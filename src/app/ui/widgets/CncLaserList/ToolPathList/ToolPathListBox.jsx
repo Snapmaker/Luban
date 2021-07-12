@@ -35,13 +35,13 @@ const getIconStatus = (status) => {
     }
     return '';
 };
-const ToolpathItem = ({ toolPath, selectedToolPathId, selectToolPathId, onClickVisible, setEditingToolpath, disabled }) => {
+const ToolpathItem = ({ toolPath, selectedToolPathIDArray, selectToolPathId, selectToolPathById, onClickVisible, setEditingToolpath, disabled }) => {
     if (!toolPath) {
         return null;
     }
     function handleOnDoubleClick() {
         setEditingToolpath(toolPath);
-        selectToolPathId(toolPath.id);
+        selectToolPathById(toolPath.id);
     }
     function handleOnClick(e) {
         if (e.detail > 1) { // Check difference to double click
@@ -63,7 +63,7 @@ const ToolpathItem = ({ toolPath, selectedToolPathId, selectToolPathId, onClickV
                     className={classNames(
                         styles['object-list-item'],
                         'clearfix',
-                        toolPath.id === selectedToolPathId ? styles.selected : null,
+                        selectedToolPathIDArray.includes(toolPath.id) ? styles.selected : null,
                     )}
                 >
                     <Anchor
@@ -101,7 +101,10 @@ const ToolpathItem = ({ toolPath, selectedToolPathId, selectToolPathId, onClickV
                                     styles.icon,
                                 )}
                                 title={i18n._('Hide')}
-                                onClick={() => onClickVisible(toolPath.id, toolPath.visible, toolPath.check)}
+                                onClick={() => {
+                                    // selectToolPathById(toolPath.id);
+                                    onClickVisible(toolPath.id, toolPath.visible, toolPath.check);
+                                }}
                                 disabled={disabled}
                             />
                         )}
@@ -113,7 +116,10 @@ const ToolpathItem = ({ toolPath, selectedToolPathId, selectToolPathId, onClickV
                                     styles.icon,
                                 )}
                                 title={i18n._('Show')}
-                                onClick={() => onClickVisible(toolPath.id, toolPath.visible, toolPath.check)}
+                                onClick={() => {
+                                    // selectToolPathById(toolPath.id);
+                                    onClickVisible(toolPath.id, toolPath.visible, toolPath.check);
+                                }}
                                 disabled={disabled}
                             />
                         )}
@@ -125,8 +131,9 @@ const ToolpathItem = ({ toolPath, selectedToolPathId, selectToolPathId, onClickV
 };
 ToolpathItem.propTypes = {
     toolPath: PropTypes.object.isRequired,
-    selectedToolPathId: PropTypes.string.isRequired,
+    selectedToolPathIDArray: PropTypes.string.isRequired,
     selectToolPathId: PropTypes.func.isRequired,
+    selectToolPathById: PropTypes.func.isRequired,
     onClickVisible: PropTypes.func.isRequired,
 
     setEditingToolpath: PropTypes.func.isRequired,
@@ -193,10 +200,10 @@ const ToolPathListBox = (props) => {
     const page = useSelector(state => state[props.headType]?.page);
     const toolPaths = useSelector(state => state[props.headType]?.toolPathGroup?.getToolPaths(), shallowEqual);
     const toolPathTypes = useSelector(state => state[props.headType]?.toolPathGroup?.getToolPathTypes(), shallowEqual);
-    const selectedToolPathId = useSelector(state => state[props.headType]?.toolPathGroup?.selectedToolPathId, shallowEqual);
+    const selectedToolPathIDArray = useSelector(state => state[props.headType]?.toolPathGroup?.selectedToolPathArray, shallowEqual);
     const inProgress = useSelector(state => state[props.headType]?.inProgress);
     const dispatch = useDispatch();
-    const selectedToolPath = toolPaths && toolPaths.find(v => v.id === selectedToolPathId);
+    const selectedToolPath = toolPaths && selectedToolPathIDArray.length === 1 && toolPaths.find(v => v.id === selectedToolPathIDArray[0]);
     const activeToolListDefinition = useSelector(state => state[props.headType]?.activeToolListDefinition, shallowEqual);
     const toolDefinitions = useSelector(state => state[props.headType]?.toolDefinitions, shallowEqual);
 
@@ -255,10 +262,18 @@ const ToolPathListBox = (props) => {
             }));
             dispatch(editorActions.resetProcessState(props.headType));
         },
-        deleteToolPath: (toolPathId) => dispatch(editorActions.deleteToolPath(props.headType, toolPathId)),
+        deleteToolPath: () => dispatch(editorActions.deleteToolPath(props.headType, selectedToolPathIDArray)),
         commitGenerateToolPath: (toolPathId) => dispatch(editorActions.commitGenerateToolPath(props.headType, toolPathId)),
-        toolPathToUp: (toolPathId) => dispatch(editorActions.toolPathToUp(props.headType, toolPathId)),
-        toolPathToDown: (toolPathId) => dispatch(editorActions.toolPathToDown(props.headType, toolPathId)),
+        toolPathToUp: () => {
+            if (selectedToolPathIDArray.length === 1) {
+                dispatch(editorActions.toolPathToUp(props.headType, selectedToolPathIDArray[0]));
+            }
+        },
+        toolPathToDown: () => {
+            if (selectedToolPathIDArray.length === 1) {
+                dispatch(editorActions.toolPathToDown(props.headType, selectedToolPathIDArray[0]));
+            }
+        },
         createToolPath: () => {
             const toolpath = dispatch(editorActions.createToolPath(props.headType));
             setCurrentToolpath(toolpath);
@@ -312,7 +327,6 @@ const ToolPathListBox = (props) => {
         props.widgetActions.setTitle(i18n._('Toolpath List'));
     }, []);
 
-    const disabled = !selectedToolPathId;
     if (page === PAGE_EDITOR) {
         props.widgetActions.setDisplay(false);
     } else if (page === PAGE_PROCESS) {
@@ -350,8 +364,9 @@ const ToolPathListBox = (props) => {
                         <ToolpathItem
                             toolPath={toolPath}
                             key={toolPath.id}
-                            selectedToolPathId={selectedToolPathId}
+                            selectedToolPathIDArray={selectedToolPathIDArray}
                             selectToolPathId={actions.selectToolPathId}
+                            selectToolPathById={actions.selectToolPathById}
                             onClickVisible={actions.onClickVisible}
                             setEditingToolpath={setEditingToolpath}
                             disabled={inProgress}
@@ -383,10 +398,10 @@ const ToolPathListBox = (props) => {
                             styles.icon,
                         )}
                         name="Delete"
-                        disabled={disabled}
+                        disabled={selectedToolPathIDArray.length < 1}
                         size={24}
                         title={i18n._('Delete')}
-                        onClick={() => actions.deleteToolPath(selectedToolPathId)}
+                        onClick={() => actions.deleteToolPath(selectedToolPathIDArray)}
                     />
                 </div>
                 <div className={classNames(
@@ -397,9 +412,9 @@ const ToolPathListBox = (props) => {
                         className={classNames(
                             styles.icon,
                         )}
-                        disabled={disabled}
+                        disabled={selectedToolPathIDArray.length !== 1}
                         title={i18n._('Prioritize')}
-                        onClick={() => actions.toolPathToUp(selectedToolPathId)}
+                        onClick={() => actions.toolPathToUp(selectedToolPathIDArray)}
                         name="Up"
                         size={24}
                     />
@@ -408,9 +423,9 @@ const ToolPathListBox = (props) => {
                             styles.icon,
                             styles.rotate180
                         )}
-                        disabled={disabled}
+                        disabled={selectedToolPathIDArray.length !== 1}
                         title={i18n._('Deprioritize')}
-                        onClick={() => actions.toolPathToDown(selectedToolPathId)}
+                        onClick={() => actions.toolPathToDown(selectedToolPathIDArray)}
                         name="Up"
                         size={24}
                     />
@@ -431,7 +446,7 @@ const ToolPathListBox = (props) => {
                 />
             )}
 
-            {selectedToolPathId && (
+            {selectedToolPath && (
                 <div className={classNames(widgetStyles.separator)} style={{ margin: '16px 0' }} />
             )}
             {selectedToolPath && selectedToolPath.headType === HEAD_CNC && activeToolListDefinition && (

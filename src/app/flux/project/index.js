@@ -203,6 +203,7 @@ export const actions = {
             for (let k = 0; k < toolpaths.length; k++) {
                 toolPathGroup.saveToolPath(toolpaths[k], { materials }, false);
             }
+            toolPathGroup.selectToolPathById(null);
             dispatch(modActions.updateState(envHeadType, toolPathGroup));
         }
         dispatch(modActions.updateState(envHeadType, restState));
@@ -445,16 +446,16 @@ export const actions = {
 
     updateRecentFile: (arr, type) => (dispatch, getState) => {
         const state = getState().project.general;
-        let newRecentFiles = cloneDeep(state.recentFiles);
+        let newRecentFiles = cloneDeep(arr);
         if (type === 'reset') {
             newRecentFiles = [];
         } else {
-            arr.forEach(fileItem => {
+            state.recentFiles.forEach(fileItem => {
                 if (newRecentFiles.length >= MAX_RECENT_FILES_LENGTH) {
                     return;
                 }
                 if (!find(newRecentFiles, { 'name': fileItem.name })) {
-                    newRecentFiles.push(fileItem);
+                    newRecentFiles.unshift(fileItem);
                 }
             });
         }

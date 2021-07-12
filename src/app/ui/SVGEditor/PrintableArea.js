@@ -242,7 +242,8 @@ class PrintableArea {
                 fill: 'indianred',
                 stroke: 'indianred',
                 'stroke-width': 1 / this.scale,
-                opacity: 1
+                opacity: 1,
+                'fill-opacity': 1
             }
         });
         this.printableAreaGroup.append(origin);
@@ -265,7 +266,8 @@ class PrintableArea {
                 fill: '#FFE7E7',
                 stroke: '#000',
                 'stroke-width': 1 / this.scale,
-                opacity: 1
+                opacity: 1,
+                'fill-opacity': 1
             }
         });
         this.printableAreaGroup.append(nonEditableArea);
