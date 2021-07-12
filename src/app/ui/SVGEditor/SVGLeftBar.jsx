@@ -61,6 +61,7 @@ class SVGLeftBar extends PureComponent {
                             disabled={!editable}
                         />
                         <SvgIcon
+                            type={['hoverNormal', 'pressSpecial']}
                             size={56}
                             name="ToolbarOpen"
                             disabled={!editable}
@@ -71,6 +72,7 @@ class SVGLeftBar extends PureComponent {
                         />
 
                         <SvgIcon
+                            type={['hoverNormal', 'pressSpecial']}
                             size={56}
                             name="ToolbarSelect"
                             disabled={!editable}
@@ -80,6 +82,7 @@ class SVGLeftBar extends PureComponent {
                             onClick={() => this.props.setMode('select')}
                         />
                         <SvgIcon
+                            type={['hoverNormal', 'pressSpecial']}
                             size={56}
                             name="ToolbarRectangle"
                             disabled={!editable}
@@ -90,6 +93,7 @@ class SVGLeftBar extends PureComponent {
                         />
 
                         <SvgIcon
+                            type={['hoverNormal', 'pressSpecial']}
                             size={56}
                             name="ToolbarOval"
                             disabled={!editable}
@@ -100,6 +104,7 @@ class SVGLeftBar extends PureComponent {
                         />
 
                         <SvgIcon
+                            type={['hoverNormal', 'pressSpecial']}
                             size={56}
                             name="ToolbarText"
                             disabled={!editable}

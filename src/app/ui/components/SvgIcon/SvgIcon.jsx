@@ -4,7 +4,6 @@ import * as Icons from 'snapmaker-react-icon';
 import classNames from 'classnames';
 import includes from 'lodash/includes';
 import { noop } from 'lodash';
-import Anchor from '../Anchor';
 
 class SvgIcon extends PureComponent {
     static propTypes = {
@@ -30,7 +29,8 @@ class SvgIcon extends PureComponent {
     };
 
     static defaultProps = {
-        isHorizontal: true
+        isHorizontal: true,
+        type: ['pressNormal', 'hoverNormal']
     }
 
     state = {
@@ -73,7 +73,7 @@ class SvgIcon extends PureComponent {
             spanClassName,
             isHorizontal,
             inputInfo,
-            type = ['static'],
+            type,
             ...props
         } = this.props;
         let {

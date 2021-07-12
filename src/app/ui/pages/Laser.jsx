@@ -86,7 +86,7 @@ function useRenderRemoveModelsWarning() {
     const onClose = () => dispatch(editorActions.updateState(HEAD_LASER, {
         removingModelsWarning: false
     }));
-    return removingModelsWarning && renderModal({
+    const returnModal = renderModal({
         onClose,
         renderBody: () => (
             <div>
@@ -112,6 +112,11 @@ function useRenderRemoveModelsWarning() {
             }
         ]
     });
+    if (removingModelsWarning) {
+        return returnModal;
+    } else {
+        return null;
+    }
 }
 function Laser() {
     const widgets = useSelector(state => state?.widget[pageHeadType]?.default?.widgets, shallowEqual);

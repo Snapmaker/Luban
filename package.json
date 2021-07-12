@@ -233,7 +233,7 @@
     "react": "~16.13.0",
     "react-bootstrap": "~1.0.0",
     "react-contexify": "~4.1.0",
-    "react-dom": "~16.8.0",
+    "react-dom": "~16.9.0",
     "react-dropzone": "~4.2.13",
     "react-facebook-loading": "~0.6.1",
     "react-ga": "~2.5.7",

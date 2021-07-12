@@ -1,6 +1,7 @@
 import classNames from 'classnames';
 import React from 'react';
 import PropTypes from 'prop-types';
+import { noop } from 'lodash';
 import i18n from '../../lib/i18n';
 import styles from './styles/maintoolbar.styl';
 import SvgIcon from '../components/SvgIcon';
@@ -11,8 +12,7 @@ function MenuItem({ menuItem, actions }) {
         return null;
     }
     const { type = 'button', name = 'Copy', iconClassName, title, inputInfo, disabled = false } = menuItem;
-    const { customRender = () => {} } = menuItem;
-    console.log('customRender', type, customRender);
+    const { customRender = noop } = menuItem;
     function handleClick() {
         actions.handleClick(menuItem.action);
     }
