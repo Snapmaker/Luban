@@ -20,7 +20,8 @@ export function useRecoveringProject(headType) {
 }
 export function useRenderRecoveryModal(page) {
     const [recoveringProject, setRecoveringProject] = useRecoveringProject(page);
-    return recoveringProject && renderRecoveryModal(page, () => { setRecoveringProject(false); });
+    const recoveryModal = renderRecoveryModal(page, () => { setRecoveringProject(false); });
+    return recoveringProject && recoveryModal;
 }
 
 export default {

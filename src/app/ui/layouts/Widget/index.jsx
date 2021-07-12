@@ -16,7 +16,8 @@ import { actions as widgetActions } from '../../../flux/widget';
 
 class WidgetContainer extends PureComponent {
     static propTypes = {
-        component: PropTypes.func.isRequired,
+        // function|object, some component is wraped with connect/withRouter
+        component: PropTypes.any.isRequired,
         widgetId: PropTypes.string.isRequired,
         headType: PropTypes.string,
         widgetProps: PropTypes.object.isRequired,

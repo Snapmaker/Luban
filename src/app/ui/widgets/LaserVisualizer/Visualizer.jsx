@@ -256,31 +256,11 @@ class Visualizer extends Component {
             this.canvas.current.setCamera(new THREE.Vector3(0, 0, 300), new THREE.Vector3());
         }
 
-        /*
-        this.canvas.current.updateTransformControl2D();
-        const { model } = nextProps;
-        if (model !== this.props.model) {
-            if (!model) {
-                this.canvas.current.controls.detach();
-            } else {
-                this.canvas.current.controls.attach(model);
-
-                const sourceType = model.modelInfo.source.type;
-                if (sourceType === 'text') {
-                    this.canvas.current.setTransformControls2DState({ enabledScale: false });
-                } else {
-                    this.canvas.current.setTransformControls2DState({ enabledScale: true });
-                }
-            }
-        }
-        */
-
-        this.canvas.current.updateTransformControl2D();
         // const { model } = nextProps;
         const { selectedToolPathModelArray } = nextProps;
         // todo, selectedModelId nof found
         if (selectedToolPathModelArray !== this.props.selectedToolPathModelArray) {
-            this.canvas.current.controls.detach();
+            this.canvas.current.detach();
             selectedToolPathModelArray.map(model => this.canvas.current.controls.attach(model.meshObject, SELECTEVENT.ADDSELECT));
         }
 
@@ -596,7 +576,6 @@ const mapStateToProps = (state, ownProps) => {
     const { size } = state.machine;
 
     const { background } = state.laser;
-    // call canvas.updateTransformControl2D() when transformation changed or model selected changed
 
     const { SVGActions, scale, target, materials, page, selectedModelID, modelGroup, svgModelGroup, toolPathGroup, displayedType,
         isChangedAfterGcodeGenerating, renderingTimestamp, stage, progress, coordinateMode, coordinateSize, inProgress } = state.laser;
