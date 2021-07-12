@@ -215,9 +215,11 @@ export const processActions = {
         }));
     },
 
-    deleteToolPath: (headType, toolPathId) => (dispatch, getState) => {
+    deleteToolPath: (headType, selectedToolPathIDArray) => (dispatch, getState) => {
         const { toolPathGroup } = getState()[headType];
-        toolPathGroup.deleteToolPath(toolPathId);
+        selectedToolPathIDArray.forEach((id) => {
+            toolPathGroup.deleteToolPath(id);
+        });
         dispatch(processActions.showSimulationInPreview(headType, false));
         dispatch(baseActions.updateState(headType, {
             displayedType: DISPLAYED_TYPE_MODEL,

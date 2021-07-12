@@ -9,7 +9,7 @@ import { MATERIAL_UNSELECTED, MATERIAL_SELECTED } from '../lib/renderer/ToolPath
 class ToolPathGroup {
     toolPaths = [];
 
-    selectedToolPathId = '';
+    selectedToolPathArray = [];
 
     modelGroup;
 
@@ -74,7 +74,7 @@ class ToolPathGroup {
 
         if (toolPath) {
             await toolPath.onGenerateToolPath(taskResult);
-            this.addSelectedToolpathColor();
+            this.addSelectedToolpathColor(true);
             this._updated();
         }
     }
@@ -84,18 +84,30 @@ class ToolPathGroup {
     }
 
     // Select
-    selectToolPathById(toolPathId) {
-        this.selectedToolPathId = toolPathId;
+    selectToolPathById(toolPathId = null) {
+        if (!toolPathId) {
+            this.selectedToolPathArray = [];
+        } else {
+            this.selectedToolPathArray = [toolPathId];
+        }
         this.addSelectedToolpathColor();
         this._updated();
     }
 
     // Unselect when selected id === toolPathId
     selectToolPathId(toolPathId) {
-        if (this.selectedToolPathId === toolPathId) {
-            this.selectedToolPathId = '';
+        if (this.selectedToolPathArray.includes(toolPathId)) {
+            const newArray = [];
+            this.selectedToolPathArray.forEach(
+                (id) => {
+                    if (id !== toolPathId) {
+                        newArray.push(id);
+                    }
+                }
+            );
+            this.selectedToolPathArray = newArray;
         } else {
-            this.selectedToolPathId = toolPathId;
+            this.selectedToolPathArray.push(toolPathId);
         }
         this.addSelectedToolpathColor();
         this._updated();
@@ -196,33 +208,54 @@ class ToolPathGroup {
             });
             this.toolPaths.push(toolPath);
             this.toolPathObjects.add(toolPath.object);
-            this.selectedToolPathId = toolPath.id;
+            this.selectToolPathById(toolPath.id);
         }
         if (shouldCommitGenerate) {
             toolPath.commitGenerateToolPath();
         }
     }
 
-    addSelectedToolpathColor() {
-        const selectedToolpath = this._getToolPath(this.selectedToolPathId);
-        let newIndex = -1;
-        this.toolPathObjects.children.forEach((item, index) => {
-            if (selectedToolpath && selectedToolpath.object === item) {
-                newIndex = index;
-                item.children.forEach((meshObj) => {
-                    meshObj.material = MATERIAL_SELECTED;
-                });
-            } else {
-                item.children.forEach((meshObj) => {
-                    meshObj.material = MATERIAL_UNSELECTED;
-                });
+    addSelectedToolpathColor(withoutSelection = false) {
+        // 2D SVGCanvas
+        const { modelGroup } = this;
+        modelGroup.models.forEach((model) => {
+            model.updateIsToolPathSelect(false);
+        });
+        this.selectedToolPathArray.forEach((id) => {
+            const selectedToolpath = this._getToolPath(id);
+            if (selectedToolpath && selectedToolpath.modelIDs) {
+                for (const modelId of selectedToolpath?.modelIDs) {
+                    const model = modelGroup.getModel(modelId);
+                    model && model.updateIsToolPathSelect(true);
+                }
             }
         });
-        if (selectedToolpath && newIndex !== this.toolPathObjects.children.length - 1) {
-            // The cloned object must be used to force updating the scene
-            this.toolPathObjects.remove(selectedToolpath.object);
-            selectedToolpath.object = selectedToolpath.object.clone();
-            this.toolPathObjects.add(selectedToolpath.object);
+
+        // 3D SMCanvas
+        this.toolPathObjects.children.forEach((item) => {
+            item.children.forEach((meshObj) => {
+                meshObj.material = MATERIAL_UNSELECTED;
+            });
+        });
+        this.selectedToolPathArray.forEach((id) => {
+            const selectedToolpath = this._getToolPath(id);
+            this.toolPathObjects.children.forEach((item) => {
+                if (selectedToolpath && selectedToolpath.object.uuid === item.uuid) {
+                    item.children.forEach((meshObj) => {
+                        meshObj.material = MATERIAL_SELECTED;
+                    });
+                }
+            });
+        });
+        // The cloned object must be used to force updating the scene
+        // The mesh object last add will show first in SMCanvas
+        if (!withoutSelection) {
+            this.selectedToolPathArray.forEach((id) => {
+                const selectedToolpath = this._getToolPath(id);
+                this.toolPathObjects.remove(selectedToolpath.object);
+                selectedToolpath.object = selectedToolpath.object.clone();
+                this.toolPathObjects.add(selectedToolpath.object);
+            });
         }
     }
 
@@ -270,9 +303,7 @@ class ToolPathGroup {
             this.toolPathObjects.remove(toolPath.object);
         }
 
-        if (this.selectedToolPathId === toolPathId) {
-            this.selectedToolPathId = '';
-        }
+        this.selectToolPathById(null);
 
         this._updated();
     }
@@ -285,7 +316,7 @@ class ToolPathGroup {
             }
         });
         this.toolPaths = [];
-        this.selectedToolPathId = '';
+        this.selectToolPathById(null);
 
         this._updated();
     }
