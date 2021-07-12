@@ -1,7 +1,7 @@
-export default class MoveOperation3D {
+export default class ScaleOperation3D {
     state = {};
 
-    description = 'MoveOperation3D';
+    description = 'ScaleOperation3D';
 
     constructor(state) {
         this.state = {
@@ -17,11 +17,12 @@ export default class MoveOperation3D {
         const model = this.state.target;
         const modelGroup = model.modelGroup;
         modelGroup.unselectAllModels();
-        model.meshObject.position.setX(this.state.to.x);
-        model.meshObject.position.setY(this.state.to.y);
+        model.meshObject.scale.copy(this.state.to);
+        model.meshObject.position.copy(this.state.translateTo);
+        // model.meshObject.position.set(this.state.to.positionX, this.state.to.positionY, this.state.to.positionZ);
+        // model.meshObject.scale.set(this.state.to.scaleX, this.state.to.scaleY, this.state.to.scaleZ);
         model.stickToPlate();
         const overstepped = modelGroup._checkOverstepped(model);
-        console.log('overstepped', overstepped);
         model.setOversteppedAndSelected(overstepped, model.isSelected);
     }
 
@@ -29,11 +30,12 @@ export default class MoveOperation3D {
         const model = this.state.target;
         const modelGroup = model.modelGroup;
         modelGroup.unselectAllModels();
-        model.meshObject.position.setX(this.state.from.x);
-        model.meshObject.position.setY(this.state.from.y);
+        model.meshObject.position.copy(this.state.translateFrom);
+        model.meshObject.scale.copy(this.state.from);
+        // model.meshObject.scale.set(this.state.from.scaleX, this.state.from.scaleY, this.state.from.scaleZ);
+        // model.meshObject.position.set(this.state.from.positionX, this.state.from.positionY, this.state.from.positionZ);
         model.stickToPlate();
         const overstepped = modelGroup._checkOverstepped(model);
-        console.log('overstepped', overstepped);
         model.setOversteppedAndSelected(overstepped, model.isSelected);
     }
 }

@@ -268,7 +268,6 @@ class Canvas extends Component {
             }
         });
         this.controls.on(EVENTS.BEFORE_TRANSFORM_OBJECT, () => {
-            console.log(this.controls.transformControl);
             this.onModelBeforeTransform(this.controls.transformControl.mode);
         });
         this.controls.on(EVENTS.TRANSFORM_OBJECT, () => {
@@ -277,7 +276,6 @@ class Canvas extends Component {
             }
         });
         this.controls.on(EVENTS.AFTER_TRANSFORM_OBJECT, () => {
-            console.log(this.controls.transformControl);
             this.onModelAfterTransform(this.controls.transformControl.mode);
         });
     }

@@ -4,7 +4,7 @@ import { connect } from 'react-redux';
 import { withRouter } from 'react-router';
 import isEqual from 'lodash/isEqual';
 import { Vector3, Box3 } from 'three';
-
+import _ from 'lodash';
 
 import { shortcutActions, priorities, ShortcutManager } from '../../../lib/shortcut';
 import { EPSILON } from '../../../constants';
@@ -18,6 +18,8 @@ import { actions as operationHistoryActions } from '../../../flux/operation-hist
 import AddOperation from '../../../flux/operation-history/AddOperation';
 import DeleteOperation from '../../../flux/operation-history/DeleteOperation';
 import MoveOperation3D from '../../../flux/operation-history/MoveOperation3D';
+import ScaleOperation3D from '../../../flux/operation-history/ScaleOperation3D';
+import RotateOperation3D from '../../../flux/operation-history/RotateOperation3D';
 import Operations from '../../../flux/operation-history/Operations';
 import VisualizerLeftBar from './VisualizerLeftBar';
 import VisualizerPreviewControl from './VisualizerPreviewControl';
@@ -113,33 +115,30 @@ class Visualizer extends PureComponent {
         onModelBeforeTransform: (transformMode) => {
             this.props.clearTargetTmpState();
             for (const model of this.props.modelGroup.selectedModelArray) {
-                console.log(model.transformation);
+                // console.log('onModelBeforeTransform', model.meshObject.scale, model.meshObject.parent.scale.clone(), model.meshObject.scale.clone().multiply(model.meshObject.parent.scale));
+                // console.log('onModelBeforeTransform', JSON.stringify(model.transformation), model.meshObject.rotation, model.meshObject.parent.rotation.clone(), model.meshObject.parent.matrix.elements); // , model.meshObject.rotation.clone().applyMatrix4(model.meshObject.parent.matrix));
                 switch (transformMode) {
                     case 'translate':
                         this.props.updateTargetTmpState(model.modelID, {
-                            from: {
-                                positionX: model.transformation.positionX,
-                                positionY: model.transformation.positionY,
-                                positionZ: model.transformation.positionZ
-                            }
+                            // groupFrom: model.meshObject.parent.position.clone(),
+                            from: model.meshObject.position.clone().applyMatrix4(model.meshObject.parent.matrix)
+                            // from: { ...model.transformation }
                         });
                         break;
                     case 'rotate':
                         this.props.updateTargetTmpState(model.modelID, {
-                            from: {
-                                rotationX: model.transformation.rotationX,
-                                rotationY: model.transformation.rotationY,
-                                rotationZ: model.transformation.rotationZ
-                            }
+                            // groupFrom: model.meshObject.parent.rotation.clone(),
+                            // translateFrom: model.meshObject.position.clone().applyMatrix4(model.meshObject.parent.matrix),
+                            from: { ...model.transformation }
+                            // from: model.meshObject.rotation.toVector3().applyMatrix4(model.meshObject.parent.matrix)
                         });
                         break;
                     case 'scale':
                         this.props.updateTargetTmpState(model.modelID, {
-                            from: {
-                                scaleX: model.transformation.scaleX,
-                                scaleY: model.transformation.scaleY,
-                                scaleZ: model.transformation.scaleZ
-                            }
+                            // groupFrom: model.meshObject.parent.scale.clone(),
+                            translateFrom: model.meshObject.position.clone().applyMatrix4(model.meshObject.parent.matrix),
+                            from: model.meshObject.scale.clone().multiply(model.meshObject.parent.scale)
+                            // from: { ...model.transformation }
                         });
                         break;
                     default: break;
@@ -147,49 +146,66 @@ class Visualizer extends PureComponent {
             }
         },
         onModelAfterTransform: (transformMode) => {
+            const operations = new Operations();
+            let operation;
             for (const model of this.props.modelGroup.selectedModelArray) {
-                console.log(model.transformation);
+                // console.log('onModelAfterTransform', model.meshObject.scale, model.meshObject.parent.scale.clone(), model.meshObject.scale.clone().multiply(model.meshObject.parent.scale));
+                // console.log('onModelAfterTransform', JSON.stringify(model.transformation), model.meshObject.rotation, model.meshObject.parent.rotation.clone(), model.meshObject.parent.matrix.elements); // , model.meshObject.rotation.clone().applyMatrix4(model.meshObject.parent.matrix));
                 switch (transformMode) {
                     case 'translate':
                         this.props.updateTargetTmpState(model.modelID, {
-                            to: {
-                                positionX: model.transformation.positionX,
-                                positionY: model.transformation.positionY,
-                                positionZ: model.transformation.positionZ
-                            }
+                            // to: { ...model.transformation }
+                            // groupTo: model.meshObject.parent.position.clone(),
+                            to: model.meshObject.position.clone().applyMatrix4(model.meshObject.parent.matrix)
                         });
+                        if (_.isEqual(this.props.targetTmpState[model.modelID].from, this.props.targetTmpState[model.modelID].to)) {
+                            continue;
+                        }
+                        operation = new MoveOperation3D({
+                            target: model,
+                            ...this.props.targetTmpState[model.modelID]
+                        });
+                        operations.push(operation);
                         break;
                     case 'rotate':
                         this.props.updateTargetTmpState(model.modelID, {
-                            to: {
-                                rotationX: model.transformation.rotationX,
-                                rotationY: model.transformation.rotationY,
-                                rotationZ: model.transformation.rotationZ
-                            }
+                            // groupTo: model.meshObject.parent.rotation.clone(),
+                            // translateTo: model.meshObject.position.clone().applyMatrix4(model.meshObject.parent.matrix),
+                            to: { ...model.transformation }
+                            // to: model.meshObject.matrix.clone()
+                            // to: model.meshObject.rotation.toVector3().applyMatrix4(model.meshObject.parent.matrix)
                         });
+                        if (_.isEqual(this.props.targetTmpState[model.modelID].from, this.props.targetTmpState[model.modelID].to)) {
+                            continue;
+                        }
+                        operation = new RotateOperation3D({
+                            target: model,
+                            ...this.props.targetTmpState[model.modelID]
+                        });
+                        operations.push(operation);
                         break;
                     case 'scale':
                         this.props.updateTargetTmpState(model.modelID, {
-                            to: {
-                                scaleX: model.transformation.scaleX,
-                                scaleY: model.transformation.scaleY,
-                                scaleZ: model.transformation.scaleZ
-                            }
+                            // groupTo: model.meshObject.parent.scale.clone(),
+                            translateTo: model.meshObject.position.clone().applyMatrix4(model.meshObject.parent.matrix),
+                            to: model.meshObject.scale.clone().multiply(model.meshObject.parent.scale)
+                            // to: { ...model.transformation }
                         });
+                        if (_.isEqual(this.props.targetTmpState[model.modelID].from, this.props.targetTmpState[model.modelID].to)) {
+                            continue;
+                        }
+                        operation = new ScaleOperation3D({
+                            target: model,
+                            ...this.props.targetTmpState[model.modelID]
+                        });
+                        operations.push(operation);
                         break;
                     default: break;
                 }
             }
-            const operations = new Operations();
-            for (const model of this.props.modelGroup.selectedModelArray) {
-                const operation = new MoveOperation3D({
-                    target: model,
-                    ...this.props.targetTmpState[model.modelID]
-                });
-                operations.push(operation);
+            if (operations.operations.length > 0) {
+                this.props.setOperations(operations);
             }
-            this.props.setOperations(operations);
-            console.log(operations);
             this.props.onModelAfterTransform();
         },
         onModelTransform: () => {

@@ -75,6 +75,8 @@ class ThreeModel extends BaseModel {
             const point = modelGroup._computeAvailableXY(this);
             this.meshObject.position.x = point.x;
             this.meshObject.position.y = point.y;
+            this.transformation.positionX = point.x;
+            this.transformation.positionY = point.y;
         }
     }
 
