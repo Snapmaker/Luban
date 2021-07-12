@@ -5,7 +5,8 @@ import { connect } from 'react-redux';
 import Select from '../../components/Select';
 import i18n from '../../../lib/i18n';
 import Anchor from '../../components/Anchor';
-import { NumberInput as Input } from '../../components/Input';
+import SvgIcon from '../../components/SvgIcon';
+import { NumberInput as Input, TextAreaInput } from '../../components/Input';
 import TipTrigger from '../../components/TipTrigger';
 
 
@@ -41,7 +42,7 @@ class TextParameters extends PureComponent {
             this.fileInput.current.click();
         },
         onSelectAllText: () => {
-            this.textArea.current.select();
+            // this.textArea.current.select();
         },
         onChangeText: (event) => {
             const text = event.target.value;
@@ -71,15 +72,13 @@ class TextParameters extends PureComponent {
 
         return (
             <div>
-                <Anchor className="sm-parameter-header" onClick={this.actions.onToggleExpand}>
-                    <span className="fa fa-font sm-parameter-header__indicator" />
-                    <span className="sm-parameter-header__title">{i18n._('Text')}</span>
-                    <span className={classNames(
-                        'fa',
-                        this.state.expanded ? 'fa-angle-double-up' : 'fa-angle-double-down',
-                        'sm-parameter-header__indicator',
-                        'pull-right',
-                    )}
+                <Anchor className="sm-flex height-32 margin-vertical-8" onClick={this.actions.onToggleExpand}>
+                    <span className="sm-flex-width">{i18n._('Text')}</span>
+                    <SvgIcon
+                        name="DropdownLine"
+                        className={classNames(
+                            this.state.expanded ? '' : 'rotate180'
+                        )}
                     />
                 </Anchor>
                 {this.state.expanded && (
@@ -90,14 +89,13 @@ class TextParameters extends PureComponent {
 The maximum length of the text is 125 mm. When the text is too long, it will be shrunk automatically. \
 Start a new line manually according to your needs.')}
                         >
-                            <div className="sm-parameter-row" style={{ height: '68px' }}>
-                                <span className="sm-parameter-row__label">{i18n._('Text')}</span>
-                                <textarea
+                            <div className="sm-flex height-80 margin-vertical-8">
+                                <TextAreaInput
                                     ref={this.textArea}
                                     disabled={disabled}
                                     onFocus={actions.onSelectAllText}
-                                    style={{ width: '202px', float: 'right', resize: 'none' }}
-                                    className="form-control"
+                                    style={{ resize: 'none' }}
+                                    className="sm-flex-width"
                                     rows="3"
                                     value={text}
                                     onKeyPress={(e) => {
@@ -113,14 +111,13 @@ Start a new line manually according to your needs.')}
                             title={i18n._('Font')}
                             content={i18n._('Select a font')}
                         >
-                            <div className="sm-parameter-row">
-                                <span className="sm-parameter-row__label">{i18n._('Font')}</span>
+                            <div className="sm-flex height-32 margin-vertical-8">
+                                <span className="sm-flex-auto sm-flex-order-negative width-56">{i18n._('Font')}</span>
                                 <Select
                                     disabled={disabled}
-                                    className="sm-parameter-row__font-select"
-                                    // style={{ width: '202px', float: 'right' }}
-                                    backspaceRemoves={false}
+                                    className="sm-flex-width align-r"
                                     clearable={false}
+                                    size="large"
                                     options={fontOptions}
                                     placeholder={i18n._('Choose font')}
                                     value={fontFamily}
@@ -132,15 +129,15 @@ Start a new line manually according to your needs.')}
                             title={i18n._('Font Size')}
                             content={i18n._('Enter the font size in pt (points).')}
                         >
-                            <div className="sm-parameter-row">
-                                <span className="sm-parameter-row__label">{i18n._('Font Size')}</span>
+                            <div className="sm-flex height-32 margin-vertical-8">
+                                <span className="sm-flex-auto sm-flex-order-negative width-64">{i18n._('Font Size')}</span>
                                 <Input
                                     disabled={disabled}
-                                    className="sm-parameter-row__input"
+                                    className="sm-flex-width align-r"
                                     value={parseInt(fontSize, 10)}
                                     onChange={actions.onChangeSize}
                                 />
-                                <span className="sm-parameter-row__input-unit">pt</span>
+                                <span className="sm-flex__input-unit-24">pt</span>
                             </div>
                         </TipTrigger>
                         {/* <TipTrigger

@@ -1,7 +1,7 @@
 import React, { PureComponent } from 'react';
 import { connect } from 'react-redux';
-import Slider from 'rc-slider';
 import PropTypes from 'prop-types';
+import Slider from '../../../components/Slider';
 import i18n from '../../../../lib/i18n';
 import { NumberInput as Input } from '../../../components/Input';
 import { controller } from '../../../../lib/controller';

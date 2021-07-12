@@ -1,9 +1,9 @@
 import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
-import Slider from 'rc-slider';
 import classNames from 'classnames';
 import { Trans } from 'react-i18next';
+import Slider from '../../components/Slider';
 
 import i18n from '../../../lib/i18n';
 import Modal from '../../components/Modal';

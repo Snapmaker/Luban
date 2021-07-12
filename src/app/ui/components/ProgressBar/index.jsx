@@ -1,12 +1,14 @@
 import React from 'react';
 import PropTypes from 'prop-types';
+import { Progress } from 'antd';
 import styles from './styles.styl';
 import { EPSILON } from '../../../constants';
 
 class ProgressBar extends React.PureComponent {
     static propTypes = {
         progress: PropTypes.number,
-        tips: PropTypes.string
+        tips: PropTypes.string,
+        strokeColor: PropTypes.string
     };
 
     timeout = null;
@@ -30,22 +32,21 @@ class ProgressBar extends React.PureComponent {
     }
 
     render() {
-        const { progress, tips } = this.props;
+        const { progress, tips, strokeColor = '#1890ff' } = this.props;
         const { display } = this.state;
         return (
-            <div style={{ display }}>
+            <div
+                style={{ display }}
+                className={styles.progressbar}
+            >
                 <div className={styles['progress-notice']}>
                     <p>{tips}</p>
                 </div>
-                <div className={styles.progressbar}>
-                    <div
-                        className={styles.progress}
-                        aria-valuenow={progress}
-                        aria-valuemin={0}
-                        aria-valuemax={100}
-                        style={{ width: `${progress}%` }}
-                    />
-                </div>
+                <Progress
+                    percent={progress}
+                    strokeColor={strokeColor}
+                    trailColor="#D5D6D9"
+                />
             </div>
 
         );

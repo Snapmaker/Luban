@@ -1,30 +1,34 @@
 import React, { PureComponent } from 'react';
 import { withRouter } from 'react-router-dom';
 import PropTypes from 'prop-types';
+import classNames from 'classnames';
+import { noop } from 'lodash';
 import { connect } from 'react-redux';
 import { actions as workspaceActions } from '../../../flux/workspace';
 import { actions as editorActions } from '../../../flux/editor';
 import { actions as projectActions } from '../../../flux/project';
 import {
-    DISPLAYED_TYPE_TOOLPATH, PAGE_EDITOR, PAGE_PROCESS
+    DISPLAYED_TYPE_TOOLPATH, PAGE_PROCESS
 } from '../../../constants';
 
 import modal from '../../../lib/modal';
-
+import { Button } from '../../components/Buttons';
+import Dropdown from '../../components/Dropdown';
+import Menu from '../../components/Menu';
 import { renderPopup } from '../../utils';
-
+import styles from './styles.styl';
 import Workspace from '../../pages/Workspace';
 import i18n from '../../../lib/i18n';
 import UniApi from '../../../lib/uni-api';
 import Thumbnail from '../CncLaserShared/Thumbnail';
-import TipTrigger from '../../components/TipTrigger';
+
 
 class Output extends PureComponent {
     static propTypes = {
         ...withRouter.propTypes,
-        autoPreviewEnabled: PropTypes.bool.isRequired,
+        // autoPreviewEnabled: PropTypes.bool.isRequired,
 
-        page: PropTypes.string.isRequired,
+        // page: PropTypes.string.isRequired,
         inProgress: PropTypes.bool.isRequired,
 
         modelGroup: PropTypes.object.isRequired,
@@ -147,102 +151,92 @@ class Output extends PureComponent {
             component: Workspace
         });
     }
+    // {i18n._('Export G-code to File')}
 
     render() {
         const actions = this.actions;
-        const { workflowState, isGcodeGenerating, gcodeFile, hasModel, hasToolPathModel, autoPreviewEnabled, inProgress, displayedType, page, disablePreview } = this.props;
-
+        const { workflowState, isGcodeGenerating, gcodeFile, hasModel, hasToolPathModel, inProgress, displayedType } = this.props;
+        const menu = (
+            <Menu>
+                <Menu.Item
+                    onClick={actions.onLoadGcode}
+                    disabled={inProgress || !hasModel || workflowState === 'running' || isGcodeGenerating || gcodeFile === null}
+                >
+                    <div className={classNames('align-c')}>
+                        {i18n._('Load G-code to Workspace')}
+                    </div>
+                </Menu.Item>
+                <Menu.Item
+                    disabled={inProgress || !hasModel || workflowState === 'running' || isGcodeGenerating || gcodeFile === null}
+                    onClick={actions.onExport}
+                >
+                    <div className={classNames('align-c')}>
+                        {i18n._('Export G-code to file')}
+                    </div>
+                </Menu.Item>
+            </Menu>
+        );
         return (
-            <div style={{ position: 'fixed', bottom: '10px', backgroundColor: '#fff', width: '360px' }}>
-                <div>
-                    {displayedType !== DISPLAYED_TYPE_TOOLPATH && page !== PAGE_EDITOR && (
-                        <button
-                            type="button"
-                            className="sm-btn-large sm-btn-default"
-                            onClick={this.actions.preview}
-                            style={{ display: 'block', width: '100%', marginBottom: '10px' }}
-                            disabled={inProgress || (!hasToolPathModel ?? false) || disablePreview}
-                        >
-                            {i18n._('Preview')}
-                        </button>
-                    )}
-                    {displayedType !== DISPLAYED_TYPE_TOOLPATH && page === PAGE_EDITOR && (
-                        <button
-                            type="button"
-                            className="sm-btn-large sm-btn-default"
-                            onClick={this.actions.switchToProcess}
-                            style={{ display: 'block', width: '100%', marginBottom: '10px' }}
-                            disabled={!hasModel ?? false}
-                        >
-                            {i18n._('Next')}
-                        </button>
-                    )}
+            <div className={classNames('position-fixed', 'border-radius-bottom-8', 'bottom-8', 'background-color-white', styles['output-wrapper'])}>
+                <div className={classNames('position-re', 'margin-horizontal-16', 'margin-vertical-16')}>
+                    <Button
+                        type="primary"
+                        priority="level-one"
+                        onClick={this.actions.preview}
+                        style={{ displayedType !== DISPLAYED_TYPE_TOOLPATH && page !== PAGE_EDITOR ? 'block' : 'none' }}
+                        disabled={inProgress || (!hasToolPathModel ?? false) || disablePreview}
+                    >
+                        {i18n._('Preview')}
+                    </Button>
+                    <Button
+                        type="primary"
+                        priority="level-one"
+                        onClick={this.actions.switchToProcess}
+                        style={{ displayedType !== DISPLAYED_TYPE_TOOLPATH && page === PAGE_EDITOR ? 'block' : 'none' }}
+                        disabled={!hasModel ?? false}
+                    >
+                        {i18n._('Next')}
+                    </Button>
                     {displayedType === DISPLAYED_TYPE_TOOLPATH && !this.state.showExportOptions && (
-                        <button
-                            type="button"
-                            className="sm-btn-large sm-btn-default"
+                        <Button
+                            type="primary"
+                            priority="level-one"
                             onClick={() => {
                                 this.actions.switchToEditPage();
                                 this.actions.handleMouseOut();
                             }}
-                            style={{ position: 'absolute', bottom: '56px', width: '100%' }}
+                            className={classNames('position-ab', 'bottom-64')}
                         >
                             {i18n._('Back to Object View')}
-                        </button>
+                        </Button>
                     )}
-                    {displayedType === DISPLAYED_TYPE_TOOLPATH && (
-                        <div
-                            onMouseEnter={actions.handleMouseOver}
-                            onMouseLeave={actions.handleMouseOut}
+                    <div
+                        onKeyDown={noop}
+                        role="button"
+                        tabIndex={0}
+                        className={classNames('position-re')}
+                        onMouseEnter={actions.handleMouseOver}
+                        onMouseLeave={actions.handleMouseOut}
+                    >
+                        <Dropdown
+                            overlay={menu}
                         >
-                            <button
-                                type="button"
-                                className="sm-btn-large sm-btn-default"
-                                onClick={actions.onExport}
+                            <Button
+                                type="primary"
+                                priority="level-one"
                                 disabled={inProgress || !hasModel || workflowState === 'running' || isGcodeGenerating || gcodeFile === null}
-                                style={{ position: 'absolute', bottom: '10px', width: '100%' }}
+                                className={classNames(
+                                    'position-ab',
+                                    'bottom-16',
+                                    'margin-top-10',
+                                    displayedType === DISPLAYED_TYPE_TOOLPATH ? 'display-block' : 'display-none'
+                                )}
                             >
-                                {i18n._('Export G-code to File')}
-                            </button>
-                            {this.state.showExportOptions && (
-                                <div style={{ position: 'relative', bottom: '56px', backgroundColor: '#fff', width: '360px' }}>
-                                    <TipTrigger
-                                        title={i18n._('Auto ToolPath Preview')}
-                                        content={i18n._('When enabled, the software will show the preview automatically after the settings are changed. You can disable it if Auto Preview takes too much time.')}
-                                    >
-                                        <div className="sm-parameter-row">
-                                            <span className="sm-parameter-row__label-lg">{i18n._('Auto Toolpath Preview')}</span>
-                                            <input
-                                                type="checkbox"
-                                                className="sm-parameter-row__checkbox"
-                                                disabled={inProgress}
-                                                checked={autoPreviewEnabled}
-                                                onChange={(event) => { actions.setAutoPreview(event.target.checked); }}
-                                            />
-                                        </div>
-                                    </TipTrigger>
-                                    {/*<button*/}
-                                    {/*    type="button"*/}
-                                    {/*    className="sm-btn-large sm-btn-default"*/}
-                                    {/*    onClick={actions.onGenerateGcode}*/}
-                                    {/*    disabled={inProgress || !canGenerateGcode || isGcodeGenerating}*/}
-                                    {/*    style={{ display: 'block', width: '100%', marginTop: '10px' }}*/}
-                                    {/*>*/}
-                                    {/*    {i18n._('Generate G-code')}*/}
-                                    {/*</button>*/}
-                                    <button
-                                        type="button"
-                                        className="sm-btn-large sm-btn-default"
-                                        onClick={actions.onLoadGcode}
-                                        disabled={inProgress || !hasModel || workflowState === 'running' || isGcodeGenerating || gcodeFile === null}
-                                        style={{ display: 'block', width: '100%', marginTop: '10px' }}
-                                    >
-                                        {i18n._('Load G-code to Workspace')}
-                                    </button>
-                                </div>
-                            )}
-                        </div>
-                    )}
+                                {i18n._('Export')}
+                            </Button>
+                        </Dropdown>
+                    </div>
+
                 </div>
                 <Thumbnail
                     ref={this.thumbnail}

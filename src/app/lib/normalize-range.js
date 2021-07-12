@@ -28,6 +28,12 @@ export const limitStringLength = (string, maxLength) => {
 };
 
 export const normalizeNameDisplay = (name, suffixLength = 7) => {
+    if (!name || name.length <= suffixLength) {
+        return {
+            prefixName: name,
+            suffixName: ''
+        };
+    }
     const prefixName = name.slice(0, name.length - suffixLength);
     const suffixName = name.slice(-suffixLength);
     return {

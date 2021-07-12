@@ -1,0 +1,112 @@
+//@import "../../../styles/variables.styl"
+
+.middle{
+    width: 160px;
+}
+.small{
+    width: 120px;
+}
+.slider:global(.ant-slider){
+    color: #EEEFF0;
+    :global(.ant-slider-track) {
+        background-color: #B9DDFF;
+    }
+    :global(.ant-slider-handle){
+        border: solid 2px #B9DDFF;
+    }
+    :global(.ant-slider-rail) {
+        background-color: #EEEFF0;
+    }
+}
+:global(.ant-slider-dot) {
+    top: -3px;
+    width: 10px;
+    height: 10px;
+}
+
+:global(.ant-slider-vertical).slider {
+    margin: 0;
+    padding: 0 3px;
+    :global(.ant-checkbox-inner) {
+        border-radius: 4px;
+        border: 1px solid #B9BCBF;
+    }
+    :global(.ant-slider-track){
+        width: 8px;
+        border-radius: 6px;
+    }
+    :global(.ant-slider-rail){
+        width: 8px;
+        border-radius: 6px;
+        background-color: #D5D6D9;
+    }
+    :global(.ant-slider-handle){
+        margin-left: -8px;
+        width: 24px;
+        height: 24px;
+        border: solid 3px #1890FF;
+    }
+
+    :global(.ant-slider-handle):not(:global(.ant-tooltip-open)){
+        border: solid 3px #91d5ff;
+    }
+}
+//todo move style inside class slide
+:global(.ant-slider):not(:global(.ant-slider-disabled)):hover {
+    :global(.ant-slider-rail) {
+        background-color: #D5D6D9;
+    }
+    :global(.ant-slider-track) {
+        background-color: #1890FF!important;
+    }
+    :global(.ant-slider-handle):not(:global(.ant-tooltip-open)){
+        border-color: #1890FF;
+    }
+    :global(.ant-slider-dot) {
+        border-color: #D5D6D9;
+    }
+    :global(.ant-slider-dot-active) {
+        border-color: #1890FF!important;
+    }
+
+}
+:global(.ant-slider-disabled) :global(div.ant-slider-track) {
+    background-color: #D5D6D9!important;
+}
+:global(.ant-slider-disabled) :global(div.ant-slider-rail) {
+    background-color: #EEEFF0 !important;
+}
+:global(.ant-slider-disabled) :global(span.ant-slider-dot) {
+    border-color: #EEEFF0 !important;
+}
+:global(.ant-slider-disabled) :global(div.ant-slider-handle) {
+    border-color: #D5D6D9 !important;
+}
+:global(.ant-slider-disabled) :global(.ant-slider-handle){
+    border-color: #D5D6D9!important;
+}
+:global(.ant-slider-disabled):hover {
+    :global(.ant-slider-rail) {
+        background-color: #f5f5f5!important;
+    }
+}
+:global(.ant-slider-dot-active) {
+    border-color: #91d5ff!important;
+}
+:global(.is-black) :global(.ant-slider) {
+    margin: 6px;
+    :global(.ant-slider-track) {
+        background-color: #85888C;
+    }
+    :global(.ant-slider-handle){
+        border-color: #85888C;
+    }
+    &:not(:global(.ant-slider-disabled)):hover {
+        :global(.ant-slider-track) {
+            background-color: #85888C!important;
+        }
+        :global(.ant-slider-handle):not(:global(.ant-tooltip-open)){
+            border-color: #85888C;
+        }
+    }
+}

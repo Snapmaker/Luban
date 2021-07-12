@@ -6,6 +6,7 @@ import TipTrigger from '../../../components/TipTrigger';
 import { NumberInput as Input } from '../../../components/Input';
 import { TOOLPATH_TYPE_VECTOR } from '../../../../constants';
 import Select from '../../../components/Select';
+import Checkbox from '../../../components/Checkbox';
 import { toHump } from '../../../../../shared/lib/utils';
 
 function SettingItem(props) {
@@ -41,36 +42,33 @@ function SettingItem(props) {
     }
 
     return (
-        <div key={settingName} className="sm-parameter-row">
-            <TipTrigger
-                title={i18n._(label)}
-                content={i18n._(content)}
-            >
-                <span className="sm-parameter-row__label-lg">{i18n._(label)}</span>
+        <TipTrigger
+            title={i18n._(label)}
+            content={i18n._(content)}
+        >
+            <div key={settingName} className="sm-flex height-32 margin-vertical-8 justify-space-between">
+                <span className="sm-flex-auto sm-flex-order-negative">{i18n._(label)}</span>
                 {type === 'bool' && (
-                    <input
-                        type="checkbox"
-                        className="sm-parameter-row__checkbox"
+                    <Checkbox
+                        className="align-r"
                         checked={defaultValue}
-                        onClick={() => {
+                        onChange={(event) => {
                             if (setting.isGcodeConfig) {
                                 const gcodeOptions = {};
-                                gcodeOptions[toHump(settingName)] = !defaultValue;
+                                gcodeOptions[toHump(settingName)] = event.target.checked;
                                 updateGcodeConfig(gcodeOptions);
                             } else {
-                                updateToolConfig(toHump(settingName), !defaultValue);
+                                updateToolConfig(toHump(settingName), event.target.checked);
                             }
                         }}
-                        // disabled={isToolParams(settingName)}
                     />
                 )}
                 {type === 'float' && (
                     <Input
-                        className="sm-parameter-row__input"
                         value={defaultValue}
                         min={min}
                         max={max}
-                        style={{ width: '160px' }}
+                        className="sm-flex-width align-r"
                         onChange={value => {
                             if (setting.isGcodeConfig) {
                                 const gcodeOptions = {};
@@ -85,10 +83,11 @@ function SettingItem(props) {
                 )}
                 {type === 'enum' && (
                     <Select
-                        className="sm-parameter-row__input"
                         clearable={false}
                         searchable={false}
                         name={i18n._(label)}
+                        size="small"
+                        className="sm-flex-width align-r"
                         options={optionsArray}
                         value={defaultValue}
                         onChange={(value) => {
@@ -103,9 +102,10 @@ function SettingItem(props) {
                         disabled={isToolParams(settingName)}
                     />
                 )}
-                <span className="sm-parameter-row__input-unit">{unit}</span>
-            </TipTrigger>
-        </div>
+                <span className="sm-flex__input-unit-40">{unit}</span>
+            </div>
+        </TipTrigger>
+
     );
 }
 SettingItem.propTypes = {
@@ -126,7 +126,7 @@ function ToolParameters(props) {
         <div>
             <React.Fragment>
                 {settings && (
-                    <div className="sm-parameter-container">
+                    <div>
                         {(Object.keys(settings).map(key => {
                             const setting = settings[key];
                             return (
@@ -140,7 +140,6 @@ function ToolParameters(props) {
                                 />
                             );
                         }))}
-
                     </div>
                 )}
             </React.Fragment>

@@ -8,12 +8,12 @@ import Checkbox from '../Checkbox';
 
 // TODO: to be improved
 const OptionalDropdown = (props) => {
-    const { hidden, title, titleTip, onClick, disabled = false, children, ...rest } = props;
+    const { hidden, title, titletip, onClick, disabled = false, children, ...rest } = props;
 
     return (
         <div>
             <div className={classNames(styles['expandable-start'], { [styles.show]: !hidden })}>
-                <TipTrigger {...rest} title={title} content={titleTip}>
+                <TipTrigger {...rest} title={title} content={titletip}>
                     <div className={styles['expandable-title']}>
                         <Anchor
                             onClick={onClick}
@@ -43,7 +43,7 @@ const OptionalDropdown = (props) => {
 
 OptionalDropdown.propTypes = {
     title: PropTypes.string.isRequired,
-    titleTip: PropTypes.string,
+    titletip: PropTypes.string,
     children: PropTypes.node.isRequired,
     onClick: PropTypes.func.isRequired,
     disabled: PropTypes.bool,

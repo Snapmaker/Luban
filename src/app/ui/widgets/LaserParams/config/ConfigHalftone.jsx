@@ -1,7 +1,7 @@
 import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
-import Slider from 'rc-slider';
+import Slider from '../../../components/Slider';
 import Select from '../../../components/Select';
 
 import i18n from '../../../../lib/i18n';
@@ -52,42 +52,46 @@ class ConfigHalftone extends PureComponent {
             <div>
                 {this.state.expanded && (
                     <React.Fragment>
-                        <div className="sm-parameter-row">
-                            <span className="sm-parameter-row__label">{i18n._('Type')}</span>
-
-                            <div style={{ float: 'right', display: 'inline-block', width: '50%' }}>
-                                <Select
-                                    clearable={false}
-                                    options={[{
-                                        value: 'line',
-                                        label: i18n._('Line')
-                                    }, {
-                                        value: 'round',
-                                        label: i18n._('Round')
-                                    }, {
-                                        value: 'diamond',
-                                        label: i18n._('Diamond')
-                                    }]}
-                                    value={npType}
-                                    searchable={false}
-                                    onChange={({ value }) => {
-                                        this.actions.onChangeType(value);
-                                        this.props.processSelectedModel();
-                                    }}
-                                />
-
-                            </div>
-
+                        <div className="sm-flex height-32 margin-vertical-8">
+                            <span className="sm-flex-width">{i18n._('Type')}</span>
+                            <Select
+                                clearable={false}
+                                options={[{
+                                    value: 'line',
+                                    label: i18n._('Line')
+                                }, {
+                                    value: 'round',
+                                    label: i18n._('Round')
+                                }, {
+                                    value: 'diamond',
+                                    label: i18n._('Diamond')
+                                }]}
+                                value={npType}
+                                searchable={false}
+                                onChange={({ value }) => {
+                                    this.actions.onChangeType(value);
+                                    this.props.processSelectedModel();
+                                }}
+                            />
                         </div>
                         <TipTrigger
                             title={i18n._('Size')}
                             content={i18n._('Set halftone size')}
                         >
-                            <div className="sm-parameter-row">
-                                <span className="sm-parameter-row__label">{i18n._('Size')}</span>
+                            <div className="sm-flex height-32 margin-vertical-8">
+                                <span className="sm-flex-width">{i18n._('Size')}</span>
+                                <Slider
+                                    disabled={disabled}
+                                    size="middle"
+                                    value={npSize}
+                                    min={5}
+                                    max={50}
+                                    onChange={this.actions.onChangeSize}
+                                    onAfterChange={this.props.processSelectedModel}
+                                />
                                 <NumberInput
                                     disabled={disabled}
-                                    className="sm-parameter-row__slider-input"
+                                    size="super-small"
                                     value={npSize}
                                     min={5}
                                     max={50}
@@ -96,27 +100,26 @@ class ConfigHalftone extends PureComponent {
                                         this.props.processSelectedModel();
                                     }}
                                 />
-                                <Slider
-                                    disabled={disabled}
-                                    className="sm-parameter-row__slider"
-                                    value={npSize}
-                                    min={5}
-                                    max={50}
-                                    onChange={this.actions.onChangeSize}
-                                    onAfterChange={this.props.processSelectedModel}
-                                />
-
                             </div>
                         </TipTrigger>
                         <TipTrigger
                             title={i18n._('Angle')}
                             content={i18n._('Set Halftone rotation angle')}
                         >
-                            <div className="sm-parameter-row">
-                                <span className="sm-parameter-row__label">{i18n._('Angle')}</span>
+                            <div className="sm-flex height-32 margin-vertical-8">
+                                <span className="sm-flex-width">{i18n._('Angle')}</span>
+                                <Slider
+                                    disabled={disabled}
+                                    size="middle"
+                                    value={npAngle}
+                                    min={0}
+                                    max={180}
+                                    onChange={this.actions.onChangeAngle}
+                                    onAfterChange={this.props.processSelectedModel}
+                                />
                                 <NumberInput
                                     disabled={disabled}
-                                    className="sm-parameter-row__slider-input"
+                                    size="super-small"
                                     value={npAngle}
                                     min={0}
                                     max={180}
@@ -125,27 +128,26 @@ class ConfigHalftone extends PureComponent {
                                         this.props.processSelectedModel();
                                     }}
                                 />
-                                <Slider
-                                    disabled={disabled}
-                                    className="sm-parameter-row__slider"
-                                    value={npAngle}
-                                    min={0}
-                                    max={180}
-                                    onChange={this.actions.onChangeAngle}
-                                    onAfterChange={this.props.processSelectedModel}
-                                />
-
                             </div>
                         </TipTrigger>
                         <TipTrigger
                             title={i18n._('Threshold')}
                             content={i18n._('Color over threshold will turn to white')}
                         >
-                            <div className="sm-parameter-row">
-                                <span className="sm-parameter-row__label">{i18n._('Threshold')}</span>
+                            <div className="sm-flex height-32 margin-vertical-8">
+                                <span className="sm-flex-width">{i18n._('Threshold')}</span>
+                                <Slider
+                                    disabled={disabled}
+                                    size="middle"
+                                    value={threshold}
+                                    min={0}
+                                    max={255}
+                                    onChange={this.actions.onChangeBWThreshold}
+                                    onAfterChange={this.props.processSelectedModel}
+                                />
                                 <NumberInput
                                     disabled={disabled}
-                                    className="sm-parameter-row__slider-input"
+                                    size="super-small"
                                     value={threshold}
                                     min={0}
                                     max={255}
@@ -154,16 +156,6 @@ class ConfigHalftone extends PureComponent {
                                         this.props.processSelectedModel();
                                     }}
                                 />
-                                <Slider
-                                    disabled={disabled}
-                                    className="sm-parameter-row__slider"
-                                    value={threshold}
-                                    min={0}
-                                    max={255}
-                                    onChange={this.actions.onChangeBWThreshold}
-                                    onAfterChange={this.props.processSelectedModel}
-                                />
-
                             </div>
                         </TipTrigger>
                     </React.Fragment>

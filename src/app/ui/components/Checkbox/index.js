@@ -1,3 +1,3 @@
-import '@trendmicro/react-checkbox/dist/react-checkbox.css';
+import CheckboxWrapper from './CheckboxWrapper';
 
-export { Checkbox as default } from '@trendmicro/react-checkbox';
+export default CheckboxWrapper;

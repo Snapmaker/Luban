@@ -1,34 +1,34 @@
 import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
-import Slider from 'rc-slider';
 import { connect } from 'react-redux';
 import classNames from 'classnames';
+import Slider from '../../components/Slider';
 import Anchor from '../../components/Anchor';
 import styles from './styles.styl';
 import { actions as printingActions } from '../../../flux/printing';
 
 
 // custom handle
-const Handle = (props) => {
-    const { offset, dragging } = props;
-    const bottom = offset === 100 ? '114%' : `${offset}%`;
-
-    const elStyle = {
-        bottom: bottom,
-        opacity: dragging ? '.5' : '1'
-    };
-
-    return (
-        <div
-            style={elStyle}
-            className={classNames('fa', 'fa-bars', styles['vertical-handle'])}
-        />
-    );
-};
-Handle.propTypes = {
-    offset: PropTypes.number,
-    dragging: PropTypes.bool
-};
+// const Handle = (props) => {
+//     const { offset, dragging } = props;
+//     const bottom = offset === 100 ? '114%' : `${offset}%`;
+//
+//     const elStyle = {
+//         bottom: bottom,
+//         opacity: dragging ? '.5' : '1'
+//     };
+//
+//     return (
+//         <div
+//             style={elStyle}
+//             className={classNames('fa', 'fa-bars', styles['vertical-handle'])}
+//         />
+//     );
+// };
+// Handle.propTypes = {
+//     offset: PropTypes.number,
+//     dragging: PropTypes.bool
+// };
 
 
 class VisualizerPreviewControl extends PureComponent {
@@ -128,7 +128,7 @@ class VisualizerPreviewControl extends PureComponent {
 
         return (
             <React.Fragment>
-                <span className={styles['layer-label']}>{this.props.layerCountDisplayed}</span>
+                <span className={styles['layer-label']}>{layerCountDisplayed}</span>
                 <div
                     style={{
                         position: 'relative',
@@ -139,13 +139,6 @@ class VisualizerPreviewControl extends PureComponent {
                     <Slider
                         className={styles['vertical-slider']}
                         vertical
-                        handle={Handle}
-                        trackStyle={{
-                            backgroundColor: '#eaeaea'
-                        }}
-                        railStyle={{
-                            backgroundColor: '#eaeaea'
-                        }}
                         min={0}
                         max={layerCount}
                         step={1}

@@ -1,9 +1,9 @@
 import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
-import Slider from 'rc-slider';
+import Slider from '../../../components/Slider';
 import Select from '../../../components/Select';
-
+import Checkbox from '../../../components/Checkbox';
 import i18n from '../../../../lib/i18n';
 import { NumberInput as Input } from '../../../components/Input';
 import TipTrigger from '../../../components/TipTrigger';
@@ -55,12 +55,11 @@ class ConfigGreyscale extends PureComponent {
                 {this.state.expanded && (
                     <React.Fragment>
                         <div>
-                            <div className="sm-parameter-row">
-                                <span className="sm-parameter-row__label">{i18n._('Invert')}</span>
-                                <input
+                            <div className="sm-flex height-32 margin-vertical-8">
+                                <span className="sm-flex-width">{i18n._('Invert')}</span>
+                                <Checkbox
                                     disabled={disabled}
-                                    type="checkbox"
-                                    className="sm-parameter-row__checkbox"
+                                    className="sm-flex-auto"
                                     checked={invert}
                                     onChange={() => {
                                         this.actions.onInverseBW();
@@ -72,11 +71,20 @@ class ConfigGreyscale extends PureComponent {
                                 title={i18n._('Contrast')}
                                 content={i18n._('The difference between the lightest color and the darkest color.')}
                             >
-                                <div className="sm-parameter-row">
-                                    <span className="sm-parameter-row__label">{i18n._('Contrast')}</span>
+                                <div className="sm-flex height-32 margin-vertical-8">
+                                    <span className="sm-flex-width">{i18n._('Contrast')}</span>
+                                    <Slider
+                                        disabled={disabled}
+                                        size="middle"
+                                        value={contrast}
+                                        min={0}
+                                        max={100}
+                                        onChange={this.actions.onChangeContrast}
+                                        onAfterChange={this.props.processSelectedModel}
+                                    />
                                     <Input
                                         disabled={disabled}
-                                        className="sm-parameter-row__slider-input"
+                                        size="super-small"
                                         value={contrast}
                                         min={0}
                                         max={100}
@@ -85,15 +93,6 @@ class ConfigGreyscale extends PureComponent {
                                             this.props.processSelectedModel();
                                         }}
                                     />
-                                    <Slider
-                                        disabled={disabled}
-                                        className="sm-parameter-row__slider"
-                                        value={contrast}
-                                        min={0}
-                                        max={100}
-                                        onChange={this.actions.onChangeContrast}
-                                        onAfterChange={this.props.processSelectedModel}
-                                    />
                                 </div>
                             </TipTrigger>
 
@@ -101,11 +100,20 @@ class ConfigGreyscale extends PureComponent {
                                 title={i18n._('Brightness')}
                                 content={i18n._('The engraved picture is brighter when this value is larger.')}
                             >
-                                <div className="sm-parameter-row">
-                                    <span className="sm-parameter-row__label">{i18n._('Brightness')}</span>
+                                <div className="sm-flex height-32 margin-vertical-8">
+                                    <span className="sm-flex-width">{i18n._('Brightness')}</span>
+                                    <Slider
+                                        size="middle"
+                                        disabled={disabled}
+                                        value={brightness}
+                                        min={0}
+                                        max={100}
+                                        onChange={this.actions.onChangeBrightness}
+                                        onAfterChange={this.props.processSelectedModel}
+                                    />
                                     <Input
                                         disabled={disabled}
-                                        className="sm-parameter-row__slider-input"
+                                        size="super-small"
                                         value={brightness}
                                         min={0}
                                         max={100}
@@ -114,26 +122,27 @@ class ConfigGreyscale extends PureComponent {
                                             this.props.processSelectedModel();
                                         }}
                                     />
-                                    <Slider
-                                        disabled={disabled}
-                                        className="sm-parameter-row__slider"
-                                        value={brightness}
-                                        min={0}
-                                        max={100}
-                                        onChange={this.actions.onChangeBrightness}
-                                        onAfterChange={this.props.processSelectedModel}
-                                    />
                                 </div>
                             </TipTrigger>
                             <TipTrigger
                                 title={i18n._('White Clip')}
                                 content={i18n._('Set the threshold to turn the color that is not pure white into pure white.')}
                             >
-                                <div className="sm-parameter-row">
-                                    <span className="sm-parameter-row__label">{i18n._('White Clip')}</span>
+
+                                <div className="sm-flex height-32 margin-vertical-8">
+                                    <span className="sm-flex-width">{i18n._('White Clip')}</span>
+                                    <Slider
+                                        disabled={disabled}
+                                        size="middle"
+                                        value={whiteClip}
+                                        min={0}
+                                        max={255}
+                                        onChange={this.actions.onChangeWhiteClip}
+                                        onAfterChange={this.props.processSelectedModel}
+                                    />
                                     <Input
                                         disabled={disabled}
-                                        className="sm-parameter-row__slider-input"
+                                        size="super-small"
                                         value={whiteClip}
                                         min={0}
                                         max={255}
@@ -142,27 +151,19 @@ class ConfigGreyscale extends PureComponent {
                                             this.props.processSelectedModel();
                                         }}
                                     />
-                                    <Slider
-                                        disabled={disabled}
-                                        className="sm-parameter-row__slider"
-                                        value={whiteClip}
-                                        min={0}
-                                        max={255}
-                                        onChange={this.actions.onChangeWhiteClip}
-                                        onAfterChange={this.props.processSelectedModel}
-                                    />
                                 </div>
                             </TipTrigger>
                             <TipTrigger
                                 title={i18n._('Algorithm')}
                                 content={i18n._('Choose an algorithm for image processing.')}
                             >
-                                <div className="sm-parameter-row">
-                                    <span className="sm-parameter-row__label">{i18n._('Algorithm')}</span>
+
+                                <div className="sm-flex height-32 margin-vertical-8">
+                                    <span className="sm-flex-width">{i18n._('Algorithm')}</span>
                                     <Select
                                         disabled={disabled}
                                         backspaceRemoves={false}
-                                        className="sm-parameter-row__select-lg"
+                                        size="large"
                                         clearable={false}
                                         menuContainerStyle={{ zIndex: 5 }}
                                         name="algorithm"

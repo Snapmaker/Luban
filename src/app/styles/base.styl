@@ -1,6 +1,7 @@
 // ==========================================================================
 // Base styles: opinionated defaults
 // ==========================================================================
+@import './global-var.styl';
 
 body {
     margin: 0;
@@ -13,6 +14,12 @@ body {
 
     @media (max-width: 767px) {
         min-width: 0;
+    }
+    a {
+        color: $black-3;
+        &:hover {
+            color: $black-4;
+        }
     }
 }
 

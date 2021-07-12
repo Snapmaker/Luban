@@ -1,0 +1,33 @@
+@import "../../../styles/global-var.styl"
+
+.checkbox {
+    :global(.ant-checkbox-inner) {
+        border-radius: 4px;
+        border: 1px solid #B9BCBF;
+    }
+    :global(.ant-checkbox-checked)::after {
+        border-radius: 4px;
+    }
+    :global(.ant-checkbox-disabled) {
+        :global(.ant-checkbox-inner) {
+            background-color: $grey-3;
+            color: $grey-1;
+            border-color: $grey-1 !important;
+            &::after {
+                border-color: $grey-1;
+            }
+        }
+    }
+}
+
+.hollow {
+    :global(.ant-checkbox-inner) {
+        background-color: #fff !important;
+        border-color: $black-5 !important;
+    }
+    :global(.ant-checkbox-inner)::after {
+        border: 1px solid $black-5 !important;
+        border-top: 0 !important;
+        border-left: 0 !important;
+    }
+}

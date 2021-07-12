@@ -1,25 +1,46 @@
 @import "../../../styles/variables.styl"
+@import "../../../styles/global-var.styl"
 
 input[type=number]::-webkit-inner-spin-button,
 input[type=number]::-webkit-outer-spin-button {
     -webkit-appearance: none;
     margin: 0;
 }
-
+.large{
+    width: 160px;
+}
+.middle{
+    width: 120px;
+}
+.small{
+    width: 96px;
+}
+.super-small{
+    width: 56px;
+}
+.override-textArea{
+    display: inline-block;
+    vertical-align: top;
+    .textarea {
+        border-radius: 8px;
+        border: 1px solid #B9BCBF;
+    }
+}
 .input
-    height: 30px
-    width: 100%
-    padding: 6px 12px
-    font-size: 13px
-    line-height: 1.42857143
-    color: $text-color
-    border-width: $border-width
-    border-style: solid
-    border-radius: $border-radius
-    border-color: $grey-color2
+    height: 32px;
+    border-radius: 8px!important;
+    border: 1px solid #B9BCBF;
+    padding: 8px!important;
+    lineHeight: 16px;
+    color: #545659!important;
+    font-size: 14px;
 
     &[disabled]
         cursor: not-allowed
-        opacity: .65
-        background-color: $grey-color3
+        background-color: #F5F5F7!important;
+        border: 1px solid #D5D6D9!important;
+        color: #B9BCBF!important;
 
+:global(.ant-input-suffix) {
+    color: $black-5;
+}

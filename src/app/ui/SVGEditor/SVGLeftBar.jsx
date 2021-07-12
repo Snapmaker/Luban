@@ -3,6 +3,7 @@ import PropTypes from 'prop-types';
 import classNames from 'classnames';
 import _ from 'lodash';
 import Anchor from '../components/Anchor';
+import SvgIcon from '../components/SvgIcon';
 import styles from './index.styl';
 import { library } from './lib/ext-shapes';
 
@@ -46,64 +47,67 @@ class SVGLeftBar extends PureComponent {
     render() {
         const { mode, editable } = this.props;
         const { showExtShape, extShape } = this.state;
-
         return (
             <React.Fragment>
                 <div className={classNames(styles['svg-left-bar'])}>
-                    <div className={styles['center-tool']}>
+                    <div className={classNames('position-ab', 'height-100', 'border-radius-8', styles['center-tool'])}>
                         <input
                             ref={this.props.fileInput}
                             type="file"
                             accept={this.props.allowedFiles}
-                            style={{ display: 'none' }}
+                            className="display-none"
                             multiple={false}
                             onChange={this.props.onChangeFile}
                             disabled={!editable}
                         />
-                        <Anchor
-                            componentClass="button"
-                            className={classNames(styles['btn-center'],
-                                { [styles.selected]: (mode === 'add') })}
+                        <SvgIcon
+                            size={56}
+                            name="ToolbarOpen"
+                            disabled={!editable}
+                            className={
+                                classNames('border-radius-top-8', 'background-transparent', 'border-0', 'padding-0', 'position-re',
+                                    { [styles.selected]: (mode === 'add') })}
                             onClick={() => this.props.onClickToUpload()}
+                        />
+
+                        <SvgIcon
+                            size={56}
+                            name="ToolbarSelect"
                             disabled={!editable}
-                        >
-                            <i className={styles['btn-add']} />
-                        </Anchor>
-                        <Anchor
-                            componentClass="button"
-                            className={classNames(styles['btn-center'],
-                                { [styles.selected]: (mode === 'select') })}
-                            onClick={() => this.actions.setMode('select')}
+                            className={
+                                classNames('background-transparent', 'border-0', 'padding-0', 'position-re',
+                                    { [styles.selected]: (mode === 'select') })}
+                            onClick={() => this.props.setMode('select')}
+                        />
+                        <SvgIcon
+                            size={56}
+                            name="ToolbarRectangle"
                             disabled={!editable}
-                        >
-                            <i className={styles['btn-select']} />
-                        </Anchor>
-                        <Anchor
-                            componentClass="button"
-                            className={classNames(styles['btn-center'],
-                                { [styles.selected]: mode === 'rect' })}
-                            onClick={() => this.actions.setMode('rect')}
+                            className={
+                                classNames('background-transparent', 'border-0', 'padding-0', 'position-re',
+                                    { [styles.selected]: (mode === 'rect') })}
+                            onClick={() => this.props.setMode('rect')}
+                        />
+
+                        <SvgIcon
+                            size={56}
+                            name="ToolbarOval"
                             disabled={!editable}
-                        >
-                            <i className={styles['btn-rectangle']} />
-                        </Anchor>
-                        <Anchor
-                            componentClass="button"
-                            className={classNames(styles['btn-center'],
-                                { [styles.selected]: mode === 'ellipse' })}
-                            onClick={() => this.actions.setMode('ellipse')}
+                            className={
+                                classNames('background-transparent', 'border-0', 'padding-0', 'position-re',
+                                    { [styles.selected]: (mode === 'ellipse') })}
+                            onClick={() => this.props.setMode('ellipse')}
+                        />
+
+                        <SvgIcon
+                            size={56}
+                            name="ToolbarText"
                             disabled={!editable}
-                        >
-                            <i className={classNames(styles['btn-round'])} />
-                        </Anchor>
-                        <Anchor
-                            componentClass="button"
-                            className={styles['btn-center']}
+                            className={
+                                classNames('background-transparent', 'border-0', 'padding-0', 'position-re',)}
                             onClick={this.actions.onClickInsertText}
-                            disabled={!editable}
-                        >
-                            <i className={styles['btn-text']} />
-                        </Anchor>
+                        />
+                        {/* todo: refactor style*/}
                         { showExtShape && (
                             <Anchor
                                 componentClass="button"

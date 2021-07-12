@@ -2,6 +2,7 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import i18n from '../../../lib/i18n';
 import TipTrigger from '../../components/TipTrigger';
+import Checkbox from '../../components/Checkbox';
 
 function CheckboxItem({ definitionKey, settings, calculateTextIndex = () => 0, defaultValue, width = 'auto', isDefinitionEditable = () => true, onChangeDefinition }) {
     const setting = settings[definitionKey];
@@ -9,17 +10,16 @@ function CheckboxItem({ definitionKey, settings, calculateTextIndex = () => 0, d
 
     return (
         <TipTrigger title={i18n._(label)} content={i18n._(description)} key={definitionKey}>
-            <div className="sm-parameter-row">
-                <input
-                    className="sm-parameter-row__checkbox"
+            <div className="sm-flex height-32 margin-vertical-8 justify-space-between">
+                <Checkbox
+                    className="sm-flex-width"
                     style={{ width: width, cursor: !isDefinitionEditable(definitionKey) ? 'not-allowed' : 'default' }}
-                    type="checkbox"
                     checked={defaultValue}
                     disabled={!isDefinitionEditable(definitionKey)}
                     onChange={(event) => onChangeDefinition(definitionKey, event.target.checked)}
                 />
                 <span
-                    className="sm-parameter-row__label-lg"
+                    className="sm-flex-auto"
                     style={{ textIndent: calculateTextIndex(definitionKey) }}
                 >
                     {i18n._(label)}

@@ -1,6 +1,7 @@
 import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
 import classNames from 'classnames';
+// import Slider from '../../../components/Slider';
 import { ABSENT_VALUE, TOOLPATH_TYPE_IMAGE, TOOLPATH_TYPE_VECTOR } from '../../../../constants';
 import i18n from '../../../../lib/i18n';
 import { NumberInput as Input } from '../../../components/Input';
@@ -61,10 +62,10 @@ class GcodeParameters extends PureComponent {
                 )}
                 {isSVG && (
                     <div>
-                        {/*<TipTrigger*/}
+                        {/* <TipTrigger*/}
                         {/*    title={i18n._('Optimize Path')}*/}
                         {/*    content={i18n._('Optimizes the path based on the proximity of the lines in the image.')}*/}
-                        {/*>*/}
+                        {/* >*/}
                         {/*    <div className="sm-parameter-row">*/}
                         {/*        <span className="sm-parameter-row__label">{i18n._('Optimize Path')}</span>*/}
                         {/*        <input*/}
@@ -74,7 +75,7 @@ class GcodeParameters extends PureComponent {
                         {/*            onClick={() => { this.props.updateGcodeConfig({ optimizePath: !optimizePath }); }}*/}
                         {/*        />*/}
                         {/*    </div>*/}
-                        {/*</TipTrigger>*/}
+                        {/* </TipTrigger>*/}
                         <span>{i18n._('Fill')}</span>
                         <div className={classNames(widgetStyles.separator)} style={{ margin: '16px 0' }} />
                         <div
@@ -92,6 +93,11 @@ class GcodeParameters extends PureComponent {
                                         style={{ width: '160px' }}
                                         value={fillDensity}
                                         min={0}
+                                        marks={
+                                            {
+                                                10: ''
+                                            }
+                                        }
                                         max={20}
                                         onChange={(value) => { this.props.updateGcodeConfig({ fillDensity: value }); }}
                                     />
@@ -187,7 +193,7 @@ class GcodeParameters extends PureComponent {
                     <div
                         style={{ marginTop: '10px', marginBottom: '10px' }}
                         title={i18n._('Multi-pass')}
-                        titleTip={i18n._('When enabled, the printer will run the G-code multiple times automatically according to the below settings. This feature helps you cut materials that can\'t be cut with only one pass.')}
+                        titletip={i18n._('When enabled, the printer will run the G-code multiple times automatically according to the below settings. This feature helps you cut materials that can\'t be cut with only one pass.')}
                     >
                         <TipTrigger
                             title={i18n._('Number of Passes')}
@@ -231,7 +237,7 @@ class GcodeParameters extends PureComponent {
                     <div
                         style={{ marginTop: '10px' }}
                         title={i18n._('Fixed Power')}
-                        titleTip={i18n._('When enabled, the power used to engrave this image will be set in the G-code, so it is not affected by the power you set in Workspace. When engraving multiple images, you can set the power for each image separately.')}
+                        titletip={i18n._('When enabled, the power used to engrave this image will be set in the G-code, so it is not affected by the power you set in Workspace. When engraving multiple images, you can set the power for each image separately.')}
                     >
                         <span>{i18n._('Power')}</span>
                         <div className={classNames(widgetStyles.separator)} style={{ margin: '16px 0' }} />

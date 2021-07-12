@@ -1,6 +1,9 @@
 import PropTypes from 'prop-types';
 import React, { PureComponent } from 'react';
 import * as Icons from 'snapmaker-react-icon';
+import classNames from 'classnames';
+import includes from 'lodash/includes';
+import { noop } from 'lodash';
 import Anchor from '../Anchor';
 
 class SvgIcon extends PureComponent {
@@ -15,7 +18,15 @@ class SvgIcon extends PureComponent {
         spanText: PropTypes.string,
         spanClassName: PropTypes.string,
         size: PropTypes.number,
-        inputInfo: PropTypes.object
+        inputInfo: PropTypes.object,
+        /** type value:
+         * 1. hoverNormal: isHovered background: #EEEFF0, color: the same as this.props.color;
+         * 2. hoverNoBackground: isHovered background: transparent, color: #2A2C2E;
+         * 3. pressNormal: isPressed background: #D5D6D9, color: #545659;
+         * 4. pressSpecial: isPressed background: #E7F3FF, color: #74BCFF;
+         * 5. static: no change
+         */
+        type: PropTypes.array
     };
 
     static defaultProps = {
@@ -23,7 +34,8 @@ class SvgIcon extends PureComponent {
     }
 
     state = {
-        isHovered: false
+        isHovered: false,
+        isPressed: false
     }
 
     actions = {
@@ -36,11 +48,21 @@ class SvgIcon extends PureComponent {
             this.setState({
                 isHovered: false
             });
+        },
+        handleMouseDown: () => {
+            this.setState({
+                isPressed: true
+            });
+        },
+        handleMouseUp: () => {
+            this.setState({
+                isPressed: false
+            });
         }
     };
 
     render() {
-        const { isHovered } = this.state;
+        const { isHovered, isPressed } = this.state;
         const {
             className,
             title,
@@ -49,18 +71,38 @@ class SvgIcon extends PureComponent {
             onClick,
             spanText,
             spanClassName,
-            color,
             isHorizontal,
             inputInfo,
+            type = ['static'],
             ...props
         } = this.props;
+        let {
+            color = '#85888C'
+        } = this.props;
+        let iconBackground = 'transparent';
         const Component = Icons[name];
         if (!Component) {
-            console.error(`Can't find the icon named '${name}', please check your icon name`);
+            console.log(`Can't find the icon named '${name}', please check your icon name`);
+            return null;
+        }
+        const hoverBackgroundColor = includes(type, 'hoverNoBackground') ? 'transparent' : '#EEEFF0';
+        const hoverIconColor = includes(type, 'hoverNoBackground') ? '#2A2C2E' : color;
+        const pressedBackground = includes(type, 'pressSpecial') ? '#E7F3FF' : '#D5D6D9';// '#D5D6D9'
+        const pressedIconColor = includes(type, 'pressSpecial') ? '#1890FF' : '#545659'; // '#545659'
+        const isStaticIcon = includes(type, 'static');
+        if (isHovered && !isPressed) {
+            color = isStaticIcon ? color : hoverIconColor;
+            iconBackground = isStaticIcon ? 'transparent' : hoverBackgroundColor;
+        } else if (isPressed && isHovered) {
+            color = (isStaticIcon || includes(type, 'hoverNoBackground')) ? color : pressedIconColor;
+            iconBackground = (isStaticIcon || includes(type, 'hoverNoBackground')) ? 'transparent' : pressedBackground;
+        } else {
+            iconBackground = 'transparent';
+            color = '#85888C';
         }
 
         return (
-            <span>
+            <span style={{ verticalAlign: 'top' }}>
                 { inputInfo !== undefined && (
                     <input
                         ref={inputInfo.fileInput}
@@ -71,21 +113,27 @@ class SvgIcon extends PureComponent {
                         onChange={inputInfo.onChange}
                     />
                 )}
-                <Anchor
-                    className={className}
+                <div
+                    className={classNames(className, 'display-inline')}
                     title={title}
                     disabled={disabled}
+                    onKeyDown={noop}
+                    role="button"
+                    tabIndex={0}
                     onClick={onClick}
                     onFocus={() => 0}
                     onBlur={() => 0}
                     onMouseEnter={this.actions.handleMouseOver}
                     onMouseLeave={this.actions.handleMouseOut}
+                    onMouseDown={this.actions.handleMouseDown}
+                    onMouseUp={this.actions.handleMouseUp}
                 >
                     {Component && (
                         <Component
                             {...props}
                             disabled={disabled}
-                            color={isHovered ? '#272829' : color}
+                            color={disabled ? '#D5D6D9' : color}
+                            style={{ background: iconBackground }}
                         />
                     )}
                     { spanText && isHorizontal && (
@@ -98,7 +146,7 @@ class SvgIcon extends PureComponent {
                             {spanText}
                         </div>
                     )}
-                </Anchor>
+                </div>
             </span>
         );
     }
