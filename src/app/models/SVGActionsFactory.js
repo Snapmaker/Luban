@@ -652,8 +652,10 @@ class SVGActionsFactory {
 
             const svgModel = this.modelGroup.addModel(options);
             svgModel.setParent(this.svgContentGroup.group);
+            return svgModel;
         } catch (e) {
             console.error(e);
+            return null;
         }
     }
 

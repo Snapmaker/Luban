@@ -28,6 +28,8 @@ import { machineStore } from '../../store/local-storage';
 
 import { CNC_LASER_STAGE } from './utils';
 import VisibleOperation2D from '../operation-history/VisibleOperation2D';
+import AddOperation2D from '../operation-history/AddOperation2D';
+import DeleteOperation2D from '../operation-history/DeleteOperation2D';
 import { actions as operationHistoryActions } from '../operation-history';
 import Operations from '../operation-history/Operations';
 
@@ -686,22 +688,40 @@ export const actions = {
     removeSelectedModel: (headType) => (dispatch, getState) => {
         const { modelGroup, SVGActions, toolPathGroup } = getState()[headType];
 
-        const { selectedModelIDArray } = modelGroup.getState();
-        const toolPaths = toolPathGroup.getToolPaths();
-        toolPaths.forEach((item) => {
-            for (const id of selectedModelIDArray) {
-                if (item.modelIDs.includes(id)) {
-                    const index = item.modelIDs.indexOf(id);
+        const operations = new Operations();
+        for (const svgModel of modelGroup.getSelectedModelArray()) {
+            const operation = new DeleteOperation2D({
+                target: svgModel,
+                svgActions: SVGActions,
+                toolPathGroup,
+                toolPaths: toolPathGroup.toolPaths.filter((item) => {
+                    const index = item.modelIDs.indexOf(svgModel.elem.id);
                     if (index > -1) {
                         item.modelIDs.splice(index, 1);
                     }
-                }
-            }
-        });
+                    return true;
+                })
+            });
+            operations.push(operation);
+        }
+
+        // const { selectedModelIDArray } = modelGroup.getState();
+        // const toolPaths = toolPathGroup.getToolPaths();
+        // toolPaths.forEach((item) => {
+        //     for (const id of selectedModelIDArray) {
+        //         if (item.modelIDs.includes(id)) {
+        //             const index = item.modelIDs.indexOf(id);
+        //             if (index > -1) {
+        //                 item.modelIDs.splice(index, 1);
+        //             }
+        //         }
+        //     }
+        // });
 
         SVGActions.deleteSelectedElements();
         const modelState = modelGroup.removeSelectedModel();
 
+        dispatch(operationHistoryActions.setOperations(operations));
         dispatch(baseActions.updateState(headType, {
             ...modelState
         }));
@@ -1044,9 +1064,20 @@ export const actions = {
      * Create model from element.
      */
     createModelFromElement: (headType, element) => async (dispatch, getState) => {
-        const { SVGActions } = getState()[headType];
+        const { SVGActions, toolPathGroup } = getState()[headType];
 
-        await SVGActions.createModelFromElement(element);
+        const newSVGModel = await SVGActions.createModelFromElement(element);
+        if (newSVGModel) {
+            const operation = new AddOperation2D({
+                toolPathGroup,
+                svgActions: SVGActions,
+                target: newSVGModel
+            });
+            const operations = new Operations();
+            operations.push(operation);
+
+            dispatch(operationHistoryActions.setOperations(operations));
+        }
 
         dispatch(actions.resetProcessState(headType));
     },
