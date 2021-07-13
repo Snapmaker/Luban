@@ -8,7 +8,7 @@ import { actions as workspaceActions } from '../../../flux/workspace';
 import { actions as editorActions } from '../../../flux/editor';
 import { actions as projectActions } from '../../../flux/project';
 import {
-    DISPLAYED_TYPE_TOOLPATH, PAGE_PROCESS
+    DISPLAYED_TYPE_TOOLPATH, PAGE_PROCESS, PAGE_EDITOR
 } from '../../../constants';
 
 import modal from '../../../lib/modal';
@@ -30,6 +30,7 @@ class Output extends PureComponent {
 
         // page: PropTypes.string.isRequired,
         inProgress: PropTypes.bool.isRequired,
+        disablePreview: PropTypes.bool.isRequired,
 
         modelGroup: PropTypes.object.isRequired,
         toolPathGroup: PropTypes.object.isRequired,
@@ -79,8 +80,6 @@ class Output extends PureComponent {
             }
             await this.props.renderGcodeFile(gcodeFile);
             this.setState({ showWorkspace: true });
-            // this.props.pageActions.popupWorkspace();
-            // this.props.history.push('/workspace');
             window.scrollTo(0, 0);
         },
         onExport: () => {
@@ -155,7 +154,8 @@ class Output extends PureComponent {
 
     render() {
         const actions = this.actions;
-        const { workflowState, isGcodeGenerating, gcodeFile, hasModel, hasToolPathModel, inProgress, displayedType } = this.props;
+        const { workflowState, isGcodeGenerating, gcodeFile, hasModel, page,
+            disablePreview, hasToolPathModel, inProgress, displayedType } = this.props;
         const menu = (
             <Menu>
                 <Menu.Item
@@ -183,7 +183,7 @@ class Output extends PureComponent {
                         type="primary"
                         priority="level-one"
                         onClick={this.actions.preview}
-                        style={{ displayedType !== DISPLAYED_TYPE_TOOLPATH && page !== PAGE_EDITOR ? 'block' : 'none' }}
+                        style={{ display: (displayedType !== DISPLAYED_TYPE_TOOLPATH && page !== PAGE_EDITOR) ? 'block' : 'none' }}
                         disabled={inProgress || (!hasToolPathModel ?? false) || disablePreview}
                     >
                         {i18n._('Preview')}
@@ -192,7 +192,7 @@ class Output extends PureComponent {
                         type="primary"
                         priority="level-one"
                         onClick={this.actions.switchToProcess}
-                        style={{ displayedType !== DISPLAYED_TYPE_TOOLPATH && page === PAGE_EDITOR ? 'block' : 'none' }}
+                        style={{ display: (displayedType !== DISPLAYED_TYPE_TOOLPATH && page === PAGE_EDITOR) ? 'block' : 'none' }}
                         disabled={!hasModel ?? false}
                     >
                         {i18n._('Next')}

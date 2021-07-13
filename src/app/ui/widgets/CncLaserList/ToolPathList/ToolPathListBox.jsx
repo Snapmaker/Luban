@@ -85,7 +85,7 @@ const ToolpathItem = ({ toolPath, selectedToolPathIDArray, selectToolPathId, sel
                     'padding-horizontal-16',
                     'sm-flex',
                     'justify-space-between',
-                    toolPath.id === selectedToolPathId ? styles.selected : null,
+                    selectedToolPathIDArray.includes(toolPath.id) ? styles.selected : null,
                 )}
             >
                 <Anchor
@@ -136,7 +136,7 @@ const ToolpathItem = ({ toolPath, selectedToolPathIDArray, selectToolPathId, sel
 };
 ToolpathItem.propTypes = {
     toolPath: PropTypes.object.isRequired,
-    selectedToolPathIDArray: PropTypes.string.isRequired,
+    selectedToolPathIDArray: PropTypes.array.isRequired,
     selectToolPathId: PropTypes.func.isRequired,
     selectToolPathById: PropTypes.func.isRequired,
     onClickVisible: PropTypes.func.isRequired,
@@ -209,6 +209,7 @@ const ToolPathListBox = (props) => {
     const inProgress = useSelector(state => state[props.headType]?.inProgress);
     const dispatch = useDispatch();
     const selectedToolPath = toolPaths && selectedToolPathIDArray.length === 1 && toolPaths.find(v => v.id === selectedToolPathIDArray[0]);
+    const selectedToolPathId = selectedToolPath.id;
     const activeToolListDefinition = useSelector(state => state[props.headType]?.activeToolListDefinition, shallowEqual);
     const toolDefinitions = useSelector(state => state[props.headType]?.toolDefinitions, shallowEqual);
     const [expanded, renderExpandItem] = useExpandItem('Toolpath List');
@@ -331,18 +332,17 @@ const ToolPathListBox = (props) => {
     useEffect(() => {
         props.widgetActions.setTitle(i18n._('Toolpath List'));
     }, []);
+    useEffect(() => {
+        if (page === PAGE_EDITOR) {
+            props.widgetActions.setDisplay(false);
+        } else if (page === PAGE_PROCESS) {
+            props.widgetActions.setDisplay(true);
+        }
+    }, [page]);
 
-    if (page === PAGE_EDITOR) {
-        props.widgetActions.setDisplay(false);
-    } else if (page === PAGE_PROCESS) {
-        props.widgetActions.setDisplay(true);
-    }
+
     return (
-        <div className={classNames(
-            styles.toolPathWrapper,
-            'clearfix'
-        )}
-        >
+        <div>
             {renderExpandItem()}
             {expanded && (
                 <div>
@@ -378,8 +378,9 @@ const ToolPathListBox = (props) => {
                                         <ToolpathItem
                                             toolPath={toolPath}
                                             key={toolPath.id}
-                                            selectedToolPathId={selectedToolPathId}
+                                            selectedToolPathIDArray={selectedToolPathIDArray}
                                             selectToolPathId={actions.selectToolPathId}
+                                            selectToolPathById={actions.selectToolPathById}
                                             onClickVisible={actions.onClickVisible}
                                             setEditingToolpath={setEditingToolpath}
                                             disabled={inProgress}
@@ -394,19 +395,19 @@ const ToolPathListBox = (props) => {
                             'clearfix'
                         )}
                         >
-                            <span className={classNames(
+                            <div className={classNames(
                                 'float-l',
                                 'margin-vertical-8',
                             )}
                             >
                                 <SvgIcon
                                     name="Delete"
-                                    disabled={disabled}
+                                    disabled={selectedToolPathIDArray.length < 1}
                                     size={24}
                                     title={i18n._('Delete')}
                                     onClick={() => actions.deleteToolPath(selectedToolPathId)}
                                 />
-                            </span>
+                            </div>
                             <div className={classNames(
                                 'float-r',
                                 'margin-vertical-8',
@@ -416,20 +417,17 @@ const ToolPathListBox = (props) => {
                                     className={classNames(
                                         'margin-horizontal-8',
                                     )}
-                                    disabled={disabled}
+                                    disabled={selectedToolPathIDArray.length !== 1}
                                     title={i18n._('Prioritize')}
-                                    onClick={() => actions.toolPathToUp(selectedToolPathId)}
-                                    name="CopyNormal"
+                                    onClick={() => actions.toolPathToUp(selectedToolPathIDArray)}
+                                    name="Prioritize"
                                     size={24}
                                 />
                                 <SvgIcon
-                                    className={classNames(
-                                        'rotate180'
-                                    )}
-                                    disabled={disabled}
+                                    disabled={selectedToolPathIDArray.length !== 1}
                                     title={i18n._('Deprioritize')}
-                                    onClick={() => actions.toolPathToDown(selectedToolPathId)}
-                                    name="CopyNormal"
+                                    onClick={() => actions.toolPathToDown(selectedToolPathIDArray)}
+                                    name="Deprioritize"
                                     size={24}
                                 />
                             </div>
@@ -472,79 +470,25 @@ const ToolPathListBox = (props) => {
                         />
                     )}
                     {selectedToolPath && (
-                        <div className={classNames(
-                            'border-default-grey-1',
-                            'border-radius-8',
-                            'margin-vertical-16',
-                            'clearfix',
-                            'padding-bottom-16'
-                        )}
-                        >
-                            <div className={classNames(
-                                'border-bottom-normal',
-                                'border-radius-top-8',
-                                'padding-horizontal-16',
-                                'height-40',
+                        <ToolParameters
+                            settings={fastEditSettings}
+                            updateToolConfig={actions.updateToolConfig}
+                            updateGcodeConfig={actions.updateGcodeConfig}
+                            toolPath={selectedToolPath}
+                        />
+                    )}
+                    {selectedToolPath && (
+                        <Anchor
+                            className={classNames(
+                                'float-r',
+                                'link-text'
                             )}
-                            >
-                                {i18n._('Common parameters')}
-                            </div>
-                            <div className="padding-horizontal-16">
-                                <ToolParameters
-                                    settings={fastEditSettings}
-                                    updateToolConfig={actions.updateToolConfig}
-                                    updateGcodeConfig={actions.updateGcodeConfig}
-                                    toolPath={selectedToolPath}
-                                />
-                                <Anchor
-                                    className={classNames(
-                                        'float-r',
-                                        'link-text',
-                                        'height-24'
-                                    )}
-                                    onClick={() => setEditingToolpath(selectedToolPath)}
-                                >
-                                    {i18n._('More')}
-                                    <SvgIcon
-                                        name="ArrowRightBlue24pxNormal"
-                                        size={24}
-                                    />
-                                </Anchor>
-                            </div>
-                        </div>
+                            onClick={() => setEditingToolpath(selectedToolPath)}
+                        >
+                            {i18n._('More')}
+                        </Anchor>
                     )}
                 </div>
-            )}
-            {selectedToolPath && selectedToolPath.headType === HEAD_CNC && activeToolListDefinition && (
-                <ToolSelector
-                    toolDefinition={activeToolListDefinition}
-                    toolDefinitions={toolDefinitions}
-                    isModifiedDefinition={() => {
-                        return !Object.entries(activeToolListDefinition.settings).every(([key, setting]) => {
-                            return fastEditSettings && fastEditSettings[key].default_value === setting.default_value;
-                        });
-                    }}
-                    setCurrentValueAsProfile={() => {}}
-                />
-            )}
-            {selectedToolPath && (
-                <ToolParameters
-                    settings={fastEditSettings}
-                    updateToolConfig={actions.updateToolConfig}
-                    updateGcodeConfig={actions.updateGcodeConfig}
-                    toolPath={selectedToolPath}
-                />
-            )}
-            {selectedToolPath && (
-                <Anchor
-                    className={classNames(
-                        'float-r',
-                        'link-text'
-                    )}
-                    onClick={() => setEditingToolpath(selectedToolPath)}
-                >
-                    {i18n._('More')}
-                </Anchor>
             )}
         </div>
     );
