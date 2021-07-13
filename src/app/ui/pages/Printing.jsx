@@ -204,9 +204,9 @@ function Printing({ history }) {
                 onDropRejected={onDropRejected}
             >
                 <PrintingVisualizer widgetId="printingVisualizer" />
+                {recoveryModal}
+                {renderHomepage()}
             </Dropzone>
-            {recoveryModal}
-            {renderHomepage()}
         </ProjectLayout>
     );
 }

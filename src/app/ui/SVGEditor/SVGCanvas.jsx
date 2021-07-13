@@ -206,6 +206,15 @@ class SVGCanvas extends PureComponent {
         }
     }
 
+    componentWillUnmount() {
+        this.svgContainer.removeEventListener('mousedown', this.onMouseDown, false);
+        this.svgContainer.removeEventListener('mousemove', this.onMouseMove, false);
+        this.svgContainer.removeEventListener('wheel', this.onMouseWheel, false);
+        window.removeEventListener('mouseup', this.onMouseUp, false);
+        window.removeEventListener('resize', this.onResize, false);
+        window.removeEventListener('hashchange', this.onResize, false);
+        window.removeEventListener('dblclick', this.onDblClick, false);
+    }
 
     get scale() {
         return (this.lastScale || this.props.scale) * DEFAULT_SCALE / ZOOM_RATE;
