@@ -29,6 +29,7 @@ import {
 } from '../../../constants';
 import SVGEditor from '../../SVGEditor';
 import { CNC_LASER_STAGE } from '../../../flux/editor/utils';
+import { actions as operationHistoryActions } from '../../../flux/operation-history';
 import modal from '../../../lib/modal';
 import UniApi from '../../../lib/uni-api';
 
@@ -61,6 +62,8 @@ class Visualizer extends Component {
         isChangedAfterGcodeGenerating: PropTypes.bool.isRequired,
 
         // func
+        undo: PropTypes.func.isRequired,
+        redo: PropTypes.func.isRequired,
         initContentGroup: PropTypes.func.isRequired,
         updateTarget: PropTypes.func,
         updateScale: PropTypes.func,
@@ -117,6 +120,12 @@ class Visualizer extends Component {
     fileInput = React.createRef();
 
     actions = {
+        undo: () => {
+            this.props.undo();
+        },
+        redo: () => {
+            this.props.redo();
+        },
         onChangeFile: (event) => {
             const file = event.target.files[0];
             const extname = path.extname(file.name).toLowerCase();
@@ -634,6 +643,8 @@ const mapStateToProps = (state, ownProps) => {
 
 const mapDispatchToProps = (dispatch) => {
     return {
+        undo: () => dispatch(operationHistoryActions.undo()),
+        redo: () => dispatch(operationHistoryActions.redo()),
         initContentGroup: (svgContentGroup) => dispatch(editorActions.initContentGroup('laser', svgContentGroup)),
         updateTarget: (target) => dispatch(editorActions.updateState('laser', { target })),
         updateScale: (scale) => dispatch(editorActions.updateState('laser', { scale })),

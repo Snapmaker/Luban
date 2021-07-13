@@ -27,6 +27,9 @@ import { isEqual, round } from '../../../shared/lib/utils';
 import { machineStore } from '../../store/local-storage';
 
 import { CNC_LASER_STAGE } from './utils';
+import VisibleOperation2D from '../operation-history/VisibleOperation2D';
+import { actions as operationHistoryActions } from '../operation-history';
+import Operations from '../operation-history/Operations';
 
 const getSourceType = (fileName) => {
     let sourceType;
@@ -969,8 +972,21 @@ export const actions = {
 
     hideSelectedModel: (headType) => (dispatch, getState) => {
         const { modelGroup, SVGActions } = getState()[headType];
+        const svgElements = SVGActions.svgContentGroup.getSelected();
+        const models = modelGroup.getSelectedModelArray();
+
         modelGroup.hideSelectedModel();
         SVGActions.hideSelectedElement();
+
+        const operation = new VisibleOperation2D({
+            svgTarget: svgElements,
+            modelTarget: models[0],
+            visible: false
+        });
+        const operations = new Operations();
+        operations.push(operation);
+
+        dispatch(operationHistoryActions.setOperations(operations));
         dispatch(baseActions.updateState(headType, {
             isChangedAfterGcodeGenerating: true
         }));
@@ -980,9 +996,21 @@ export const actions = {
 
     showSelectedModel: (headType) => (dispatch, getState) => {
         const { modelGroup, SVGActions } = getState()[headType];
+        const svgElements = SVGActions.svgContentGroup.getSelected();
+        const models = modelGroup.getSelectedModelArray();
+
         modelGroup.showSelectedModel();
         SVGActions.showSelectedElement();
         // SVGActions.updateTransformation(modelGroup.getSelectedModel().transformation);
+        const operation = new VisibleOperation2D({
+            svgTarget: svgElements,
+            modelTarget: models[0],
+            visible: true
+        });
+        const operations = new Operations();
+        operations.push(operation);
+
+        dispatch(operationHistoryActions.setOperations(operations));
         dispatch(baseActions.updateState(headType, {
             isChangedAfterGcodeGenerating: true
         }));
