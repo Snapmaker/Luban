@@ -1,8 +1,10 @@
 import ensureArray from 'ensure-array';
 import PropTypes from 'prop-types';
+import classNames from 'classnames';
 import React, { PureComponent } from 'react';
 import { connect } from 'react-redux';
 import TipTrigger from '../../components/TipTrigger';
+import SvgIcon from '../../components/SvgIcon';
 import {
     CONNECTION_TYPE_WIFI,
     MODAL_RUN_MACRO,
@@ -10,8 +12,8 @@ import {
     WORKFLOW_STATE_IDLE, PROTOCOL_SCREEN
 } from '../../../constants';
 import api from '../../../api';
-import { Button } from '../../components/Buttons';
-import Space from '../../components/Space';
+// import { Button } from '../../components/Buttons';
+// import Space from '../../components/Space';
 import { limitStringLength } from '../../../lib/normalize-range';
 import i18n from '../../../lib/i18n';
 import { actions as machineActions } from '../../../flux/machine';
@@ -108,64 +110,48 @@ class Macro extends PureComponent {
         const { macros } = this.state;
 
         return (
-            <div>
-                <div className={styles.tableContainer}>
-                    <table className={styles.table}>
-                        <tbody>
-                            {macros.length === 0 && (
-                                <tr>
-                                    <td colSpan="2">
-                                        <div className={styles.emptyResult}>
-                                            {i18n._('No macros')}
-                                        </div>
-                                    </td>
-                                </tr>
-                            )}
-                            {ensureArray(macros).map((macro) => (
-                                <tr key={macro.id}>
-                                    <td style={{ padding: '6px 0px' }}>
-
-                                        <TipTrigger
-                                            style={{ display: 'inline-block' }}
-                                            key={macro.id}
-                                            title={i18n._('Macro')}
-                                            content={macro.name}
-                                        >
-                                            <Button
-                                                compact
-                                                btnSize="xs"
-                                                btnStyle="flat"
-                                                disabled={!canClick}
-                                                onClick={() => {
-                                                    this.actions.runMacro(macro);
-                                                }}
-                                                title={i18n._('Run Macro')}
-                                            >
-                                                <i className="fa fa-play" />
-                                            </Button>
-                                            <Space width="8" />
-                                            {limitStringLength(macro.name, 30)}
-                                        </TipTrigger>
-                                    </td>
-                                    <td style={{ width: '1%' }}>
-                                        <div className="nowrap">
-                                            <Button
-                                                compact
-                                                btnSize="xs"
-                                                btnStyle="flat"
-                                                onClick={() => {
-                                                    this.actions.openEditMacroModal(macro.id);
-                                                }}
-                                            >
-                                                <i className="fa fa-edit" />
-                                            </Button>
-                                        </div>
-                                    </td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                </div>
+            <div className="padding-horizontal-16 height-176 padding-vertical-4
+                overflow-y-auto border-default-grey-1 border-radius-8
+                margin-bottom-16"
+            >
+                {macros.length === 0 && (
+                    <div className={styles.emptyResult}>
+                        {i18n._('No macros')}
+                    </div>
+                )}
+                {ensureArray(macros).map((macro) => (
+                    <div
+                        key={macro.id}
+                        className={classNames(
+                            'sm-flex',
+                            'justify-space-between',
+                            'height-32',
+                        )}
+                    >
+                        <TipTrigger
+                            key={macro.id}
+                            title={i18n._('Macro')}
+                            content={macro.name}
+                        >
+                            <SvgIcon
+                                name="StartPlay"
+                                className="margin-right-4"
+                                title={i18n._('Run Macro')}
+                                disabled={!canClick}
+                                onClick={() => {
+                                    this.actions.runMacro(macro);
+                                }}
+                            />
+                            {limitStringLength(macro.name, 30)}
+                        </TipTrigger>
+                        <SvgIcon
+                            name="Edit"
+                            onClick={() => {
+                                this.actions.openEditMacroModal(macro.id);
+                            }}
+                        />
+                    </div>
+                ))}
             </div>
         );
     }

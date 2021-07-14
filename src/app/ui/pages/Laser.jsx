@@ -267,15 +267,6 @@ function Laser() {
                     dispatch(projectActions.save(HEAD_LASER));
                 }
             },
-            // Todo, add after completed
-            // {
-            //     title: 'Undo',
-            //     type: 'button'
-            // },
-            // {
-            //     title: 'Redo',
-            //     type: 'button'
-            // }
             {
                 title: i18n._('Job'),
                 type: 'button',

@@ -106,9 +106,12 @@ class Workspace extends PureComponent {
     state = {
         leftItems: [
             {
-                name: 'Edit',
-                action: () => this.props.history.push('/'),
-                title: i18n._('Home')
+                title: i18n._('Home'),
+                type: 'button',
+                name: 'MainToolbarHome',
+                action: () => {
+                    this.props.history.push('/');
+                }
             }
         ],
         connected: controller.connected,
@@ -226,9 +229,9 @@ class Workspace extends PureComponent {
                     showCloseButton={false}
                 >
                     <Modal.Body>
-                        <div style={{ display: 'flex' }}>
+                        <div className="sm-flex">
                             <i className="fa fa-exclamation-circle fa-4x text-danger" />
-                            <div style={{ marginLeft: 25 }}>
+                            <div className="margin-left-24">
                                 <h5>{i18n._('Server has stopped working')}</h5>
                                 <p>{i18n._('A problem caused the server to stop working correctly. Check out the server status and try again.')}</p>
                             </div>
@@ -262,6 +265,7 @@ class Workspace extends PureComponent {
             isDraggingWidget,
             connected
         } = this.state;
+        console.log('primaryWidgets', primaryWidgets, secondaryWidgets);
 
         const widgetProps = { };
         return (

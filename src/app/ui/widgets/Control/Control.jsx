@@ -3,8 +3,12 @@ import includes from 'lodash/includes';
 import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
-import ChangedReactSelect from '../../components/Select';
-
+import classNames from 'classnames';
+import Switch from '../../components/Switch';
+import Select from '../../components/Select';
+import Anchor from '../../components/Anchor';
+import { Button } from '../../components/Buttons';
+import SvgIcon from '../../components/SvgIcon';
 import i18n from '../../../lib/i18n';
 import { controller } from '../../../lib/controller';
 import { preventDefault } from '../../../lib/dom-events';
@@ -96,9 +100,15 @@ class Control extends PureComponent {
         updateWidgetState: PropTypes.func.isRequired
     };
 
-    state = this.getInitialState();
+    state = {
+        ...this.getInitialState(),
+        expanded: true
+    };
 
     actions = {
+        onToggleExpand: () => {
+            this.setState(state => ({ expanded: !state.expanded }));
+        },
         onChangeJogSpeed: (option) => {
             const jogSpeed = Math.min(6000, Number(option.value) || 0);
             this.setState({ jogSpeed });
@@ -500,64 +510,76 @@ class Control extends PureComponent {
             ...this.actions
         };
 
-        const { workPosition, originOffset } = this.state;
+        const { workPosition, originOffset, expanded } = this.state;
 
         return (
-            <div>
-                <DisplayPanel
-                    workPosition={workPosition}
-                    originOffset={originOffset}
-                    headType={this.props.headType}
-                    executeGcode={this.actions.executeGcode}
-                    state={state}
-                />
-
-                <div className="mb-3">
-                    <KeypadOverlay
-                        show={state.canClick && state.keypadJogging}
-                    >
-                        <button
-                            type="button"
-                            className="btn btn-outline-secondary"
-                            onClick={actions.toggleKeypadJogging}
-                            disabled={!canClick}
-                        >
-                            {state.keypadJogging && <i className="fa fa-toggle-on fa-fw" />}
-                            {!state.keypadJogging && <i className="fa fa-toggle-off fa-fw" />}
-                            <span className="space space-sm" />
-                            {i18n._('Keyboard Shortcuts')}
-                        </button>
-                    </KeypadOverlay>
-                </div>
-
-                <div className="sm-parameter-row">
-                    <button
-                        type="button"
-                        className="btn btn-outline-secondary"
-                        disabled={!canClick}
-                        onClick={() => this.props.executeGcodeAutoHome()}
-                    >
-                        {i18n._('Home')}
-                    </button>
-                    <div className="sm-parameter-row__label2" style={{ textAlign: 'center', margin: '0 0 0 5px' }}>{i18n._('Jog Speed')}</div>
-                    <ChangedReactSelect
-                        backspaceRemoves={false}
-                        className="sm-parameter-row__select2"
-                        clearable={false}
-                        menuContainerStyle={{ zIndex: 5 }}
-                        options={this.state.jogSpeedOptions}
-                        onNewOptionClick={this.actions.onCreateJogSpeedOption}
-                        searchable
-                        value={this.state.jogSpeed}
-                        onChange={this.actions.onChangeJogSpeed}
+            <div className="border-bottom-normal">
+                <Anchor className="sm-flex height-24 margin-bottom-8" onClick={this.actions.onToggleExpand}>
+                    <span className="sm-flex-width font-weight-bold">{i18n._('Control')}</span>
+                    <SvgIcon
+                        name="DropdownLine"
+                        className={classNames(
+                            expanded ? '' : 'rotate180'
+                        )}
                     />
-                </div>
+                </Anchor>
+                {expanded && (
+                    <div>
+                        <DisplayPanel
+                            workPosition={workPosition}
+                            originOffset={originOffset}
+                            headType={this.props.headType}
+                            executeGcode={this.actions.executeGcode}
+                            state={state}
+                        />
 
-                <ControlPanel
-                    state={state}
-                    actions={actions}
-                    executeGcode={this.actions.executeGcode}
-                />
+                        <div className="sm-flex justify-space-between margin-vertical-8">
+                            <KeypadOverlay
+                                show={state.canClick && state.keypadJogging}
+                            >
+                                <span>{i18n._('Keyboard Shortcuts')}</span>
+                                <Switch
+                                    onClick={actions.toggleKeypadJogging}
+                                    disabled={!canClick}
+                                    checked={state.keypadJogging}
+                                />
+                            </KeypadOverlay>
+                        </div>
+
+                        <div className="sm-flex justify-space-between margin-vertical-8">
+                            <Button
+                                type="primary"
+                                level="level-three"
+                                width="96px"
+                                disabled={!canClick}
+                                onClick={() => this.props.executeGcodeAutoHome()}
+                            >
+                                {i18n._('Home')}
+                            </Button>
+                            <div>
+                                <span className="">{i18n._('Jog Speed')}</span>
+                                <Select
+                                    backspaceRemoves={false}
+                                    className="margin-left-8"
+                                    clearable={false}
+                                    size="super-small"
+                                    menuContainerStyle={{ zIndex: 5 }}
+                                    options={this.state.jogSpeedOptions}
+                                    onNewOptionClick={this.actions.onCreateJogSpeedOption}
+                                    searchable
+                                    value={this.state.jogSpeed}
+                                    onChange={this.actions.onChangeJogSpeed}
+                                />
+                            </div>
+                        </div>
+
+                        <ControlPanel
+                            state={state}
+                            actions={actions}
+                            executeGcode={this.actions.executeGcode}
+                        />
+                    </div>
+                )}
             </div>
         );
     }

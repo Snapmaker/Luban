@@ -107,9 +107,9 @@ const JogDistance = (props) => {
         )
     };
     return (
-        <div>
+        <div className="margin-bottom-16">
             <div className={styles['jog-distance-control']}>
-                <p style={{ marginBottom: '5px' }}>{i18n._('XYZ Axis Travel Distance')}</p>
+                <p className="margin-vertical-8">{i18n._('XYZ Axis Travel Distance')}</p>
                 <div className="row no-gutters">
                     <div className="col-12">
                         <div className="input-group no-gutters">
@@ -216,7 +216,7 @@ const JogDistance = (props) => {
             </div>
             {workPosition.isFourAxis && (
                 <div className={styles['jog-distance-control']}>
-                    <p style={{ marginTop: '5px', marginBottom: '5px' }}>{i18n._('B-axis Angle of Rotation')}</p>
+                    <p className="margin-vertical-8">{i18n._('B-axis Angle of Rotation')}</p>
                     <div className="row no-gutters">
                         <div className="col-12">
                             <div className="input-group no-gutters">

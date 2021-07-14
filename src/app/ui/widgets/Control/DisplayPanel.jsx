@@ -44,8 +44,8 @@ class DisplayPanel extends PureComponent {
         }
 
         return (
-            <div className={styles['coordinate-panel']}>
-                <table className="table table-bordered">
+            <div className={styles['coordinate-panel'], 'margin-bottom-16'}>
+                <table className="table table-bordered ">
                     <thead>
                         <tr>
                             <th>{i18n._('Axis')}</th>

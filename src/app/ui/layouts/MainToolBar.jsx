@@ -34,7 +34,7 @@ class MainToolBar extends PureComponent {
         return (
             <div
                 className={classNames(
-                    styles['is-clearfix'],
+                    'clearfix',
                     styles['bar-wrapper']
                 )}
             >
