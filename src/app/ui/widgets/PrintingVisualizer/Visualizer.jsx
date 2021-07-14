@@ -15,8 +15,8 @@ import ContextMenu from '../../components/ContextMenu';
 import Canvas from '../../components/SMCanvas';
 import { actions as printingActions, PRINTING_STAGE } from '../../../flux/printing';
 import { actions as operationHistoryActions } from '../../../flux/operation-history';
-import AddOperation from '../../../flux/operation-history/AddOperation';
-import DeleteOperation from '../../../flux/operation-history/DeleteOperation';
+import AddOperation3D from '../../../flux/operation-history/AddOperation3D';
+import DeleteOperation3D from '../../../flux/operation-history/DeleteOperation3D';
 import MoveOperation3D from '../../../flux/operation-history/MoveOperation3D';
 import ScaleOperation3D from '../../../flux/operation-history/ScaleOperation3D';
 import RotateOperation3D from '../../../flux/operation-history/RotateOperation3D';
@@ -221,7 +221,7 @@ class Visualizer extends PureComponent {
         deleteSelectedModel: () => {
             const operations = new Operations();
             for (const model of this.props.modelGroup.selectedModelArray) {
-                const operation = new DeleteOperation({
+                const operation = new DeleteOperation3D({
                     target: model,
                     parent: model.meshObject.parent.clone(false)
                 });
@@ -235,7 +235,7 @@ class Visualizer extends PureComponent {
             // newly added model will be selected, record them to operation history
             const operations = new Operations();
             for (const model of this.props.modelGroup.selectedModelArray) {
-                const operation = new AddOperation({
+                const operation = new AddOperation3D({
                     target: model,
                     parent: null
                 });
@@ -249,7 +249,7 @@ class Visualizer extends PureComponent {
         clearBuildPlate: () => {
             const operations = new Operations();
             for (const model of this.props.modelGroup.models) {
-                const operation = new DeleteOperation({
+                const operation = new DeleteOperation3D({
                     target: model,
                     parent: null
                 });
@@ -302,7 +302,7 @@ class Visualizer extends PureComponent {
             if (!model.supportTag) {
                 // support should be recorded when mouse clicked
                 console.log(model);
-                const operation = new AddOperation({
+                const operation = new AddOperation3D({
                     target: model,
                     parent: null
                 });
@@ -345,7 +345,7 @@ class Visualizer extends PureComponent {
                 this.props.saveSupport(this._model);
                 if (!this._model.isInitSupport) {
                     // save generated support into operation history
-                    const operation = new AddOperation({
+                    const operation = new AddOperation3D({
                         target: this._model,
                         parent: this._model.target
                     });
@@ -369,7 +369,7 @@ class Visualizer extends PureComponent {
             if (isSupportSelected) {
                 const operations = new Operations();
                 for (const model of this.props.modelGroup.selectedModelArray) {
-                    const operation = new DeleteOperation({
+                    const operation = new DeleteOperation3D({
                         target: model,
                         parent: model.target
                     });
@@ -385,7 +385,7 @@ class Visualizer extends PureComponent {
             if (supports && supports.length > 0) {
                 const operations = new Operations();
                 for (const model of supports) {
-                    const operation = new DeleteOperation({
+                    const operation = new DeleteOperation3D({
                         target: model,
                         parent: model.target
                     });
@@ -422,7 +422,7 @@ class Visualizer extends PureComponent {
                     this.props.paste();
                     const operations = new Operations();
                     for (const model of this.props.modelGroup.selectedModelArray) {
-                        const operation = new AddOperation({
+                        const operation = new AddOperation3D({
                             target: model,
                             parent: null
                         });

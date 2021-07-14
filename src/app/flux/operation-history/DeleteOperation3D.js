@@ -1,11 +1,11 @@
 import ThreeUtils from '../../three-extensions/ThreeUtils';
+import Operation from './Operation';
 
-export default class DeleteOperation {
+export default class DeleteOperation3D extends Operation {
     state = {};
 
-    description = 'Delete';
-
     constructor(state) {
+        super();
         this.state = {
             target: null,
             parent: null,

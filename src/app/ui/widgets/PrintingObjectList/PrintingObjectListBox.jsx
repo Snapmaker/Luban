@@ -4,7 +4,7 @@ import { useDispatch, useSelector, shallowEqual } from 'react-redux';
 import styles from './styles.styl';
 import { actions as printingActions } from '../../../flux/printing';
 import { actions as operationHistoryActions } from '../../../flux/operation-history';
-import VisibleOperation from '../../../flux/operation-history/VisibleOperation';
+import VisibleOperation3D from '../../../flux/operation-history/VisibleOperation3D';
 import Operations from '../../../flux/operation-history/Operations';
 // import i18n from '../../../lib/i18n';
 import ModelItem from '../../views/model-item';
@@ -29,7 +29,7 @@ function PrintingObjectListBox() {
             } else {
                 dispatch(printingActions.showSelectedModel());
             }
-            const operation = new VisibleOperation({
+            const operation = new VisibleOperation3D({
                 target: targetModel,
                 visible: !visible
             });

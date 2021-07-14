@@ -1,19 +1,16 @@
-export default class VisibleOperation2D {
+import Operation from './Operation';
+
+export default class VisibleOperation2D extends Operation {
     state = {};
 
-    description = 'Visible';
-
     constructor(state) {
+        super();
         this.state = {
             svgTarget: null,
             modelTarget: null,
             visible: true,
             ...state
         };
-    }
-
-    mergePreviousOperation(prevOperation) {
-        console.log('mergePreviousOperation', prevOperation);
     }
 
     redo() {

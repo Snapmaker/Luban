@@ -1,16 +1,13 @@
-export default class ScaleOperation3D {
+import Operation from './Operation';
+
+export default class ScaleOperation3D extends Operation {
     state = {};
 
-    description = 'ScaleOperation3D';
-
     constructor(state) {
+        super();
         this.state = {
             ...state
         };
-    }
-
-    mergePreviousOperation(prevOperation) {
-        console.log('mergePreviousOperation', prevOperation);
     }
 
     redo() {

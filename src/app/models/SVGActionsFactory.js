@@ -1219,6 +1219,35 @@ class SVGActionsFactory {
     }
 
     /**
+     * Reset Flip elements.
+     *
+     * @param elements
+     */
+    resetFlipElements(elements, newScale = {}) {
+        if (elements.length !== 1) {
+            return;
+        }
+
+        for (const element of elements) {
+            const transformList = SvgModel.getTransformList(element);
+
+            const scaleTransform = transformList.getItem(2);
+            const scaleX = newScale.x === undefined ? Math.abs(scaleTransform.matrix.a) : newScale.x;
+            const scaleY = newScale.y === undefined ? Math.abs(scaleTransform.matrix.d) : newScale.y;
+
+            scaleTransform.setScale(scaleX, scaleY);
+            this.getSVGModelByElement(element).onTransform();
+        }
+
+        // update selector
+        this._resetSelector(elements);
+
+        // update t
+        const t = SVGActionsFactory.calculateElementsTransformation(elements);
+        this._setSelectedElementsTransformation(t);
+    }
+
+    /**
      * Rotate elements start.
      *
      * Prepend [R = (0, 0, 0)] to transform list, make transform list [R][T][R][S][T].
@@ -1335,7 +1364,6 @@ class SVGActionsFactory {
      * @param newAngle
      */
     rotateElementsImmediately(elements, { newAngle }) {
-        console.log(newAngle);
         if (!elements || elements.length === 0) {
             return;
         }

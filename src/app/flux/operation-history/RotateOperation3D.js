@@ -1,18 +1,16 @@
 // import ThreeUtils from '../../three-extensions/ThreeUtils';
 
-export default class RotateOperation3D {
+import Operation from './Operation';
+
+export default class RotateOperation3D extends Operation {
     state = {};
 
-    description = 'RotateOperation3D';
-
     constructor(state) {
+        super();
         this.state = {
+            target: null,
             ...state
         };
-    }
-
-    mergePreviousOperation(prevOperation) {
-        console.log('mergePreviousOperation', prevOperation);
     }
 
     redo() {

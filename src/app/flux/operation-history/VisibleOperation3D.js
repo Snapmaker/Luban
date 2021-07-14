@@ -1,9 +1,10 @@
-export default class VisibleOperation {
+import Operation from './Operation';
+
+export default class VisibleOperation3D extends Operation {
     state = {};
 
-    description = 'Visible';
-
     constructor(state) {
+        super();
         this.state = {
             target: null,
             visible: true,

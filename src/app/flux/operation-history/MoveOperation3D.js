@@ -1,16 +1,14 @@
-export default class MoveOperation3D {
+import Operation from './Operation';
+
+export default class MoveOperation3D extends Operation {
     state = {};
 
-    description = 'MoveOperation3D';
-
     constructor(state) {
+        super();
         this.state = {
+            target: null,
             ...state
         };
-    }
-
-    mergePreviousOperation(prevOperation) {
-        console.log('mergePreviousOperation', prevOperation);
     }
 
     redo() {

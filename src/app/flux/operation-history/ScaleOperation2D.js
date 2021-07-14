@@ -18,13 +18,18 @@ export default class ScaleOperation2D extends Operation {
     redo() {
         const model = this.state.target;
         const svgActions = this.state.svgActions;
-        svgActions.resizeElementsImmediately([model.elem], {
+        const elements = [model.elem];
+        svgActions.resizeElementsImmediately(elements, {
             newWidth: this.state.to.width,
             newHeight: this.state.to.height
         });
-        svgActions.moveElementsImmediately([model.elem], {
+        svgActions.moveElementsImmediately(elements, {
             newX: this.state.to.positionX + this.state.machine.size.x,
             newY: -this.state.to.positionY + this.state.machine.size.y
+        });
+        svgActions.resetFlipElements(elements, {
+            x: this.state.to.scaleX,
+            y: this.state.to.scaleY
         });
         svgActions.clearSelection();
     }
@@ -32,13 +37,18 @@ export default class ScaleOperation2D extends Operation {
     undo() {
         const model = this.state.target;
         const svgActions = this.state.svgActions;
-        svgActions.resizeElementsImmediately([model.elem], {
+        const elements = [model.elem];
+        svgActions.resizeElementsImmediately(elements, {
             newWidth: this.state.from.width,
             newHeight: this.state.from.height
         });
-        svgActions.moveElementsImmediately([model.elem], {
+        svgActions.moveElementsImmediately(elements, {
             newX: this.state.from.positionX + this.state.machine.size.x,
             newY: -this.state.from.positionY + this.state.machine.size.y
+        });
+        svgActions.resetFlipElements(elements, {
+            x: this.state.from.scaleX,
+            y: this.state.from.scaleY
         });
         svgActions.clearSelection();
     }

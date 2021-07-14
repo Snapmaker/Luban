@@ -1,20 +1,16 @@
 import ThreeUtils from '../../three-extensions/ThreeUtils';
+import Operation from './Operation';
 
-export default class AddOperation {
+export default class AddOperation3D extends Operation {
     state = {};
 
-    description = 'Add';
-
     constructor(state) {
+        super();
         this.state = {
             target: null,
             parent: null,
             ...state
         };
-    }
-
-    mergePreviousOperation(prevOperation) {
-        console.log('mergePreviousOperation', prevOperation);
     }
 
     redo() {

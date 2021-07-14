@@ -340,7 +340,7 @@ export const actions = {
      */
     generateModel: (headType, originalName, uploadName, sourceWidth, sourceHeight, mode, sourceType, config, gcodeConfig, transformation, modelID, zIndex) => (dispatch, getState) => {
         const { size } = getState().machine;
-        const { materials, modelGroup, SVGActions, contentGroup } = getState()[headType];
+        const { materials, modelGroup, SVGActions, contentGroup, toolPathGroup } = getState()[headType];
 
         sourceType = sourceType || getSourceType(originalName);
 
@@ -420,6 +420,16 @@ export const actions = {
         };
 
         const model = modelGroup.addModel(options);
+
+        const operation = new AddOperation2D({
+            toolPathGroup,
+            svgActions: SVGActions,
+            target: model
+        });
+        const operations = new Operations();
+        operations.push(operation);
+
+        dispatch(operationHistoryActions.setOperations(operations));
 
         SVGActions.clearSelection();
         SVGActions.addSelectedSvgModelsByModels([model]);
@@ -638,29 +648,20 @@ export const actions = {
 
     onFlipSelectedModel: (headType, flipStr) => (dispatch, getState) => {
         const model = getState()[headType].modelGroup.getSelectedModel();
-        let { scaleX, scaleY } = model.transformation;
 
         switch (flipStr) {
             case 'Vertical':
-                scaleY *= -1;
+                dispatch(actions.flipElementsVertically(headType, [model.elem]));
                 break;
             case 'Horizontal':
-                scaleX *= -1;
+                dispatch(actions.flipElementsHorizontally(headType, [model.elem]));
                 break;
             case 'Reset':
-                scaleX = Math.abs(scaleX);
-                scaleY = Math.abs(scaleY);
+                dispatch(actions.resetFlipElements(headType, [model.elem]));
                 break;
             default:
         }
-        if (model.modelID) {
-            model.updateAndRefresh({
-                transformation: {
-                    scaleX,
-                    scaleY
-                }
-            });
-        }
+
         dispatch(actions.processSelectedModel(headType));
         dispatch(actions.resetProcessState(headType));
     },
@@ -1312,9 +1313,31 @@ export const actions = {
      */
     flipElementsHorizontally: (headType, elements) => (dispatch, getState) => {
         const { SVGActions } = getState()[headType];
+        const { machine } = getState();
+
+        const tmpTransformationState = {};
+        for (const element of elements) {
+            const svgModel = SVGActions.getSVGModelByElement(element);
+            tmpTransformationState[element.id] = { ...svgModel.transformation };
+        }
 
         SVGActions.flipElementsHorizontally(elements);
 
+        const operations = new Operations();
+        for (const element of elements) {
+            const svgModel = SVGActions.getSVGModelByElement(element);
+            if (!_.isEqual(tmpTransformationState[element.id], svgModel.transformation)) {
+                const operation = new ScaleOperation2D({
+                    target: svgModel,
+                    svgActions: SVGActions,
+                    machine,
+                    from: tmpTransformationState[element.id],
+                    to: { ...svgModel.transformation }
+                });
+                operations.push(operation);
+            }
+        }
+        dispatch(operationHistoryActions.setOperations(operations));
         dispatch(actions.resetProcessState(headType));
 
         dispatch(baseActions.render(headType));
@@ -1327,9 +1350,66 @@ export const actions = {
      */
     flipElementsVertically: (headType, elements) => (dispatch, getState) => {
         const { SVGActions } = getState()[headType];
+        const { machine } = getState();
+
+        const tmpTransformationState = {};
+        for (const element of elements) {
+            const svgModel = SVGActions.getSVGModelByElement(element);
+            tmpTransformationState[element.id] = { ...svgModel.transformation };
+        }
 
         SVGActions.flipElementsVertically(elements);
 
+        const operations = new Operations();
+        for (const element of elements) {
+            const svgModel = SVGActions.getSVGModelByElement(element);
+            if (!_.isEqual(tmpTransformationState[element.id], svgModel.transformation)) {
+                const operation = new ScaleOperation2D({
+                    target: svgModel,
+                    svgActions: SVGActions,
+                    machine,
+                    from: tmpTransformationState[element.id],
+                    to: { ...svgModel.transformation }
+                });
+                operations.push(operation);
+            }
+        }
+        dispatch(operationHistoryActions.setOperations(operations));
+        dispatch(baseActions.render(headType));
+    },
+
+    /**
+     * Flip elements vertically.
+     *
+     * Note that only support flip one element.
+     */
+    resetFlipElements: (headType, elements) => (dispatch, getState) => {
+        const { SVGActions } = getState()[headType];
+        const { machine } = getState();
+
+        const tmpTransformationState = {};
+        for (const element of elements) {
+            const svgModel = SVGActions.getSVGModelByElement(element);
+            tmpTransformationState[element.id] = { ...svgModel.transformation };
+        }
+
+        SVGActions.resetFlipElements(elements);
+
+        const operations = new Operations();
+        for (const element of elements) {
+            const svgModel = SVGActions.getSVGModelByElement(element);
+            if (!_.isEqual(tmpTransformationState[element.id], svgModel.transformation)) {
+                const operation = new ScaleOperation2D({
+                    target: svgModel,
+                    svgActions: SVGActions,
+                    machine,
+                    from: tmpTransformationState[element.id],
+                    to: { ...svgModel.transformation }
+                });
+                operations.push(operation);
+            }
+        }
+        dispatch(operationHistoryActions.setOperations(operations));
         dispatch(baseActions.render(headType));
     },
 
