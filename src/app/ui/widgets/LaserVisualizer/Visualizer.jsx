@@ -62,6 +62,7 @@ class Visualizer extends Component {
         isChangedAfterGcodeGenerating: PropTypes.bool.isRequired,
 
         // func
+        clearOperationHistory: PropTypes.func.isRequired,
         undo: PropTypes.func.isRequired,
         redo: PropTypes.func.isRequired,
         initContentGroup: PropTypes.func.isRequired,
@@ -242,17 +243,7 @@ class Visualizer extends Component {
 
     componentDidMount() {
         this.canvas.current.resizeWindow();
-        // this.canvas.current.disable3D();
-
-        // window.addEventListener(
-        //     'hashchange',
-        //     (event) => {
-        //         if (event.newURL.endsWith('laser')) {
-        //             this.canvas.current.resizeWindow();
-        //         }
-        //     },
-        //     false
-        // );
+        this.props.clearOperationHistory();
         UniApi.Event.on('appbar-menu:laser.import', this.actions.importFile);
     }
 
@@ -316,6 +307,7 @@ class Visualizer extends Component {
     }
 
     componentWillUnmount() {
+        this.props.clearOperationHistory();
         UniApi.Event.off('appbar-menu:laser.import', this.actions.importFile);
     }
 
@@ -643,6 +635,7 @@ const mapStateToProps = (state, ownProps) => {
 
 const mapDispatchToProps = (dispatch) => {
     return {
+        clearOperationHistory: () => dispatch(operationHistoryActions.clear()),
         undo: () => dispatch(operationHistoryActions.undo()),
         redo: () => dispatch(operationHistoryActions.redo()),
         initContentGroup: (svgContentGroup) => dispatch(editorActions.initContentGroup('laser', svgContentGroup)),

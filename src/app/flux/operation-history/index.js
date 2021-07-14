@@ -22,6 +22,16 @@ export const actions = {
             });
         }
     },
+    clear: () => (dispatch, getState) => {
+        const { history } = getState().operationHistory;
+        history.clear();
+        dispatch({
+            type: ACTIONS_UPDATE_STATE,
+            action: {
+                history
+            }
+        });
+    },
     undo: () => (dispatch, getState) => {
         const { history } = getState().operationHistory;
         history.undo();

@@ -45,6 +45,7 @@ class Visualizer extends PureComponent {
         renderingTimestamp: PropTypes.number.isRequired,
         inProgress: PropTypes.bool.isRequired,
 
+        clearOperationHistory: PropTypes.func.isRequired,
         updateTargetTmpState: PropTypes.func.isRequired,
         clearTargetTmpState: PropTypes.func.isRequired,
         setOperations: PropTypes.func.isRequired,
@@ -470,6 +471,7 @@ class Visualizer extends PureComponent {
     // };
 
     componentDidMount() {
+        this.props.clearOperationHistory();
         this.canvas.current.resizeWindow();
         this.canvas.current.enable3D();
         ShortcutManager.register(this.shortcutHandler);
@@ -567,6 +569,7 @@ class Visualizer extends PureComponent {
     }
 
     componentWillUnmount() {
+        this.props.clearOperationHistory();
         this.props.modelGroup.on('add', this.actions.recordAddOperation);
     }
 
@@ -812,6 +815,7 @@ const mapStateToProps = (state, ownProps) => {
 };
 
 const mapDispatchToProps = (dispatch) => ({
+    clearOperationHistory: () => dispatch(operationHistoryActions.clear()),
     setOperations: (operation) => dispatch(operationHistoryActions.setOperations(operation)),
     clearTargetTmpState: () => dispatch(operationHistoryActions.clearTargetTmpState()),
     updateTargetTmpState: (targetId, tmpState) => dispatch(operationHistoryActions.updateTargetTmpState(targetId, tmpState)),
