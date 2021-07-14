@@ -1335,6 +1335,7 @@ class SVGActionsFactory {
      * @param newAngle
      */
     rotateElementsImmediately(elements, { newAngle }) {
+        console.log(newAngle);
         if (!elements || elements.length === 0) {
             return;
         }

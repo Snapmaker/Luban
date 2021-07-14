@@ -5,6 +5,10 @@ export default class Operations {
         this.operations.push(...operations);
     }
 
+    isEmpty() {
+        return this.operations.length === 0;
+    }
+
     mergePreviousOperation() {
         console.log('Operations.mergePreviousOperation');
     }

@@ -3,8 +3,6 @@ import Operation from './Operation';
 export default class DeleteOperation2D extends Operation {
     state = {};
 
-    description = 'DeleteOperation2D';
-
     constructor(state) {
         super();
         this.state = {
@@ -37,6 +35,7 @@ export default class DeleteOperation2D extends Operation {
         }
         svgActions.svgContentGroup.deleteElement(model.elem);
         modelGroup.removeModel(model);
+        svgActions.clearSelection();
     }
 
     undo() {
@@ -62,5 +61,6 @@ export default class DeleteOperation2D extends Operation {
         modelGroup.models.push(model);
         modelGroup.models = [...modelGroup.models]; // trigger <ModelItem> component to show the unselected model
         modelGroup.modelChanged();
+        svgActions.clearSelection();
     }
 }

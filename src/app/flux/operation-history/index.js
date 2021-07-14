@@ -11,14 +11,16 @@ const INITIAL_STATE = {
 export const actions = {
     // one time complete
     setOperations: (operations) => (dispatch, getState) => {
-        const { history } = getState().operationHistory;
-        history.push(operations);
-        dispatch({
-            type: ACTIONS_UPDATE_STATE,
-            action: {
-                history
-            }
-        });
+        if (!operations.isEmpty()) {
+            const { history } = getState().operationHistory;
+            history.push(operations);
+            dispatch({
+                type: ACTIONS_UPDATE_STATE,
+                action: {
+                    history
+                }
+            });
+        }
     },
     undo: () => (dispatch, getState) => {
         const { history } = getState().operationHistory;
@@ -66,16 +68,6 @@ export const actions = {
             }
         });
     }
-    // ,
-    // createOperation: (state) => (dispatch, getState) => {
-    //     const operationHistory = getState().operationHistory;
-    // },
-    // updateOperation: (state) => (dispatch, getState) => {
-    //     const operationHistory = getState().operationHistory;
-    // },
-    // finishOperation: (state) => (dispatch, getState) => {
-    //     const operationHistory = getState().operationHistory;
-    // }
 };
 
 export default function reducers(state = INITIAL_STATE, action) {

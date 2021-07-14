@@ -8,6 +8,9 @@ import { getToolPathType } from '../../toolpaths/utils';
 import { toast } from '../../ui/components/Toast';
 
 import i18n from '../../lib/i18n';
+import { actions as operationHistoryActions } from '../operation-history';
+import DeleteToolPathOperation from '../operation-history/DeleteToolPathOperation';
+import Operations from '../operation-history/Operations';
 
 let toastId;
 
@@ -217,7 +220,16 @@ export const processActions = {
 
     deleteToolPath: (headType, toolPathId) => (dispatch, getState) => {
         const { toolPathGroup } = getState()[headType];
+
+        const operations = new Operations();
+        const operation = new DeleteToolPathOperation({
+            target: toolPathGroup._getToolPath(toolPathId),
+            toolPathGroup
+        });
+        operations.push(operation);
         toolPathGroup.deleteToolPath(toolPathId);
+
+        dispatch(operationHistoryActions.setOperations(operations));
         dispatch(processActions.showSimulationInPreview(headType, false));
         dispatch(baseActions.updateState(headType, {
             displayedType: DISPLAYED_TYPE_MODEL,

@@ -1,7 +1,7 @@
 export default class Operation {
     state = {};
 
-    description = 'Noop';
+    description = this.constructor.name;
 
     mergePreviousOperation(operation) {
         console.log('mergePreviousOperation', operation);

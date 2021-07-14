@@ -1102,7 +1102,6 @@ class SVGCanvas extends PureComponent {
                 cleanupAttributes(element);
 
                 this.props.onCreateElement(element);
-                console.log('asdasdas', element);
 
                 // TODO: select model newly created
                 // this.addToSelection([element]);
