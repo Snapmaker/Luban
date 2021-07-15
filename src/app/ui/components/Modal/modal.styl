@@ -1,0 +1,37 @@
+@import "../../../styles/global-var.styl";
+
+:global(.ant-modal) {
+    min-height: 200px !important;
+    min-width: 480px !important;
+    max-width: 992px !important;
+    max-height: 720px !important;
+}
+
+:global(.ant-modal-content) {
+    :global(.ant-modal-close) {
+        :global(.ant-modal-close-x) {
+            width: $px-grade-28;
+            height: $px-grade-24;
+            line-height: $px-grade-20;
+        }
+    }
+    :global(.ant-modal-header) {
+        padding: $px-grade-7 $px-grade-12;
+    }
+    :global(.ant-modal-body) {
+        padding: $px-grade-12 $px-grade-12 $px-grade-20;
+    }
+    :global(.ant-modal-footer) {
+        background: $grey-3;
+    }
+}
+
+:global(.ant-modal-root) {
+    :global(.no-header) {
+        :global(.ant-modal-content) {
+            :global(.ant-modal-body) {
+                padding-top: $px-grade-20;
+            }
+        }
+    }
+}

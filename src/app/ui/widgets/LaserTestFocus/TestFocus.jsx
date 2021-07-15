@@ -78,9 +78,9 @@ class TestFocus extends PureComponent {
                 {showInstructions && (
                     <Modal style={{ width: '1080px' }} size="lg" onClose={actions.hideInstructions}>
                         <Modal.Header>
-                            <Modal.Title>
-                                {i18n._('How Fine Tune Work Origin Works')}
-                            </Modal.Title>
+                            {/* <Modal.Title> */}
+                            {i18n._('How Fine Tune Work Origin Works')}
+                            {/* </Modal.Title> */}
                         </Modal.Header>
                         <Modal.Body className={styles['test-laser-instruction-content']}>
                             <p>

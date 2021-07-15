@@ -174,9 +174,9 @@ function ToolPathConfigurations(props) {
                 onClose={actions.cancelUpdateToolPath}
             >
                 <Modal.Header>
-                    <Modal.Title>
-                        {i18n._('Configurations')}
-                    </Modal.Title>
+                    {/* <Modal.Title> */}
+                    {i18n._('Configurations')}
+                    {/* </Modal.Title> */}
                 </Modal.Header>
                 <Modal.Body style={{
                     overflowY: 'auto',

@@ -411,6 +411,7 @@ function ProfileManager({ optionConfigGroup, disableCategory = true, managerTitl
         <React.Fragment>
             {definitionState?.definitionForManager && (
                 <Modal
+                    size="lg"
                     className={classNames(styles['manager-body'])}
                     style={{ minWidth: '700px' }}
                     onClose={outsideActions.closeManager}

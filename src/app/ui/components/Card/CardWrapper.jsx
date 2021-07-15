@@ -3,8 +3,8 @@ import React, { useState } from 'react';
 import PropTypes from 'prop-types';
 import classNames from 'classnames';
 import { Card } from 'antd';
-import SvgIcon from '../SvgIcon';
 import styles from './styles.styl';
+import SvgIcon from '../SvgIcon';
 // import i18n from '../../../lib/i18n';
 
 function CardWrapper({ className = '', children, hasToggleBotton = true, ...rest }) {
