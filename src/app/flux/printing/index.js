@@ -1138,23 +1138,6 @@ export const actions = {
 
     // uploadModel
     undo: () => (dispatch) => {
-    // undo: () => (dispatch, getState) => {
-        // const { modelGroup, undoSnapshots, redoSnapshots } = getState().printing;
-        // if (undoSnapshots.length <= 1) {
-        //     return;
-        // }
-        // redoSnapshots.push(undoSnapshots.pop());
-        // const snapshots = undoSnapshots[undoSnapshots.length - 1];
-
-        // const modelState = modelGroup.undoRedo(snapshots.models);
-
-        // dispatch(actions.updateState({
-        //     ...modelState,
-        //     undoSnapshots: undoSnapshots,
-        //     redoSnapshots: redoSnapshots,
-        //     canUndo: undoSnapshots.length > 1,
-        //     canRedo: redoSnapshots.length > 0
-        // }));
         dispatch(operationHistoryActions.undo());
         dispatch(actions.destroyGcodeLine());
         dispatch(actions.displayModel());
@@ -1162,24 +1145,6 @@ export const actions = {
     },
 
     redo: () => (dispatch) => {
-    // redo: () => (dispatch, getState) => {
-        // const { modelGroup, undoSnapshots, redoSnapshots } = getState().printing;
-        // if (redoSnapshots.length === 0) {
-        //     return;
-        // }
-
-        // undoSnapshots.push(redoSnapshots.pop());
-        // const snapshots = undoSnapshots[undoSnapshots.length - 1];
-
-        // const modelState = modelGroup.undoRedo(snapshots.models);
-
-        // dispatch(actions.updateState({
-        //     ...modelState,
-        //     undoSnapshots: undoSnapshots,
-        //     redoSnapshots: redoSnapshots,
-        //     canUndo: undoSnapshots.length > 1,
-        //     canRedo: redoSnapshots.length > 0
-        // }));
         dispatch(operationHistoryActions.redo());
         dispatch(actions.destroyGcodeLine());
         dispatch(actions.displayModel());

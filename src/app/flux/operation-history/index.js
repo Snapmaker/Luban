@@ -5,12 +5,33 @@ const ACTIONS_UPDATE_STATE = 'history/ACTION_UPDATE_STATE';
 
 const INITIAL_STATE = {
     history: getOperationHistoryInstance(),
-    targetTmpState: {}
+    targetTmpState: {},
+    // When project recovered, the operation history should be cleared,
+    // however we can not identify while the recovery is done, just exclude
+    // them when the models loaded at the first time.
+    excludeModelIDs: {}
 };
 
 export const actions = {
-    // one time complete
+    excludeModelById: (id) => (dispatch, getState) => {
+        const { excludeModelIDs } = getState().operationHistory;
+        excludeModelIDs[id] = true;
+        dispatch({
+            type: ACTIONS_UPDATE_STATE,
+            action: {
+                excludeModelIDs
+            }
+        });
+    },
     setOperations: (operations) => (dispatch, getState) => {
+        const { excludeModelIDs } = getState().operationHistory;
+        for (let i = operations.length() - 1; i > -1; i--) {
+            const modelID = operations.getItem(i).state.target.modelID;
+            if (modelID in excludeModelIDs) {
+                delete excludeModelIDs[modelID];
+                operations.removeItem(i);
+            }
+        }
         if (!operations.isEmpty()) {
             const { history } = getState().operationHistory;
             history.push(operations);

@@ -636,8 +636,8 @@ const mapStateToProps = (state, ownProps) => {
 const mapDispatchToProps = (dispatch) => {
     return {
         clearOperationHistory: () => dispatch(operationHistoryActions.clear()),
-        undo: () => dispatch(operationHistoryActions.undo()),
-        redo: () => dispatch(operationHistoryActions.redo()),
+        undo: () => dispatch(editorActions.undo()),
+        redo: () => dispatch(editorActions.redo()),
         initContentGroup: (svgContentGroup) => dispatch(editorActions.initContentGroup('laser', svgContentGroup)),
         updateTarget: (target) => dispatch(editorActions.updateState('laser', { target })),
         updateScale: (scale) => dispatch(editorActions.updateState('laser', { scale })),

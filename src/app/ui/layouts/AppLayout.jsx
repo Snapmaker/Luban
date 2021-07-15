@@ -31,10 +31,12 @@ import { actions as menuActions } from '../../flux/appbar-menu';
 import { actions as machineActions } from '../../flux/machine';
 import { actions as editorActions } from '../../flux/editor';
 import { actions as projectActions } from '../../flux/project';
+import { actions as operationHistoryActions } from '../../flux/operation-history';
 import styles from './styles/appbar.styl';
 
 class AppLayout extends PureComponent {
     static propTypes = {
+        clearOperationHistory: PropTypes.func.isRequired,
         updateMaterials: PropTypes.func.isRequired,
         initRecoverService: PropTypes.func.isRequired,
         save: PropTypes.func.isRequired,
@@ -374,6 +376,7 @@ class AppLayout extends PureComponent {
             UniApi.Event.on('appbar-menu:new-file', async ({ headType, isRotate }) => {
                 await this.actions.closeFile();
                 this.props.history.push(`/${headType}`);
+                this.props.clearOperationHistory();
                 if (headType === 'cnc' || headType === 'laser') {
                     // UniApi.Event.emit('appbar-menu:cnc-laser.new-file', isRotate);
                     this.props.updateMaterials(headType, { isRotate });
@@ -481,6 +484,7 @@ const mapStateToProps = (state) => {
 
 const mapDispatchToProps = (dispatch) => {
     return {
+        clearOperationHistory: () => dispatch(operationHistoryActions.clear()),
         initRecoverService: () => dispatch(projectActions.initRecoverService()),
         saveAsFile: (headType) => dispatch(projectActions.saveAsFile(headType)),
         save: (headType, dialogOptions) => dispatch(projectActions.save(headType, dialogOptions)),

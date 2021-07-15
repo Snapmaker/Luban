@@ -17,6 +17,7 @@ import { actions as editorActions } from '../editor';
 // import machineAction from '../machine/action-base';
 import { actions as workspaceActions } from '../workspace';
 import { bubbleSortByAttribute } from '../../lib/numeric-utils';
+import { actions as operationHistoryActions } from '../operation-history';
 
 import i18n from '../../lib/i18n';
 import UniApi from '../../lib/uni-api';
@@ -190,8 +191,12 @@ export const actions = {
             }
         }
 
+        // clear operation history
+        dispatch(operationHistoryActions.clear());
         for (let k = 0; k < models.length; k++) {
             const { headType, originalName, uploadName, config, sourceType, gcodeConfig, sourceWidth, sourceHeight, mode, transformation, modelID } = models[k];
+            // prevent project recovery recorded into operation history
+            dispatch(operationHistoryActions.excludeModelById(modelID));
             await dispatch(modActions.generateModel(headType, originalName, uploadName, sourceWidth, sourceHeight, mode,
                 sourceType, config, gcodeConfig, transformation, modelID));
         }
@@ -394,6 +399,9 @@ export const actions = {
         dispatch(actions.updateState(newHeadType, { unSaved: false, openedFile: null }));
 
         history.push(to);
+
+        // clear operation history
+        dispatch(operationHistoryActions.clear());
     },
 
     saveAndClose: (headType, opts) => async (dispatch, getState) => {

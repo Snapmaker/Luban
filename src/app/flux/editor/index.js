@@ -939,44 +939,13 @@ export const actions = {
         dispatch(baseActions.render(headType));
     },
 
-    undo: (headType) => (dispatch, getState) => {
-        const { modelGroup, undoSnapshots, redoSnapshots } = getState()[headType];
-        if (undoSnapshots.length <= 1) {
-            return;
-        }
-        redoSnapshots.push(undoSnapshots.pop());
-        const snapshots = undoSnapshots[undoSnapshots.length - 1];
-
-        const modelState = modelGroup.undoRedo(snapshots.models);
-
-        dispatch(baseActions.updateState(headType, {
-            ...modelState,
-            undoSnapshots: undoSnapshots,
-            redoSnapshots: redoSnapshots,
-            canUndo: undoSnapshots.length > 1,
-            canRedo: redoSnapshots.length > 0
-        }));
+    undo: (headType) => (dispatch) => {
+        dispatch(operationHistoryActions.undo());
         dispatch(baseActions.render(headType));
     },
 
-    redo: (headType) => (dispatch, getState) => {
-        const { modelGroup, undoSnapshots, redoSnapshots } = getState()[headType];
-        if (redoSnapshots.length === 0) {
-            return;
-        }
-
-        undoSnapshots.push(redoSnapshots.pop());
-        const snapshots = undoSnapshots[undoSnapshots.length - 1];
-
-        const modelState = modelGroup.undoRedo(snapshots.models);
-
-        dispatch(baseActions.updateState(headType, {
-            ...modelState,
-            undoSnapshots: undoSnapshots,
-            redoSnapshots: redoSnapshots,
-            canUndo: undoSnapshots.length > 1,
-            canRedo: redoSnapshots.length > 0
-        }));
+    redo: (headType) => (dispatch) => {
+        dispatch(operationHistoryActions.redo());
         dispatch(baseActions.render(headType));
     },
 
