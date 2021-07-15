@@ -102,7 +102,7 @@ class SvgIcon extends PureComponent {
         }
 
         return (
-            <span title={title} style={{ verticalAlign: 'top' }}>
+            <span title={title} className={classNames(className, 'display-inline')} style={{ verticalAlign: 'top', background: iconBackground }}>
                 { inputInfo !== undefined && (
                     <input
                         ref={inputInfo.fileInput}
@@ -114,7 +114,7 @@ class SvgIcon extends PureComponent {
                     />
                 )}
                 <div
-                    className={classNames(className, 'display-inline')}
+                    className={classNames('display-inline')}
                     disabled={disabled}
                     onKeyDown={noop}
                     role="button"

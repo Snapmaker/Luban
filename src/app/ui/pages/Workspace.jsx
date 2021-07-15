@@ -92,8 +92,6 @@ const reloadPage = (forcedReload = true) => {
 class Workspace extends PureComponent {
     static propTypes = {
         ...withRouter.propTypes,
-        showPrimaryContainer: PropTypes.bool.isRequired,
-        showSecondaryContainer: PropTypes.bool.isRequired,
         defaultWidgets: PropTypes.array.isRequired,
         primaryWidgets: PropTypes.array.isRequired,
         secondaryWidgets: PropTypes.array.isRequired,
@@ -260,7 +258,7 @@ class Workspace extends PureComponent {
     }
 
     render() {
-        const { style, className, primaryWidgets, secondaryWidgets, showPrimaryContainer, showSecondaryContainer } = this.props;
+        const { style, className, primaryWidgets, secondaryWidgets } = this.props;
         const {
             isDraggingWidget,
             connected
@@ -271,8 +269,6 @@ class Workspace extends PureComponent {
         return (
             <div style={style} className={classNames(className)}>
                 <WorkspaceLayout
-                    showSecondaryContainer={showSecondaryContainer}
-                    showPrimaryContainer={showPrimaryContainer}
                     renderMainToolBar={this.renderMainToolBar}
                     renderLeftView={() => renderWidgetList('workspace', 'left', primaryWidgets, allWidgets, this.listActions, widgetProps)}
                     renderRightView={() => renderWidgetList('workspace', 'right', secondaryWidgets, allWidgets, this.listActions, widgetProps)}
@@ -282,8 +278,6 @@ class Workspace extends PureComponent {
                         disabled={isDraggingWidget || controller.workflowState !== WORKFLOW_STATE_IDLE}
                         accept={ACCEPT}
                         dragEnterMsg={i18n._('Drop a G-code file here.')}
-                        havePrimaryWidget={showPrimaryContainer}
-                        haveSecondaryWidget={showSecondaryContainer}
                         onDropAccepted={this.actions.onDropAccepted}
                         onDropRejected={this.actions.onDropRejected}
                     >
@@ -305,14 +299,10 @@ class Workspace extends PureComponent {
 }
 const mapStateToProps = (state) => {
     const widget = state.widget;
-    const showPrimaryContainer = widget.workspace.left.show;
     const primaryWidgets = widget.workspace.left.widgets;
-    const showSecondaryContainer = widget.workspace.right.show;
     const secondaryWidgets = widget.workspace.right.widgets;
     const defaultWidgets = widget.workspace.default.widgets;
     return {
-        showPrimaryContainer,
-        showSecondaryContainer,
         defaultWidgets,
         primaryWidgets,
         secondaryWidgets

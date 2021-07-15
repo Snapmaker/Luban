@@ -47,6 +47,10 @@ Button.propTypes = {
     priority: PropTypes.string,
     className: PropTypes.string,
     suffixIcon: PropTypes.element,
-    children: PropTypes.string | PropTypes.number | PropTypes.element
+    children: PropTypes.oneOfType([
+        PropTypes.number,
+        PropTypes.element,
+        PropTypes.string
+    ])
 };
 export default Button;

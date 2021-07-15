@@ -98,7 +98,7 @@ class Connection extends PureComponent {
         const { connectionType, isConnected, series, isHomed } = this.props;
         const { alertMessage, showHomeReminder, expanded } = this.state;
         const isOriginal = series === MACHINE_SERIES.ORIGINAL.value;
-
+        console.log('dd', isOriginal, isHomed, isOriginal, showHomeReminder);
         return (
             <div className="border-bottom-normal padding-bottom-16">
                 <Anchor className="sm-flex height-24 margin-top-16" onClick={this.actions.onToggleExpand}>
@@ -150,9 +150,7 @@ class Connection extends PureComponent {
                         {isConnected && showHomeReminder && !isOriginal && isHomed !== null && !isHomed && (
                             <Modal disableOverlay size="sm" showCloseButton={false}>
                                 <Modal.Header>
-                                    <Modal.Title>
-                                        {i18n._('Home Reminder')}
-                                    </Modal.Title>
+                                    {i18n._('Home Reminder')}
                                 </Modal.Header>
                                 <Modal.Body>
                                     <div>

@@ -332,19 +332,19 @@ class WifiConnection extends PureComponent {
                     </div>
                     <div>
                         <SvgIcon
-                            className="border-default-black-5 border-radius-left-8"
+                            className="border-default-black-5 padding-vertical-4 padding-horizontal-4 border-radius-left-8"
                             name={serverDiscovering ? 'Reset' : 'Reset'}
-                            size="30"
                             title={i18n._('Refresh')}
                             onClick={this.actions.onRefreshServers}
                             disabled={isOpen}
+                            size={22}
                         />
                         <SvgIcon
-                            className="border-default-black-5 border-radius-right-8"
+                            className="border-default-black-5 padding-vertical-4 padding-horizontal-4 border-radius-right-8"
                             name="Add"
-                            size="30"
                             title={i18n._('Add')}
                             disabled={isOpen}
+                            size={22}
                             onClick={this.actions.showManualWiFiModal}
                         />
                     </div>

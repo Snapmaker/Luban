@@ -332,9 +332,9 @@ class SerialConnection extends PureComponent {
                         />
                     </div>
                     <SvgIcon
-                        className="border-default-black-5 border-radius-8"
+                        className="border-default-black-5 padding-vertical-4 padding-horizontal-4 border-radius-8"
+                        size={22}
                         name="Reset"
-                        size="30"
                         title={i18n._('Refresh')}
                         onClick={this.actions.onRefreshPorts}
                         disabled={!canRefresh}
