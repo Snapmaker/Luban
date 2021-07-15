@@ -309,31 +309,28 @@ class WifiConnection extends PureComponent {
         return (
             <div>
                 <div className="sm-flex justify-space-between margin-bottom-16">
-                    <div
-                        className={classNames('sm-flex-auto sm-flex-order-negative')}
-                    >
-                        {/** https://react-select.com/upgrade-guide#new-components-api **/}
-                        <Select
-                            backspaceRemoves={false}
-                            clearable={false}
-                            name="port"
-                            size="large"
-                            noResultsText={i18n._('No machines detected.')}
-                            onChange={this.actions.onChangeServerOption}
-                            disabled={isOpen}
-                            options={map(servers, (s) => ({
-                                value: s.name,
-                                address: s.address,
-                                label: `${s.name} (${s.address})`
-                            }))}
-                            placeholder={i18n._('Choose a machine')}
-                            value={server ? server?.name : ''}
-                        />
-                    </div>
-                    <div>
+                    {/** https://react-select.com/upgrade-guide#new-components-api **/}
+                    <Select
+                        backspaceRemoves={false}
+                        className={classNames('sm-flex-width sm-flex-order-negative')}
+                        clearable={false}
+                        size="256px"
+                        name="port"
+                        noResultsText={i18n._('No machines detected.')}
+                        onChange={this.actions.onChangeServerOption}
+                        disabled={isOpen}
+                        options={map(servers, (s) => ({
+                            value: s.name,
+                            address: s.address,
+                            label: `${s.name} (${s.address})`
+                        }))}
+                        placeholder={i18n._('Choose a machine')}
+                        value={server ? server?.name : ''}
+                    />
+                    <div className="sm-flex-auto ">
                         <SvgIcon
-                            className="border-default-black-5 padding-vertical-4 padding-horizontal-4 border-radius-left-8"
-                            name={serverDiscovering ? 'Reset' : 'Reset'}
+                            className="border-default-black-5 margin-left-8 padding-vertical-4 padding-horizontal-4 border-radius-left-8"
+                            name={serverDiscovering ? 'Refresh' : 'Reset'}
                             title={i18n._('Refresh')}
                             onClick={this.actions.onRefreshServers}
                             disabled={isOpen}
@@ -383,7 +380,7 @@ class WifiConnection extends PureComponent {
                         <Button
                             width="120px"
                             type="primary"
-                            priority="level-one"
+                            priority="level-two"
                             onClick={this.actions.openServer}
                             disabled={isOpen}
                         >
@@ -394,7 +391,7 @@ class WifiConnection extends PureComponent {
                         <Button
                             width="120px"
                             type="primary"
-                            priority="level-one"
+                            priority="level-two"
                             onClick={this.actions.closeServer}
                         >
                             {i18n._('Disconnect')}

@@ -49,6 +49,7 @@ import CNCPathWidget from '../widgets/CNCPath';
 // import PrintingOutputWidget from '../widgets/PrintingOutput';
 import WifiTransport from '../widgets/WifiTransport';
 import EnclosureWidget from '../widgets/Enclosure';
+
 import CncLaserObjectList from '../widgets/CncLaserList';
 // import PrintingObjectList from '../widgets/PrintingObjectList';
 import JobType from '../widgets/JobType';
@@ -104,9 +105,9 @@ class Workspace extends PureComponent {
     state = {
         leftItems: [
             {
-                title: i18n._('Home'),
+                title: i18n._('Back'),
                 type: 'button',
-                name: 'MainToolbarHome',
+                name: 'MainToolbarBack',
                 action: () => {
                     this.props.history.push('/');
                 }

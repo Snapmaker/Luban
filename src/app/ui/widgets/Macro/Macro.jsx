@@ -125,7 +125,8 @@ class Macro extends PureComponent {
                         className={classNames(
                             'sm-flex',
                             'justify-space-between',
-                            'height-32',
+                            'height-24',
+                            'margin-vertical-4'
                         )}
                     >
                         <TipTrigger

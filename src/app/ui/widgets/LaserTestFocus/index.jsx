@@ -1,16 +1,16 @@
 import React, { PureComponent } from 'react';
-import classNames from 'classnames';
 import { connect } from 'react-redux';
 import PropTypes from 'prop-types';
-import i18n from '../../../lib/i18n';
-import Widget from '../../components/Widget';
+// import Widget from '../../components/Widget';
 import {
-    WidgetState,
-    SMSortableHandle
+    WidgetState
+    // SMSortableHandle
     // SMMinimizeButton,
     // SMDropdownButton
 } from '../../components/SMWidget';
-import styles from '../styles.styl';
+// import SvgIcon from '../../components/SvgIcon';
+// import Anchor from '../../components/Anchor';
+// import styles from '../styles.styl';
 import TestFocus from './TestFocus';
 import { MACHINE_HEAD_TYPE } from '../../../constants';
 
@@ -49,34 +49,12 @@ class LaserTestFocusWidget extends PureComponent {
         }
 
         return (
-            <Widget fullscreen={state.fullscreen}>
-                <Widget.Header>
-                    <SMSortableHandle />
-                    {i18n._('Fine Tune Work Origin')}
-                    {/* <Widget.Controls className="sortable-filter">
-                        <Widget.Button
-                            onClick={this.actions.showInstructions}
-                        >
-                            <i className="fa fa-info" />
-                        </Widget.Button>
-                        <SMMinimizeButton state={state} actions={actions} />
-                        <SMDropdownButton state={state} actions={actions} />
-                    </Widget.Controls>*/}
-                </Widget.Header>
-                <Widget.Content
-                    className={classNames(
-                        styles['widget-content'],
-                        { [styles.hidden]: state.minimized }
-                    )}
-                >
-                    <TestFocus
-                        isConnected={this.props.isConnected}
-                        workflowState={this.props.workflowState}
-                        showInstructions={state.showInstructions}
-                        actions={this.actions}
-                    />
-                </Widget.Content>
-            </Widget>
+            <TestFocus
+                isConnected={this.props.isConnected}
+                workflowState={this.props.workflowState}
+                showInstructions={state.showInstructions}
+                actions={this.actions}
+            />
         );
     }
 }

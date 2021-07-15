@@ -3,9 +3,6 @@ import PropTypes from 'prop-types';
 import classNames from 'classnames';
 import { connect } from 'react-redux';
 import { Button } from '../../components/Buttons';
-import SvgIcon from '../../components/SvgIcon';
-import Anchor from '../../components/Anchor';
-
 
 import {
     CONNECTION_TYPE_SERIAL,
@@ -38,14 +35,10 @@ class Connection extends PureComponent {
 
     state = {
         alertMessage: '',
-        expanded: true,
         showHomeReminder: false
     };
 
     actions = {
-        onToggleExpand: () => {
-            this.setState(state => ({ expanded: !state.expanded }));
-        },
         clearAlert: () => {
             this.setState({
                 alertMessage: ''
@@ -96,81 +89,68 @@ class Connection extends PureComponent {
 
     render() {
         const { connectionType, isConnected, series, isHomed } = this.props;
-        const { alertMessage, showHomeReminder, expanded } = this.state;
+        const { alertMessage, showHomeReminder } = this.state;
         const isOriginal = series === MACHINE_SERIES.ORIGINAL.value;
-        console.log('dd', isOriginal, isHomed, isOriginal, showHomeReminder);
         return (
-            <div className="border-bottom-normal padding-bottom-16">
-                <Anchor className="sm-flex height-24 margin-top-16" onClick={this.actions.onToggleExpand}>
-                    <span className="sm-flex-width font-weight-bold">{i18n._('Connection')}</span>
-                    <SvgIcon
-                        name="DropdownLine"
-                        className={classNames(
-                            this.state.expanded ? '' : 'rotate180'
-                        )}
-                    />
-                </Anchor>
-                {expanded && (
-                    <div>
-                        {alertMessage && (
-                            <Notifications bsStyle="danger" onDismiss={this.actions.clearAlert}>
-                                {alertMessage}
-                            </Notifications>
-                        )}
+            <div className="padding-bottom-16">
+                {alertMessage && (
+                    <Notifications bsStyle="danger" onDismiss={this.actions.clearAlert}>
+                        {alertMessage}
+                    </Notifications>
+                )}
 
-                        {EXPERIMENTAL_WIFI_CONTROL && (
-                            <div className={classNames('sm-tabs', 'margin-vertical-16')}>
-                                <button
-                                    type="button"
-                                    className={classNames('sm-tab', { 'sm-selected': (connectionType === CONNECTION_TYPE_SERIAL) })}
-                                    onClick={this.actions.onSelectTabSerial}
-                                    disabled={isConnected}
-                                >
-                                    {i18n._('Serial Port')}
-                                </button>
-                                <button
-                                    type="button"
-                                    className={classNames('sm-tab', { 'sm-selected': (connectionType === CONNECTION_TYPE_WIFI) })}
-                                    onClick={this.actions.onSelectTabWifi}
-                                    disabled={isConnected}
-                                >
-                                    {i18n._('Wi-Fi')}
-                                </button>
-                            </div>
-                        )}
-                        {!EXPERIMENTAL_WIFI_CONTROL && (
-                            <p>{i18n._('Serial Port')}</p>
-                        )}
-                        {connectionType === CONNECTION_TYPE_SERIAL && (
-                            <SerialConnection dataSource={this.props.dataSource} />
-                        )}
-                        {connectionType === CONNECTION_TYPE_WIFI && (
-                            <WifiConnection />
-                        )}
-                        {isConnected && showHomeReminder && !isOriginal && isHomed !== null && !isHomed && (
-                            <Modal disableOverlay size="sm" showCloseButton={false}>
-                                <Modal.Header>
-                                    {i18n._('Home Reminder')}
-                                </Modal.Header>
-                                <Modal.Body>
-                                    <div>
-                                        {i18n._('To continue, the machine needs to go to its home position. Homing works by moving X, Y, Z axes to the pre-defined positions, which will be used as the reference points.')}
-                                    </div>
-                                </Modal.Body>
-                                <Modal.Footer>
-                                    <Button
-                                        btnStyle="primary"
-                                        onClick={this.actions.clickHomeModalOk}
-                                    >
-                                        {i18n._('OK')}
-                                    </Button>
-                                </Modal.Footer>
-                            </Modal>
-                        )}
+                {EXPERIMENTAL_WIFI_CONTROL && (
+                    <div className={classNames('sm-tabs', 'margin-vertical-16')}>
+                        <button
+                            type="button"
+                            className={classNames('sm-tab', { 'sm-selected': (connectionType === CONNECTION_TYPE_SERIAL) })}
+                            onClick={this.actions.onSelectTabSerial}
+                            disabled={isConnected}
+                        >
+                            {i18n._('Serial Port')}
+                        </button>
+                        <button
+                            type="button"
+                            className={classNames('sm-tab', { 'sm-selected': (connectionType === CONNECTION_TYPE_WIFI) })}
+                            onClick={this.actions.onSelectTabWifi}
+                            disabled={isConnected}
+                        >
+                            {i18n._('Wi-Fi')}
+                        </button>
                     </div>
                 )}
+                {!EXPERIMENTAL_WIFI_CONTROL && (
+                    <p>{i18n._('Serial Port')}</p>
+                )}
+                {connectionType === CONNECTION_TYPE_SERIAL && (
+                    <SerialConnection dataSource={this.props.dataSource} />
+                )}
+                {connectionType === CONNECTION_TYPE_WIFI && (
+                    <WifiConnection />
+                )}
+                {isConnected && showHomeReminder && !isOriginal && isHomed !== null && !isHomed && (
+                    <Modal disableOverlay size="sm" showCloseButton={false}>
+                        <Modal.Header>
+                            {i18n._('Home Reminder')}
+                        </Modal.Header>
+                        <Modal.Body>
+                            <div>
+                                {i18n._('To continue, the machine needs to go to its home position. Homing works by moving X, Y, Z axes to the pre-defined positions, which will be used as the reference points.')}
+                            </div>
+                        </Modal.Body>
+                        <Modal.Footer>
+                            <Button
+                                priority="level-two"
+                                className="align-r"
+                                width="96px"
+                                onClick={this.actions.clickHomeModalOk}
+                            >
+                                {i18n._('OK')}
+                            </Button>
+                        </Modal.Footer>
+                    </Modal>
+                )}
             </div>
-
         );
     }
 }

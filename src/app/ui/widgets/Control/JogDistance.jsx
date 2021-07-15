@@ -183,6 +183,7 @@ const JogDistance = (props) => {
                             <input
                                 type="number"
                                 className="form-control"
+                                style={{ borderColor: '#6c757d' }}
                                 title={i18n._('Custom distance for every move operation')}
                                 min={DISTANCE_MIN}
                                 max={DISTANCE_MAX}
@@ -263,6 +264,7 @@ const JogDistance = (props) => {
                                 </button>
                                 <input
                                     type="number"
+                                    style={{ borderColor: '#6c757d' }}
                                     className="form-control"
                                     title={i18n._('Custom angle for every move operation')}
                                     min={DISTANCE_MIN}

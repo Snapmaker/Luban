@@ -1,4 +1,4 @@
-@import "variables.styl"
+//@import "variables.styl"
 
 .sm-tabs {
     display: block
@@ -21,11 +21,14 @@
         height: 32px
 
         background-color: #FFFFFF;
-        color: $grey-color
+        color: $black-4
 
+        &:hover {
+            color: $black-2
+        }
         &.sm-selected {
             background-color: $white-color
-            color: $blue-color
+            color: $black-2
         }
 
         &.sm-tab-large {
@@ -33,7 +36,7 @@
             color: $text-color
 
             &.sm-selected {
-                color: $blue-color
+                color: $black-2
             }
         }
     }
@@ -46,6 +49,6 @@
     > .sm-tab:last-child {
         border-top-right-radius: 8px
         border-bottom-right-radius: 8px
-        border-right: 1px solid $border-color
+        border-right: 1px solid $black-5
     }
 }

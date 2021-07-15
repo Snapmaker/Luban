@@ -81,10 +81,10 @@ class SvgIcon extends PureComponent {
         } = this.props;
         let iconBackground = 'transparent';
         const Component = Icons[name];
-        if (!Component) {
-            console.log(`Can't find the icon named '${name}', please check your icon name`);
-            return null;
-        }
+        // if (!Component) {
+        //     console.log(`Can't find the icon named '${name}', please check your icon name`);
+        //     return null;
+        // }
         const hoverBackgroundColor = includes(type, 'hoverNoBackground') ? 'transparent' : '#EEEFF0';
         const hoverIconColor = includes(type, 'hoverNoBackground') ? '#2A2C2E' : color;
         const pressedBackground = includes(type, 'pressSpecial') ? '#E7F3FF' : '#D5D6D9';// '#D5D6D9'
@@ -102,7 +102,7 @@ class SvgIcon extends PureComponent {
         }
 
         return (
-            <span title={title} className={classNames(className, 'display-inline')} style={{ verticalAlign: 'top', background: iconBackground }}>
+            <span title={title} className={classNames(className, 'display-inline')} style={{ verticalAlign: 'top', background: iconBackground, fontSize: '0' }}>
                 { inputInfo !== undefined && (
                     <input
                         ref={inputInfo.fileInput}
@@ -115,7 +115,7 @@ class SvgIcon extends PureComponent {
                 )}
                 <div
                     className={classNames('display-inline')}
-                    disabled={disabled}
+                    style={{ maxWidth: 'inherit', cursor: disabled ? 'not-allowed' : 'pointer' }}
                     onKeyDown={noop}
                     role="button"
                     tabIndex={0}
@@ -136,12 +136,18 @@ class SvgIcon extends PureComponent {
                         />
                     )}
                     { spanText && isHorizontal && (
-                        <span className={spanClassName}>
+                        <span
+                            className={spanClassName}
+                            style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontSize: '14px', color: disabled ? '#D5D6D9' : '#000' }}
+                        >
                             {spanText}
                         </span>
                     )}
                     { spanText && !isHorizontal && (
-                        <div className={spanClassName}>
+                        <div
+                            className={spanClassName}
+                            style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontSize: '14px', color: disabled ? '#D5D6D9' : '#000' }}
+                        >
                             {spanText}
                         </div>
                     )}

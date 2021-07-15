@@ -284,7 +284,7 @@ function Laser() {
                     return (
                         <Anchor
                             onClick={() => dispatch(editorActions.bringSelectedModelToFront(HEAD_LASER))}
-                            className="width-64 display-inline align-c padding-vertical-2 padding-horizontal-2 font-size-0"
+                            className="width-64 display-inline align-c padding-top-4 padding-horizontal-2 font-size-0"
                         >
                             <i
                                 style={{
@@ -305,7 +305,7 @@ function Laser() {
                     return (
                         <Anchor
                             onClick={() => dispatch(editorActions.sendSelectedModelToBack(HEAD_LASER))}
-                            className="width-64 display-inline align-c padding-vertical-2 padding-horizontal-2 font-size-0"
+                            className="width-64 display-inline align-c padding-top-4 padding-horizontal-2 font-size-0"
                         >
                             <i
                                 style={{
@@ -330,7 +330,7 @@ function Laser() {
                     return (
                         <Anchor
                             onClick={() => setShowCameraCapture(true)}
-                            className="display-inline align-c padding-vertical-2 padding-horizontal-2 font-size-0"
+                            className="display-inline align-c padding-top-4 padding-horizontal-2 font-size-0"
                         >
                             <i
                                 style={{

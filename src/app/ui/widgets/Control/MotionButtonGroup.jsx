@@ -30,7 +30,7 @@ const MotionButtonGroup = (props) => {
                 )}
             >
                 <Button
-                    width="152px"
+                    width="144px"
                     type="primary"
                     className="margin-bottom-8"
                     priority="level-three"
@@ -45,7 +45,7 @@ const MotionButtonGroup = (props) => {
                 content={i18n._('Move the head to the last saved work origin.')}
             >
                 <Button
-                    width="152px"
+                    width="144px"
                     type="primary"
                     className="margin-bottom-8"
                     priority="level-three"
@@ -68,7 +68,7 @@ const MotionButtonGroup = (props) => {
                 content={i18n._('Set the current position of the head as the work origin.')}
             >
                 <Button
-                    width="152px"
+                    width="144px"
                     type="primary"
                     className="margin-bottom-8"
                     priority="level-three"

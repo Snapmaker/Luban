@@ -1,10 +1,8 @@
 import PropTypes from 'prop-types';
 import React, { PureComponent } from 'react';
-import classNames from 'classnames';
+// import classNames from 'classnames';
 import api from '../../../api';
 import i18n from '../../../lib/i18n';
-import SvgIcon from '../../components/SvgIcon';
-import Anchor from '../../components/Anchor';
 import Macro from './Macro';
 import AddMacro from './AddMacro';
 import EditMacro from './EditMacro';
@@ -24,14 +22,10 @@ class MacroWidget extends PureComponent {
     state = {
         modalName: MODAL_NONE,
         modalParams: {},
-        macros: [],
-        expanded: true
+        macros: []
     };
 
     actions = {
-        onToggleExpand: () => {
-            this.setState(state => ({ expanded: !state.expanded }));
-        },
         openModal: (name = MODAL_NONE, params = {}) => {
             this.setState({
                 modalName: name,
@@ -96,7 +90,7 @@ class MacroWidget extends PureComponent {
                 {
                     title: 'New Macro',
                     onClick: this.actions.openAddMacroModal,
-                    className: 'fa fa-plus'
+                    name: 'Increase'
                 },
                 'SMMinimize',
                 'SMDropdown'
@@ -120,52 +114,32 @@ class MacroWidget extends PureComponent {
     };
 
     render() {
-        const { macros, expanded } = this.state;
+        const { macros } = this.state;
         const modalName = this.state.modalName;
 
         return (
-            <div className="border-bottom-normal">
-                <Anchor className="sm-flex height-24 margin-bottom-8">
-                    <span className="sm-flex-width font-weight-bold">{i18n._('Macro')}</span>
-                    <SvgIcon
-                        name="Increase"
-                        onClick={this.actions.openAddMacroModal}
-                        title="New Macro"
+            <div>
+                {modalName === MODAL_ADD_MACRO && (
+                    <AddMacro
+                        modalParams={this.state.modalParams}
+                        addMacro={this.actions.addMacro}
+                        closeModal={this.actions.closeModal}
                     />
-                    <SvgIcon
-                        name="DropdownLine"
-                        onClick={this.actions.onToggleExpand}
-                        className={classNames(
-                            expanded ? '' : 'rotate180',
-                            'margin-left-8'
-                        )}
-                    />
-                </Anchor>
-                {expanded && (
-                    <div>
-                        {modalName === MODAL_ADD_MACRO && (
-                            <AddMacro
-                                modalParams={this.state.modalParams}
-                                addMacro={this.actions.addMacro}
-                                closeModal={this.actions.closeModal}
-                            />
-                        )}
-                        {modalName === MODAL_EDIT_MACRO && (
-                            <EditMacro
-                                modalParams={this.state.modalParams}
-                                updateMacro={this.actions.updateMacro}
-                                deleteMacro={this.actions.deleteMacro}
-                                closeModal={this.actions.closeModal}
-                            />
-                        )}
-                        <Macro
-                            widgetId={this.props.widgetId}
-                            macros={macros}
-                            openModal={this.actions.openModal}
-                            updateModal={this.actions.updateModal}
-                        />
-                    </div>
                 )}
+                {modalName === MODAL_EDIT_MACRO && (
+                    <EditMacro
+                        modalParams={this.state.modalParams}
+                        updateMacro={this.actions.updateMacro}
+                        deleteMacro={this.actions.deleteMacro}
+                        closeModal={this.actions.closeModal}
+                    />
+                )}
+                <Macro
+                    widgetId={this.props.widgetId}
+                    macros={macros}
+                    openModal={this.actions.openModal}
+                    updateModal={this.actions.updateModal}
+                />
             </div>
         );
     }

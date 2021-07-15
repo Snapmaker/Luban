@@ -305,36 +305,29 @@ class SerialConnection extends PureComponent {
         return (
             <div>
                 <div className="sm-flex justify-space-between margin-bottom-16">
-                    <div
-                        className={classNames('sm-flex-auto', 'sm-flex-order-negative')}
-                    >
-                        <Select
-                            menuStyle={{
-                                maxHeight: '100px'
-                            }}
-                            size="large"
-                            backspaceRemoves={false}
-                            clearable={false}
-                            searchable={false}
-                            disabled={!canChangePort}
-                            name="port"
-                            noResultsText={i18n._('No ports available')}
-                            onChange={this.actions.onChangePortOption}
-                            optionRenderer={this.renderPortOption}
-                            options={map(ports, (o) => ({
-                                value: o.port,
-                                label: o.port,
-                                manufacturer: o.manufacturer
-                            }))}
-                            placeholder={i18n._('Choose a port')}
-                            value={port}
-                            valueRenderer={this.renderPortValue}
-                        />
-                    </div>
+                    <Select
+                        backspaceRemoves={false}
+                        className={classNames('sm-flex-width', 'sm-flex-order-negative')}
+                        clearable={false}
+                        searchable={false}
+                        disabled={!canChangePort}
+                        name="port"
+                        noResultsText={i18n._('No ports available')}
+                        onChange={this.actions.onChangePortOption}
+                        optionRenderer={this.renderPortOption}
+                        options={map(ports, (o) => ({
+                            value: o.port,
+                            label: o.port,
+                            manufacturer: o.manufacturer
+                        }))}
+                        placeholder={i18n._('Choose a port')}
+                        value={port}
+                        valueRenderer={this.renderPortValue}
+                    />
                     <SvgIcon
-                        className="border-default-black-5 padding-vertical-4 padding-horizontal-4 border-radius-8"
+                        className="border-default-black-5 margin-left-8 padding-vertical-4 padding-horizontal-4 border-radius-8"
                         size={22}
-                        name="Reset"
+                        name={loadingPorts ? 'Refresh' : 'Reset'}
                         title={i18n._('Refresh')}
                         onClick={this.actions.onRefreshPorts}
                         disabled={!canRefresh}
@@ -359,7 +352,7 @@ class SerialConnection extends PureComponent {
                         <Button
                             width="120px"
                             type="primary"
-                            priority="level-one"
+                            priority="level-two"
                             disabled={!canOpenPort}
                             onClick={this.actions.onOpenPort}
                         >
@@ -370,7 +363,7 @@ class SerialConnection extends PureComponent {
                         <Button
                             width="120px"
                             type="primary"
-                            priority="level-one"
+                            priority="level-two"
                             onClick={this.actions.onClosePort}
                         >
                             {i18n._('Disconnect')}

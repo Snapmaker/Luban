@@ -14,7 +14,7 @@ class Body extends PureComponent {
 
     render() {
         return (
-            <div id={this.props.key}>{this.props.children}</div>
+            <div className="clearfix" id={this.props.key}>{this.props.children}</div>
         );
     }
 }

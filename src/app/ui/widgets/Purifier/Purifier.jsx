@@ -2,6 +2,7 @@ import PropTypes from 'prop-types';
 import React, { PureComponent } from 'react';
 import { connect } from 'react-redux';
 import classNames from 'classnames';
+import Switch from '../../components/Switch';
 import styles from './index.styl';
 import {
     SPEED_HIGH,
@@ -128,97 +129,102 @@ class Purifier extends PureComponent {
 
     render() {
         const { isFilterEnable, workSpeed, filterLife } = this.state;
+
         return (
-            <div>
-                <div className="sm-parameter-container">
-                    <div className="sm-parameter-row">
-                        <span className="sm-parameter-row__label-lg">{i18n._('Switch')}</span>
+            <div className="">
+                <div className="sm-flex justify-space-between margin-vertical-8">
+                    <span>{i18n._('Switch')}</span>
+                    <button
+                        type="button"
+                        className={classNames(
+                            'sm-btn-small',
+                            isFilterEnable ? 'sm-btn-primary' : 'sm-btn-danger'
+                        )}
+                        style={{
+                            float: 'right'
+                        }}
+                        onClick={this.actions.onHandleFilterEnabled}
+                    >
+                        {!isFilterEnable && <i className="fa fa-toggle-off" />}
+                        {!!isFilterEnable && <i className="fa fa-toggle-on" />}
+                        <span className="space" />
+                        {isFilterEnable ? i18n._('On') : i18n._('Off')}
+                    </button>
+                    <Switch
+                        onClick={this.actions.onHandleFilterEnabled}
+                        checked={isFilterEnable}
+                    />
+                </div>
+                <div className="sm-flex justify-space-between margin-vertical-8">
+                    <span>{i18n._('Work Speed')}</span>
+                    <span
+                        className={classNames(
+                            'border-radius-8',
+                            styles['btn-3btns']
+                        )}
+                    >
                         <button
                             type="button"
                             className={classNames(
-                                'sm-btn-small',
-                                isFilterEnable ? 'sm-btn-primary' : 'sm-btn-danger'
+                                (workSpeed === SPEED_LOW) ? styles.active : styles.passive,
                             )}
-                            style={{
-                                float: 'right'
-                            }}
-                            onClick={this.actions.onHandleFilterEnabled}
+                            onClick={() => this.actions.onChangeFilterSpeed(SPEED_LOW)}
                         >
-                            {!isFilterEnable && <i className="fa fa-toggle-off" />}
-                            {!!isFilterEnable && <i className="fa fa-toggle-on" />}
-                            <span className="space" />
-                            {isFilterEnable ? i18n._('On') : i18n._('Off')}
+                            {i18n._('Low')}
                         </button>
-                    </div>
-                    <div className="sm-parameter-row">
-                        <span className="sm-parameter-row__label">{i18n._('Work Speed')}</span>
-                        <span
+                        <button
+                            type="button"
                             className={classNames(
-                                styles['btn-3btns']
+                                (workSpeed === SPEED_MEDIUM) ? styles.active : styles.passive,
                             )}
+                            onClick={() => this.actions.onChangeFilterSpeed(SPEED_MEDIUM)}
                         >
-                            <button
-                                type="button"
-                                className={classNames(
-                                    (workSpeed === SPEED_LOW) ? styles.active : styles.passive,
-                                )}
-                                onClick={() => this.actions.onChangeFilterSpeed(SPEED_LOW)}
-                            >
-                                {i18n._('Low')}
-                            </button>
-                            <button
-                                type="button"
-                                className={classNames(
-                                    (workSpeed === SPEED_MEDIUM) ? styles.active : styles.passive,
-                                )}
-                                onClick={() => this.actions.onChangeFilterSpeed(SPEED_MEDIUM)}
-                            >
-                                {i18n._('Medium')}
-                            </button>
-                            <button
-                                type="button"
-                                className={classNames(
-                                    (workSpeed === SPEED_HIGH) ? styles.active : styles.passive,
-                                )}
-                                onClick={() => this.actions.onChangeFilterSpeed(SPEED_HIGH)}
-                            >
-                                {i18n._('High')}
-                            </button>
-                        </span>
-                    </div>
-                    <div className="sm-parameter-row">
-                        <span className="sm-parameter-row__label">{i18n._('Filter Life')}</span>
-                        <span
+                            {i18n._('Medium')}
+                        </button>
+                        <button
+                            type="button"
                             className={classNames(
-                                styles.lifeLength
+                                (workSpeed === SPEED_HIGH) ? styles.active : styles.passive,
                             )}
+                            onClick={() => this.actions.onChangeFilterSpeed(SPEED_HIGH)}
                         >
-                            <span
-                                className={classNames(
-                                    'space',
-                                    filterLife >= 0 ? styles.active : styles.passive
-                                )}
-                            />
-                            <span
-                                className={classNames(
-                                    'space',
-                                    filterLife >= 1 ? styles.active : styles.passive
-                                )}
-                            />
-                            <span
-                                className={classNames(
-                                    'space',
-                                    filterLife >= 2 ? styles.active : styles.passive
-                                )}
-                            />
-                        </span>
-                    </div>
-                    {(filterLife === 0) && (
-                        <div className={classNames(styles.notice)}>
-                            {i18n._('The filter element needs to be replaced.')}
-                        </div>
-                    )}
+                            {i18n._('High')}
+                        </button>
+                    </span>
                 </div>
+                <div className="sm-flex justify-space-between margin-vertical-8">
+                    <span>{i18n._('Filter Life')}</span>
+                    <span
+                        className={classNames(
+                            'border-radius-8',
+                            styles.lifeLength
+                        )}
+                    >
+                        <span
+                            className={classNames(
+                                'space',
+                                filterLife >= 0 ? styles.active : styles.passive
+                            )}
+                        />
+                        <span
+                            className={classNames(
+                                'space',
+                                filterLife >= 1 ? styles.active : styles.passive
+                            )}
+                        />
+                        <span
+                            className={classNames(
+                                'space',
+                                filterLife >= 2 ? styles.active : styles.passive
+                            )}
+                        />
+                    </span>
+                </div>
+                {(filterLife === 0) && (
+                    <div className={classNames(styles.notice)}>
+                        {i18n._('The filter element needs to be replaced.')}
+                    </div>
+                )}
             </div>
         );
     }

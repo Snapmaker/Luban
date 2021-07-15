@@ -1,7 +1,7 @@
 import color from 'cli-color';
 import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
-import classNames from 'classnames';
+// import classNames from 'classnames';
 import { connect } from 'react-redux';
 import pubsub from 'pubsub-js';
 import { withRouter } from 'react-router-dom';
@@ -11,8 +11,6 @@ import { actions as machineActions } from '../../../flux/machine';
 import { controller } from '../../../lib/controller';
 import Terminal from './Terminal';
 import { ABSENT_OBJECT, CONNECTION_TYPE_SERIAL } from '../../../constants';
-import SvgIcon from '../../components/SvgIcon';
-import Anchor from '../../components/Anchor';
 
 class Console extends PureComponent {
     static propTypes = {
@@ -36,8 +34,7 @@ class Console extends PureComponent {
     };
 
     state = {
-        shouldRenderFitaddon: false,
-        expanded: true
+        shouldRenderFitaddon: false
     }
 
     terminal = React.createRef();
@@ -72,9 +69,6 @@ class Console extends PureComponent {
     };
 
     actions = {
-        onToggleExpand: () => {
-            this.setState(state => ({ expanded: !state.expanded }));
-        },
         onTerminalData: (data) => {
             if (data === '') {
                 // ignore
@@ -208,6 +202,19 @@ class Console extends PureComponent {
         }
     };
 
+    constructor(props) {
+        super(props);
+        props.widgetActions.setTitle(i18n._('Console'));
+        props.widgetActions.setControlButtons([
+            {
+                title: 'Eliminate',
+                name: 'Eliminate',
+                onClick: this.actions.clearAll
+            },
+            'SMMinimize'
+        ]);
+    }
+
     componentWillMount() {
         this.unlisten = this.props.history.listen((location) => {
             if (location.pathname === '/workspace') {
@@ -329,33 +336,16 @@ class Console extends PureComponent {
         const { isDefault, terminalHistory, consoleHistory } = this.props;
         const inputValue = terminalHistory.get(0) || '';
         return (
-            <div>
-                <Anchor className="sm-flex height-24 margin-bottom-8">
-                    <span className="sm-flex-width heading-2">{i18n._('Console')}</span>
-                    <SvgIcon
-                        name="FullScreen"
-                        onClick={this.resizeTerminal}
-                    />
-                    <SvgIcon
-                        name="DropdownLine"
-                        onClick={this.actions.onToggleExpand}
-                        className={classNames(
-                            this.state.expanded ? '' : 'rotate180',
-                            'margin-left-8'
-                        )}
-                    />
-                </Anchor>
-                {this.state.expanded && (
-                    <Terminal
-                        ref={this.terminal}
-                        onData={this.actions.onTerminalData}
-                        isDefault={isDefault}
-                        shouldRenderFitaddon={this.state.shouldRenderFitaddon}
-                        terminalHistory={terminalHistory}
-                        consoleHistory={consoleHistory}
-                        inputValue={inputValue}
-                    />
-                )}
+            <div className="padding-bottom-16">
+                <Terminal
+                    ref={this.terminal}
+                    onData={this.actions.onTerminalData}
+                    isDefault={isDefault}
+                    shouldRenderFitaddon={this.state.shouldRenderFitaddon}
+                    terminalHistory={terminalHistory}
+                    consoleHistory={consoleHistory}
+                    inputValue={inputValue}
+                />
             </div>
 
         );
