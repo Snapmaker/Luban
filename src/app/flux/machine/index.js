@@ -159,7 +159,9 @@ const INITIAL_STATE = {
     // Whether an update is being downloaded
     isDownloading: false,
     // endregion
-    use4Axis: true
+    use4Axis: true,
+    // use multiple engine
+    multipleEngine: false
 };
 
 
@@ -969,6 +971,10 @@ export const actions = {
     updateShouldCheckForUpdate: (shouldCheckForUpdate) => (dispatch) => {
         dispatch(baseActions.updateState({ shouldCheckForUpdate: shouldCheckForUpdate }));
         machineStore.set('shouldCheckForUpdate', shouldCheckForUpdate);
+    },
+    updateMultipleEngine: () => (dispatch, getState) => {
+        const { multipleEngine } = getState().machine;
+        dispatch(baseActions.updateState({ multipleEngine: !multipleEngine }));
     }
     // endregion
 };

@@ -27,6 +27,7 @@ class CncParameters extends PureComponent {
         setCurrentValueAsProfile: PropTypes.func.isRequired,
 
         size: PropTypes.object.isRequired,
+        multipleEngine: PropTypes.bool.isRequired,
         materials: PropTypes.object.isRequired
     };
 
@@ -38,9 +39,9 @@ class CncParameters extends PureComponent {
 
 
     render() {
-        const { toolPath, materials, size } = this.props;
+        const { toolPath, materials, size, multipleEngine } = this.props;
 
-        const { name, type, gcodeConfig } = toolPath;
+        const { name, type, gcodeConfig, useLegacyEngine } = toolPath;
 
         const { pathType, sliceMode, smoothY, allowance, targetDepth } = gcodeConfig;
 
@@ -119,6 +120,17 @@ class CncParameters extends PureComponent {
                             onChange={(event) => { this.props.updateToolPath({ name: event.target.value }); }}
                         />
                     </div>
+                    {multipleEngine && (
+                        <div className="sm-parameter-row">
+                            <span className="sm-parameter-row__label">{i18n._('Use legacy engine')}</span>
+                            <input
+                                type="checkbox"
+                                className="sm-parameter-row__checkbox"
+                                checked={useLegacyEngine}
+                                onChange={() => { this.props.updateToolPath({ useLegacyEngine: !useLegacyEngine }); }}
+                            />
+                        </div>
+                    )}
                     {isSVG && (
                         <div>
                             <TipTrigger
@@ -345,10 +357,11 @@ class CncParameters extends PureComponent {
 }
 
 const mapStateToProps = (state) => {
-    const { size } = state.machine;
+    const { size, multipleEngine } = state.machine;
     const { materials } = state.cnc;
     return {
         size,
+        multipleEngine,
         materials
     };
 };

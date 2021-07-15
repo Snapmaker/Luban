@@ -1,7 +1,8 @@
 import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
+import { connect } from 'react-redux';
 import Select from '../../../components/Select';
-import { ABSENT_VALUE, TOOLPATH_TYPE_IMAGE, TOOLPATH_TYPE_VECTOR } from '../../../../constants';
+import { TOOLPATH_TYPE_IMAGE, TOOLPATH_TYPE_VECTOR } from '../../../../constants';
 import i18n from '../../../../lib/i18n';
 import { TextInput } from '../../../components/Input';
 import TipTrigger from '../../../components/TipTrigger';
@@ -12,7 +13,9 @@ class LaserParameters extends PureComponent {
         toolPath: PropTypes.object.isRequired,
 
         updateToolPath: PropTypes.func.isRequired,
-        updateGcodeConfig: PropTypes.func.isRequired
+        updateGcodeConfig: PropTypes.func.isRequired,
+
+        multipleEngine: PropTypes.bool.isRequired
     };
 
     state = {
@@ -22,7 +25,7 @@ class LaserParameters extends PureComponent {
         onChangeMovementMode: (options) => {
             if (options.value === 'greyscale-line') {
                 this.props.updateGcodeConfig({
-                    dwellTime: ABSENT_VALUE,
+                    dwellTime: 42,
                     jogSpeed: 1500,
                     workSpeed: 500,
                     fixedPower: 50,
@@ -31,7 +34,7 @@ class LaserParameters extends PureComponent {
             } else if (options.value === 'greyscale-dot') {
                 this.props.updateGcodeConfig({
                     dwellTime: 42,
-                    jogSpeed: ABSENT_VALUE,
+                    jogSpeed: 1500,
                     workSpeed: 1500,
                     fixedPower: 30,
                     movementMode: options.value
@@ -41,9 +44,9 @@ class LaserParameters extends PureComponent {
     };
 
     render() {
-        const { toolPath } = this.props;
+        const { toolPath, multipleEngine } = this.props;
 
-        const { name, type, gcodeConfig } = toolPath;
+        const { name, type, gcodeConfig, useLegacyEngine } = toolPath;
 
         const { direction, movementMode } = gcodeConfig;
 
@@ -64,6 +67,17 @@ class LaserParameters extends PureComponent {
                             onChange={(event) => { this.props.updateToolPath({ name: event.target.value }); }}
                         />
                     </div>
+                    {multipleEngine && (
+                        <div className="sm-parameter-row">
+                            <span className="sm-parameter-row__label">{i18n._('Use legacy engine')}</span>
+                            <input
+                                type="checkbox"
+                                className="sm-parameter-row__checkbox"
+                                checked={useLegacyEngine}
+                                onChange={() => { this.props.updateToolPath({ useLegacyEngine: !useLegacyEngine }); }}
+                            />
+                        </div>
+                    )}
                     {isImage && (
                         <div>
                             <TipTrigger
@@ -131,4 +145,11 @@ class LaserParameters extends PureComponent {
     }
 }
 
-export default LaserParameters;
+const mapStateToProps = (state) => {
+    const { multipleEngine } = state.machine;
+    return {
+        multipleEngine
+    };
+};
+
+export default connect(mapStateToProps, null)(LaserParameters);
