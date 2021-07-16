@@ -374,16 +374,6 @@ export default class CNCToolPathGenerator extends EventEmitter {
 
         const boundingBox = toolPath.boundingBox;
 
-        if (isRotate) {
-            boundingBox.max.b += toolPath.toB(positionX);
-            boundingBox.min.b += toolPath.toB(positionX);
-        } else {
-            boundingBox.max.x += positionX;
-            boundingBox.min.x += positionX;
-        }
-        boundingBox.max.y += positionY;
-        boundingBox.min.y += positionY;
-
         return {
             headType: headType,
             mode: mode,

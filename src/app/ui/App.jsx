@@ -29,7 +29,8 @@ class App extends PureComponent {
         functionsInit: PropTypes.func.isRequired,
         workspaceInit: PropTypes.func.isRequired,
         textInit: PropTypes.func.isRequired,
-        shouldCheckForUpdate: PropTypes.bool.isRequired
+        shouldCheckForUpdate: PropTypes.bool.isRequired,
+        updateMultipleEngine: PropTypes.func.isRequired
     };
 
     router = React.createRef();
@@ -46,6 +47,12 @@ class App extends PureComponent {
                 keys: ['mod+alt+k l'],
                 callback: () => {
                     ShortcutManager.printList();
+                }
+            },
+            'MULTIPLEENGINE': {
+                keys: ['mod+alt+k e'],
+                callback: () => {
+                    this.props.updateMultipleEngine();
                 }
             }
         }
@@ -130,7 +137,8 @@ const mapDispatchToProps = (dispatch) => {
         functionsInit: () => {
             dispatch(editorActions.initSelectedModelListener('laser'));
             dispatch(editorActions.initSelectedModelListener('cnc'));
-        }
+        },
+        updateMultipleEngine: () => dispatch(machineActions.updateMultipleEngine())
     };
 };
 
