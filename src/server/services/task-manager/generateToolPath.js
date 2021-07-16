@@ -1,6 +1,6 @@
 import fs from 'fs';
 import path from 'path';
-import { pathWithRandomSuffix } from '../../../shared/lib/random-utils';
+import { pathWithRandomSuffix, generateRandomPathName } from '../../../shared/lib/random-utils';
 import DataStorage from '../../DataStorage';
 import { editorProcess } from '../../lib/editor/process';
 import { LaserToolPathGenerator } from '../../lib/ToolPathGenerator';
@@ -156,7 +156,7 @@ const generateLaserToolPathFromEngine = async (modelInfo, onProgress) => {
 
     modelInfo.gcodeConfig.stepOver = 1 / modelInfo.gcodeConfig.density;
 
-    modelInfo.toolpathFileName = pathWithRandomSuffix(`${path.parse(modelInfo.uploadName).name}.json`);
+    modelInfo.toolpathFileName = generateRandomPathName('json');
 
     const sliceParams = {
         headType: modelInfo.headType,

@@ -4,6 +4,14 @@
 import path from 'path';
 import isFunction from 'lodash/isFunction';
 
+function random(n) {
+    let s = '';
+    for (let i = 0; i < n; i++) {
+        s += parseInt(Math.random() * 10, 10);
+    }
+    return s;
+}
+
 // 17 digits
 function timestamp() {
     function pad2(n) {
@@ -60,7 +68,13 @@ function pathWithRandomSuffix(pathString) {
     }
 }
 
+function generateRandomPathName(suffix) {
+    return `${random(8)}_${timestamp()}.${suffix}`;
+}
+
+
 export {
     timestamp,
-    pathWithRandomSuffix
+    pathWithRandomSuffix,
+    generateRandomPathName
 };
