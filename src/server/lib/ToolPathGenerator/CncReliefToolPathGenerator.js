@@ -591,17 +591,6 @@ export default class CncReliefToolPathGenerator extends EventEmitter {
         this.toolPath.resetB();
 
         const boundingBox = this.toolPath.boundingBox;
-        const { positionX } = this.transformation;
-
-        if (this.isRotate) {
-            boundingBox.max.b += this.toolPath.toB(positionX);
-            boundingBox.min.b += this.toolPath.toB(positionX);
-        } else {
-            boundingBox.max.x += positionX;
-            boundingBox.min.x += positionX;
-        }
-        boundingBox.max.y += this.transformation.positionY;
-        boundingBox.min.y += this.transformation.positionY;
 
         const { headType, mode, gcodeConfig } = this.modelInfo;
 

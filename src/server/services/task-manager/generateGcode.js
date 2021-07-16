@@ -144,15 +144,13 @@ export const generateGcode = (toolPaths, onProgress) => {
             isRotate = toolPathObj.isRotate;
             diameter = toolPathObj.diameter;
 
-            const { from, positionX = 0, positionY = 0, rotationB = 0 } = toolPathObj;
-            if (from === 'LubanEngine') {
-                toolPathObj.boundingBox.max.x += positionX;
-                toolPathObj.boundingBox.min.x += positionX;
-                toolPathObj.boundingBox.max.y += positionY;
-                toolPathObj.boundingBox.min.y += positionY;
-                toolPathObj.boundingBox.max.b += rotationB;
-                toolPathObj.boundingBox.min.b += rotationB;
-            }
+            const { positionX = 0, positionY = 0, rotationB = 0 } = toolPathObj;
+            toolPathObj.boundingBox.max.x += positionX;
+            toolPathObj.boundingBox.min.x += positionX;
+            toolPathObj.boundingBox.max.y += positionY;
+            toolPathObj.boundingBox.min.y += positionY;
+            toolPathObj.boundingBox.max.b += rotationB;
+            toolPathObj.boundingBox.min.b += rotationB;
 
             if (boundingBox === null) {
                 boundingBox = toolPathObj.boundingBox;

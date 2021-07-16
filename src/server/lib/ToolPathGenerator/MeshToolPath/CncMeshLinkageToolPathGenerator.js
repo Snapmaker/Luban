@@ -731,15 +731,6 @@ export default class CncMeshLinkageToolPathGenerator extends EventEmitter {
         this.toolPath.resetB();
 
         const boundingBox = this.toolPath.boundingBox;
-        const { positionX, positionY } = this.transformation;
-
-        if (this.isRotate) {
-            boundingBox.max.b += this.toolPath.toB(positionX);
-            boundingBox.min.b += this.toolPath.toB(positionX);
-        }
-        boundingBox.max.y += positionY;
-        boundingBox.min.y += positionY;
-
 
         return {
             headType: headType,
