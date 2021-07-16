@@ -16,6 +16,12 @@ import gcodeBufferGeometryToObj3d from '../../workers/GcodeToBufferGeometry/gcod
 import ModelExporter from '../../ui/widgets/PrintingVisualizer/ModelExporter';
 import { controller } from '../../lib/controller';
 import { actions as operationHistoryActions } from '../operation-history';
+import Operations from '../operation-history/Operations';
+import MoveOperation3D from '../operation-history/MoveOperation3D';
+import RotateOperation3D from '../operation-history/RotateOperation3D';
+import ScaleOperation3D from '../operation-history/ScaleOperation3D';
+import DeleteOperation3D from '../operation-history/DeleteOperation3D';
+import AddOperation3D from '../operation-history/AddOperation3D';
 
 const isDefaultQualityDefinition = (definitionId) => {
     return definitionId.indexOf('quality') !== -1
@@ -943,8 +949,26 @@ export const actions = {
 
     updateSelectedModelTransformation: (transformation, newUniformScalingState) => (dispatch, getState) => {
         const { modelGroup } = getState().printing;
+
+        let transformMode;
+        switch (true) {
+            case ['positionX', 'positionY'].some(item => item in transformation):
+                transformMode = 'translate';
+                break;
+            case ['scaleX', 'scaleY', 'scaleZ'].some(item => item in transformation):
+                transformMode = 'scale';
+                break;
+            case ['rotationX', 'rotationY', 'rotationZ'].some(item => item in transformation):
+                transformMode = 'rotate';
+                break;
+            default: break;
+        }
+        dispatch(actions.recordModelBeforeTransform(transformMode, modelGroup));
+
         modelGroup.updateSelectedGroupTransformation(transformation, newUniformScalingState);
         modelGroup.onModelAfterTransform();
+
+        dispatch(actions.recordModelAfterTransform(transformMode, modelGroup));
         dispatch(actions.recordSnapshot());
         dispatch(actions.destroyGcodeLine());
         dispatch(actions.displayModel());
@@ -1017,6 +1041,15 @@ export const actions = {
     },
     removeSelectedModel: () => (dispatch, getState) => {
         const { modelGroup } = getState().printing;
+        const operations = new Operations();
+        for (const model of modelGroup.selectedModelArray) {
+            const operation = new DeleteOperation3D({
+                target: model
+            });
+            operations.push(operation);
+        }
+        dispatch(operationHistoryActions.setOperations(operations));
+
         const modelState = modelGroup.removeSelectedModel();
         if (!modelState.hasModel) {
             dispatch(actions.updateState({
@@ -1036,6 +1069,16 @@ export const actions = {
 
     removeAllModels: () => (dispatch, getState) => {
         const { modelGroup } = getState().printing;
+        const operations = new Operations();
+        for (const model of modelGroup.models) {
+            const operation = new DeleteOperation3D({
+                target: model,
+                parent: null
+            });
+            operations.push(operation);
+        }
+        dispatch(operationHistoryActions.setOperations(operations));
+
         const modelState = modelGroup.removeAllModels();
 
         dispatch(actions.updateState({
@@ -1056,6 +1099,100 @@ export const actions = {
         dispatch(actions.destroyGcodeLine());
         dispatch(actions.recordSnapshot());
         dispatch(actions.render());
+    },
+
+    recordModelBeforeTransform: (transformMode, modelGroup) => (dispatch) => {
+        dispatch(operationHistoryActions.clearTargetTmpState());
+        for (const model of modelGroup.selectedModelArray) {
+            // console.log('onModelBeforeTransform', model.transformation);
+            // console.log('onModelBeforeTransform', modelGroup.selectedGroup.scale.clone(), model.meshObject.scale.clone(), model.meshObject.parent.scale.clone(), model.meshObject.scale.clone().multiply(model.meshObject.parent.scale));
+            // console.log('onModelBeforeTransform', JSON.stringify(model.transformation), model.meshObject.rotation, model.meshObject.parent.rotation.clone(), model.meshObject.parent.matrix.elements); // , model.meshObject.rotation.clone().applyMatrix4(model.meshObject.parent.matrix));
+            switch (transformMode) {
+                case 'translate':
+                    dispatch(operationHistoryActions.updateTargetTmpState(model.modelID, {
+                        // groupFrom: model.meshObject.parent.position.clone(),
+                        // from: model.meshObject.position.clone().applyMatrix4(model.meshObject.parent.matrix)
+                        from: { ...model.transformation }
+                    }));
+                    break;
+                case 'rotate':
+                    dispatch(operationHistoryActions.updateTargetTmpState(model.modelID, {
+                        from: { ...model.transformation }
+                    }));
+                    break;
+                case 'scale':
+                    dispatch(operationHistoryActions.updateTargetTmpState(model.modelID, {
+                        from: { ...model.transformation }
+                    }));
+                    break;
+                default: break;
+            }
+        }
+    },
+
+    recordModelAfterTransform: (transformMode, modelGroup) => (dispatch, getState) => {
+        const { targetTmpState } = getState().operationHistory;
+        const operations = new Operations();
+        let operation;
+
+        function stateEqual(stateFrom, stateTo) {
+            for (const key of Object.keys(stateFrom)) {
+                if (Math.abs(stateFrom[key] - stateTo[key]) > EPSILON) {
+                    return false;
+                }
+            }
+            return true;
+        }
+        for (const model of modelGroup.selectedModelArray) {
+            // console.log('onModelAfterTransform', model.transformation);
+            // console.log('onModelAfterTransform', targetTmpState[model.modelID], modelGroup.selectedGroup.scale.clone(), model.meshObject.scale.clone(), model.meshObject.parent.scale.clone(), model.meshObject.scale.clone().multiply(model.meshObject.parent.scale));
+            // console.log('onModelAfterTransform', JSON.stringify(model.transformation), model.meshObject.rotation, model.meshObject.parent.rotation.clone(), model.meshObject.parent.matrix.elements); // , model.meshObject.rotation.clone().applyMatrix4(model.meshObject.parent.matrix));
+            switch (transformMode) {
+                case 'translate':
+                    dispatch(operationHistoryActions.updateTargetTmpState(model.modelID, {
+                        to: { ...model.transformation }
+                        // groupTo: model.meshObject.parent.position.clone(),
+                        // to: model.meshObject.position.clone().applyMatrix4(model.meshObject.parent.matrix)
+                    }));
+                    if (stateEqual(targetTmpState[model.modelID].from, targetTmpState[model.modelID].to)) {
+                        continue;
+                    }
+                    operation = new MoveOperation3D({
+                        target: model,
+                        ...targetTmpState[model.modelID]
+                    });
+                    operations.push(operation);
+                    break;
+                case 'rotate':
+                    dispatch(operationHistoryActions.updateTargetTmpState(model.modelID, {
+                        to: { ...model.transformation }
+                    }));
+                    if (stateEqual(targetTmpState[model.modelID].from, targetTmpState[model.modelID].to)) {
+                        continue;
+                    }
+                    operation = new RotateOperation3D({
+                        target: model,
+                        ...targetTmpState[model.modelID]
+                    });
+                    operations.push(operation);
+                    break;
+                case 'scale':
+                    dispatch(operationHistoryActions.updateTargetTmpState(model.modelID, {
+                        to: { ...model.transformation }
+                    }));
+                    if (stateEqual(targetTmpState[model.modelID].from, targetTmpState[model.modelID].to)) {
+                        continue;
+                    }
+                    operation = new ScaleOperation3D({
+                        target: model,
+                        ...targetTmpState[model.modelID]
+                    });
+                    operations.push(operation);
+                    break;
+                default: break;
+            }
+        }
+        dispatch(operationHistoryActions.setOperations(operations));
     },
 
     onModelTransform: () => (dispatch, getState) => {
@@ -1080,6 +1217,17 @@ export const actions = {
     duplicateSelectedModel: () => (dispatch, getState) => {
         const { modelGroup } = getState().printing;
         const modelState = modelGroup.duplicateSelectedModel();
+
+        const operations = new Operations();
+        for (const model of modelGroup.selectedModelArray) {
+            const operation = new AddOperation3D({
+                target: model,
+                parent: null
+            });
+            operations.push(operation);
+        }
+        dispatch(operationHistoryActions.setOperations(operations));
+
         dispatch(actions.updateState(modelState));
         dispatch(actions.recordSnapshot());
         dispatch(actions.destroyGcodeLine());
@@ -1094,6 +1242,17 @@ export const actions = {
     paste: () => (dispatch, getState) => {
         const { modelGroup } = getState().printing;
         const modelState = modelGroup.paste();
+
+        const operations = new Operations();
+        for (const model of modelGroup.selectedModelArray) {
+            const operation = new AddOperation3D({
+                target: model,
+                parent: null
+            });
+            operations.push(operation);
+        }
+        dispatch(operationHistoryActions.setOperations(operations));
+
         dispatch(actions.updateState(modelState));
         dispatch(actions.recordSnapshot());
         dispatch(actions.destroyGcodeLine());
@@ -1102,7 +1261,12 @@ export const actions = {
 
     layFlatSelectedModel: () => (dispatch, getState) => {
         const { modelGroup } = getState().printing;
+        dispatch(actions.recordModelBeforeTransform('rotate', modelGroup));
+
         const modelState = modelGroup.layFlatSelectedModel();
+        modelGroup.onModelAfterTransform();
+
+        dispatch(actions.recordModelAfterTransform('rotate', modelGroup));
         dispatch(actions.updateState(modelState));
         dispatch(actions.recordSnapshot());
         dispatch(actions.destroyGcodeLine());
@@ -1111,7 +1275,12 @@ export const actions = {
 
     autoRotateSelectedModel: () => (dispatch, getState) => {
         const { modelGroup } = getState().printing;
+        dispatch(actions.recordModelBeforeTransform('rotate', modelGroup));
+
         const modelState = modelGroup.autoRotateSelectedModel();
+        modelGroup.onModelAfterTransform();
+
+        dispatch(actions.recordModelAfterTransform('rotate', modelGroup));
         dispatch(actions.updateState(modelState));
         dispatch(actions.recordSnapshot());
         dispatch(actions.destroyGcodeLine());
@@ -1120,7 +1289,12 @@ export const actions = {
     scaleToFitSelectedModel: () => (dispatch, getState) => {
         const { modelGroup } = getState().printing;
         const { size } = getState().machine;
+        dispatch(actions.recordModelBeforeTransform('scale', modelGroup));
+
         const modelState = modelGroup.scaleToFitSelectedModel(size);
+        modelGroup.onModelAfterTransform();
+
+        dispatch(actions.recordModelAfterTransform('scale', modelGroup));
         dispatch(actions.updateState(modelState));
         dispatch(actions.recordSnapshot());
         dispatch(actions.destroyGcodeLine());
@@ -1129,7 +1303,12 @@ export const actions = {
 
     resetSelectedModelTransformation: () => (dispatch, getState) => {
         const { modelGroup } = getState().printing;
+        dispatch(actions.recordModelBeforeTransform('scale', modelGroup));
+
         const modelState = modelGroup.resetSelectedModelTransformation();
+        modelGroup.onModelAfterTransform();
+
+        dispatch(actions.recordModelAfterTransform('scale', modelGroup));
         dispatch(actions.updateState(modelState));
         dispatch(actions.recordSnapshot());
         dispatch(actions.destroyGcodeLine());
@@ -1189,12 +1368,35 @@ export const actions = {
     saveSupport: (model) => (dispatch, getState) => {
         const { modelGroup } = getState().printing;
         modelGroup.saveSupportModel(model);
+        if (!model.isInitSupport) {
+            // save generated support into operation history
+            const operation = new AddOperation3D({
+                target: model,
+                parent: model.target
+            });
+            operation.description = 'AddSupport';
+            const operations = new Operations();
+            operations.push(operation);
+            dispatch(operationHistoryActions.setOperations(operations));
+        }
         dispatch(actions.recordSnapshot());
     },
     clearAllManualSupport: () => (dispatch, getState) => {
         const { modelGroup } = getState().printing;
-        modelGroup.removeAllManualSupport();
-        dispatch(actions.recordSnapshot());
+        const supports = modelGroup.models.filter(item => item.supportTag === true);
+        if (supports && supports.length > 0) {
+            const operations = new Operations();
+            for (const model of supports) {
+                const operation = new DeleteOperation3D({
+                    target: model
+                });
+                operations.push(operation);
+            }
+            dispatch(operationHistoryActions.setOperations(operations));
+
+            modelGroup.removeAllManualSupport();
+            dispatch(actions.recordSnapshot());
+        }
     },
     setDefaultSupportSize: (size) => (dispatch, getState) => {
         const { modelGroup } = getState().printing;

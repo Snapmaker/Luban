@@ -3,15 +3,15 @@ export default class Operation {
 
     description = this.constructor.name;
 
-    mergePreviousOperation(operation) {
-        console.log('mergePreviousOperation', operation);
+    mergePreviousOperation() {
+        throw new Error('NotImplementedException');
     }
 
     redo() {
-        console.log('redo');
+        throw new Error('NotImplementedException');
     }
 
     undo() {
-        console.log('undo');
+        throw new Error('NotImplementedException');
     }
 }

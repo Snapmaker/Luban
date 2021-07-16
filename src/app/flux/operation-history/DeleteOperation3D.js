@@ -8,7 +8,6 @@ export default class DeleteOperation3D extends Operation {
         super();
         this.state = {
             target: null,
-            parent: null,
             ...state
         };
         // an object to be deleted will be selected at first, unwrapped from parent group
@@ -22,10 +21,6 @@ export default class DeleteOperation3D extends Operation {
                 ThreeUtils.setObjectParent(model.meshObject, model.target.meshObject);
             }
         }
-    }
-
-    mergePreviousOperation(prevOperation) {
-        console.log('mergePreviousOperation', prevOperation);
     }
 
     redo() {

@@ -942,7 +942,6 @@ class ModelGroup extends EventEmitter {
     updateSelectedGroupTransformation(transformation, newUniformScalingState) {
         const { positionX, positionY, rotationX, rotationY, rotationZ, scaleX, scaleY, scaleZ, width, height, uniformScalingState } = transformation;
         const shouldUniformScale = newUniformScalingState ?? this.selectedGroup.uniformScalingState;
-
         // todo, width and height use for 2d
         if (width !== undefined) {
             this.selectedGroup.width = width;

@@ -4,7 +4,6 @@ import { connect } from 'react-redux';
 import { withRouter } from 'react-router';
 import isEqual from 'lodash/isEqual';
 import { Vector3, Box3 } from 'three';
-import _ from 'lodash';
 
 import { shortcutActions, priorities, ShortcutManager } from '../../../lib/shortcut';
 import { EPSILON } from '../../../constants';
@@ -16,10 +15,6 @@ import Canvas from '../../components/SMCanvas';
 import { actions as printingActions, PRINTING_STAGE } from '../../../flux/printing';
 import { actions as operationHistoryActions } from '../../../flux/operation-history';
 import AddOperation3D from '../../../flux/operation-history/AddOperation3D';
-import DeleteOperation3D from '../../../flux/operation-history/DeleteOperation3D';
-import MoveOperation3D from '../../../flux/operation-history/MoveOperation3D';
-import ScaleOperation3D from '../../../flux/operation-history/ScaleOperation3D';
-import RotateOperation3D from '../../../flux/operation-history/RotateOperation3D';
 import Operations from '../../../flux/operation-history/Operations';
 import VisualizerLeftBar from './VisualizerLeftBar';
 import VisualizerPreviewControl from './VisualizerPreviewControl';
@@ -30,7 +25,6 @@ import styles from './styles.styl';
 
 class Visualizer extends PureComponent {
     static propTypes = {
-        targetTmpState: PropTypes.object.isRequired,
         isActive: PropTypes.bool.isRequired,
         size: PropTypes.object.isRequired,
         stage: PropTypes.number.isRequired,
@@ -45,9 +39,9 @@ class Visualizer extends PureComponent {
         renderingTimestamp: PropTypes.number.isRequired,
         inProgress: PropTypes.bool.isRequired,
 
+        recordModelBeforeTransform: PropTypes.func.isRequired,
+        recordModelAfterTransform: PropTypes.func.isRequired,
         clearOperationHistory: PropTypes.func.isRequired,
-        updateTargetTmpState: PropTypes.func.isRequired,
-        clearTargetTmpState: PropTypes.func.isRequired,
         setOperations: PropTypes.func.isRequired,
         offsetGcodeLayers: PropTypes.func.isRequired,
         destroyGcodeLine: PropTypes.func.isRequired,
@@ -114,99 +108,10 @@ class Visualizer extends PureComponent {
             this.props.selectMultiModel(intersect, selectEvent);
         },
         onModelBeforeTransform: (transformMode) => {
-            this.props.clearTargetTmpState();
-            for (const model of this.props.modelGroup.selectedModelArray) {
-                // console.log('onModelBeforeTransform', model.meshObject.scale, model.meshObject.parent.scale.clone(), model.meshObject.scale.clone().multiply(model.meshObject.parent.scale));
-                // console.log('onModelBeforeTransform', JSON.stringify(model.transformation), model.meshObject.rotation, model.meshObject.parent.rotation.clone(), model.meshObject.parent.matrix.elements); // , model.meshObject.rotation.clone().applyMatrix4(model.meshObject.parent.matrix));
-                switch (transformMode) {
-                    case 'translate':
-                        this.props.updateTargetTmpState(model.modelID, {
-                            // groupFrom: model.meshObject.parent.position.clone(),
-                            from: model.meshObject.position.clone().applyMatrix4(model.meshObject.parent.matrix)
-                            // from: { ...model.transformation }
-                        });
-                        break;
-                    case 'rotate':
-                        this.props.updateTargetTmpState(model.modelID, {
-                            // groupFrom: model.meshObject.parent.rotation.clone(),
-                            // translateFrom: model.meshObject.position.clone().applyMatrix4(model.meshObject.parent.matrix),
-                            from: { ...model.transformation }
-                            // from: model.meshObject.rotation.toVector3().applyMatrix4(model.meshObject.parent.matrix)
-                        });
-                        break;
-                    case 'scale':
-                        this.props.updateTargetTmpState(model.modelID, {
-                            // groupFrom: model.meshObject.parent.scale.clone(),
-                            translateFrom: model.meshObject.position.clone().applyMatrix4(model.meshObject.parent.matrix),
-                            from: model.meshObject.scale.clone().multiply(model.meshObject.parent.scale)
-                            // from: { ...model.transformation }
-                        });
-                        break;
-                    default: break;
-                }
-            }
+            this.props.recordModelBeforeTransform(transformMode, this.props.modelGroup);
         },
         onModelAfterTransform: (transformMode) => {
-            const operations = new Operations();
-            let operation;
-            for (const model of this.props.modelGroup.selectedModelArray) {
-                // console.log('onModelAfterTransform', model.meshObject.scale, model.meshObject.parent.scale.clone(), model.meshObject.scale.clone().multiply(model.meshObject.parent.scale));
-                // console.log('onModelAfterTransform', JSON.stringify(model.transformation), model.meshObject.rotation, model.meshObject.parent.rotation.clone(), model.meshObject.parent.matrix.elements); // , model.meshObject.rotation.clone().applyMatrix4(model.meshObject.parent.matrix));
-                switch (transformMode) {
-                    case 'translate':
-                        this.props.updateTargetTmpState(model.modelID, {
-                            // to: { ...model.transformation }
-                            // groupTo: model.meshObject.parent.position.clone(),
-                            to: model.meshObject.position.clone().applyMatrix4(model.meshObject.parent.matrix)
-                        });
-                        if (_.isEqual(this.props.targetTmpState[model.modelID].from, this.props.targetTmpState[model.modelID].to)) {
-                            continue;
-                        }
-                        operation = new MoveOperation3D({
-                            target: model,
-                            ...this.props.targetTmpState[model.modelID]
-                        });
-                        operations.push(operation);
-                        break;
-                    case 'rotate':
-                        this.props.updateTargetTmpState(model.modelID, {
-                            // groupTo: model.meshObject.parent.rotation.clone(),
-                            // translateTo: model.meshObject.position.clone().applyMatrix4(model.meshObject.parent.matrix),
-                            to: { ...model.transformation }
-                            // to: model.meshObject.matrix.clone()
-                            // to: model.meshObject.rotation.toVector3().applyMatrix4(model.meshObject.parent.matrix)
-                        });
-                        if (_.isEqual(this.props.targetTmpState[model.modelID].from, this.props.targetTmpState[model.modelID].to)) {
-                            continue;
-                        }
-                        operation = new RotateOperation3D({
-                            target: model,
-                            ...this.props.targetTmpState[model.modelID]
-                        });
-                        operations.push(operation);
-                        break;
-                    case 'scale':
-                        this.props.updateTargetTmpState(model.modelID, {
-                            // groupTo: model.meshObject.parent.scale.clone(),
-                            translateTo: model.meshObject.position.clone().applyMatrix4(model.meshObject.parent.matrix),
-                            to: model.meshObject.scale.clone().multiply(model.meshObject.parent.scale)
-                            // to: { ...model.transformation }
-                        });
-                        if (_.isEqual(this.props.targetTmpState[model.modelID].from, this.props.targetTmpState[model.modelID].to)) {
-                            continue;
-                        }
-                        operation = new ScaleOperation3D({
-                            target: model,
-                            ...this.props.targetTmpState[model.modelID]
-                        });
-                        operations.push(operation);
-                        break;
-                    default: break;
-                }
-            }
-            if (operations.operations.length > 0) {
-                this.props.setOperations(operations);
-            }
+            this.props.recordModelAfterTransform(transformMode, this.props.modelGroup);
             this.props.onModelAfterTransform();
         },
         onModelTransform: () => {
@@ -220,43 +125,15 @@ class Visualizer extends PureComponent {
         },
 
         deleteSelectedModel: () => {
-            const operations = new Operations();
-            for (const model of this.props.modelGroup.selectedModelArray) {
-                const operation = new DeleteOperation3D({
-                    target: model,
-                    parent: model.meshObject.parent.clone(false)
-                });
-                operations.push(operation);
-            }
-            this.props.setOperations(operations);
             this.props.removeSelectedModel();
         },
         duplicateSelectedModel: () => {
             this.props.duplicateSelectedModel();
-            // newly added model will be selected, record them to operation history
-            const operations = new Operations();
-            for (const model of this.props.modelGroup.selectedModelArray) {
-                const operation = new AddOperation3D({
-                    target: model,
-                    parent: null
-                });
-                operations.push(operation);
-            }
-            this.props.setOperations(operations);
         },
         resetSelectedModelTransformation: () => {
             this.props.resetSelectedModelTransformation();
         },
         clearBuildPlate: () => {
-            const operations = new Operations();
-            for (const model of this.props.modelGroup.models) {
-                const operation = new DeleteOperation3D({
-                    target: model,
-                    parent: null
-                });
-                operations.push(operation);
-            }
-            this.props.setOperations(operations);
             this.props.removeAllModels();
         },
         arrangeAllModels: () => {
@@ -302,7 +179,6 @@ class Visualizer extends PureComponent {
         recordAddOperation: (model) => {
             if (!model.supportTag) {
                 // support should be recorded when mouse clicked
-                console.log(model);
                 const operation = new AddOperation3D({
                     target: model,
                     parent: null
@@ -344,17 +220,6 @@ class Visualizer extends PureComponent {
         saveSupport: () => {
             if (this._model) {
                 this.props.saveSupport(this._model);
-                if (!this._model.isInitSupport) {
-                    // save generated support into operation history
-                    const operation = new AddOperation3D({
-                        target: this._model,
-                        parent: this._model.target
-                    });
-                    operation.description = 'AddSupport';
-                    const operations = new Operations();
-                    operations.push(operation);
-                    this.props.setOperations(operations);
-                }
                 this._model = null;
             }
         },
@@ -368,34 +233,11 @@ class Visualizer extends PureComponent {
             // support can only be selected with supports
             const isSupportSelected = modelGroup.selectedModelArray.length > 0 && modelGroup.selectedModelArray[0].supportTag === true;
             if (isSupportSelected) {
-                const operations = new Operations();
-                for (const model of this.props.modelGroup.selectedModelArray) {
-                    const operation = new DeleteOperation3D({
-                        target: model,
-                        parent: model.target
-                    });
-                    operation.description = 'DeleteSupport';
-                    operations.push(operation);
-                }
-                this.props.setOperations(operations);
                 modelGroup.removeSelectedModel();
             }
         },
         clearAllManualSupport: () => {
-            const supports = this.props.modelGroup.models.filter(item => item.supportTag === true);
-            if (supports && supports.length > 0) {
-                const operations = new Operations();
-                for (const model of supports) {
-                    const operation = new DeleteOperation3D({
-                        target: model,
-                        parent: model.target
-                    });
-                    operation.description = 'DeleteSupport';
-                    operations.push(operation);
-                }
-                this.props.setOperations(operations);
-                this.props.clearAllManualSupport();
-            }
+            this.props.clearAllManualSupport();
         }
     };
 
@@ -421,15 +263,6 @@ class Visualizer extends PureComponent {
             [shortcutActions.PASTE]: () => {
                 if (!this.props.inProgress) {
                     this.props.paste();
-                    const operations = new Operations();
-                    for (const model of this.props.modelGroup.selectedModelArray) {
-                        const operation = new AddOperation3D({
-                            target: model,
-                            parent: null
-                        });
-                        operations.push(operation);
-                    }
-                    this.props.setOperations(operations);
                 }
             },
             [shortcutActions.DUPLICATE]: () => {
@@ -570,7 +403,7 @@ class Visualizer extends PureComponent {
 
     componentWillUnmount() {
         this.props.clearOperationHistory();
-        this.props.modelGroup.on('add', this.actions.recordAddOperation);
+        this.props.modelGroup.off('add', this.actions.recordAddOperation);
     }
 
     getNotice() {
@@ -791,12 +624,10 @@ class Visualizer extends PureComponent {
 const mapStateToProps = (state, ownProps) => {
     const machine = state.machine;
     const printing = state.printing;
-    const { targetTmpState } = state.operationHistory;
     const { size } = machine;
     // TODO: be to organized
     const { stage, modelGroup, hasModel, gcodeLineGroup, transformMode, progress, displayedType, renderingTimestamp, inProgress } = printing;
     return {
-        targetTmpState,
         isActive: ownProps.location.pathname.indexOf('3dp') > 0,
         stage,
         size,
@@ -815,10 +646,10 @@ const mapStateToProps = (state, ownProps) => {
 };
 
 const mapDispatchToProps = (dispatch) => ({
+    recordModelBeforeTransform: (transformMode, modelGroup) => dispatch(printingActions.recordModelBeforeTransform(transformMode, modelGroup)),
+    recordModelAfterTransform: (transformMode, modelGroup) => dispatch(printingActions.recordModelAfterTransform(transformMode, modelGroup)),
     clearOperationHistory: () => dispatch(operationHistoryActions.clear()),
     setOperations: (operation) => dispatch(operationHistoryActions.setOperations(operation)),
-    clearTargetTmpState: () => dispatch(operationHistoryActions.clearTargetTmpState()),
-    updateTargetTmpState: (targetId, tmpState) => dispatch(operationHistoryActions.updateTargetTmpState(targetId, tmpState)),
 
     destroyGcodeLine: () => dispatch(printingActions.destroyGcodeLine()),
     offsetGcodeLayers: (offset) => dispatch(printingActions.offsetGcodeLayers(offset)),

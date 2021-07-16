@@ -22,6 +22,6 @@ export default class Operations {
     }
 
     mergePreviousOperation() {
-        console.log('Operations.mergePreviousOperation');
+        throw new Error('NotImplementedException');
     }
 }

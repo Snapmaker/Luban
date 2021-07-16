@@ -12,10 +12,6 @@ export default class VisibleOperation3D extends Operation {
         };
     }
 
-    mergePreviousOperation(prevOperation) {
-        console.log('mergePreviousOperation', prevOperation);
-    }
-
     redo() {
         const model = this.state.target;
         const modelGroup = model.modelGroup;
