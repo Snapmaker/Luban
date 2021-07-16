@@ -22,6 +22,7 @@ import RotateOperation3D from '../operation-history/RotateOperation3D';
 import ScaleOperation3D from '../operation-history/ScaleOperation3D';
 import DeleteOperation3D from '../operation-history/DeleteOperation3D';
 import AddOperation3D from '../operation-history/AddOperation3D';
+import VisibleOperation3D from '../operation-history/VisibleOperation3D';
 
 const isDefaultQualityDefinition = (definitionId) => {
     return definitionId.indexOf('quality') !== -1
@@ -1017,18 +1018,36 @@ export const actions = {
         dispatch(actions.updateState(modelState));
     },
 
-    hideSelectedModel: () => (dispatch, getState) => {
+    hideSelectedModel: (targetModel) => (dispatch, getState) => {
         const { modelGroup } = getState().printing;
         const modelState = modelGroup.hideSelectedModel();
+
+        const operation = new VisibleOperation3D({
+            target: targetModel,
+            visible: false
+        });
+        const operations = new Operations();
+        operations.push(operation);
+
+        dispatch(operationHistoryActions.setOperations(operations));
         dispatch(actions.updateState(modelState));
         dispatch(actions.recordSnapshot());
         dispatch(actions.destroyGcodeLine());
         dispatch(actions.displayModel());
     },
 
-    showSelectedModel: () => (dispatch, getState) => {
+    showSelectedModel: (targetModel) => (dispatch, getState) => {
         const { modelGroup } = getState().printing;
         const modelState = modelGroup.showSelectedModel();
+
+        const operation = new VisibleOperation3D({
+            target: targetModel,
+            visible: true
+        });
+        const operations = new Operations();
+        operations.push(operation);
+
+        dispatch(operationHistoryActions.setOperations(operations));
         dispatch(actions.updateState(modelState));
         dispatch(actions.recordSnapshot());
         dispatch(actions.destroyGcodeLine());
@@ -1104,14 +1123,9 @@ export const actions = {
     recordModelBeforeTransform: (transformMode, modelGroup) => (dispatch) => {
         dispatch(operationHistoryActions.clearTargetTmpState());
         for (const model of modelGroup.selectedModelArray) {
-            // console.log('onModelBeforeTransform', model.transformation);
-            // console.log('onModelBeforeTransform', modelGroup.selectedGroup.scale.clone(), model.meshObject.scale.clone(), model.meshObject.parent.scale.clone(), model.meshObject.scale.clone().multiply(model.meshObject.parent.scale));
-            // console.log('onModelBeforeTransform', JSON.stringify(model.transformation), model.meshObject.rotation, model.meshObject.parent.rotation.clone(), model.meshObject.parent.matrix.elements); // , model.meshObject.rotation.clone().applyMatrix4(model.meshObject.parent.matrix));
             switch (transformMode) {
                 case 'translate':
                     dispatch(operationHistoryActions.updateTargetTmpState(model.modelID, {
-                        // groupFrom: model.meshObject.parent.position.clone(),
-                        // from: model.meshObject.position.clone().applyMatrix4(model.meshObject.parent.matrix)
                         from: { ...model.transformation }
                     }));
                     break;
@@ -1144,53 +1158,34 @@ export const actions = {
             return true;
         }
         for (const model of modelGroup.selectedModelArray) {
-            // console.log('onModelAfterTransform', model.transformation);
-            // console.log('onModelAfterTransform', targetTmpState[model.modelID], modelGroup.selectedGroup.scale.clone(), model.meshObject.scale.clone(), model.meshObject.parent.scale.clone(), model.meshObject.scale.clone().multiply(model.meshObject.parent.scale));
-            // console.log('onModelAfterTransform', JSON.stringify(model.transformation), model.meshObject.rotation, model.meshObject.parent.rotation.clone(), model.meshObject.parent.matrix.elements); // , model.meshObject.rotation.clone().applyMatrix4(model.meshObject.parent.matrix));
+            dispatch(operationHistoryActions.updateTargetTmpState(model.modelID, {
+                to: { ...model.transformation }
+            }));
+            if (stateEqual(targetTmpState[model.modelID].from, targetTmpState[model.modelID].to)) {
+                continue;
+            }
             switch (transformMode) {
                 case 'translate':
-                    dispatch(operationHistoryActions.updateTargetTmpState(model.modelID, {
-                        to: { ...model.transformation }
-                        // groupTo: model.meshObject.parent.position.clone(),
-                        // to: model.meshObject.position.clone().applyMatrix4(model.meshObject.parent.matrix)
-                    }));
-                    if (stateEqual(targetTmpState[model.modelID].from, targetTmpState[model.modelID].to)) {
-                        continue;
-                    }
                     operation = new MoveOperation3D({
                         target: model,
                         ...targetTmpState[model.modelID]
                     });
-                    operations.push(operation);
                     break;
                 case 'rotate':
-                    dispatch(operationHistoryActions.updateTargetTmpState(model.modelID, {
-                        to: { ...model.transformation }
-                    }));
-                    if (stateEqual(targetTmpState[model.modelID].from, targetTmpState[model.modelID].to)) {
-                        continue;
-                    }
                     operation = new RotateOperation3D({
                         target: model,
                         ...targetTmpState[model.modelID]
                     });
-                    operations.push(operation);
                     break;
                 case 'scale':
-                    dispatch(operationHistoryActions.updateTargetTmpState(model.modelID, {
-                        to: { ...model.transformation }
-                    }));
-                    if (stateEqual(targetTmpState[model.modelID].from, targetTmpState[model.modelID].to)) {
-                        continue;
-                    }
                     operation = new ScaleOperation3D({
                         target: model,
                         ...targetTmpState[model.modelID]
                     });
-                    operations.push(operation);
                     break;
                 default: break;
             }
+            operations.push(operation);
         }
         dispatch(operationHistoryActions.setOperations(operations));
     },

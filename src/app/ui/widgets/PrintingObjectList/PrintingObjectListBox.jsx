@@ -3,9 +3,6 @@ import React, { useState } from 'react';
 import { useDispatch, useSelector, shallowEqual } from 'react-redux';
 import styles from './styles.styl';
 import { actions as printingActions } from '../../../flux/printing';
-import { actions as operationHistoryActions } from '../../../flux/operation-history';
-import VisibleOperation3D from '../../../flux/operation-history/VisibleOperation3D';
-import Operations from '../../../flux/operation-history/Operations';
 // import i18n from '../../../lib/i18n';
 import ModelItem from '../../views/model-item';
 import Anchor from '../../components/Anchor';
@@ -25,17 +22,10 @@ function PrintingObjectListBox() {
             const visible = targetModel.visible;
             actions.selectTargetModel(targetModel);
             if (visible === true) {
-                dispatch(printingActions.hideSelectedModel());
+                dispatch(printingActions.hideSelectedModel(targetModel));
             } else {
-                dispatch(printingActions.showSelectedModel());
+                dispatch(printingActions.showSelectedModel(targetModel));
             }
-            const operation = new VisibleOperation3D({
-                target: targetModel,
-                visible: !visible
-            });
-            const operations = new Operations();
-            operations.push(operation);
-            dispatch(operationHistoryActions.setOperations(operations));
         }
     };
     return (

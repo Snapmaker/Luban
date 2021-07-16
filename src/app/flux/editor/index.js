@@ -964,17 +964,17 @@ export const actions = {
         }));
     },
 
-    hideSelectedModel: (headType) => (dispatch, getState) => {
+    hideSelectedModel: (headType, model) => (dispatch, getState) => {
         const { modelGroup, SVGActions } = getState()[headType];
         const svgElements = SVGActions.svgContentGroup.getSelected();
-        const models = modelGroup.getSelectedModelArray();
 
         modelGroup.hideSelectedModel();
         SVGActions.hideSelectedElement();
 
         const operation = new VisibleOperation2D({
             svgTarget: svgElements,
-            modelTarget: models[0],
+            svgActions: SVGActions,
+            target: model,
             visible: false
         });
         const operations = new Operations();
@@ -988,17 +988,17 @@ export const actions = {
         dispatch(baseActions.render(headType));
     },
 
-    showSelectedModel: (headType) => (dispatch, getState) => {
+    showSelectedModel: (headType, model) => (dispatch, getState) => {
         const { modelGroup, SVGActions } = getState()[headType];
         const svgElements = SVGActions.svgContentGroup.getSelected();
-        const models = modelGroup.getSelectedModelArray();
 
         modelGroup.showSelectedModel();
         SVGActions.showSelectedElement();
         // SVGActions.updateTransformation(modelGroup.getSelectedModel().transformation);
         const operation = new VisibleOperation2D({
             svgTarget: svgElements,
-            modelTarget: models[0],
+            svgActions: SVGActions,
+            target: model,
             visible: true
         });
         const operations = new Operations();

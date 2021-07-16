@@ -2,7 +2,7 @@ export default class Operations {
     operations = [];
 
     push(...operations) {
-        this.operations.push(...operations);
+        this.operations.push(...(operations.filter(item => !!item)));
     }
 
     getItem(i) {
