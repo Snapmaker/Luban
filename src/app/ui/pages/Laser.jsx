@@ -32,7 +32,7 @@ import MarlinWidget from '../widgets/Marlin';
 import VisualizerWidget from '../widgets/WorkspaceVisualizer';
 import WebcamWidget from '../widgets/Webcam';
 import LaserParamsWidget from '../widgets/LaserParams';
-import LaserSetBackground from '../widgets/LaserSetBackground';
+import LaserSetBackground from '../widgets/LaserSetBackground/SetBackground';
 import LaserTestFocusWidget from '../widgets/LaserTestFocus';
 import CNCPathWidget from '../widgets/CNCPath';
 import CncLaserOutputWidget from '../widgets/CncLaserOutput';
