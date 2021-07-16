@@ -20,6 +20,7 @@ export default class RotateOperation3D extends Operation {
         model.meshObject.rotation.set(this.state.to.rotationX, this.state.to.rotationY, this.state.to.rotationZ);
         model.meshObject.scale.set(this.state.to.scaleX, this.state.to.scaleY, this.state.to.scaleZ);
         model.meshObject.position.set(this.state.to.positionX, this.state.to.positionY, this.state.to.positionZ);
+        model.computeBoundingBox();
         model.stickToPlate();
         const overstepped = modelGroup._checkOverstepped(model);
         model.setOversteppedAndSelected(overstepped, model.isSelected);
@@ -32,6 +33,7 @@ export default class RotateOperation3D extends Operation {
         model.meshObject.rotation.set(this.state.from.rotationX, this.state.from.rotationY, this.state.from.rotationZ);
         model.meshObject.scale.set(this.state.from.scaleX, this.state.from.scaleY, this.state.from.scaleZ);
         model.meshObject.position.set(this.state.from.positionX, this.state.from.positionY, this.state.from.positionZ);
+        model.computeBoundingBox();
         model.stickToPlate();
         const overstepped = modelGroup._checkOverstepped(model);
         model.setOversteppedAndSelected(overstepped, model.isSelected);
