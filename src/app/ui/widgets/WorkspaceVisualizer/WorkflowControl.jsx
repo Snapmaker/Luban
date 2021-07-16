@@ -11,7 +11,8 @@ import {
 } from '../../../constants';
 
 import i18n from '../../../lib/i18n';
-import styles from './index.styl';
+import SvgIcon from '../../components/SvgIcon';
+// import styles from './index.styl';
 
 
 class WorkflowControl extends PureComponent {
@@ -95,45 +96,39 @@ class WorkflowControl extends PureComponent {
         const canStop = _.includes([WORKFLOW_STATE_PAUSED, WORKFLOW_STATUS_PAUSED], status);
 
         return (
-            <div className={styles['workflow-control']}>
-                <div className="btn-group" role="group">
-                    <button
-                        type="button"
-                        className="btn btn-outline-secondary"
-                        title={i18n._('Run')}
-                        onClick={this.actions.handleRun}
-                        disabled={isServerWaiting || !canPlay}
-                    >
-                        <i className="fa fa-play" />
-                    </button>
-                    <button
-                        type="button"
-                        className="btn btn-outline-secondary"
-                        title={i18n._('Pause')}
-                        onClick={this.actions.handlePause}
-                        disabled={isServerWaiting || !canPause}
-                    >
-                        <i className="fa fa-pause" />
-                    </button>
-                    <button
-                        type="button"
-                        className="btn btn-outline-secondary"
-                        title={i18n._('Stop')}
-                        onClick={this.actions.handleStop}
-                        disabled={isServerWaiting || !canStop}
-                    >
-                        <i className="fa fa-stop" />
-                    </button>
-                    <button
-                        type="button"
-                        className="btn btn-outline-secondary"
-                        title={i18n._('Close')}
-                        onClick={this.actions.handleClose}
-                        disabled={isServerWaiting || !canClose}
-                    >
-                        <i className="fa fa-close" />
-                    </button>
-                </div>
+            <div className="">
+                <SvgIcon
+                    name="WorkspacePlay"
+                    className="border-default-black-5 padding-vertical-4 padding-horizontal-4 border-radius-left-8"
+                    size={22}
+                    title={i18n._('Run')}
+                    onClick={this.actions.handleRun}
+                    disabled={isServerWaiting || !canPlay}
+                />
+                <SvgIcon
+                    name="WorkspaceSuspend"
+                    className="border-default-black-5 padding-vertical-4 padding-horizontal-4"
+                    size={22}
+                    title={i18n._('Pause')}
+                    onClick={this.actions.handlePause}
+                    disabled={isServerWaiting || !canPause}
+                />
+                <SvgIcon
+                    name="WorkspaceStop"
+                    className="border-default-black-5 padding-vertical-4 padding-horizontal-4"
+                    size={22}
+                    title={i18n._('Stop')}
+                    onClick={this.actions.handleStop}
+                    disabled={isServerWaiting || !canStop}
+                />
+                <SvgIcon
+                    name="WorkspaceCancel"
+                    className="border-default-black-5 padding-vertical-4 padding-horizontal-4 border-radius-right-8"
+                    size={22}
+                    title={i18n._('Close')}
+                    onClick={this.actions.handleClose}
+                    disabled={isServerWaiting || !canClose}
+                />
             </div>
         );
     }

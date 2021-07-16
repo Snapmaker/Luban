@@ -6,6 +6,7 @@ import { Trans } from 'react-i18next';
 import Slider from '../../components/Slider';
 
 import i18n from '../../../lib/i18n';
+import { Button } from '../../components/Buttons';
 import Modal from '../../components/Modal';
 import { NumberInput as Input } from '../../components/Input';
 import TipTrigger from '../../components/TipTrigger';
@@ -78,11 +79,11 @@ class TestFocus extends PureComponent {
                 {showInstructions && (
                     <Modal style={{ width: '1080px' }} size="lg" onClose={actions.hideInstructions}>
                         <Modal.Header>
-                            <Modal.Title>
-                                {i18n._('How Fine Tune Work Origin Works')}
-                            </Modal.Title>
+                            {/* <Modal.Title> */}
+                            {i18n._('How Fine Tune Work Origin Works')}
+                            {/* </Modal.Title> */}
                         </Modal.Header>
-                        <Modal.Body className={styles['test-laser-instruction-content']}>
+                        <Modal.Body className={classNames(styles['test-laser-instruction-content'], 'clearfix')}>
                             <p>
                                 <Trans i18nKey="key_laser_test_focus_description_1">
                                     <b>Setting work origin</b> is essentially finding the best place for the engraved image
@@ -146,74 +147,54 @@ class TestFocus extends PureComponent {
                         </Modal.Body>
                     </Modal>
                 )}
-                <table className={styles['parameter-table']}>
-                    <tbody>
-                        <tr>
-                            <td style={{ width: '100%' }}>
-                                {i18n._('Work Speed')}
-                            </td>
-                            <td>
-                                <TipTrigger
-                                    placement="right"
-                                    title={i18n._('Work Speed')}
-                                    content={i18n._('Determines how fast the machine moves when it’s working.')}
-                                >
-                                    <Input
-                                        style={{ width: '100px', float: 'right' }}
-                                        min={1}
-                                        max={6000}
-                                        value={this.state.workSpeed}
-                                        onChange={actions.onChangeWorkSpeed}
-                                    />
-                                    <span className={styles.unit}>mm/min</span>
-                                </TipTrigger>
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
-                <table className={styles['parameter-table']} style={{ marginTop: '10px' }}>
-                    <tbody>
-                        <tr>
-                            <td style={{ width: '25%' }}>
-                                {i18n._('Power (%)')}
-                            </td>
-                            <td style={{ width: '50%', paddingLeft: '5%', paddingRight: '5%' }}>
-                                <Slider
-                                    value={this.state.power}
-                                    min={0}
-                                    max={100}
-                                    step={0.5}
-                                    onChange={actions.onChangePower}
-                                />
-                            </td>
-                            <td style={{ width: '25%' }}>
-                                <TipTrigger
-                                    placement="right"
-                                    title={i18n._('Power')}
-                                    content={i18n._('Power to use when laser is working.')}
-                                >
-                                    <Input
-                                        style={{ width: '100%' }}
-                                        min={1}
-                                        max={100}
-                                        value={this.state.power}
-                                        onChange={actions.onChangePower}
-                                    />
-                                </TipTrigger>
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
-                <button
-                    type="button"
-                    style={{ display: 'block', width: '100%', marginTop: '15px' }}
-                    className="sm-btn-large sm-btn-default"
+                <div className="sm-flex height-32 justify-space-between margin-vertical-8">
+                    <span>{i18n._('Work Speed')}</span>
+                    <TipTrigger
+                        placement="right"
+                        className="sm-flex-auto"
+                        title={i18n._('Work Speed')}
+                        content={i18n._('Determines how fast the machine moves when it’s working.')}
+                    >
+                        <Input
+                            min={1}
+                            max={6000}
+                            value={this.state.workSpeed}
+                            onChange={actions.onChangeWorkSpeed}
+                        />
+                        <span className="sm-flex__input-unit-8">mm/min</span>
+                    </TipTrigger>
+                </div>
+                <div className="sm-flex height-32 justify-space-between margin-vertical-8">
+                    <span>{i18n._('Power')}</span>
+                    <Slider
+                        value={this.state.power}
+                        min={0}
+                        max={100}
+                        step={0.5}
+                        onChange={actions.onChangePower}
+                    />
+                    <TipTrigger
+                        placement="right"
+                        className="sm-flex-auto"
+                        title={i18n._('Power')}
+                        content={i18n._('Power to use when laser is working.')}
+                    >
+                        <Input
+                            min={1}
+                            max={100}
+                            value={this.state.power}
+                            onChange={actions.onChangePower}
+                        />
+                        <span className="sm-flex__input-unit-8">%</span>
+                    </TipTrigger>
+                </div>
+                <Button
                     disabled={!isIdle}
+                    className="margin-bottom-16"
                     onClick={actions.generateAndLoadGcode}
                 >
                     {i18n._('Generate and Load G-code')}
-                </button>
-                <div className={styles.separator} style={{ marginTop: '20px', marginBottom: '10px' }} />
+                </Button>
                 <table style={{ borderCollapse: 'separate', borderSpacing: '5px', width: '100%' }}>
                     <tbody>
                         <tr>
@@ -224,7 +205,7 @@ class TestFocus extends PureComponent {
                                             className={classNames({
                                                 [styles['text-test-laser-focus-z-value-selected']]: this.state.z === zValue,
                                                 [styles['text-test-laser-focus-z-value-normal']]: this.state.z !== zValue
-                                            })}
+                                            }, 'color-blue-2')}
                                         >
                                             {zValue.toFixed(1)}
                                         </span>
@@ -236,7 +217,7 @@ class TestFocus extends PureComponent {
                                             className={classNames({
                                                 [styles['btn-test-laser-focus-z-selected']]: this.state.z === zValue,
                                                 [styles['btn-test-laser-focus-z-normal']]: this.state.z !== zValue
-                                            })}
+                                            }, 'border-color-blue-2')}
                                         />
                                     </td>
                                 );
@@ -276,15 +257,15 @@ class TestFocus extends PureComponent {
                         </tr>
                     </tbody>
                 </table>
-                <button
-                    type="button"
-                    className="sm-btn-large sm-btn-primary"
+                <Button
+                    priority="level-two"
+                    type="primary"
                     onClick={actions.setLaserFocusZ}
+                    className="margin-top-16"
                     disabled={!isIdle || !isConnected}
-                    style={{ display: 'block', width: '100%', marginTop: '5px' }}
                 >
                     {i18n._('Set Work Origin')}
-                </button>
+                </Button>
             </React.Fragment>
         );
     }

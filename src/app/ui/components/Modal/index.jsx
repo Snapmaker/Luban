@@ -1,15 +1,30 @@
-import '@trendmicro/react-modal/dist/react-modal.css';
-import Modal from '@trendmicro/react-modal';
 import React, { PureComponent } from 'react';
+// import '@trendmicro/react-modal/dist/react-modal.css';
+// import Modal from '@trendmicro/react-modal';
+import PropTypes from 'prop-types';
+
+import './modal.styl';
+import { filter } from 'lodash';
+import { Modal } from 'antd';
+import Title from './modalTitle';
+import Body from './modalBody';
+import Footer from './modalFooter';
 import UniApi from '../../../lib/uni-api';
 
 class ModalWrapper extends PureComponent {
     static propTypes = {
-        ...Modal.propTypes
+        ...Modal.propTypes,
+        modalWrapperClassName: PropTypes.string,
+        tile: PropTypes.bool
     };
 
     static defaultProps = {
-        ...Modal.defaultProps
+        ...Modal.defaultProps,
+        visible: true,
+        width: 'auto',
+        size: 'md',
+        modalWrapperClassName: 'modal-wrapper',
+        tile: false
     };
 
     componentDidMount() {
@@ -42,27 +57,97 @@ class ModalWrapper extends PureComponent {
         body.style.overflowY = 'auto';
     }
 
-    render() {
-        const { onClose, ...props } = this.props;
+    renderTitle = () => {
+        if (this.props.children instanceof Array) {
+            const titleNode = filter(this.props.children, (o) => {
+                return o?.props?.key === 'modalTitle';
+            });
+            if (!titleNode.length) {
+                return null;
+            } else {
+                return titleNode;
+            }
+        } else {
+            if (this.props.children.props.key === 'modalTitle') {
+                return this.props.children;
+            } else {
+                return null;
+            }
+        }
+    }
 
+    renderBody = () => {
+        if (this.props.children instanceof Array) {
+            const bodyNode = filter(this.props.children, (o) => {
+                return o?.props?.key === 'modalBody';
+            });
+            if (!bodyNode.length) {
+                return null;
+            } else {
+                return bodyNode;
+            }
+        } else {
+            if (this.props.children.props.key === 'modalBody') {
+                return this.props.children;
+            } else {
+                return null;
+            }
+        }
+    }
+
+    renderFooter = () => {
+        if (this.props.children instanceof Array) {
+            const footerNode = filter(this.props.children, (o) => {
+                return o?.props?.key === 'modalFooter';
+            });
+            if (footerNode.length) {
+                return footerNode;
+            } else {
+                return null;
+            }
+        } else {
+            if (this.props.children.props.key === 'modalFooter') {
+                return this.props.children;
+            } else {
+                return null;
+            }
+        }
+    }
+
+    render() {
+        const { onClose, visible = true, tile, className, modalWrapperClassName, size, ...props } = this.props;
         return (
             <Modal
                 {...props}
-                disableOverlay
-                onClose={() => {
-                    this.unblockScrolling();
-                    onClose();
+                width="auto"
+                visible={visible}
+                title={this.renderTitle()}
+                footer={this.renderFooter()}
+                onCancel={onClose}
+                centered
+                mask={!tile}
+                className={`${this.renderTitle() ? className : `${className} no-header`}`}
+                wrapClassName={tile ? `${modalWrapperClassName} tile-modal` : modalWrapperClassName}
+                maskStyle={{
+                    background: '#2A2C2E30'
                 }}
-            />
+            >
+                {this.renderBody()}
+            </Modal>
         );
     }
 }
 
-ModalWrapper.Overlay = Modal.Overlay;
-ModalWrapper.Content = Modal.Content;
-ModalWrapper.Header = Modal.Header;
-ModalWrapper.Title = Modal.Title;
-ModalWrapper.Body = Modal.Body;
-ModalWrapper.Footer = Modal.Footer;
+ModalWrapper.Header = Title;
+ModalWrapper.Body = Body;
+ModalWrapper.Footer = Footer;
+// ModalWrapper.Header = Header;
+// console.log(ModalWrapper.Header);
+// ModalWrapper.Overlay = Modal.Overlay;
+// ModalWrapper.Content = Modal.Content;
+// ModalWrapper.Header = Modal.Header;
+// ModalWrapper.Title = Modal.Title;
+// ModalWrapper.Body = Modal.Body;
+// ModalWrapper.Footer = Modal.Footer;
 
 export default ModalWrapper;

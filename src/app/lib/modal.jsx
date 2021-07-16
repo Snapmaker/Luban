@@ -64,9 +64,9 @@ class ModalHOC extends PureComponent {
             >
                 {title && (
                     <Modal.Header>
-                        <Modal.Title>
-                            {title}
-                        </Modal.Title>
+                        {/* <Modal.Title> */}
+                        {title}
+                        {/* </Modal.Title> */}
                     </Modal.Header>
                 )}
                 <Modal.Body>

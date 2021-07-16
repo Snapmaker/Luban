@@ -2,9 +2,11 @@ import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
 import classNames from 'classnames';
 import { connect } from 'react-redux';
-import { Button, InputGroup } from 'react-bootstrap';
 import { map } from 'lodash';
+// import { InputGroup } from 'react-bootstrap';
+import { Button } from '../../components/Buttons';
 import Select from '../../components/Select';
+import SvgIcon from '../../components/SvgIcon';
 import i18n from '../../../lib/i18n';
 import { actions as machineActions } from '../../../flux/machine';
 import {
@@ -306,69 +308,46 @@ class WifiConnection extends PureComponent {
         const { server, showConnectionMessage, connectionMessage, showManualWiFiModal, manualWiFi } = this.state;
         return (
             <div>
-                <InputGroup className="mb-3">
-                    <div
-                        style={{
-                            flex: '1 1 0%',
-                            width: '100%',
-                            marginRight: '5px'
-                        }}
-                    >
-                        {/** https://react-select.com/upgrade-guide#new-components-api **/}
-                        <Select
-                            backspaceRemoves={false}
-                            clearable={false}
-                            name="port"
-                            noResultsText={i18n._('No machines detected.')}
-                            onChange={this.actions.onChangeServerOption}
-                            disabled={isOpen}
-                            options={map(servers, (s) => ({
-                                value: s.name,
-                                address: s.address,
-                                label: `${s.name} (${s.address})`
-                            }))}
-                            placeholder={i18n._('Choose a machine')}
-                            value={server ? server?.name : ''}
-                        />
-                    </div>
-                    <InputGroup.Append>
-                        <Button
-                            variant="outline-secondary"
-                            style={{ borderColor: '#c8c8c8' }}
-                            name="btn-refresh"
+                <div className="sm-flex justify-space-between margin-bottom-16">
+                    {/** https://react-select.com/upgrade-guide#new-components-api **/}
+                    <Select
+                        backspaceRemoves={false}
+                        className={classNames('sm-flex-width sm-flex-order-negative')}
+                        clearable={false}
+                        size="256px"
+                        name="port"
+                        noResultsText={i18n._('No machines detected.')}
+                        onChange={this.actions.onChangeServerOption}
+                        disabled={isOpen}
+                        options={map(servers, (s) => ({
+                            value: s.name,
+                            address: s.address,
+                            label: `${s.name} (${s.address})`
+                        }))}
+                        placeholder={i18n._('Choose a machine')}
+                        value={server ? server?.name : ''}
+                    />
+                    <div className="sm-flex-auto ">
+                        <SvgIcon
+                            className="border-default-black-5 margin-left-8 padding-vertical-4 padding-horizontal-4 border-radius-left-8"
+                            name={serverDiscovering ? 'Refresh' : 'Reset'}
                             title={i18n._('Refresh')}
-                            disabled={isOpen}
                             onClick={this.actions.onRefreshServers}
-                        >
-                            <i
-                                className={classNames(
-                                    'fa',
-                                    'fa-refresh',
-                                    { 'fa-spin': serverDiscovering }
-                                )}
-                            />
-                        </Button>
-                    </InputGroup.Append>
-                    <InputGroup.Append>
-                        <Button
-                            variant="outline-secondary"
-                            style={{ borderColor: '#c8c8c8' }}
-                            name="btn-add"
+                            disabled={isOpen}
+                            size={22}
+                        />
+                        <SvgIcon
+                            className="border-default-black-5 padding-vertical-4 padding-horizontal-4 border-radius-right-8"
+                            name="Add"
                             title={i18n._('Add')}
                             disabled={isOpen}
+                            size={22}
                             onClick={this.actions.showManualWiFiModal}
-                        >
-                            <i
-                                className={classNames(
-                                    'fa',
-                                    'fa-plus'
-                                )}
-                            />
-                        </Button>
-                    </InputGroup.Append>
-                </InputGroup>
+                        />
+                    </div>
+                </div>
                 {isConnected && (
-                    <div style={{ marginBottom: '10px' }}>
+                    <div className="margin-bottom-16">
                         <div
                             className={styles['connection-state']}
                         >
@@ -397,32 +376,27 @@ class WifiConnection extends PureComponent {
                     </div>
                 )}
                 <div>
-                    <div
-                        className="btn-group"
-                        style={{
-                            width: '50%'
-                        }}
-                    >
-                        {!isConnected && (
-                            <button
-                                type="button"
-                                className="sm-btn-small sm-btn-primary"
-                                onClick={this.actions.openServer}
-                                disabled={isOpen}
-                            >
-                                {i18n._('Connect')}
-                            </button>
-                        )}
-                        {isConnected && (
-                            <button
-                                type="button"
-                                className="sm-btn-small sm-btn-danger"
-                                onClick={this.actions.closeServer}
-                            >
-                                {i18n._('Disconnect')}
-                            </button>
-                        )}
-                    </div>
+                    {!isConnected && (
+                        <Button
+                            width="120px"
+                            type="primary"
+                            priority="level-two"
+                            onClick={this.actions.openServer}
+                            disabled={isOpen}
+                        >
+                            {i18n._('Connect')}
+                        </Button>
+                    )}
+                    {isConnected && (
+                        <Button
+                            width="120px"
+                            type="primary"
+                            priority="level-two"
+                            onClick={this.actions.closeServer}
+                        >
+                            {i18n._('Disconnect')}
+                        </Button>
+                    )}
                 </div>
                 {showConnectionMessage && (
                     <ModalSmall

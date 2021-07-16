@@ -38,9 +38,9 @@ export default function renderModal(options) {
     return (
         <Modal disableOverlay size={size} onClose={onClose}>
             <Modal.Header>
-                <Modal.Title>
-                    {title}
-                </Modal.Title>
+                {/* <Modal.Title> */}
+                {title}
+                {/* </Modal.Title> */}
             </Modal.Header>
             <Modal.Body>
                 {renderBody()}

@@ -44,9 +44,9 @@ class EditMacro extends PureComponent {
         return (
             <Modal disableOverlay size="md" onClose={this.props.closeModal}>
                 <Modal.Header>
-                    <Modal.Title>
-                        {i18n._('Edit Macro')}
-                    </Modal.Title>
+                    {/* <Modal.Title> */}
+                    {i18n._('Edit Macro')}
+                    {/* </Modal.Title> */}
                 </Modal.Header>
                 <Modal.Body>
                     <Form
@@ -113,9 +113,9 @@ class EditMacro extends PureComponent {
                             portal(({ onClose }) => (
                                 <Modal disableOverlay={false} size="xs" onClose={onClose}>
                                     <Modal.Header>
-                                        <Modal.Title>
-                                            {i18n._('Delete Macro')}
-                                        </Modal.Title>
+                                        {/* <Modal.Title> */}
+                                        {i18n._('Delete Macro')}
+                                        {/* </Modal.Title> */}
                                     </Modal.Header>
                                     <Modal.Body>
                                         {i18n._('Delete this macro?')}

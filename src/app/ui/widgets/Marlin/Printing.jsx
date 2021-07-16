@@ -3,6 +3,8 @@ import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
 import _ from 'lodash';
 import Anchor from '../../components/Anchor';
+import SvgIcon from '../../components/SvgIcon';
+import { Button } from '../../components/Buttons';
 import i18n from '../../../lib/i18n';
 import { NumberInput as Input } from '../../components/Input';
 import { actions as machineActions } from '../../../flux/machine';
@@ -110,98 +112,99 @@ class Printing extends PureComponent {
         const actions = this.actions;
         return (
             <div>
-                <div className="sm-parameter-container">
-                    <WorkSpeed />
-                    <div className="sm-parameter-row">
-                        <span className="sm-parameter-row__label-lg">{i18n._('Nozzle Temp.')}</span>
-                        <span className="sm-parameter-row__input2-text">{nozzleTargetTemperature} / </span>
+                <WorkSpeed />
+                <div className="sm-flex justify-space-between margin-vertical-8">
+                    <span className="height-32">{i18n._('Nozzle Temp.')}</span>
+                    <div className="sm-flex-auto">
+                        <span className="height-32">{nozzleTargetTemperature} / </span>
                         <Input
-                            className="sm-parameter-row__input2"
+                            size="small"
                             value={nozzleTemperatureValue}
                             max={250}
                             min={0}
                             onChange={actions.onChangeNozzleTemperatureValue}
                         />
-                        <span className="sm-parameter-row__input2-unit">°C</span>
-                        <Anchor
-                            className="sm-parameter-row__input2-check fa fa-chevron-circle-right"
+                        <span className="height-32 sm-flex__input-unit-44">°C</span>
+                        <SvgIcon
+                            name="Reset"
+                            size={22}
+                            className="border-default-black-5 margin-left-4 padding-vertical-4 padding-horizontal-4 border-radius-8"
                             onClick={actions.onClickNozzleTemperature}
                         />
                     </div>
+                </div>
 
-                    <div className="sm-parameter-row">
-                        <span className="sm-parameter-row__label">{i18n._('Heated Bed Temp.')}</span>
-                        <span className="sm-parameter-row__input2-text">{heatedBedTargetTemperature} / </span>
+                <div className="sm-flex justify-space-between margin-vertical-8">
+                    <span className="height-32">{i18n._('Heated Bed Temp.')}</span>
+                    <div className="sm-flex-auto">
+                        <span className="height-32">{heatedBedTargetTemperature} / </span>
                         <Input
-                            className="sm-parameter-row__input2"
+                            size="small"
                             value={heatedBedTemperatureValue}
                             max={80}
                             min={0}
                             onChange={actions.onChangeHeatedBedTemperatureValue}
                         />
-                        <span className="sm-parameter-row__input2-unit">°C</span>
-                        <Anchor
-                            className="sm-parameter-row__input2-check fa fa-chevron-circle-right"
+                        <span className="height-32 sm-flex__input-unit-44">°C</span>
+                        <SvgIcon
+                            name="Reset"
+                            size={22}
+                            className="border-default-black-5 margin-left-4 padding-vertical-4 padding-horizontal-4 border-radius-8"
                             onClick={actions.onClickHeatedBedTemperature}
                         />
                     </div>
+                </div>
 
-                    <div className="sm-parameter-row">
-                        <span className="sm-parameter-row__label">{i18n._('Filament')}</span>
-                        <button
-                            type="button"
-                            className="btn btn-outline-secondary"
-                            style={{
-                                width: '82px',
-                                float: 'right'
-                            }}
+                <div className="sm-flex justify-space-between margin-vertical-8">
+                    <span className="height-32">{i18n._('Filament')}</span>
+                    <div>
+                        <Button
+                            priority="level-three"
+                            width="96px"
+                            className="display-inline"
                             onClick={actions.onClickUnload}
                         >
                             {i18n._('Unload')}
-                        </button>
-                        <button
-                            type="button"
-                            className="btn btn-outline-secondary"
-                            style={{
-                                width: '82px',
-                                float: 'right',
-                                marginRight: '2px'
-                            }}
+                        </Button>
+                        <Button
+                            className="margin-left-4 display-inline"
+                            priority="level-three"
+                            width="96px"
                             onClick={actions.onClickLoad}
                         >
                             {i18n._('Load')}
-                        </button>
+                        </Button>
                     </div>
-
-                    {isConnected && _.includes([WORKFLOW_STATUS_RUNNING, WORKFLOW_STATUS_PAUSED], workflowStatus) && (
-                        <div className="sm-parameter-row">
-                            <span className="sm-parameter-row__label">{i18n._('Z Offset')}</span>
-                            <Anchor
-                                className="sm-parameter-row__input2"
-                                style={{
-                                    marginRight: '84px'
-                                }}
-                            >
-                                <JogDistance
-                                    marks={zOffsetMarks}
-                                    onChange={actions.onChangeZOffset}
-                                    defaultValue={zOffsetValue}
-                                />
-                            </Anchor>
-                            <Anchor
-                                className="sm-parameter-row__input2-check fa fa-plus"
-                                onClick={actions.onClickPlusZOffset}
-                            />
-                            <Anchor
-                                className="sm-parameter-row__input2-check fa fa-minus"
-                                style={{
-                                    right: '152px'
-                                }}
-                                onClick={actions.onClickMinusZOffset}
-                            />
-                        </div>
-                    )}
                 </div>
+
+                {isConnected && _.includes([WORKFLOW_STATUS_RUNNING, WORKFLOW_STATUS_PAUSED], workflowStatus) && (
+                    <div className="sm-parameter-row">
+                        <span className="sm-parameter-row__label">{i18n._('Z Offset')}</span>
+                        <Anchor
+                            className="sm-parameter-row__input2"
+                            style={{
+                                marginRight: '84px'
+                            }}
+                        >
+                            <JogDistance
+                                marks={zOffsetMarks}
+                                onChange={actions.onChangeZOffset}
+                                defaultValue={zOffsetValue}
+                            />
+                        </Anchor>
+                        <Anchor
+                            className="sm-parameter-row__input2-check fa fa-plus"
+                            onClick={actions.onClickPlusZOffset}
+                        />
+                        <Anchor
+                            className="sm-parameter-row__input2-check fa fa-minus"
+                            style={{
+                                right: '152px'
+                            }}
+                            onClick={actions.onClickMinusZOffset}
+                        />
+                    </div>
+                )}
             </div>
         );
     }

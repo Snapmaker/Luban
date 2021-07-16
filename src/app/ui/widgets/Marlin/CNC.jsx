@@ -4,6 +4,7 @@ import PropTypes from 'prop-types';
 import { actions as machineActions } from '../../../flux/machine';
 import WorkSpeed from './WorkSpeed';
 import i18n from '../../../lib/i18n';
+import Switch from '../../components/Switch';
 
 
 class Printing extends PureComponent {
@@ -34,24 +35,14 @@ class Printing extends PureComponent {
         const { headStatus } = this.state;
         return (
             <div>
-                <div className="sm-parameter-container">
-                    <WorkSpeed />
-                    <div className="sm-parameter-row">
-                        <span className="sm-parameter-row__label-lg">{i18n._('Tool Head')}</span>
-                        <button
-                            type="button"
-                            className={headStatus ? 'sm-btn-small sm-btn-primary' : 'sm-btn-small sm-btn-danger'}
-                            style={{
-                                float: 'right'
-                            }}
-                            onClick={this.actions.onClickToolHead}
-                        >
-                            {!headStatus && <i className="fa fa-toggle-off" />}
-                            {headStatus && <i className="fa fa-toggle-on" />}
-                            <span className="space" />
-                            {headStatus ? i18n._('On') : i18n._('Off')}
-                        </button>
-                    </div>
+                <WorkSpeed />
+                <div className="sm-flex justify-space-between margin-vertical-8">
+                    <span>{i18n._('Tool Head')}</span>
+                    <Switch
+                        className="sm-flex-auto"
+                        onClick={this.actions.onClickToolHead}
+                        checked={headStatus}
+                    />
                 </div>
             </div>
         );

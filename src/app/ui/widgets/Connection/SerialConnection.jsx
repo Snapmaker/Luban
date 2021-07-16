@@ -2,9 +2,11 @@ import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
 import classNames from 'classnames';
-import { Button, InputGroup } from 'react-bootstrap';
+// import { InputGroup } from 'react-bootstrap';
 import { includes, map } from 'lodash';
 import Select from '../../components/Select';
+import SvgIcon from '../../components/SvgIcon';
+import { Button } from '../../components/Buttons';
 
 import log from '../../../lib/log';
 import i18n from '../../../lib/i18n';
@@ -14,7 +16,6 @@ import {
     MACHINE_HEAD_TYPE
 } from '../../../constants';
 import { valueOf } from '../../../lib/contants-utils';
-import Space from '../../components/Space';
 import { actions as machineActions } from '../../../flux/machine';
 import PrintingState from './PrintingState';
 import LaserState from './LaserState';
@@ -303,95 +304,73 @@ class SerialConnection extends PureComponent {
 
         return (
             <div>
-                <InputGroup className="mb-3">
-                    <div
-                        style={{
-                            flex: '1 1 0%',
-                            width: '100%',
-                            marginRight: '5px'
-                        }}
-                    >
-                        <Select
-                            menuStyle={{
-                                maxHeight: '100px'
-                            }}
-                            backspaceRemoves={false}
-                            clearable={false}
-                            searchable={false}
-                            disabled={!canChangePort}
-                            name="port"
-                            noResultsText={i18n._('No ports available')}
-                            onChange={this.actions.onChangePortOption}
-                            optionRenderer={this.renderPortOption}
-                            options={map(ports, (o) => ({
-                                value: o.port,
-                                label: o.port,
-                                manufacturer: o.manufacturer
-                            }))}
-                            placeholder={i18n._('Choose a port')}
-                            value={port}
-                            valueRenderer={this.renderPortValue}
-                        />
-                    </div>
-                    <InputGroup.Append>
-                        <Button
-                            variant="outline-secondary"
-                            style={{ borderColor: '#c8c8c8' }}
-                            name="btn-refresh"
-                            title={i18n._('Refresh')}
-                            onClick={this.actions.onRefreshPorts}
-                            disabled={!canRefresh}
-                        >
-                            <i
-                                className={classNames(
-                                    'fa',
-                                    'fa-refresh',
-                                    { 'fa-spin': loadingPorts }
-                                )}
-                            />
-                        </Button>
-                    </InputGroup.Append>
-                </InputGroup>
+                <div className="sm-flex justify-space-between margin-bottom-16">
+                    <Select
+                        backspaceRemoves={false}
+                        className={classNames('sm-flex-width', 'sm-flex-order-negative')}
+                        clearable={false}
+                        searchable={false}
+                        disabled={!canChangePort}
+                        name="port"
+                        noResultsText={i18n._('No ports available')}
+                        onChange={this.actions.onChangePortOption}
+                        optionRenderer={this.renderPortOption}
+                        options={map(ports, (o) => ({
+                            value: o.port,
+                            label: o.port,
+                            manufacturer: o.manufacturer
+                        }))}
+                        placeholder={i18n._('Choose a port')}
+                        value={port}
+                        valueRenderer={this.renderPortValue}
+                    />
+                    <SvgIcon
+                        className="border-default-black-5 margin-left-8 padding-vertical-4 padding-horizontal-4 border-radius-8"
+                        size={22}
+                        name={loadingPorts ? 'Refresh' : 'Reset'}
+                        title={i18n._('Refresh')}
+                        onClick={this.actions.onRefreshPorts}
+                        disabled={!canRefresh}
+                    />
+                </div>
 
                 {isConnected && (
-                    <div className="mb-3">
+                    <div className="margin-bottom-16">
                         {headType === MACHINE_HEAD_TYPE['3DP'].value && <PrintingState headType={headType} />}
                         {headType === MACHINE_HEAD_TYPE.LASER.value && <LaserState headType={headType} />}
                         {headType === MACHINE_HEAD_TYPE.CNC.value && <CNCState headType={headType} />}
                     </div>
                 )}
                 {isConnected && this.props.enclosureOnline && (
-                    <div className="mb-3">
+                    <div className="margin-bottom-16">
                         <EnclosureState />
                     </div>
                 )}
 
-                <div className="btn-group">
+                <div>
                     {!isConnected && (
-                        <button
-                            type="button"
-                            className="sm-btn-small sm-btn-primary"
+                        <Button
+                            width="120px"
+                            type="primary"
+                            priority="level-two"
                             disabled={!canOpenPort}
                             onClick={this.actions.onOpenPort}
                         >
-                            <i className="fa fa-toggle-off" />
-                            <span className="space" />
                             {i18n._('Connect')}
-                        </button>
+                        </Button>
                     )}
                     {isConnected && (
-                        <button
-                            type="button"
-                            className="sm-btn-small sm-btn-danger"
+                        <Button
+                            width="120px"
+                            type="primary"
+                            priority="level-two"
                             onClick={this.actions.onClosePort}
                         >
-                            <i className="fa fa-toggle-on" />
-                            <Space width={4} />
                             {i18n._('Disconnect')}
-                        </button>
+                        </Button>
                     )}
                     {err && (
-                        <span style={{ margin: '0 8px' }}>{err}</span>
+                        <span className="margin-horizontal-8">{err}</span>
                     )}
                 </div>
             </div>

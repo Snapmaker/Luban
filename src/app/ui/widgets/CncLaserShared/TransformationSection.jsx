@@ -5,7 +5,6 @@ import classNames from 'classnames';
 
 import i18n from '../../../lib/i18n';
 import { toFixed } from '../../../lib/numeric-utils';
-import Anchor from '../../components/Anchor';
 import TipTrigger from '../../components/TipTrigger';
 import SvgIcon from '../../components/SvgIcon';
 import { DegreeInput, NumberInput as Input } from '../../components/Input';
@@ -67,13 +66,9 @@ class TransformationSection extends PureComponent {
     };
 
     state = {
-        expanded: true
     };
 
     actions = {
-        onToggleExpand: () => {
-            this.setState(state => ({ expanded: !state.expanded }));
-        },
 
         onChangeLogicalX: (logicalX) => {
             const elements = this.props.selectedElements;
@@ -165,30 +160,21 @@ class TransformationSection extends PureComponent {
         const actions = this.actions;
 
         return (
-            <div>
-                <Anchor className="sm-flex height-32 margin-vertical-8" onClick={this.actions.onToggleExpand}>
-                    <span className="sm-flex-width">{i18n._('Transformation')}</span>
-                    <SvgIcon
-                        name="DropdownLine"
-                        className={classNames(
-                            this.state.expanded ? '' : 'rotate180'
-                        )}
-                    />
-                </Anchor>
-                {this.state.expanded && (
-                    <React.Fragment>
-                        {/* X */}
-                        <TipTrigger
-                            title={i18n._('Move')}
-                            content={i18n._('Set the coordinate of the selected image or text. You can also drag the image directly.')}
-                        >
-                            <div className="sm-flex height-32 margin-vertical-8 ">
-                                <span className="sm-flex-auto sm-flex-order-negative width-64">{i18n._('Move (mm)')}</span>
-                                <span className="sm-flex-width sm-flex justify-space-between">
-                                    <div className="display-inline ">
-                                        <span className="width-16 display-inline">
+            <div className="margin-vertical-8">
+                <React.Fragment>
+                    {/* X */}
+                    <TipTrigger
+                        title={i18n._('Move')}
+                        content={i18n._('Set the coordinate of the selected image or text. You can also drag the image directly.')}
+                    >
+                        <div className="sm-flex height-32 margin-vertical-8 ">
+                            <span className="sm-flex-auto sm-flex-order-negative width-64">{i18n._('Move (mm)')}</span>
+                            <span className="sm-flex-width heading-3 sm-flex justify-space-between">
+                                <div className="display-inline position-re">
+                                    <span className="width-16 display-inline">
                                             X
-                                        </span>
+                                    </span>
+                                    <span>
                                         <Input
                                             className="margin-horizontal-2"
                                             disabled={disabled || !selectedNotHide}
@@ -200,11 +186,14 @@ class TransformationSection extends PureComponent {
                                                 actions.onChangeLogicalX(value);
                                             }}
                                         />
-                                    </div>
-                                    <div className="display-inline">
-                                        <span className="width-16 display-inline">
+                                        <span className="sm-flex__input-unit-8">mm</span>
+                                    </span>
+                                </div>
+                                <div className="display-inline position-re">
+                                    <span className="width-16 display-inline">
                                             Y
-                                        </span>
+                                    </span>
+                                    <span>
                                         <Input
                                             disabled={disabled || !selectedNotHide}
                                             className="margin-horizontal-2"
@@ -216,21 +205,24 @@ class TransformationSection extends PureComponent {
                                                 actions.onChangeLogicalY(value);
                                             }}
                                         />
-                                    </div>
-                                </span>
-                            </div>
-                        </TipTrigger>
-                        <TipTrigger
-                            title={i18n._('Size')}
-                            content={i18n._('Enter the size of the engraved picture. The size cannot be larger than 125 x 125 mm or the size of your material.')}
-                        >
-                            <div className="sm-flex height-32 margin-vertical-8">
-                                <span className="sm-flex-auto sm-flex-order-negative width-64">{i18n._('Size (mm)')}</span>
-                                <div className="sm-flex-width sm-flex justify-space-between">
-                                    <div className="display-inline">
-                                        <span className="width-16 display-inline">
+                                        <span className="sm-flex__input-unit-8">mm</span>
+                                    </span>
+                                </div>
+                            </span>
+                        </div>
+                    </TipTrigger>
+                    <TipTrigger
+                        title={i18n._('Size')}
+                        content={i18n._('Enter the size of the engraved picture. The size cannot be larger than 125 x 125 mm or the size of your material.')}
+                    >
+                        <div className="sm-flex height-32 margin-vertical-8">
+                            <span className="sm-flex-auto sm-flex-order-negative width-64">{i18n._('Size (mm)')}</span>
+                            <div className="sm-flex-width sm-flex justify-space-between">
+                                <div className="display-inline position-re">
+                                    <span className="width-16 display-inline">
                                            W
-                                        </span>
+                                    </span>
+                                    <span>
                                         <Input
                                             className="margin-horizontal-2"
                                             disabled={disabled || !selectedNotHide || canResize === false}
@@ -242,24 +234,27 @@ class TransformationSection extends PureComponent {
                                                 actions.onChangeWidth(value);
                                             }}
                                         />
-                                    </div>
-                                    <button
-                                        type="button"
-                                        disabled={disabled || !selectedNotHide || sourceType === 'raster'}
-                                        className={classNames(
-                                            uniformScalingState ? styles.icon_size_lock : styles.icon_size_unlock,
-                                            'display-inline',
-                                            'width-24',
-                                            'height-32'
-                                        )}
-                                        onClick={() => {
-                                            actions.onChangeUniformScalingState(!uniformScalingState);
-                                        }}
-                                    />
-                                    <div className="display-inline">
-                                        <span className="width-16 display-inline">
+                                        <span className="sm-flex__input-unit-8">mm</span>
+                                    </span>
+                                </div>
+                                <button
+                                    type="button"
+                                    disabled={disabled || !selectedNotHide || sourceType === 'raster'}
+                                    className={classNames(
+                                        uniformScalingState ? styles.icon_size_lock : styles.icon_size_unlock,
+                                        'display-inline',
+                                        'width-24',
+                                        'height-32'
+                                    )}
+                                    onClick={() => {
+                                        actions.onChangeUniformScalingState(!uniformScalingState);
+                                    }}
+                                />
+                                <div className="display-inline position-re">
+                                    <span className="width-16 display-inline">
                                            H
-                                        </span>
+                                    </span>
+                                    <span>
                                         <Input
                                             className="margin-horizontal-2"
                                             disabled={disabled || !selectedNotHide || canResize === false}
@@ -271,62 +266,63 @@ class TransformationSection extends PureComponent {
                                                 actions.onChangeHeight(value);
                                             }}
                                         />
-                                    </div>
+                                        <span className="sm-flex__input-unit-8">mm</span>
+                                    </span>
                                 </div>
                             </div>
-                        </TipTrigger>
-                        <TipTrigger
-                            title={i18n._('Rotate')}
-                            content={i18n._('Rotate the image to the angle you need.')}
-                        >
-                            <div className="sm-flex height-32 margin-vertical-8">
-                                <span className="sm-flex-auto sm-flex-order-negative width-64">{i18n._('Rotate')}</span>
-                                <div className="sm-flex-width sm-flex justify-space-between">
-                                    <div className="display-inline">
-                                        {/* <SvgIcon
-                                            size={16}
-                                            name="RotationAngle"
-                                        />*/}
-                                        <DegreeInput
-                                            disabled={disabled || !selectedNotHide || !canRotate}
-                                            value={toFixed(logicalAngle, 1)}
-                                            size="small"
-                                            onChange={actions.onChangeLogicalAngle}
+                        </div>
+                    </TipTrigger>
+                    <TipTrigger
+                        title={i18n._('Rotate')}
+                        content={i18n._('Rotate the image to the angle you need.')}
+                    >
+                        <div className="sm-flex height-32 margin-vertical-8">
+                            <span className="sm-flex-auto sm-flex-order-negative width-56">{i18n._('Rotate')}</span>
+                            <div className="sm-flex-width sm-flex justify-space-between">
+                                <div className="display-inline">
+                                    <SvgIcon
+                                        name="RotationAngle"
+                                    />
+                                    <DegreeInput
+                                        disabled={disabled || !selectedNotHide || !canRotate}
+                                        value={toFixed(logicalAngle, 1)}
+                                        className="margin-horizontal-2"
+                                        size="small"
+                                        onChange={actions.onChangeLogicalAngle}
+                                    />
+                                </div>
+                                <div className="sm-flex width-96 justify-space-between">
+                                    {selectedModelArray.length === 1 && (
+                                        <button
+                                            type="button"
+                                            className={classNames(
+                                                styles.icon_flip_vertically,
+                                                'width-44',
+                                                'border-radius-8',
+                                                'padding-horizontal-10'
+                                            )}
+                                            disabled={disabled || !selectedNotHide}
+                                            onClick={actions.onFlipHorizontally}
                                         />
-                                    </div>
-                                    <div className="sm-flex width-96 justify-space-between">
-                                        {selectedModelArray.length === 1 && (
-                                            <button
-                                                type="button"
-                                                className={classNames(
-                                                    styles.icon_flip_vertically,
-                                                    'width-44',
-                                                    'border-radius-8',
-                                                    'padding-horizontal-10'
-                                                )}
-                                                disabled={disabled || !selectedNotHide}
-                                                onClick={actions.onFlipHorizontally}
-                                            />
-                                        )}
-                                        {selectedModelArray.length === 1 && (
-                                            <button
-                                                type="button"
-                                                className={classNames(
-                                                    styles.icon_flip_horizontal,
-                                                    'width-44',
-                                                    'border-radius-8',
-                                                    'padding-horizontal-10'
-                                                )}
-                                                disabled={disabled || !selectedNotHide}
-                                                onClick={actions.onFlipVertically}
-                                            />
-                                        )}
-                                    </div>
+                                    )}
+                                    {selectedModelArray.length === 1 && (
+                                        <button
+                                            type="button"
+                                            className={classNames(
+                                                styles.icon_flip_horizontal,
+                                                'width-44',
+                                                'border-radius-8',
+                                                'padding-horizontal-10'
+                                            )}
+                                            disabled={disabled || !selectedNotHide}
+                                            onClick={actions.onFlipVertically}
+                                        />
+                                    )}
                                 </div>
                             </div>
-                        </TipTrigger>
-                    </React.Fragment>
-                )}
+                        </div>
+                    </TipTrigger>
+                </React.Fragment>
             </div>
         );
     }

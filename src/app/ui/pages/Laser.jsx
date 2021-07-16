@@ -32,7 +32,7 @@ import MarlinWidget from '../widgets/Marlin';
 import VisualizerWidget from '../widgets/WorkspaceVisualizer';
 import WebcamWidget from '../widgets/Webcam';
 import LaserParamsWidget from '../widgets/LaserParams';
-import LaserSetBackground from '../widgets/LaserSetBackground';
+import LaserSetBackground from '../widgets/LaserSetBackground/SetBackground';
 import LaserTestFocusWidget from '../widgets/LaserTestFocus';
 import CNCPathWidget from '../widgets/CNCPath';
 import CncLaserOutputWidget from '../widgets/CncLaserOutput';
@@ -267,15 +267,6 @@ function Laser() {
                     dispatch(projectActions.save(HEAD_LASER));
                 }
             },
-            // Todo, add after completed
-            // {
-            //     title: 'Undo',
-            //     type: 'button'
-            // },
-            // {
-            //     title: 'Redo',
-            //     type: 'button'
-            // }
             {
                 title: i18n._('Job'),
                 type: 'button',
@@ -293,7 +284,7 @@ function Laser() {
                     return (
                         <Anchor
                             onClick={() => dispatch(editorActions.bringSelectedModelToFront(HEAD_LASER))}
-                            className="width-64 display-inline align-c padding-vertical-2 padding-horizontal-2 font-size-0"
+                            className="width-64 display-inline align-c padding-top-4 padding-horizontal-2 font-size-0"
                         >
                             <i
                                 style={{
@@ -314,7 +305,7 @@ function Laser() {
                     return (
                         <Anchor
                             onClick={() => dispatch(editorActions.sendSelectedModelToBack(HEAD_LASER))}
-                            className="width-64 display-inline align-c padding-vertical-2 padding-horizontal-2 font-size-0"
+                            className="width-64 display-inline align-c padding-top-4 padding-horizontal-2 font-size-0"
                         >
                             <i
                                 style={{
@@ -339,7 +330,7 @@ function Laser() {
                     return (
                         <Anchor
                             onClick={() => setShowCameraCapture(true)}
-                            className="display-inline align-c padding-vertical-2 padding-horizontal-2 font-size-0"
+                            className="display-inline align-c padding-top-4 padding-horizontal-2 font-size-0"
                         >
                             <i
                                 style={{

@@ -22,8 +22,7 @@ class WidgetContainer extends PureComponent {
         widgetId: PropTypes.string.isRequired,
         // headType: PropTypes.string,
         onRemove: PropTypes.func,
-        // onToggle: PropTypes.func,
-        // widgetActions: PropTypes.object,
+        onToggle: PropTypes.func,
 
         minimized: PropTypes.bool.isRequired,
         fullscreen: PropTypes.bool.isRequired,
@@ -69,14 +68,14 @@ class WidgetContainer extends PureComponent {
     };
 
     render() {
-        const { children, minimized, fullscreen } = this.props;
-        // const { children, widgetId, headType, widgetActions, minimized, fullscreen, onToggle } = this.props;
+        const { children, minimized, fullscreen, onToggle } = this.props;
         const state = {
             title: this.state.title,
             minimized: minimized,
             fullscreen: fullscreen,
             buttons: this.state.buttons
         };
+        console.log('onToggle', onToggle, state.buttons);
         const actions = this.actions;
 
         return (
@@ -125,24 +124,7 @@ class WidgetContainer extends PureComponent {
                 </Widget.Header>
                 <Widget.Content style={{ display: state.minimized ? 'none' : 'block' }}>
                     {children}
-                    {/* <WrappedWidget
-                        widgetId={widgetId}
-                        headType={headType}
-                        pageActions={widgetActions}
-                        minimized={minimized}
-                        onToggle={onToggle}
-                        setTitle={actions.setTitle}
-                        setDisplay={actions.setDisplay}
-                        setControlButtons={actions.setControlButtons}
-                    /> */}
                 </Widget.Content>
-                {/* {WrappedFooter && (
-                    <Widget.Footer>
-                        <WrappedFooter
-                            headType={headType}
-                        />
-                    </Widget.Footer>
-                )} */}
             </Widget>
         );
     }

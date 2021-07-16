@@ -3,8 +3,9 @@ import includes from 'lodash/includes';
 import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
-import ChangedReactSelect from '../../components/Select';
-
+import Switch from '../../components/Switch';
+import Select from '../../components/Select';
+import { Button } from '../../components/Buttons';
 import i18n from '../../../lib/i18n';
 import { controller } from '../../../lib/controller';
 import { preventDefault } from '../../../lib/dom-events';
@@ -512,45 +513,44 @@ class Control extends PureComponent {
                     state={state}
                 />
 
-                <div className="mb-3">
+                <div className="sm-flex justify-space-between margin-vertical-8">
                     <KeypadOverlay
                         show={state.canClick && state.keypadJogging}
                     >
-                        <button
-                            type="button"
-                            className="btn btn-outline-secondary"
+                        <span>{i18n._('Keyboard Shortcuts')}</span>
+                        <Switch
                             onClick={actions.toggleKeypadJogging}
                             disabled={!canClick}
-                        >
-                            {state.keypadJogging && <i className="fa fa-toggle-on fa-fw" />}
-                            {!state.keypadJogging && <i className="fa fa-toggle-off fa-fw" />}
-                            <span className="space space-sm" />
-                            {i18n._('Keyboard Shortcuts')}
-                        </button>
+                            checked={state.keypadJogging}
+                        />
                     </KeypadOverlay>
                 </div>
 
-                <div className="sm-parameter-row">
-                    <button
-                        type="button"
-                        className="btn btn-outline-secondary"
+                <div className="sm-flex justify-space-between margin-vertical-8">
+                    <Button
+                        type="primary"
+                        level="level-three"
+                        width="96px"
                         disabled={!canClick}
                         onClick={() => this.props.executeGcodeAutoHome()}
                     >
                         {i18n._('Home')}
-                    </button>
-                    <div className="sm-parameter-row__label2" style={{ textAlign: 'center', margin: '0 0 0 5px' }}>{i18n._('Jog Speed')}</div>
-                    <ChangedReactSelect
-                        backspaceRemoves={false}
-                        className="sm-parameter-row__select2"
-                        clearable={false}
-                        menuContainerStyle={{ zIndex: 5 }}
-                        options={this.state.jogSpeedOptions}
-                        onNewOptionClick={this.actions.onCreateJogSpeedOption}
-                        searchable
-                        value={this.state.jogSpeed}
-                        onChange={this.actions.onChangeJogSpeed}
-                    />
+                    </Button>
+                    <div>
+                        <span className="">{i18n._('Jog Speed')}</span>
+                        <Select
+                            backspaceRemoves={false}
+                            className="margin-left-8"
+                            clearable={false}
+                            size="small"
+                            menuContainerStyle={{ zIndex: 5 }}
+                            options={this.state.jogSpeedOptions}
+                            onNewOptionClick={this.actions.onCreateJogSpeedOption}
+                            searchable
+                            value={this.state.jogSpeed}
+                            onChange={this.actions.onChangeJogSpeed}
+                        />
+                    </div>
                 </div>
 
                 <ControlPanel

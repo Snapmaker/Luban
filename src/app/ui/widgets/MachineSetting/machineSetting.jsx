@@ -80,7 +80,7 @@ const MachineSetting = (props) => {
                 />
             </div>
             <Button
-                btnStyle="primary"
+                type="primary"
                 onClick={onSave}
                 className={styles.confirmBtn}
             >

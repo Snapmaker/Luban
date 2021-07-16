@@ -673,7 +673,6 @@ class Visualizer extends Component {
         const state = this.state;
         const notice = this.notice();
         const { gcodeFile } = this.props;
-
         return (
             <div style={{ top: 0, bottom: 0, left: 0, right: 0 }}>
                 <div className={styles['visualizer-progress']}>
@@ -687,7 +686,7 @@ class Visualizer extends Component {
                 <div className={styles['canvas-wrapper']}>
                     {this.props.uploadState === 'uploading' && <Loading />}
                     {this.props.renderState === 'rendering' && <Rendering />}
-                    <div className={styles['m-3']}>
+                    <div className="position-re top-left-16">
                         <WorkflowControl
                             workflowStatus={this.props.workflowStatus}
                             isConnected={this.props.isConnected}
@@ -706,7 +705,7 @@ class Visualizer extends Component {
                         cameraInitialTarget={new THREE.Vector3(0, 0, 0)}
                     />
                 </div>
-                <div className={styles['canvas-footer']}>
+                <div className="position-ab left-16 bottom-16">
                     <SecondaryToolbar
                         zoomIn={this.actions.zoomIn}
                         zoomOut={this.actions.zoomOut}

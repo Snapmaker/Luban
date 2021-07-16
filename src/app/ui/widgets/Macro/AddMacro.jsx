@@ -40,9 +40,9 @@ class AddMacro extends PureComponent {
         return (
             <Modal disableOverlay size="md" onClose={this.props.closeModal}>
                 <Modal.Header>
-                    <Modal.Title>
-                        {i18n._('New Macro')}
-                    </Modal.Title>
+                    {/* <Modal.Title> */}
+                    {i18n._('New Macro')}
+                    {/* </Modal.Title> */}
                 </Modal.Header>
                 <Modal.Body>
                     <Form

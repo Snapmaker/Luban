@@ -13,7 +13,7 @@ import styles from './index.styl';
 class TerminalWrapper extends PureComponent {
     static propTypes = {
         onData: PropTypes.func,
-        isDefault: PropTypes.bool.isRequired,
+        isDefault: PropTypes.bool,
         terminalHistory: PropTypes.object.isRequired,
         shouldRenderFitaddon: PropTypes.bool.isRequired,
         consoleHistory: PropTypes.object.isRequired,

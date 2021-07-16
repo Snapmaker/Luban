@@ -100,7 +100,9 @@ class Settings extends PureComponent {
                 onClose={this.handleCancel}
             >
                 <Modal.Header>
-                    <Modal.Title>{i18n._('Webcam Settings')}</Modal.Title>
+                    {/* <Modal.Title> */}
+                    {i18n._('Webcam Settings')}
+                    {/* </Modal.Title> */}
                 </Modal.Header>
                 <Modal.Body>
                     <div className="form-group">

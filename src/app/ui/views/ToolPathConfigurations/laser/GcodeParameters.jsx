@@ -44,18 +44,19 @@ class GcodeParameters extends PureComponent {
                             content={i18n._('Determines how fine and smooth the engraved picture will be. \
     The bigger this value is, the better quality you will get. The range is 1-10 dot/mm and 10 is recommended.')}
                         >
-                            <div className="sm-parameter-row">
-                                <span className="sm-parameter-row__label">{i18n._('Density')}</span>
+                            <div className="sm-flex justify-space-between margin-bottom-8">
+                                <span className="line-height-32">{i18n._('Density')}</span>
                                 <NumberInput
-                                    className="sm-parameter-row__input"
-                                    style={{ width: '160px' }}
+                                    // className="sm-parameter-row__input-md"
+                                    size="large"
+                                    // style={{ width: '160px' }}
                                     value={density}
                                     min={1}
                                     max={10}
                                     step={1}
                                     onChange={(value) => { this.props.updateGcodeConfig({ density: value }); }}
                                 />
-                                <span className="sm-parameter-row__input-unit">dot/mm</span>
+                                <span className="unit-text sm-flex__input-unit-in-modal line-height-32">dot/mm</span>
                             </div>
                         </TipTrigger>
                     </div>
@@ -86,11 +87,12 @@ class GcodeParameters extends PureComponent {
                                 title={i18n._('Fill Density')}
                                 content={i18n._('Set the degree to which an area is filled with laser dots. The highest density is 20 dot/mm. When it is set to 0, the SVG image will be engraved without fill.')}
                             >
-                                <div className="sm-parameter-row">
-                                    <span className="sm-parameter-row__label">{i18n._('Fill Density')}</span>
+                                <div className="sm-flex justify-space-between margin-bottom-8">
+                                    <span className="line-height-32">{i18n._('Fill Density')}</span>
                                     <Input
-                                        className="sm-parameter-row__input"
-                                        style={{ width: '160px' }}
+                                        // className="sm-parameter-row__input-md"
+                                        // style={{ width: '160px' }}
+                                        size="large"
                                         value={fillDensity}
                                         min={0}
                                         marks={
@@ -113,18 +115,19 @@ class GcodeParameters extends PureComponent {
                         title={i18n._('Jog Speed')}
                         content={i18n._('Determines how fast the machine moves when it’s not engraving.')}
                     >
-                        <div className="sm-parameter-row">
-                            <span className="sm-parameter-row__label">{i18n._('Jog Speed')}</span>
+                        <div className="sm-flex justify-space-between margin-bottom-8">
+                            <span className="line-height-32">{i18n._('Jog Speed')}</span>
                             <Input
-                                className="sm-parameter-row__input"
-                                style={{ width: '160px' }}
+                                // className="sm-parameter-row__input-md"
+                                // style={{ width: '160px' }}
+                                size="large"
                                 value={jogSpeed}
                                 min={1}
                                 max={6000}
                                 step={1}
                                 onChange={(value) => { this.props.updateGcodeConfig({ jogSpeed: value }); }}
                             />
-                            <span className="sm-parameter-row__input-unit">mm/min</span>
+                            <span className="unit-text sm-flex__input-unit-in-modal line-height-32">mm/min</span>
                         </div>
                     </TipTrigger>
                 )}
@@ -133,18 +136,19 @@ class GcodeParameters extends PureComponent {
                         title={i18n._('Work Speed')}
                         content={i18n._('Determines how fast the machine moves when it’s engraving.')}
                     >
-                        <div className="sm-parameter-row">
-                            <span className="sm-parameter-row__label">{i18n._('Work Speed')}</span>
+                        <div className="sm-flex justify-space-between margin-bottom-8">
+                            <span className="line-height-32">{i18n._('Work Speed')}</span>
                             <Input
-                                className="sm-parameter-row__input"
-                                style={{ width: '160px' }}
+                                // className="sm-parameter-row__input-md"
+                                // style={{ width: '160px' }}
+                                size="large"
                                 value={workSpeed}
                                 min={1}
                                 step={1}
                                 max={6000}
                                 onChange={(value) => { this.props.updateGcodeConfig({ workSpeed: value }); }}
                             />
-                            <span className="sm-parameter-row__input-unit">mm/min</span>
+                            <span className="unit-text sm-flex__input-unit-in-modal line-height-32">mm/min</span>
                         </div>
                     </TipTrigger>
                 )}
@@ -153,18 +157,19 @@ class GcodeParameters extends PureComponent {
                         title={i18n._('Dwell Time')}
                         content={i18n._('Determines how long the laser keeps on when it’s engraving a dot.')}
                     >
-                        <div className="sm-parameter-row">
-                            <span className="sm-parameter-row__label">{i18n._('Dwell Time')}</span>
+                        <div className="sm-flex justify-space-between margin-bottom-8">
+                            <span className="line-height-32">{i18n._('Dwell Time')}</span>
                             <Input
-                                className="sm-parameter-row__input"
-                                style={{ width: '160px' }}
+                                // className="sm-parameter-row__input-md"
+                                // style={{ width: '160px' }}
+                                size="large"
                                 value={dwellTime}
                                 min={0.1}
                                 max={1000}
                                 step={0.1}
                                 onChange={(value) => { this.props.updateGcodeConfig({ dwellTime: value }); }}
                             />
-                            <span className="sm-parameter-row__input-unit">ms/dot</span>
+                            <span className="unit-text sm-flex__input-unit-in-modal line-height-32">ms/dot</span>
                         </div>
                     </TipTrigger>
                 )}
@@ -172,18 +177,19 @@ class GcodeParameters extends PureComponent {
                     <TipTrigger
                         title={i18n._('Plunge Speed')}
                     >
-                        <div className="sm-parameter-row">
-                            <span className="sm-parameter-row__label">{i18n._('Plunge Speed')}</span>
+                        <div className="sm-flex justify-space-between margin-bottom-8">
+                            <span className="line-height-32">{i18n._('Plunge Speed')}</span>
                             <Input
-                                className="sm-parameter-row__input"
-                                style={{ width: '160px' }}
+                                // className="sm-parameter-row__input-md"
+                                // style={{ width: '160px' }}
+                                size="large"
                                 value={plungeSpeed}
                                 min={0.1}
                                 max={1000}
                                 step={0.1}
                                 onChange={(value) => { this.props.updateGcodeConfig({ plungeSpeed: value }); }}
                             />
-                            <span className="sm-parameter-row__input-unit">mm/min</span>
+                            <span className="unit-text sm-flex__input-unit-in-modal line-height-32">mm/min</span>
                         </div>
                     </TipTrigger>
                 )}
@@ -199,11 +205,12 @@ class GcodeParameters extends PureComponent {
                             title={i18n._('Number of Passes')}
                             content={i18n._('Determines how many times the printer will run the G-code automatically.')}
                         >
-                            <div className="sm-parameter-row">
-                                <span className="sm-parameter-row__label">{i18n._('Number of Passes')}</span>
+                            <div className="sm-flex justify-space-between margin-bottom-8">
+                                <span className="line-height-32">{i18n._('Number of Passes')}</span>
                                 <Input
-                                    className="sm-parameter-row__input"
-                                    style={{ width: '160px' }}
+                                    // className="sm-parameter-row__input-md"
+                                    // style={{ width: '160px' }}
+                                    size="large"
                                     min={1}
                                     max={50}
                                     value={multiPasses}
@@ -217,17 +224,18 @@ class GcodeParameters extends PureComponent {
                                 title={i18n._('Z step per pass')}
                                 content={i18n._('Determines how much the laser module will be lowered after each pass.')}
                             >
-                                <div className="sm-parameter-row">
-                                    <span className="sm-parameter-row__label">{i18n._('Z step per pass')}</span>
+                                <div className="sm-flex justify-space-between margin-bottom-8">
+                                    <span className="line-height-32">{i18n._('Z step per pass')}</span>
                                     <Input
-                                        className="sm-parameter-row__input"
-                                        style={{ width: '160px' }}
+                                        // className="sm-parameter-row__input"
+                                        // style={{ width: '160px' }}
+                                        size="large"
                                         min={0}
                                         max={10}
                                         value={multiPassDepth}
                                         onChange={(value) => { this.props.updateGcodeConfig({ multiPassDepth: value }); }}
                                     />
-                                    <span className="sm-parameter-row__input-unit">mm</span>
+                                    <span className="unit-text sm-flex__input-unit-in-modal line-height-32">mm</span>
                                 </div>
                             </TipTrigger>
                         )}
@@ -245,17 +253,18 @@ class GcodeParameters extends PureComponent {
                             title={i18n._('Power')}
                             content={i18n._('Power to use when laser is working.')}
                         >
-                            <div className="sm-parameter-row">
-                                <span className="sm-parameter-row__label">{i18n._('Power (%)')}</span>
+                            <div className="sm-flex justify-space-between margin-bottom-8">
+                                <span className="line-height-32">{i18n._('Power (%)')}</span>
                                 <Input
-                                    className="sm-parameter-row__input"
-                                    style={{ width: '160px' }}
+                                    // className="sm-parameter-row__input"
+                                    // style={{ width: '160px' }}
+                                    size="large"
                                     min={1}
                                     max={100}
                                     value={fixedPower}
                                     onChange={(value) => { this.props.updateGcodeConfig({ fixedPower: value }); }}
                                 />
-                                <span className="sm-parameter-row__input-unit">%</span>
+                                <span className="unit-text sm-flex__input-unit-in-modal line-height-32">%</span>
                             </div>
                         </TipTrigger>
                     </div>

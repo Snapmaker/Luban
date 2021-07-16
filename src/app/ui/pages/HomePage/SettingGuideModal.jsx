@@ -1,3 +1,4 @@
+/* eslint-disable */
 import React, { useState } from 'react';
 import i18next from 'i18next';
 import classNames from 'classnames';
@@ -145,13 +146,12 @@ const SettingGuideModal = (props) => {
             setMachineSeries(newMachineSeries);
         }
     };
+
     return (
         <div>
             <Modal disableOverlay size="sm" onClose={handleCancel} className={styles.settingModal}>
                 <Modal.Header>
-                    <Modal.Title>
-                        {i18n._('Config')}
-                    </Modal.Title>
+                    {i18n._('Config')}         
                 </Modal.Header>
                 <Modal.Body>
                     {
@@ -230,19 +230,37 @@ const SettingGuideModal = (props) => {
                 <Modal.Footer>
                     {
                         settingStep === 'lang' && (
-                            <Button onClick={handleStepChange}>
+                            <Button
+                                onClick={handleStepChange}
+                                type='primary'
+                                width='96px'
+                                priority='level-two'
+                                className='display-inline margin-horizontal-8'
+                            >
                                 {i18n._('Next')}
                             </Button>
                         )
                     }
                     {
                         settingStep === 'machine' && (
-                            <Button onClick={handleSubmit}>
+                            <Button
+                                onClick={handleSubmit}
+                                type='primary'
+                                width='96px'
+                                priority='level-two'
+                                className='display-inline margin-horizontal-8   '
+                            >
                                 {i18n._('Done')}
                             </Button>
                         )
                     }
-                    <Button onClick={handleCancel}>
+                    <Button
+                        onClick={handleCancel}
+                        type='default'
+                        width='96px'
+                        priority='level-two'
+                        className='display-inline'
+                    >
                         {i18n._('Cancel')}
                     </Button>
                 </Modal.Footer>

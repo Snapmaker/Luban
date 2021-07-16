@@ -12,6 +12,8 @@ import {
     METRIC_UNITS
 } from '../../../constants';
 import i18n from '../../../lib/i18n';
+// import SvgIcon from '../../components/SvgIcon';
+// import Anchor from '../../components/Anchor';
 import styles from './index.styl';
 
 const toFixedUnits = (units, val) => {
@@ -62,7 +64,6 @@ class GCode extends PureComponent {
     state = this.getInitialState();
 
     actions = {
-
     };
 
     controllerEvents = {
@@ -226,74 +227,82 @@ class GCode extends PureComponent {
 
         return (
             <div className={styles['gcode-inspect']}>
-                <div className="row no-gutters mb-3">
-                    <div className="col-12">
-                        <table className="table table-bordered" data-table="dimension">
-                            <thead>
-                                <tr>
-                                    <th className={styles.axis}>{i18n._('Axis')}</th>
-                                    <th>{i18n._('Min')}</th>
-                                    <th>{i18n._('Max')}</th>
-                                    <th>{i18n._('Dimension')}</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr>
-                                    <td className={styles.axis}>X</td>
-                                    <td>{bbox.min.x} {displayUnits}</td>
-                                    <td>{bbox.max.x} {displayUnits}</td>
-                                    <td>{bbox.delta.x} {displayUnits}</td>
-                                </tr>
-                                <tr>
-                                    <td className={styles.axis}>Y</td>
-                                    <td>{bbox.min.y} {displayUnits}</td>
-                                    <td>{bbox.max.y} {displayUnits}</td>
-                                    <td>{bbox.delta.y} {displayUnits}</td>
-                                </tr>
-                                <tr>
-                                    <td className={styles.axis}>Z</td>
-                                    <td>{bbox.min.z} {displayUnits}</td>
-                                    <td>{bbox.max.z} {displayUnits}</td>
-                                    <td>{bbox.delta.z} {displayUnits}</td>
-                                </tr>
-                                <tr>
-                                    <td className={styles.axis}>B</td>
-                                    <td>{bbox.min.b} °</td>
-                                    <td>{bbox.max.b} °</td>
-                                    <td>{bbox.delta.b} °</td>
-                                </tr>
-                            </tbody>
-                        </table>
+                <div>
+                    <div className="row no-gutters margin-bottom-16">
+                        <div className="col-12">
+                            <table
+                                className="table table-bordered"
+                                data-table="dimension"
+                                style={{ borderCollapse: 'separate',
+                                    borderRadius: '8px',
+                                    borderSpacing: 0 }}
+                            >
+                                <thead>
+                                    <tr>
+                                        <th className={styles.axis}>{i18n._('Axis')}</th>
+                                        <th>{i18n._('Min')}</th>
+                                        <th>{i18n._('Max')}</th>
+                                        <th>{i18n._('Dimension')}</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td className={styles.axis}>X</td>
+                                        <td>{bbox.min.x} {displayUnits}</td>
+                                        <td>{bbox.max.x} {displayUnits}</td>
+                                        <td>{bbox.delta.x} {displayUnits}</td>
+                                    </tr>
+                                    <tr>
+                                        <td className={styles.axis}>Y</td>
+                                        <td>{bbox.min.y} {displayUnits}</td>
+                                        <td>{bbox.max.y} {displayUnits}</td>
+                                        <td>{bbox.delta.y} {displayUnits}</td>
+                                    </tr>
+                                    <tr>
+                                        <td className={styles.axis}>Z</td>
+                                        <td>{bbox.min.z} {displayUnits}</td>
+                                        <td>{bbox.max.z} {displayUnits}</td>
+                                        <td>{bbox.delta.z} {displayUnits}</td>
+                                    </tr>
+                                    <tr>
+                                        <td className={styles.axis}>B</td>
+                                        <td>{bbox.min.b} °</td>
+                                        <td>{bbox.max.b} °</td>
+                                        <td>{bbox.delta.b} °</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
-                </div>
-                <div className="row no-gutters mb-3">
-                    <div className="col-6">
-                        <div>{i18n._('Sent')}</div>
-                        <div>{total > 0 ? `${sent} / ${total}` : '–'}</div>
+                    <div className="row no-gutters margin-bottom-16">
+                        <div className="col-6">
+                            <div>{i18n._('Sent')}</div>
+                            <div>{total > 0 ? `${sent} / ${total}` : '–'}</div>
+                        </div>
+                        <div className="col-6">
+                            <div>{i18n._('Received')}</div>
+                            <div>{total > 0 ? `${received} / ${total}` : '–'}</div>
+                        </div>
                     </div>
-                    <div className="col-6">
-                        <div>{i18n._('Received')}</div>
-                        <div>{total > 0 ? `${received} / ${total}` : '–'}</div>
+                    <div className="row no-gutters margin-bottom-16">
+                        <div className="col-6">
+                            <div>{i18n._('Start Time')}</div>
+                            <div>{startTime}</div>
+                        </div>
+                        <div className="col-6">
+                            <div>{i18n._('Elapsed Time')}</div>
+                            <div>{elapsedTime}</div>
+                        </div>
                     </div>
-                </div>
-                <div className="row no-gutters mb-3">
-                    <div className="col-6">
-                        <div>{i18n._('Start Time')}</div>
-                        <div>{startTime}</div>
-                    </div>
-                    <div className="col-6">
-                        <div>{i18n._('Elapsed Time')}</div>
-                        <div>{elapsedTime}</div>
-                    </div>
-                </div>
-                <div className="row no-gutters">
-                    <div className="col-6">
-                        <div>{i18n._('Finish Time')}</div>
-                        <div>{finishTime}</div>
-                    </div>
-                    <div className="col-6">
-                        <div>{i18n._('Remaining Time')}</div>
-                        <div>{remainingTime}</div>
+                    <div className="row no-gutters">
+                        <div className="col-6">
+                            <div>{i18n._('Finish Time')}</div>
+                            <div>{finishTime}</div>
+                        </div>
+                        <div className="col-6">
+                            <div>{i18n._('Remaining Time')}</div>
+                            <div>{remainingTime}</div>
+                        </div>
                     </div>
                 </div>
             </div>

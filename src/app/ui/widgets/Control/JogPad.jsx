@@ -18,7 +18,7 @@ const JogPad = React.memo((props) => {
                         { [styles['column-4']]: !workPosition.isFourAxis },
                     )}
                     >
-                        <div className="mr-3">
+                        <div className="margin-right-4">
                             <button
                                 type="button"
                                 className="btn btn-sm btn-outline-secondary jog-x-minus jog-y-plus"
@@ -40,7 +40,7 @@ const JogPad = React.memo((props) => {
                             { [styles['jog-direction-highlight']]: keypadJogging || selectedAxis === 'y' }
                         )}
                     >
-                        <div className="mr-3">
+                        <div className="margin-right-4">
                             <button
                                 type="button"
                                 className="btn btn-sm btn-outline-secondary jog-y-plus"
@@ -60,7 +60,7 @@ const JogPad = React.memo((props) => {
                         { [styles['column-4']]: !workPosition.isFourAxis },
                     )}
                     >
-                        <div className="mr-3">
+                        <div className="margin-right-4">
                             <button
                                 type="button"
                                 className="btn btn-sm btn-outline-secondary jog-x-plus jog-y-plus"
@@ -82,7 +82,7 @@ const JogPad = React.memo((props) => {
                             { [styles['jog-direction-highlight']]: keypadJogging || selectedAxis === 'z' }
                         )}
                     >
-                        <div className="mr-3">
+                        <div className="margin-right-4">
                             <button
                                 type="button"
                                 className="btn btn-sm btn-outline-secondary jog-z-plus"
@@ -105,7 +105,7 @@ const JogPad = React.memo((props) => {
                                 { [styles['jog-direction-highlight']]: keypadJogging }
                             )}
                         >
-                            <div className="mr-3">
+                            <div className="margin-right-4">
                                 <button
                                     type="button"
                                     className="btn btn-sm btn-outline-secondary jog-z-plus"
@@ -133,7 +133,7 @@ const JogPad = React.memo((props) => {
                             { [styles['jog-direction-highlight']]: keypadJogging || selectedAxis === 'x' }
                         )}
                     >
-                        <div className="mr-3">
+                        <div className="margin-right-4">
                             <button
                                 type="button"
                                 className="btn btn-sm btn-outline-secondary jog-x-minus"
@@ -153,7 +153,7 @@ const JogPad = React.memo((props) => {
                         { [styles['column-4']]: !workPosition.isFourAxis },
                     )}
                     >
-                        <div className="mr-3">
+                        <div className="margin-right-4">
                             <button
                                 type="button"
                                 className="btn btn-sm btn-outline-secondary jog-xy-zero"
@@ -172,7 +172,7 @@ const JogPad = React.memo((props) => {
                             { [styles['jog-direction-highlight']]: keypadJogging || selectedAxis === 'x' }
                         )}
                     >
-                        <div className="mr-3">
+                        <div className="margin-right-4">
                             <button
                                 type="button"
                                 className="btn btn-sm btn-outline-secondary jog-x-plus"
@@ -192,7 +192,7 @@ const JogPad = React.memo((props) => {
                         { [styles['column-4']]: !workPosition.isFourAxis },
                     )}
                     >
-                        <div className="mr-3">
+                        <div className="margin-right-4">
                             <button
                                 type="button"
                                 className="btn btn-sm btn-outline-secondary jog-z-zero"
@@ -210,7 +210,7 @@ const JogPad = React.memo((props) => {
                             { [styles['column-4']]: !workPosition.isFourAxis },
                         )}
                         >
-                            <div className="mr-3">
+                            <div className="margin-right-4">
                                 <button
                                     type="button"
                                     className="btn btn-sm btn-outline-secondary jog-z-zero"
@@ -232,7 +232,7 @@ const JogPad = React.memo((props) => {
                         { [styles['column-4']]: !workPosition.isFourAxis },
                     )}
                     >
-                        <div className="mr-3">
+                        <div className="margin-right-4">
                             <button
                                 type="button"
                                 className="btn btn-sm btn-outline-secondary jog-x-minus jog-y-minus"
@@ -255,7 +255,7 @@ const JogPad = React.memo((props) => {
                             { [styles['jog-direction-highlight']]: keypadJogging || selectedAxis === 'y' }
                         )}
                     >
-                        <div className="mr-3">
+                        <div className="margin-right-4">
                             <button
                                 type="button"
                                 className="btn btn-sm btn-outline-secondary jog-y-minus"
@@ -275,7 +275,7 @@ const JogPad = React.memo((props) => {
                         { [styles['column-4']]: !workPosition.isFourAxis },
                     )}
                     >
-                        <div className="mr-3">
+                        <div className="margin-right-4">
                             <button
                                 type="button"
                                 className="btn btn-sm btn-outline-secondary jog-x-plus jog-y-minus"
@@ -297,7 +297,7 @@ const JogPad = React.memo((props) => {
                             { [styles['jog-direction-highlight']]: keypadJogging || selectedAxis === 'z' }
                         )}
                     >
-                        <div className="mr-3">
+                        <div className="margin-right-4">
                             <button
                                 type="button"
                                 className="btn btn-sm btn-outline-secondary jog-z-minus"
@@ -320,7 +320,7 @@ const JogPad = React.memo((props) => {
                                 { [styles['jog-direction-highlight']]: keypadJogging }
                             )}
                         >
-                            <div className="mr-3">
+                            <div className="margin-right-4">
                                 <button
                                     type="button"
                                     className="btn btn-sm btn-outline-secondary jog-z-minus"

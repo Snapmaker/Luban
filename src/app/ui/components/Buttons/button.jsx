@@ -8,11 +8,12 @@ import '../../../styles/global.styl';
 const Button = (props) => {
     const { priority = 'level-three', className, suffixIcon, width = '100%', ...rest } = props;
     const ref = useRef();
-    const type = priority === 'level-three' ? 'default' : props.type;
+    const type = priority === 'level-three' ? 'default' : (props.type || 'primary');
     return (
         <div
             style={{ width: width }}
             className={classNames(
+                'display-inline',
                 className
             )}
         >
@@ -47,6 +48,10 @@ Button.propTypes = {
     priority: PropTypes.string,
     className: PropTypes.string,
     suffixIcon: PropTypes.element,
-    children: PropTypes.string | PropTypes.number | PropTypes.element
+    children: PropTypes.oneOfType([
+        PropTypes.number,
+        PropTypes.element,
+        PropTypes.string
+    ])
 };
 export default Button;

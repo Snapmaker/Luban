@@ -473,7 +473,7 @@ class Visualizer extends Component {
                         transformSourceType="2D"
                     />
                 </div>
-                <div className={styles['bottom-left']}>
+                <div className="position-ab left-16 bottom-16">
                     <VisualizerBottomLeft
                         headType={HEAD_CNC}
                         scale={this.props.scale}
