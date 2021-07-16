@@ -8,8 +8,12 @@ class DefinitionManager {
     async init() {
         const toolDefinitions = await api.cncConfigs.getAllDefinitions();
         this.toolDefinitions = toolDefinitions.body.definitions;
+        let res;
+        res = await api.cncConfigs.getDefaultDefinitions();
+        this.defaultDefinitions = res.body.definitions;
+
         // active definition
-        const res = await api.cncConfigs.getToolListDefinition('active');
+        res = await api.cncConfigs.getToolListDefinition('active');
         this.activeToolListDefinition = res.body.definition;
     }
 

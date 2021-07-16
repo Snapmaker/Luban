@@ -295,7 +295,7 @@ function Cnc() {
             {
                 title: i18n._('Home'),
                 type: 'button',
-                name: 'Copy',
+                name: 'MainToolbarHome',
                 action: () => {
                     setShowHomePage(true);
                     window.scrollTo(0, 0);
@@ -341,6 +341,7 @@ function Cnc() {
             {
                 title: 'Save',
                 type: 'button',
+                name: 'MainToolbarSave',
                 action: () => {
                     dispatch(projectActions.save(HEAD_CNC));
                 }
@@ -357,7 +358,7 @@ function Cnc() {
             {
                 title: i18n._('Job'),
                 type: 'button',
-                name: 'Copy',
+                name: 'MainToolbarJobSetup',
                 action: () => {
                     setShowJobType(true);
                 }

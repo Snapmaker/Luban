@@ -10,6 +10,8 @@ class DefinitionManager {
 
     qualityDefinitions = [];
 
+    defaultDefinitions = [];
+
     series = '';
 
     async init(series) {
@@ -36,6 +38,9 @@ class DefinitionManager {
 
         res = await api.printingConfigs.getQualityDefinitions(series);
         this.qualityDefinitions = res.body.definitions;
+
+        res = await api.printingConfigs.getDefaultDefinitions(series);
+        this.defaultDefinitions = res.body.definitions;
     }
 
     /**

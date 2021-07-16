@@ -1,8 +1,9 @@
-import { loadQualityDefinitions, loadMaterialDefinitions, DefinitionLoader } from './definition';
+import { loadQualityDefinitions, loadMaterialDefinitions, loadDefaultDefinitions, DefinitionLoader } from './definition';
 
 
 export {
     loadQualityDefinitions,
     loadMaterialDefinitions,
+    loadDefaultDefinitions,
     DefinitionLoader
 };

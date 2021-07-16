@@ -109,7 +109,8 @@ export const actions = {
 
         dispatch(editorActions.updateState('cnc', {
             toolDefinitions: definitionManager.toolDefinitions,
-            activeToolListDefinition: definitionManager.activeToolListDefinition
+            activeToolListDefinition: definitionManager.activeToolListDefinition,
+            defaultDefinitions: definitionManager.defaultDefinitions
         }));
 
         const materials = machineStore.get('cnc.materials');
@@ -252,6 +253,11 @@ export const actions = {
         dispatch(editorActions.updateState('cnc', {
             toolDefinitions: [...newToolDefinitions]
         }));
+    },
+    getDefaultDefinition: (definitionId) => (dispatch, getState) => {
+        const { defaultDefinitions } = getState().cnc;
+        const def = defaultDefinitions.find(d => d.definitionId === definitionId);
+        return def?.settings;
     },
     onUploadToolDefinition: (file) => async (dispatch, getState) => {
         const formData = new FormData();

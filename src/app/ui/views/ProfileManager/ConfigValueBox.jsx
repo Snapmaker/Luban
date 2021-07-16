@@ -9,7 +9,7 @@ import Anchor from '../../components/Anchor';
 import styles from './styles.styl';
 
 
-function ConfigValueBox({ optionConfigGroup, calculateTextIndex, isCategorySelected, type = 'input', isDefinitionEditable = () => true, onChangeDefinition, definitionForManager, customConfigs }) {
+function ConfigValueBox({ optionConfigGroup, calculateTextIndex, isCategorySelected, type = 'input', isDefinitionEditable = () => true, onChangeDefinition, selectedSettingDefaultValue, definitionForManager, customConfigs }) {
     const [activeCateId, setActiveCateId] = useState(2);
     const scrollDom = useRef(null);
     function setActiveCate(cateId) {
@@ -28,7 +28,6 @@ function ConfigValueBox({ optionConfigGroup, calculateTextIndex, isCategorySelec
     }
     // Make as a demo
     const isEditable = useCallback(() => {
-        // console.log('isEditable');
         return isDefinitionEditable(definitionForManager);
     }, [isDefinitionEditable, definitionForManager]);
 
@@ -86,6 +85,10 @@ function ConfigValueBox({ optionConfigGroup, calculateTextIndex, isCategorySelec
                                                 key={key}
                                                 isDefinitionEditable={isEditable}
                                                 onChangeDefinition={onChangeDefinition}
+                                                isProfile="true"
+                                                defaultValue={{
+                                                    value: selectedSettingDefaultValue && selectedSettingDefaultValue[key].default_value
+                                                }}
                                             />
                                         );
                                     } else if (type === 'checkbox') {
@@ -120,7 +123,8 @@ ConfigValueBox.propTypes = {
     type: PropTypes.string,
     calculateTextIndex: PropTypes.func,
     isDefinitionEditable: PropTypes.func,
-    onChangeDefinition: PropTypes.func.isRequired
+    onChangeDefinition: PropTypes.func.isRequired,
+    selectedSettingDefaultValue: PropTypes.object
 };
 
 export default React.memo(ConfigValueBox);

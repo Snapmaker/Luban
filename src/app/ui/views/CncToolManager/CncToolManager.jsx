@@ -95,6 +95,9 @@ function CncToolManager({ closeToolManager }) {
         },
         removeToolCategoryDefinition: (definition) => {
             dispatch(cncActions.removeToolCategoryDefinition(definition.category));
+        },
+        getDefaultDefinition: (definitionId) => {
+            return dispatch(cncActions.getDefaultDefinition(definitionId));
         }
     };
     const optionConfigGroup = CNC_TOOL_CONFIG_GROUP;

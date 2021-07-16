@@ -6,12 +6,15 @@ import { NumberInput as Input } from '../../components/Input';
 import Checkbox from '../../components/Checkbox';
 
 import TipTrigger from '../../components/TipTrigger';
+import SvgIcon from '../../components/SvgIcon';
 
-function SettingItem({ definitionKey, settings, width = 'auto', isDefinitionEditable = () => true, onChangeDefinition }) {
+function SettingItem({ definitionKey, settings, width = 'auto', isDefinitionEditable = () => true, onChangeDefinition, defaultValue }) {
     const setting = settings[definitionKey];
 
+    const isProfile = !isDefinitionEditable();
     const { label, description, type, unit = '', enabled, options } = setting;
-    const defaultValue = setting.default_value;
+    const settingDefaultValue = setting.default_value;
+    const isDefault = defaultValue && (defaultValue.value === settingDefaultValue);
     if (typeof enabled === 'string') {
         if (enabled.indexOf(' and ') !== -1) {
             const andConditions = enabled.split(' and ').map(c => c.trim());
@@ -100,13 +103,27 @@ function SettingItem({ definitionKey, settings, width = 'auto', isDefinitionEdit
     return (
         <TipTrigger title={i18n._(label)} content={i18n._(description)} key={definitionKey}>
             <div className="sm-parameter-row">
-                <span className="sm-parameter-row__label-lg">{i18n._(label)}</span>
+                <span className="sm-parameter-row__label-lg" style={{ width: '45%' }}>
+                    {i18n._(label)}
+                    {isProfile && !isDefault && (
+                        <span steyle={{ right: '0px', float: 'right' }}>
+                            <SvgIcon
+                                name="Reset"
+                                size={18}
+                                // className={}
+                                onClick={() => {
+                                    onChangeDefinition(definitionKey, (defaultValue && defaultValue.value) ?? settingDefaultValue);
+                                }}
+                            />
+                        </span>
+                    )}
+                </span>
                 {type === 'float' && (
                     <Input
                         className="sm-parameter-row__input"
                         style={{ width: width }}
-                        value={defaultValue}
-                        disabled={!isDefinitionEditable()}
+                        value={settingDefaultValue}
+                        // disabled={!isDefinitionEditable()}
                         onChange={(value) => {
                             onChangeDefinition(definitionKey, value);
                         }}
@@ -119,8 +136,8 @@ function SettingItem({ definitionKey, settings, width = 'auto', isDefinitionEdit
                     <Input
                         className="sm-parameter-row__input"
                         style={{ width: width }}
-                        value={defaultValue}
-                        disabled={!isDefinitionEditable()}
+                        value={settingDefaultValue}
+                        // disabled={!isDefinitionEditable()}
                         onChange={(value) => {
                             onChangeDefinition(definitionKey, value);
                         }}
@@ -133,8 +150,10 @@ function SettingItem({ definitionKey, settings, width = 'auto', isDefinitionEdit
                     <Checkbox
                         className="sm-parameter-row__checkbox"
                         style={{ cursor: !isDefinitionEditable() ? 'not-allowed' : 'default' }}
-                        defaultChecked={defaultValue}
-                        disabled={!isDefinitionEditable()}
+                        defaultChecked={settingDefaultValue}
+                        // disabled={!isDefinitionEditable()}
+                        type="checkbox"
+                        checked={settingDefaultValue}
                         onChange={(event) => onChangeDefinition(definitionKey, event.target.checked)}
                     />
                 )}
@@ -145,9 +164,9 @@ function SettingItem({ definitionKey, settings, width = 'auto', isDefinitionEdit
                         clearable={false}
                         menuContainerStyle={{ zIndex: 5 }}
                         name={definitionKey}
-                        disabled={!isDefinitionEditable()}
+                        // disabled={!isDefinitionEditable()}
                         options={opts}
-                        value={defaultValue}
+                        value={settingDefaultValue}
                         onChange={(option) => {
                             onChangeDefinition(definitionKey, option.value);
                         }}
@@ -157,8 +176,8 @@ function SettingItem({ definitionKey, settings, width = 'auto', isDefinitionEdit
                     <Input
                         className="sm-parameter-row__input"
                         style={{ width: width }}
-                        value={defaultValue}
-                        disabled={!isDefinitionEditable()}
+                        value={settingDefaultValue}
+                        // disabled={!isDefinitionEditable()}
                         onChange={(value) => {
                             onChangeDefinition(definitionKey, value);
                         }}
@@ -176,7 +195,8 @@ SettingItem.propTypes = {
     definitionKey: PropTypes.string.isRequired,
     isDefinitionEditable: PropTypes.func,
     width: PropTypes.string,
-    onChangeDefinition: PropTypes.func.isRequired
+    onChangeDefinition: PropTypes.func.isRequired,
+    defaultValue: PropTypes.object
 };
 
 export default React.memo(SettingItem);

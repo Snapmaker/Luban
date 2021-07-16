@@ -154,7 +154,8 @@ function registerApis(app) {
 
     app.get(urljoin(settings.route, 'api/printingQualityDefinitions/:series'), api.printingConfigs.getQualityDefinitions);
     app.get(urljoin(settings.route, 'api/printingMaterialDefinitions'), api.printingConfigs.getMaterialDefinitions);
-    app.get(urljoin(settings.route, 'api/printingDefinition/:definitionId'), api.printingConfigs.getDefinition);
+    app.get(urljoin(settings.route, 'api/printingDefaultDefinitions/:series'), api.printingConfigs.getDefaultDefinitions);
+    app.get(urljoin(settings.route, 'api/printingDefinition/:definitionId/:series'), api.printingConfigs.getDefinition);
     app.get(urljoin(settings.route, 'api/printingRawDefinition/:definitionId'), api.printingConfigs.getRawDefinition);
     app.post(urljoin(settings.route, 'api/printingDefinition'), api.printingConfigs.createDefinition);
     app.delete(urljoin(settings.route, 'api/printingDefinition/:definitionId'), api.printingConfigs.removeDefinition);
@@ -162,6 +163,7 @@ function registerApis(app) {
     app.post(urljoin(settings.route, 'api/printingDefinition/upload'), api.printingConfigs.uploadDefinition);
 
     app.get(urljoin(settings.route, 'api/cncToolDefinitions'), api.cncConfigs.getToolDefinitions);
+    app.get(urljoin(settings.route, 'api/cncDefaultDefinitions'), api.cncConfigs.getDefaultDefinitions);
 
     app.get(urljoin(settings.route, 'api/cncToolListDefinition/:definitionId'), api.cncConfigs.getToolListDefinition);
     app.post(urljoin(settings.route, 'api/cncToolListDefinition'), api.cncConfigs.createToolListDefinition);

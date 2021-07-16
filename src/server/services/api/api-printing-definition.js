@@ -1,7 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 import { ERR_BAD_REQUEST, ERR_INTERNAL_SERVER_ERROR } from '../../constants';
-import { loadQualityDefinitions, loadMaterialDefinitions, DefinitionLoader } from '../../slicer';
+import { loadQualityDefinitions, loadMaterialDefinitions, loadDefaultDefinitions, DefinitionLoader } from '../../slicer';
 import DataStorage from '../../DataStorage';
 
 const isDefaultQualityDefinition = (definitionId) => {
@@ -34,7 +34,7 @@ export const getRawDefinition = (req, res) => {
 
 export const getDefinition = (req, res) => {
     const { definitionId } = req.params;
-    const series = isDefaultQualityDefinition(definitionId) ? req.body.series : '';
+    const series = isDefaultQualityDefinition(definitionId) ? req.params.series : '';
     if (!definitionId) {
         res.status(ERR_BAD_REQUEST).send({
             err: 'Parameter "definitionId" is required.'
@@ -56,6 +56,12 @@ export const getMaterialDefinitions = (req, res) => {
 export const getQualityDefinitions = (req, res) => {
     const { series } = req.params;
     const definitions = loadQualityDefinitions(series);
+    res.send({ definitions });
+};
+
+export const getDefaultDefinitions = (req, res) => {
+    const { series } = req.params;
+    const definitions = loadDefaultDefinitions(series);
     res.send({ definitions });
 };
 

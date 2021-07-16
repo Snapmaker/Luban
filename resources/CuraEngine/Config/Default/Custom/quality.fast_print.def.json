@@ -1,0 +1,179 @@
+{
+    "name": "Fast Print",
+    "version": 2,
+    "inherits": "snapmaker",
+    "overrides": {
+        "resolution": {
+            "type": "category",
+            "children": {
+                "layer_height": {
+                    "default_value": 0.2
+                },
+                "layer_height_0": {
+                    "default_value": 0.3
+                },
+                "initial_layer_line_width_factor": {
+                    "default_value": 100
+                }
+            }
+        },
+        "shell": {
+            "type": "category",
+            "children": {
+                "wall_thickness": {
+                    "default_value": 0.8
+                },
+                "wall_line_count": {
+                    "default_value": 4
+                },
+                "top_thickness": {
+                    "default_value": 0.8
+                },
+                "top_layers": {
+                    "default_value": 4
+                },
+                "bottom_thickness": {
+                    "default_value": 0.6
+                },
+                "bottom_layers": {
+                    "default_value": 3
+                }
+            }
+        },
+        "infill": {
+            "type": "category",
+            "children": {
+                "infill_line_distance": {
+                    "default_value": 10
+                },
+                "infill_sparse_density": {
+                    "default_value": 8
+                }
+            }
+        },
+        "material": {
+            "type": "category",
+            "children": {
+                "retraction_enable": {
+                    "default_value": true
+                },
+                "retraction_speed": {
+                    "default_value": 25
+                },
+                "retraction_amount": {
+                    "default_value": 6.5
+                },
+                "retract_at_layer_change": {
+                    "default_value": false
+                }
+            }
+        },
+        "speed": {
+            "type": "category",
+            "children": {
+                "speed_travel": {
+                    "default_value": 70
+                },
+                "speed_topbottom": {
+                    "default_value": 40
+                },
+                "speed_wall_x": {
+                    "default_value": 60
+                },
+                "speed_wall_0": {
+                    "default_value": 60
+                },
+                "speed_wall": {
+                    "default_value": 40
+                },
+                "speed_infill": {
+                    "default_value": 60
+                },
+                "speed_print": {
+                    "default_value": 60
+                },
+                "speed_print_layer_0": {
+                    "default_value": 18
+                },
+                "speed_travel_layer_0": {
+                    "default_value": 30
+                },
+                "skirt_brim_speed": {
+                    "default_value": 18
+                }
+            }
+        },
+        "travel": {
+            "type": "category",
+            "children": {
+                "retraction_hop": {
+                    "default_value": 1
+                },
+                "retraction_hop_enabled": {
+                    "default_value": false
+                }
+            }
+        },
+        "blackmagic": {
+            "type": "category",
+            "children": {
+                "magic_spiralize": {
+                    "default_value": false
+                },
+                "magic_mesh_surface_mode": {
+                    "default_value": "normal"
+                }
+            }
+        },
+        "platform_adhesion": {
+            "type": "category",
+            "children": {
+                "adhesion_type": {
+                    "default_value": "skirt"
+                },
+                "skirt_line_count": {
+                    "default_value": 1
+                },
+                "brim_width": {
+                    "default_value": 8.0,
+                    "children": {
+                        "brim_line_count": {
+                            "default_value": 20
+                        }
+                    }
+                },
+                "raft_margin": {
+                    "default_value": 15
+                }
+            }
+        },
+        "support": {
+            "type": "category",
+            "children": {
+                "support_enable": {
+                    "default_value": false
+                },
+                "support_type": {
+                    "default_value": "everywhere"
+                },
+                "support_pattern": {
+                    "default_value": "zigzag"
+                },
+                "support_angle": {
+                    "default_value": 50
+                },
+                "support_infill_rate": {
+                    "default_value": 15,
+                    "children": {
+                        "support_line_distance": {
+                            "default_value": 2.66
+                        },
+                        "support_initial_layer_line_distance": {
+                            "default_value": 2.66
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
