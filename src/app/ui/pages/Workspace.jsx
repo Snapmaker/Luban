@@ -264,7 +264,6 @@ class Workspace extends PureComponent {
             isDraggingWidget,
             connected
         } = this.state;
-        console.log('primaryWidgets', primaryWidgets, secondaryWidgets);
 
         const widgetProps = { };
         return (

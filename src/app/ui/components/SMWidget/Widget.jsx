@@ -22,7 +22,7 @@ class WidgetContainer extends PureComponent {
         widgetId: PropTypes.string.isRequired,
         // headType: PropTypes.string,
         onRemove: PropTypes.func,
-        onToggle: PropTypes.func,
+        // onToggle: PropTypes.func,
 
         minimized: PropTypes.bool.isRequired,
         fullscreen: PropTypes.bool.isRequired,
@@ -68,14 +68,13 @@ class WidgetContainer extends PureComponent {
     };
 
     render() {
-        const { children, minimized, fullscreen, onToggle } = this.props;
+        const { children, minimized, fullscreen } = this.props;
         const state = {
             title: this.state.title,
             minimized: minimized,
             fullscreen: fullscreen,
             buttons: this.state.buttons
         };
-        console.log('onToggle', onToggle, state.buttons);
         const actions = this.actions;
 
         return (
