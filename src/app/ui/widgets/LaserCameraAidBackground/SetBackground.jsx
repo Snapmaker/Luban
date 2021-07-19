@@ -152,9 +152,9 @@ class SetBackground extends PureComponent {
                         {state.panel === PANEL_NOT_CALIBRATION && (
                             <div>
                                 <Modal.Header>
-                                    <Modal.Title>
-                                        {i18n._('Warning')}
-                                    </Modal.Title>
+                                    {/* <Modal.Title> */}
+                                    {i18n._('Warning')}
+                                    {/* </Modal.Title> */}
                                 </Modal.Header>
                                 <Modal.Body style={{ margin: '0', paddingBottom: '15px', height: '100%' }}>
                                     <div>

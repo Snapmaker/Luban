@@ -49,6 +49,7 @@ import CNCPathWidget from '../widgets/CNCPath';
 // import PrintingOutputWidget from '../widgets/PrintingOutput';
 import WifiTransport from '../widgets/WifiTransport';
 import EnclosureWidget from '../widgets/Enclosure';
+
 import CncLaserObjectList from '../widgets/CncLaserList';
 // import PrintingObjectList from '../widgets/PrintingObjectList';
 import JobType from '../widgets/JobType';
@@ -92,8 +93,6 @@ const reloadPage = (forcedReload = true) => {
 class Workspace extends PureComponent {
     static propTypes = {
         ...withRouter.propTypes,
-        showPrimaryContainer: PropTypes.bool.isRequired,
-        showSecondaryContainer: PropTypes.bool.isRequired,
         defaultWidgets: PropTypes.array.isRequired,
         primaryWidgets: PropTypes.array.isRequired,
         secondaryWidgets: PropTypes.array.isRequired,
@@ -106,9 +105,12 @@ class Workspace extends PureComponent {
     state = {
         leftItems: [
             {
-                name: 'Edit',
-                action: () => this.props.history.push('/'),
-                title: i18n._('Home')
+                title: i18n._('Back'),
+                type: 'button',
+                name: 'MainToolbarBack',
+                action: () => {
+                    this.props.history.push('/');
+                }
             }
         ],
         connected: controller.connected,
@@ -226,9 +228,9 @@ class Workspace extends PureComponent {
                     showCloseButton={false}
                 >
                     <Modal.Body>
-                        <div style={{ display: 'flex' }}>
+                        <div className="sm-flex">
                             <i className="fa fa-exclamation-circle fa-4x text-danger" />
-                            <div style={{ marginLeft: 25 }}>
+                            <div className="margin-left-24">
                                 <h5>{i18n._('Server has stopped working')}</h5>
                                 <p>{i18n._('A problem caused the server to stop working correctly. Check out the server status and try again.')}</p>
                             </div>
@@ -257,7 +259,7 @@ class Workspace extends PureComponent {
     }
 
     render() {
-        const { style, className, primaryWidgets, secondaryWidgets, showPrimaryContainer, showSecondaryContainer } = this.props;
+        const { style, className, primaryWidgets, secondaryWidgets } = this.props;
         const {
             isDraggingWidget,
             connected
@@ -267,8 +269,6 @@ class Workspace extends PureComponent {
         return (
             <div style={style} className={classNames(className)}>
                 <WorkspaceLayout
-                    showSecondaryContainer={showSecondaryContainer}
-                    showPrimaryContainer={showPrimaryContainer}
                     renderMainToolBar={this.renderMainToolBar}
                     renderLeftView={() => renderWidgetList('workspace', 'left', primaryWidgets, allWidgets, this.listActions, widgetProps)}
                     renderRightView={() => renderWidgetList('workspace', 'right', secondaryWidgets, allWidgets, this.listActions, widgetProps)}
@@ -278,8 +278,6 @@ class Workspace extends PureComponent {
                         disabled={isDraggingWidget || controller.workflowState !== WORKFLOW_STATE_IDLE}
                         accept={ACCEPT}
                         dragEnterMsg={i18n._('Drop a G-code file here.')}
-                        havePrimaryWidget={showPrimaryContainer}
-                        haveSecondaryWidget={showSecondaryContainer}
                         onDropAccepted={this.actions.onDropAccepted}
                         onDropRejected={this.actions.onDropRejected}
                     >
@@ -301,14 +299,10 @@ class Workspace extends PureComponent {
 }
 const mapStateToProps = (state) => {
     const widget = state.widget;
-    const showPrimaryContainer = widget.workspace.left.show;
     const primaryWidgets = widget.workspace.left.widgets;
-    const showSecondaryContainer = widget.workspace.right.show;
     const secondaryWidgets = widget.workspace.right.widgets;
     const defaultWidgets = widget.workspace.default.widgets;
     return {
-        showPrimaryContainer,
-        showSecondaryContainer,
         defaultWidgets,
         primaryWidgets,
         secondaryWidgets

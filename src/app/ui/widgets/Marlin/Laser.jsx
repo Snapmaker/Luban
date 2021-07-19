@@ -3,14 +3,16 @@ import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
 import _ from 'lodash';
 import Slider from '../../components/Slider';
-import Anchor from '../../components/Anchor';
+import Switch from '../../components/Switch';
 import i18n from '../../../lib/i18n';
 import { NumberInput as Input } from '../../components/Input';
+import Checkbox from '../../components/Checkbox';
+import SvgIcon from '../../components/SvgIcon';
 import { actions as machineActions } from '../../../flux/machine';
 import WorkSpeed from './WorkSpeed';
 import { CONNECTION_TYPE_WIFI, WORKFLOW_STATUS_PAUSED, WORKFLOW_STATUS_RUNNING } from '../../../constants';
 
-class Printing extends PureComponent {
+class Laser extends PureComponent {
     static propTypes = {
         headStatus: PropTypes.bool,
         laserPower: PropTypes.number,
@@ -99,123 +101,106 @@ class Printing extends PureComponent {
 
         return (
             <div>
-                <div className="sm-parameter-container">
+                {connectionType === CONNECTION_TYPE_WIFI && (
                     <div>
-                        {connectionType === CONNECTION_TYPE_WIFI && (
-                            <div>
-                                <div className="sm-parameter-row">
-                                    <span className="sm-parameter-row__label-lg">{i18n._('Printing Auto Mode')}</span>
-                                    <span>
-                                        <input
-                                            className="sm-parameter-row__input2-check"
-                                            style={{
-                                                margin: '0 0'
-                                            }}
-                                            type="checkbox"
-                                            checked={isLaserPrintAutoMode}
-                                            onChange={actions.onChangeLaserPrintMode}
-                                        />
-                                    </span>
-                                </div>
-                                {isLaserPrintAutoMode && !workPosition.isFourAxis && (
-                                    <div>
-                                        <div className="sm-parameter-row">
-                                            <span className="sm-parameter-row__label-lg">{i18n._('Material Thickness')}</span>
-                                            <span>
-                                                <Input
-                                                    className="sm-parameter-row__input"
-                                                    value={materialThickness}
-                                                    max={size.z - 40}
-                                                    min={0}
-                                                    onChange={actions.onChangeMaterialThickness}
-                                                />
-                                            </span>
-                                            <span className="sm-parameter-row__input-unit">mm</span>
-                                        </div>
-                                    </div>
-                                )}
-                                {isLaserPrintAutoMode && workPosition.isFourAxis && (
-                                    <div>
-                                        <div className="sm-parameter-row">
-                                            <span className="sm-parameter-row__label-lg">{i18n._('Material Diameter')}</span>
-                                            <span>
-                                                <Input
-                                                    className="sm-parameter-row__input"
-                                                    value={materialThickness * 2}
-                                                    max={size.z - 40}
-                                                    min={0}
-                                                    onChange={actions.onChangeFourAxisMaterialThickness}
-                                                />
-                                            </span>
-                                            <span className="sm-parameter-row__input-unit">mm</span>
-                                        </div>
-                                    </div>
-                                )}
-                                {isLaserPrintAutoMode && laserFocalLength && (
-                                    <div>
-                                        <div className="sm-parameter-row">
-                                            <span className="sm-parameter-row__label-lg">{i18n._('Laser Height')}</span>
-                                            <span
-                                                className="sm-parameter-row__input"
-                                            >
-                                                {laserFocalLength.toFixed(2)}
-                                            </span>
-                                            <span className="sm-parameter-row__input-unit">mm</span>
-                                        </div>
-                                        <div className="sm-parameter-row">
-                                            <span className="sm-parameter-row__label-lg">{i18n._('Z Offset')}</span>
-                                            <span
-                                                className="sm-parameter-row__input"
-                                            >
-                                                {(laserFocalLength + materialThickness).toFixed(2)}
-                                            </span>
-                                            <span className="sm-parameter-row__input-unit">mm</span>
-                                        </div>
-                                    </div>
-                                )}
+                        <div className="sm-flex height-32 justify-space-between margin-vertical-8">
+                            <span>{i18n._('Printing Auto Mode')}</span>
+                            <Checkbox
+                                className="sm-flex-auto"
+                                checked={isLaserPrintAutoMode}
+                                onChange={actions.onChangeLaserPrintMode}
+                            />
+                        </div>
+                        {isLaserPrintAutoMode && !workPosition.isFourAxis && (
+                            <div className="sm-flex height-32 justify-space-between margin-vertical-8">
+                                <span className="">{i18n._('Material Thickness')}</span>
+                                <Input
+                                    className="sm-flex-auto"
+                                    size="small"
+                                    value={materialThickness}
+                                    max={size.z - 40}
+                                    min={0}
+                                    onChange={actions.onChangeMaterialThickness}
+                                />
+                                <span className="sm-flex__input-unit-8">mm</span>
                             </div>
                         )}
-                        <WorkSpeed />
-                        <div className="sm-parameter-row">
-                            <span className="sm-parameter-row__label-lg">{i18n._('Laser Power')}</span>
-                            <button
-                                type="button"
-                                className={laserPowerOpen ? 'sm-btn-small sm-btn-primary' : 'sm-btn-small sm-btn-danger'}
-                                style={{
-                                    float: 'right'
-                                }}
-                                onClick={this.actions.onClickLaserPower}
-                                disabled={isWifiPrinting}
-                            >
-                                {!laserPowerOpen && <i className="fa fa-toggle-off" />}
-                                {laserPowerOpen && <i className="fa fa-toggle-on" />}
-                                <span className="space" />
-                                {laserPowerOpen ? i18n._('On') : i18n._('Off')}
-                            </button>
-                        </div>
-                        <div className="sm-parameter-row">
-                            <Slider
-                                className="sm-parameter-row__slider2"
-                                max={100}
-                                min={0}
-                                marks={laserPowerMarks}
-                                value={laserPower}
-                                onChange={actions.onChangeLaserPower}
-                            />
-                            <span className="sm-parameter-row__input2-text">{this.props.laserPower}/</span>
-                            <Input
-                                className="sm-parameter-row__input2"
-                                value={laserPower}
-                                max={100}
-                                min={0}
-                                onChange={actions.onChangeLaserPower}
-                            />
-                            <span className="sm-parameter-row__input2-unit">%</span>
-                            <Anchor
-                                className="sm-parameter-row__input2-check fa fa-chevron-circle-right"
-                                onClick={actions.onSaveLaserPower}
-                            />
-                        </div>
+                        {isLaserPrintAutoMode && workPosition.isFourAxis && (
+                            <div className="sm-flex height-32 justify-space-between margin-vertical-8">
+                                <span className="">{i18n._('Material Diameter')}</span>
+                                <Input
+                                    className="sm-flex-auto"
+                                    size="small"
+                                    value={materialThickness * 2}
+                                    max={size.z - 40}
+                                    min={0}
+                                    onChange={actions.onChangeFourAxisMaterialThickness}
+                                />
+                                <span className="sm-flex__input-unit-8">mm</span>
+                            </div>
+                        )}
+                        {isLaserPrintAutoMode && laserFocalLength && (
+                            <div>
+                                <div className="sm-flex height-32 justify-space-between margin-vertical-8">
+                                    <span>{i18n._('Laser Height')}</span>
+                                    <Input
+                                        className="sm-flex-auto"
+                                        size="small"
+                                        disabled
+                                        value={laserFocalLength.toFixed(2)}
+                                    />
+                                    <span className="sm-flex__input-unit-8">mm</span>
+                                </div>
+                                <div className="sm-flex height-32 justify-space-between margin-vertical-8">
+                                    <span>{i18n._('Z Offset')}</span>
+                                    <Input
+                                        className="sm-flex-auto"
+                                        size="small"
+                                        disabled
+                                        value={(laserFocalLength + materialThickness).toFixed(2)}
+                                    />
+                                    <span className="sm-flex__input-unit-8">mm</span>
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                )}
+                <WorkSpeed />
+                <div className="sm-flex justify-space-between margin-vertical-8">
+                    <span>{i18n._('Laser Power')}</span>
+                    <Switch
+                        className="sm-flex-auto"
+                        onClick={this.actions.onClickLaserPower}
+                        disabled={isWifiPrinting}
+                        checked={laserPowerOpen}
+                    />
+                </div>
+                <div className="sm-flex justify-space-between margin-vertical-8">
+                    <Slider
+                        max={100}
+                        min={0}
+                        size="middle"
+                        className="height-56"
+                        marks={laserPowerMarks}
+                        value={laserPower}
+                        onChange={actions.onChangeLaserPower}
+                    />
+                    <div className="">
+                        <span>{this.props.laserPower}/</span>
+                        <Input
+                            value={laserPower}
+                            max={100}
+                            min={0}
+                            size="small"
+                            onChange={actions.onChangeLaserPower}
+                        />
+                        <span className="height-32 sm-flex__input-unit-44">%</span>
+                        <SvgIcon
+                            name="Reset"
+                            size={22}
+                            className="border-default-black-5 margin-left-4 padding-vertical-4 padding-horizontal-4 border-radius-8"
+                            onClick={actions.onSaveLaserPower}
+                        />
                     </div>
                 </div>
             </div>
@@ -249,4 +234,4 @@ const mapDispatchToProps = (dispatch) => {
     };
 };
 
-export default connect(mapStateToProps, mapDispatchToProps)(Printing);
+export default connect(mapStateToProps, mapDispatchToProps)(Laser);

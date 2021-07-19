@@ -1,7 +1,5 @@
 // Coordinate Panel
 .coordinate-panel {
-    margin-bottom: 1rem;
-
     :global {
         .table th, .table td {
             padding: .5rem;
@@ -60,19 +58,18 @@
 .control-panel {
     .jog-pad {
         .column-5{
-            flex: 0 0 20%;
-            max-width: 20%;
+            flex: 0 0 auto;
         }
         .column-4{
-            flex: 0 0 25%;
-            max-width: 25%;
+            flex: 0 0 auto;
         }
         button[class^="jog-"],
         button[class*=" jog-"] {
+            border-radius: 8px;
+            border: 1px solid #B9BCBF;
             font-size: 16px;
             padding: 0;
-            min-width: 35px;
-            width: 100%;
+            min-width: 32px;
             line-height: 30px;
             text-align: center;
             vertical-align: middle;
@@ -110,26 +107,6 @@
         }
     }
 
-    .motion-controls {
-        :global {
-            .btn,
-            .btn-group {
-                width: 100%
-            }
-        }
-
-        :global {
-            .row {
-                margin-bottom: .5rem;
-            }
-        }
-
-        button {
-            height: 32px
-            width: 100%
-            line-height: 13px
-        }
-    }
 }
 
 // Jog Distance
@@ -145,10 +122,14 @@
             .btn:first-child {
                 border-top-right-radius: 0
                 border-bottom-right-radius: 0
+                border-top-left-radius: 8px
+                border-bottom-left-radius: 8px
             }
             .btn:last-child {
                 border-top-left-radius: 0
                 border-bottom-left-radius: 0
+                border-top-right-radius: 8px
+                border-bottom-right-radius: 8px
             }
             .btn:not(:first-child):not(:last-child) {
                 border-radius: 0
@@ -156,15 +137,6 @@
             .btn:not(:last-child) {
                 border-right: 0
             }
-            input {
-                border-right: 0
-                border-radius: 0
-                border-color: #6c757d
-            }
-            input:disabled {
-                opacity: .65
-            }
-
         }
     }
 }

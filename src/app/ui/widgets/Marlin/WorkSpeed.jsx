@@ -2,7 +2,8 @@ import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
 import _ from 'lodash';
-import Anchor from '../../components/Anchor';
+// import Anchor from '../../components/Anchor';
+import SvgIcon from '../../components/SvgIcon';
 import i18n from '../../../lib/i18n';
 import { NumberInput as Input } from '../../components/Input';
 import { actions as machineActions } from '../../../flux/machine';
@@ -51,22 +52,25 @@ class WorkSpeed extends PureComponent {
         const { workSpeed, workSpeedValue } = this.state;
         const actions = this.actions;
         return (
-
-            <div className="sm-parameter-row">
-                <span className="sm-parameter-row__label-lg">{i18n._('Work Speed')}</span>
-                <span className="sm-parameter-row__input2-text">{workSpeed}/</span>
-                <Input
-                    className="sm-parameter-row__input2"
-                    value={workSpeedValue}
-                    max={500}
-                    min={0}
-                    onChange={actions.onChangeWorkSpeedValue}
-                />
-                <span className="sm-parameter-row__input2-unit">%</span>
-                <Anchor
-                    className="sm-parameter-row__input2-check fa fa-chevron-circle-right"
-                    onClick={actions.onClickWorkSpeed}
-                />
+            <div className="sm-flex justify-space-between margin-vertical-8">
+                <span className="height-32">{i18n._('Work Speed')}</span>
+                <div className="sm-flex-auto">
+                    <span className="height-32">{workSpeed}/</span>
+                    <Input
+                        size="small"
+                        value={workSpeedValue}
+                        max={500}
+                        min={0}
+                        onChange={actions.onChangeWorkSpeedValue}
+                    />
+                    <span className="height-32 sm-flex__input-unit-44">%</span>
+                    <SvgIcon
+                        name="Reset"
+                        size={22}
+                        className="border-default-black-5 margin-left-4 padding-vertical-4 padding-horizontal-4 border-radius-8"
+                        onClick={actions.onClickWorkSpeed}
+                    />
+                </div>
             </div>
         );
     }

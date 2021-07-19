@@ -58,11 +58,12 @@ class LaserParameters extends PureComponent {
         return (
             <React.Fragment>
                 <div className="sm-parameter-container">
-                    <div className="sm-parameter-row">
-                        <span className="sm-parameter-row__label">{i18n._('Name')}</span>
+                    <div className="sm-flex justify-space-between margin-bottom-8">
+                        <span className="line-height-32">{i18n._('Name')}</span>
                         <TextInput
-                            className="sm-parameter-row__input"
-                            style={{ width: '160px' }}
+                            // className="sm-parameter-row__input-md"
+                            // style={{ width: '160px' }}
+                            size="large"
                             value={name}
                             onChange={(event) => { this.props.updateToolPath({ name: event.target.value }); }}
                         />

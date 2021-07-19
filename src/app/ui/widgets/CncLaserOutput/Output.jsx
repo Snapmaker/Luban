@@ -205,37 +205,39 @@ class Output extends PureComponent {
                                 this.actions.switchToEditPage();
                                 this.actions.handleMouseOut();
                             }}
-                            className={classNames('position-ab', 'bottom-64')}
+                            className={classNames('position-ab', 'bottom-64', 'left-0')}
                         >
                             {i18n._('Back to Object View')}
                         </Button>
                     )}
-                    <div
-                        onKeyDown={noop}
-                        role="button"
-                        tabIndex={0}
-                        className={classNames('position-re')}
-                        onMouseEnter={actions.handleMouseOver}
-                        onMouseLeave={actions.handleMouseOut}
-                    >
-                        <Dropdown
-                            overlay={menu}
+                    {displayedType === DISPLAYED_TYPE_TOOLPATH && (
+                        <div
+                            onKeyDown={noop}
+                            role="button"
+                            tabIndex={0}
+                            className={classNames('position-re')}
+                            onMouseEnter={actions.handleMouseOver}
+                            onMouseLeave={actions.handleMouseOut}
                         >
-                            <Button
-                                type="primary"
-                                priority="level-one"
-                                disabled={inProgress || !hasModel || workflowState === 'running' || isGcodeGenerating || gcodeFile === null}
-                                className={classNames(
-                                    'position-ab',
-                                    'bottom-16',
-                                    'margin-top-10',
-                                    displayedType === DISPLAYED_TYPE_TOOLPATH ? 'display-block' : 'display-none'
-                                )}
+                            <Dropdown
+                                overlay={menu}
                             >
-                                {i18n._('Export')}
-                            </Button>
-                        </Dropdown>
-                    </div>
+                                <Button
+                                    type="primary"
+                                    priority="level-one"
+                                    disabled={inProgress || !hasModel || workflowState === 'running' || isGcodeGenerating || gcodeFile === null}
+                                    className={classNames(
+                                        'position-ab',
+                                        'bottom-16',
+                                        'margin-top-10',
+                                        displayedType === DISPLAYED_TYPE_TOOLPATH ? 'display-block' : 'display-none'
+                                    )}
+                                >
+                                    {i18n._('Export')}
+                                </Button>
+                            </Dropdown>
+                        </div>
+                    )}
 
                 </div>
                 <Thumbnail

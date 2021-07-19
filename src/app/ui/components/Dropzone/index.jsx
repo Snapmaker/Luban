@@ -43,7 +43,7 @@ class Dropzone extends PureComponent {
     }
 
     render() {
-        const { disabled = false, dragEnterMsg = '', children = null, havePrimaryWidget = false, haveSecondaryWidget = true } = this.props;
+        const { disabled = false, dragEnterMsg = '', children = null, havePrimaryWidget = true, haveSecondaryWidget = true } = this.props;
         const isDragging = this.state.isDragging;
 
 

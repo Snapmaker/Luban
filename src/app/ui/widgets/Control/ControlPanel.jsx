@@ -11,30 +11,27 @@ const ControlPanel = (props) => {
     return (
         <div className={styles['control-panel']}>
             {isFourAxis && (
-                <div className="row no-gutters">
-                    <div className="col-sm-7">
+                <div className="sm-flex justify-space-between">
+                    <div className="">
                         <JogPad {...props} />
                     </div>
-                    <div className="col-sm-5">
+                    <div className="">
                         <MotionButtonGroup {...props} />
                     </div>
                 </div>
             )}
             {!isFourAxis && (
-                <div className="row no-gutters">
-                    <div className="col-sm-6">
+                <div className="sm-flex justify-space-between">
+                    <div className="sm-flex-auto">
                         <JogPad {...props} />
                     </div>
-                    <div className="col-sm-6">
+                    <div className="sm-flex-auto">
                         <MotionButtonGroup {...props} />
                     </div>
                 </div>
             )}
-            <div className="row no-gutters">
-                <div className="col-sm-12">
-                    <JogDistance {...props} />
-                </div>
-            </div>
+
+            <JogDistance {...props} />
         </div>
     );
 };

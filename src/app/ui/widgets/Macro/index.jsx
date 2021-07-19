@@ -1,8 +1,8 @@
 import PropTypes from 'prop-types';
 import React, { PureComponent } from 'react';
+// import classNames from 'classnames';
 import api from '../../../api';
 import i18n from '../../../lib/i18n';
-// import log from '../../lib/log';
 import Macro from './Macro';
 import AddMacro from './AddMacro';
 import EditMacro from './EditMacro';
@@ -90,7 +90,7 @@ class MacroWidget extends PureComponent {
                 {
                     title: 'New Macro',
                     onClick: this.actions.openAddMacroModal,
-                    className: 'fa fa-plus'
+                    name: 'Increase'
                 },
                 'SMMinimize',
                 'SMDropdown'

@@ -55,7 +55,7 @@ class ChangedReactSelect extends PureComponent {
             valueObj,
             value,
             options,
-            size = 'middle',
+            size = '100%',
             className,
             isGroup,
             disabled = true
@@ -86,7 +86,7 @@ class ChangedReactSelect extends PureComponent {
             });
 
             return (
-                <div className={classNames(styles['override-select'], className)}>
+                <div className={classNames(styles['override-select'], className)} style={{ width: size }}>
                     <TreeSelect
                         className={styles[size]}
                         value={defaultValue}
@@ -122,10 +122,8 @@ class ChangedReactSelect extends PureComponent {
                     <Select
                         className={styles[size]}
                         value={defaultValue?.value}
+                        style={{ width: size }}
                         disabled={disabled}
-                        dropdownStyle={{
-                            width: '120%'
-                        }}
                         onChange={this.actions.handleChange}
                     >
                         {(options.map((option) => {

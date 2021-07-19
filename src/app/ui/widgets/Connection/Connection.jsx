@@ -2,7 +2,7 @@ import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
 import classNames from 'classnames';
 import { connect } from 'react-redux';
-import { Button } from '@trendmicro/react-buttons';
+import { Button } from '../../components/Buttons';
 
 import {
     CONNECTION_TYPE_SERIAL,
@@ -91,9 +91,8 @@ class Connection extends PureComponent {
         const { connectionType, isConnected, series, isHomed } = this.props;
         const { alertMessage, showHomeReminder } = this.state;
         const isOriginal = series === MACHINE_SERIES.ORIGINAL.value;
-
         return (
-            <div>
+            <div className="padding-bottom-16">
                 {alertMessage && (
                     <Notifications bsStyle="danger" onDismiss={this.actions.clearAlert}>
                         {alertMessage}
@@ -101,10 +100,9 @@ class Connection extends PureComponent {
                 )}
 
                 {EXPERIMENTAL_WIFI_CONTROL && (
-                    <div className="sm-tabs" style={{ marginBottom: '1rem' }}>
+                    <div className={classNames('sm-tabs', 'margin-vertical-16')}>
                         <button
                             type="button"
-                            style={{ width: '50%' }}
                             className={classNames('sm-tab', { 'sm-selected': (connectionType === CONNECTION_TYPE_SERIAL) })}
                             onClick={this.actions.onSelectTabSerial}
                             disabled={isConnected}
@@ -113,7 +111,6 @@ class Connection extends PureComponent {
                         </button>
                         <button
                             type="button"
-                            style={{ width: '50%' }}
                             className={classNames('sm-tab', { 'sm-selected': (connectionType === CONNECTION_TYPE_WIFI) })}
                             onClick={this.actions.onSelectTabWifi}
                             disabled={isConnected}
@@ -134,9 +131,7 @@ class Connection extends PureComponent {
                 {isConnected && showHomeReminder && !isOriginal && isHomed !== null && !isHomed && (
                     <Modal disableOverlay size="sm" showCloseButton={false}>
                         <Modal.Header>
-                            <Modal.Title>
-                                {i18n._('Home Reminder')}
-                            </Modal.Title>
+                            {i18n._('Home Reminder')}
                         </Modal.Header>
                         <Modal.Body>
                             <div>
@@ -145,7 +140,9 @@ class Connection extends PureComponent {
                         </Modal.Body>
                         <Modal.Footer>
                             <Button
-                                btnStyle="primary"
+                                priority="level-two"
+                                className="align-r"
+                                width="96px"
                                 onClick={this.actions.clickHomeModalOk}
                             >
                                 {i18n._('OK')}

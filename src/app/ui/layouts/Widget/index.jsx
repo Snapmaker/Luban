@@ -6,12 +6,14 @@ import _ from 'lodash';
 
 import { connect } from 'react-redux';
 import Widget from '../../components/Widget';
+import SvgIcon from '../../components/SvgIcon';
+// import Anchor from '../../components/Anchor';
 
 // import SMSortableHandle from './SMSortableHandle';
 // import SMDropdownButton from './SMDropdownButton';
-// import SMMinimizeButton from './SMMinimizeButton';
+import SMMinimizeButton from './SMMinimizeButton';
 import { actions as widgetActions } from '../../../flux/widget';
-// import i18n from '../../../lib/i18n';
+import i18n from '../../../lib/i18n';
 
 
 class WidgetContainer extends PureComponent {
@@ -77,10 +79,44 @@ class WidgetContainer extends PureComponent {
             fullscreen: fullscreen,
             buttons: this.state.buttons
         };
-        // const actions = this.actions;
+        const actions = this.actions;
         return (
-            <Widget style={{ display: this.state.display ? '' : 'none' }} fullscreen={state.fullscreen}>
-                <Widget.Content style={{ display: state.minimized ? 'none' : 'block', padding: '8px 16px', border: 'none' }}>
+            <Widget
+                style={{ display: this.state.display ? '' : 'none', margin: '8px 16px' }}
+                className="border-bottom-normal"
+                fullscreen={state.fullscreen}
+            >
+                <div className="sm-flex height-32 justify-space-between margin-bottom-8">
+                    <span className="sm-flex-width heading-3">{i18n._(state.title)}</span>
+                    <div>
+                        {state.buttons && _.isArray(state.buttons) && state.buttons.map(v => {
+                            if (typeof v === 'object') {
+                                const { disabled = false, title = '', onClick, className = '', name = 'CopyNomral' } = v;
+                                return (
+                                    <SvgIcon
+                                        key={title}
+                                        disabled={disabled}
+                                        name={name}
+                                        className={className}
+                                        title={i18n._(title)}
+                                        onClick={onClick}
+                                    />
+                                );
+                            } else if (v === 'SMMinimize') {
+                                return (
+                                    <SMMinimizeButton
+                                        key="SMMinimize"
+                                        className="margin-left-4"
+                                        state={state}
+                                        actions={actions}
+                                    />
+                                );
+                            }
+                            return null;
+                        })}
+                    </div>
+                </div>
+                <Widget.Content style={{ display: state.minimized ? 'none' : 'block', padding: '0', border: 'none' }}>
 
                     <Component
                         isWidget

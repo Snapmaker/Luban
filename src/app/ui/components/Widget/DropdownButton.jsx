@@ -9,9 +9,9 @@ const DropdownButton = (props) => {
     // Split component props
     const dropdownProps = {};
     const toggleProps = {};
-    Object.keys(rest).forEach(propName => {
+    rest && Object.keys(rest).forEach(propName => {
         const propValue = props[propName];
-        if (Dropdown.ControlledComponent.propTypes[propName]) {
+        if (Dropdown?.ControlledComponent?.propTypes[propName]) {
             dropdownProps[propName] = propValue;
         } else {
             toggleProps[propName] = propValue;

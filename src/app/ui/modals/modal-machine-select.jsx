@@ -114,10 +114,10 @@ class MachineSelectModal extends PureComponent {
         return (
             <Modal disableOverlay showCloseButton={false} size="md" onClose={this.handleClose}>
                 <Modal.Header>
-                    <Modal.Title>
-                        <div className={styles['device-not-recognized']}>{i18n._('Device Not Recognized')}</div>
-                        <div className={styles['device-not-recognized-detail']}>{i18n._('Oops, Snapmaker Luban doesn\'t recognize your connected device.')}</div>
-                    </Modal.Title>
+                    {/* <Modal.Title> */}
+                    <div className={styles['device-not-recognized']}>{i18n._('Device Not Recognized')}</div>
+                    <div className={styles['device-not-recognized-detail']}>{i18n._('Oops, Snapmaker Luban doesn\'t recognize your connected device.')}</div>
+                    {/* </Modal.Title> */}
                 </Modal.Header>
                 <Modal.Body>
                     <div className={styles['which-model']}>{i18n._('Which model is connected to Snapmaker Luban?')}

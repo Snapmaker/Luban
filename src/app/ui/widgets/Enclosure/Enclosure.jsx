@@ -155,34 +155,19 @@ class Enclosure extends PureComponent {
 
         return (
             <div>
-                <div className="sm-parameter-container">
-                    <div className="sm-parameter-row">
-                        <span className="sm-parameter-row__label-lg">{i18n._('LED Strip')}</span>
-                        <button
-                            type="button"
-                            className={led ? 'sm-btn-small sm-btn-primary' : 'sm-btn-small sm-btn-danger'}
-                            style={{
-                                float: 'right'
-                            }}
-                            onClick={this.actions.onHandleLed}
-                            disabled={(connectionType === 'serial' && !isLedReady) || !isConnected}
-                        >
-                            {!led && <i className="fa fa-toggle-off" />}
-                            {!!led && <i className="fa fa-toggle-on" />}
-                            <span className="space" />
-                            {led ? i18n._('On') : i18n._('Off')}
-                        </button>
-                    </div>
-                    <div className="sm-parameter-row">
-                        <span className="sm-parameter-row__label-lg">{i18n._('Cooling Fan')}</span>
+                <div className="margin-bottom-8">
+                    <div className="sm-flex justify-space-between margin-vertical-8">
+                        <span>{i18n._('LED Strip')}</span>
                         <Switch
-                            className={fan ? 'sm-btn-small sm-btn-primary' : 'sm-btn-small sm-btn-danger'}
-                            style={{
-                                float: 'right'
-                            }}
+                            onClick={this.actions.onHandleLed}
+                            checked={led}
+                            disabled={(connectionType === 'serial' && !isLedReady) || !isConnected}
+                        />
+                    </div>
+                    <div className="sm-flex justify-space-between margin-vertical-8 ">
+                        <span>{i18n._('Cooling Fan')}</span>
+                        <Switch
                             onClick={this.actions.onHandleCoolingFans}
-                            checkedChildren={i18n._('On')}
-                            unCheckedChildren={i18n._('Off')}
                             checked={fan}
                             disabled={(connectionType === 'serial' && !isFanReady) || !isConnected}
                         />
@@ -196,21 +181,13 @@ class Enclosure extends PureComponent {
                                 </div>
                             )}
                         >
-                            <div className="sm-parameter-row">
-                                <span className="sm-parameter-row__label-lg">{i18n._('Door Detection')}</span>
-                                <button
-                                    type="button"
-                                    className={isDoorEnabled ? 'sm-btn-small sm-btn-primary' : 'sm-btn-small sm-btn-danger'}
-                                    style={{
-                                        float: 'right'
-                                    }}
+                            <div className="sm-flex justify-space-between margin-vertical-8 ">
+                                <span>{i18n._('Door Detection')}</span>
+                                <Switch
                                     onClick={this.actions.onHandleDoorEnabled}
-                                >
-                                    {!isDoorEnabled && <i className="fa fa-toggle-off" />}
-                                    {isDoorEnabled && <i className="fa fa-toggle-on" />}
-                                    <span className="space" />
-                                    {isDoorEnabled ? i18n._('On') : i18n._('Off')}
-                                </button>
+                                    checked={isDoorEnabled}
+                                    disabled={(connectionType === 'serial' && !isFanReady) || !isConnected}
+                                />
                             </div>
                         </TipTrigger>
                     )}

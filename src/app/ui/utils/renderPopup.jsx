@@ -1,5 +1,5 @@
 import React from 'react';
-import Modal from '../components/Modal';
+import Modal from '../components/Modal/tileModal';
 // import { Button } from '../components/Buttons';
 
 // import i18n from '../../lib/i18n';
@@ -17,11 +17,11 @@ export default function renderPopup(options) {
 
 
     return (
-        <Modal disableOverlay style={{ width: '100%', height: '100%' }} onClose={onClose}>
+        <Modal disableOverlay tile style={{ width: '100%', height: '100%' }} onClose={onClose}>
 
-            <Modal.Body style={{ padding: '0' }}>
-                <Component isPopup onClose={onClose} />
-            </Modal.Body>
+            {/* <Modal.Body style={{ padding: '0' }}> */}
+            <Component isPopup onClose={onClose} />
+            {/* </Modal.Body> */}
 
         </Modal>
     );
