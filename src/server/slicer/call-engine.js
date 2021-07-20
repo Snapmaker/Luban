@@ -49,7 +49,7 @@ function slice(modelInfo, onProgress, onSucceed, onError) {
                 onError();
             } else {
                 onSucceed({
-                    filename: data[0].toolpathFileName
+                    filenames: data.map(v => v.toolpathFileName)
                 });
                 log.info(`slice progress closed with code ${res.code}`);
             }
