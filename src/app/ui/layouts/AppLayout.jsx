@@ -31,10 +31,12 @@ import { actions as menuActions } from '../../flux/appbar-menu';
 import { actions as machineActions } from '../../flux/machine';
 import { actions as editorActions } from '../../flux/editor';
 import { actions as projectActions } from '../../flux/project';
+import { actions as operationHistoryActions } from '../../flux/operation-history';
 import styles from './styles/appbar.styl';
 
 class AppLayout extends PureComponent {
     static propTypes = {
+        clearOperationHistory: PropTypes.func.isRequired,
         updateMaterials: PropTypes.func.isRequired,
         initRecoverService: PropTypes.func.isRequired,
         save: PropTypes.func.isRequired,
@@ -378,6 +380,9 @@ class AppLayout extends PureComponent {
                     // UniApi.Event.emit('appbar-menu:cnc-laser.new-file', isRotate);
                     this.props.updateMaterials(headType, { isRotate });
                     this.props.switchToPage(headType, PAGE_EDITOR);
+                    this.props.clearOperationHistory(headType);
+                } else {
+                    this.props.clearOperationHistory('printing');
                 }
             });
             UniApi.Event.on('appbar-menu:clear-recent-files', () => {
@@ -481,6 +486,7 @@ const mapStateToProps = (state) => {
 
 const mapDispatchToProps = (dispatch) => {
     return {
+        clearOperationHistory: (headType) => dispatch(operationHistoryActions.clear(headType)),
         initRecoverService: () => dispatch(projectActions.initRecoverService()),
         saveAsFile: (headType) => dispatch(projectActions.saveAsFile(headType)),
         save: (headType, dialogOptions) => dispatch(projectActions.save(headType, dialogOptions)),

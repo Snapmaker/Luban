@@ -178,6 +178,8 @@ function Cnc() {
     const coordinateMode = useSelector(state => state[HEAD_CNC]?.coordinateMode, shallowEqual);
     const coordinateSize = useSelector(state => state[HEAD_CNC]?.coordinateSize, shallowEqual);
     const materials = useSelector(state => state[HEAD_CNC]?.materials, shallowEqual);
+    const canRedo = useSelector(state => state[HEAD_CNC]?.history?.canRedo, shallowEqual);
+    const canUndo = useSelector(state => state[HEAD_CNC]?.history?.canUndo, shallowEqual);
     const [jobTypeState, setJobTypeState] = useState({
         coordinateMode,
         coordinateSize,
@@ -339,22 +341,31 @@ function Cnc() {
             //     }
             // },
             {
-                title: 'Save',
+                title: i18n._('Save'),
                 type: 'button',
                 name: 'MainToolbarSave',
                 action: () => {
                     dispatch(projectActions.save(HEAD_CNC));
                 }
             },
-            // Todo: add after completed
-            // {
-            //     title: 'Undo',
-            //     type: 'button'
-            // },
-            // {
-            //     title: 'Redo',
-            //     type: 'button'
-            // }
+            {
+                title: i18n._('Undo'),
+                disabled: !canUndo,
+                type: 'button',
+                name: 'MainToolbarUndo',
+                action: () => {
+                    dispatch(editorActions.undo(HEAD_CNC));
+                }
+            },
+            {
+                title: i18n._('Redo'),
+                disabled: !canRedo,
+                type: 'button',
+                name: 'MainToolbarRedo',
+                action: () => {
+                    dispatch(editorActions.redo(HEAD_CNC));
+                }
+            },
             {
                 title: i18n._('Job'),
                 type: 'button',

@@ -5,7 +5,6 @@ import { withRouter } from 'react-router';
 import isEqual from 'lodash/isEqual';
 import { Vector3, Box3 } from 'three';
 
-
 import { shortcutActions, priorities, ShortcutManager } from '../../../lib/shortcut';
 import { EPSILON } from '../../../constants';
 import i18n from '../../../lib/i18n';
@@ -14,6 +13,7 @@ import ProgressBar from '../../components/ProgressBar';
 import ContextMenu from '../../components/ContextMenu';
 import Canvas from '../../components/SMCanvas';
 import { actions as printingActions, PRINTING_STAGE } from '../../../flux/printing';
+import { actions as operationHistoryActions } from '../../../flux/operation-history';
 import VisualizerLeftBar from './VisualizerLeftBar';
 import VisualizerPreviewControl from './VisualizerPreviewControl';
 import VisualizerBottomLeft from './VisualizerBottomLeft';
@@ -37,6 +37,10 @@ class Visualizer extends PureComponent {
         renderingTimestamp: PropTypes.number.isRequired,
         inProgress: PropTypes.bool.isRequired,
 
+        recordAddOperation: PropTypes.func.isRequired,
+        recordModelBeforeTransform: PropTypes.func.isRequired,
+        recordModelAfterTransform: PropTypes.func.isRequired,
+        clearOperationHistory: PropTypes.func.isRequired,
         offsetGcodeLayers: PropTypes.func.isRequired,
         destroyGcodeLine: PropTypes.func.isRequired,
         selectMultiModel: PropTypes.func.isRequired,
@@ -101,7 +105,11 @@ class Visualizer extends PureComponent {
         onSelectModels: (intersect, selectEvent) => {
             this.props.selectMultiModel(intersect, selectEvent);
         },
-        onModelAfterTransform: () => {
+        onModelBeforeTransform: () => {
+            this.props.recordModelBeforeTransform(this.props.modelGroup);
+        },
+        onModelAfterTransform: (transformMode) => {
+            this.props.recordModelAfterTransform(transformMode, this.props.modelGroup);
             this.props.onModelAfterTransform();
         },
         onModelTransform: () => {
@@ -208,9 +216,10 @@ class Visualizer extends PureComponent {
         },
         clearSelectedSupport: () => {
             const { modelGroup } = this.props;
+            // support can only be selected with supports
             const isSupportSelected = modelGroup.selectedModelArray.length > 0 && modelGroup.selectedModelArray[0].supportTag === true;
             if (isSupportSelected) {
-                modelGroup.removeSelectedModel();
+                this.props.removeSelectedModel();
             }
         },
         clearAllManualSupport: () => {
@@ -229,7 +238,7 @@ class Visualizer extends PureComponent {
             [shortcutActions.UNSELECT]: this.props.unselectAllModels,
             [shortcutActions.DELETE]: () => {
                 if (!this.props.inProgress) {
-                    this.props.removeSelectedModel();
+                    this.actions.deleteSelectedModel();
                 }
             },
             [shortcutActions.COPY]: () => {
@@ -244,7 +253,7 @@ class Visualizer extends PureComponent {
             },
             [shortcutActions.DUPLICATE]: () => {
                 if (!this.props.inProgress) {
-                    this.props.duplicateSelectedModel();
+                    this.actions.duplicateSelectedModel();
                 }
             },
             [shortcutActions.UNDO]: () => {
@@ -281,6 +290,7 @@ class Visualizer extends PureComponent {
     // };
 
     componentDidMount() {
+        this.props.clearOperationHistory();
         this.canvas.current.resizeWindow();
         this.canvas.current.enable3D();
         ShortcutManager.register(this.shortcutHandler);
@@ -293,6 +303,7 @@ class Visualizer extends PureComponent {
             },
             false
         );
+        this.props.modelGroup.on('add', this.props.recordAddOperation);
     }
 
     componentWillReceiveProps(nextProps) {
@@ -376,6 +387,11 @@ class Visualizer extends PureComponent {
         }
     }
 
+    componentWillUnmount() {
+        this.props.clearOperationHistory();
+        this.props.modelGroup.off('add', this.props.recordAddOperation);
+    }
+
     getNotice() {
         const { stage, progress } = this.props;
         switch (stage) {
@@ -412,7 +428,6 @@ class Visualizer extends PureComponent {
 
     render() {
         const { size, hasModel, selectedModelArray, modelGroup, gcodeLineGroup, progress, displayedType, inProgress } = this.props;
-
         // const actions = this.actions;
 
         const isModelSelected = (selectedModelArray.length > 0);
@@ -473,6 +488,7 @@ class Visualizer extends PureComponent {
                         supportActions={this.supportActions}
                         onSelectModels={this.actions.onSelectModels}
                         onModelAfterTransform={this.actions.onModelAfterTransform}
+                        onModelBeforeTransform={this.actions.onModelBeforeTransform}
                         onModelTransform={this.actions.onModelTransform}
                         showContextMenu={this.showContextMenu}
                     />
@@ -616,6 +632,11 @@ const mapStateToProps = (state, ownProps) => {
 };
 
 const mapDispatchToProps = (dispatch) => ({
+    recordAddOperation: (model) => dispatch(printingActions.recordAddOperation(model)),
+    recordModelBeforeTransform: (modelGroup) => dispatch(printingActions.recordModelBeforeTransform(modelGroup)),
+    recordModelAfterTransform: (transformMode, modelGroup) => dispatch(printingActions.recordModelAfterTransform(transformMode, modelGroup)),
+    clearOperationHistory: () => dispatch(operationHistoryActions.clear('printing')),
+
     destroyGcodeLine: () => dispatch(printingActions.destroyGcodeLine()),
     offsetGcodeLayers: (offset) => dispatch(printingActions.offsetGcodeLayers(offset)),
     selectMultiModel: (intersect, selectEvent) => dispatch(printingActions.selectMultiModel(intersect, selectEvent)),
@@ -623,8 +644,8 @@ const mapDispatchToProps = (dispatch) => ({
     selectAllModels: () => dispatch(printingActions.selectAllModels()),
     copy: () => dispatch(printingActions.copy()),
     paste: () => dispatch(printingActions.paste()),
-    undo: () => dispatch(printingActions.undo()),
-    redo: () => dispatch(printingActions.redo()),
+    undo: () => dispatch(printingActions.undo('printing')),
+    redo: () => dispatch(printingActions.redo('printing')),
     removeSelectedModel: () => dispatch(printingActions.removeSelectedModel()),
     removeAllModels: () => dispatch(printingActions.removeAllModels()),
     arrangeAllModels: () => dispatch(printingActions.arrangeAllModels()),

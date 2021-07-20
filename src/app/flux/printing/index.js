@@ -15,6 +15,17 @@ import ModelGroup from '../../models/ModelGroup';
 import gcodeBufferGeometryToObj3d from '../../workers/GcodeToBufferGeometry/gcodeBufferGeometryToObj3d';
 import ModelExporter from '../../ui/widgets/PrintingVisualizer/ModelExporter';
 import { controller } from '../../lib/controller';
+import { actions as operationHistoryActions } from '../operation-history';
+import Operations from '../operation-history/Operations';
+import MoveOperation3D from '../operation-history/MoveOperation3D';
+import RotateOperation3D from '../operation-history/RotateOperation3D';
+import ScaleOperation3D from '../operation-history/ScaleOperation3D';
+import DeleteOperation3D from '../operation-history/DeleteOperation3D';
+import AddOperation3D from '../operation-history/AddOperation3D';
+import VisibleOperation3D from '../operation-history/VisibleOperation3D';
+import OperationHistory from '../operation-history/OperationHistory';
+
+const operationHistory = new OperationHistory();
 
 const isDefaultQualityDefinition = (definitionId) => {
     return definitionId.indexOf('quality') !== -1
@@ -67,6 +78,7 @@ export const PRINTING_STAGE = {
 };
 
 const INITIAL_STATE = {
+    name: 'printing',
     // printing configurations
     defaultDefinitions: [],
     materialDefinitions: [],
@@ -118,6 +130,12 @@ const INITIAL_STATE = {
     redoSnapshots: [], // snapshot { models }
     canUndo: false,
     canRedo: false,
+    history: operationHistory,
+    targetTmpState: {},
+    // When project recovered, the operation history should be cleared,
+    // however we can not identify while the recovery is done, just exclude
+    // them when the models loaded at the first time.
+    excludeModelIDs: {},
 
     // modelGroup state
     hasModel: false,
@@ -976,9 +994,27 @@ export const actions = {
 
     updateSelectedModelTransformation: (transformation, newUniformScalingState) => (dispatch, getState) => {
         const { modelGroup } = getState().printing;
+
+        let transformMode;
+        switch (true) {
+            case ['positionX', 'positionY'].some(item => item in transformation):
+                transformMode = 'translate';
+                break;
+            case ['scaleX', 'scaleY', 'scaleZ'].some(item => item in transformation):
+                transformMode = 'scale';
+                break;
+            case ['rotationX', 'rotationY', 'rotationZ'].some(item => item in transformation):
+                transformMode = 'rotate';
+                break;
+            default: break;
+        }
+        dispatch(actions.recordModelBeforeTransform(modelGroup));
+
         modelGroup.updateSelectedGroupTransformation(transformation, newUniformScalingState);
         modelGroup.onModelAfterTransform();
-        dispatch(actions.recordSnapshot());
+
+        dispatch(actions.recordModelAfterTransform(transformMode, modelGroup));
+        // dispatch(actions.recordSnapshot());
         dispatch(actions.destroyGcodeLine());
         dispatch(actions.displayModel());
     },
@@ -1026,20 +1062,48 @@ export const actions = {
         dispatch(actions.updateState(modelState));
     },
 
-    hideSelectedModel: () => (dispatch, getState) => {
+    hideSelectedModel: (targetModel) => (dispatch, getState) => {
         const { modelGroup } = getState().printing;
         const modelState = modelGroup.hideSelectedModel();
+
+        const operation = new VisibleOperation3D({
+            target: targetModel,
+            visible: false
+        });
+        const operations = new Operations();
+        operations.push(operation);
+        operations.registCallbackAfterAll(() => {
+            dispatch(actions.updateState(modelGroup.getState()));
+            dispatch(actions.destroyGcodeLine());
+            dispatch(actions.displayModel());
+        });
+
+        dispatch(operationHistoryActions.setOperations(INITIAL_STATE.name, operations));
         dispatch(actions.updateState(modelState));
-        dispatch(actions.recordSnapshot());
+        // dispatch(actions.recordSnapshot());
         dispatch(actions.destroyGcodeLine());
         dispatch(actions.displayModel());
     },
 
-    showSelectedModel: () => (dispatch, getState) => {
+    showSelectedModel: (targetModel) => (dispatch, getState) => {
         const { modelGroup } = getState().printing;
         const modelState = modelGroup.showSelectedModel();
+
+        const operation = new VisibleOperation3D({
+            target: targetModel,
+            visible: true
+        });
+        const operations = new Operations();
+        operations.push(operation);
+        operations.registCallbackAfterAll(() => {
+            dispatch(actions.updateState(modelGroup.getState()));
+            dispatch(actions.destroyGcodeLine());
+            dispatch(actions.displayModel());
+        });
+
+        dispatch(operationHistoryActions.setOperations(INITIAL_STATE.name, operations));
         dispatch(actions.updateState(modelState));
-        dispatch(actions.recordSnapshot());
+        // dispatch(actions.recordSnapshot());
         dispatch(actions.destroyGcodeLine());
         dispatch(actions.displayModel());
     },
@@ -1050,6 +1114,28 @@ export const actions = {
     },
     removeSelectedModel: () => (dispatch, getState) => {
         const { modelGroup } = getState().printing;
+        const operations = new Operations();
+        for (const model of modelGroup.selectedModelArray) {
+            const operation = new DeleteOperation3D({
+                target: model
+            });
+            operations.push(operation);
+        }
+        operations.registCallbackAfterAll(() => {
+            const modelState = modelGroup.getState();
+            if (!modelState.hasModel) {
+                dispatch(actions.updateState({
+                    stage: PRINTING_STAGE.EMPTY,
+                    inProgress: false,
+                    progress: 0
+                }));
+            }
+            dispatch(actions.updateState(modelState));
+            dispatch(actions.destroyGcodeLine());
+            dispatch(actions.displayModel());
+        });
+        dispatch(operationHistoryActions.setOperations(INITIAL_STATE.name, operations));
+
         const modelState = modelGroup.removeSelectedModel();
         if (!modelState.hasModel) {
             dispatch(actions.updateState({
@@ -1062,13 +1148,36 @@ export const actions = {
         dispatch(actions.updateState(
             modelState
         ));
-        dispatch(actions.recordSnapshot());
+        // dispatch(actions.recordSnapshot());
         dispatch(actions.destroyGcodeLine());
         dispatch(actions.displayModel());
     },
 
     removeAllModels: () => (dispatch, getState) => {
         const { modelGroup } = getState().printing;
+        const operations = new Operations();
+        for (const model of modelGroup.models) {
+            const operation = new DeleteOperation3D({
+                target: model,
+                parent: null
+            });
+            operations.push(operation);
+        }
+        operations.registCallbackAfterAll(() => {
+            const modelState = modelGroup.getState();
+            if (!modelState.hasModel) {
+                dispatch(actions.updateState({
+                    stage: PRINTING_STAGE.EMPTY,
+                    inProgress: false,
+                    progress: 0
+                }));
+            }
+            dispatch(actions.updateState(modelState));
+            dispatch(actions.destroyGcodeLine());
+            dispatch(actions.render());
+        });
+        dispatch(operationHistoryActions.setOperations(INITIAL_STATE.name, operations));
+
         const modelState = modelGroup.removeAllModels();
 
         dispatch(actions.updateState({
@@ -1077,18 +1186,84 @@ export const actions = {
             progress: 0
         }));
         dispatch(actions.updateState(modelState));
-        dispatch(actions.recordSnapshot());
+        // dispatch(actions.recordSnapshot());
         dispatch(actions.destroyGcodeLine());
         dispatch(actions.render());
     },
 
     arrangeAllModels: () => (dispatch, getState) => {
         const { modelGroup } = getState().printing;
+        dispatch(actions.recordModelBeforeTransform(modelGroup));
+
         const modelState = modelGroup.arrangeAllModels();
+        modelGroup.onModelAfterTransform();
+
+        dispatch(actions.recordModelAfterTransform('translate', modelGroup));
         dispatch(actions.updateState(modelState));
         dispatch(actions.destroyGcodeLine());
-        dispatch(actions.recordSnapshot());
+        // dispatch(actions.recordSnapshot());
         dispatch(actions.render());
+    },
+
+    recordModelBeforeTransform: (modelGroup) => (dispatch) => {
+        dispatch(operationHistoryActions.clearTargetTmpState(INITIAL_STATE.name));
+        for (const model of modelGroup.selectedModelArray) {
+            dispatch(operationHistoryActions.updateTargetTmpState(INITIAL_STATE.name, model.modelID, {
+                from: { ...model.transformation }
+            }));
+        }
+    },
+
+    recordModelAfterTransform: (transformMode, modelGroup) => (dispatch, getState) => {
+        const { targetTmpState } = getState().printing;
+        const operations = new Operations();
+        let operation;
+
+        function stateEqual(stateFrom, stateTo) {
+            for (const key of Object.keys(stateFrom)) {
+                if (Math.abs(stateFrom[key] - stateTo[key]) > EPSILON) {
+                    return false;
+                }
+            }
+            return true;
+        }
+        for (const model of modelGroup.selectedModelArray) {
+            dispatch(operationHistoryActions.updateTargetTmpState(INITIAL_STATE.name, model.modelID, {
+                to: { ...model.transformation }
+            }));
+            if (stateEqual(targetTmpState[model.modelID].from, targetTmpState[model.modelID].to)) {
+                continue;
+            }
+            switch (transformMode) {
+                case 'translate':
+                    operation = new MoveOperation3D({
+                        target: model,
+                        ...targetTmpState[model.modelID]
+                    });
+                    break;
+                case 'rotate':
+                    operation = new RotateOperation3D({
+                        target: model,
+                        ...targetTmpState[model.modelID]
+                    });
+                    break;
+                case 'scale':
+                    operation = new ScaleOperation3D({
+                        target: model,
+                        ...targetTmpState[model.modelID]
+                    });
+                    break;
+                default: break;
+            }
+            operations.push(operation);
+        }
+        operations.registCallbackAfterAll(() => {
+            dispatch(actions.updateState(modelGroup.getState()));
+            dispatch(actions.destroyGcodeLine());
+            dispatch(actions.displayModel());
+            dispatch(actions.render());
+        });
+        dispatch(operationHistoryActions.setOperations(INITIAL_STATE.name, operations));
     },
 
     onModelTransform: () => (dispatch, getState) => {
@@ -1103,7 +1278,7 @@ export const actions = {
         const modelState = modelGroup.onModelAfterTransform();
         // if (!customCompareTransformation(modelState.transformation, transformation)) {
         dispatch(actions.updateState(modelState));
-        dispatch(actions.recordSnapshot());
+        // dispatch(actions.recordSnapshot());
         dispatch(actions.destroyGcodeLine());
         dispatch(actions.displayModel());
         // }
@@ -1113,8 +1288,24 @@ export const actions = {
     duplicateSelectedModel: () => (dispatch, getState) => {
         const { modelGroup } = getState().printing;
         const modelState = modelGroup.duplicateSelectedModel();
+
+        const operations = new Operations();
+        for (const model of modelGroup.selectedModelArray) {
+            const operation = new AddOperation3D({
+                target: model,
+                parent: null
+            });
+            operations.push(operation);
+        }
+        operations.registCallbackAfterAll(() => {
+            dispatch(actions.updateState(modelGroup.getState()));
+            dispatch(actions.destroyGcodeLine());
+            dispatch(actions.displayModel());
+        });
+        dispatch(operationHistoryActions.setOperations(INITIAL_STATE.name, operations));
+
         dispatch(actions.updateState(modelState));
-        dispatch(actions.recordSnapshot());
+        // dispatch(actions.recordSnapshot());
         dispatch(actions.destroyGcodeLine());
         dispatch(actions.displayModel());
     },
@@ -1127,89 +1318,94 @@ export const actions = {
     paste: () => (dispatch, getState) => {
         const { modelGroup } = getState().printing;
         const modelState = modelGroup.paste();
+
+        const operations = new Operations();
+        for (const model of modelGroup.selectedModelArray) {
+            const operation = new AddOperation3D({
+                target: model,
+                parent: null
+            });
+            operations.push(operation);
+        }
+        operations.registCallbackAfterAll(() => {
+            dispatch(actions.updateState(modelGroup.getState()));
+            dispatch(actions.destroyGcodeLine());
+            dispatch(actions.displayModel());
+        });
+        dispatch(operationHistoryActions.setOperations(INITIAL_STATE.name, operations));
+
         dispatch(actions.updateState(modelState));
-        dispatch(actions.recordSnapshot());
+        // dispatch(actions.recordSnapshot());
         dispatch(actions.destroyGcodeLine());
         dispatch(actions.displayModel());
     },
 
     layFlatSelectedModel: () => (dispatch, getState) => {
         const { modelGroup } = getState().printing;
+        dispatch(actions.recordModelBeforeTransform(modelGroup));
+
         const modelState = modelGroup.layFlatSelectedModel();
+        modelGroup.onModelAfterTransform();
+
+        dispatch(actions.recordModelAfterTransform('rotate', modelGroup));
         dispatch(actions.updateState(modelState));
-        dispatch(actions.recordSnapshot());
+        // dispatch(actions.recordSnapshot());
         dispatch(actions.destroyGcodeLine());
         dispatch(actions.displayModel());
     },
 
     autoRotateSelectedModel: () => (dispatch, getState) => {
         const { modelGroup } = getState().printing;
+        dispatch(actions.recordModelBeforeTransform(modelGroup));
+
         const modelState = modelGroup.autoRotateSelectedModel();
+        modelGroup.onModelAfterTransform();
+
+        dispatch(actions.recordModelAfterTransform('rotate', modelGroup));
         dispatch(actions.updateState(modelState));
-        dispatch(actions.recordSnapshot());
+        // dispatch(actions.recordSnapshot());
         dispatch(actions.destroyGcodeLine());
         dispatch(actions.displayModel());
     },
     scaleToFitSelectedModel: () => (dispatch, getState) => {
         const { modelGroup } = getState().printing;
         const { size } = getState().machine;
+        dispatch(actions.recordModelBeforeTransform(modelGroup));
+
         const modelState = modelGroup.scaleToFitSelectedModel(size);
+        modelGroup.onModelAfterTransform();
+
+        dispatch(actions.recordModelAfterTransform('scale', modelGroup));
         dispatch(actions.updateState(modelState));
-        dispatch(actions.recordSnapshot());
+        // dispatch(actions.recordSnapshot());
         dispatch(actions.destroyGcodeLine());
         dispatch(actions.displayModel());
     },
 
     resetSelectedModelTransformation: () => (dispatch, getState) => {
         const { modelGroup } = getState().printing;
+        dispatch(actions.recordModelBeforeTransform(modelGroup));
+
         const modelState = modelGroup.resetSelectedModelTransformation();
+        modelGroup.onModelAfterTransform();
+
+        dispatch(actions.recordModelAfterTransform('scale', modelGroup));
         dispatch(actions.updateState(modelState));
-        dispatch(actions.recordSnapshot());
+        // dispatch(actions.recordSnapshot());
         dispatch(actions.destroyGcodeLine());
         dispatch(actions.displayModel());
     },
 
     // uploadModel
-    undo: () => (dispatch, getState) => {
-        const { modelGroup, undoSnapshots, redoSnapshots } = getState().printing;
-        if (undoSnapshots.length <= 1) {
-            return;
-        }
-        redoSnapshots.push(undoSnapshots.pop());
-        const snapshots = undoSnapshots[undoSnapshots.length - 1];
-
-        const modelState = modelGroup.undoRedo(snapshots.models);
-
-        dispatch(actions.updateState({
-            ...modelState,
-            undoSnapshots: undoSnapshots,
-            redoSnapshots: redoSnapshots,
-            canUndo: undoSnapshots.length > 1,
-            canRedo: redoSnapshots.length > 0
-        }));
+    undo: () => (dispatch) => {
+        dispatch(operationHistoryActions.undo(INITIAL_STATE.name));
         dispatch(actions.destroyGcodeLine());
         dispatch(actions.displayModel());
         dispatch(actions.render());
     },
 
-    redo: () => (dispatch, getState) => {
-        const { modelGroup, undoSnapshots, redoSnapshots } = getState().printing;
-        if (redoSnapshots.length === 0) {
-            return;
-        }
-
-        undoSnapshots.push(redoSnapshots.pop());
-        const snapshots = undoSnapshots[undoSnapshots.length - 1];
-
-        const modelState = modelGroup.undoRedo(snapshots.models);
-
-        dispatch(actions.updateState({
-            ...modelState,
-            undoSnapshots: undoSnapshots,
-            redoSnapshots: redoSnapshots,
-            canUndo: undoSnapshots.length > 1,
-            canRedo: redoSnapshots.length > 0
-        }));
+    redo: () => (dispatch) => {
+        dispatch(operationHistoryActions.redo(INITIAL_STATE.name));
         dispatch(actions.destroyGcodeLine());
         dispatch(actions.displayModel());
         dispatch(actions.render());
@@ -1253,12 +1449,35 @@ export const actions = {
     saveSupport: (model) => (dispatch, getState) => {
         const { modelGroup } = getState().printing;
         modelGroup.saveSupportModel(model);
-        dispatch(actions.recordSnapshot());
+        if (!model.isInitSupport) {
+            // save generated support into operation history
+            const operation = new AddOperation3D({
+                target: model,
+                parent: model.target
+            });
+            operation.description = 'AddSupport';
+            const operations = new Operations();
+            operations.push(operation);
+            dispatch(operationHistoryActions.setOperations(INITIAL_STATE.name, operations));
+        }
+        // dispatch(actions.recordSnapshot());
     },
     clearAllManualSupport: () => (dispatch, getState) => {
         const { modelGroup } = getState().printing;
-        modelGroup.removeAllManualSupport();
-        dispatch(actions.recordSnapshot());
+        const supports = modelGroup.models.filter(item => item.supportTag === true);
+        if (supports && supports.length > 0) {
+            const operations = new Operations();
+            for (const model of supports) {
+                const operation = new DeleteOperation3D({
+                    target: model
+                });
+                operations.push(operation);
+            }
+            dispatch(operationHistoryActions.setOperations(INITIAL_STATE.name, operations));
+
+            modelGroup.removeAllManualSupport();
+            // dispatch(actions.recordSnapshot());
+        }
     },
     setDefaultSupportSize: (size) => (dispatch, getState) => {
         const { modelGroup } = getState().printing;
@@ -1309,7 +1528,7 @@ export const actions = {
                     dispatch(actions.updateState(modelState));
                     dispatch(actions.displayModel());
                     dispatch(actions.destroyGcodeLine());
-                    dispatch(actions.recordSnapshot());
+                    // dispatch(actions.recordSnapshot());
                     dispatch(actions.updateState({
                         stage: PRINTING_STAGE.LOAD_MODEL_SUCCEED,
                         inProgress: false,
@@ -1350,6 +1569,32 @@ export const actions = {
             }
         };
         createLoadModelWorker(uploadPath, onMessage);
+    },
+    recordAddOperation: (model) => (dispatch, getState) => {
+        const { modelGroup } = getState().printing;
+        if (!model.supportTag) {
+            // support should be recorded when mouse clicked
+            const operation = new AddOperation3D({
+                target: model,
+                parent: null
+            });
+            const operations = new Operations();
+            operations.push(operation);
+            operations.registCallbackAfterAll(() => {
+                const modelState = modelGroup.getState();
+                if (!modelState.hasModel) {
+                    dispatch(actions.updateState({
+                        stage: PRINTING_STAGE.EMPTY,
+                        inProgress: false,
+                        progress: 0
+                    }));
+                }
+                dispatch(actions.updateState(modelState));
+                dispatch(actions.destroyGcodeLine());
+                dispatch(actions.render());
+            });
+            dispatch(operationHistoryActions.setOperations(INITIAL_STATE.name, operations));
+        }
     }
 };
 

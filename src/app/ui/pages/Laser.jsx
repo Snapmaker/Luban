@@ -126,6 +126,8 @@ function Laser() {
     const coordinateMode = useSelector(state => state[HEAD_LASER]?.coordinateMode, shallowEqual);
     const coordinateSize = useSelector(state => state[HEAD_LASER]?.coordinateSize, shallowEqual);
     const materials = useSelector(state => state[HEAD_LASER]?.materials, shallowEqual);
+    const canRedo = useSelector(state => state[HEAD_LASER]?.history?.canRedo, shallowEqual);
+    const canUndo = useSelector(state => state[HEAD_LASER]?.history?.canUndo, shallowEqual);
     const [jobTypeState, setJobTypeState] = useState({
         coordinateMode,
         coordinateSize,
@@ -265,6 +267,24 @@ function Laser() {
                 name: 'MainToolbarSave',
                 action: () => {
                     dispatch(projectActions.save(HEAD_LASER));
+                }
+            },
+            {
+                title: i18n._('Undo'),
+                disabled: !canUndo,
+                type: 'button',
+                name: 'MainToolbarUndo',
+                action: () => {
+                    dispatch(editorActions.undo(HEAD_LASER));
+                }
+            },
+            {
+                title: i18n._('Redo'),
+                disabled: !canRedo,
+                type: 'button',
+                name: 'MainToolbarRedo',
+                action: () => {
+                    dispatch(editorActions.redo(HEAD_LASER));
                 }
             },
             {

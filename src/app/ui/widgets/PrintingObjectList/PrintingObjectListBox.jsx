@@ -22,9 +22,9 @@ function PrintingObjectListBox() {
             const visible = targetModel.visible;
             actions.selectTargetModel(targetModel);
             if (visible === true) {
-                dispatch(printingActions.hideSelectedModel());
+                dispatch(printingActions.hideSelectedModel(targetModel));
             } else {
-                dispatch(printingActions.showSelectedModel());
+                dispatch(printingActions.showSelectedModel(targetModel));
             }
         }
     };

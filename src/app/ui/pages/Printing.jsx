@@ -74,8 +74,8 @@ const pageHeadType = HEAD_3DP;
 function useRenderMainToolBar() {
     const unSaved = useSelector(state => state?.project[pageHeadType]?.unSaved, shallowEqual);
     const hasModel = useSelector(state => state?.printing?.hasModel, shallowEqual);
-    const canRedo = useSelector(state => state?.printing?.canRedo, shallowEqual);
-    const canUndo = useSelector(state => state?.printing?.canUndo, shallowEqual);
+    const canRedo = useSelector(state => state?.printing?.history?.canRedo, shallowEqual);
+    const canUndo = useSelector(state => state?.printing?.history?.canUndo, shallowEqual);
     const [showHomePage, setShowHomePage] = useState(false);
     const dispatch = useDispatch();
     function renderHomepage() {

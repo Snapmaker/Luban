@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import path from 'path';
 import uuid from 'uuid';
 import includes from 'lodash/includes';
+import _ from 'lodash';
 
 import api from '../../api';
 import {
@@ -27,6 +28,14 @@ import { isEqual, round } from '../../../shared/lib/utils';
 import { machineStore } from '../../store/local-storage';
 
 import { CNC_LASER_STAGE } from './utils';
+import VisibleOperation2D from '../operation-history/VisibleOperation2D';
+import AddOperation2D from '../operation-history/AddOperation2D';
+import DeleteOperation2D from '../operation-history/DeleteOperation2D';
+import { actions as operationHistoryActions } from '../operation-history';
+import Operations from '../operation-history/Operations';
+import MoveOperation2D from '../operation-history/MoveOperation2D';
+import ScaleOperation2D from '../operation-history/ScaleOperation2D';
+import RotateOperation2D from '../operation-history/RotateOperation2D';
 
 const getSourceType = (fileName) => {
     let sourceType;
@@ -331,7 +340,7 @@ export const actions = {
      */
     generateModel: (headType, originalName, uploadName, sourceWidth, sourceHeight, mode, sourceType, config, gcodeConfig, transformation, modelID, zIndex) => (dispatch, getState) => {
         const { size } = getState().machine;
-        const { materials, modelGroup, SVGActions, contentGroup } = getState()[headType];
+        const { materials, modelGroup, SVGActions, contentGroup, toolPathGroup } = getState()[headType];
 
         sourceType = sourceType || getSourceType(originalName);
 
@@ -411,6 +420,16 @@ export const actions = {
         };
 
         const model = modelGroup.addModel(options);
+
+        const operation = new AddOperation2D({
+            toolPathGroup,
+            svgActions: SVGActions,
+            target: model
+        });
+        const operations = new Operations();
+        operations.push(operation);
+
+        dispatch(operationHistoryActions.setOperations(headType, operations));
 
         SVGActions.clearSelection();
         SVGActions.addSelectedSvgModelsByModels([model]);
@@ -629,29 +648,20 @@ export const actions = {
 
     onFlipSelectedModel: (headType, flipStr) => (dispatch, getState) => {
         const model = getState()[headType].modelGroup.getSelectedModel();
-        let { scaleX, scaleY } = model.transformation;
 
         switch (flipStr) {
             case 'Vertical':
-                scaleY *= -1;
+                dispatch(actions.flipElementsVertically(headType, [model.elem]));
                 break;
             case 'Horizontal':
-                scaleX *= -1;
+                dispatch(actions.flipElementsHorizontally(headType, [model.elem]));
                 break;
             case 'Reset':
-                scaleX = Math.abs(scaleX);
-                scaleY = Math.abs(scaleY);
+                dispatch(actions.resetFlipElements(headType, [model.elem]));
                 break;
             default:
         }
-        if (model.modelID) {
-            model.updateAndRefresh({
-                transformation: {
-                    scaleX,
-                    scaleY
-                }
-            });
-        }
+
         dispatch(actions.processSelectedModel(headType));
         dispatch(actions.resetProcessState(headType));
     },
@@ -683,6 +693,24 @@ export const actions = {
     removeSelectedModel: (headType) => (dispatch, getState) => {
         const { modelGroup, SVGActions, toolPathGroup } = getState()[headType];
 
+        const operations = new Operations();
+        for (const svgModel of modelGroup.getSelectedModelArray()) {
+            const operation = new DeleteOperation2D({
+                target: svgModel,
+                svgActions: SVGActions,
+                toolPathGroup,
+                toolPaths: toolPathGroup.toolPaths.filter((item) => {
+                    const index = item.modelIDs.indexOf(svgModel.modelID);
+                    if (index > -1) {
+                        item.modelIDs.splice(index, 1);
+                        return true;
+                    }
+                    return false;
+                })
+            });
+            operations.push(operation);
+        }
+
         const { selectedModelIDArray } = modelGroup.getState();
         const toolPaths = toolPathGroup.getToolPaths();
         toolPaths.forEach((item) => {
@@ -699,6 +727,7 @@ export const actions = {
         SVGActions.deleteSelectedElements();
         const modelState = modelGroup.removeSelectedModel();
 
+        dispatch(operationHistoryActions.setOperations(headType, operations));
         dispatch(baseActions.updateState(headType, {
             ...modelState
         }));
@@ -907,48 +936,17 @@ export const actions = {
         const modelState = modelGroup.onModelTransform();
 
         dispatch(baseActions.updateTransformation(headType, modelState.transformation));
-        dispatch(actions.recordSnapshot(headType));
+        // dispatch(actions.recordSnapshot(headType));
         dispatch(baseActions.render(headType));
     },
 
-    undo: (headType) => (dispatch, getState) => {
-        const { modelGroup, undoSnapshots, redoSnapshots } = getState()[headType];
-        if (undoSnapshots.length <= 1) {
-            return;
-        }
-        redoSnapshots.push(undoSnapshots.pop());
-        const snapshots = undoSnapshots[undoSnapshots.length - 1];
-
-        const modelState = modelGroup.undoRedo(snapshots.models);
-
-        dispatch(baseActions.updateState(headType, {
-            ...modelState,
-            undoSnapshots: undoSnapshots,
-            redoSnapshots: redoSnapshots,
-            canUndo: undoSnapshots.length > 1,
-            canRedo: redoSnapshots.length > 0
-        }));
+    undo: (headType) => (dispatch) => {
+        dispatch(operationHistoryActions.undo(headType));
         dispatch(baseActions.render(headType));
     },
 
-    redo: (headType) => (dispatch, getState) => {
-        const { modelGroup, undoSnapshots, redoSnapshots } = getState()[headType];
-        if (redoSnapshots.length === 0) {
-            return;
-        }
-
-        undoSnapshots.push(redoSnapshots.pop());
-        const snapshots = undoSnapshots[undoSnapshots.length - 1];
-
-        const modelState = modelGroup.undoRedo(snapshots.models);
-
-        dispatch(baseActions.updateState(headType, {
-            ...modelState,
-            undoSnapshots: undoSnapshots,
-            redoSnapshots: redoSnapshots,
-            canUndo: undoSnapshots.length > 1,
-            canRedo: redoSnapshots.length > 0
-        }));
+    redo: (headType) => (dispatch) => {
+        dispatch(operationHistoryActions.redo(headType));
         dispatch(baseActions.render(headType));
     },
 
@@ -967,10 +965,23 @@ export const actions = {
         }));
     },
 
-    hideSelectedModel: (headType) => (dispatch, getState) => {
+    hideSelectedModel: (headType, model) => (dispatch, getState) => {
         const { modelGroup, SVGActions } = getState()[headType];
+        const svgElements = SVGActions.svgContentGroup.getSelected();
+
         modelGroup.hideSelectedModel();
         SVGActions.hideSelectedElement();
+
+        const operation = new VisibleOperation2D({
+            svgTarget: svgElements,
+            svgActions: SVGActions,
+            target: model,
+            visible: false
+        });
+        const operations = new Operations();
+        operations.push(operation);
+
+        dispatch(operationHistoryActions.setOperations(headType, operations));
         dispatch(baseActions.updateState(headType, {
             isChangedAfterGcodeGenerating: true
         }));
@@ -978,11 +989,23 @@ export const actions = {
         dispatch(baseActions.render(headType));
     },
 
-    showSelectedModel: (headType) => (dispatch, getState) => {
+    showSelectedModel: (headType, model) => (dispatch, getState) => {
         const { modelGroup, SVGActions } = getState()[headType];
+        const svgElements = SVGActions.svgContentGroup.getSelected();
+
         modelGroup.showSelectedModel();
         SVGActions.showSelectedElement();
         // SVGActions.updateTransformation(modelGroup.getSelectedModel().transformation);
+        const operation = new VisibleOperation2D({
+            svgTarget: svgElements,
+            svgActions: SVGActions,
+            target: model,
+            visible: true
+        });
+        const operations = new Operations();
+        operations.push(operation);
+
+        dispatch(operationHistoryActions.setOperations(headType, operations));
         dispatch(baseActions.updateState(headType, {
             isChangedAfterGcodeGenerating: true
         }));
@@ -1016,9 +1039,20 @@ export const actions = {
      * Create model from element.
      */
     createModelFromElement: (headType, element) => async (dispatch, getState) => {
-        const { SVGActions } = getState()[headType];
+        const { SVGActions, toolPathGroup } = getState()[headType];
 
-        await SVGActions.createModelFromElement(element);
+        const newSVGModel = await SVGActions.createModelFromElement(element);
+        if (newSVGModel) {
+            const operation = new AddOperation2D({
+                toolPathGroup,
+                svgActions: SVGActions,
+                target: newSVGModel
+            });
+            const operations = new Operations();
+            operations.push(operation);
+
+            dispatch(operationHistoryActions.setOperations(headType, operations));
+        }
 
         dispatch(actions.resetProcessState(headType));
     },
@@ -1067,9 +1101,31 @@ export const actions = {
      */
     moveElementsFinish: (headType, elements, options) => (dispatch, getState) => {
         const { SVGActions } = getState()[headType];
+        const { machine } = getState();
+
+        const tmpTransformationState = {};
+        for (const element of elements) {
+            const svgModel = SVGActions.getSVGModelByElement(element);
+            tmpTransformationState[element.id] = { ...svgModel.transformation };
+        }
 
         SVGActions.moveElementsFinish(elements, options);
 
+        const operations = new Operations();
+        for (const element of elements) {
+            const svgModel = SVGActions.getSVGModelByElement(element);
+            if (!_.isEqual(tmpTransformationState[element.id], svgModel.transformation)) {
+                const operation = new MoveOperation2D({
+                    target: svgModel,
+                    svgActions: SVGActions,
+                    machine,
+                    from: tmpTransformationState[element.id],
+                    to: { ...svgModel.transformation }
+                });
+                operations.push(operation);
+            }
+        }
+        dispatch(operationHistoryActions.setOperations(headType, operations));
         dispatch(baseActions.render(headType));
     },
 
@@ -1078,9 +1134,31 @@ export const actions = {
      */
     moveElementsImmediately: (headType, elements, options) => (dispatch, getState) => {
         const { SVGActions } = getState()[headType];
+        const { machine } = getState();
+
+        const tmpTransformationState = {};
+        for (const element of elements) {
+            const svgModel = SVGActions.getSVGModelByElement(element);
+            tmpTransformationState[element.id] = { ...svgModel.transformation };
+        }
 
         SVGActions.moveElementsImmediately(elements, options);
 
+        const operations = new Operations();
+        for (const element of elements) {
+            const svgModel = SVGActions.getSVGModelByElement(element);
+            if (!_.isEqual(tmpTransformationState[element.id], svgModel.transformation)) {
+                const operation = new MoveOperation2D({
+                    target: svgModel,
+                    svgActions: SVGActions,
+                    machine,
+                    from: tmpTransformationState[element.id],
+                    to: { ...svgModel.transformation }
+                });
+                operations.push(operation);
+            }
+        }
+        dispatch(operationHistoryActions.setOperations(headType, operations));
         dispatch(actions.resetProcessState(headType));
 
         dispatch(baseActions.render(headType));
@@ -1126,9 +1204,31 @@ export const actions = {
      */
     resizeElementsFinish: (headType, elements, options) => (dispatch, getState) => {
         const { SVGActions, modelGroup } = getState()[headType];
+        const { machine } = getState();
+
+        const tmpTransformationState = {};
+        for (const element of elements) {
+            const svgModel = SVGActions.getSVGModelByElement(element);
+            tmpTransformationState[element.id] = { ...svgModel.transformation };
+        }
 
         SVGActions.resizeElementsFinish(elements, options);
 
+        const operations = new Operations();
+        for (const element of elements) {
+            const svgModel = SVGActions.getSVGModelByElement(element);
+            if (!_.isEqual(tmpTransformationState[element.id], svgModel.transformation)) {
+                const operation = new ScaleOperation2D({
+                    target: svgModel,
+                    svgActions: SVGActions,
+                    machine,
+                    from: tmpTransformationState[element.id],
+                    to: { ...svgModel.transformation }
+                });
+                operations.push(operation);
+            }
+        }
+        dispatch(operationHistoryActions.setOperations(headType, operations));
         dispatch(actions.resetProcessState(headType));
         const selectedModels = modelGroup.getSelectedModelArray();
         if (selectedModels.length !== 1) {
@@ -1147,9 +1247,30 @@ export const actions = {
      */
     resizeElementsImmediately: (headType, elements, options) => (dispatch, getState) => {
         const { SVGActions } = getState()[headType];
+        const { machine } = getState();
 
+        const tmpTransformationState = {};
+        for (const element of elements) {
+            const svgModel = SVGActions.getSVGModelByElement(element);
+            tmpTransformationState[element.id] = { ...svgModel.transformation };
+        }
         SVGActions.resizeElementsImmediately(elements, options);
 
+        const operations = new Operations();
+        for (const element of elements) {
+            const svgModel = SVGActions.getSVGModelByElement(element);
+            if (!_.isEqual(tmpTransformationState[element.id], svgModel.transformation)) {
+                const operation = new ScaleOperation2D({
+                    target: svgModel,
+                    svgActions: SVGActions,
+                    machine,
+                    from: tmpTransformationState[element.id],
+                    to: { ...svgModel.transformation }
+                });
+                operations.push(operation);
+            }
+        }
+        dispatch(operationHistoryActions.setOperations(headType, operations));
         dispatch(actions.resetProcessState(headType));
 
         dispatch(baseActions.render(headType));
@@ -1162,9 +1283,31 @@ export const actions = {
      */
     flipElementsHorizontally: (headType, elements) => (dispatch, getState) => {
         const { SVGActions } = getState()[headType];
+        const { machine } = getState();
+
+        const tmpTransformationState = {};
+        for (const element of elements) {
+            const svgModel = SVGActions.getSVGModelByElement(element);
+            tmpTransformationState[element.id] = { ...svgModel.transformation };
+        }
 
         SVGActions.flipElementsHorizontally(elements);
 
+        const operations = new Operations();
+        for (const element of elements) {
+            const svgModel = SVGActions.getSVGModelByElement(element);
+            if (!_.isEqual(tmpTransformationState[element.id], svgModel.transformation)) {
+                const operation = new ScaleOperation2D({
+                    target: svgModel,
+                    svgActions: SVGActions,
+                    machine,
+                    from: tmpTransformationState[element.id],
+                    to: { ...svgModel.transformation }
+                });
+                operations.push(operation);
+            }
+        }
+        dispatch(operationHistoryActions.setOperations(headType, operations));
         dispatch(actions.resetProcessState(headType));
 
         dispatch(baseActions.render(headType));
@@ -1177,9 +1320,66 @@ export const actions = {
      */
     flipElementsVertically: (headType, elements) => (dispatch, getState) => {
         const { SVGActions } = getState()[headType];
+        const { machine } = getState();
+
+        const tmpTransformationState = {};
+        for (const element of elements) {
+            const svgModel = SVGActions.getSVGModelByElement(element);
+            tmpTransformationState[element.id] = { ...svgModel.transformation };
+        }
 
         SVGActions.flipElementsVertically(elements);
 
+        const operations = new Operations();
+        for (const element of elements) {
+            const svgModel = SVGActions.getSVGModelByElement(element);
+            if (!_.isEqual(tmpTransformationState[element.id], svgModel.transformation)) {
+                const operation = new ScaleOperation2D({
+                    target: svgModel,
+                    svgActions: SVGActions,
+                    machine,
+                    from: tmpTransformationState[element.id],
+                    to: { ...svgModel.transformation }
+                });
+                operations.push(operation);
+            }
+        }
+        dispatch(operationHistoryActions.setOperations(headType, operations));
+        dispatch(baseActions.render(headType));
+    },
+
+    /**
+     * Flip elements vertically.
+     *
+     * Note that only support flip one element.
+     */
+    resetFlipElements: (headType, elements) => (dispatch, getState) => {
+        const { SVGActions } = getState()[headType];
+        const { machine } = getState();
+
+        const tmpTransformationState = {};
+        for (const element of elements) {
+            const svgModel = SVGActions.getSVGModelByElement(element);
+            tmpTransformationState[element.id] = { ...svgModel.transformation };
+        }
+
+        SVGActions.resetFlipElements(elements);
+
+        const operations = new Operations();
+        for (const element of elements) {
+            const svgModel = SVGActions.getSVGModelByElement(element);
+            if (!_.isEqual(tmpTransformationState[element.id], svgModel.transformation)) {
+                const operation = new ScaleOperation2D({
+                    target: svgModel,
+                    svgActions: SVGActions,
+                    machine,
+                    from: tmpTransformationState[element.id],
+                    to: { ...svgModel.transformation }
+                });
+                operations.push(operation);
+            }
+        }
+        dispatch(operationHistoryActions.setOperations(headType, operations));
         dispatch(baseActions.render(headType));
     },
 
@@ -1227,9 +1427,31 @@ export const actions = {
      */
     rotateElementsFinish: (headType, elements) => (dispatch, getState) => {
         const { SVGActions } = getState()[headType];
+        const { machine } = getState();
+
+        const tmpTransformationState = {};
+        for (const element of elements) {
+            const svgModel = SVGActions.getSVGModelByElement(element);
+            tmpTransformationState[element.id] = { ...svgModel.transformation };
+        }
 
         SVGActions.rotateElementsFinish(elements);
 
+        const operations = new Operations();
+        for (const element of elements) {
+            const svgModel = SVGActions.getSVGModelByElement(element);
+            if (!_.isEqual(tmpTransformationState[element.id], svgModel.transformation)) {
+                const operation = new RotateOperation2D({
+                    target: svgModel,
+                    svgActions: SVGActions,
+                    machine,
+                    from: tmpTransformationState[element.id],
+                    to: { ...svgModel.transformation }
+                });
+                operations.push(operation);
+            }
+        }
+        dispatch(operationHistoryActions.setOperations(headType, operations));
         dispatch(baseActions.render(headType));
     },
 
@@ -1238,9 +1460,31 @@ export const actions = {
      */
     rotateElementsImmediately: (headType, elements, options) => (dispatch, getState) => {
         const { SVGActions } = getState()[headType];
+        const { machine } = getState();
+
+        const tmpTransformationState = {};
+        for (const element of elements) {
+            const svgModel = SVGActions.getSVGModelByElement(element);
+            tmpTransformationState[element.id] = { ...svgModel.transformation };
+        }
 
         SVGActions.rotateElementsImmediately(elements, options);
 
+        const operations = new Operations();
+        for (const element of elements) {
+            const svgModel = SVGActions.getSVGModelByElement(element);
+            if (!_.isEqual(tmpTransformationState[element.id], svgModel.transformation)) {
+                const operation = new RotateOperation2D({
+                    target: svgModel,
+                    svgActions: SVGActions,
+                    machine,
+                    from: tmpTransformationState[element.id],
+                    to: { ...svgModel.transformation }
+                });
+                operations.push(operation);
+            }
+        }
+        dispatch(operationHistoryActions.setOperations(headType, operations));
         dispatch(actions.resetProcessState(headType));
 
         dispatch(baseActions.render(headType));

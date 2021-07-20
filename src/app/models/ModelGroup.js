@@ -264,7 +264,7 @@ class ModelGroup extends EventEmitter {
             model.meshObject.removeEventListener('update', this.onModelUpdate);
             model.meshObject.parent.remove(model.meshObject);
         }
-        this.models.splice(0);
+        this.models = [];
     }
 
     /**
@@ -942,7 +942,6 @@ class ModelGroup extends EventEmitter {
     updateSelectedGroupTransformation(transformation, newUniformScalingState) {
         const { positionX, positionY, rotationX, rotationY, rotationZ, scaleX, scaleY, scaleZ, width, height, uniformScalingState } = transformation;
         const shouldUniformScale = newUniformScalingState ?? this.selectedGroup.uniformScalingState;
-
         // todo, width and height use for 2d
         if (width !== undefined) {
             this.selectedGroup.width = width;
