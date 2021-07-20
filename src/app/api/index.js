@@ -254,10 +254,11 @@ printingConfigs.update = defaultAPIFactory((formdata) => request.put('/api/print
 printingConfigs.delete = defaultAPIFactory((options) => request.delete('/api/printingConfigs').send(options));
 
 printingConfigs.getRawDefinition = defaultAPIFactory((definitionId, series) => request.get(`/api/printingRawDefinition/${definitionId}`).query({ series }));
-printingConfigs.getDefinition = defaultAPIFactory((definitionId, series) => request.get(`/api/printingDefinition/${definitionId}`).send({ series }));
+printingConfigs.getDefinition = defaultAPIFactory((definitionId, series) => request.get(`/api/printingDefinition/${definitionId}/${series}`));
 
 printingConfigs.getQualityDefinitions = defaultAPIFactory((series) => request.get(`/api/printingQualityDefinitions/${series}`));
 printingConfigs.getMaterialDefinitions = defaultAPIFactory(() => request.get('/api/printingMaterialDefinitions'));
+printingConfigs.getDefaultDefinitions = defaultAPIFactory((series) => request.get(`/api/printingDefaultDefinitions/${series}`));
 
 printingConfigs.createDefinition = defaultAPIFactory((definition, series) => request.post('/api/printingDefinition').send({
     definition,
@@ -281,6 +282,7 @@ printingConfigs.uploadDefinition = defaultAPIFactory((definitionId, tmpPath, ser
 //
 const cncConfigs = {};
 cncConfigs.getAllDefinitions = defaultAPIFactory(() => request.get('/api/cncToolDefinitions'));
+cncConfigs.getDefaultDefinitions = defaultAPIFactory(() => request.get('/api/cncDefaultDefinitions'));
 cncConfigs.getToolListDefinition = defaultAPIFactory((definitionId, name) => request.get(`/api/cncToolListDefinition/${definitionId}`).query({ name }));
 // cncConfigs.createToolCategoryDefinition = defaultAPIFactory((activeToolCategory) => request.post('/api/cncToolCategoryDefinition').send({ activeToolCategory }));
 cncConfigs.createToolListDefinition = defaultAPIFactory((activeToolList) => request.post('/api/cncToolListDefinition/').send({ activeToolList }));

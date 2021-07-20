@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import path from 'path';
-import { isNil } from 'lodash';
+import { cloneDeep, isNil } from 'lodash';
 // import FileSaver from 'file-saver';
 import LoadModelWorker from '../../workers/LoadModel.worker';
 import GcodeToBufferGeometryWorker from '../../workers/GcodeToBufferGeometry.worker';
@@ -68,6 +68,7 @@ export const PRINTING_STAGE = {
 
 const INITIAL_STATE = {
     // printing configurations
+    defaultDefinitions: [],
     materialDefinitions: [],
     qualityDefinitions: [],
     isRecommended: true, // Using recommended settings
@@ -249,6 +250,7 @@ export const actions = {
         dispatch(actions.updateActiveDefinitionMachineSize(size));
 
         dispatch(actions.updateState({
+            defaultDefinitions: definitionManager.defaultDefinitions,
             materialDefinitions: definitionManager.materialDefinitions,
             qualityDefinitions: definitionManager.qualityDefinitions
         }));
@@ -392,6 +394,37 @@ export const actions = {
                     break;
             }
         };
+    },
+
+    getDefaultDefinition: (id) => (dispatch, getState) => {
+        const { defaultDefinitions } = getState().printing;
+        const def = defaultDefinitions.find(d => d.definitionId === id);
+        return def?.settings;
+    },
+
+    resetDefinitionById: (definitionId) => (dispatch, getState) => {
+        const { defaultDefinitions, qualityDefinitions, materialDefinitions } = getState().printing;
+        const newDef = cloneDeep(defaultDefinitions.find(d => d.definitionId === definitionId));
+        definitionManager.updateDefinition(newDef);
+        dispatch(actions.updateActiveDefinition(newDef));
+        // const definition =
+        if (definitionId.indexOf('quality') !== -1
+            && (definitionId.indexOf('fast_print') !== -1
+                || definitionId.indexOf('high_quality') !== -1
+                || definitionId.indexOf('normal_quality') !== -1
+            )) {
+            const index = qualityDefinitions.findIndex(d => d.definitionId === definitionId);
+            qualityDefinitions[index] = newDef;
+            dispatch(actions.updateState({
+                qualityDefinitions: [...qualityDefinitions]
+            }));
+        } else {
+            const index = materialDefinitions.findIndex(d => d.definitionId === definitionId);
+            materialDefinitions[index] = newDef;
+            dispatch(actions.updateState({
+                materialDefinitions: [...materialDefinitions]
+            }));
+        }
     },
 
     updateShowPrintingManager: (showPrintingManager) => (dispatch) => {

@@ -181,7 +181,7 @@ class JobType extends PureComponent {
                             marginTop: '16px'
                         }}
                         >
-                            <div className="sm-parameter-row">
+                            <div className="position-re sm-flex justify-space-between height-32 margin-vertical-8">
                                 <span className="sm-parameter-row__label">{i18n._('Height (mm)')}</span>
                                 <Input
                                     disabled={inProgress}
@@ -204,7 +204,7 @@ class JobType extends PureComponent {
                                     W
                                 </span>
                             </div>
-                            <div className="sm-parameter-row">
+                            <div className="position-re sm-flex justify-space-between height-32 margin-vertical-8">
                                 <span className="sm-parameter-row__label">{i18n._('Width (mm)')}</span>
                                 <Input
                                     disabled={inProgress}
@@ -260,7 +260,7 @@ class JobType extends PureComponent {
                             marginTop: '16px'
                         }}
                         >
-                            <div className="sm-parameter-row">
+                            <div className="position-re sm-flex justify-space-between height-32 margin-vertical-8">
                                 <span className="sm-parameter-row__label">{i18n._('Length (mm)')}</span>
                                 <Input
                                     disabled={inProgress}
@@ -284,7 +284,7 @@ class JobType extends PureComponent {
                                     L
                                 </span>
                             </div>
-                            <div className="sm-parameter-row">
+                            <div className="position-re sm-flex justify-space-between height-32 margin-vertical-8">
                                 <span className="sm-parameter-row__label">{i18n._('Diameter (mm)')}</span>
                                 <Input
                                     disabled={inProgress}

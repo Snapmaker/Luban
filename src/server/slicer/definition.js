@@ -252,3 +252,36 @@ export function loadQualityDefinitions(configPath) {
 
     return definitions;
 }
+
+export function loadDefaultDefinitions(series) {
+    const configPath = `Default/${series}`;
+    const configPathMaterial = 'Default';
+    const predefined = [];
+    predefined.push('quality.fast_print.def.json');
+    predefined.push('quality.normal_quality.def.json');
+    predefined.push('quality.high_quality.def.json');
+    predefined.push('material.pla.def.json');
+    predefined.push('material.abs.def.json');
+
+    const configDir = `${DataStorage.configDir}`;
+    let defaultFilenames = fs.readdirSync(`${configDir}/${configPath}`);
+
+    // Load pre-defined definitions first
+    const definitions = [];
+    for (const filename of predefined) {
+        if (includes(defaultFilenames, filename)) {
+            const definitionLoader = loadDefinitionLoaderByFilename(filename, configPath);
+            definitions.push(definitionLoader.toObject());
+        }
+    }
+
+    defaultFilenames = fs.readdirSync(`${configDir}/${configPathMaterial}`);
+    for (const filename of predefined) {
+        if (includes(defaultFilenames, filename)) {
+            const definitionLoader = loadDefinitionLoaderByFilename(filename, configPathMaterial);
+            definitions.push(definitionLoader.toObject());
+        }
+    }
+
+    return definitions;
+}

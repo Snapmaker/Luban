@@ -10,6 +10,8 @@ class DefinitionManager {
 
     qualityDefinitions = [];
 
+    defaultDefinitions = [];
+
     series = '';
 
     async init(series) {
@@ -36,6 +38,9 @@ class DefinitionManager {
 
         res = await api.printingConfigs.getQualityDefinitions(series);
         this.qualityDefinitions = res.body.definitions;
+
+        res = await api.printingConfigs.getDefaultDefinitions(series);
+        this.defaultDefinitions = res.body.definitions;
     }
 
     /**
@@ -74,6 +79,18 @@ class DefinitionManager {
     // Update definition
     // Only name & settings are configurable
     async updateDefinition(definition) {
+        const definitionId = definition.definitionId;
+        if (definitionId.indexOf('quality') !== -1
+            && (definitionId.indexOf('fast_print') !== -1
+                || definitionId.indexOf('high_quality') !== -1
+                || definitionId.indexOf('normal_quality') !== -1
+            )) {
+            const index = this.qualityDefinitions.findIndex(d => d.definitionId === definitionId);
+            this.qualityDefinitions[index] = definition;
+        } else {
+            const index = this.materialDefinitions.findIndex(d => d.definitionId === definitionId);
+            this.materialDefinitions[index] = definition;
+        }
         await api.printingConfigs.updateDefinition(definition.definitionId, definition, this.series);
     }
 

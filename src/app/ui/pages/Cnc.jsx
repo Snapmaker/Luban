@@ -3,16 +3,15 @@ import React, { useState, useEffect } from 'react';
 import { shallowEqual, useSelector, useDispatch } from 'react-redux';
 // import PropTypes from 'prop-types';
 import { withRouter } from 'react-router-dom';
-import classNames from 'classnames';
 
 import path from 'path';
 import { Trans } from 'react-i18next';
 import i18n from '../../lib/i18n';
-import Anchor from '../components/Anchor';
 import modal from '../../lib/modal';
 import Dropzone from '../components/Dropzone';
 import Space from '../components/Space';
 import { renderModal, renderPopup, renderWidgetList, useRenderRecoveryModal } from '../utils';
+import Tabs from '../components/Tabs';
 
 import CNCVisualizer from '../widgets/CNCVisualizer';
 import ProjectLayout from '../layouts/ProjectLayout';
@@ -57,6 +56,7 @@ import JobType from '../widgets/JobType';
 import ToolPathListBox from '../widgets/CncLaserList/ToolPathList';
 import PrintingVisualizer from '../widgets/PrintingVisualizer';
 import HomePage from './HomePage';
+import Anchor from '../components/Anchor';
 
 const allWidgets = {
     'control': ControlWidget,
@@ -295,7 +295,7 @@ function Cnc() {
             {
                 title: i18n._('Home'),
                 type: 'button',
-                name: 'Copy',
+                name: 'MainToolbarHome',
                 action: () => {
                     setShowHomePage(true);
                     window.scrollTo(0, 0);
@@ -341,6 +341,7 @@ function Cnc() {
             {
                 title: 'Save',
                 type: 'button',
+                name: 'MainToolbarSave',
                 action: () => {
                     dispatch(projectActions.save(HEAD_CNC));
                 }
@@ -357,23 +358,68 @@ function Cnc() {
             {
                 title: i18n._('Job'),
                 type: 'button',
-                name: 'Copy',
+                name: 'MainToolbarJobSetup',
                 action: () => {
                     setShowJobType(true);
+                }
+            },
+            {
+                type: 'separator'
+            },
+            {
+                type: 'render',
+                customRender: function () {
+                    return (
+                        <Anchor
+                            onClick={() => dispatch(editorActions.bringSelectedModelToFront(HEAD_CNC))}
+                            className="width-64 display-inline align-c padding-vertical-2 padding-horizontal-2 font-size-0"
+                        >
+                            <i
+                                style={{
+                                    backgroundImage: `url(${require('../../resources/images/laser-image/Set-top-normal.svg')})`
+                                }}
+                                className="width-24 height-24 display-inline "
+                            />
+                            <div className="font-size-base">
+                                {i18n._('Front')}
+                            </div>
+                        </Anchor>
+                    );
+                }
+            },
+            {
+                type: 'render',
+                customRender: function () {
+                    return (
+                        <Anchor
+                            onClick={() => dispatch(editorActions.sendSelectedModelToBack(HEAD_CNC))}
+                            className="width-64 display-inline align-c padding-vertical-2 padding-horizontal-2 font-size-0"
+                        >
+                            <i
+                                style={{
+                                    backgroundImage: `url(${require('../../resources/images/laser-image/Set-bottom-normal.svg')})`
+                                }}
+                                className="width-24 height-24 display-inline "
+                            />
+                            <div className="font-size-base">
+                                {i18n._('Bottom')}
+                            </div>
+                        </Anchor>
+                    );
                 }
             }
         ];
         const centerItems = [
-            {
-                name: 'Edit',
-                action: () => dispatch(editorActions.bringSelectedModelToFront(HEAD_CNC)),
-                title: i18n._('Front')
-            },
-            {
-                name: 'Edit',
-                action: () => dispatch(editorActions.sendSelectedModelToBack(HEAD_CNC)),
-                title: i18n._('Bottom')
-            }
+            // {
+            //     name: 'Edit',
+            //     action: () => dispatch(editorActions.bringSelectedModelToFront(HEAD_CNC)),
+            //     title: i18n._('Front')
+            // },
+            // {
+            //     name: 'Edit',
+            //     action: () => dispatch(editorActions.sendSelectedModelToBack(HEAD_CNC)),
+            //     title: i18n._('Bottom')
+            // }
         ];
         return (
             <MainToolBar
@@ -386,39 +432,22 @@ function Cnc() {
         const widgetProps = { headType: 'cnc' };
         return (
             <div>
-                <div
-                    style={{
-                        display: 'inline-block',
-                        width: '50%',
-                        border: '1px solid #fafafa',
-                        backgroundColor: page === PAGE_EDITOR ? '#b3d4fc' : '#fafafa'
+                <Tabs
+                    options={[
+                        {
+                            tab: i18n._('Edit'),
+                            key: PAGE_EDITOR
+                        },
+                        {
+                            tab: i18n._('Process'),
+                            key: PAGE_PROCESS
+                        }
+                    ]}
+                    activeKey={page}
+                    onChange={(key) => {
+                        dispatch(editorActions.switchToPage(HEAD_CNC, key));
                     }}
-                    className={classNames({ 'selected': page === PAGE_EDITOR })}
-                >
-                    <Anchor
-                        style={{
-
-                        }}
-                        onClick={() => dispatch(editorActions.switchToPage(HEAD_CNC, PAGE_EDITOR))}
-                    >
-                        {i18n._('Edit')}
-                    </Anchor>
-                </div>
-                <div
-                    style={{
-                        display: 'inline-block',
-                        width: '50%',
-                        border: '1px solid #fafafa',
-                        backgroundColor: page === PAGE_PROCESS ? '#b3d4fc' : '#fafafa'
-                    }}
-                    className={classNames({ 'selected': page === PAGE_PROCESS })}
-                >
-                    <Anchor
-                        onClick={() => dispatch(editorActions.switchToPage(HEAD_CNC, PAGE_PROCESS))}
-                    >
-                        {i18n._('Process')}
-                    </Anchor>
-                </div>
+                />
                 {renderWidgetList('cnc', 'default', widgets, allWidgets, listActions, widgetProps)}
                 <CncLaserOutputWidget
                     headType={HEAD_CNC}

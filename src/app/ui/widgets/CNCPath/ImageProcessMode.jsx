@@ -5,6 +5,8 @@ import i18n from '../../../lib/i18n';
 import Anchor from '../../components/Anchor';
 import styles from '../CncLaserShared/styles.styl';
 import ReliefParameters from './config/ReliefParameters';
+import SvgIcon from '../../components/SvgIcon';
+import Checkbox from '../../components/Checkbox';
 
 class ImageProcessMode extends PureComponent {
     static propTypes = {
@@ -39,65 +41,55 @@ class ImageProcessMode extends PureComponent {
 
         return (
             <React.Fragment>
-                <Anchor className="sm-parameter-header" onClick={this.actions.onToggleExpand}>
-                    <span className="fa fa-arrows-alt sm-parameter-header__indicator" />
-                    <span className="sm-parameter-header__title">{i18n._('Processing Mode')}</span>
-                    <span className={classNames(
-                        'fa',
-                        this.state.expanded ? 'fa-angle-double-up' : 'fa-angle-double-down',
-                        'sm-parameter-header__indicator',
-                        'pull-right',
-                    )}
-                    />
-                </Anchor>
-                {this.state.expanded && (
-                    <React.Fragment>
-                        <div
-                            style={{
-                                margin: '15px 0px'
-                            }}
-                        >
-                            <div
-                                className={styles['laser-modes']}
-                            >
-                                <div className={classNames(styles['laser-mode'], { [styles.selected]: this.props.mode === 'greyscale' })}>
+                <div className={styles['cnc-mode']}>
+                    <Anchor className="sm-flex height-32 margin-vertical-8" onClick={this.actions.onToggleExpand}>
+                        <span className="sm-flex-width">{i18n._('Processing Mode')}</span>
+                        <SvgIcon
+                            name="DropdownLine"
+                            className={classNames(
+                                this.state.expanded ? '' : 'rotate180'
+                            )}
+                        />
+                    </Anchor>
+                    {this.state.expanded && (
+                        <React.Fragment>
+                            <div className={classNames('sm-flex', 'margin-vertical-8', 'align-c', 'justify-space-between')}>
+                                <div className={classNames(this.props.mode === 'greyscale' ? styles.selected : styles.unselected)}>
                                     <Anchor
-                                        className={styles['laser-mode__btn']}
+                                        disabled={disabled}
                                         onClick={() => actions.changeSelectedModelMode('greyscale')}
                                     >
-                                        <i className={styles['laser-mode__icon-greyscale']} />
+                                        <i className={styles['cnc-mode__icon-greyscale']} />
                                     </Anchor>
-                                    <span className={styles['laser-mode__text']}>{i18n._('RELIEF')}</span>
+                                    <span>{i18n._('RELIEF')}</span>
                                 </div>
                                 {isSvg && (
-                                    <div className={classNames(styles['laser-mode'], { [styles.selected]: this.props.mode === 'vector' })}>
+                                    <div className={classNames(this.props.mode === 'vector' ? styles.selected : styles.unselected)}>
                                         <Anchor
                                             disabled={disabled}
-                                            className={styles['laser-mode__btn']}
                                             onClick={() => actions.changeSelectedModelMode('vector')}
                                         >
-                                            <i className={styles['laser-mode__icon-vector']} />
+                                            <i className={styles['cnc-mode__icon-vector']} />
                                         </Anchor>
-                                        <span className={styles['laser-mode__text']}>{i18n._('VECTOR')}</span>
+                                        <span>{i18n._('VECTOR')}</span>
                                     </div>
                                 )}
                             </div>
-                        </div>
-                        <div className="sm-parameter-row">
-                            <span className="sm-parameter-row__label-lg">{i18n._('Show Original Image')}</span>
-                            <input
-                                disabled={disabled}
-                                type="checkbox"
-                                className="sm-parameter-row__checkbox"
-                                checked={showOrigin}
-                                onChange={this.props.changeSelectedModelShowOrigin}
-                            />
-                        </div>
-                        {isGreyscale && (
-                            <ReliefParameters disabled={disabled} />
-                        )}
-                    </React.Fragment>
-                )}
+                            <div className="sm-flex height-32 margin-vertical-8">
+                                <span className="sm-flex-width">{i18n._('Show Original Image')}</span>
+                                <Checkbox
+                                    disabled={disabled}
+                                    className="sm-flex-auto"
+                                    checked={showOrigin}
+                                    onChange={this.props.changeSelectedModelShowOrigin}
+                                />
+                            </div>
+                            {isGreyscale && (
+                                <ReliefParameters disabled={disabled} />
+                            )}
+                        </React.Fragment>
+                    )}
+                </div>
             </React.Fragment>
         );
     }

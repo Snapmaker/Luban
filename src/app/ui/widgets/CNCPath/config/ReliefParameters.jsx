@@ -4,7 +4,7 @@ import { connect } from 'react-redux';
 
 import i18n from '../../../../lib/i18n';
 import { actions as editorActions } from '../../../../flux/editor';
-
+import Checkbox from '../../../components/Checkbox';
 
 class ReliefParameters extends PureComponent {
     static propTypes = {
@@ -32,12 +32,11 @@ class ReliefParameters extends PureComponent {
             <div>
                 {this.state.expanded && (
                     <React.Fragment>
-                        <div className="sm-parameter-row">
-                            <span className="sm-parameter-row__label">{i18n._('Invert')}</span>
-                            <input
+                        <div className="sm-flex height-32 margin-vertical-8">
+                            <span className="sm-flex-width">{i18n._('Invert')}</span>
+                            <Checkbox
                                 disabled={disabled}
-                                className="sm-parameter-row__checkbox"
-                                type="checkbox"
+                                className="sm-flex-auto"
                                 defaultChecked={invert}
                                 onChange={() => {
                                     this.actions.onToggleInvert();
