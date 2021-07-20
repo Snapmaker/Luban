@@ -18,7 +18,7 @@ import {
     PROTOCOL_TEXT, WORKFLOW_STATUS_IDLE, WORKFLOW_STATUS_PAUSED, WORKFLOW_STATUS_RUNNING,
     WORKFLOW_STATE_IDLE,
     WORKFLOW_STATE_PAUSED,
-    WORKFLOW_STATE_RUNNING, WORKFLOW_STATUS_UNKNOWN, IMAGE_WIFI_ERROR, IMAGE_WIFI_WARNING, IMAGE_EMERGENCY_STOP
+    WORKFLOW_STATE_RUNNING, WORKFLOW_STATUS_UNKNOWN, IMAGE_WIFI_ERROR, IMAGE_WIFI_WARNING
 } from '../../../constants';
 import { ensureRange } from '../../../lib/numeric-utils';
 import TargetPoint from '../../../three-extensions/TargetPoint';
@@ -717,7 +717,7 @@ class Visualizer extends Component {
                     <ModalSmall
                         title={i18n._('Emergency Stop')}
                         text={i18n._('The network connection has been interrupted, please follow the on-screen instructions to solve the problem.')}
-                        img={IMAGE_EMERGENCY_STOP}
+                        img="WarningTipsEmergencyStop"
                         onClose={this.actions.closeModal}
                     />
                 )}
@@ -727,7 +727,7 @@ class Visualizer extends Component {
                         onClose={this.actions.closeModal}
                         text={i18n._('One or both of the enclosure panels is/are opened. Please close the panel(s) to continue printing.')}
                         subtext={i18n._('Please wait one second after you close the door to proceed.')}
-                        img={IMAGE_WIFI_WARNING}
+                        img="WarningTipsWarning"
                     />
                 )}
             </div>

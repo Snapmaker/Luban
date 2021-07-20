@@ -4,6 +4,8 @@ import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
 import ReactDOM from 'react-dom';
 import i18n from '../../../lib/i18n';
+import { Button } from '../Buttons';
+import SvgIcon from '../SvgIcon';
 import Modal from './index';
 import styles from './styles.styl';
 
@@ -13,6 +15,7 @@ class ModalSmallHOC extends PureComponent {
         container: PropTypes.object,
         showCloseButton: PropTypes.bool,
         img: PropTypes.string,
+        iconColor: PropTypes.string,
         title: PropTypes.string.isRequired,
         subtext: PropTypes.string,
         text: PropTypes.string
@@ -54,7 +57,9 @@ class ModalSmallHOC extends PureComponent {
     render() {
         const { onCancel, onConfirm, showCloseButton = true } = this.props;
         const { show } = this.state;
-        const img = this.props.img || '../../images/ic_warning-64x64.png';
+        const img = this.props.img || '';
+        const iconColor = this.props.iconColor;
+        const isImage = new RegExp(/^\.\.\//).test(img);
         const text = this.props.text;
         const subtext = this.props.subtext;
         const title = this.props.title;
@@ -66,16 +71,21 @@ class ModalSmallHOC extends PureComponent {
                 showCloseButton={showCloseButton}
                 onClose={this.handleClose}
                 show={show}
-                style={{
-                    borderRadius: '4px'
-                }}
             >
                 <Modal.Body style={{
                     marginBottom: '42px'
                 }}
                 >
                     <div className={styles['modal-small-img']}>
-                        <img src={img} width="64" height="64" alt="......" />
+                        {!isImage && (
+                            <SvgIcon
+                                name={img}
+                                size="72"
+                                color={iconColor}
+                                type="static"
+                            />
+                        )}
+                        {isImage && (<img src={img} alt="......" />)}
                     </div>
                     <div className={styles['modal-small-body-text']}>
                         {i18n._(title)}
@@ -94,23 +104,23 @@ class ModalSmallHOC extends PureComponent {
                 </Modal.Body>
                 {onCancel && onConfirm && (
                     <Modal.Footer>
-                        <button
-                            type="button"
-                            className="btn btn-default"
-                            style={{
-                                float: 'left'
-                            }}
+                        <Button
+                            priority="level-two"
+                            className="margin-left-8"
+                            width="96px"
+                            type="default"
                             onClick={this.handleClose}
                         >
                             {i18n._('Cancel')}
-                        </button>
-                        <button
-                            type="button"
-                            className="btn btn-primary"
+                        </Button>
+                        <Button
+                            priority="level-two"
+                            className="margin-left-8"
+                            width="96px"
                             onClick={this.handleConfirm}
                         >
                             {i18n._('Confirm')}
-                        </button>
+                        </Button>
                     </Modal.Footer>
                 )}
             </Modal>

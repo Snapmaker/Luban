@@ -7,9 +7,11 @@ import FacebookLoading from 'react-facebook-loading';
 // import { connect } from 'react-redux';
 // import settings from '../../../../config/settings';
 import i18n from '../../../../lib/i18n';
-// import Anchor from '../../../components/Anchor';
-// import Space from '../../../components/Space';
-import styles from './index.styl';
+import Checkbox from '../../../components/Checkbox';
+import { Button } from '../../../components/Buttons';
+import SvgIcon from '../../../components/SvgIcon';
+import Select from '../../../components/Select';
+// import styles from './index.styl';
 import UniApi from '../../../../lib/uni-api';
 import { actions as machineActions } from '../../../../flux/machine';
 
@@ -42,6 +44,39 @@ import { actions as machineActions } from '../../../../flux/machine';
 //         </div>
 //     );
 // };
+const languageOptions = [
+    {
+        value: 'de',
+        label: 'Deutsch'
+    }, {
+        value: 'en',
+        label: 'English'
+    }, {
+        value: 'es',
+        label: 'Español'
+    }, {
+        value: 'fr',
+        label: 'Français'
+    }, {
+        value: 'it',
+        label: 'Italiano'
+    }, {
+        value: 'ru',
+        label: 'Русский'
+    }, {
+        value: 'uk',
+        label: 'Українська'
+    }, {
+        value: 'ko',
+        label: '한국어'
+    }, {
+        value: 'ja',
+        label: '日本語'
+    }, {
+        value: 'zh-cn',
+        label: '中文 (简体)'
+    }
+];
 
 function General({ state: generalState, actions }) {
     const isDownloading = useSelector(state => state?.machine?.isDownloading, shallowEqual);
@@ -100,60 +135,51 @@ function General({ state: generalState, actions }) {
     // NOTHING a b
 
     return (
-        <div style={{ marginBottom: '55px' }}>
-            {/* <About /> */}
-
+        <div>
             <form>
-                <div className={styles['form-container']}>
-                    <div className={styles['form-group']}>
-                        <span>{i18n._('Language')}</span>
-                        <select
+                <div>
+                    <div className="border-bottom-normal padding-bottom-4">
+                        <SvgIcon
+                            name="TitleSetting"
+                        />
+                        <span className="margin-left-4">{i18n._('Language')}</span>
+                    </div>
+                    <Select
+                        className={classNames(
+                            'margin-top-16'
+                        )}
+                        size="middle"
+                        value={lang}
+                        onChange={handlers.changeLanguage}
+                        options={languageOptions}
+                    />
+                    <div className="margin-top-16">
+                        <div className="border-bottom-normal padding-bottom-4">
+                            <SvgIcon
+                                name="TitleSetting"
+                            />
+                            <span className="margin-left-4">{i18n._('Software Update')}</span>
+                        </div>
+                        <Button
                             className={classNames(
-                                'form-control',
-                                styles['form-control'],
-                                styles.short
+                                'margin-top-16'
                             )}
-                            value={lang}
-                            onChange={handlers.changeLanguage}
+                            width="auto"
+                            onClick={handleCheckForUpdate}
                         >
-                            <option value="de">Deutsch</option>
-                            <option value="en">English (US)</option>
-                            <option value="es">Español</option>
-                            <option value="fr">Français (France)</option>
-                            <option value="it">Italiano</option>
-                            <option value="ru">Русский</option>
-                            <option value="uk">Українська</option>
-                            <option value="ko">한국어</option>
-                            <option value="ja">日本語</option>
-                            <option value="zh-cn">中文 (简体)</option>
-                        </select>
-                        <div className={styles['autoupdate-wrapper']}>
-                            <p className={styles['update-title']}>{i18n._('Software Update')}</p>
-                            <button
-                                className={classNames(
-                                    'btn',
-                                    'btn-outline-secondary',
-                                    styles['autoupdate-button'],
-                                )}
-                                type="button"
-                                onClick={handleCheckForUpdate}
-                            >
-                                {i18n._('Check for updates')}
-                            </button>
-                            <div className={styles['autoupdate-auto']}>
-                                <input
-                                    type="checkbox"
-                                    className={styles['autoupdate-checkbox']}
-                                    checked={shouldCheckForUpdate}
-                                    onChange={(event) => { updateShouldCheckForUpdate(event.target.checked); }}
-                                />
-                                <span className={styles['autoupdate-text']}>
-                                    {i18n._('Automatically check for updates')}
-                                </span>
-                            </div>
-                            <div className={styles['autoupdate-message']}>
-                                {autoupdateMessage}
-                            </div>
+                            {i18n._('Check for updates')}
+                        </Button>
+                        <div className="display-inline margin-left-8 height-32">
+                            <Checkbox
+                                checked={shouldCheckForUpdate}
+                                onChange={(event) => { updateShouldCheckForUpdate(event.target.checked); }}
+                            />
+                            <span className="margin-left-4">
+                                {i18n._('Automatically check for updates')}
+                            </span>
+                        </div>
+                        <div className="margin-vertical-4">
+                            {autoupdateMessage}
                         </div>
                     </div>
                 </div>

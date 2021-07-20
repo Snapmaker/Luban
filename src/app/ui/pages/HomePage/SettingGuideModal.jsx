@@ -13,6 +13,7 @@ import { actions as machineActions } from '../../../flux/machine';
 import { machineStore } from '../../../store/local-storage';
 
 import Modal from '../../components/Modal';
+import SvgIcon from '../../components/SvgIcon';
 import { Button } from '../../components/Buttons';
 import Anchor from '../../components/Anchor';
 import Select from '../../components/Select';
@@ -151,18 +152,20 @@ const SettingGuideModal = (props) => {
         <div>
             <Modal disableOverlay size="sm" onClose={handleCancel} className={styles.settingModal}>
                 <Modal.Header>
-                    {i18n._('Config')}         
+                    {i18n._('Config')}
                 </Modal.Header>
                 <Modal.Body>
                     {
                         settingStep === 'lang' && (
-                            <div className={styles.langSelect}>
+                            <div className={styles.langSelect} style={{width: '552px', height:'286px'}}>
                                 <div className={styles.titleLabel}>
                                     {`${i18n._('Language')}`}
                                 </div>
                                 <Select
                                     className={styles.langSelectInput}
                                     clearable={false}
+                                    size='super-large'
+                                    className='margin-auto'
                                     searchable={false}
                                     options={languageOptions}
                                     value={lang}
@@ -177,21 +180,26 @@ const SettingGuideModal = (props) => {
                                 <div className={styles.titleLabel}>{i18n._('Choose a machine')}</div>
                                 <div className={styles.machineContent}>
                                     <div className={styles.machineImg}>
-                                        <Anchor
-                                            className={classNames('fa', 'fa-chevron-up')}
+                                        <SvgIcon
+                                            size={48}
+                                            name='LeftSlipNormal'
                                             onClick={() => handleMachineChange('up')}
                                         />
-                                        <img
-                                            src={machineSeriesOptions[machineSeries].img}
-                                            alt={machineSeriesOptions[machineSeries].value}
-                                        />
-                                        <div>{machineSeriesOptions[machineSeries].label}</div>
-                                        <Anchor
-                                            className={classNames('fa', 'fa-chevron-down')}
+                                        <div>
+                                            <img
+                                                width='240px'
+                                                src={machineSeriesOptions[machineSeries].img}
+                                                alt={machineSeriesOptions[machineSeries].value}
+                                            />
+                                        <div className='align-c'>{machineSeriesOptions[machineSeries].label}</div>
+                                        </div>
+                                        <SvgIcon
+                                            size={48}
+                                            name='RightSlipNormal'
                                             onClick={() => handleMachineChange('down')}
                                         />
                                     </div>
-                                    <div className={styles.machineInfo}>
+                                    <div className={classNames(styles.machineInfo, 'margin-left-16')}>
                                         {
                                             machineSeries === 0 && (
                                                 <div className={styles.zAxisSelect}>
@@ -228,6 +236,15 @@ const SettingGuideModal = (props) => {
                     }
                 </Modal.Body>
                 <Modal.Footer>
+                    <Button
+                        onClick={handleCancel}
+                        type='default'
+                        width='96px'
+                        priority='level-two'
+                        className='display-inline'
+                    >
+                        {i18n._('Cancel')}
+                    </Button>
                     {
                         settingStep === 'lang' && (
                             <Button
@@ -254,15 +271,6 @@ const SettingGuideModal = (props) => {
                             </Button>
                         )
                     }
-                    <Button
-                        onClick={handleCancel}
-                        type='default'
-                        width='96px'
-                        priority='level-two'
-                        className='display-inline'
-                    >
-                        {i18n._('Cancel')}
-                    </Button>
                 </Modal.Footer>
             </Modal>
         </div>

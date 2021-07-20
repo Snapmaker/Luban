@@ -15,9 +15,8 @@ import styles from './index.styl';
 import {
     CONNECTION_TYPE_WIFI,
     DATA_PREFIX,
-    IMAGE_WIFI_CONNECTED,
-    IMAGE_WIFI_CONNECT_WAITING,
-    IMAGE_WIFI_ERROR,
+    // IMAGE_WIFI_CONNECTED,
+    // IMAGE_WIFI_ERROR,
     MACHINE_HEAD_TYPE
 } from '../../../constants';
 import { actions as workspaceActions } from '../../../flux/workspace';
@@ -164,7 +163,8 @@ class WifiTransport extends PureComponent {
             const isSendingFile = modalSmallHOC({
                 title: i18n._('Sending File'),
                 text: i18n._('Please wait for the file transfer.'),
-                img: IMAGE_WIFI_CONNECT_WAITING
+                iconColor: '#4CB518',
+                img: 'WarningTipsProgress'
             }).ref;
             const selectFileName = this.state.selectFileName;
             const find = this.props.gcodeFiles.find(v => v.uploadName === selectFileName);
@@ -182,13 +182,15 @@ class WifiTransport extends PureComponent {
                         modalSmallHOC({
                             title: i18n._('Failed to Send File'),
                             text: text,
-                            img: IMAGE_WIFI_ERROR
+                            iconColor: '#FF4D4F',
+                            img: 'WarningTipsError'
                         });
                     } else {
                         (modalSmallHOC({
                             title: i18n._('File Sent Successfully'),
                             text: i18n._('Please confirm whether to start this print job on the touchscreen.'),
-                            img: IMAGE_WIFI_CONNECTED
+                            iconColor: '#4CB518',
+                            img: 'WarningTipsSuccess'
                         }));
                     }
                 });

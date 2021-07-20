@@ -163,6 +163,7 @@ function Printing({ history }) {
         const body = i18n._('Only STL/OBJ files are supported.');
         modal({
             title: title,
+            cancelTitle: 'Close',
             body: body
         });
     }

@@ -98,7 +98,7 @@ class SvgIcon extends PureComponent {
             iconBackground = (isStaticIcon || includes(type, 'hoverNoBackground')) ? 'transparent' : pressedBackground;
         } else {
             iconBackground = 'transparent';
-            color = '#85888C';
+            color = color || '#85888C';
         }
 
         return (

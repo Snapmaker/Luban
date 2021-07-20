@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 
 import { shallowEqual, useSelector, useDispatch } from 'react-redux';
-// import PropTypes from 'prop-types';
+import PropTypes from 'prop-types';
 import { withRouter } from 'react-router-dom';
 
 import path from 'path';
@@ -9,9 +9,12 @@ import { Trans } from 'react-i18next';
 import i18n from '../../lib/i18n';
 import modal from '../../lib/modal';
 import Dropzone from '../components/Dropzone';
+import SvgIcon from '../components/SvgIcon';
 import Space from '../components/Space';
 import { renderModal, renderPopup, renderWidgetList, useRenderRecoveryModal } from '../utils';
 import Tabs from '../components/Tabs';
+import Checkbox from '../components/Checkbox';
+import { Button } from '../components/Buttons';
 
 import CNCVisualizer from '../widgets/CNCVisualizer';
 import ProjectLayout from '../layouts/ProjectLayout';
@@ -101,37 +104,53 @@ function useRenderWarning() {
     return showWarning && renderModal({
         onClose,
         renderBody: () => (
-            <div>
-                <Trans i18nKey="key_CNC_loading_warning">
-                            This is an alpha feature that helps you get started with CNC Carving. Make sure you
-                    <Space width={4} />
-                    <a
-                        style={{ color: '#28a7e1' }}
-                        href="https://manual.snapmaker.com/cnc_carving/read_this_first_-_safety_information.html"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                    >
-                                Read This First - Safety Information
-                    </a>
-                    <Space width={4} />
-                            before proceeding.
-                </Trans>
+            <div style={{ width: '432px' }}>
+                <SvgIcon
+                    color="#FFA940"
+                    type="static"
+                    className="display-block width-72 margin-auto"
+                    name="WarningTipsWarning"
+                    size="72"
+                />
+                <div className="align-c font-weight-bold margin-bottom-16">
+                    {i18n._('Warning')}
+                </div>
+                <div>
+                    <Trans i18nKey="key_CNC_loading_warning">
+                                This is an alpha feature that helps you get started with CNC Carving. Make sure you
+                        <Space width={4} />
+                        <a
+                            style={{ color: '#28a7e1' }}
+                            href="https://manual.snapmaker.com/cnc_carving/read_this_first_-_safety_information.html"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                        >
+                                    Read This First - Safety Information
+                        </a>
+                        <Space width={4} />
+                                before proceeding.
+                    </Trans>
+                </div>
             </div>
         ),
         renderFooter: () => (
-            <div style={{ display: 'inline-block', marginRight: '8px' }}>
-                <button type="button" className="sm-btn-large sm-btn-default" onClick={onClose}>
+            <div className="sm-flex justify-space-between">
+                <div className="display-inline height-32">
+                    <Checkbox
+                        id="footer-input"
+                        defaultChecked={false}
+                        onChange={onChangeShouldShowWarning}
+                    />
+                    <span className="margin-left-4">{i18n._('Don\'t show again')}</span>
+                </div>
+                <Button
+                    type="default"
+                    width="96px"
+                    priority="level-two"
+                    onClick={onClose}
+                >
                     {i18n._('Cancel')}
-                </button>
-                <input
-                    id="footer-input"
-                    type="checkbox"
-                    defaultChecked={false}
-                    onChange={onChangeShouldShowWarning}
-                />
-                {/* eslint-disable-next-line jsx-a11y/label-has-for */}
-                <label id="footer-input-label" htmlFor="footer-input" style={{ paddingLeft: '4px' }}>{i18n._('Don\'t show again')}</label>
-
+                </Button>
             </div>
         )
     });
@@ -155,6 +174,10 @@ function useRenderRemoveModelsWarning() {
         ),
         actions: [
             {
+                name: i18n._('Cancel'),
+                onClick: () => { onClose(); }
+            },
+            {
                 name: i18n._('Yes'),
                 isPrimary: true,
                 onClick: () => {
@@ -162,19 +185,15 @@ function useRenderRemoveModelsWarning() {
                     dispatch(editorActions.removeEmptyToolPaths(HEAD_CNC));
                     onClose();
                 }
-            },
-            {
-                name: i18n._('Cancel'),
-                onClick: () => { onClose(); }
             }
         ]
     });
 }
-function Cnc() {
+function Cnc({ location }) {
     const widgets = useSelector(state => state?.widget[pageHeadType]?.default?.widgets, shallowEqual);
     const [isDraggingWidget, setIsDraggingWidget] = useState(false);
     const [showHomePage, setShowHomePage] = useState(false);
-    const [showJobType, setShowJobType] = useState(true);
+    const [showJobType, setShowJobType] = useState(false);
     const coordinateMode = useSelector(state => state[HEAD_CNC]?.coordinateMode, shallowEqual);
     const coordinateSize = useSelector(state => state[HEAD_CNC]?.coordinateSize, shallowEqual);
     const materials = useSelector(state => state[HEAD_CNC]?.materials, shallowEqual);
@@ -200,6 +219,12 @@ function Cnc() {
         });
     }, [coordinateMode, coordinateSize, materials]);
 
+    useEffect(() => {
+        if (location?.state?.shouldShowJobType) {
+            setShowJobType(true);
+        }
+    }, [location?.state?.shouldShowJobType]);
+
     const recoveryModal = useRenderRecoveryModal(pageHeadType);
     const renderHomepage = () => {
         const onClose = () => setShowHomePage(false);
@@ -208,7 +233,8 @@ function Cnc() {
             component: HomePage
         });
     };
-    const jobTypeModal = showJobType && renderModal({
+
+    const jobTypeModal = (showJobType) && renderModal({
         title: i18n._('Job Type'),
         renderBody() {
             return (
@@ -222,16 +248,6 @@ function Cnc() {
         },
         actions: [
             {
-                name: i18n._('Save'),
-                isPrimary: true,
-                onClick: () => {
-                    dispatch(editorActions.changeCoordinateMode(HEAD_CNC,
-                        jobTypeState.coordinateMode, jobTypeState.coordinateSize));
-                    dispatch(editorActions.updateMaterials(HEAD_CNC, jobTypeState.materials));
-                    setShowJobType(false);
-                }
-            },
-            {
                 name: i18n._('Cancel'),
                 onClick: () => {
                     setJobTypeState({
@@ -239,6 +255,16 @@ function Cnc() {
                         coordinateSize,
                         materials
                     });
+                    setShowJobType(false);
+                }
+            },
+            {
+                name: i18n._('Save'),
+                isPrimary: true,
+                onClick: () => {
+                    dispatch(editorActions.changeCoordinateMode(HEAD_CNC,
+                        jobTypeState.coordinateMode, jobTypeState.coordinateSize));
+                    dispatch(editorActions.updateMaterials(HEAD_CNC, jobTypeState.materials));
                     setShowJobType(false);
                 }
             }
@@ -286,6 +312,7 @@ function Cnc() {
         onDropRejected: () => {
             modal({
                 title: i18n._('Warning'),
+                cancelTitle: 'Close',
                 body: i18n._('Only {{accept}} files are supported.', { accept: ACCEPT })
             });
         }
@@ -493,7 +520,8 @@ function Cnc() {
     );
 }
 Cnc.propTypes = {
-    // history: PropTypes.object
-    // location: PropTypes.object
+    // ...withRouter,
+    // shouldShowJobType: PropTypes.bool,
+    location: PropTypes.object
 };
 export default withRouter(Cnc);

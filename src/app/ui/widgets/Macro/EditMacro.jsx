@@ -5,6 +5,7 @@ import React, { PureComponent } from 'react';
 import { Button } from '../../components/Buttons';
 import Modal from '../../components/Modal';
 import { Form, Input, Textarea } from '../../components/Validation';
+import { NumberInput } from '../../components/Input';
 import i18n from '../../../lib/i18n';
 import portal from '../../../lib/portal';
 import * as validations from '../../../lib/validations';
@@ -58,11 +59,12 @@ class EditMacro extends PureComponent {
                         }}
                     >
                         <div className="form-group">
-                            <span className="sm-parameter-row__label">{i18n._('Macro Name')}</span>
+                            <span className="">{i18n._('Macro Name')}</span>
                             <Input
                                 ref={c => {
                                     this.fields.name = c;
                                 }}
+                                style={{ borderRadius: '8px' }}
                                 type="text"
                                 className="form-control"
                                 name="name"
@@ -72,12 +74,13 @@ class EditMacro extends PureComponent {
                         </div>
                         <div className="form-group">
                             <div>
-                                <span className="sm-parameter-row__label">{i18n._('Macro Commands')}</span>
+                                <span className="">{i18n._('Macro Commands')}</span>
                             </div>
                             <Textarea
                                 ref={c => {
                                     this.fields.content = c;
                                 }}
+                                style={{ borderRadius: '8px' }}
                                 rows="10"
                                 className="form-control"
                                 name="content"
@@ -86,16 +89,14 @@ class EditMacro extends PureComponent {
                             />
                         </div>
                         <div className="form-group">
-                            <span className="sm-parameter-row__label">{i18n._('Repeat')}</span>
-                            <Input
+                            <span className="">{i18n._('Repeat')}</span>
+                            <NumberInput
                                 ref={c => {
                                     this.fields.repeat = c;
                                 }}
-                                className="form-control"
-                                style={{ width: '60px' }}
-                                type="number"
-                                name="repeat"
+                                className="display-block"
                                 value={repeat}
+                                name="repeat"
                                 min={1}
                                 validations={[validations.required]}
                             />
@@ -104,8 +105,10 @@ class EditMacro extends PureComponent {
                 </Modal.Body>
                 <Modal.Footer>
                     <Button
-                        btnStyle="danger"
-                        className="pull-left"
+                        type="default"
+                        priority="level-two"
+                        width="96px"
+                        className="float-l"
                         disabled={isDefault}
                         onClick={() => {
                             const name_ = get(this.fields.name, 'value');
@@ -122,11 +125,18 @@ class EditMacro extends PureComponent {
                                         <p><strong>{name_}</strong></p>
                                     </Modal.Body>
                                     <Modal.Footer>
-                                        <Button onClick={onClose}>
+                                        <Button
+                                            priority="level-two"
+                                            width="96px"
+                                            type="default"
+                                            onClick={onClose}
+                                        >
                                             {i18n._('No')}
                                         </Button>
                                         <Button
-                                            btnStyle="danger"
+                                            className="margin-left-8"
+                                            priority="level-two"
+                                            width="96px"
                                             onClick={chainedFunction(
                                                 () => {
                                                     this.props.deleteMacro(id);
@@ -145,6 +155,10 @@ class EditMacro extends PureComponent {
                         {i18n._('Delete')}
                     </Button>
                     <Button
+                        type="default"
+                        className="margin-left-8"
+                        priority="level-two"
+                        width="96px"
                         onClick={() => {
                             this.props.closeModal();
                         }}
@@ -152,7 +166,9 @@ class EditMacro extends PureComponent {
                         {i18n._('Cancel')}
                     </Button>
                     <Button
-                        btnStyle="primary"
+                        className="margin-left-8"
+                        priority="level-two"
+                        width="96px"
                         onClick={() => {
                             this.form.validate(err => {
                                 if (err) {

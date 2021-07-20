@@ -6,6 +6,8 @@ import { shallowEqual, useDispatch, useSelector } from 'react-redux';
 import settings from '../../../../config/settings';
 import i18n from '../../../../lib/i18n';
 import Anchor from '../../../components/Anchor';
+import Checkbox from '../../../components/Checkbox';
+import { Button } from '../../../components/Buttons';
 import Space from '../../../components/Space';
 import styles from './index.styl';
 import UniApi from '../../../../lib/uni-api';
@@ -38,68 +40,50 @@ function SoftwareUpdate() {
     };
 
     return (
-        <div style={{ marginBottom: '55px' }}>
-            {/* <About /> */}
-
-            <form>
-                <div className={styles['form-container']}>
-                    <div className={styles['form-group']}>
-                        <div className={styles['autoupdate-wrapper']}>
-                            <div>
-                                <div className={styles['lu-logo-container']}>
-                                    <i className={styles.logo} />
-                                </div>
-                                <div className={styles['lu-version']}>
-                                    <div className={styles['product-details']}>
-                                        <div className={styles['about-product-name']}>
-                                            {`Snapmaker Luban ${settings.version}`}
-                                        </div>
-                                        <div className={styles['about-product-description']}>
-                                            {i18n._('A web-based interface for Snapmaker which is able to do 3D Printing, laser engraving and CNC carving.')}
-                                            <Space width={8} />
-                                            <Anchor
-                                                className={styles['learn-more']}
-                                                href="https://snapmaker.com/support"
-                                                target="_blank"
-                                            >
-                                                {i18n._('Learn more')}
-                                                <i className="fa fa-arrow-circle-right" style={{ marginLeft: 5 }} />
-                                            </Anchor>
-                                        </div>
-                                    </div>
-                                    <div className={styles['autoupdate-auto']}>
-                                        <input
-                                            type="checkbox"
-                                            className={styles['autoupdate-checkbox']}
-                                            checked={shouldCheckForUpdate}
-                                            onChange={(event) => { updateShouldCheckForUpdate(event.target.checked); }}
-                                        />
-                                        <span className={styles['autoupdate-text']}>
-                                            {i18n._('Automatically check for updates')}
-                                        </span>
-                                    </div>
-                                </div>
-                            </div>
-                            <div className={styles['autoupdate-update']}>
-                                <button
-                                    className={classNames(
-                                        'btn',
-                                        'btn-outline-secondary',
-                                        styles['autoupdate-button'],
-                                    )}
-                                    type="button"
-                                    onClick={actions.handleCheckForUpdate}
-                                >
-                                    {i18n._('Check for updates')}
-                                </button>
-                                <div className={styles['autoupdate-message']}>
-                                    {autoupdateMessage}
-                                </div>
-                            </div>
+        <div className={styles['autoupdate-wrapper']}>
+            <div>
+                <div className={styles['lu-logo-container']}>
+                    <i className={styles.logo} />
+                </div>
+                <div className={styles['lu-version']}>
+                    <div className={styles['product-details']}>
+                        <div className={classNames(styles['about-product-name'], 'heading - 3')}>
+                            {`Snapmaker Luban ${settings.version}`}
+                        </div>
+                        <div className={classNames(styles['about-product-description'], 'color-black-4')}>
+                            {i18n._('A web-based interface for Snapmaker which is able to do 3D Printing, laser engraving and CNC carving.')}
+                            <Space width={8} />
+                            <Anchor
+                                className="link-text"
+                                href="https://snapmaker.com/support"
+                                target="_blank"
+                            >
+                                {i18n._('Learn more >')}
+                            </Anchor>
                         </div>
                     </div>
+                    <div className={styles['autoupdate-auto']}>
+                        <Checkbox
+                            className={styles['autoupdate-checkbox']}
+                            checked={shouldCheckForUpdate}
+                            onChange={(event) => { updateShouldCheckForUpdate(event.target.checked); }}
+                        />
+                        <span className={classNames(styles['autoupdate-text'], 'margin-left-8')}>
+                            {i18n._('Automatically check for updates')}
+                        </span>
+                    </div>
                 </div>
-            </form>
+            </div>
+            <div className={styles['autoupdate-update']}>
+                <Button
+                    onClick={actions.handleCheckForUpdate}
+                >
+                    {i18n._('Check for updates')}
+                </Button>
+                <div className={styles['autoupdate-message']}>
+                    {autoupdateMessage}
+                </div>
+            </div>
         </div>
     );
 }

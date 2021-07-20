@@ -32,7 +32,7 @@ function ConfigValueBox({ optionConfigGroup, calculateTextIndex, isCategorySelec
     }, [isDefinitionEditable, definitionForManager]);
 
     return (
-        <div style={{ display: 'flex' }}>
+        <div className="sm-flex">
             {(optionConfigGroup.length > 2) && (
                 <div className={classNames(styles['manager-grouplist'])}>
                     <div className="sm-parameter-container">

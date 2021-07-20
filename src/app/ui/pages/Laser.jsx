@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { shallowEqual, useSelector, useDispatch } from 'react-redux';
 import path from 'path';
-// import PropTypes from 'prop-types';
+import PropTypes from 'prop-types';
 import { withRouter } from 'react-router-dom';
 // import classNames from 'classnames';
 import i18n from '../../lib/i18n';
@@ -98,6 +98,10 @@ function useRenderRemoveModelsWarning() {
         ),
         actions: [
             {
+                name: i18n._('Cancel'),
+                onClick: () => { onClose(); }
+            },
+            {
                 name: i18n._('Yes'),
                 isPrimary: true,
                 onClick: () => {
@@ -105,10 +109,6 @@ function useRenderRemoveModelsWarning() {
                     dispatch(editorActions.removeEmptyToolPaths(HEAD_LASER));
                     onClose();
                 }
-            },
-            {
-                name: i18n._('Cancel'),
-                onClick: () => { onClose(); }
             }
         ]
     });
@@ -118,16 +118,16 @@ function useRenderRemoveModelsWarning() {
         return null;
     }
 }
-function Laser() {
+function Laser({ location }) {
     const widgets = useSelector(state => state?.widget[pageHeadType]?.default?.widgets, shallowEqual);
     const [isDraggingWidget, setIsDraggingWidget] = useState(false);
     const [showHomePage, setShowHomePage] = useState(false);
     const [showJobType, setShowJobType] = useState(true);
+    const canRedo = useSelector(state => state[HEAD_LASER]?.history?.canRedo, shallowEqual);
+    const canUndo = useSelector(state => state[HEAD_LASER]?.history?.canUndo, shallowEqual);
     const coordinateMode = useSelector(state => state[HEAD_LASER]?.coordinateMode, shallowEqual);
     const coordinateSize = useSelector(state => state[HEAD_LASER]?.coordinateSize, shallowEqual);
     const materials = useSelector(state => state[HEAD_LASER]?.materials, shallowEqual);
-    const canRedo = useSelector(state => state[HEAD_LASER]?.history?.canRedo, shallowEqual);
-    const canUndo = useSelector(state => state[HEAD_LASER]?.history?.canUndo, shallowEqual);
     const [jobTypeState, setJobTypeState] = useState({
         coordinateMode,
         coordinateSize,
@@ -148,6 +148,11 @@ function Laser() {
         });
     }, [coordinateMode, coordinateSize, materials]);
 
+    useEffect(() => {
+        if (location?.state?.shouldShowJobType) {
+            setShowJobType(true);
+        }
+    }, [location?.state?.shouldShowJobType]);
 
     const recoveryModal = useRenderRecoveryModal(pageHeadType);
     const renderHomepage = () => {
@@ -171,16 +176,6 @@ function Laser() {
         },
         actions: [
             {
-                name: i18n._('Save'),
-                isPrimary: true,
-                onClick: () => {
-                    dispatch(editorActions.changeCoordinateMode(HEAD_LASER,
-                        jobTypeState.coordinateMode, jobTypeState.coordinateSize));
-                    dispatch(editorActions.updateMaterials(HEAD_LASER, jobTypeState.materials));
-                    setShowJobType(false);
-                }
-            },
-            {
                 name: i18n._('Cancel'),
                 onClick: () => {
                     setJobTypeState({
@@ -188,6 +183,16 @@ function Laser() {
                         coordinateSize,
                         materials
                     });
+                    setShowJobType(false);
+                }
+            },
+            {
+                name: i18n._('Save'),
+                isPrimary: true,
+                onClick: () => {
+                    dispatch(editorActions.changeCoordinateMode(HEAD_LASER,
+                        jobTypeState.coordinateMode, jobTypeState.coordinateSize));
+                    dispatch(editorActions.updateMaterials(HEAD_LASER, jobTypeState.materials));
                     setShowJobType(false);
                 }
             }
@@ -242,6 +247,7 @@ function Laser() {
         onDropRejected: () => {
             modal({
                 title: i18n._('Warning'),
+                cancelTitle: 'Close',
                 body: i18n._('Only {{accept}} files are supported.', { accept: ACCEPT })
             });
         }
@@ -430,6 +436,6 @@ function Laser() {
 }
 Laser.propTypes = {
     // history: PropTypes.object
-    // location: PropTypes.object
+    location: PropTypes.object
 };
 export default withRouter(Laser);

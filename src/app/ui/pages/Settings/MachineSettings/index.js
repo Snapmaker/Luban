@@ -1,3 +1,3 @@
-import Enclosure from './MachineSettings';
+import MachineSettings from './MachineSettings';
 
-export default Enclosure;
+export default MachineSettings;

@@ -28,8 +28,8 @@ class SetBackground extends PureComponent {
         server: PropTypes.object.isRequired,
 
         // redux
-        series: PropTypes.string.isRequired,
-        laserSize: PropTypes.object,
+        // series: PropTypes.string.isRequired,
+        // laserSize: PropTypes.object,
         size: PropTypes.object.isRequired,
         setBackgroundImage: PropTypes.func.isRequired,
         removeBackgroundImage: PropTypes.func.isRequired
@@ -117,40 +117,36 @@ class SetBackground extends PureComponent {
 
     render() {
         const state = { ...this.state };
-        const { connectionType, isConnected, hasBackground, laserSize, series, workflowStatus, workPosition } = this.props;
-        let fullWidth;
-        if (series === 'A350') {
-            fullWidth = laserSize ? (laserSize.x * 1.5 + 72 + 4) : 512;
-        } else if (series === 'A250') {
-            fullWidth = laserSize ? (laserSize.x * 2 + 72 + 4) : 512;
-        } else {
-            fullWidth = 512 + 72 + 4;
-        }
+        const { connectionType, isConnected, hasBackground, workflowStatus, workPosition } = this.props;
+        // let fullWidth;
+        // if (series === 'A350') {
+        //     fullWidth = laserSize ? (laserSize.x * 1.5 + 72 + 4) : 512;
+        // } else if (series === 'A250') {
+        //     fullWidth = laserSize ? (laserSize.x * 2 + 72 + 4) : 512;
+        // } else {
+        //     fullWidth = 512 + 72 + 4;
+        // }
         const canCameraCapture = workflowStatus === WORKFLOW_STATUS_IDLE;
         return (
             <React.Fragment>
                 {state.showModal && (
-                    <Modal style={{ width: fullWidth, paddingBottom: '10px' }} size="lg" onClose={this.actions.hideModal}>
-                        <Modal.Body
-                            style={{ margin: '0', padding: '72px 36px 36px 36px', height: '100%' }}
-                            className={classNames(
-                                styles['modal-body']
-                            )}
-                        >
-                            <ExtractSquareTrace
-                                canTakePhoto={this.state.canTakePhoto}
-                                changeCanTakePhoto={this.actions.changeCanTakePhoto}
-                                ySize={this.state.ySize}
-                                xSize={this.state.xSize}
-                                lastFileNames={this.state.lastFileNames}
-                                updateEachPicSize={this.actions.updateEachPicSize}
-                                changeLastFileNames={this.actions.changeLastFileNames}
-                                setBackgroundImage={this.actions.setBackgroundImage}
-                                updateAffinePoints={this.actions.updateAffinePoints}
-                            />
-                        </Modal.Body>
+                    <div>
+                        <ExtractSquareTrace
+                            canTakePhoto={this.state.canTakePhoto}
+                            changeCanTakePhoto={this.actions.changeCanTakePhoto}
+                            ySize={this.state.ySize}
+                            xSize={this.state.xSize}
+                            hideModal={this.actions.hideModal}
+                            lastFileNames={this.state.lastFileNames}
+                            updateEachPicSize={this.actions.updateEachPicSize}
+                            changeLastFileNames={this.actions.changeLastFileNames}
+                            setBackgroundImage={this.actions.setBackgroundImage}
+                            updateAffinePoints={this.actions.updateAffinePoints}
+                        />
+
                         {state.panel === PANEL_NOT_CALIBRATION && (
-                            <div>
+                            <Modal style={{ paddingBottom: '10px' }} size="lg" onClose={this.actions.hideModal}>
+
                                 <Modal.Header>
                                     {/* <Modal.Title> */}
                                     {i18n._('Warning')}
@@ -173,9 +169,9 @@ class SetBackground extends PureComponent {
                                         <span style={{ paddingLeft: '4px' }}>{i18n._('Don\'t show again in current session')}</span>
                                     </div>
                                 </Modal.Footer>
-                            </div>
+                            </Modal>
                         )}
-                    </Modal>
+                    </div>
                 )}
                 <button
                     type="button"

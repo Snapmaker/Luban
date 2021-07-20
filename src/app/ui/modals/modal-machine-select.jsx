@@ -3,7 +3,7 @@ import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
 import ReactDOM from 'react-dom';
 import classNames from 'classnames';
-import { Button } from '@trendmicro/react-buttons';
+import { Button } from '../components/Buttons';
 import i18n from '../../lib/i18n';
 import Modal from '../components/Modal';
 import { MACHINE_HEAD_TYPE, MACHINE_SERIES } from '../../constants';
@@ -115,8 +115,7 @@ class MachineSelectModal extends PureComponent {
             <Modal disableOverlay showCloseButton={false} size="md" onClose={this.handleClose}>
                 <Modal.Header>
                     {/* <Modal.Title> */}
-                    <div className={styles['device-not-recognized']}>{i18n._('Device Not Recognized')}</div>
-                    <div className={styles['device-not-recognized-detail']}>{i18n._('Oops, Snapmaker Luban doesn\'t recognize your connected device.')}</div>
+                    {i18n._('Device Not Recognized')}
                     {/* </Modal.Title> */}
                 </Modal.Header>
                 <Modal.Body>
@@ -169,7 +168,8 @@ class MachineSelectModal extends PureComponent {
                 </Modal.Body>
                 <Modal.Footer>
                     <Button
-                        btnStyle="primary"
+                        priority="level-two"
+                        width="96px"
                         onClick={this.handleConfirm}
                     >
                         {i18n._('Choose')}

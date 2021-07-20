@@ -10,6 +10,7 @@ import i18n from '../../../lib/i18n';
 import { actions as editorActions } from '../../../flux/editor';
 import { actions as cncActions } from '../../../flux/cnc';
 import Modal from '../../components/Modal';
+import { Button } from '../../components/Buttons';
 import CncParameters from './cnc/CncParameters';
 import { toHump } from '../../../../shared/lib/utils';
 import LaserParameters from './laser/LaserParameters';
@@ -178,10 +179,11 @@ function ToolPathConfigurations(props) {
                     {i18n._('Configurations')}
                     {/* </Modal.Title> */}
                 </Modal.Header>
-                <Modal.Body style={{
-                    overflowY: 'auto',
-                    height: '546px'
-                }}
+                <Modal.Body
+                    style={{
+                        overflowY: 'auto',
+                        height: '546px'
+                    }}
                 >
                     {props.headType === HEAD_CNC && (
                         <CncParameters
@@ -209,20 +211,23 @@ function ToolPathConfigurations(props) {
                     width: '100%'
                 }}
                 >
-                    <button
-                        type="button"
-                        className="sm-btn-large sm-btn-default"
+                    <Button
+                        priority="level-two"
+                        className="margin-left-8"
+                        width="96px"
+                        type="default"
                         onClick={actions.cancelUpdateToolPath}
                     >
                         {i18n._('Cancel')}
-                    </button>
-                    <button
-                        type="button"
-                        className="sm-btn-large sm-btn-primary"
+                    </Button>
+                    <Button
+                        priority="level-two"
+                        className="margin-left-8"
+                        width="96px"
                         onClick={actions.saveToolPath}
                     >
                         {i18n._('Save')}
-                    </button>
+                    </Button>
                 </Modal.Footer>
             </Modal>
         </React.Fragment>

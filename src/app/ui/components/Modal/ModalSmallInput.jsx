@@ -2,6 +2,8 @@ import '@trendmicro/react-modal/dist/react-modal.css';
 import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
 import Modal from './index';
+import { Button } from '../Buttons';
+import { TextInput } from '../Input';
 import styles from './styles.styl';
 import i18n from '../../../lib/i18n';
 
@@ -32,7 +34,8 @@ class ModalSmallInput extends PureComponent {
 
     render() {
         const { onClose, onCancel, onConfirm, showCloseButton = true, ...props } = this.props;
-        const img = this.props.img || '../../images/ic_warning-64x64.png';
+        const img = this.props.img;
+        console.log('img', img);
         const text = this.props.text;
         const label = this.props.label;
         const subtext = this.props.subtext;
@@ -44,20 +47,19 @@ class ModalSmallInput extends PureComponent {
                 {...props}
                 showCloseButton={showCloseButton}
                 onClose={onClose}
-                style={{
-                    borderRadius: '4px'
-                }}
             >
+                <Modal.Header>
+                    {title}
+                </Modal.Header>
                 <Modal.Body style={{
                     marginBottom: '42px'
                 }}
                 >
-                    <div className={styles['modal-small-img']}>
-                        <img src={img} alt="......" />
-                    </div>
-                    <div className={styles['modal-small-body-text']}>
-                        {i18n._(title)}
-                    </div>
+                    {img && (
+                        <div className={styles['modal-small-img']}>
+                            <img src={img} alt="......" />
+                        </div>
+                    )}
                     {text && (
                         <div className={styles['modal-small-body-hit']}>
                             {i18n._(text)}
@@ -71,30 +73,36 @@ class ModalSmallInput extends PureComponent {
                     <div className="form-group">
                         {/* eslint-disable-next-line jsx-a11y/label-has-for */}
                         <label id="modal-small-input-label" htmlFor="modal-small-input">{label}</label>
-                        <input id="modal-small-input" type="text" className="form-control" value={inputtext} onChange={this.actions.onInputChange} />
+                        <TextInput
+                            id="modal-small-input"
+                            size="100%"
+                            className="display-block"
+                            value={inputtext}
+                            onChange={this.actions.onInputChange}
+                        />
                     </div>
 
 
                 </Modal.Body>
                 {onCancel && onConfirm && (
                     <Modal.Footer>
-                        <button
-                            type="button"
-                            className="btn btn-outline-secondary"
-                            style={{
-                                float: 'left'
-                            }}
+                        <Button
+                            priority="level-two"
+                            className="margin-left-8"
+                            width="96px"
+                            type="default"
                             onClick={onCancel}
                         >
                             {i18n._('Cancel')}
-                        </button>
-                        <button
-                            type="button"
-                            className="btn btn-primary"
+                        </Button>
+                        <Button
+                            priority="level-two"
+                            className="margin-left-8"
+                            width="96px"
                             onClick={() => { onConfirm(inputtext); }}
                         >
                             {i18n._('Confirm')}
-                        </button>
+                        </Button>
                     </Modal.Footer>
                 )}
             </Modal>
