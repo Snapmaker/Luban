@@ -10,6 +10,7 @@ import i18n from '../../../lib/i18n';
 import SvgIcon from '../../components/SvgIcon';
 import Notifications from '../../components/Notifications';
 import Modal from '../../components/Modal';
+import { Button } from '../../components/Buttons';
 import ConfigValueBox from './ConfigValueBox';
 import useSetState from '../../../lib/hooks/set-state';
 import { limitStringLength } from '../../../lib/normalize-range';
@@ -426,7 +427,7 @@ function ProfileManager({ optionConfigGroup, disableCategory = true, managerTitl
                         <div
                             className={classNames(styles['manager-content'])}
                         >
-                            <div className={classNames(styles['manager-name'])}>
+                            <div className={classNames(styles['manager-name'], 'border-radius-8')}>
                                 {notificationMessage && (
                                     <Notifications bsStyle="danger" onDismiss={actions.clearNotification} className="Notifications">
                                         {notificationMessage}
@@ -621,32 +622,31 @@ function ProfileManager({ optionConfigGroup, disableCategory = true, managerTitl
 
                         </div>
 
-
-                        <div className={classNames(styles['manager-settings'], 'clearfix')}>
-                            <div className={classNames(styles['manager-settings-save'], styles['manager-settings-btn'])}>
-                                <Anchor
-                                    onClick={() => { outsideActions.closeManager(); }}
-                                    className="sm-btn-large sm-btn-default"
-                                    style={{ marginRight: '11px' }}
-                                >
-                                    {i18n._('Close')}
-                                </Anchor>
-
-                                {!definitionState?.isCategorySelected && (
-                                    <Anchor
-                                        onClick={() => {
-                                            outsideActions.onUpdateDefaultDefinition(definitionState.definitionForManager);
-                                            outsideActions.closeManager();
-                                        }}
-                                        className="sm-btn-large sm-btn-primary"
-                                    >
-                                        {i18n._('Select')}
-                                    </Anchor>
-                                )}
-
-                            </div>
-                        </div>
                     </Modal.Body>
+                    <Modal.Footer>
+                        <Button
+                            onClick={() => { outsideActions.closeManager(); }}
+                            type="default"
+                            priority="level-two"
+                            width="96px"
+                        >
+                            {i18n._('Close')}
+                        </Button>
+
+                        {!definitionState?.isCategorySelected && (
+                            <Button
+                                onClick={() => {
+                                    outsideActions.onUpdateDefaultDefinition(definitionState.definitionForManager);
+                                    outsideActions.closeManager();
+                                }}
+                                priority="level-two"
+                                width="96px"
+                                className="margin-left-8"
+                            >
+                                {i18n._('Select')}
+                            </Button>
+                        )}
+                    </Modal.Footer>
                 </Modal>
             )}
         </React.Fragment>
