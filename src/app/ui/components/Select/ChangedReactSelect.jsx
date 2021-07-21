@@ -42,7 +42,6 @@ class ChangedReactSelect extends PureComponent {
     actions = {
         handleChange: (value) => {
             const option = this.props.options.find(d => d.value === value);
-            // console.log('option', value, option);
             this.props.onChange && this.props.onChange(option);
         },
         handleTreeChange: (option) => {

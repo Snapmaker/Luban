@@ -1,4 +1,4 @@
-import React, { useLayoutEffect, useState, useRef } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import classNames from 'classnames';
 import PropTypes from 'prop-types';
 import { isUndefined, cloneDeep, uniqWith } from 'lodash';
@@ -47,8 +47,7 @@ function creatCateArray(optionList) {
 
 function useGetDefinitions(allDefinitions, definitionState, setDefinitionState, defaultKeysAndId, getDefaultDefinition) {
     const definitionsRef = useRef([]);
-    useLayoutEffect(() => {
-        console.log('useLayoutEffect',);
+    useEffect(() => {
         const newState = {};
         const lastDefinitionForManager = definitionState?.definitionForManager;
         let definitionForManager = allDefinitions.find(d => d.definitionId === lastDefinitionForManager?.definitionId && d.name === lastDefinitionForManager?.name);

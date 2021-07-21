@@ -35,7 +35,6 @@ class ModalSmallInput extends PureComponent {
     render() {
         const { onClose, onCancel, onConfirm, showCloseButton = true, ...props } = this.props;
         const img = this.props.img;
-        console.log('img', img);
         const text = this.props.text;
         const label = this.props.label;
         const subtext = this.props.subtext;
