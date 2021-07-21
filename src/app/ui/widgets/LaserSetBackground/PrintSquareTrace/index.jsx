@@ -4,6 +4,8 @@ import PropTypes from 'prop-types';
 import Slider from '../../../components/Slider';
 import i18n from '../../../../lib/i18n';
 import { NumberInput as Input } from '../../../components/Input';
+import { Button } from '../../../components/Buttons';
+import Modal from '../../../components/Modal';
 import { controller } from '../../../../lib/controller';
 import styles from '../styles.styl';
 import { actions as workspaceActions } from '../../../../flux/workspace';
@@ -123,86 +125,91 @@ class PrintSquareTrace extends PureComponent {
         const minSideLength = Math.min(maxSideLength / 2, maxSideLength);
 
         return (
-            <div>
+            <Modal style={{ width: '480px', height: '720px' }} size="lg" onClose={actions.hideModal}>
                 <div className="clearfix" />
-                <div className={styles['laser-set-background-modal-title']}>
+                <Modal.Header>
                     {i18n._('Print Square Trace')}
-                </div>
-                <div style={{ textAlign: 'center' }}>
-                    <PrintPreview
-                        size={size}
-                        sideLength={this.props.state.sideLength}
-                        width={400}
-                        height={400}
-                    />
-                </div>
-                <div style={{ height: '74px', margin: '20px 60px' }}>
-                    <table className={styles['parameter-table']}>
-                        <tbody>
-                            <tr>
-                                <td>
-                                    {i18n._('Side Length')}
-                                </td>
-                                <td style={{ width: '50%', paddingRight: '15px' }}>
-                                    <Slider
-                                        value={this.props.state.sideLength}
-                                        min={minSideLength}
-                                        max={maxSideLength}
-                                        onChange={actions.setSideLength}
-                                    />
-                                </td>
-                                <td style={{ width: '48px' }}>
-                                    <Input
-                                        value={this.props.state.sideLength}
-                                        min={minSideLength}
-                                        max={maxSideLength}
-                                        onChange={actions.setSideLength}
-                                    />
-                                </td>
-                            </tr>
-                            <tr>
-                                <td>
-                                    {i18n._('Power (%)')}
-                                </td>
-                                <td style={{ width: '50%', paddingRight: '15px' }}>
-                                    <Slider
-                                        value={state.power}
-                                        min={0.1}
-                                        max={100}
-                                        onChange={actions.setPower}
-                                    />
-                                </td>
-                                <td style={{ width: '48px' }}>
-                                    <Input
-                                        min={0.1}
-                                        max={100}
-                                        value={state.power}
-                                        onChange={actions.setPower}
-                                    />
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-                <div style={{ margin: '20px 60px' }}>
-                    <button
-                        type="button"
-                        className="sm-btn-large sm-btn-primary"
+                </Modal.Header>
+
+                <Modal.Body>
+                    <div style={{ textAlign: 'center' }}>
+                        <PrintPreview
+                            size={size}
+                            sideLength={this.props.state.sideLength}
+                            width={400}
+                            height={400}
+                        />
+                    </div>
+                    <div className="margin-top-16">
+                        <table className={styles['parameter-table']}>
+                            <tbody>
+                                <tr>
+                                    <td>
+                                        {i18n._('Side Length')}
+                                    </td>
+                                    <td>
+                                        <Slider
+                                            className="margin-right-8 float-r"
+                                            value={this.props.state.sideLength}
+                                            min={minSideLength}
+                                            max={maxSideLength}
+                                            onChange={actions.setSideLength}
+                                        />
+                                    </td>
+                                    <td>
+                                        <Input
+                                            value={this.props.state.sideLength}
+                                            min={minSideLength}
+                                            max={maxSideLength}
+                                            onChange={actions.setSideLength}
+                                        />
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        {i18n._('Power (%)')}
+                                    </td>
+                                    <td>
+                                        <Slider
+                                            className="margin-right-8 float-r"
+                                            value={state.power}
+                                            min={0.1}
+                                            max={100}
+                                            onChange={actions.setPower}
+                                        />
+                                    </td>
+                                    <td>
+                                        <Input
+                                            min={0.1}
+                                            max={100}
+                                            value={state.power}
+                                            onChange={actions.setPower}
+                                        />
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <Button
+                        priority="level-three"
+                        width="160px"
+                        type="default"
+                        className="float-l margin-top-16"
                         onClick={actions.printSquareTrace}
-                        style={{ width: '40%', float: 'left' }}
                     >
                         {i18n._('Print Square Trace')}
-                    </button>
-                    <button
-                        type="button"
-                        className="sm-btn-large sm-btn-primary"
+                    </Button>
+                </Modal.Body>
+                <Modal.Footer>
+                    <Button
+                        width="96px"
+                        priority="level-two"
                         onClick={actions.displayExtractTrace}
-                        style={{ width: '40%', float: 'right' }}
                     >
                         {i18n._('Next')}
-                    </button>
-                </div>
-            </div>
+                    </Button>
+                </Modal.Footer>
+            </Modal>
         );
     }
 }

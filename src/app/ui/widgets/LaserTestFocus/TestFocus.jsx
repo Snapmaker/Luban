@@ -77,7 +77,7 @@ class TestFocus extends PureComponent {
         return (
             <React.Fragment>
                 {showInstructions && (
-                    <Modal style={{ width: '1080px' }} size="lg" onClose={actions.hideInstructions}>
+                    <Modal style={{ width: '1080px' }} size="lg" onClose={this.props.actions.hideInstructions}>
                         <Modal.Header>
                             {/* <Modal.Title> */}
                             {i18n._('How Fine Tune Work Origin Works')}
@@ -145,6 +145,16 @@ class TestFocus extends PureComponent {
                                 </p>
                             </div>
                         </Modal.Body>
+                        <Modal.Footer>
+                            <Button
+                                priority="level-two"
+                                type="default"
+                                width="96px"
+                                onClick={this.props.actions.hideInstructions}
+                            >
+                                {i18n._('Close')}
+                            </Button>
+                        </Modal.Footer>
                     </Modal>
                 )}
                 <div className="sm-flex height-32 justify-space-between margin-vertical-8">

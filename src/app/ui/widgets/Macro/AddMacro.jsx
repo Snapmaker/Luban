@@ -3,6 +3,7 @@ import React, { PureComponent } from 'react';
 import { Button } from '../../components/Buttons';
 import Modal from '../../components/Modal';
 import { Form, Input, Textarea } from '../../components/Validation';
+import { NumberInput } from '../../components/Input';
 import i18n from '../../../lib/i18n';
 import * as validations from '../../../lib/validations';
 
@@ -54,11 +55,12 @@ class AddMacro extends PureComponent {
                         }}
                     >
                         <div className="form-group">
-                            <span className="sm-parameter-row__label">{i18n._('Macro Name')}</span>
+                            <span className="">{i18n._('Macro Name')}</span>
                             <Input
                                 ref={c => {
                                     this.fields.name = c;
                                 }}
+                                style={{ borderRadius: '8px' }}
                                 type="text"
                                 className="form-control"
                                 name="name"
@@ -68,9 +70,10 @@ class AddMacro extends PureComponent {
                         </div>
                         <div className="form-group">
                             <div>
-                                <span className="sm-parameter-row__label">{i18n._('Macro Commands')}</span>
+                                <span className="">{i18n._('Macro Commands')}</span>
                             </div>
                             <Textarea
+                                style={{ borderRadius: '8px' }}
                                 ref={c => {
                                     this.fields.content = c;
                                 }}
@@ -82,15 +85,13 @@ class AddMacro extends PureComponent {
                             />
                         </div>
                         <div className="form-group">
-                            <span className="sm-parameter-row__label">{i18n._('Repeat')}</span>
-                            <Input
+                            <span className="">{i18n._('Repeat')}</span>
+                            <NumberInput
                                 ref={c => {
                                     this.fields.repeat = c;
                                 }}
-                                className="form-control"
-                                style={{ width: '60px' }}
+                                className="display-block"
                                 value={repeat}
-                                type="number"
                                 name="repeat"
                                 min={1}
                                 validations={[validations.required]}
@@ -101,11 +102,16 @@ class AddMacro extends PureComponent {
                 <Modal.Footer>
                     <Button
                         onClick={this.props.closeModal}
+                        type="default"
+                        priority="level-two"
+                        width="96px"
                     >
                         {i18n._('Cancel')}
                     </Button>
                     <Button
-                        btnStyle="primary"
+                        priority="level-two"
+                        width="96px"
+                        className="margin-left-8"
                         onClick={() => {
                             this.form.validate(err => {
                                 if (err) {

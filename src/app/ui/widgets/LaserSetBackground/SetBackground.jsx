@@ -7,7 +7,7 @@ import { Trans } from 'react-i18next';
 import { EXPERIMENTAL_LASER_CAMERA } from '../../../constants';
 import i18n from '../../../lib/i18n';
 import modal from '../../../lib/modal';
-import Modal from '../../components/Modal';
+// import Modal from '../../components/Modal';
 
 import { actions } from '../../../flux/laser';
 import PrintTrace from './PrintSquareTrace';
@@ -136,23 +136,22 @@ class SetBackground extends PureComponent {
             <React.Fragment>
                 {showInstructions && <Instructions onClose={this.props.actions.hideInstructions} />}
                 {state.showModal && (
-                    <Modal style={{ width: '500px', height: '640px' }} size="lg" onClose={this.actions.hideModal}>
-                        <Modal.Body style={{ margin: '0', padding: '0', height: '100%' }}>
-                            {state.panel === PANEL_PRINT_TRACE && (
-                                <PrintTrace
-                                    state={state}
-                                    actions={this.actions}
-                                />
-                            )}
-                            {state.panel === PANEL_EXTRACT_TRACE && (
-                                <ExtractSquareTrace
-                                    sideLength={this.state.sideLength}
-                                    displayPrintTrace={this.actions.displayPrintTrace}
-                                    setBackgroundImage={this.actions.setBackgroundImage}
-                                />
-                            )}
-                        </Modal.Body>
-                    </Modal>
+                    <div>
+                        {state.panel === PANEL_PRINT_TRACE && (
+                            <PrintTrace
+                                state={state}
+                                actions={this.actions}
+                            />
+                        )}
+                        {state.panel === PANEL_EXTRACT_TRACE && (
+                            <ExtractSquareTrace
+                                sideLength={this.state.sideLength}
+                                displayPrintTrace={this.actions.displayPrintTrace}
+                                setBackgroundImage={this.actions.setBackgroundImage}
+                                hideModal={this.actions.hideModal}
+                            />
+                        )}
+                    </div>
                 )}
                 <button
                     type="button"

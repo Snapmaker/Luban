@@ -404,8 +404,10 @@ export const actions = {
             history.push('/');
         }
         dispatch(actions.updateState(newHeadType, { unSaved: false, openedFile: null }));
-
-        history.push(to);
+        history.push({
+            pathname: to,
+            state: { shouldShowJobType: true }
+        });
 
         // clear operation history
         dispatch(operationHistoryActions.clear(newHeadType));

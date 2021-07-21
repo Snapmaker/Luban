@@ -101,6 +101,7 @@ function Material({ widgetActions }) {
             >
                 <Select
                     clearable={false}
+                    size="282px"
                     searchable
                     options={materialDefinitionOptions}
                     value={currentDefinition.definitionId}
@@ -118,67 +119,6 @@ function Material({ widgetActions }) {
                     )}
                 />
             </Anchor>
-            {/* <div>
-                <OptionalDropdown
-                    draggable="false"
-                    title={i18n._('Show Details')}
-                    hidden={!showOfficialMaterialDetails}
-                    onClick={() => {
-                        setShowOfficialMaterialDetails(!showOfficialMaterialDetails);
-                    }}
-                >
-                    {showOfficialMaterialDetails && (
-                        <table className={styles['config-details-table']}>
-                            <tbody>
-                                {MATERIAL_CONFIG_KEYS.map((key) => {
-                                    const setting = currentDefinition.settings[key];
-                                    const { label, type, unit = '', enabled = '' } = setting;
-                                    const defaultValue = setting.default_value;
-                                    if (typeof enabled === 'string') {
-                                        // for example: retraction_hop.enable = retraction_enable and retraction_hop_enabled
-                                        const conditions = enabled.split('and').map(c => c.trim());
-
-                                        for (const condition of conditions) {
-                                            // Simple implementation of condition
-                                            if (currentDefinition.settings[condition]) {
-                                                const value = currentDefinition.settings[condition].default_value;
-                                                if (!value) {
-                                                    return null;
-                                                }
-                                            }
-                                        }
-                                    }
-
-                                    return (
-                                        <tr key={key}>
-                                            <td>{i18n._(label)}</td>
-                                            { type === 'float' && (
-                                                <td>
-                                                    <span>{i18n._(defaultValue)}</span>
-                                                    <Space width="4" />
-                                                    <span>{i18n._(unit)}</span>
-                                                </td>
-                                            )}
-                                            { type === 'enum' && (
-                                                <td>
-                                                    <span>{i18n._(setting.options[defaultValue])}</span>
-                                                    <Space width="4" />
-                                                    <span>{i18n._(unit)}</span>
-                                                </td>
-                                            )}
-                                            { type === 'bool' && (
-                                                <td>
-                                                    {defaultValue ? i18n._('Yes') : i18n._('No')}
-                                                </td>
-                                            )}
-                                        </tr>
-                                    );
-                                })}
-                            </tbody>
-                        </table>
-                    )}
-                </OptionalDropdown>
-            </div>*/}
         </React.Fragment>
     );
 }

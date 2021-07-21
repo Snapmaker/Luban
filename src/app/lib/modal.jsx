@@ -5,6 +5,7 @@ import PropTypes from 'prop-types';
 import ReactDOM from 'react-dom';
 import i18n from './i18n';
 import Modal from '../ui/components/Modal';
+import { Button } from '../ui/components/Buttons';
 
 let outsideInputValue = '';
 class ModalHOC extends PureComponent {
@@ -13,6 +14,7 @@ class ModalHOC extends PureComponent {
         removeContainer: PropTypes.func.isRequired,
         defaultInputValue: PropTypes.string,
         type: PropTypes.string,
+        cancelTitle: PropTypes.string,
         title: PropTypes.node,
         body: PropTypes.node,
         footer: PropTypes.node
@@ -51,10 +53,10 @@ class ModalHOC extends PureComponent {
     }
 
     render() {
-        const { title, body, footer, size, type } = this.props;
+        const { title, body, footer, size, type, cancelTitle } = this.props;
         const { show, inputValue } = this.state;
         const props = pick(this.props, Object.keys(Modal.propTypes));
-
+        const newTitle = i18n._(cancelTitle) || i18n._('Cancel');
         return (
             <Modal
                 {...props}
@@ -91,9 +93,12 @@ class ModalHOC extends PureComponent {
                 </Modal.Body>
                 <Modal.Footer>
                     {type === 'buttonRight' && footer}
-                    <button type="button" className="sm-btn-large sm-btn-default" onClick={this.handleClose}>
-                        {i18n._('Cancel')}
-                    </button>
+                    <Button
+                        onClick={this.handleClose}
+                        width="110px"
+                    >
+                        {newTitle}
+                    </Button>
                     {type !== 'buttonRight' && footer}
                 </Modal.Footer>
             </Modal>

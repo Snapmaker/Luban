@@ -5,7 +5,10 @@ import PropTypes from 'prop-types';
 import i18n from '../../../../lib/i18n';
 import api from '../../../../api';
 import CalibrationPreview from './ManualCalibration';
-import Anchor from '../../../components/Anchor';
+// import Anchor from '../../../components/Anchor';
+import Modal from '../../../components/Modal';
+import { Button } from '../../../components/Buttons';
+
 import styles from '../styles.styl';
 import { EXPERIMENTAL_LASER_CAMERA } from '../../../../constants';
 
@@ -80,91 +83,88 @@ class ManualCalibration extends PureComponent {
 
     render() {
         return (
-            <div>
+            <Modal>
                 <div className="clearfix" />
-                <div className={styles['laser-set-background-calibration-title']}>
-                    {i18n._('Calibration')}
-                </div>
-                <div className={styles['laser-set-background-modal-content']}>
-                    <div className={styles['calibrate-background']}>
+                <Modal.Header>
+                    <div className={styles['laser-set-background-calibration-title']}>
+                        {i18n._('Calibration')}
+                    </div>
+                </Modal.Header>
+                <Modal.Body>
+                    <div className={styles['laser-set-background-modal-content']}>
+                        <div className={styles['calibrate-background']}>
+                            <div className={styles['calibrate-advise']}>
+                                <p style={{ marginBottom: '1rem', textAlign: 'center', width: '522px' }}>
+                                    {i18n._('Align the four corners of the quadrilateral with the corners of the printed square. This will affect how the captured image is mapped with machine coordinates.') }
+                                </p>
+                            </div>
+
+                        </div>
+                        <CalibrationPreview
+                            ref={this.calibrationPreview}
+                            getPoints={this.props.getPoints}
+                            width={this.state.width}
+                            height={this.state.height}
+                            updateAffinePoints={this.props.updateAffinePoints}
+                        />
+
                         <div className={classNames(
-                            styles['reset-actions'],
-                            'sm-btn-large',
+                            'sm-flex',
+                            'justify-space-between',
+                            'margin-vertical-16',
                         )}
                         >
-                            <Anchor
-                                className={styles['reset-actions__btn']}
+                            <Button
+                                width="160px"
+                                priority="level-three"
+                                type="default"
                                 onClick={this.actions.onClickToUpload}
                             >
-                                <i className={styles['reset-actions__icon-reset']} />
-                                <span className={styles['reset-actions__text']}>
-                                    {i18n._('Reset')}
-                                </span>
-                            </Anchor>
-                        </div>
-
-                        <div
-                            className={classNames(
-                                styles['confirm-actions'],
-                                'sm-btn-large',
-                                'sm-btn-default',
-                                styles[this.state.isComfirmPoints ? 'isBlue' : ''],
-                            )}
-                        >
-                            <Anchor
-                                className={styles['confirm-actions__btn']}
+                                {i18n._('Reset')}
+                            </Button>
+                            <Button
+                                width="160px"
+                                priority="level-three"
+                                type="default"
                                 onClick={this.actions.onClickToConfirm}
                             >
-                                <i className={styles['confirm-actions__icon-confirm']} />
-                                <span className={styles['reset-actions__text']}>
-                                    {i18n._('Confirm')}
-                                </span>
-                            </Anchor>
+                                {i18n._('Confirm')}
+                            </Button>
                         </div>
-
                     </div>
-                    <CalibrationPreview
-                        ref={this.calibrationPreview}
-                        getPoints={this.props.getPoints}
-                        width={this.state.width}
-                        height={this.state.height}
-                        updateAffinePoints={this.props.updateAffinePoints}
-                    />
-
-                    <div className={styles['calibrate-advise']}>
-                        <p style={{ margin: '1rem 0', textAlign: 'center' }}>
-                            {i18n._('Align the four corners of the quadrilateral with the corners of the printed square. This will affect how the captured image is mapped with machine coordinates.') }
-                        </p>
+                </Modal.Body>
+                <Modal.Footer>
+                    <div style={{ minHeight: 30 }}>
+                        {!EXPERIMENTAL_LASER_CAMERA && (
+                            <Button
+                                width="96px"
+                                priority="level-two"
+                                type="default"
+                                className={classNames(
+                                    styles['btn-camera'],
+                                    'float-l'
+                                )}
+                                onClick={this.actions.previousPanel}
+                            >
+                                {i18n._('Previous')}
+                            </Button>
+                        )}
+                        {!EXPERIMENTAL_LASER_CAMERA && (
+                            <Button
+                                priority="level-two"
+                                width="96px"
+                                className={classNames(
+                                    styles[this.state.isComfirmPoints ? 'btn-right-camera' : 'btn-right-camera-disabled'],
+                                )}
+                                disabled={!this.state.isComfirmPoints}
+                                onClick={this.actions.setCameraCalibrationMatrix}
+                            >
+                                {i18n._('Apply')}
+                            </Button>
+                        )}
                     </div>
-                </div>
-                <div style={{ minHeight: 30, margin: '0 auto' }}>
-                    {!EXPERIMENTAL_LASER_CAMERA && (
-                        <button
-                            type="button"
-                            className={classNames(
-                                'sm-btn-large',
-                                styles['btn-camera'],
-                            )}
-                            onClick={this.actions.previousPanel}
-                        >
-                            {i18n._('Previous')}
-                        </button>
-                    )}
-                    {!EXPERIMENTAL_LASER_CAMERA && (
-                        <button
-                            type="button"
-                            className={classNames(
-                                'sm-btn-large',
-                                styles[this.state.isComfirmPoints ? 'btn-right-camera' : 'btn-right-camera-disabled'],
-                            )}
-                            disabled={!this.state.isComfirmPoints}
-                            onClick={this.actions.setCameraCalibrationMatrix}
-                        >
-                            {i18n._('Apply')}
-                        </button>
-                    )}
-                </div>
-            </div>
+                </Modal.Footer>
+            </Modal>
         );
     }
 }

@@ -10,6 +10,8 @@ import ExtractPreview from './ExtractPreview';
 import ManualCalibration from '../ManualCalibration';
 import { MACHINE_SERIES } from '../../../../constants';
 import { actions } from '../../../../flux/machine';
+import { Button } from '../../../components/Buttons';
+import Modal from '../../../components/Modal';
 
 const PANEL_EXTRACT_TRACE = 1;
 const PANEL_MANUAL_CALIBRATION = 2;
@@ -30,6 +32,7 @@ class ExtractSquareTrace extends PureComponent {
         changeLastFileNames: PropTypes.func.isRequired,
         changeCanTakePhoto: PropTypes.func.isRequired,
         setBackgroundImage: PropTypes.func.isRequired,
+        hideModal: PropTypes.func.isRequired,
         executeGcodeG54: PropTypes.func.isRequired
     };
 
@@ -439,72 +442,78 @@ class ExtractSquareTrace extends PureComponent {
             <div>
                 <div className="clearfix" />
                 <div style={{ display: this.state.panel === PANEL_EXTRACT_TRACE ? 'block' : 'none' }}>
-                    <div className={styles['laser-set-background-modal-title']}>
-                        {i18n._('Camera Capture')}
-                    </div>
-                    <div style={{ margin: '1rem 0' }}>
-                        {i18n._('The camera on the laser module captures images of the work area, and stitch them together as the background. The accuracy of Camera Calibration affects how the captured image is mapped with machine coordinates. If you have reinstalled the laser module, please redo Camera Calibration on the touchscreen before proceeding.')}
-                    </div>
-                    <div
-                        className={styles['photo-display']}
-                        style={{ height: this.props.laserSize.y * this.multiple + 2, width: this.props.laserSize.x * this.multiple + 2 }}
-                    >
-
-                        {this.extractingPreview.map((previewId, index) => {
-                            const key = previewId + index;
-                            return (
-                                <ExtractPreview
-                                    size={this.props.laserSize}
-                                    series={this.props.series}
-                                    ref={previewId}
-                                    key={key}
-                                />
-                            );
-                        })}
-                        <div
-                            className={styles['start-background']}
-                            style={{ display: this.state.canStart ? 'block' : 'none', width: '100%' }}
-
+                    <Modal onClose={this.props.hideModal}>
+                        <Modal.Header>
+                            {i18n._('Camera Capture')}
+                        </Modal.Header>
+                        <Modal.Body
+                            className={classNames(
+                                styles['modal-body']
+                            )}
                         >
-                            <button
-                                type="button"
-                                className="sm-btn-large sm-btn-primary start-actions"
-                                onClick={this.actions.startCameraAid}
-                                style={{ display: 'block', width: '50%', margin: 'auto' }}
-
+                            <div style={{ margin: '0 auto', width: '509px' }}>
+                                {i18n._('The camera on the laser module captures images of the work area, and stitch them together as the background. The accuracy of Camera Calibration affects how the captured image is mapped with machine coordinates. If you have reinstalled the laser module, please redo Camera Calibration on the touchscreen before proceeding.')}
+                            </div>
+                            <div
+                                className={classNames(styles['photo-display'], 'border-radius-8')}
+                                style={{ height: this.props.laserSize.y * this.multiple + 2, width: this.props.laserSize.x * this.multiple + 2 }}
                             >
-                                {i18n._('Start')}
-                            </button>
-                        </div>
-                    </div>
-                    <div style={{ minHeight: 30, width: this.props.laserSize.x * this.multiple + 2, margin: '0 auto' }}>
-                        <div className="clearfix" />
-                        <button
-                            type="button"
-                            className={classNames(
-                                'sm-btn-large',
-                                styles[this.props.canTakePhoto ? 'btn-camera' : 'btn-camera-disabled'],
-                            )}
-                            style={{ marginTop: '1rem' }}
-                            onClick={this.actions.displayManualCalibration}
-                            disabled={!this.props.canTakePhoto}
+                                {this.extractingPreview.map((previewId, index) => {
+                                    const key = previewId + index;
+                                    return (
+                                        <ExtractPreview
+                                            size={this.props.laserSize}
+                                            series={this.props.series}
+                                            ref={previewId}
+                                            key={key}
+                                        />
+                                    );
+                                })}
+                                <div
+                                    className={styles['start-background']}
+                                    style={{ display: this.state.canStart ? 'inline-block' : 'none', margin: '0 auto' }}
 
-                        >
-                            {i18n._('Calibration')}
-                        </button>
-                        <button
-                            type="button"
-                            className={classNames(
-                                'sm-btn-large',
-                                styles[this.state.isStitched ? 'btn-right-camera' : 'btn-right-camera-disabled'],
-                            )}
-                            style={{ marginTop: '1rem' }}
-                            onClick={this.actions.setBackgroundImage}
-                            disabled={!this.state.isStitched}
-                        >
-                            {i18n._('Confirm')}
-                        </button>
-                    </div>
+                                >
+                                    <Button
+                                        priority="level-two"
+                                        width="160px"
+                                        onClick={this.actions.startCameraAid}
+                                    >
+                                        {i18n._('Start')}
+                                    </Button>
+                                </div>
+                            </div>
+                            <div style={{ minHeight: 30, width: this.props.laserSize.x * this.multiple + 2, margin: '0 auto' }}>
+                                <div className="clearfix" />
+                                <Button
+                                    priority="level-two"
+                                    type="default"
+                                    width="160px"
+                                    className={classNames(
+                                        styles[this.props.canTakePhoto ? 'btn-camera' : 'btn-camera-disabled'],
+                                        'margin-top-16'
+                                    )}
+                                    onClick={this.actions.displayManualCalibration}
+                                    disabled={!this.props.canTakePhoto}
+                                >
+                                    {i18n._('Calibration')}
+                                </Button>
+                            </div>
+                        </Modal.Body>
+                        <Modal.Footer>
+                            <Button
+                                priority="level-two"
+                                width="96px"
+                                className={classNames(
+                                    styles[this.state.isStitched ? 'btn-right-camera' : 'btn-right-camera-disabled'],
+                                )}
+                                onClick={this.actions.setBackgroundImage}
+                                disabled={!this.state.isStitched}
+                            >
+                                {i18n._('Confirm')}
+                            </Button>
+                        </Modal.Footer>
+                    </Modal>
                 </div>
                 {this.state.panel === PANEL_MANUAL_CALIBRATION && (
                     <ManualCalibration
@@ -518,7 +527,6 @@ class ExtractSquareTrace extends PureComponent {
                         calibrationOnOff={this.actions.calibrationOnOff}
                     />
                 )}
-
             </div>
         );
     }

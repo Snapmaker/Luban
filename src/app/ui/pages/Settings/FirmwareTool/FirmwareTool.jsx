@@ -4,7 +4,6 @@ import FileSaver from 'file-saver';
 // import { TextInput } from '../../../components/Input';
 import api from '../../../../api';
 import i18n from '../../../../lib/i18n';
-import styles from './index.styl';
 import UniApi from '../../../../lib/uni-api';
 
 class FirmwareTool extends PureComponent {
@@ -77,45 +76,33 @@ class FirmwareTool extends PureComponent {
         const shouldShowWarning = !state.mainFile && !state.moduleFile;
 
         return (
-            <div style={{ marginBottom: '55px' }}>
-                <ul className={styles.firmware}>
-                    <li className={styles.wrapper}>
-                        <span className={styles.labelText}>{i18n._('Controller Firmware')}</span>
-                        <input
-                            ref={this.mainInput}
-                            className={styles.mainInput}
-                            type="file"
-                            accept=".bin"
-                            multiple={false}
-                            onChange={actions.onChangeMainFile}
-                        />
-                    </li>
-                    <li className={styles.wrapper}>
-                        <span className={styles.labelText}>{i18n._('Module Firmware')}</span>
-                        <input
-                            ref={this.moduleInput}
-                            className={styles.moduleInput}
-                            type="file"
-                            accept=".bin"
-                            multiple={false}
-                            onChange={actions.onChangeModuleFile}
-                        />
-                    </li>
-                </ul>
-                {/* <div className={styles.buildButton}>
-                    <button
-                        type="button"
-                        disabled={shouldShowWarning}
-                        className="sm-btn-small sm-btn-primary"
-                        onClick={() => actions.onClickToBuildAndExport()}
-                    >
-                        {i18n._('Compile and Export')}
-                    </button>
-                </div> */}
+            <div>
+                <div className="sm-flex height-28 margin-bottom-8">
+                    <span className="width-136">{i18n._('Controller Firmware')}</span>
+                    <input
+                        ref={this.mainInput}
+                        className="margin-left-32 "
+                        type="file"
+                        accept=".bin"
+                        multiple={false}
+                        onChange={actions.onChangeMainFile}
+                    />
+                </div>
+                <div className="sm-flex height-28">
+                    <span className="width-136">{i18n._('Module Firmware')}</span>
+                    <input
+                        ref={this.moduleInput}
+                        className="margin-left-32 "
+                        type="file"
+                        accept=".bin"
+                        multiple={false}
+                        onChange={actions.onChangeModuleFile}
+                    />
+                </div>
                 {shouldShowWarning && (
-                    <p className={styles.warningNotes}>
+                    <span className="margin-top-10 display-inline color-red-1">
                         {i18n._('Please select one or more firmware binaries')}
-                    </p>
+                    </span>
                 )}
             </div>
         );

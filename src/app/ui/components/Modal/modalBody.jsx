@@ -1,10 +1,12 @@
 import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
+import classNames from 'classnames';
 // import { Modal as AModal } from 'antd';
 
 class Body extends PureComponent {
     static propTypes = {
         children: PropTypes.node,
+        className: PropTypes.string,
         key: PropTypes.string
     };
 
@@ -14,7 +16,12 @@ class Body extends PureComponent {
 
     render() {
         return (
-            <div className="clearfix" id={this.props.key}>{this.props.children}</div>
+            <div
+                id={this.props.key}
+                className={classNames(this.props.className, 'clearfix')}
+            >
+                {this.props.children}
+            </div>
         );
     }
 }

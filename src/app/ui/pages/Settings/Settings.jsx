@@ -7,7 +7,7 @@ import Uri from 'jsuri';
 import React, { PureComponent } from 'react';
 // import { Link } from 'react-router-dom';
 import settings from '../../../config/settings';
-// import Breadcrumbs from '../../components/Breadcrumbs';
+import Anchor from '../../components/Anchor';
 import confirm from '../../../lib/confirm';
 import i18n from '../../../lib/i18n';
 // import storeManager from '../../store/local-storage';
@@ -182,24 +182,20 @@ class Settings extends PureComponent {
         const id = mapSectionPathToId(sectionPath || initialSectionPath);
         const activeSection = _.find(this.sections, { id: id }) || this.sections[0];
         const sectionItems = this.sections.map((section) => (
-            <li
+            <div
                 key={section.id}
-                className={classNames(
-                    { [styles.active]: activeSection.id === section.id }
-                )}
             >
-                <span
-                    role="button"
-                    tabIndex="-1"
-                    onKeyPress={() => {}}
+                <Anchor
+                    className={classNames(styles.item, { [styles.selected]: activeSection.id === section.id })}
                     onClick={(e) => {
                         e.preventDefault();
                         this.switchTab(`/settings/${section.path}`);
                     }}
                 >
-                    {section.title}
-                </span>
-            </li>
+                    <span className="sm-parameter-header__title">{i18n._(section.title)}</span>
+
+                </Anchor>
+            </div>
         ));
 
         // Section component
@@ -210,33 +206,20 @@ class Settings extends PureComponent {
         const sectionActions = actions[activeSection.id];
 
         return (
-            <div className={styles.settings}>
-                {/* <Breadcrumbs>
-                    <Breadcrumbs.Item active>{i18n._('Settings')}</Breadcrumbs.Item>
-                </Breadcrumbs> */}
-                <div className={classNames(styles.container, styles.border)}>
-                    <div className={styles.row}>
-                        <div className={classNames(styles.col, styles.sidenav)}>
-                            <nav className={styles.navbar}>
-                                <ul className={styles.nav}>
-                                    {sectionItems}
-                                </ul>
-                            </nav>
-                        </div>
-                        <div className={classNames(styles.col, styles.splitter)} />
-                        <div className={classNames(styles.col, styles.section)}>
-                            <div className={styles.heading}>{activeSection.title}</div>
-                            <div className={styles.content}>
-                                <Section
-                                    {...this.props}
-                                    initialState={sectionInitialState}
-                                    state={sectionState}
-                                    stateChanged={sectionStateChanged}
-                                    actions={sectionActions}
-                                />
-                            </div>
-                        </div>
+            <div className={classNames(styles['manager-wrapper'], 'sm-flex')}>
+                <div className={classNames(styles['manager-grouplist'], 'width-percent-30')}>
+                    <div className="sm-parameter-container">
+                        {sectionItems}
                     </div>
+                </div>
+                <div className={classNames(styles['manager-details'])}>
+                    <Section
+                        {...this.props}
+                        initialState={sectionInitialState}
+                        state={sectionState}
+                        stateChanged={sectionStateChanged}
+                        actions={sectionActions}
+                    />
                 </div>
             </div>
         );

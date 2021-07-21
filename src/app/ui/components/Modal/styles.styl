@@ -1,12 +1,15 @@
 @import "../../../styles/variables.styl"
-
+.modal{
+    :global(.ant-modal-content){
+        overflow-y: auto
+        max-height: 720px
+    }
+}
 .modal-small-img
     width: 100%
     display: block
     vertical-align: middle
     text-align: center
-    margin-bottom: 24px
-
 .modal-small-body
 
     &-text
@@ -90,7 +93,3 @@
     margin-top: 16px
     margin-bottom: 12px
     font-size: $font-size-lead
-
-
-
-

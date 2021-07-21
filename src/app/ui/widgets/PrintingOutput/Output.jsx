@@ -2,9 +2,13 @@ import React, { PureComponent } from 'react';
 import { withRouter } from 'react-router-dom';
 import { connect } from 'react-redux';
 import path from 'path';
+import classNames from 'classnames';
 import { noop } from 'lodash';
 import PropTypes from 'prop-types';
 import FileSaver from 'file-saver';
+import Menu from '../../components/Menu';
+import { Button } from '../../components/Buttons';
+import Dropdown from '../../components/Dropdown';
 
 // import { pathWithRandomSuffix } from '../../../shared/lib/random-utils';
 import i18n from '../../../lib/i18n';
@@ -162,68 +166,78 @@ class Output extends PureComponent {
 
         const isSlicing = stage === PRINTING_STAGE.SLICING;
         const { isAnyModelOverstepped } = this.props;
+        const menu = (
+            <Menu>
+                <Menu.Item
+                    onClick={actions.onClickLoadGcode}
+                    disabled={workflowState === 'running' || !gcodeLine || inProgress}
+                >
+                    <div className={classNames('align-c')}>
+                        {i18n._('Load G-code to Workspace')}
+                    </div>
+                </Menu.Item>
+                <Menu.Item
+                    disabled={!gcodeLine || inProgress}
+                    onClick={actions.onClickExportGcode}
+                >
+                    <div className={classNames('align-c')}>
+                        {i18n._('Export G-code to file')}
+                    </div>
+                </Menu.Item>
+            </Menu>
+        );
 
         return (
-            <div style={{ position: 'fixed', bottom: '10px', backgroundColor: '#fff', width: '360px' }}>
-                <div>
-                    <button
-                        type="button"
-                        className="sm-btn-large sm-btn-default"
+            <div className={classNames('position-fixed', 'border-radius-bottom-8', 'bottom-8', 'background-color-white', 'width-360')}>
+                <div className={classNames('position-re', 'margin-horizontal-16', 'margin-vertical-16')}>
+                    <Button
+                        type="primary"
+                        priority="level-one"
                         onClick={actions.onClickGenerateGcode}
                         disabled={!hasModel || !hasAnyModelVisible || isSlicing || isAnyModelOverstepped || inProgress}
                         style={{ display: gcodeLine ? 'none' : 'block', width: '100%' }}
                     >
                         {i18n._('Generate G-code')}
-                    </button>
-                    {gcodeLine && (
-                        <button
-                            type="button"
-                            className="sm-btn-large sm-btn-default"
-                            onClick={actions.onToggleDisplayGcode}
-                            style={{ position: 'absolute', bottom: '46px', width: '100%' }}
+                    </Button>
+                    {gcodeLine && !this.state.showExportOptions && (
+                        <Button
+                            type="default"
+                            priority="level-one"
                             disabled={inProgress}
+                            onClick={actions.onToggleDisplayGcode}
+                            className={classNames('position-ab', 'bottom-64', 'left-0')}
                         >
                             {displayedType === 'gcode' ? i18n._('Close preview') : i18n._('Preview ')}
-                        </button>
+                        </Button>
                     )}
-                    <div
-                        onKeyDown={noop}
-                        role="button"
-                        tabIndex={0}
-                        onMouseEnter={actions.handleMouseOver}
-                        onMouseLeave={actions.handleMouseOut}
-                    >
-                        <button
-                            type="button"
-                            className="sm-btn-large sm-btn-default"
-                            style={{ display: gcodeLine ? 'block' : 'none', position: 'absolute', bottom: '0', width: '100%', marginTop: '10px' }}
-                            disabled={inProgress}
+                    {gcodeLine && (
+                        <div
+                            onKeyDown={noop}
+                            role="button"
+                            className={classNames('position-re')}
+                            tabIndex={0}
+                            onMouseEnter={actions.handleMouseOver}
+                            onMouseLeave={actions.handleMouseOut}
                         >
-                            {i18n._('Export')}
-                        </button>
-                        {this.state.showExportOptions && (
-                            <div style={{ position: 'relative', bottom: '46px', backgroundColor: '#fff', width: '360px' }}>
-                                <button
-                                    type="button"
-                                    className="sm-btn-large sm-btn-default"
-                                    onClick={actions.onClickLoadGcode}
-                                    disabled={workflowState === 'running' || !gcodeLine || inProgress}
-                                    style={{ display: 'block', width: '100%', marginTop: '10px' }}
+                            <Dropdown
+                                overlay={menu}
+                            >
+                                <Button
+                                    type="primary"
+                                    priority="level-one"
+                                    disabled={inProgress}
+                                    className={classNames(
+                                        'position-ab',
+                                        'bottom-16',
+                                        'margin-top-10',
+                                        displayedType === gcodeLine ? 'display-block' : 'display-none'
+                                    )}
                                 >
-                                    {i18n._('Load G-code to Workspace')}
-                                </button>
-                                <button
-                                    type="button"
-                                    className="sm-btn-large sm-btn-default"
-                                    onClick={actions.onClickExportGcode}
-                                    disabled={!gcodeLine || inProgress}
-                                    style={{ display: 'block', width: '100%', marginTop: '10px' }}
-                                >
-                                    {i18n._('Export G-code to File')}
-                                </button>
-                            </div>
-                        )}
-                    </div>
+                                    {i18n._('Export')}
+                                </Button>
+                            </Dropdown>
+                        </div>
+                    )}
                 </div>
                 <Thumbnail
                     ref={this.thumbnail}

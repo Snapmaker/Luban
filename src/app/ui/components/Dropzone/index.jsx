@@ -13,8 +13,6 @@ class Dropzone extends PureComponent {
     static propTypes = {
         children: PropTypes.node.isRequired,
         disabled: PropTypes.bool,
-        havePrimaryWidget: PropTypes.bool,
-        haveSecondaryWidget: PropTypes.bool,
         accept: PropTypes.string.isRequired,
         onDropAccepted: PropTypes.func.isRequired,
         onDropRejected: PropTypes.func.isRequired,
@@ -43,7 +41,7 @@ class Dropzone extends PureComponent {
     }
 
     render() {
-        const { disabled = false, dragEnterMsg = '', children = null, havePrimaryWidget = true, haveSecondaryWidget = true } = this.props;
+        const { disabled = false, dragEnterMsg = '', children = null } = this.props;
         const isDragging = this.state.isDragging;
 
 
@@ -53,8 +51,6 @@ class Dropzone extends PureComponent {
                     className={classNames(
                         styles['dropzone-overlay'],
                         { [styles.hidden]: !(isDragging) },
-                        { [styles.havePrimaryWidget]: havePrimaryWidget },
-                        { [styles.haveNotSecondaryWidget]: !haveSecondaryWidget }
                     )}
                 >
                     <div className={styles['text-block']}>

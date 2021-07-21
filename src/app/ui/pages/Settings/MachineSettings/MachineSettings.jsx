@@ -2,9 +2,10 @@ import React, { useEffect, useState } from 'react';
 // import { connect } from 'react-redux';
 import { useDispatch, useSelector } from 'react-redux';
 // import PropTypes from 'prop-types';
-import classNames from 'classnames';
+// import classNames from 'classnames';
 // import isEqual from 'lodash/isEqual';
 import Select from '../../../components/Select';
+import SvgIcon from '../../../components/SvgIcon';
 import { NumberInput } from '../../../components/Input';
 import i18n from '../../../../lib/i18n';
 import { actions as machineActions } from '../../../../flux/machine';
@@ -177,161 +178,55 @@ function MachineSettings() {
         });
     }, [series, size, enclosureDoorDetection, zAxisModule, connectionTimeout]);
 
-    // const doorDetectionOptions = [
-    //     {
-    //         value: true,
-    //         label: i18n._('On')
-    //     },
-    //     {
-    //         value: false,
-    //         label: i18n._('Off')
-    //     }
-    // ];
-    // const zAxisModuleOptions = [
-    //     {
-    //         value: 0,
-    //         label: i18n._('Standard Module')
-    //     },
-    //     {
-    //         value: 1,
-    //         label: i18n._('Extension Module')
-    //     }
-    // ];
-
-    // const stateChanged = (state.series !== series)
-    //     || !isEqual(size, state.size)
-    //     || !isEqual(enclosureDoorDetection, state.enclosureDoorDetection)
-    //     || !isEqual(zAxisModule, state.zAxisModule)
-    //     || !isEqual(connectionTimeout, state.connectionTimeout);
-
     const editable = (state.series === 'Custom');
     return (
-        <div className={styles['form-container']} style={{ marginBottom: '55px' }}>
-            <p className={styles['form-title']}>{i18n._('Machine')}</p>
-            <div className={styles['form-group']}>
-                <div className={classNames(styles['form-control'], styles.short)}>
-                    <Select
-                        clearable={false}
-                        searchable={false}
-                        disabled={isConnected}
-                        name="select-machine"
-                        options={machineSeriesOptions}
-                        value={state.series}
-                        onChange={actions.onChangeMachineSeries}
-                    />
-                </div>
+        <div className={styles['form-container']}>
+            <div className="border-bottom-normal padding-bottom-4">
+                <SvgIcon
+                    name="TitleSetting"
+                />
+                <span className="margin-left-4">{i18n._('Machine')}</span>
             </div>
-            <div className={styles['form-group']}>
-                <span>{i18n._('X (Width)')}</span>
-                <div className={classNames(styles['form-control'], styles.short)}>
-                    <NumberInput
-                        value={state.size.x}
-                        disabled={!editable}
-                        onChange={actions.onChangeSizeX}
-                    />
-                    <span className={styles.unit}>mm</span>
-                </div>
+            <Select
+                className="margin-top-16"
+                searchable={false}
+                size="200px"
+                disabled={isConnected}
+                name="select-machine"
+                options={machineSeriesOptions}
+                value={state.series}
+                onChange={actions.onChangeMachineSeries}
+            />
+            <div className="margin-top-16">{i18n._('X (Width)')}</div>
+            <div className="position-re sm-flex height-32">
+                <NumberInput
+                    size="large"
+                    value={state.size.x}
+                    disabled={!editable}
+                    onChange={actions.onChangeSizeX}
+                />
+                <span className="sm-flex__input-unit-l-128">mm</span>
             </div>
-            <div className={styles['form-group']}>
-                <span>{i18n._('Y (Depth)')}</span>
-                <div className={classNames(styles['form-control'], styles.short)}>
-                    <NumberInput
-                        value={state.size.y}
-                        disabled={!editable}
-                        onChange={actions.onChangeSizeY}
-                    />
-                    <span className={styles.unit}>mm</span>
-                </div>
+            <div className="margin-top-16">{i18n._('Y (Depth)')}</div>
+            <div className="position-re sm-flex height-32">
+                <NumberInput
+                    size="large"
+                    value={state.size.y}
+                    disabled={!editable}
+                    onChange={actions.onChangeSizeY}
+                />
+                <span className="sm-flex__input-unit-l-128">mm</span>
             </div>
-            <div className={styles['form-group']}>
-                <span>{i18n._('Z (Height)')}</span>
-                <div className={classNames(styles['form-control'], styles.short)}>
-                    <NumberInput
-                        value={state.size.z}
-                        disabled={!editable}
-                        onChange={actions.onChangeSizeZ}
-                    />
-                    <span className={styles.unit}>mm</span>
-                </div>
+            <div className="margin-top-16">{i18n._('Z (Height)')}</div>
+            <div className="position-re sm-flex height-32">
+                <NumberInput
+                    size="large"
+                    value={state.size.z}
+                    disabled={!editable}
+                    onChange={actions.onChangeSizeZ}
+                />
+                <span className="sm-flex__input-unit-l-128">mm</span>
             </div>
-            {/* <p className={styles['form-title']}>{i18n._('Enclosure')}</p>
-            <div className={styles['form-group']}>
-                <span>{i18n._('Door Detection')}</span>
-                <div className={classNames(styles['form-control'], styles.short)}>
-                    <Select
-                        clearable={false}
-                        searchable={false}
-                        name={i18n._('Door Detection')}
-                        options={doorDetectionOptions}
-                        value={state.enclosureDoorDetection}
-                        onChange={actions.onChangeEnclosureState}
-                    />
-                </div>
-            </div>
-            <p className={styles['form-title']}>{i18n._('Module')}</p>
-            <div className={styles['form-group']}>
-                <span>{i18n._('Z-Axis Extension Module')}</span>
-                <div className={classNames(styles['form-control'], styles.short)}>
-                    <Select
-                        clearable={false}
-                        searchable={false}
-                        name={i18n._('Z-Axis Extension Module')}
-                        options={zAxisModuleOptions}
-                        value={state.zAxisModule}
-                        onChange={actions.onChangeZAxisModuleState}
-                    />
-                </div>
-            </div>
-            <p className={styles['form-title']}>{i18n._('Connection')}</p>
-            <div className={styles['form-group']}>
-                <span>{i18n._('Timeout')}</span>
-                <div className={classNames(styles['form-control'], styles.short)}>
-                    <Select
-                        clearable={false}
-                        searchable={false}
-                        name={i18n._('Wait Time')}
-                        options={[
-                            {
-                                value: 3000,
-                                label: '3s'
-                            },
-                            {
-                                value: 15000,
-                                label: '15s'
-                            },
-                            {
-                                value: 30000,
-                                label: '30s'
-                            }
-                        ]}
-                        value={state.connectionTimeout}
-                        onChange={actions.onChangeConnectionTimeoutState}
-                    />
-                </div>
-            </div> */}
-            {/* <div className={styles['form-actions']}>
-                <div className="row">
-                    <div className="col-12">
-                        <button
-                            type="button"
-                            className="btn btn-outline-secondary"
-                            onClick={actions.onCancel}
-                        >
-                            {i18n._('Cancel')}
-                        </button>
-                        <button
-                            type="button"
-                            className="btn btn-primary"
-                            disabled={!stateChanged}
-                            onClick={actions.onSave}
-                        >
-                            <i className="fa fa-save" />
-                            <span className="space" />
-                            {i18n._('Save Changes')}
-                        </button>
-                    </div>
-                </div>
-            </div> */}
         </div>
     );
 }

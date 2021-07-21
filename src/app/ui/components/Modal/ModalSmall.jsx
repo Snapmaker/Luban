@@ -2,6 +2,8 @@ import '@trendmicro/react-modal/dist/react-modal.css';
 import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
 import Modal from './index';
+import { Button } from '../Buttons';
+import SvgIcon from '../SvgIcon';
 import styles from './styles.styl';
 import i18n from '../../../lib/i18n';
 
@@ -10,6 +12,7 @@ class ModalSmall extends PureComponent {
         ...Modal.propTypes,
         showCloseButton: PropTypes.bool,
         img: PropTypes.string,
+        iconColor: PropTypes.string,
         title: PropTypes.string.isRequired,
         text: PropTypes.string,
         subtext: PropTypes.string
@@ -21,7 +24,9 @@ class ModalSmall extends PureComponent {
 
     render() {
         const { onClose, onCancel, onConfirm, showCloseButton = true, ...props } = this.props;
-        const img = this.props.img || '../../images/ic_warning-64x64.png';
+        const img = this.props.img || '';
+        const iconColor = this.props.iconColor;
+        const isImage = new RegExp(/^\.\.\//).test(img);
         const text = this.props.text;
         const subtext = this.props.subtext;
         const title = this.props.title;
@@ -43,7 +48,15 @@ class ModalSmall extends PureComponent {
                 }}
                 >
                     <div className={styles['modal-small-img']}>
-                        <img src={img} alt="......" />
+                        {!isImage && (
+                            <SvgIcon
+                                name={img}
+                                color={iconColor}
+                                type="static"
+                                size="72"
+                            />
+                        )}
+                        {isImage && (<img src={img} alt="......" />)}
                     </div>
                     <div className={styles['modal-small-body-text']}>
                         {i18n._(title)}
@@ -71,27 +84,26 @@ class ModalSmall extends PureComponent {
                         </div>
                     )}
 
-
                 </Modal.Body>
                 {onCancel && onConfirm && (
                     <Modal.Footer>
-                        <button
-                            type="button"
-                            className="btn btn-outline-secondary"
-                            style={{
-                                float: 'left'
-                            }}
+                        <Button
+                            priority="level-two"
+                            className="margin-left-8"
+                            width="96px"
+                            type="default"
                             onClick={onCancel}
                         >
                             {i18n._('Cancel')}
-                        </button>
-                        <button
-                            type="button"
-                            className="btn btn-primary"
+                        </Button>
+                        <Button
+                            priority="level-two"
+                            className="margin-left-8"
+                            width="96px"
                             onClick={onConfirm}
                         >
                             {i18n._('Confirm')}
-                        </button>
+                        </Button>
                     </Modal.Footer>
                 )}
             </Modal>

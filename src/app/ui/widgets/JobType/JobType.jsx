@@ -4,10 +4,10 @@ import PropTypes from 'prop-types';
 // import classNames from 'classnames';
 import i18n from '../../../lib/i18n';
 import { toFixed } from '../../../lib/numeric-utils';
-import styles from './styles.styl';
+// import styles from './styles.styl';
 import {
     COORDINATE_MODE_CENTER, COORDINATE_MODE_BOTTOM_LEFT, COORDINATE_MODE_BOTTOM_RIGHT, COORDINATE_MODE_TOP_LEFT,
-    COORDINATE_MODE_TOP_RIGHT, COORDINATE_MODE_BOTTOM_CENTER, HEAD_CNC, HEAD_LASER
+    COORDINATE_MODE_TOP_RIGHT, COORDINATE_MODE_BOTTOM_CENTER, HEAD_LASER
 } from '../../../constants';
 import { NumberInput as Input } from '../../components/Input';
 import Select from '../../components/Select';
@@ -108,163 +108,128 @@ class JobType extends PureComponent {
     };
 
     render() {
-        const { size, headType, inProgress, jobTypeState } = this.props;
+        const { size, inProgress, jobTypeState, headType } = this.props;
         const { materials, coordinateMode, coordinateSize } = jobTypeState;
         const { isRotate, diameter, length } = materials;
 
         return (
             <React.Fragment>
                 {!isRotate && (
-                    <div className="sm-parameter-row">
-                        <span className="sm-parameter-row__label">{i18n._('Origin Mode')}</span>
-                        <Select
-                            className="sm-parameter-row__font-select"
-                            backspaceRemoves={false}
-                            clearable={false}
-                            options={this.coordinateModeList}
-                            isGroup={false}
-                            placeholder={i18n._('Choose font')}
-                            value={i18n._(coordinateMode.label ?? COORDINATE_MODE_CENTER.label)}
-                            onChange={this.actions.changeCoordinateMode}
-                            disabled={inProgress}
-                        />
-                    </div>
-                )}
-                {/*<div className="">*/}
-                {/*    <div className="sm-tabs" style={{ marginBottom: '1rem' }}>*/}
-                {/*        <button*/}
-                {/*            type="button"*/}
-                {/*            style={{ width: '50%' }}*/}
-                {/*            className={classNames('sm-tab', { 'sm-selected': !isRotate })}*/}
-                {/*            onClick={() => {*/}
-                {/*                this.actions.changeCoordinateMode(*/}
-                {/*                    COORDINATE_MODE_CENTER*/}
-                {/*                );*/}
-                {/*                this.actions.setMaterials({ isRotate: false });*/}
-                {/*            }}*/}
-                {/*            disabled={inProgress}*/}
-                {/*        >*/}
-                {/*            {i18n._('3-axis')}*/}
-                {/*        </button>*/}
-                {/*        <button*/}
-                {/*            type="button"*/}
-                {/*            style={{ width: '50%' }}*/}
-                {/*            className={classNames('sm-tab', { 'sm-selected': isRotate })}*/}
-                {/*            onClick={() => {*/}
-                {/*                this.actions.setCoordinateModeAndCoordinateSize(*/}
-                {/*                    COORDINATE_MODE_BOTTOM_CENTER, {*/}
-                {/*                        x: diameter * Math.PI,*/}
-                {/*                        y: length*/}
-                {/*                    }*/}
-                {/*                );*/}
-                {/*                this.actions.setMaterials({ isRotate: true });*/}
-                {/*            }}*/}
-                {/*            disabled={inProgress}*/}
-                {/*        >*/}
-                {/*            {i18n._('4-axis')}*/}
-                {/*        </button>*/}
-                {/*    </div>*/}
-                {/*</div>*/}
-                {!isRotate && (
-                    <div>
-                        <img
-                            draggable="false"
-                            style={{
-                                margin: '8px 0px 0px 0px',
-                                width: '316px'
-                            }}
-                            src="/resources/images/cnc-laser/3axis.png"
-                            role="presentation"
-                            alt="3 Axis"
-                        />
-                        <div style={{
-                            marginTop: '16px'
-                        }}
-                        >
-                            <div className="position-re sm-flex justify-space-between height-32 margin-vertical-8">
-                                <span className="sm-parameter-row__label">{i18n._('Height (mm)')}</span>
-                                <Input
-                                    disabled={inProgress}
-                                    className={styles['input-box-left']}
-                                    value={toFixed(coordinateSize.y, 1)}
-                                    max={size.y}
-                                    min={10}
-                                    onChange={(value) => {
-                                        this.actions.setCoordinateModeAndCoordinateSize(
-                                            coordinateMode, {
-                                                x: coordinateSize.x,
-                                                y: value
-                                            }
-                                        );
-                                    }}
-                                />
-                                <span
-                                    className={styles['input-box-inner-text']}
-                                >
-                                    W
-                                </span>
+                    <div className="margin-left-50">
+                        <div className="margin-bottom-16 font-weight-bold">
+                            {i18n._('Working size')}
+                        </div>
+                        <div className="sm-flex">
+                            <img
+                                draggable="false"
+                                style={{
+                                    width: '100px',
+                                    height: '100px'
+                                }}
+                                src="/resources/images/cnc-laser/working-size-3.png"
+                                role="presentation"
+                                alt="3 Axis"
+                            />
+                            <div className="margin-left-16 sm-flex-width">
+                                <div className="sm-flex height-32 position-re">
+                                    <span className="width-88 margin-right-8">{i18n._('Width (X)')}</span>
+                                    <Input
+                                        disabled={inProgress}
+                                        value={toFixed(coordinateSize.x, 1)}
+                                        max={size.x}
+                                        min={2}
+                                        onChange={(value) => {
+                                            this.actions.setCoordinateModeAndCoordinateSize(
+                                                coordinateMode, {
+                                                    x: value,
+                                                    y: coordinateSize.y
+                                                }
+                                            );
+                                        }}
+                                    />
+                                    <span
+                                        className="sm-flex__input-unit-l-184"
+                                    >
+                                        mm
+                                    </span>
+                                </div>
+                                <div className="sm-flex height-32 position-re margin-top-16">
+                                    <span className="width-88 margin-right-8">{i18n._('Height (Y)')}</span>
+                                    <Input
+                                        disabled={inProgress}
+                                        value={toFixed(coordinateSize.y, 1)}
+                                        max={size.y}
+                                        min={10}
+                                        onChange={(value) => {
+                                            this.actions.setCoordinateModeAndCoordinateSize(
+                                                coordinateMode, {
+                                                    x: coordinateSize.x,
+                                                    y: value
+                                                }
+                                            );
+                                        }}
+                                    />
+                                    <span
+                                        className="sm-flex__input-unit-l-184"
+                                    >
+                                        mm
+                                    </span>
+                                </div>
                             </div>
-                            <div className="position-re sm-flex justify-space-between height-32 margin-vertical-8">
-                                <span className="sm-parameter-row__label">{i18n._('Width (mm)')}</span>
-                                <Input
+                        </div>
+                        <div className="margin-top-24 margin-bottom-16 font-weight-bold">
+                            {i18n._('Working origin')}
+                        </div>
+                        <div className="sm-flex">
+                            <img
+                                draggable="false"
+                                style={{
+                                    width: '100px',
+                                    height: '100px'
+                                }}
+                                src="/resources/images/cnc-laser/working-origin-3.png"
+                                role="presentation"
+                                alt="3 Axis"
+                            />
+                            <div className="margin-left-16 sm-flex-width sm-flex height-32">
+                                <span className="width-88 margin-right-8">{i18n._('Zero zone')}</span>
+                                <Select
+                                    backspaceRemoves={false}
+                                    size="120px"
+                                    clearable={false}
+                                    options={this.coordinateModeList}
+                                    isGroup={false}
+                                    placeholder={i18n._('Choose font')}
+                                    value={i18n._(coordinateMode.label ?? COORDINATE_MODE_CENTER.label)}
+                                    onChange={this.actions.changeCoordinateMode}
                                     disabled={inProgress}
-                                    className={styles['input-box-left']}
-                                    value={toFixed(coordinateSize.x, 1)}
-                                    max={size.x}
-                                    min={2}
-                                    onChange={(value) => {
-                                        this.actions.setCoordinateModeAndCoordinateSize(
-                                            coordinateMode, {
-                                                x: value,
-                                                y: coordinateSize.y
-                                            }
-                                        );
-                                    }}
                                 />
-                                <span
-                                    className={styles['input-box-inner-text']}
-                                >
-                                    H
-                                </span>
                             </div>
                         </div>
                     </div>
                 )}
                 {isRotate && (
-                    <div>
-                        {headType === HEAD_CNC && (
+                    <div className="margin-left-50">
+                        <div className="margin-bottom-16 font-weight-bold">
+                            {i18n._('Working size')}
+                        </div>
+                        <div className="sm-flex">
                             <img
                                 draggable="false"
                                 style={{
-                                    margin: '8px 0px 0px 0px',
-                                    width: '316px'
+                                    width: '330px',
+                                    margin: '0 auto'
                                 }}
-                                src="/resources/images/cnc-laser/cnc-4axis.png"
+                                src="/resources/images/cnc-laser/working-size-4.png"
                                 role="presentation"
-                                alt="4 Axis"
+                                alt="3 Axis"
                             />
-                        )}
-                        {headType === HEAD_LASER && (
-                            <img
-                                draggable="false"
-                                style={{
-                                    margin: '8px 0px 0px 0px',
-                                    width: '316px'
-                                }}
-                                src="/resources/images/cnc-laser/laser-4axis.png"
-                                role="presentation"
-                                alt="4 Axis"
-                            />
-                        )}
-                        <div style={{
-                            marginTop: '16px'
-                        }}
-                        >
-                            <div className="position-re sm-flex justify-space-between height-32 margin-vertical-8">
-                                <span className="sm-parameter-row__label">{i18n._('Length (mm)')}</span>
+                        </div>
+                        <div className="margin-top-16">
+                            <div className="sm-flex height-32 position-re">
+                                <span className="width-88 margin-right-8">{i18n._('Length (L)')}</span>
                                 <Input
                                     disabled={inProgress}
-                                    className={styles['input-box-left']}
                                     value={toFixed(length, 1)}
                                     max={size.y}
                                     min={10}
@@ -279,16 +244,15 @@ class JobType extends PureComponent {
                                     }}
                                 />
                                 <span
-                                    className={styles['input-box-inner-text']}
+                                    className="sm-flex__input-unit-l-184"
                                 >
-                                    L
+                                        mm
                                 </span>
                             </div>
-                            <div className="position-re sm-flex justify-space-between height-32 margin-vertical-8">
-                                <span className="sm-parameter-row__label">{i18n._('Diameter (mm)')}</span>
+                            <div className="sm-flex height-32 position-re margin-top-8">
+                                <span className="width-88 margin-right-8">{i18n._('Diameter (D)')}</span>
                                 <Input
                                     disabled={inProgress}
-                                    className={styles['input-box-left']}
                                     value={toFixed(diameter, 1)}
                                     max={size.x}
                                     min={2}
@@ -303,10 +267,59 @@ class JobType extends PureComponent {
                                     }}
                                 />
                                 <span
-                                    className={styles['input-box-inner-text']}
+                                    className="sm-flex__input-unit-l-184"
                                 >
-                                    D
+                                        mm
                                 </span>
+                            </div>
+                        </div>
+                        <div className="margin-top-24 margin-bottom-16 font-weight-bold">
+                            {i18n._('Working origin')}
+                        </div>
+                        <div className="sm-flex">
+                            <img
+                                draggable="false"
+                                style={{
+                                    width: '116px',
+                                    height: '128px',
+                                    margin: '0 auto'
+                                }}
+                                src={headType === HEAD_LASER ? '/resources/images/cnc-laser/working-origin-laser-4.png' : '/resources/images/cnc-laser/working-origin-cnc-4.png'}
+                                role="presentation"
+                                alt="3 Axis"
+                            />
+                            <div className="margin-left-16 sm-flex-width sm-flex height-32">
+                                <span className="width-88 margin-right-8">{i18n._('Zero zone')}</span>
+                                {headType === HEAD_LASER && (
+                                    <Select
+                                        backspaceRemoves={false}
+                                        size="120px"
+                                        clearable={false}
+                                        options={[
+                                            {
+                                                label: 'top',
+                                                value: 'top'
+                                            }]}
+                                        isGroup={false}
+                                        value="top"
+                                        disabled
+                                    />
+                                )}
+                                {headType !== HEAD_LASER && (
+                                    <Select
+                                        backspaceRemoves={false}
+                                        size="120px"
+                                        clearable={false}
+                                        options={[
+                                            {
+                                                label: 'center',
+                                                value: 'center'
+                                            }]}
+                                        isGroup={false}
+                                        value="center"
+                                        disabled
+                                    />
+                                )}
                             </div>
                         </div>
                     </div>
@@ -323,7 +336,8 @@ const mapStateToProps = (state, ownProps) => {
 
     return {
         size,
-        inProgress
+        inProgress,
+        headType
     };
 };
 

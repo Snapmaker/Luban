@@ -95,39 +95,39 @@ function ToolSelector(props) {
         <div>
             <React.Fragment>
                 <div className="position-re sm-flex justify-space-between margin-vertical-8">
-                    <span className="sm-flex-auto sm-flex-order-negative">
+                    <span className="sm-flex-auto sm-flex-order-negative height-32">
                         {i18n._('Tool')}
                     </span>
-                    <Select
-                        className="sm-flex align-r"
-                        clearable={false}
-                        isGroup
-                        size="large"
-                        valueObj={valueObj}
-                        options={toolDefinitionOptions}
-                        placeholder={i18n._('Choose profile')}
-                        onChange={onChangeActiveToolListValue}
-                    />
                     <div className="sm-flex">
+                        {(isModifiedDefinition
+                            && (
+                                <span
+                                    className={classNames(
+                                        styles['manager-is-modified']
+                                    )}
+                                />
+                            )
+                        )}
+                        <Select
+                            className="sm-flex align-r"
+                            clearable={false}
+                            isGroup
+                            size="large"
+                            valueObj={valueObj}
+                            options={toolDefinitionOptions}
+                            placeholder={i18n._('Choose profile')}
+                            onChange={onChangeActiveToolListValue}
+                        />
                         <SvgIcon
-                            className="border-radius-8 border-default-grey-1 padding-vertical-2 padding-horizontal-2"
+                            className="border-radius-8 border-default-grey-1 padding-vertical-2 padding-horizontal-2 margin-left-4"
                             name="PrintingSettingNormal"
                             size={24}
                             onClick={onShowCncToolManager}
                         />
                     </div>
                 </div>
-                <div className="position-re sm-flex justify-space-between height-32 margin-vertical-8">
-                    {(isModifiedDefinition
-                        && (
-                            <span
-                                className={classNames(
-                                    styles['manager-is-modified']
-                                )}
-                            />
-                        )
-                    )}
-                    <p className="sm-flex-auto">
+                <div className="position-re height-8 margin-bottom-8">
+                    <p className="sm-flex__input-unit-l-150 tooltip-message">
                         {foundDefinition && `${i18n._('Material')} : ${foundDefinition.label}`}
                     </p>
                 </div>

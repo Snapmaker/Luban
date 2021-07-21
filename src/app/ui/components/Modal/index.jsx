@@ -6,7 +6,9 @@ import PropTypes from 'prop-types';
 import './modal.styl';
 import { filter } from 'lodash';
 import { Modal } from 'antd';
+import classNames from 'classnames';
 import Title from './modalTitle';
+import styles from './styles.styl';
 import Body from './modalBody';
 import Footer from './modalFooter';
 import UniApi from '../../../lib/uni-api';
@@ -126,7 +128,7 @@ class ModalWrapper extends PureComponent {
                 onCancel={onClose}
                 centered
                 mask={!tile}
-                className={`${this.renderTitle() ? className : `${className} no-header`}`}
+                className={classNames(styles.modal, `${this.renderTitle() ? className : `${className} no-header`}`)}
                 wrapClassName={tile ? `${modalWrapperClassName} tile-modal` : modalWrapperClassName}
                 maskStyle={{
                     background: '#2A2C2E30'

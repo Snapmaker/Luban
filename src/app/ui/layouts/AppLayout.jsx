@@ -86,17 +86,17 @@ class AppLayout extends PureComponent {
                 onClose,
                 actions: [
                     {
-                        name: i18n._('Save'),
-                        isPrimary: true,
+                        name: i18n._('Cancel'),
                         onClick: () => {
-                            UniApi.Event.emit('appbar-menu:settings.save');
+                            UniApi.Event.emit('appbar-menu:settings.cancel');
                             onClose();
                         }
                     },
                     {
-                        name: i18n._('Cancel'),
+                        name: i18n._('Save'),
+                        isPrimary: true,
                         onClick: () => {
-                            UniApi.Event.emit('appbar-menu:settings.cancel');
+                            UniApi.Event.emit('appbar-menu:settings.save');
                             onClose();
                         }
                     }
@@ -123,16 +123,17 @@ class AppLayout extends PureComponent {
                 onClose,
                 actions: [
                     {
-                        name: i18n._('Compile and Export'),
-                        isPrimary: true,
+                        name: i18n._('Cancel'),
                         onClick: () => {
-                            UniApi.Event.emit('appbar-menu:firmware-tools.export');
                             onClose();
                         }
                     },
                     {
-                        name: i18n._('Cancel'),
+                        name: i18n._('Compile and Export'),
+                        isPrimary: true,
+                        isAutoWidth: true,
                         onClick: () => {
+                            UniApi.Event.emit('appbar-menu:firmware-tools.export');
                             onClose();
                         }
                     }
@@ -155,6 +156,7 @@ class AppLayout extends PureComponent {
                 renderBody: () => {
                     return (<SoftwareUpdate />);
                 },
+                shouldRenderFooter: false,
                 renderFooter() { return null; },
                 onClose,
                 actions: []

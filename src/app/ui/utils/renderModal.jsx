@@ -7,6 +7,7 @@ import i18n from '../../lib/i18n';
 export default function renderModal(options) {
     const { actions, onClose } = options;
     let { renderFooter, renderBody, size, title } = options;
+    const { shouldRenderFooter = true } = options;
 
     if (!onClose) {
         console.error('Modal need close action');
@@ -18,10 +19,13 @@ export default function renderModal(options) {
     if (!renderFooter) {
         renderFooter = () => (
             <React.Fragment>
-                {actions.map(({ name, isPrimary, onClick }) => (
+                {actions.map(({ name, isPrimary, isAutoWidth, onClick }) => (
                     <Button
                         key={name}
-                        btnStyle={isPrimary && 'primary'}
+                        priority="level-two"
+                        className="margin-left-8"
+                        width={isAutoWidth ? 'auto' : '96px'}
+                        type={isPrimary ? 'primary' : 'default'}
                         onClick={onClick}
                     >
                         {name}
@@ -45,9 +49,11 @@ export default function renderModal(options) {
             <Modal.Body>
                 {renderBody()}
             </Modal.Body>
-            <Modal.Footer>
-                {renderFooter()}
-            </Modal.Footer>
+            {shouldRenderFooter && (
+                <Modal.Footer>
+                    {renderFooter()}
+                </Modal.Footer>
+            )}
         </Modal>
     );
 }

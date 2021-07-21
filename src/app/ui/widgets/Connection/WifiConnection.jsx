@@ -17,7 +17,7 @@ import {
     CONNECTION_TYPE_WIFI,
     IMAGE_WIFI_CONNECTED,
     IMAGE_WIFI_CONNECTING,
-    IMAGE_WIFI_ERROR,
+    // IMAGE_WIFI_ERROR,
     IMAGE_WIFI_WAITING,
     MACHINE_HEAD_TYPE,
     WORKFLOW_STATUS_IDLE,
@@ -133,8 +133,9 @@ class WifiConnection extends PureComponent {
                 connectionMessage: {
                     text: '',
                     title: i18n._('Connected'),
-                    img: IMAGE_WIFI_CONNECTED,
+                    img: 'WarningTipsSuccess',
                     showCloseButton: false,
+                    iconColor: '#4CB518',
                     onCancel: null,
                     onConfirm: null
                 }
@@ -149,7 +150,8 @@ class WifiConnection extends PureComponent {
                 connectionMessage: {
                     text: i18n._(''),
                     title: i18n._('Disconnected'),
-                    img: IMAGE_WIFI_ERROR,
+                    img: 'WarningTipsError',
+                    iconColor: '#FF4D4F',
                     showCloseButton: false,
                     onCancel: null,
                     onConfirm: null
@@ -165,7 +167,7 @@ class WifiConnection extends PureComponent {
                 connectionMessage: {
                     text: i18n._(data || err.message),
                     title: err.status ? i18n._(`Error ${err.status}`) : i18n._('Error'),
-                    img: IMAGE_WIFI_ERROR,
+                    img: 'WarningTipsError',
                     showCloseButton: true,
                     onCancel: null,
                     onConfirm: null
@@ -187,7 +189,7 @@ class WifiConnection extends PureComponent {
                     text: null,
                     title: i18n._('Connect Manually'),
                     label: i18n._('IP') ? `${i18n._('IP')}:` : '',
-                    img: IMAGE_WIFI_WAITING,
+                    // img: IMAGE_WIFI_WAITING,
                     showCloseButton: true,
                     inputtext: this.props.manualIp,
                     onCancel: this.actions.onCloseManualWiFi,
@@ -352,7 +354,7 @@ class WifiConnection extends PureComponent {
                             className={styles['connection-state']}
                         >
                             <span className={styles['connection-state-name']}>
-                                {server.name}
+                                {server?.name}
                             </span>
                             <span className={styles['connection-state-icon']}>
                                 {workflowStatus === WORKFLOW_STATUS_UNKNOWN
@@ -402,6 +404,7 @@ class WifiConnection extends PureComponent {
                     <ModalSmall
                         showCloseButton={connectionMessage.showCloseButton}
                         img={connectionMessage.img}
+                        iconColor={connectionMessage?.iconColor}
                         text={connectionMessage.text}
                         title={connectionMessage.title}
                         onClose={this.actions.onCloseWifiConnectionMessage}
@@ -412,7 +415,6 @@ class WifiConnection extends PureComponent {
                 {showManualWiFiModal && (
                     <ModalSmallInput
                         showCloseButton={manualWiFi.showCloseButton}
-                        img={manualWiFi.img}
                         text={manualWiFi.text}
                         title={manualWiFi.title}
                         label={manualWiFi.label}

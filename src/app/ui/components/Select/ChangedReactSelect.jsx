@@ -22,7 +22,7 @@ class ChangedReactSelect extends PureComponent {
         className: PropTypes.string,
         // whether using 'GroupHeading' component
         isGroup: PropTypes.bool,
-        onChange: PropTypes.func.isRequired,
+        onChange: PropTypes.func,
         // to calculate the 'defaultValue' for the react-select component
         valueObj: PropTypes.shape({
             firstKey: PropTypes.string,
@@ -42,11 +42,10 @@ class ChangedReactSelect extends PureComponent {
     actions = {
         handleChange: (value) => {
             const option = this.props.options.find(d => d.value === value);
-            // console.log('option', value, option);
-            this.props.onChange(option);
+            this.props.onChange && this.props.onChange(option);
         },
         handleTreeChange: (option) => {
-            this.props.onChange(option);
+            this.props.onChange && this.props.onChange(option);
         }
     }
 

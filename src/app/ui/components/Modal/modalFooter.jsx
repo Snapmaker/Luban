@@ -13,7 +13,7 @@ class Footer extends PureComponent {
 
     render() {
         return (
-            <div id={this.props.key} className="display-inline align-r">
+            <div id={this.props.key} className=" align-r">
                 {this.props.children}
             </div>
         );

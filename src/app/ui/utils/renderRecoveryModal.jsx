@@ -19,17 +19,17 @@ export default function (headType, onClose) {
         },
         actions: [
             {
+                name: i18n._('Cancel'),
+
+                onClick: () => { onClose(); }
+            },
+            {
                 name: i18n._('Yes'),
                 isPrimary: true,
                 onClick: () => {
                     actions.onRecovery();
                     onClose();
                 }
-            },
-            {
-                name: i18n._('Cancel'),
-
-                onClick: () => { onClose(); }
             }
         ],
         onClose
