@@ -34,7 +34,7 @@ function ConfigValueBox({ optionConfigGroup, calculateTextIndex, isCategorySelec
     return (
         <div className="sm-flex">
             {(optionConfigGroup.length > 2) && (
-                <div className={classNames(styles['manager-grouplist'])}>
+                <div className={classNames(styles['manager-grouplist'], 'border-radius-8')}>
                     <div className="sm-parameter-container">
                         {optionConfigGroup.map((group, idx) => {
                             return (
@@ -60,7 +60,7 @@ function ConfigValueBox({ optionConfigGroup, calculateTextIndex, isCategorySelec
                 </div>
             )}
             <div
-                className={classNames(styles['manager-details'])}
+                className={classNames(styles['manager-details'], 'border-radius-8')}
                 onWheel={() => { setActiveCate(); }}
             >
                 <div className="sm-parameter-container" ref={scrollDom}>

@@ -266,9 +266,9 @@ class Configurations extends PureComponent {
                         <Modal.Body>
                             <div className={classNames(styles['manager-type-wrapper'])}>
                                 <div
-                                    className={classNames(styles['manager-type'])}
+                                    className={classNames(styles['manager-type'], 'font-weight-blod')}
                                 >
-                                    {i18n._('managerTitle')}
+                                    {i18n._('Custom Parameter Visibility ')}
                                 </div>
                             </div>
 
@@ -286,16 +286,17 @@ class Configurations extends PureComponent {
                                     onResetDefinition={actions.onResetDefinition}
                                 />
                             </div>
-                            <div style={{ float: 'right' }}>
-                                <Anchor
-                                    onClick={actions.closePannel}
-                                    className="sm-btn-large sm-btn-default"
-                                    style={{ marginRight: '11px' }}
-                                >
-                                    {i18n._('Close')}
-                                </Anchor>
-                            </div>
                         </Modal.Body>
+                        <Modal.Footer>
+                            <Button
+                                onClick={actions.closePannel}
+                                type="default"
+                                width="96px"
+                                priority="level-two"
+                            >
+                                {i18n._('Close')}
+                            </Button>
+                        </Modal.Footer>
                     </Modal>
                 )}
             </div>
