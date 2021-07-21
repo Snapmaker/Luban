@@ -199,7 +199,7 @@ class Output extends PureComponent {
                     </Button>
                     {displayedType === DISPLAYED_TYPE_TOOLPATH && !this.state.showExportOptions && (
                         <Button
-                            type="primary"
+                            type="default"
                             priority="level-one"
                             onClick={() => {
                                 this.actions.switchToEditPage();

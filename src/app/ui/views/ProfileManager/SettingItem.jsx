@@ -160,6 +160,7 @@ function SettingItem({ definitionKey, settings, isDefinitionEditable = () => tru
                             className="sm-flex-width align-r"
                             backspaceRemoves={false}
                             clearable={false}
+                            size={styleSize}
                             menuContainerStyle={{ zIndex: 5 }}
                             name={definitionKey}
                             // disabled={!isDefinitionEditable()}

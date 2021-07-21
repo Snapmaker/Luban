@@ -6,6 +6,7 @@ import { cloneDeep, includes } from 'lodash';
 import Select from '../../components/Select';
 import Anchor from '../../components/Anchor';
 import Modal from '../../components/Modal';
+import { Button } from '../../components/Buttons';
 import i18n from '../../../lib/i18n';
 import { actions as printingActions } from '../../../flux/printing';
 import { actions as projectActions } from '../../../flux/project';
@@ -211,6 +212,7 @@ class Configurations extends PureComponent {
                     <Select
                         clearable={false}
                         searchable
+                        size="282px"
                         options={customDefinitionOptions}
                         value={qualityDefinition.definitionId}
                         onChange={(option) => {
@@ -233,7 +235,7 @@ class Configurations extends PureComponent {
                     { state.customConfigs.map((key) => {
                         return (
                             <SettingItem
-                                styleSize="small"
+                                styleSize="middle"
                                 settings={qualityDefinition?.settings}
                                 definitionKey={key}
                                 key={key}
@@ -248,13 +250,13 @@ class Configurations extends PureComponent {
                         );
                     })}
                 </div>
-                <button
-                    type="button"
-                    className="sm-btn-large sm-btn-default"
+                <Button
+                    type="default"
+                    width="96px"
                     onClick={actions.toggleShowCustomConfigPannel}
                 >
                     {i18n._('Custom')}
-                </button>
+                </Button>
                 {state.showCustomConfigPannel && (
                     <Modal
                         className={classNames(styles['manager-body'])}
