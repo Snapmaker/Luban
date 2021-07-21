@@ -44,6 +44,7 @@ function ModelItem({ model, visible, isSelected, styles, onSelect, onToggleVisib
                     'padding-vertical-4',
                     'padding-horizontal-8',
                     'sm-flex',
+                    styles.objectListItem,
                     isSelected ? styles.selected : null,
                 )}
             >

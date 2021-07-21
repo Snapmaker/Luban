@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 // import PropTypes from 'prop-types';
 import { useDispatch, useSelector, shallowEqual } from 'react-redux';
 import styles from './styles.styl';
@@ -13,33 +13,23 @@ function PrintingObjectListBox() {
     // const [showList, setShowList] = useState(true);
     const dispatch = useDispatch();
     const actions = {
-        onClickModelNameBox(model, event) {
-            let isMultiSelect = event.shiftKey;
-            if (selectedModelArray.length === 1 && selectedModelArray[0].visible === false) {
-                isMultiSelect = false;
-            }
-            if (selectedModelArray && selectedModelArray.length > 0 && model.visible === false) {
-                isMultiSelect = false;
-            }
-            dispatch(printingActions.selectTargetModel(model, isMultiSelect));
+        onClickModelNameBox(targetModel, shiftKey) {
+            dispatch(printingActions.selectTargetModel(targetModel, shiftKey));
         },
-        onClickModelHideBox(model) {
-            const visible = model.visible;
-            dispatch(printingActions.selectTargetModel(model));
-            if (visible) {
-                dispatch(printingActions.hideSelectedModel(model));
+        onClickModelHideBox(targetModel) {
+            const visible = targetModel.visible;
+            actions.onClickModelNameBox(targetModel);
+            if (visible === true) {
+                dispatch(printingActions.hideSelectedModel(targetModel));
             } else {
-                dispatch(printingActions.showSelectedModel(model));
+                dispatch(printingActions.showSelectedModel(targetModel));
             }
         }
     };
 
-    useEffect(() => {
-    }, [models]);
-
     return (
         <div className="width-264 margin-vertical-4">
-            {models && models.map((model) => {
+            {(models) && models.filter(model => !model.supportTag).map((model) => {
                 return (
                     <ModelItem
                         model={model}
