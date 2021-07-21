@@ -8,7 +8,7 @@ import Checkbox from '../../components/Checkbox';
 import TipTrigger from '../../components/TipTrigger';
 import SvgIcon from '../../components/SvgIcon';
 
-function SettingItem({ definitionKey, settings, isDefinitionEditable = () => true, onChangeDefinition, defaultValue }) {
+function SettingItem({ definitionKey, settings, isDefinitionEditable = () => true, onChangeDefinition, defaultValue, styleSize = 'large' }) {
     const setting = settings[definitionKey];
 
     const isProfile = !isDefinitionEditable();
@@ -123,7 +123,7 @@ function SettingItem({ definitionKey, settings, isDefinitionEditable = () => tru
                             className="sm-flex-width align-r"
                             value={settingDefaultValue}
                             // disabled={!isDefinitionEditable()}
-                            size="large"
+                            size={styleSize}
                             onChange={(value) => {
                                 onChangeDefinition(definitionKey, value);
                             }}
@@ -193,7 +193,8 @@ SettingItem.propTypes = {
     definitionKey: PropTypes.string.isRequired,
     isDefinitionEditable: PropTypes.func,
     onChangeDefinition: PropTypes.func.isRequired,
-    defaultValue: PropTypes.object
+    defaultValue: PropTypes.object,
+    styleSize: PropTypes.string
 };
 
 export default React.memo(SettingItem);

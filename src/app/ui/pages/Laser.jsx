@@ -288,7 +288,7 @@ function Laser() {
                 }
             },
             {
-                title: i18n._('Job'),
+                title: i18n._('Job Setup'),
                 type: 'button',
                 name: 'MainToolbarJobSetup',
                 action: () => {
@@ -313,7 +313,7 @@ function Laser() {
                                 className="width-24 height-24 display-inline "
                             />
                             <div className="font-size-base">
-                                {i18n._('Front')}
+                                {i18n._('Top')}
                             </div>
                         </Anchor>
                     );

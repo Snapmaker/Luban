@@ -110,14 +110,37 @@ class DataStorage {
              for (const file of files) {
                  const src = path.join(CURA_ENGINE_CONFIG_LOCAL, file);
                  const dst = path.join(this.configDir, file);
-                 if (fs.statSync(src)
-                     .isFile()) {
+                 if (fs.statSync(src).isFile()) {
+                     if (fs.existsSync(dst)) {
+                         continue;
+                     }
                      fs.copyFileSync(src, dst, () => {
                      });
                  } else {
                      const srcPath = `${CURA_ENGINE_CONFIG_LOCAL}/${file}`;
                      const dstPath = `${this.configDir}/${file}`;
-                     await this.copyDir(srcPath, dstPath);
+                     await this.copyDirForInitSlicer(srcPath, dstPath);
+                 }
+             }
+         }
+     }
+
+     async copyDirForInitSlicer(src, dst) {
+         mkdirp.sync(dst);
+
+         if (fs.existsSync(src)) {
+             const files = fs.readdirSync(src);
+             for (const file of files) {
+                 const srcPath = path.join(src, file);
+                 const dstPath = path.join(dst, file);
+                 if (fs.statSync(srcPath).isFile()) {
+                     if (fs.existsSync(dstPath)) {
+                         return;
+                     }
+                     fs.copyFileSync(srcPath, dstPath);
+                 } else {
+                     // Todo: cause dead cycle?
+                     await this.copyDirForInitSlicer(srcPath, dstPath);
                  }
              }
          }
@@ -164,7 +187,6 @@ class DataStorage {
 
      async copyDir(src, dst) {
          mkdirp.sync(dst);
-
          if (fs.existsSync(src)) {
              const files = fs.readdirSync(src);
              for (const file of files) {

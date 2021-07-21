@@ -4,10 +4,10 @@ import { useDispatch } from 'react-redux';
 import classNames from 'classnames';
 import Select from '../../../components/Select';
 import i18n from '../../../../lib/i18n';
-import Anchor from '../../../components/Anchor';
 import styles from '../styles.styl';
 import { actions as cncActions } from '../../../../flux/cnc';
 import CncToolManager from '../../CncToolManager';
+import SvgIcon from '../../../components/SvgIcon';
 
 function ToolSelector(props) {
     const [showManager, setShowManager] = useState(false);
@@ -94,56 +94,42 @@ function ToolSelector(props) {
     return (
         <div>
             <React.Fragment>
-                <div className="sm-parameter-container">
-                    <div
-                        className={classNames(
-                            styles['manager-wrapper']
-                        )}
-                    >
-                        <span className={classNames(
-                            'sm-parameter-row__label',
-                            styles['manager-select-name'],
-                        )}
-                        >
-                            {i18n._('Tool')}
-                        </span>
-                        {(isModifiedDefinition
-                            && (
-                                <span
-                                    className={classNames(
-                                        styles['manager-is-modified']
-                                    )}
-                                />
-                            )
-                        )}
-                        <Select
-                            className={classNames(
-                                styles['manager-select'],
-                                'sm-parameter-row__select'
-                            )}
-                            clearable={false}
-                            isGroup
-                            valueObj={valueObj}
-                            options={toolDefinitionOptions}
-                            placeholder={i18n._('Choose profile')}
-                            onChange={onChangeActiveToolListValue}
-                        />
-                        <p className={classNames(
-                            styles['manager-detail'],
-                        )}
-                        >
-                            {foundDefinition && `${i18n._('Material')} : ${foundDefinition.label}`}
-                        </p>
-                        <Anchor
+                <div className="position-re sm-flex justify-space-between margin-vertical-8">
+                    <span className="sm-flex-auto sm-flex-order-negative">
+                        {i18n._('Tool')}
+                    </span>
+                    <Select
+                        className="sm-flex align-r"
+                        clearable={false}
+                        isGroup
+                        size="large"
+                        valueObj={valueObj}
+                        options={toolDefinitionOptions}
+                        placeholder={i18n._('Choose profile')}
+                        onChange={onChangeActiveToolListValue}
+                    />
+                    <div className="sm-flex">
+                        <SvgIcon
+                            className="border-radius-8 border-default-grey-1 padding-vertical-2 padding-horizontal-2"
+                            name="PrintingSettingNormal"
+                            size={24}
                             onClick={onShowCncToolManager}
-                        >
+                        />
+                    </div>
+                </div>
+                <div className="position-re sm-flex justify-space-between height-32 margin-vertical-8">
+                    {(isModifiedDefinition
+                        && (
                             <span
                                 className={classNames(
-                                    styles['manager-icon'],
+                                    styles['manager-is-modified']
                                 )}
                             />
-                        </Anchor>
-                    </div>
+                        )
+                    )}
+                    <p className="sm-flex-auto">
+                        {foundDefinition && `${i18n._('Material')} : ${foundDefinition.label}`}
+                    </p>
                 </div>
                 {renderModalView()}
             </React.Fragment>

@@ -453,43 +453,48 @@ const ToolPathListBox = (props) => {
                     onClose={() => setEditingToolpath(null)}
                 />
             )}
-
-            {selectedToolPath && selectedToolPath.headType === HEAD_CNC && activeToolListDefinition && (
-                <ToolSelector
-                    toolDefinition={activeToolListDefinition}
-                    toolDefinitions={toolDefinitions}
-                    isModifiedDefinition={() => {
-                        return !Object.entries(activeToolListDefinition.settings).every(([key, setting]) => {
-                            return fastEditSettings && fastEditSettings[key].default_value === setting.default_value;
-                        });
-                    }}
-                    setCurrentValueAsProfile={() => {}}
-                />
-            )}
             {selectedToolPath && (
+
                 <div className={classNames(
                     'border-default-grey-1',
                     'border-radius-8',
-                    'padding-horizontal-16',
                     'clearfix'
                 )}
                 >
-                    <ToolParameters
-                        settings={fastEditSettings}
-                        updateToolConfig={actions.updateToolConfig}
-                        updateGcodeConfig={actions.updateGcodeConfig}
-                        toolPath={selectedToolPath}
-                    />
-                    <Anchor
-                        className={classNames(
-                            'float-r',
-                            'link-text',
-                            'margin-bottom-16'
+                    <div className="sm-flex height-40 border-bottom-normal padding-horizontal-16">
+                        <span className="sm-flex-width font-size-big">{i18n._('General Parameters')}</span>
+                    </div>
+                    <div className="padding-horizontal-16 padding-vertical-16">
+                        {selectedToolPath && selectedToolPath.headType === HEAD_CNC && activeToolListDefinition && (
+                            <ToolSelector
+                                toolDefinition={activeToolListDefinition}
+                                toolDefinitions={toolDefinitions}
+                                isModifiedDefinition={() => {
+                                    return !Object.entries(activeToolListDefinition.settings).every(([key, setting]) => {
+                                        return fastEditSettings && fastEditSettings[key].default_value === setting.default_value;
+                                    });
+                                }}
+                                setCurrentValueAsProfile={() => {}}
+                            />
                         )}
-                        onClick={() => setEditingToolpath(selectedToolPath)}
-                    >
-                        {i18n._('More')}
-                    </Anchor>
+                        <ToolParameters
+                            styleSize="middle"
+                            settings={fastEditSettings}
+                            updateToolConfig={actions.updateToolConfig}
+                            updateGcodeConfig={actions.updateGcodeConfig}
+                            toolPath={selectedToolPath}
+                        />
+                        <Anchor
+                            className={classNames(
+                                'float-r',
+                                'link-text',
+                                'margin-bottom-16'
+                            )}
+                            onClick={() => setEditingToolpath(selectedToolPath)}
+                        >
+                            {i18n._('More')}
+                        </Anchor>
+                    </div>
                 </div>
             )}
         </div>

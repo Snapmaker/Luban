@@ -591,9 +591,9 @@ function ProfileManager({ optionConfigGroup, disableCategory = true, managerTitl
                                 </div>
 
 
-                                <div className="sm-tabs" style={{ padding: '16px' }}>
+                                <div className="sm-tabs padding-vertical-16 padding-horizontal-16">
                                     <SvgIcon
-                                        name="NewNomal" // TODO: "NewNormal"
+                                        name="NewNormal"
                                         size={24}
                                         className={classNames(styles['manager-file'], 'sm-tab')}
                                         onClick={() => { actions.showNewModal(); }}
