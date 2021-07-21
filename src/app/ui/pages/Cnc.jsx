@@ -60,6 +60,7 @@ import ToolPathListBox from '../widgets/CncLaserList/ToolPathList';
 import PrintingVisualizer from '../widgets/PrintingVisualizer';
 import HomePage from './HomePage';
 import Anchor from '../components/Anchor';
+import Workspace from './Workspace';
 
 const allWidgets = {
     'control': ControlWidget,
@@ -193,7 +194,8 @@ function Cnc({ location }) {
     const widgets = useSelector(state => state?.widget[pageHeadType]?.default?.widgets, shallowEqual);
     const [isDraggingWidget, setIsDraggingWidget] = useState(false);
     const [showHomePage, setShowHomePage] = useState(false);
-    const [showJobType, setShowJobType] = useState(false);
+    const [showWorkspace, setShowWorkspace] = useState(false);
+    const [showJobType, setShowJobType] = useState(true);
     const coordinateMode = useSelector(state => state[HEAD_CNC]?.coordinateMode, shallowEqual);
     const coordinateSize = useSelector(state => state[HEAD_CNC]?.coordinateSize, shallowEqual);
     const materials = useSelector(state => state[HEAD_CNC]?.materials, shallowEqual);
@@ -328,6 +330,14 @@ function Cnc({ location }) {
                 action: () => {
                     setShowHomePage(true);
                     window.scrollTo(0, 0);
+                }
+            },
+            {
+                title: i18n._('Workspace'),
+                type: 'button',
+                name: 'MainToolbarWorkspace',
+                action: () => {
+                    setShowWorkspace(true);
                 }
             },
             {
@@ -493,7 +503,13 @@ function Cnc({ location }) {
             </div>
         );
     }
-
+    function renderWorkspace() {
+        const onClose = () => setShowWorkspace(false);
+        return showWorkspace && renderPopup({
+            onClose,
+            component: Workspace
+        });
+    }
 
     return (
         <div>
@@ -516,6 +532,7 @@ function Cnc({ location }) {
             {warningRemovingModels}
             {jobTypeModal}
             {renderHomepage()}
+            {renderWorkspace()}
         </div>
     );
 }
