@@ -3,7 +3,7 @@ import PropTypes from 'prop-types';
 import { HashRouter, Route, Switch } from 'react-router-dom';
 import { connect } from 'react-redux';
 import ReactGA from 'react-ga';
-import { /* shortcutActions, */ priorities, ShortcutManager } from '../lib/shortcut';
+import { shortcutActions, priorities, ShortcutManager } from '../lib/shortcut';
 import { ToastContainer } from './components/Toast';
 import { actions as machineActions } from '../flux/machine';
 import { actions as developToolsActions } from '../flux/develop-tools';
@@ -42,7 +42,24 @@ class App extends PureComponent {
         priority: priorities.APP,
         shortcuts: {
             // TODO: implement file menu actions
-            // [shortcutActions.OPEN]: () => { console.log('app.open'); },
+            [shortcutActions.OPEN]: () => {
+                UniApi.Event.emit('appbar-menu:open-file');
+            },
+            [shortcutActions.SAVE]: () => {
+                UniApi.Event.emit('save');
+            },
+            [shortcutActions.SAVE_AS]: () => {
+                UniApi.Event.emit('save-as-file');
+            },
+            [shortcutActions.IMPORT]: () => {
+                UniApi.Event.emit('appbar-menu:import');
+            },
+            [shortcutActions.EXPORT_MODELS]: () => {
+                UniApi.Event.emit('appbar-menu:export-model');
+            },
+            [shortcutActions.EXPORT_GCODE]: () => {
+                UniApi.Event.emit('appbar-menu:export-gcode');
+            },
             'LISTALLSHORTCUTS': {
                 keys: ['mod+alt+k l'],
                 callback: () => {

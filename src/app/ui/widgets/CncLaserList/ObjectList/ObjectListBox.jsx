@@ -12,7 +12,7 @@ import ModelItem from '../../../views/model-item';
 
 function ObjectListBox({ headType }) {
     // https://github.com/tc39/proposal-optional-chaining
-    const selectedModelArray = useSelector(state => state[headType]?.modelGroup?.selectedModelArray, shallowEqual);
+    const selectedModelArray = useSelector(state => state[headType]?.modelGroup?.selectedModelArray);
     const models = useSelector(state => state[headType]?.modelGroup?.models);
     const inProgress = useSelector(state => state[headType]?.inProgress, shallowEqual);
     const previewFailed = useSelector(state => state[headType]?.previewFailed, shallowEqual);

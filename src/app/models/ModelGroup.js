@@ -609,7 +609,7 @@ class ModelGroup extends EventEmitter {
 
         model.setSelected(true);
         ThreeUtils.applyObjectMatrix(this.selectedGroup, new Matrix4().getInverse(this.selectedGroup.matrix));
-        this.selectedModelArray.push(model);
+        this.selectedModelArray = [...this.selectedModelArray, model];
 
         ThreeUtils.setObjectParent(model.meshObject, this.selectedGroup);
         this.prepareSelectedGroup();
@@ -662,7 +662,9 @@ class ModelGroup extends EventEmitter {
 
         this.models.forEach((model) => {
             if (model.supportTag) return;
-            this.addModelToSelectedGroup(model);
+            if (model.visible) {
+                this.addModelToSelectedGroup(model);
+            }
         });
 
         this.modelChanged();
@@ -700,6 +702,7 @@ class ModelGroup extends EventEmitter {
             model.meshObject.position.x = point.x;
             model.meshObject.position.y = point.y;
             model.meshObject.updateMatrix();
+            model.computeBoundingBox();
 
             arrangedModels.push(model);
             this.object.add(model.meshObject);
@@ -730,7 +733,10 @@ class ModelGroup extends EventEmitter {
                 const point = this._computeAvailableXY(newModel);
                 newModel.meshObject.position.x = point.x;
                 newModel.meshObject.position.y = point.y;
+                newModel.transformation.positionX = point.x;
+                newModel.transformation.positionY = point.y;
                 newModel.meshObject.updateMatrix();
+                newModel.computeBoundingBox();
 
                 newModel.modelID = modelID || uuid.v4();
             } else {
@@ -782,8 +788,11 @@ class ModelGroup extends EventEmitter {
                 const point = this._computeAvailableXY(newModel);
                 newModel.meshObject.position.x = point.x;
                 newModel.meshObject.position.y = point.y;
+                newModel.transformation.positionX = point.x;
+                newModel.transformation.positionY = point.y;
                 // Once the position of selectedGroup is changed, updateMatrix must be called
                 newModel.meshObject.updateMatrix();
+                newModel.computeBoundingBox();
 
                 newModel.modelID = uuid.v4();
 

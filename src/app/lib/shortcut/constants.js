@@ -10,29 +10,39 @@ export const shortcutActions = {
     'UNSELECT': Symbol('UNSELECT'),
     'DELETE': Symbol('DELETE'),
 
+    'CUT': Symbol('CUT'),
     'COPY': Symbol('COPY'),
     'PASTE': Symbol('PASTE'),
     'DUPLICATE': Symbol('DUPLICATE'),
 
     'UNDO': Symbol('UNDO'),
-    'REDO': Symbol('REDO')
+    'REDO': Symbol('REDO'),
 
+    'IMPORT': Symbol('IMPORT'),
+    'EXPORT_MODELS': Symbol('EXPORT_MODELS'),
+    'EXPORT_GCODE': Symbol('EXPORT_GCODE')
 };
 
 export const actionKeys = {
     [shortcutActions.OPEN]: ['mod+O'],
     [shortcutActions.SAVE]: ['mod+s'],
+    [shortcutActions.SAVE_AS]: ['mod+shift+s'],
     [shortcutActions.NEW]: ['mod+n'],
 
     [shortcutActions.SELECTALL]: ['mod+a'],
-    [shortcutActions.UNSELECT]: ['esc'],
+    [shortcutActions.UNSELECT]: ['esc', 'mod+shift+a'],
     [shortcutActions.DELETE]: ['del', 'backspace'],
     [shortcutActions.COPY]: ['mod+c'],
     [shortcutActions.PASTE]: ['mod+v'],
     [shortcutActions.DUPLICATE]: ['mod+d'],
+    [shortcutActions.CUT]: ['mod+x'],
 
     [shortcutActions.UNDO]: ['mod+z'],
-    [shortcutActions.REDO]: ['mod+shift+z']
+    [shortcutActions.REDO]: ['mod+shift+z'],
+
+    [shortcutActions.IMPORT]: ['mod+i'],
+    [shortcutActions.EXPORT_MODELS]: ['mod+e'],
+    [shortcutActions.EXPORT_GCODE]: ['mod+p']
 };
 
 export const priorities = {

@@ -54,7 +54,7 @@ function ModelItem({ model, visible, isSelected, styles, onSelect, onToggleVisib
                         'sm-flex-width',
                         'sm-flex'
                     )}
-                    onClick={(event) => onSelect(model, event.shiftKey)}
+                    onClick={(event) => onSelect(model, event)}
                 >
                     <span
                         className={classNames(

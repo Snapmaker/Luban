@@ -8,7 +8,7 @@ import UniApi from '../../../lib/uni-api';
 class AppBar extends PureComponent {
     fileInputRef = React.createRef();
 
-    accept = ['.snap3dp', '.snaplzr', '.snapcnc', '.gcode', '.cnc', '.nc']
+    accept = ['.snap3dp', '.snaplzr', '.snapcnc']
 
     actions = {
         openDialog: () => {

@@ -32,7 +32,7 @@ class CShortcutManger {
      * } handler : readonly
      */
     register(handler) {
-        if (!handler) {
+        if (Object.prototype.toString.call(handler) !== '[object Object]') {
             console.error('ShortcutManger: handler should be an object!');
             return;
         }
@@ -111,7 +111,7 @@ class CShortcutManger {
             }
 
             mapItem.push({ handler, actionName });
-            Mousetrap.bind(comboKey, (/* e, pressedKeys*/) => {
+            const mousetrapCallback = (event) => {
                 const matched = mapItem.reduce((prev, current) => {
                     if (!current.handler.isActive()) {
                         return prev;
@@ -134,8 +134,14 @@ class CShortcutManger {
                 const matchedHandler = matched.handler;
 
                 let callback = matchedHandler.shortcuts[matched.actionName];
-                if (typeof callback !== 'function' && callback.callback) {
-                    callback = callback.callback;
+                if (event.type === 'keydown') {
+                    if (typeof callback !== 'function' && typeof callback.callback === 'function') {
+                        callback = callback.callback;
+                    }
+                } else if (event.type === 'keyup') {
+                    if (typeof callback !== 'function' && typeof callback.keyupCallback === 'function') {
+                        callback = callback.keyupCallback;
+                    }
                 }
                 if (typeof callback === 'function') {
                     // console.info('keyboard event trigger:', pressedKeys, matchedHandler.title, matched.actionName);
@@ -144,7 +150,11 @@ class CShortcutManger {
                 }
                 console.warn(`actionName [${matched.actionName}] has no callback!`);
                 return true;
-            });
+            };
+            Mousetrap.bind(comboKey, mousetrapCallback); // default bind keydown
+            if ('keyupCallback' in handler.shortcuts[actionName]) {
+                Mousetrap.bind(comboKey, mousetrapCallback, 'keyup');
+            }
         }
     }
 }

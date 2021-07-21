@@ -33,9 +33,13 @@ import { actions as editorActions } from '../../flux/editor';
 import { actions as projectActions } from '../../flux/project';
 import { actions as operationHistoryActions } from '../../flux/operation-history';
 import styles from './styles/appbar.styl';
+import HomePage from '../pages/HomePage';
+import Workspace from '../pages/Workspace';
 
 class AppLayout extends PureComponent {
     static propTypes = {
+        currentModalPath: PropTypes.string,
+        updateCurrentModalPath: PropTypes.func.isRequired,
         clearOperationHistory: PropTypes.func.isRequired,
         updateMaterials: PropTypes.func.isRequired,
         initRecoverService: PropTypes.func.isRequired,
@@ -169,8 +173,9 @@ class AppLayout extends PureComponent {
         },
         openProject: async (file) => {
             if (!file) {
-                this.fileInput.current.value = null;
-                this.fileInput.current.click();
+                // this.fileInput.current.value = null;
+                // this.fileInput.current.click();
+                UniApi.Event.emit('appbar-menu:open-file-in-browser');
             } else {
                 try {
                     await this.props.openProject(file, this.props.history);
@@ -253,10 +258,22 @@ class AppLayout extends PureComponent {
                 }
             });
             UniApi.Event.on('save-as-file', (event, file) => {
-                this.actions.saveAsFile(file);
+                const pathname = this.props.currentModalPath || this.props.history.location.pathname;
+                switch (pathname) {
+                    case '/3dp':
+                    case '/laser':
+                    case '/cnc': this.actions.saveAsFile(file); break;
+                    default: break;
+                }
             });
             UniApi.Event.on('save', () => {
-                this.actions.save();
+                const pathname = this.props.currentModalPath || this.props.history.location.pathname;
+                switch (pathname) {
+                    case '/3dp':
+                    case '/laser':
+                    case '/cnc': this.actions.save(); break;
+                    default: break;
+                }
             });
             UniApi.Event.on('save-and-close', async () => {
                 await this.actions.saveAll();
@@ -393,11 +410,18 @@ class AppLayout extends PureComponent {
             });
             UniApi.Event.on('appbar-menu:import', async () => {
                 let fileObj;
+                const pathname = this.props.currentModalPath || this.props.history.location.pathname;
+                if (pathname === '/') {
+                    return;
+                }
                 if (isElectron()) {
-                    const file = await UniApi.Dialog.showOpenFileDialog(this.props.history.location.pathname.slice(1));
+                    const file = await UniApi.Dialog.showOpenFileDialog(pathname);
+                    if (!file) {
+                        return;
+                    }
                     fileObj = UniApi.File.constructFileObj(file.path, file.name.split('\\').pop());
                 }
-                switch (this.props.history.location.pathname) {
+                switch (pathname) {
                     case '/3dp': UniApi.Event.emit('appbar-menu:printing.import', fileObj); break;
                     case '/laser': UniApi.Event.emit('appbar-menu:laser.import', fileObj); break;
                     case '/cnc': UniApi.Event.emit('appbar-menu:cnc.import', fileObj); break;
@@ -406,7 +430,8 @@ class AppLayout extends PureComponent {
                 }
             });
             UniApi.Event.on('appbar-menu:export-model', () => {
-                if (this.props.history.location.pathname === '/3dp') {
+                const pathname = this.props.currentModalPath || this.props.history.location.pathname;
+                if (pathname === '/3dp') {
                     UniApi.Event.emit('appbar-menu:printing.export-model');
                 }
             });
@@ -414,7 +439,8 @@ class AppLayout extends PureComponent {
                 this.props.loadCase(caseItem.pathConfig, this.props.history);
             });
             UniApi.Event.on('appbar-menu:export-gcode', () => {
-                switch (this.props.history.location.pathname) {
+                const pathname = this.props.currentModalPath || this.props.history.location.pathname;
+                switch (pathname) {
                     case '/3dp': UniApi.Event.emit('appbar-menu:printing.export-gcode'); break;
                     case '/laser': UniApi.Event.emit('appbar-menu:cnc-laser.export-gcode'); break;
                     case '/cnc': UniApi.Event.emit('appbar-menu:cnc-laser.export-gcode'); break;
@@ -425,6 +451,18 @@ class AppLayout extends PureComponent {
 
             this.props.history.listen(() => {
                 this.props.updateMenu();
+            });
+            UniApi.Event.on('tile-modal:show', ({ component }) => {
+                if (component.type === HomePage) {
+                    this.props.updateCurrentModalPath('#/');
+                } else if (component.type === Workspace) {
+                    this.props.updateCurrentModalPath('#/workspace');
+                }
+                this.props.enableMenu();
+            });
+            UniApi.Event.on('tile-modal:hide', () => {
+                this.props.updateCurrentModalPath(null);
+                this.props.enableMenu();
             });
             UniApi.Event.on('appbar-menu:disable', () => {
                 this.props.disableMenu();
@@ -477,9 +515,11 @@ class AppLayout extends PureComponent {
 
 const mapStateToProps = (state) => {
     const machineInfo = state.machine;
+    const { currentModalPath } = state.appbarMenu;
     const { shouldCheckForUpdate } = machineInfo;
     // const projectState = state.project;
     return {
+        currentModalPath: currentModalPath ? currentModalPath.slice(1) : currentModalPath, // exclude hash character `#`
         machineInfo,
         shouldCheckForUpdate
         // projectState
@@ -498,6 +538,7 @@ const mapDispatchToProps = (dispatch) => {
         updateMaterials: (headType, newMaterials) => dispatch(editorActions.updateMaterials(headType, newMaterials)),
         // openProject: (file, history) => dispatch(projectActions.open(file, history)),
         loadCase: (pathConfig, history) => dispatch(projectActions.openProject(pathConfig, history)),
+        updateCurrentModalPath: (path) => dispatch(menuActions.updateCurrentModalPath(path)),
         updateMenu: () => dispatch(menuActions.updateMenu()),
         initMenuLanguage: () => dispatch(menuActions.initMenuLanguage()),
         enableMenu: () => dispatch(menuActions.enableMenu()),
