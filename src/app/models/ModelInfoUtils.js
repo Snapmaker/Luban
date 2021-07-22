@@ -11,7 +11,8 @@ import {
 import { round } from '../../shared/lib/utils';
 
 const DEFAULT_FILL_ENABLED = false;
-const DEFAULT_FILL_DENSITY = 4;
+// const DEFAULT_FILL_DENSITY = 4;
+const DEFAULT_FILL_INTERVAL = 0.25;
 
 const DEFAULT_TEXT_CONFIG = {
     text: 'Snapmaker',
@@ -146,13 +147,13 @@ const defaultGcodeConfigs = {
     [toKey(HEAD_LASER, PROCESS_MODE_GREYSCALE)]: {
         direction: 'Horizontal',
         movementMode: 'greyscale-dot', // greyscale-line, greyscale-dot
-        density: 7,
+        fillInterval: 0.14, // density: 7,
         jogSpeed: 2500,
         workSpeed: 2500,
         plungeSpeed: 800,
         dwellTime: 5,
         fixedPowerEnabled: true,
-        fixedPower: 30,
+        fixedPower: 60,
         multiPassEnabled: true,
         multiPasses: 1,
         multiPassDepth: 1
@@ -160,13 +161,13 @@ const defaultGcodeConfigs = {
     [toKey(HEAD_LASER, PROCESS_MODE_BW)]: {
         direction: 'Horizontal',
         movementMode: 'greyscale-line', // greyscale-line, greyscale-dot
-        density: DEFAULT_FILL_DENSITY,
-        jogSpeed: 1500,
-        workSpeed: 800,
+        fillInterval: DEFAULT_FILL_INTERVAL, // density: DEFAULT_FILL_DENSITY,
+        jogSpeed: 2500,
+        workSpeed: 2500,
         plungeSpeed: 800,
         dwellTime: 5,
         fixedPowerEnabled: false,
-        fixedPower: 50,
+        fixedPower: 60,
         multiPassEnabled: true,
         multiPasses: 1,
         multiPassDepth: 1
@@ -174,22 +175,23 @@ const defaultGcodeConfigs = {
     [toKey(HEAD_LASER, PROCESS_MODE_HALFTONE)]: {
         direction: 'Horizontal',
         movementMode: 'greyscale-line', // greyscale-line, greyscale-dot
-        density: DEFAULT_FILL_DENSITY,
-        jogSpeed: 1500,
-        workSpeed: 800,
+        fillInterval: DEFAULT_FILL_INTERVAL, // density: DEFAULT_FILL_DENSITY,
+        jogSpeed: 2500,
+        workSpeed: 2500,
         plungeSpeed: 800,
         dwellTime: 5,
         fixedPowerEnabled: false,
-        fixedPower: 50,
+        fixedPower: 60,
         multiPassEnabled: true,
         multiPasses: 1,
         multiPassDepth: 1
     },
     [toKey(HEAD_LASER, PROCESS_MODE_VECTOR)]: {
         optimizePath: false,
+        movementMode: 'greyscale-line', // greyscale-line, greyscale-dot
         fillEnabled: DEFAULT_FILL_ENABLED,
-        fillDensity: DEFAULT_FILL_DENSITY,
-        jogSpeed: 1500,
+        fillInterval: DEFAULT_FILL_INTERVAL, // fillDensity: DEFAULT_FILL_DENSITY,
+        jogSpeed: 3000,
         workSpeed: 140,
         plungeSpeed: 800,
         dwellTime: 5,
@@ -201,9 +203,10 @@ const defaultGcodeConfigs = {
     },
     [toKey(HEAD_LASER, PROCESS_MODE_VECTOR, true)]: {
         optimizePath: false,
+        movementMode: 'greyscale-line', // greyscale-line, greyscale-dot
         fillEnabled: DEFAULT_FILL_ENABLED,
-        fillDensity: DEFAULT_FILL_DENSITY,
-        jogSpeed: 1500,
+        fillInterval: DEFAULT_FILL_INTERVAL, // fillDensity: DEFAULT_FILL_DENSITY,
+        jogSpeed: 3000,
         workSpeed: 800,
         plungeSpeed: 800,
         dwellTime: 5,
@@ -215,9 +218,10 @@ const defaultGcodeConfigs = {
     },
     [toKey(HEAD_LASER, PROCESS_MODE_VECTOR, SOURCE_TYPE_RASTER)]: {
         optimizePath: true,
+        movementMode: 'greyscale-line', // greyscale-line, greyscale-dot
         fillEnabled: DEFAULT_FILL_ENABLED,
-        fillDensity: DEFAULT_FILL_DENSITY,
-        jogSpeed: 1500,
+        fillInterval: DEFAULT_FILL_INTERVAL, // fillDensity: DEFAULT_FILL_DENSITY,
+        jogSpeed: 3000,
         workSpeed: 140,
         plungeSpeed: 800,
         dwellTime: 5,
@@ -229,9 +233,10 @@ const defaultGcodeConfigs = {
     },
     [toKey(HEAD_LASER, PROCESS_MODE_VECTOR, SOURCE_TYPE_RASTER, true)]: {
         optimizePath: true,
+        movementMode: 'greyscale-line', // greyscale-line, greyscale-dot
         fillEnabled: DEFAULT_FILL_ENABLED,
-        fillDensity: DEFAULT_FILL_DENSITY,
-        jogSpeed: 1500,
+        fillInterval: DEFAULT_FILL_INTERVAL, // fillDensity: DEFAULT_FILL_DENSITY,
+        jogSpeed: 3000,
         workSpeed: 800,
         plungeSpeed: 800,
         dwellTime: 5,
@@ -249,7 +254,7 @@ const defaultGcodeConfigs = {
         stepDown: 0.5,
         safetyHeight: 1.0,
         stopHeight: 10,
-        density: 5,
+        stepOver: 0.25, // density: 5,
         jogSpeed: 1500,
         workSpeed: 600,
         plungeSpeed: 600,
@@ -264,7 +269,7 @@ const defaultGcodeConfigs = {
         stepDown: 0.5,
         safetyHeight: 1.0,
         stopHeight: 10,
-        density: 5,
+        stepOver: 0.25, // density: 5,
         enableTab: false,
         jogSpeed: 1500,
         workSpeed: 300,
@@ -280,7 +285,7 @@ const defaultGcodeConfigs = {
         stepDown: 10,
         safetyHeight: 1.0,
         stopHeight: 10,
-        density: 5,
+        stepOver: 0.25, // density: 5,
         enableTab: false,
         jogSpeed: 1500,
         workSpeed: 300,
@@ -291,7 +296,7 @@ const defaultGcodeConfigs = {
     [toKey(HEAD_CNC)]: {
         optimizePath: false,
         fillEnabled: DEFAULT_FILL_ENABLED,
-        fillDensity: DEFAULT_FILL_DENSITY,
+        stepOver: 0.25, // fillDensity: DEFAULT_FILL_DENSITY,
         pathType: 'path',
         targetDepth: 2.0,
         stepDown: 0.5,

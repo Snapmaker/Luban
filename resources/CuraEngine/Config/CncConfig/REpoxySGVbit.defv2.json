@@ -63,13 +63,13 @@
             "label": "Step Down",
             "description": "Enter the depth of each carving step."
         },
-        "density": {
-            "default_value": 5,
+        "step_over": {
+            "default_value": 0.25,
             "type": "float",
             "min": 0.01,
             "max": 20,
-            "unit": "dot/mm",
-            "label": "Density",
+            "unit": "mm",
+            "label": "Step Over",
             "description": "Set the density of the tool head movements. The highest density is 10 dot/mm. When generating G-code, the density will be re-calculated to ensure the process work normally."
         }
     }

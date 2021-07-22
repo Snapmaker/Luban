@@ -48,12 +48,12 @@ class LaserParameters extends PureComponent {
 
         const { name, type, gcodeConfig, useLegacyEngine } = toolPath;
 
-        const { direction, movementMode } = gcodeConfig;
-
+        const { fillEnabled } = gcodeConfig;
 
         // eslint-disable-next-line no-unused-vars
         const isSVG = type === TOOLPATH_TYPE_VECTOR;
         const isImage = type === TOOLPATH_TYPE_IMAGE;
+        const defaultFillEnabled = true;
 
         return (
             <React.Fragment>
@@ -78,8 +78,8 @@ class LaserParameters extends PureComponent {
                                 />
                             </div>
                         )}
-                        {isImage && (
-                            <div>
+                        <div>
+                            {isSVG && (
                                 <TipTrigger
                                     title={i18n._('Line Direction')}
                                     content={i18n._('Select the direction of the engraving path.')}
@@ -94,49 +94,47 @@ class LaserParameters extends PureComponent {
                                             menuContainerStyle={{ zIndex: 5 }}
                                             name="line_direction"
                                             options={[{
-                                                value: 'Horizontal',
-                                                label: i18n._('Horizontal')
+                                                value: 'true',
+                                                label: i18n._('Fill')
                                             }, {
-                                                value: 'Vertical',
-                                                label: i18n._('Vertical')
-                                            }, {
-                                                value: 'Diagonal',
-                                                label: i18n._('Diagonal')
-                                            }, {
-                                                value: 'Diagonal2',
-                                                label: i18n._('Diagonal2')
+                                                value: 'false',
+                                                label: i18n._('On The Path')
                                             }]}
                                             placeholder=""
                                             searchable={false}
-                                            value={direction}
-                                            onChange={(option) => { this.props.updateGcodeConfig({ direction: option.value }); }}
+                                            value={fillEnabled.toString()}
+                                            onChange={(option) => { this.props.updateGcodeConfig({ fillEnabled: option.value }); }}
                                         />
                                     </div>
                                 </TipTrigger>
-                                <div className="position-re sm-flex justify-space-between height-32 margin-vertical-8">
-                                    <span>{i18n._('Movement Mode')}</span>
-                                    <Select
-                                        size="middle"
-                                        backspaceRemoves={false}
-                                        className="sm-parameter-row__select-md"
-                                        clearable={false}
-                                        menuContainerStyle={{ zIndex: 5 }}
-                                        name="Movement"
-                                        options={[{
-                                            value: 'greyscale-line',
-                                            label: i18n._('Line')
-                                        }, {
-                                            value: 'greyscale-dot',
-                                            label: i18n._('Dot')
-                                        }]}
-                                        placeholder={i18n._('Choose movement mode')}
-                                        searchable={false}
-                                        value={movementMode}
-                                        onChange={this.actions.onChangeMovementMode}
-                                    />
-                                </div>
-                            </div>
-                        )}
+                            )}
+                            {isImage && (
+                                <TipTrigger
+                                    title={i18n._('Line Direction')}
+                                    content={i18n._('Select the direction of the engraving path.')}
+                                >
+                                    <div className="position-re sm-flex justify-space-between height-32 margin-vertical-8">
+                                        <span>{i18n._('Method')}</span>
+                                        <Select
+                                            size="middle"
+                                            backspaceRemoves={false}
+                                            className="sm-parameter-row__select-md"
+                                            clearable={false}
+                                            menuContainerStyle={{ zIndex: 5 }}
+                                            name="line_direction"
+                                            options={[{
+                                                value: true,
+                                                label: i18n._('Fill')
+                                            }]}
+                                            placeholder=""
+                                            searchable={false}
+                                            value={defaultFillEnabled}
+                                            onChange={() => {}}
+                                        />
+                                    </div>
+                                </TipTrigger>
+                            )}
+                        </div>
                     </div>
                     <GcodeParameters
                         toolPath={this.props.toolPath}

@@ -12,7 +12,7 @@ export default class CncMeshLinkageToolPathGenerator extends EventEmitter {
         super();
         const { uploadName, gcodeConfig = {}, transformation = {}, materials = {}, toolParams = {} } = modelInfo;
 
-        const { density = 5, safetyHeight = 1, smoothY = true, stepDown, allowance } = gcodeConfig;
+        const { stepOver = 0.25, safetyHeight = 1, smoothY = true, stepDown, allowance } = gcodeConfig;
         const { isRotate, diameter } = materials;
         const { toolDiameter = 0, toolAngle = 0, toolShaftDiameter = 0 } = toolParams;
 
@@ -22,7 +22,7 @@ export default class CncMeshLinkageToolPathGenerator extends EventEmitter {
         this.gcodeConfig = gcodeConfig;
         this.allowance = allowance;
 
-        this.density = density;
+        this.density = 1 / stepOver;
         this.smoothY = smoothY;
         this.stepDown = stepDown;
 

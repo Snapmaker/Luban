@@ -241,12 +241,22 @@ export const CNC_TOOL_CONFIG_GROUP = [
             'work_speed',
             'plunge_speed',
             'step_down',
-            'density'
+            'step_over'
         ]
     }
 ];
 
 export const CNC_DEFAULT_GCODE_PARAMETERS_DEFINITION = {
+    'allowance': {
+        label: 'Allowance',
+        description: 'Allowance',
+        min: 0,
+        step: 0.1,
+        unit: 'mm',
+        type: 'float',
+        default_value: 0.1,
+        value: 'allowance'
+    },
     'sliceMode': {
         label: 'Slicing Mode',
         description: 'Select the slicing mode of the mesh toolpath',
@@ -337,16 +347,29 @@ export const CNC_DEFAULT_GCODE_PARAMETERS_DEFINITION = {
         default_value: 'tabWidth',
         type: 'float',
         unit: 'mm'
+    },
+    'step_over': {
+        label: 'Step Over',
+        description: 'Step Over',
+        min: 0.01,
+        step: 0.01,
+        default_value: 0.25,
+        value: 'step_over',
+        type: 'float'
     }
 };
 
 export const LASER_DEFAULT_GCODE_PARAMETERS_DEFINITION = {
-    'fill_enabled': {
-        label: 'Fill',
-        type: 'bool',
-        default_value: false
+    'fillEnabled': {
+        label: 'Method', // 'Fill'
+        type: 'enum',
+        default_value: 'false',
+        options: {
+            false: 'On the Path',
+            true: 'Fill'
+        }
     },
-    'work_speed': {
+    'workSpeed': {
         label: 'Work Speed',
         description: 'Determines how fast the machine moves when it’s engraving.',
         type: 'float',
@@ -356,7 +379,7 @@ export const LASER_DEFAULT_GCODE_PARAMETERS_DEFINITION = {
         default_value: 'workSpeed',
         unit: 'mm/min'
     },
-    'multi_passes': {
+    'multiPasses': {
         label: 'Number of Passes',
         description: 'Determines how many times the printer will run the G-code automatically.',
         type: 'float',
@@ -364,7 +387,7 @@ export const LASER_DEFAULT_GCODE_PARAMETERS_DEFINITION = {
         max: 50,
         default_value: 'passes'
     },
-    'multi_pass_depth': {
+    'multiPassDepth': {
         label: 'Z Step Per Pass',
         description: 'Determines how much the laser module will be lowered after each pass.',
         type: 'float',
@@ -373,7 +396,7 @@ export const LASER_DEFAULT_GCODE_PARAMETERS_DEFINITION = {
         default_value: 'passDepth',
         unit: 'mm'
     },
-    'fixed_power': {
+    'fixedPower': {
         label: 'Power',
         description: 'Power to use when laser is working.',
         type: 'float',
@@ -382,7 +405,7 @@ export const LASER_DEFAULT_GCODE_PARAMETERS_DEFINITION = {
         default_value: 'fixedPower',
         unit: '%'
     },
-    'movement_mode': {
+    'movementMode': {
         label: 'Movement Mode',
         description: 'Choose Movement Mode',
         type: 'enum',
@@ -390,7 +413,28 @@ export const LASER_DEFAULT_GCODE_PARAMETERS_DEFINITION = {
             'greyscale-line': 'Line', //'Line (Normal Quality)',
             'greyscale-dot': 'Dot' // 'Dot (High Quality)'
         },
-        default_value: 'movementMode'
+        default_value: 'greyscale-line'
+    },
+    'fillInterval': {
+        label: 'Fill Interval',
+        description: 'Fill Interval',
+        type: 'float',
+        min: 0.01,
+        max: 1,
+        step: 0.01,
+        default_value: 0.25,
+        value: 'fillInterval',
+        unit: 'mm'
+    },
+    'fillDensity': {
+        label: 'Fill Density',
+        description: 'Set the precision at which an area is carved. The highest density is 0.05 mm (20 dot/mm). When it is set to 0, the SVG image will be carved without fill.',
+        type: 'float',
+        min: 1,
+        max: 10,
+        step: 1,
+        default_value: 1,
+        unit: 'dot/mm'
     },
     'density': {
         label: 'Density',
@@ -403,7 +447,7 @@ The bigger this value is, the better quality you will get. The range is 1-10 dot
         default_value: 'density',
         unit: 'dot/mm'
     },
-    'dwell_time': {
+    'dwellTime': {
         label: 'Dwell Time',
         description: 'Determines how long the laser keeps on when it’s engraving a dot.',
         type: 'float',
@@ -414,6 +458,17 @@ The bigger this value is, the better quality you will get. The range is 1-10 dot
         value: 'dwellTime',
         unit: 'ms/dot'
     },
+    'jogSpeed': {
+        label: 'Jog Speed',
+        description: 'Determines how fast the machine moves when it’s not engraving.',
+        min: 1,
+        max: 6000,
+        step: 1,
+        type: 'float',
+        unit: 'mm/min',
+        default_value: 1500,
+        value: 'jogSpeed'
+    },
     'direction': {
         label: 'Line Direction',
         description: 'Select the direction of the engraving path.',
@@ -423,6 +478,7 @@ The bigger this value is, the better quality you will get. The range is 1-10 dot
             Diagonal: 'Diagonal',
             Diagonal2: 'Diagonal2'
         },
+        type: 'enum',
         default_value: 'direction',
         value: 'direction'
     }
