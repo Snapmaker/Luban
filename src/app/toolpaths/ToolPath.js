@@ -164,20 +164,25 @@ class ToolPath {
             }
         }
 
+        const data = [];
+
         for (let i = 0; i < taskInfos.length; i++) {
             const taskInfo = taskInfos[i];
 
-            const task = {
-                taskId: this.id,
-                modelId: taskInfo.modelID,
-                headType: this.headType,
-                data: taskInfo
-            };
-
-            controller.commitToolPathTask(task);
+            data.push(taskInfo);
 
             this.modelMap.get(taskInfo.modelID).status = RUNNING;
         }
+
+        const task = {
+            taskId: this.id,
+            modelId: '',
+            headType: this.headType,
+            data: data
+        };
+
+        controller.commitToolPathTask(task);
+
         this.checkoutStatus();
         return true;
     }
@@ -226,30 +231,34 @@ class ToolPath {
      */
     onGenerateToolPath(result) {
         return new Promise((resolve, reject) => {
-            const modelMapResult = this.modelMap.get(result.data.modelID);
-
-            if (modelMapResult) {
-                if (result.status === 'failed') {
-                    modelMapResult.status = FAILED;
-
-                    this.checkoutStatus();
-                    reject();
-                } else {
-                    modelMapResult.status = SUCCESS;
-                    modelMapResult.toolPathFile = result.filename;
-                    this.loadToolPathFile(result.filename)
-                        .then((toolPathObj3D) => {
-                            const oldMeshObj = modelMapResult.meshObj;
-
-                            oldMeshObj && this.object.remove(oldMeshObj);
-                            modelMapResult.meshObj = toolPathObj3D;
-                            this.object.add(toolPathObj3D);
-
-                            this.checkoutStatus();
-                            this.removeAllNonMeshObj();
-                            resolve();
-                        });
+            if (result.status === 'failed') {
+                for (let i = 0; i < result.data.length; i++) {
+                    const modelMapResult = this.modelMap.get(result.data[i].modelID);
+                    modelMapResult && (modelMapResult.status = FAILED);
                 }
+
+                this.checkoutStatus();
+                reject();
+            } else {
+                for (let i = 0; i < result.data.length; i++) {
+                    const modelMapResult = this.modelMap.get(result.data[i].modelID);
+                    if (modelMapResult) {
+                        modelMapResult.status = SUCCESS;
+                        modelMapResult.toolPathFile = result.filenames[i];
+                        this.loadToolPathFile(result.filenames[i])
+                            .then((toolPathObj3D) => {
+                                const oldMeshObj = modelMapResult.meshObj;
+
+                                oldMeshObj && this.object.remove(oldMeshObj);
+                                modelMapResult.meshObj = toolPathObj3D;
+                                this.object.add(toolPathObj3D);
+                            });
+                    }
+                }
+
+                this.checkoutStatus();
+                this.removeAllNonMeshObj();
+                resolve();
             }
         });
     }

@@ -120,7 +120,7 @@ class TaskManager extends EventEmitter {
 
             if (taskSelected.taskType === TASK_TYPE_GENERATE_TOOLPATH) {
                 const res = await generateToolPath(taskSelected.data, onProgress);
-                taskSelected.filename = res.filename;
+                taskSelected.filenames = res.filenames;
             } else if (taskSelected.taskType === TASK_TYPE_GENERATE_GCODE) {
                 const res = await generateGcode(taskSelected.data, onProgress);
                 taskSelected.gcodeFile = res.gcodeFile;

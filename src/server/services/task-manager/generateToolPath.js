@@ -33,14 +33,16 @@ const generateLaserToolPath = async (modelInfo, onProgress) => {
         modelPath = `${DataStorage.tmpDir}/${uploadName}`;
     } else {
         if (uploadName.indexOf('svg') > 0) {
-            return Promise.reject(new Error('process image need an image uploadName'));
+            log.error('process image need an image uploadName');
+            return null;
         }
         // processImage: do "scale, rotate, greyscale/bw"
         try {
             const result = await editorProcess(modelInfo);
             modelPath = `${DataStorage.tmpDir}/${result.filename}`;
         } catch (e) {
-            return Promise.reject(new Error(`process Image Error ${e.message}`));
+            log.error(`process Image Error ${e.message}`);
+            return null;
         }
     }
 
@@ -53,25 +55,15 @@ const generateLaserToolPath = async (modelInfo, onProgress) => {
         let toolPath;
         try {
             toolPath = await generator.generateToolPathObj(modelInfo, modelPath);
+            fs.writeFileSync(outputFilePath, JSON.stringify(toolPath), 'utf8');
+
+            return outputFilename;
         } catch (e) {
             console.log(e);
+            return null;
         }
-
-        return new Promise((resolve, reject) => {
-            fs.writeFile(outputFilePath, JSON.stringify(toolPath), 'utf8', (err) => {
-                if (err) {
-                    log.error(err);
-                    reject(err);
-                } else {
-                    resolve({
-                        filename: outputFilename
-                    });
-                }
-            });
-        });
     }
-
-    return Promise.reject(new Error('No model found.'));
+    return null;
 };
 
 const generateCncToolPath = async (modelInfo, onProgress) => {
@@ -94,80 +86,48 @@ const generateCncToolPath = async (modelInfo, onProgress) => {
         generator.on('progress', (p) => onProgress(p));
         const toolPath = await generator.generateToolPathObj(svg, modelInfo);
         // }
-        return new Promise((resolve, reject) => {
-            fs.writeFile(outputFilePath, JSON.stringify(toolPath), 'utf8', (err) => {
-                if (err) {
-                    log.error(err);
-                    reject(err);
-                } else {
-                    resolve({
-                        filename: outputFilename
-                    });
-                }
-            });
-        });
+        fs.writeFileSync(outputFilePath, JSON.stringify(toolPath), 'utf8');
+        return outputFilename;
     } else if (mode === PROCESS_MODE_MESH) {
         const generator = new CncMeshToolPathGenerator(modelInfo);
         generator.on('progress', (p) => onProgress(p));
 
         const toolPath = await generator.generateToolPathObj();
-
-        return new Promise((resolve, reject) => {
-            fs.writeFile(outputFilePath, JSON.stringify(toolPath), 'utf8', (err) => {
-                if (err) {
-                    log.error(err);
-                    reject(err);
-                } else {
-                    resolve({
-                        filename: outputFilename
-                    });
-                }
-            });
-        });
+        fs.writeFileSync(outputFilePath, JSON.stringify(toolPath), 'utf8');
+        return outputFilename;
     } else if (mode === PROCESS_MODE_GREYSCALE) {
         const generator = new CncReliefToolPathGenerator(modelInfo, modelPath);
         generator.on('progress', (p) => onProgress(p));
 
         const toolPath = await generator.generateToolPathObj();
-
-        return new Promise((resolve, reject) => {
-            fs.writeFile(outputFilePath, JSON.stringify(toolPath), 'utf8', (err) => {
-                if (err) {
-                    log.error(err);
-                    reject(err);
-                } else {
-                    resolve({
-                        filename: outputFilename
-                    });
-                }
-            });
-        });
+        fs.writeFileSync(outputFilePath, JSON.stringify(toolPath), 'utf8');
+        return outputFilename;
     } else {
-        return Promise.reject(new Error(`Unexpected params: type = ${sourceType} mode = ${mode}`));
+        return null;
     }
 };
 
-const generateLaserToolPathFromEngine = async (modelInfo, onProgress) => {
-    const { type, sourceType } = modelInfo;
-    if ([TOOLPATH_TYPE_VECTOR + SOURCE_TYPE_RASTER].includes(type + sourceType)) {
-        const result = await editorProcess(modelInfo);
-        modelInfo.uploadName = result.filename;
+const generateLaserToolPathFromEngine = async (modelInfos, onProgress) => {
+    for (const modelInfo of modelInfos) {
+        const { type, sourceType } = modelInfo;
+        if ([TOOLPATH_TYPE_VECTOR + SOURCE_TYPE_RASTER].includes(type + sourceType)) {
+            const result = await editorProcess(modelInfo);
+            modelInfo.uploadName = result.filename;
+        }
+        modelInfo.gcodeConfig.stepOver = 1 / modelInfo.gcodeConfig.density;
+        modelInfo.toolpathFileName = generateRandomPathName('json');
     }
 
-    modelInfo.gcodeConfig.stepOver = 1 / modelInfo.gcodeConfig.density;
-
-    modelInfo.toolpathFileName = generateRandomPathName('json');
-
     const sliceParams = {
-        headType: modelInfo.headType,
-        type: modelInfo.type,
-        data: [modelInfo]
+        headType: modelInfos[0].headType,
+        type: modelInfos[0].type,
+        data: modelInfos
     };
 
     return new Promise((resolve, reject) => {
         slice(sliceParams, onProgress, (res) => {
             resolve({
-                filename: res.filename
+                filenames: res.filenames
             });
         }, () => {
             reject(new Error('Slice Error'));
@@ -175,21 +135,35 @@ const generateLaserToolPathFromEngine = async (modelInfo, onProgress) => {
     });
 };
 
-export const generateToolPath = (modelInfo, onProgress) => {
-    if (!modelInfo) {
+export const generateToolPath = (modelInfos, onProgress) => {
+    if (!modelInfos || modelInfos.length === 0) {
         return Promise.reject(new Error('modelInfo is empty.'));
     }
-
-    const { headType, useLegacyEngine } = modelInfo;
+    const { headType, useLegacyEngine } = modelInfos[0];
+    if (!['laser', 'cnc'].includes(headType)) {
+        return Promise.reject(new Error(`Unsupported type: ${headType}`));
+    }
     if (useLegacyEngine) {
-        if (headType === 'laser') {
-            return generateLaserToolPath(modelInfo, onProgress);
-        } else if (headType === 'cnc') {
-            return generateCncToolPath(modelInfo, onProgress);
-        } else {
-            return Promise.reject(new Error(`Unsupported type: ${headType}`));
-        }
+        return new Promise(async (resolve, reject) => {
+            const filenames = [];
+            for (let i = 0; i < modelInfos.length; i++) {
+                let res;
+                if (headType === 'laser') {
+                    res = await generateLaserToolPath(modelInfos[i], onProgress);
+                } else {
+                    modelInfos[i].taskAsyncFor = modelInfos.taskAsyncFor;
+                    res = await generateCncToolPath(modelInfos[i], onProgress);
+                }
+                if (!res) {
+                    reject();
+                }
+                filenames.push(res);
+            }
+            resolve({
+                filenames: filenames
+            });
+        });
     } else {
-        return generateLaserToolPathFromEngine(modelInfo, onProgress);
+        return generateLaserToolPathFromEngine(modelInfos, onProgress);
     }
 };
