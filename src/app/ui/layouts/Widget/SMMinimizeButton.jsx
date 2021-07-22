@@ -16,6 +16,7 @@ const SMMinimizeButton = React.memo(({ state, actions, className }) => {
             title={minimized ? i18n._('Expand') : i18n._('Collapse')}
             onClick={onToggleMinimized}
             name="DropdownLine"
+            size={32}
             className={classNames(
                 className,
                 !minimized ? '' : 'rotate180'

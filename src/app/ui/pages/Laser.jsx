@@ -6,6 +6,9 @@ import { withRouter } from 'react-router-dom';
 // import classNames from 'classnames';
 import i18n from '../../lib/i18n';
 import Anchor from '../components/Anchor';
+import Dropdown from '../components/Dropdown';
+import Menu from '../components/Menu';
+import SvgIcon from '../components/SvgIcon';
 import modal from '../../lib/modal';
 import LaserVisualizer from '../widgets/LaserVisualizer';
 import Tabs from '../components/Tabs';
@@ -19,7 +22,7 @@ import ProjectLayout from '../layouts/ProjectLayout';
 import MainToolBar from '../layouts/MainToolBar';
 // import WidgetContainer from '../Layouts/Widget';
 
-import { HEAD_LASER, PAGE_EDITOR, PAGE_PROCESS } from '../../constants';
+import { HEAD_LASER, PAGE_EDITOR, PAGE_PROCESS, MACHINE_SERIES } from '../../constants';
 
 
 import ControlWidget from '../widgets/Control';
@@ -32,7 +35,8 @@ import MarlinWidget from '../widgets/Marlin';
 import VisualizerWidget from '../widgets/WorkspaceVisualizer';
 import WebcamWidget from '../widgets/Webcam';
 import LaserParamsWidget from '../widgets/LaserParams';
-import LaserSetBackground from '../widgets/LaserSetBackground/SetBackground';
+import LaserSetBackground from '../widgets/LaserSetBackground';
+import LaserCameraAidBackground from '../widgets/LaserCameraAidBackground';
 import LaserTestFocusWidget from '../widgets/LaserTestFocus';
 import CNCPathWidget from '../widgets/CNCPath';
 import CncLaserOutputWidget from '../widgets/CncLaserOutput';
@@ -68,7 +72,6 @@ const allWidgets = {
     '3dp-output': PrintingOutputWidget,
     'laser-params': LaserParamsWidget,
     // 'laser-output': CncLaserOutputWidget,
-    'laser-set-background': LaserSetBackground,
     'laser-test-focus': LaserTestFocusWidget,
     'cnc-path': CNCPathWidget,
     'cnc-output': CncLaserOutputWidget,
@@ -78,6 +81,205 @@ const allWidgets = {
 
 const ACCEPT = '.svg, .png, .jpg, .jpeg, .bmp, .dxf';
 const pageHeadType = HEAD_LASER;
+
+
+function useRenderMainToolBar(setShowHomePage, setShowJobType) {
+    // (!workPosition.isFourAxis && (connectionType === CONNECTION_TYPE_WIFI && isConnected && !hasBackground))
+    const isConnected = useSelector(state => state?.machine?.isConnected, shallowEqual);
+    const series = useSelector(state => state?.machine?.series, shallowEqual);
+    const canRedo = useSelector(state => state[HEAD_LASER]?.history?.canRedo, shallowEqual);
+    const canUndo = useSelector(state => state[HEAD_LASER]?.history?.canUndo, shallowEqual);
+    const [showCameraCapture, setShowCameraCapture] = useState(false);
+    const dispatch = useDispatch();
+    const menu = (
+        <Menu style={{ marginTop: '8px' }}>
+            <Menu.Item
+                onClick={() => setShowCameraCapture(true)}
+                disabled={series === MACHINE_SERIES.ORIGINAL?.value ? false : !isConnected}
+            >
+                <div className="align-c">
+                    <SvgIcon
+                        type="static"
+                        name="MainToolbarAddBackground"
+                    />
+                    {i18n._('Add Background')}
+                </div>
+            </Menu.Item>
+            <Menu.Item
+                onClick={() => dispatch(laserActions.removeBackgroundImage())}
+            >
+                <div className="align-c">
+                    <SvgIcon
+                        type="static"
+                        name="MainToolbarRemoveBackground"
+                    />
+                    {i18n._('Remove Background')}
+                </div>
+            </Menu.Item>
+        </Menu>
+    );
+    const leftItems = [
+        {
+            title: i18n._('Home'),
+            type: 'button',
+            name: 'MainToolbarHome',
+            action: () => {
+                setShowHomePage(true);
+            }
+        },
+        {
+            type: 'separator'
+        },
+        {
+            title: i18n._('Save'),
+            type: 'button',
+            name: 'MainToolbarSave',
+            action: () => {
+                dispatch(projectActions.save(HEAD_LASER));
+            }
+        },
+        {
+            title: i18n._('Undo'),
+            disabled: !canUndo,
+            type: 'button',
+            name: 'MainToolbarUndo',
+            action: () => {
+                dispatch(editorActions.undo(HEAD_LASER));
+            }
+        },
+        {
+            title: i18n._('Redo'),
+            disabled: !canRedo,
+            type: 'button',
+            name: 'MainToolbarRedo',
+            action: () => {
+                dispatch(editorActions.redo(HEAD_LASER));
+            }
+        },
+        {
+            title: i18n._('Job Setup'),
+            type: 'button',
+            name: 'MainToolbarJobSetup',
+            action: () => {
+                setShowJobType(true);
+            }
+        },
+        {
+            type: 'separator'
+        },
+        {
+            type: 'render',
+            customRender: function () {
+                return (
+                    <Anchor
+                        onClick={() => dispatch(editorActions.bringSelectedModelToFront(HEAD_LASER))}
+                        className="width-64 display-inline align-c padding-top-4 padding-horizontal-2 font-size-0"
+                    >
+                        <i
+                            style={{
+                                backgroundImage: `url(${require('../../resources/images/laser-image/Set-top-normal.svg')})`
+                            }}
+                            className="width-24 height-24 display-inline "
+                        />
+                        <div className="font-size-base">
+                            {i18n._('Top')}
+                        </div>
+                    </Anchor>
+                );
+            }
+        },
+        {
+            type: 'render',
+            customRender: function () {
+                return (
+                    <Anchor
+                        onClick={() => dispatch(editorActions.sendSelectedModelToBack(HEAD_LASER))}
+                        className="width-64 display-inline align-c padding-top-4 padding-horizontal-2 font-size-0"
+                    >
+                        <i
+                            style={{
+                                backgroundImage: `url(${require('../../resources/images/laser-image/Set-bottom-normal.svg')})`
+                            }}
+                            className="width-24 height-24 display-inline "
+                        />
+                        <div className="font-size-base">
+                            {i18n._('Bottom')}
+                        </div>
+                    </Anchor>
+                );
+            }
+        },
+        {
+            type: 'separator'
+        },
+        {
+            // Camera-capture-normal
+            type: 'render',
+            customRender: function () {
+                return (
+                    <Dropdown
+                        className="display-inline align-c padding-top-4 padding-horizontal-2"
+                        overlay={menu}
+                    >
+                        <div
+                            className="display-inline font-size-0"
+                        >
+                            <i
+                                style={{
+                                    backgroundImage: `url(${require('../../resources/images/laser-image/Camera-capture-normal.svg')})`
+                                }}
+                                className="width-24 height-24 display-inline "
+                            />
+                            <div className="font-size-base">
+                                {i18n._('Camera Capture')}
+                                <SvgIcon
+                                    type="static"
+                                    name="DropdownLine"
+                                />
+                            </div>
+                        </div>
+                    </Dropdown>
+                );
+            }
+        }
+    ];
+
+    const setBackgroundModal = showCameraCapture && renderModal({
+        renderBody() {
+            return (
+                <div>
+                    {series === MACHINE_SERIES.ORIGINAL?.value && (
+                        <LaserSetBackground
+                            hideModal={() => {
+                                setShowCameraCapture(false);
+                            }}
+                        />
+                    )}
+                    {series !== MACHINE_SERIES.ORIGINAL?.value && (
+                        <LaserCameraAidBackground
+                            hideModal={() => {
+                                setShowCameraCapture(false);
+                            }}
+                        />
+                    )}
+                </div>
+            );
+        },
+        actions: [],
+        onClose: () => { setShowCameraCapture(false); }
+    });
+
+    return {
+        setBackgroundModal,
+        renderMainToolBar: () => {
+            return (
+                <MainToolBar
+                    leftItems={leftItems}
+                />
+            );
+        }
+    };
+}
 
 function useRenderRemoveModelsWarning() {
     const removingModelsWarning = useSelector(state => state?.laser?.removingModelsWarning);
@@ -123,8 +325,6 @@ function Laser({ location }) {
     const [isDraggingWidget, setIsDraggingWidget] = useState(false);
     const [showHomePage, setShowHomePage] = useState(false);
     const [showJobType, setShowJobType] = useState(true);
-    const canRedo = useSelector(state => state[HEAD_LASER]?.history?.canRedo, shallowEqual);
-    const canUndo = useSelector(state => state[HEAD_LASER]?.history?.canUndo, shallowEqual);
     const coordinateMode = useSelector(state => state[HEAD_LASER]?.coordinateMode, shallowEqual);
     const coordinateSize = useSelector(state => state[HEAD_LASER]?.coordinateSize, shallowEqual);
     const materials = useSelector(state => state[HEAD_LASER]?.materials, shallowEqual);
@@ -133,7 +333,6 @@ function Laser({ location }) {
         coordinateSize,
         materials
     });
-    const [showCameraCapture, setShowCameraCapture] = useState(false);
     const dispatch = useDispatch();
     const page = useSelector(state => state?.laser?.page);
     useEffect(() => {
@@ -155,6 +354,8 @@ function Laser({ location }) {
     }, [location?.state?.shouldShowJobType]);
 
     const recoveryModal = useRenderRecoveryModal(pageHeadType);
+    const { setBackgroundModal,
+        renderMainToolBar } = useRenderMainToolBar(setShowHomePage, setShowJobType);
     const renderHomepage = () => {
         const onClose = () => setShowHomePage(false);
         return showHomePage && renderPopup({
@@ -206,22 +407,6 @@ function Laser({ location }) {
             setShowJobType(false);
         }
     });
-    const setBackgroundModal = showCameraCapture && renderModal({
-        title: i18n._('Set Background'),
-        renderBody() {
-            return (
-                <LaserSetBackground />
-            );
-        },
-        actions: [
-            {
-                name: i18n._('Cancel'),
-
-                onClick: () => { setShowCameraCapture(false); }
-            }
-        ],
-        onClose: () => { setShowCameraCapture(false); }
-    });
     const warningRemovingModels = useRenderRemoveModelsWarning();
     const listActions = {
         onDragStart: () => {
@@ -253,132 +438,6 @@ function Laser({ location }) {
         }
     };
 
-    function renderMainToolBar() {
-        // const fileInput = React.createRef();
-        const leftItems = [
-            {
-                title: i18n._('Home'),
-                type: 'button',
-                name: 'MainToolbarHome',
-                action: () => {
-                    setShowHomePage(true);
-                }
-            },
-            {
-                type: 'separator'
-            },
-            {
-                title: i18n._('Save'),
-                type: 'button',
-                name: 'MainToolbarSave',
-                action: () => {
-                    dispatch(projectActions.save(HEAD_LASER));
-                }
-            },
-            {
-                title: i18n._('Undo'),
-                disabled: !canUndo,
-                type: 'button',
-                name: 'MainToolbarUndo',
-                action: () => {
-                    dispatch(editorActions.undo(HEAD_LASER));
-                }
-            },
-            {
-                title: i18n._('Redo'),
-                disabled: !canRedo,
-                type: 'button',
-                name: 'MainToolbarRedo',
-                action: () => {
-                    dispatch(editorActions.redo(HEAD_LASER));
-                }
-            },
-            {
-                title: i18n._('Job Setup'),
-                type: 'button',
-                name: 'MainToolbarJobSetup',
-                action: () => {
-                    setShowJobType(true);
-                }
-            },
-            {
-                type: 'separator'
-            },
-            {
-                type: 'render',
-                customRender: function () {
-                    return (
-                        <Anchor
-                            onClick={() => dispatch(editorActions.bringSelectedModelToFront(HEAD_LASER))}
-                            className="width-64 display-inline align-c padding-top-4 padding-horizontal-2 font-size-0"
-                        >
-                            <i
-                                style={{
-                                    backgroundImage: `url(${require('../../resources/images/laser-image/Set-top-normal.svg')})`
-                                }}
-                                className="width-24 height-24 display-inline "
-                            />
-                            <div className="font-size-base">
-                                {i18n._('Top')}
-                            </div>
-                        </Anchor>
-                    );
-                }
-            },
-            {
-                type: 'render',
-                customRender: function () {
-                    return (
-                        <Anchor
-                            onClick={() => dispatch(editorActions.sendSelectedModelToBack(HEAD_LASER))}
-                            className="width-64 display-inline align-c padding-top-4 padding-horizontal-2 font-size-0"
-                        >
-                            <i
-                                style={{
-                                    backgroundImage: `url(${require('../../resources/images/laser-image/Set-bottom-normal.svg')})`
-                                }}
-                                className="width-24 height-24 display-inline "
-                            />
-                            <div className="font-size-base">
-                                {i18n._('Bottom')}
-                            </div>
-                        </Anchor>
-                    );
-                }
-            },
-            {
-                type: 'separator'
-            },
-            {
-                // Camera-capture-normal
-                type: 'render',
-                customRender: function () {
-                    return (
-                        <Anchor
-                            onClick={() => setShowCameraCapture(true)}
-                            className="display-inline align-c padding-top-4 padding-horizontal-2 font-size-0"
-                        >
-                            <i
-                                style={{
-                                    backgroundImage: `url(${require('../../resources/images/laser-image/Camera-capture-normal.svg')})`
-                                }}
-                                className="width-24 height-24 display-inline "
-                            />
-                            <div className="font-size-base">
-                                {i18n._('Camera Capture')}
-                            </div>
-                        </Anchor>
-                    );
-                }
-            }
-        ];
-
-        return (
-            <MainToolBar
-                leftItems={leftItems}
-            />
-        );
-    }
 
     function renderRightView() {
         const widgetProps = { headType: 'laser' };

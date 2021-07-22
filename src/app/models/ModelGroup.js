@@ -271,10 +271,9 @@ class ModelGroup extends EventEmitter {
      * Remove all models.
      */
     removeAllModels() {
-        if (this.hasModel()) {
-            this._removeAllModels();
-            this.unselectAllModels();
-        }
+        this._removeAllModels();
+        this.unselectAllModels();
+
         this.modelChanged();
         return this._getEmptyState();
     }

@@ -625,7 +625,7 @@ function ProfileManager({ optionConfigGroup, disableCategory = true, managerTitl
                     </Modal.Body>
                     <Modal.Footer>
                         <Button
-                            onClick={() => { outsideActions.closeManager(); }}
+                            onClick={outsideActions.closeManager}
                             type="default"
                             priority="level-two"
                             width="96px"

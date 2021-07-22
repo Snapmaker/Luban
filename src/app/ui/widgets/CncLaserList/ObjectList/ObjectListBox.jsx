@@ -9,12 +9,12 @@ import i18n from '../../../../lib/i18n';
 import ModelItem from '../../../views/model-item';
 
 
-function ObjectListBox(props) {
+function ObjectListBox({ headType }) {
     // https://github.com/tc39/proposal-optional-chaining
-    const selectedModelArray = useSelector(state => state[props.headType]?.modelGroup?.selectedModelArray, shallowEqual);
-    const models = useSelector(state => state[props.headType]?.modelGroup?.models);
-    const inProgress = useSelector(state => state[props.headType]?.inProgress, shallowEqual);
-    const previewFailed = useSelector(state => state[props.headType]?.previewFailed, shallowEqual);
+    const selectedModelArray = useSelector(state => state[headType]?.modelGroup?.selectedModelArray, shallowEqual);
+    const models = useSelector(state => state[headType]?.modelGroup?.models);
+    const inProgress = useSelector(state => state[headType]?.inProgress, shallowEqual);
+    const previewFailed = useSelector(state => state[headType]?.previewFailed, shallowEqual);
     // const [showList, setShowList] = useState(true);
     const dispatch = useDispatch();
     const actions = {
@@ -26,15 +26,15 @@ function ObjectListBox(props) {
             if (selectedModelArray && selectedModelArray.length > 0 && model.visible === false) {
                 isMultiSelect = false;
             }
-            dispatch(editorActions.selectTargetModel(model, props.headType, isMultiSelect));
+            dispatch(editorActions.selectTargetModel(model, headType, isMultiSelect));
         },
         onClickModelHideBox(model) {
             const visible = model.visible;
-            dispatch(editorActions.selectTargetModel(model, props.headType));
+            dispatch(editorActions.selectTargetModel(model, headType));
             if (visible) {
-                dispatch(editorActions.hideSelectedModel(props.headType, model));
+                dispatch(editorActions.hideSelectedModel(headType, model));
             } else {
-                dispatch(editorActions.showSelectedModel(props.headType, model));
+                dispatch(editorActions.showSelectedModel(headType, model));
             }
         }
     };
