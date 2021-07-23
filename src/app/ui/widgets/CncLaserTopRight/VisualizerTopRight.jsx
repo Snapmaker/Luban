@@ -1,7 +1,10 @@
 import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
+import classNames from 'classnames';
 import i18n from '../../../lib/i18n';
+import Checkbox from '../../components/Checkbox';
+
 import { HEAD_CNC, DISPLAYED_TYPE_TOOLPATH } from '../../../constants';
 import { actions as editorActions } from '../../../flux/editor';
 import styles from './styles.styl';
@@ -57,8 +60,8 @@ class VisualizerTopRight extends PureComponent {
     render() {
         return (
             <React.Fragment>
-                <div className={styles['visualizer-top-right']}>
-                    {/*<div>*/}
+                <div>
+                    {/* <div>*/}
                     {/*    <button*/}
                     {/*        type="button"*/}
                     {/*        className="sm-btn-small sm-btn-primary"*/}
@@ -76,33 +79,41 @@ class VisualizerTopRight extends PureComponent {
                     {/*            {i18n._('Back To Object View')}*/}
                     {/*        </div>*/}
                     {/*    </button>*/}
-                    {/*</div>*/}
+                    {/* </div>*/}
                     {this.props.headType === HEAD_CNC && (
                         <div
-                            className={styles['top-right-div2']}
+                            className={classNames(
+                                styles['visualizer-top-right'],
+                                'position-ab',
+                                'right-8',
+                                'width-200',
+                                'border-default-grey-1',
+                                'border-radius-8',
+                                'background-color-white',
+                            )}
                         >
-                            <div className={styles.title}>
+                            <div className="border-bottom-normal padding-vertical-10 padding-horizontal-16 height-40">
                                 {i18n._('Preview Type')}
                             </div>
-                            <div className={styles.content}>
-                                <input
-                                    type="checkbox"
-                                    onChange={this.actions.switchShowToolPath}
-                                    checked={this.props.showToolPath}
-                                />
-                                <span>
-                                    {i18n._('Toolpath')}
-                                </span>
-                            </div>
-                            <div className={styles.content}>
-                                <input
-                                    type="checkbox"
-                                    onChange={this.actions.switchShowSimulation}
-                                    checked={this.props.showSimulation}
-                                />
-                                <span>
-                                    {i18n._('Simulation')}
-                                </span>
+                            <div className="padding-vertical-16 padding-horizontal-16">
+                                <div className="sm-flex justify-space-between height-24">
+                                    <span>
+                                        {i18n._('Toolpath')}
+                                    </span>
+                                    <Checkbox
+                                        onChange={this.actions.switchShowToolPath}
+                                        checked={this.props.showToolPath}
+                                    />
+                                </div>
+                                <div className="sm-flex justify-space-between height-24 margin-top-16">
+                                    <span>
+                                        {i18n._('Simulation')}
+                                    </span>
+                                    <Checkbox
+                                        onChange={this.actions.switchShowSimulation}
+                                        checked={this.props.showSimulation}
+                                    />
+                                </div>
                             </div>
                         </div>
                     )}
