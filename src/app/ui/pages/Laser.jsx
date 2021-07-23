@@ -13,7 +13,7 @@ import modal from '../../lib/modal';
 import LaserVisualizer from '../widgets/LaserVisualizer';
 import Tabs from '../components/Tabs';
 
-import { renderPopup, renderWidgetList, useRenderRecoveryModal, renderModal } from '../utils';
+import { renderPopup, renderWidgetList, renderModal } from '../utils';
 import Dropzone from '../components/Dropzone';
 import { actions as editorActions } from '../../flux/editor';
 import { actions as laserActions } from '../../flux/laser';
@@ -35,8 +35,8 @@ import MarlinWidget from '../widgets/Marlin';
 import VisualizerWidget from '../widgets/WorkspaceVisualizer';
 import WebcamWidget from '../widgets/Webcam';
 import LaserParamsWidget from '../widgets/LaserParams';
-import LaserSetBackground from '../widgets/LaserSetBackground';
 import LaserCameraAidBackground from '../widgets/LaserCameraAidBackground';
+import LaserSetBackground from '../widgets/LaserSetBackground/SetBackground';
 import LaserTestFocusWidget from '../widgets/LaserTestFocus';
 import CNCPathWidget from '../widgets/CNCPath';
 import CncLaserOutputWidget from '../widgets/CncLaserOutput';
@@ -344,7 +344,6 @@ function Laser({ location }) {
         }
     }, [location?.state?.shouldShowJobType]);
 
-    const recoveryModal = useRenderRecoveryModal(pageHeadType);
     const { setBackgroundModal,
         renderMainToolBar } = useRenderMainToolBar(setShowHomePage, setShowJobType, setShowWorkspace);
     const renderHomepage = () => {
@@ -484,7 +483,6 @@ function Laser({ location }) {
                     />
                 </Dropzone>
             </ProjectLayout>
-            {recoveryModal}
             {warningRemovingModels}
             {jobTypeModal}
             {setBackgroundModal}

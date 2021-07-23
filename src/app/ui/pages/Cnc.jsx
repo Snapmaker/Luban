@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 
 import { shallowEqual, useSelector, useDispatch } from 'react-redux';
-import PropTypes from 'prop-types';
+// import PropTypes from 'prop-types';
 import { withRouter } from 'react-router-dom';
 
 import path from 'path';
@@ -11,10 +11,11 @@ import modal from '../../lib/modal';
 import Dropzone from '../components/Dropzone';
 import SvgIcon from '../components/SvgIcon';
 import Space from '../components/Space';
-import { renderModal, renderPopup, renderWidgetList, useRenderRecoveryModal } from '../utils';
+// import { renderModal, renderPopup, renderWidgetList, useRenderRecoveryModal } from '../utils';
 import Tabs from '../components/Tabs';
 import Checkbox from '../components/Checkbox';
 import { Button } from '../components/Buttons';
+import { renderModal, renderPopup, renderWidgetList } from '../utils';
 
 import CNCVisualizer from '../widgets/CNCVisualizer';
 import ProjectLayout from '../layouts/ProjectLayout';
@@ -190,7 +191,7 @@ function useRenderRemoveModelsWarning() {
         ]
     });
 }
-function Cnc({ location }) {
+function Cnc() {
     const widgets = useSelector(state => state?.widget[pageHeadType]?.default?.widgets, shallowEqual);
     const [isDraggingWidget, setIsDraggingWidget] = useState(false);
     const [showHomePage, setShowHomePage] = useState(false);
@@ -221,13 +222,6 @@ function Cnc({ location }) {
         });
     }, [coordinateMode, coordinateSize, materials]);
 
-    useEffect(() => {
-        if (location?.state?.shouldShowJobType) {
-            setShowJobType(true);
-        }
-    }, [location?.state?.shouldShowJobType]);
-
-    const recoveryModal = useRenderRecoveryModal(pageHeadType);
     const renderHomepage = () => {
         const onClose = () => setShowHomePage(false);
         return showHomePage && renderPopup({
@@ -281,7 +275,7 @@ function Cnc({ location }) {
         }
     });
     const warningModal = useRenderWarning();
-    const warningRemovingModels = useRenderRemoveModelsWarning();
+    const removeModelsWarningModal = useRenderRemoveModelsWarning();
     const listActions = {
         onDragStart: () => {
             setIsDraggingWidget(true);
@@ -527,9 +521,8 @@ function Cnc({ location }) {
                     <CNCVisualizer />
                 </Dropzone>
             </ProjectLayout>
-            {recoveryModal}
             {warningModal}
-            {warningRemovingModels}
+            {removeModelsWarningModal}
             {jobTypeModal}
             {renderHomepage()}
             {renderWorkspace()}
@@ -539,6 +532,6 @@ function Cnc({ location }) {
 Cnc.propTypes = {
     // ...withRouter,
     // shouldShowJobType: PropTypes.bool,
-    location: PropTypes.object
+    // location: PropTypes.object
 };
 export default withRouter(Cnc);
