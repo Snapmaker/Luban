@@ -18,7 +18,6 @@ import PrintablePlate from '../CncLaserShared/PrintablePlate';
 import VisualizerBottomLeft from '../CncLaserShared/VisualizerBottomLeft';
 import { actions as editorActions } from '../../../flux/editor';
 import VisualizerTopRight from '../CncLaserTopRight/VisualizerTopRight';
-import LaserCameraAidBackground from '../LaserCameraAidBackground';
 import styles from './styles.styl';
 import {
     DISPLAYED_TYPE_TOOLPATH,
@@ -359,9 +358,6 @@ class Visualizer extends Component {
                         />
                     </div>
                 )}
-                <div className={styles['visualizer-top-right']}>
-                    <LaserCameraAidBackground />
-                </div>
                 <div style={{
                     visibility: (displayedType !== DISPLAYED_TYPE_TOOLPATH) ? 'visible' : 'hidden'
                 }}

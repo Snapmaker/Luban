@@ -23,7 +23,7 @@ class ExtractSquareTrace extends PureComponent {
         size: PropTypes.object.isRequired,
         server: PropTypes.object.isRequired,
         series: PropTypes.string.isRequired,
-        headType: PropTypes.string.isRequired,
+        headType: PropTypes.string,
         canTakePhoto: PropTypes.bool.isRequired,
         lastFileNames: PropTypes.array,
         xSize: PropTypes.array.isRequired,

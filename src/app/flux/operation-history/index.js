@@ -36,7 +36,7 @@ export const actions = {
         }
     },
     clear: (headType) => (dispatch, getState) => {
-        const { history } = getState()[headType];
+        const history = getState()[headType]?.history;
         history.clear();
         dispatch(updateState(headType, {
             history

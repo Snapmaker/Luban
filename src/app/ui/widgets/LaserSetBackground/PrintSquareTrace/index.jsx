@@ -76,6 +76,7 @@ function generateSquareGcode(size, sideLength, power) {
 class PrintSquareTrace extends PureComponent {
     static propTypes = {
         size: PropTypes.object.isRequired,
+        hideModal: PropTypes.func.isRequired,
         renderGcode: PropTypes.func.isRequired,
         clearGcode: PropTypes.func.isRequired,
         state: PropTypes.shape({
@@ -125,7 +126,7 @@ class PrintSquareTrace extends PureComponent {
         const minSideLength = Math.min(maxSideLength / 2, maxSideLength);
 
         return (
-            <Modal style={{ width: '480px', height: '720px' }} size="lg" onClose={actions.hideModal}>
+            <Modal style={{ width: '480px', height: '720px' }} size="lg" onClose={this.props.hideModal}>
                 <div className="clearfix" />
                 <Modal.Header>
                     {i18n._('Print Square Trace')}

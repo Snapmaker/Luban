@@ -23,15 +23,14 @@ class SetBackground extends PureComponent {
         isLaser: PropTypes.bool.isRequired,
         showInstructions: PropTypes.bool.isRequired,
         actions: PropTypes.object.isRequired,
+        hideModal: PropTypes.func.isRequired,
 
         // redux
         size: PropTypes.object.isRequired,
-        setBackgroundImage: PropTypes.func.isRequired,
-        removeBackgroundImage: PropTypes.func.isRequired
+        setBackgroundImage: PropTypes.func.isRequired
     };
 
     state = {
-        showModal: false,
         panel: PANEL_PRINT_TRACE,
 
         // print trace settings
@@ -44,20 +43,13 @@ class SetBackground extends PureComponent {
         showModal: () => {
             if (EXPERIMENTAL_LASER_CAMERA) {
                 this.setState({
-                    showModal: true,
                     panel: PANEL_EXTRACT_TRACE
                 });
             } else {
                 this.setState({
-                    showModal: true,
                     panel: PANEL_PRINT_TRACE
                 });
             }
-        },
-        hideModal: () => {
-            this.setState({
-                showModal: false
-            });
         },
         setBackgroundImage: (filename) => {
             const { size } = this.props;
@@ -77,11 +69,8 @@ class SetBackground extends PureComponent {
                 this.props.setBackgroundImage(filename, sideLength, sideLength, (size.x - sideLength) / 2, (size.y - sideLength) / 2);
             }
 
-            this.actions.hideModal();
+            this.props.hideModal();
             this.actions.displayPrintTrace();
-        },
-        removeBackgroundImage: () => {
-            this.props.removeBackgroundImage();
         },
         checkConnectionStatus: () => {
             const { isConnected, isLaser } = this.props;
@@ -135,40 +124,23 @@ class SetBackground extends PureComponent {
         return (
             <React.Fragment>
                 {showInstructions && <Instructions onClose={this.props.actions.hideInstructions} />}
-                {state.showModal && (
-                    <div>
-                        {state.panel === PANEL_PRINT_TRACE && (
-                            <PrintTrace
-                                state={state}
-                                actions={this.actions}
-                            />
-                        )}
-                        {state.panel === PANEL_EXTRACT_TRACE && (
-                            <ExtractSquareTrace
-                                sideLength={this.state.sideLength}
-                                displayPrintTrace={this.actions.displayPrintTrace}
-                                setBackgroundImage={this.actions.setBackgroundImage}
-                                hideModal={this.actions.hideModal}
-                            />
-                        )}
-                    </div>
-                )}
-                <button
-                    type="button"
-                    className="sm-btn-large sm-btn-default"
-                    onClick={this.actions.showModal}
-                    style={{ display: 'block', width: '100%' }}
-                >
-                    {i18n._('Add Background')}
-                </button>
-                <button
-                    type="button"
-                    className="sm-btn-large sm-btn-default"
-                    onClick={this.actions.removeBackgroundImage}
-                    style={{ display: 'block', width: '100%', marginTop: '10px' }}
-                >
-                    {i18n._('Remove Background')}
-                </button>
+                <div>
+                    {state.panel === PANEL_PRINT_TRACE && (
+                        <PrintTrace
+                            state={state}
+                            actions={this.actions}
+                            hideModal={this.props.hideModal}
+                        />
+                    )}
+                    {state.panel === PANEL_EXTRACT_TRACE && (
+                        <ExtractSquareTrace
+                            sideLength={this.state.sideLength}
+                            displayPrintTrace={this.actions.displayPrintTrace}
+                            setBackgroundImage={this.actions.setBackgroundImage}
+                            hideModal={this.props.hideModal}
+                        />
+                    )}
+                </div>
             </React.Fragment>
         );
     }
@@ -183,8 +155,7 @@ const mapStateToProps = (state) => {
 
 const mapDispatchToProps = (dispatch) => {
     return {
-        setBackgroundImage: (filename, width, height, dx, dy) => dispatch(actions.setBackgroundImage(filename, width, height, dx, dy)),
-        removeBackgroundImage: () => dispatch(actions.removeBackgroundImage())
+        setBackgroundImage: (filename, width, height, dx, dy) => dispatch(actions.setBackgroundImage(filename, width, height, dx, dy))
     };
 };
 
