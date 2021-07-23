@@ -167,6 +167,11 @@ export const processActions = {
         toolPathGroup.selectToolPathId(toolPathId);
     },
 
+    selectOneToolPathId: (headType, toolPathId) => (dispatch, getState) => {
+        const { toolPathGroup } = getState()[headType];
+        toolPathGroup.selectOneToolPathId(toolPathId);
+    },
+
     updatingToolPath: (headType, toolPathId) => (dispatch, getState) => {
         const { toolPathGroup } = getState()[headType];
         const toolPath = toolPathGroup.getToolPath(toolPathId);

@@ -56,7 +56,7 @@ const getIconStatus = (status) => {
 //     }
 //     return [expanded, renderExpandItem];
 // };
-const ToolpathItem = ({ toolPath, selectedToolPathIDArray, selectToolPathId, selectToolPathById, onClickVisible, setEditingToolpath, disabled }) => {
+const ToolpathItem = ({ toolPath, selectedToolPathIDArray, selectToolPathId, selectOneToolPathId, selectToolPathById, onClickVisible, setEditingToolpath, disabled }) => {
     if (!toolPath) {
         return null;
     }
@@ -68,7 +68,11 @@ const ToolpathItem = ({ toolPath, selectedToolPathIDArray, selectToolPathId, sel
         if (e.detail > 1) { // Check difference to double click
             return;
         }
-        selectToolPathId(toolPath.id);
+        if (e.shiftKey) {
+            selectToolPathId(toolPath.id);
+        } else {
+            selectOneToolPathId(toolPath.id);
+        }
     }
     const suffixLength = 6;
     const { prefixName, suffixName } = normalizeNameDisplay(toolPath.name, suffixLength);
@@ -138,6 +142,7 @@ ToolpathItem.propTypes = {
     toolPath: PropTypes.object.isRequired,
     selectedToolPathIDArray: PropTypes.array.isRequired,
     selectToolPathId: PropTypes.func.isRequired,
+    selectOneToolPathId: PropTypes.func.isRequired,
     selectToolPathById: PropTypes.func.isRequired,
     onClickVisible: PropTypes.func.isRequired,
 
@@ -255,6 +260,9 @@ const ToolPathListBox = (props) => {
     const [editingToolpath, setEditingToolpath] = useState(null);
     const [currentToolpath, setCurrentToolpath] = useState(null);
     const actions = {
+        selectOneToolPathId: (id) => {
+            dispatch(editorActions.selectOneToolPathId(props.headType, id));
+        },
         selectToolPathId: (id) => {
             dispatch(editorActions.selectToolPathId(props.headType, id));
         },
@@ -376,6 +384,7 @@ const ToolPathListBox = (props) => {
                                     toolPath={toolPath}
                                     key={toolPath.id}
                                     selectedToolPathIDArray={selectedToolPathIDArray}
+                                    selectOneToolPathId={actions.selectOneToolPathId}
                                     selectToolPathId={actions.selectToolPathId}
                                     selectToolPathById={actions.selectToolPathById}
                                     onClickVisible={actions.onClickVisible}

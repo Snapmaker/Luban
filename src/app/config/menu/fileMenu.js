@@ -9,7 +9,6 @@ export default {
             id: 'new',
             label: 'New File',
             enabled: true,
-            accelerator: 'CmdOrCtrl+N',
             submenu: [
                 {
                     id: '3dp',

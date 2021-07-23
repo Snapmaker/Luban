@@ -198,7 +198,7 @@ export const actions = {
         for (let k = 0; k < models.length; k++) {
             const { headType, originalName, uploadName, config, sourceType, gcodeConfig, sourceWidth, sourceHeight, mode, transformation, modelID } = models[k];
             // prevent project recovery recorded into operation history
-            if (envHeadType === '3dp') {
+            if (envHeadType === HEAD_3DP) {
                 dispatch(operationHistoryActions.excludeModelById('printing', modelID));
             } else {
                 dispatch(operationHistoryActions.excludeModelById(envHeadType, modelID));
@@ -410,7 +410,11 @@ export const actions = {
         });
 
         // clear operation history
-        dispatch(operationHistoryActions.clear(newHeadType));
+        if (newHeadType === HEAD_CNC || newHeadType === HEAD_LASER) {
+            dispatch(operationHistoryActions.clear(newHeadType));
+        } else if (newHeadType === HEAD_3DP) {
+            dispatch(operationHistoryActions.clear('printing'));
+        }
     },
 
     saveAndClose: (headType, opts) => async (dispatch, getState) => {

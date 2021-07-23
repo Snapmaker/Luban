@@ -51,6 +51,7 @@ import JobType from '../widgets/JobType';
 import PrintingVisualizer from '../widgets/PrintingVisualizer';
 import HomePage from './HomePage';
 import ToolPathListBox from '../widgets/CncLaserList/ToolPathList';
+import Workspace from './Workspace';
 
 const allWidgets = {
     'control': ControlWidget,
@@ -83,7 +84,7 @@ const ACCEPT = '.svg, .png, .jpg, .jpeg, .bmp, .dxf';
 const pageHeadType = HEAD_LASER;
 
 
-function useRenderMainToolBar(setShowHomePage, setShowJobType) {
+function useRenderMainToolBar(setShowHomePage, setShowJobType, setShowWorkspace) {
     // (!workPosition.isFourAxis && (connectionType === CONNECTION_TYPE_WIFI && isConnected && !hasBackground))
     const isConnected = useSelector(state => state?.machine?.isConnected, shallowEqual);
     const series = useSelector(state => state?.machine?.series, shallowEqual);
@@ -125,6 +126,14 @@ function useRenderMainToolBar(setShowHomePage, setShowJobType) {
             name: 'MainToolbarHome',
             action: () => {
                 setShowHomePage(true);
+            }
+        },
+        {
+            title: i18n._('Workspace'),
+            type: 'button',
+            name: 'MainToolbarWorkspace',
+            action: () => {
+                setShowWorkspace(true);
             }
         },
         {
@@ -324,6 +333,7 @@ function Laser({ location }) {
     const widgets = useSelector(state => state?.widget[pageHeadType]?.default?.widgets, shallowEqual);
     const [isDraggingWidget, setIsDraggingWidget] = useState(false);
     const [showHomePage, setShowHomePage] = useState(false);
+    const [showWorkspace, setShowWorkspace] = useState(false);
     const [showJobType, setShowJobType] = useState(true);
     const coordinateMode = useSelector(state => state[HEAD_LASER]?.coordinateMode, shallowEqual);
     const coordinateSize = useSelector(state => state[HEAD_LASER]?.coordinateSize, shallowEqual);
@@ -355,7 +365,7 @@ function Laser({ location }) {
 
     const recoveryModal = useRenderRecoveryModal(pageHeadType);
     const { setBackgroundModal,
-        renderMainToolBar } = useRenderMainToolBar(setShowHomePage, setShowJobType);
+        renderMainToolBar } = useRenderMainToolBar(setShowHomePage, setShowJobType, setShowWorkspace);
     const renderHomepage = () => {
         const onClose = () => setShowHomePage(false);
         return showHomePage && renderPopup({
@@ -467,6 +477,14 @@ function Laser({ location }) {
 
         );
     }
+    function renderWorkspace() {
+        const onClose = () => setShowWorkspace(false);
+        return showWorkspace && renderPopup({
+            onClose,
+            component: Workspace
+        });
+    }
+
     return (
         <div>
             <ProjectLayout
@@ -490,6 +508,7 @@ function Laser({ location }) {
             {jobTypeModal}
             {setBackgroundModal}
             {renderHomepage()}
+            {renderWorkspace()}
         </div>
     );
 }
