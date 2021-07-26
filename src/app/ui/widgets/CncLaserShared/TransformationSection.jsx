@@ -168,7 +168,7 @@ class TransformationSection extends PureComponent {
                         content={i18n._('Set the coordinate of the selected image or text. You can also drag the image directly.')}
                     >
                         <div className="sm-flex height-32 margin-vertical-8 ">
-                            <span className="sm-flex-auto sm-flex-order-negative width-64">{i18n._('Move (mm)')}</span>
+                            <span className="sm-flex-auto sm-flex-order-negative width-64">{i18n._('Move')}</span>
                             <span className="sm-flex-width sm-flex justify-space-between">
                                 <div className="display-inline position-re">
                                     <span className="width-16 display-inline">
@@ -216,7 +216,7 @@ class TransformationSection extends PureComponent {
                         content={i18n._('Enter the size of the engraved picture. The size cannot be larger than 125 x 125 mm or the size of your material.')}
                     >
                         <div className="sm-flex height-32 margin-vertical-8">
-                            <span className="sm-flex-auto sm-flex-order-negative width-64">{i18n._('Size (mm)')}</span>
+                            <span className="sm-flex-auto sm-flex-order-negative width-64">{i18n._('Size')}</span>
                             <div className="sm-flex-width sm-flex justify-space-between">
                                 <div className="display-inline position-re">
                                     <span className="width-16 display-inline">

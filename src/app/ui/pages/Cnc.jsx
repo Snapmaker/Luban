@@ -59,7 +59,7 @@ import JobType from '../widgets/JobType';
 import ToolPathListBox from '../widgets/CncLaserList/ToolPathList';
 import PrintingVisualizer from '../widgets/PrintingVisualizer';
 import HomePage from './HomePage';
-import Anchor from '../components/Anchor';
+// import Anchor from '../components/Anchor';
 import Workspace from './Workspace';
 
 const allWidgets = {
@@ -156,6 +156,99 @@ function useRenderWarning() {
         )
     });
 }
+function useRenderMainToolBar(setShowHomePage, setShowJobType, setShowWorkspace) {
+    // const unSaved = useSelector(state => state?.project[HEAD_CNC]?.unSaved, shallowEqual);
+    // const hasModel = useSelector(state => state[HEAD_CNC]?.hasModel, shallowEqual);
+    const canRedo = useSelector(state => state[HEAD_CNC]?.history?.canRedo, shallowEqual);
+    const canUndo = useSelector(state => state[HEAD_CNC]?.history?.canUndo, shallowEqual);
+    const dispatch = useDispatch();
+    const leftItems = [
+        {
+            title: i18n._('Home'),
+            type: 'button',
+            name: 'MainToolbarHome',
+            action: () => {
+                setShowHomePage(true);
+                window.scrollTo(0, 0);
+            }
+        },
+        {
+            title: i18n._('Workspace'),
+            type: 'button',
+            name: 'MainToolbarWorkspace',
+            action: () => {
+                setShowWorkspace(true);
+            }
+        },
+        {
+            type: 'separator'
+        },
+        {
+            title: i18n._('Save'),
+            // disabled: !hasModel,
+            type: 'button',
+            name: 'MainToolbarSave',
+            action: () => {
+                dispatch(projectActions.save(HEAD_CNC));
+            }
+        },
+        {
+            title: i18n._('Undo'),
+            disabled: !canUndo,
+            type: 'button',
+            name: 'MainToolbarUndo',
+            action: () => {
+                dispatch(editorActions.undo(HEAD_CNC));
+            }
+        },
+        {
+            title: i18n._('Redo'),
+            disabled: !canRedo,
+            type: 'button',
+            name: 'MainToolbarRedo',
+            action: () => {
+                dispatch(editorActions.redo(HEAD_CNC));
+            }
+        },
+        {
+            title: i18n._('Job Setup'),
+            type: 'button',
+            name: 'MainToolbarJobSetup',
+            action: () => {
+                setShowJobType(true);
+            }
+        },
+        {
+            type: 'separator'
+        },
+        {
+            title: i18n._('Top'),
+            type: 'button',
+            name: 'MainToolbarTop',
+            action: () => {
+                dispatch(editorActions.bringSelectedModelToFront(HEAD_CNC));
+            }
+        },
+        {
+            title: i18n._('Bottom'),
+            type: 'button',
+            name: 'MainToolbarBottom',
+            action: () => {
+                dispatch(editorActions.sendSelectedModelToBack(HEAD_CNC));
+            }
+        }
+    ];
+    return {
+        renderMainToolBar: () => {
+            return (
+                <MainToolBar
+                    leftItems={leftItems}
+                />
+            );
+        }
+    };
+}
+
 function useRenderRemoveModelsWarning() {
     const removingModelsWarning = useSelector(state => state?.cnc?.removingModelsWarning);
     const emptyToolPaths = useSelector(state => state?.cnc?.emptyToolPaths);
@@ -199,8 +292,6 @@ function Cnc({ location }) {
     const coordinateMode = useSelector(state => state[HEAD_CNC]?.coordinateMode, shallowEqual);
     const coordinateSize = useSelector(state => state[HEAD_CNC]?.coordinateSize, shallowEqual);
     const materials = useSelector(state => state[HEAD_CNC]?.materials, shallowEqual);
-    const canRedo = useSelector(state => state[HEAD_CNC]?.history?.canRedo, shallowEqual);
-    const canUndo = useSelector(state => state[HEAD_CNC]?.history?.canUndo, shallowEqual);
     const [jobTypeState, setJobTypeState] = useState({
         coordinateMode,
         coordinateSize,
@@ -224,9 +315,15 @@ function Cnc({ location }) {
     useEffect(() => {
         if (location?.state?.shouldShowJobType) {
             setShowJobType(true);
+        } else {
+            setShowJobType(false);
         }
     }, [location?.state?.shouldShowJobType]);
-
+    const { renderMainToolBar } = useRenderMainToolBar(
+        setShowHomePage,
+        setShowJobType,
+        setShowWorkspace
+    );
     const renderHomepage = () => {
         const onClose = () => setShowHomePage(false);
         return showHomePage && renderPopup({
@@ -234,7 +331,6 @@ function Cnc({ location }) {
             component: HomePage
         });
     };
-
     const jobTypeModal = (showJobType) && renderModal({
         title: i18n._('Job Type'),
         renderBody() {
@@ -319,162 +415,6 @@ function Cnc({ location }) {
         }
     };
 
-    function renderMainToolBar() {
-        // const fileInput = React.createRef();
-        const leftItems = [
-            {
-                title: i18n._('Home'),
-                type: 'button',
-                name: 'MainToolbarHome',
-                action: () => {
-                    setShowHomePage(true);
-                    window.scrollTo(0, 0);
-                }
-            },
-            {
-                title: i18n._('Workspace'),
-                type: 'button',
-                name: 'MainToolbarWorkspace',
-                action: () => {
-                    setShowWorkspace(true);
-                }
-            },
-            {
-                type: 'separator'
-            },
-            // {
-            //     title: i18n._('Open'),
-            //     type: 'button',
-            //     name: 'Copy',
-            //     inputInfo: {
-            //         accept: '.snapcnc',
-            //         fileInput: fileInput,
-            //         onChange: async (e) => {
-            //             const file = e.target.files[0];
-            //             const recentFile = {
-            //                 name: file.name,
-            //                 path: file.path || ''
-            //             };
-            //             try {
-            //                 await dispatch(projectActions.openProject(file, history));
-            //                 // Todo: Add to recent file, but not use isElectron()
-            //                 // if (isElectron()) {
-            //                 //     const ipc = window.require('electron').ipcRenderer;
-            //                 //     ipc.send('add-recent-file', recentFile);
-            //                 // }
-            //                 await dispatch(projectActions.updateRecentFile([recentFile], 'update'));
-            //             } catch (error) {
-            //                 modal({
-            //                     title: i18n._('Failed to upload model'),
-            //                     body: error.message
-            //                 });
-            //             }
-            //         }
-            //     },
-            //     action: () => {
-            //         fileInput.current.value = null;
-            //         fileInput.current.click();
-            //     }
-            // },
-            {
-                title: i18n._('Save'),
-                type: 'button',
-                name: 'MainToolbarSave',
-                action: () => {
-                    dispatch(projectActions.save(HEAD_CNC));
-                }
-            },
-            {
-                title: i18n._('Undo'),
-                disabled: !canUndo,
-                type: 'button',
-                name: 'MainToolbarUndo',
-                action: () => {
-                    dispatch(editorActions.undo(HEAD_CNC));
-                }
-            },
-            {
-                title: i18n._('Redo'),
-                disabled: !canRedo,
-                type: 'button',
-                name: 'MainToolbarRedo',
-                action: () => {
-                    dispatch(editorActions.redo(HEAD_CNC));
-                }
-            },
-            {
-                title: i18n._('Job Setup'),
-                type: 'button',
-                name: 'MainToolbarJobSetup',
-                action: () => {
-                    setShowJobType(true);
-                }
-            },
-            {
-                type: 'separator'
-            },
-            {
-                type: 'render',
-                customRender: function () {
-                    return (
-                        <Anchor
-                            onClick={() => dispatch(editorActions.bringSelectedModelToFront(HEAD_CNC))}
-                            className="width-64 display-inline align-c padding-vertical-2 padding-horizontal-2 font-size-0"
-                        >
-                            <i
-                                style={{
-                                    backgroundImage: `url(${require('../../resources/images/laser-image/Set-top-normal.svg')})`
-                                }}
-                                className="width-24 height-24 display-inline "
-                            />
-                            <div className="font-size-base">
-                                {i18n._('Top')}
-                            </div>
-                        </Anchor>
-                    );
-                }
-            },
-            {
-                type: 'render',
-                customRender: function () {
-                    return (
-                        <Anchor
-                            onClick={() => dispatch(editorActions.sendSelectedModelToBack(HEAD_CNC))}
-                            className="width-64 display-inline align-c padding-vertical-2 padding-horizontal-2 font-size-0"
-                        >
-                            <i
-                                style={{
-                                    backgroundImage: `url(${require('../../resources/images/laser-image/Set-bottom-normal.svg')})`
-                                }}
-                                className="width-24 height-24 display-inline "
-                            />
-                            <div className="font-size-base">
-                                {i18n._('Bottom')}
-                            </div>
-                        </Anchor>
-                    );
-                }
-            }
-        ];
-        const centerItems = [
-            // {
-            //     name: 'Edit',
-            //     action: () => dispatch(editorActions.bringSelectedModelToFront(HEAD_CNC)),
-            //     title: i18n._('Front')
-            // },
-            // {
-            //     name: 'Edit',
-            //     action: () => dispatch(editorActions.sendSelectedModelToBack(HEAD_CNC)),
-            //     title: i18n._('Bottom')
-            // }
-        ];
-        return (
-            <MainToolBar
-                leftItems={leftItems}
-                centerItems={centerItems}
-            />
-        );
-    }
     function renderRightView() {
         const widgetProps = { headType: 'cnc' };
         return (

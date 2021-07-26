@@ -1,10 +1,10 @@
-import React from 'react';
+import React, { useState } from 'react';
 import classNames from 'classnames';
-import { withRouter } from 'react-router-dom';
-// import { Link, withRouter } from 'react-router-dom';
+import { useHistory, useLocation } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
-import PropTypes from 'prop-types';
+// import PropTypes from 'prop-types';
 import { slice, cloneDeep, reverse } from 'lodash';
+import { renderPopup } from '../../utils';
 import { Button } from '../../components/Buttons';
 import Anchor from '../../components/Anchor';
 import styles from './styles.styl';
@@ -13,20 +13,39 @@ import { actions as projectActions } from '../../../flux/project';
 import { actions as editorActions } from '../../../flux/editor';
 import { COORDINATE_MODE_CENTER, COORDINATE_MODE_BOTTOM_CENTER, HEAD_LASER, HEAD_CNC } from '../../../constants';
 import UniApi from '../../../lib/uni-api';
+import Workspace from '../Workspace';
 
 
-const Begin = (props) => {
+const Begin = () => {
     // redux correlation
     const dispatch = useDispatch();
+    const history = useHistory();
+    const location = useLocation();
     const project = useSelector(state => state?.project);
     const store = useSelector(state => state);
     const newRecentFile = reverse(cloneDeep(project.general.recentFiles));
+    const [showWorkspace, setShowWorkspace] = useState(false);
     // method
     const onStartProject = async (pathname) => {
-        const oldPathname = props.location?.pathname;
-        await dispatch(projectActions.startProject(oldPathname, pathname, props.history));
+        const oldPathname = location?.pathname;
+        await dispatch(projectActions.startProject(oldPathname, pathname, history));
         return null;
     };
+    function renderWorkspace() {
+        const onClose = () => setShowWorkspace(false);
+        return showWorkspace && renderPopup({
+            onClose,
+            component: Workspace
+        });
+    }
+    function handleSwitchToWorkspace(pathname) {
+        const oldPathname = location?.pathname;
+        if (oldPathname === '/') {
+            history.push(pathname);
+        } else {
+            setShowWorkspace(true);
+        }
+    }
 
     const changeAxis = async (e, isRotate, headType) => {
         e.preventDefault();
@@ -147,7 +166,7 @@ const Begin = (props) => {
                             </Anchor>
                         </div>
                         <div className={styles.workspace}>
-                            <Anchor onClick={() => onStartProject('/workspace')} title={i18n._('Workspace')}>
+                            <Anchor onClick={() => handleSwitchToWorkspace('/workspace')} title={i18n._('Workspace')}>
                                 <i className={
                                     classNames(
                                         styles.icon,
@@ -172,7 +191,8 @@ const Begin = (props) => {
                                 return (
                                     <div
                                         className={styles['file-item']}
-                                        onClick={() => dispatch(projectActions.openProject(item, props.history))}
+                                        key={item?.name}
+                                        onClick={() => dispatch(projectActions.openProject(item, history))}
                                         aria-hidden="true"
                                     >
                                         {item.name}
@@ -202,13 +222,9 @@ const Begin = (props) => {
                     </div>
                 </div>
             </div>
+            {renderWorkspace()}
         </div>
     );
 };
 
-Begin.propTypes = {
-    history: PropTypes.object,
-    location: PropTypes.object
-};
-
-export default withRouter(Begin);
+export default Begin;

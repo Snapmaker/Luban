@@ -351,17 +351,17 @@ const ToolPathListBox = (props) => {
     }, [page]);
 
     return (
-        <div className="clearfix margin-bottom-16">
+        <div className="clearfix">
             <div className={classNames(
                 'border-default-grey-1',
                 'border-radius-8',
-                'margin-bottom-8',
-                'padding-bottom-16'
+                'margin-top-8'
             )}
             >
                 <div className={classNames(
                     'height-176',
-                    'align-c'
+                    'align-c',
+                    'padding-vertical-4'
                 )}
                 >
                     {toolPaths.length === 0 && (
@@ -399,13 +399,15 @@ const ToolPathListBox = (props) => {
                 </div>
                 <div className={classNames(
                     'border-radius-bottom-8',
-                    'margin-horizontal-16',
+                    'padding-horizontal-16',
+                    'module-default-shadow',
+                    'padding-bottom-16',
                     'clearfix'
                 )}
                 >
                     <div className={classNames(
                         'float-l',
-                        'margin-vertical-8',
+                        'margin-vertical-4',
                     )}
                     >
                         <SvgIcon
@@ -418,7 +420,7 @@ const ToolPathListBox = (props) => {
                     </div>
                     <div className={classNames(
                         'float-r',
-                        'margin-vertical-8',
+                        'margin-vertical-4',
                     )}
                     >
                         <SvgIcon
@@ -465,9 +467,9 @@ const ToolPathListBox = (props) => {
                 />
             )}
             {selectedToolPath && (
-
                 <div className={classNames(
                     'border-default-grey-1',
+                    'margin-top-16',
                     'border-radius-8',
                     'clearfix'
                 )}

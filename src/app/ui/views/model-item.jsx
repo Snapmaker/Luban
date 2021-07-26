@@ -60,6 +60,7 @@ function ModelItem({ model, visible, isSelected, styles, onSelect, onToggleVisib
                         className={classNames(
                             'height-24',
                             'width-24',
+                            styles.icon,
                             modelIcon
                         )}
                     />

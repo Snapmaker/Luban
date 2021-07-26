@@ -26,9 +26,9 @@ function routeToHeadType(history, headType, forceRefresh = false) {
 export default function (headType, onClose) {
     const dispatch = useDispatch();
     const history = useHistory();
-    const actions = {
-        onRecovery: () => dispatch(projectActions.onRecovery(headType))
-    };
+    function onRecovery() {
+        dispatch(projectActions.onRecovery(headType));
+    }
 
     return renderModal({
         title: i18n._('Resume Job'),
@@ -46,7 +46,7 @@ export default function (headType, onClose) {
                 isPrimary: true,
                 onClick: () => {
                     routeToHeadType(history, headType);
-                    actions.onRecovery();
+                    onRecovery();
                     onClose();
                 }
             }

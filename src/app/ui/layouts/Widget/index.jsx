@@ -82,11 +82,11 @@ class WidgetContainer extends PureComponent {
         const actions = this.actions;
         return (
             <Widget
-                style={{ display: this.state.display ? '' : 'none', margin: '8px 16px' }}
-                className="border-bottom-normal"
+                style={{ display: this.state.display ? '' : 'none', margin: '16px 16px 0' }}
+                className="border-bottom-normal padding-bottom-16"
                 fullscreen={state.fullscreen}
             >
-                <div className="sm-flex height-32 justify-space-between margin-bottom-8">
+                <div className="sm-flex height-32 justify-space-between">
                     <span className="sm-flex-width heading-3">{i18n._(state.title)}</span>
                     <div>
                         {state.buttons && _.isArray(state.buttons) && state.buttons.map(v => {

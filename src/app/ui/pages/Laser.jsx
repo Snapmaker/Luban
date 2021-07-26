@@ -101,6 +101,7 @@ function useRenderMainToolBar(setShowHomePage, setShowJobType, setShowWorkspace)
                 <div className="align-l width-168">
                     <SvgIcon
                         type="static"
+                        disabled={series === MACHINE_SERIES.ORIGINAL?.value ? false : !isConnected}
                         name="MainToolbarAddBackground"
                     />
                     <span
@@ -341,6 +342,8 @@ function Laser({ location }) {
     useEffect(() => {
         if (location?.state?.shouldShowJobType) {
             setShowJobType(true);
+        } else {
+            setShowJobType(false);
         }
     }, [location?.state?.shouldShowJobType]);
 

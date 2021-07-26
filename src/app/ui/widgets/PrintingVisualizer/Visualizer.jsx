@@ -444,20 +444,17 @@ class Visualizer extends PureComponent {
                 className={styles['printing-visualizer']}
                 ref={this.visualizerRef}
             >
-                <div className={styles['visualizer-left-bar']}>
-                    <VisualizerLeftBar
-                        inProgress={inProgress}
-                        updateBoundingBox={this.actions.updateBoundingBox}
-                        setTransformMode={this.actions.setTransformMode}
-                        supportActions={this.supportActions}
-                        defaultSupportSize={this.state.defaultSupportSize}
-                        isSupporting={this.state.isSupporting}
-                        arrangeAllModels={this.actions.arrangeAllModels}
-                        scaleToFitSelectedModel={this.actions.scaleToFitSelectedModel}
-                        autoRotateSelectedModel={this.actions.autoRotateSelectedModel}
-                    />
-                </div>
-
+                <VisualizerLeftBar
+                    inProgress={inProgress}
+                    updateBoundingBox={this.actions.updateBoundingBox}
+                    setTransformMode={this.actions.setTransformMode}
+                    supportActions={this.supportActions}
+                    defaultSupportSize={this.state.defaultSupportSize}
+                    isSupporting={this.state.isSupporting}
+                    arrangeAllModels={this.actions.arrangeAllModels}
+                    scaleToFitSelectedModel={this.actions.scaleToFitSelectedModel}
+                    autoRotateSelectedModel={this.actions.autoRotateSelectedModel}
+                />
                 <div className={styles['visualizer-bottom-left']}>
                     <VisualizerBottomLeft actions={this.actions} />
                 </div>
@@ -470,9 +467,7 @@ class Visualizer extends PureComponent {
                     <VisualizerInfo />
                 </div>
 
-                <div className={styles['visualizer-progress']}>
-                    <ProgressBar tips={notice} progress={progress * 100} />
-                </div>
+                <ProgressBar tips={notice} progress={progress * 100} />
 
                 <div className={styles['canvas-wrapper']}>
                     <Canvas
@@ -561,7 +556,6 @@ class Visualizer extends PureComponent {
                                         onClick: () => this.actions.mirrorSelectedModel('Z')
                                     }
                                 ]
-
                             },
                             {
                                 type: 'separator'

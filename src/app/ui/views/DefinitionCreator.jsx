@@ -2,6 +2,7 @@ import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
 import { Radio } from '../components/Radio';
 import Select from '../components/Select';
+import { TextInput as Input } from '../components/Input';
 
 import i18n from '../../lib/i18n';
 
@@ -45,19 +46,9 @@ class DefinitionCreator extends PureComponent {
     renderMaterialCreate() {
         return (
             <div>
-                <p>{i18n._('Enter Material Name:')}</p>
-                <input
-                    type="text"
-                    style={{ height: '30px',
-                        width: '100%',
-                        padding: '6px 12px',
-                        fontSize: '13px',
-                        lineHeight: '1.42857143',
-                        color: '#282828',
-                        borderWidth: '1px',
-                        borderStyle: 'solid',
-                        borderRadius: '4px',
-                        borderColor: '#c8c8c8' }}
+                <span className="font-size-base display-block margin-vertical-8">{i18n._('Enter Material Name:')}</span>
+                <Input
+                    size="432px"
                     onChange={(event) => {
                         const materialName = event.target.value;
                         this.setState({ materialName });
@@ -73,19 +64,9 @@ class DefinitionCreator extends PureComponent {
             <div>
                 {this.props.disableCategory && (
                     <div>
-                        <p>{i18n._('Enter Profile Name:')}</p>
-                        <input
-                            type="text"
-                            style={{ height: '30px',
-                                width: '100%',
-                                padding: '6px 12px',
-                                fontSize: '13px',
-                                lineHeight: '1.42857143',
-                                color: '#282828',
-                                borderWidth: '1px',
-                                borderStyle: 'solid',
-                                borderRadius: '4px',
-                                borderColor: '#c8c8c8' }}
+                        <span className="font-size-base display-block margin-vertical-8">{i18n._('Enter Profile Name:')}</span>
+                        <Input
+                            size="432px"
                             onChange={(event) => {
                                 const toolName = event.target.value;
                                 this.setState({ toolName });
@@ -96,29 +77,20 @@ class DefinitionCreator extends PureComponent {
                 )}
                 {!this.props.disableCategory && (
                     <div>
-                        <p>{i18n._('Enter Tool Name:')}</p>
-                        <input
-                            type="text"
-                            style={{ height: '30px',
-                                width: '100%',
-                                padding: '6px 12px',
-                                fontSize: '13px',
-                                lineHeight: '1.42857143',
-                                color: '#282828',
-                                borderWidth: '1px',
-                                borderStyle: 'solid',
-                                borderRadius: '4px',
-                                borderColor: '#c8c8c8' }}
+                        <span className="font-size-base display-block margin-vertical-8">{i18n._('Enter Tool Name:')}</span>
+                        <Input
+                            size="432px"
                             onChange={(event) => {
                                 const toolName = event.target.value;
                                 this.setState({ toolName });
                             }}
                             value={this.state.toolName}
                         />
-                        <p style={{ marginTop: '10px' }}>
+                        <p className="margin-top-16 font-size-base">
                             {i18n._('Select Tool Type:')}
                         </p>
                         <Select
+                            size="432px"
                             backspaceRemoves={false}
                             clearable={false}
                             options={this.props.materialOptions}
@@ -149,12 +121,12 @@ class DefinitionCreator extends PureComponent {
                     }}
                 >
                     <div>
-                        <Radio value="Material">{i18n._('Create Material')}</Radio>
+                        <Radio value="Material" className="height-24">{i18n._('Create Material')}</Radio>
                         {this.state.createType === 'Material' && this.renderMaterialCreate()}
                     </div>
 
-                    <div style={{ marginTop: '20px' }}>
-                        <Radio value="Tool">{i18n._('Create Carving Tool')}</Radio>
+                    <div className="margin-top-16">
+                        <Radio value="Tool" className="height-24">{i18n._('Create Carving Tool')}</Radio>
                         {this.state.createType === 'Tool' && this.renderToolCreate()}
                     </div>
 

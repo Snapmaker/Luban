@@ -4,7 +4,7 @@ import { connect } from 'react-redux';
 import classNames from 'classnames';
 import { cloneDeep, includes } from 'lodash';
 import Select from '../../components/Select';
-import Anchor from '../../components/Anchor';
+import SvgIcon from '../../components/SvgIcon';
 import Modal from '../../components/Modal';
 import { Button } from '../../components/Buttons';
 import i18n from '../../../lib/i18n';
@@ -206,13 +206,15 @@ class Configurations extends PureComponent {
         return (
             <div>
                 <div className={classNames(
-                    styles['material-select']
+                    'sm-flex',
+                    'margin-bottom-16',
+                    'margin-top-8'
                 )}
                 >
                     <Select
                         clearable={false}
                         searchable
-                        size="282px"
+                        size="294px"
                         options={customDefinitionOptions}
                         value={qualityDefinition.definitionId}
                         onChange={(option) => {
@@ -220,43 +222,48 @@ class Configurations extends PureComponent {
                         }}
                         disabled={inProgress}
                     />
-                </div>
-                <Anchor
-                    onClick={this.actions.onShowMaterialManager}
-                    disabled={inProgress}
-                >
-                    <span
-                        className={classNames(
-                            styles['manager-icon'],
-                        )}
+                    <SvgIcon
+                        className="border-radius-8 border-default-grey-1 padding-vertical-2 padding-horizontal-2 margin-left-4"
+                        name="PrintingSettingNormal"
+                        disabled={inProgress}
+                        onClick={actions.onShowMaterialManager}
                     />
-                </Anchor>
-                <div className="sm-parameter-container">
-                    { state.customConfigs.map((key) => {
-                        return (
-                            <SettingItem
-                                styleSize="middle"
-                                settings={qualityDefinition?.settings}
-                                definitionKey={key}
-                                key={key}
-                                onChangeDefinition={actions.onChangeDefinition}
-                                isDefinitionEditable={() => {
-                                    return !isProfile;
-                                }}
-                                defaultValue={{
-                                    value: selectedSettingDefaultValue && selectedSettingDefaultValue[key].default_value
-                                }}
-                            />
-                        );
-                    })}
                 </div>
-                <Button
-                    type="default"
-                    width="96px"
-                    onClick={actions.toggleShowCustomConfigPannel}
+                <div className={classNames(
+                    'border-default-grey-1',
+                    'border-radius-8',
+                    'clearfix'
+                )}
                 >
-                    {i18n._('Custom')}
-                </Button>
+                    <div className="sm-flex height-40 border-bottom-normal padding-horizontal-16">
+                        <span className="sm-flex-width heading-3">{i18n._('General Parameters')}</span>
+                        <SvgIcon
+                            name="Manage"
+                            size={32}
+                            onClick={actions.toggleShowCustomConfigPannel}
+                        />
+                    </div>
+                    <div className="padding-horizontal-16 padding-vertical-16">
+                        { state.customConfigs.map((key) => {
+                            return (
+                                <SettingItem
+                                    styleSize="middle"
+                                    settings={qualityDefinition?.settings}
+                                    definitionKey={key}
+                                    key={key}
+                                    onChangeDefinition={actions.onChangeDefinition}
+                                    isDefinitionEditable={() => {
+                                        return !isProfile;
+                                    }}
+                                    defaultValue={{
+                                        value: selectedSettingDefaultValue && selectedSettingDefaultValue[key].default_value
+                                    }}
+                                />
+                            );
+                        })}
+                    </div>
+
+                </div>
                 {state.showCustomConfigPannel && (
                     <Modal
                         className={classNames(styles['manager-body'])}

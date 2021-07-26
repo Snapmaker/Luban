@@ -96,7 +96,7 @@ $bottom-bar-height = 0px
     z-index: $z-index-float
     position: absolute
     left: $visualizer-padding + $left-bar-width
-    bottom: $visualizer-padding + $bottom-bar-height // todo
+    bottom: 16px
 
     .camera-operation
         border: 1px solid $border-color
@@ -181,33 +181,23 @@ $bottom-bar-height = 0px
         text-align: center
         color: $desc-text-color
 
-    > .preview-panel
-        background-color: $background-color
+    > .preview-panel {
         display: block
-        width: 170px
         position: absolute
         top: 142px
         right: 40px
-        border-radius: $border-radius
-        padding: 16px 8px
 
-        .preview-title
-            font-weight: bold
-            margin-bottom: 10px
+        .preview-brick {
+           display: inline-block
+           width: 14px
+           height: 14px
+           margin-top: 5px
+           float: right
+       }
+    }
 
-        .preview-type
-            display: block
-            height: 24px
 
-            > input
-                margin-right: 4px
 
-        .preview-brick
-            display: inline-block
-            width: 14px
-            height: 14px
-            margin-top: 5px
-            float: right
 
 
 .visualizer-model-transformation
@@ -226,6 +216,10 @@ $bottom-bar-height = 0px
 
 
 .visualizer-left-bar
+    position: absolute;
+    left: 8px;
+    top: 8px;
+    bottom: 8px;
     .leftbar
         z-index: 99
         position: absolute

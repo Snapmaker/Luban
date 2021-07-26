@@ -7,20 +7,23 @@ import Checkbox from '../../components/Checkbox';
 function CheckboxItem({ definitionKey, settings, calculateTextIndex = () => 0, defaultValue, width = 'auto', isDefinitionEditable = () => true, onChangeDefinition }) {
     const setting = settings[definitionKey];
     const { label, description } = setting;
-
     return (
         <TipTrigger title={i18n._(label)} content={i18n._(description)} key={definitionKey}>
-            <div className="sm-flex height-32 margin-vertical-8">
+            <div
+                className="sm-flex height-32 margin-vertical-8"
+            >
                 <Checkbox
                     className="sm-flex-auto sm-flex-order-negative"
-                    style={{ width: width, cursor: !isDefinitionEditable(definitionKey) ? 'not-allowed' : 'default' }}
+                    style={{ width: width,
+                        cursor: !isDefinitionEditable(definitionKey) ? 'not-allowed' : 'default',
+                        marginLeft: calculateTextIndex(definitionKey)
+                    }}
                     checked={defaultValue}
                     disabled={!isDefinitionEditable(definitionKey)}
                     onChange={(event) => onChangeDefinition(definitionKey, event.target.checked)}
                 />
                 <span
                     className="margin-left-8"
-                    style={{ textIndent: calculateTextIndex(definitionKey) }}
                 >
                     {i18n._(label)}
                 </span>
