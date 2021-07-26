@@ -127,7 +127,7 @@ function ToolSelector(props) {
                     </div>
                 </div>
                 <div className="position-re height-8 margin-bottom-8">
-                    <p className="sm-flex__input-unit-l-150 tooltip-message">
+                    <p className="sm-flex__input-unit-104 tooltip-message">
                         {foundDefinition && `${i18n._('Material')} : ${foundDefinition.label}`}
                     </p>
                 </div>

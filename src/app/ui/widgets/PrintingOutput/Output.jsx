@@ -188,24 +188,25 @@ class Output extends PureComponent {
         );
 
         return (
-            <div className={classNames('position-fixed', 'border-radius-bottom-8', 'bottom-8', 'background-color-white', 'width-360')}>
+            <div className={classNames('position-fixed', 'border-radius-bottom-8', 'bottom-8', 'background-color-white', 'width-360', 'module-default-shadow')}>
                 <div className={classNames('position-re', 'margin-horizontal-16', 'margin-vertical-16')}>
-                    <Button
-                        type="primary"
-                        priority="level-one"
-                        onClick={actions.onClickGenerateGcode}
-                        disabled={!hasModel || !hasAnyModelVisible || isSlicing || isAnyModelOverstepped || inProgress}
-                        style={{ display: gcodeLine ? 'none' : 'block', width: '100%' }}
-                    >
-                        {i18n._('Generate G-code')}
-                    </Button>
+                    {!gcodeLine && (
+                        <Button
+                            type="primary"
+                            priority="level-one"
+                            onClick={actions.onClickGenerateGcode}
+                            disabled={!hasModel || !hasAnyModelVisible || isSlicing || isAnyModelOverstepped || inProgress}
+                        >
+                            {i18n._('Generate G-code')}
+                        </Button>
+                    )}
                     {gcodeLine && !this.state.showExportOptions && (
                         <Button
                             type="default"
                             priority="level-one"
                             disabled={inProgress}
                             onClick={actions.onToggleDisplayGcode}
-                            className={classNames('position-ab', 'bottom-64', 'left-0')}
+                            className={classNames('position-re', 'bottom-0', 'left-0')}
                         >
                             {displayedType === 'gcode' ? i18n._('Close preview') : i18n._('Preview ')}
                         </Button>
@@ -214,7 +215,7 @@ class Output extends PureComponent {
                         <div
                             onKeyDown={noop}
                             role="button"
-                            className={classNames('position-re')}
+                            className={classNames('position-re', 'height-40',)}
                             tabIndex={0}
                             onMouseEnter={actions.handleMouseOver}
                             onMouseLeave={actions.handleMouseOut}
@@ -228,7 +229,7 @@ class Output extends PureComponent {
                                     disabled={inProgress}
                                     className={classNames(
                                         'position-ab',
-                                        'bottom-16',
+                                        'bottom-ne-8',
                                         'margin-top-10',
                                         displayedType === gcodeLine ? 'display-block' : 'display-none'
                                     )}

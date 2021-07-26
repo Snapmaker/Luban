@@ -55,6 +55,7 @@ class ConfigHalftone extends PureComponent {
                         <div className="sm-flex height-32 margin-vertical-8">
                             <span className="sm-flex-width">{i18n._('Type')}</span>
                             <Select
+                                size="middle"
                                 clearable={false}
                                 options={[{
                                     value: 'line',

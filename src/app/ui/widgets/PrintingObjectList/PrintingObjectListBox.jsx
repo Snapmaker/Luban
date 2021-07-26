@@ -1,8 +1,8 @@
 import React from 'react';
 // import PropTypes from 'prop-types';
 import { useDispatch, useSelector, shallowEqual } from 'react-redux';
+import classNames from 'classnames';
 import styles from './styles.styl';
-// import i18n from '../../../lib/i18n';
 import ModelItem from '../../views/model-item';
 import { actions as printingActions } from '../../../flux/printing';
 
@@ -26,10 +26,15 @@ function PrintingObjectListBox() {
             }
         }
     };
+    const allModels = (models) && models.filter(model => !model.supportTag);
 
     return (
-        <div className="width-264 margin-vertical-4">
-            {(models) && models.filter(model => !model.supportTag).map((model) => {
+        <div className={classNames(
+            'width-264',
+            allModels.length > 0 ? 'border-radius-8 border-default-grey-1 padding-vertical-4' : '',
+        )}
+        >
+            {allModels && allModels.map((model) => {
                 return (
                     <ModelItem
                         model={model}

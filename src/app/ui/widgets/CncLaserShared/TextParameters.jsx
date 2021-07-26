@@ -1,11 +1,13 @@
 import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
+import classNames from 'classnames';
 import Select from '../../components/Select';
 import i18n from '../../../lib/i18n';
 import { NumberInput as Input, TextAreaInput } from '../../components/Input';
 import TipTrigger from '../../components/TipTrigger';
-
+import Anchor from '../../components/Anchor';
+import SvgIcon from '../../components/SvgIcon';
 
 class TextParameters extends PureComponent {
     static propTypes = {
@@ -23,6 +25,7 @@ class TextParameters extends PureComponent {
     };
 
     state = {
+        expanded: true
     };
 
     fileInput = React.createRef();
@@ -30,6 +33,9 @@ class TextParameters extends PureComponent {
     textArea = React.createRef();
 
     actions = {
+        onToggleExpand: () => {
+            this.setState(state => ({ expanded: !state.expanded }));
+        },
         onClickUpload: () => {
             this.fileInput.current.value = null;
             this.fileInput.current.click();
@@ -65,129 +71,77 @@ class TextParameters extends PureComponent {
 
         return (
             <div className="margin-vertical-8">
-                <React.Fragment>
-                    <TipTrigger
-                        title={i18n._('Text')}
-                        content={i18n._('Enter the text you want to engrave. \
-The maximum length of the text is 125 mm. When the text is too long, it will be shrunk automatically. \
-Start a new line manually according to your needs.')}
-                    >
-                        <div className="sm-flex height-80 margin-vertical-8">
-                            <TextAreaInput
-                                ref={this.textArea}
-                                disabled={disabled}
-                                onFocus={actions.onSelectAllText}
-                                style={{ resize: 'none' }}
-                                className="sm-flex-width"
-                                rows="3"
-                                value={text}
-                                onKeyPress={(e) => {
-                                    if (e.key === 'Enter') {
-                                        e.preventDefault();
-                                    }
-                                }}
-                                onChange={actions.onChangeText}
-                            />
-                        </div>
-                    </TipTrigger>
-                    <TipTrigger
-                        title={i18n._('Font')}
-                        content={i18n._('Select a font')}
-                    >
-                        <div className="sm-flex height-32 margin-vertical-8">
-                            <span className="sm-flex-auto sm-flex-order-negative width-56">{i18n._('Font')}</span>
-                            <Select
-                                disabled={disabled}
-                                className="sm-flex-width align-r"
-                                clearable={false}
-                                size="large"
-                                options={fontOptions}
-                                placeholder={i18n._('Choose font')}
-                                value={fontFamily}
-                                onChange={actions.onChangeFont}
-                            />
-                        </div>
-                    </TipTrigger>
-                    <TipTrigger
-                        title={i18n._('Font Size')}
-                        content={i18n._('Enter the font size in pt (points).')}
-                    >
-                        <div className="sm-flex height-32 margin-vertical-8">
-                            <span className="sm-flex-auto sm-flex-order-negative width-64">{i18n._('Font Size')}</span>
-                            <Input
-                                disabled={disabled}
-                                className="sm-flex-width align-r"
-                                value={parseInt(fontSize, 10)}
-                                onChange={actions.onChangeSize}
-                            />
-                            <span className="sm-flex__input-unit-8">pt</span>
-                        </div>
-                    </TipTrigger>
-                    {/* <TipTrigger
-                            title={i18n._('Line Height')}
-                            content={i18n._('Set the distance between each line in the text. The value you enter is the multiple of the font size.')}
+                <Anchor className="sm-flex height-32 margin-vertical-8" onClick={this.actions.onToggleExpand}>
+                    <span className="sm-flex-width heading-3">{i18n._('Text')}</span>
+                    <SvgIcon
+                        name="DropdownLine"
+                        size={32}
+                        className={classNames(
+                            this.state.expanded ? '' : 'rotate180'
+                        )}
+                    />
+                </Anchor>
+                {this.state.expanded && (
+                    <React.Fragment>
+                        <TipTrigger
+                            title={i18n._('Text')}
+                            content={i18n._('Enter the text you want to engrave. \
+                        The maximum length of the text is 125 mm. When the text is too long, it will be shrunk automatically. \
+                        Start a new line manually according to your needs.')}
                         >
-                            <div className="sm-parameter-row">
-                                <span className="sm-parameter-row__label">{i18n._('Line Height')}</span>
-
-                                <Select
+                            <div className="sm-flex height-80 margin-vertical-8">
+                                <TextAreaInput
+                                    ref={this.textArea}
                                     disabled={disabled}
-                                    className="sm-parameter-row__select"
-                                    backspaceRemoves={false}
-                                    clearable={false}
-                                    searchable={false}
-                                    options={[
-                                    ]}
-                                    value={lineHeight}
-                                    onChange={actions.onChangeLineHeight}
+                                    onFocus={actions.onSelectAllText}
+                                    style={{ resize: 'none' }}
+                                    className="sm-flex-width"
+                                    rows="3"
+                                    value={text}
+                                    onKeyPress={(e) => {
+                                        if (e.key === 'Enter') {
+                                            e.preventDefault();
+                                        }
+                                    }}
+                                    onChange={actions.onChangeText}
                                 />
                             </div>
                         </TipTrigger>
-
                         <TipTrigger
-                            title={i18n._('Alignment')}
-                            content={i18n._('Align the text in different lines to either the left or right or in the center horizontally.')}
+                            title={i18n._('Font')}
+                            content={i18n._('Select a font')}
                         >
-                            <div className="sm-parameter-row">
-                                <span className="sm-parameter-row__label">{i18n._('Alignment')}</span>
-                                <span className={styles.textAlignWrap}>
-                                    <button
-                                        className={classNames(
-                                            styles.textAlignButton,
-                                            { [styles.active]: alignment === 'left' }
-                                        )}
-                                        type="button"
-                                        disabled={disabled}
-                                        onClick={() => { actions.onChangeAlignment('left'); }}
-                                    >
-                                        <IconAlignLeft size={16} color="#666666" />
-                                    </button>
-                                    <button
-                                        type="button"
-                                        className={classNames(
-                                            styles.textAlignButton,
-                                            { [styles.active]: alignment === 'middle' },
-                                        )}
-                                        disabled={disabled}
-                                        onClick={() => { actions.onChangeAlignment('middle'); }}
-                                    >
-                                        <IconAlignCenter size={16} color="#666666" />
-                                    </button>
-                                    <button
-                                        className={classNames(
-                                            styles.textAlignButton,
-                                            { [styles.active]: alignment === 'right' },
-                                        )}
-                                        type="button"
-                                        disabled={disabled}
-                                        onClick={() => { actions.onChangeAlignment('right'); }}
-                                    >
-                                        <IconAlignRight size={16} color="#666666" />
-                                    </button>
-                                </span>
+                            <div className="sm-flex height-32 margin-vertical-8">
+                                <span className="sm-flex-auto sm-flex-order-negative width-56">{i18n._('Font')}</span>
+                                <Select
+                                    disabled={disabled}
+                                    className="sm-flex-width align-r"
+                                    clearable={false}
+                                    size="large"
+                                    options={fontOptions}
+                                    placeholder={i18n._('Choose font')}
+                                    value={fontFamily}
+                                    onChange={actions.onChangeFont}
+                                />
                             </div>
-                        </TipTrigger> */}
-                </React.Fragment>
+                        </TipTrigger>
+                        <TipTrigger
+                            title={i18n._('Font Size')}
+                            content={i18n._('Enter the font size in pt (points).')}
+                        >
+                            <div className="sm-flex height-32 margin-vertical-8">
+                                <span className="sm-flex-auto sm-flex-order-negative width-64">{i18n._('Font Size')}</span>
+                                <Input
+                                    disabled={disabled}
+                                    className="sm-flex-width align-r"
+                                    value={parseInt(fontSize, 10)}
+                                    onChange={actions.onChangeSize}
+                                />
+                                <span className="sm-flex__input-unit-8">pt</span>
+                            </div>
+                        </TipTrigger>
+                    </React.Fragment>
+                )}
             </div>
         );
     }

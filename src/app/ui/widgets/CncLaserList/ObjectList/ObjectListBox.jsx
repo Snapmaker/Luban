@@ -1,4 +1,5 @@
 // import React, { PureComponent } from 'react';
+import classNames from 'classnames';
 import React, { useEffect } from 'react';
 import PropTypes from 'prop-types';
 import { useSelector, useDispatch, shallowEqual } from 'react-redux';
@@ -47,10 +48,16 @@ function ObjectListBox({ headType }) {
             });
         }
     }, [previewFailed]);
+    const allModels = (models) && models.filter(model => !model.supportTag);
 
     return (
-        <div className={styles['object-list-box']}>
-            {models && models.map((model) => {
+        <div className={classNames(
+            'width-264',
+            styles['object-list-box'],
+            allModels.length > 0 ? 'border-radius-8 border-default-grey-1 padding-vertical-4' : '',
+        )}
+        >
+            {allModels && allModels.map((model) => {
                 return (
                     <ModelItem
                         model={model}

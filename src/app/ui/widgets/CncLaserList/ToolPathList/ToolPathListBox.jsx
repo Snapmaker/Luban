@@ -25,16 +25,16 @@ import ToolParameters from '../../../views/ToolPathConfigurations/cnc/ToolParame
 import { actions as cncActions } from '../../../../flux/cnc';
 import ToolSelector from '../../../views/ToolPathConfigurations/cnc/ToolSelector';
 
-const getIconStatus = (status) => {
-    if (status === 'running') {
-        return [styles.icon, styles.iconRunning];
-    } else if (status === 'warning') {
-        return [styles.icon, styles.iconWarning];
-    } else if (status === 'failed') {
-        return [styles.icon, styles.iconError];
-    }
-    return [];
-};
+// const getIconStatus = (status) => {
+//     if (status === 'running') {
+//         return [styles.icon, styles.iconRunning];
+//     } else if (status === 'warning') {
+//         return [styles.icon, styles.iconWarning];
+//     } else if (status === 'failed') {
+//         return [styles.icon, styles.iconError];
+//     }
+//     return [];
+// };
 // 'Toolpath List'
 // const useExpandItem = (title) => {
 //     const [expanded, setExpanded] = useState(true);
@@ -111,7 +111,7 @@ const ToolpathItem = ({ toolPath, selectedToolPathIDArray, selectToolPathId, sel
                 <div className={classNames('sm-flex', 'height-24')}>
                     <i
                         className={classNames(
-                            ...getIconStatus(toolPath.status)
+                            // ...getIconStatus(toolPath.status)
                         )}
                     />
                     {!toolPath.visible && (
@@ -119,6 +119,7 @@ const ToolpathItem = ({ toolPath, selectedToolPathIDArray, selectToolPathId, sel
                             size={24}
                             color="#BFBFBF"
                             name="HideNormal"
+                            type="static"
                             title={i18n._('Hide')}
                             onClick={() => onClickVisible(toolPath.id, toolPath.visible, toolPath.check)}
                             disabled={disabled}
@@ -126,6 +127,7 @@ const ToolpathItem = ({ toolPath, selectedToolPathIDArray, selectToolPathId, sel
                     )}
                     {toolPath.visible && (
                         <SvgIcon
+                            type="static"
                             size={24}
                             name="ShowNormal"
                             title={i18n._('Show')}
@@ -471,7 +473,7 @@ const ToolPathListBox = (props) => {
                 )}
                 >
                     <div className="sm-flex height-40 border-bottom-normal padding-horizontal-16">
-                        <span className="sm-flex-width font-size-big">{i18n._('General Parameters')}</span>
+                        <span className="sm-flex-width heading-3">{i18n._('General Parameters')}</span>
                     </div>
                     <div className="padding-horizontal-16 padding-vertical-16">
                         {selectedToolPath && selectedToolPath.headType === HEAD_CNC && activeToolListDefinition && (

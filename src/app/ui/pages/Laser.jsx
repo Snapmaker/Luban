@@ -5,7 +5,7 @@ import PropTypes from 'prop-types';
 import { withRouter } from 'react-router-dom';
 // import classNames from 'classnames';
 import i18n from '../../lib/i18n';
-import Anchor from '../components/Anchor';
+// import Anchor from '../components/Anchor';
 import Dropdown from '../components/Dropdown';
 import Menu from '../components/Menu';
 import SvgIcon from '../components/SvgIcon';
@@ -98,23 +98,32 @@ function useRenderMainToolBar(setShowHomePage, setShowJobType, setShowWorkspace)
                 onClick={() => setShowCameraCapture(true)}
                 disabled={series === MACHINE_SERIES.ORIGINAL?.value ? false : !isConnected}
             >
-                <div className="align-c">
+                <div className="align-l width-168">
                     <SvgIcon
                         type="static"
                         name="MainToolbarAddBackground"
                     />
-                    {i18n._('Add Background')}
+                    <span
+                        className="margin-left-4"
+                    >
+                        {i18n._('Add Background')}
+                    </span>
+
                 </div>
             </Menu.Item>
             <Menu.Item
                 onClick={() => dispatch(laserActions.removeBackgroundImage())}
             >
-                <div className="align-c">
+                <div className="align-l width-168">
                     <SvgIcon
                         type="static"
-                        name="MainToolbarRemoveBackground"
+                        name="MainToolbarRemoverBackground"
                     />
-                    {i18n._('Remove Background')}
+                    <span
+                        className="margin-left-4"
+                    >
+                        {i18n._('Remove Background')}
+                    </span>
                 </div>
             </Menu.Item>
         </Menu>
@@ -177,52 +186,26 @@ function useRenderMainToolBar(setShowHomePage, setShowJobType, setShowWorkspace)
             type: 'separator'
         },
         {
-            type: 'render',
-            customRender: function () {
-                return (
-                    <Anchor
-                        onClick={() => dispatch(editorActions.bringSelectedModelToFront(HEAD_LASER))}
-                        className="width-64 display-inline align-c padding-top-4 padding-horizontal-2 font-size-0"
-                    >
-                        <i
-                            style={{
-                                backgroundImage: `url(${require('../../resources/images/laser-image/Set-top-normal.svg')})`
-                            }}
-                            className="width-24 height-24 display-inline "
-                        />
-                        <div className="font-size-base">
-                            {i18n._('Top')}
-                        </div>
-                    </Anchor>
-                );
+            title: i18n._('Top'),
+            type: 'button',
+            name: 'MainToolbarTop',
+            action: () => {
+                dispatch(editorActions.bringSelectedModelToFront(HEAD_LASER));
             }
         },
         {
-            type: 'render',
-            customRender: function () {
-                return (
-                    <Anchor
-                        onClick={() => dispatch(editorActions.sendSelectedModelToBack(HEAD_LASER))}
-                        className="width-64 display-inline align-c padding-top-4 padding-horizontal-2 font-size-0"
-                    >
-                        <i
-                            style={{
-                                backgroundImage: `url(${require('../../resources/images/laser-image/Set-bottom-normal.svg')})`
-                            }}
-                            className="width-24 height-24 display-inline "
-                        />
-                        <div className="font-size-base">
-                            {i18n._('Bottom')}
-                        </div>
-                    </Anchor>
-                );
+            title: i18n._('Bottom'),
+            type: 'button',
+            name: 'MainToolbarBottom',
+            action: () => {
+                dispatch(editorActions.sendSelectedModelToBack(HEAD_LASER));
             }
         },
         {
             type: 'separator'
         },
         {
-            // Camera-capture-normal
+            // MainToolbarCameraCapture
             type: 'render',
             customRender: function () {
                 return (
@@ -231,21 +214,19 @@ function useRenderMainToolBar(setShowHomePage, setShowJobType, setShowWorkspace)
                         overlay={menu}
                     >
                         <div
-                            className="display-inline font-size-0"
+                            className="display-inline font-size-0 v-align-t"
                         >
-                            <i
-                                style={{
-                                    backgroundImage: `url(${require('../../resources/images/laser-image/Camera-capture-normal.svg')})`
-                                }}
-                                className="width-24 height-24 display-inline "
-                            />
-                            <div className="font-size-base">
-                                {i18n._('Camera Capture')}
-                                <SvgIcon
-                                    type="static"
-                                    name="DropdownLine"
-                                />
-                            </div>
+                            <SvgIcon
+                                name="MainToolbarCameraCapture"
+                            >
+                                <div className="font-size-base color-black-3">
+                                    {i18n._('Camera Capture')}
+                                    <SvgIcon
+                                        type="static"
+                                        name="DropdownLine"
+                                    />
+                                </div>
+                            </SvgIcon>
                         </div>
                     </Dropdown>
                 );
