@@ -4,6 +4,7 @@ import * as Icons from 'snapmaker-react-icon';
 import classNames from 'classnames';
 import includes from 'lodash/includes';
 import { noop } from 'lodash';
+import styles from './styles.styl';
 
 class SvgIcon extends PureComponent {
     static propTypes = {
@@ -12,7 +13,9 @@ class SvgIcon extends PureComponent {
         title: PropTypes.string,
         onClick: PropTypes.func,
         disabled: PropTypes.bool,
+        hasBorderBottom: PropTypes.bool,
         isHorizontal: PropTypes.bool,
+        children: PropTypes.node,
         color: PropTypes.string,
         spanText: PropTypes.string,
         spanClassName: PropTypes.string,
@@ -73,7 +76,9 @@ class SvgIcon extends PureComponent {
             spanClassName,
             isHorizontal,
             inputInfo,
+            hasBorderBottom,
             type,
+            children,
             ...props
         } = this.props;
         let {
@@ -114,7 +119,7 @@ class SvgIcon extends PureComponent {
                     />
                 )}
                 <div
-                    className={classNames('display-inline')}
+                    className={classNames('display-inline', styles['icon-wrapper'])}
                     style={{ maxWidth: 'inherit', cursor: disabled ? 'not-allowed' : 'pointer' }}
                     onKeyDown={noop}
                     role="button"
@@ -131,14 +136,16 @@ class SvgIcon extends PureComponent {
                         <Component
                             {...props}
                             disabled={disabled}
+
                             color={disabled ? '#D5D6D9' : color}
-                            style={{ background: iconBackground }}
+                            style={{ background: iconBackground, borderBottom: hasBorderBottom ? '1px solid #D5D6D9' : 0 }}
                         />
                     )}
+                    {children}
                     { spanText && isHorizontal && (
                         <span
                             className={spanClassName}
-                            style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontSize: '14px', color: disabled ? '#D5D6D9' : '#000' }}
+                            style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontSize: '14px', color: disabled ? '#D5D6D9' : '#545659' }}
                         >
                             {spanText}
                         </span>
@@ -146,7 +153,7 @@ class SvgIcon extends PureComponent {
                     { spanText && !isHorizontal && (
                         <div
                             className={spanClassName}
-                            style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontSize: '14px', color: disabled ? '#D5D6D9' : '#000' }}
+                            style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontSize: '14px', color: disabled ? '#D5D6D9' : '#545659' }}
                         >
                             {spanText}
                         </div>

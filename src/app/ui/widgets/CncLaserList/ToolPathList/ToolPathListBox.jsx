@@ -25,16 +25,16 @@ import ToolParameters from '../../../views/ToolPathConfigurations/cnc/ToolParame
 import { actions as cncActions } from '../../../../flux/cnc';
 import ToolSelector from '../../../views/ToolPathConfigurations/cnc/ToolSelector';
 
-const getIconStatus = (status) => {
-    if (status === 'running') {
-        return [styles.icon, styles.iconRunning];
-    } else if (status === 'warning') {
-        return [styles.icon, styles.iconWarning];
-    } else if (status === 'failed') {
-        return [styles.icon, styles.iconError];
-    }
-    return [];
-};
+// const getIconStatus = (status) => {
+//     if (status === 'running') {
+//         return [styles.icon, styles.iconRunning];
+//     } else if (status === 'warning') {
+//         return [styles.icon, styles.iconWarning];
+//     } else if (status === 'failed') {
+//         return [styles.icon, styles.iconError];
+//     }
+//     return [];
+// };
 // 'Toolpath List'
 // const useExpandItem = (title) => {
 //     const [expanded, setExpanded] = useState(true);
@@ -56,7 +56,7 @@ const getIconStatus = (status) => {
 //     }
 //     return [expanded, renderExpandItem];
 // };
-const ToolpathItem = ({ toolPath, selectedToolPathIDArray, selectToolPathId, selectToolPathById, onClickVisible, setEditingToolpath, disabled }) => {
+const ToolpathItem = ({ toolPath, selectedToolPathIDArray, selectToolPathId, selectOneToolPathId, selectToolPathById, onClickVisible, setEditingToolpath, disabled }) => {
     if (!toolPath) {
         return null;
     }
@@ -68,7 +68,11 @@ const ToolpathItem = ({ toolPath, selectedToolPathIDArray, selectToolPathId, sel
         if (e.detail > 1) { // Check difference to double click
             return;
         }
-        selectToolPathId(toolPath.id);
+        if (e.shiftKey) {
+            selectToolPathId(toolPath.id);
+        } else {
+            selectOneToolPathId(toolPath.id);
+        }
     }
     const suffixLength = 6;
     const { prefixName, suffixName } = normalizeNameDisplay(toolPath.name, suffixLength);
@@ -107,7 +111,7 @@ const ToolpathItem = ({ toolPath, selectedToolPathIDArray, selectToolPathId, sel
                 <div className={classNames('sm-flex', 'height-24')}>
                     <i
                         className={classNames(
-                            ...getIconStatus(toolPath.status)
+                            // ...getIconStatus(toolPath.status)
                         )}
                     />
                     {!toolPath.visible && (
@@ -115,6 +119,7 @@ const ToolpathItem = ({ toolPath, selectedToolPathIDArray, selectToolPathId, sel
                             size={24}
                             color="#BFBFBF"
                             name="HideNormal"
+                            type="static"
                             title={i18n._('Hide')}
                             onClick={() => onClickVisible(toolPath.id, toolPath.visible, toolPath.check)}
                             disabled={disabled}
@@ -122,6 +127,7 @@ const ToolpathItem = ({ toolPath, selectedToolPathIDArray, selectToolPathId, sel
                     )}
                     {toolPath.visible && (
                         <SvgIcon
+                            type="static"
                             size={24}
                             name="ShowNormal"
                             title={i18n._('Show')}
@@ -138,6 +144,7 @@ ToolpathItem.propTypes = {
     toolPath: PropTypes.object.isRequired,
     selectedToolPathIDArray: PropTypes.array.isRequired,
     selectToolPathId: PropTypes.func.isRequired,
+    selectOneToolPathId: PropTypes.func.isRequired,
     selectToolPathById: PropTypes.func.isRequired,
     onClickVisible: PropTypes.func.isRequired,
 
@@ -255,6 +262,9 @@ const ToolPathListBox = (props) => {
     const [editingToolpath, setEditingToolpath] = useState(null);
     const [currentToolpath, setCurrentToolpath] = useState(null);
     const actions = {
+        selectOneToolPathId: (id) => {
+            dispatch(editorActions.selectOneToolPathId(props.headType, id));
+        },
         selectToolPathId: (id) => {
             dispatch(editorActions.selectToolPathId(props.headType, id));
         },
@@ -376,6 +386,7 @@ const ToolPathListBox = (props) => {
                                     toolPath={toolPath}
                                     key={toolPath.id}
                                     selectedToolPathIDArray={selectedToolPathIDArray}
+                                    selectOneToolPathId={actions.selectOneToolPathId}
                                     selectToolPathId={actions.selectToolPathId}
                                     selectToolPathById={actions.selectToolPathById}
                                     onClickVisible={actions.onClickVisible}
@@ -462,7 +473,7 @@ const ToolPathListBox = (props) => {
                 )}
                 >
                     <div className="sm-flex height-40 border-bottom-normal padding-horizontal-16">
-                        <span className="sm-flex-width font-size-big">{i18n._('General Parameters')}</span>
+                        <span className="sm-flex-width heading-3">{i18n._('General Parameters')}</span>
                     </div>
                     <div className="padding-horizontal-16 padding-vertical-16">
                         {selectedToolPath && selectedToolPath.headType === HEAD_CNC && activeToolListDefinition && (

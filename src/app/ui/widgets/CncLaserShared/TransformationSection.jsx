@@ -169,7 +169,7 @@ class TransformationSection extends PureComponent {
                     >
                         <div className="sm-flex height-32 margin-vertical-8 ">
                             <span className="sm-flex-auto sm-flex-order-negative width-64">{i18n._('Move (mm)')}</span>
-                            <span className="sm-flex-width heading-3 sm-flex justify-space-between">
+                            <span className="sm-flex-width sm-flex justify-space-between">
                                 <div className="display-inline position-re">
                                     <span className="width-16 display-inline">
                                             X
@@ -293,27 +293,17 @@ class TransformationSection extends PureComponent {
                                 </div>
                                 <div className="sm-flex width-96 justify-space-between">
                                     {selectedModelArray.length === 1 && (
-                                        <button
-                                            type="button"
-                                            className={classNames(
-                                                styles.icon_flip_vertically,
-                                                'width-44',
-                                                'border-radius-8',
-                                                'padding-horizontal-10'
-                                            )}
+                                        <SvgIcon
+                                            name="FlipLevel"
+                                            className="padding-horizontal-8 border-radius-8 border-default-grey-1"
                                             disabled={disabled || !selectedNotHide}
                                             onClick={actions.onFlipHorizontally}
                                         />
                                     )}
                                     {selectedModelArray.length === 1 && (
-                                        <button
-                                            type="button"
-                                            className={classNames(
-                                                styles.icon_flip_horizontal,
-                                                'width-44',
-                                                'border-radius-8',
-                                                'padding-horizontal-10'
-                                            )}
+                                        <SvgIcon
+                                            name="FlipVertical"
+                                            className="padding-horizontal-8 border-radius-8 border-default-grey-1"
                                             disabled={disabled || !selectedNotHide}
                                             onClick={actions.onFlipVertically}
                                         />

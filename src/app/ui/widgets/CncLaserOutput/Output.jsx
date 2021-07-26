@@ -178,25 +178,27 @@ class Output extends PureComponent {
         );
         return (
             <div className={classNames('position-fixed', 'border-radius-bottom-8', 'bottom-8', 'background-color-white', styles['output-wrapper'])}>
-                <div className={classNames('position-re', 'margin-horizontal-16', 'margin-vertical-16')}>
-                    <Button
-                        type="primary"
-                        priority="level-one"
-                        onClick={this.actions.preview}
-                        style={{ display: (displayedType !== DISPLAYED_TYPE_TOOLPATH && page !== PAGE_EDITOR) ? 'block' : 'none' }}
-                        disabled={inProgress || (!hasToolPathModel ?? false) || disablePreview}
-                    >
-                        {i18n._('Preview')}
-                    </Button>
-                    <Button
-                        type="primary"
-                        priority="level-one"
-                        onClick={this.actions.switchToProcess}
-                        style={{ display: (displayedType !== DISPLAYED_TYPE_TOOLPATH && page === PAGE_EDITOR) ? 'block' : 'none' }}
-                        disabled={!hasModel ?? false}
-                    >
-                        {i18n._('Next')}
-                    </Button>
+                <div className={classNames('position-re', 'margin-horizontal-16', 'margin-vertical-16',)}>
+                    {(displayedType !== DISPLAYED_TYPE_TOOLPATH && page !== PAGE_EDITOR) && (
+                        <Button
+                            type="primary"
+                            priority="level-one"
+                            onClick={this.actions.preview}
+                            disabled={inProgress || (!hasToolPathModel ?? false) || disablePreview}
+                        >
+                            {i18n._('Preview')}
+                        </Button>
+                    )}
+                    {(displayedType !== DISPLAYED_TYPE_TOOLPATH && page === PAGE_EDITOR) && (
+                        <Button
+                            type="primary"
+                            priority="level-one"
+                            onClick={this.actions.switchToProcess}
+                            disabled={!hasModel ?? false}
+                        >
+                            {i18n._('Next')}
+                        </Button>
+                    )}
                     {displayedType === DISPLAYED_TYPE_TOOLPATH && !this.state.showExportOptions && (
                         <Button
                             type="default"
@@ -205,7 +207,7 @@ class Output extends PureComponent {
                                 this.actions.switchToEditPage();
                                 this.actions.handleMouseOut();
                             }}
-                            className={classNames('position-ab', 'bottom-64', 'left-0')}
+                            className={classNames('position-re', 'bottom-0', 'left-0')}
                         >
                             {i18n._('Back to Object View')}
                         </Button>
@@ -215,7 +217,7 @@ class Output extends PureComponent {
                             onKeyDown={noop}
                             role="button"
                             tabIndex={0}
-                            className={classNames('position-re')}
+                            className={classNames('position-re', 'height-40',)}
                             onMouseEnter={actions.handleMouseOver}
                             onMouseLeave={actions.handleMouseOut}
                         >
@@ -228,7 +230,7 @@ class Output extends PureComponent {
                                     disabled={inProgress || !hasModel || workflowState === 'running' || isGcodeGenerating || gcodeFile === null}
                                     className={classNames(
                                         'position-ab',
-                                        'bottom-16',
+                                        'bottom-ne-8',
                                         'margin-top-10',
                                         displayedType === DISPLAYED_TYPE_TOOLPATH ? 'display-block' : 'display-none'
                                     )}

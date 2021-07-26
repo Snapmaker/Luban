@@ -4,14 +4,12 @@ import editMenu from './editMenu';
 import settingsMenu from './settingsMenu';
 import windowMenu from './windowMenu';
 import helpMenu from './helpMenu';
-import connectionMenu from './connectionMenu';
 
 const menuItems = [
     fileMenu,
     editMenu,
     windowMenu,
     settingsMenu,
-    connectionMenu,
     helpMenu
 ];
 

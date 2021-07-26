@@ -113,6 +113,19 @@ class ToolPathGroup {
         this._updated();
     }
 
+    selectOneToolPathId(toolPathId) {
+        if (this.selectedToolPathArray.length > 1) {
+            this.selectedToolPathArray = [toolPathId];
+        } else {
+            if (this.selectedToolPathArray.includes(toolPathId)) {
+                this.selectedToolPathArray = [];
+            } else {
+                this.selectedToolPathArray = [toolPathId];
+            }
+        }
+        this._updated();
+    }
+
     getToolPathTypes() {
         // return getToolPathType(this.modelGroup.getSelectedToolPathModels());
         return getToolPathType(this.modelGroup.getSelectedModelArray());

@@ -43,9 +43,10 @@ class ImageProcessMode extends PureComponent {
             <React.Fragment>
                 <div className={styles['cnc-mode']}>
                     <Anchor className="sm-flex height-32 margin-vertical-8" onClick={this.actions.onToggleExpand}>
-                        <span className="sm-flex-width">{i18n._('Processing Mode')}</span>
+                        <span className="sm-flex-width heading-3">{i18n._('Processing Mode')}</span>
                         <SvgIcon
                             name="DropdownLine"
+                            size={32}
                             className={classNames(
                                 this.state.expanded ? '' : 'rotate180'
                             )}

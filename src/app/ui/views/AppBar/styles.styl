@@ -9,7 +9,7 @@
 
     &.menu-submenu  {
         position: absolute;
-        width: 200px;
+        width: fit-content;
         box-shadow: 2px 2px 4px 1px #bbb;
     }
     &::after {
@@ -34,10 +34,15 @@
             float: right;
         }
         &>div {
-            float: left;
+            // float: left;
             width: 100%;
             padding: 0 15px;
             cursor: default;
+            &::after {
+                content: '';
+                display: block;
+                clear: both;
+            }
         }
         &.selected {
             & span {
@@ -60,7 +65,7 @@
     }
     .sub-3 {
         top: auto;
-        left: 195px;
+        left: 100%;
     }
     .hide {
         display: none;
@@ -70,13 +75,17 @@
         .separator {
             margin: 5px 0;
             width: 100%;
-            float: left;
+            // float: left;
             border-top: 1px solid #eee;
         }
         .menu-item {
             width: 100%;
-            &:hover {
+            float: none;
+            &:not(.enabled):hover {
                 background-color: #C8C8C9;
+            }
+            .label {
+                margin-right: 20px;
             }
         }
     }

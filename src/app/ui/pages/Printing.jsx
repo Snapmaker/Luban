@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { shallowEqual, useSelector, useDispatch } from 'react-redux';
-import PropTypes from 'prop-types';
+// import PropTypes from 'prop-types';
 import { withRouter } from 'react-router-dom';
 // import Widget from '../widgets/Widget';
 import PrintingVisualizer from '../widgets/PrintingVisualizer';
@@ -39,6 +39,7 @@ import EnclosureWidget from '../widgets/Enclosure';
 import CncLaserObjectList from '../widgets/CncLaserList';
 import JobType from '../widgets/JobType';
 import HomePage from './HomePage';
+import Workspace from './Workspace';
 
 
 const allWidgets = {
@@ -77,12 +78,20 @@ function useRenderMainToolBar() {
     const canRedo = useSelector(state => state?.printing?.history?.canRedo, shallowEqual);
     const canUndo = useSelector(state => state?.printing?.history?.canUndo, shallowEqual);
     const [showHomePage, setShowHomePage] = useState(false);
+    const [showWorkspace, setShowWorkspace] = useState(false);
     const dispatch = useDispatch();
     function renderHomepage() {
         const onClose = () => setShowHomePage(false);
         return showHomePage && renderPopup({
             onClose,
             component: HomePage
+        });
+    }
+    function renderWorkspace() {
+        const onClose = () => setShowWorkspace(false);
+        return showWorkspace && renderPopup({
+            onClose,
+            component: Workspace
         });
     }
     function renderMainToolBar() {
@@ -94,6 +103,14 @@ function useRenderMainToolBar() {
                 name: 'MainToolbarHome',
                 action: () => {
                     setShowHomePage(true);
+                }
+            },
+            {
+                title: i18n._('Workspace'),
+                type: 'button',
+                name: 'MainToolbarWorkspace',
+                action: () => {
+                    setShowWorkspace(true);
                 }
             },
             {
@@ -133,16 +150,16 @@ function useRenderMainToolBar() {
             />
         );
     }
-    return [renderHomepage, renderMainToolBar];
+    return [renderHomepage, renderMainToolBar, renderWorkspace];
 }
 
-function Printing({ history }) {
+function Printing() {
     const widgets = useSelector(state => state?.widget[pageHeadType].default.widgets, shallowEqual);
     const [isDraggingWidget, setIsDraggingWidget] = useState(false);
     const dispatch = useDispatch();
 
     const recoveryModal = useRenderRecoveryModal(pageHeadType);
-    const [renderHomepage, renderMainToolBar] = useRenderMainToolBar(history);
+    const [renderHomepage, renderMainToolBar, renderWorkspace] = useRenderMainToolBar();
 
     useEffect(() => {
         dispatch(printingActions.init());
@@ -207,11 +224,12 @@ function Printing({ history }) {
                 <PrintingVisualizer widgetId="printingVisualizer" />
                 {recoveryModal}
                 {renderHomepage()}
+                {renderWorkspace()}
             </Dropzone>
         </ProjectLayout>
     );
 }
 Printing.propTypes = {
-    history: PropTypes.object
+    // history: PropTypes.object
 };
 export default (withRouter(Printing));

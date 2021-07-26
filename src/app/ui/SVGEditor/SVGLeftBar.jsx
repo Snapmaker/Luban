@@ -62,12 +62,14 @@ class SVGLeftBar extends PureComponent {
                         />
                         <SvgIcon
                             type={['hoverNormal', 'pressSpecial']}
-                            size={56}
+                            size={48}
+                            hasBorderBottom
                             name="ToolbarOpen"
                             disabled={!editable}
                             color="#545659"
                             className={
-                                classNames('border-radius-top-8', 'background-transparent', 'border-0', 'padding-0', 'position-re',
+                                classNames('border-radius-top-8', 'background-transparent',
+                                    'padding-vertical-4', 'padding-horizontal-4', 'position-re',
                                     { [styles.selected]: (mode === 'add') })}
                             onClick={() => this.props.onClickToUpload()}
                         />
@@ -75,22 +77,24 @@ class SVGLeftBar extends PureComponent {
                         <SvgIcon
                             color="#545659"
                             type={['hoverNormal', 'pressSpecial']}
-                            size={56}
+                            size={48}
                             name="ToolbarSelect"
                             disabled={!editable}
                             className={
-                                classNames('background-transparent', 'border-0', 'padding-0', 'position-re',
+                                classNames('background-transparent',
+                                    'padding-vertical-4', 'padding-horizontal-4', 'position-re',
                                     { [styles.selected]: (mode === 'select') })}
                             onClick={() => this.props.setMode('select')}
                         />
                         <SvgIcon
                             type={['hoverNormal', 'pressSpecial']}
                             color="#545659"
-                            size={56}
+                            size={48}
                             name="ToolbarRectangle"
                             disabled={!editable}
                             className={
-                                classNames('background-transparent', 'border-0', 'padding-0', 'position-re',
+                                classNames('background-transparent',
+                                    'padding-vertical-4', 'padding-horizontal-4', 'position-re',
                                     { [styles.selected]: (mode === 'rect') })}
                             onClick={() => this.props.setMode('rect')}
                         />
@@ -98,23 +102,25 @@ class SVGLeftBar extends PureComponent {
                         <SvgIcon
                             type={['hoverNormal', 'pressSpecial']}
                             color="#545659"
-                            size={56}
+                            size={48}
                             name="ToolbarOval"
                             disabled={!editable}
                             className={
-                                classNames('background-transparent', 'border-0', 'padding-0', 'position-re',
+                                classNames('background-transparent',
+                                    'padding-vertical-4', 'padding-horizontal-4', 'position-re',
                                     { [styles.selected]: (mode === 'ellipse') })}
                             onClick={() => this.props.setMode('ellipse')}
                         />
 
                         <SvgIcon
                             type={['hoverNormal', 'pressSpecial']}
-                            size={56}
                             color="#545659"
+                            size={48}
                             name="ToolbarText"
                             disabled={!editable}
                             className={
-                                classNames('background-transparent', 'border-0', 'padding-0', 'position-re',)}
+                                classNames('background-transparent',
+                                    'padding-vertical-4', 'padding-horizontal-4', 'position-re',)}
                             onClick={this.actions.onClickInsertText}
                         />
                         {/* todo: refactor style*/}
