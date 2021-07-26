@@ -1209,6 +1209,9 @@ export const actions = {
     recordModelBeforeTransform: (modelGroup) => (dispatch) => {
         dispatch(operationHistoryActions.clearTargetTmpState(INITIAL_STATE.name));
         for (const model of modelGroup.selectedModelArray) {
+            if (model.supportTag) {
+                dispatch(actions.onModelTransform());
+            }
             dispatch(operationHistoryActions.updateTargetTmpState(INITIAL_STATE.name, model.modelID, {
                 from: { ...model.transformation }
             }));
@@ -1222,7 +1225,7 @@ export const actions = {
 
         function stateEqual(stateFrom, stateTo) {
             for (const key of Object.keys(stateFrom)) {
-                if (Math.abs(stateFrom[key] - stateTo[key]) > EPSILON) {
+                if (key !== 'positionZ' && Math.abs(stateFrom[key] - stateTo[key]) > EPSILON) {
                     return false;
                 }
             }
@@ -1404,18 +1407,24 @@ export const actions = {
     },
 
     // uploadModel
-    undo: () => (dispatch) => {
-        dispatch(operationHistoryActions.undo(INITIAL_STATE.name));
-        dispatch(actions.destroyGcodeLine());
-        dispatch(actions.displayModel());
-        dispatch(actions.render());
+    undo: () => (dispatch, getState) => {
+        const { canUndo } = getState().printing.history;
+        if (canUndo) {
+            dispatch(operationHistoryActions.undo(INITIAL_STATE.name));
+            dispatch(actions.destroyGcodeLine());
+            dispatch(actions.displayModel());
+            dispatch(actions.render());
+        }
     },
 
-    redo: () => (dispatch) => {
-        dispatch(operationHistoryActions.redo(INITIAL_STATE.name));
-        dispatch(actions.destroyGcodeLine());
-        dispatch(actions.displayModel());
-        dispatch(actions.render());
+    redo: () => (dispatch, getState) => {
+        const { canRedo } = getState().printing.history;
+        if (canRedo) {
+            dispatch(operationHistoryActions.redo(INITIAL_STATE.name));
+            dispatch(actions.destroyGcodeLine());
+            dispatch(actions.displayModel());
+            dispatch(actions.render());
+        }
     },
 
     recordSnapshot: () => (dispatch, getState) => {

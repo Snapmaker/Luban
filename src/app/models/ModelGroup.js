@@ -626,7 +626,6 @@ class ModelGroup extends EventEmitter {
             parent = model.target.meshObject;
         }
         ThreeUtils.setObjectParent(model.meshObject, parent);
-
         this.selectedModelArray = [];
         this.selectedGroup.children.forEach((meshObject) => {
             const selectedModel = this.models.find(d => d.meshObject === meshObject);
@@ -1057,6 +1056,10 @@ class ModelGroup extends EventEmitter {
         selectedModelArray.forEach((selected) => {
             if (selected.sourceType === '3d') {
                 selected.stickToPlate();
+            }
+            if (selected.supportTag && selected.isSelected) {
+                selected.meshObject.parent.position.setZ(0);
+                selected.meshObject.parent.updateMatrix();
             }
             selected.computeBoundingBox();
         });
