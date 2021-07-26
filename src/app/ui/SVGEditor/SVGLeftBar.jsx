@@ -66,6 +66,7 @@ class SVGLeftBar extends PureComponent {
                             hasBorderBottom
                             name="ToolbarOpen"
                             disabled={!editable}
+                            color="#545659"
                             className={
                                 classNames('border-radius-top-8', 'background-transparent',
                                     'padding-vertical-4', 'padding-horizontal-4', 'position-re',
@@ -74,6 +75,7 @@ class SVGLeftBar extends PureComponent {
                         />
 
                         <SvgIcon
+                            color="#545659"
                             type={['hoverNormal', 'pressSpecial']}
                             size={48}
                             name="ToolbarSelect"
@@ -86,6 +88,7 @@ class SVGLeftBar extends PureComponent {
                         />
                         <SvgIcon
                             type={['hoverNormal', 'pressSpecial']}
+                            color="#545659"
                             size={48}
                             name="ToolbarRectangle"
                             disabled={!editable}
@@ -98,6 +101,7 @@ class SVGLeftBar extends PureComponent {
 
                         <SvgIcon
                             type={['hoverNormal', 'pressSpecial']}
+                            color="#545659"
                             size={48}
                             name="ToolbarOval"
                             disabled={!editable}
@@ -110,6 +114,7 @@ class SVGLeftBar extends PureComponent {
 
                         <SvgIcon
                             type={['hoverNormal', 'pressSpecial']}
+                            color="#545659"
                             size={48}
                             name="ToolbarText"
                             disabled={!editable}

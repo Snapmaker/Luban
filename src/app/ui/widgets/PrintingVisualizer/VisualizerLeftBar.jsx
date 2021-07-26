@@ -259,6 +259,7 @@ class VisualizerLeftBar extends PureComponent {
                                     }}
                                     size={48}
                                     disabled={inProgress}
+                                    color="#545659"
                                 />
                             </li>
                         </ul>
@@ -267,6 +268,7 @@ class VisualizerLeftBar extends PureComponent {
                                 className="padding-vertical-4"
                             >
                                 <SvgIcon
+                                    color="#545659"
                                     className={classNames({ [styles.selected]: (!transformDisabled && transformMode === 'translate') })}
                                     // Todo: Add selected props
                                     type={['hoverSpecial', 'pressSpecial']}
@@ -282,6 +284,7 @@ class VisualizerLeftBar extends PureComponent {
                                 className="padding-vertical-4"
                             >
                                 <SvgIcon
+                                    color="#545659"
                                     className={classNames({ [styles.selected]: (!transformDisabled && transformMode === 'scale') })}
                                     type={['hoverSpecial', 'pressSpecial']}
                                     name="ToolbarScale"
@@ -296,6 +299,7 @@ class VisualizerLeftBar extends PureComponent {
                                 className="padding-vertical-4"
                             >
                                 <SvgIcon
+                                    color="#545659"
                                     className={classNames({ [styles.selected]: (!transformDisabled && transformMode === 'rotate') })}
                                     type={['hoverSpecial', 'pressSpecial']}
                                     name="ToolbarRotate"
@@ -310,6 +314,7 @@ class VisualizerLeftBar extends PureComponent {
                                 className="padding-vertical-4"
                             >
                                 <SvgIcon
+                                    color="#545659"
                                     className={classNames({ [styles.selected]: (!transformDisabled && transformMode === 'mirror') })}
                                     type={['hoverSpecial', 'pressSpecial']}
                                     name="ToolbarMirror"
@@ -326,6 +331,7 @@ class VisualizerLeftBar extends PureComponent {
                                 className="padding-vertical-4"
                             >
                                 <SvgIcon
+                                    color="#545659"
                                     type={['hoverSpecial', 'pressSpecial']}
                                     name="ToolbarAutoLayout"
                                     size={48}
@@ -341,6 +347,7 @@ class VisualizerLeftBar extends PureComponent {
                                 className="padding-vertical-4"
                             >
                                 <SvgIcon
+                                    color="#545659"
                                     className={classNames({ [styles.selected]: (!transformDisabled && transformMode === 'support') })}
                                     type={['hoverSpecial', 'pressSpecial']}
                                     name="ToolbarSupport"

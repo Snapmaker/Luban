@@ -9,7 +9,8 @@
 
 :global(.ant-modal-content) {
     height: auto;
-    overflow: hidden;
+    overflow: hidden !important;
+    border-radius: 16px !important;
     :global(.ant-modal-close) {
         :global(.ant-modal-close-x) {
             width: $px-grade-28;
@@ -22,6 +23,8 @@
     }
     :global(.ant-modal-body) {
         padding: $px-grade-12 $px-grade-12 $px-grade-20;
+        max-height 600px !important
+        overflow-y auto !important
     }
     :global(.ant-modal-footer) {
         background: $grey-3;
