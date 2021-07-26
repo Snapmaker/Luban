@@ -161,11 +161,17 @@ class TransformControls extends Object3D {
         });
 
 
-        const RED = 0xe93100;
-        const GREEN = 0x22ac38;
-        const BLUE = 0x00b7ee;
-        const GRAY = 0x787878;
-        const DARKGRAY = 0x2778dd;
+        // const RED = 0xe93100;
+        // const GREEN = 0x22ac38;
+        // const BLUE = 0x00b7ee;
+        const RED = 0xff5759;
+        const GREEN = 0x4cb518;
+        const BLUE = 0x1890ff;
+        const RED2 = 0xb32426;
+        const GREEN2 = 0x287303;
+        const BLUE2 = 0x0064c2;
+        const GRAY = 0xd5d6d9;
+        // const DARKGRAY = 0x2778dd;
 
         const meshMaterialRed = meshMaterial.clone();
         meshMaterialRed.color.set(RED);
@@ -176,11 +182,22 @@ class TransformControls extends Object3D {
         const meshMaterialBlue = meshMaterial.clone();
         meshMaterialBlue.color.set(BLUE);
 
+        const meshMaterialRed2 = meshMaterial.clone();
+        meshMaterialRed2.color.set(RED2);
+
+        const meshMaterialGreen2 = meshMaterial.clone();
+        meshMaterialGreen2.color.set(GREEN2);
+
+        const meshMaterialBlue2 = meshMaterial.clone();
+        meshMaterialBlue2.color.set(BLUE2);
+
+
         const meshMaterialInvisible = meshMaterial.clone();
         meshMaterialInvisible.visible = false;
+        meshMaterialInvisible.color.set(BLUE);
 
         const lineMaterialDarkGray = selectedlineMaterial.clone();
-        lineMaterialDarkGray.color.set(DARKGRAY);
+        lineMaterialDarkGray.color.set(BLUE);// DARKGRAY);
 
         const lineMaterialRed = lineMaterial.clone();
         lineMaterialRed.color.set(RED);
@@ -212,6 +229,10 @@ class TransformControls extends Object3D {
             MESH_MATERIAL_GREEN: meshMaterialGreen,
             MESH_MATERIAL_BLUE: meshMaterialBlue,
             MESH_MATERIAL_INVISIBLE: meshMaterialInvisible,
+
+            MESH_MATERIAL_RED2: meshMaterialRed2,
+            MESH_MATERIAL_GREEN2: meshMaterialGreen2,
+            MESH_MATERIAL_BLUE2: meshMaterialBlue2,
 
             LINE_MATERIAL_DARKGRAY: lineMaterialDarkGray,
             LINE_MATERIAL_RED: lineMaterialRed,
@@ -317,6 +338,7 @@ class TransformControls extends Object3D {
         this.translatePeripheral.visible = false;
         this.rotatePeripheral.visible = false;
         this.scalePeripheral.visible = false;
+        this.mirrorPeripheral.visible = false;
     }
 
     hideSelectedPeripherals() {
@@ -374,6 +396,13 @@ class TransformControls extends Object3D {
         ]);
         this.scalePicker.visiable = false;
         this.add(this.scalePicker);
+
+        this.mirrorPeripheral = this.createPeripheral([
+            ['X', new Line(defaults.LINE.clone(), defaults.LINE_MATERIAL_RED.clone())],
+            ['Y', new Line(defaults.LINE.clone(), defaults.LINE_MATERIAL_GREEN.clone()), null, [0, 0, Math.PI / 2]],
+            ['Z', new Line(defaults.LINE.clone(), defaults.LINE_MATERIAL_BLUE.clone()), null, [0, -Math.PI / 2, 0]]
+        ]);
+        this.add(this.mirrorPeripheral);
     }
 
     initPlane() {
@@ -449,6 +478,7 @@ class TransformControls extends Object3D {
                 this.translatePeripheral.visible = (this.mode === 'translate' && child.visible);
                 this.rotatePeripheral.visible = (this.mode === 'rotate' && child.visible);
                 this.scalePeripheral.visible = (this.mode === 'scale' && child.visible);
+                this.mirrorPeripheral.visible = (this.mode === 'mirror' && child.visible);
             });
 
             this.object.matrixWorld.decompose(objectPosition, objectQuaternion, objectScale);
@@ -558,8 +588,11 @@ class TransformControls extends Object3D {
                 this.scalePicker.scale.set(1, 1, 1).multiplyScalar(eyeDistance / 8);
 
                 handles.push(...this.scalePeripheral.children);
+            } else if (this.mode === 'mirror') {
+                this.mirrorPeripheral.position.copy(multiObjectPosition);
+                this.mirrorPeripheral.quaternion.copy(objectQuaternion);
+                this.mirrorPeripheral.scale.set(1, 1, 1).multiplyScalar(eyeDistance / 8);
             }
-
 
             // Highlight peripherals internals based on axis selected
             for (const handle of handles) {
@@ -590,9 +623,33 @@ class TransformControls extends Object3D {
 
                 if (this.axis) {
                     if (handle.label === this.axis || handle.label === OUTLINE) {
-                        handle.material.opacity = 1;
+                        // handle.material.opacity = 1;
+                        const RED2 = 0xb32426;
+                        const GREEN2 = 0x287303;
+                        const BLUE2 = 0x0064c2;
+                        if (handle.label === 'X') {
+                            handle.material.color.set(RED2);
+                        } else if (handle.label === 'Y') {
+                            handle.material.color.set(GREEN2);
+                        } else if (handle.label === 'Z') {
+                            handle.material.color.set(BLUE2);
+                        } else if (handle.label === 'XY') {
+                            handle.material.color.set(BLUE2);
+                        }
                     } else {
-                        handle.material.opacity = 0.15;
+                        // handle.material.opacity = 1;
+                        const RED = 0xff5759;
+                        const GREEN = 0x4cb518;
+                        const BLUE = 0x1890ff;
+                        if (handle.label === 'X') {
+                            handle.material.color.set(RED);
+                        } else if (handle.label === 'Y') {
+                            handle.material.color.set(GREEN);
+                        } else if (handle.label === 'Z') {
+                            handle.material.color.set(BLUE);
+                        } else if (handle.label === 'XY') {
+                            handle.material.color.set(BLUE);
+                        }
                     }
                 }
             }

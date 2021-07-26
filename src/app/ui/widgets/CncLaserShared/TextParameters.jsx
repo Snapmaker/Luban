@@ -137,7 +137,7 @@ class TextParameters extends PureComponent {
                                     value={parseInt(fontSize, 10)}
                                     onChange={actions.onChangeSize}
                                 />
-                                <span className="sm-flex__input-unit-8">pt</span>
+                                <span className="sm-flex__input-unit-8 color-black-5">pt</span>
                             </div>
                         </TipTrigger>
                     </React.Fragment>

@@ -122,7 +122,7 @@ class Laser extends PureComponent {
                                     min={0}
                                     onChange={actions.onChangeMaterialThickness}
                                 />
-                                <span className="sm-flex__input-unit-8">mm</span>
+                                <span className="sm-flex__input-unit-8 color-black-5">mm</span>
                             </div>
                         )}
                         {isLaserPrintAutoMode && workPosition.isFourAxis && (
@@ -136,7 +136,7 @@ class Laser extends PureComponent {
                                     min={0}
                                     onChange={actions.onChangeFourAxisMaterialThickness}
                                 />
-                                <span className="sm-flex__input-unit-8">mm</span>
+                                <span className="sm-flex__input-unit-8 color-black-5">mm</span>
                             </div>
                         )}
                         {isLaserPrintAutoMode && laserFocalLength && (
@@ -149,7 +149,7 @@ class Laser extends PureComponent {
                                         disabled
                                         value={laserFocalLength.toFixed(2)}
                                     />
-                                    <span className="sm-flex__input-unit-8">mm</span>
+                                    <span className="sm-flex__input-unit-8 color-black-5">mm</span>
                                 </div>
                                 <div className="sm-flex height-32 justify-space-between margin-vertical-8">
                                     <span>{i18n._('Z Offset')}</span>
@@ -159,7 +159,7 @@ class Laser extends PureComponent {
                                         disabled
                                         value={(laserFocalLength + materialThickness).toFixed(2)}
                                     />
-                                    <span className="sm-flex__input-unit-8">mm</span>
+                                    <span className="sm-flex__input-unit-8 color-black-5">mm</span>
                                 </div>
                             </div>
                         )}
@@ -194,7 +194,7 @@ class Laser extends PureComponent {
                             size="small"
                             onChange={actions.onChangeLaserPower}
                         />
-                        <span className="height-32 sm-flex__input-unit-44">%</span>
+                        <span className="height-32 sm-flex__input-unit-44 color-black-5">%</span>
                         <SvgIcon
                             name="Reset"
                             size={22}

@@ -63,7 +63,7 @@ class WorkSpeed extends PureComponent {
                         min={0}
                         onChange={actions.onChangeWorkSpeedValue}
                     />
-                    <span className="height-32 sm-flex__input-unit-44">%</span>
+                    <span className="height-32 sm-flex__input-unit-44 color-black-5">%</span>
                     <SvgIcon
                         name="Reset"
                         size={22}

@@ -424,15 +424,19 @@ class VisualizerLeftBar extends PureComponent {
                                         <span className="sm-flex__input-unit-8 color-black-5">mm</span>
                                     </div>
                                 </div>
-                                <Button
-                                    className="margin-top-32"
-                                    type="primary"
-                                    priority="level-three"
-                                    width="100%"
-                                    onClick={actions.resetPosition}
-                                >
-                                    <span>{i18n._('Reset')}</span>
-                                </Button>
+                                {!isSupportSelected && (
+                                    <div className="sm-flex">
+                                        <Button
+                                            className="margin-top-32"
+                                            type="primary"
+                                            priority="level-three"
+                                            width="100%"
+                                            onClick={actions.resetPosition}
+                                        >
+                                            <span>{i18n._('Reset')}</span>
+                                        </Button>
+                                    </div>
+                                )}
                             </div>
                         </div>
                     )}
@@ -581,6 +585,28 @@ class VisualizerLeftBar extends PureComponent {
                                     </div>
                                 </div>
                             </div>
+                            {!isSupportSelected && (
+                                <div className="sm-flex">
+                                    <Button
+                                        className="margin-top-32 margin-right-8"
+                                        type="primary"
+                                        priority="level-three"
+                                        width="100%"
+                                        onClick={this.props.autoRotateSelectedModel}
+                                    >
+                                        <span>{i18n._('Auto Rotate')}</span>
+                                    </Button>
+                                    <Button
+                                        className="margin-top-32 margin-left-8"
+                                        type="primary"
+                                        priority="level-three"
+                                        width="100%"
+                                        onClick={actions.resetRotation}
+                                    >
+                                        <span>{i18n._('Reset')}</span>
+                                    </Button>
+                                </div>
+                            )}
                         </div>
                     )}
 

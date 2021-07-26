@@ -60,7 +60,7 @@ class GcodeParameters extends PureComponent {
                                     step={1}
                                     onChange={(value) => { this.props.updateGcodeConfig({ density: value }); }}
                                 />
-                                <span className="unit-text sm-flex__input-unit-in-modal line-height-32 margin-horizontal-16">dot/mm</span>
+                                <span className="unit-text sm-flex__input-unit-in-modal line-height-32 margin-horizontal-16  color-black-5">dot/mm</span>
                             </div>
                         </TipTrigger>
                     </div>
@@ -126,7 +126,7 @@ class GcodeParameters extends PureComponent {
                                 step={1}
                                 onChange={(value) => { this.props.updateGcodeConfig({ jogSpeed: value }); }}
                             />
-                            <span className="unit-text sm-flex__input-unit-in-modal line-height-32 margin-horizontal-16">mm/min</span>
+                            <span className="unit-text sm-flex__input-unit-in-modal line-height-32 margin-horizontal-16 color-black-5">mm/min</span>
                         </div>
                     </TipTrigger>
                 )}
@@ -146,7 +146,7 @@ class GcodeParameters extends PureComponent {
                                 max={6000}
                                 onChange={(value) => { this.props.updateGcodeConfig({ workSpeed: value }); }}
                             />
-                            <span className="unit-text sm-flex__input-unit-in-modal line-height-32 margin-horizontal-16">mm/min</span>
+                            <span className="unit-text sm-flex__input-unit-in-modal line-height-32 margin-horizontal-16 color-black-5">mm/min</span>
                         </div>
                     </TipTrigger>
                 )}
@@ -166,7 +166,7 @@ class GcodeParameters extends PureComponent {
                                 step={0.1}
                                 onChange={(value) => { this.props.updateGcodeConfig({ dwellTime: value }); }}
                             />
-                            <span className="unit-text sm-flex__input-unit-in-modal line-height-32 margin-horizontal-16">ms/dot</span>
+                            <span className="unit-text sm-flex__input-unit-in-modal line-height-32 margin-horizontal-16 color-black-5">ms/dot</span>
                         </div>
                     </TipTrigger>
                 )}
@@ -185,7 +185,7 @@ class GcodeParameters extends PureComponent {
                                 step={0.1}
                                 onChange={(value) => { this.props.updateGcodeConfig({ plungeSpeed: value }); }}
                             />
-                            <span className="unit-text sm-flex__input-unit-in-modal line-height-32 margin-horizontal-16">mm/min</span>
+                            <span className="unit-text sm-flex__input-unit-in-modal line-height-32 margin-horizontal-16 color-black-5">mm/min</span>
                         </div>
                     </TipTrigger>
                 )}
@@ -234,7 +234,7 @@ class GcodeParameters extends PureComponent {
                                         value={multiPassDepth}
                                         onChange={(value) => { this.props.updateGcodeConfig({ multiPassDepth: value }); }}
                                     />
-                                    <span className="unit-text sm-flex__input-unit-in-modal line-height-32 margin-horizontal-16">mm</span>
+                                    <span className="unit-text sm-flex__input-unit-in-modal line-height-32 margin-horizontal-16 color-black-5">mm</span>
                                 </div>
                             </TipTrigger>
                         )}
@@ -267,7 +267,7 @@ class GcodeParameters extends PureComponent {
                                     value={fixedPower}
                                     onChange={(value) => { this.props.updateGcodeConfig({ fixedPower: value }); }}
                                 />
-                                <span className="unit-text sm-flex__input-unit-in-modal line-height-32 margin-horizontal-16">%</span>
+                                <span className="unit-text sm-flex__input-unit-in-modal line-height-32 margin-horizontal-16 color-black-5">%</span>
                             </div>
                         </TipTrigger>
                     </div>

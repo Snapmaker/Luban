@@ -112,6 +112,11 @@ class JobType extends PureComponent {
         const { materials, coordinateMode, coordinateSize } = jobTypeState;
         const { isRotate, diameter, length } = materials;
 
+        let imgOF3axisCoordinateMode = '';
+        if (!isRotate) {
+            imgOF3axisCoordinateMode = `/resources/images/cnc-laser/working-origin-3-${coordinateMode.value}.png`;
+        }
+
         return (
             <React.Fragment>
                 {!isRotate && (
@@ -148,7 +153,7 @@ class JobType extends PureComponent {
                                         }}
                                     />
                                     <span
-                                        className="sm-flex__input-unit-l-184"
+                                        className="sm-flex__input-unit-l-184 color-black-5"
                                     >
                                         mm
                                     </span>
@@ -170,7 +175,7 @@ class JobType extends PureComponent {
                                         }}
                                     />
                                     <span
-                                        className="sm-flex__input-unit-l-184"
+                                        className="sm-flex__input-unit-l-184 color-black-5"
                                     >
                                         mm
                                     </span>
@@ -187,7 +192,7 @@ class JobType extends PureComponent {
                                     width: '100px',
                                     height: '100px'
                                 }}
-                                src="/resources/images/cnc-laser/working-origin-3.png"
+                                src={imgOF3axisCoordinateMode}
                                 role="presentation"
                                 alt="3 Axis"
                             />
@@ -244,7 +249,7 @@ class JobType extends PureComponent {
                                     }}
                                 />
                                 <span
-                                    className="sm-flex__input-unit-l-184"
+                                    className="sm-flex__input-unit-l-184 color-black-5"
                                 >
                                         mm
                                 </span>
@@ -267,7 +272,7 @@ class JobType extends PureComponent {
                                     }}
                                 />
                                 <span
-                                    className="sm-flex__input-unit-l-184"
+                                    className="sm-flex__input-unit-l-184 color-black-5"
                                 >
                                         mm
                                 </span>

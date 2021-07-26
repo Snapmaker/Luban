@@ -130,7 +130,7 @@ function SettingItem({ definitionKey, settings, isDefinitionEditable = () => tru
                         />
                     )}
                     {type === 'float' && (
-                        <span className="sm-flex__input-unit-8">{unit}</span>
+                        <span className="sm-flex__input-unit-8 color-black-5">{unit}</span>
                     )}
                     {type === 'int' && (
                         <Input
@@ -143,7 +143,7 @@ function SettingItem({ definitionKey, settings, isDefinitionEditable = () => tru
                         />
                     )}
                     {type === 'int' && (
-                        <span className="sm-flex__input-unit-8">{unit}</span>
+                        <span className="sm-flex__input-unit-8 color-black-5">{unit}</span>
                     )}
                     {type === 'bool' && (
                         <Checkbox

@@ -124,7 +124,7 @@ class Printing extends PureComponent {
                             min={0}
                             onChange={actions.onChangeNozzleTemperatureValue}
                         />
-                        <span className="height-32 sm-flex__input-unit-44">°C</span>
+                        <span className="height-32 sm-flex__input-unit-44 color-black-5">°C</span>
                         <SvgIcon
                             name="Reset"
                             size={22}
@@ -145,7 +145,7 @@ class Printing extends PureComponent {
                             min={0}
                             onChange={actions.onChangeHeatedBedTemperatureValue}
                         />
-                        <span className="height-32 sm-flex__input-unit-44">°C</span>
+                        <span className="height-32 sm-flex__input-unit-44 color-black-5">°C</span>
                         <SvgIcon
                             name="Reset"
                             size={22}

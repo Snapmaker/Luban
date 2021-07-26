@@ -31,15 +31,19 @@ class PrintableCube extends Object3D {
 
     _setup() {
         // Faces
-        const bottom = Grid.createGrid(this.size.x, this.size.y, 10);
+        const bottom = Grid.createGrid(this.size.x, this.size.y, 10, '#D5D6D9');
         bottom.position.set(0, 0, 0);
         this.add(bottom);
 
-        const top = Rectangle.createRectangle(this.size.x, this.size.y);
+        const top = Rectangle.createRectangle(this.size.x, this.size.y, '#85888C');
         top.position.set(0, 0, this.size.z);
         this.add(top);
 
-        const left = Rectangle.createRectangle(this.size.z, this.size.y);
+        const bottomBorder = top.clone();
+        bottomBorder.position.set(0, 0, 0);
+        this.add(bottomBorder);
+
+        const left = Rectangle.createRectangle(this.size.z, this.size.y, '#85888C');
         left.rotateY(-Math.PI / 2);
         left.position.set(-this.size.x / 2, 0, this.size.z / 2);
         this.add(left);

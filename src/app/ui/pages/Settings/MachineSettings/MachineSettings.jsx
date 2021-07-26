@@ -205,7 +205,7 @@ function MachineSettings() {
                     disabled={!editable}
                     onChange={actions.onChangeSizeX}
                 />
-                <span className="sm-flex__input-unit-l-128">mm</span>
+                <span className="sm-flex__input-unit-l-128 color-black-5">mm</span>
             </div>
             <div className="margin-top-16">{i18n._('Y (Depth)')}</div>
             <div className="position-re sm-flex height-32">
@@ -215,7 +215,7 @@ function MachineSettings() {
                     disabled={!editable}
                     onChange={actions.onChangeSizeY}
                 />
-                <span className="sm-flex__input-unit-l-128">mm</span>
+                <span className="sm-flex__input-unit-l-128 color-black-5">mm</span>
             </div>
             <div className="margin-top-16">{i18n._('Z (Height)')}</div>
             <div className="position-re sm-flex height-32">
@@ -225,7 +225,7 @@ function MachineSettings() {
                     disabled={!editable}
                     onChange={actions.onChangeSizeZ}
                 />
-                <span className="sm-flex__input-unit-l-128">mm</span>
+                <span className="sm-flex__input-unit-l-128 color-black-5">mm</span>
             </div>
         </div>
     );

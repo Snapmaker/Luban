@@ -171,7 +171,7 @@ class TestFocus extends PureComponent {
                             value={this.state.workSpeed}
                             onChange={actions.onChangeWorkSpeed}
                         />
-                        <span className="sm-flex__input-unit-8">mm/min</span>
+                        <span className="sm-flex__input-unit-8 color-black-5">mm/min</span>
                     </TipTrigger>
                 </div>
                 <div className="sm-flex height-32 justify-space-between margin-vertical-8">
@@ -195,7 +195,7 @@ class TestFocus extends PureComponent {
                             value={this.state.power}
                             onChange={actions.onChangePower}
                         />
-                        <span className="sm-flex__input-unit-8">%</span>
+                        <span className="sm-flex__input-unit-8 color-black-5">%</span>
                     </TipTrigger>
                 </div>
                 <Button

@@ -186,7 +186,7 @@ class TransformationSection extends PureComponent {
                                                 actions.onChangeLogicalX(value);
                                             }}
                                         />
-                                        <span className="sm-flex__input-unit-8">mm</span>
+                                        <span className="sm-flex__input-unit-8 color-black-5">mm</span>
                                     </span>
                                 </div>
                                 <div className="display-inline position-re">
@@ -205,7 +205,7 @@ class TransformationSection extends PureComponent {
                                                 actions.onChangeLogicalY(value);
                                             }}
                                         />
-                                        <span className="sm-flex__input-unit-8">mm</span>
+                                        <span className="sm-flex__input-unit-8 color-black-5">mm</span>
                                     </span>
                                 </div>
                             </span>
@@ -234,7 +234,7 @@ class TransformationSection extends PureComponent {
                                                 actions.onChangeWidth(value);
                                             }}
                                         />
-                                        <span className="sm-flex__input-unit-8">mm</span>
+                                        <span className="sm-flex__input-unit-8 color-black-5">mm</span>
                                     </span>
                                 </div>
                                 <button
@@ -266,7 +266,7 @@ class TransformationSection extends PureComponent {
                                                 actions.onChangeHeight(value);
                                             }}
                                         />
-                                        <span className="sm-flex__input-unit-8">mm</span>
+                                        <span className="sm-flex__input-unit-8 color-black-5">mm</span>
                                     </span>
                                 </div>
                             </div>
