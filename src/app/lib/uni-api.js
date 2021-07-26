@@ -379,18 +379,10 @@ const Window = {
         }
     },
     reload() {
-        if (isElectron()) {
-            window.require('electron').remote.BrowserWindow.getFocusedWindow().webContents.reload();
-        } else {
-            window.location.reload(false);
-        }
+        window.location.href = '/';
     },
     forceReload() {
-        if (isElectron()) {
-            window.require('electron').remote.BrowserWindow.getFocusedWindow().webContents.reloadIgnoringCache();
-        } else {
-            window.location.reload(true);
-        }
+        window.location.href = '/';
     },
     viewInBrowser() {
         if (isElectron()) {

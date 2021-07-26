@@ -503,6 +503,22 @@ export const MACHINE_SERIES = {
             }
         }
     },
+    ORIGINAL_LZ: {
+        value: 'Original Long Z-axis',
+        label: 'Snapmaker Original with Long Z-axis',
+        setting: {
+            size: {
+                x: 125,
+                y: 125,
+                z: 221
+            },
+            laserSize: {
+                x: 125,
+                y: 125,
+                z: 221
+            }
+        }
+    },
     A150: {
         value: 'A150',
         label: 'Snapmaker 2.0 A150',
