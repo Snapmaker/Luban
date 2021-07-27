@@ -30,9 +30,11 @@ const QuickStart = (props) => {
             case MACHINE_SERIES.ORIGINAL.value:
             case MACHINE_SERIES.CUSTOM.value:
                 setCaseConfig(CaseConfigOriginal);
+                setCaseConfigFourAxis([]);
                 break;
             case MACHINE_SERIES.A150.value:
                 setCaseConfig(CaseConfig150);
+                setCaseConfigFourAxis([]);
                 break;
             case MACHINE_SERIES.A250.value:
                 setCaseConfig(CaseConfig250);
@@ -64,7 +66,7 @@ const QuickStart = (props) => {
 
     return (
         <div className={styles['quick-start-container']}>
-            <div className={styles['title-label']}>
+            <div className={classNames(styles['title-label'], 'highlight-heading', 'margin-bottom-16')}>
                 {i18n._('Fast Start')}
             </div>
             <div className={
@@ -82,13 +84,17 @@ const QuickStart = (props) => {
                             onClick={() => loadCase(caseItem)}
                         >
                             <div>
-                                <img className={styles['case-img']} src={caseItem.imgSrc} alt="" />
-                                <span className={styles['tag-icon']}>
-                                    {i18n._(caseItem.tag_i18n)}
-                                </span>
+                                <div className={styles.imgWrapper}>
+                                    <img className={styles['case-img']} src={caseItem.imgSrc} alt="" />
+                                </div>
                             </div>
-                            <div className={styles['case-title']}>
-                                {caseItem.title}
+                            <div className={classNames(styles.caseText)}>
+                                <div className={classNames(styles['case-title'], 'heading-3')}>
+                                    {caseItem.title}
+                                </div>
+                                <div className={classNames('disabled-text')}>
+                                    {i18n._(caseItem.tag_i18n)}
+                                </div>
                             </div>
                         </div>
                     );
@@ -102,14 +108,18 @@ const QuickStart = (props) => {
                             onClick={() => loadCase(caseFourAxisItem)}
                         >
                             <div>
-                                <img className={styles['case-img']} src={caseFourAxisItem.imgSrc} alt="" />
-                                <span className={styles['tag-icon']}>
+                                <div className={styles.imgWrapper}>
+                                    <img className={styles['case-img']} src={caseFourAxisItem.imgSrc} alt="" />
+                                </div>
+                            </div>
+                            <div className={classNames(styles.caseText)}>
+                                <div className={classNames(styles['case-title'], 'heading-3')}>
+                                    {caseFourAxisItem.title}
+                                </div>
+                                <div className={classNames('disabled-text')}>
                                     <span style={{ paddingRight: 2 }}>{i18n._('4-axis')}</span>
                                     <span>{i18n._(caseFourAxisItem.tag_i18n)}</span>
-                                </span>
-                            </div>
-                            <div className={styles['case-title']}>
-                                {caseFourAxisItem.title}
+                                </div>
                             </div>
                         </div>
                     );

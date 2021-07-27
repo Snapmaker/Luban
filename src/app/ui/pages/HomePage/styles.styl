@@ -1,264 +1,456 @@
-@import "../../../styles/variables.styl"
+// @import "../../../styles/variables.styl"
 
-[class~='appbar'] {
-    .create-new-project {
-        .beginPart {
-            margin-top: calc(48px);
-        }
+// [class~='appbar'] {
+//     .create-new-project {
+//         .beginPart {
+//             margin-top: calc(48px);
+//         }
+//     }
+// }
+
+// .icon
+//     width: 5.5vw
+//     height: 5.5vw
+//     min-width 35px
+//     min-height 35px
+//     display: inline-block
+//     vertical-align: middle
+//     filter: invert(60%)
+// .title-label
+//     font-size: 18px
+//     line-height 24px
+//     font-weight: bold
+// .sub-title
+//     font-size 1.2vw
+//     line-height 1.2vw
+
+.secondLine {
+  width 95vw
+  height auto
+  display flex
+  justify-content space-between
+  align-items center
+  margin 32px auto;
+  .quick-start-container {
+    width 62.4vw;
+    .case-list {
+      height 21.7vw
+      max-height 313px
+      overflow auto
+      background #fff
+      border-radius 24px
     }
+  }
+  .more-info {
+    width 31.2vw;
+    .resource-list {
+      height 21.7vw
+      max-height 313px
+      overflow auto
+      background #fff
+      border-radius 24px
+    }
+  }
 }
-
-.icon
-    width: 5.5vw
-    height: 5.5vw
-    min-width 35px
-    min-height 35px
-    display: inline-block
-    vertical-align: middle
-    filter: invert(60%)
-.title-label
-    font-size: 18px
-    line-height 24px
-    font-weight: bold
-.sub-title
-    font-size 1.2vw
-    line-height 1.2vw
-
 .create-new-project
     width 95vw
     height auto
-    min-width 670px
-    min-height 150px
-    margin 16px auto 0
-    .beginPart
-        width 95vw
-        height auto
-        min-width 670px;
-        min-height 150px
-        border-radius: 8px
-        margin 24px auto 0
-        display: flex
-        justify-content space-between
-        .beginContainer
-            width: 65%
-            min-width 450px
-            display flex
-            flex-direction column
-            .link-bar
-                height 100%
-                background #fff
-                margin-top 15px
-                display: flex
-                align-items: center
-                justify-content space-between
-                .icon-3dp
-                    background: url('./images/3dp.svg') no-repeat 0 0
-                .icon-laser
-                    background: url('./images/laser.svg') no-repeat 0 0
-                .icon-cnc
-                    background: url('./images/cnc.svg') no-repeat 0 0
-                .icon-xyz
-                    background: url('./images/xyz.svg') no-repeat 0 0
-
-                .workspace, .3dp, .laser, .cnc
-                    width 13vw
-                    min-width 90px
-                    height 15.6vw
-                    min-height 90px
-                    padding-bottom 2.2vw
-                    > a
-                        height 100%
-                        display flex
-                        flex-direction column
-                        align-items center
-                        justify-content flex-end
-                        > i
-                            margin-bottom 2.64vw
-                        &:hover
-                            .icon
-                                filter: invert(.5) sepia(1) saturate(5) hue-rotate(175deg)
-                .laser
-                    &-axis-select
-                        display none
-                    &:hover
-                        .icon-laser
-                            display none
-                        .laser-axis-select
-                            display flex
-                            flex-direction column
-                            width 6vw
-                            height 5.5vw
-                            margin-bottom 2.64vw
-                            .axis
-                                height 50%
-                                display flex
-                                justify-content center
-                                align-items center
-                                border 2px solid #86868b
-                                font-size 16px
-                                font-weight bold
-                                &:hover
-                                    color #3aabff
-                                    border 2px solid #3aabff
-                .cnc
-                    &-axis-select
-                        display none
-                    &:hover
-                        .icon-cnc
-                            display none
-                        .cnc-axis-select
-                            display flex
-                            flex-direction column
-                            width 6vw
-                            height 5.5vw
-                            margin-bottom 2.64vw
-                            .axis
-                                height 50%
-                                display flex
-                                justify-content center
-                                align-items center
-                                border 2px solid #86868b
-                                font-size 16px
-                                font-weight bold
-                                &:hover
-                                    color #3aabff
-                                    border 2px solid #3aabff
-        .nearly-container
-            // flex-grow 3
-            width 32%
-            font-size 1.2vw
-            line-height 1.2vw
-            .file-container
-                height 15.6vw
-                min-height 90px
-                font-size 1vw
-                line-height 1.2vw
-                margin-top 15px
-                padding 2.36vw 1.67vw 1.67vw
-                background #fff
-                display flex
-                flex-direction column
-                justify-content space-between
-                .recent-file-list
-                    height 8vw
-                    display flex
-                    flex-wrap wrap
-                    .file-item
-                        width 50%
-                        overflow hidden
-                        white-space nowrap
-                        text-overflow ellipsis
-                        cursor pointer
-
-
-.quick-start-container
-    width 95vw
-    min-width 670px
-    margin 50px auto 0
-    .small-list
-        width 48.75%
-    .case-list
+    background #fff
+    margin 82px auto 0
+    border-radius 24px
+    .beginPart {
+      display: flex;
+      flex-direction column
+      align-items center
+      justify-content center
+      padding: 2.22vw 2.22vw 0
+      .headingPart {
         display flex
+        width 100%
+        justify-content center
         align-item center
-        justify-content space-between
-        margin-top 24px
-
-        .case-item
-            width 13.37vw
-            height auto
-            min-width 90px
-            min-height 90px
-            cursor pointer
-            font-size 12px
-            position relative
-            .case-title
-                font-size 14px
-                line-height 22px
-                margin: 0.9vw 0 0.5vw
-                width 13vw
-                overflow hidden
-                text-overflow ellipsis
-                white-space nowrap
-
-            .tag-icon
-                background #D6D6D7
-                padding 2px 4px
-                border-radius 2px
-                margin-top 4px
-                font-size 12px
-                line-height 0.9vw
-                position absolute
-                top -3px
-                left 0px
-                color #86868B
-            img
-                // height 138px
-                // width: 200px
-                width 100%
-                height 60%
-                border 2px solid #D6D6D7
-                border-radius 4px
-                background #fff
-                padding 20px
-
-.more-info
-    width 95vw
-    min-width 670px
-    margin 50px auto 20px
-    font-size 1.3vw
-    .resource-list
-        display flex
-        justify-content space-between
-        align-items center
-        margin-top 24px
-        > a
-            width 13.37vw
-            height auto
-            display flex
-            flex-direction column
-            align-items center
-            min-width 90px
-            font-size 14px
-            line-height 28px
-            > img
-                width 100%
-                padding 2.7vw 4.6vw
-                border 2px solid #D6D6D7
-                margin-bottom 0.9vw
-                height 9.2vw
-.setting-modal
-    .lang-select .title-label
-        margin-bottom 48px
-    .lang-select
-        display flex
-        flex-direction column
-        align-items center
-        .lang-select-input
-            width 160px
-            height 30px
-    .machine-select
-        display flex
-        flex-direction column
-        align-items center
-        .machine-content
-            width 100%
-            display flex
-            justify-content space-evenly
-            align-items center
-            .machine-img
+      }
+      .beginContainer {
+        width 100%
+        .link-bar {
+          height 166px
+          display flex
+          flex-direction wrap
+          justify-content center
+          align-items center
+          .3dp, .laser, .cnc, .workspace {
+            > a {
+              display flex
+              flex-direction column
+              justify-content center
+              align-items center
+              width 16.66vw
+              max-width 240px
+              .imgWrapper {
+                width: 100%;
+                max-height 148px
+                height: 10.28vw;
+                min-height 120px
                 display flex
-                //flex-direction column
+                justify-content center
                 align-items center
-                justify-content space-between
-                > img
-                    width 160px
-            .machine-info
-                min-width 200px
-                .z-axis-select
+                margin-bottom 18px
+                > img {
+                  display block
+                }
+                .cnc-axis-select, .laser-axis-select {
+                  display none
+                }
+                .three-axis-select, .four-axis-select {
+                    height 32px
+                    width 100%
+                    text-align center
+                    line-height 32px
+                    // border 1px solid #b9bcbf
+                    border-radius 8px
+                }
+                .three-axis-select {
+                  margin-bottom 12px
+                }
+                &:hover {
+                  cursor pointer
+                  box-shadow 0px 0px 23px -5px #a5a5a550
+                  border-radius: 24px
+                  .cnc-axis-select, .laser-axis-select {
                     display flex
-                    align-items center
-                    font-size 14px
-                    margin-bottom 14px
-                    > input
-                        margin-right 8px
-                        cursor pointer
+                    flex-direction column
+                    justify-content center
+                    height 120px
+                    width 120px
+                  }
+                  .laser-img, .cnc-img {
+                    display none
+                  }
+                }
+              }
+            }
+          }
+        }
+        .nearlyFile {
+          height: 166px;
+          width 100%
+          .recent-file-list {
+            display flex
+            flex-wrap wrap
+            justify-content flex-start
+            .file-item {
+              width 20.14vw;
+              border-bottom 1px solid #D5D6D9;
+              margin-right: 2.88vw;
+              height 55.3px
+              line-height 75.3px;
+              > span {
+                display inline-block;
+                width 90%
+                overflow hidden
+                white-space nowrap
+                text-overflow ellipsis
+                &:hover {
+                  cursor pointer
+                }
+              }
+            }
+            .file-item:nth-child(4n+4) {
+              margin-right 0px
+            }
+          }
+        }
+      }
+    }
+
+.quick-start-container {
+  .case-list {
+    padding 2vw 3.33vw
+    display flex
+    flex-wrap wrap
+    justify-content space-between
+    align-content space-around
+    .case-item {
+      width 32%
+      display flex
+      align-items 
+      padding: 8px
+      .imgWrapper {
+        // height 97px
+        // width 97px
+        height 6.74vw
+        width 6.74vw
+        max-height 97px
+        min-height 69px
+        max-width 97px
+        min-width 69px
+        display flex
+        // align-items center
+        background: #EEEFF0
+        border-radius 16px
+        > img {
+          width: 100%
+        }
+      }
+      .caseText {
+        width 10vw;
+        white-space normal
+        padding: 6px 0 0 12px
+      }
+      &:hover {
+        cursor pointer
+        border-radius 24px
+        box-shadow 0 0 23px -5px #a5a5a550;
+      }
+    }
+  }
+}
+.more-info {
+  .resource-list {
+    padding: 2vw 3.33vw 7vw;
+    display flex
+    flex-wrap wrap
+    align-items center
+    .listItem {
+      width 65%
+    }
+    .right-part {
+      width: 35%
+    }
+  }
+}
+//     min-width 670px
+//     min-height 150px
+//     margin 16px auto 0
+//     .beginPart
+//         width 95vw
+//         height auto
+//         min-width 670px;
+//         min-height 150px
+//         border-radius: 8px
+//         margin 24px auto 0
+//         display: flex
+//         justify-content space-between
+//         .beginContainer
+//             width: 65%
+//             min-width 450px
+//             display flex
+//             flex-direction column
+//             .link-bar
+//                 height 100%
+//                 background #fff
+//                 margin-top 15px
+//                 display: flex
+//                 align-items: center
+//                 justify-content space-between
+//                 .icon-3dp
+//                     background: url('./images/3dp.svg') no-repeat 0 0
+//                 .icon-laser
+//                     background: url('./images/laser.svg') no-repeat 0 0
+//                 .icon-cnc
+//                     background: url('./images/cnc.svg') no-repeat 0 0
+//                 .icon-xyz
+//                     background: url('./images/xyz.svg') no-repeat 0 0
+
+//                 .workspace, .3dp, .laser, .cnc
+//                     width 13vw
+//                     min-width 90px
+//                     height 15.6vw
+//                     min-height 90px
+//                     padding-bottom 2.2vw
+//                     > a
+//                         height 100%
+//                         display flex
+//                         flex-direction column
+//                         align-items center
+//                         justify-content flex-end
+//                         > i
+//                             margin-bottom 2.64vw
+//                         &:hover
+//                             .icon
+//                                 filter: invert(.5) sepia(1) saturate(5) hue-rotate(175deg)
+//                 .laser
+//                     &-axis-select
+//                         display none
+//                     &:hover
+//                         .icon-laser
+//                             display none
+//                         .laser-axis-select
+//                             display flex
+//                             flex-direction column
+//                             width 6vw
+//                             height 5.5vw
+//                             margin-bottom 2.64vw
+//                             .axis
+//                                 height 50%
+//                                 display flex
+//                                 justify-content center
+//                                 align-items center
+//                                 border 2px solid #86868b
+//                                 font-size 16px
+//                                 font-weight bold
+//                                 &:hover
+//                                     color #3aabff
+//                                     border 2px solid #3aabff
+//                 .cnc
+//                     &-axis-select
+//                         display none
+//                     &:hover
+//                         .icon-cnc
+//                             display none
+//                         .cnc-axis-select
+//                             display flex
+//                             flex-direction column
+//                             width 6vw
+//                             height 5.5vw
+//                             margin-bottom 2.64vw
+//                             .axis
+//                                 height 50%
+//                                 display flex
+//                                 justify-content center
+//                                 align-items center
+//                                 border 2px solid #86868b
+//                                 font-size 16px
+//                                 font-weight bold
+//                                 &:hover
+//                                     color #3aabff
+//                                     border 2px solid #3aabff
+//         .nearly-container
+//             // flex-grow 3
+//             width 32%
+//             font-size 1.2vw
+//             line-height 1.2vw
+//             .file-container
+//                 height 15.6vw
+//                 min-height 90px
+//                 font-size 1vw
+//                 line-height 1.2vw
+//                 margin-top 15px
+//                 padding 2.36vw 1.67vw 1.67vw
+//                 background #fff
+//                 display flex
+//                 flex-direction column
+//                 justify-content space-between
+//                 .recent-file-list
+//                     height 8vw
+//                     display flex
+//                     flex-wrap wrap
+//                     .file-item
+//                         width 50%
+//                         overflow hidden
+//                         white-space nowrap
+//                         text-overflow ellipsis
+//                         cursor pointer
+
+
+// .quick-start-container
+//     width 95vw
+//     min-width 670px
+//     margin 50px auto 0
+//     .small-list
+//         width 48.75%
+//     .case-list
+//         display flex
+//         align-item center
+//         justify-content space-between
+//         margin-top 24px
+
+//         .case-item
+//             width 13.37vw
+//             height auto
+//             min-width 90px
+//             min-height 90px
+//             cursor pointer
+//             font-size 12px
+//             position relative
+//             .case-title
+//                 font-size 14px
+//                 line-height 22px
+//                 margin: 0.9vw 0 0.5vw
+//                 width 13vw
+//                 overflow hidden
+//                 text-overflow ellipsis
+//                 white-space nowrap
+
+//             .tag-icon
+//                 background #D6D6D7
+//                 padding 2px 4px
+//                 border-radius 2px
+//                 margin-top 4px
+//                 font-size 12px
+//                 line-height 0.9vw
+//                 position absolute
+//                 top -3px
+//                 left 0px
+//                 color #86868B
+//             img
+//                 // height 138px
+//                 // width: 200px
+//                 width 100%
+//                 height 60%
+//                 border 2px solid #D6D6D7
+//                 border-radius 4px
+//                 background #fff
+//                 padding 20px
+
+// .more-info
+//     width 95vw
+//     min-width 670px
+//     margin 50px auto 20px
+//     font-size 1.3vw
+//     .resource-list
+//         display flex
+//         justify-content space-between
+//         align-items center
+//         margin-top 24px
+//         > a
+//             width 13.37vw
+//             height auto
+//             display flex
+//             flex-direction column
+//             align-items center
+//             min-width 90px
+//             font-size 14px
+//             line-height 28px
+//             > img
+//                 width 100%
+//                 padding 2.7vw 4.6vw
+//                 border 2px solid #D6D6D7
+//                 margin-bottom 0.9vw
+//                 height 9.2vw
+// .setting-modal
+//     .lang-select .title-label
+//         margin-bottom 48px
+//     .lang-select
+//         display flex
+//         flex-direction column
+//         align-items center
+//         .lang-select-input
+//             width 160px
+//             height 30px
+//     .machine-select
+//         display flex
+//         flex-direction column
+//         align-items center
+//         .machine-content
+//             width 100%
+//             display flex
+//             justify-content space-evenly
+//             align-items center
+//             .machine-img
+//                 display flex
+//                 //flex-direction column
+//                 align-items center
+//                 justify-content space-between
+//                 > img
+//                     width 160px
+//             .machine-info
+//                 min-width 200px
+//                 .z-axis-select
+//                     display flex
+//                     align-items center
+//                     font-size 14px
+//                     margin-bottom 14px
+//                     > input
+//                         margin-right 8px
+//                         cursor pointer

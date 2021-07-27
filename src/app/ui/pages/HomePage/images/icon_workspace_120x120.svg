@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="120px" height="120px" viewBox="0 0 120 120" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <title>icon_workspace_120x120</title>
+    <g id="icon_workspace_120x120" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <g id="编组" transform="translate(33.000000, 18.000000)" stroke="#2A2C2E">
+            <rect id="矩形" stroke-width="2.28571429" fill="#FFFFFF" x="1.14285714" y="1.14285714" width="51.7142857" height="79.7142857" rx="2"></rect>
+            <line x1="13.5200915" y1="27" x2="13.5200915" y2="71" id="路径-5" stroke-width="2" stroke-linecap="round"></line>
+            <line x1="27.5625" y1="27" x2="27.5625" y2="71" id="路径-5备份" stroke-width="2" stroke-linecap="round"></line>
+            <line x1="41.6450915" y1="27" x2="41.6450915" y2="71" id="路径-5备份-2" stroke-width="2" stroke-linecap="round"></line>
+            <ellipse id="椭圆形" stroke-width="1.8" fill="#FFFFFF" cx="27.5" cy="59.9324324" rx="3.6" ry="3.58648649"></ellipse>
+            <ellipse id="椭圆形备份" stroke-width="1.8" fill="#FFFFFF" cx="13.5200915" cy="46.8648649" rx="3.6" ry="3.58648649"></ellipse>
+            <ellipse id="椭圆形备份-2" stroke-width="1.8" fill="#FFFFFF" cx="41.6450915" cy="37.7702703" rx="3.6" ry="3.58648649"></ellipse>
+            <line x1="0" y1="17" x2="52" y2="17" id="路径-6" stroke-width="2"></line>
+            <line x1="47.5" y1="5" x2="47.5" y2="13" id="路径-5备份" stroke-width="2" stroke-linecap="round"></line>
+            <line x1="43.5" y1="7" x2="43.5" y2="13" id="路径-5备份-3" stroke-width="2" stroke-linecap="round"></line>
+            <line x1="39.5" y1="9" x2="39.5" y2="13" id="路径-5备份-4" stroke-width="2" stroke-linecap="round"></line>
+            <g id="编组-2" transform="translate(5.000000, 5.000000)" fill="#2A2C2E" stroke-width="2.28571429">
+                <rect id="矩形" x="1.14285714" y="1.14285714" width="1.71428571" height="1.71428571" rx="0.857142857"></rect>
+                <rect id="矩形备份" x="6.14285714" y="1.14285714" width="1.71428571" height="1.71428571" rx="0.857142857"></rect>
+            </g>
+        </g>
+    </g>
+</svg>
