@@ -44,8 +44,9 @@ class ChangedReactSelect extends PureComponent {
             const option = this.props.options.find(d => d.value === value);
             this.props.onChange && this.props.onChange(option);
         },
-        handleTreeChange: (option) => {
-            this.props.onChange && this.props.onChange(option);
+        handleTreeChange: (option, allTreeOptions) => {
+            const currentOption = allTreeOptions.find(d => d.definitionId === option);
+            this.props.onChange && this.props.onChange(currentOption);
         }
     }
 
@@ -77,28 +78,29 @@ class ChangedReactSelect extends PureComponent {
                 if (group.definitionId === 'new') {
                     allTreeOptions.push(group);
                 } else {
-                    allTreeOptions.push({ disabled: true, label: group.label });
+                    allTreeOptions.push({ disabled: true, label: group.label, isTitle: true });
                 }
                 group.options && group.options.forEach((item) => {
                     allTreeOptions.push(item);
                 });
             });
-
             return (
                 <div className={classNames(styles['override-select'], className)} style={{ width: size }}>
                     <TreeSelect
                         className={styles[size]}
-                        value={defaultValue}
-                        onChange={this.actions.handleTreeChange}
+                        value={defaultValue.definitionId}
+                        // value={firstValue}
+                        onChange={(option) => this.actions.handleTreeChange(option, allTreeOptions)}
                         disabled={disabled}
+                        treeDefaultExpandAll
                     >
                         {(allTreeOptions.map((option) => {
                             return (
                                 <TreeNode
                                     key={option.definitionId || option.label}
                                     disabled={!!option.disabled}
-                                    value={option}
-                                    title={option?.name || option.label}
+                                    value={option.definitionId}
+                                    title={option.label || option?.name}
                                 />
                             );
                         }))}

@@ -1,39 +1,51 @@
 import React from 'react';
+import classNames from 'classnames';
+import i18next from 'i18next';
 import i18n from '../../../lib/i18n';
 import styles from './styles.styl';
 
 const MoreInfo = () => {
+    const lang = i18next.language;
     return (
         <div className={styles['more-info']}>
-            <div className={styles['title-label']}>
+            <div className={classNames('highlight-heading', 'margin-bottom-16')}>
                 {i18n._('More Resource')}
             </div>
-            <div className={styles['resource-list']}>
-                {/* <a href="javascript;">
-                    {i18n._('Software Manual')}
-                </a> */}
-                <a href="https://support.snapmaker.com/hc/en-us" target="_blank" rel="noopener noreferrer">
-                    <img src={require('./images/question.png')} alt="" />
-                    <div>{i18n._('Support Center')}</div>
+            <div className={classNames(styles['resource-list'])}>
+                <a href="javascript;" target="_blank" rel="noopener noreferrer" className={classNames(styles.listItem)}>
+                    <span className={classNames('heading-3-normal-with-hover')}>
+                      Software Manual
+                    </span>
                 </a>
-                <a href="https://www.youtube.com/c/Snapmaker/playlists" target="_blank" rel="noopener noreferrer">
-                    <img src={require('./images/question.png')} alt="" />
-                    <div>{i18n._('Video Tutorial')}</div>
+                <a className={classNames(styles.listItem, styles['right-part'])} href={lang === 'en' ? 'https://support.snapmaker.com/hc/en-us' : 'https://support.snapmaker.com/hc/zh-cn'} target="_blank" rel="noopener noreferrer">
+                    <span className={classNames('heading-3-normal-with-hover')}>
+                      Support
+                    </span>
                 </a>
-                <a href="https://forum.snapmaker.com/c/snapmaker-luban" target="_blank" rel="noopener noreferrer">
-                    <img src={require('./images/question.png')} alt="" />
-                    <div>{i18n._('Forum')}</div>
+                <a className={classNames(styles.listItem)} href="https://www.youtube.com/c/Snapmaker/playlists" target="_blank" rel="noopener noreferrer">
+                    <span className={classNames('heading-3-normal-with-hover')}>
+                      Video Tutorial
+                    </span>
                 </a>
-                <a href="https://store.snapmaker.com" target="_blank" rel="noopener noreferrer">
-                    <img src={require('./images/question.png')} alt="" />
-                    <div>{i18n._('Store')}</div>
+                <a className={classNames(styles.listItem, styles['right-part'])} href="https://forum.snapmaker.com/" target="_blank" rel="noopener noreferrer">
+                    <span className={classNames('heading-3-normal-with-hover')}>
+                      Forum
+                    </span>
                 </a>
-                <a href="https://www.myminifactory.com/" target="_blank" rel="noopener noreferrer">
-                    <img src={require('./images/question.png')} alt="" />
-                    <div>{i18n._('Myminifactory')}</div>
+                <a className={classNames(styles.listItem)} href={lang === 'en' ? 'https://snapmaker.com' : 'https://snapmaker.cn/'} target="_blank" rel="noopener noreferrer">
+                    <span className={classNames('heading-3-normal-with-hover')}>
+                      Snapmaker.com
+                    </span>
                 </a>
-                <a href="javascript;">
-                    {/* {i18n._('Software Manual')} */}
+                <a className={classNames(styles.listItem, styles['right-part'])} href="https://shop.snapmaker.com/" target="_blank" rel="noopener noreferrer">
+                    <span className={classNames('heading-3-normal-with-hover')}>
+                      Shopify
+                    </span>
+                </a>
+                <a className={classNames(styles.listItem)} href="https://www.myminifactory.com/" target="_blank" rel="noopener noreferrer">
+                    <span className={classNames('heading-3-normal-with-hover')}>
+                      Myminifactory
+                    </span>
                 </a>
             </div>
         </div>
