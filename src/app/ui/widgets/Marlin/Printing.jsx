@@ -118,13 +118,13 @@ class Printing extends PureComponent {
                     <div className="sm-flex-auto">
                         <span className="height-32">{nozzleTargetTemperature} / </span>
                         <Input
+                            suffix="°C"
                             size="small"
                             value={nozzleTemperatureValue}
                             max={250}
                             min={0}
                             onChange={actions.onChangeNozzleTemperatureValue}
                         />
-                        <span className="height-32 sm-flex__input-unit-44">°C</span>
                         <SvgIcon
                             name="Reset"
                             size={22}
@@ -139,13 +139,13 @@ class Printing extends PureComponent {
                     <div className="sm-flex-auto">
                         <span className="height-32">{heatedBedTargetTemperature} / </span>
                         <Input
+                            suffix="°C"
                             size="small"
                             value={heatedBedTemperatureValue}
                             max={80}
                             min={0}
                             onChange={actions.onChangeHeatedBedTemperatureValue}
                         />
-                        <span className="height-32 sm-flex__input-unit-44">°C</span>
                         <SvgIcon
                             name="Reset"
                             size={22}

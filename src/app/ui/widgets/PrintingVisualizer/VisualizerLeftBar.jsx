@@ -396,6 +396,7 @@ class VisualizerLeftBar extends PureComponent {
                                     <span className="sm-flex-auto width-16 color-red-1">X</span>
                                     <div className="position-ab sm-flex-auto margin-horizontal-24">
                                         <Input
+                                            suffix="mm"
                                             size="small"
                                             min={-size.x / 2}
                                             max={size.x / 2}
@@ -405,13 +406,13 @@ class VisualizerLeftBar extends PureComponent {
                                                 actions.onModelAfterTransform();
                                             }}
                                         />
-                                        <span className="sm-flex__input-unit-8 color-black-5">mm</span>
                                     </div>
                                 </div>
                                 <div className="sm-flex height-32 margin-bottom-8">
                                     <span className="sm-flex-auto width-16 color-green-1">Y</span>
                                     <div className="position-ab sm-flex-auto margin-horizontal-24">
                                         <Input
+                                            suffix="mm"
                                             size="small"
                                             min={-size.y / 2}
                                             max={size.y / 2}
@@ -421,18 +422,21 @@ class VisualizerLeftBar extends PureComponent {
                                                 actions.onModelAfterTransform();
                                             }}
                                         />
-                                        <span className="sm-flex__input-unit-8 color-black-5">mm</span>
                                     </div>
                                 </div>
-                                <Button
-                                    className="margin-top-32"
-                                    type="primary"
-                                    priority="level-three"
-                                    width="100%"
-                                    onClick={actions.resetPosition}
-                                >
-                                    <span>{i18n._('Reset')}</span>
-                                </Button>
+                                {!isSupportSelected && (
+                                    <div className="sm-flex">
+                                        <Button
+                                            className="margin-top-32"
+                                            type="primary"
+                                            priority="level-three"
+                                            width="100%"
+                                            onClick={actions.resetPosition}
+                                        >
+                                            <span>{i18n._('Reset')}</span>
+                                        </Button>
+                                    </div>
+                                )}
                             </div>
                         </div>
                     )}
@@ -451,6 +455,7 @@ class VisualizerLeftBar extends PureComponent {
                                     <span className="sm-flex-auto width-16 color-red-1">X</span>
                                     <div className="position-ab sm-flex-auto margin-horizontal-24">
                                         <Input
+                                            suffix="%"
                                             size="small"
                                             min={1}
                                             value={scaleXPercent}
@@ -459,13 +464,13 @@ class VisualizerLeftBar extends PureComponent {
                                                 actions.onModelAfterTransform();
                                             }}
                                         />
-                                        <span className="sm-flex__input-unit-8 color-black-5">%</span>
                                     </div>
                                 </div>
                                 <div className="sm-flex height-32 margin-bottom-8">
                                     <span className="sm-flex-auto width-16 color-green-1">Y</span>
                                     <div className="position-ab sm-flex-auto margin-horizontal-24">
                                         <Input
+                                            suffix="%"
                                             size="small"
                                             min={1}
                                             value={scaleYPercent}
@@ -474,13 +479,13 @@ class VisualizerLeftBar extends PureComponent {
                                                 actions.onModelAfterTransform();
                                             }}
                                         />
-                                        <span className="sm-flex__input-unit-8 color-black-5">%</span>
                                     </div>
                                 </div>
                                 <div className="sm-flex height-32 margin-bottom-8">
                                     <span className="sm-flex-auto width-16 color-blue-2">Z</span>
                                     <div className="position-ab sm-flex-auto margin-horizontal-24">
                                         <Input
+                                            suffix="%"
                                             size="small"
                                             min={1}
                                             value={scaleZPercent}
@@ -489,7 +494,6 @@ class VisualizerLeftBar extends PureComponent {
                                                 actions.onModelAfterTransform();
                                             }}
                                         />
-                                        <span className="sm-flex__input-unit-8 color-black-5">%</span>
                                     </div>
                                 </div>
                                 <div className="sm-flex height-32 margin-bottom-8">
@@ -542,12 +546,12 @@ class VisualizerLeftBar extends PureComponent {
                                             size="small"
                                             min={1}
                                             value={modelSize.x}
+                                            suffix="mm"
                                             onChange={(value) => {
                                                 actions.onModelTransform({ 'scaleX': value / modelSize.x });
                                                 actions.onModelAfterTransform();
                                             }}
                                         />
-                                        <span className="sm-flex__input-unit-8 color-black-5">mm</span>
                                     </div>
                                 </div>
                                 <div className="sm-flex height-32 margin-bottom-8">
@@ -557,12 +561,12 @@ class VisualizerLeftBar extends PureComponent {
                                             size="small"
                                             min={1}
                                             value={modelSize.y}
+                                            suffix="mm"
                                             onChange={(value) => {
                                                 actions.onModelTransform({ 'scaleY': value / modelSize.y });
                                                 actions.onModelAfterTransform();
                                             }}
                                         />
-                                        <span className="sm-flex__input-unit-8 color-black-5">mm</span>
                                     </div>
                                 </div>
                                 <div className="sm-flex height-32 margin-bottom-8">
@@ -571,16 +575,38 @@ class VisualizerLeftBar extends PureComponent {
                                         <Input
                                             size="small"
                                             min={1}
+                                            suffix="mm"
                                             value={modelSize.z}
                                             onChange={(value) => {
                                                 actions.onModelTransform({ 'scaleZ': value / modelSize.z });
                                                 actions.onModelAfterTransform();
                                             }}
                                         />
-                                        <span className="sm-flex__input-unit-8 color-black-5">mm</span>
                                     </div>
                                 </div>
                             </div>
+                            {!isSupportSelected && (
+                                <div className="sm-flex">
+                                    <Button
+                                        className="margin-top-32 margin-right-8"
+                                        type="primary"
+                                        priority="level-three"
+                                        width="100%"
+                                        onClick={this.props.autoRotateSelectedModel}
+                                    >
+                                        <span>{i18n._('Auto Rotate')}</span>
+                                    </Button>
+                                    <Button
+                                        className="margin-top-32 margin-left-8"
+                                        type="primary"
+                                        priority="level-three"
+                                        width="100%"
+                                        onClick={actions.resetRotation}
+                                    >
+                                        <span>{i18n._('Reset')}</span>
+                                    </Button>
+                                </div>
+                            )}
                         </div>
                     )}
 
@@ -603,12 +629,12 @@ class VisualizerLeftBar extends PureComponent {
                                             min={-180}
                                             max={180}
                                             value={rotateX}
+                                            suffix="°"
                                             onChange={(degree) => {
                                                 actions.onModelTransform({ 'rotateX': THREE.Math.degToRad(degree) });
                                                 actions.onModelAfterTransform();
                                             }}
                                         />
-                                        <span className="sm-flex__input-unit-8 color-black-5">°</span>
                                     </div>
                                 </div>
                                 <div className="sm-flex height-32 margin-bottom-8">
@@ -618,13 +644,13 @@ class VisualizerLeftBar extends PureComponent {
                                             size="small"
                                             min={-180}
                                             max={180}
+                                            suffix="°"
                                             value={rotateY}
                                             onChange={(degree) => {
                                                 actions.onModelTransform({ 'rotateY': THREE.Math.degToRad(degree) });
                                                 actions.onModelAfterTransform();
                                             }}
                                         />
-                                        <span className="sm-flex__input-unit-8 color-black-5">°</span>
                                     </div>
                                 </div>
                                 <div className="sm-flex height-32 margin-bottom-8">
@@ -634,13 +660,13 @@ class VisualizerLeftBar extends PureComponent {
                                             size="small"
                                             min={-180}
                                             max={180}
+                                            suffix="°"
                                             value={rotateZ}
                                             onChange={(degree) => {
                                                 actions.onModelTransform({ 'rotateZ': THREE.Math.degToRad(degree) });
                                                 actions.onModelAfterTransform();
                                             }}
                                         />
-                                        <span className="sm-flex__input-unit-8 color-black-5">°</span>
                                     </div>
                                 </div>
                                 <div className="sm-flex">
@@ -730,6 +756,7 @@ class VisualizerLeftBar extends PureComponent {
                                     <span className="sm-flex-auto width-16 color-red-1">X</span>
                                     <div className="position-ab sm-flex-auto margin-horizontal-24">
                                         <Input
+                                            suffix="mm"
                                             size="small"
                                             min={-size.x / 2}
                                             max={size.x / 2}
@@ -738,13 +765,13 @@ class VisualizerLeftBar extends PureComponent {
                                                 supportActions.setDefaultSupportSize({ x: value });
                                             }}
                                         />
-                                        <span className="sm-flex__input-unit-8 color-black-5">mm</span>
                                     </div>
                                 </div>
                                 <div className="sm-flex height-32">
                                     <span className="sm-flex-auto width-16 color-green-1">Y</span>
                                     <div className="position-ab sm-flex-auto margin-horizontal-24">
                                         <Input
+                                            suffix="mm"
                                             size="small"
                                             min={-size.y / 2}
                                             max={size.y / 2}
@@ -753,7 +780,6 @@ class VisualizerLeftBar extends PureComponent {
                                                 supportActions.setDefaultSupportSize({ y: value });
                                             }}
                                         />
-                                        <span className="sm-flex__input-unit-8 color-black-5">mm</span>
                                     </div>
                                 </div>
                                 <div className="sm-flex margin-top-32">

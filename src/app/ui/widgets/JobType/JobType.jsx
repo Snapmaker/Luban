@@ -112,6 +112,11 @@ class JobType extends PureComponent {
         const { materials, coordinateMode, coordinateSize } = jobTypeState;
         const { isRotate, diameter, length } = materials;
 
+        let imgOF3axisCoordinateMode = '';
+        if (!isRotate) {
+            imgOF3axisCoordinateMode = `/resources/images/cnc-laser/working-origin-3-${coordinateMode.value}.png`;
+        }
+
         return (
             <React.Fragment>
                 {!isRotate && (
@@ -134,6 +139,7 @@ class JobType extends PureComponent {
                                 <div className="sm-flex height-32 position-re">
                                     <span className="width-88 margin-right-8">{i18n._('Width (X)')}</span>
                                     <Input
+                                        suffix="mm"
                                         disabled={inProgress}
                                         value={toFixed(coordinateSize.x, 1)}
                                         max={size.x}
@@ -147,15 +153,11 @@ class JobType extends PureComponent {
                                             );
                                         }}
                                     />
-                                    <span
-                                        className="sm-flex__input-unit-l-184"
-                                    >
-                                        mm
-                                    </span>
                                 </div>
                                 <div className="sm-flex height-32 position-re margin-top-16">
                                     <span className="width-88 margin-right-8">{i18n._('Height (Y)')}</span>
                                     <Input
+                                        suffix="mm"
                                         disabled={inProgress}
                                         value={toFixed(coordinateSize.y, 1)}
                                         max={size.y}
@@ -169,11 +171,6 @@ class JobType extends PureComponent {
                                             );
                                         }}
                                     />
-                                    <span
-                                        className="sm-flex__input-unit-l-184"
-                                    >
-                                        mm
-                                    </span>
                                 </div>
                             </div>
                         </div>
@@ -187,7 +184,7 @@ class JobType extends PureComponent {
                                     width: '100px',
                                     height: '100px'
                                 }}
-                                src="/resources/images/cnc-laser/working-origin-3.png"
+                                src={imgOF3axisCoordinateMode}
                                 role="presentation"
                                 alt="3 Axis"
                             />
@@ -229,6 +226,7 @@ class JobType extends PureComponent {
                             <div className="sm-flex height-32 position-re">
                                 <span className="width-88 margin-right-8">{i18n._('Length (L)')}</span>
                                 <Input
+                                    suffix="mm"
                                     disabled={inProgress}
                                     value={toFixed(length, 1)}
                                     max={size.y}
@@ -243,15 +241,11 @@ class JobType extends PureComponent {
                                         );
                                     }}
                                 />
-                                <span
-                                    className="sm-flex__input-unit-l-184"
-                                >
-                                        mm
-                                </span>
                             </div>
                             <div className="sm-flex height-32 position-re margin-top-8">
                                 <span className="width-88 margin-right-8">{i18n._('Diameter (D)')}</span>
                                 <Input
+                                    suffix="mm"
                                     disabled={inProgress}
                                     value={toFixed(diameter, 1)}
                                     max={size.x}
@@ -266,11 +260,6 @@ class JobType extends PureComponent {
                                         );
                                     }}
                                 />
-                                <span
-                                    className="sm-flex__input-unit-l-184"
-                                >
-                                        mm
-                                </span>
                             </div>
                         </div>
                         <div className="margin-top-24 margin-bottom-16 font-weight-bold">

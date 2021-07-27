@@ -33,9 +33,10 @@ class PrintableArea {
         });
 
         this.svgFactory.getRoot().append(this.printableAreaGroup);
-        this._setGridLine();
         this._setCoordinateAxes();
+        this._setGridLine();
         this._setMaterialsRect();
+        this._setOriginPoint();
     }
 
     updateScale(state) {
@@ -60,9 +61,10 @@ class PrintableArea {
             while (this.printableAreaGroup.firstChild) {
                 this.printableAreaGroup.removeChild(this.printableAreaGroup.lastChild);
             }
-            this._setGridLine();
             this._setCoordinateAxes();
+            this._setGridLine();
             this._setMaterialsRect();
+            this._setOriginPoint();
         }
     }
 
@@ -72,9 +74,10 @@ class PrintableArea {
         }
         this.coordinateSize = coordinateSize;
         this._setCoordinateMode(coordinateMode);
-        this._setGridLine();
         this._setCoordinateAxes();
+        this._setGridLine();
         this._setMaterialsRect();
+        this._setOriginPoint();
     }
 
     _removeAll() {
@@ -94,78 +97,239 @@ class PrintableArea {
     _setGridLine() {
         const { x, y } = this.size;
         const { x: cx, y: cy } = this.coordinateSize;
-        const minY = Math.ceil((y - cy / 2 + this.coorDelta.y) / 10) * 10;
-        const maxY = Math.floor((y + cy / 2 + this.coorDelta.y) / 10) * 10;
-        for (let i = minY; i <= maxY; i += 10) {
-            const color = i === 0 ? '#444444' : '#888888';
+        const xMin = x - cx / 2 + this.coorDelta.x;
+        const xMax = x + cx / 2 + this.coorDelta.x;
+        const yMin = y - cy / 2 + this.coorDelta.y;
+        const yMax = y + cy / 2 + this.coorDelta.y;
+        const colorSmallGrid = '#E5E5E7';
+        const colorBigGrid = '#D5D6D9';
+        const colorTextFill = '#85888C';
+        const textSize = 6;
+        const coordinateModeName = this.coordinateMode.value;
+        // small grid 10x10
+        for (let i = y; i >= yMin; i -= 10) {
+            const color = colorSmallGrid;
             const line = createSVGElement({
                 element: 'line',
                 attr: {
-                    x1: x - cx / 2 + this.coorDelta.x,
+                    x1: xMin,
                     y1: i,
-                    x2: x + cx / 2 + this.coorDelta.x,
+                    x2: xMax,
                     y2: i,
                     id: uuid.v4(),
                     stroke: color,
                     fill: 'none',
                     'stroke-width': 1 / this.scale,
-                    opacity: 0.16
+                    opacity: 1,
+                    'fill-opacity': 1
+                }
+            });
+            this.printableAreaGroup.append(line);
+        }
+        for (let i = y + 10; i < yMax; i += 10) {
+            const color = colorSmallGrid;
+            const line = createSVGElement({
+                element: 'line',
+                attr: {
+                    x1: xMin,
+                    y1: i,
+                    x2: xMax,
+                    y2: i,
+                    id: uuid.v4(),
+                    stroke: color,
+                    fill: 'none',
+                    'stroke-width': 1 / this.scale,
+                    opacity: 1,
+                    'fill-opacity': 1
+                }
+            });
+            this.printableAreaGroup.append(line);
+        }
+        for (let i = x; i >= xMin; i -= 10) {
+            const color = colorSmallGrid;
+            const line = createSVGElement({
+                element: 'line',
+                attr: {
+                    x1: i,
+                    y1: yMin,
+                    x2: i,
+                    y2: yMax,
+                    id: uuid.v4(),
+                    stroke: color,
+                    fill: 'none',
+                    'stroke-width': 1 / this.scale,
+                    opacity: 1,
+                    'fill-opacity': 1
+                }
+            });
+            this.printableAreaGroup.append(line);
+        }
+        for (let i = x + 10; i < xMax; i += 10) {
+            const color = colorSmallGrid;
+            const line = createSVGElement({
+                element: 'line',
+                attr: {
+                    x1: i,
+                    y1: yMin,
+                    x2: i,
+                    y2: yMax,
+                    id: uuid.v4(),
+                    stroke: color,
+                    fill: 'none',
+                    'stroke-width': 1 / this.scale,
+                    opacity: 1,
+                    'fill-opacity': 1
+                }
+            });
+            this.printableAreaGroup.append(line);
+        }
+
+        // big grid 50x50 and text
+        for (let i = y; i >= yMin; i -= 50) {
+            const color = colorBigGrid;
+            const line = createSVGElement({
+                element: 'line',
+                attr: {
+                    x1: xMin,
+                    y1: i,
+                    x2: xMax,
+                    y2: i,
+                    id: uuid.v4(),
+                    stroke: color,
+                    fill: 'none',
+                    'stroke-width': 1 / this.scale,
+                    opacity: 1,
+                    'fill-opacity': 1
                 }
             });
             const label = createSVGElement({
                 element: 'text',
                 attr: {
-                    x: x - 4,
+                    x: x + (coordinateModeName.indexOf('right') !== -1 ? 6 : -6),
                     y: i + 1.2,
                     id: uuid.v4(),
-                    'font-size': 4,
+                    'font-size': textSize,
                     'font-family': 'serif',
-                    fill: 'green',
+                    fill: colorTextFill,
                     'text-anchor': 'middle',
                     'xml:space': 'preserve',
                     'stroke-width': 1 / this.scale,
-                    'fill-opacity': 0.5,
+                    'fill-opacity': 1,
                     'stroke-opacity': 0
                 }
             });
-            if (i - y !== 0) {
-                label.innerHTML = -(i - y);
-                label.style.cursor = 'default';
-            }
+            label.innerHTML = -(i - y);
+            label.style.cursor = 'default';
             this.printableAreaGroup.append(line);
             this.printableAreaGroup.append(label);
         }
-        const minX = Math.ceil((x - cx / 2 + this.coorDelta.x) / 10) * 10;
-        const maxX = Math.floor((x + cx / 2 + this.coorDelta.x) / 10) * 10;
-        for (let i = minX; i <= maxX; i += 10) {
-            const color = i === 0 ? '#444444' : '#888888';
+        for (let i = y + 50; i <= yMax; i += 50) {
+            const color = colorBigGrid;
             const line = createSVGElement({
                 element: 'line',
                 attr: {
-                    x1: i,
-                    y1: y - cy / 2 + this.coorDelta.y,
-                    x2: i,
-                    y2: y + cy / 2 + this.coorDelta.y,
+                    x1: xMin,
+                    y1: i,
+                    x2: xMax,
+                    y2: i,
                     id: uuid.v4(),
                     stroke: color,
                     fill: 'none',
                     'stroke-width': 1 / this.scale,
-                    opacity: 0.16
+                    opacity: 1,
+                    'fill-opacity': 1
+                }
+            });
+            const label = createSVGElement({
+                element: 'text',
+                attr: {
+                    x: x + (coordinateModeName.indexOf('right') !== -1 ? 6 : -6),
+                    y: i + 1.2,
+                    id: uuid.v4(),
+                    'font-size': textSize,
+                    'font-family': 'serif',
+                    fill: colorTextFill,
+                    'text-anchor': 'middle',
+                    'xml:space': 'preserve',
+                    'stroke-width': 1 / this.scale,
+                    'fill-opacity': 1,
+                    'stroke-opacity': 0
+                }
+            });
+            label.innerHTML = -(i - y);
+            label.style.cursor = 'default';
+            this.printableAreaGroup.append(line);
+            this.printableAreaGroup.append(label);
+        }
+        for (let i = x; i >= xMin; i -= 50) {
+            const color = colorBigGrid;
+            const line = createSVGElement({
+                element: 'line',
+                attr: {
+                    x1: i,
+                    y1: yMin,
+                    x2: i,
+                    y2: yMax,
+                    id: uuid.v4(),
+                    stroke: color,
+                    fill: 'none',
+                    'stroke-width': 1 / this.scale,
+                    opacity: 1,
+                    'fill-opacity': 1
                 }
             });
             const label = createSVGElement({
                 element: 'text',
                 attr: {
                     x: i,
-                    y: y + 5,
+                    y: y + (coordinateModeName.indexOf('top') !== -1 ? -3 : 6),
                     id: uuid.v4(),
-                    'font-size': 4,
+                    'font-size': textSize,
                     'font-family': 'serif',
-                    fill: 'red',
+                    fill: colorTextFill,
                     'text-anchor': 'middle',
                     'xml:space': 'preserve',
                     'stroke-width': 1 / this.scale,
-                    'fill-opacity': 0.5,
+                    'fill-opacity': 1,
+                    'stroke-opacity': 0
+                }
+            });
+            if (i - x !== 0) {
+                label.innerHTML = i - x;
+            }
+            this.printableAreaGroup.append(line);
+            this.printableAreaGroup.append(label);
+        }
+        for (let i = x + 50; i < xMax; i += 50) {
+            const color = colorBigGrid;
+            const line = createSVGElement({
+                element: 'line',
+                attr: {
+                    x1: i,
+                    y1: yMin,
+                    x2: i,
+                    y2: yMax,
+                    id: uuid.v4(),
+                    stroke: color,
+                    fill: 'none',
+                    'stroke-width': 1 / this.scale,
+                    opacity: 1,
+                    'fill-opacity': 1
+                }
+            });
+            const label = createSVGElement({
+                element: 'text',
+                attr: {
+                    x: i,
+                    y: y + (coordinateModeName.indexOf('top') !== -1 ? -3 : 6),
+                    id: uuid.v4(),
+                    'font-size': textSize,
+                    'font-family': 'serif',
+                    fill: colorTextFill,
+                    'text-anchor': 'middle',
+                    'xml:space': 'preserve',
+                    'stroke-width': 1 / this.scale,
+                    'fill-opacity': 1,
                     'stroke-opacity': 0
                 }
             });
@@ -177,7 +341,7 @@ class PrintableArea {
         }
     }
 
-    _setAxes(x1, y1, x2, y2, color, dashed) {
+    _setBorder(x1, y1, x2, y2, color, dashed) {
         const line = createSVGElement({
             element: 'line',
             attr: {
@@ -220,27 +384,45 @@ class PrintableArea {
     _setCoordinateAxes() {
         const { x, y } = this.size;
         const { x: cx, y: cy } = this.coordinateSize;
-        if (x - cx / 2 + this.coorDelta.x < x) {
-            this._setAxes(x - cx / 2 + this.coorDelta.x, y, x, y, 'red', true);
-        }
-        if (y - cy / 2 + this.coorDelta.y < y) {
-            this._setAxes(x, y - cy / 2 + this.coorDelta.y, x, y, 'green', false);
-        }
-        if (x + cx / 2 + this.coorDelta.x > x) {
-            this._setAxes(x + cx / 2 + this.coorDelta.x, y, x, y, 'red', false);
-        }
-        if (y + cy / 2 + this.coorDelta.y > y) {
-            this._setAxes(x, y + cy / 2 + this.coorDelta.y, x, y, 'green', true);
-        }
+        const xMin = x - cx / 2 + this.coorDelta.x;
+        const xMax = x + cx / 2 + this.coorDelta.x;
+        const yMin = y - cy / 2 + this.coorDelta.y;
+        const yMax = y + cy / 2 + this.coorDelta.y;
+        const border = createSVGElement({
+            element: 'rect',
+            attr: {
+                x: xMin,
+                y: yMin,
+                width: xMax - xMin,
+                height: yMax - yMin,
+                id: uuid.v4(),
+                stroke: '#B9BCBF',
+                fill: '#FFFFFF',
+                'stroke-width': 1 / this.scale,
+                opacity: 1,
+                'fill-opacity': 1
+            }
+        });
+        this.printableAreaGroup.append(border);
+        // this._setBorder(, yMin, xMax, yMin, '#B9BCBF', false);
+        // this._setBorder(xMin, yMin, xMin, yMax, '#B9BCBF', false);
+        // this._setBorder(xMin, yMax, xMax, yMax, '#B9BCBF', false);
+        // this._setBorder(xMax, yMin, xMax, yMax, '#B9BCBF', false);
+    }
 
+    _setOriginPoint() {
+        if (this.materials.isRotate) {
+            return;
+        }
+        const { x, y } = this.size;
         const origin = createSVGElement({
             element: 'circle',
             attr: {
                 cx: x,
                 cy: y,
-                r: 0.5,
-                fill: 'indianred',
-                stroke: 'indianred',
+                r: 2,
+                fill: '#FF5759',
+                stroke: '#FF5759',
                 'stroke-width': 1 / this.scale,
                 opacity: 1,
                 'fill-opacity': 1
@@ -250,24 +432,32 @@ class PrintableArea {
     }
 
     _setMaterialsRect() {
-        const { x = 0, y = 0, fixtureLength = 0 } = this.materials;
+        const { isRotate, x = 0, y = 0, fixtureLength = 0 } = this.materials;
+        if (!isRotate) {
+            return;
+        }
         if (!x || !y) {
             return;
         }
 
+        const height = Math.min(fixtureLength, y);
+        const width = height * 415 / 90;
+        const posX = this.size.x - x / 2;
+        const scaleX = x / width;
         // eslint-disable-next-line no-unused-vars
         const nonEditableArea = createSVGElement({
-            element: 'rect',
+            element: 'image',
             attr: {
-                x: this.size.x - x / 2,
+                x: posX,
                 y: this.size.y - y,
-                width: x,
-                height: Math.min(fixtureLength, y),
-                fill: '#FFE7E7',
+                width: width, // real width = width * scale
+                height: height,
+                href: '/resources/images/cnc-laser/pic_4-axis_stop_bg.png',
                 stroke: '#000',
                 'stroke-width': 1 / this.scale,
                 opacity: 1,
-                'fill-opacity': 1
+                'fill-opacity': 1,
+                transform: `scale(${scaleX} 1) translate(${(posX - posX * scaleX) / scaleX} 0)`
             }
         });
         this.printableAreaGroup.append(nonEditableArea);

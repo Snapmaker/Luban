@@ -65,6 +65,7 @@ function SettingItem(props) {
                 )}
                 {type === 'float' && (
                     <Input
+                        suffix={unit}
                         value={defaultValue}
                         min={min}
                         max={max}
@@ -103,7 +104,6 @@ function SettingItem(props) {
                         disabled={isToolParams(settingName)}
                     />
                 )}
-                <span className="sm-flex__input-unit-8">{unit}</span>
             </div>
         </TipTrigger>
 

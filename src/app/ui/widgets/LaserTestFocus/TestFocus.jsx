@@ -166,12 +166,12 @@ class TestFocus extends PureComponent {
                         content={i18n._('Determines how fast the machine moves when it’s working.')}
                     >
                         <Input
+                            suffix="mm/min"
                             min={1}
                             max={6000}
                             value={this.state.workSpeed}
                             onChange={actions.onChangeWorkSpeed}
                         />
-                        <span className="sm-flex__input-unit-8">mm/min</span>
                     </TipTrigger>
                 </div>
                 <div className="sm-flex height-32 justify-space-between margin-vertical-8">
@@ -190,12 +190,12 @@ class TestFocus extends PureComponent {
                         content={i18n._('Power to use when laser is working.')}
                     >
                         <Input
+                            suffix="%"
                             min={1}
                             max={100}
                             value={this.state.power}
                             onChange={actions.onChangePower}
                         />
-                        <span className="sm-flex__input-unit-8">%</span>
                     </TipTrigger>
                 </div>
                 <Button

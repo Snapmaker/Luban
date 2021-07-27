@@ -200,32 +200,32 @@ function MachineSettings() {
             <div className="margin-top-16">{i18n._('X (Width)')}</div>
             <div className="position-re sm-flex height-32">
                 <NumberInput
+                    suffix="mm"
                     size="large"
                     value={state.size.x}
                     disabled={!editable}
                     onChange={actions.onChangeSizeX}
                 />
-                <span className="sm-flex__input-unit-l-128">mm</span>
             </div>
             <div className="margin-top-16">{i18n._('Y (Depth)')}</div>
             <div className="position-re sm-flex height-32">
                 <NumberInput
+                    suffix="mm"
                     size="large"
                     value={state.size.y}
                     disabled={!editable}
                     onChange={actions.onChangeSizeY}
                 />
-                <span className="sm-flex__input-unit-l-128">mm</span>
             </div>
             <div className="margin-top-16">{i18n._('Z (Height)')}</div>
             <div className="position-re sm-flex height-32">
                 <NumberInput
+                    suffix="mm"
                     size="large"
                     value={state.size.z}
                     disabled={!editable}
                     onChange={actions.onChangeSizeZ}
                 />
-                <span className="sm-flex__input-unit-l-128">mm</span>
             </div>
         </div>
     );

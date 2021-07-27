@@ -2,6 +2,7 @@
 import includes from 'lodash/includes';
 import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
+import classNames from 'classnames';
 import { Dropdown, DropdownButton } from 'react-bootstrap';
 import i18n from '../../../lib/i18n';
 import {
@@ -44,7 +45,7 @@ class DisplayPanel extends PureComponent {
         }
 
         return (
-            <div className={styles['coordinate-panel'], 'margin-bottom-16'}>
+            <div className={classNames(styles['coordinate-panel'], 'margin-bottom-16')}>
                 <table className="table table-bordered " style={{borderCollapse: 'separate', borderRadius: '8px',
                 borderSpacing: 0}}>
                     <thead>
