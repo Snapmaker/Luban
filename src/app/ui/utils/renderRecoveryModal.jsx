@@ -1,13 +1,31 @@
 import React from 'react';
 import { useDispatch } from 'react-redux';
+import { useHistory } from 'react-router-dom';
 import renderModal from './renderModal';
 
 import i18n from '../../lib/i18n';
+import { HEAD_3DP, HEAD_CNC, HEAD_LASER } from '../../constants';
 
 import { actions as projectActions } from '../../flux/project';
 
+function routeToHeadType(history, headType, forceRefresh = false) {
+    const routerMap = {
+        [HEAD_3DP]: '/3dp',
+        [HEAD_CNC]: '/cnc',
+        [HEAD_LASER]: '/laser'
+    };
+
+    const isCurrent = history.location.pathname.indexOf(routerMap[headType]) !== -1;
+    if (isCurrent && forceRefresh) {
+        history.replace();
+    } else {
+        history.replace(routerMap[headType]);
+    }
+}
+
 export default function (headType, onClose) {
     const dispatch = useDispatch();
+    const history = useHistory();
     const actions = {
         onRecovery: () => dispatch(projectActions.onRecovery(headType))
     };
@@ -27,6 +45,7 @@ export default function (headType, onClose) {
                 name: i18n._('Yes'),
                 isPrimary: true,
                 onClick: () => {
+                    routeToHeadType(history, headType);
                     actions.onRecovery();
                     onClose();
                 }

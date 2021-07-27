@@ -11,7 +11,7 @@ import modal from '../../lib/modal';
 import Dropzone from '../components/Dropzone';
 import SvgIcon from '../components/SvgIcon';
 import Space from '../components/Space';
-import { renderModal, renderPopup, renderWidgetList, useRenderRecoveryModal } from '../utils';
+import { renderModal, renderPopup, renderWidgetList } from '../utils';
 import Tabs from '../components/Tabs';
 import Checkbox from '../components/Checkbox';
 import { Button } from '../components/Buttons';
@@ -227,7 +227,6 @@ function Cnc({ location }) {
         }
     }, [location?.state?.shouldShowJobType]);
 
-    const recoveryModal = useRenderRecoveryModal(pageHeadType);
     const renderHomepage = () => {
         const onClose = () => setShowHomePage(false);
         return showHomePage && renderPopup({
@@ -281,7 +280,7 @@ function Cnc({ location }) {
         }
     });
     const warningModal = useRenderWarning();
-    const warningRemovingModels = useRenderRemoveModelsWarning();
+    const removeModelsWarningModal = useRenderRemoveModelsWarning();
     const listActions = {
         onDragStart: () => {
             setIsDraggingWidget(true);
@@ -527,9 +526,8 @@ function Cnc({ location }) {
                     <CNCVisualizer />
                 </Dropzone>
             </ProjectLayout>
-            {recoveryModal}
             {warningModal}
-            {warningRemovingModels}
+            {removeModelsWarningModal}
             {jobTypeModal}
             {renderHomepage()}
             {renderWorkspace()}

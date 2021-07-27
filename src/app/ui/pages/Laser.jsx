@@ -13,7 +13,7 @@ import modal from '../../lib/modal';
 import LaserVisualizer from '../widgets/LaserVisualizer';
 import Tabs from '../components/Tabs';
 
-import { renderPopup, renderWidgetList, useRenderRecoveryModal, renderModal } from '../utils';
+import { renderPopup, renderWidgetList, renderModal } from '../utils';
 import Dropzone from '../components/Dropzone';
 import { actions as editorActions } from '../../flux/editor';
 import { actions as laserActions } from '../../flux/laser';
@@ -344,7 +344,6 @@ function Laser({ location }) {
         }
     }, [location?.state?.shouldShowJobType]);
 
-    const recoveryModal = useRenderRecoveryModal(pageHeadType);
     const { setBackgroundModal,
         renderMainToolBar } = useRenderMainToolBar(setShowHomePage, setShowJobType, setShowWorkspace);
     const renderHomepage = () => {
@@ -484,7 +483,6 @@ function Laser({ location }) {
                     />
                 </Dropzone>
             </ProjectLayout>
-            {recoveryModal}
             {warningRemovingModels}
             {jobTypeModal}
             {setBackgroundModal}

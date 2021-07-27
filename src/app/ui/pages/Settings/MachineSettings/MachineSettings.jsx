@@ -30,6 +30,9 @@ const machineSeriesOptions = [
         ...MACHINE_SERIES.ORIGINAL
     },
     {
+        ...MACHINE_SERIES.ORIGINAL_LZ
+    },
+    {
         ...MACHINE_SERIES.A150
     },
     {
@@ -37,8 +40,7 @@ const machineSeriesOptions = [
     },
     {
         ...MACHINE_SERIES.A350
-    },
-    customOption
+    }
 ];
 
 function MachineSettings() {
@@ -64,15 +66,6 @@ function MachineSettings() {
 
 
     const actions = {
-        initState: () => {
-            setState({
-                series: series,
-                connectionTimeout: connectionTimeout,
-                size: size,
-                enclosureDoorDetection: enclosureDoorDetection,
-                zAxisModule: zAxisModule
-            });
-        },
         // Machine Model
         onChangeMachineSeries: (option) => {
             setState({
@@ -148,14 +141,21 @@ function MachineSettings() {
             dispatch(machineActions.updateMachineSize(state.size));
             dispatch(machineActions.setEnclosureState(state.enclosureDoorDetection));
             dispatch(machineActions.setZAxisModuleState(state.zAxisModule));
+            window.location.href = '/';
         }
     };
 
     useEffect(() => {
-        actions.initState();
+        setState({
+            series: series,
+            connectionTimeout: connectionTimeout,
+            size: size,
+            enclosureDoorDetection: enclosureDoorDetection,
+            zAxisModule: zAxisModule
+        });
         dispatch(machineActions.getEnclosureState());
         dispatch(machineActions.getZAxisModuleState());
-    }, [dispatch]);
+    }, [dispatch, series, connectionTimeout, size, enclosureDoorDetection, zAxisModule]);
 
     useEffect(() => {
         function cleanup() {
@@ -166,7 +166,7 @@ function MachineSettings() {
         UniApi.Event.on('appbar-menu:settings.save', actions.onSave);
         UniApi.Event.on('appbar-menu:settings.cancel', actions.onCancel);
         return cleanup;
-    }, [actions]);
+    }, [actions.onSave, actions.onCancel]);
 
     useEffect(() => {
         setState({

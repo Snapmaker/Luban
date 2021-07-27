@@ -14,7 +14,7 @@ import { actions as projectActions } from '../../flux/project';
 import ProjectLayout from '../layouts/ProjectLayout';
 import MainToolBar from '../layouts/MainToolBar';
 import { HEAD_3DP } from '../../constants';
-import { renderPopup, renderWidgetList, useRenderRecoveryModal } from '../utils';
+import { renderPopup, renderWidgetList } from '../utils';
 
 import ControlWidget from '../widgets/Control';
 import ConnectionWidget from '../widgets/Connection';
@@ -158,7 +158,6 @@ function Printing() {
     const [isDraggingWidget, setIsDraggingWidget] = useState(false);
     const dispatch = useDispatch();
 
-    const recoveryModal = useRenderRecoveryModal(pageHeadType);
     const [renderHomepage, renderMainToolBar, renderWorkspace] = useRenderMainToolBar();
 
     useEffect(() => {
@@ -222,7 +221,6 @@ function Printing() {
                 onDropRejected={onDropRejected}
             >
                 <PrintingVisualizer widgetId="printingVisualizer" />
-                {recoveryModal}
                 {renderHomepage()}
                 {renderWorkspace()}
             </Dropzone>

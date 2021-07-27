@@ -6,6 +6,9 @@ import { withRouter } from 'react-router-dom';
 import styles from './styles.styl';
 import { machineStore } from '../../../store/local-storage';
 
+import { useRenderRecoveryModal } from '../../utils';
+import { HEAD_3DP, HEAD_CNC, HEAD_LASER } from '../../../constants';
+
 // component
 import Begin from './Begin';
 import QuickStart from './QuickStart';
@@ -29,6 +32,11 @@ const HomePage = (props) => { // Todo, what's the props ?
             ipc.send('get-recent-file');
         }
     }, []);
+
+    const printingModal = useRenderRecoveryModal(HEAD_3DP);
+    const laserModal = useRenderRecoveryModal(HEAD_LASER);
+    const cncModal = useRenderRecoveryModal(HEAD_CNC);
+
     return (
         <div className={styles.homepageContainer}>
             {props?.isPopup && (
@@ -52,6 +60,7 @@ const HomePage = (props) => { // Todo, what's the props ?
                     />
                 )
             }
+            {printingModal || laserModal || cncModal}
         </div>
     );
 };
