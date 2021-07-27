@@ -29,25 +29,34 @@ class VisualizerBottomLeft extends PureComponent {
                         headType={HEAD_3DP}
                     />
                 </Card>
-                <div className={classNames('margin-horizontal-8', 'height-24')}>
+                <div className={classNames('margin-horizontal-8', 'height-30')}>
                     <SvgIcon
                         name="ViewIsometric"
+                        size={30}
                         onClick={actions.toBottom} // Todo: fix new function
                     />
                     <SvgIcon
                         name="ViewFront"
+                        size={30}
+                        className="margin-left-2"
                         onClick={actions.toFront}
                     />
                     <SvgIcon
                         name="ViewTop"
+                        size={30}
+                        className="margin-left-2"
                         onClick={actions.toTop}
                     />
                     <SvgIcon
                         name="ViewLeft"
+                        size={30}
+                        className="margin-left-2"
                         onClick={actions.toLeft}
                     />
                     <SvgIcon
                         name="ViewRight"
+                        size={30}
+                        className="margin-left-2"
                         onClick={actions.toRight}
                     />
                 </div>

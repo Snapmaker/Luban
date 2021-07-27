@@ -95,7 +95,7 @@ class ModalHOC extends PureComponent {
                     {type === 'buttonRight' && footer}
                     <Button
                         onClick={this.handleClose}
-                        width="110px"
+                        width="96px"
                     >
                         {newTitle}
                     </Button>

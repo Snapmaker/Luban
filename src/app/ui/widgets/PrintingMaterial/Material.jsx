@@ -3,11 +3,12 @@ import PropTypes from 'prop-types';
 import { useSelector, useDispatch, shallowEqual } from 'react-redux';
 import classNames from 'classnames';
 import Select from '../../components/Select';
+import SvgIcon from '../../components/SvgIcon';
 import i18n from '../../../lib/i18n';
-import Anchor from '../../components/Anchor';
+// import Anchor from '../../components/Anchor';
 import { actions as printingActions } from '../../../flux/printing';
 import { actions as projectActions } from '../../../flux/project';
-import styles from './styles.styl';
+// import styles from './styles.styl';
 import { HEAD_3DP, PRINTING_MANAGER_TYPE_MATERIAL } from '../../../constants';
 // import OptionalDropdown from '../../components/OptionalDropdown';
 // import Space from '../../components/Space';
@@ -96,29 +97,27 @@ function Material({ widgetActions }) {
     return (
         <React.Fragment>
             <div className={classNames(
-                styles['material-select']
+                'sm-flex',
+                'margin-top-8'
             )}
             >
                 <Select
                     clearable={false}
-                    size="282px"
+                    size="294px"
                     searchable
                     options={materialDefinitionOptions}
                     value={currentDefinition.definitionId}
                     onChange={onChangeMaterialValue}
                     disabled={inProgress}
                 />
-            </div>
-            <Anchor
-                onClick={onShowPrintingManager}
-                disabled={inProgress}
-            >
-                <span
-                    className={classNames(
-                        styles['manager-icon'],
-                    )}
+                <SvgIcon
+                    className="border-radius-8 border-default-grey-1 padding-vertical-2 padding-horizontal-2 margin-left-4"
+                    name="PrintingSettingNormal"
+                    size={24}
+                    disabled={inProgress}
+                    onClick={onShowPrintingManager}
                 />
-            </Anchor>
+            </div>
         </React.Fragment>
     );
 }

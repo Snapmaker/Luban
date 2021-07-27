@@ -34,7 +34,11 @@ function ConfigValueBox({ optionConfigGroup, calculateTextIndex, isCategorySelec
     return (
         <div className="sm-flex">
             {(optionConfigGroup.length > 2) && (
-                <div className={classNames(styles['manager-grouplist'], 'border-radius-8')}>
+                <div className={classNames(styles['manager-grouplist'],
+                    'border-default-grey-1',
+                    'padding-vertical-4',
+                    'border-radius-8')}
+                >
                     <div className="sm-parameter-container">
                         {optionConfigGroup.map((group, idx) => {
                             return (
@@ -60,7 +64,7 @@ function ConfigValueBox({ optionConfigGroup, calculateTextIndex, isCategorySelec
                 </div>
             )}
             <div
-                className={classNames(styles['manager-details'], 'border-radius-8')}
+                className={classNames(styles['manager-details'], 'border-default-grey-1', 'border-radius-8')}
                 onWheel={() => { setActiveCate(); }}
             >
                 <div className="sm-parameter-container" ref={scrollDom}>
@@ -68,12 +72,11 @@ function ConfigValueBox({ optionConfigGroup, calculateTextIndex, isCategorySelec
                         return (
                             <div key={group.name || group.fields[0]}>
                                 { group.name && (
-                                    <div className="border-bottom-normal">
+                                    <div className="border-bottom-normal padding-bottom-8 margin-vertical-16">
                                         <SvgIcon
                                             name="TitleSetting"
-                                            size={24}
                                         />
-                                        <span className="margin-left-8">{i18n._(group.name)}</span>
+                                        <span className="margin-left-2">{i18n._(group.name)}</span>
                                     </div>
                                 )}
                                 { group.fields && group.fields.map((key) => {

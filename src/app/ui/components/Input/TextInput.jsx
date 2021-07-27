@@ -15,7 +15,10 @@ class TextInput extends PureComponent {
         const { className = '', size = 'middle', ...rest } = this.props;
 
         return (
-            <span className={classNames('display-inline', styles[size], className)}>
+            <span
+                style={{ width: size }}
+                className={classNames('display-inline', styles[size], className)}
+            >
                 <Input
                     {...rest}
                     type="text"

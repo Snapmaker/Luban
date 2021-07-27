@@ -3,10 +3,11 @@ import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
 import classNames from 'classnames';
 import Slider from '../../components/Slider';
+import Checkbox from '../../components/Checkbox';
 import Anchor from '../../components/Anchor';
 import styles from './styles.styl';
 import { actions as printingActions } from '../../../flux/printing';
-
+import i18n from '../../../lib/i18n';
 
 // custom handle
 // const Handle = (props) => {
@@ -159,88 +160,104 @@ class VisualizerPreviewControl extends PureComponent {
                     />
                 )}
                 {state.showPreviewPanel && (
-                    <div className={styles['preview-panel']}>
-                        <div className={styles['preview-title']}>Line Type</div>
-                        <div className={styles['preview-type']}>
-                            <input
-                                type="checkbox"
-                                checked={state.showWallInner}
-                                onChange={actions.onTogglePreviewWallInner}
-                            />
-                            Inner Wall
-                            <span className={styles['preview-brick']} style={{ backgroundColor: '#00ff00' }} />
+                    <div
+                        className={classNames(
+                            styles['preview-panel'],
+                            'position-ab',
+                            'width-200',
+                            'border-default-grey-1',
+                            'border-radius-8',
+                            'background-color-white',
+                        )}
+                    >
+                        <div className="border-bottom-normal padding-vertical-10 padding-horizontal-16 height-40 heading-3">
+                            {i18n._('Line Type')}
                         </div>
-                        <div className={styles['preview-type']}>
-                            <input
-                                type="checkbox"
-                                checked={state.showWallOuter}
-                                onChange={actions.onTogglePreviewWallOuter}
-                            />
-                            Outer Wall
-                            <span className={styles['preview-brick']} style={{ backgroundColor: '#ff2121' }} />
-                        </div>
-                        <div className={styles['preview-type']}>
-                            <input
-                                type="checkbox"
-                                checked={state.showSkin}
-                                onChange={actions.onTogglePreviewSkin}
-                            />
-                            Skin
-                            <span className={styles['preview-brick']} style={{ backgroundColor: '#ffff00' }} />
-                        </div>
-                        {/* <div className={styles['preview-type']}>
-                            <input
-                                type="checkbox"
-                                checked={state.showSkirt}
-                                onChange={actions.onTogglePreviewSkirt}
-                            />
-                            Skirt
-                            <span className={styles['preview-brick']} style={{ backgroundColor: '#fa8c35' }} />
-                        </div>
-                        <div className={styles['preview-type']}>
-                            <input
-                                type="checkbox"
-                                checked={state.showSupport}
-                                onChange={actions.onTogglePreviewSupport}
-                            />
-                            Support
-                            <span className={styles['preview-brick']} style={{ backgroundColor: '#4b0082' }} />
-                        </div> */}
-                        <div className={styles['preview-type']}>
-                            <input
-                                type="checkbox"
-                                checked={state.showSupport}
-                                onChange={actions.onTogglePreviewSupport}
-                            />
-                            Helper
-                            <span className={styles['preview-brick']} style={{ backgroundColor: '#4b0082' }} />
-                        </div>
-                        <div className={styles['preview-type']}>
-                            <input
-                                type="checkbox"
-                                checked={state.showFill}
-                                onChange={actions.onTogglePreviewFill}
-                            />
-                            Fill
-                            <span className={styles['preview-brick']} style={{ backgroundColor: '#8d4bbb' }} />
-                        </div>
-                        <div className={styles['preview-type']}>
-                            <input
-                                type="checkbox"
-                                checked={state.showTravel}
-                                onChange={actions.onTogglePreviewTravel}
-                            />
-                            Travel
-                            <span className={styles['preview-brick']} style={{ backgroundColor: '#44cef6' }} />
-                        </div>
-                        <div className={styles['preview-type']}>
-                            <input
-                                type="checkbox"
-                                checked={state.showUnknown}
-                                onChange={actions.onTogglePreviewUnknown}
-                            />
-                            Unknown
-                            <span className={styles['preview-brick']} style={{ backgroundColor: '#4b0082' }} />
+                        <div className="padding-vertical-16 padding-horizontal-16">
+                            <div className="sm-flex justify-space-between height-24 margin-bottom-8">
+                                <div>
+                                    <span className="display-inline width-16 height-16 v-align-m" style={{ backgroundColor: '#00ff00' }} />
+                                    <span className="v-align-m margin-left-8">
+                                            Inner Wall
+                                    </span>
+                                </div>
+                                <Checkbox
+                                    checked={state.showWallInner}
+                                    onChange={actions.onTogglePreviewWallInner}
+                                />
+                            </div>
+                            <div className="sm-flex justify-space-between height-24 margin-vertical-8">
+                                <div>
+                                    <span className="display-inline width-16 height-16 v-align-m" style={{ backgroundColor: '#ff2121' }} />
+                                    <span className="v-align-m margin-left-8">
+                                            Outer Wall
+                                    </span>
+                                </div>
+                                <Checkbox
+                                    checked={state.showWallOuter}
+                                    onChange={actions.onTogglePreviewWallOuter}
+                                />
+                            </div>
+                            <div className="sm-flex justify-space-between height-24 margin-vertical-8">
+                                <div>
+                                    <span className="display-inline width-16 height-16 v-align-m" style={{ backgroundColor: '#ffff00' }} />
+                                    <span className="v-align-m margin-left-8">
+                                            Skin
+                                    </span>
+                                </div>
+                                <Checkbox
+                                    checked={state.showSkin}
+                                    onChange={actions.onTogglePreviewSkin}
+                                />
+                            </div>
+                            <div className="sm-flex justify-space-between height-24 margin-vertical-8">
+                                <div>
+                                    <span className="display-inline width-16 height-16 v-align-m" style={{ backgroundColor: '#4b0082' }} />
+                                    <span className="v-align-m margin-left-8">
+                                            Helper
+                                    </span>
+                                </div>
+                                <Checkbox
+                                    checked={state.showSupport}
+                                    onChange={actions.onTogglePreviewSupport}
+                                />
+                            </div>
+                            <div className="sm-flex justify-space-between height-24 margin-vertical-8">
+                                <div>
+                                    <span className="display-inline width-16 height-16 v-align-m" style={{ backgroundColor: '#8d4bbb' }} />
+                                    <span className="v-align-m margin-left-8">
+                                            Fill
+                                    </span>
+                                </div>
+                                <Checkbox
+                                    checked={state.showFill}
+                                    onChange={actions.onTogglePreviewFill}
+                                />
+                            </div>
+                            <div className="sm-flex justify-space-between height-24 margin-vertical-8">
+                                <div>
+                                    <span className="display-inline width-16 height-16 v-align-m" style={{ backgroundColor: '#44cef6' }} />
+                                    <span className="v-align-m margin-left-8">
+                                            Travel
+                                    </span>
+                                </div>
+                                <Checkbox
+                                    checked={state.showTravel}
+                                    onChange={actions.onTogglePreviewTravel}
+                                />
+                            </div>
+                            <div className="sm-flex justify-space-between height-24 margin-top-8">
+                                <div>
+                                    <span className="display-inline width-16 height-16 v-align-m" style={{ backgroundColor: '#4b0082' }} />
+                                    <span className="v-align-m margin-left-8">
+                                            Unknown
+                                    </span>
+                                </div>
+                                <Checkbox
+                                    checked={state.showUnknown}
+                                    onChange={actions.onTogglePreviewUnknown}
+                                />
+                            </div>
                         </div>
                     </div>
                 )}

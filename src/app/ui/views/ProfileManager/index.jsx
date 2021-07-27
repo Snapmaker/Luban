@@ -214,9 +214,10 @@ function ProfileManager({ optionConfigGroup, disableCategory = true, managerTitl
                 ),
 
                 footer: (
-                    <button
-                        type="button"
-                        className="sm-btn-large sm-btn-primary"
+                    <Button
+                        priority="level-two"
+                        className="margin-left-8"
+                        width="96px"
                         onClick={async () => {
                             if (!isCategorySelected) {
                                 await outsideActions.removeManagerDefinition(definition);
@@ -231,7 +232,7 @@ function ProfileManager({ optionConfigGroup, disableCategory = true, managerTitl
                         }}
                     >
                         {i18n._('OK')}
-                    </button>
+                    </Button>
                 )
             });
         },
@@ -294,9 +295,10 @@ function ProfileManager({ optionConfigGroup, disableCategory = true, managerTitl
                     </React.Fragment>
                 ),
                 footer: (
-                    <button
-                        type="button"
-                        className="sm-btn-large sm-btn-primary"
+                    <Button
+                        priority="level-two"
+                        className="margin-left-8"
+                        width="96px"
                         onClick={async () => {
                             const data = refs.refCreateModal.current.getData();
                             const newDefinitionForManager = cloneDeep(definitionState.definitionForManager);
@@ -333,7 +335,7 @@ function ProfileManager({ optionConfigGroup, disableCategory = true, managerTitl
                         }}
                     >
                         {i18n._('OK')}
-                    </button>
+                    </Button>
                 )
             });
         },
@@ -413,21 +415,16 @@ function ProfileManager({ optionConfigGroup, disableCategory = true, managerTitl
                     style={{ minWidth: '700px' }}
                     onClose={outsideActions.closeManager}
                 >
-                    <Modal.Body
-                        style={{ margin: '0', padding: '20px 0 0', height: '100%', minHeight: '525px', textAlign: 'center' }}
-                    >
-                        <div className={classNames(styles['manager-type-wrapper'])}>
-                            <div
-                                className={classNames(styles['manager-type'])}
-                            >
-                                {i18n._(managerTitle)}
-                            </div>
+                    <Modal.Header>
+                        <div className={classNames('heading-3')}>
+                            {i18n._(managerTitle)}
                         </div>
-
+                    </Modal.Header>
+                    <Modal.Body>
                         <div
-                            className={classNames(styles['manager-content'])}
+                            className={classNames(styles['manager-content'], 'sm-flex')}
                         >
-                            <div className={classNames(styles['manager-name'], 'border-radius-8')}>
+                            <div className={classNames(styles['manager-name'], 'border-default-grey-1', 'border-radius-8', 'padding-top-4')}>
                                 {notificationMessage && (
                                     <Notifications bsStyle="danger" onDismiss={actions.clearNotification} className="Notifications">
                                         {notificationMessage}
@@ -447,9 +444,12 @@ function ProfileManager({ optionConfigGroup, disableCategory = true, managerTitl
                                                     onDoubleClick={() => actions.setRenamingStatus(true)}
                                                 >
                                                     <SvgIcon
-                                                        // type={['hoverNormal', 'pressSpecial']}
-                                                        size={24}
                                                         name="DropdownOpen"
+                                                        className={classNames(
+                                                            'margin-horizontal-4',
+                                                            'padding-horizontal-4',
+                                                            configExpanded[cate.category] ? 'rotate270' : ''
+                                                        )}
                                                         onClick={() => { actions.foldCategory(cate.category); }}
                                                     />
                                                     {(definitionState?.isCategorySelected && isCategorySelected && definitionState?.renamingStatus) ? (
@@ -479,6 +479,7 @@ function ProfileManager({ optionConfigGroup, disableCategory = true, managerTitl
                                                             const definitionForManager = definitionState?.definitionForManager;
                                                             const isSelected = !definitionState.isCategorySelected && currentOption.value === definitionForManager.definitionId;
                                                             let isAllValueDefault = isDefault && isSelected;
+                                                            // TODO: need to fix this
                                                             if (isDefault && isSelected) {
                                                                 const selectedSettingDefaultValue = definitionState?.selectedSettingDefaultValue;
                                                                 optionConfigGroup.map((item) => {
@@ -505,15 +506,14 @@ function ProfileManager({ optionConfigGroup, disableCategory = true, managerTitl
                                                                             onDoubleClick={() => actions.setRenamingStatus(true)}
                                                                         >
                                                                             {isDefault && isSelected && !isAllValueDefault && (
-                                                                                <span className="margin-left-8">
-                                                                                    <SvgIcon
-                                                                                        name="Reset"
-                                                                                        size={24}
-                                                                                        onClick={() => {
-                                                                                            outsideActions.resetDefinitionById(currentOption.value);
-                                                                                        }}
-                                                                                    />
-                                                                                </span>
+                                                                                <SvgIcon
+                                                                                    name="Reset"
+                                                                                    size={24}
+                                                                                    className="margin-left-n-28 margin-right-4"
+                                                                                    onClick={() => {
+                                                                                        outsideActions.resetDefinitionById(currentOption.value);
+                                                                                    }}
+                                                                                />
                                                                             )}
                                                                             {(isSelected && definitionState.renamingStatus) ? (
                                                                                 <input
@@ -549,66 +549,68 @@ function ProfileManager({ optionConfigGroup, disableCategory = true, managerTitl
                                     }))}
                                 </ul>
 
-                                <div style={{
-                                    display: 'flex',
-                                    justifyContent: 'space-around'
-                                }}
-                                >
-                                    <SvgIcon
-                                        name="Edit"
-                                        disabled={isOfficialDefinition(definitionState.definitionForManager)}
-                                        size={24}
-                                        title={i18n._('Edit')}
-                                        onClick={() => actions.setRenamingStatus(true)}
-                                    />
-                                    <input
-                                        ref={refs.fileInput}
-                                        type="file"
-                                        accept=".json"
-                                        style={{ display: 'none' }}
-                                        multiple={false}
-                                        onChange={outsideActions.onChangeFileForManager}
-                                    />
-                                    <SvgIcon
-                                        name="Import"
-                                        size={24}
-                                        title={i18n._('Import')}
-                                        onClick={() => actions.importFile(refs.fileInput)}
-                                    />
-                                    <SvgIcon
-                                        name="Export"
-                                        size={24}
-                                        disabled={definitionState.isCategorySelected}
-                                        title={i18n._('Export')}
-                                        onClick={() => outsideActions.exportConfigFile(definitionState.definitionForManager)}
-                                    />
-                                    <SvgIcon
-                                        name="Delete"
-                                        size={24}
-                                        title={i18n._('Delete')}
-                                        onClick={() => actions.onRemoveManagerDefinition(definitionState.definitionForManager, definitionState.isCategorySelected)}
-                                        disabled={isOfficialDefinition(definitionState.definitionForManager)}
-                                    />
-                                </div>
+                                <div className="module-default-shadow">
+                                    <div className="sm-flex justify-space-between padding-vertical-8 padding-horizontal-16">
+                                        <SvgIcon
+                                            name="Edit"
+                                            disabled={isOfficialDefinition(definitionState.definitionForManager)}
+                                            size={24}
+                                            className="padding-vertical-2 padding-horizontal-2"
+                                            title={i18n._('Edit')}
+                                            onClick={() => actions.setRenamingStatus(true)}
+                                        />
+                                        <input
+                                            ref={refs.fileInput}
+                                            type="file"
+                                            accept=".json"
+                                            style={{ display: 'none' }}
+                                            multiple={false}
+                                            onChange={outsideActions.onChangeFileForManager}
+                                        />
+                                        <SvgIcon
+                                            name="Import"
+                                            size={24}
+                                            className="padding-vertical-2 padding-horizontal-2"
+                                            title={i18n._('Import')}
+                                            onClick={() => actions.importFile(refs.fileInput)}
+                                        />
+                                        <SvgIcon
+                                            name="Export"
+                                            size={24}
+                                            className="padding-vertical-2 padding-horizontal-2"
+                                            disabled={definitionState.isCategorySelected}
+                                            title={i18n._('Export')}
+                                            onClick={() => outsideActions.exportConfigFile(definitionState.definitionForManager)}
+                                        />
+                                        <SvgIcon
+                                            name="Delete"
+                                            size={24}
+                                            className="padding-vertical-2 padding-horizontal-2"
+                                            title={i18n._('Delete')}
+                                            onClick={() => actions.onRemoveManagerDefinition(definitionState.definitionForManager, definitionState.isCategorySelected)}
+                                            disabled={isOfficialDefinition(definitionState.definitionForManager)}
+                                        />
+                                    </div>
 
 
-                                <div className="sm-tabs padding-vertical-16 padding-horizontal-16">
-                                    <SvgIcon
-                                        name="NewNormal"
-                                        size={24}
-                                        className={classNames(styles['manager-file'], 'sm-tab')}
-                                        onClick={() => { actions.showNewModal(); }}
-                                        spanText={i18n._('New')}
-                                        spanClassName={classNames(styles['action-title'])}
-                                    />
-                                    <SvgIcon
-                                        name="CopyNormal"
-                                        size={24}
-                                        className={classNames(styles['manager-file'], 'sm-tab')}
-                                        onClick={() => { actions.showDuplicateModal(); }}
-                                        spanText={i18n._('Copy')}
-                                        spanClassName={classNames(styles['action-title'])}
-                                    />
+                                    <div className="sm-tabs padding-bottom-16 padding-horizontal-16">
+                                        <SvgIcon
+                                            name="NewNormal"
+                                            size={24}
+                                            className={classNames(styles['manager-file'], 'sm-tab')}
+                                            onClick={() => { actions.showNewModal(); }}
+                                            spanText={i18n._('New')}
+                                            spanClassName={classNames(styles['action-title'])}
+                                        />
+                                        <SvgIcon
+                                            name="CopyNormal"
+                                            size={24}
+                                            className={classNames(styles['manager-file'], 'sm-tab')}
+                                            onClick={() => { actions.showDuplicateModal(); }}
+                                            spanText={i18n._('Copy')}
+                                            spanClassName={classNames(styles['action-title'])}
+                                        />
+                                    </div>
                                 </div>
                             </div>
                             <ConfigValueBox

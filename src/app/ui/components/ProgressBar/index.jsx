@@ -1,6 +1,7 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import { Progress } from 'antd';
+import classNames from 'classnames';
 import styles from './styles.styl';
 import { EPSILON } from '../../../constants';
 
@@ -37,10 +38,10 @@ class ProgressBar extends React.PureComponent {
         return (
             <div
                 style={{ display }}
-                className={styles.progressbar}
+                className={classNames(styles.progressbar, 'module-default-shadow')}
             >
-                <div className={styles['progress-notice']}>
-                    <p>{tips}</p>
+                <div className="position-re height-16 margin-top-16 margin-bottom-8 align-c">
+                    <span>{tips}</span>
                 </div>
                 <Progress
                     percent={progress}
