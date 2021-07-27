@@ -120,6 +120,7 @@ function SettingItem({ definitionKey, settings, isDefinitionEditable = () => tru
                     )}
                     {type === 'float' && (
                         <Input
+                            suffix={unit}
                             className="sm-flex-width align-r"
                             value={settingDefaultValue}
                             // disabled={!isDefinitionEditable()}
@@ -129,21 +130,17 @@ function SettingItem({ definitionKey, settings, isDefinitionEditable = () => tru
                             }}
                         />
                     )}
-                    {type === 'float' && (
-                        <span className="sm-flex__input-unit-8 color-black-5">{unit}</span>
-                    )}
                     {type === 'int' && (
                         <Input
+                            suffix={unit}
                             className="sm-flex-width align-r"
                             value={settingDefaultValue}
+                            size={styleSize}
                             // disabled={!isDefinitionEditable()}
                             onChange={(value) => {
                                 onChangeDefinition(definitionKey, value);
                             }}
                         />
-                    )}
-                    {type === 'int' && (
-                        <span className="sm-flex__input-unit-8 color-black-5">{unit}</span>
                     )}
                     {type === 'bool' && (
                         <Checkbox
@@ -173,6 +170,7 @@ function SettingItem({ definitionKey, settings, isDefinitionEditable = () => tru
                     )}
                     {type === undefined && (
                         <Input
+                            size={styleSize}
                             className="sm-flex-width align-r"
                             value={settingDefaultValue}
                             // disabled={!isDefinitionEditable()}

@@ -139,6 +139,7 @@ class JobType extends PureComponent {
                                 <div className="sm-flex height-32 position-re">
                                     <span className="width-88 margin-right-8">{i18n._('Width (X)')}</span>
                                     <Input
+                                        suffix="mm"
                                         disabled={inProgress}
                                         value={toFixed(coordinateSize.x, 1)}
                                         max={size.x}
@@ -152,15 +153,11 @@ class JobType extends PureComponent {
                                             );
                                         }}
                                     />
-                                    <span
-                                        className="sm-flex__input-unit-l-184 color-black-5"
-                                    >
-                                        mm
-                                    </span>
                                 </div>
                                 <div className="sm-flex height-32 position-re margin-top-16">
                                     <span className="width-88 margin-right-8">{i18n._('Height (Y)')}</span>
                                     <Input
+                                        suffix="mm"
                                         disabled={inProgress}
                                         value={toFixed(coordinateSize.y, 1)}
                                         max={size.y}
@@ -174,11 +171,6 @@ class JobType extends PureComponent {
                                             );
                                         }}
                                     />
-                                    <span
-                                        className="sm-flex__input-unit-l-184 color-black-5"
-                                    >
-                                        mm
-                                    </span>
                                 </div>
                             </div>
                         </div>
@@ -234,6 +226,7 @@ class JobType extends PureComponent {
                             <div className="sm-flex height-32 position-re">
                                 <span className="width-88 margin-right-8">{i18n._('Length (L)')}</span>
                                 <Input
+                                    suffix="mm"
                                     disabled={inProgress}
                                     value={toFixed(length, 1)}
                                     max={size.y}
@@ -248,15 +241,11 @@ class JobType extends PureComponent {
                                         );
                                     }}
                                 />
-                                <span
-                                    className="sm-flex__input-unit-l-184 color-black-5"
-                                >
-                                        mm
-                                </span>
                             </div>
                             <div className="sm-flex height-32 position-re margin-top-8">
                                 <span className="width-88 margin-right-8">{i18n._('Diameter (D)')}</span>
                                 <Input
+                                    suffix="mm"
                                     disabled={inProgress}
                                     value={toFixed(diameter, 1)}
                                     max={size.x}
@@ -271,11 +260,6 @@ class JobType extends PureComponent {
                                         );
                                     }}
                                 />
-                                <span
-                                    className="sm-flex__input-unit-l-184 color-black-5"
-                                >
-                                        mm
-                                </span>
                             </div>
                         </div>
                         <div className="margin-top-24 margin-bottom-16 font-weight-bold">

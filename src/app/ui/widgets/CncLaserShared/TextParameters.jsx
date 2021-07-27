@@ -132,12 +132,12 @@ class TextParameters extends PureComponent {
                             <div className="sm-flex height-32 margin-vertical-8">
                                 <span className="sm-flex-auto sm-flex-order-negative width-64">{i18n._('Font Size')}</span>
                                 <Input
+                                    suffix="pt"
                                     disabled={disabled}
                                     className="sm-flex-width align-r"
                                     value={parseInt(fontSize, 10)}
                                     onChange={actions.onChangeSize}
                                 />
-                                <span className="sm-flex__input-unit-8 color-black-5">pt</span>
                             </div>
                         </TipTrigger>
                     </React.Fragment>

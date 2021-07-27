@@ -52,6 +52,7 @@ class GcodeParameters extends PureComponent {
                             <div className="sm-flex justify-space-between height-32 margin-vertical-8">
                                 <span>{i18n._('Density')}</span>
                                 <Input
+                                    suffix="dot/mm"
                                     className="sm-flex-auto"
                                     size="large"
                                     value={density}
@@ -60,7 +61,6 @@ class GcodeParameters extends PureComponent {
                                     step={1}
                                     onChange={(value) => { this.props.updateGcodeConfig({ density: value }); }}
                                 />
-                                <span className="unit-text sm-flex__input-unit-in-modal line-height-32 margin-horizontal-16  color-black-5">dot/mm</span>
                             </div>
                         </TipTrigger>
                     </div>
@@ -118,6 +118,7 @@ class GcodeParameters extends PureComponent {
                         <div className="sm-flex justify-space-between height-32 margin-vertical-8">
                             <span>{i18n._('Jog Speed')}</span>
                             <Input
+                                suffix="mm/min"
                                 className="sm-flex-auto"
                                 size="large"
                                 value={jogSpeed}
@@ -126,7 +127,6 @@ class GcodeParameters extends PureComponent {
                                 step={1}
                                 onChange={(value) => { this.props.updateGcodeConfig({ jogSpeed: value }); }}
                             />
-                            <span className="unit-text sm-flex__input-unit-in-modal line-height-32 margin-horizontal-16 color-black-5">mm/min</span>
                         </div>
                     </TipTrigger>
                 )}
@@ -138,6 +138,7 @@ class GcodeParameters extends PureComponent {
                         <div className="sm-flex justify-space-between height-32 margin-vertical-8">
                             <span>{i18n._('Work Speed')}</span>
                             <Input
+                                suffix="mm/min"
                                 className="sm-flex-auto"
                                 size="large"
                                 value={workSpeed}
@@ -146,7 +147,6 @@ class GcodeParameters extends PureComponent {
                                 max={6000}
                                 onChange={(value) => { this.props.updateGcodeConfig({ workSpeed: value }); }}
                             />
-                            <span className="unit-text sm-flex__input-unit-in-modal line-height-32 margin-horizontal-16 color-black-5">mm/min</span>
                         </div>
                     </TipTrigger>
                 )}
@@ -158,6 +158,7 @@ class GcodeParameters extends PureComponent {
                         <div className="sm-flex justify-space-between height-32 margin-vertical-8">
                             <span>{i18n._('Dwell Time')}</span>
                             <Input
+                                suffix="ms/dot"
                                 className="sm-flex-auto"
                                 size="large"
                                 value={dwellTime}
@@ -166,7 +167,6 @@ class GcodeParameters extends PureComponent {
                                 step={0.1}
                                 onChange={(value) => { this.props.updateGcodeConfig({ dwellTime: value }); }}
                             />
-                            <span className="unit-text sm-flex__input-unit-in-modal line-height-32 margin-horizontal-16 color-black-5">ms/dot</span>
                         </div>
                     </TipTrigger>
                 )}
@@ -177,6 +177,7 @@ class GcodeParameters extends PureComponent {
                         <div className="sm-flex justify-space-between height-32 margin-vertical-8">
                             <span>{i18n._('Plunge Speed')}</span>
                             <Input
+                                suffix="mm/min"
                                 className="sm-flex-auto"
                                 size="large"
                                 value={plungeSpeed}
@@ -185,7 +186,6 @@ class GcodeParameters extends PureComponent {
                                 step={0.1}
                                 onChange={(value) => { this.props.updateGcodeConfig({ plungeSpeed: value }); }}
                             />
-                            <span className="unit-text sm-flex__input-unit-in-modal line-height-32 margin-horizontal-16 color-black-5">mm/min</span>
                         </div>
                     </TipTrigger>
                 )}
@@ -227,6 +227,7 @@ class GcodeParameters extends PureComponent {
                                 <div className="sm-flex justify-space-between height-32 margin-vertical-8">
                                     <span>{i18n._('Z step per pass')}</span>
                                     <Input
+                                        suffix="mm"
                                         className="sm-flex-auto"
                                         size="large"
                                         min={0}
@@ -234,7 +235,6 @@ class GcodeParameters extends PureComponent {
                                         value={multiPassDepth}
                                         onChange={(value) => { this.props.updateGcodeConfig({ multiPassDepth: value }); }}
                                     />
-                                    <span className="unit-text sm-flex__input-unit-in-modal line-height-32 margin-horizontal-16 color-black-5">mm</span>
                                 </div>
                             </TipTrigger>
                         )}
@@ -260,6 +260,7 @@ class GcodeParameters extends PureComponent {
                             <div className="sm-flex justify-space-between height-32 margin-vertical-8">
                                 <span>{i18n._('Power (%)')}</span>
                                 <Input
+                                    suffix="%"
                                     className="sm-flex-auto"
                                     size="large"
                                     min={1}
@@ -267,7 +268,6 @@ class GcodeParameters extends PureComponent {
                                     value={fixedPower}
                                     onChange={(value) => { this.props.updateGcodeConfig({ fixedPower: value }); }}
                                 />
-                                <span className="unit-text sm-flex__input-unit-in-modal line-height-32 margin-horizontal-16 color-black-5">%</span>
                             </div>
                         </TipTrigger>
                     </div>

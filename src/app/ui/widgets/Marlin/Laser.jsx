@@ -115,6 +115,7 @@ class Laser extends PureComponent {
                             <div className="sm-flex height-32 justify-space-between margin-vertical-8">
                                 <span className="">{i18n._('Material Thickness')}</span>
                                 <Input
+                                    suffix="mm"
                                     className="sm-flex-auto"
                                     size="small"
                                     value={materialThickness}
@@ -122,13 +123,13 @@ class Laser extends PureComponent {
                                     min={0}
                                     onChange={actions.onChangeMaterialThickness}
                                 />
-                                <span className="sm-flex__input-unit-8 color-black-5">mm</span>
                             </div>
                         )}
                         {isLaserPrintAutoMode && workPosition.isFourAxis && (
                             <div className="sm-flex height-32 justify-space-between margin-vertical-8">
                                 <span className="">{i18n._('Material Diameter')}</span>
                                 <Input
+                                    suffix="mm"
                                     className="sm-flex-auto"
                                     size="small"
                                     value={materialThickness * 2}
@@ -136,7 +137,6 @@ class Laser extends PureComponent {
                                     min={0}
                                     onChange={actions.onChangeFourAxisMaterialThickness}
                                 />
-                                <span className="sm-flex__input-unit-8 color-black-5">mm</span>
                             </div>
                         )}
                         {isLaserPrintAutoMode && laserFocalLength && (
@@ -144,22 +144,22 @@ class Laser extends PureComponent {
                                 <div className="sm-flex height-32 justify-space-between margin-vertical-8">
                                     <span>{i18n._('Laser Height')}</span>
                                     <Input
+                                        suffix="mm"
                                         className="sm-flex-auto"
                                         size="small"
                                         disabled
                                         value={laserFocalLength.toFixed(2)}
                                     />
-                                    <span className="sm-flex__input-unit-8 color-black-5">mm</span>
                                 </div>
                                 <div className="sm-flex height-32 justify-space-between margin-vertical-8">
                                     <span>{i18n._('Z Offset')}</span>
                                     <Input
+                                        suffix="mm"
                                         className="sm-flex-auto"
                                         size="small"
                                         disabled
                                         value={(laserFocalLength + materialThickness).toFixed(2)}
                                     />
-                                    <span className="sm-flex__input-unit-8 color-black-5">mm</span>
                                 </div>
                             </div>
                         )}
@@ -188,13 +188,13 @@ class Laser extends PureComponent {
                     <div className="">
                         <span>{this.props.laserPower}/</span>
                         <Input
+                            suffix="%"
                             value={laserPower}
                             max={100}
                             min={0}
                             size="small"
                             onChange={actions.onChangeLaserPower}
                         />
-                        <span className="height-32 sm-flex__input-unit-44 color-black-5">%</span>
                         <SvgIcon
                             name="Reset"
                             size={22}
