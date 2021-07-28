@@ -7,7 +7,7 @@ import { NumberInput as Input } from '../../../components/Input';
 import { TOOLPATH_TYPE_VECTOR } from '../../../../constants';
 import Select from '../../../components/Select';
 import Checkbox from '../../../components/Checkbox';
-import { toHump } from '../../../../../shared/lib/utils';
+import { toHump, toLine } from '../../../../../shared/lib/utils';
 
 function SettingItem(props) {
     const { setting, isSVG, settingName, updateToolConfig, updateGcodeConfig, styleSize = 'large' } = props;
@@ -58,7 +58,7 @@ function SettingItem(props) {
                                 gcodeOptions[toHump(settingName)] = event.target.checked;
                                 updateGcodeConfig(gcodeOptions);
                             } else {
-                                updateToolConfig(toHump(settingName), event.target.checked);
+                                updateToolConfig(toLine(settingName), event.target.checked);
                             }
                         }}
                     />
@@ -77,7 +77,7 @@ function SettingItem(props) {
                                 gcodeOptions[toHump(settingName)] = value;
                                 updateGcodeConfig(gcodeOptions);
                             } else {
-                                updateToolConfig(toHump(settingName), value);
+                                updateToolConfig(toLine(settingName), value);
                             }
                         }}
                         disabled={isToolParams(settingName)}
@@ -98,7 +98,7 @@ function SettingItem(props) {
                                 gcodeOptions[toHump(settingName)] = value.value;
                                 updateGcodeConfig(gcodeOptions);
                             } else {
-                                updateToolConfig(toHump(settingName), value.value);
+                                updateToolConfig(toLine(settingName), value.value);
                             }
                         }}
                         disabled={isToolParams(settingName)}

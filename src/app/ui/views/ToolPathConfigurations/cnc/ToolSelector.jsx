@@ -103,7 +103,8 @@ function ToolSelector(props) {
                             && (
                                 <span
                                     className={classNames(
-                                        styles['manager-is-modified']
+                                        styles['manager-is-modified'],
+                                        'height-32'
                                     )}
                                 />
                             )
