@@ -21,6 +21,7 @@ class JobType extends PureComponent {
         inProgress: PropTypes.bool.isRequired,
 
         jobTypeState: PropTypes.object.isRequired, // { materials, coordinateMode, coordinateSize }
+        useBackground: PropTypes.bool, // only laser
         setJobTypeState: PropTypes.func.isRequired
     };
 
@@ -108,13 +109,18 @@ class JobType extends PureComponent {
     };
 
     render() {
-        const { size, inProgress, jobTypeState, headType } = this.props;
+        const { size, inProgress, jobTypeState, headType, useBackground } = this.props;
         const { materials, coordinateMode, coordinateSize } = jobTypeState;
         const { isRotate, diameter, length } = materials;
 
         let imgOF3axisCoordinateMode = '';
         if (!isRotate) {
             imgOF3axisCoordinateMode = `/resources/images/cnc-laser/working-origin-3-${coordinateMode.value}.png`;
+        }
+
+        let settingSizeDisabled = false;
+        if (useBackground) {
+            settingSizeDisabled = true;
         }
 
         return (
@@ -140,7 +146,7 @@ class JobType extends PureComponent {
                                     <span className="width-88 margin-right-8">{i18n._('Width (X)')}</span>
                                     <Input
                                         suffix="mm"
-                                        disabled={inProgress}
+                                        disabled={inProgress || settingSizeDisabled}
                                         value={toFixed(coordinateSize.x, 1)}
                                         max={size.x}
                                         min={2}
@@ -158,7 +164,7 @@ class JobType extends PureComponent {
                                     <span className="width-88 margin-right-8">{i18n._('Height (Y)')}</span>
                                     <Input
                                         suffix="mm"
-                                        disabled={inProgress}
+                                        disabled={inProgress || settingSizeDisabled}
                                         value={toFixed(coordinateSize.y, 1)}
                                         max={size.y}
                                         min={10}
@@ -199,7 +205,7 @@ class JobType extends PureComponent {
                                     placeholder={i18n._('Choose font')}
                                     value={i18n._(coordinateMode.label ?? COORDINATE_MODE_CENTER.label)}
                                     onChange={this.actions.changeCoordinateMode}
-                                    disabled={inProgress}
+                                    disabled={inProgress || settingSizeDisabled}
                                 />
                             </div>
                         </div>
@@ -227,7 +233,7 @@ class JobType extends PureComponent {
                                 <span className="width-88 margin-right-8">{i18n._('Length (L)')}</span>
                                 <Input
                                     suffix="mm"
-                                    disabled={inProgress}
+                                    disabled={inProgress || settingSizeDisabled}
                                     value={toFixed(length, 1)}
                                     max={size.y}
                                     min={10}
@@ -246,7 +252,7 @@ class JobType extends PureComponent {
                                 <span className="width-88 margin-right-8">{i18n._('Diameter (D)')}</span>
                                 <Input
                                     suffix="mm"
-                                    disabled={inProgress}
+                                    disabled={inProgress || settingSizeDisabled}
                                     value={toFixed(diameter, 1)}
                                     max={size.x}
                                     min={2}
@@ -321,12 +327,13 @@ class JobType extends PureComponent {
 const mapStateToProps = (state, ownProps) => {
     const { headType } = ownProps;
     const { size } = state.machine;
-    const { inProgress } = state[headType];
+    const { inProgress, useBackground } = state[headType];
 
     return {
         size,
         inProgress,
-        headType
+        headType,
+        useBackground
     };
 };
 

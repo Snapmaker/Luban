@@ -3,13 +3,10 @@ import * as THREE from 'three';
 class GridLine {
     group = new THREE.Object3D();
 
-    colorCenterLine = new THREE.Color(0x444444);
+    colorGrid = 0xF5F5F7;
 
-    colorGrid = new THREE.Color(0x888888);
-
-    constructor(minX, maxX, stepX, minY, maxY, stepY, colorCenterLine, colorGrid) {
-        colorCenterLine = new THREE.Color(colorCenterLine) || this.colorCenterLine;
-        colorGrid = new THREE.Color(colorGrid) || this.colorGrid;
+    constructor(minX, maxX, stepX, minY, maxY, stepY, colorGrid) {
+        colorGrid = colorGrid ?? this.colorGrid;
 
         minY = minY ?? minX;
         maxY = maxY ?? maxX;
@@ -20,7 +17,7 @@ class GridLine {
             const material = new THREE.LineBasicMaterial({
                 vertexColors: THREE.VertexColors
             });
-            const color = (x === 0) ? colorCenterLine : colorGrid;
+            const color = colorGrid;
 
             geometry.vertices.push(
                 new THREE.Vector3(x, minY, 0),
@@ -36,7 +33,7 @@ class GridLine {
             const material = new THREE.LineBasicMaterial({
                 vertexColors: THREE.VertexColors
             });
-            const color = (y === 0) ? colorCenterLine : colorGrid;
+            const color = colorGrid;
 
             geometry.vertices.push(
                 new THREE.Vector3(minX, y, 0),
@@ -46,6 +43,22 @@ class GridLine {
 
             this.group.add(new THREE.Line(geometry, material));
         }
+
+        const color = 0xFFFFFF - 0xB9BCBF;
+        const material = new THREE.LineBasicMaterial({
+            linewidth: 2,
+            color: color
+        });
+
+        const square = new THREE.BufferGeometry().setFromPoints([
+            new THREE.Vector3(minX, minY, 0),
+            new THREE.Vector3(maxX, minY, 0),
+            new THREE.Vector3(maxX, maxY, 0),
+            new THREE.Vector3(minX, maxY, 0),
+            new THREE.Vector3(minX, minY, 0)
+        ]);
+
+        this.group.add(new THREE.Line(square, material));
 
         return this.group;
     }

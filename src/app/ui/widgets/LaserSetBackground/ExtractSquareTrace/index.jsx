@@ -81,7 +81,7 @@ class ExtractSquareTrace extends PureComponent {
 
     render() {
         return (
-            <Modal style={{ width: '480px', height: '720px' }} size="lg" onClose={this.props.hideModal}>
+            <div>
                 <input
                     ref={this.fileInput}
                     type="file"
@@ -90,73 +90,76 @@ class ExtractSquareTrace extends PureComponent {
                     multiple={false}
                     onChange={this.actions.onChangeFile}
                 />
-                <div className="clearfix" />
-                <Modal.Header>
-                    <div className={styles['laser-set-background-modal-title']}>
-                        {i18n._('Extract Square Trace')}
-                    </div>
-                </Modal.Header>
+                <Modal style={{ width: '480px', height: '720px' }} size="lg" onClose={this.props.hideModal}>
 
-                <Modal.Body>
-                    <div style={{ textAlign: 'center' }}>
-                        <ExtractPreview
-                            ref={this.extractingPreview}
-                            size={this.props.size}
-                            width={400}
-                            height={400}
-                        />
-                    </div>
-                    <div className={styles['extract-background']}>
-                        <div className={classNames(styles['extract-actions'])}>
-                            <Anchor
-                                className={styles['extract-actions__btn']}
-                                onClick={this.actions.onClickToUpload}
-                            >
-                                <i className={styles['extract-actions__icon-upload']} />
-                            </Anchor>
-                            <span className={styles['extract-actions__text']}>{i18n._('Upload')}</span>
+                    <div className="clearfix" />
+                    <Modal.Header>
+                        <div className={styles['laser-set-background-modal-title']}>
+                            {i18n._('Extract Square Trace')}
                         </div>
-                        <div className={classNames(styles['extract-actions'])}>
-                            <Anchor
-                                className={styles['extract-actions__btn']}
-                                onClick={this.actions.reset}
-                            >
-                                <i className={styles['extract-actions__icon-reset']} />
-                            </Anchor>
-                            <span className={styles['extract-actions__text']}>{i18n._('Reset')}</span>
+                    </Modal.Header>
+
+                    <Modal.Body>
+                        <div style={{ textAlign: 'center' }}>
+                            <ExtractPreview
+                                ref={this.extractingPreview}
+                                size={this.props.size}
+                                width={400}
+                                height={400}
+                            />
                         </div>
-                        <div className={classNames(styles['extract-actions'])}>
-                            <Anchor
-                                className={styles['extract-actions__btn']}
-                                onClick={this.actions.extract}
-                            >
-                                <i className={styles['extract-actions__icon-conform']} />
-                            </Anchor>
-                            <span className={styles['extract-actions__text']}>{i18n._('Extract')}</span>
+                        <div className={styles['extract-background']}>
+                            <div className={classNames(styles['extract-actions'])}>
+                                <Anchor
+                                    className={styles['extract-actions__btn']}
+                                    onClick={this.actions.onClickToUpload}
+                                >
+                                    <i className={styles['extract-actions__icon-upload']} />
+                                </Anchor>
+                                <span className={styles['extract-actions__text']}>{i18n._('Upload')}</span>
+                            </div>
+                            <div className={classNames(styles['extract-actions'])}>
+                                <Anchor
+                                    className={styles['extract-actions__btn']}
+                                    onClick={this.actions.reset}
+                                >
+                                    <i className={styles['extract-actions__icon-reset']} />
+                                </Anchor>
+                                <span className={styles['extract-actions__text']}>{i18n._('Reset')}</span>
+                            </div>
+                            <div className={classNames(styles['extract-actions'])}>
+                                <Anchor
+                                    className={styles['extract-actions__btn']}
+                                    onClick={this.actions.extract}
+                                >
+                                    <i className={styles['extract-actions__icon-conform']} />
+                                </Anchor>
+                                <span className={styles['extract-actions__text']}>{i18n._('Extract')}</span>
+                            </div>
                         </div>
-                    </div>
-                </Modal.Body>
-                <Modal.Footer>
-                    {!EXPERIMENTAL_LASER_CAMERA && (
+                    </Modal.Body>
+                    <Modal.Footer>
+                        {!EXPERIMENTAL_LASER_CAMERA && (
+                            <Button
+                                priority="level-two"
+                                width="96px"
+                                type="default"
+                                className="float-l"
+                                onClick={this.actions.previousPanel}
+                            >
+                                {i18n._('Previous')}
+                            </Button>
+                        )}
                         <Button
                             priority="level-two"
                             width="96px"
-                            type="default"
-                            className="float-l"
-                            onClick={this.actions.previousPanel}
+                            onClick={this.actions.setBackgroundImage}
                         >
-                            {i18n._('Previous')}
+                            {i18n._('Complete')}
                         </Button>
-                    )}
-                    <Button
-                        priority="level-two"
-                        width="96px"
-                        onClick={this.actions.setBackgroundImage}
-                    >
-                        {i18n._('Complete')}
-                    </Button>
-                </Modal.Footer>
-            </Modal>
+                    </Modal.Footer>
+                </Modal>
+            </div>
         );
     }
 }

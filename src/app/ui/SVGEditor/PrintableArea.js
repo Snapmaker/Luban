@@ -101,10 +101,10 @@ class PrintableArea {
         const xMax = x + cx / 2 + this.coorDelta.x;
         const yMin = y - cy / 2 + this.coorDelta.y;
         const yMax = y + cy / 2 + this.coorDelta.y;
-        const colorSmallGrid = '#E5E5E7';
-        const colorBigGrid = '#D5D6D9';
+        const colorSmallGrid = '#EEEFF0';
+        const colorBigGrid = '#EEEFF0';
         const colorTextFill = '#85888C';
-        const textSize = 6;
+        const textSize = 4;
         const coordinateModeName = this.coordinateMode.value;
         // small grid 10x10
         for (let i = y; i >= yMin; i -= 10) {
@@ -209,7 +209,7 @@ class PrintableArea {
                     y: i + 1.2,
                     id: uuid.v4(),
                     'font-size': textSize,
-                    'font-family': 'serif',
+                    'font-family': 'roboto',
                     fill: colorTextFill,
                     'text-anchor': 'middle',
                     'xml:space': 'preserve',
@@ -247,7 +247,7 @@ class PrintableArea {
                     y: i + 1.2,
                     id: uuid.v4(),
                     'font-size': textSize,
-                    'font-family': 'serif',
+                    'font-family': 'roboto',
                     fill: colorTextFill,
                     'text-anchor': 'middle',
                     'xml:space': 'preserve',
@@ -285,7 +285,7 @@ class PrintableArea {
                     y: y + (coordinateModeName.indexOf('top') !== -1 ? -3 : 6),
                     id: uuid.v4(),
                     'font-size': textSize,
-                    'font-family': 'serif',
+                    'font-family': 'roboto',
                     fill: colorTextFill,
                     'text-anchor': 'middle',
                     'xml:space': 'preserve',
@@ -324,7 +324,7 @@ class PrintableArea {
                     y: y + (coordinateModeName.indexOf('top') !== -1 ? -3 : 6),
                     id: uuid.v4(),
                     'font-size': textSize,
-                    'font-family': 'serif',
+                    'font-family': 'roboto',
                     fill: colorTextFill,
                     'text-anchor': 'middle',
                     'xml:space': 'preserve',
@@ -368,7 +368,7 @@ class PrintableArea {
                 y: 30,
                 id: uuid.v4(),
                 'font-size': 24,
-                'font-family': 'serif',
+                'font-family': 'roboto',
                 fill: '#ff7f00',
                 'text-anchor': 'middle',
                 'xml:space': 'preserve',
