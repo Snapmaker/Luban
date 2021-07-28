@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import PropTypes from 'prop-types';
 import { useSelector, useDispatch, shallowEqual } from 'react-redux';
 import classNames from 'classnames';
+import { cloneDeep } from 'lodash';
 import SvgIcon from '../../../components/SvgIcon';
 import Anchor from '../../../components/Anchor';
 import { Button } from '../../../components/Buttons';
@@ -25,37 +26,7 @@ import ToolParameters from '../../../views/ToolPathConfigurations/cnc/ToolParame
 import { actions as cncActions } from '../../../../flux/cnc';
 import ToolSelector from '../../../views/ToolPathConfigurations/cnc/ToolSelector';
 
-// const getIconStatus = (status) => {
-//     if (status === 'running') {
-//         return [styles.icon, styles.iconRunning];
-//     } else if (status === 'warning') {
-//         return [styles.icon, styles.iconWarning];
-//     } else if (status === 'failed') {
-//         return [styles.icon, styles.iconError];
-//     }
-//     return [];
-// };
-// 'Toolpath List'
-// const useExpandItem = (title) => {
-//     const [expanded, setExpanded] = useState(true);
-//     function handleClick() {
-//         setExpanded(!expanded);
-//     }
-//     function renderExpandItem() {
-//         return (
-//             <Anchor className="sm-flex height-32 margin-vertical-8" onClick={handleClick}>
-//                 <span className="sm-flex-width">{i18n._(title)}</span>
-//                 <SvgIcon
-//                     name="DropdownLine"
-//                     className={classNames(
-//                         expanded ? '' : 'rotate180'
-//                     )}
-//                 />
-//             </Anchor>
-//         );
-//     }
-//     return [expanded, renderExpandItem];
-// };
+
 const ToolpathItem = ({ toolPath, selectedToolPathIDArray, selectToolPathId, selectOneToolPathId, selectToolPathById, onClickVisible, setEditingToolpath, disabled }) => {
     if (!toolPath) {
         return null;
@@ -217,7 +188,7 @@ const ToolPathListBox = (props) => {
     const dispatch = useDispatch();
     const selectedToolPath = toolPaths && selectedToolPathIDArray.length === 1 && toolPaths.find(v => v.id === selectedToolPathIDArray[0]);
     const selectedToolPathId = selectedToolPath.id;
-    const activeToolListDefinition = useSelector(state => state[props.headType]?.activeToolListDefinition, shallowEqual);
+    const activeToolListDefinition = cloneDeep(useSelector(state => state[props.headType]?.activeToolListDefinition, shallowEqual));
     const toolDefinitions = useSelector(state => state[props.headType]?.toolDefinitions, shallowEqual);
     // const [expanded, renderExpandItem] = useExpandItem('Toolpath List');
     // ToolPath fast edit init

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useLayoutEffect } from 'react';
 import { useDispatch, useSelector, shallowEqual } from 'react-redux';
 import PropTypes from 'prop-types';
 import classNames from 'classnames';
@@ -23,7 +23,7 @@ function ToolPathConfigurations(props) {
     const dispatch = useDispatch();
 
     const [currentToolDefinition, setCurrentToolDefinition] = useState(activeToolListDefinition);
-    useEffect(() => {
+    useLayoutEffect(() => {
         setCurrentToolDefinition(_.cloneDeep(activeToolListDefinition));
     }, [activeToolListDefinition]);
 
@@ -82,7 +82,6 @@ function ToolPathConfigurations(props) {
             const gcodeConfig = {
                 ...toolPath.gcodeConfig
             };
-
             if (currentToolDefinition) {
                 toolParams.definitionId = currentToolDefinition.definitionId;
                 toolParams.definitionName = currentToolDefinition.name;
@@ -205,12 +204,7 @@ function ToolPathConfigurations(props) {
                         />
                     )}
                 </Modal.Body>
-                <Modal.Footer style={{
-                    bottom: '0px',
-                    position: 'absolute',
-                    width: '100%'
-                }}
-                >
+                <Modal.Footer>
                     <Button
                         priority="level-two"
                         className="margin-left-8"

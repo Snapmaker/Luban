@@ -433,8 +433,7 @@ function ProfileManager({ optionConfigGroup, disableCategory = true, managerTitl
                                 <ul className={classNames(styles['manager-name-wrapper'])}>
                                     {(cates.map((cate) => {
                                         const displayCategory = limitStringLength(cate.category, 28);
-                                        const { category } = cate;
-                                        const isDefault = category.indexOf('Default') !== -1;
+                                        // const { category } = cate;
                                         const isCategorySelected = cate.category === definitionState?.definitionForManager.category;
                                         return !!cate.items.length && (
                                             <li key={`${cate.category}`}>
@@ -478,6 +477,7 @@ function ProfileManager({ optionConfigGroup, disableCategory = true, managerTitl
                                                             const displayName = limitStringLength(i18n._(currentOption.label), 24);
                                                             const definitionForManager = definitionState?.definitionForManager;
                                                             const isSelected = !definitionState.isCategorySelected && currentOption.value === definitionForManager.definitionId;
+                                                            const isDefault = (currentOption?.value.indexOf('Default') > -1);
                                                             let isAllValueDefault = isDefault && isSelected;
                                                             // TODO: need to fix this
                                                             if (isDefault && isSelected) {
