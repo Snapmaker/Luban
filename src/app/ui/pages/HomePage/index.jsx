@@ -64,7 +64,7 @@ const HomePage = (props) => { // Todo, what's the props ?
                     />
                 )
             }
-            {printingModal || laserModal || cncModal}
+            {props?.isPopup || printingModal || laserModal || cncModal}
         </div>
     );
 };

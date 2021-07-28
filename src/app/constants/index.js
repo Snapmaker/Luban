@@ -387,7 +387,7 @@ export const LASER_DEFAULT_GCODE_PARAMETERS_DEFINITION = {
         description: 'Choose Movement Mode',
         type: 'enum',
         options: {
-            'greyscale-line': 'Line', //'Line (Normal Quality)',
+            'greyscale-line': 'Line', // 'Line (Normal Quality)',
             'greyscale-dot': 'Dot' // 'Dot (High Quality)'
         },
         default_value: 'movementMode'
@@ -486,6 +486,7 @@ export const SELECTEVENT = {
     REMOVESELECT: 'select:removeSelect'
 };
 
+// todo: refactor this data structure
 export const MACHINE_SERIES = {
     ORIGINAL: {
         value: 'Original',
@@ -505,6 +506,7 @@ export const MACHINE_SERIES = {
     },
     ORIGINAL_LZ: {
         value: 'Original Long Z-axis',
+        configPath: 'Original',
         label: 'Snapmaker Original with Long Z-axis',
         setting: {
             size: {
