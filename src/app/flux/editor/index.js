@@ -965,14 +965,22 @@ export const actions = {
         dispatch(baseActions.render(headType));
     },
 
-    undo: (headType) => (dispatch) => {
-        dispatch(operationHistoryActions.undo(headType));
-        dispatch(baseActions.render(headType));
+    undo: (headType) => (dispatch, getState) => {
+        const { canUndo } = getState()[headType].history;
+        if (canUndo) {
+            dispatch(operationHistoryActions.undo(headType));
+            dispatch(actions.showModelGroupObject(headType));
+            dispatch(baseActions.render(headType));
+        }
     },
 
-    redo: (headType) => (dispatch) => {
-        dispatch(operationHistoryActions.redo(headType));
-        dispatch(baseActions.render(headType));
+    redo: (headType) => (dispatch, getState) => {
+        const { canRedo } = getState()[headType].history;
+        if (canRedo) {
+            dispatch(operationHistoryActions.redo(headType));
+            dispatch(actions.showModelGroupObject(headType));
+            dispatch(baseActions.render(headType));
+        }
     },
 
     recordSnapshot: (headType) => (dispatch, getState) => {

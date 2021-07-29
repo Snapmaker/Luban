@@ -124,7 +124,11 @@ class SvgIcon extends PureComponent {
                     onKeyDown={noop}
                     role="button"
                     tabIndex={0}
-                    onClick={onClick}
+                    onClick={(e) => {
+                        if (!disabled) {
+                            onClick(e);
+                        }
+                    }}
                     onFocus={() => 0}
                     onBlur={() => 0}
                     onMouseEnter={this.actions.handleMouseOver}
