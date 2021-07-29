@@ -1,6 +1,13 @@
 import * as THREE from 'three';
 // import { DATA_PREFIX, EPSILON } from '../../constants';
-import { COORDINATE_MODE_CENTER, DATA_PREFIX, DISPLAYED_TYPE_MODEL, HEAD_LASER, PAGE_EDITOR } from '../../constants';
+import {
+    COORDINATE_MODE_BOTTOM_LEFT,
+    COORDINATE_MODE_CENTER,
+    DATA_PREFIX,
+    DISPLAYED_TYPE_MODEL,
+    HEAD_LASER,
+    PAGE_EDITOR
+} from '../../constants';
 import ModelGroup from '../../models/ModelGroup';
 import OperationHistory from '../operation-history/OperationHistory';
 import SVGActionsFactory from '../../models/SVGActionsFactory';
@@ -86,9 +93,11 @@ const INITIAL_STATE = {
         enabled: false,
         group: new THREE.Group()
     },
+    useBackground: false,
 
     previewFailed: false,
     autoPreviewEnabled: false,
+    needToPreview: true,
 
     // rendering
     renderingTimestamp: 0,
@@ -133,7 +142,9 @@ export const actions = {
 
     setBackgroundImage: (filename, width, height, dx, dy) => (dispatch, getState) => {
         const state = getState().laser;
+        dispatch(editorActions.changeCoordinateMode(HEAD_LASER, COORDINATE_MODE_BOTTOM_LEFT));
         const { SVGActions } = state;
+        const coordinateMode = COORDINATE_MODE_BOTTOM_LEFT; // const { coordinateMode } = state;
 
         SVGActions.addImageBackgroundToSVG({
             modelID: 'image-background',
@@ -141,8 +152,8 @@ export const actions = {
             transformation: {
                 width: width,
                 height: height,
-                positionX: dx + width / 2,
-                positionY: dy + height / 2
+                positionX: (dx + width / 2) * coordinateMode.setting.sizeMultiplyFactor.x,
+                positionY: (dy + height / 2) * coordinateMode.setting.sizeMultiplyFactor.y
             }
         });
 
@@ -166,6 +177,9 @@ export const actions = {
         group.remove(...group.children);
         group.add(mesh);
         dispatch(actions.setBackgroundEnabled(true));
+        dispatch(editorActions.updateState(HEAD_LASER, {
+            useBackground: true
+        }));
         dispatch(editorActions.render('laser'));
     },
 
@@ -176,6 +190,9 @@ export const actions = {
         const { group } = state.background;
         group.remove(...group.children);
         dispatch(actions.setBackgroundEnabled(false));
+        dispatch(editorActions.updateState(HEAD_LASER, {
+            useBackground: false
+        }));
         dispatch(editorActions.render('laser'));
     }
 };

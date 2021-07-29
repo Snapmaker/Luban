@@ -23,6 +23,9 @@ export const processActions = {
     },
 
     preview: (headType) => (dispatch, getState) => {
+        dispatch(baseActions.updateState(headType, {
+            needToPreview: false
+        }));
         dispatch(processActions.recalculateAllToolPath(headType));
         dispatch(processActions.showToolPathGroupObject(headType));
         // Different models cannot be selected in process page
@@ -192,6 +195,7 @@ export const processActions = {
         }
         dispatch(baseActions.updateState(headType, {
             displayedType: DISPLAYED_TYPE_MODEL,
+            needToPreview: true,
             updatingToolPath: null,
             isChangedAfterGcodeGenerating: true
         }));
@@ -240,6 +244,7 @@ export const processActions = {
         dispatch(processActions.showSimulationInPreview(headType, false));
         dispatch(baseActions.updateState(headType, {
             displayedType: DISPLAYED_TYPE_MODEL,
+            needToPreview: true,
             isChangedAfterGcodeGenerating: true
         }));
     },

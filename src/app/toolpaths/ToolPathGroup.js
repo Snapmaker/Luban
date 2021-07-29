@@ -348,7 +348,7 @@ class ToolPathGroup {
         const toolPath = this._getToolPath(toolPathId);
         if (toolPath) {
             toolPath.updateState({ ...newState, ...options });
-            toolPath.commitGenerateToolPath();
+            // toolPath.commitGenerateToolPath();
         }
 
         this._updated();
