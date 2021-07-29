@@ -23,7 +23,7 @@ import {
 } from '../../../constants';
 
 import i18n from '../../../lib/i18n';
-import styles from './styles.styl';
+// import styles from './styles.styl';
 
 const texture = new TextureLoader().load('../resources/images/wood.png');
 
@@ -146,6 +146,7 @@ const set4AxisMeshState = async (mesh, transformation, materials, coordinateSize
 class Cnc3DVisualizer extends PureComponent {
     static propTypes = {
         hasModel: PropTypes.bool,
+        show: PropTypes.bool.isRequired,
         mesh: PropTypes.object,
         materials: PropTypes.object,
         sourceScale: PropTypes.number,
@@ -161,10 +162,6 @@ class Cnc3DVisualizer extends PureComponent {
     environment = null;
 
     cameraInitialPosition = null;
-
-    state = {
-        show: true
-    };
 
     actions = {
         hideCnc3DVisualizer: () => {
@@ -211,63 +208,35 @@ class Cnc3DVisualizer extends PureComponent {
     }
 
     render() {
-        const { mesh, hasModel } = this.props;
-        const { show } = this.state;
+        const { mesh, hasModel, show } = this.props;
         return (
             <React.Fragment>
                 {hasModel && (
                     <div
-                        className={classNames(styles['manager-content'])}
-                        style={{ position: 'fixed', top: '58px', right: '370px' }}
+                        style={{ position: 'fixed', top: '74px', right: '376px' }}
                     >
                         {show && (
-
-                            <div
-
-                                style={{
-                                    backgroundColor: '#fff',
-                                    width: '400px',
-                                    height: '260px',
-                                    boxShadow: '0px 4px 12px 0px rgba(115, 115, 115, 0.5)' }}
+                            <div className={classNames(
+                                'border-default-grey-1',
+                                // 'margin-top-16',
+                                'module-default-shadow',
+                                'border-radius-8',
+                                'background-color-white'
+                            )}
                             >
-                                <button
-                                    type="button"
-                                    style={{
-                                        border: 'none',
-                                        backgroundColor: '#ffffff00',
-                                        fontSize: '16px',
-                                        color: '#838383',
-                                        position: 'absolute',
-                                        right: '8px',
-                                        top: '8px'
-                                    }}
-                                    onClick={() => this.setState({ show: false })}
-                                >
-                                    <i
-
-                                        className="fa fa-close"
-
-
+                                <div className="sm-flex height-40 border-bottom-normal padding-horizontal-16">
+                                    <span className="sm-flex-width heading-3">{i18n._('Stl 3D View')}</span>
+                                </div>
+                                <div className="padding-vertical-4 padding-horizontal-4 'background-color-white">
+                                    <Canvas
+                                        mesh={mesh}
+                                        environment={this.environment}
+                                        cameraInitialPosition={this.cameraInitialPosition}
+                                        worldTransform={this.worldTransform}
                                     />
-                                </button>
-
-                                <Canvas
-                                    mesh={mesh}
-                                    environment={this.environment}
-                                    cameraInitialPosition={this.cameraInitialPosition}
-                                    worldTransform={this.worldTransform}
-                                />
+                                </div>
                             </div>
 
-                        )}
-                        {!show && (
-                            <button
-                                type="button"
-                                className="sm-btn-small"
-                                onClick={() => this.setState({ show: true })}
-                            >
-                                {i18n._('Model View')}
-                            </button>
                         )}
                     </div>
                 )}

@@ -581,7 +581,7 @@ class Canvas extends Component {
             <div
                 ref={this.node}
                 style={{
-                    backgroundColor: '#eee'
+                    backgroundColor: '#fff'
                 }}
             />
         );

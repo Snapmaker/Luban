@@ -8,8 +8,6 @@ import { SVG_EVENT_CONTEXTMENU, SVG_EVENT_MODE } from './constants';
 import SVGCanvas from './SVGCanvas';
 import SVGLeftBar from './SVGLeftBar';
 
-import Cnc3DVisualizer from '../views/Cnc3DVisualizer';
-
 class SVGEditor extends PureComponent {
     static propTypes = {
         // eslint-disable-next-line react/no-unused-prop-types
@@ -23,7 +21,6 @@ class SVGEditor extends PureComponent {
         target: PropTypes.object,
         coordinateMode: PropTypes.object.isRequired,
         coordinateSize: PropTypes.object.isRequired,
-        use3DVisualizer: PropTypes.bool,
         editable: PropTypes.bool.isRequired,
 
         updateScale: PropTypes.func.isRequired,
@@ -223,9 +220,6 @@ class SVGEditor extends PureComponent {
                             editable={this.props.editable}
                         />
                     </div>
-                    {this.props.use3DVisualizer && (
-                        <Cnc3DVisualizer />
-                    )}
                 </div>
             </React.Fragment>
         );

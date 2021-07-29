@@ -455,7 +455,6 @@ class Visualizer extends Component {
                         onMoveSelectedElementsByKey={this.props.onMoveSelectedElementsByKey}
                         createText={this.props.createText}
                         updateTextTransformationAfterEdit={this.props.updateTextTransformationAfterEdit}
-                        use3DVisualizer
                         onChangeFile={this.actions.onChangeFile}
                         onClickToUpload={this.actions.onClickToUpload}
                         fileInput={this.fileInput}
