@@ -458,16 +458,26 @@ export const actions = {
 
     // TODO: method docs
     selectTargetModel: (model, headType, isMultiSelect = false) => (dispatch, getState) => {
-        const { SVGActions } = getState()[headType];
+        const { SVGActions, modelGroup } = getState()[headType];
+        let selected = modelGroup.getSelectedModelArray();
+        selected = [...selected];
+        dispatch(actions.clearSelection(headType));
         if (!isMultiSelect) {
             // remove all selected model
-            dispatch(actions.clearSelection(headType));
+            SVGActions.addSelectedSvgModelsByModels([model]);
+        } else {
+            if (selected.find(item => item === model)) {
+                const selectedModels = selected.filter(item => item !== model);
+                modelGroup.emptySelectedModelArray();
+                SVGActions.addSelectedSvgModelsByModels(selectedModels);
+            } else {
+                SVGActions.addSelectedSvgModelsByModels([...selected, model]);
+            }
         }
 
-        SVGActions.addSelectedSvgModelsByModels([model]);
-
+        dispatch(baseActions.render(headType));
         // todo, donot reset here
-        SVGActions.resetSelection();
+        // SVGActions.resetSelection();
     },
 
     changeSelectedModelMode: (headType, sourceType, mode) => async (dispatch, getState) => {
@@ -634,15 +644,30 @@ export const actions = {
 
 
     duplicateSelectedModel: (headType) => (dispatch, getState) => {
-        const { modelGroup } = getState()[headType];
+        const { modelGroup, SVGActions, toolPathGroup } = getState()[headType];
 
-        const { originalName, uploadName, config, sourceType, sourceWidth, sourceHeight, mode } = modelGroup.getSelectedModel();
-        const transformation = { ...modelGroup.getSelectedModel().transformation };
-        transformation.positionX += 5;
-        transformation.positionY -= 5;
-        dispatch(actions.generateModel(headType, originalName, uploadName, sourceWidth, sourceHeight, mode,
-            sourceType, config, undefined, transformation));
+        SVGActions.duplicateSelectedModel();
+
+        const operations = new Operations();
+        for (const svgModel of modelGroup.getSelectedModelArray()) {
+            const operation = new AddOperation2D({
+                target: svgModel,
+                svgActions: SVGActions,
+                toolPathGroup
+            });
+            operations.push(operation);
+        }
+
+        dispatch(operationHistoryActions.setOperations(headType, operations));
         dispatch(actions.resetProcessState(headType));
+        dispatch(baseActions.render(headType));
+        // const { originalName, uploadName, config, sourceType, sourceWidth, sourceHeight, mode } = modelGroup.getSelectedModel();
+        // const transformation = { ...modelGroup.getSelectedModel().transformation };
+        // transformation.positionX += 5;
+        // transformation.positionY -= 5;
+        // dispatch(actions.generateModel(headType, originalName, uploadName, sourceWidth, sourceHeight, mode,
+        //     sourceType, config, undefined, transformation));
+        // dispatch(actions.resetProcessState(headType));
     },
 
 
@@ -1055,6 +1080,44 @@ export const actions = {
         }
 
         dispatch(actions.resetProcessState(headType));
+    },
+
+    selectAllElements: (headType) => (dispatch, getState) => {
+        const { SVGActions } = getState()[headType];
+        // dispatch(actions.clearSelection(headType));
+        SVGActions.selectAllElements();
+        dispatch(baseActions.render(headType));
+    },
+
+    cut: (headType) => (dispatch) => {
+        dispatch(actions.copy(headType));
+        dispatch(actions.removeSelectedModel(headType));
+    },
+
+    copy: (headType) => (dispatch, getState) => {
+        const { SVGActions } = getState()[headType];
+        SVGActions.copy();
+        dispatch(baseActions.render(headType));
+    },
+
+    paste: (headType) => (dispatch, getState) => {
+        const { modelGroup, SVGActions, toolPathGroup } = getState()[headType];
+
+        SVGActions.paste();
+
+        const operations = new Operations();
+        for (const svgModel of modelGroup.getSelectedModelArray()) {
+            const operation = new AddOperation2D({
+                target: svgModel,
+                svgActions: SVGActions,
+                toolPathGroup
+            });
+            operations.push(operation);
+        }
+
+        dispatch(operationHistoryActions.setOperations(headType, operations));
+        dispatch(actions.resetProcessState(headType));
+        dispatch(baseActions.render(headType));
     },
 
     /**

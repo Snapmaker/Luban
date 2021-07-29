@@ -601,6 +601,43 @@ class SVGActionsFactory {
         });
     }
 
+    _pasteFrom(models) {
+        this.clearSelection();
+        models.forEach((clonedSVGModel) => {
+            clonedSVGModel.transformation.positionX += 5;
+            clonedSVGModel.transformation.positionY -= 5;
+            clonedSVGModel.setParent(this.svgContentGroup.group);
+            const svgModel = clonedSVGModel.clone(this.modelGroup);
+            clonedSVGModel.elem.remove();
+
+            const INDEXMARGIN = 0.02;
+            svgModel.elem.id = svgModel.modelID;
+            svgModel.setParent(this.svgContentGroup.group);
+            svgModel.modelName = this.modelGroup._createNewModelName(svgModel);
+            this.modelGroup.resetModelsPositionZByOrder();
+            svgModel.transformation.positionZ = (this.modelGroup.models.length + 1) * INDEXMARGIN;
+            svgModel.onTransform();
+            this.modelGroup.models.push(svgModel);
+
+            this.addSelectedSvgModelsByModels([svgModel]);
+            this.modelGroup.models = [...this.modelGroup.models];
+            this.modelGroup.modelChanged();
+        });
+    }
+
+    copy() {
+        this.modelGroup.clipboard = this.modelGroup.getSelectedModelArray().map(item => item.clone(this.modelGroup));
+    }
+
+    paste() {
+        this._pasteFrom(this.modelGroup.clipboard);
+    }
+
+    duplicateSelectedModel() {
+        const selectedModels = this.modelGroup.getSelectedModelArray().map(item => item.clone(this.modelGroup));
+        this._pasteFrom(selectedModels);
+    }
+
     /**
      * Create model (SVGModel, Model, etc) from element.
      *
@@ -659,6 +696,19 @@ class SVGActionsFactory {
         }
     }
 
+    selectAllElements() {
+        this.clearSelection();
+        const childNodes = this.svgContentGroup.group.children;
+        for (const node of childNodes) {
+            const svgModel = this.getSVGModelByElement(node);
+            if (svgModel !== null) {
+                if (svgModel.visible) {
+                    this.selectElements([node]);
+                }
+            }
+        }
+    }
+
     /**
      * Select elements.
      *
@@ -679,7 +729,7 @@ class SVGActionsFactory {
         }
 
         const selectedElements = this.svgContentGroup.selectedElements;
-
+        this.modelGroup.selectedModelArray = [...this.modelGroup.selectedModelArray];
         // update selector
         this._resetSelector(selectedElements);
 

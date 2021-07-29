@@ -80,35 +80,52 @@ class SVGEditor extends PureComponent {
         shortcuts: {
             [shortcutActions.UNDO]: () => { this.props.editorActions.undo(); },
             [shortcutActions.REDO]: () => { this.props.editorActions.redo(); },
-            // [shortcutActions.SELECTALL]: this.props.editorActions.selectAll,
-            [shortcutActions.UNSELECT]: () => { this.props.onClearSelection(); },
-            [shortcutActions.DELETE]: this.props.editorActions.deleteSelectedModel,
-            // [shortcutActions.COPY]: this.props.editorActions.copy,
-            // [shortcutActions.PASTE]: this.props.editorActions.paste,
-            // [shortcutActions.DUPLICATE]: this.props.editorActions.duplicate,
+            [shortcutActions.SELECTALL]: () => { this.props.editorActions.selectAll(); },
+            [shortcutActions.UNSELECT]: () => { this.props.editorActions.unselectAll(); },
+            [shortcutActions.DELETE]: () => { this.props.editorActions.deleteSelectedModel(); },
+            [shortcutActions.COPY]: () => { this.props.editorActions.copy(); },
+            [shortcutActions.PASTE]: () => { this.props.editorActions.paste(); },
+            [shortcutActions.DUPLICATE]: () => { this.props.editorActions.duplicateSelectedModel(); },
+            [shortcutActions.CUT]: () => { this.props.editorActions.cut(); },
             // optimize: accelerate when continuous click
             'MOVE-UP': {
-                keys: ['alt+up'],
+                keys: ['up'],
                 callback: () => {
-                    this.props.elementActions.moveElementsOnKeyDown({ dx: 0, dy: -1 });
+                    this.props.elementActions.moveElementsStart(this.props.SVGActions.getSelectedElements());
+                    this.props.elementActions.moveElements(this.props.SVGActions.getSelectedElements(), { dx: 0, dy: -1 });
+                },
+                keyupCallback: () => {
+                    this.props.elementActions.moveElementsFinish(this.props.SVGActions.getSelectedElements());
                 }
             },
             'MOVE-DOWM': {
-                keys: ['alt+down'],
+                keys: ['down'],
                 callback: () => {
-                    this.props.elementActions.moveElementsOnKeyDown({ dx: 0, dy: 1 });
+                    this.props.elementActions.moveElementsStart(this.props.SVGActions.getSelectedElements());
+                    this.props.elementActions.moveElements(this.props.SVGActions.getSelectedElements(), { dx: 0, dy: 1 });
+                },
+                keyupCallback: () => {
+                    this.props.elementActions.moveElementsFinish(this.props.SVGActions.getSelectedElements());
                 }
             },
             'MOVE-LEFT': {
-                keys: ['alt+left'],
+                keys: ['left'],
                 callback: () => {
-                    this.props.elementActions.moveElementsOnKeyDown({ dx: -1, dy: 0 });
+                    this.props.elementActions.moveElementsStart(this.props.SVGActions.getSelectedElements());
+                    this.props.elementActions.moveElements(this.props.SVGActions.getSelectedElements(), { dx: -1, dy: 0 });
+                },
+                keyupCallback: () => {
+                    this.props.elementActions.moveElementsFinish(this.props.SVGActions.getSelectedElements());
                 }
             },
             'MOVE-RIGHT': {
-                keys: ['alt+right'],
+                keys: ['right'],
                 callback: () => {
-                    this.props.elementActions.moveElementsOnKeyDown({ dx: 1, dy: 0 });
+                    this.props.elementActions.moveElementsStart(this.props.SVGActions.getSelectedElements());
+                    this.props.elementActions.moveElements(this.props.SVGActions.getSelectedElements(), { dx: 1, dy: 0 });
+                },
+                keyupCallback: () => {
+                    this.props.elementActions.moveElementsFinish(this.props.SVGActions.getSelectedElements());
                 }
             }
 

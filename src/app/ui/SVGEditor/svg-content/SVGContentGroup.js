@@ -117,7 +117,9 @@ class SVGContentGroup {
     }
 
     findSVGElement(id) {
-        return this.group.querySelector(`#${id}`);
+        // uuid.v4() may generate id starts with digit, that will cause querySelector fail
+        // https://stackoverflow.com/questions/37270787/uncaught-syntaxerror-failed-to-execute-queryselector-on-document
+        return this.svgContent.getElementById(`${id}`);
     }
 
     insertAfter(element, index) {

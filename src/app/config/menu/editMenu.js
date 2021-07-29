@@ -38,7 +38,13 @@ export default {
             label: 'Cut',
             accelerator: 'CommandOrControl+X',
             enabled: true,
-            click: () => {}
+            click(menuItem, browserWindow) {
+                if (isElectron()) {
+                    browserWindow.webContents.send('shortcut', 'mod+x');
+                } else {
+                    UniApi.Event.emit('appbar-menu:shortcut', 'mod+x');
+                }
+            }
         },
         {
             id: 'copy',

@@ -12,9 +12,12 @@ const menuEvent = new AppbarMenuEvent();
  * Event Listener in electron
  */
 const Event = {
+    _isAvailInBrowser: (eventName) => {
+        return eventName.startsWith('appbar-menu:') || eventName.startsWith('tile-modal:');
+    },
     on: (eventName, callback) => {
         if (isElectron()) {
-            if (eventName.startsWith('appbar-menu:')) {
+            if (Event._isAvailInBrowser(eventName)) {
                 menuEvent.on(eventName, callback);
             } else {
                 const { ipcRenderer } = window.require('electron');
@@ -26,7 +29,7 @@ const Event = {
     },
     emit: (eventName, ...args) => {
         if (isElectron()) {
-            if (eventName.startsWith('appbar-menu:')) {
+            if (Event._isAvailInBrowser(eventName)) {
                 menuEvent.emit(eventName, ...args);
             } else {
                 const { ipcRenderer } = window.require('electron');
@@ -38,7 +41,7 @@ const Event = {
     },
     off: (eventName, callback) => {
         if (isElectron()) {
-            if (eventName.startsWith('appbar-menu:')) {
+            if (Event._isAvailInBrowser(eventName)) {
                 menuEvent.off(eventName, callback);
             } else {
                 const { ipcRenderer } = window.require('electron');
@@ -265,8 +268,8 @@ const File = {
  */
 const Dialog = {
     async showOpenFileDialog(type) {
-        let extensions = ['snap3dp', 'snaplzr', 'snapcnc', 'gcode', 'cnc', 'nc'];
-        switch (type) {
+        let extensions = ['snap3dp', 'snaplzr', 'snapcnc'];
+        switch (type.slice(1)) { // substring '/3dp' to '3dp'
             case '3dp':
                 extensions = ['stl', 'obj'];
                 break;

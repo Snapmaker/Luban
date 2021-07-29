@@ -61,6 +61,10 @@ class Visualizer extends Component {
         renderingTimestamp: PropTypes.number.isRequired,
 
         // func
+        selectAllElements: PropTypes.func.isRequired,
+        cut: PropTypes.func.isRequired,
+        copy: PropTypes.func.isRequired,
+        paste: PropTypes.func.isRequired,
         clearOperationHistory: PropTypes.func.isRequired,
         undo: PropTypes.func.isRequired,
         redo: PropTypes.func.isRequired,
@@ -127,6 +131,21 @@ class Visualizer extends Component {
         },
         redo: () => {
             this.props.redo();
+        },
+        selectAll: () => {
+            this.props.selectAllElements();
+        },
+        unselectAll: () => {
+            this.props.onClearSelection();
+        },
+        copy: () => {
+            this.props.copy();
+        },
+        paste: () => {
+            this.props.paste();
+        },
+        cut: () => {
+            this.props.cut();
         },
         onChangeFile: (event) => {
             const file = event.target.files[0];
@@ -410,7 +429,7 @@ class Visualizer extends Component {
                 }}
                 >
                     <SVGEditor
-                        isActive={this.props.pathname.indexOf('cnc') > 0}
+                        isActive={!this.props.currentModalPath && this.props.pathname.indexOf('cnc') > 0}
                         ref={this.svgCanvas}
                         editable={!this.props.inProgress}
                         size={this.props.size}
@@ -618,6 +637,7 @@ class Visualizer extends Component {
 const mapStateToProps = (state, ownProps) => {
     // call canvas.updateTransformControl2D() when transformation changed or model selected changed
     const { size } = state.machine;
+    const { currentModalPath } = state.appbarMenu;
     const { page, materials, modelGroup, toolPathGroup, displayedType, hasModel, isChangedAfterGcodeGenerating,
         renderingTimestamp, stage, progress, SVGActions, scale, target, coordinateMode, coordinateSize, inProgress } = state.cnc;
     const selectedModelArray = modelGroup.getSelectedModelArray();
@@ -625,6 +645,7 @@ const mapStateToProps = (state, ownProps) => {
     const selectedToolPathModels = modelGroup.getSelectedToolPathModels();
 
     return {
+        currentModalPath,
         // switch pages trigger pathname change
         pathname: ownProps.location.pathname,
         page,
@@ -671,7 +692,11 @@ const mapDispatchToProps = (dispatch) => {
         duplicateSelectedModel: () => dispatch(editorActions.duplicateSelectedModel('cnc')),
         removeSelectedModel: () => dispatch(editorActions.checkToRemoveSelectedModels('cnc')),
 
+        cut: () => dispatch(editorActions.cut('cnc')),
+        copy: () => dispatch(editorActions.copy('cnc')),
+        paste: () => dispatch(editorActions.paste('cnc')),
         onCreateElement: (element) => dispatch(editorActions.createModelFromElement('cnc', element)),
+        selectAllElements: () => dispatch(editorActions.selectAllElements('cnc')),
         onSelectElements: (elements) => dispatch(editorActions.selectElements('cnc', elements)),
         onClearSelection: () => dispatch(editorActions.clearSelection('cnc')),
         onMoveSelectedElementsByKey: () => dispatch(editorActions.moveElementsOnKeyUp('cnc')),

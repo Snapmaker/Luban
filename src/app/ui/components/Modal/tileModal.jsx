@@ -2,6 +2,7 @@ import React, { PureComponent } from 'react';
 
 import { Modal } from 'antd';
 import './tileModal.styl';
+import UniApi from '../../../lib/uni-api';
 
 class TileModal extends PureComponent {
     static propTypes = {
@@ -10,6 +11,14 @@ class TileModal extends PureComponent {
 
     static defaultProps = {
         ...Modal.defaultProps
+    }
+
+    componentDidMount() {
+        UniApi.Event.emit('tile-modal:show', { component: this.props.children });
+    }
+
+    componentWillUnmount() {
+        UniApi.Event.emit('tile-modal:hide');
     }
 
     render() {

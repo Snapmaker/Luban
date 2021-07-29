@@ -14,6 +14,7 @@ export const ACTION_UPDATE_STATE = 'appbar-menu/ACTION_UPDATE_STATE';
 
 const INITIAL_STATE = {
     menuDisabledCount: 0,
+    currentModalPath: null, // used for HomePage and Workspace modal
     menu: [
         ...getMenuItems()
     ]
@@ -48,6 +49,14 @@ function traverseMenu(menu, callback) {
 }
 
 export const actions = {
+    updateCurrentModalPath: (path) => (dispatch) => {
+        dispatch({
+            type: ACTION_UPDATE_STATE,
+            state: {
+                currentModalPath: path
+            }
+        });
+    },
     initMenuLanguage: () => (dispatch, getState) => {
         const appbarMenu = getState().appbarMenu.menu;
         traverseMenu(appbarMenu, (item) => {
@@ -103,6 +112,7 @@ export const actions = {
         const menu = getState().appbarMenu.menu;
         const series = getState()?.machine?.series;
         const recentFiles = getState().project.general.recentFiles;
+        const currentPath = getState().appbarMenu.currentModalPath || window.location.hash;
 
         // menu clicked
         menu.forEach((item, i) => {
@@ -165,7 +175,7 @@ export const actions = {
             }
         }
 
-        const stateName = hashStateMap[window.location.hash]; // acquire corresponding state according to location hash
+        const stateName = hashStateMap[currentPath]; // acquire corresponding state according to location hash
         if (stateName) {
             const {
                 gcodeFile,
@@ -183,7 +193,7 @@ export const actions = {
             fileMenu.submenu.forEach(item => {
                 switch (item.id) {
                     case 'export-models':
-                        if (window.location.hash === '#/3dp' && hasModel) {
+                        if (currentPath === '#/3dp' && hasModel) {
                             item.enabled = true;
                         } else {
                             item.enabled = false;
@@ -224,7 +234,7 @@ export const actions = {
                 }
             }
         }
-        if (window.location.hash === '#/') {
+        if (currentPath === '#/') {
             fileMenu.submenu.forEach(item => {
                 switch (item.id) {
                     case 'save':
@@ -237,7 +247,7 @@ export const actions = {
             });
             editMenu.submenu.forEach(item => { item.enabled = false; });
         }
-        if (window.location.hash === '#/workspace') {
+        if (currentPath === '#/workspace') {
             const { gcodeFile } = getState().workspace;
             fileMenu.submenu.forEach(item => {
                 switch (item.id) {
