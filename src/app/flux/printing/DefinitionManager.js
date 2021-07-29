@@ -17,11 +17,13 @@ class DefinitionManager {
     async init(series) {
         this.series = series;
         let res;
-
-        if (this.series === MACHINE_SERIES.ORIGINAL.value) {
-            res = await api.printingConfigs.getDefinition('snapmaker');
-            this.snapmakerDefinition = res.body.definition;
-        } else if (this.series === MACHINE_SERIES.CUSTOM.value) {
+        const seriesConfig = Object.values(MACHINE_SERIES).find(s => s.value === series);
+        const configPath = seriesConfig?.configPath || series;
+        if (
+            this.series === MACHINE_SERIES.ORIGINAL.value
+            || this.series === MACHINE_SERIES.ORIGINAL_LZ.value
+            || this.series === MACHINE_SERIES.CUSTOM.value
+        ) {
             res = await api.printingConfigs.getDefinition('snapmaker');
             this.snapmakerDefinition = res.body.definition;
         } else {
@@ -36,10 +38,10 @@ class DefinitionManager {
         res = await api.printingConfigs.getMaterialDefinitions();
         this.materialDefinitions = res.body.definitions;
 
-        res = await api.printingConfigs.getQualityDefinitions(series);
+        res = await api.printingConfigs.getQualityDefinitions(configPath);
         this.qualityDefinitions = res.body.definitions;
 
-        res = await api.printingConfigs.getDefaultDefinitions(series);
+        res = await api.printingConfigs.getDefaultDefinitions(configPath);
         this.defaultDefinitions = res.body.definitions;
     }
 

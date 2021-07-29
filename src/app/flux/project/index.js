@@ -226,6 +226,10 @@ export const actions = {
         }
         // // TODO: set current content to avoid <unSaved> flag mis-set
         // await dispatch(actions.clearSavedEnvironment(envHeadType));
+
+        for (const type of [HEAD_3DP, HEAD_CNC, HEAD_LASER]) {
+            await dispatch(actions.clearSavedEnvironment(type));
+        }
     },
 
     quitRecovery: (headType) => async (dispatch) => {
