@@ -122,13 +122,13 @@ export const generateGcode = (toolPaths, onProgress) => {
             const renderMethod = gcodeConfig.movementMode === 'greyscale-dot' ? 'point' : 'line';
 
             if (i > 0 || j > 0) {
-                const header = '\n'
+                const header = '\n\n'
                     + ';Header Start\n'
                     + `;renderMethod: ${renderMethod}\n`
-                    + ';Header End'
+                    + ';Header End\n'
                     + '\n';
                 writeStream.write(header);
-                fileTotalLines += header.split('\n').length;
+                fileTotalLines += header.split('\n').length - 2;
             }
 
             fileTotalLines += gcodeLines.length;
@@ -136,7 +136,7 @@ export const generateGcode = (toolPaths, onProgress) => {
             writeStream.write(gcodeLines.join('\n'));
 
             if (gcodeConfig.multiPassEnabled) {
-                estimatedTime = toolPathObj.estimatedTime * gcodeConfig.multiPasses;
+                estimatedTime += toolPathObj.estimatedTime * gcodeConfig.multiPasses;
             } else {
                 estimatedTime += toolPathObj.estimatedTime;
             }
