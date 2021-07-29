@@ -54,6 +54,7 @@ class LaserParameters extends PureComponent {
         const isSVG = type === TOOLPATH_TYPE_VECTOR;
         const isImage = type === TOOLPATH_TYPE_IMAGE;
         const defaultFillEnabled = true;
+        const fillMethod = (fillEnabled ? 'fill' : 'path');
 
         return (
             <React.Fragment>
@@ -94,16 +95,14 @@ class LaserParameters extends PureComponent {
                                             menuContainerStyle={{ zIndex: 5 }}
                                             name="line_direction"
                                             options={[{
-                                                value: 'true',
+                                                value: 'fill',
                                                 label: i18n._('Fill')
                                             }, {
-                                                value: 'false',
+                                                value: 'path',
                                                 label: i18n._('On The Path')
                                             }]}
-                                            placeholder=""
-                                            searchable={false}
-                                            value={fillEnabled.toString()}
-                                            onChange={(option) => { this.props.updateGcodeConfig({ fillEnabled: option.value }); }}
+                                            value={fillMethod}
+                                            onChange={(option) => { this.props.updateGcodeConfig({ fillEnabled: option.value === 'fill' }); }}
                                         />
                                     </div>
                                 </TipTrigger>

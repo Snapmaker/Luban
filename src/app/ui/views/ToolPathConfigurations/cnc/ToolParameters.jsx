@@ -34,9 +34,16 @@ function SettingItem(props) {
     const optionsArray = [];
     if (options) {
         Object.keys(options).map(key => {
+            let value = key;
+            if (value === 'true') {
+                value = true;
+            }
+            if (value === 'false') {
+                value = false;
+            }
             return optionsArray.push({
                 'label': options[key],
-                'value': key
+                'value': value
             });
         });
     }
@@ -91,7 +98,7 @@ function SettingItem(props) {
                         size={styleSize === 'middle' ? 'small' : 'middle'} // Todo: change the size to the same value
                         className="sm-flex-width align-r"
                         options={optionsArray}
-                        value={defaultValue && defaultValue.toString()}
+                        value={defaultValue}
                         onChange={(value) => {
                             if (setting.isGcodeConfig) {
                                 const gcodeOptions = {};

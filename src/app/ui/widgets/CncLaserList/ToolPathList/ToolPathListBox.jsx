@@ -219,7 +219,7 @@ const ToolPathListBox = (props) => {
                 allDefinition.plunge_speed.default_value = gcodeConfig?.plungeSpeed;
                 allDefinition.work_speed.default_value = gcodeConfig?.workSpeed;
                 allDefinition.step_down.default_value = gcodeConfig?.stepDown;
-                allDefinition.density.default_value = gcodeConfig?.density;
+                allDefinition.step_over.default_value = gcodeConfig?.stepOver;
             }
         }
         if (props.headType === HEAD_LASER) {
