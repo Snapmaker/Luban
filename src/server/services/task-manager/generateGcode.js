@@ -136,7 +136,7 @@ export const generateGcode = (toolPaths, onProgress) => {
             writeStream.write(gcodeLines.join('\n'));
 
             if (gcodeConfig.multiPassEnabled) {
-                estimatedTime = toolPathObj.estimatedTime * gcodeConfig.multiPasses;
+                estimatedTime += toolPathObj.estimatedTime * gcodeConfig.multiPasses;
             } else {
                 estimatedTime += toolPathObj.estimatedTime;
             }
