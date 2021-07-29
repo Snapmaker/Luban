@@ -1,11 +1,14 @@
 import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
 // import Slider from '../../../components/Slider';
-import { ABSENT_VALUE, TOOLPATH_TYPE_IMAGE, TOOLPATH_TYPE_VECTOR } from '../../../../constants';
+import {
+    TOOLPATH_TYPE_IMAGE,
+    TOOLPATH_TYPE_VECTOR,
+    LASER_DEFAULT_GCODE_PARAMETERS_DEFINITION
+} from '../../../../constants';
 import i18n from '../../../../lib/i18n';
-import { NumberInput as Input } from '../../../components/Input';
-import TipTrigger from '../../../components/TipTrigger';
 import SvgIcon from '../../../components/SvgIcon';
+import ToolParameters from '../cnc/ToolParameters';
 
 class GcodeParameters extends PureComponent {
     static propTypes = {
@@ -28,224 +31,147 @@ class GcodeParameters extends PureComponent {
         const isSVG = type === TOOLPATH_TYPE_VECTOR;
         const isImage = type === TOOLPATH_TYPE_IMAGE;
 
-        const { density, fillDensity, jogSpeed, workSpeed, dwellTime, plungeSpeed, multiPassEnabled,
-            multiPasses, multiPassDepth, fixedPowerEnabled, fixedPower } = gcodeConfig;
+        const { fillEnabled, movementMode,
+            multiPasses, fixedPowerEnabled } = gcodeConfig;
+
+        //Todo
+        const isMethodFill = (fillEnabled === 'true' || fillEnabled === true);
+
+        const gcodeDefinition = LASER_DEFAULT_GCODE_PARAMETERS_DEFINITION;
+        Object.keys(gcodeDefinition).forEach((key) => {
+            gcodeDefinition[key].default_value = gcodeConfig[key];
+            // isGcodeConfig is true means to use updateGcodeConfig, false means to use updateToolConfig
+            gcodeDefinition[key].isGcodeConfig = true;
+        });
+
+        // Session Fill
+        const laserDefinitionFillKeys = [];
+        const laserDefinitionFill = {};
+        if (!isSVG || isMethodFill) {
+            laserDefinitionFillKeys.push('movementMode');
+            if (isImage) {
+                if (movementMode === 'greyscale-line') {
+                    laserDefinitionFillKeys.push('direction');
+                }
+                laserDefinitionFillKeys.push('fillInterval');
+            }
+            if (isSVG) {
+                laserDefinitionFillKeys.push('fillInterval');
+            }
+            laserDefinitionFillKeys.forEach((key) => {
+                if (gcodeDefinition[key]) {
+                    laserDefinitionFill[key] = gcodeDefinition[key];
+                }
+                if (key === 'movementMode') {
+                    if (isSVG) {
+                        laserDefinitionFill[key].options = {
+                            'greyscale-line': 'Line'
+                        };
+                    } else {
+                        laserDefinitionFill[key].options = {
+                            'greyscale-line': 'Line',
+                            'greyscale-dot': 'Dot'
+                        };
+                    }
+                }
+            });
+        }
+
+        // Session Speed
+        const laserDefinitionSpeedKeys = ['jogSpeed'];
+        if (isMethodFill || movementMode === 'greyscale-line') {
+            laserDefinitionSpeedKeys.push('workSpeed');
+        }
+        if (movementMode === 'greyscale-dot') {
+            laserDefinitionSpeedKeys.push('dwellTime');
+        }
+        const laserDefinitionSpeed = {};
+        laserDefinitionSpeedKeys.forEach((key) => {
+            if (gcodeDefinition[key]) {
+                laserDefinitionSpeed[key] = gcodeDefinition[key];
+            }
+        });
+
+        // Session Repetition
+        const laserDefinitionRepetitionKeys = [];
+        const laserDefinitionRepetition = {};
+        if (isSVG && !isMethodFill) {
+            laserDefinitionRepetitionKeys.push('multiPasses');
+            if (multiPasses > 1) {
+                laserDefinitionRepetitionKeys.push('multiPassDepth');
+            }
+            laserDefinitionRepetitionKeys.forEach((key) => {
+                if (gcodeDefinition[key]) {
+                    laserDefinitionRepetition[key] = gcodeDefinition[key];
+                }
+            });
+        }
+
+        // Session Power
+        const laserDefinitionPowerKeys = ['fixedPower'];
+        const laserDefinitionPower = {};
+        laserDefinitionPowerKeys.forEach((key) => {
+            if (gcodeDefinition[key]) {
+                laserDefinitionPower[key] = gcodeDefinition[key];
+            }
+        });
 
         return (
             <React.Fragment>
-                {isImage && (
+                {(!isSVG || isMethodFill) && (
+                    <div>
+                        <div className="border-bottom-normal padding-bottom-4 margin-bottom-16">
+                            <SvgIcon
+                                name="TitleSetting"
+                                size={24}
+                            />
+                            <span>{i18n._('Fill')}</span>
+                        </div>
+                        <ToolParameters
+                            settings={laserDefinitionFill}
+                            updateToolConfig={() => {}}
+                            updateGcodeConfig={this.props.updateGcodeConfig}
+                            toolPath={this.props.toolPath}
+                            styleSize="large"
+                        />
+                    </div>
+                )}
+                <div>
                     <div className="border-bottom-normal padding-bottom-4 margin-bottom-16">
                         <SvgIcon
                             name="TitleSetting"
                             size={24}
                         />
-                        <span>{i18n._('Fill')}</span>
+                        <span>{i18n._('Speed')}</span>
                     </div>
-                )}
-                {isImage && (
+                    <ToolParameters
+                        settings={laserDefinitionSpeed}
+                        updateToolConfig={() => {}}
+                        updateGcodeConfig={this.props.updateGcodeConfig}
+                        toolPath={this.props.toolPath}
+                        styleSize="large"
+                    />
+                </div>
+                {isSVG && !isMethodFill && (
                     <div>
-                        <TipTrigger
-                            title={i18n._('Density')}
-                            content={i18n._('Determines how fine and smooth the engraved picture will be. \
-    The bigger this value is, the better quality you will get. The range is 1-10 dot/mm and 10 is recommended.')}
-                        >
-                            <div className="sm-flex justify-space-between height-32 margin-vertical-8">
-                                <span>{i18n._('Density')}</span>
-                                <Input
-                                    suffix="dot/mm"
-                                    className="sm-flex-auto"
-                                    size="large"
-                                    value={density}
-                                    min={1}
-                                    max={10}
-                                    step={1}
-                                    onChange={(value) => { this.props.updateGcodeConfig({ density: value }); }}
-                                />
-                            </div>
-                        </TipTrigger>
-                    </div>
-                )}
-                {isSVG && (
-                    <div className="border-bottom-normal padding-bottom-4 margin-bottom-16">
-                        <SvgIcon
-                            name="TitleSetting"
-                            size={24}
+                        <div className="border-bottom-normal padding-bottom-4 margin-bottom-16">
+                            <SvgIcon
+                                name="TitleSetting"
+                                size={24}
+                            />
+                            <span>{i18n._('Repetition')}</span>
+                        </div>
+                        <ToolParameters
+                            settings={laserDefinitionRepetition}
+                            updateToolConfig={() => {}}
+                            updateGcodeConfig={this.props.updateGcodeConfig}
+                            toolPath={this.props.toolPath}
+                            styleSize="large"
                         />
-                        <span>{i18n._('Fill')}</span>
-                    </div>
-                )}
-                {isSVG && (
-                    <div>
-                        <div
-                            title={i18n._('Fill')}
-                        >
-                            <TipTrigger
-                                title={i18n._('Fill Density')}
-                                content={i18n._('Set the degree to which an area is filled with laser dots. The highest density is 20 dot/mm. When it is set to 0, the SVG image will be engraved without fill.')}
-                            >
-                                <div className="sm-flex justify-space-between height-32 margin-vertical-8">
-                                    <span>{i18n._('Fill Density')}</span>
-                                    <Input
-                                        className="sm-flex-auto"
-                                        size="large"
-                                        value={fillDensity}
-                                        min={0}
-                                        marks={
-                                            {
-                                                10: ''
-                                            }
-                                        }
-                                        max={20}
-                                        onChange={(value) => { this.props.updateGcodeConfig({ fillDensity: value }); }}
-                                    />
-                                </div>
-                            </TipTrigger>
-                        </div>
-                    </div>
-                )}
-                <div className="border-bottom-normal padding-bottom-4 margin-bottom-16">
-                    <SvgIcon
-                        name="TitleSetting"
-                        size={24}
-                    />
-                    <span>{i18n._('Speed')}</span>
-                </div>
-                {jogSpeed !== ABSENT_VALUE && (
-                    <TipTrigger
-                        title={i18n._('Jog Speed')}
-                        content={i18n._('Determines how fast the machine moves when it’s not engraving.')}
-                    >
-                        <div className="sm-flex justify-space-between height-32 margin-vertical-8">
-                            <span>{i18n._('Jog Speed')}</span>
-                            <Input
-                                suffix="mm/min"
-                                className="sm-flex-auto"
-                                size="large"
-                                value={jogSpeed}
-                                min={1}
-                                max={6000}
-                                step={1}
-                                onChange={(value) => { this.props.updateGcodeConfig({ jogSpeed: value }); }}
-                            />
-                        </div>
-                    </TipTrigger>
-                )}
-                {workSpeed !== ABSENT_VALUE && (
-                    <TipTrigger
-                        title={i18n._('Work Speed')}
-                        content={i18n._('Determines how fast the machine moves when it’s engraving.')}
-                    >
-                        <div className="sm-flex justify-space-between height-32 margin-vertical-8">
-                            <span>{i18n._('Work Speed')}</span>
-                            <Input
-                                suffix="mm/min"
-                                className="sm-flex-auto"
-                                size="large"
-                                value={workSpeed}
-                                min={1}
-                                step={1}
-                                max={6000}
-                                onChange={(value) => { this.props.updateGcodeConfig({ workSpeed: value }); }}
-                            />
-                        </div>
-                    </TipTrigger>
-                )}
-                {dwellTime !== ABSENT_VALUE && (
-                    <TipTrigger
-                        title={i18n._('Dwell Time')}
-                        content={i18n._('Determines how long the laser keeps on when it’s engraving a dot.')}
-                    >
-                        <div className="sm-flex justify-space-between height-32 margin-vertical-8">
-                            <span>{i18n._('Dwell Time')}</span>
-                            <Input
-                                suffix="ms/dot"
-                                className="sm-flex-auto"
-                                size="large"
-                                value={dwellTime}
-                                min={0.1}
-                                max={1000}
-                                step={0.1}
-                                onChange={(value) => { this.props.updateGcodeConfig({ dwellTime: value }); }}
-                            />
-                        </div>
-                    </TipTrigger>
-                )}
-                {plungeSpeed !== ABSENT_VALUE && (
-                    <TipTrigger
-                        title={i18n._('Plunge Speed')}
-                    >
-                        <div className="sm-flex justify-space-between height-32 margin-vertical-8">
-                            <span>{i18n._('Plunge Speed')}</span>
-                            <Input
-                                suffix="mm/min"
-                                className="sm-flex-auto"
-                                size="large"
-                                value={plungeSpeed}
-                                min={0.1}
-                                max={1000}
-                                step={0.1}
-                                onChange={(value) => { this.props.updateGcodeConfig({ plungeSpeed: value }); }}
-                            />
-                        </div>
-                    </TipTrigger>
-                )}
-                <div className="border-bottom-normal padding-bottom-4 margin-bottom-16">
-                    <SvgIcon
-                        name="TitleSetting"
-                        size={24}
-                    />
-                    <span>{i18n._('Repetition')}</span>
-                </div>
-                {multiPassEnabled !== undefined && (
-                    <div
-                        style={{ marginTop: '10px', marginBottom: '10px' }}
-                        title={i18n._('Multi-pass')}
-                        titletip={i18n._('When enabled, the printer will run the G-code multiple times automatically according to the below settings. This feature helps you cut materials that can\'t be cut with only one pass.')}
-                    >
-                        <TipTrigger
-                            title={i18n._('Number of Passes')}
-                            content={i18n._('Determines how many times the printer will run the G-code automatically.')}
-                        >
-                            <div className="sm-flex justify-space-between height-32 margin-vertical-8">
-                                <span>{i18n._('Number of Passes')}</span>
-                                <Input
-                                    className="sm-flex-auto"
-                                    size="large"
-                                    min={1}
-                                    max={50}
-                                    value={multiPasses}
-                                    onChange={(value) => { this.props.updateGcodeConfig({ multiPasses: value }); }}
-                                />
-                            </div>
-                        </TipTrigger>
-
-                        {multiPasses > 1 && (
-                            <TipTrigger
-                                title={i18n._('Z step per pass')}
-                                content={i18n._('Determines how much the laser module will be lowered after each pass.')}
-                            >
-                                <div className="sm-flex justify-space-between height-32 margin-vertical-8">
-                                    <span>{i18n._('Z step per pass')}</span>
-                                    <Input
-                                        suffix="mm"
-                                        className="sm-flex-auto"
-                                        size="large"
-                                        min={0}
-                                        max={10}
-                                        value={multiPassDepth}
-                                        onChange={(value) => { this.props.updateGcodeConfig({ multiPassDepth: value }); }}
-                                    />
-                                </div>
-                            </TipTrigger>
-                        )}
                     </div>
                 )}
                 {fixedPowerEnabled !== undefined && (
-                    <div
-                        style={{ marginTop: '10px' }}
-                        title={i18n._('Fixed Power')}
-                        titletip={i18n._('When enabled, the power used to engrave this image will be set in the G-code, so it is not affected by the power you set in Workspace. When engraving multiple images, you can set the power for each image separately.')}
-                    >
+                    <div>
                         <div className="border-bottom-normal padding-bottom-4 margin-bottom-16">
                             <SvgIcon
                                 name="TitleSetting"
@@ -253,23 +179,13 @@ class GcodeParameters extends PureComponent {
                             />
                             <span>{i18n._('Power')}</span>
                         </div>
-                        <TipTrigger
-                            title={i18n._('Power')}
-                            content={i18n._('Power to use when laser is working.')}
-                        >
-                            <div className="sm-flex justify-space-between height-32 margin-vertical-8">
-                                <span>{i18n._('Power (%)')}</span>
-                                <Input
-                                    suffix="%"
-                                    className="sm-flex-auto"
-                                    size="large"
-                                    min={1}
-                                    max={100}
-                                    value={fixedPower}
-                                    onChange={(value) => { this.props.updateGcodeConfig({ fixedPower: value }); }}
-                                />
-                            </div>
-                        </TipTrigger>
+                        <ToolParameters
+                            settings={laserDefinitionPower}
+                            updateToolConfig={() => {}}
+                            updateGcodeConfig={this.props.updateGcodeConfig}
+                            toolPath={this.props.toolPath}
+                            styleSize="large"
+                        />
                     </div>
                 )}
             </React.Fragment>

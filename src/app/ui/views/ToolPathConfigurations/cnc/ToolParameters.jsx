@@ -17,9 +17,9 @@ function SettingItem(props) {
     const defaultValue = setting.default_value;
     const label = setting.label;
     const unit = setting.unit;
-    const min = setting.min || -1000;
-    const max = setting.max || 6000;
-    const content = setting.description || '';
+    const min = setting.min ?? -1000;
+    const max = setting.max ?? 6000;
+    const content = setting.description ?? '';
     const type = setting.type;
 
     const isToolParams = (k) => {
@@ -34,9 +34,16 @@ function SettingItem(props) {
     const optionsArray = [];
     if (options) {
         Object.keys(options).map(key => {
+            let value = key;
+            if (value === 'true') {
+                value = true;
+            }
+            if (value === 'false') {
+                value = false;
+            }
             return optionsArray.push({
                 'label': options[key],
-                'value': key
+                'value': value
             });
         });
     }
@@ -115,7 +122,7 @@ SettingItem.propTypes = {
     updateGcodeConfig: PropTypes.func.isRequired,
     setting: PropTypes.object.isRequired,
     isSVG: PropTypes.bool.isRequired,
-    styleSize: PropTypes.bool.isRequired
+    styleSize: PropTypes.string.isRequired
 };
 
 

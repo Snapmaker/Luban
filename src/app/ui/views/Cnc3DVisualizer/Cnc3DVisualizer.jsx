@@ -105,7 +105,7 @@ const set3AxisMeshState = (mesh, transformation, platSize) => {
     }
 };
 
-const set4AxisMeshState = async (mesh, transformation, materials) => {
+const set4AxisMeshState = async (mesh, transformation, materials, coordinateSize) => {
     mesh.material = new MeshPhongMaterial(
         {
             color: '#ffffff',
@@ -131,7 +131,7 @@ const set4AxisMeshState = async (mesh, transformation, materials) => {
     //     meshCylinder
     // );
 
-    mesh.position.set(0, 0, materials.length / 2 - transformation.positionY);
+    mesh.position.set(0, 0, materials.length / 2 - transformation.positionY - coordinateSize.y / 2);
     mesh.updateMatrix();
     if (radius) {
         mesh.applyMatrix(new Matrix4().makeRotationZ(-transformation.positionX / radius));
@@ -181,6 +181,7 @@ class Cnc3DVisualizer extends PureComponent {
                 || transformation !== this.props.transformation || direction !== this.props.direction
                 || this.props.coordinateSize !== coordinateSize
                 || this.props.coordinateMode !== coordinateMode
+                || this.props.placement !== nextProps.placement
             ) {
                 const t = getModelTransformation(transformation, machineSize, coordinateMode, coordinateSize);
                 mesh.remove(...mesh.children);
@@ -192,7 +193,7 @@ class Cnc3DVisualizer extends PureComponent {
                 }
 
                 if (materials.isRotate) {
-                    set4AxisMeshState(mesh, t, materials);
+                    set4AxisMeshState(mesh, t, materials, coordinateSize);
 
                     this.environment = new Env4Axis(mesh, materials);
                     this.worldTransform = new Matrix4().makeRotationY(Math.PI);

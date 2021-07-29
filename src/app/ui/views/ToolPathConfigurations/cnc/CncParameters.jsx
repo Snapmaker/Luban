@@ -8,7 +8,7 @@ import { CNC_MESH_SLICE_MODE_LINKAGE, CNC_MESH_SLICE_MODE_ROTATION,
     CNC_DEFAULT_GCODE_PARAMETERS_DEFINITION
 } from '../../../../constants';
 import i18n from '../../../../lib/i18n';
-import { NumberInput as Input, TextInput } from '../../../components/Input';
+import { TextInput } from '../../../components/Input';
 import ToolParameters from './ToolParameters';
 import TipTrigger from '../../../components/TipTrigger';
 import ToolSelector from './ToolSelector';
@@ -26,7 +26,7 @@ class CncParameters extends PureComponent {
         updateToolConfig: PropTypes.func.isRequired,
         setCurrentValueAsProfile: PropTypes.func.isRequired,
 
-        size: PropTypes.object.isRequired,
+        // size: PropTypes.object.isRequired,
         multipleEngine: PropTypes.bool.isRequired,
         materials: PropTypes.object.isRequired
     };
@@ -37,13 +37,12 @@ class CncParameters extends PureComponent {
     actions = {
     };
 
-
     render() {
-        const { toolPath, materials, size, multipleEngine } = this.props;
+        const { toolPath, materials, multipleEngine } = this.props;
 
         const { name, type, gcodeConfig, useLegacyEngine } = toolPath;
 
-        const { pathType, sliceMode, smoothY, allowance, targetDepth } = gcodeConfig;
+        const { pathType, sliceMode } = gcodeConfig;
 
         const { isRotate } = materials;
 
@@ -71,42 +70,63 @@ class CncParameters extends PureComponent {
             ...gcodeDefinition,
             ...this.props.activeToolDefinition.settings
         };
+        // Session First
+        const toolDefinitionFirstKeys = [];
+        if (isSVG || isImage || isSculpt && !isRotate && methodType === 'Carve') {
+            toolDefinitionFirstKeys.push('targetDepth');
+        }
+        if (methodType === 'Carve' || sliceMode === CNC_MESH_SLICE_MODE_ROTATION || sliceMode === CNC_MESH_SLICE_MODE_LINKAGE) {
+            toolDefinitionFirstKeys.push('allowance');
+        }
+        const toolDefinitionFirst = {};
+        toolDefinitionFirstKeys.forEach((key) => {
+            if (allDefinition[key]) {
+                toolDefinitionFirst[key] = allDefinition[key];
+            }
+        });
 
+        // Session Tool
         const toolDefinitionToolKeys = [
             'work_speed', 'plunge_speed', 'step_down', 'step_over'
         ];
-        const toolDefinitionJogKeys = [
-            'jog_speed', 'safetyHeight', 'stopHeight'
-        ];
-        let toolDefinitionTabKeys = [];
-        const useCncTabConfig = toolPath.type === 'vector';
-        if (!allDefinition.enableTab.default_value) {
-            toolDefinitionTabKeys = [
-                'enableTab'
-            ];
-        } else {
-            toolDefinitionTabKeys = [
-                'enableTab', 'tabHeight', 'tabSpace', 'tabWidth'
-            ];
-        }
         const toolDefinitionTool = {};
         toolDefinitionToolKeys.forEach((key) => {
             if (allDefinition[key]) {
                 toolDefinitionTool[key] = allDefinition[key];
             }
         });
+
+        // Session Jog
+        const toolDefinitionJogKeys = [
+            'jog_speed', 'safetyHeight', 'stopHeight'
+        ];
         const toolDefinitionJog = {};
         toolDefinitionJogKeys.forEach((key) => {
             if (allDefinition[key]) {
                 toolDefinitionJog[key] = allDefinition[key];
             }
         });
+
+        // Session Tab
+        let toolDefinitionTabKeys = [];
         const toolDefinitionTab = {};
-        toolDefinitionTabKeys.forEach((key) => {
-            if (allDefinition[key]) {
-                toolDefinitionTab[key] = allDefinition[key];
+        const useCncTabConfig = pathType === 'path' || pathType === 'outline';
+        if (useCncTabConfig) {
+            if (!allDefinition.enableTab.default_value) {
+                toolDefinitionTabKeys = [
+                    'enableTab'
+                ];
+            } else {
+                toolDefinitionTabKeys = [
+                    'enableTab', 'tabHeight', 'tabSpace', 'tabWidth'
+                ];
             }
-        });
+            toolDefinitionTabKeys.forEach((key) => {
+                if (allDefinition[key]) {
+                    toolDefinitionTab[key] = allDefinition[key];
+                }
+            });
+        }
 
         return (
             <React.Fragment>
@@ -182,28 +202,6 @@ class CncParameters extends PureComponent {
                                         />
                                     </div>
                                 </TipTrigger>
-
-                                {(methodType === 'Carve' || pathType === 'pocket' || pathType === 'path') && (
-                                    <TipTrigger
-                                        title={i18n._('Target Depth')}
-                                        content={i18n._('Enter the depth of the carved image. The depth cannot be deeper than the flute length.')}
-                                    >
-                                        <div className="position-re sm-flex justify-space-between height-32 margin-vertical-8">
-                                            <span>{i18n._('Target Depth')}</span>
-                                            <Input
-                                                disabled={false}
-                                                className="sm-flex-auto"
-                                                size="large"
-                                                value={targetDepth}
-                                                min={0.01}
-                                                max={size.z}
-                                                step={0.1}
-                                                onChange={(value) => { this.props.updateGcodeConfig({ targetDepth: value }); }}
-                                            />
-                                            <span className="sm-parameter-row__input-unit">mm</span>
-                                        </div>
-                                    </TipTrigger>
-                                )}
                             </div>
                         )}
                         {isImage && (
@@ -240,7 +238,6 @@ class CncParameters extends PureComponent {
                                         </div>
                                     </TipTrigger>
                                 )}
-
                                 {isRotate && (
                                     <React.Fragment>
                                         <TipTrigger
@@ -263,110 +260,80 @@ class CncParameters extends PureComponent {
                                         </TipTrigger>
                                     </React.Fragment>
                                 )}
-
-                                {isRotate && sliceMode === CNC_MESH_SLICE_MODE_LINKAGE && (
-                                    <div className="position-re sm-flex justify-space-between height-32 margin-vertical-8">
-                                        <span>{i18n._('Y Smoothing')}</span>
-                                        <input
-                                            disabled={false}
-                                            type="checkbox"
-                                            className="sm-flex-auto"
-                                            checked={smoothY}
-                                            onChange={() => { this.props.updateGcodeConfig({ smoothY: !smoothY }); }}
-                                        />
-                                    </div>
-                                )}
+                                {/*{isRotate && sliceMode === CNC_MESH_SLICE_MODE_LINKAGE && (*/}
+                                {/*    <div className="position-re sm-flex justify-space-between height-32 margin-vertical-8">*/}
+                                {/*        <span>{i18n._('Y Smoothing')}</span>*/}
+                                {/*        <input*/}
+                                {/*            disabled={false}*/}
+                                {/*            type="checkbox"*/}
+                                {/*            className="sm-flex-auto"*/}
+                                {/*            checked={smoothY}*/}
+                                {/*            onChange={() => { this.props.updateGcodeConfig({ smoothY: !smoothY }); }}*/}
+                                {/*        />*/}
+                                {/*    </div>*/}
+                                {/*)}*/}
                             </div>
                         )}
-                        {!isSVG && (
-                            <TipTrigger
-                                title={i18n._('Target Depth')}
-                            >
-                                <div className="position-re sm-flex justify-space-between height-32 margin-vertical-8">
-                                    <span>{i18n._('Target Depth')}</span>
-                                    <Input
-                                        disabled={false}
-                                        className="sm-flex-auto"
-                                        value={targetDepth}
-                                        size="large"
-                                        min={0.01}
-                                        step={0.1}
-                                        max={100}
-                                        onChange={(value) => { this.props.updateGcodeConfig({ targetDepth: value }); }}
-                                    />
-                                    <span className="sm-parameter-row__input-unit">mm</span>
-                                </div>
-                            </TipTrigger>
-                        )}
-                        {!isSVG && (
-                            <TipTrigger
-                                title={i18n._('Allowance')}
-                            >
-                                <div className="position-re sm-flex justify-space-between height-32 margin-vertical-8">
-                                    <span>{i18n._('Allowance')}</span>
-                                    <Input
-                                        disabled={false}
-                                        className="sm-flex-auto"
-                                        size="large"
-                                        value={allowance}
-                                        min={0.00}
-                                        step={0.1}
-                                        onChange={(value) => { this.props.updateGcodeConfig({ allowance: value }); }}
-                                    />
-                                    <span className="sm-parameter-row__input-unit">mm</span>
-                                </div>
-                            </TipTrigger>
-                        )}
-                    </div>
-                    <div className="border-bottom-normal padding-bottom-4 margin-bottom-16">
-                        <SvgIcon
-                            name="TitleSetting"
-                            size={24}
+                        <ToolParameters
+                            settings={toolDefinitionFirst}
+                            updateToolConfig={this.props.updateToolConfig}
+                            updateGcodeConfig={this.props.updateGcodeConfig}
+                            toolPath={this.props.toolPath}
                         />
-                        <span>{i18n._('Tool')}</span>
                     </div>
-                    <ToolSelector
-                        toolDefinition={this.props.activeToolDefinition}
-                        toolDefinitions={this.props.toolDefinitions}
-                        isModifiedDefinition={this.props.isModifiedDefinition}
-                        setCurrentValueAsProfile={this.props.setCurrentValueAsProfile}
-                    />
-                    <ToolParameters
-                        settings={toolDefinitionTool}
-                        updateToolConfig={this.props.updateToolConfig}
-                        updateGcodeConfig={this.props.updateGcodeConfig}
-                        toolPath={this.props.toolPath}
-                    />
-                    <div className="border-bottom-normal padding-bottom-4 margin-bottom-16">
-                        <SvgIcon
-                            name="TitleSetting"
-                            size={24}
-                        />
-                        <span>{i18n._('Jog')}</span>
-                    </div>
-                    <ToolParameters
-                        settings={toolDefinitionJog}
-                        updateToolConfig={this.props.updateToolConfig}
-                        updateGcodeConfig={this.props.updateGcodeConfig}
-                        toolPath={this.props.toolPath}
-                    />
-                    {useCncTabConfig && (
+                    <div>
                         <div className="border-bottom-normal padding-bottom-4 margin-bottom-16">
                             <SvgIcon
                                 name="TitleSetting"
                                 size={24}
                             />
-                            <span>{i18n._('Tab')}</span>
+                            <span>{i18n._('Tool')}</span>
                         </div>
-                    )}
+                        <ToolSelector
+                            toolDefinition={this.props.activeToolDefinition}
+                            toolDefinitions={this.props.toolDefinitions}
+                            isModifiedDefinition={this.props.isModifiedDefinition}
+                            setCurrentValueAsProfile={this.props.setCurrentValueAsProfile}
+                        />
+                        <ToolParameters
+                            settings={toolDefinitionTool}
+                            updateToolConfig={this.props.updateToolConfig}
+                            updateGcodeConfig={this.props.updateGcodeConfig}
+                            toolPath={this.props.toolPath}
+                        />
+                    </div>
+                    <div>
+                        <div className="border-bottom-normal padding-bottom-4 margin-bottom-16">
+                            <SvgIcon
+                                name="TitleSetting"
+                                size={24}
+                            />
+                            <span>{i18n._('Jog')}</span>
+                        </div>
+                        <ToolParameters
+                            settings={toolDefinitionJog}
+                            updateToolConfig={this.props.updateToolConfig}
+                            updateGcodeConfig={this.props.updateGcodeConfig}
+                            toolPath={this.props.toolPath}
+                        />
+                    </div>
                     {useCncTabConfig && (
                         <div>
-                            <ToolParameters
-                                settings={toolDefinitionTab}
-                                updateToolConfig={this.props.updateToolConfig}
-                                updateGcodeConfig={this.props.updateGcodeConfig}
-                                toolPath={this.props.toolPath}
-                            />
+                            <div className="border-bottom-normal padding-bottom-4 margin-bottom-16">
+                                <SvgIcon
+                                    name="TitleSetting"
+                                    size={24}
+                                />
+                                <span>{i18n._('Tab')}</span>
+                            </div>
+                            <div>
+                                <ToolParameters
+                                    settings={toolDefinitionTab}
+                                    updateToolConfig={this.props.updateToolConfig}
+                                    updateGcodeConfig={this.props.updateGcodeConfig}
+                                    toolPath={this.props.toolPath}
+                                />
+                            </div>
                         </div>
                     )}
                 </div>
@@ -376,10 +343,9 @@ class CncParameters extends PureComponent {
 }
 
 const mapStateToProps = (state) => {
-    const { size, multipleEngine } = state.machine;
+    const { multipleEngine } = state.machine;
     const { materials } = state.cnc;
     return {
-        size,
         multipleEngine,
         materials
     };

@@ -60,7 +60,7 @@ const ToolpathItem = ({ toolPath, selectedToolPathIDArray, selectToolPathId, sel
                     'padding-horizontal-16',
                     'sm-flex',
                     'justify-space-between',
-                    selectedToolPathIDArray.includes(toolPath.id) ? styles.selected : null,
+                    selectedToolPathIDArray.includes(toolPath.id) ? styles.selected : null
                 )}
             >
                 <Anchor
@@ -152,13 +152,20 @@ function getFastEditSettingsKeys(toolPath) {
     if (headType === HEAD_LASER) {
         if (toolPathType === 'vector') {
             const multiPasses = gcodeConfig?.multiPasses;
+            const fillEnabled = gcodeConfig?.fillEnabled;
+            //Todo
+            const isMethodFill = (fillEnabled === 'true' || fillEnabled === true);
+
+            if (isMethodFill) {
+                return ['fillEnabled', 'fillInterval', 'workSpeed', 'fixedPower'];
+            }
             if (multiPasses === 1) {
                 return [
-                    'fill_enabled', 'work_speed', 'multi_passes', 'fixed_power'
+                    'fillEnabled', 'workSpeed', 'multiPasses', 'fixedPower'
                 ];
             } else {
                 return [
-                    'fill_enabled', 'work_speed', 'multi_passes', 'multi_pass_depth', 'fixed_power'
+                    'fillEnabled', 'workSpeed', 'multiPasses', 'multiPassDepth', 'fixedPower'
                 ];
             }
         }
@@ -166,12 +173,12 @@ function getFastEditSettingsKeys(toolPath) {
             const movementMode = gcodeConfig?.movementMode;
             if (movementMode === 'greyscale-line') {
                 return [
-                    'movement_mode', 'density', 'work_speed', 'fixed_power'
+                    'movementMode', 'step_over', 'workSpeed', 'fixedPower'
                 ];
             }
             if (movementMode === 'greyscale-dot') {
                 return [
-                    'movement_mode', 'density', 'dwell_time', 'fixed_power'
+                    'movementMode', 'step_over', 'dwellTime', 'fixedPower'
                 ];
             }
         }
@@ -212,7 +219,7 @@ const ToolPathListBox = (props) => {
                 allDefinition.plunge_speed.default_value = gcodeConfig?.plungeSpeed;
                 allDefinition.work_speed.default_value = gcodeConfig?.workSpeed;
                 allDefinition.step_down.default_value = gcodeConfig?.stepDown;
-                allDefinition.density.default_value = gcodeConfig?.density;
+                allDefinition.step_over.default_value = gcodeConfig?.stepOver;
             }
         }
         if (props.headType === HEAD_LASER) {

@@ -179,7 +179,8 @@ export default class CNCToolPathGenerator extends EventEmitter {
     _processSVG(svg, modelInfo) {
         const { transformation, sourceType, gcodeConfig, toolParams } = modelInfo;
 
-        const { pathType = 'path', targetDepth, fillEnabled, fillDensity } = gcodeConfig;
+        const { pathType = 'path', targetDepth, fillEnabled, stepOver } = gcodeConfig;
+        const fillDensity = 1 / stepOver;
         const { toolDiameter, toolAngle, toolShaftDiameter } = toolParams;
 
         const { scaleX, scaleY } = transformation;
