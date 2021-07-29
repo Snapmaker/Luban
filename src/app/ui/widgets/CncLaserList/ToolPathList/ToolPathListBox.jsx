@@ -186,6 +186,7 @@ const ToolPathListBox = (props) => {
     const selectedToolPathIDArray = useSelector(state => state[props.headType]?.toolPathGroup?.selectedToolPathArray, shallowEqual);
     const inProgress = useSelector(state => state[props.headType]?.inProgress);
     const dispatch = useDispatch();
+    // todo  selectedToolPath
     const selectedToolPath = toolPaths && selectedToolPathIDArray.length === 1 && toolPaths.find(v => v.id === selectedToolPathIDArray[0]);
     const selectedToolPathId = selectedToolPath.id;
     const activeToolListDefinition = cloneDeep(useSelector(state => state[props.headType]?.activeToolListDefinition, shallowEqual));

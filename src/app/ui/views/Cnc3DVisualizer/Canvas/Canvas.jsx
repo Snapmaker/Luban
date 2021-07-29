@@ -60,7 +60,7 @@ class Canvas extends Component {
         this.setupControls();
 
         this.renderScene();
-        window.addEventListener('resize', this.resizeWindow, false);
+        // window.addEventListener('resize', this.resizeWindow, false);
     }
 
     componentWillReceiveProps(nextProps) {
@@ -112,7 +112,7 @@ class Canvas extends Component {
         this.camera.aspect = width / height;
         this.camera.updateProjectionMatrix();
 
-        this.renderer.setClearColor(new Color(0xfafafa), 1);
+        this.renderer.setClearColor(new Color(0xffffff), 1);
         this.renderer.setSize(width, height);
         this.renderer.shadowMap.enabled = true;
 
@@ -233,9 +233,6 @@ class Canvas extends Component {
         return (
             <div
                 ref={this.node}
-                style={{
-                    backgroundColor: '#eee'
-                }}
             />
         );
     }

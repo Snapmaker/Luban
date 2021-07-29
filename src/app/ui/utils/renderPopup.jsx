@@ -17,7 +17,7 @@ export default function renderPopup(options) {
 
 
     return (
-        <Modal disableOverlay tile style={{ width: '100%', height: '100%' }} onClose={onClose}>
+        <Modal closable={false} disableOverlay tile style={{ width: '100%', height: '100%' }} onClose={onClose}>
 
             {/* <Modal.Body style={{ padding: '0' }}> */}
             <Component isPopup onClose={onClose} />

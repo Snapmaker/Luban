@@ -19,7 +19,7 @@ import MainToolBar from '../../layouts/MainToolBar';
 const HomePage = (props) => { // Todo, what's the props ?
     const [modalShow, setModalShow] = useState(false);
     useEffect(() => {
-        document.querySelector('body').setAttribute('style', 'height: calc(100vh - 82px); background: #f8f8f8;');
+        document.querySelector('body').setAttribute('style', 'height: calc(100vh - 82px); background: #f5f5f7;');
         const settingStore = machineStore.get('settings');
         if (gte(machineStore.version, '3.16.0') && (!settingStore?.finishGuide || settingStore?.guideVersion !== 1)) {
             setModalShow(true);

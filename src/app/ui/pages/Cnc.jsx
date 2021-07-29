@@ -3,9 +3,10 @@ import React, { useState, useEffect } from 'react';
 import { shallowEqual, useSelector, useDispatch } from 'react-redux';
 import PropTypes from 'prop-types';
 import { withRouter } from 'react-router-dom';
-
 import path from 'path';
 import { Trans } from 'react-i18next';
+import Dropdown from '../components/Dropdown';
+import Menu from '../components/Menu';
 import i18n from '../../lib/i18n';
 import modal from '../../lib/modal';
 import Dropzone from '../components/Dropzone';
@@ -15,6 +16,7 @@ import { renderModal, renderPopup, renderWidgetList } from '../utils';
 import Tabs from '../components/Tabs';
 import Checkbox from '../components/Checkbox';
 import { Button } from '../components/Buttons';
+import Cnc3DVisualizer from '../views/Cnc3DVisualizer';
 
 import CNCVisualizer from '../widgets/CNCVisualizer';
 import ProjectLayout from '../layouts/ProjectLayout';
@@ -161,7 +163,54 @@ function useRenderMainToolBar(setShowHomePage, setShowJobType, setShowWorkspace)
     // const hasModel = useSelector(state => state[HEAD_CNC]?.hasModel, shallowEqual);
     const canRedo = useSelector(state => state[HEAD_CNC]?.history?.canRedo, shallowEqual);
     const canUndo = useSelector(state => state[HEAD_CNC]?.history?.canUndo, shallowEqual);
+    const isRotate = useSelector(state => state[HEAD_CNC]?.materials?.isRotate, shallowEqual);
+    const [showStlModal, setShowStlModal] = useState(true);
     const dispatch = useDispatch();
+    function handleHideStlModal() {
+        setShowStlModal(false);
+    }
+    function handleShowStlModal() {
+        setShowStlModal(true);
+    }
+    const menu = (
+        <Menu style={{ marginTop: '8px' }}>
+            <Menu.Item
+                onClick={handleShowStlModal}
+                disabled={showStlModal}
+            >
+                <div className="align-l width-168">
+                    <SvgIcon
+                        type="static"
+                        disabled={showStlModal}
+                        name="MainToolbarAddBackground"
+                    />
+                    <span
+                        className="margin-left-4"
+                    >
+                        {i18n._('Enabled Stl 3D View')}
+                    </span>
+
+                </div>
+            </Menu.Item>
+            <Menu.Item
+                onClick={handleHideStlModal}
+                disabled={!showStlModal}
+            >
+                <div className="align-l width-168">
+                    <SvgIcon
+                        type="static"
+                        disabled={!showStlModal}
+                        name="MainToolbarRemoverBackground"
+                    />
+                    <span
+                        className="margin-left-4"
+                    >
+                        {i18n._('Disabled Stl 3D View')}
+                    </span>
+                </div>
+            </Menu.Item>
+        </Menu>
+    );
     const leftItems = [
         {
             title: i18n._('Home'),
@@ -237,8 +286,45 @@ function useRenderMainToolBar(setShowHomePage, setShowJobType, setShowWorkspace)
                 dispatch(editorActions.sendSelectedModelToBack(HEAD_CNC));
             }
         }
+
     ];
+    if (isRotate) {
+        leftItems.push(
+            {
+                type: 'render',
+                customRender: function () {
+                    return (
+                        <Dropdown
+                            className="display-inline align-c padding-top-4 padding-horizontal-2"
+                            overlay={menu}
+                        >
+                            <div
+                                className="display-inline font-size-0 v-align-t"
+                            >
+                                <SvgIcon
+                                    name="MainToolbarStl3dView"
+                                >
+                                    <div className="font-size-base color-black-3">
+                                        {i18n._('Stl 3D View')}
+                                        <SvgIcon
+                                            type="static"
+                                            name="DropdownLine"
+                                        />
+                                    </div>
+                                </SvgIcon>
+                            </div>
+                        </Dropdown>
+                    );
+                }
+            }
+        );
+    }
     return {
+        renderStlModal: () => {
+            return (
+                <Cnc3DVisualizer show={showStlModal} />
+            );
+        },
         renderMainToolBar: () => {
             return (
                 <MainToolBar
@@ -319,11 +405,12 @@ function Cnc({ location }) {
             setShowJobType(false);
         }
     }, [location?.state?.shouldShowJobType]);
-    const { renderMainToolBar } = useRenderMainToolBar(
+    const { renderStlModal, renderMainToolBar } = useRenderMainToolBar(
         setShowHomePage,
         setShowJobType,
         setShowWorkspace
     );
+
     const renderHomepage = () => {
         const onClose = () => setShowHomePage(false);
         return showHomePage && renderPopup({
@@ -469,6 +556,7 @@ function Cnc({ location }) {
             {warningModal}
             {removeModelsWarningModal}
             {jobTypeModal}
+            {renderStlModal()}
             {renderHomepage()}
             {renderWorkspace()}
         </div>

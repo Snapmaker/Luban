@@ -10,6 +10,8 @@ import { Button } from '../../components/Buttons';
 import i18n from '../../../lib/i18n';
 import { actions as printingActions } from '../../../flux/printing';
 import { actions as projectActions } from '../../../flux/project';
+import { actions as machineActions } from '../../../flux/machine';
+
 import { HEAD_3DP, PRINTING_MANAGER_TYPE_QUALITY, PRINTING_QUALITY_CONFIG_INDEX,
     PRINTING_QUALITY_CUSTOMIZE_FIELDS, PRINTING_QUALITY_CONFIG_GROUP } from '../../../constants';
 import SettingItem from '../../views/ProfileManager/SettingItem';
@@ -30,9 +32,11 @@ class Configurations extends PureComponent {
         defaultQualityId: PropTypes.string.isRequired,
         qualityDefinitions: PropTypes.array.isRequired,
         inProgress: PropTypes.bool.isRequired,
+        printingCustomConfigs: PropTypes.array.isRequired,
         destroyGcodeLine: PropTypes.func.isRequired,
         displayModel: PropTypes.func.isRequired,
 
+        updatePrintingCustomConfigs: PropTypes.func.isRequired,
         updateDefinitionSettings: PropTypes.func.isRequired,
         updateDefinitionsForManager: PropTypes.func.isRequired,
         updateManagerDisplayType: PropTypes.func.isRequired,
@@ -44,7 +48,7 @@ class Configurations extends PureComponent {
 
     state = {
         selectedSettingDefaultValue: null,
-        customConfigs: cloneDeep(PRINTING_QUALITY_CUSTOMIZE_FIELDS),
+        // printingCustomConfigs: cloneDeep(PRINTING_QUALITY_CUSTOMIZE_FIELDS),
         showCustomConfigPannel: false,
         selectedDefinition: null
     };
@@ -68,16 +72,16 @@ class Configurations extends PureComponent {
             });
         },
         onChangeCustomConfig: (key, value) => {
-            let { customConfigs } = this.state;
-            if (value && !includes(customConfigs, key)) {
-                customConfigs.push(key);
-                customConfigs = [...customConfigs];
+            let { printingCustomConfigs } = this.props;
+            if (value && !includes(printingCustomConfigs, key)) {
+                printingCustomConfigs.push(key);
+                printingCustomConfigs = [...printingCustomConfigs];
             } else if (!value) {
-                customConfigs = customConfigs.filter((a) => a !== key);
+                printingCustomConfigs = printingCustomConfigs.filter((a) => a !== key);
             }
-            this.setState({
-                customConfigs
-            });
+            this.props.updatePrintingCustomConfigs(
+                printingCustomConfigs
+            );
         },
         displayModel: () => {
             this.props.destroyGcodeLine();
@@ -186,7 +190,7 @@ class Configurations extends PureComponent {
     }
 
     render() {
-        const { qualityDefinitions, inProgress, defaultQualityId } = this.props;
+        const { qualityDefinitions, inProgress, defaultQualityId, printingCustomConfigs } = this.props;
         const state = this.state;
         const actions = this.actions;
         const qualityDefinition = this.state.selectedDefinition;
@@ -244,7 +248,7 @@ class Configurations extends PureComponent {
                         />
                     </div>
                     <div className="padding-horizontal-16 padding-vertical-16">
-                        { state.customConfigs.map((key) => {
+                        { printingCustomConfigs.map((key) => {
                             return (
                                 <SettingItem
                                     styleSize="middle"
@@ -284,7 +288,7 @@ class Configurations extends PureComponent {
                             >
                                 <ConfigValueBox
                                     calculateTextIndex={calculateTextIndex}
-                                    customConfigs={state.customConfigs}
+                                    customConfigs={printingCustomConfigs}
                                     definitionForManager={state.selectedDefinition}
                                     optionConfigGroup={PRINTING_QUALITY_CONFIG_GROUP}
                                     isDefinitionEditable={isDefinitionEditable}
@@ -313,9 +317,12 @@ class Configurations extends PureComponent {
 
 const mapStateToProps = (state) => {
     const { qualityDefinitions, defaultQualityId, isRecommended, activeDefinition, inProgress } = state.printing;
+    const { printingCustomConfigs } = state.machine;
+
     return {
         qualityDefinitions,
         defaultQualityId,
+        printingCustomConfigs,
         isRecommended,
         activeDefinition,
         inProgress
@@ -333,6 +340,7 @@ const mapDispatchToProps = (dispatch) => {
         updateDefinitionSettings: (definition, settings) => dispatch(printingActions.updateDefinitionSettings(definition, settings)),
         updateManagerDisplayType: (managerDisplayType) => dispatch(printingActions.updateManagerDisplayType(managerDisplayType)),
         getDefaultDefinition: (id) => dispatch(printingActions.getDefaultDefinition(id)),
+        updatePrintingCustomConfigs: (customConfigs) => dispatch(machineActions.updatePrintingCustomConfigs(customConfigs)),
 
         destroyGcodeLine: () => dispatch(printingActions.destroyGcodeLine()),
         displayModel: () => dispatch(printingActions.displayModel()),

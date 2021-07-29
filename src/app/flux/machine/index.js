@@ -60,7 +60,6 @@ const INITIAL_STATE = {
     savedServerAddress: '',
     savedServerToken: '',
     manualIp: '',
-
     isOpen: false,
     isConnected: false,
     workflowStatus: WORKFLOW_STATUS_UNKNOWN,
@@ -148,6 +147,13 @@ const INITIAL_STATE = {
         elapsedTime: 0,
         remainingTime: 0
     },
+    printingCustomConfigs: [
+        'layer_height',
+        'infill_sparse_density',
+        'wall_thickness',
+        'adhesion_type',
+        'support_enable'
+    ],
 
     // security warning
     shouldShowCncWarning: true,
@@ -185,6 +191,13 @@ export const actions = {
             const shouldCheckForUpdate = false;
             dispatch(baseActions.updateState({
                 shouldCheckForUpdate: shouldCheckForUpdate
+            }));
+        }
+        const printingCustomConfigs = machineStore.get('printingCustomConfigs');
+        if (printingCustomConfigs && Object.prototype.toString.call(printingCustomConfigs) === '[object String]') {
+            const customConfigsArray = printingCustomConfigs.split('-');
+            dispatch(baseActions.updateState({
+                printingCustomConfigs: customConfigsArray
             }));
         }
     },
@@ -971,6 +984,11 @@ export const actions = {
     updateShouldCheckForUpdate: (shouldCheckForUpdate) => (dispatch) => {
         dispatch(baseActions.updateState({ shouldCheckForUpdate: shouldCheckForUpdate }));
         machineStore.set('shouldCheckForUpdate', shouldCheckForUpdate);
+    },
+    updatePrintingCustomConfigs: (printingCustomConfigs) => (dispatch) => {
+        dispatch(baseActions.updateState({ printingCustomConfigs }));
+        const newConfig = printingCustomConfigs.join('-');
+        machineStore.set('printingCustomConfigs', newConfig);
     },
     updateMultipleEngine: () => (dispatch, getState) => {
         const { multipleEngine } = getState().machine;

@@ -11,7 +11,7 @@ class WebGLRendererWrapper {
     constructor(options) {
         if (Detector.isWebGLAvailable()) {
             this.renderer = new WebGLRenderer(options);
-            this.renderer.setClearColor(new Color(0xfafafa), 1);
+            this.renderer.setClearColor(new Color(0xF5F5F7), 1);
             this.renderer.shadowMap.enabled = true;
         } else {
             this.renderer = null;

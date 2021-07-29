@@ -275,7 +275,7 @@ class SVGCanvas extends PureComponent {
             height: '100%',
             x: 0,
             y: 0,
-            fill: '#fafafa',
+            fill: '#F5F5F7',
             stroke: '#000',
             'stroke-width': 0,
             style: 'pointer-events: none'
