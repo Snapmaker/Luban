@@ -61,12 +61,13 @@ class PrintablePlate extends Object3D {
         //     group.add(borderPlane);
         // }
         { // Coordinate Grid
+            // Todo: cause twice
             const gridLine = new GridLine(
-                -this.size.x / 2 + this.coorDelta.dx,
-                this.size.x / 2 + this.coorDelta.dx,
+                -this.size.x / 2 + this.coorDelta?.dx,
+                this.size.x / 2 + this.coorDelta?.dx,
                 gridSpacing,
-                -this.size.y / 2 + this.coorDelta.dy,
-                this.size.y / 2 + this.coorDelta.dy,
+                -this.size.y / 2 + this.coorDelta?.dy,
+                this.size.y / 2 + this.coorDelta?.dy,
                 gridSpacing,
                 0XFFFFFF - 0xF500F7 // grid
             );
@@ -81,10 +82,10 @@ class PrintablePlate extends Object3D {
 
         { // Axis Labels
             const textSize = (10 / 3);
-            const minX = Math.ceil((-this.size.x / 2 + this.coorDelta.dx) / METRIC_GRID_BIG_SPACING) * METRIC_GRID_BIG_SPACING;
-            const minY = Math.ceil((-this.size.y / 2 + this.coorDelta.dy) / METRIC_GRID_BIG_SPACING) * METRIC_GRID_BIG_SPACING;
-            const maxX = Math.floor((this.size.x / 2 + this.coorDelta.dx) / METRIC_GRID_BIG_SPACING) * METRIC_GRID_BIG_SPACING;
-            const maxY = Math.floor((this.size.y / 2 + this.coorDelta.dy) / METRIC_GRID_BIG_SPACING) * METRIC_GRID_BIG_SPACING;
+            const minX = Math.ceil((-this.size.x / 2 + this.coorDelta?.dx) / METRIC_GRID_BIG_SPACING) * METRIC_GRID_BIG_SPACING;
+            const minY = Math.ceil((-this.size.y / 2 + this.coorDelta?.dy) / METRIC_GRID_BIG_SPACING) * METRIC_GRID_BIG_SPACING;
+            const maxX = Math.floor((this.size.x / 2 + this.coorDelta?.dx) / METRIC_GRID_BIG_SPACING) * METRIC_GRID_BIG_SPACING;
+            const maxY = Math.floor((this.size.y / 2 + this.coorDelta?.dy) / METRIC_GRID_BIG_SPACING) * METRIC_GRID_BIG_SPACING;
 
             for (let x = minX; x <= maxX; x += METRIC_GRID_BIG_SPACING) {
                 if (x !== 0) {

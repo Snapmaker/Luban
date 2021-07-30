@@ -109,18 +109,17 @@ const generateCncToolPath = async (modelInfo, onProgress) => {
 
 const generateLaserToolPathFromEngine = async (modelInfos, onProgress) => {
     for (const modelInfo of modelInfos) {
-        const { type, sourceType } = modelInfo;
+        const { headType, type, sourceType } = modelInfo;
         if ([TOOLPATH_TYPE_VECTOR + SOURCE_TYPE_RASTER].includes(type + sourceType)) {
             const result = await editorProcess(modelInfo);
             modelInfo.uploadName = result.filename;
         }
-        if (modelInfo.gcodeConfig.fillInterval) {
-            modelInfo.gcodeConfig.fillDensity = modelInfo.gcodeConfig.fillInterval;
-            modelInfo.gcodeConfig.stepOver = 1 / modelInfo.gcodeConfig.fillInterval;
+        if (headType === 'laser') {
+            modelInfo.gcodeConfig.fillDensity = 1 / modelInfo.gcodeConfig.fillInterval;
+            modelInfo.gcodeConfig.stepOver = modelInfo.gcodeConfig.fillInterval;
         } else {
             modelInfo.gcodeConfig.fillDensity = 1 / modelInfo.gcodeConfig.stepOver;
         }
-        // modelInfo.gcodeConfig.stepOver = 1 / modelInfo.gcodeConfig.density;
         modelInfo.toolpathFileName = generateRandomPathName('json');
     }
 
