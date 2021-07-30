@@ -80,6 +80,7 @@ class WidgetContainer extends PureComponent {
             buttons: this.state.buttons
         };
         const actions = this.actions;
+        console.log('title', state.title);
         return (
             <Widget
                 style={{ display: this.state.display ? '' : 'none', margin: '16px 16px 0' }}

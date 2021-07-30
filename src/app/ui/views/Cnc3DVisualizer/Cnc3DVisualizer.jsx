@@ -225,7 +225,7 @@ class Cnc3DVisualizer extends PureComponent {
                             )}
                             >
                                 <div className="sm-flex height-40 border-bottom-normal padding-horizontal-16">
-                                    <span className="sm-flex-width heading-3">{i18n._('Stl 3D View')}</span>
+                                    <span className="sm-flex-width heading-3">{i18n._('STL 3D View')}</span>
                                 </div>
                                 <div className="padding-vertical-4 padding-horizontal-4 'background-color-white">
                                     <Canvas

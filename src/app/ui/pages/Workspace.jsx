@@ -152,7 +152,7 @@ class Workspace extends PureComponent {
                 return;
             }
             const returnButton = {
-                title: 'Return',
+                title: 'Back',
                 name: 'MainToolbarBack',
                 action: this.props.onClose
             };

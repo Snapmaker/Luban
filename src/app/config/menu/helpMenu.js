@@ -6,18 +6,45 @@ export default {
     label: 'Help',
     submenu: [
         {
-            label: 'Guide',
+            label: 'Guided Tour',
             enabled: true,
             click: () => {}
         },
         {
-            label: 'Forum',
+            label: 'Software Manual',
+            enabled: true,
+            click: () => {}
+        },
+        {
+            label: 'Video Tutorials',
             enabled: true,
             click: (menuItem, browserWindow) => {
                 if (isElectron()) {
-                    browserWindow.webContents.send('help.link', 'forum');
+                    browserWindow.webContents.send('help.link', 'tutorials');
                 } else {
-                    UniApi.Event.emit('appbar-menu:help.link', 'forum');
+                    UniApi.Event.emit('appbar-menu:help.link', 'tutorials');
+                }
+            }
+        },
+        {
+            label: 'Snapmaker.com',
+            enabled: true,
+            click: (menuItem, browserWindow) => {
+                if (isElectron()) {
+                    browserWindow.webContents.send('help.link', 'officialSite');
+                } else {
+                    UniApi.Event.emit('appbar-menu:help.link', 'officialSite');
+                }
+            }
+        },
+        {
+            label: 'Myminifactory',
+            enabled: true,
+            click: (menuItem, browserWindow) => {
+                if (isElectron()) {
+                    browserWindow.webContents.send('help.link', 'myminifactory');
+                } else {
+                    UniApi.Event.emit('appbar-menu:help.link', 'myminifactory');
                 }
             }
         },
@@ -33,46 +60,24 @@ export default {
             }
         },
         {
-            label: 'Tutorials',
+            label: 'Forum',
             enabled: true,
             click: (menuItem, browserWindow) => {
                 if (isElectron()) {
-                    browserWindow.webContents.send('help.link', 'tutorials');
+                    browserWindow.webContents.send('help.link', 'forum');
                 } else {
-                    UniApi.Event.emit('appbar-menu:help.link', 'tutorials');
+                    UniApi.Event.emit('appbar-menu:help.link', 'forum');
                 }
             }
         },
         {
-            label: 'Official Site',
-            enabled: true,
-            click: (menuItem, browserWindow) => {
-                if (isElectron()) {
-                    browserWindow.webContents.send('help.link', 'officialSite');
-                } else {
-                    UniApi.Event.emit('appbar-menu:help.link', 'officialSite');
-                }
-            }
-        },
-        {
-            label: 'Online Market',
+            label: 'Shopify',
             enabled: true,
             click: (menuItem, browserWindow) => {
                 if (isElectron()) {
                     browserWindow.webContents.send('help.link', 'market');
                 } else {
                     UniApi.Event.emit('appbar-menu:help.link', 'market');
-                }
-            }
-        },
-        {
-            label: 'Myminifactory',
-            enabled: true,
-            click: (menuItem, browserWindow) => {
-                if (isElectron()) {
-                    browserWindow.webContents.send('help.link', 'myminifactory');
-                } else {
-                    UniApi.Event.emit('appbar-menu:help.link', 'myminifactory');
                 }
             }
         },

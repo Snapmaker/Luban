@@ -159,7 +159,7 @@ class GcodeParameters extends PureComponent {
                                 name="TitleSetting"
                                 size={24}
                             />
-                            <span>{i18n._('Repetition')}</span>
+                            <span>{i18n._('Pass')}</span>
                         </div>
                         <ToolParameters
                             settings={laserDefinitionRepetition}

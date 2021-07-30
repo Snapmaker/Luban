@@ -51,7 +51,7 @@ function SoftwareUpdate() {
                             {`Snapmaker Luban ${settings.version}`}
                         </div>
                         <div className={classNames(styles['about-product-description'], 'color-black-4')}>
-                            {i18n._('A web-based interface for Snapmaker which is able to do 3D Printing, laser engraving and CNC carving.')}
+                            {i18n._('An open-source slicing software which can 3D print, laser engrave, and CNC carve.')}
                             <Space width={8} />
                             <Anchor
                                 className="link-text"

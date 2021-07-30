@@ -166,7 +166,7 @@ class ModelGroup extends EventEmitter {
             const whd = new Vector3(0, 0, 0);
             ThreeUtils.computeBoundingBox(this.selectedGroup).getSize(whd);
             // width-depth-height
-            return `${whd.x.toFixed(1)} x ${whd.y.toFixed(1)} x ${whd.z.toFixed(1)} mm`;
+            return `${whd.x.toFixed(1)} × ${whd.y.toFixed(1)} × ${whd.z.toFixed(1)} mm`;
         } else {
             return '';
         }

@@ -406,7 +406,7 @@ class TracePreview extends Component {
                                         clearable={false}
                                         options={[{
                                             value: 'bw',
-                                            label: i18n._('B&W')
+                                            label: i18n._('Threshold')
                                         }, {
                                             value: 'greyscale',
                                             label: i18n._('GREYSCALE')

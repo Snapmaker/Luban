@@ -156,7 +156,7 @@ class Purifier extends PureComponent {
                     />
                 </div>
                 <div className="sm-flex justify-space-between margin-vertical-8">
-                    <span>{i18n._('Work Speed')}</span>
+                    <span>{i18n._('Fan Speed')}</span>
                     <span
                         className={classNames(
                             'border-radius-8',
@@ -222,7 +222,7 @@ class Purifier extends PureComponent {
                 </div>
                 {(filterLife === 0) && (
                     <div className={classNames(styles.notice)}>
-                        {i18n._('The filter element needs to be replaced.')}
+                        {i18n._('You should replace the filter cartridge.')}
                     </div>
                 )}
             </div>

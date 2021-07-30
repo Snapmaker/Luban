@@ -496,7 +496,7 @@ class ExtractSquareTrace extends PureComponent {
                                     onClick={this.actions.displayManualCalibration}
                                     disabled={!this.props.canTakePhoto}
                                 >
-                                    {i18n._('Calibration')}
+                                    {i18n._('Calibrate')}
                                 </Button>
                             </div>
                         </Modal.Body>

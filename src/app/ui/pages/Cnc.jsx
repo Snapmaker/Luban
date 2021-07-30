@@ -187,7 +187,7 @@ function useRenderMainToolBar(setShowHomePage, setShowJobType, setShowWorkspace)
                     <span
                         className="margin-left-4"
                     >
-                        {i18n._('Enabled Stl 3D View')}
+                        {i18n._('Enable STL 3D View')}
                     </span>
 
                 </div>
@@ -205,7 +205,7 @@ function useRenderMainToolBar(setShowHomePage, setShowJobType, setShowWorkspace)
                     <span
                         className="margin-left-4"
                     >
-                        {i18n._('Disabled Stl 3D View')}
+                        {i18n._('Disable STL 3D View')}
                     </span>
                 </div>
             </Menu.Item>
@@ -305,7 +305,7 @@ function useRenderMainToolBar(setShowHomePage, setShowJobType, setShowWorkspace)
                                     name="MainToolbarStl3dView"
                                 >
                                     <div className="font-size-base color-black-3">
-                                        {i18n._('Stl 3D View')}
+                                        {i18n._('STL 3D View')}
                                         <SvgIcon
                                             type="static"
                                             name="DropdownLine"
@@ -419,7 +419,7 @@ function Cnc({ location }) {
         });
     };
     const jobTypeModal = (showJobType) && renderModal({
-        title: i18n._('Job Type'),
+        title: i18n._('Job Setup'),
         renderBody() {
             return (
                 <JobType

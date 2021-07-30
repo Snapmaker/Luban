@@ -83,8 +83,8 @@ const Begin = () => {
         <div className={classNames(styles['create-new-project'], 'tile-modal-homepage')}>
             <div className={styles.beginPart}>
                 <div className={classNames('position-re', styles.headingPart)}>
-                    <Anchor className={classNames(`${beginSelected === 'start-project' ? 'highlight-heading' : 'highlight-heading-unselect-with-hover'}`, 'margin-horizontal-24')} onClick={() => handleBeginSelectedChange('start-project')}>{i18n._('Start Project')}</Anchor>
-                    <Anchor className={classNames(`${beginSelected === 'nearly-file' ? 'highlight-heading' : 'highlight-heading-unselect-with-hover'}`)} onClick={() => handleBeginSelectedChange('nearly-file')}>{i18n._('Nearly Files')}</Anchor>
+                    <Anchor className={classNames(`${beginSelected === 'start-project' ? 'highlight-heading' : 'highlight-heading-unselect-with-hover'}`, 'margin-horizontal-24')} onClick={() => handleBeginSelectedChange('start-project')}>{i18n._('Get Started')}</Anchor>
+                    <Anchor className={classNames(`${beginSelected === 'nearly-file' ? 'highlight-heading' : 'highlight-heading-unselect-with-hover'}`)} onClick={() => handleBeginSelectedChange('nearly-file')}>{i18n._('Recent Files')}</Anchor>
                     <Button
                         width="11.11vw"
                         className={classNames('position-ab', 'right-16')}

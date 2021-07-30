@@ -70,7 +70,7 @@ export const CaseConfig150 = [
         tag: 'cnc',
         tag_i18n: 'CNC',
         // title: 'CNC Cut Keychain',
-        title: 'Keychain',
+        title: 'Phone Holder',
         mode: 'vector', // mode: 'vector','greyscale','bw','text','trace'
         imgSrc: '../../resources/images/user-case/A150/library_phone_holder_97x97.png',
         pathConfig: {
@@ -114,7 +114,7 @@ export const CaseConfig250 = [
         tag: 'cnc',
         tag_i18n: 'CNC',
         // title: 'CNC Cut Smartphone Holder',
-        title: 'Smartphone Holder',
+        title: 'Phone Holder',
         mode: 'vector', // mode: 'vector','greyscale','bw','text','trace'
         imgSrc: '../../resources/images/user-case/A250/library_phone_holder_97x97.png',
         pathConfig: {
@@ -158,7 +158,7 @@ export const CaseConfig350 = [
         tag: 'cnc',
         tag_i18n: 'CNC',
         // title: 'CNC Cut Smartphone Holder',
-        title: 'Smartphone Holder',
+        title: 'Phone Holder',
         mode: 'vector', // mode: 'vector','greyscale','bw','text','trace'
         imgSrc: '../../resources/images/user-case/A250/library_phone_holder_97x97.png',
         pathConfig: {
@@ -174,7 +174,7 @@ const DEFAULT_CASE = [
         tag: 'cnc',
         tag_i18n: 'CNC',
         // title: 'Rotary CNC Carved Chess Piece',
-        title: 'Chess Piece',
+        title: 'Knight Chess Piece',
         mode: 'greyscale', // mode:     path: /UserCase/A250/',
         imgSrc: '../../resources/images/user-case/FourAxis/library_chess_piece_97x97.png',
         pathConfig: {
@@ -186,7 +186,7 @@ const DEFAULT_CASE = [
     {
         tag: 'cnc',
         tag_i18n: 'CNC',
-        title: 'Lion',
+        title: 'Lion Chess Piece',
         // title: '4-axis Linkage CNC Carved Lion',
         mode: 'greyscale', // mode: 'vec    path: /UserCase/A250/',
         imgSrc: '../../resources/images/user-case/FourAxis/library_cnc_lion_97x97.png',
@@ -204,7 +204,7 @@ export const CaseConfigA250FourAxis = [
         tag: 'laser',
         tag_i18n: 'Laser',
         // title: 'Rotary Laser Engraved Lion',
-        title: 'Lion',
+        title: 'Lion Box',
         // sourceType: 'svg', // raster/svg/text
         mode: 'greyscale', // mode: 'v
         imgSrc: '../../resources/images/user-case/FourAxis/library_laser_lion_97x97.png',
@@ -222,7 +222,7 @@ export const CaseConfigA350FourAxis = [
         tag: 'laser',
         tag_i18n: 'Laser',
         // title: 'Rotary Laser Engraved Lion',
-        title: 'Lion',
+        title: 'Lion Box',
         // sourceType: 'svg', // raster/svg/text
         mode: 'greyscale', // mode: 'v
         imgSrc: '../../resources/images/user-case/FourAxis/library_laser_lion_97x97.png',

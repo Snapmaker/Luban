@@ -87,7 +87,7 @@ class ManualCalibration extends PureComponent {
                 <div className="clearfix" />
                 <Modal.Header>
                     <div className={styles['laser-set-background-calibration-title']}>
-                        {i18n._('Calibration')}
+                        {i18n._('Calibrate')}
                     </div>
                 </Modal.Header>
                 <Modal.Body>

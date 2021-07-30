@@ -152,7 +152,7 @@ const SettingGuideModal = (props) => {
         <div>
             <Modal disableOverlay size="sm" onClose={handleCancel} className={styles.settingModal}>
                 <Modal.Header>
-                    {i18n._('Config')}
+                    {i18n._('Configuration Wizard')}
                 </Modal.Header>
                 <Modal.Body>
                     {

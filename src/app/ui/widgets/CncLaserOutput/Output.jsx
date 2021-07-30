@@ -176,7 +176,7 @@ class Output extends PureComponent {
                     onClick={actions.onExport}
                 >
                     <div className={classNames('align-c')}>
-                        {i18n._('Export G-code to file')}
+                        {i18n._('Export G-code to File')}
                     </div>
                 </Menu.Item>
             </Menu>
@@ -214,7 +214,7 @@ class Output extends PureComponent {
                             }}
                             className={classNames('position-re', 'bottom-0', 'left-0')}
                         >
-                            {i18n._('Back to Object View')}
+                            {i18n._('Close Preview')}
                         </Button>
                     )}
                     {!needToPreview && displayedType !== DISPLAYED_TYPE_TOOLPATH && !this.state.showExportOptions && (

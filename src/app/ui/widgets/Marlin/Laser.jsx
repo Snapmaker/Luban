@@ -104,7 +104,7 @@ class Laser extends PureComponent {
                 {connectionType === CONNECTION_TYPE_WIFI && (
                     <div>
                         <div className="sm-flex height-32 justify-space-between margin-vertical-8">
-                            <span>{i18n._('Printing Auto Mode')}</span>
+                            <span>{i18n._('Auto Mode')}</span>
                             <Checkbox
                                 className="sm-flex-auto"
                                 checked={isLaserPrintAutoMode}

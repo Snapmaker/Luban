@@ -63,11 +63,11 @@ class ConfigRasterVector extends PureComponent {
                             </div>
                         </TipTrigger>
                         <TipTrigger
-                            title={i18n._('B&W')}
-                            content={i18n._('Set the proportion of the black color based on the original color of the image.')}
+                            title={i18n._('Threshold')}
+                            content={i18n._('Set a value above which colors will be rendered in white.')}
                         >
                             <div className="sm-flex height-32 margin-vertical-8">
-                                <span className="sm-flex-width">{i18n._('B&W')}</span>
+                                <span className="sm-flex-width">{i18n._('Threshold')}</span>
 
                                 <Slider
                                     disabled={disabled}

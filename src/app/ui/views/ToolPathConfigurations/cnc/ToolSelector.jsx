@@ -50,9 +50,9 @@ function ToolSelector(props) {
             const name = tool.name;
             let detailName = '';
             if (tool.settings.angle.default_value !== '180') {
-                detailName = `${tool.name} (${tool.settings.angle.default_value}${tool.settings.angle.unit} ${tool.settings.shaft_diameter.default_value}${tool.settings.shaft_diameter.unit} )`;
+                detailName = `${tool.name} (${tool.settings.angle.default_value}${tool.settings.angle.unit} ${tool.settings.shaft_diameter.default_value}${tool.settings.shaft_diameter.unit})`;
             } else {
-                detailName = `${tool.name} (${tool.settings.shaft_diameter.default_value}${tool.settings.shaft_diameter.unit} )`;
+                detailName = `${tool.name} (${tool.settings.shaft_diameter.default_value}${tool.settings.shaft_diameter.unit})`;
             }
             checkboxAndSelectGroup.name = name;
             checkboxAndSelectGroup.definitionId = definitionId;
@@ -129,7 +129,7 @@ function ToolSelector(props) {
                 </div>
                 <div className="position-re height-8 margin-bottom-8">
                     <p className="sm-flex__input-unit-104 tooltip-message">
-                        {foundDefinition && `${i18n._('Material')} : ${foundDefinition.label}`}
+                        {foundDefinition && `${i18n._('Material')}: ${foundDefinition.label}`}
                     </p>
                 </div>
                 {renderModalView()}

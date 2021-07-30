@@ -164,7 +164,7 @@ export const PRINTING_QUALITY_CONFIG_GROUP = [
         ]
     },
     {
-        name: 'Retract & Z Hop',
+        name: 'Retraction & Z-hop',
         fields: [
             'retraction_enable',
             'retract_at_layer_change',
@@ -349,8 +349,8 @@ export const CNC_DEFAULT_GCODE_PARAMETERS_DEFINITION = {
         unit: 'mm'
     },
     'step_over': {
-        label: 'Step Over',
-        description: 'Step Over',
+        label: 'Stepover',
+        description: 'Set the space between parallel toolpaths.',
         min: 0.01,
         step: 0.01,
         default_value: 0.25,
@@ -388,7 +388,7 @@ export const LASER_DEFAULT_GCODE_PARAMETERS_DEFINITION = {
         default_value: 'passes'
     },
     'multiPassDepth': {
-        label: 'Z Step Per Pass',
+        label: 'Z Step per Pass',
         description: 'Determines how much the laser module will be lowered after each pass.',
         type: 'float',
         min: 0.01,
@@ -397,7 +397,7 @@ export const LASER_DEFAULT_GCODE_PARAMETERS_DEFINITION = {
         unit: 'mm'
     },
     'fixedPower': {
-        label: 'Power',
+        label: 'Laser Power',
         description: 'Power to use when laser is working.',
         type: 'float',
         min: 0,
@@ -417,9 +417,9 @@ export const LASER_DEFAULT_GCODE_PARAMETERS_DEFINITION = {
     },
     'fillInterval': {
         label: 'Fill Interval',
-        description: 'Fill Interval',
+        description: 'Set the degree to which an area is filled with laser lines or dots. The minimal interval is 0.05 mm.',
         type: 'float',
-        min: 0.01,
+        min: 0.05,
         // max: 1,
         step: 0.01,
         default_value: 0.25,
@@ -563,7 +563,7 @@ export const MACHINE_SERIES = {
     ORIGINAL_LZ: {
         value: 'Original Long Z-axis',
         configPath: 'Original',
-        label: 'Snapmaker Original with Long Z-axis',
+        label: 'Snapmaker Original with Z-axis Extension Module ',
         setting: {
             size: {
                 x: 125,

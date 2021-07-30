@@ -45,7 +45,7 @@ class CNCPath extends PureComponent {
 
     constructor(props) {
         super(props);
-        this.props.widgetActions.setTitle(i18n._('Configurations'));
+        this.props.widgetActions.setTitle(i18n._('Transformation'));
     }
 
     componentDidMount() {

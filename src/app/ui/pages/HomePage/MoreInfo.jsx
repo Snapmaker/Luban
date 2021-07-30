@@ -9,7 +9,7 @@ const MoreInfo = () => {
     return (
         <div className={styles['more-info']}>
             <div className={classNames('highlight-heading', 'margin-bottom-16')}>
-                {i18n._('More Resource')}
+                {i18n._('Help')}
             </div>
             <div className={classNames(styles['resource-list'])}>
                 <a href="javascript;" target="_blank" rel="noopener noreferrer" className={classNames(styles.listItem)}>
