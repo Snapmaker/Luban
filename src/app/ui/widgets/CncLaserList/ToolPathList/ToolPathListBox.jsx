@@ -297,7 +297,6 @@ const ToolPathListBox = (props) => {
             dispatch(editorActions.saveToolPath(props.headType, newToolPath));
         },
         updateGcodeConfig: (option) => {
-            console.log('option', option);
             const toolPath = selectedToolPath;
             if (props.headType === HEAD_LASER) {
                 if (!option.fixedPower) {
@@ -307,10 +306,6 @@ const ToolPathListBox = (props) => {
                     if (option.movementMode === 'greyscale-dot') {
                         option.fixedPower = 30;
                     }
-                }
-                if (option.fillInterval) {
-                    option.density = 1 / option.fillInterval;
-                    option.fillDensity = 1 / option.fillInterval;
                 }
             }
             const newToolPath = {

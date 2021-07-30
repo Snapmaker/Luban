@@ -114,8 +114,13 @@ const generateLaserToolPathFromEngine = async (modelInfos, onProgress) => {
             const result = await editorProcess(modelInfo);
             modelInfo.uploadName = result.filename;
         }
-        console.log('density', modelInfo.gcodeConfig.density);
-        modelInfo.gcodeConfig.stepOver = 1 / modelInfo.gcodeConfig.density;
+        if (modelInfo.gcodeConfig.fillInterval) {
+            modelInfo.gcodeConfig.fillDensity = modelInfo.gcodeConfig.fillInterval;
+            modelInfo.gcodeConfig.stepOver = 1 / modelInfo.gcodeConfig.fillInterval;
+        } else {
+            modelInfo.gcodeConfig.fillDensity = 1 / modelInfo.gcodeConfig.stepOver;
+        }
+        // modelInfo.gcodeConfig.stepOver = 1 / modelInfo.gcodeConfig.density;
         modelInfo.toolpathFileName = generateRandomPathName('json');
     }
 
@@ -137,7 +142,6 @@ const generateLaserToolPathFromEngine = async (modelInfos, onProgress) => {
 };
 
 export const generateToolPath = (modelInfos, onProgress) => {
-    console.log('modelInfos', modelInfos);
     if (!modelInfos || modelInfos.length === 0) {
         return Promise.reject(new Error('modelInfo is empty.'));
     }
