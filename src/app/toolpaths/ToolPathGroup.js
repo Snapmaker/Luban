@@ -123,6 +123,7 @@ class ToolPathGroup {
                 this.selectedToolPathArray = [toolPathId];
             }
         }
+        this.addSelectedToolpathColor();
         this._updated();
     }
 

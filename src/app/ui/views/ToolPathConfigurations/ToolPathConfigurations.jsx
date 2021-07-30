@@ -44,7 +44,7 @@ function ToolPathConfigurations(props) {
             activeToolDefinition.settings.plunge_speed.default_value = gcodeConfig?.plungeSpeed;
             activeToolDefinition.settings.work_speed.default_value = gcodeConfig?.workSpeed;
             activeToolDefinition.settings.step_down.default_value = gcodeConfig?.stepDown;
-            activeToolDefinition.settings.density.default_value = gcodeConfig?.density;
+            activeToolDefinition.settings.step_over.default_value = gcodeConfig?.stepOver;
         }
         await dispatch(cncActions.changeActiveToolListDefinition(activeToolDefinition.definitionId, activeToolDefinition.name));
         setCurrentToolDefinition(activeToolDefinition);

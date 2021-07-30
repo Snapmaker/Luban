@@ -97,6 +97,7 @@ class Settings extends PureComponent {
                         window.location.search = uri.toString();
                     });
                 }
+                window.location.href = '/';
             },
             restoreSettings: () => {
                 // Restore settings from initialState
