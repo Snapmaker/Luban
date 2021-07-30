@@ -173,12 +173,12 @@ function getFastEditSettingsKeys(toolPath) {
             const movementMode = gcodeConfig?.movementMode;
             if (movementMode === 'greyscale-line') {
                 return [
-                    'movementMode', 'step_over', 'workSpeed', 'fixedPower'
+                    'movementMode', 'fillInterval', 'workSpeed', 'fixedPower'
                 ];
             }
             if (movementMode === 'greyscale-dot') {
                 return [
-                    'movementMode', 'step_over', 'dwellTime', 'fixedPower'
+                    'movementMode', 'fillInterval', 'dwellTime', 'fixedPower'
                 ];
             }
         }
@@ -297,6 +297,7 @@ const ToolPathListBox = (props) => {
             dispatch(editorActions.saveToolPath(props.headType, newToolPath));
         },
         updateGcodeConfig: (option) => {
+            console.log('option', option);
             const toolPath = selectedToolPath;
             if (props.headType === HEAD_LASER) {
                 if (!option.fixedPower) {
@@ -306,6 +307,10 @@ const ToolPathListBox = (props) => {
                     if (option.movementMode === 'greyscale-dot') {
                         option.fixedPower = 30;
                     }
+                }
+                if (option.fillInterval) {
+                    option.density = 1 / option.fillInterval;
+                    option.fillDensity = 1 / option.fillInterval;
                 }
             }
             const newToolPath = {

@@ -338,6 +338,7 @@ class ToolPathGroup {
         let res = false;
         const toolPath = this._getToolPath(toolPathId);
         if (toolPath) {
+            console.log('generate', toolPath);
             res = toolPath.commitGenerateToolPath();
         }
         this._updated();
