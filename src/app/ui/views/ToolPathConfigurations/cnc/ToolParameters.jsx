@@ -95,7 +95,7 @@ function SettingItem(props) {
                         clearable={false}
                         searchable={false}
                         name={i18n._(label)}
-                        size={styleSize === 'middle' ? 'small' : 'middle'} // Todo: change the size to the same value
+                        size={styleSize} // Todo: change the size to the same value
                         className="sm-flex-width align-r"
                         options={optionsArray}
                         value={defaultValue}

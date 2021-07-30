@@ -86,9 +86,8 @@ function General({ state: generalState, actions }) {
     const updateShouldCheckForUpdate = (shouldAutoUpdate) => dispatch(machineActions.updateShouldCheckForUpdate(shouldAutoUpdate));
 
     const handlers = {
-        changeLanguage: (event) => {
-            const target = event.target;
-            actions.changeLanguage(target.value);
+        changeLanguage: (option) => {
+            actions.changeLanguage(option?.value);
         },
         cancel: () => {
             actions.restoreSettings();
