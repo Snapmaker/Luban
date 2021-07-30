@@ -758,7 +758,7 @@ class VisualizerLeftBar extends PureComponent {
                                         <Input
                                             suffix="mm"
                                             size="small"
-                                            min={-size.x / 2}
+                                            min={1}
                                             max={size.x / 2}
                                             value={defaultSupportSize.x}
                                             onChange={(value) => {
@@ -773,7 +773,7 @@ class VisualizerLeftBar extends PureComponent {
                                         <Input
                                             suffix="mm"
                                             size="small"
-                                            min={-size.y / 2}
+                                            min={1}
                                             max={size.y / 2}
                                             value={defaultSupportSize.y}
                                             onChange={(value) => {
