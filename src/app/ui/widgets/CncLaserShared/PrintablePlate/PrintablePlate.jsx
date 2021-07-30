@@ -62,7 +62,6 @@ class PrintablePlate extends Object3D {
         // }
         { // Coordinate Grid
             // Todo: cause twice
-            console.trace();
             const gridLine = new GridLine(
                 -this.size.x / 2 + this.coorDelta?.dx,
                 this.size.x / 2 + this.coorDelta?.dx,
