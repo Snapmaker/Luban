@@ -29,6 +29,7 @@ class Output extends PureComponent {
 
         displayGcode: PropTypes.func.isRequired,
         displayModel: PropTypes.func.isRequired,
+        clearGcodeFile: PropTypes.func.isRequired,
 
         modelGroup: PropTypes.object.isRequired,
         isGcodeOverstepped: PropTypes.bool.isRequired,
@@ -57,6 +58,7 @@ class Output extends PureComponent {
         onToggleDisplayGcode: () => {
             if (this.props.displayedType === 'gcode') {
                 this.props.displayModel();
+                this.props.clearGcodeFile();
             } else {
                 this.props.displayGcode();
             }
@@ -280,6 +282,7 @@ const mapDispatchToProps = (dispatch) => {
         renderGcodeFile: (file) => dispatch(workspaceActions.renderGcodeFile(file)),
         displayGcode: () => dispatch(printingActions.displayGcode()),
         displayModel: () => dispatch(printingActions.displayModel()),
+        clearGcodeFile: () => dispatch(printingActions.clearGcodeFile()),
         exportFile: (targetFile) => dispatch(projectActions.exportFile(targetFile))
     };
 };

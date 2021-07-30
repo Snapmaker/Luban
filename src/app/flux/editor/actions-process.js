@@ -405,5 +405,12 @@ export const processActions = {
             showSimulation: true
         }));
         dispatch(baseActions.render(headType));
+    },
+
+    clearGcodeFile: (headType) => (dispatch) => {
+        dispatch(baseActions.updateState(headType, {
+            gcodeFile: null
+        }));
+        dispatch(baseActions.render(headType));
     }
 };

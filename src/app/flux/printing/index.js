@@ -980,6 +980,16 @@ export const actions = {
         dispatch(actions.render());
     },
 
+    clearGcodeFile: () => (dispatch, getState) => {
+        const { gcodeLineGroup, gcodeLine } = getState().printing;
+        gcodeLineGroup.remove(gcodeLine);
+        dispatch(actions.updateState({
+            gcodeFile: null,
+            gcodeLine: null
+        }));
+        dispatch(actions.render());
+    },
+
     selectModel: (modelMeshObject) => (dispatch, getState) => {
         const { modelGroup } = getState().printing;
         let modelState;
