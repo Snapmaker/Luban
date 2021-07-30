@@ -88,7 +88,7 @@ class LaserParameters extends PureComponent {
                                     <div className="position-re sm-flex justify-space-between height-32 margin-vertical-8">
                                         <span>{i18n._('Method')}</span>
                                         <Select
-                                            size="middle"
+                                            size="large"
                                             backspaceRemoves={false}
                                             className="sm-parameter-row__select-md"
                                             clearable={false}
@@ -115,7 +115,7 @@ class LaserParameters extends PureComponent {
                                     <div className="position-re sm-flex justify-space-between height-32 margin-vertical-8">
                                         <span>{i18n._('Method')}</span>
                                         <Select
-                                            size="middle"
+                                            size="large"
                                             backspaceRemoves={false}
                                             className="sm-parameter-row__select-md"
                                             clearable={false}

@@ -175,6 +175,7 @@ class CncParameters extends PureComponent {
                                         </span>
                                         <Select
                                             disabled={false}
+                                            size="large"
                                             className={classNames(
                                                 'sm-parameter-row__select-md',
                                             )}
@@ -248,6 +249,7 @@ class CncParameters extends PureComponent {
                                                 <span className="sm-parameter-row__label">{i18n._('Method')}</span>
                                                 <Select
                                                     disabled={false}
+                                                    size="large"
                                                     className="sm-parameter-row__select-md"
                                                     backspaceRemoves={false}
                                                     clearable={false}
@@ -260,7 +262,7 @@ class CncParameters extends PureComponent {
                                         </TipTrigger>
                                     </React.Fragment>
                                 )}
-                                {/*{isRotate && sliceMode === CNC_MESH_SLICE_MODE_LINKAGE && (*/}
+                                {/* {isRotate && sliceMode === CNC_MESH_SLICE_MODE_LINKAGE && (*/}
                                 {/*    <div className="position-re sm-flex justify-space-between height-32 margin-vertical-8">*/}
                                 {/*        <span>{i18n._('Y Smoothing')}</span>*/}
                                 {/*        <input*/}
@@ -271,7 +273,7 @@ class CncParameters extends PureComponent {
                                 {/*            onChange={() => { this.props.updateGcodeConfig({ smoothY: !smoothY }); }}*/}
                                 {/*        />*/}
                                 {/*    </div>*/}
-                                {/*)}*/}
+                                {/* )}*/}
                             </div>
                         )}
                         <ToolParameters

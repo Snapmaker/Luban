@@ -98,6 +98,18 @@ export const getToolDefinitions = (req, res) => {
             const filePath = path.join(configDir, filename);
             const data = fs.readFileSync(filePath, 'utf8');
             const json = JSON.parse(data);
+            if (json.settings.step_over === undefined) {
+                json.settings.step_over = {
+                    default_value: 0.25,
+                    type: 'float',
+                    min: 0.01,
+                    max: 20,
+                    unit: 'mm',
+                    label: 'Step Over',
+                    description: 'Set the density of the tool head movements. The highest density is 10 dot/mm. When generating G-code, the density will be re-calculated to ensure the process work normally.'
+                };
+                fs.writeFileSync(filePath, JSON.stringify(json));
+            }
             definitions.push(json);
         }
     }
@@ -160,6 +172,7 @@ export const getDefaultDefinitions = (req, res) => {
                     label: 'Step Over',
                     description: 'Set the density of the tool head movements. The highest density is 10 dot/mm. When generating G-code, the density will be re-calculated to ensure the process work normally.'
                 };
+                fs.writeFileSync(filePath, JSON.stringify(json));
             }
             definitions.push(json);
         }
