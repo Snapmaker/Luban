@@ -84,7 +84,7 @@ const ACCEPT = '.svg, .png, .jpg, .jpeg, .bmp, .dxf';
 const pageHeadType = HEAD_LASER;
 
 
-function useRenderMainToolBar(setShowHomePage, setShowJobType, setShowWorkspace) {
+function useRenderMainToolBar(setShowHomePage, setShowJobType, setShowWorkspace, isRotate) {
     // (!workPosition.isFourAxis && (connectionType === CONNECTION_TYPE_WIFI && isConnected && !hasBackground))
     const isConnected = useSelector(state => state?.machine?.isConnected, shallowEqual);
     const series = useSelector(state => state?.machine?.series, shallowEqual);
@@ -201,39 +201,43 @@ function useRenderMainToolBar(setShowHomePage, setShowJobType, setShowWorkspace)
             action: () => {
                 dispatch(editorActions.sendSelectedModelToBack(HEAD_LASER));
             }
-        },
-        {
-            type: 'separator'
-        },
-        {
-            // MainToolbarCameraCapture
-            type: 'render',
-            customRender: function () {
-                return (
-                    <Dropdown
-                        className="display-inline align-c padding-top-4 padding-horizontal-2"
-                        overlay={menu}
-                    >
-                        <div
-                            className="display-inline font-size-0 v-align-t"
-                        >
-                            <SvgIcon
-                                name="MainToolbarCameraCapture"
-                            >
-                                <div className="font-size-base color-black-3">
-                                    {i18n._('Camera Capture')}
-                                    <SvgIcon
-                                        type="static"
-                                        name="DropdownLine"
-                                    />
-                                </div>
-                            </SvgIcon>
-                        </div>
-                    </Dropdown>
-                );
-            }
         }
     ];
+    if (!isRotate) {
+        leftItems.push(
+            {
+                type: 'separator'
+            },
+            {
+                // MainToolbarCameraCapture
+                type: 'render',
+                customRender: function () {
+                    return (
+                        <Dropdown
+                            className="display-inline align-c padding-top-4 padding-horizontal-2"
+                            overlay={menu}
+                        >
+                            <div
+                                className="display-inline font-size-0 v-align-t"
+                            >
+                                <SvgIcon
+                                    name="MainToolbarCameraCapture"
+                                >
+                                    <div className="font-size-base color-black-3">
+                                        {i18n._('Camera Capture')}
+                                        <SvgIcon
+                                            type="static"
+                                            name="DropdownLine"
+                                        />
+                                    </div>
+                                </SvgIcon>
+                            </div>
+                        </Dropdown>
+                    );
+                }
+            }
+        );
+    }
 
     const setBackgroundModal = showCameraCapture && renderModal({
         renderBody() {
@@ -320,6 +324,7 @@ function Laser({ location }) {
     const coordinateMode = useSelector(state => state[HEAD_LASER]?.coordinateMode, shallowEqual);
     const coordinateSize = useSelector(state => state[HEAD_LASER]?.coordinateSize, shallowEqual);
     const materials = useSelector(state => state[HEAD_LASER]?.materials, shallowEqual);
+    const { isRotate } = materials;
     const [jobTypeState, setJobTypeState] = useState({
         coordinateMode,
         coordinateSize,
@@ -348,7 +353,7 @@ function Laser({ location }) {
     }, [location?.state?.shouldShowJobType]);
 
     const { setBackgroundModal,
-        renderMainToolBar } = useRenderMainToolBar(setShowHomePage, setShowJobType, setShowWorkspace);
+        renderMainToolBar } = useRenderMainToolBar(setShowHomePage, setShowJobType, setShowWorkspace, isRotate);
     const renderHomepage = () => {
         const onClose = () => setShowHomePage(false);
         return showHomePage && renderPopup({
