@@ -26,7 +26,7 @@ class ModalSmall extends PureComponent {
         const { onClose, onCancel, onConfirm, showCloseButton = true, ...props } = this.props;
         const img = this.props.img || '';
         const iconColor = this.props.iconColor;
-        const isImage = new RegExp(/^\.\.\//).test(img);
+        const isImage = new RegExp(/^\/resources/).test(img);
         const text = this.props.text;
         const subtext = this.props.subtext;
         const title = this.props.title;

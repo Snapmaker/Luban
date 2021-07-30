@@ -58,6 +58,7 @@ class ProjectLayout extends PureComponent {
                         ref={this.rightView}
                         className={classNames(
                             styles.controls,
+                            'overflow-x-hidden',
                             'border-radius-8',
                             styles['controls-right'],
                         )}

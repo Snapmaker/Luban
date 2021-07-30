@@ -670,13 +670,13 @@ export const MACHINE_HEAD_TYPE = {
     }
 };
 
-export const IMAGE_WIFI_CONNECTING = '../../images/connection/Screen.png';
-export const IMAGE_WIFI_CONNECT_WAITING = '../../images/connection/ic_waiting-64x64.png';
-export const IMAGE_WIFI_CONNECTED = '../../images/connection/ic_complete_64x64.png';
-export const IMAGE_WIFI_ERROR = '../../images/connection/ic_error_64x64.png';
-export const IMAGE_WIFI_WAITING = '../../images/connection/ic_WI-FI_64x64.png';
-export const IMAGE_WIFI_WARNING = '../../images/ic_warning-64x64.png';
-export const IMAGE_EMERGENCY_STOP = '../../images/connection/ic_emergency_stop.png';
+export const IMAGE_WIFI_CONNECTING = '/resources/images/connection/Screen.png';
+export const IMAGE_WIFI_CONNECT_WAITING = '/resources/images/connection/ic_waiting-64x64.png';
+export const IMAGE_WIFI_CONNECTED = '/resources/images/connection/ic_complete_64x64.png';
+export const IMAGE_WIFI_ERROR = '/resources/images/connection/ic_error_64x64.png';
+export const IMAGE_WIFI_WAITING = '/resources/images/connection/ic_WI-FI_64x64.png';
+export const IMAGE_WIFI_WARNING = '/resources/images/ic_warning-64x64.png';
+export const IMAGE_EMERGENCY_STOP = '/resources/images/connection/ic_emergency_stop.png';
 export const HEAD_TYPE_ENV_NAME = {
     '3dp': '3D printing',
     'laser': 'Laser',

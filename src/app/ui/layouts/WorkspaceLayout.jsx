@@ -79,14 +79,9 @@ class WorkspaceLayout extends PureComponent {
                             'sm-flex-auto'
                         )}
                     >
-                        <div className={classNames(
-                            'position-re'
+                        {renderLeftView && (
+                            renderLeftView()
                         )}
-                        >
-                            {renderLeftView && (
-                                renderLeftView()
-                            )}
-                        </div>
                     </div>
                     <div
                         ref={this.visualizerContainer}
@@ -107,14 +102,9 @@ class WorkspaceLayout extends PureComponent {
                             'sm-flex-auto'
                         )}
                     >
-                        <div className={classNames(
-                            styles.secondaryWrapper
+                        {renderRightView && (
+                            renderRightView()
                         )}
-                        >
-                            {renderRightView && (
-                                renderRightView()
-                            )}
-                        </div>
 
                     </div>
                 </div>
