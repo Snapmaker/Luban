@@ -23,7 +23,7 @@ class PrintablePlate extends Object3D {
         this.materials = {
             ...materials
         };
-        if (materials.isRotate) {
+        if (materials && materials.isRotate) {
             return;
         }
 
