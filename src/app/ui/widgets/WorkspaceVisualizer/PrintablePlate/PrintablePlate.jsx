@@ -1,14 +1,16 @@
 import { MeshBasicMaterial, Object3D, Group, Mesh, PlaneGeometry, DoubleSide } from 'three';
 import each from 'lodash/each';
+import colornames from 'colornames';
 
+import { RED, GREEN } from '../../../../constants/colors';
 import TextSprite from '../../../../three-extensions/TextSprite';
 import TargetPoint from '../../../../three-extensions/TargetPoint';
 
 import GridLine from './GridLine';
+import CoordinateAxes from './CoordinateAxes';
 import { COORDINATE_MODE_CENTER } from '../../../../constants';
 
 const METRIC_GRID_SPACING = 10; // 10 mm
-const METRIC_GRID_BIG_SPACING = 50;
 
 
 class PrintablePlate extends Object3D {
@@ -23,9 +25,6 @@ class PrintablePlate extends Object3D {
         this.materials = {
             ...materials
         };
-        if (materials && materials.isRotate) {
-            return;
-        }
 
         this.coordinateMode = coordinateMode ?? COORDINATE_MODE_CENTER;
         this.coorDelta = {
@@ -51,15 +50,6 @@ class PrintablePlate extends Object3D {
 
         const group = new Group();
 
-        // { // Border Plane
-        //     const plane = new PlaneGeometry(this.size.x, this.size.y);
-        //     const material = new MeshBasicMaterial({
-        //         side: DoubleSide,
-        //         color: 0xFFFFFF
-        //     });
-        //     const borderPlane = new Mesh(plane, material);
-        //     group.add(borderPlane);
-        // }
         { // Coordinate Grid
             const gridLine = new GridLine(
                 -this.size.x / 2 + this.coorDelta.dx,
@@ -68,7 +58,8 @@ class PrintablePlate extends Object3D {
                 -this.size.y / 2 + this.coorDelta.dy,
                 this.size.y / 2 + this.coorDelta.dy,
                 gridSpacing,
-                0XFFFFFF - 0xF500F7 // grid
+                colornames('blue'), // center line
+                colornames('gray 44') // grid
             );
             each(gridLine.children, (o) => {
                 o.material.opacity = 0.15;
@@ -79,14 +70,25 @@ class PrintablePlate extends Object3D {
             group.add(gridLine);
         }
 
+        { // Coordinate Control
+            const coordinateAxes = new CoordinateAxes(
+                -this.size.x / 2 + this.coorDelta.dx,
+                this.size.x / 2 + this.coorDelta.dx,
+                -this.size.y / 2 + this.coorDelta.dy,
+                this.size.y / 2 + this.coorDelta.dy
+            );
+            coordinateAxes.name = 'CoordinateAxes';
+            group.add(coordinateAxes);
+        }
+
         { // Axis Labels
             const textSize = (10 / 3);
-            const minX = Math.ceil((-this.size.x / 2 + this.coorDelta.dx) / METRIC_GRID_BIG_SPACING) * METRIC_GRID_BIG_SPACING;
-            const minY = Math.ceil((-this.size.y / 2 + this.coorDelta.dy) / METRIC_GRID_BIG_SPACING) * METRIC_GRID_BIG_SPACING;
-            const maxX = Math.floor((this.size.x / 2 + this.coorDelta.dx) / METRIC_GRID_BIG_SPACING) * METRIC_GRID_BIG_SPACING;
-            const maxY = Math.floor((this.size.y / 2 + this.coorDelta.dy) / METRIC_GRID_BIG_SPACING) * METRIC_GRID_BIG_SPACING;
+            const minX = Math.ceil((-this.size.x / 2 + this.coorDelta.dx) / gridSpacing) * gridSpacing;
+            const minY = Math.ceil((-this.size.y / 2 + this.coorDelta.dy) / gridSpacing) * gridSpacing;
+            const maxX = Math.floor((this.size.x / 2 + this.coorDelta.dx) / gridSpacing) * gridSpacing;
+            const maxY = Math.floor((this.size.y / 2 + this.coorDelta.dy) / gridSpacing) * gridSpacing;
 
-            for (let x = minX; x <= maxX; x += METRIC_GRID_BIG_SPACING) {
+            for (let x = minX; x <= maxX; x += gridSpacing) {
                 if (x !== 0) {
                     const textLabel = new TextSprite({
                         x: x,
@@ -96,25 +98,27 @@ class PrintablePlate extends Object3D {
                         text: x,
                         textAlign: 'center',
                         textBaseline: 'bottom',
-                        color: 0x85888c,
+                        color: RED,
                         opacity: 0.5
                     });
                     group.add(textLabel);
                 }
             }
-            for (let y = minY; y <= maxY; y += METRIC_GRID_BIG_SPACING) {
-                const textLabel = new TextSprite({
-                    x: -4,
-                    y: y,
-                    z: 0,
-                    size: textSize,
-                    text: y,
-                    textAlign: 'center',
-                    textBaseline: 'bottom',
-                    color: 0x85888c,
-                    opacity: 0.5
-                });
-                group.add(textLabel);
+            for (let y = minY; y <= maxY; y += gridSpacing) {
+                if (y !== 0) {
+                    const textLabel = new TextSprite({
+                        x: -4,
+                        y: y,
+                        z: 0,
+                        size: textSize,
+                        text: y,
+                        textAlign: 'center',
+                        textBaseline: 'bottom',
+                        color: GREEN,
+                        opacity: 0.5
+                    });
+                    group.add(textLabel);
+                }
             }
         }
         this.coordinateSystem = group;
@@ -123,8 +127,8 @@ class PrintablePlate extends Object3D {
 
         // Target Point
         this.targetPoint = new TargetPoint({
-            color: 0xFF5759,
-            radius: 2
+            color: colornames('indianred'),
+            radius: 0.5
         });
         this.targetPoint.name = 'TargetPoint';
         this.targetPoint.visible = true;

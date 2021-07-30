@@ -173,12 +173,12 @@ function getFastEditSettingsKeys(toolPath) {
             const movementMode = gcodeConfig?.movementMode;
             if (movementMode === 'greyscale-line') {
                 return [
-                    'movementMode', 'step_over', 'workSpeed', 'fixedPower'
+                    'movementMode', 'fillInterval', 'workSpeed', 'fixedPower'
                 ];
             }
             if (movementMode === 'greyscale-dot') {
                 return [
-                    'movementMode', 'step_over', 'dwellTime', 'fixedPower'
+                    'movementMode', 'fillInterval', 'dwellTime', 'fixedPower'
                 ];
             }
         }

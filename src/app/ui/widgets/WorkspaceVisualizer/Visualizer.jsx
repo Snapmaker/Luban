@@ -24,7 +24,7 @@ import { ensureRange } from '../../../lib/numeric-utils';
 import TargetPoint from '../../../three-extensions/TargetPoint';
 import { actions as machineActions } from '../../../flux/machine';
 import { actions, WORKSPACE_STAGE } from '../../../flux/workspace';
-import PrintablePlate from '../CncLaserShared/PrintablePlate';
+import PrintablePlate from './PrintablePlate';
 
 import { loadTexture } from './helpers';
 import Loading from './Loading';
