@@ -159,7 +159,7 @@ const SettingGuideModal = (props) => {
                         settingStep === 'lang' && (
                             <div className={styles.langSelect} style={{width: '552px', height:'286px'}}>
                                 <div className={styles.titleLabel}>
-                                    {`${i18n._('Language')}`}
+                                    {`${i18n._('Select Language')}`}
                                 </div>
                                 <Select
                                     className={styles.langSelectInput}
@@ -213,18 +213,18 @@ const SettingGuideModal = (props) => {
                                             )
                                         }
                                         <div className={styles.machineSize}>
-                                            <div>{i18n._('Size')}:</div>
+                                            <div>{i18n._('Dimensions')}:</div>
                                             {
                                                 !zAxis && (
                                                     <div>
-                                                        {`${machineSeriesOptions[machineSeries].size.x} x ${machineSeriesOptions[machineSeries].size.y} x ${machineSeriesOptions[machineSeries].size.z} mm`}
+                                                        {`${machineSeriesOptions[machineSeries].size.x} mm × ${machineSeriesOptions[machineSeries].size.y} mm × ${machineSeriesOptions[machineSeries].size.z} mm`}
                                                     </div>
                                                 )
                                             }
                                             {
                                                 zAxis && machineSeries === 0 && (
                                                     <div>
-                                                        {`${machineSeriesOptions[0].zSize?.x} x ${machineSeriesOptions[0].zSize?.y} x ${machineSeriesOptions[0].zSize?.z} mm`}
+                                                        {`${machineSeriesOptions[0].zSize?.x} mm × ${machineSeriesOptions[0].zSize?.y} mm × ${machineSeriesOptions[0].zSize?.z} mm`}
                                                     </div>
                                                 )
                                             }

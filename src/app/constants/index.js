@@ -420,7 +420,7 @@ export const LASER_DEFAULT_GCODE_PARAMETERS_DEFINITION = {
         description: 'Fill Interval',
         type: 'float',
         min: 0.01,
-        max: 1,
+        // max: 1,
         step: 0.01,
         default_value: 0.25,
         value: 'fillInterval',

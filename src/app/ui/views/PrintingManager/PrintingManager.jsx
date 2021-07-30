@@ -146,7 +146,7 @@ function PrintingManager() {
             isOfficialDefinition={isOfficialDefinition}
             optionConfigGroup={optionConfigGroup}
             allDefinitions={allDefinitions}
-            managerTitle={managerDisplayType === PRINTING_MANAGER_TYPE_MATERIAL ? 'Material' : 'Printing Settings'}
+            managerTitle={managerDisplayType === PRINTING_MANAGER_TYPE_MATERIAL ? 'Material Settings' : 'Printing Settings'}
             defaultKeysAndId={defaultKeysAndId[managerDisplayType]}
         />
     );
