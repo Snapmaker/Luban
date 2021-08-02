@@ -153,7 +153,7 @@ function getFastEditSettingsKeys(toolPath) {
         if (toolPathType === 'vector') {
             const multiPasses = gcodeConfig?.multiPasses;
             const fillEnabled = gcodeConfig?.fillEnabled;
-            //Todo
+            // Todo
             const isMethodFill = (fillEnabled === 'true' || fillEnabled === true);
 
             if (isMethodFill) {
@@ -461,6 +461,7 @@ const ToolPathListBox = (props) => {
                             <ToolSelector
                                 toolDefinition={activeToolListDefinition}
                                 toolDefinitions={toolDefinitions}
+                                shouldDisabedSelect
                                 isModifiedDefinition={() => {
                                     return !Object.entries(activeToolListDefinition.settings).every(([key, setting]) => {
                                         return fastEditSettings && fastEditSettings[key].default_value === setting.default_value;

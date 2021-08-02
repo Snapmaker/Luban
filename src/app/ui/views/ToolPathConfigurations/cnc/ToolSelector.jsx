@@ -12,7 +12,7 @@ import SvgIcon from '../../../components/SvgIcon';
 function ToolSelector(props) {
     const [showManager, setShowManager] = useState(false);
     const dispatch = useDispatch();
-    const { toolDefinitions, toolDefinition, isModifiedDefinition } = props;
+    const { toolDefinitions, toolDefinition, isModifiedDefinition, shouldDisabedSelect = false } = props;
 
     const toolDefinitionOptions = [];
     const toolDefinitionOptionsObj = {};
@@ -113,6 +113,7 @@ function ToolSelector(props) {
                             className="sm-flex align-r"
                             clearable={false}
                             isGroup
+                            disabled={shouldDisabedSelect}
                             size="large"
                             valueObj={valueObj}
                             options={toolDefinitionOptions}
@@ -141,6 +142,7 @@ ToolSelector.propTypes = {
     toolDefinitions: PropTypes.array.isRequired,
     toolDefinition: PropTypes.object.isRequired,
     isModifiedDefinition: PropTypes.bool.isRequired,
+    shouldDisabedSelect: PropTypes.bool,
     setCurrentValueAsProfile: PropTypes.func.isRequired
 };
 

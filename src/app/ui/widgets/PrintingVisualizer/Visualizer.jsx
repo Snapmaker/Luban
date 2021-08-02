@@ -11,6 +11,7 @@ import i18n from '../../../lib/i18n';
 import modal from '../../../lib/modal';
 import ProgressBar from '../../components/ProgressBar';
 import ContextMenu from '../../components/ContextMenu';
+import { Button } from '../../components/Buttons';
 import Canvas from '../../components/SMCanvas';
 import { actions as printingActions, PRINTING_STAGE } from '../../../flux/printing';
 import { actions as operationHistoryActions } from '../../../flux/operation-history';
@@ -375,18 +376,18 @@ class Visualizer extends PureComponent {
                     ),
 
                     footer: (
-                        <button
-                            type="button"
-                            className="btn sm-btn-default"
+                        <Button
+                            priority="level-two"
+                            type="primary"
+                            width="96px"
+                            className="margin-left-4"
                             onClick={() => {
                                 this.actions.scaleToFitSelectedModel();
                                 popupActions.close();
                             }}
                         >
                             {i18n._('Yes')}
-                        </button>
-
-
+                        </Button>
                     )
                 });
             }

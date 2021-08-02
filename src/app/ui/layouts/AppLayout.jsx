@@ -294,7 +294,6 @@ class AppLayout extends PureComponent {
             });
             UniApi.Event.on('open-file-in-app', async () => {
                 const pathname = this.props.currentModalPath || this.props.history?.location?.pathname;
-                console.log('this.props.currentModalPath || this.props.history?.location?.pathname', this.props.currentModalPath, this.props.history?.location?.pathname);
                 const file = await UniApi.Dialog.showOpenFileDialog(pathname);
                 if (file && file.path) {
                     UniApi.Event.emit('appbar-menu:open-file', file, [file]);
