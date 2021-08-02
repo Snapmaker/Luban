@@ -1052,6 +1052,7 @@ export const actions = {
      */
     resetProcessState: (headType) => (dispatch) => {
         dispatch(baseActions.updateState(headType, {
+            simulationNeedToPreview: true,
             displayedType: DISPLAYED_TYPE_MODEL,
             needToPreview: true
         }));
@@ -1700,6 +1701,7 @@ export const actions = {
             dispatch(baseActions.render(headType));
         }
 
+        dispatch(actions.resetProcessState(headType));
         dispatch(actions.updateState(headType, { coordinateMode, coordinateSize }));
     }
 };

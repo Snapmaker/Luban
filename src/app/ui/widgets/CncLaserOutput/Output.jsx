@@ -181,20 +181,11 @@ class Output extends PureComponent {
                 </Menu.Item>
             </Menu>
         );
+        const isEditor = page === PAGE_EDITOR;
         return (
             <div className={classNames('position-fixed', 'border-radius-bottom-8', 'bottom-8', 'background-color-white', styles['output-wrapper'])}>
                 <div className={classNames('position-re', 'margin-horizontal-16', 'margin-vertical-16',)}>
-                    {(needToPreview && page !== PAGE_EDITOR) && (
-                        <Button
-                            type="primary"
-                            priority="level-one"
-                            onClick={this.actions.preview}
-                            disabled={inProgress || (!hasToolPathModel ?? false) || disablePreview}
-                        >
-                            {i18n._('Generate G-code and Preview')}
-                        </Button>
-                    )}
-                    {(needToPreview && displayedType !== DISPLAYED_TYPE_TOOLPATH && page === PAGE_EDITOR) && (
+                    {isEditor && (
                         <Button
                             type="primary"
                             priority="level-one"
@@ -204,7 +195,17 @@ class Output extends PureComponent {
                             {i18n._('Next')}
                         </Button>
                     )}
-                    {!needToPreview && displayedType === DISPLAYED_TYPE_TOOLPATH && !this.state.showExportOptions && (
+                    {(!isEditor && needToPreview) && (
+                        <Button
+                            type="primary"
+                            priority="level-one"
+                            onClick={this.actions.preview}
+                            disabled={inProgress || (!hasToolPathModel ?? false) || disablePreview}
+                        >
+                            {i18n._('Generate G-code and Preview')}
+                        </Button>
+                    )}
+                    {!isEditor && !needToPreview && displayedType === DISPLAYED_TYPE_TOOLPATH && !this.state.showExportOptions && (
                         <Button
                             type="default"
                             priority="level-one"
@@ -217,7 +218,7 @@ class Output extends PureComponent {
                             {i18n._('Close Preview')}
                         </Button>
                     )}
-                    {!needToPreview && displayedType !== DISPLAYED_TYPE_TOOLPATH && !this.state.showExportOptions && (
+                    {!isEditor && !needToPreview && displayedType !== DISPLAYED_TYPE_TOOLPATH && !this.state.showExportOptions && (
                         <Button
                             type="default"
                             priority="level-one"
@@ -229,7 +230,7 @@ class Output extends PureComponent {
                             {i18n._('Preview')}
                         </Button>
                     )}
-                    {!needToPreview && (
+                    {!isEditor && !needToPreview && (
                         <div
                             onKeyDown={noop}
                             role="button"

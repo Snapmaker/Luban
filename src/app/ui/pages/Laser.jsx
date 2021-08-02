@@ -455,6 +455,9 @@ function Laser({ location }) {
                     activeKey={page}
                     onChange={(key) => {
                         dispatch(editorActions.switchToPage(HEAD_LASER, key));
+                        if (key === PAGE_EDITOR) {
+                            dispatch(editorActions.showModelGroupObject(HEAD_LASER));
+                        }
                     }}
                 />
                 {renderWidgetList('laser', 'default', widgets, allWidgets, listActions, widgetProps)}
