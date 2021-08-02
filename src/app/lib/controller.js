@@ -200,7 +200,9 @@ class SerialPortClient {
             return;
         }
         if (typeof callback === 'function') {
-            callbacks.push(callback);
+            this.callbacks[eventName] = [callback];
+            // Todo: duplicate event name
+            // callbacks.push(callback);
         }
     }
 
