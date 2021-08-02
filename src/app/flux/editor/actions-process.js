@@ -194,6 +194,7 @@ export const processActions = {
             dispatch(processActions.preview(headType));
         }
         dispatch(baseActions.updateState(headType, {
+            simulationNeedToPreview: true,
             displayedType: DISPLAYED_TYPE_MODEL,
             needToPreview: true,
             updatingToolPath: null,
