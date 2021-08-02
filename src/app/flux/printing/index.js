@@ -704,6 +704,8 @@ export const actions = {
     updateDefaultIdByType: (type, materialId) => (dispatch) => {
         const defaultId = defaultDefinitionKeys[type].id;
         dispatch(actions.updateState({ [defaultId]: materialId }));
+        dispatch(actions.destroyGcodeLine());
+        dispatch(actions.displayModel());
     },
     updateDefaultMaterialId: (materialId) => (dispatch) => {
         dispatch(actions.updateState({ defaultMaterialId: materialId }));
