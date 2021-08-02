@@ -465,6 +465,11 @@ class ToolPathGroup {
                 async (data) => {
                     this.simulationObject && (this.simulationObjects.remove(this.simulationObject));
 
+                    // Todo: Remove this
+                    this.simulationObjects = new THREE.Group();
+                    this.object.add(this.simulationObjects);
+                    // Todo: Remove this
+
                     const viewPathData = JSON.parse(data);
                     this.simulationObject = await new ViewPathRenderer().render(viewPathData, size);
 
