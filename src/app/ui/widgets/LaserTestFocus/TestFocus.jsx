@@ -175,7 +175,7 @@ class TestFocus extends PureComponent {
                     </TipTrigger>
                 </div>
                 <div className="sm-flex height-32 justify-space-between margin-vertical-8">
-                    <span>{i18n._('Power')}</span>
+                    <span>{i18n._('Laser Power')}</span>
                     <Slider
                         value={this.state.power}
                         min={0}
@@ -186,7 +186,7 @@ class TestFocus extends PureComponent {
                     <TipTrigger
                         placement="right"
                         className="sm-flex-auto"
-                        title={i18n._('Power')}
+                        title={i18n._('Laser Power')}
                         content={i18n._('Power to use when laser is working.')}
                     >
                         <Input

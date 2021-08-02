@@ -181,7 +181,7 @@ class Output extends PureComponent {
                     onClick={actions.onClickExportGcode}
                 >
                     <div className={classNames('align-c')}>
-                        {i18n._('Export G-code to file')}
+                        {i18n._('Export G-code to File')}
                     </div>
                 </Menu.Item>
             </Menu>
@@ -208,7 +208,7 @@ class Output extends PureComponent {
                             onClick={actions.onToggleDisplayGcode}
                             className={classNames('position-re', 'bottom-0', 'left-0')}
                         >
-                            {displayedType === 'gcode' ? i18n._('Close preview') : i18n._('Preview ')}
+                            {displayedType === 'gcode' ? i18n._('Close Preview') : i18n._('Preview ')}
                         </Button>
                     )}
                     {gcodeLine && (

@@ -30,7 +30,7 @@ export default {
                     submenu: [
                         {
                             id: 'laser-axis3',
-                            label: '3-Axis',
+                            label: '3-axis',
                             enabled: true,
                             click(menuItem, browserWindow) {
                                 if (isElectron()) {
@@ -62,7 +62,7 @@ export default {
                     submenu: [
                         {
                             id: 'cnc-axis3',
-                            label: '3-Axis',
+                            label: '3-axis',
                             enabled: true,
                             click(menuItem, browserWindow) {
                                 if (isElectron()) {
@@ -109,7 +109,7 @@ export default {
                 { id: 'line-0', type: 'separator' },
                 {
                     id: 'remove-recent',
-                    label: 'Clean All Recent Files',
+                    label: 'Clear All Recent Files',
                     enabled: true,
                     click: (menuItem, browserWindow) => {
                         if (isElectron()) {

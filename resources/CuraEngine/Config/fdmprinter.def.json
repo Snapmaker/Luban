@@ -2712,7 +2712,7 @@
                     {
                         "speed_print_layer_0":
                         {
-                            "label": "Initial Layer Print Speed",
+                            "label": "Initial Layer Printing Speed",
                             "description": "The speed of printing for the initial layer. A lower value is advised to improve adhesion to the build plate.",
                             "unit": "mm/s",
                             "type": "float",
@@ -3492,7 +3492,7 @@
                     "settable_per_meshgroup": true
                 },
                 "retraction_hop_enabled": {
-                    "label": "Z Hop When Retracted",
+                    "label": "Z-hop When Retracted",
                     "description": "Whenever a retraction is done, the build plate is lowered to create clearance between the nozzle and the print. It prevents the nozzle from hitting the print during travel moves, reducing the chance to knock the print from the build plate.",
                     "type": "bool",
                     "default_value": false,
@@ -3510,7 +3510,7 @@
                     "settable_per_extruder": true
                 },
                 "retraction_hop": {
-                    "label": "Z Hop Height",
+                    "label": "Z-hop Height",
                     "description": "The height difference when performing a Z Hop.",
                     "unit": "mm",
                     "type": "float",
@@ -3806,7 +3806,7 @@
                     "type": "enum",
                     "options":
                     {
-                        "lines": "Lines",
+                        "lines": "Line",
                         "grid": "Grid",
                         "triangles": "Triangles",
                         "concentric": "Concentric",

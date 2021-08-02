@@ -187,8 +187,8 @@ class WifiConnection extends PureComponent {
                 showManualWiFiModal: true,
                 manualWiFi: {
                     text: null,
-                    title: i18n._('Connect Manually'),
-                    label: i18n._('IP') ? `${i18n._('IP')}:` : '',
+                    title: i18n._('Manual Connection'),
+                    label: i18n._('IP Address') ? `${i18n._('IP Address')}:` : '',
                     // img: IMAGE_WIFI_WAITING,
                     showCloseButton: true,
                     inputtext: this.props.manualIp,

@@ -140,7 +140,7 @@
         },
         "magic_mesh_surface_mode": {
             "label": "Surface Mode",
-            "description": "Treat the model as a surface only, a volume, or volumes with loose surfaces. The normal print mode only prints enclosed volumes. \"Surface\" prints a single wall tracing the mesh surface with no infill and no top/bottom skin. \"Both\" prints enclosed volumes like normal and any remaining polygons as surfaces.",
+            "description": "In surface mode, your printer only prints the model surface, with no infill, top, or bottom. In normal mode, your printer will print the infill, top, and bottom, except the surface.",
             "options": {
                 "normal": "Normal",
                 "surface": "Surface",
@@ -156,7 +156,7 @@
             "description": "The temperature used for the heated bed. If this is 0, the bed temperature will not be adjusted."
         },
         "material_bed_temperature_layer_0": {
-            "label": "Heated Bed Temperature Initial Layer",
+            "label": "Initial Heated Bed Temperature",
             "description": "The temperature used for the heated bed at the first layer."
         },
         "material_bed_temp_prepend": {
@@ -247,11 +247,11 @@
             "description": "Retract the filament when the nozzle is moving over a non-printed area."
         },
         "retraction_hop": {
-            "label": "Z Hop Height",
+            "label": "Z-hop Height",
             "description": "The height difference when performing a Z Hop."
         },
         "retraction_hop_enabled": {
-            "label": "Z Hop When Retracted",
+            "label": "Z-hop When Retracted",
             "description": "Whenever a retraction is done, the heated bed is lowered to create clearance between the nozzle and the print. It prevents the nozzle from hitting the print during travel moves, reducing the chance to knock the print from the heated bed."
         },
         "retraction_speed": {
@@ -283,7 +283,7 @@
             "description": "The speed at which printing happens."
         },
         "speed_print_layer_0": {
-            "label": "Initial Layer Print Speed",
+            "label": "Initial Layer Printing Speed",
             "description": "The speed of printing for the initial layer. A lower value is advised to improve adhesion to the heated bed."
         },
         "support": {
@@ -303,7 +303,7 @@
                     "default_value": "zigzag",
                     "enabled": true,
                     "options": {
-                        "lines": "Lines",
+                        "lines": "Line",
                         "grid": "Grid",
                         "zigzag": "Zig Zag"
                     }

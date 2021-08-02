@@ -362,7 +362,7 @@ function Laser({ location }) {
         });
     };
     const jobTypeModal = showJobType && renderModal({
-        title: i18n._('Job Type'),
+        title: i18n._('Job Setup'),
         renderBody() {
             return (
                 <JobType

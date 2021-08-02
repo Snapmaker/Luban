@@ -26,7 +26,7 @@
             "min": 0.1,
             "max": 10,
             "unit": "mm",
-            "label": "Shaft Diameter"
+            "label": "Shank Diameter"
         },
         "jog_speed": {
             "default_value": 1500,
@@ -60,7 +60,7 @@
             "type": "float",
             "min": 0.01,
             "unit": "mm",
-            "label": "Step Down",
+            "label": "Stepdown",
             "description": "Enter the depth of each carving step."
         },
         "step_over": {
@@ -69,8 +69,8 @@
             "min": 0.01,
             "max": 20,
             "unit": "mm",
-            "label": "Step Over",
-            "description": "Set the density of the tool head movements. The highest density is 10 dot/mm. When generating G-code, the density will be re-calculated to ensure the process work normally."
+            "label": "Stepover",
+            "description": "Set the space between parallel toolpaths."
         }
     }
 }

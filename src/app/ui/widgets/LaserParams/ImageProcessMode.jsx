@@ -67,7 +67,7 @@ class ImageProcessMode extends PureComponent {
                                     >
                                         <i className={styles['laser-mode__icon-bw']} />
                                     </Anchor>
-                                    <span>{i18n._('B&W')}</span>
+                                    <span>{i18n._('Threshold')}</span>
                                 </div>
                                 <div className={classNames(this.props.mode === 'greyscale' ? styles.selected : styles.unselected)}>
                                     <Anchor

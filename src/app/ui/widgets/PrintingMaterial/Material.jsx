@@ -87,7 +87,7 @@ function Material({ widgetActions }) {
     }, [defaultMaterialId, onChangeMaterial]);
 
     useEffect(() => {
-        widgetActions.setTitle(i18n._('Material'));
+        widgetActions.setTitle(i18n._('Material Settings'));
     }, [widgetActions]);
 
     if (!currentDefinition) {

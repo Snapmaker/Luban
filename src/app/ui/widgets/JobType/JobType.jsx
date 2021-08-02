@@ -27,27 +27,27 @@ class JobType extends PureComponent {
 
     coordinateModeList = [
         {
-            label: COORDINATE_MODE_CENTER.value,
+            label: COORDINATE_MODE_CENTER.label,
             value: i18n._(COORDINATE_MODE_CENTER.label),
             mode: COORDINATE_MODE_CENTER
         },
         {
-            label: COORDINATE_MODE_BOTTOM_LEFT.value,
+            label: COORDINATE_MODE_BOTTOM_LEFT.label,
             value: i18n._(COORDINATE_MODE_BOTTOM_LEFT.label),
             mode: COORDINATE_MODE_BOTTOM_LEFT
         },
         {
-            label: COORDINATE_MODE_BOTTOM_RIGHT.value,
+            label: COORDINATE_MODE_BOTTOM_RIGHT.label,
             value: i18n._(COORDINATE_MODE_BOTTOM_RIGHT.label),
             mode: COORDINATE_MODE_BOTTOM_RIGHT
         },
         {
-            label: COORDINATE_MODE_TOP_LEFT.value,
+            label: COORDINATE_MODE_TOP_LEFT.label,
             value: i18n._(COORDINATE_MODE_TOP_LEFT.label),
             mode: COORDINATE_MODE_TOP_LEFT
         },
         {
-            label: COORDINATE_MODE_TOP_RIGHT.value,
+            label: COORDINATE_MODE_TOP_RIGHT.label,
             value: i18n._(COORDINATE_MODE_TOP_RIGHT.label),
             mode: COORDINATE_MODE_TOP_RIGHT
         }
@@ -128,7 +128,7 @@ class JobType extends PureComponent {
                 {!isRotate && (
                     <div className="margin-left-50">
                         <div className="margin-bottom-16 font-weight-bold">
-                            {i18n._('Working size')}
+                            {i18n._('Work Size')}
                         </div>
                         <div className="sm-flex">
                             <img
@@ -181,7 +181,7 @@ class JobType extends PureComponent {
                             </div>
                         </div>
                         <div className="margin-top-24 margin-bottom-16 font-weight-bold">
-                            {i18n._('Working origin')}
+                            {i18n._('Work Origin')}
                         </div>
                         <div className="sm-flex">
                             <img
@@ -195,7 +195,7 @@ class JobType extends PureComponent {
                                 alt="3 Axis"
                             />
                             <div className="margin-left-16 sm-flex-width sm-flex height-32">
-                                <span className="width-88 margin-right-8">{i18n._('Zero zone')}</span>
+                                <span className="width-88 margin-right-8">{i18n._('Origin Position')}</span>
                                 <Select
                                     backspaceRemoves={false}
                                     size="120px"
@@ -214,7 +214,7 @@ class JobType extends PureComponent {
                 {isRotate && (
                     <div className="margin-left-50">
                         <div className="margin-bottom-16 font-weight-bold">
-                            {i18n._('Working size')}
+                            {i18n._('Work Size')}
                         </div>
                         <div className="sm-flex">
                             <img
@@ -269,7 +269,7 @@ class JobType extends PureComponent {
                             </div>
                         </div>
                         <div className="margin-top-24 margin-bottom-16 font-weight-bold">
-                            {i18n._('Working origin')}
+                            {i18n._('Work Origin')}
                         </div>
                         <div className="sm-flex">
                             <img
@@ -284,7 +284,7 @@ class JobType extends PureComponent {
                                 alt="3 Axis"
                             />
                             <div className="margin-left-16 sm-flex-width sm-flex height-32">
-                                <span className="width-88 margin-right-8">{i18n._('Zero zone')}</span>
+                                <span className="width-88 margin-right-8">{i18n._('Origin Position')}</span>
                                 {headType === HEAD_LASER && (
                                     <Select
                                         backspaceRemoves={false}
@@ -292,7 +292,7 @@ class JobType extends PureComponent {
                                         clearable={false}
                                         options={[
                                             {
-                                                label: 'top',
+                                                label: 'Top',
                                                 value: 'top'
                                             }]}
                                         isGroup={false}
@@ -307,7 +307,7 @@ class JobType extends PureComponent {
                                         clearable={false}
                                         options={[
                                             {
-                                                label: 'center',
+                                                label: 'Center',
                                                 value: 'center'
                                             }]}
                                         isGroup={false}

@@ -267,7 +267,7 @@ class GcodeParameters extends PureComponent {
                                 hidden={!fixedPowerEnabled}
                             >
                                 <TipTrigger
-                                    title={i18n._('Power')}
+                                    title={i18n._('Laser Power')}
                                     content={i18n._('Power to use when laser is working.')}
                                 >
                                     <div className="sm-parameter-row">

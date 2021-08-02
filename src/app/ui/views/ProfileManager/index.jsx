@@ -206,10 +206,10 @@ function ProfileManager({ optionConfigGroup, disableCategory = true, managerTitl
                 newDefinition = allDefinitions[0];
             }
             const popupActions = modal({
-                title: i18n._('Delete Parameters'),
+                title: i18n._('Delete Profile'),
                 body: (
                     <React.Fragment>
-                        <p>{`Are you sure to remove profile "${definition.name}"?`}</p>
+                        <p>{`Are you sure to delete profile "${definition.name}"?`}</p>
                     </React.Fragment>
                 ),
 
@@ -231,7 +231,7 @@ function ProfileManager({ optionConfigGroup, disableCategory = true, managerTitl
                             popupActions.close();
                         }}
                     >
-                        {i18n._('OK')}
+                        {i18n._('Delete')}
                     </Button>
                 )
             });
@@ -249,11 +249,11 @@ function ProfileManager({ optionConfigGroup, disableCategory = true, managerTitl
         showInputModal: ({ isCreate }) => {
             const definitionForManager = definitionState?.definitionForManager;
             const isCategorySelected = definitionState?.isCategorySelected;
-            let title = i18n._('Create');
+            let title = i18n._('Create Profile');
             let copyType = '', copyCategoryName = '', copyToolName = '';
 
             if (!isCreate) {
-                title = i18n._('Copy');
+                title = i18n._('Copy Profile');
                 copyType = isCategorySelected ? 'Material' : 'Tool';
                 copyCategoryName = definitionForManager.category;
                 if (!isCategorySelected) {
@@ -263,7 +263,7 @@ function ProfileManager({ optionConfigGroup, disableCategory = true, managerTitl
                 copyCategoryName = definitionForManager.category;
             }
             if (isCreate && disableCategory) {
-                title = i18n._('Create');
+                title = i18n._('Create Profile');
                 copyType = 'Tool';
                 copyToolName = 'New Profile';
             }
@@ -334,7 +334,7 @@ function ProfileManager({ optionConfigGroup, disableCategory = true, managerTitl
                             }
                         }}
                     >
-                        {i18n._('OK')}
+                        {i18n._('Save')}
                     </Button>
                 )
             });
@@ -598,7 +598,7 @@ function ProfileManager({ optionConfigGroup, disableCategory = true, managerTitl
                                             size={24}
                                             className={classNames(styles['manager-file'], 'sm-tab')}
                                             onClick={() => { actions.showNewModal(); }}
-                                            spanText={i18n._('New')}
+                                            spanText={i18n._('Create')}
                                             spanClassName={classNames(styles['action-title'])}
                                         />
                                         <SvgIcon

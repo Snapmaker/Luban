@@ -1,6 +1,7 @@
 import React, { PureComponent } from 'react';
 import { connect } from 'react-redux';
 import PropTypes from 'prop-types';
+import i18n from '../../../lib/i18n';
 // import Widget from '../../components/Widget';
 import {
     WidgetState
@@ -19,7 +20,8 @@ class LaserTestFocusWidget extends PureComponent {
     static propTypes = {
         headType: PropTypes.string,
         isConnected: PropTypes.bool.isRequired,
-        workflowState: PropTypes.string
+        workflowState: PropTypes.string,
+        widgetActions: PropTypes.func
     };
 
     state = {
@@ -38,6 +40,8 @@ class LaserTestFocusWidget extends PureComponent {
     constructor(props) {
         super(props);
         WidgetState.bind(this);
+        // Todo, add to widget state?
+        props.widgetActions.setTitle(i18n._('Fine-tune Work Origin'));
     }
 
     render() {

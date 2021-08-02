@@ -67,7 +67,7 @@ const QuickStart = (props) => {
     return (
         <div className={styles['quick-start-container']}>
             <div className={classNames(styles['title-label'], 'highlight-heading', 'margin-bottom-16')}>
-                {i18n._('Fast Start')}
+                {i18n._('Case Library')}
             </div>
             <div className={
                 classNames(
