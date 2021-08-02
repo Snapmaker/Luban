@@ -1420,6 +1420,8 @@ export const actions = {
             }
         }
         dispatch(operationHistoryActions.setOperations(headType, operations));
+        dispatch(actions.resetProcessState(headType));
+
         dispatch(baseActions.render(headType));
     },
 
