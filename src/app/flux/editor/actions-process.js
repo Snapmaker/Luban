@@ -2,7 +2,7 @@ import uuid from 'uuid';
 import { baseActions } from './actions-base';
 import { controller } from '../../lib/controller';
 import { CNC_LASER_STAGE } from './utils';
-import { DISPLAYED_TYPE_MODEL, DISPLAYED_TYPE_TOOLPATH, SELECTEVENT } from '../../constants';
+import { DISPLAYED_TYPE_MODEL, DISPLAYED_TYPE_TOOLPATH, HEAD_LASER, SELECTEVENT } from '../../constants';
 import { getToolPathType } from '../../toolpaths/utils';
 
 import { toast } from '../../ui/components/Toast';
@@ -23,13 +23,14 @@ export const processActions = {
     },
 
     preview: (headType) => (dispatch, getState) => {
+        const { SVGActions, toolPathGroup } = getState()[headType];
+        toolPathGroup.selectToolPathById();
         dispatch(baseActions.updateState(headType, {
             needToPreview: false
         }));
         dispatch(processActions.recalculateAllToolPath(headType));
         dispatch(processActions.showToolPathGroupObject(headType));
         // Different models cannot be selected in process page
-        const { SVGActions } = getState()[headType];
         SVGActions.clearSelection();
         dispatch(baseActions.render(headType));
     },
@@ -44,7 +45,7 @@ export const processActions = {
         }
         modelGroup.hideAllModelsObj3D();
         toolPathGroup.show();
-        toolPathGroup.showToolpathObjects(true);
+        toolPathGroup.showToolpathObjects(true, headType === HEAD_LASER);
         dispatch(baseActions.updateState(headType, {
             displayedType: DISPLAYED_TYPE_TOOLPATH,
             showToolPath: true,
@@ -194,6 +195,7 @@ export const processActions = {
             dispatch(processActions.preview(headType));
         }
         dispatch(baseActions.updateState(headType, {
+            simulationNeedToPreview: true,
             displayedType: DISPLAYED_TYPE_MODEL,
             needToPreview: true,
             updatingToolPath: null,
@@ -316,15 +318,11 @@ export const processActions = {
 
     onGenerateGcode: (headType, taskResult) => async (dispatch, getState) => {
         const { modelGroup } = getState()[headType];
-        dispatch(baseActions.updateState(
-            headType, {
-                isGcodeGenerating: false
-            }
-        ));
         if (taskResult.taskStatus === 'failed') {
             modelGroup.estimatedTime = 0;
-            dispatch(baseActions.updateState(headType, {
+            await dispatch(baseActions.updateState(headType, {
                 stage: CNC_LASER_STAGE.GENERATE_GCODE_FAILED,
+                isGcodeGenerating: false,
                 progress: 1
             }));
             return;
@@ -343,8 +341,10 @@ export const processActions = {
                 thumbnail: gcodeFile.thumbnail
             },
             stage: CNC_LASER_STAGE.GENERATE_GCODE_SUCCESS,
+            isGcodeGenerating: false,
             progress: 1
         }));
+        dispatch(baseActions.render(headType));
     },
 
     /**

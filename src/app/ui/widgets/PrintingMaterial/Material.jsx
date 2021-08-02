@@ -52,6 +52,8 @@ function Material({ widgetActions }) {
             setCurrentDefinition(definition);
             dispatch(printingActions.updateState({ defaultMaterialId: definition.definitionId }));
             updateActiveDefinition(definition);
+            dispatch(printingActions.destroyGcodeLine());
+            dispatch(printingActions.displayModel());
         }
     }
 

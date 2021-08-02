@@ -520,6 +520,9 @@ function Cnc({ location }) {
                     activeKey={page}
                     onChange={(key) => {
                         dispatch(editorActions.switchToPage(HEAD_CNC, key));
+                        if (key === PAGE_EDITOR) {
+                            dispatch(editorActions.showModelGroupObject(HEAD_CNC));
+                        }
                     }}
                 />
                 {renderWidgetList('cnc', 'default', widgets, allWidgets, listActions, widgetProps)}

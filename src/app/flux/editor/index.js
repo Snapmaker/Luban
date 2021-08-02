@@ -970,7 +970,7 @@ export const actions = {
         const { canUndo } = getState()[headType].history;
         if (canUndo) {
             dispatch(operationHistoryActions.undo(headType));
-            dispatch(actions.showModelGroupObject(headType));
+            dispatch(actions.resetProcessState(headType));
             dispatch(baseActions.render(headType));
         }
     },
@@ -979,7 +979,7 @@ export const actions = {
         const { canRedo } = getState()[headType].history;
         if (canRedo) {
             dispatch(operationHistoryActions.redo(headType));
-            dispatch(actions.showModelGroupObject(headType));
+            dispatch(actions.resetProcessState(headType));
             dispatch(baseActions.render(headType));
         }
     },
@@ -1052,6 +1052,7 @@ export const actions = {
      */
     resetProcessState: (headType) => (dispatch) => {
         dispatch(baseActions.updateState(headType, {
+            simulationNeedToPreview: true,
             displayedType: DISPLAYED_TYPE_MODEL,
             needToPreview: true
         }));
@@ -1198,6 +1199,7 @@ export const actions = {
                 operations.push(operation);
             }
         }
+        dispatch(actions.resetProcessState(headType));
         dispatch(operationHistoryActions.setOperations(headType, operations));
         dispatch(baseActions.render(headType));
     },
@@ -1418,6 +1420,8 @@ export const actions = {
             }
         }
         dispatch(operationHistoryActions.setOperations(headType, operations));
+        dispatch(actions.resetProcessState(headType));
+
         dispatch(baseActions.render(headType));
     },
 
@@ -1524,6 +1528,7 @@ export const actions = {
                 operations.push(operation);
             }
         }
+        dispatch(actions.resetProcessState(headType));
         dispatch(operationHistoryActions.setOperations(headType, operations));
         dispatch(baseActions.render(headType));
     },
@@ -1698,6 +1703,7 @@ export const actions = {
             dispatch(baseActions.render(headType));
         }
 
+        dispatch(actions.resetProcessState(headType));
         dispatch(actions.updateState(headType, { coordinateMode, coordinateSize }));
     }
 };

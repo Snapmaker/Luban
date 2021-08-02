@@ -60,13 +60,15 @@ class ToolPathGroup {
         this.simulationObjects.visible = false;
     }
 
-    showToolpathObjects(show) {
+    showToolpathObjects(show, showWood) {
         this.toolPathObjects.visible = show;
+        showWood && (this.simulationObjects.visible = show);
     }
 
     showSimulationObject(show) {
         // Todo, control it in actions-process
         this.simulationObject && (this.simulationObjects.visible = show);
+        this.simulationObject && (this.simulationObject.visible = show);
     }
 
     async onGenerateToolPath(taskResult) {
