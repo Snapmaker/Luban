@@ -24,6 +24,11 @@ export const processActions = {
 
     preview: (headType) => (dispatch, getState) => {
         const { SVGActions, toolPathGroup } = getState()[headType];
+        toolPathGroup.toolPaths.forEach((toolPath) => {
+            toolPathGroup.toolPathObjects.remove(toolPath.object);
+            toolPath.object = toolPath.object.clone();
+            toolPathGroup.toolPathObjects.add(toolPath.object);
+        });
         toolPathGroup.selectToolPathById();
         dispatch(baseActions.updateState(headType, {
             needToPreview: false
