@@ -168,7 +168,7 @@ class Enclosure extends PureComponent {
                         <span>{i18n._('Cooling Fan')}</span>
                         <Switch
                             onClick={this.actions.onHandleCoolingFans}
-                            checked={fan}
+                            checked={Boolean(fan)}
                             disabled={(connectionType === 'serial' && !isFanReady) || !isConnected}
                         />
                     </div>

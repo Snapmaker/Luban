@@ -110,7 +110,6 @@ class MachineSelectModal extends PureComponent {
                 img: '/resources/images/machine/function-cnc.jpg'
             }
         ];
-
         return (
             <Modal disableOverlay showCloseButton={false} size="md" onClose={this.handleClose}>
                 <Modal.Header>

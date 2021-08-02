@@ -2,6 +2,7 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import { Progress } from 'antd';
 import classNames from 'classnames';
+import { isEqual } from 'lodash';
 import styles from './styles.styl';
 import { EPSILON } from '../../../constants';
 
@@ -19,14 +20,15 @@ class ProgressBar extends React.PureComponent {
         this.state = { display: 'none' };
     }
 
-    componentWillReceiveProps(nextProps) {
-        if (nextProps.progress !== this.props.progress) {
+
+    getSnapshotBeforeUpdate(prevProps) {
+        if (!isEqual(prevProps.progress, this.props.progress) && this.props.progress !== 0) {
             this.setState({ display: 'block' });
             if (this.timeout) {
                 clearTimeout(this.timeout);
                 this.timeout = null;
             }
-            if (nextProps.progress > 100 - EPSILON) {
+            if (this.props.progress > 100 - EPSILON) {
                 this.timeout = setTimeout(() => this.setState({ display: 'none' }), 5000);
             }
         }
