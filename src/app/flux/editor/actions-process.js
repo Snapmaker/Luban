@@ -23,13 +23,14 @@ export const processActions = {
     },
 
     preview: (headType) => (dispatch, getState) => {
+        const { SVGActions, toolPathGroup } = getState()[headType];
+        toolPathGroup.selectToolPathById();
         dispatch(baseActions.updateState(headType, {
             needToPreview: false
         }));
         dispatch(processActions.recalculateAllToolPath(headType));
         dispatch(processActions.showToolPathGroupObject(headType));
         // Different models cannot be selected in process page
-        const { SVGActions } = getState()[headType];
         SVGActions.clearSelection();
         dispatch(baseActions.render(headType));
     },
@@ -317,15 +318,11 @@ export const processActions = {
 
     onGenerateGcode: (headType, taskResult) => async (dispatch, getState) => {
         const { modelGroup } = getState()[headType];
-        dispatch(baseActions.updateState(
-            headType, {
-                isGcodeGenerating: false
-            }
-        ));
         if (taskResult.taskStatus === 'failed') {
             modelGroup.estimatedTime = 0;
-            dispatch(baseActions.updateState(headType, {
+            await dispatch(baseActions.updateState(headType, {
                 stage: CNC_LASER_STAGE.GENERATE_GCODE_FAILED,
+                isGcodeGenerating: false,
                 progress: 1
             }));
             return;
@@ -344,8 +341,10 @@ export const processActions = {
                 thumbnail: gcodeFile.thumbnail
             },
             stage: CNC_LASER_STAGE.GENERATE_GCODE_SUCCESS,
+            isGcodeGenerating: false,
             progress: 1
         }));
+        dispatch(baseActions.render(headType));
     },
 
     /**
