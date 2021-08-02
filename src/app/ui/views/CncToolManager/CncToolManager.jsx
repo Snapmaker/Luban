@@ -5,8 +5,9 @@ import { includes } from 'lodash';
 import PropTypes from 'prop-types';
 import { actions as cncActions } from '../../../flux/cnc';
 import { actions as projectActions } from '../../../flux/project';
+import { actions as editorActions } from '../../../flux/editor';
 
-import { CNC_TOOL_CONFIG_GROUP } from '../../../constants';
+import { CNC_TOOL_CONFIG_GROUP, HEAD_CNC } from '../../../constants';
 import ProfileManager from '../ProfileManager';
 import i18n from '../../../lib/i18n';
 
@@ -50,6 +51,7 @@ function CncToolManager({ closeToolManager }) {
         onUpdateDefaultDefinition: (definitionForManager) => {
             const { definitionId, name } = definitionForManager;
             dispatch(cncActions.changeActiveToolListDefinition(definitionId, name));
+            dispatch(editorActions.resetProcessState(HEAD_CNC));
         },
         onSaveDefinitionForManager: async (definition) => {
             dispatch(cncActions.updateToolListDefinition(definition));

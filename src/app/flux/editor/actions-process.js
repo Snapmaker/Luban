@@ -317,7 +317,7 @@ export const processActions = {
     },
 
     onGenerateGcode: (headType, taskResult) => async (dispatch, getState) => {
-        const { modelGroup } = getState()[headType];
+        const { modelGroup, toolPathGroup } = getState()[headType];
         if (taskResult.taskStatus === 'failed') {
             modelGroup.estimatedTime = 0;
             await dispatch(baseActions.updateState(headType, {
@@ -329,6 +329,7 @@ export const processActions = {
         }
         const { gcodeFile } = taskResult;
         modelGroup.estimatedTime = gcodeFile.estimatedTime;
+        toolPathGroup.showSimulationObject(false);
 
         dispatch(baseActions.updateState(headType, {
             isChangedAfterGcodeGenerating: false,
