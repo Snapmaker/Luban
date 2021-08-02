@@ -268,8 +268,9 @@ const File = {
  */
 const Dialog = {
     async showOpenFileDialog(type) {
+        type = typeof type === 'string' ? type.slice(1) : '';
         let extensions = ['snap3dp', 'snaplzr', 'snapcnc'];
-        switch (type.slice(1)) { // substring '/3dp' to '3dp'
+        switch (type) { // substring '/3dp' to '3dp'
             case '3dp':
                 extensions = ['stl', 'obj'];
                 break;
