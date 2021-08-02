@@ -27,7 +27,7 @@ const Button = (props) => {
                     styles['button-lb']
                 )}
             >
-                <div className={classNames('position-re')}>
+                <div className={classNames('position-re', styles['inside-button'])}>
                     {props.children}
                     {
                         !!suffixIcon && priority === 'level-one' && (

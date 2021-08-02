@@ -172,7 +172,7 @@ class Laser extends PureComponent {
                         className="sm-flex-auto"
                         onClick={this.actions.onClickLaserPower}
                         disabled={isWifiPrinting}
-                        checked={laserPowerOpen}
+                        checked={Boolean(laserPowerOpen)}
                     />
                 </div>
                 <div className="sm-flex justify-space-between margin-vertical-8">

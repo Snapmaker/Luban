@@ -19,9 +19,9 @@ import { MACHINE_HEAD_TYPE } from '../../../constants';
 class LaserTestFocusWidget extends PureComponent {
     static propTypes = {
         headType: PropTypes.string,
+        widgetActions: PropTypes.object.isRequired,
         isConnected: PropTypes.bool.isRequired,
-        workflowState: PropTypes.string,
-        widgetActions: PropTypes.func
+        workflowState: PropTypes.string
     };
 
     state = {
@@ -44,11 +44,20 @@ class LaserTestFocusWidget extends PureComponent {
         props.widgetActions.setTitle(i18n._('Fine-tune Work Origin'));
     }
 
+    componentDidMount() {
+        const { isConnected } = this.props;
+        if (isConnected) {
+            this.props.widgetActions.setDisplay(true);
+        } else {
+            this.props.widgetActions.setDisplay(false);
+        }
+    }
+
     render() {
         const state = this.state;
         // const actions = this.actions;
 
-        if (!this.props.isConnected || !(this.props.headType === MACHINE_HEAD_TYPE.LASER.value)) {
+        if (!(this.props.headType === MACHINE_HEAD_TYPE.LASER.value)) {
             return null;
         }
 

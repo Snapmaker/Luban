@@ -19,6 +19,7 @@ class VisualizerLeftBar extends PureComponent {
         size: PropTypes.object.isRequired,
         selectedModelArray: PropTypes.array,
         hasModel: PropTypes.bool,
+        gcodeLine: PropTypes.object,
         transformMode: PropTypes.string.isRequired,
         transformation: PropTypes.shape({
             positionX: PropTypes.number,
@@ -203,7 +204,9 @@ class VisualizerLeftBar extends PureComponent {
 
     render() {
         const actions = this.actions;
-        const { size, hasModel, selectedModelArray, transformMode, transformation, defaultSupportSize, isSupporting, isSupportSelected, modelSize, supportActions, inProgress } = this.props;
+        const { size, hasModel, selectedModelArray, transformMode,
+            transformation, defaultSupportSize, isSupporting, gcodeLine,
+            isSupportSelected, modelSize, supportActions, inProgress } = this.props;
         let moveX = 0;
         let moveY = 0;
         let scaleXPercent = 100;
@@ -352,7 +355,7 @@ class VisualizerLeftBar extends PureComponent {
                                         onClick={() => {
                                             actions.arrangeAllModels();
                                         }}
-                                        disabled={inProgress || !hasModel || isSupportSelected}
+                                        disabled={inProgress || !hasModel || isSupportSelected || gcodeLine}
                                     />
                                 </li>
                             </ul>
@@ -823,6 +826,7 @@ const mapStateToProps = (state) => {
     const {
         modelGroup,
         hasModel,
+        gcodeLine,
         transformMode
     } = printing;
     let modelSize = {};
@@ -844,6 +848,7 @@ const mapStateToProps = (state) => {
         transformation: modelGroup.getSelectedModelTransformationForPrinting(),
         // defaultSupportSize: modelGroup.defaultSupportSize,
         hasModel,
+        gcodeLine,
         isSupportSelected,
         modelSize,
         transformMode

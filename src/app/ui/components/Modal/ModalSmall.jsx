@@ -52,8 +52,8 @@ class ModalSmall extends PureComponent {
                             <SvgIcon
                                 name={img}
                                 color={iconColor}
-                                type="static"
-                                size="72"
+                                type={['static']}
+                                size={72}
                             />
                         )}
                         {isImage && (<img src={img} alt="......" />)}
