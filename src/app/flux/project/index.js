@@ -123,6 +123,13 @@ export const actions = {
 
     getLastEnvironment: (headType) => async (dispatch) => {
         const { body: { content } } = await api.getEnv({ headType });
+        try {
+            const envObj = JSON.parse(content);
+            if (!envObj.models.length) return;
+        } catch (e) {
+            console.error('Error content JSON');
+        }
+
         content && dispatch(actions.updateState(headType, { findLastEnvironment: true, content }));
     },
 
@@ -397,6 +404,10 @@ export const actions = {
             message: i18n._('Do you want to save the changes in the {{headType}} editor?', { headType: HEAD_TYPE_ENV_NAME[oldHeadType] })
         }));
         await dispatch(actions.closeProject(oldHeadType));
+
+        for (const type of [HEAD_3DP, HEAD_CNC, HEAD_LASER]) {
+            await dispatch(actions.clearSavedEnvironment(type));
+        }
 
         if (newHeadType === HEAD_CNC || newHeadType === HEAD_LASER) {
             dispatch(editorActions.updateState(newHeadType, {
