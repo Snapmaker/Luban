@@ -75,7 +75,7 @@ class ToolPathGroup {
         const toolPath = this.toolPaths.find(v => v.id === taskResult.taskId);
 
         if (toolPath) {
-            await toolPath.onGenerateToolPath(taskResult);
+            await toolPath.onGenerateToolPath(taskResult, () => { this._updated(); });
             this.addSelectedToolpathColor(true);
             this._updated();
         }

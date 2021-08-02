@@ -229,7 +229,7 @@ class ToolPath {
     /**
      * Listen generate toolpath result
      */
-    onGenerateToolPath(result) {
+    onGenerateToolPath(result, cb) {
         return new Promise((resolve, reject) => {
             if (result.status === 'failed') {
                 for (let i = 0; i < result.data.length; i++) {
@@ -252,6 +252,7 @@ class ToolPath {
                                 oldMeshObj && this.object.remove(oldMeshObj);
                                 modelMapResult.meshObj = toolPathObj3D;
                                 this.object.add(toolPathObj3D);
+                                cb();
                             });
                     }
                 }
