@@ -2,7 +2,7 @@ import uuid from 'uuid';
 import { baseActions } from './actions-base';
 import { controller } from '../../lib/controller';
 import { CNC_LASER_STAGE } from './utils';
-import { DISPLAYED_TYPE_MODEL, DISPLAYED_TYPE_TOOLPATH, SELECTEVENT } from '../../constants';
+import { DISPLAYED_TYPE_MODEL, DISPLAYED_TYPE_TOOLPATH, HEAD_LASER, SELECTEVENT } from '../../constants';
 import { getToolPathType } from '../../toolpaths/utils';
 
 import { toast } from '../../ui/components/Toast';
@@ -45,7 +45,7 @@ export const processActions = {
         }
         modelGroup.hideAllModelsObj3D();
         toolPathGroup.show();
-        toolPathGroup.showToolpathObjects(true);
+        toolPathGroup.showToolpathObjects(true, headType === HEAD_LASER);
         dispatch(baseActions.updateState(headType, {
             displayedType: DISPLAYED_TYPE_TOOLPATH,
             showToolPath: true,
