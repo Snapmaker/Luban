@@ -32,10 +32,10 @@ const SettingGuideModal = (props) => {
             value: MACHINE_SERIES.ORIGINAL.value,
             label: MACHINE_SERIES.ORIGINAL.label,
             size: MACHINE_SERIES.ORIGINAL.setting.size,
-            zSize: {
-                x: 125,
-                y: 125,
-                z: 221
+            lz: {
+                value: MACHINE_SERIES.ORIGINAL_LZ.value,
+                // label: MACHINE_SERIES.ORIGINAL_LZ.label,
+                size: MACHINE_SERIES.ORIGINAL_LZ.setting.size,
             },
             img: '/resources/images/machine/size-1.0-original.jpg'
         },
@@ -104,11 +104,7 @@ const SettingGuideModal = (props) => {
             setSettingStep('machine');
         }
     };
-    const handleSubmit = async () => {
-        const currentZAxis = zAxis ? 1 : 0;
-        await dispatch(machineActions.updateMachineSeries(machineSeriesOptions[machineSeries].value));
-        await dispatch(machineActions.updateMachineSize(machineSeries === 0 && !!zAxis ? machineSeriesOptions[0].zSize : machineSeriesOptions[machineSeries].size));
-        await dispatch(machineActions.setZAxisModuleState(machineSeries === 0 ? null : currentZAxis));
+    const handleSubmit =  () => {
         // if update guide content, change the version
         machineStore.set('settings.guideVersion', 1);
         machineStore.set('settings.finishGuide', true);
@@ -116,6 +112,11 @@ const SettingGuideModal = (props) => {
             const uri = new Uri(window.location.search);
             uri.replaceQueryParam('lang', lang);
             window.location.search = uri.toString();
+            const currentZAxis = zAxis ? 1 : 0;
+            dispatch(machineActions.updateMachineSeries(machineSeries === 0 && !!zAxis ? machineSeriesOptions[0]?.lz?.value : machineSeriesOptions[machineSeries].value));
+            dispatch(machineActions.updateMachineSize(machineSeries === 0 && !!zAxis ? machineSeriesOptions[0]?.lz?.size : machineSeriesOptions[machineSeries].size));
+            dispatch(machineActions.setZAxisModuleState(machineSeries === 0 ? null : currentZAxis));
+            window.location.href = '/'
         });
         props.handleModalShow(false);
     };
@@ -224,7 +225,7 @@ const SettingGuideModal = (props) => {
                                             {
                                                 zAxis && machineSeries === 0 && (
                                                     <div>
-                                                        {`${machineSeriesOptions[0].zSize?.x} mm × ${machineSeriesOptions[0].zSize?.y} mm × ${machineSeriesOptions[0].zSize?.z} mm`}
+                                                        {`${machineSeriesOptions[0]?.lz?.size?.x} mm × ${machineSeriesOptions[0]?.lz?.size?.y} mm × ${machineSeriesOptions[0]?.lz?.size?.z} mm`}
                                                     </div>
                                                 )
                                             }
