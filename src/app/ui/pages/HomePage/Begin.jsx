@@ -49,7 +49,8 @@ const Begin = () => {
     }
 
     const changeAxis = async (e, isRotate, headType) => {
-        e.preventDefault();
+        // e.preventDefault();
+        // e.stopPropagation();
         if (!isRotate) {
             const { materials } = store?.[headType];
             if (materials.isRotate !== isRotate) {
@@ -107,14 +108,14 @@ const Begin = () => {
                                 </Anchor>
                             </div>
                             <div className={classNames(styles.laser, 'margin-horizontal-16')}>
-                                <Anchor onClick={() => onStartProject('/laser')} title={i18n._('Laser G-code Generator')}>
+                                <Anchor title={i18n._('Laser G-code Generator')}>
                                     <div className={classNames(styles.imgWrapper)}>
                                         <img className={classNames(styles['laser-img'])} src={require('./images/icon_laser_120x120.svg')} alt="" />
                                         <div className={styles['laser-axis-select']}>
-                                            <Button onClick={(e) => changeAxis(e, false, HEAD_LASER)} className={classNames(styles['three-axis-select'])} type="default" priority="level-three">
+                                            <Button onClick={(e) => { changeAxis(e, false, HEAD_LASER); onStartProject('/laser'); }} className={classNames(styles['three-axis-select'])} type="default" priority="level-three">
                                                 {i18n._('3-axis')}
                                             </Button>
-                                            <Button onClick={(e) => changeAxis(e, true, HEAD_LASER)} className={classNames(styles['four-axis-select'])} type="default" priority="level-three">
+                                            <Button onClick={(e) => { changeAxis(e, true, HEAD_LASER); onStartProject('/laser'); }} className={classNames(styles['four-axis-select'])} type="default" priority="level-three">
                                                 {i18n._('4-axis')}
                                             </Button>
                                         </div>
@@ -123,14 +124,14 @@ const Begin = () => {
                                 </Anchor>
                             </div>
                             <div className={classNames(styles.cnc, 'margin-horizontal-16')}>
-                                <Anchor onClick={() => onStartProject('/cnc')} title={i18n._('CNC G-code Generator')}>
+                                <Anchor title={i18n._('CNC G-code Generator')}>
                                     <div className={classNames(styles.imgWrapper)}>
                                         <img className={classNames(styles['cnc-img'])} src={require('./images/icon_cnc_120x120.svg')} alt="" />
                                         <div className={styles['cnc-axis-select']}>
-                                            <Button onClick={(e) => changeAxis(e, false, HEAD_CNC)} className={classNames(styles['three-axis-select'])} type="default" priority="level-three">
+                                            <Button onClick={(e) => { changeAxis(e, false, HEAD_CNC); onStartProject('/cnc'); }} className={classNames(styles['three-axis-select'])} type="default" priority="level-three">
                                                 {i18n._('3-axis')}
                                             </Button>
-                                            <Button onClick={(e) => changeAxis(e, true, HEAD_CNC)} className={classNames(styles['four-axis-select'])} type="default" priority="level-three">
+                                            <Button onClick={(e) => { changeAxis(e, true, HEAD_CNC); onStartProject('/cnc'); }} className={classNames(styles['four-axis-select'])} type="default" priority="level-three">
                                                 {i18n._('4-axis')}
                                             </Button>
                                         </div>
