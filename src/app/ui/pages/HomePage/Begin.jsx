@@ -49,8 +49,7 @@ const Begin = () => {
     }
 
     const changeAxis = async (e, isRotate, headType) => {
-        // e.preventDefault();
-        // e.stopPropagation();
+        e.preventDefault();
         if (!isRotate) {
             const { materials } = store?.[headType];
             if (materials.isRotate !== isRotate) {
