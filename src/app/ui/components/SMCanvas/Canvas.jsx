@@ -405,7 +405,7 @@ class Canvas extends Component {
     toTopFrontRight() {
         const positionStart = this.props.cameraInitialPosition;
         const target = { x: 0, y: 0, z: this.props.cameraInitialPosition.z };
-        const position = this._getCameraPositionByRotation(positionStart, target, -Math.PI / 4, -Math.PI / 4);
+        const position = this._getCameraPositionByRotation(positionStart, target, Math.PI / 6, -Math.PI / 10);
         this.camera.position.x = position.x;
         this.camera.position.y = position.y;
         this.camera.position.z = position.z;
