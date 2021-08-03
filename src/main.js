@@ -167,85 +167,127 @@ if (process.platform === 'win32') {
     }
 }
 
-const createWindow = async () => {
-    try {
-        // TODO: move to server
-        DataStorage.init();
-    } catch (err) {
-        console.error('Error: ', err);
-    }
+const showLoadingWindow = (loadingWindow) => {
+    loadingWindow.once('show', () => {
+        setTimeout(async () => {
+            try {
+                // TODO: move to server
+                DataStorage.init();
+            } catch (err) {
+                console.error('Error: ', err);
+            }
 
-    if (!serverData) {
-        // only start server once
-        // TODO: start server on the outermost
-        serverData = await launchServer();
-    }
+            if (!serverData) {
+                // only start server once
+                // TODO: start server on the outermost
+                serverData = await launchServer();
+            }
 
-    const { address, port } = { ...serverData };
-    const windowOptions = getBrowserWindowOptions();
-    const window = new BrowserWindow(windowOptions);
-
-
-    mainWindow = window;
-    configureWindow(window);
-
-    const loadUrl = `http://${address}:${port}`;
-
-    // Ignore proxy settings
-    // https://electronjs.org/docs/api/session#sessetproxyconfig-callback
-
-    const session = window.webContents.session;
-    session.setProxy({ proxyRules: 'direct://' })
-        .then(() => window.loadURL(loadUrl))
-        .then(() => {
+            const { address, port } = { ...serverData };
+            const outsideX = -999999, outsideY = -999999;
+            const windowOptions = getBrowserWindowOptions();
+            const window = new BrowserWindow(windowOptions);
+            window.setSkipTaskbar(true);
+            window.blur();
+            window.setPosition(outsideX, outsideY, false);
             window.show();
-            window.focus();
-        });
 
-    window.on('close', (e) => {
-        e.preventDefault();
-        const bounds = window.getBounds();
-        const display = screen.getDisplayMatching(bounds);
-        const options = {
-            id: display.id,
-            ...bounds
-        };
+            ipcMain.once('show-main-window', () => {
+                if (loadingWindow.isMinimized()) {
+                    loadingWindow.restore();
+                } else if (loadingWindow.isMaximized()) {
+                    window.maximize();
+                }
+                const [x, y] = loadingWindow.getPosition();
+                window.setPosition(x, y, false);
+                window.moveTop();
+                window.setSkipTaskbar(false);
+                loadingWindow.setSkipTaskbar(true);
+                loadingWindow.setPosition(outsideX, outsideY, false);
+                window.focus();
+                loadingWindow.close();
+            });
+            mainWindow = window;
+            configureWindow(window);
 
-        config.set('winBounds', options);
-        window.webContents.send('save-and-close');
+            const loadUrl = `http://${address}:${port}`;
 
-        mainWindow = null;
+            // Ignore proxy settings
+            // https://electronjs.org/docs/api/session#sessetproxyconfig-callback
+
+            const session = window.webContents.session;
+            session.setProxy({ proxyRules: 'direct://' })
+                .then(() => window.loadURL(loadUrl));
+
+            window.on('close', (e) => {
+                e.preventDefault();
+                const bounds = window.getBounds();
+                const display = screen.getDisplayMatching(bounds);
+                const options = {
+                    id: display.id,
+                    ...bounds
+                };
+
+                config.set('winBounds', options);
+                window.webContents.send('save-and-close');
+
+                mainWindow = null;
+            });
+
+
+            // Setup menu
+            const menuBuilder = new MenuBuilder(window, { url: loadUrl });
+            // menuBuilder.buildMenu();
+            // Init homepage recent files
+            ipcMain.on('get-recent-file', () => {
+                const fileArr = menuBuilder.getInitRecentFile();
+                window.webContents.send('update-recent-file', fileArr, 'update');
+            });
+            // the "open file or folder" dialog can also be triggered from the React app
+            ipcMain.handle('popFile', () => {
+                const newProjectFile = config.get('projectFile');
+                if (!isUndefined(newProjectFile) && !isNull(newProjectFile)) {
+                    config.set('projectFile', null);
+                    return newProjectFile;
+                }
+                return null;
+            });
+
+            ipcMain.on('clean-all-recent-files', () => {
+                cleanAllRecentFiles();
+            });
+
+            ipcMain.on('add-recent-file', (event, file) => {
+                console.log('main add-recent-file', event, file);
+                addRecentFile(file);
+            });
+
+            updateHandle();
+        }, 50);
     });
+    loadingWindow.show();
+}
 
+const createWindow = () => {
+    MenuBuilder.hideMenu();
+    const windowOptions = getBrowserWindowOptions();
 
-    // Setup menu
-    const menuBuilder = new MenuBuilder(window, { url: loadUrl });
-    // menuBuilder.buildMenu();
-    // Init homepage recent files
-    ipcMain.on('get-recent-file', () => {
-        const fileArr = menuBuilder.getInitRecentFile();
-        window.webContents.send('update-recent-file', fileArr, 'update');
-    });
-    // the "open file or folder" dialog can also be triggered from the React app
-    ipcMain.handle('popFile', () => {
-        const newProjectFile = config.get('projectFile');
-        if (!isUndefined(newProjectFile) && !isNull(newProjectFile)) {
-            config.set('projectFile', null);
-            return newProjectFile;
+    const loadingWindow = new BrowserWindow(windowOptions);
+    loadingWindow.setResizable(false);
+    loadingWindow.loadURL(path.resolve(__dirname, 'app', 'loading.html'));
+
+    if (process.platform === 'win32') {
+        loadingWindow.once('ready-to-show', () => {
+            showLoadingWindow(loadingWindow);
+        })
+    } else {
+        showLoadingWindow(loadingWindow);
+    }
+    loadingWindow.once('close', () => {
+        if (!mainWindow || !mainWindow.isFocused()) {
+            process.exit(0);
         }
-        return null;
     });
-
-    ipcMain.on('clean-all-recent-files', () => {
-        cleanAllRecentFiles();
-    });
-
-    ipcMain.on('add-recent-file', (event, file) => {
-        console.log('main add-recent-file', event, file);
-        addRecentFile(file);
-    });
-
-    updateHandle();
 };
 
 // Allow max 4G memory usage

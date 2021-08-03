@@ -424,6 +424,11 @@ const Window = {
         } else {
             window.open(url);
         }
+    },
+    showMainWindow() {
+        if (isElectron()) {
+            window.require('electron').ipcRenderer.send('show-main-window');
+        }
     }
 };
 

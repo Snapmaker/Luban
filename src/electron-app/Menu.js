@@ -38,8 +38,8 @@ function saveRecentFile(file) {
     }
     arr.push(file);
 
-    if (arr.length > 10) {
-        arr.splice(0, arr.length - 10);
+    if (arr.length > 12) {
+        arr.splice(0, arr.length - 12);
     }
     fs.writeFileSync(recentFileName, JSON.stringify(arr), 'utf-8');
 }
@@ -213,6 +213,11 @@ export default class MenuBuilder {
     constructor(mainWindow, options) {
         this.mainWindow = mainWindow;
         this.options = options;
+    }
+
+    static hideMenu() {
+        const menu = Menu.buildFromTemplate([]);
+        Menu.setApplicationMenu(menu);
     }
 
     buildMenu() {
