@@ -972,7 +972,6 @@ class SVGCanvas extends PureComponent {
     };
 
     onMouseUp = (event) => {
-        console.log('this.mode', this.mode);
         const draw = this.currentDrawing;
         if (!draw.started) {
             return;

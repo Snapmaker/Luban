@@ -1584,6 +1584,7 @@ export const actions = {
         const { SVGActions } = getState()[headType];
 
         SVGActions.modifyText(element, options);
+        dispatch(actions.resetProcessState());
     },
 
     /**
