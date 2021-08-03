@@ -13,7 +13,7 @@ const getWidgetByName = (name, allWidgets) => {
 
 export default function renderWidgetList(tab, container, widgetIds, Widgets, listActions, widgetProps) {
     return (
-        <div>
+        <div style={{ height: `${tab === 'workspace' ? '100%' : `calc(100vh - ${widgetProps.headType === '3dp' ? '185px' : '250px'})`}`, overflowY: 'auto' }}>
             <WidgetList
                 tab={tab}
                 container={container}
