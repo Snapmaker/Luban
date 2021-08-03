@@ -79,6 +79,12 @@ const Begin = () => {
     const handleBeginSelectedChange = (type) => {
         setBeginSelected(type);
     };
+
+    const handleChangeAxis = async (e, isRotate, headType) => {
+        await changeAxis(e, isRotate, headType);
+        onStartProject(`/${headType}`);
+    };
+
     return (
         <div className={classNames(styles['create-new-project'], 'tile-modal-homepage')}>
             <div className={styles.beginPart}>
@@ -111,10 +117,10 @@ const Begin = () => {
                                     <div className={classNames(styles.imgWrapper)}>
                                         <img className={classNames(styles['laser-img'])} src={require('./images/icon_laser_120x120.svg')} alt="" />
                                         <div className={styles['laser-axis-select']}>
-                                            <Button onClick={(e) => { changeAxis(e, false, HEAD_LASER); onStartProject('/laser'); }} className={classNames(styles['three-axis-select'])} type="default" priority="level-three">
+                                            <Button onClick={(e) => { handleChangeAxis(e, false, HEAD_LASER); }} className={classNames(styles['three-axis-select'])} type="default" priority="level-three">
                                                 {i18n._('3-axis')}
                                             </Button>
-                                            <Button onClick={(e) => { changeAxis(e, true, HEAD_LASER); onStartProject('/laser'); }} className={classNames(styles['four-axis-select'])} type="default" priority="level-three">
+                                            <Button onClick={(e) => { handleChangeAxis(e, true, HEAD_LASER); }} className={classNames(styles['four-axis-select'])} type="default" priority="level-three">
                                                 {i18n._('4-axis')}
                                             </Button>
                                         </div>
@@ -127,10 +133,10 @@ const Begin = () => {
                                     <div className={classNames(styles.imgWrapper)}>
                                         <img className={classNames(styles['cnc-img'])} src={require('./images/icon_cnc_120x120.svg')} alt="" />
                                         <div className={styles['cnc-axis-select']}>
-                                            <Button onClick={(e) => { changeAxis(e, false, HEAD_CNC); onStartProject('/cnc'); }} className={classNames(styles['three-axis-select'])} type="default" priority="level-three">
+                                            <Button onClick={(e) => { handleChangeAxis(e, false, HEAD_CNC); }} className={classNames(styles['three-axis-select'])} type="default" priority="level-three">
                                                 {i18n._('3-axis')}
                                             </Button>
-                                            <Button onClick={(e) => { changeAxis(e, true, HEAD_CNC); onStartProject('/cnc'); }} className={classNames(styles['four-axis-select'])} type="default" priority="level-three">
+                                            <Button onClick={(e) => { handleChangeAxis(e, true, HEAD_CNC); }} className={classNames(styles['four-axis-select'])} type="default" priority="level-three">
                                                 {i18n._('4-axis')}
                                             </Button>
                                         </div>
