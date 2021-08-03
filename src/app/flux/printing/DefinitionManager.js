@@ -54,7 +54,15 @@ class DefinitionManager {
     }
 
     async getDefinition(definitionId) {
-        const res = await api.printingConfigs.getDefinition(definitionId, this.series);
+        let series = this.series;
+        if (
+            this.series === MACHINE_SERIES.ORIGINAL.value
+            || this.series === MACHINE_SERIES.ORIGINAL_LZ.value
+            || this.series === MACHINE_SERIES.CUSTOM.value
+        ) {
+            series = MACHINE_SERIES.ORIGINAL.value;
+        }
+        const res = await api.printingConfigs.getDefinition(definitionId, series);
         return res.body.definition;
     }
 
@@ -93,7 +101,16 @@ class DefinitionManager {
             const index = this.materialDefinitions.findIndex(d => d.definitionId === definitionId);
             this.materialDefinitions[index] = definition;
         }
-        await api.printingConfigs.updateDefinition(definition.definitionId, definition, this.series);
+        // TODO
+        let series = this.series;
+        if (
+            this.series === MACHINE_SERIES.ORIGINAL.value
+            || this.series === MACHINE_SERIES.ORIGINAL_LZ.value
+            || this.series === MACHINE_SERIES.CUSTOM.value
+        ) {
+            series = MACHINE_SERIES.ORIGINAL.value;
+        }
+        await api.printingConfigs.updateDefinition(definition.definitionId, definition, series);
     }
 
     // Calculate hidden settings
