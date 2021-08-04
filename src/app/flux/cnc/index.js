@@ -10,9 +10,14 @@ import {
 } from '../actionType';
 import { timestamp } from '../../../shared/lib/random-utils';
 import { actions as editorActions } from '../editor';
-import { PAGE_EDITOR, HEAD_CNC, DISPLAYED_TYPE_MODEL, COORDINATE_MODE_CENTER } from '../../constants';
+import {
+    PAGE_EDITOR,
+    HEAD_CNC,
+    DISPLAYED_TYPE_MODEL,
+    COORDINATE_MODE_CENTER,
+    COORDINATE_MODE_BOTTOM_CENTER
+} from '../../constants';
 import definitionManager from './DefinitionManager';
-import { machineStore } from '../../store/local-storage';
 import ToolPathGroup from '../../toolpaths/ToolPathGroup';
 import { CNC_LASER_STAGE } from '../editor/utils';
 import OperationHistory from '../operation-history/OperationHistory';
@@ -106,7 +111,10 @@ const INITIAL_STATE = {
 
     // check to remove models
     removingModelsWarning: false,
-    emptyToolPaths: []
+    emptyToolPaths: [],
+
+    // check not to duplicated create event
+    initEventFlag: false
 };
 
 export const actions = {
@@ -122,18 +130,22 @@ export const actions = {
             defaultDefinitions: definitionManager.defaultDefinitions
         }));
 
-        const materials = machineStore.get('cnc.materials');
-        if (materials) {
-            dispatch(editorActions.updateMaterials('cnc', materials));
-        }
-
         // Set machine size into coordinate default size
         const { size } = getState().machine;
-        const { coordinateSize } = getState().cnc;
-        if (size && coordinateSize.x === 0 && coordinateSize.y === 0) {
-            dispatch(editorActions.updateState('cnc', {
-                coordinateSize: size
-            }));
+        const { coordinateSize, materials } = getState().cnc;
+        const { isRotate } = materials;
+        if (isRotate) {
+            const newCoordinateSize = {
+                x: materials.diameter * Math.PI,
+                y: materials.length
+            };
+            dispatch(editorActions.changeCoordinateMode(HEAD_CNC, COORDINATE_MODE_BOTTOM_CENTER, newCoordinateSize));
+        } else {
+            if (size && coordinateSize.x === 0 && coordinateSize.y === 0) {
+                dispatch(editorActions.updateState(HEAD_CNC, {
+                    coordinateSize: size
+                }));
+            }
         }
     },
     updateToolListDefinition: (activeToolList) => async (dispatch, getState) => {

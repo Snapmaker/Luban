@@ -153,7 +153,10 @@ const INITIAL_STATE = {
     displayedType: 'model', // model/gcode
 
     // temp
-    renderingTimestamp: 0
+    renderingTimestamp: 0,
+
+    // check not to duplicated create event
+    initEventFlag: false
 };
 
 
@@ -288,52 +291,56 @@ export const actions = {
         await dispatch(actions.initSize());
 
         const printingState = getState().printing;
-        const { modelGroup, gcodeLineGroup } = printingState;
+        const { modelGroup, gcodeLineGroup, initEventFlag } = printingState;
 
         modelGroup.removeAllModels();
 
-        // TODO: not yet to clear old events before regist
-        // generate gcode event
-        controller.on('slice:started', () => {
+        if (!initEventFlag) {
             dispatch(actions.updateState({
-                stage: PRINTING_STAGE.SLICING,
-                inProgress: true,
-                progress: 0
+                initEventFlag: true
             }));
-        });
-        controller.on('slice:completed', (args) => {
-            const { gcodeFilename, gcodeFileLength, printTime, filamentLength, filamentWeight } = args;
-            dispatch(actions.updateState({
-                gcodeFile: {
-                    name: gcodeFilename,
-                    uploadName: gcodeFilename,
-                    size: gcodeFileLength,
-                    lastModified: +new Date(),
-                    thumbnail: ''
-                },
-                printTime,
-                filamentLength,
-                filamentWeight,
-                stage: PRINTING_STAGE.SLICE_SUCCEED,
-                inProgress: false,
-                progress: 1
-            }));
+            // generate gcode event
+            controller.on('slice:started', () => {
+                dispatch(actions.updateState({
+                    stage: PRINTING_STAGE.SLICING,
+                    inProgress: true,
+                    progress: 0
+                }));
+            });
+            controller.on('slice:completed', (args) => {
+                const { gcodeFilename, gcodeFileLength, printTime, filamentLength, filamentWeight } = args;
+                dispatch(actions.updateState({
+                    gcodeFile: {
+                        name: gcodeFilename,
+                        uploadName: gcodeFilename,
+                        size: gcodeFileLength,
+                        lastModified: +new Date(),
+                        thumbnail: ''
+                    },
+                    printTime,
+                    filamentLength,
+                    filamentWeight,
+                    stage: PRINTING_STAGE.SLICE_SUCCEED,
+                    inProgress: false,
+                    progress: 1
+                }));
 
-            modelGroup.unselectAllModels();
-            dispatch(actions.loadGcode(gcodeFilename));
-        });
-        controller.on('slice:progress', (progress) => {
-            const state = getState().printing;
-            if (progress - state.progress > 0.01 || progress > 1 - EPSILON) {
-                dispatch(actions.updateState({ progress }));
-            }
-        });
-        controller.on('slice:error', () => {
-            dispatch(actions.updateState({
-                stage: PRINTING_STAGE.SLICE_FAILED,
-                inProgress: false
-            }));
-        });
+                modelGroup.unselectAllModels();
+                dispatch(actions.loadGcode(gcodeFilename));
+            });
+            controller.on('slice:progress', (progress) => {
+                const state = getState().printing;
+                if (progress - state.progress > 0.01 || progress > 1 - EPSILON) {
+                    dispatch(actions.updateState({ progress }));
+                }
+            });
+            controller.on('slice:error', () => {
+                dispatch(actions.updateState({
+                    stage: PRINTING_STAGE.SLICE_FAILED,
+                    inProgress: false
+                }));
+            });
+        }
 
         gcodeRenderingWorker.onmessage = (e) => {
             const data = e.data;

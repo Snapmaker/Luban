@@ -32,7 +32,7 @@ STLExporter.prototype = {
 	        let triangles = 0;
 
 	        scene.traverse((object) => {
-	            if (object.isMesh) {
+	            if (object.isMesh && object.visible) {
 	                const geometry = object.geometry;
 
 	                if (geometry.isBufferGeometry !== true) {

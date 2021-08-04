@@ -23,6 +23,7 @@ class LaserParameters extends PureComponent {
         selectedModelArray: PropTypes.array,
         selectedModelVisible: PropTypes.bool,
         sourceType: PropTypes.string,
+        isDXF: PropTypes.bool.isRequired,
         mode: PropTypes.string.isRequired,
         showOrigin: PropTypes.bool,
         config: PropTypes.object.isRequired,
@@ -109,7 +110,7 @@ class LaserParameters extends PureComponent {
         const { accept } = this.state;
         const {
             selectedModelArray, selectedModelVisible, sourceType, mode,
-            config,
+            config, isDXF,
             changeSelectedModelMode, showOrigin, changeSelectedModelShowOrigin,
             headType, updateSelectedModelUniformScalingState,
             modifyText, inProgress, hasSelectedModels
@@ -120,6 +121,8 @@ class LaserParameters extends PureComponent {
         const isEditor = this.props.page === PAGE_EDITOR;
         const isTextVector = (config.svgNodeName === 'text');
         const showImageProcessMode = (sourceType === 'raster' || sourceType === 'svg') && config.svgNodeName === 'image';
+
+        // const isDXF =
 
         return (
             <React.Fragment>
@@ -141,6 +144,7 @@ class LaserParameters extends PureComponent {
                 )}
                 {isEditor && showImageProcessMode && (selectedModelArray.length === 1) && (
                     <ImageProcessMode
+                        isDXF={isDXF}
                         disabled={inProgress || !selectedModelVisible}
                         sourceType={sourceType}
                         mode={mode}
@@ -179,10 +183,13 @@ const mapStateToProps = (state) => {
         sourceType,
         showOrigin,
         config,
-        visible
+        visible,
+        originalName
     } = selectedModel;
     const hasSelectedModels = modelGroup.getSelectedModelArray().length > 0;
+    const isDXF = originalName && (originalName.substr(originalName.length - 4, 4) === '.dxf');
     return {
+        isDXF,
         page,
         printOrder,
         selectedModelArray,

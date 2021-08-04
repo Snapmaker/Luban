@@ -767,14 +767,14 @@ class SVGCanvas extends PureComponent {
 
                 // uniform scale
                 if (draw.uniformScale) {
-                    if (x1 !== 0) {
+                    if (widthFactor !== 0) { // uniformed scale with width(x)
                         newScaleY = draw.scaleY * scaleX;
                         const newY1 = startHeight * scaleX - startHeight;
                         centerPointAfter = {
                             x: centerPointOrigin.x + (x1 * Math.cos(angle) * widthFactor - newY1 * Math.sin(angle) * heightFactor) / 2,
                             y: centerPointOrigin.y + (x1 * Math.sin(angle) * widthFactor + newY1 * Math.cos(angle) * heightFactor) / 2
                         };
-                    } else {
+                    } else { // uniformed scale with height(y)
                         newScaleX = draw.scaleX * scaleY;
                         const newX1 = startWidth * scaleY - startHeight;
                         centerPointAfter = {
