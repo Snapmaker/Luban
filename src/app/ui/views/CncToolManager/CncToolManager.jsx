@@ -1,6 +1,6 @@
 import React from 'react';
 // import { shallowEqual, useSelector, useDispatch } from 'react-redux';
-import { useSelector, useDispatch } from 'react-redux';
+import { useSelector, useDispatch, shallowEqual } from 'react-redux';
 import { includes } from 'lodash';
 import PropTypes from 'prop-types';
 import { actions as cncActions } from '../../../flux/cnc';
@@ -28,12 +28,10 @@ function isDefinitionEditable(activeToolList) {
         activeToolList.definitionId));
 }
 
-function CncToolManager({ closeToolManager }) {
+function CncToolManager({ closeToolManager, shouldSaveToolpath = false, saveToolPath, setCurrentToolDefinition }) {
     const toolDefinitions = useSelector(state => state?.cnc?.toolDefinitions);
+    const activeToolListDefinition = useSelector(state => state?.cnc?.activeToolListDefinition, shallowEqual);
     const dispatch = useDispatch();
-    // if (!showManager) {
-    //     return null;
-    // }
 
     const actions = {
         closeManager: () => {
@@ -52,6 +50,11 @@ function CncToolManager({ closeToolManager }) {
             const { definitionId, name } = definitionForManager;
             dispatch(cncActions.changeActiveToolListDefinition(definitionId, name));
             dispatch(editorActions.resetProcessState(HEAD_CNC));
+            if (shouldSaveToolpath) {
+                const newDefinition = toolDefinitions.find(d => d.definitionId === definitionId);
+                saveToolPath && saveToolPath(newDefinition);
+                setCurrentToolDefinition && setCurrentToolDefinition(newDefinition);
+            }
         },
         onSaveDefinitionForManager: async (definition) => {
             dispatch(cncActions.updateToolListDefinition(definition));
@@ -115,6 +118,7 @@ function CncToolManager({ closeToolManager }) {
     return (
         <ProfileManager
             outsideActions={actions}
+            activeDefinition={activeToolListDefinition}
             isDefinitionEditable={isDefinitionEditable}
             isOfficialDefinition={isOfficialDefinition}
             optionConfigGroup={optionConfigGroup}
@@ -126,7 +130,9 @@ function CncToolManager({ closeToolManager }) {
     );
 }
 CncToolManager.propTypes = {
-    // showManager: PropTypes.bool.isRequired,
+    shouldSaveToolpath: PropTypes.bool,
+    saveToolPath: PropTypes.func,
+    setCurrentToolDefinition: PropTypes.func,
     closeToolManager: PropTypes.func.isRequired
 };
 export default CncToolManager;

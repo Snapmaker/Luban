@@ -295,11 +295,12 @@ export const actions = {
         const { stlVisualizer } = getState().cnc;
         dispatch(editorActions.updateState('cnc', { stlVisualizer: { ...stlVisualizer, ...obj } }));
     },
-    changeActiveToolListDefinition: (definitionId, name) => async (dispatch) => {
+    changeActiveToolListDefinition: (definitionId, name, shouldSaveToolpath = false) => async (dispatch) => {
         const activeToolListDefinition = await definitionManager.changeActiveToolListDefinition(
             definitionId,
             name
         );
+        activeToolListDefinition.shouldSaveToolpath = shouldSaveToolpath;
         dispatch(editorActions.updateState('cnc', {
             activeToolListDefinition
         }));

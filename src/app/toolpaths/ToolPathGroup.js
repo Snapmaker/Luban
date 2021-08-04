@@ -52,6 +52,10 @@ class ToolPathGroup {
         return this.toolPaths.length + 1;
     }
 
+    get singleToolPath() {
+        return this.toolPaths && this.selectedToolPathArray.length === 1 && this.toolPaths.find(v => v.id === this.selectedToolPathArray[0]);
+    }
+
     /**
      * Used to show model group objects in process canvas before preview models
      */

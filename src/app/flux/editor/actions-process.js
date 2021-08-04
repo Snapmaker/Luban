@@ -206,6 +206,7 @@ export const processActions = {
             updatingToolPath: null,
             isChangedAfterGcodeGenerating: true
         }));
+        console.trace('flux saveToolPath', toolPath?.gcodeConfig);
     },
 
     updateToolPath: (headType, toolPathId, newState) => (dispatch, getState) => {

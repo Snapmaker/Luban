@@ -1,18 +1,17 @@
 import React, { useState } from 'react';
 import PropTypes from 'prop-types';
-import { useDispatch } from 'react-redux';
+// import { useDispatch } from 'react-redux';
 import classNames from 'classnames';
 import Select from '../../../components/Select';
 import i18n from '../../../../lib/i18n';
 import styles from '../styles.styl';
-import { actions as cncActions } from '../../../../flux/cnc';
+// import { actions as cncActions } from '../../../../flux/cnc';
 import CncToolManager from '../../CncToolManager';
 import SvgIcon from '../../../components/SvgIcon';
 
-function ToolSelector(props) {
+function ToolSelector({ toolDefinitions, setCurrentToolDefinition, setCurrentValueAsProfile, toolDefinition, isModifiedDefinition, shouldSaveToolpath = false, saveToolPath }) {
     const [showManager, setShowManager] = useState(false);
-    const dispatch = useDispatch();
-    const { toolDefinitions, toolDefinition, isModifiedDefinition, shouldDisabedSelect = false } = props;
+    // const dispatch = useDispatch();
 
     const toolDefinitionOptions = [];
     const toolDefinitionOptionsObj = {};
@@ -25,19 +24,30 @@ function ToolSelector(props) {
         function onclose() {
             setShowManager(false);
         }
+        let saveToolPathFunc;
+        if (shouldSaveToolpath) {
+            saveToolPathFunc = saveToolPath;
+        }
         return (
-            showManager && (<CncToolManager closeToolManager={onclose} />)
+            showManager && (
+                <CncToolManager
+                    shouldSaveToolpath
+                    setCurrentToolDefinition={setCurrentToolDefinition}
+                    saveToolPath={saveToolPathFunc}
+                    closeToolManager={onclose}
+                />
+            )
         );
     }
 
     async function onChangeActiveToolListValue(option) {
         if (option.definitionId === 'new') {
             await onShowCncToolManager();
-            props.setCurrentValueAsProfile();
+            setCurrentValueAsProfile();
         } else {
             const definitionId = option.definitionId;
-            const name = option.name;
-            await dispatch(cncActions.changeActiveToolListDefinition(definitionId, name));
+            const newDefinition = toolDefinitions.find(d => d.definitionId === definitionId);
+            setCurrentToolDefinition(newDefinition);
         }
     }
 
@@ -113,7 +123,6 @@ function ToolSelector(props) {
                             className="sm-flex align-r"
                             clearable={false}
                             isGroup
-                            disabled={shouldDisabedSelect}
                             size="large"
                             valueObj={valueObj}
                             options={toolDefinitionOptions}
@@ -141,8 +150,10 @@ function ToolSelector(props) {
 ToolSelector.propTypes = {
     toolDefinitions: PropTypes.array.isRequired,
     toolDefinition: PropTypes.object.isRequired,
+    setCurrentToolDefinition: PropTypes.func,
     isModifiedDefinition: PropTypes.bool.isRequired,
-    shouldDisabedSelect: PropTypes.bool,
+    shouldSaveToolpath: PropTypes.bool,
+    saveToolPath: PropTypes.func,
     setCurrentValueAsProfile: PropTypes.func.isRequired
 };
 
