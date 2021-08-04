@@ -17,7 +17,7 @@ class OperatorPoints {
             attr: {
                 id: 'selected-elements-box',
                 fill: 'none',
-                stroke: '#00b7ee',
+                stroke: '#1890FF',
                 'stroke-width': 2 / this.scale,
                 // 'stroke-dasharray': '2, 1',
                 style: 'pointer-events:none'
@@ -77,15 +77,43 @@ class OperatorPoints {
         this.operatorPointsGroup.append(this.allSelectedElementsBox);
 
         // grips
+        this.rotateGripConnector = createSVGElement({
+            element: 'line',
+            attr: {
+                id: 'operator-grip-rotate-connector',
+                stroke: '#1890FF',
+                'stroke-width': 1 / this.scale
+            }
+        });
+
+        this.rotateGrip = createSVGElement({
+            element: 'circle',
+            attr: {
+                id: 'operator-grip-rotate',
+                fill: '#1890FF',
+                'fill-opacity': 1,
+                r: GRIP_RADIUS / this.scale / 2,
+                stroke: '#1890FF',
+                'stroke-width': 2 / this.scale,
+                style: 'cursor:url(../../resources/images/rotate.png) 12 12, auto;'
+            }
+        });
+        this.rotateGrip.setAttribute('data-type', 'rotate');
+        this.operatorPointsGroup.append(this.rotateGripConnector);
+        this.operatorPointsGroup.append(this.rotateGrip);
+
+
         for (const dir of Object.keys(this.operatorGrips)) {
             // TODO: cursor
             const grip = createSVGElement({
                 element: 'circle',
                 attr: {
                     id: `operator-grip-size-${dir}`,
-                    fill: '#ffffff',
-                    r: GRIP_RADIUS / this.scale,
+                    fill: '#FFFFFF',
+                    'fill-opacity': 1,
+                    r: GRIP_RADIUS / this.scale / 2,
                     'stroke-width': 2 / this.scale,
+                    stroke: '#1890FF',
                     style: `cursor: ${dir}-resize`,
                     'pointer-events': 'all'
                 }
@@ -96,29 +124,6 @@ class OperatorPoints {
             this.operatorPointsGroup.append(grip);
         }
 
-        this.rotateGripConnector = createSVGElement({
-            element: 'line',
-            attr: {
-                id: 'operator-grip-rotate-connector',
-                stroke: '#00b7ee',
-                'stroke-width': 1 / this.scale
-            }
-        });
-
-        this.rotateGrip = createSVGElement({
-            element: 'circle',
-            attr: {
-                id: 'operator-grip-rotate',
-                fill: '#00b7ee',
-                r: GRIP_RADIUS / this.scale,
-                'stroke-width': 2 / this.scale,
-                style: 'cursor:url(../../resources/images/rotate.png) 12 12, auto;'
-            }
-        });
-        this.rotateGrip.setAttribute('data-type', 'rotate');
-
-        this.operatorPointsGroup.append(this.rotateGripConnector);
-        this.operatorPointsGroup.append(this.rotateGrip);
         this.showOperator(false);
     }
 
@@ -130,12 +135,12 @@ class OperatorPoints {
         this.rotateGripConnector.setAttribute('y2', ny - GRIP_RADIUS * 9.4 / this.scale);
 
         this.rotateGrip.setAttribute('cy', ny - GRIP_RADIUS * 9.4 / this.scale);
-        this.rotateGrip.setAttribute('r', GRIP_RADIUS / this.scale);
+        this.rotateGrip.setAttribute('r', GRIP_RADIUS / this.scale / 2);
         this.rotateGrip.setAttribute('stroke-width', 2 / this.scale);
 
         for (const dir of Object.keys(this.operatorGrips)) {
             const grip = this.operatorGrips[dir];
-            grip.setAttribute('r', GRIP_RADIUS / this.scale);
+            grip.setAttribute('r', GRIP_RADIUS / this.scale / 2);
             grip.setAttribute('stroke-width', 2 / this.scale);
         }
     }
@@ -327,7 +332,7 @@ class OperatorPoints {
                     attr: {
                         id: 'selected-elements-box',
                         fill: 'none',
-                        stroke: '#00b7ee',
+                        stroke: '#1890FF',
                         'stroke-width': 1 / this.scale,
                         'stroke-dasharray': '2, 1',
                         style: 'pointer-events:none'

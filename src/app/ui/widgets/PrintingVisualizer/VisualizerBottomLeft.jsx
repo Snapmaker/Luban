@@ -11,7 +11,7 @@ class VisualizerBottomLeft extends PureComponent {
         actions: PropTypes.shape({
             toLeft: PropTypes.func.isRequired,
             toTop: PropTypes.func.isRequired,
-            toBottom: PropTypes.func.isRequired,
+            toTopFrontRight: PropTypes.func.isRequired,
             toRight: PropTypes.func.isRequired,
             toFront: PropTypes.func.isRequired
         })
@@ -33,7 +33,7 @@ class VisualizerBottomLeft extends PureComponent {
                     <SvgIcon
                         name="ViewIsometric"
                         size={30}
-                        onClick={actions.toBottom} // Todo: fix new function
+                        onClick={actions.toTopFrontRight}
                     />
                     <SvgIcon
                         name="ViewFront"

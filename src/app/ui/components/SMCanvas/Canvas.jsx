@@ -386,6 +386,33 @@ class Canvas extends Component {
         this.startTween(tween);
     }
 
+    _getCameraPositionByRotation(positionStart, target, angelEW, angleNS) {
+        const positionRotateNS = {
+            x: positionStart.x,
+            y: target.y + (positionStart.y - target.y) * Math.cos(angleNS) - (positionStart.z - target.z) * Math.sin(angleNS),
+            z: target.z + (positionStart.y - target.y) * Math.sin(angleNS) + (positionStart.z - target.z) * Math.cos(angleNS)
+        };
+
+        const positionRotateEW = {
+            x: target.x + (positionRotateNS.x - target.x) * Math.cos(angelEW) - (positionRotateNS.y - target.y) * Math.sin(angelEW),
+            y: target.y + (positionRotateNS.x - target.x) * Math.sin(angelEW) + (positionRotateNS.y - target.y) * Math.cos(angelEW),
+            z: positionRotateNS.z
+        };
+
+        return positionRotateEW;
+    }
+
+    toTopFrontRight() {
+        const positionStart = this.props.cameraInitialPosition;
+        const target = { x: 0, y: 0, z: this.props.cameraInitialPosition.z };
+        const position = this._getCameraPositionByRotation(positionStart, target, Math.PI / 6, -Math.PI / 10);
+        this.camera.position.x = position.x;
+        this.camera.position.y = position.y;
+        this.camera.position.z = position.z;
+        this.controls.setTarget(new Vector3(0, 0, this.props.cameraInitialPosition.z));
+        this.renderScene();
+    }
+
     toFront() {
         this.camera.position.x = this.props.cameraInitialPosition.x;
         this.camera.position.y = this.props.cameraInitialPosition.y;
@@ -396,76 +423,36 @@ class Canvas extends Component {
     }
 
     toLeft() {
-        this.camera.rotation.x = Math.PI / 2;
-        this.camera.rotation.z = 0;
-
-        // BTH, I don't know why Y rotation is applied before X rotation, so here we can't change rotation.z
-        const object = {
-            rotationY: this.camera.rotation.y
-        };
-        const dist = this.camera.position.distanceTo(this.controls.target);
-        const to = {
-            rotationY: Math.round(this.camera.rotation.y / (Math.PI / 2)) * (Math.PI / 2) - Math.PI / 2
-        };
-        const tween = new TWEEN.Tween(object)
-            .to(to, ANIMATION_DURATION)
-            .onUpdate(() => {
-                const rotation = object.rotationY;
-                this.camera.rotation.y = rotation;
-
-                this.camera.position.x = this.controls.target.x + Math.sin(rotation) * dist;
-                this.camera.position.y = this.controls.target.y - Math.cos(rotation) * dist;
-                this.camera.position.z = this.controls.target.z;
-            });
-        this.startTween(tween);
+        const positionStart = this.props.cameraInitialPosition;
+        const target = { x: 0, y: 0, z: this.props.cameraInitialPosition.z };
+        const position = this._getCameraPositionByRotation(positionStart, target, -Math.PI / 2, 0);
+        this.camera.position.x = position.x;
+        this.camera.position.y = position.y;
+        this.camera.position.z = position.z;
+        this.controls.setTarget(new Vector3(0, 0, this.props.cameraInitialPosition.z));
+        this.renderScene();
     }
 
     toRight() {
-        this.camera.rotation.x = Math.PI / 2;
-        this.camera.rotation.z = 0;
-
-        const object = {
-            rotationY: this.camera.rotation.y
-        };
-        const dist = this.camera.position.distanceTo(this.controls.target);
-        const to = {
-            rotationY: Math.round(this.camera.rotation.y / (Math.PI / 2)) * (Math.PI / 2) + Math.PI / 2
-        };
-        const tween = new TWEEN.Tween(object)
-            .to(to, ANIMATION_DURATION)
-            .onUpdate(() => {
-                const rotation = object.rotationY;
-                this.camera.rotation.y = rotation;
-
-                this.camera.position.x = this.controls.target.x + Math.sin(rotation) * dist;
-                this.camera.position.y = this.controls.target.y - Math.cos(rotation) * dist;
-                this.camera.position.z = this.controls.target.z;
-            });
-        this.startTween(tween);
+        const positionStart = this.props.cameraInitialPosition;
+        const target = { x: 0, y: 0, z: this.props.cameraInitialPosition.z };
+        const position = this._getCameraPositionByRotation(positionStart, target, Math.PI / 2, 0);
+        this.camera.position.x = position.x;
+        this.camera.position.y = position.y;
+        this.camera.position.z = position.z;
+        this.controls.setTarget(new Vector3(0, 0, this.props.cameraInitialPosition.z));
+        this.renderScene();
     }
 
     toTop() {
-        this.camera.rotation.y = 0;
-        this.camera.rotation.z = 0;
-
-        const object = {
-            rotationX: this.camera.rotation.x
-        };
-        const dist = this.camera.position.distanceTo(this.controls.target);
-        const to = {
-            rotationX: Math.round(this.camera.rotation.x / (Math.PI / 2)) * (Math.PI / 2) - Math.PI / 2
-        };
-        const tween = new TWEEN.Tween(object)
-            .to(to, ANIMATION_DURATION)
-            .onUpdate(() => {
-                const rotation = object.rotationX;
-                this.camera.rotation.x = rotation;
-
-                this.camera.position.x = this.controls.target.x;
-                this.camera.position.y = this.controls.target.y - Math.sin(rotation) * dist;
-                this.camera.position.z = this.controls.target.z + Math.cos(rotation) * dist;
-            });
-        this.startTween(tween);
+        const positionStart = this.props.cameraInitialPosition;
+        const target = { x: 0, y: 0, z: this.props.cameraInitialPosition.z };
+        const position = this._getCameraPositionByRotation(positionStart, target, 0, -Math.PI / 2);
+        this.camera.position.x = position.x;
+        this.camera.position.y = position.y;
+        this.camera.position.z = position.z;
+        this.controls.setTarget(new Vector3(0, 0, this.props.cameraInitialPosition.z));
+        this.renderScene();
     }
 
     toBottom() {

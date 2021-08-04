@@ -1117,7 +1117,7 @@ class SVGCanvas extends PureComponent {
             } else {
                 // in stead select another element or select nothing
                 const target = this.getMouseTarget(event);
-                if (target && target !== this.svgContainer) {
+                if (target && target !== this.svgContainer && target.id !== 'printable-area-group') {
                     this.selectOnly([target]);
                 } else {
                     this.clearSelection();

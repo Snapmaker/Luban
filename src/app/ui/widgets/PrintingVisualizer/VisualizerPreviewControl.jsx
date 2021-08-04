@@ -176,7 +176,7 @@ class VisualizerPreviewControl extends PureComponent {
                         <div className="padding-vertical-16 padding-horizontal-16">
                             <div className="sm-flex justify-space-between height-24 margin-bottom-8">
                                 <div>
-                                    <span className="display-inline width-16 height-16 v-align-m" style={{ backgroundColor: '#00ff00' }} />
+                                    <span className="display-inline width-16 height-16 v-align-m border-radius-4" style={{ backgroundColor: '#00ff00' }} />
                                     <span className="v-align-m margin-left-8">
                                             Inner Wall
                                     </span>
@@ -188,7 +188,7 @@ class VisualizerPreviewControl extends PureComponent {
                             </div>
                             <div className="sm-flex justify-space-between height-24 margin-vertical-8">
                                 <div>
-                                    <span className="display-inline width-16 height-16 v-align-m" style={{ backgroundColor: '#ff2121' }} />
+                                    <span className="display-inline width-16 height-16 v-align-m border-radius-4" style={{ backgroundColor: '#ff2121' }} />
                                     <span className="v-align-m margin-left-8">
                                             Outer Wall
                                     </span>
@@ -200,7 +200,7 @@ class VisualizerPreviewControl extends PureComponent {
                             </div>
                             <div className="sm-flex justify-space-between height-24 margin-vertical-8">
                                 <div>
-                                    <span className="display-inline width-16 height-16 v-align-m" style={{ backgroundColor: '#ffff00' }} />
+                                    <span className="display-inline width-16 height-16 v-align-m border-radius-4" style={{ backgroundColor: '#ffff00' }} />
                                     <span className="v-align-m margin-left-8">
                                             Skin
                                     </span>
@@ -212,7 +212,7 @@ class VisualizerPreviewControl extends PureComponent {
                             </div>
                             <div className="sm-flex justify-space-between height-24 margin-vertical-8">
                                 <div>
-                                    <span className="display-inline width-16 height-16 v-align-m" style={{ backgroundColor: '#4b0082' }} />
+                                    <span className="display-inline width-16 height-16 v-align-m border-radius-4" style={{ backgroundColor: '#4b0082' }} />
                                     <span className="v-align-m margin-left-8">
                                             Helper
                                     </span>
@@ -224,7 +224,7 @@ class VisualizerPreviewControl extends PureComponent {
                             </div>
                             <div className="sm-flex justify-space-between height-24 margin-vertical-8">
                                 <div>
-                                    <span className="display-inline width-16 height-16 v-align-m" style={{ backgroundColor: '#8d4bbb' }} />
+                                    <span className="display-inline width-16 height-16 v-align-m border-radius-4" style={{ backgroundColor: '#8d4bbb' }} />
                                     <span className="v-align-m margin-left-8">
                                             Fill
                                     </span>
@@ -236,7 +236,7 @@ class VisualizerPreviewControl extends PureComponent {
                             </div>
                             <div className="sm-flex justify-space-between height-24 margin-vertical-8">
                                 <div>
-                                    <span className="display-inline width-16 height-16 v-align-m" style={{ backgroundColor: '#44cef6' }} />
+                                    <span className="display-inline width-16 height-16 v-align-m border-radius-4" style={{ backgroundColor: '#44cef6' }} />
                                     <span className="v-align-m margin-left-8">
                                             Travel
                                     </span>
@@ -248,7 +248,7 @@ class VisualizerPreviewControl extends PureComponent {
                             </div>
                             <div className="sm-flex justify-space-between height-24 margin-top-8">
                                 <div>
-                                    <span className="display-inline width-16 height-16 v-align-m" style={{ backgroundColor: '#4b0082' }} />
+                                    <span className="display-inline width-16 height-16 v-align-m border-radius-4" style={{ backgroundColor: '#4b0082' }} />
                                     <span className="v-align-m margin-left-8">
                                             Unknown
                                     </span>

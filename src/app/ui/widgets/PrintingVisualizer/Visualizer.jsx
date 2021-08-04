@@ -104,6 +104,9 @@ class Visualizer extends PureComponent {
         toBottom: () => {
             this.canvas.current.toBottom();
         },
+        toTopFrontRight: () => {
+            this.canvas.current.toTopFrontRight();
+        },
         onSelectModels: (intersect, selectEvent) => {
             this.props.selectMultiModel(intersect, selectEvent);
         },

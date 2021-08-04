@@ -107,7 +107,7 @@ class PrintableArea {
         const textSize = 4;
         const coordinateModeName = this.coordinateMode.value;
         // small grid 10x10
-        for (let i = y; i >= yMin; i -= 10) {
+        for (let i = y; i > yMin; i -= 10) {
             const color = colorSmallGrid;
             const line = createSVGElement({
                 element: 'line',
@@ -145,7 +145,7 @@ class PrintableArea {
             });
             this.printableAreaGroup.append(line);
         }
-        for (let i = x; i >= xMin; i -= 10) {
+        for (let i = x; i > xMin; i -= 10) {
             const color = colorSmallGrid;
             const line = createSVGElement({
                 element: 'line',
@@ -185,7 +185,7 @@ class PrintableArea {
         }
 
         // big grid 50x50 and text
-        for (let i = y; i >= yMin; i -= 50) {
+        for (let i = y; i > yMin; i -= 50) {
             const color = colorBigGrid;
             const line = createSVGElement({
                 element: 'line',
@@ -223,7 +223,7 @@ class PrintableArea {
             this.printableAreaGroup.append(line);
             this.printableAreaGroup.append(label);
         }
-        for (let i = y + 50; i <= yMax; i += 50) {
+        for (let i = y + 50; i < yMax; i += 50) {
             const color = colorBigGrid;
             const line = createSVGElement({
                 element: 'line',
@@ -261,7 +261,7 @@ class PrintableArea {
             this.printableAreaGroup.append(line);
             this.printableAreaGroup.append(label);
         }
-        for (let i = x; i >= xMin; i -= 50) {
+        for (let i = x; i > xMin; i -= 50) {
             const color = colorBigGrid;
             const line = createSVGElement({
                 element: 'line',
@@ -339,6 +339,73 @@ class PrintableArea {
             this.printableAreaGroup.append(line);
             this.printableAreaGroup.append(label);
         }
+
+        // 4 border lines
+        const borderColor = '#B9BCBF';
+        const line1 = createSVGElement({
+            element: 'line',
+            attr: {
+                x1: xMin,
+                y1: yMin,
+                x2: xMin,
+                y2: yMax,
+                id: uuid.v4(),
+                stroke: borderColor,
+                fill: 'none',
+                'stroke-width': 1 / this.scale,
+                opacity: 1,
+                'fill-opacity': 1
+            }
+        });
+        const line2 = createSVGElement({
+            element: 'line',
+            attr: {
+                x1: xMax,
+                y1: yMin,
+                x2: xMax,
+                y2: yMax,
+                id: uuid.v4(),
+                stroke: borderColor,
+                fill: 'none',
+                'stroke-width': 1 / this.scale,
+                opacity: 1,
+                'fill-opacity': 1
+            }
+        });
+        const line3 = createSVGElement({
+            element: 'line',
+            attr: {
+                x1: xMin,
+                y1: yMin,
+                x2: xMax,
+                y2: yMin,
+                id: uuid.v4(),
+                stroke: borderColor,
+                fill: 'none',
+                'stroke-width': 1 / this.scale,
+                opacity: 1,
+                'fill-opacity': 1
+            }
+        });
+        const line4 = createSVGElement({
+            element: 'line',
+            attr: {
+                x1: xMin,
+                y1: yMax,
+                x2: xMax,
+                y2: yMax,
+                id: uuid.v4(),
+                stroke: borderColor,
+                fill: 'none',
+                'stroke-width': 1 / this.scale,
+                opacity: 1,
+                'fill-opacity': 1
+            }
+        });
+        this.printableAreaGroup.append(line1);
+        this.printableAreaGroup.append(line2);
+        this.printableAreaGroup.append(line3);
+        this.printableAreaGroup.append(line4);
     }
 
     _setBorder(x1, y1, x2, y2, color, dashed) {
@@ -398,7 +465,7 @@ class PrintableArea {
                 id: uuid.v4(),
                 stroke: '#B9BCBF',
                 fill: '#FFFFFF',
-                'stroke-width': 1 / this.scale,
+                'stroke-width': 2 / this.scale,
                 opacity: 1,
                 'fill-opacity': 1
             }
