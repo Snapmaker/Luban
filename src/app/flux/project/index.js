@@ -203,8 +203,11 @@ export const actions = {
         }
 
         for (let k = 0; k < models.length; k++) {
-            const { headType, originalName, uploadName, config, sourceType, gcodeConfig, sourceWidth, sourceHeight, mode, transformation, modelID } = models[k];
+            const { headType, originalName, uploadName, config, sourceType, gcodeConfig, sourceWidth, sourceHeight, mode, transformation, modelID, supportTag } = models[k];
             // prevent project recovery recorded into operation history
+            if (supportTag) {
+                continue;
+            }
             if (envHeadType === HEAD_3DP) {
                 dispatch(operationHistoryActions.excludeModelById('printing', modelID));
             } else {
