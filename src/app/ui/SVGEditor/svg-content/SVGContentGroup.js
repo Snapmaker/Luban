@@ -59,7 +59,7 @@ class SVGContentGroup {
         filterImage.setAttribute('id', 'inSelectedToolPathImage');
         const filterElementImage = document.createElementNS(NS.SVG, 'feColorMatrix');
         filterElementImage.setAttribute('type', 'matrix');
-        filterElementImage.setAttribute('values', '0.125 0 0 0 0.125 0 0.25 0 0 0.25 0 0 0.375 0 0.375 0 0 0 0.8 0');
+        filterElementImage.setAttribute('values', '0.99 0 0 0 0.01 0 0.7 0 0 0.3 0 0 0.05 0 0.95 0 0 0 1 0');
         filterImage.append(filterElementImage);
 
         this.svgContent.append(filterText);
