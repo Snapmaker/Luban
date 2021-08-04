@@ -257,7 +257,7 @@ class VisualizerLeftBar extends PureComponent {
                                     <SvgIcon
                                         type={['hoverSpecial', 'pressSpecial']}
                                         name="ToolbarOpen"
-                                        className="padding-horizontal-4"
+                                        className="padding-horizontal-4 tool-bar-open-printing"
                                         onClick={() => {
                                             actions.onClickToUpload();
                                         }}

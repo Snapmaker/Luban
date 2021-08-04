@@ -38,7 +38,7 @@ class WorkspaceLayout extends PureComponent {
         const visualizerContainer = this.visualizerContainer.current;
         const secondaryContainer = this.secondaryContainer.current;
         if (visualizerContainer) {
-            visualizerContainer.style.width = `calc(100vw - ${primaryContainer.clientWidth < 360 ? 360 : primaryContainer.clientWidth}px - ${secondaryContainer.clientWidth < 360 ? 360 : secondaryContainer.clientWidth}px)`;
+            visualizerContainer.style.width = `calc(100vw - ${primaryContainer.clientWidth < 360 ? 360 : primaryContainer.clientWidth}px - ${secondaryContainer.clientWidth < 360 ? 360 : secondaryContainer.clientWidth}px - 48px)`;
         }
     }
 

@@ -237,7 +237,7 @@ class Output extends PureComponent {
                             onKeyDown={noop}
                             role="button"
                             tabIndex={0}
-                            className={classNames('position-re', 'height-40',)}
+                            className={classNames('position-re', 'height-40', 'margin-top-10')}
                             onMouseEnter={actions.handleMouseOver}
                             onMouseLeave={actions.handleMouseOut}
                         >
@@ -250,8 +250,8 @@ class Output extends PureComponent {
                                     disabled={inProgress || !hasModel || workflowState === 'running' || isGcodeGenerating || gcodeFile === null}
                                     className={classNames(
                                         'position-ab',
-                                        'bottom-ne-8',
-                                        'margin-top-10',
+                                        // 'bottom-ne-8',
+                                        // 'margin-top-10',
                                         displayedType === DISPLAYED_TYPE_TOOLPATH ? 'display-block' : 'display-none'
                                     )}
                                 >
