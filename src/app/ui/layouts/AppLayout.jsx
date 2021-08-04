@@ -14,7 +14,8 @@ import Settings from '../pages/Settings/Settings';
 import FirmwareTool from '../pages/Settings/FirmwareTool';
 import SoftwareUpdate from '../pages/Settings/SoftwareUpdate';
 import {
-    PAGE_EDITOR,
+    COORDINATE_MODE_CENTER,
+    COORDINATE_MODE_BOTTOM_CENTER,
     getCurrentHeadType,
     HEAD_TYPE_ENV_NAME,
     FORUM_URL,
@@ -38,9 +39,12 @@ import Workspace from '../pages/Workspace';
 
 class AppLayout extends PureComponent {
     static propTypes = {
+        store: PropTypes.object.isRequired,
         currentModalPath: PropTypes.string,
         updateCurrentModalPath: PropTypes.func.isRequired,
         clearOperationHistory: PropTypes.func.isRequired,
+        startProject: PropTypes.func.isRequired,
+        changeCoordinateMode: PropTypes.func.isRequired,
         updateMaterials: PropTypes.func.isRequired,
         initRecoverService: PropTypes.func.isRequired,
         save: PropTypes.func.isRequired,
@@ -54,7 +58,6 @@ class AppLayout extends PureComponent {
         enableMenu: PropTypes.func.isRequired,
         updateMenu: PropTypes.func.isRequired,
         loadCase: PropTypes.func.isRequired,
-        switchToPage: PropTypes.func.isRequired,
         shouldCheckForUpdate: PropTypes.bool.isRequired,
         updateIsDownloading: PropTypes.func.isRequired,
         updateAutoupdateMessage: PropTypes.func.isRequired,
@@ -394,16 +397,34 @@ class AppLayout extends PureComponent {
                 }
             });
             UniApi.Event.on('appbar-menu:new-file', async ({ headType, isRotate }) => {
-                await this.actions.closeFile();
-                this.props.history.push(`/${headType}`);
+                const oldPathname = this.props.history.location.pathname;
+                const history = this.props.history;
                 if (headType === 'cnc' || headType === 'laser') {
-                    // UniApi.Event.emit('appbar-menu:cnc-laser.new-file', isRotate);
-                    this.props.updateMaterials(headType, { isRotate });
-                    this.props.switchToPage(headType, PAGE_EDITOR);
+                    if (!isRotate) {
+                        const { materials } = this.props.store?.[headType];
+                        if (materials.isRotate !== isRotate) {
+                            await this.props.changeCoordinateMode(headType, COORDINATE_MODE_CENTER);
+                            await this.props.updateMaterials(headType, { isRotate });
+                        }
+                    } else {
+                        const { SVGActions, materials } = this.props.store?.[headType];
+                        if (materials.isRotate !== isRotate) {
+                            await this.props.changeCoordinateMode(
+                                headType,
+                                COORDINATE_MODE_BOTTOM_CENTER, {
+                                    x: materials.diameter * Math.PI,
+                                    y: materials.length
+                                },
+                                !SVGActions.svgContentGroup
+                            );
+                            await this.props.updateMaterials(headType, { isRotate });
+                        }
+                    }
                     this.props.clearOperationHistory(headType);
                 } else {
                     this.props.clearOperationHistory('printing');
                 }
+                await this.props.startProject(oldPathname, `/${headType}`, history);
             });
             UniApi.Event.on('appbar-menu:clear-recent-files', () => {
                 this.actions.updateRecentFile([], 'reset');
@@ -522,7 +543,8 @@ const mapStateToProps = (state) => {
     return {
         currentModalPath: currentModalPath ? currentModalPath.slice(1) : currentModalPath, // exclude hash character `#`
         machineInfo,
-        shouldCheckForUpdate
+        shouldCheckForUpdate,
+        store: state
         // projectState
     };
 };
@@ -535,16 +557,16 @@ const mapDispatchToProps = (dispatch) => {
         save: (headType, dialogOptions) => dispatch(projectActions.save(headType, dialogOptions)),
         saveAndClose: (headType, opts) => dispatch(projectActions.saveAndClose(headType, opts)),
         openProject: (file, history) => dispatch(projectActions.openProject(file, history)),
+        startProject: (from, to, history) => dispatch(projectActions.startProject(from, to, history)),
         updateRecentProject: (arr, type) => dispatch(projectActions.updateRecentFile(arr, type)),
+        changeCoordinateMode: (headType, coordinateMode, coordinateSize) => dispatch(editorActions.changeCoordinateMode(headType, coordinateMode, coordinateSize)),
         updateMaterials: (headType, newMaterials) => dispatch(editorActions.updateMaterials(headType, newMaterials)),
-        // openProject: (file, history) => dispatch(projectActions.open(file, history)),
         loadCase: (pathConfig, history) => dispatch(projectActions.openProject(pathConfig, history)),
         updateCurrentModalPath: (path) => dispatch(menuActions.updateCurrentModalPath(path)),
         updateMenu: () => dispatch(menuActions.updateMenu()),
         initMenuLanguage: () => dispatch(menuActions.initMenuLanguage()),
         enableMenu: () => dispatch(menuActions.enableMenu()),
         disableMenu: () => dispatch(menuActions.disableMenu()),
-        switchToPage: (from, page) => dispatch(editorActions.switchToPage(from, page)),
         updateShouldCheckForUpdate: (shouldAutoUpdate) => dispatch(machineActions.updateShouldCheckForUpdate(shouldAutoUpdate)),
         updateAutoupdateMessage: (message) => dispatch(machineActions.updateAutoupdateMessage(message)),
         updateIsDownloading: (isDownloading) => dispatch(machineActions.updateIsDownloading(isDownloading))

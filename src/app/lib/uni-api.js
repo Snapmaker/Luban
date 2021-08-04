@@ -1,7 +1,6 @@
 import isElectron from 'is-electron';
 import request from 'superagent';
 import FileSaver from 'file-saver';
-import path from 'path';
 import events from 'events';
 import i18n from './i18n';
 
@@ -196,7 +195,7 @@ const File = {
             targetFile = saveDialogReturnValue.filePath;
             if (!targetFile) throw new Error('select file canceled');
 
-            const file = { path: targetFile, name: path.basename(targetFile) };
+            const file = { path: targetFile, name: window.require('path').basename(targetFile) };
 
             fs.copyFileSync(tmpFile, targetFile);
             // const menu = window.require('electron').remote.require('./electron-app/Menu');
@@ -231,7 +230,7 @@ const File = {
             targetFile = saveDialogReturnValue.filePath;
             if (!targetFile) throw new Error('export file canceled');
 
-            const file = { path: targetFile, name: path.basename(targetFile) };
+            const file = { path: targetFile, name: window.require('path').basename(targetFile) };
 
             fs.copyFileSync(tmpFile, targetFile);
 
