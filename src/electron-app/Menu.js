@@ -26,8 +26,14 @@ function saveRecentFile(file) {
     const recentFileName = `${DataStorage.userDataDir}/recent-opened-files.json`;
     const arr = getSavedRecentFile();
 
-    const index = arr.find(f => f.name === file.name);
-    if (index && index !== -1) {
+    const index = arr.findIndex(f => {
+        if (f.path && file.path) {
+            return f.path === file.path;
+        } else {
+            return f.name === file.name;
+        }
+    });
+    if (index !== -1) {
         arr.splice(index, 1);
     }
     arr.push(file);
