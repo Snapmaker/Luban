@@ -4,7 +4,6 @@ import { useDispatch, useSelector, shallowEqual } from 'react-redux';
 import PropTypes from 'prop-types';
 import classNames from 'classnames';
 import _ from 'lodash';
-import modal from '../../../lib/modal';
 import i18n from '../../../lib/i18n';
 import { actions as editorActions } from '../../../flux/editor';
 import { actions as cncActions } from '../../../flux/cnc';
@@ -130,7 +129,6 @@ function ToolPathFastConfigurations(props) {
         saveToolPath(value);
     }
     function handleSetEditingToolpath() {
-        console.log('handleSetEditingToolpath', props, props.setEditingToolpath, toolPath);
         props.setEditingToolpath(toolPath);
     }
     const updateCncActiveToolDefinition = async (currentToolPath) => {
@@ -159,10 +157,9 @@ function ToolPathFastConfigurations(props) {
     };
 
     useEffect(() => {
-        const newToolPath = _.cloneDeep(toolpath);
-        setToolPath(newToolPath);
+        setToolPath(toolpath);
         if (!_.isNull(toolpath) && props.headType === HEAD_CNC) {
-            updateCncActiveToolDefinition(newToolPath);
+            updateCncActiveToolDefinition(toolpath);
         }
     }, [toolpath]);
 
@@ -189,15 +186,6 @@ function ToolPathFastConfigurations(props) {
         //         return false;
         //     }
         // },
-        cancelUpdateToolPath() {
-            props.onClose && props.onClose();
-        },
-        updateToolPath(option) {
-            setToolPath({
-                ...toolPath,
-                ...option
-            });
-        },
         onDuplicateToolNameDefinition: async (inputValue) => {
             const newToolDefinition = {
                 ...currentToolDefinition,
@@ -205,37 +193,6 @@ function ToolPathFastConfigurations(props) {
             };
             await dispatch(cncActions.duplicateToolListDefinition(newToolDefinition));
             await dispatch(cncActions.changeActiveToolListDefinition(newToolDefinition.definitionId, newToolDefinition.name));
-        },
-        setCurrentValueAsProfile: () => {
-            const activeToolDefinition = currentToolDefinition;
-            const definitionsWithSameCategory = toolDefinitions.filter(d => d.category === activeToolDefinition.category);
-            // make sure name is not repeated
-            while (definitionsWithSameCategory.find(d => d.name === activeToolDefinition.name)) {
-                activeToolDefinition.name = `#${activeToolDefinition.name}`;
-            }
-
-            const popupActions = modal({
-                title: i18n._('Create Profile'),
-                body: (
-                    <React.Fragment>
-                        <p>{i18n._('Enter Tool Name')}</p>
-                    </React.Fragment>
-
-                ),
-                defaultInputValue: activeToolDefinition.name,
-                footer: (
-                    <button
-                        type="button"
-                        className="sm-btn-large sm-btn-primary"
-                        onClick={async () => {
-                            await actions.onDuplicateToolNameDefinition(popupActions.getInputValue());
-                            popupActions.close();
-                        }}
-                    >
-                        {i18n._('OK')}
-                    </button>
-                )
-            });
         },
         updateGcodeConfig: (option) => {
             if (props.headType === HEAD_LASER) {
@@ -339,7 +296,6 @@ function ToolPathFastConfigurations(props) {
     );
 }
 ToolPathFastConfigurations.propTypes = {
-    onClose: PropTypes.func,
     setEditingToolpath: PropTypes.func,
     headType: PropTypes.string,
     toolpath: PropTypes.object.isRequired

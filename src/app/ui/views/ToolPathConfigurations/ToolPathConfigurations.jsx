@@ -143,16 +143,17 @@ function ToolPathConfigurations(props) {
                 ),
                 defaultInputValue: activeToolDefinition.name,
                 footer: (
-                    <button
-                        type="button"
-                        className="sm-btn-large sm-btn-primary"
+                    <Button
+                        priority="level-two"
+                        className="margin-left-8"
+                        width="96px"
                         onClick={async () => {
                             await actions.onDuplicateToolNameDefinition(popupActions.getInputValue());
                             popupActions.close();
                         }}
                     >
                         {i18n._('OK')}
-                    </button>
+                    </Button>
                 )
             });
         },
