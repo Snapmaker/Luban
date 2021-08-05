@@ -230,7 +230,7 @@ class ToolPath {
      * Listen generate toolpath result
      */
     onGenerateToolPath(result, cb) {
-        return new Promise((resolve, reject) => {
+        return new Promise(async (resolve, reject) => {
             if (result.status === 'failed') {
                 for (let i = 0; i < result.data.length; i++) {
                     const modelMapResult = this.modelMap.get(result.data[i].modelID);
@@ -245,20 +245,18 @@ class ToolPath {
                     if (modelMapResult) {
                         modelMapResult.status = SUCCESS;
                         modelMapResult.toolPathFile = result.filenames[i];
-                        this.loadToolPathFile(result.filenames[i])
-                            .then((toolPathObj3D) => {
-                                const oldMeshObj = modelMapResult.meshObj;
+                        const toolPathObj3D = await this.loadToolPathFile(result.filenames[i]);
+                        const oldMeshObj = modelMapResult.meshObj;
 
-                                oldMeshObj && this.object.remove(oldMeshObj);
-                                modelMapResult.meshObj = toolPathObj3D;
-                                this.object.add(toolPathObj3D);
-                                cb();
-                            });
+                        oldMeshObj && this.object.remove(oldMeshObj);
+                        modelMapResult.meshObj = toolPathObj3D;
+                        this.object.add(toolPathObj3D);
                     }
                 }
 
                 this.checkoutStatus();
                 this.removeAllNonMeshObj();
+                cb();
                 resolve();
             }
         });

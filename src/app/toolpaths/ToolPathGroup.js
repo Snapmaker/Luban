@@ -27,6 +27,8 @@ class ToolPathGroup {
 
     materialsObject = null;
 
+    thumbnail = '';
+
     constructor(modelGroup, headType) {
         this.modelGroup = modelGroup;
         this.headType = headType;
@@ -371,6 +373,10 @@ class ToolPathGroup {
         }
 
         return object;
+    }
+
+    updateThumbnail(thumbnail) {
+        this.thumbnail = thumbnail;
     }
 
     updateMaterials(materials) {
