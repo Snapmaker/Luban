@@ -116,6 +116,7 @@
       "target": [
         "nsis"
       ],
+      "artifactName": "${productName} ${version}.${ext}",
       "verifyUpdateCodeSignature": false,
       "icon": "build/electron/snapmaker-luban.ico"
     },

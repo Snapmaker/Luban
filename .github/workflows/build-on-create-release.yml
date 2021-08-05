@@ -47,7 +47,7 @@ jobs:
           $PACKAGE_VERSION=node -e "console.log(require('./src/package.json').version)"
           $RELEASE="${PACKAGE_NAME}-${PACKAGE_VERSION}"
 
-          $INSTALLER_ASSET_PATH="./output/${PRODUCT_NAME} Setup ${PACKAGE_VERSION}.exe"
+          $INSTALLER_ASSET_PATH="./output/${PRODUCT_NAME} ${PACKAGE_VERSION}.exe"
           $INSTALLER_ASSET_NAME="${RELEASE}-win-x64.exe"
 
           $INSTALLER_AU_ASSET_NAME="${PACKAGE_NAME}-Setup-${PACKAGE_VERSION}.exe"
@@ -106,7 +106,7 @@ jobs:
           $PACKAGE_VERSION=node -e "console.log(require('./src/package.json').version)"
           $RELEASE="${PACKAGE_NAME}-${PACKAGE_VERSION}"
 
-          $INSTALLER_ASSET_PATH="./output/${PRODUCT_NAME} Setup ${PACKAGE_VERSION}.exe"
+          $INSTALLER_ASSET_PATH="./output/${PRODUCT_NAME} ${PACKAGE_VERSION}.exe"
           $INSTALLER_ASSET_NAME="${RELEASE}-win-ia32.exe"
 
           echo "INSTALLER_ASSET_PATH=${INSTALLER_ASSET_PATH}" >> ${Env:GITHUB_ENV}
@@ -200,6 +200,171 @@ jobs:
 
       - name: Upload Release Asset - macOS ZIP (Auto Updates)
         id: upload-release-asset-zip
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ github.event.release.upload_url }}
+          asset_path: ${{ env.ZIP_ASSET_PATH }}
+          asset_name: ${{ env.ZIP_ASSET_NAME }}
+          asset_content_type: application/octet-stream
+
+  build-linux:
+    name: Build Linux Packages
+
+    # Ubuntu 20.04: ubuntu-latest or ubuntu-20.04
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v2
+
+      - name: Checkout submodules
+        run: git submodule update --init --recursive
+
+      - name: Use Node.js 10.x
+        uses: actions/setup-node@v2
+        with:
+          node-version: '10.x'
+
+      - run: npm install -g npm@latest
+      - run: npm install
+
+      - run: npm run build
+
+      # ----------------------------------------------------------------
+      # Build Linux x64
+      # ----------------------------------------------------------------
+      - name: Build Linux x64 Binaries
+        run: npm run build:linux-x64
+
+      - run: |
+          PRODUCT_NAME="Snapmaker Luban"
+          PACKAGE_NAME="Snapmaker-Luban"
+          PACKAGE_VERSION=`node -e "console.log(require('./src/package.json').version)"`
+          RELEASE=${PACKAGE_NAME}-${PACKAGE_VERSION}
+
+          ln -sf ./output/linux-unpacked "${RELEASE}-linux-x64"
+          tar zcfh "${RELEASE}-linux-x64.tar.gz" "${RELEASE}-linux-x64"
+          rm -f "${RELEASE}-linux-x64"
+
+      - name: Setting Environment Variables
+        run: |
+          PRODUCT_NAME="Snapmaker Luban"
+          PACKAGE_NAME="Snapmaker-Luban"
+          PACKAGE_VERSION=`node -e "console.log(require('./src/package.json').version)"`
+          RELEASE=${PACKAGE_NAME}-${PACKAGE_VERSION}
+
+          DEB_ASSET_PATH="./output/${PACKAGE_NAME}_${PACKAGE_VERSION}_amd64.deb"
+          DEB_ASSET_NAME="${RELEASE}-linux-amd64.deb"
+
+          RPM_ASSET_PATH="./output/${PACKAGE_NAME}-${PACKAGE_VERSION}.x86_64.rpm"
+          RPM_ASSET_NAME="${RELEASE}-linux.x86_64.rpm"
+
+          ZIP_ASSET_PATH="./output/${RELEASE}-linux-x64.zip"
+          ZIP_ASSET_NAME="${RELEASE}-linux-x64.zip"
+
+          echo "DEB_ASSET_PATH=$DEB_ASSET_PATH" >> $GITHUB_ENV
+          echo "DEB_ASSET_NAME=$DEB_ASSET_NAME" >> $GITHUB_ENV
+
+          echo "RPM_ASSET_PATH=$RPM_ASSET_PATH" >> $GITHUB_ENV
+          echo "RPM_ASSET_NAME=$RPM_ASSET_NAME" >> $GITHUB_ENV
+
+          echo "ZIP_ASSET_PATH=$ZIP_ASSET_PATH" >> $GITHUB_ENV
+          echo "ZIP_ASSET_NAME=$ZIP_ASSET_NAME" >> $GITHUB_ENV
+
+      - name: Upload Release Asset - Debian
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ github.event.release.upload_url }}
+          asset_path: ${{ env.DEB_ASSET_PATH }}
+          asset_name: ${{ env.DEB_ASSET_NAME }}
+          asset_content_type: application/octet-stream
+
+      - name: Upload Release Asset - RPM
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ github.event.release.upload_url }}
+          asset_path: ${{ env.RPM_ASSET_PATH }}
+          asset_name: ${{ env.RPM_ASSET_NAME }}
+          asset_content_type: application/octet-stream
+
+      - name: Upload Release Asset - ZIP
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ github.event.release.upload_url }}
+          asset_path: ${{ env.ZIP_ASSET_PATH }}
+          asset_name: ${{ env.ZIP_ASSET_NAME }}
+          asset_content_type: application/octet-stream
+
+      # ----------------------------------------------------------------
+      # Build Linux ia32
+      # ----------------------------------------------------------------
+      - name: Build Linux ia32 Binaries
+        run: npm run build:linux-ia32
+
+      - run: |
+          PRODUCT_NAME="Snapmaker Luban"
+          PACKAGE_NAME="Snapmaker-Luban"
+          PACKAGE_VERSION=`node -e "console.log(require('./src/package.json').version)"`
+          RELEASE=${PACKAGE_NAME}-${PACKAGE_VERSION}
+
+          ln -sf ./output/linux-unpacked "${RELEASE}-linux-ia32"
+          tar zcfh "${RELEASE}-linux-ia32.tar.gz" "${RELEASE}-linux-ia32"
+          rm -f "${RELEASE}-linux-ia32"
+
+      - name: Setting Environment Variables
+        run: |
+          PRODUCT_NAME="Snapmaker Luban"
+          PACKAGE_NAME="Snapmaker-Luban"
+          PACKAGE_VERSION=`node -e "console.log(require('./src/package.json').version)"`
+          RELEASE=${PACKAGE_NAME}-${PACKAGE_VERSION}
+
+          DEB_ASSET_PATH="./output/${PACKAGE_NAME}_${PACKAGE_VERSION}_i386.deb"
+          DEB_ASSET_NAME="${RELEASE}-linux-i386.deb"
+
+          RPM_ASSET_PATH="./output/${PACKAGE_NAME}-${PACKAGE_VERSION}.i686.rpm"
+          RPM_ASSET_NAME="${RELEASE}-linux.i686.rpm"
+
+          ZIP_ASSET_PATH="./output/${RELEASE}-linux-ia32.zip"
+          ZIP_ASSET_NAME="${RELEASE}-linux-ia32.zip"
+
+          echo "DEB_ASSET_PATH=$DEB_ASSET_PATH" >> $GITHUB_ENV
+          echo "DEB_ASSET_NAME=$DEB_ASSET_NAME" >> $GITHUB_ENV
+
+          echo "RPM_ASSET_PATH=$RPM_ASSET_PATH" >> $GITHUB_ENV
+          echo "RPM_ASSET_NAME=$RPM_ASSET_NAME" >> $GITHUB_ENV
+
+          echo "ZIP_ASSET_PATH=$ZIP_ASSET_PATH" >> $GITHUB_ENV
+          echo "ZIP_ASSET_NAME=$ZIP_ASSET_NAME" >> $GITHUB_ENV
+
+      - name: Upload Release Asset - Debian
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ github.event.release.upload_url }}
+          asset_path: ${{ env.DEB_ASSET_PATH }}
+          asset_name: ${{ env.DEB_ASSET_NAME }}
+          asset_content_type: application/octet-stream
+
+      - name: Upload Release Asset - RPM
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ github.event.release.upload_url }}
+          asset_path: ${{ env.RPM_ASSET_PATH }}
+          asset_name: ${{ env.RPM_ASSET_NAME }}
+          asset_content_type: application/octet-stream
+
+      - name: Upload Release Asset - ZIP
         uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
