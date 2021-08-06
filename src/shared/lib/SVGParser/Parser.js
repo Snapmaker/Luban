@@ -50,14 +50,33 @@ class SVGParser {
                     reject(err);
                     return;
                 }
-
-                resolve(await this.readString(xml));
+                try {
+                    resolve(await this.readString(xml));
+                } catch (e) {
+                    reject(e);
+                }
             });
         });
     }
 
     readString(s) {
         return new Promise((resolve, reject) => {
+            /* 
+                Remove some xml namespace attributes which cannot be parsed by xml2js.
+                <!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd" [
+                    <!ENTITY ns_flows "http://ns.adobe.com/Flows/1.0/">
+                    <!ENTITY ns_extend "http://ns.adobe.com/Extensibility/1.0/">
+                    <!ENTITY ns_ai "http://ns.adobe.com/AdobeIllustrator/10.0/">
+                    <!ENTITY ns_graphs "http://ns.adobe.com/Graphs/1.0/">
+                    <!ENTITY ns_vars "http://ns.adobe.com/Variables/1.0/">
+                    <!ENTITY ns_imrep "http://ns.adobe.com/ImageReplacement/1.0/">
+                    <!ENTITY ns_sfw "http://ns.adobe.com/SaveForWeb/1.0/">
+                    <!ENTITY ns_custom "http://ns.adobe.com/GenericCustomNamespace/1.0/">
+                    <!ENTITY ns_adobe_xpath "http://ns.adobe.com/XPath/1.0/">
+                ]>
+                <svg version="1.1" id="artwork" xmlns:x="&ns_extend;" xmlns:i="&ns_ai;" xmlns:graph="&ns_graphs;">
+            */
+            s = s.replace(/xmlns:.+="\&.+;"/ig, '');
             // keep the orders of children coz they can overlap each other
             const options = {
                 explicitChildren: false,

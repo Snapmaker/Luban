@@ -30,14 +30,14 @@ class Visualizer extends PureComponent {
         selectedModelArray: PropTypes.array,
         transformation: PropTypes.object,
         modelGroup: PropTypes.object.isRequired,
-        hasModel: PropTypes.bool.isRequired,
         gcodeLineGroup: PropTypes.object.isRequired,
         transformMode: PropTypes.string.isRequired,
         progress: PropTypes.number.isRequired,
-        displayedType: PropTypes.string.isRequired,
         renderingTimestamp: PropTypes.number.isRequired,
         inProgress: PropTypes.bool.isRequired,
+        hasModel: PropTypes.bool.isRequired,
 
+        hideSelectedModel: PropTypes.func.isRequired,
         recordAddOperation: PropTypes.func.isRequired,
         recordModelBeforeTransform: PropTypes.func.isRequired,
         recordModelAfterTransform: PropTypes.func.isRequired,
@@ -438,18 +438,12 @@ class Visualizer extends PureComponent {
     };
 
     render() {
-        const { size, hasModel, selectedModelArray, modelGroup, gcodeLineGroup, progress, displayedType, inProgress } = this.props;
-        // const actions = this.actions;
+        const { size, selectedModelArray, modelGroup, gcodeLineGroup, progress, inProgress, hasModel } = this.props;
 
         const isModelSelected = (selectedModelArray.length > 0);
-        const isSingleSelected = (selectedModelArray.length === 1);
         const isSupportSelected = modelGroup.selectedModelArray.length > 0 && modelGroup.selectedModelArray[0].supportTag === true;
-        const isModelDisplayed = (displayedType === 'model');
         const notice = this.getNotice();
-        // let isSupporting = false;
-        // if (this.canvas.current && this.canvas.current.controls.state === 4) {
-        //     isSupporting = true;
-        // }
+        const pasteDisabled = (modelGroup.clipboard.length === 0);
         return (
             <div
                 className={styles['printing-visualizer']}
@@ -506,102 +500,62 @@ class Visualizer extends PureComponent {
                         [
                             {
                                 type: 'item',
-                                label: i18n._('Center Selected Model'),
+                                label: i18n._('Cut'),
                                 disabled: inProgress || !isModelSelected || isSupportSelected,
-                                onClick: this.actions.centerSelectedModel
+                                onClick: this.props.cut
                             },
                             {
                                 type: 'item',
-                                label: i18n._('Delete Selected Model'),
+                                label: i18n._('Copy'),
                                 disabled: inProgress || !isModelSelected || isSupportSelected,
-                                onClick: this.actions.deleteSelectedModel
+                                onClick: this.props.copy
                             },
                             {
                                 type: 'item',
-                                label: i18n._('Duplicate Selected Model'),
+                                label: i18n._('Paste'),
+                                disabled: inProgress || isSupportSelected || pasteDisabled,
+                                onClick: this.props.paste
+                            },
+                            {
+                                type: 'item',
+                                label: i18n._('Duplicate'),
                                 disabled: inProgress || !isModelSelected || isSupportSelected,
                                 onClick: this.actions.duplicateSelectedModel
                             },
                             {
+                                type: 'separator'
+                            },
+                            {
                                 type: 'item',
-                                label: i18n._('Reset Selected Model Transformation'),
+                                label: i18n._('Hide'),
+                                disabled: inProgress || !isModelSelected || isSupportSelected,
+                                onClick: this.props.hideSelectedModel
+                            },
+                            {
+                                type: 'separator'
+                            },
+                            {
+                                type: 'item',
+                                label: i18n._('Reset Model Transformation'),
                                 disabled: inProgress || !isModelSelected || isSupportSelected,
                                 onClick: this.actions.resetSelectedModelTransformation
                             },
                             {
                                 type: 'item',
-                                label: i18n._('Lay Flat Selected Model'),
+                                label: i18n._('Center Models'),
                                 disabled: inProgress || !isModelSelected || isSupportSelected,
-                                onClick: this.actions.layFlatSelectedModel
+                                onClick: this.actions.centerSelectedModel
                             },
                             {
                                 type: 'item',
-                                label: i18n._('Auto Rotate Selected Model'),
+                                label: i18n._('Auto Rotate'),
                                 disabled: inProgress || !isModelSelected || isSupportSelected,
                                 onClick: this.actions.autoRotateSelectedModel
                             },
                             {
                                 type: 'item',
-                                label: i18n._('Scale To Fit Selected Model'),
-                                disabled: inProgress || !isModelSelected || isSupportSelected,
-                                onClick: this.actions.scaleToFitSelectedModel
-                            },
-                            {
-                                type: 'subMenu',
-                                label: i18n._('Mirror Selected Model'),
-                                disabled: inProgress || !isModelSelected || isSupportSelected,
-                                items: [
-                                    {
-                                        type: 'item',
-                                        label: i18n._('X Axis'),
-                                        onClick: () => this.actions.mirrorSelectedModel('X')
-                                    },
-                                    {
-                                        type: 'item',
-                                        label: i18n._('Y Axis'),
-                                        onClick: () => this.actions.mirrorSelectedModel('Y')
-                                    },
-                                    {
-                                        type: 'item',
-                                        label: i18n._('Z Axis'),
-                                        onClick: () => this.actions.mirrorSelectedModel('Z')
-                                    }
-                                ]
-                            },
-                            {
-                                type: 'separator'
-                            },
-                            {
-                                type: 'item',
-                                label: i18n._('Add Manual Support'),
-                                disabled: inProgress || !isSingleSelected || isSupportSelected,
-                                onClick: this.supportActions.startSupportMode
-                            },
-                            {
-                                type: 'item',
-                                label: i18n._('Delete Selected Support'),
-                                disabled: inProgress || !isSupportSelected,
-                                onClick: this.supportActions.clearSelectedSupport
-                            },
-                            {
-                                type: 'item',
-                                label: i18n._('Clear All Manual Support'),
-                                disabled: false,
-                                onClick: this.supportActions.clearAllManualSupport
-                            },
-                            {
-                                type: 'separator'
-                            },
-                            {
-                                type: 'item',
-                                label: i18n._('Clear Heated Bed'),
-                                disabled: inProgress || !hasModel || !isModelDisplayed,
-                                onClick: this.actions.clearBuildPlate
-                            },
-                            {
-                                type: 'item',
-                                label: i18n._('Arrange All Models'),
-                                disabled: inProgress || !hasModel || !isModelDisplayed,
+                                label: i18n._('Auto Arrange'),
+                                disabled: inProgress || !hasModel || isSupportSelected,
                                 onClick: this.actions.arrangeAllModels
                             }
                         ]
@@ -643,6 +597,7 @@ const mapDispatchToProps = (dispatch) => ({
     recordModelAfterTransform: (transformMode, modelGroup) => dispatch(printingActions.recordModelAfterTransform(transformMode, modelGroup)),
     clearOperationHistory: () => dispatch(operationHistoryActions.clear('printing')),
 
+    hideSelectedModel: () => dispatch(printingActions.hideSelectedModel()),
     destroyGcodeLine: () => dispatch(printingActions.destroyGcodeLine()),
     offsetGcodeLayers: (offset) => dispatch(printingActions.offsetGcodeLayers(offset)),
     selectMultiModel: (intersect, selectEvent) => dispatch(printingActions.selectMultiModel(intersect, selectEvent)),

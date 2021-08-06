@@ -1084,14 +1084,23 @@ export const actions = {
 
     hideSelectedModel: (targetModel) => (dispatch, getState) => {
         const { modelGroup } = getState().printing;
+        let targetModels;
+        if (!targetModel) {
+            targetModels = modelGroup.getSelectedModelArray();
+        } else {
+            targetModels = [targetModel];
+        }
+
         const modelState = modelGroup.hideSelectedModel();
 
-        const operation = new VisibleOperation3D({
-            target: targetModel,
-            visible: false
-        });
         const operations = new Operations();
-        operations.push(operation);
+        targetModels.forEach(model => {
+            const operation = new VisibleOperation3D({
+                target: model,
+                visible: false
+            });
+            operations.push(operation);
+        });
         operations.registCallbackAfterAll(() => {
             dispatch(actions.updateState(modelGroup.getState()));
             dispatch(actions.destroyGcodeLine());

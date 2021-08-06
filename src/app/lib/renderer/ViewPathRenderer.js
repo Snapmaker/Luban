@@ -145,7 +145,7 @@ export class ViewPathRenderer {
                 group.add(mesh);
             }
         } else {
-            const points = this._generateByBox({ x: -size.x, y: -size.y }, { x: size.x, y: size.y });
+            const points = this._generateByBox({ x: size.minX, y: size.minY }, { x: size.maxX, y: size.maxY });
 
             const shape = new THREE.Shape(points);
 
