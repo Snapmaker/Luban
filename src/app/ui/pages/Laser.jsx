@@ -13,7 +13,7 @@ import modal from '../../lib/modal';
 import LaserVisualizer from '../widgets/LaserVisualizer';
 import Tabs from '../components/Tabs';
 
-import { renderPopup, renderWidgetList, renderModal } from '../utils';
+import { renderPopup, renderWidgetList, renderModal, logPageView } from '../utils';
 import Dropzone from '../components/Dropzone';
 import { actions as editorActions } from '../../flux/editor';
 import { actions as laserActions } from '../../flux/laser';
@@ -334,6 +334,10 @@ function Laser({ location }) {
     const page = useSelector(state => state?.laser?.page);
     useEffect(() => {
         dispatch(laserActions.init());
+        logPageView({
+            pathname: '/laser',
+            isRotate
+        });
     }, []);
 
     useEffect(() => {
@@ -355,7 +359,13 @@ function Laser({ location }) {
     const { setBackgroundModal,
         renderMainToolBar } = useRenderMainToolBar(setShowHomePage, setShowJobType, setShowWorkspace, isRotate);
     const renderHomepage = () => {
-        const onClose = () => setShowHomePage(false);
+        const onClose = () => {
+            setShowHomePage(false);
+            logPageView({
+                pathname: '/laser',
+                isRotate
+            });
+        };
         return showHomePage && renderPopup({
             onClose,
             component: HomePage
@@ -469,7 +479,13 @@ function Laser({ location }) {
         );
     }
     function renderWorkspace() {
-        const onClose = () => setShowWorkspace(false);
+        const onClose = () => {
+            setShowWorkspace(false);
+            logPageView({
+                pathname: '/laser',
+                isRotate
+            });
+        };
         return showWorkspace && renderPopup({
             onClose,
             component: Workspace

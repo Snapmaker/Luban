@@ -12,7 +12,7 @@ import modal from '../../lib/modal';
 import Dropzone from '../components/Dropzone';
 import SvgIcon from '../components/SvgIcon';
 import Space from '../components/Space';
-import { renderModal, renderPopup, renderWidgetList } from '../utils';
+import { renderModal, renderPopup, renderWidgetList, logPageView } from '../utils';
 import Tabs from '../components/Tabs';
 import Checkbox from '../components/Checkbox';
 import { Button } from '../components/Buttons';
@@ -388,6 +388,10 @@ function Cnc({ location }) {
 
     useEffect(() => {
         dispatch(cncActions.init());
+        logPageView({
+            pathname: '/cnc',
+            isRotate: materials?.isRotate
+        });
     }, []);
 
     useEffect(() => {
@@ -412,7 +416,13 @@ function Cnc({ location }) {
     );
 
     const renderHomepage = () => {
-        const onClose = () => setShowHomePage(false);
+        const onClose = () => {
+            setShowHomePage(false);
+            logPageView({
+                pathname: '/cnc',
+                isRotate: materials?.isRotate
+            });
+        };
         return showHomePage && renderPopup({
             onClose,
             component: HomePage
@@ -533,7 +543,13 @@ function Cnc({ location }) {
         );
     }
     function renderWorkspace() {
-        const onClose = () => setShowWorkspace(false);
+        const onClose = () => {
+            setShowWorkspace(false);
+            logPageView({
+                pathname: '/cnc',
+                isRotate: materials?.isRotate
+            });
+        };
         return showWorkspace && renderPopup({
             onClose,
             component: Workspace

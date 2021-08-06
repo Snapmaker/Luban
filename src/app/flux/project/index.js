@@ -419,7 +419,10 @@ export const actions = {
             }));
         }
         if (from === to) {
-            history.push('/');
+            history.push({
+                pathname: '/',
+                state: { shouldNotLogPageView: true }
+            });
         }
         dispatch(actions.updateState(newHeadType, { unSaved: false, openedFile: null }));
         history.push({

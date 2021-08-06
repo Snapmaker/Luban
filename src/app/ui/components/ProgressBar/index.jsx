@@ -29,9 +29,13 @@ class ProgressBar extends React.PureComponent {
                 this.timeout = null;
             }
             if (this.props.progress > 100 - EPSILON) {
-                this.timeout = setTimeout(() => this.setState({ display: 'none' }), 5000);
+                this.timeout = setTimeout(() => this.setState({ display: 'none' }), 2000);
             }
         }
+        if (this.props.tips === 'Failed to load model.') {
+            this.setState({ display: 'none' });
+        }
+        return this.props;
     }
 
     render() {
