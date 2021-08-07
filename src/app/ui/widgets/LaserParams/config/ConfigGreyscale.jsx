@@ -23,7 +23,10 @@ class ConfigGreyscale extends PureComponent {
     };
 
     state = {
-        expanded: true
+        expanded: true,
+        contrast: 0,
+        brightness: 0,
+        whiteClip: 0
     };
 
     actions = {
@@ -34,21 +37,72 @@ class ConfigGreyscale extends PureComponent {
             this.props.updateSelectedModelConfig({ invert: !this.props.invert });
         },
         onChangeContrast: (contrast) => {
+            console.log('contrast', contrast);
+            this.setState({
+                contrast
+            });
+        },
+        onAfterChangeContrast: () => {
+            const { contrast } = this.state;
             this.props.updateSelectedModelConfig({ contrast });
+            this.props.processSelectedModel();
         },
         onChangeBrightness: (brightness) => {
+            this.setState({
+                brightness
+            });
+        },
+        onAfterChangeBrightness: () => {
+            const { brightness } = this.state;
             this.props.updateSelectedModelConfig({ brightness });
+            this.props.processSelectedModel();
         },
         onChangeWhiteClip: (whiteClip) => {
+            this.setState({
+                whiteClip
+            });
+        },
+        onAfterChangeWhiteClip: () => {
+            const { whiteClip } = this.state;
             this.props.updateSelectedModelConfig({ whiteClip });
+            this.props.processSelectedModel();
         },
         onChangeAlgorithm: (options) => {
             this.props.updateSelectedModelConfig({ algorithm: options.value });
         }
     };
 
+    componentDidMount() {
+        const { contrast, brightness, whiteClip } = this.props;
+        this.setState({
+            contrast,
+            brightness,
+            whiteClip
+        });
+    }
+
+    getSnapshotBeforeUpdate(prevProps) {
+        const { contrast, brightness, whiteClip } = this.props;
+        if (contrast !== prevProps.contrast) {
+            this.setState({
+                contrast
+            });
+        }
+        if (brightness !== prevProps.brightness) {
+            this.setState({
+                brightness
+            });
+        }
+        if (whiteClip !== prevProps.whiteClip) {
+            this.setState({
+                whiteClip
+            });
+        }
+        return this.props;
+    }
+
     render() {
-        const { invert, contrast, brightness, whiteClip, algorithm, disabled } = this.props;
+        const { invert, algorithm, disabled } = this.props;
 
         return (
             <div>
@@ -76,21 +130,21 @@ class ConfigGreyscale extends PureComponent {
                                     <Slider
                                         disabled={disabled}
                                         size="middle"
-                                        value={contrast}
+                                        value={this.state.contrast}
                                         min={0}
                                         max={100}
                                         onChange={this.actions.onChangeContrast}
-                                        onAfterChange={this.props.processSelectedModel}
+                                        onAfterChange={this.actions.onAfterChangeContrast}
                                     />
                                     <Input
                                         disabled={disabled}
                                         size="super-small"
-                                        value={contrast}
+                                        value={this.state.contrast}
                                         min={0}
                                         max={100}
-                                        onChange={(value) => {
-                                            this.actions.onChangeContrast(value);
-                                            this.props.processSelectedModel();
+                                        onChange={async (value) => {
+                                            await this.actions.onChangeContrast(value);
+                                            this.actions.onAfterChangeContrast();
                                         }}
                                     />
                                 </div>
@@ -105,21 +159,21 @@ class ConfigGreyscale extends PureComponent {
                                     <Slider
                                         size="middle"
                                         disabled={disabled}
-                                        value={brightness}
+                                        value={this.state.brightness}
                                         min={0}
                                         max={100}
                                         onChange={this.actions.onChangeBrightness}
-                                        onAfterChange={this.props.processSelectedModel}
+                                        onAfterChange={this.actions.onAfterChangeBrightness}
                                     />
                                     <Input
                                         disabled={disabled}
                                         size="super-small"
-                                        value={brightness}
+                                        value={this.state.brightness}
                                         min={0}
                                         max={100}
-                                        onChange={(value) => {
-                                            this.actions.onChangeBrightness(value);
-                                            this.props.processSelectedModel();
+                                        onChange={async (value) => {
+                                            await this.actions.onChangeBrightness(value);
+                                            this.actions.onAfterChangeBrightness();
                                         }}
                                     />
                                 </div>
@@ -134,21 +188,21 @@ class ConfigGreyscale extends PureComponent {
                                     <Slider
                                         disabled={disabled}
                                         size="middle"
-                                        value={whiteClip}
+                                        value={this.state.whiteClip}
                                         min={0}
                                         max={255}
                                         onChange={this.actions.onChangeWhiteClip}
-                                        onAfterChange={this.props.processSelectedModel}
+                                        onAfterChange={this.actions.onAfterChangeWhiteClip}
                                     />
                                     <Input
                                         disabled={disabled}
                                         size="super-small"
-                                        value={whiteClip}
+                                        value={this.state.whiteClip}
                                         min={0}
                                         max={255}
-                                        onChange={(value) => {
-                                            this.actions.onChangeWhiteClip(value);
-                                            this.props.processSelectedModel();
+                                        onChange={async (value) => {
+                                            await this.actions.onChangeWhiteClip(value);
+                                            this.actions.onAfterChangeWhiteClip();
                                         }}
                                     />
                                 </div>

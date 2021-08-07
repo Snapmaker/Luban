@@ -20,6 +20,7 @@ class ConfigRasterBW extends PureComponent {
     };
 
     state = {
+        bwThreshold: 0,
         expanded: true
     };
 
@@ -31,12 +32,36 @@ class ConfigRasterBW extends PureComponent {
             this.props.updateSelectedModelConfig({ invert: !this.props.invert });
         },
         onChangeBWThreshold: (bwThreshold) => {
+            this.setState({
+                bwThreshold
+            });
+        },
+        onAfterChangeBWThreshold: () => {
+            const { bwThreshold } = this.state;
             this.props.updateSelectedModelConfig({ bwThreshold });
+            this.props.processSelectedModel();
         }
     };
 
+    componentDidMount() {
+        const { bwThreshold } = this.props;
+        this.setState({
+            bwThreshold
+        });
+    }
+
+    getSnapshotBeforeUpdate(prevProps) {
+        const { bwThreshold } = this.props;
+        if (bwThreshold !== prevProps.bwThreshold) {
+            this.setState({
+                bwThreshold
+            });
+        }
+        return this.props;
+    }
+
     render() {
-        const { invert, bwThreshold, disabled } = this.props;
+        const { invert, disabled } = this.props;
 
         return (
             <div>
@@ -63,22 +88,22 @@ class ConfigRasterBW extends PureComponent {
                                 <Slider
                                     disabled={disabled}
                                     size="middle"
-                                    value={bwThreshold}
+                                    value={this.state.bwThreshold}
                                     min={0}
                                     max={255}
                                     onChange={this.actions.onChangeBWThreshold}
-                                    onAfterChange={this.props.processSelectedModel}
+                                    onAfterChange={this.actions.onAfterChangeBWThreshold}
                                 />
                                 <NumberInput
                                     disabled={disabled}
-                                    value={bwThreshold}
+                                    value={this.state.bwThreshold}
                                     className="sm-flex-auto"
                                     size="super-small"
                                     min={0}
                                     max={255}
-                                    onChange={(value) => {
-                                        this.actions.onChangeBWThreshold(value);
-                                        this.props.processSelectedModel();
+                                    onChange={async (value) => {
+                                        await this.actions.onChangeBWThreshold(value);
+                                        this.actions.onAfterChangeBWThreshold();
                                     }}
                                 />
 
