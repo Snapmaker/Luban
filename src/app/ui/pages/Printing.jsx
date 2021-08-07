@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { shallowEqual, useSelector, useDispatch } from 'react-redux';
 // import PropTypes from 'prop-types';
 import { useHistory, withRouter } from 'react-router-dom';
-import { Steps } from 'intro.js-react';
+// import { Steps } from 'intro.js-react';
 import 'intro.js/introjs.css';
 import PrintingVisualizer from '../widgets/PrintingVisualizer';
 // import PrintingOutput from '../widgets/PrintingOutput';
@@ -48,6 +48,7 @@ import {
     printIntroStepFour, printIntroStepFive, printIntroStepSix
 } from './introContent';
 import '../../styles/introCustom.styl';
+import Steps from '../components/Steps';
 
 
 const allWidgets = {
