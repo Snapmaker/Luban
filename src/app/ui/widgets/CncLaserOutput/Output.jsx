@@ -162,7 +162,7 @@ class Output extends PureComponent {
     render() {
         const actions = this.actions;
         const { workflowState, isGcodeGenerating, gcodeFile, hasModel, page,
-            disablePreview, hasToolPathModel, inProgress, displayedType, needToPreview } = this.props;
+            disablePreview, hasToolPathModel, inProgress, displayedType, needToPreview, headType } = this.props;
         const menu = (
             <Menu>
                 <Menu.Item
@@ -185,8 +185,8 @@ class Output extends PureComponent {
         );
         const isEditor = page === PAGE_EDITOR;
         return (
-            <div className={classNames('position-fixed', 'border-radius-bottom-8', 'bottom-8', 'background-color-white', styles['output-wrapper'])}>
-                <div className={classNames('position-re', 'margin-horizontal-16', 'margin-vertical-16',)}>
+            <div className={classNames('position-fixed', 'border-radius-bottom-8', 'bottom-8', 'background-color-white', styles['output-wrapper'], `${headType}-preview-export-intro-part`)}>
+                <div className={classNames('position-re', 'margin-horizontal-16', 'margin-vertical-16')}>
                     {isEditor && (
                         <Button
                             type="primary"

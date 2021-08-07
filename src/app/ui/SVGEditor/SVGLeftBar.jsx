@@ -16,7 +16,8 @@ class SVGLeftBar extends PureComponent {
         onClickToUpload: PropTypes.func.isRequired,
         fileInput: PropTypes.object.isRequired,
         allowedFiles: PropTypes.string.isRequired,
-        editable: PropTypes.bool.isRequired
+        editable: PropTypes.bool.isRequired,
+        headType: PropTypes.string
     };
 
     state = {
@@ -71,66 +72,68 @@ class SVGLeftBar extends PureComponent {
                                     color="#545659"
                                     className={
                                         classNames('border-radius-top-8', 'background-transparent',
-                                            'padding-horizontal-4', 'position-re',
+                                            'padding-horizontal-4', 'position-re', `${this.props.headType}-tool-bar-open-icon`,
                                             { [styles.selected]: (mode === 'add') })}
                                     onClick={() => this.props.onClickToUpload()}
                                 />
                             </div>
                         </div>
-                        <div className="margin-vertical-4">
-                            <SvgIcon
-                                color="#545659"
-                                type={['hoverNormal', 'pressSpecial']}
-                                size={48}
-                                name="ToolbarSelect"
-                                disabled={!editable}
-                                className={
-                                    classNames('background-transparent',
-                                        'padding-horizontal-4', 'position-re',
-                                        { [styles.selected]: (mode === 'select') })}
-                                onClick={() => this.props.setMode('select')}
-                            />
-                        </div>
-                        <div className="margin-vertical-4">
-                            <SvgIcon
-                                type={['hoverNormal', 'pressSpecial']}
-                                color="#545659"
-                                size={48}
-                                name="ToolbarRectangle"
-                                disabled={!editable}
-                                className={
-                                    classNames('background-transparent',
-                                        'padding-horizontal-4', 'position-re',
-                                        { [styles.selected]: (mode === 'rect') })}
-                                onClick={() => this.props.setMode('rect')}
-                            />
-                        </div>
-                        <div className="margin-vertical-4">
-                            <SvgIcon
-                                type={['hoverNormal', 'pressSpecial']}
-                                color="#545659"
-                                size={48}
-                                name="ToolbarOval"
-                                disabled={!editable}
-                                className={
-                                    classNames('background-transparent',
-                                        'padding-horizontal-4', 'position-re',
-                                        { [styles.selected]: (mode === 'ellipse') })}
-                                onClick={() => this.props.setMode('ellipse')}
-                            />
-                        </div>
-                        <div className="margin-vertical-4">
-                            <SvgIcon
-                                type={['hoverNormal', 'pressSpecial']}
-                                color="#545659"
-                                size={48}
-                                name="ToolbarText"
-                                disabled={!editable}
-                                className={
-                                    classNames('background-transparent',
-                                        'padding-horizontal-4', 'position-re',)}
-                                onClick={this.actions.onClickInsertText}
-                            />
+                        <div className={`${this.props.headType}-draw-intro-part`}>
+                            <div className="margin-vertical-4">
+                                <SvgIcon
+                                    color="#545659"
+                                    type={['hoverNormal', 'pressSpecial']}
+                                    size={48}
+                                    name="ToolbarSelect"
+                                    disabled={!editable}
+                                    className={
+                                        classNames('background-transparent',
+                                            'padding-horizontal-4', 'position-re',
+                                            { [styles.selected]: (mode === 'select') })}
+                                    onClick={() => this.props.setMode('select')}
+                                />
+                            </div>
+                            <div className="margin-vertical-4">
+                                <SvgIcon
+                                    type={['hoverNormal', 'pressSpecial']}
+                                    color="#545659"
+                                    size={48}
+                                    name="ToolbarRectangle"
+                                    disabled={!editable}
+                                    className={
+                                        classNames('background-transparent',
+                                            'padding-horizontal-4', 'position-re',
+                                            { [styles.selected]: (mode === 'rect') })}
+                                    onClick={() => this.props.setMode('rect')}
+                                />
+                            </div>
+                            <div className="margin-vertical-4">
+                                <SvgIcon
+                                    type={['hoverNormal', 'pressSpecial']}
+                                    color="#545659"
+                                    size={48}
+                                    name="ToolbarOval"
+                                    disabled={!editable}
+                                    className={
+                                        classNames('background-transparent',
+                                            'padding-horizontal-4', 'position-re',
+                                            { [styles.selected]: (mode === 'ellipse') })}
+                                    onClick={() => this.props.setMode('ellipse')}
+                                />
+                            </div>
+                            <div className="margin-vertical-4">
+                                <SvgIcon
+                                    type={['hoverNormal', 'pressSpecial']}
+                                    color="#545659"
+                                    size={48}
+                                    name="ToolbarText"
+                                    disabled={!editable}
+                                    className={
+                                        classNames('background-transparent',
+                                            'padding-horizontal-4', 'position-re',)}
+                                    onClick={this.actions.onClickInsertText}
+                                />
+                            </div>
                         </div>
                         {/* todo: refactor style*/}
                         { showExtShape && (

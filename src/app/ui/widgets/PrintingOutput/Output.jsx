@@ -45,6 +45,7 @@ class Output extends PureComponent {
         generateGcode: PropTypes.func.isRequired,
         exportFile: PropTypes.func.isRequired,
         renderGcodeFile: PropTypes.func.isRequired
+        // onRef: PropTypes.func
     };
 
     state = {
@@ -144,6 +145,7 @@ class Output extends PureComponent {
     };
 
     componentDidMount() {
+        // this.props.onRef(this);
         UniApi.Event.on('appbar-menu:printing.export-gcode', this.actions.onClickExportGcode);
         UniApi.Event.on('appbar-menu:printing.export-model', this.actions.onClickExportModel);
     }
@@ -190,7 +192,7 @@ class Output extends PureComponent {
         );
 
         return (
-            <div className={classNames('position-fixed', 'border-radius-bottom-8', 'bottom-8', 'background-color-white', 'width-360', 'module-default-shadow')}>
+            <div className={classNames('position-fixed', 'border-radius-bottom-8', 'bottom-8', 'background-color-white', 'width-360', 'module-default-shadow', 'print-output-intro')}>
                 <div className={classNames('position-re', 'margin-horizontal-16', 'margin-vertical-16')}>
                     {!gcodeLine && (
                         <Button

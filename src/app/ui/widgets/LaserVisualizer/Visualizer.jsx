@@ -413,6 +413,7 @@ class Visualizer extends Component {
                         onClickToUpload={this.actions.onClickToUpload}
                         fileInput={this.fileInput}
                         allowedFiles=".svg, .png, .jpg, .jpeg, .bmp, .dxf"
+                        headType={HEAD_LASER}
                     />
                 </div>
                 <div
