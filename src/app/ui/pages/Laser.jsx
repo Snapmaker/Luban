@@ -22,7 +22,7 @@ import ProjectLayout from '../layouts/ProjectLayout';
 import MainToolBar from '../layouts/MainToolBar';
 // import WidgetContainer from '../Layouts/Widget';
 
-import { HEAD_LASER, PAGE_EDITOR, PAGE_PROCESS, MACHINE_SERIES } from '../../constants';
+import { HEAD_LASER, PAGE_EDITOR, PAGE_PROCESS, MACHINE_SERIES, PROCESS_MODE_GREYSCALE, PROCESS_MODE_VECTOR } from '../../constants';
 
 
 import ControlWidget from '../widgets/Control';
@@ -416,9 +416,9 @@ function Laser({ location }) {
     };
     const actions = {
         onDropAccepted: (file) => {
-            let mode = 'bw';
+            let mode = PROCESS_MODE_GREYSCALE;
             if (path.extname(file.name).toLowerCase() === '.svg' || path.extname(file.name).toLowerCase() === '.dxf') {
-                mode = 'vector';
+                mode = PROCESS_MODE_VECTOR;
             }
             dispatch(editorActions.uploadImage('laser', file, mode, () => {
                 modal({

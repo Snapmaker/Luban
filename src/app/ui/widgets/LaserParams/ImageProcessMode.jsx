@@ -17,6 +17,7 @@ class ImageProcessMode extends PureComponent {
         mode: PropTypes.string.isRequired,
         showOrigin: PropTypes.bool,
         disabled: PropTypes.bool,
+        isDXF: PropTypes.bool,
 
         changeSelectedModelMode: PropTypes.func.isRequired,
         changeSelectedModelShowOrigin: PropTypes.func.isRequired
@@ -37,7 +38,7 @@ class ImageProcessMode extends PureComponent {
     };
 
     render() {
-        const { sourceType, mode, showOrigin, disabled } = this.props;
+        const { sourceType, mode, showOrigin, disabled, isDXF } = this.props;
         const actions = this.actions;
         const isBW = mode === 'bw';
         const isGreyscale = mode === 'greyscale';
@@ -60,24 +61,28 @@ class ImageProcessMode extends PureComponent {
                     {this.state.expanded && (
                         <React.Fragment>
                             <div className={classNames('sm-flex', 'margin-vertical-8', 'align-c', 'justify-space-between')}>
-                                <div className={classNames(this.props.mode === 'bw' ? styles.selected : styles.unselected)}>
-                                    <Anchor
-                                        disabled={disabled}
-                                        onClick={() => actions.changeSelectedModelMode('bw')}
-                                    >
-                                        <i className={styles['laser-mode__icon-bw']} />
-                                    </Anchor>
-                                    <span>{i18n._('Threshold')}</span>
-                                </div>
-                                <div className={classNames(this.props.mode === 'greyscale' ? styles.selected : styles.unselected)}>
-                                    <Anchor
-                                        disabled={disabled}
-                                        onClick={() => actions.changeSelectedModelMode('greyscale')}
-                                    >
-                                        <i className={styles['laser-mode__icon-greyscale']} />
-                                    </Anchor>
-                                    <span>{i18n._('GREYSCALE')}</span>
-                                </div>
+                                { !isDXF && (
+                                    <div className={classNames(this.props.mode === 'bw' ? styles.selected : styles.unselected)}>
+                                        <Anchor
+                                            disabled={disabled}
+                                            onClick={() => actions.changeSelectedModelMode('bw')}
+                                        >
+                                            <i className={styles['laser-mode__icon-bw']} />
+                                        </Anchor>
+                                        <span>{i18n._('Threshold')}</span>
+                                    </div>
+                                )}
+                                { !isDXF && (
+                                    <div className={classNames(this.props.mode === 'greyscale' ? styles.selected : styles.unselected)}>
+                                        <Anchor
+                                            disabled={disabled}
+                                            onClick={() => actions.changeSelectedModelMode('greyscale')}
+                                        >
+                                            <i className={styles['laser-mode__icon-greyscale']} />
+                                        </Anchor>
+                                        <span>{i18n._('GREYSCALE')}</span>
+                                    </div>
+                                )}
                                 <div className={classNames(this.props.mode === 'vector' ? styles.selected : styles.unselected)}>
                                     <Anchor
                                         disabled={disabled}
@@ -87,15 +92,17 @@ class ImageProcessMode extends PureComponent {
                                     </Anchor>
                                     <span>{i18n._('VECTOR')}</span>
                                 </div>
-                                <div className={classNames(this.props.mode === 'halftone' ? styles.selected : styles.unselected)}>
-                                    <Anchor
-                                        disabled={disabled}
-                                        onClick={() => actions.changeSelectedModelMode('halftone')}
-                                    >
-                                        <i className={styles['laser-mode__icon-halftone']} />
-                                    </Anchor>
-                                    <span>{i18n._('HALFTONE')}</span>
-                                </div>
+                                { !isDXF && (
+                                    <div className={classNames(this.props.mode === 'halftone' ? styles.selected : styles.unselected)}>
+                                        <Anchor
+                                            disabled={disabled}
+                                            onClick={() => actions.changeSelectedModelMode('halftone')}
+                                        >
+                                            <i className={styles['laser-mode__icon-halftone']} />
+                                        </Anchor>
+                                        <span>{i18n._('HALFTONE')}</span>
+                                    </div>
+                                )}
                             </div>
                             <div className="sm-flex height-32 margin-vertical-8">
                                 <span className="sm-flex-width">{i18n._('Show Original Image')}</span>

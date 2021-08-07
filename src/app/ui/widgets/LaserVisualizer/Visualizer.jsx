@@ -24,7 +24,8 @@ import {
     PAGE_EDITOR,
     SELECTEVENT,
     MAX_LASER_CNC_CANVAS_SCALE,
-    MIN_LASER_CNC_CANVAS_SCALE, HEAD_LASER
+    MIN_LASER_CNC_CANVAS_SCALE, HEAD_LASER,
+    PROCESS_MODE_VECTOR, PROCESS_MODE_GREYSCALE
 } from '../../../constants';
 import SVGEditor from '../../SVGEditor';
 import { CNC_LASER_STAGE } from '../../../flux/editor/utils';
@@ -150,11 +151,11 @@ class Visualizer extends Component {
             const extname = path.extname(file.name).toLowerCase();
             let uploadMode;
             if (extname === '.svg') {
-                uploadMode = 'vector';
+                uploadMode = PROCESS_MODE_VECTOR;
             } else if (extname === '.dxf') {
-                uploadMode = 'vector';
+                uploadMode = PROCESS_MODE_VECTOR;
             } else {
-                uploadMode = 'bw';
+                uploadMode = PROCESS_MODE_GREYSCALE;
             }
 
             // Switch to PAGE_EDITOR page if new image being uploaded

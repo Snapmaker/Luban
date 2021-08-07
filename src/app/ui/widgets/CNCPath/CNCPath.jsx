@@ -26,7 +26,7 @@ class CNCPath extends PureComponent {
         // transformation: PropTypes.object.isRequired,
         selectedModel: PropTypes.object,
         inProgress: PropTypes.bool.isRequired,
-
+        isDXF: PropTypes.bool.isRequired,
 
         updateSelectedModelUniformScalingState: PropTypes.func.isRequired,
         changeSelectedModelMode: PropTypes.func.isRequired,
@@ -68,7 +68,7 @@ class CNCPath extends PureComponent {
         const {
             page, selectedModelArray,
             selectedModelVisible, sourceType, mode,
-            showOrigin,
+            showOrigin, isDXF,
             config,
             changeSelectedModelShowOrigin, changeSelectedModelMode,
             updateSelectedModelUniformScalingState,
@@ -98,6 +98,7 @@ class CNCPath extends PureComponent {
                     <div className="sm-parameter-container">
                         {isEditor && showImageProcessMode && (selectedModelArray.length === 1) && (
                             <ImageProcessMode
+                                isDXF={isDXF}
                                 sourceType={sourceType}
                                 mode={mode}
                                 disabled={inProgress || !selectedNotHide}
@@ -138,11 +139,14 @@ const mapStateToProps = (state) => {
         mode,
         showOrigin,
         transformation,
-        config
+        config,
+        originalName
     } = selectedModel;
     const selectedModelArray = modelGroup.getSelectedModelArray();
     const hasSelectedModels = modelGroup.getSelectedModelArray().length > 0;
+    const isDXF = originalName && (originalName.substr(originalName.length - 4, 4) === '.dxf');
     return {
+        isDXF,
         selectedModelArray,
         page,
         transformation,
