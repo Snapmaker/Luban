@@ -32,6 +32,7 @@ class ProgressBar extends React.PureComponent {
                 this.timeout = setTimeout(() => this.setState({ display: 'none' }), 5000);
             }
         }
+        return prevProps;
     }
 
     render() {

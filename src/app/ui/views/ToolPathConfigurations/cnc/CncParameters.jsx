@@ -21,6 +21,7 @@ class CncParameters extends PureComponent {
         isModifiedDefinition: PropTypes.bool.isRequired,
         toolPath: PropTypes.object.isRequired,
 
+        setCurrentToolDefinition: PropTypes.func.isRequired,
         updateToolPath: PropTypes.func.isRequired,
         updateGcodeConfig: PropTypes.func.isRequired,
         updateToolConfig: PropTypes.func.isRequired,
@@ -294,6 +295,7 @@ class CncParameters extends PureComponent {
                         <ToolSelector
                             toolDefinition={this.props.activeToolDefinition}
                             toolDefinitions={this.props.toolDefinitions}
+                            setCurrentToolDefinition={this.props.setCurrentToolDefinition}
                             isModifiedDefinition={this.props.isModifiedDefinition}
                             setCurrentValueAsProfile={this.props.setCurrentValueAsProfile}
                         />

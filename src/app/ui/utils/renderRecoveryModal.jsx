@@ -38,8 +38,10 @@ export default function (headType, onClose) {
         actions: [
             {
                 name: i18n._('Cancel'),
-
-                onClick: () => { onClose(); }
+                onClick: () => {
+                    dispatch(projectActions.clearSavedEnvironment(headType));
+                    onClose();
+                }
             },
             {
                 name: i18n._('Yes'),

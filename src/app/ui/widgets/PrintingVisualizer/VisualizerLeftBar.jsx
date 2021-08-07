@@ -355,7 +355,7 @@ class VisualizerLeftBar extends PureComponent {
                                         onClick={() => {
                                             actions.arrangeAllModels();
                                         }}
-                                        disabled={inProgress || !hasModel || isSupportSelected || gcodeLine}
+                                        disabled={!!(inProgress || !hasModel || isSupportSelected || gcodeLine)}
                                     />
                                 </li>
                             </ul>
