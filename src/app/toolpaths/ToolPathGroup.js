@@ -52,8 +52,12 @@ class ToolPathGroup {
         return this.toolPaths.length + 1;
     }
 
-    get singleToolPath() {
-        return this.toolPaths && this.selectedToolPathArray.length === 1 && this.toolPaths.find(v => v.id === this.selectedToolPathArray[0]);
+    get isSingleSelected() {
+        return this.toolPaths && this.selectedToolPathArray.length === 1;
+    }
+
+    get firstSelectedToolpath() {
+        return this.toolPaths && this.toolPaths.find(v => v.id === this.selectedToolPathArray[0]);
     }
 
     /**

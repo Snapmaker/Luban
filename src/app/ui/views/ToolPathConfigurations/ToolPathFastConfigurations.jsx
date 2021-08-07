@@ -220,11 +220,11 @@ function ToolPathFastConfigurations(props) {
     }
 
     const fastEditSettings = {};
-    if (toolPath && activeToolListDefinition) {
-        const cncGcodeDefinition = CNC_DEFAULT_GCODE_PARAMETERS_DEFINITION;
+    if (toolPath) {
         const { gcodeConfig } = toolPath;
         let allDefinition = {};
-        if (props.headType === HEAD_CNC) {
+        if (props.headType === HEAD_CNC && activeToolListDefinition) {
+            const cncGcodeDefinition = CNC_DEFAULT_GCODE_PARAMETERS_DEFINITION;
             Object.keys(cncGcodeDefinition).forEach((key) => {
                 cncGcodeDefinition[key].default_value = gcodeConfig[key];
                 // isGcodeConfig is true means to use updateGcodeConfig, false means to use updateToolConfig

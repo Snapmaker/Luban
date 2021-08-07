@@ -49,10 +49,9 @@ function ToolPathConfigurations(props) {
 
     const [toolPath, setToolPath] = useState(toolpath);
     useEffect(() => {
-        const newToolPath = _.cloneDeep(toolpath);
-        setToolPath(newToolPath);
+        setToolPath(toolpath);
         if (!_.isNull(toolpath) && props.headType === HEAD_CNC) {
-            updateCncActiveToolDefinition(newToolPath);
+            updateCncActiveToolDefinition(toolpath);
         }
     }, [toolpath]);
 

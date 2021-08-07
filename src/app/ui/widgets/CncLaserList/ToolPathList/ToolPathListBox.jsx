@@ -125,12 +125,10 @@ const ToolPathListBox = (props) => {
     const toolPaths = useSelector(state => state[props.headType]?.toolPathGroup?.getToolPaths(), shallowEqual);
     const selectedToolPathIDArray = useSelector(state => state[props.headType]?.toolPathGroup?.selectedToolPathArray, shallowEqual);
     const inProgress = useSelector(state => state[props.headType]?.inProgress);
-    // const selectedToolPath = toolPaths && selectedToolPathIDArray.length === 1 && toolPaths.find(v => v.id === selectedToolPathIDArray[0]);
-    const selectedToolPath = useSelector(state => state[props.headType]?.toolPathGroup?.singleToolPath, shallowEqual);
+    const firstSelectedToolpath = useSelector(state => state[props.headType]?.toolPathGroup?.isSingleSelected && state[props.headType]?.toolPathGroup?.firstSelectedToolpath, shallowEqual);
     const dispatch = useDispatch();
 
-    // console.log('selectedToolPath', selectedToolPath);
-    const selectedToolPathId = selectedToolPath.id;
+    const selectedToolPathId = firstSelectedToolpath.id;
     const [editingToolpath, setEditingToolpath] = useState(null);
 
     const actions = {
@@ -294,11 +292,11 @@ const ToolPathListBox = (props) => {
                     onClose={() => setEditingToolpath(null)}
                 />
             )}
-            {selectedToolPath && (
+            {firstSelectedToolpath && (
                 <ToolPathFastConfigurations
                     headType={props.headType}
                     setEditingToolpath={setEditingToolpath}
-                    toolpath={selectedToolPath}
+                    toolpath={firstSelectedToolpath}
                 />
             )}
         </div>
