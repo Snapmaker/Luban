@@ -141,7 +141,7 @@ class PrintSquareTrace extends PureComponent {
                             height={400}
                         />
                     </div>
-                    <div className="margin-top-16">
+                    <div className="margin-top-16 margin-left-16">
                         <table className={styles['parameter-table']}>
                             <tbody>
                                 <tr>
@@ -163,12 +163,13 @@ class PrintSquareTrace extends PureComponent {
                                             min={minSideLength}
                                             max={maxSideLength}
                                             onChange={actions.setSideLength}
+                                            suffix="mm"
                                         />
                                     </td>
                                 </tr>
                                 <tr>
                                     <td>
-                                        {i18n._('Power (%)')}
+                                        {i18n._('Power')}
                                     </td>
                                     <td>
                                         <Slider
@@ -185,6 +186,7 @@ class PrintSquareTrace extends PureComponent {
                                             max={100}
                                             value={state.power}
                                             onChange={actions.setPower}
+                                            suffix="%"
                                         />
                                     </td>
                                 </tr>
@@ -195,7 +197,7 @@ class PrintSquareTrace extends PureComponent {
                         priority="level-three"
                         width="160px"
                         type="default"
-                        className="float-l margin-top-16"
+                        className="float-l margin-top-16 margin-left-16"
                         onClick={actions.printSquareTrace}
                     >
                         {i18n._('Print Square Trace')}

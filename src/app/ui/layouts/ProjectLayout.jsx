@@ -61,6 +61,7 @@ class ProjectLayout extends PureComponent {
                             'overflow-x-hidden',
                             'border-radius-8',
                             styles['controls-right'],
+                            'box-shadow-module'
                         )}
                     >
                         {renderRightView && (

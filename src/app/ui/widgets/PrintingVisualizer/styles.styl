@@ -138,7 +138,9 @@ $bottom-bar-height = 0px
     z-index: $z-index-float
     position: absolute
     right: $visualizer-padding - 5px
-    top: 160px
+    // top: 160px
+    top: 50%;
+    transform: translateY(-50%);
     width: 22px
 
     .vertical-slider
@@ -184,7 +186,9 @@ $bottom-bar-height = 0px
     > .preview-panel {
         display: block
         position: absolute
-        top: 142px
+        // top: 142px
+        top: 50%;
+        transform: translateY(-50%);
         right: 40px
 
         .preview-brick {

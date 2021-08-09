@@ -9,7 +9,8 @@ class MainToolBar extends PureComponent {
     static propTypes = {
         leftItems: PropTypes.array,
         centerItems: PropTypes.array,
-        rightItems: PropTypes.array
+        rightItems: PropTypes.array,
+        mainBarClassName: PropTypes.string
     };
 
 
@@ -29,13 +30,14 @@ class MainToolBar extends PureComponent {
 
     render() {
         const actions = this.actions;
-        const { leftItems, centerItems, rightItems } = this.props;
+        const { leftItems, centerItems, rightItems, mainBarClassName } = this.props;
         let key = 0;
         return (
             <div
                 className={classNames(
                     'clearfix',
-                    styles['bar-wrapper']
+                    styles['bar-wrapper'],
+                    mainBarClassName || ''
                 )}
             >
                 <div
