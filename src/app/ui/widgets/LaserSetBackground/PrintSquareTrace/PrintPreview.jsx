@@ -3,6 +3,7 @@ import PropTypes from 'prop-types';
 import * as THREE from 'three';
 import Detector from 'three/examples/js/Detector';
 import RectangleGridHelper from '../../../../three-extensions/RectangleGridHelper';
+import WebGLRendererWrapper from '../../../../three-extensions/WebGLRendererWrapper';
 
 
 class PrintPreview extends Component {
@@ -40,6 +41,11 @@ class PrintPreview extends Component {
 
     componentWillUnmount() {
         cancelAnimationFrame(this.frameId);
+
+        if (this.renderer) {
+            this.renderer.dispose();
+            this.renderer = null;
+        }
     }
 
     setupThreejs() {
@@ -49,7 +55,7 @@ class PrintPreview extends Component {
         this.camera.position.set(0, 0, 170);
         this.camera.lookAt(new THREE.Vector3(0, 0, 0));
 
-        this.renderer = new THREE.WebGLRenderer({ antialias: true });
+        this.renderer = new WebGLRendererWrapper({ antialias: true });
         this.renderer.setClearColor(new THREE.Color(0xfafafa), 1);
         this.renderer.setSize(width, height);
 

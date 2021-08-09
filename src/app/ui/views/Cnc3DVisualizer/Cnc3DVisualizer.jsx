@@ -97,8 +97,10 @@ const setMeshTransform = (mesh, sourceScale, transformation, isRotate, direction
 
 
 const set3AxisMeshState = (mesh, transformation, platSize) => {
-    const { positionX: x, positionY: z, width, height } = transformation;
+    const { positionX: x, positionY: z, rotationZ, width, height } = transformation;
     mesh.position.set(x, 0, z);
+    mesh.applyMatrix(new Matrix4().makeRotationY(-rotationZ));
+    // mesh.rotation.set(0, -rotationZ, 0);
     if (Math.abs(x) + width / 2 > platSize.x / 2 || Math.abs(z) + height / 2 > platSize.z / 2) {
         const material = new MeshPhongMaterial({ color: 0xff0000, specular: 0xb0b0b0, shininess: 0 });
         mesh.material = material;
@@ -130,7 +132,7 @@ const set4AxisMeshState = async (mesh, transformation, materials, coordinateSize
     // mesh.add(
     //     meshCylinder
     // );
-
+    mesh.applyMatrix(new Matrix4().makeRotationY(-transformation.rotationZ));
     mesh.position.set(0, 0, materials.length / 2 - transformation.positionY - coordinateSize.y / 2);
     mesh.updateMatrix();
     if (radius) {

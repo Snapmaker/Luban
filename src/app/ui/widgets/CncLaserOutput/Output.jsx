@@ -43,7 +43,7 @@ class Output extends PureComponent {
         isGcodeGenerating: PropTypes.bool.isRequired,
         workflowState: PropTypes.string.isRequired,
         gcodeFile: PropTypes.object,
-        commitGenerateGcode: PropTypes.func.isRequired,
+        setThumbnail: PropTypes.func.isRequired,
         commitGenerateViewPath: PropTypes.func.isRequired,
         renderGcodeFile: PropTypes.func.isRequired,
         createToolPath: PropTypes.func.isRequired,
@@ -72,9 +72,9 @@ class Output extends PureComponent {
         switchToProcess: () => {
             this.props.switchToPage(PAGE_PROCESS);
         },
-        onGenerateGcode: () => {
+        onGenerateThumbnail: () => {
             const thumbnail = this.thumbnail.current.getThumbnail();
-            this.props.commitGenerateGcode(thumbnail);
+            this.props.setThumbnail(thumbnail);
         },
         onLoadGcode: async () => {
             const { gcodeFile } = this.props;
@@ -104,9 +104,6 @@ class Output extends PureComponent {
         preview: async () => {
             if (this.props.needToPreview) {
                 await this.props.preview();
-                if (this.props.canGenerateGcode) {
-                    this.actions.onGenerateGcode();
-                }
             } else {
                 this.props.showToolPathGroupObject();
             }
@@ -143,6 +140,9 @@ class Output extends PureComponent {
                 title: i18n._('Failed to preview'),
                 body: i18n._('Failed to preview, please modify parameters and try again.')
             });
+        }
+        if (nextProps.canGenerateGcode !== this.props.canGenerateGcode && nextProps.canGenerateGcode) {
+            this.actions.onGenerateThumbnail();
         }
     }
 
@@ -313,7 +313,7 @@ const mapDispatchToProps = (dispatch, ownProps) => {
         showModelGroupObject: () => dispatch(editorActions.showModelGroupObject(headType)),
         clearGcodeFile: () => dispatch(editorActions.clearGcodeFile(headType)),
         // togglePage: (page) => dispatch(editorActions.togglePage(headType, page)),
-        commitGenerateGcode: (thumbnail) => dispatch(editorActions.commitGenerateGcode(headType, thumbnail)),
+        setThumbnail: (thumbnail) => dispatch(editorActions.setThumbnail(headType, thumbnail)),
         renderGcodeFile: (fileName) => dispatch(workspaceActions.renderGcodeFile(fileName)),
         createToolPath: () => dispatch(editorActions.createToolPath(headType)),
         exportFile: (targetFile) => dispatch(projectActions.exportFile(targetFile)),

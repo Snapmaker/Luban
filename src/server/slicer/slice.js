@@ -7,7 +7,7 @@ import { CURA_ENGINE_MACOS, CURA_ENGINE_WIN64, CURA_ENGINE_LINUX } from '../cons
 import DataStorage from '../DataStorage';
 import settings from '../config/settings';
 import { DefinitionLoader } from './definition';
-import { pathWithRandomSuffix } from '../../shared/lib/random-utils';
+import { generateRandomPathName } from '../../shared/lib/random-utils';
 
 
 const log = logger('print3d-slice');
@@ -147,7 +147,7 @@ function slice(params, onProgress, onSucceed, onError) {
     }
 
 
-    const gcodeFilename = pathWithRandomSuffix(`${path.parse(originalName).name}.gcode`);
+    const gcodeFilename = generateRandomPathName(`${path.parse(originalName).name}.gcode`);
     const gcodeFilePath = `${DataStorage.tmpDir}/${gcodeFilename}`;
     const process = callCuraEngine(modelConfig, supportConfig, gcodeFilePath);
 

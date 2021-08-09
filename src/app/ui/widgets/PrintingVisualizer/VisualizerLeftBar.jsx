@@ -18,8 +18,8 @@ class VisualizerLeftBar extends PureComponent {
     static propTypes = {
         size: PropTypes.object.isRequired,
         selectedModelArray: PropTypes.array,
-        hasModel: PropTypes.bool,
-        gcodeLine: PropTypes.object,
+        // hasModel: PropTypes.bool,
+        // gcodeLine: PropTypes.object,
         transformMode: PropTypes.string.isRequired,
         transformation: PropTypes.shape({
             positionX: PropTypes.number,
@@ -36,7 +36,7 @@ class VisualizerLeftBar extends PureComponent {
         defaultSupportSize: PropTypes.shape({
             x: PropTypes.number,
             y: PropTypes.number
-        }).isRequired,
+        }),
         inProgress: PropTypes.bool.isRequired,
         isSupporting: PropTypes.bool.isRequired,
         isSupportSelected: PropTypes.bool.isRequired,
@@ -204,8 +204,8 @@ class VisualizerLeftBar extends PureComponent {
 
     render() {
         const actions = this.actions;
-        const { size, hasModel, selectedModelArray, transformMode,
-            transformation, defaultSupportSize, isSupporting, gcodeLine,
+        const { size, selectedModelArray, transformMode,
+            transformation, defaultSupportSize, isSupporting,
             isSupportSelected, modelSize, supportActions, inProgress } = this.props;
         let moveX = 0;
         let moveY = 0;
@@ -340,23 +340,6 @@ class VisualizerLeftBar extends PureComponent {
                                                 actions.setTransformMode('mirror');
                                             }}
                                             disabled={transformDisabled || isSupportSelected}
-                                        />
-                                    </li>
-                                </ul>
-                                <ul className={classNames(styles.nav, 'border-bottom-normal')}>
-                                    <li
-                                        className="margin-vertical-4"
-                                    >
-                                        <SvgIcon
-                                            color="#545659"
-                                            type={['hoverSpecial', 'pressSpecial']}
-                                            name="ToolbarAutoLayout"
-                                            size={48}
-                                            className="padding-horizontal-4"
-                                            onClick={() => {
-                                                actions.arrangeAllModels();
-                                            }}
-                                            disabled={inProgress || !hasModel || isSupportSelected || gcodeLine}
                                         />
                                     </li>
                                 </ul>
@@ -762,7 +745,7 @@ class VisualizerLeftBar extends PureComponent {
                                             size="small"
                                             min={1}
                                             max={size.x / 2}
-                                            value={defaultSupportSize.x}
+                                            value={defaultSupportSize?.x}
                                             onChange={(value) => {
                                                 supportActions.setDefaultSupportSize({ x: value });
                                             }}
@@ -777,7 +760,7 @@ class VisualizerLeftBar extends PureComponent {
                                             size="small"
                                             min={1}
                                             max={size.y / 2}
-                                            value={defaultSupportSize.y}
+                                            value={defaultSupportSize?.y}
                                             onChange={(value) => {
                                                 supportActions.setDefaultSupportSize({ y: value });
                                             }}
@@ -848,7 +831,7 @@ const mapStateToProps = (state) => {
         size: machine.size,
         selectedModelArray: modelGroup.selectedModelArray,
         transformation: modelGroup.getSelectedModelTransformationForPrinting(),
-        // defaultSupportSize: modelGroup.defaultSupportSize,
+        defaultSupportSize: modelGroup.defaultSupportSize,
         hasModel,
         gcodeLine,
         isSupportSelected,
