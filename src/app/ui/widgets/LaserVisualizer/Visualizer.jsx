@@ -72,6 +72,7 @@ class Visualizer extends Component {
         initContentGroup: PropTypes.func.isRequired,
         updateTarget: PropTypes.func,
         updateScale: PropTypes.func,
+        scaleCanvasToFit: PropTypes.func,
         getEstimatedTime: PropTypes.func.isRequired,
         // getSelectedModel: PropTypes.func.isRequired,
         bringSelectedModelToFront: PropTypes.func.isRequired,
@@ -191,8 +192,8 @@ class Visualizer extends Component {
         },
         autoFocus: () => {
             this.canvas.current.setCameraOnTop();
-            this.props.updateScale(1);
-            // this.props.updateTarget({ x: 0, y: 0 });
+            this.props.scaleCanvasToFit();
+
             const { coordinateMode, coordinateSize } = this.props;
             const target = {
                 x: 0,
@@ -201,8 +202,8 @@ class Visualizer extends Component {
             target.x += coordinateSize.x / 2 * coordinateMode.setting.sizeMultiplyFactor.x;
             target.y += coordinateSize.y / 2 * coordinateMode.setting.sizeMultiplyFactor.y;
 
-            target.x /= 1.5;
-            target.y /= 1.5;
+            target.x /= 1;
+            target.y /= 1;
             this.props.updateTarget(target);
         },
         onSelectModels: (intersect, selectEvent) => { // this is a toolpath model? mesh object??
@@ -277,6 +278,7 @@ class Visualizer extends Component {
 
     componentDidMount() {
         this.canvas.current.resizeWindow();
+        this.actions.autoFocus();
         this.props.clearOperationHistory();
         UniApi.Event.on('appbar-menu:laser.import', this.actions.importFile);
     }
@@ -288,6 +290,7 @@ class Visualizer extends Component {
             const { size, materials } = nextProps;
             this.printableArea.updateSize(size, materials);
             this.canvas.current.setCamera(new THREE.Vector3(0, 0, 300), new THREE.Vector3());
+            this.actions.autoFocus();
         }
 
         // const { model } = nextProps;
@@ -628,6 +631,7 @@ const mapDispatchToProps = (dispatch) => {
         initContentGroup: (svgContentGroup) => dispatch(editorActions.initContentGroup('laser', svgContentGroup)),
         updateTarget: (target) => dispatch(editorActions.updateState('laser', { target })),
         updateScale: (scale) => dispatch(editorActions.updateState('laser', { scale })),
+        scaleCanvasToFit: () => dispatch(editorActions.scaleCanvasToFit('laser')),
         getEstimatedTime: (type) => dispatch(editorActions.getEstimatedTime('laser', type)),
         getSelectedModel: () => dispatch(editorActions.getSelectedModel('laser')),
         bringSelectedModelToFront: () => dispatch(editorActions.bringSelectedModelToFront('laser')),

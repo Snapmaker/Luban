@@ -69,7 +69,21 @@ class ToolPath {
         this.checkoutToolPathStatus();
     }
 
-    getState() {
+    getState(filterInvisible = false) {
+        let modelIDs = [];
+        let toolPathFiles = [];
+        if (filterInvisible) {
+            const modelsInModelIDs = this.modelGroup.models.filter(model => {
+                return this.modelIDs.includes(model.modelID) && model.visible === true;
+            });
+            if (modelsInModelIDs) {
+                modelIDs = [...modelsInModelIDs.map(model => model.modelID)];
+                toolPathFiles = [...modelIDs.map(v => this.modelMap.get(v).toolPathFile)];
+            }
+        } else {
+            modelIDs = this.modelIDs.map(v => v);
+            toolPathFiles = this._getToolPathFiles();
+        }
         return {
             id: this.id,
             headType: this.headType,
@@ -80,8 +94,8 @@ class ToolPath {
             status: this.status,
             check: this.check,
             visible: this.visible,
-            modelIDs: this.modelIDs.map(v => v),
-            toolPathFiles: this._getToolPathFiles(),
+            modelIDs,
+            toolPathFiles,
             gcodeConfig: {
                 ...this.gcodeConfig
             },
@@ -96,6 +110,10 @@ class ToolPath {
 
     updateStatus(status) {
         this.status = status;
+    }
+
+    setWarningStatus() {
+        this.status = WARNING;
     }
 
     updateState(toolPath) {
@@ -168,10 +186,10 @@ class ToolPath {
 
         for (let i = 0; i < taskInfos.length; i++) {
             const taskInfo = taskInfos[i];
-
-            data.push(taskInfo);
-
-            this.modelMap.get(taskInfo.modelID).status = RUNNING;
+            if (taskInfo.visible) {
+                data.push(taskInfo);
+                this.modelMap.get(taskInfo.modelID).status = RUNNING;
+            }
         }
 
         const task = {

@@ -17,7 +17,9 @@ import {
     PAGE_PROCESS,
     SOURCE_TYPE_IMAGE3D,
     DATA_PREFIX,
-    COORDINATE_MODE_BOTTOM_CENTER, DISPLAYED_TYPE_MODEL, COORDINATE_MODE_CENTER
+    COORDINATE_MODE_CENTER,
+    COORDINATE_MODE_BOTTOM_CENTER, DISPLAYED_TYPE_MODEL,
+    MIN_LASER_CNC_CANVAS_SCALE, MAX_LASER_CNC_CANVAS_SCALE
 } from '../../constants';
 import { baseActions } from './actions-base';
 import { processActions } from './actions-process';
@@ -1732,6 +1734,23 @@ export const actions = {
 
         dispatch(actions.resetProcessState(headType));
         dispatch(actions.updateState(headType, { coordinateMode, coordinateSize }));
+    },
+
+    scaleCanvasToFit: (headType) => (dispatch, getState) => {
+        const { coordinateSize } = getState()[headType];
+        const longestEdge = Math.max(coordinateSize.x, coordinateSize.y);
+        if (longestEdge > 0) {
+            let newScale = 350 / longestEdge * 0.6;
+            if (newScale < MIN_LASER_CNC_CANVAS_SCALE) {
+                newScale = MIN_LASER_CNC_CANVAS_SCALE;
+            }
+            if (newScale > MAX_LASER_CNC_CANVAS_SCALE) {
+                newScale = MAX_LASER_CNC_CANVAS_SCALE;
+            }
+            dispatch(actions.updateState(headType, {
+                scale: newScale
+            }));
+        }
     }
 };
 

@@ -18,7 +18,8 @@ import ToolPathFastConfigurations from '../../../views/ToolPathConfigurations/To
 
 import {
     PAGE_EDITOR,
-    PAGE_PROCESS
+    PAGE_PROCESS,
+    DISPLAYED_TYPE_TOOLPATH
 } from '../../../../constants';
 import ContextMenu from '../../../components/ContextMenu';
 
@@ -69,6 +70,7 @@ const ToolpathItem = ({
                         if (!(selectedToolPathIDArray.length === 1 && selectedToolPathIDArray[0] === toolPath.id)) {
                             selectOneToolPathId(toolPath.id);
                         }
+                        e.persist();
                         showContextMenu(e);
                     }
                 }}
@@ -141,12 +143,13 @@ const ToolPathListBox = (props) => {
     const selectedToolPathIDArray = useSelector(state => state[props.headType]?.toolPathGroup?.selectedToolPathArray, shallowEqual);
     const inProgress = useSelector(state => state[props.headType]?.inProgress);
     const firstSelectedToolpath = useSelector(state => state[props.headType]?.toolPathGroup?.isSingleSelected && state[props.headType]?.toolPathGroup?.firstSelectedToolpath, shallowEqual);
+    const displayedType = useSelector(state => state[props.headType]?.displayedType);
     const dispatch = useDispatch();
 
     const selectedToolPathId = firstSelectedToolpath.id;
     const [editingToolpath, setEditingToolpath] = useState(null);
     const contextMenuRef = useRef(null);
-    let contextMenuDisabled = true;
+    const contextMenuDisabled = (!firstSelectedToolpath);
     const contextMenuArrangementDisabled = (toolPaths.length === 1);
     const actions = {
         selectOneToolPathId: (id) => {
@@ -163,28 +166,39 @@ const ToolPathListBox = (props) => {
                 visible: !visible,
                 check: !check
             }));
-            dispatch(editorActions.resetProcessState(props.headType));
+            if (displayedType === DISPLAYED_TYPE_TOOLPATH) {
+                dispatch(editorActions.refreshToolPathPreview(props.headType));
+            } else {
+                dispatch(editorActions.resetProcessState(props.headType));
+            }
         },
-        deleteToolPath: () => dispatch(editorActions.deleteToolPath(props.headType, selectedToolPathIDArray)),
+        deleteToolPath: () => {
+            dispatch(editorActions.deleteToolPath(props.headType, selectedToolPathIDArray));
+            dispatch(editorActions.refreshToolPathPreview(props.headType));
+        },
         commitGenerateToolPath: (toolPathId) => dispatch(editorActions.commitGenerateToolPath(props.headType, toolPathId)),
         toolPathToUp: () => {
             if (selectedToolPathIDArray.length === 1) {
                 dispatch(editorActions.toolPathToUp(props.headType, selectedToolPathIDArray[0]));
+                dispatch(editorActions.refreshToolPathPreview(props.headType));
             }
         },
         toolPathToDown: () => {
             if (selectedToolPathIDArray.length === 1) {
                 dispatch(editorActions.toolPathToDown(props.headType, selectedToolPathIDArray[0]));
+                dispatch(editorActions.refreshToolPathPreview(props.headType));
             }
         },
         toolPathToTop: () => {
             if (selectedToolPathIDArray.length === 1) {
                 dispatch(editorActions.toolPathToTop(props.headType, selectedToolPathIDArray[0]));
+                dispatch(editorActions.refreshToolPathPreview(props.headType));
             }
         },
         toolPathToBottom: () => {
             if (selectedToolPathIDArray.length === 1) {
                 dispatch(editorActions.toolPathToBottom(props.headType, selectedToolPathIDArray[0]));
+                dispatch(editorActions.refreshToolPathPreview(props.headType));
             }
         },
         createToolPath: () => {
@@ -199,7 +213,9 @@ const ToolPathListBox = (props) => {
             });
         },
         showContextMenu: (event) => {
-            contextMenuRef.current.show(event);
+            setTimeout(() => {
+                contextMenuRef.current.show(event);
+            }, 0);
         }
     };
     useEffect(() => {
@@ -211,8 +227,7 @@ const ToolPathListBox = (props) => {
         } else if (page === PAGE_PROCESS) {
             props.widgetActions.setDisplay(true);
         }
-        contextMenuDisabled = (!selectedToolPathId);
-    }, [page, selectedToolPathId]);
+    }, [page]);
 
     return (
         <div className="clearfix">

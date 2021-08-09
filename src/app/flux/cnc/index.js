@@ -114,7 +114,9 @@ const INITIAL_STATE = {
     emptyToolPaths: [],
 
     // check not to duplicated create event
-    initEventFlag: false
+    initEventFlag: false,
+    // used to manually control the gcode ganeration including thumbnails
+    shouldGenerateGcodeCounter: 0
 };
 
 export const actions = {

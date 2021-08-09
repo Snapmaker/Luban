@@ -433,6 +433,7 @@ function Laser({ location }) {
                     dispatch(editorActions.changeCoordinateMode(HEAD_LASER,
                         jobTypeState.coordinateMode, jobTypeState.coordinateSize));
                     dispatch(editorActions.updateMaterials(HEAD_LASER, jobTypeState.materials));
+                    dispatch(editorActions.scaleCanvasToFit(HEAD_LASER));
                     setShowJobType(false);
                 }
             }

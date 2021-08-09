@@ -187,19 +187,19 @@ class SVGCanvas extends PureComponent {
             || nextProps.coordinateSize.y !== this.props.coordinateSize.y) {
             this.printableArea.updateCoordinateMode(nextProps.coordinateMode, nextProps.coordinateSize);
 
-            const { coordinateSize, coordinateMode } = this.props;
+            // const { coordinateSize, coordinateMode } = this.props;
             const coorDelta = {
                 dx: 0,
                 dy: 0
             };
-            coorDelta.dx += coordinateSize.x / 2 * coordinateMode.setting.sizeMultiplyFactor.x;
-            coorDelta.dy -= coordinateSize.y / 2 * coordinateMode.setting.sizeMultiplyFactor.y;
+            // coorDelta.dx += coordinateSize.x / 2 * coordinateMode.setting.sizeMultiplyFactor.x;
+            // coorDelta.dy -= coordinateSize.y / 2 * coordinateMode.setting.sizeMultiplyFactor.y;
 
             coorDelta.dx -= nextProps.coordinateSize.x / 2 * nextProps.coordinateMode.setting.sizeMultiplyFactor.x;
             coorDelta.dy += nextProps.coordinateSize.y / 2 * nextProps.coordinateMode.setting.sizeMultiplyFactor.y;
 
-            this.offsetX += coorDelta.dx / 1.5;
-            this.offsetY += coorDelta.dy / 1.5;
+            this.offsetX = coorDelta.dx / 1;
+            this.offsetY = coorDelta.dy / 1;
             this.target = { x: -this.offsetX, y: this.offsetY };
             this.props.updateTarget(this.target);
             this.updateCanvas(null, nextProps.materials);
@@ -1260,8 +1260,8 @@ class SVGCanvas extends PureComponent {
         const svgWidth = size.x * 2 * this.scale * ratio;
         const svgHeight = size.y * 2 * this.scale * ratio;
 
-        const x = (width - svgWidth) / 2 + this.offsetX * this.scale;
-        const y = (height - svgHeight) / 2 + this.offsetY * this.scale;
+        const x = (width - svgWidth) / 2 + this.offsetX * this.scale * ratio;
+        const y = (height - svgHeight) / 2 + this.offsetY * this.scale * ratio;
 
         setAttributes(this.svgContent, {
             width: svgWidth,

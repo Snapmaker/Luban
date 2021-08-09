@@ -71,6 +71,7 @@ class Visualizer extends Component {
         initContentGroup: PropTypes.func.isRequired,
         updateTarget: PropTypes.func,
         updateScale: PropTypes.func,
+        scaleCanvasToFit: PropTypes.func,
 
         getEstimatedTime: PropTypes.func.isRequired,
         // getSelectedModel: PropTypes.func.isRequired,
@@ -194,7 +195,7 @@ class Visualizer extends Component {
         },
         autoFocus: () => {
             this.canvas.current.setCameraOnTop();
-            this.props.updateScale(1);
+            this.props.scaleCanvasToFit();
 
             const { coordinateMode, coordinateSize } = this.props;
             const target = {
@@ -204,8 +205,8 @@ class Visualizer extends Component {
             target.x += coordinateSize.x / 2 * coordinateMode.setting.sizeMultiplyFactor.x;
             target.y += coordinateSize.y / 2 * coordinateMode.setting.sizeMultiplyFactor.y;
 
-            target.x /= 1.5;
-            target.y /= 1.5;
+            target.x /= 1;
+            target.y /= 1;
             this.props.updateTarget(target);
         },
         onSelectModels: (intersect, selectEvent) => {
@@ -274,6 +275,7 @@ class Visualizer extends Component {
 
     componentDidMount() {
         this.canvas.current.resizeWindow();
+        this.actions.autoFocus();
         this.props.clearOperationHistory();
         UniApi.Event.on('appbar-menu:cnc.import', this.actions.importFile);
     }
@@ -285,6 +287,7 @@ class Visualizer extends Component {
             const { size, materials } = nextProps;
             this.printableArea.updateSize(size, materials);
             this.canvas.current.setCamera(new THREE.Vector3(0, 0, Math.min(size.z, 300)), new THREE.Vector3());
+            this.actions.autoFocus();
         }
 
         // const { model } = nextProps;
@@ -672,6 +675,7 @@ const mapDispatchToProps = (dispatch) => {
         initContentGroup: (svgContentGroup) => dispatch(editorActions.initContentGroup('cnc', svgContentGroup)),
         updateTarget: (target) => dispatch(editorActions.updateState('cnc', { target })),
         updateScale: (scale) => dispatch(editorActions.updateState('cnc', { scale })),
+        scaleCanvasToFit: () => dispatch(editorActions.scaleCanvasToFit('cnc')),
         getEstimatedTime: (type) => dispatch(editorActions.getEstimatedTime('cnc', type)),
         getSelectedModel: () => dispatch(editorActions.getSelectedModel('cnc')),
         bringSelectedModelToFront: () => dispatch(editorActions.bringSelectedModelToFront('cnc')),
