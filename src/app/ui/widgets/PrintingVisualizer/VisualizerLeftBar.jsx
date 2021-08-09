@@ -248,7 +248,7 @@ class VisualizerLeftBar extends PureComponent {
                         multiple={false}
                         onChange={actions.onChangeFile}
                     />
-                    <div className="position-ab height-percent-100 border-radius-8 background-color-white width-56">
+                    <div className="position-ab height-percent-100 border-radius-8 background-color-white width-56 box-shadow-module">
                         <nav className={styles.navbar}>
                             <ul className={classNames(styles.nav, 'border-bottom-normal')}>
                                 <li
@@ -356,11 +356,11 @@ class VisualizerLeftBar extends PureComponent {
                                             onClick={() => {
                                                 actions.arrangeAllModels();
                                             }}
-                                            disabled={!!(inProgress || !hasModel || isSupportSelected || gcodeLine)}
+                                            disabled={inProgress || !hasModel || isSupportSelected || gcodeLine}
                                         />
                                     </li>
                                 </ul>
-                                <ul className={styles.nav}>
+                                <ul className={classNames(styles.nav)}>
                                     <li
                                         className="margin-vertical-4"
                                     >

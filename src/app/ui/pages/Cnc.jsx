@@ -6,6 +6,7 @@ import { useHistory, withRouter } from 'react-router-dom';
 import path from 'path';
 import { Trans } from 'react-i18next';
 import 'intro.js/introjs.css';
+import Steps from '../components/Steps';
 import Dropdown from '../components/Dropdown';
 import Menu from '../components/Menu';
 import i18n from '../../lib/i18n';
@@ -67,7 +68,6 @@ import Workspace from './Workspace';
 import { machineStore } from '../../store/local-storage';
 import Thumbnail from '../widgets/CncLaserShared/Thumbnail';
 import { laserCncIntroStepOne, laserCncIntroStepTwo, laserCncIntroStepFive, laserCncIntroStepSix, cnc4AxisStepOne } from './introContent';
-import Steps from '../components/Steps';
 
 const allWidgets = {
     'control': ControlWidget,

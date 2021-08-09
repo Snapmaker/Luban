@@ -76,6 +76,7 @@ class WorkspaceLayout extends PureComponent {
                             'border-radius-8',
                             'background-color-white',
                             'margin-8',
+                            'box-shadow-module'
                             // 'sm-flex-auto'
                         )}
                     >
@@ -99,7 +100,8 @@ class WorkspaceLayout extends PureComponent {
                             'border-radius-8',
                             'background-color-white',
                             'margin-8',
-                            'sm-flex-auto'
+                            'sm-flex-auto',
+                            'box-shadow-module'
                         )}
                     >
                         {renderRightView && (

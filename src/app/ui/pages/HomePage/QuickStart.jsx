@@ -21,6 +21,7 @@ const QuickStart = (props) => {
 
     // redux correlation
     const series = useSelector(state => state?.machine?.series);
+    console.log({ series });
     const use4Axis = useSelector(state => state?.machine?.use4Axis);
     const dispatch = useDispatch();
 
@@ -29,6 +30,7 @@ const QuickStart = (props) => {
         switch (series) {
             case MACHINE_SERIES.ORIGINAL.value:
             case MACHINE_SERIES.CUSTOM.value:
+            case MACHINE_SERIES.ORIGINAL_LZ.value:
                 setCaseConfig(CaseConfigOriginal);
                 setCaseConfigFourAxis([]);
                 break;

@@ -274,14 +274,17 @@ class Configurations extends PureComponent {
                         style={{ minWidth: '700px' }}
                         onClose={actions.closePannel}
                     >
+                        <Modal.Header>
+                            {i18n._('Custom Parameter Visibility ')}
+                        </Modal.Header>
                         <Modal.Body>
-                            <div className={classNames(styles['manager-type-wrapper'])}>
+                            {/* <div className={classNames(styles['manager-type-wrapper'])}>
                                 <div
                                     className={classNames(styles['manager-type'], 'font-weight-blod')}
                                 >
                                     {i18n._('Custom Parameter Visibility ')}
                                 </div>
-                            </div>
+                            </div> */}
 
                             <div
                                 className={classNames(styles['manager-content'])}

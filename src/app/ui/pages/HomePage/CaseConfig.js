@@ -70,7 +70,7 @@ export const CaseConfig150 = [
         tag: 'cnc',
         tag_i18n: 'CNC',
         // title: 'CNC Cut Keychain',
-        title: 'Phone Holder',
+        title: 'Keychain',
         mode: 'vector', // mode: 'vector','greyscale','bw','text','trace'
         imgSrc: '../../resources/images/user-case/A150/library_phone_holder_97x97.png',
         pathConfig: {

@@ -51,7 +51,7 @@ class SVGLeftBar extends PureComponent {
         return (
             <React.Fragment>
                 <div className={classNames(styles['svg-left-bar'])}>
-                    <div className={classNames('position-ab', 'height-percent-100', 'border-radius-8', styles['center-tool'])}>
+                    <div className={classNames('position-ab', 'height-percent-100', 'border-radius-8', styles['center-tool'], 'box-shadow-module')}>
                         <input
                             ref={this.props.fileInput}
                             type="file"
