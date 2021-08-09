@@ -93,6 +93,7 @@ function useUnSavedTag(headType) {
 }
 function useRenderMainToolBar(setShowHomePage, setShowJobType, setShowWorkspace, isRotate) {
     // (!workPosition.isFourAxis && (connectionType === CONNECTION_TYPE_WIFI && isConnected && !hasBackground))
+    const unSaved = useSelector(state => state?.project[pageHeadType]?.unSaved, shallowEqual);
     const isConnected = useSelector(state => state?.machine?.isConnected, shallowEqual);
     const series = useSelector(state => state?.machine?.series, shallowEqual);
     const canRedo = useSelector(state => state[HEAD_LASER]?.history?.canRedo, shallowEqual);
@@ -159,6 +160,7 @@ function useRenderMainToolBar(setShowHomePage, setShowJobType, setShowWorkspace,
         {
             title: i18n._('Save'),
             type: 'button',
+            disabled: !unSaved,
             name: 'MainToolbarSave',
             action: () => {
                 dispatch(projectActions.save(HEAD_LASER));

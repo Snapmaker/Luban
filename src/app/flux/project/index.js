@@ -18,6 +18,8 @@ import { actions as editorActions } from '../editor';
 // import machineAction from '../machine/action-base';
 import { actions as workspaceActions } from '../workspace';
 import { bubbleSortByAttribute } from '../../lib/numeric-utils';
+import { UniformToolpathConfig } from '../../lib/uniform-toolpath-config';
+
 import { actions as operationHistoryActions } from '../operation-history';
 
 import i18n from '../../lib/i18n';
@@ -214,7 +216,8 @@ export const actions = {
         }
 
         for (let k = 0; k < models.length; k++) {
-            const { headType, originalName, uploadName, config, sourceType, gcodeConfig, sourceWidth, sourceHeight, mode, transformation, modelID, supportTag } = models[k];
+            const { headType, originalName, uploadName, config, sourceType, gcodeConfig,
+                sourceWidth, sourceHeight, mode, transformation, modelID, supportTag } = models[k];
             // prevent project recovery recorded into operation history
             if (supportTag) {
                 continue;
@@ -382,7 +385,8 @@ export const actions = {
             }
             const machineInfo = envObj.machineInfo;
             let headType;
-            // Compatible with old project file
+            // Start of Compatible with old project file
+
             if (machineInfo) {
                 // new verison of project file
                 headType = machineInfo.headType;
@@ -390,6 +394,10 @@ export const actions = {
                 // old verison of project file
                 headType = envObj.headType;
             }
+            UniformToolpathConfig(envObj);
+
+            // End of Compatible with old project file
+
             const oldHeadType = getCurrentHeadType(history?.location?.pathname) || headType;
             await dispatch(actions.save(oldHeadType, {
                 message: i18n._('Do you want to save the changes in the {{headType}} editor?', { headType: HEAD_TYPE_ENV_NAME[oldHeadType] })
@@ -403,7 +411,6 @@ export const actions = {
 
             await dispatch(actions.onRecovery(headType, envObj, false));
             if (shouldSetFileName) {
-                console.log('other file', file);
                 if (file instanceof File) {
                     await dispatch(actions.setOpenedFileWithType(headType, file));
                 } else {
@@ -411,7 +418,6 @@ export const actions = {
                 }
                 dispatch(actions.updateState(headType, { unSaved: false }));
             } else {
-                console.log('casefile', file);
                 dispatch(actions.updateState(headType, { unSaved: false, openedFile: null }));
                 dispatch(actions.setOpenedFileWithUnSaved(headType, true));
             }
