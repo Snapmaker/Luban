@@ -166,8 +166,9 @@ class Visualizer extends Component {
 
             this.props.uploadImage(file, uploadMode, () => {
                 modal({
-                    title: i18n._('Parse Error'),
-                    body: i18n._('Failed to parse image file {{filename}}.', { filename: file.name })
+                    cancelTitle: i18n._('Close'),
+                    title: i18n._('Import Error'),
+                    body: i18n._('Failed to import this object. \nPlease select a supported file format.')
                 });
             });
         },

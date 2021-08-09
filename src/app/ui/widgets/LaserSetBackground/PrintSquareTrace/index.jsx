@@ -129,7 +129,7 @@ class PrintSquareTrace extends PureComponent {
             <Modal style={{ width: '480px', height: '720px' }} size="lg" onClose={this.props.hideModal}>
                 <div className="clearfix" />
                 <Modal.Header>
-                    {i18n._('Print Square Trace')}
+                    {i18n._('Engrave Square')}
                 </Modal.Header>
 
                 <Modal.Body>

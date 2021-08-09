@@ -774,7 +774,7 @@ export const COORDINATE_MODE_CENTER = {
     }
 };
 export const COORDINATE_MODE_TOP_RIGHT = {
-    label: 'Top-Right',
+    label: 'Top Right',
     value: 'top-right',
     setting: {
         sizeMultiplyFactor: {
@@ -784,7 +784,7 @@ export const COORDINATE_MODE_TOP_RIGHT = {
     }
 };
 export const COORDINATE_MODE_BOTTOM_RIGHT = {
-    label: 'Bottom-Right',
+    label: 'Bottom Right',
     value: 'bottom-right',
     setting: {
         sizeMultiplyFactor: {
@@ -794,7 +794,7 @@ export const COORDINATE_MODE_BOTTOM_RIGHT = {
     }
 };
 export const COORDINATE_MODE_TOP_LEFT = {
-    label: 'Top-Left',
+    label: 'Top Left',
     value: 'top-left',
     setting: {
         sizeMultiplyFactor: {
@@ -804,7 +804,7 @@ export const COORDINATE_MODE_TOP_LEFT = {
     }
 };
 export const COORDINATE_MODE_BOTTOM_LEFT = {
-    label: 'Bottom-Left',
+    label: 'Bottom Left',
     value: 'bottom-left',
     setting: {
         sizeMultiplyFactor: {
@@ -814,7 +814,7 @@ export const COORDINATE_MODE_BOTTOM_LEFT = {
     }
 };
 export const COORDINATE_MODE_BOTTOM_CENTER = {
-    label: 'Bottom-Center',
+    label: 'Top',
     value: 'bottom-center',
     setting: {
         sizeMultiplyFactor: {

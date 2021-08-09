@@ -208,7 +208,7 @@ const ToolPathListBox = (props) => {
                             'background-color-blue'
                         )}
                         >
-                            {i18n._('Select object to create toolPath')}
+                            {i18n._('Select object to create toolpath')}
                         </div>
                     )}
 

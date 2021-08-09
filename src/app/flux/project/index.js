@@ -371,7 +371,7 @@ export const actions = {
             }
             const oldHeadType = getCurrentHeadType(history?.location?.pathname) || headType;
             await dispatch(actions.save(oldHeadType, {
-                message: i18n._('Do you want to save the changes in the {{headType}} editor?', { headType: HEAD_TYPE_ENV_NAME[oldHeadType] })
+                message: i18n._('Save the changes you made in the {{headType}} G-code Generator? Your changes will be lost if you don’t save them.', { headType: HEAD_TYPE_ENV_NAME[oldHeadType] })
             }));
             await dispatch(actions.closeProject(oldHeadType));
             content && dispatch(actions.updateState(headType, { findLastEnvironment: false, content, unSaved: false }));
@@ -405,7 +405,7 @@ export const actions = {
             return;
         }
         await dispatch(actions.save(oldHeadType, {
-            message: i18n._('Do you want to save the changes in the {{headType}} editor?', { headType: HEAD_TYPE_ENV_NAME[oldHeadType] })
+            message: i18n._('Save the changes you made in the {{headType}} G-code Generator? Your changes will be lost if you don’t save them.', { headType: HEAD_TYPE_ENV_NAME[oldHeadType] })
         }));
         await dispatch(actions.closeProject(oldHeadType));
 

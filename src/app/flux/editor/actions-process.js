@@ -116,7 +116,7 @@ export const processActions = {
                 const selectedModels = modelGroup.getSelectedToolPathModels();
                 if (getToolPathType([...selectedModels, model]).length !== 1) {
                     if (!toastId || !toast.isActive(toastId)) {
-                        toastId = toast(i18n._('Cannot generate toolpath; format of objects have to be the same.'));
+                        toastId = toast(i18n._('Failed to generate a toolpath. Selected objects should be of the same type.'));
                     }
                 } else if (selectedModels.findIndex(m => m === model) === -1) {
                     modelGroup.addSelectedToolPathModelIDs([model.modelID]);
@@ -141,7 +141,7 @@ export const processActions = {
         const selectedModels = modelGroup.getSelectedModelArray();
         if (getToolPathType(selectedModels).length !== 1) {
             if (!toastId || !toast.isActive(toastId)) {
-                toastId = toast(i18n._('Cannot generate toolpath; format of objects have to be the same.'));
+                toastId = toast(i18n._('Failed to generate a toolpath. Selected objects should be of the same type.'));
             }
             return null;
         }

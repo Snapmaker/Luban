@@ -131,7 +131,7 @@ class EditMacro extends PureComponent {
                                             type="default"
                                             onClick={onClose}
                                         >
-                                            {i18n._('No')}
+                                            {i18n._('Cancel')}
                                         </Button>
                                         <Button
                                             className="margin-left-8"
@@ -145,7 +145,7 @@ class EditMacro extends PureComponent {
                                                 onClose
                                             )}
                                         >
-                                            {i18n._('Yes')}
+                                            {i18n._('Delete')}
                                         </Button>
                                     </Modal.Footer>
                                 </Modal>
@@ -179,7 +179,7 @@ class EditMacro extends PureComponent {
                             });
                         }}
                     >
-                        {i18n._('Save Changes')}
+                        {i18n._('Save')}
                     </Button>
                 </Modal.Footer>
             </Modal>

@@ -95,7 +95,7 @@ class ManualCalibration extends PureComponent {
                         <div className={styles['calibrate-background']}>
                             <div className={styles['calibrate-advise']}>
                                 <p style={{ marginBottom: '1rem', textAlign: 'left', width: '522px' }}>
-                                    {i18n._('Align the four corners of the quadrilateral with the corners of the printed square. This will affect how the captured image is mapped with machine coordinates.') }
+                                    {i18n._('Align the four corners of the blue quadrilateral with the printed square.') }
                                 </p>
                             </div>
 
@@ -146,7 +146,7 @@ class ManualCalibration extends PureComponent {
                                 )}
                                 onClick={this.actions.previousPanel}
                             >
-                                {i18n._('Previous')}
+                                {i18n._('Back')}
                             </Button>
                         )}
                         {!EXPERIMENTAL_LASER_CAMERA && (

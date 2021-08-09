@@ -96,7 +96,7 @@ class ExtractSquareTrace extends PureComponent {
                     <div className="clearfix" />
                     <Modal.Header>
                         <div className={styles['laser-set-background-modal-title']}>
-                            {i18n._('Extract Square Trace')}
+                            {i18n._('Extract Square')}
                         </div>
                     </Modal.Header>
 
@@ -163,7 +163,7 @@ class ExtractSquareTrace extends PureComponent {
                                 className="float-l"
                                 onClick={this.actions.previousPanel}
                             >
-                                {i18n._('Previous')}
+                                {i18n._('Back')}
                             </Button>
                         )}
                         <Button

@@ -162,7 +162,7 @@ class WifiTransport extends PureComponent {
         sendFile: () => {
             const isSendingFile = modalSmallHOC({
                 title: i18n._('Sending File'),
-                text: i18n._('Please wait for the file transfer.'),
+                text: i18n._('Sending file. Please wait…'),
                 iconColor: '#4CB518',
                 img: 'WarningTipsProgress'
             }).ref;
@@ -188,7 +188,7 @@ class WifiTransport extends PureComponent {
                     } else {
                         (modalSmallHOC({
                             title: i18n._('File Sent Successfully'),
-                            text: i18n._('Please confirm whether to start this print job on the touchscreen.'),
+                            text: i18n._('Your file was successfully sent. Receive it on the Touchscreen.'),
                             iconColor: '#4CB518',
                             img: 'WarningTipsSuccess'
                         }));

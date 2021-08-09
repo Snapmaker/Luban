@@ -122,7 +122,7 @@ class AddMacro extends PureComponent {
                             });
                         }}
                     >
-                        {i18n._('OK')}
+                        {i18n._('Save')}
                     </Button>
                 </Modal.Footer>
             </Modal>

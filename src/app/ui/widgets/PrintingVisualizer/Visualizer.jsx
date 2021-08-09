@@ -358,8 +358,9 @@ class Visualizer extends PureComponent {
 
         if (stage !== this.props.stage && stage === PRINTING_STAGE.LOAD_MODEL_FAILED) {
             modal({
-                title: i18n._('Parse Error'),
-                body: i18n._('Failed to load model.')
+                cancelTitle: i18n._(''),
+                title: i18n._('Import Error'),
+                body: i18n._('Failed to import this object. \nPlease select a supported file format.')
             });
         }
         if (stage !== this.props.stage && stage === PRINTING_STAGE.LOAD_MODEL_SUCCEED) {
@@ -372,8 +373,8 @@ class Visualizer extends PureComponent {
                     title: i18n._('Scale to fit'),
                     body: (
                         <React.Fragment>
-                            <p>{i18n._('Model’s size exceeds the machine’s maximum build volume.')}</p>
-                            <p>{i18n._('Do you want scale model to fit machine?')}</p>
+                            <p>{i18n._('Model size has exceeded the printable area.')}</p>
+                            <p>{i18n._('Scale it to the maximum printable size?')}</p>
                         </React.Fragment>
 
                     ),
@@ -389,7 +390,7 @@ class Visualizer extends PureComponent {
                                 popupActions.close();
                             }}
                         >
-                            {i18n._('Yes')}
+                            {i18n._('Scale')}
                         </Button>
                     )
                 });

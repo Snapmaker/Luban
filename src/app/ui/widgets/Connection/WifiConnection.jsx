@@ -118,7 +118,7 @@ class WifiConnection extends PureComponent {
             this.setState({
                 showConnectionMessage: true,
                 connectionMessage: {
-                    text: i18n._('Please tap Yes on Snapmaker touchscreen to confirm Wi-Fi connection.'),
+                    text: i18n._('Confirm the Wi-Fi connection request on the Touchscreen.'),
                     title: i18n._('Screen Authorization Needed'),
                     img: IMAGE_WIFI_CONNECTING,
                     showCloseButton: true,

@@ -33,7 +33,7 @@ export default function (headType, onClose) {
     return renderModal({
         title: i18n._('Resume Job'),
         renderBody() {
-            return (<p>{i18n._('Do you want to resume previous job?')}</p>);
+            return (<p>{i18n._('Snapmaker Luban quit unexpectedly. Resume the previous job?')}</p>);
         },
         actions: [
             {
@@ -44,7 +44,7 @@ export default function (headType, onClose) {
                 }
             },
             {
-                name: i18n._('Yes'),
+                name: i18n._('Resume'),
                 isPrimary: true,
                 onClick: () => {
                     routeToHeadType(history, headType);

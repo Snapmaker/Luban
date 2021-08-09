@@ -178,7 +178,7 @@ const SettingGuideModal = (props) => {
                     {
                         settingStep === 'machine' && (
                             <div className={styles.machineSelect}>
-                                <div className={classNames(styles.titleLabel, 'heading-2')}>{i18n._('Choose a machine')}</div>
+                                <div className={classNames(styles.titleLabel, 'heading-2')}>{i18n._('Select machine')}</div>
                                 <div className={styles.machineContent}>
                                     <div className={styles.machineImg}>
                                         <SvgIcon
@@ -214,7 +214,7 @@ const SettingGuideModal = (props) => {
                                             )
                                         }
                                         <div className={styles.machineSize}>
-                                            <div>{i18n._('Dimensions')}:</div>
+                                            <div>{i18n._('Work Area')}:</div>
                                             {
                                                 !zAxis && (
                                                     <div>
@@ -268,7 +268,7 @@ const SettingGuideModal = (props) => {
                                 priority='level-two'
                                 className='display-inline margin-horizontal-8   '
                             >
-                                {i18n._('Done')}
+                                {i18n._('Complete')}
                             </Button>
                         )
                     }
