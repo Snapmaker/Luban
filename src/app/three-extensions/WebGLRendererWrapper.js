@@ -26,12 +26,31 @@ class WebGLRendererWrapper {
         return this.renderer.domElement;
     }
 
+    setClearColor(...args) {
+        this.renderer.setClearColor(args);
+    }
+
     setSize(width, height) {
         this.renderer && this.renderer.setSize(width, height);
     }
 
     render(scene, camera) {
         this.renderer.render(scene, camera);
+    }
+
+    dispose() {
+        if (!this.renderer) {
+            return;
+        }
+        try {
+            this.renderer.forceContextLoss();
+            this.renderer.context = null;
+            this.renderer.domElement = null;
+            this.renderer.dispose();
+            this.renderer = null;
+        } catch (e) {
+            console.warn(e);
+        }
     }
 }
 
