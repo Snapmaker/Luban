@@ -308,7 +308,8 @@ export const CNC_DEFAULT_GCODE_PARAMETERS_DEFINITION = {
         max: 100,
         value: 'stopHeight',
         default_value: 'stopHeight',
-        type: 'float'
+        type: 'float',
+        unit: 'mm'
     },
     'enableTab': {
         label: 'Use Tab',

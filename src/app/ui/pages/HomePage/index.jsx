@@ -49,6 +49,7 @@ const HomePage = (props) => { // Todo, what's the props ?
                             action: () => props?.onClose()
                         }
                     ]}
+                    mainBarClassName="background-transparent"
                 />
             )}
             <Begin {...props} />

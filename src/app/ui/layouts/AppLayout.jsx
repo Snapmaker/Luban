@@ -62,7 +62,8 @@ class AppLayout extends PureComponent {
         updateIsDownloading: PropTypes.func.isRequired,
         updateAutoupdateMessage: PropTypes.func.isRequired,
         updateShouldCheckForUpdate: PropTypes.func.isRequired,
-        children: PropTypes.array.isRequired
+        children: PropTypes.array.isRequired,
+        restartGuideTours: PropTypes.func.isRequired
     };
 
     state = {
@@ -334,6 +335,9 @@ class AppLayout extends PureComponent {
             UniApi.Event.on('help.link', (event, ...args) => {
                 UniApi.Event.emit('appbar-menu:help.link', ...args);
             });
+            UniApi.Event.on('guided-tours-begin', () => {
+                UniApi.Event.emit('appbar-menu:guided-tours-begin');
+            });
             UniApi.Event.on('window', (event, ...args) => {
                 UniApi.Event.emit('appbar-menu:window', ...args);
             });
@@ -498,6 +502,12 @@ class AppLayout extends PureComponent {
             UniApi.Event.on('appbar-menu:update-electron-menu', (action) => {
                 UniApi.Menu.replaceMenu(action.state.menu);
             });
+            UniApi.Event.on('appbar-menu:guided-tours-begin', () => {
+                const pathname = this.props.history.location?.pathname;
+                if (!(pathname === '/workspace' || pathname === '/' || pathname === 'undefined')) {
+                    this.props.restartGuideTours(pathname, this.props.history);
+                }
+            });
         }
     }
 
@@ -569,7 +579,8 @@ const mapDispatchToProps = (dispatch) => {
         disableMenu: () => dispatch(menuActions.disableMenu()),
         updateShouldCheckForUpdate: (shouldAutoUpdate) => dispatch(machineActions.updateShouldCheckForUpdate(shouldAutoUpdate)),
         updateAutoupdateMessage: (message) => dispatch(machineActions.updateAutoupdateMessage(message)),
-        updateIsDownloading: (isDownloading) => dispatch(machineActions.updateIsDownloading(isDownloading))
+        updateIsDownloading: (isDownloading) => dispatch(machineActions.updateIsDownloading(isDownloading)),
+        restartGuideTours: (pathname, history) => dispatch(projectActions.startProject(pathname, pathname, history, true))
     };
 };
 

@@ -10,6 +10,7 @@ import Anchor from '../../../components/Anchor';
 import { Button } from '../../../components/Buttons';
 import Modal from '../../../components/Modal';
 import { EXPERIMENTAL_LASER_CAMERA } from '../../../../constants';
+import SvgIcon from '../../../components/SvgIcon';
 
 
 class ExtractSquareTrace extends PureComponent {
@@ -114,7 +115,12 @@ class ExtractSquareTrace extends PureComponent {
                                     className={styles['extract-actions__btn']}
                                     onClick={this.actions.onClickToUpload}
                                 >
-                                    <i className={styles['extract-actions__icon-upload']} />
+                                    {/* <i className={styles['extract-actions__icon-upload']} /> */}
+                                    <SvgIcon
+                                        type={['static']}
+                                        className="margin-bottom-4"
+                                        name="CameraCaptureImport"
+                                    />
                                 </Anchor>
                                 <span className={styles['extract-actions__text']}>{i18n._('Upload')}</span>
                             </div>
@@ -123,7 +129,12 @@ class ExtractSquareTrace extends PureComponent {
                                     className={styles['extract-actions__btn']}
                                     onClick={this.actions.reset}
                                 >
-                                    <i className={styles['extract-actions__icon-reset']} />
+                                    {/* <i className={styles['extract-actions__icon-reset']} /> */}
+                                    <SvgIcon
+                                        type={['static']}
+                                        className="margin-bottom-4"
+                                        name="CameraCaptureReset"
+                                    />
                                 </Anchor>
                                 <span className={styles['extract-actions__text']}>{i18n._('Reset')}</span>
                             </div>
@@ -132,7 +143,12 @@ class ExtractSquareTrace extends PureComponent {
                                     className={styles['extract-actions__btn']}
                                     onClick={this.actions.extract}
                                 >
-                                    <i className={styles['extract-actions__icon-conform']} />
+                                    <SvgIcon
+                                        type={['static']}
+                                        className="margin-bottom-4"
+                                        name="CameraCaptureExtract"
+                                    />
+                                    {/* <i className={styles['extract-actions__icon-conform']} /> */}
                                 </Anchor>
                                 <span className={styles['extract-actions__text']}>{i18n._('Extract')}</span>
                             </div>

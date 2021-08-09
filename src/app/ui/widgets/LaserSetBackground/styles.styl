@@ -51,10 +51,12 @@
     color: $dark-blue-color
 
 .laser-set-background-modal-title
+    // display: block
+    // font: bold 24px "Arial Black", Gadget, sans-serif
+    // margin: 20px 0
+    // text-align: center
     display: block
-    font: bold 24px "Arial Black", Gadget, sans-serif
-    margin: 20px 0
-    text-align: center
+    text-align: left
 
 
 .extract-background
@@ -63,12 +65,22 @@
     width: 400px
     margin: 20px auto
     border: 1px solid $grey-color2
+    padding: 0 74px;
+    display flex
+    justify-content space-between
+    align-items center
+    border-radius 8px
 
     .extract-actions
-        display: inline-block
-        width: 33.333333%
+        // display: inline-block
+        display flex
+        flex-direction column
+        align-items center
+        justify-content center
+        // width: 33.333333%
         height: 100%
         border: 1px solid transparent
+        cursor pointer
 
         &__btn
             display: block
@@ -92,5 +104,5 @@
             text-align: center
             color: $grey-color
 
-        &:hover
-            border: 1px solid $dark-blue-color
+        // &:hover
+        //     border: 1px solid $dark-blue-color

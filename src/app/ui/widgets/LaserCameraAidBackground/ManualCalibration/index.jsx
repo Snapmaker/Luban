@@ -94,7 +94,7 @@ class ManualCalibration extends PureComponent {
                     <div className={styles['laser-set-background-modal-content']}>
                         <div className={styles['calibrate-background']}>
                             <div className={styles['calibrate-advise']}>
-                                <p style={{ marginBottom: '1rem', textAlign: 'center', width: '522px' }}>
+                                <p style={{ marginBottom: '1rem', textAlign: 'left', width: '522px' }}>
                                     {i18n._('Align the four corners of the blue quadrilateral with the printed square.') }
                                 </p>
                             </div>
@@ -154,7 +154,7 @@ class ManualCalibration extends PureComponent {
                                 priority="level-two"
                                 width="96px"
                                 className={classNames(
-                                    styles[this.state.isComfirmPoints ? 'btn-right-camera' : 'btn-right-camera-disabled'],
+                                    styles[this.state.isComfirmPoints ? 'btn-right-camera' : 'btn-right-camera-disabled border-radius-8'],
                                 )}
                                 disabled={!this.state.isComfirmPoints}
                                 onClick={this.actions.setCameraCalibrationMatrix}
