@@ -424,12 +424,15 @@ function Cnc({ location }) {
         } else {
             setShowJobType(false);
         }
+    }, [location?.state?.shouldShowJobType]);
+
+    useEffect(() => {
         if (location?.state?.shouldShowGuideTours) {
             setEnabledIntro(true);
         } else {
             setEnabledIntro(false);
         }
-    }, [location?.state?.shouldShowJobType, location?.state?.shouldShowGuideTours]);
+    }, [location?.state?.shouldShowGuideTours]);
 
     useEffect(() => {
         if (typeof (enabledIntro) === 'boolean' && !enabledIntro) {
