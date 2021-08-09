@@ -17,6 +17,7 @@ function timestamp() {
     function pad2(n) {
         return n < 10 ? `0${n}` : `${n}`;
     }
+
     function pad3(n) {
         if (n < 10) {
             return `00${n}`;
@@ -26,6 +27,7 @@ function timestamp() {
             return `${n}`;
         }
     }
+
     const d = new Date();
 
     return pad2(d.getMinutes())
@@ -69,6 +71,10 @@ function pathWithRandomSuffix(pathString) {
 }
 
 function generateRandomPathName(suffix) {
+    const dot = suffix.lastIndexOf('.');
+    if (dot !== -1) {
+        suffix = suffix.substr(dot + 1);
+    }
     return `${random(8)}_${timestamp()}.${suffix}`;
 }
 

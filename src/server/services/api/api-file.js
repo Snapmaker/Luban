@@ -14,6 +14,7 @@ import {
     ERR_INTERNAL_SERVER_ERROR
 } from '../../constants';
 import { removeSpecialChars } from '../../../shared/lib/utils';
+import { generateRandomPathName } from '../../../shared/lib/random-utils';
 
 const log = logger('api:file');
 
@@ -48,7 +49,7 @@ export const set = async (req, res) => {
     if (file) { // post blob file in web
         const originalName = removeSpecialChars(path.basename(file.name));
         if (!uploadName) {
-            uploadName = pathWithRandomSuffix(originalName);
+            uploadName = generateRandomPathName(originalName);
         }
         const uploadPath = `${DataStorage.tmpDir}/${uploadName}`;
 

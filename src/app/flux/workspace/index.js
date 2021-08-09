@@ -4,7 +4,7 @@ import * as THREE from 'three';
 import uuid from 'uuid';
 import api from '../../api';
 import log from '../../lib/log';
-import { pathWithRandomSuffix } from '../../../shared/lib/random-utils';
+import { generateRandomPathName } from '../../../shared/lib/random-utils';
 import GcodeToArraybufferGeometry from '../../workers/GcodeToArraybufferGeometry.worker';
 
 import gcodeBufferGeometryToObj3d from '../../workers/GcodeToBufferGeometry/gcodeBufferGeometryToObj3d';
@@ -160,7 +160,7 @@ export const actions = {
     uploadGcodeFile: (file) => (dispatch) => {
         const formData = new FormData();
         formData.append('file', (file instanceof File) ? file : JSON.stringify(file));
-        const uploadName = pathWithRandomSuffix(file.name);
+        const uploadName = generateRandomPathName(file.name);
         formData.append('uploadName', uploadName);
 
         api.uploadGcodeFile(formData)

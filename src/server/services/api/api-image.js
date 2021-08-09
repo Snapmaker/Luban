@@ -8,15 +8,14 @@ import SVGParser from '../../../shared/lib/SVGParser';
 import { parseDxf, generateSvgFromDxf } from '../../../shared/lib/DXFParser/Parser';
 import { unzipFile } from '../../lib/archive';
 import { editorProcess } from '../../lib/editor/process';
-import { pathWithRandomSuffix } from '../../lib/random-utils';
 import stockRemap from '../../lib/stock-remap';
 import trace from '../../lib/image-trace';
 import { ERR_INTERNAL_SERVER_ERROR } from '../../constants';
 import DataStorage from '../../DataStorage';
 import { stitch, stitchEach } from '../../lib/image-stitch';
 import { calibrationPhoto, getCameraCalibration, getPhoto, setMatrix, takePhoto } from '../../lib/image-getPhoto';
-import { removeSpecialChars } from '../../../shared/lib/utils';
 import { Mesh } from '../../lib/MeshProcess/Mesh';
+import { generateRandomPathName } from '../../../shared/lib/random-utils';
 
 const log = logger('api:image');
 
@@ -28,14 +27,14 @@ export const set = (req, res) => {
     if (files) {
         const file = files.image;
         originalName = path.basename(file.name);
-        tempName = pathWithRandomSuffix(removeSpecialChars(originalName));
+        tempName = generateRandomPathName(originalName);
         tempPath = `${DataStorage.tmpDir}/${tempName}`;
         originalPath = file.path;
     } else {
         const { name, casePath } = req.body;
         originalName = name;
         originalPath = `${DataStorage.userCaseDir}/${casePath}/${name}`;
-        tempName = pathWithRandomSuffix(removeSpecialChars(originalName));
+        tempName = generateRandomPathName(originalName);
         tempPath = `${DataStorage.tmpDir}/${tempName}`;
     }
     const extname = path.extname(tempName).toLowerCase();

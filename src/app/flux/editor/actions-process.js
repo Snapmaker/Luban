@@ -286,6 +286,11 @@ export const processActions = {
         }
     },
 
+    setThumbnail: (headType, thumbnail) => (dispatch, getState) => {
+        const { toolPathGroup } = getState()[headType];
+        toolPathGroup.updateThumbnail(thumbnail);
+    },
+
     /**
      * Commit Generate G-code Task.
      *
@@ -293,7 +298,7 @@ export const processActions = {
      * @param thumbnail G-code thumbnail should be included in G-code header.
      * @returns {Function}
      */
-    commitGenerateGcode: (headType, thumbnail) => (dispatch, getState) => {
+    commitGenerateGcode: (headType) => (dispatch, getState) => {
         const { toolPathGroup } = getState()[headType];
 
         const toolPaths = toolPathGroup.getCommitGenerateGcodeInfos();
@@ -301,7 +306,7 @@ export const processActions = {
             return;
         }
 
-        toolPaths[0].thumbnail = thumbnail;
+        toolPaths[0].thumbnail = toolPathGroup.thumbnail;
 
         dispatch(baseActions.updateState(
             headType, {
