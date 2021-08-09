@@ -38,7 +38,7 @@ export default {
             }
         },
         {
-            label: 'Myminifactory',
+            label: 'MyMiniFactory',
             enabled: true,
             click: (menuItem, browserWindow) => {
                 if (isElectron()) {

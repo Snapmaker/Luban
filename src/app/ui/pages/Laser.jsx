@@ -287,7 +287,7 @@ function useRenderRemoveModelsWarning() {
         onClose,
         renderBody: () => (
             <div>
-                <div>{i18n._('Remove all empty toolPath(s)?')}</div>
+                <div>{i18n._('Delete the object? The toolpath created will be deleted together.')}</div>
                 {emptyToolPaths.map((item) => {
                     return (<div key={item.name}>{item.name}</div>);
                 })}
@@ -299,7 +299,7 @@ function useRenderRemoveModelsWarning() {
                 onClick: () => { onClose(); }
             },
             {
-                name: i18n._('Yes'),
+                name: i18n._('Delete'),
                 isPrimary: true,
                 onClick: () => {
                     dispatch(editorActions.removeSelectedModel(HEAD_LASER));
@@ -386,7 +386,7 @@ function Laser({ location }) {
                 }
             },
             {
-                name: i18n._('Save'),
+                name: i18n._('Confirm'),
                 isPrimary: true,
                 onClick: () => {
                     dispatch(editorActions.changeCoordinateMode(HEAD_LASER,
@@ -422,8 +422,9 @@ function Laser({ location }) {
             }
             dispatch(editorActions.uploadImage('laser', file, mode, () => {
                 modal({
-                    title: i18n._('Parse Error'),
-                    body: i18n._('Failed to parse image file {{filename}}.', { filename: file.name })
+                    cancelTitle: i18n._('Close'),
+                    title: i18n._('Import Error'),
+                    body: i18n._('Failed to import this object. \nPlease select a supported file format.')
                 });
             }));
         },

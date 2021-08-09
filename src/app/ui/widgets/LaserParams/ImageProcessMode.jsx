@@ -17,7 +17,7 @@ class ImageProcessMode extends PureComponent {
         mode: PropTypes.string.isRequired,
         showOrigin: PropTypes.bool,
         disabled: PropTypes.bool,
-        isDXF: PropTypes.bool,
+        isDXF: PropTypes.bool.isRequired,
 
         changeSelectedModelMode: PropTypes.func.isRequired,
         changeSelectedModelShowOrigin: PropTypes.func.isRequired
@@ -69,7 +69,7 @@ class ImageProcessMode extends PureComponent {
                                         >
                                             <i className={styles['laser-mode__icon-bw']} />
                                         </Anchor>
-                                        <span>{i18n._('Threshold')}</span>
+                                        <span>{i18n._('B&W')}</span>
                                     </div>
                                 )}
                                 { !isDXF && (

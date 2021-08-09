@@ -44,7 +44,7 @@ const MoreInfo = () => {
                 </a>
                 <a className={classNames(styles.listItem)} href="https://www.myminifactory.com/" target="_blank" rel="noopener noreferrer">
                     <span className={classNames('heading-3-normal-with-hover')}>
-                      Myminifactory
+                      MyMiniFactory
                     </span>
                 </a>
             </div>

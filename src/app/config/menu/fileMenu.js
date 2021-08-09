@@ -7,7 +7,7 @@ export default {
     submenu: [
         {
             id: 'new',
-            label: 'New File',
+            label: 'New Project',
             enabled: true,
             submenu: [
                 {
@@ -42,7 +42,7 @@ export default {
                         },
                         {
                             id: 'laser-axis4',
-                            label: '4-Axis',
+                            label: '4-axis',
                             enabled: true,
                             click(menuItem, browserWindow) {
                                 if (isElectron()) {
@@ -74,7 +74,7 @@ export default {
                         },
                         {
                             id: 'cnc-axis4',
-                            label: '4-Axis',
+                            label: '4-axis',
                             enabled: true,
                             click(menuItem, browserWindow) {
                                 if (isElectron()) {
@@ -90,7 +90,7 @@ export default {
         },
         {
             id: 'open-file',
-            label: 'Open File',
+            label: 'Open Project',
             enabled: true,
             accelerator: 'CmdOrCtrl+O',
             click: async (menuItem, browserWindow) => {
@@ -103,13 +103,13 @@ export default {
         },
         {
             id: 'recent-files',
-            label: 'Recent Files',
+            label: 'Recent Project',
             enabled: true,
             submenu: [
                 { id: 'line-0', type: 'separator' },
                 {
                     id: 'remove-recent',
-                    label: 'Clear All Recent Files',
+                    label: 'Clear All Recent Project',
                     enabled: true,
                     click: (menuItem, browserWindow) => {
                         if (isElectron()) {
@@ -123,7 +123,7 @@ export default {
         },
         {
             id: 'get-started',
-            label: 'Get Started',
+            label: 'Case Library',
             enabled: true,
             click: () => {},
             submenu: []
@@ -131,7 +131,7 @@ export default {
         { id: 'line-1', type: 'separator' },
         {
             id: 'save',
-            label: 'Save File',
+            label: 'Save Project',
             enabled: true,
             accelerator: 'CommandOrControl+S',
             click(menuItem, browserWindow) {
@@ -158,7 +158,7 @@ export default {
         { id: 'line-2', type: 'separator' },
         {
             id: 'import',
-            label: 'Import',
+            label: 'Import Object',
             enabled: true,
             accelerator: 'CmdOrCtrl+I',
             click(menuItem, browserWindow) {
@@ -171,7 +171,7 @@ export default {
         },
         {
             id: 'export-models',
-            label: 'Export Models',
+            label: 'Export Object',
             enabled: true,
             accelerator: 'CmdOrCtrl+E',
             click(menuItem, browserWindow) {

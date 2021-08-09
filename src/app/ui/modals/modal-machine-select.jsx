@@ -118,7 +118,7 @@ class MachineSelectModal extends PureComponent {
                     {/* </Modal.Title> */}
                 </Modal.Header>
                 <Modal.Body>
-                    <div className={styles['which-model']}>{i18n._('Which model is connected to Snapmaker Luban?')}
+                    <div className={styles['which-model']}>{i18n._('Select the machine model that is connected to Luban')}
                     </div>
                     <div className={styles['select-tools']}>
                         { machineSeriesOptions.map(v => {
@@ -171,7 +171,7 @@ class MachineSelectModal extends PureComponent {
                         width="96px"
                         onClick={this.handleConfirm}
                     >
-                        {i18n._('Choose')}
+                        {i18n._('Select')}
                     </Button>
                 </Modal.Footer>
             </Modal>

@@ -181,7 +181,7 @@ function ToolPathConfigurations(props) {
             >
                 <Modal.Header>
                     {/* <Modal.Title> */}
-                    {i18n._('Toolpath Profile')}
+                    {i18n._('Toolpath Settings')}
                     {/* </Modal.Title> */}
                 </Modal.Header>
                 <Modal.Body

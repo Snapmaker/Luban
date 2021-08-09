@@ -131,11 +131,11 @@ class Connection extends PureComponent {
                 {isConnected && showHomeReminder && !isOriginal && isHomed !== null && !isHomed && (
                     <Modal disableOverlay size="sm" showCloseButton={false}>
                         <Modal.Header>
-                            {i18n._('Home Reminder')}
+                            {i18n._('Go Home')}
                         </Modal.Header>
                         <Modal.Body>
                             <div>
-                                {i18n._('To continue, the machine needs to go to its home position. Homing works by moving X, Y, Z axes to the pre-defined positions, which will be used as the reference points.')}
+                                {i18n._('To continue, the machine needs to return to the start position of the X, Y, and Z axes.')}
                             </div>
                         </Modal.Body>
                         <Modal.Footer>

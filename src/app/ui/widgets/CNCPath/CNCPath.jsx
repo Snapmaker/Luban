@@ -144,7 +144,7 @@ const mapStateToProps = (state) => {
     } = selectedModel;
     const selectedModelArray = modelGroup.getSelectedModelArray();
     const hasSelectedModels = modelGroup.getSelectedModelArray().length > 0;
-    const isDXF = originalName && (originalName.substr(originalName.length - 4, 4) === '.dxf');
+    const isDXF = (originalName ? (originalName.substr(originalName.length - 4, 4) === '.dxf') : false);
     return {
         isDXF,
         selectedModelArray,
