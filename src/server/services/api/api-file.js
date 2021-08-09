@@ -9,6 +9,7 @@ import store from '../../store';
 import { PROTOCOL_TEXT } from '../../controllers/constants';
 import { parseLubanGcodeHeader } from '../../lib/parseGcodeHeader';
 import { zipFolder, unzipFile } from '../../lib/archive';
+import { UniformToolpathConfig } from '../../lib/profile/uniform-toolpath-config';
 import { packFirmware } from '../../lib/firmware-build';
 import {
     ERR_INTERNAL_SERVER_ERROR
@@ -379,6 +380,9 @@ export const recoverProjectFile = async (req, res) => {
     content = content.toString();
 
     const config = JSON.parse(content);
+    // console.log('before UniformToolpathConfig', config, );
+    UniformToolpathConfig(config);
+
     if (config.defaultMaterialId && /^material.([0-9_]+)$/.test(config.defaultMaterialId)) {
         const fname = `${DataStorage.tmpDir}/${config.defaultMaterialId}.def.json`;
         if (fs.existsSync(fname)) {

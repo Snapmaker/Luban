@@ -1,16 +1,10 @@
 import fs from 'fs';
 import path from 'path';
-import { isNil, includes } from 'lodash';
-import { ERR_BAD_REQUEST, ERR_INTERNAL_SERVER_ERROR, CNC_CONFIG_SUBCATEGORY } from '../../constants';
+import { isNil } from 'lodash';
+import { ERR_BAD_REQUEST, ERR_INTERNAL_SERVER_ERROR, CNC_CONFIG_SUBCATEGORY, CncSuffix } from '../../constants';
 import DataStorage from '../../DataStorage';
+import { cncUniformProfile } from '../../lib/profile/cnc-uniform-profile';
 
-const defaultToolListNames = [
-    'Carving V-bit',
-    'Flat End Mill',
-    'Ball End Mill',
-    'Straight Groove V-bit'
-];
-const Suffix = '.defv2.json';
 /**
  * Get definition
  */
@@ -23,7 +17,7 @@ export const getToolListDefinition = (req, res) => {
         return;
     }
 
-    const filePath = path.join(`${DataStorage.configDir}`, CNC_CONFIG_SUBCATEGORY, `${definitionId}${Suffix}`);
+    const filePath = path.join(`${DataStorage.configDir}`, CNC_CONFIG_SUBCATEGORY, `${definitionId}${CncSuffix}`);
 
     const data = fs.readFileSync(filePath, 'utf8');
     const json = JSON.parse(data);
@@ -39,8 +33,8 @@ export const changeActiveToolListDefinition = (req, res) => {
         return;
     }
 
-    const filePath = path.join(`${DataStorage.configDir}`, CNC_CONFIG_SUBCATEGORY, `${definitionId}${Suffix}`);
-    const activeFilePath = path.join(`${DataStorage.configDir}`, CNC_CONFIG_SUBCATEGORY, `active${Suffix}`);
+    const filePath = path.join(`${DataStorage.configDir}`, CNC_CONFIG_SUBCATEGORY, `${definitionId}${CncSuffix}`);
+    const activeFilePath = path.join(`${DataStorage.configDir}`, CNC_CONFIG_SUBCATEGORY, `active${CncSuffix}`);
     const data = fs.readFileSync(filePath, 'utf8');
     const json = JSON.parse(data);
     fs.writeFile(activeFilePath, data, 'utf8', (err) => {
@@ -53,128 +47,31 @@ export const changeActiveToolListDefinition = (req, res) => {
 };
 
 export const getToolDefinitions = (req, res) => {
-    const regexV1 = /([A-Za-z0-9_]+).def.json$/;
-    const regexV2 = /([A-Za-z0-9_]+).defv2.json$/;
-
     const configDir = `${DataStorage.configDir}/${CNC_CONFIG_SUBCATEGORY}`;
     const filenames = fs.readdirSync(configDir);
 
     // // Load pre-defined definitions first
-    const definitions = [];
+    let definitions = [];
 
     for (const filename of filenames) {
-        if (regexV1.test(filename) && filename.substr(0, filename.length - 9) !== 'active') {
-            const filePath = path.join(configDir, filename);
-            const data = fs.readFileSync(filePath, 'utf8');
-            const json = JSON.parse(data);
-            if (json.toolList && isNil(json.settings)) {
-                const toolLists = json.toolList;
-                const shouldCheckName = json?.definitionId === 'Default';
-                toolLists.forEach((item) => {
-                    let shouldCoverDefinition = false;
-                    if (shouldCheckName && item.name && !includes(defaultToolListNames, item.name)) {
-                        shouldCoverDefinition = true;
-                    } else if (!shouldCheckName && item.name) {
-                        shouldCoverDefinition = true;
-                    }
-                    if (shouldCoverDefinition) {
-                        const newDefinition = {};
-                        newDefinition.category = json.category;
-                        newDefinition.version = json.version;
-                        newDefinition.name = item.name;
-                        newDefinition.settings = item.config;
-                        const newName = `Old${json.definitionId}${item.name}`;
-                        newDefinition.definitionId = newName;
-                        fs.writeFileSync(path.join(configDir, `${newName}${Suffix}`), JSON.stringify(newDefinition));
-                        // JSON.stringify
-                        definitions.push(newDefinition);
-                    }
-                });
-                fs.unlinkSync(filePath);
-            }
-        }
-
-        if (regexV2.test(filename) && filename.substr(0, filename.length - Suffix.length) !== 'active') {
-            const filePath = path.join(configDir, filename);
-            const data = fs.readFileSync(filePath, 'utf8');
-            const json = JSON.parse(data);
-            if (json.settings.step_over === undefined) {
-                json.settings.step_over = {
-                    default_value: 0.25,
-                    type: 'float',
-                    min: 0.01,
-                    max: 20,
-                    unit: 'mm',
-                    label: 'Step Over',
-                    description: 'Set the density of the tool head movements. The highest density is 10 dot/mm. When generating G-code, the density will be re-calculated to ensure the process work normally.'
-                };
-                fs.writeFileSync(filePath, JSON.stringify(json));
-            }
-            definitions.push(json);
+        const definitionArray = cncUniformProfile(filename, configDir);
+        if (!isNil(definitionArray)) {
+            definitions = definitions.concat(definitionArray);
         }
     }
     res.send({ definitions });
 };
 export const getDefaultDefinitions = (req, res) => {
-    const regexV1 = /([A-Za-z0-9_]+).def.json$/;
-    const regexV2 = /([A-Za-z0-9_]+).defv2.json$/;
-
     const configDir = `${DataStorage.configDir}/default/${CNC_CONFIG_SUBCATEGORY}`;
     const filenames = fs.readdirSync(configDir);
 
     // // Load pre-defined definitions first
-    const definitions = [];
+    let definitions = [];
 
     for (const filename of filenames) {
-        if (regexV1.test(filename) && filename.substr(0, filename.length - 9) !== 'active') {
-            const filePath = path.join(configDir, filename);
-            const data = fs.readFileSync(filePath, 'utf8');
-            const json = JSON.parse(data);
-            if (json.toolList && isNil(json.settings)) {
-                const toolLists = json.toolList;
-                const shouldCheckName = json?.definitionId === 'Default';
-                toolLists.forEach((item) => {
-                    let shouldCoverDefinition = false;
-                    if (shouldCheckName && item.name && !includes(defaultToolListNames, item.name)) {
-                        shouldCoverDefinition = true;
-                    } else if (!shouldCheckName && item.name) {
-                        shouldCoverDefinition = true;
-                    }
-                    if (shouldCoverDefinition) {
-                        const newDefinition = {};
-                        newDefinition.category = json.category;
-                        newDefinition.version = json.version;
-                        newDefinition.name = item.name;
-                        newDefinition.settings = item.config;
-                        const newName = `Old${json.definitionId}${item.name}`;
-                        newDefinition.definitionId = newName;
-                        fs.writeFileSync(path.join(configDir, `${newName}${Suffix}`), JSON.stringify(newDefinition));
-                        // JSON.stringify
-                        definitions.push(newDefinition);
-                    }
-                });
-                fs.unlinkSync(filePath);
-            }
-        }
-
-        if (regexV2.test(filename) && filename.substr(0, filename.length - Suffix.length) !== 'active') {
-            const filePath = path.join(configDir, filename);
-            const data = fs.readFileSync(filePath, 'utf8');
-            const json = JSON.parse(data);
-            // Todo, read from resources/CuraEngin/Config/Default/CncConfig
-            if (json.settings.step_over === undefined) {
-                json.settings.step_over = {
-                    default_value: 0.25,
-                    type: 'float',
-                    min: 0.01,
-                    max: 20,
-                    unit: 'mm',
-                    label: 'Stepover',
-                    description: 'Set the density of the tool head movements. The highest density is 10 dot/mm. When generating G-code, the density will be re-calculated to ensure the process work normally.'
-                };
-                fs.writeFileSync(filePath, JSON.stringify(json));
-            }
-            definitions.push(json);
+        const definitionArray = cncUniformProfile(filename, configDir);
+        if (!isNil(definitionArray)) {
+            definitions = definitions.concat(definitionArray);
         }
     }
     res.send({ definitions });
@@ -183,7 +80,7 @@ export const createToolListDefinition = (req, res) => {
     const { activeToolList } = req.body;
     const newActiveToolDefinition = JSON.parse(JSON.stringify(activeToolList));
     const definitionId = activeToolList.definitionId;
-    const filename = `${definitionId}${Suffix}`;
+    const filename = `${definitionId}${CncSuffix}`;
 
     const destPath = path.join(`${DataStorage.configDir}`, CNC_CONFIG_SUBCATEGORY, filename);
 
@@ -199,7 +96,7 @@ export const createToolListDefinition = (req, res) => {
 export const removeToolListDefinition = (req, res) => {
     const { activeToolList } = req.body;
     const definitionId = activeToolList.definitionId;
-    const filename = `${definitionId}${Suffix}`;
+    const filename = `${definitionId}${CncSuffix}`;
     const filePath = path.join(`${DataStorage.configDir}`, CNC_CONFIG_SUBCATEGORY, filename);
 
     fs.unlink(filePath, (err) => {
@@ -213,7 +110,7 @@ export const removeToolListDefinition = (req, res) => {
 
 export const updateToolDefinition = (req, res) => {
     const { activeToolList } = req.body;
-    const filePath = path.join(`${DataStorage.configDir}/${CNC_CONFIG_SUBCATEGORY}`, `${activeToolList.definitionId}${Suffix}`);
+    const filePath = path.join(`${DataStorage.configDir}/${CNC_CONFIG_SUBCATEGORY}`, `${activeToolList.definitionId}${CncSuffix}`);
     fs.writeFile(filePath, JSON.stringify(activeToolList, null, 2), 'utf8', (err) => {
         if (err) {
             res.status(ERR_INTERNAL_SERVER_ERROR).send({ err });
@@ -245,7 +142,7 @@ export const uploadToolDefinition = (req, res) => {
         obj.category = `#${obj.category}`;
     }
     // try {
-    const newFilePath = path.join(`${DataStorage.configDir}`, CNC_CONFIG_SUBCATEGORY, `${obj.definitionId}${Suffix}`);
+    const newFilePath = path.join(`${DataStorage.configDir}`, CNC_CONFIG_SUBCATEGORY, `${obj.definitionId}${CncSuffix}`);
     fs.writeFile(newFilePath, JSON.stringify(obj, null, 2), 'utf8', (err) => {
         if (err) {
             res.status(ERR_INTERNAL_SERVER_ERROR).send({ err });

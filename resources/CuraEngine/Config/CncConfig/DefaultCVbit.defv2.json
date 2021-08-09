@@ -56,7 +56,7 @@
             "description": "Determines how fast the tool feeds into the material."
         },
         "step_down": {
-            "default_value": 0.5,
+            "default_value": 15,
             "type": "float",
             "min": 0.01,
             "unit": "mm",
@@ -64,7 +64,7 @@
             "description": "Enter the depth of each carving step."
         },
         "step_over": {
-            "default_value": 0.25,
+            "default_value": 15,
             "type": "float",
             "min": 0.01,
             "unit": "mm",
