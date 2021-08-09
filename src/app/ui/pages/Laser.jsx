@@ -83,7 +83,14 @@ const allWidgets = {
 const ACCEPT = '.svg, .png, .jpg, .jpeg, .bmp, .dxf';
 const pageHeadType = HEAD_LASER;
 
-
+function useUnSavedTag(headType) {
+    const unSaved = useSelector(state => state?.project[headType]?.unSaved, shallowEqual);
+    const dispatch = useDispatch();
+    useEffect(() => {
+        console.log('useUnSavedTag', headType, unSaved);
+        dispatch(projectActions.setOpenedFileWithUnSaved(headType, unSaved));
+    }, [unSaved]);
+}
 function useRenderMainToolBar(setShowHomePage, setShowJobType, setShowWorkspace, isRotate) {
     // (!workPosition.isFourAxis && (connectionType === CONNECTION_TYPE_WIFI && isConnected && !hasBackground))
     const isConnected = useSelector(state => state?.machine?.isConnected, shallowEqual);
@@ -332,6 +339,7 @@ function Laser({ location }) {
     });
     const dispatch = useDispatch();
     const page = useSelector(state => state?.laser?.page);
+    useUnSavedTag(pageHeadType);
     useEffect(() => {
         dispatch(laserActions.init());
     }, []);

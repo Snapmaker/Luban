@@ -361,6 +361,7 @@ const Window = {
     },
 
     setOpenedFile(filename = 'new') {
+        console.log('setOpenedFile', filename);
         if (!this.window) {
             this.initWindow();
         }

@@ -1,5 +1,6 @@
 import cloneDeep from 'lodash/cloneDeep';
-import find from 'lodash/find';
+import { find } from 'lodash';
+// import { find, isEqual } from 'lodash';
 import {
     HEAD_CNC,
     HEAD_LASER,
@@ -73,7 +74,7 @@ export const actions = {
             }
 
             const action = actions.autoSaveEnvironment(envHeadType);
-            setInterval(() => dispatch(action), 1000);
+            setInterval(() => dispatch(action), 2000);
         };
 
         startService(HEAD_LASER);
@@ -114,8 +115,18 @@ export const actions = {
             envObj.toolpaths = toolPaths;
         }
         const content = JSON.stringify(envObj);
+        if (lastString) {
+            Object.values(lastString).every((item, i) => {
+                if (item !== content[i]) {
+                    console.log('diff', '------', item, content[i], i, lastString.slice(i));
+                }
+                return item === content[i];
+            });
+        }
 
         if (force || content !== lastString) {
+            // console.trace('force', force, content !== lastString);
+            // dispatch(actions.updateState(headType, { content, unSaved: false, initState: false }));
             dispatch(actions.updateState(headType, { content, unSaved: true, initState: false }));
             await api.saveEnv({ content });
         }
@@ -260,10 +271,21 @@ export const actions = {
         }
         await UniApi.File.exportAs(targetFile, configFile);
     },
+
     setOpenedFileWithType: (headType, openedFile) => async (dispatch) => {
         openedFile && UniApi.Window.setOpenedFile(openedFile?.name);
         await dispatch(actions.updateState(headType, { findLastEnvironment: false, openedFile, unSaved: false }));
         UniApi.Menu.setItemEnabled('save', !!openedFile);
+    },
+
+    setOpenedFileWithUnSaved: (headType, unSaved) => async (dispatch, getState) => {
+        const { openedFile } = getState().project[headType];
+        console.log('unSaved, openedFile', headType, unSaved, openedFile);
+        if (openedFile) {
+            UniApi.Window.setOpenedFile(unSaved ? `${openedFile?.name} *` : openedFile?.name);
+        } else {
+            UniApi.Window.setOpenedFile(unSaved ? 'New *' : 'New');
+        }
     },
 
     saveAsFile: (headType) => async (dispatch) => {
@@ -381,6 +403,7 @@ export const actions = {
 
             await dispatch(actions.onRecovery(headType, envObj, false));
             if (shouldSetFileName) {
+                console.log('other file', file);
                 if (file instanceof File) {
                     await dispatch(actions.setOpenedFileWithType(headType, file));
                 } else {
@@ -388,7 +411,9 @@ export const actions = {
                 }
                 dispatch(actions.updateState(headType, { unSaved: false }));
             } else {
+                console.log('casefile', file);
                 dispatch(actions.updateState(headType, { unSaved: false, openedFile: null }));
+                dispatch(actions.setOpenedFileWithUnSaved(headType, true));
             }
         } else if (tail === 'gcode') {
             dispatch(workspaceActions.uploadGcodeFile(file));
