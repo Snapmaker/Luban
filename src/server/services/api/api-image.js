@@ -52,57 +52,61 @@ export const set = (req, res) => {
             }
         },
         async (next) => {
-            if (extname === '.svg') {
-                const svgParser = new SVGParser();
-                const svg = await svgParser.parseFile(tempPath);
+            try {
+                if (extname === '.svg') {
+                    const svgParser = new SVGParser();
+                    const svg = await svgParser.parseFile(tempPath);
 
-                res.send({
-                    originalName: originalName,
-                    uploadName: svg.uploadName,
-                    width: svg.width,
-                    height: svg.height
-                });
+                    res.send({
+                        originalName: originalName,
+                        uploadName: svg.uploadName,
+                        width: svg.width,
+                        height: svg.height
+                    });
 
-                next();
-            } else if (extname === '.dxf') {
-                const result = await parseDxf(tempPath);
-                const svg = await generateSvgFromDxf(result.svg, tempPath, tempName);
-                const { width, height } = result;
+                    next();
+                } else if (extname === '.dxf') {
+                    const result = await parseDxf(tempPath);
+                    const svg = await generateSvgFromDxf(result.svg, tempPath, tempName);
+                    const { width, height } = result;
 
-                res.send({
-                    originalName: originalName,
-                    uploadName: svg.uploadName,
-                    width,
-                    height
-                });
+                    res.send({
+                        originalName: originalName,
+                        uploadName: svg.uploadName,
+                        width,
+                        height
+                    });
 
-                next();
-            } else if (extname === '.stl' || extname === '.zip') {
-                if (extname === '.zip') {
-                    await unzipFile(`${tempName}`, `${DataStorage.tmpDir}`);
-                    originalName = originalName.replace(/\.zip$/, '');
-                    tempName = originalName;
-                }
-                const { width, height } = Mesh.loadSize(`${DataStorage.tmpDir}/${tempName}`, isRotate === 'true' || isRotate === true);
-                res.send({
-                    originalName: originalName,
-                    uploadName: tempName,
-                    width: width,
-                    height: height
-                });
-                next();
-            } else {
-                jimp.read(tempPath).then((image) => {
+                    next();
+                } else if (extname === '.stl' || extname === '.zip') {
+                    if (extname === '.zip') {
+                        await unzipFile(`${tempName}`, `${DataStorage.tmpDir}`);
+                        originalName = originalName.replace(/\.zip$/, '');
+                        tempName = originalName;
+                    }
+                    const { width, height } = Mesh.loadSize(`${DataStorage.tmpDir}/${tempName}`, isRotate === 'true' || isRotate === true);
                     res.send({
                         originalName: originalName,
                         uploadName: tempName,
-                        width: image.bitmap.width,
-                        height: image.bitmap.height
+                        width: width,
+                        height: height
                     });
                     next();
-                }).catch((err) => {
-                    next(err);
-                });
+                } else {
+                    jimp.read(tempPath).then((image) => {
+                        res.send({
+                            originalName: originalName,
+                            uploadName: tempName,
+                            width: image.bitmap.width,
+                            height: image.bitmap.height
+                        });
+                        next();
+                    }).catch((err) => {
+                        next(err);
+                    });
+                }
+            } catch (e) {
+                next(e);
             }
         }
     ], (err) => {

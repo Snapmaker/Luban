@@ -41,7 +41,7 @@ class Visualizer extends Component {
         stage: PropTypes.number.isRequired,
         progress: PropTypes.number.isRequired,
         inProgress: PropTypes.bool.isRequired,
-        hasModel: PropTypes.bool.isRequired,
+        showSimulation: PropTypes.bool.isRequired,
 
         coordinateMode: PropTypes.object.isRequired,
         coordinateSize: PropTypes.object.isRequired,
@@ -238,6 +238,20 @@ class Visualizer extends Component {
         duplicateSelectedModel: () => {
             this.props.duplicateSelectedModel();
         },
+        rotateModel: (angle) => {
+            const elements = this.props.SVGActions.svgContentGroup.selectedElements;
+            const startAngle = this.props.SVGActions.svgContentGroup.getElementAngel();
+            let endAngle = (startAngle + angle) % 360;
+            if (endAngle > 180) {
+                endAngle -= 360;
+            }
+            if (endAngle < -180) {
+                endAngle += 360;
+            }
+            this.props.elementActions.rotateElementsImmediately(elements, {
+                newAngle: endAngle
+            });
+        },
         importFile: (fileObj) => {
             if (fileObj) {
                 this.actions.onChangeFile({
@@ -307,6 +321,7 @@ class Visualizer extends Component {
         if (nextProps.coordinateSize !== this.props.coordinateSize) {
             this.printableArea = new PrintablePlate(nextProps.coordinateSize, nextProps.materials, nextProps.coordinateMode);
         }
+        this.printableArea.changeCoordinateVisibility(!nextProps.showSimulation);
     }
 
     componentWillUnmount() {
@@ -357,8 +372,13 @@ class Visualizer extends Component {
     }
 
     showContextMenu = (event) => {
-        if (this.props.modelGroup.selectedModelArray.length > 1) {
+        const model = this.props.SVGActions.getSVGModelByElement(event.target);
+        if (this.props.modelGroup.selectedModelArray.length > 1 && this.props.modelGroup.selectedModelArray.includes(model)) {
             return;
+        }
+        if (model) {
+            this.props.onClearSelection();
+            this.props.onSelectElements([event.target]);
         }
         this.contextMenuRef.current.show(event);
     };
@@ -383,7 +403,7 @@ class Visualizer extends Component {
         // const isModelSelected = !!this.props.selectedModelID;
         const isOnlySelectedOneModel = (this.props.selectedModelArray && this.props.selectedModelArray.length === 1);
         // eslint-disable-next-line no-unused-vars
-        const hasModel = this.props.hasModel;
+        // const hasModel = this.props.hasModel;
 
         // const { model, modelGroup } = this.props;
 
@@ -411,8 +431,9 @@ class Visualizer extends Component {
 
         const estimatedTime = this.props.displayedType === DISPLAYED_TYPE_TOOLPATH && !this.props.isChangedAfterGcodeGenerating ? this.props.getEstimatedTime('selected') : '';
         const notice = this.getNotice();
-        const contextMednuDisabled = !isOnlySelectedOneModel || !this.props.selectedModelArray[0].visible;
+        const contextMenuDisabled = !isOnlySelectedOneModel || !this.props.selectedModelArray[0].visible;
         const { displayedType } = this.props;
+        const pasteDisabled = (this.props.modelGroup.clipboard.length === 0);
 
         return (
             <div
@@ -522,111 +543,80 @@ class Visualizer extends Component {
                         [
                             {
                                 type: 'item',
-                                label: i18n._('Duplicate Selected Model'),
-                                disabled: contextMednuDisabled,
+                                label: i18n._('Cut'),
+                                disabled: contextMenuDisabled,
+                                onClick: this.actions.cut
+                            },
+                            {
+                                type: 'item',
+                                label: i18n._('Copy'),
+                                disabled: contextMenuDisabled,
+                                onClick: this.actions.copy
+                            },
+                            {
+                                type: 'item',
+                                label: i18n._('Paste'),
+                                disabled: pasteDisabled,
+                                onClick: this.actions.paste
+                            },
+                            {
+                                type: 'item',
+                                label: i18n._('Duplicate'),
+                                disabled: contextMenuDisabled,
                                 onClick: this.actions.duplicateSelectedModel
-                            },
-                            {
-                                type: 'item',
-                                label: i18n._('Bring to Front'),
-                                disabled: contextMednuDisabled,
-                                onClick: this.actions.bringToFront
-                            },
-                            {
-                                type: 'item',
-                                label: i18n._('Send to Back'),
-                                disabled: contextMednuDisabled,
-                                onClick: this.actions.sendToBack
-                            },
-                            {
-                                type: 'subMenu',
-                                label: i18n._('Reference Position'),
-                                disabled: contextMednuDisabled,
-                                items: [
-                                    {
-                                        type: 'item',
-                                        label: i18n._('Top Left'),
-                                        onClick: () => this.actions.onUpdateSelectedModelPosition('Top Left')
-                                    },
-                                    {
-                                        type: 'item',
-                                        label: i18n._('Top Middle'),
-                                        onClick: () => this.actions.onUpdateSelectedModelPosition('Top Middle')
-                                    },
-                                    {
-                                        type: 'item',
-                                        label: i18n._('Top Right'),
-                                        onClick: () => this.actions.onUpdateSelectedModelPosition('Top Right')
-                                    },
-                                    {
-                                        type: 'item',
-                                        label: i18n._('Center Left'),
-                                        onClick: () => this.actions.onUpdateSelectedModelPosition('Center Left')
-                                    },
-                                    {
-                                        type: 'item',
-                                        label: i18n._('Center'),
-                                        onClick: () => this.actions.onUpdateSelectedModelPosition('Center')
-                                    },
-                                    {
-                                        type: 'item',
-                                        label: i18n._('Center Right'),
-                                        onClick: () => this.actions.onUpdateSelectedModelPosition('Center Right')
-                                    },
-                                    {
-                                        type: 'item',
-                                        label: i18n._('Bottom Left'),
-                                        onClick: () => this.actions.onUpdateSelectedModelPosition('Bottom Left')
-                                    },
-                                    {
-                                        type: 'item',
-                                        label: i18n._('Bottom Middle'),
-                                        onClick: () => this.actions.onUpdateSelectedModelPosition('Bottom Middle')
-                                    },
-                                    {
-                                        type: 'item',
-                                        label: i18n._('Bottom Right'),
-                                        onClick: () => this.actions.onUpdateSelectedModelPosition('Bottom Right')
-                                    }
-                                ]
-                            },
-                            {
-                                type: 'subMenu',
-                                label: i18n._('Flip'),
-                                disabled: contextMednuDisabled,
-                                items: [
-                                    {
-                                        type: 'item',
-                                        label: i18n._('Vertical'),
-                                        onClick: () => this.props.onFlipSelectedModel('Vertical')
-                                    },
-                                    {
-                                        type: 'item',
-                                        label: i18n._('Horizontal'),
-                                        onClick: () => this.props.onFlipSelectedModel('Horizontal')
-                                    },
-                                    {
-                                        type: 'item',
-                                        label: i18n._('Reset'),
-                                        onClick: () => this.props.onFlipSelectedModel('Reset')
-                                    }
-                                ]
                             },
                             {
                                 type: 'separator'
                             },
                             {
-                                type: 'item',
-                                label: i18n._('Delete Selected Model'),
-                                disabled: contextMednuDisabled,
-                                onClick: this.actions.deleteSelectedModel
+                                type: 'subMenu',
+                                label: i18n._('Arrange'),
+                                disabled: contextMenuDisabled,
+                                items: [
+                                    {
+                                        type: 'item',
+                                        label: i18n._('Bring to Front'),
+                                        onClick: () => this.actions.bringToFront()
+                                    },
+                                    {
+                                        type: 'item',
+                                        label: i18n._('Send to Back'),
+                                        onClick: () => this.actions.sendToBack()
+                                    }
+                                ]
+                            },
+                            {
+                                type: 'subMenu',
+                                label: i18n._('Transform'),
+                                disabled: contextMenuDisabled,
+                                items: [
+                                    {
+                                        type: 'item',
+                                        label: i18n._('Rotate 180°'),
+                                        onClick: () => this.actions.rotateModel(180)
+                                    },
+                                    {
+                                        type: 'item',
+                                        label: i18n._('Rotate 90° Clockwise'),
+                                        onClick: () => this.actions.rotateModel(90)
+                                    },
+                                    {
+                                        type: 'item',
+                                        label: i18n._('Rotate 90° Counter Clockwise'),
+                                        onClick: () => this.actions.rotateModel(-90)
+                                    },
+                                    {
+                                        type: 'item',
+                                        label: i18n._('Flip Horizontal'),
+                                        onClick: () => this.props.onFlipSelectedModel('Horizontal')
+                                    },
+                                    {
+                                        type: 'item',
+                                        label: i18n._('Flip Vertical'),
+                                        onClick: () => this.props.onFlipSelectedModel('Vertical')
+                                    }
+                                ]
                             }
-                            // {
-                            //     type: 'item',
-                            //     label: i18n._('Arrange All Models'),
-                            //     disabled: !hasModel,
-                            //     onClick: this.actions.arrangeAllModels
-                            // }
                         ]
                     }
                 />
@@ -640,13 +630,14 @@ const mapStateToProps = (state, ownProps) => {
     const { size } = state.machine;
     const { currentModalPath } = state.appbarMenu;
     const { page, materials, modelGroup, toolPathGroup, displayedType, hasModel, isChangedAfterGcodeGenerating,
-        renderingTimestamp, stage, progress, SVGActions, scale, target, coordinateMode, coordinateSize, inProgress } = state.cnc;
+        renderingTimestamp, stage, progress, SVGActions, scale, target, coordinateMode, coordinateSize, inProgress, showSimulation } = state.cnc;
     const selectedModelArray = modelGroup.getSelectedModelArray();
     const selectedModelID = modelGroup.getSelectedModel().modelID;
     const selectedToolPathModels = modelGroup.getSelectedToolPathModels();
 
     return {
         currentModalPath,
+        showSimulation,
         // switch pages trigger pathname change
         pathname: ownProps.location.pathname,
         page,
@@ -719,7 +710,8 @@ const mapDispatchToProps = (dispatch) => {
             rotateElementsStart: (elements, options) => dispatch(editorActions.rotateElementsStart('cnc', elements, options)),
             rotateElements: (elements, options) => dispatch(editorActions.rotateElements('cnc', elements, options)),
             rotateElementsFinish: (elements, options) => dispatch(editorActions.rotateElementsFinish('cnc', elements, options)),
-            moveElementsOnKeyDown: (options) => dispatch(editorActions.moveElementsOnKeyDown('cnc', null, options))
+            moveElementsOnKeyDown: (options) => dispatch(editorActions.moveElementsOnKeyDown('cnc', null, options)),
+            rotateElementsImmediately: (elements, options) => dispatch(editorActions.rotateElementsImmediately('cnc', elements, options))
         }
         // onModelTransform: () => dispatch(editorActions.onModelTransform('cnc')),
         // onModelAfterTransform: () => dispatch(editorActions.onModelAfterTransform('cnc'))
