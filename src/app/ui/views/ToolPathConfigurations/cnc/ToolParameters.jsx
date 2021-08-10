@@ -47,6 +47,9 @@ function SettingItem(props) {
             });
         });
     }
+    if (settingName === 'enableTab') {
+        console.log('enableTab', setting.isGcodeConfig, setting.value);
+    }
 
     return (
         <TipTrigger
@@ -108,7 +111,7 @@ function SettingItem(props) {
                                 updateToolConfig(toLine(settingName), value.value);
                             }
                         }}
-                        disabled={isToolParams(settingName) || options.length === 1}
+                        disabled={Object.keys(options).length === 1 || isToolParams(settingName)}
                     />
                 )}
             </div>
