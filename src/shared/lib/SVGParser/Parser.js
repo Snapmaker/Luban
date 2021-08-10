@@ -61,7 +61,7 @@ class SVGParser {
 
     readString(s) {
         return new Promise((resolve, reject) => {
-            /* 
+            /*
                 Remove some xml namespace attributes which cannot be parsed by xml2js.
                 <!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd" [
                     <!ENTITY ns_flows "http://ns.adobe.com/Flows/1.0/">
@@ -76,7 +76,7 @@ class SVGParser {
                 ]>
                 <svg version="1.1" id="artwork" xmlns:x="&ns_extend;" xmlns:i="&ns_ai;" xmlns:graph="&ns_graphs;">
             */
-            s = s.replace(/xmlns:.+="\&.+;"/ig, '');
+            s = s.replace(/xmlns:.+="&.+;"/ig, '');
             // keep the orders of children coz they can overlap each other
             const options = {
                 explicitChildren: false,
