@@ -40,6 +40,38 @@ class LaserParameters extends PureComponent {
                     movementMode: options.value
                 });
             }
+        },
+        updateGcodeConfig: (option) => {
+            // Movement Mode
+            if (option.movementMode === 'greyscale-dot') {
+                option.dwellTime = 5;
+                option.fillInterval = 0.14;
+                option.jogSpeed = 2500;
+                option.workSpeed = 2500;
+                option.fixedPower = 60;
+            }
+            if (option.movementMode === 'greyscale-line') {
+                option.fillInterval = 0.25;
+                option.jogSpeed = 3000;
+                option.workSpeed = 500;
+                option.fixedPower = 100;
+            }
+
+            // Fill Enabled
+            if (option.fillEnabled === true) {
+                option.fillInterval = 0.25;
+                option.jogSpeed = 3000;
+                option.workSpeed = 500;
+                option.fixedPower = 100;
+            }
+            if (option.fillEnabled === false) {
+                option.jogSpeed = 3000;
+                option.workSpeed = 140;
+                option.multiPasses = 2;
+                option.multiPassDepth = 0.6;
+                option.fixedPower = 100;
+            }
+            this.props.updateGcodeConfig(option);
         }
     };
 
@@ -115,7 +147,7 @@ class LaserParameters extends PureComponent {
                                                 label: i18n._('On The Path')
                                             }]}
                                             value={fillMethod}
-                                            onChange={(option) => { this.props.updateGcodeConfig({ fillEnabled: option.value === 'fill' }); }}
+                                            onChange={(option) => { this.actions.updateGcodeConfig({ fillEnabled: option.value === 'fill' }); }}
                                         />
                                     </div>
                                 </TipTrigger>
@@ -142,6 +174,7 @@ class LaserParameters extends PureComponent {
                                             searchable={false}
                                             value={defaultFillEnabled}
                                             onChange={() => {}}
+                                            disabled="true"
                                         />
                                     </div>
                                 </TipTrigger>
@@ -150,7 +183,7 @@ class LaserParameters extends PureComponent {
                     </div>
                     <GcodeParameters
                         toolPath={this.props.toolPath}
-                        updateGcodeConfig={this.props.updateGcodeConfig}
+                        updateGcodeConfig={this.actions.updateGcodeConfig}
                     />
                 </div>
             </React.Fragment>

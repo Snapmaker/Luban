@@ -108,7 +108,7 @@ function SettingItem(props) {
                                 updateToolConfig(toLine(settingName), value.value);
                             }
                         }}
-                        disabled={isToolParams(settingName)}
+                        disabled={isToolParams(settingName) || options.length === 1}
                     />
                 )}
             </div>
