@@ -12,7 +12,7 @@ import modal from '../../lib/modal';
 import Dropzone from '../components/Dropzone';
 import SvgIcon from '../components/SvgIcon';
 import Space from '../components/Space';
-import { renderModal, renderPopup, renderWidgetList } from '../utils';
+import { renderModal, renderPopup, renderWidgetList, useUnsavedTitle } from '../utils';
 import Tabs from '../components/Tabs';
 import Checkbox from '../components/Checkbox';
 import { Button } from '../components/Buttons';
@@ -385,7 +385,7 @@ function Cnc({ location }) {
     });
     const dispatch = useDispatch();
     const page = useSelector(state => state?.cnc.page);
-
+    useUnsavedTitle(pageHeadType);
     useEffect(() => {
         dispatch(cncActions.init());
     }, []);

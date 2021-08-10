@@ -3,7 +3,7 @@ import path from 'path';
 import { isNil } from 'lodash';
 import { ERR_BAD_REQUEST, ERR_INTERNAL_SERVER_ERROR, CNC_CONFIG_SUBCATEGORY, CncSuffix } from '../../constants';
 import DataStorage from '../../DataStorage';
-import { cncUniformProfile } from '../../lib/profile/cnc-uniform-profile';
+import { cncUniformProfile, addNewParameter } from '../../lib/profile/cnc-uniform-profile';
 
 /**
  * Get definition
@@ -127,10 +127,7 @@ export const uploadToolDefinition = (req, res) => {
     const obj = JSON.parse(readFileSync);
     const newDefinitionId = uploadName.substr(0, uploadName.length - 9);
     obj.definitionId = newDefinitionId;
-    if (!obj.settings) {
-        const defaultToolList = toolDefinitions.find((d) => d.definitionId === 'DefaultCVbit');
-        obj.settings = defaultToolList.settings;
-    }
+    obj.settings = addNewParameter(obj?.settings);
 
     if (!obj.category) {
         obj.category = newDefinitionId;

@@ -1,5 +1,6 @@
 import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
+import { isNil } from 'lodash';
 // import Slider from '../../../components/Slider';
 import {
     TOOLPATH_TYPE_IMAGE,
@@ -34,12 +35,14 @@ class GcodeParameters extends PureComponent {
         const { fillEnabled, movementMode,
             multiPasses, fixedPowerEnabled } = gcodeConfig;
 
-        //Todo
+        // Todo
         const isMethodFill = (fillEnabled === 'true' || fillEnabled === true);
 
         const gcodeDefinition = LASER_DEFAULT_GCODE_PARAMETERS_DEFINITION;
         Object.keys(gcodeDefinition).forEach((key) => {
-            gcodeDefinition[key].default_value = gcodeConfig[key];
+            if (!isNil(gcodeConfig[key])) {
+                gcodeDefinition[key].default_value = gcodeConfig[key];
+            }
             // isGcodeConfig is true means to use updateGcodeConfig, false means to use updateToolConfig
             gcodeDefinition[key].isGcodeConfig = true;
         });

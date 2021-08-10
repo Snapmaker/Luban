@@ -1,6 +1,5 @@
 import cloneDeep from 'lodash/cloneDeep';
 import { find } from 'lodash';
-// import { find, isEqual } from 'lodash';
 import {
     HEAD_CNC,
     HEAD_LASER,
@@ -68,15 +67,15 @@ export const actions = {
     },
 
     initRecoverService: () => (dispatch, getState) => {
-        const startService = (envHeadType) => {
+        const startService = async (envHeadType) => {
             // disable auto recovery if openedFile set
             const { openedFile } = getState().project[envHeadType];
             if (!openedFile) {
-                dispatch(actions.getLastEnvironment(envHeadType));
+                await dispatch(actions.getLastEnvironment(envHeadType));
             }
 
-            const action = actions.autoSaveEnvironment(envHeadType);
-            setInterval(() => dispatch(action), 2000);
+            const action = await actions.autoSaveEnvironment(envHeadType);
+            setInterval(() => dispatch(action), 1000);
         };
 
         startService(HEAD_LASER);
@@ -88,9 +87,7 @@ export const actions = {
         const fluxMod = headType2FluxMod(headType);
         const editorState = getState()[fluxMod];
         const { initState, content: lastString } = getState().project[headType];
-
         const models = editorState.modelGroup.getModels();
-        // dispatch(actions.updateState(headType, { hasModel: !!models.length }));
         if (!models.length && initState) return;
 
         const machineState = getState().machine;
@@ -117,18 +114,7 @@ export const actions = {
             envObj.toolpaths = toolPaths;
         }
         const content = JSON.stringify(envObj);
-        if (lastString) {
-            Object.values(lastString).every((item, i) => {
-                if (item !== content[i]) {
-                    console.log('diff', '------', item, content[i], i, lastString.slice(i));
-                }
-                return item === content[i];
-            });
-        }
-
-        if (force || content !== lastString) {
-            // console.trace('force', force, content !== lastString);
-            // dispatch(actions.updateState(headType, { content, unSaved: false, initState: false }));
+        if (force || (lastString && content !== lastString)) {
             dispatch(actions.updateState(headType, { content, unSaved: true, initState: false }));
             await api.saveEnv({ content });
         }
@@ -250,7 +236,6 @@ export const actions = {
         }
         // // TODO: set current content to avoid <unSaved> flag mis-set
         // await dispatch(actions.clearSavedEnvironment(envHeadType));
-
         for (const type of [HEAD_3DP, HEAD_CNC, HEAD_LASER]) {
             await dispatch(actions.clearSavedEnvironment(type));
         }
@@ -283,7 +268,6 @@ export const actions = {
 
     setOpenedFileWithUnSaved: (headType, unSaved) => async (dispatch, getState) => {
         const { openedFile } = getState().project[headType];
-        console.log('unSaved, openedFile', headType, unSaved, openedFile);
         if (openedFile) {
             UniApi.Window.setOpenedFile(unSaved ? `${openedFile?.name} *` : openedFile?.name);
         } else {
@@ -416,13 +400,14 @@ export const actions = {
                 } else {
                     await dispatch(actions.setOpenedFileWithType(headType, JSON.parse(file)));
                 }
-                dispatch(actions.updateState(headType, { unSaved: false }));
+                console.log('opened content', content);
+                await dispatch(actions.updateState(headType, { unSaved: false, content }));
             } else {
-                dispatch(actions.updateState(headType, { unSaved: false, openedFile: null }));
-                dispatch(actions.setOpenedFileWithUnSaved(headType, true));
+                await dispatch(actions.updateState(headType, { unSaved: false, openedFile: null }));
+                await dispatch(actions.setOpenedFileWithUnSaved(headType, true));
             }
         } else if (tail === 'gcode') {
-            dispatch(workspaceActions.uploadGcodeFile(file));
+            await dispatch(workspaceActions.uploadGcodeFile(file));
             history.push('/workspace');
         }
     },

@@ -14,7 +14,7 @@ import { actions as projectActions } from '../../flux/project';
 import ProjectLayout from '../layouts/ProjectLayout';
 import MainToolBar from '../layouts/MainToolBar';
 import { HEAD_3DP } from '../../constants';
-import { renderPopup, renderWidgetList } from '../utils';
+import { renderPopup, renderWidgetList, useUnsavedTitle } from '../utils';
 
 import ControlWidget from '../widgets/Control';
 import ConnectionWidget from '../widgets/Connection';
@@ -159,7 +159,7 @@ function Printing() {
     const dispatch = useDispatch();
 
     const [renderHomepage, renderMainToolBar, renderWorkspace] = useRenderMainToolBar();
-
+    useUnsavedTitle(pageHeadType);
     useEffect(() => {
         dispatch(printingActions.init());
     }, []);

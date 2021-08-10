@@ -134,9 +134,6 @@ class DataStorage {
                  const srcPath = path.join(src, file);
                  const dstPath = path.join(dst, file);
                  const overwriteTag = dstPath.indexOf('Config/Default/') >= 0;
-                 if (overwriteTag) {
-                     console.log('isNotFile outside', typeof file, dstPath, dstPath.indexOf('Config/Default/'));
-                 }
                  if (fs.statSync(srcPath).isFile()) {
                      if (fs.existsSync(dstPath) && !overwriteTag) {
                          return;

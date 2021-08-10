@@ -84,7 +84,6 @@ export const addNewParameter = (settings) => {
         settings = {};
     }
     const allSettingsParameters = Object.keys(settings);
-    console.log('!includes(allSettingsParameters, parameter', allSettingsParameters, Object.keys(defaultParameters));
     Object.keys(defaultParameters).forEach((parameter) => {
         if (!includes(allSettingsParameters, parameter)) {
             settings[parameter] = defaultParameters[parameter];

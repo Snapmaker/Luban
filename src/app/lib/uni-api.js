@@ -360,8 +360,7 @@ const Window = {
         }
     },
 
-    setOpenedFile(filename = 'new') {
-        console.log('setOpenedFile', filename);
+    setOpenedFile(filename = 'New') {
         if (!this.window) {
             this.initWindow();
         }

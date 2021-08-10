@@ -1159,14 +1159,13 @@ class SvgModel extends BaseModel {
             modelID, limitSize, headType, sourceType, sourceHeight, sourceWidth, originalName, uploadName, config, mode,
             transformation, processImageName
         } = this;
-        // console.log('sourceHeight.toFixed(2)', sourceHeight, sourceHeight.toFixed(2), transformation);
         return {
             modelID,
             limitSize,
             headType,
             sourceType,
-            sourceHeight: sourceHeight.toFixed(2),
-            sourceWidth: sourceWidth.toFixed(2),
+            sourceHeight,
+            sourceWidth,
             originalName,
             uploadName,
             config,

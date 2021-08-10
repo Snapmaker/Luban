@@ -13,7 +13,7 @@ import modal from '../../lib/modal';
 import LaserVisualizer from '../widgets/LaserVisualizer';
 import Tabs from '../components/Tabs';
 
-import { renderPopup, renderWidgetList, renderModal } from '../utils';
+import { renderPopup, renderWidgetList, renderModal, useUnsavedTitle } from '../utils';
 import Dropzone from '../components/Dropzone';
 import { actions as editorActions } from '../../flux/editor';
 import { actions as laserActions } from '../../flux/laser';
@@ -83,14 +83,6 @@ const allWidgets = {
 const ACCEPT = '.svg, .png, .jpg, .jpeg, .bmp, .dxf';
 const pageHeadType = HEAD_LASER;
 
-function useUnSavedTag(headType) {
-    const unSaved = useSelector(state => state?.project[headType]?.unSaved, shallowEqual);
-    const dispatch = useDispatch();
-    useEffect(() => {
-        console.log('useUnSavedTag', headType, unSaved);
-        dispatch(projectActions.setOpenedFileWithUnSaved(headType, unSaved));
-    }, [unSaved]);
-}
 function useRenderMainToolBar(setShowHomePage, setShowJobType, setShowWorkspace, isRotate) {
     // (!workPosition.isFourAxis && (connectionType === CONNECTION_TYPE_WIFI && isConnected && !hasBackground))
     const unSaved = useSelector(state => state?.project[pageHeadType]?.unSaved, shallowEqual);
@@ -341,7 +333,7 @@ function Laser({ location }) {
     });
     const dispatch = useDispatch();
     const page = useSelector(state => state?.laser?.page);
-    useUnSavedTag(pageHeadType);
+    useUnsavedTitle(pageHeadType);
     useEffect(() => {
         dispatch(laserActions.init());
     }, []);
