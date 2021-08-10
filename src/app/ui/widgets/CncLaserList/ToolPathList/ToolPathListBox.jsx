@@ -65,7 +65,6 @@ const ToolpathItem = ({
                 tabIndex="0"
                 onMouseUp={(e) => {
                     if (e.button === 2) { // right click
-                        console.log(selectedToolPathIDArray, toolPath.id);
                         // item is selected, do not select again
                         if (!(selectedToolPathIDArray.length === 1 && selectedToolPathIDArray[0] === toolPath.id)) {
                             selectOneToolPathId(toolPath.id);
@@ -147,7 +146,7 @@ const ToolPathListBox = (props) => {
     const selectedToolPathId = firstSelectedToolpath.id;
     const [editingToolpath, setEditingToolpath] = useState(null);
     const contextMenuRef = useRef(null);
-    const contextMenuDisabled = (selectedToolPathIDArray.length !== 1);
+    let contextMenuDisabled = true;
     const contextMenuArrangementDisabled = (toolPaths.length === 1);
     const actions = {
         selectOneToolPathId: (id) => {
@@ -212,7 +211,8 @@ const ToolPathListBox = (props) => {
         } else if (page === PAGE_PROCESS) {
             props.widgetActions.setDisplay(true);
         }
-    }, [page]);
+        contextMenuDisabled = (!selectedToolPathId);
+    }, [page, selectedToolPathId]);
 
     return (
         <div className="clearfix">
@@ -270,7 +270,7 @@ const ToolPathListBox = (props) => {
                                         label: i18n._('Edit'),
                                         disabled: contextMenuDisabled,
                                         onClick: () => {
-                                            setEditingToolpath(selectedToolPath);
+                                            setEditingToolpath(firstSelectedToolpath);
                                         }
                                     },
                                     {
