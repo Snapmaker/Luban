@@ -21,7 +21,6 @@ const QuickStart = (props) => {
 
     // redux correlation
     const series = useSelector(state => state?.machine?.series);
-    console.log({ series });
     const use4Axis = useSelector(state => state?.machine?.use4Axis);
     const dispatch = useDispatch();
 

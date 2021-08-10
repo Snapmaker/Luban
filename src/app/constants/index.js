@@ -64,11 +64,11 @@ export const PRINTING_MATERIAL_CONFIG_KEYS = [
     'material_flow',
     'material_print_temperature',
     'material_print_temperature_layer_0',
-    'material_final_print_temperature',
     'cool_fan_speed',
     'machine_heated_bed',
     'material_bed_temperature',
-    'material_bed_temperature_layer_0'
+    'material_bed_temperature_layer_0',
+    'material_flow_layer_0'
 ];
 export const PRINTING_QUALITY_CONFIG_KEYS = [
     'layer_height',
@@ -117,11 +117,11 @@ export const PRINTING_MATERIAL_CONFIG_GROUP = [
             'material_flow',
             'material_print_temperature',
             'material_print_temperature_layer_0',
-            'material_final_print_temperature',
             'cool_fan_speed',
             'machine_heated_bed',
             'material_bed_temperature',
-            'material_bed_temperature_layer_0'
+            'material_bed_temperature_layer_0',
+            'material_flow_layer_0'
         ]
     }
 ];

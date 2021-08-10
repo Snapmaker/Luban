@@ -80,6 +80,7 @@ function ConfigValueBox({ optionConfigGroup, calculateTextIndex, isCategorySelec
                                     </div>
                                 )}
                                 { group.fields && group.fields.map((key) => {
+                                    console.log('key', key, definitionForManager?.settings[key]);
                                     if (type === 'input') {
                                         return (
                                             <SettingItem
