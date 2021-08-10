@@ -30,11 +30,13 @@ const ToolpathItem = ({
     if (!toolPath) {
         return null;
     }
-    function handleOnDoubleClick() {
+    function handleOnDoubleClick(e) {
+        e.stopPropagation();
         setEditingToolpath(toolPath);
         selectToolPathById(toolPath.id);
     }
     function handleOnClick(e) {
+        e.stopPropagation();
         if (e.detail > 1) { // Check difference to double click
             return;
         }
@@ -222,11 +224,18 @@ const ToolPathListBox = (props) => {
                 'margin-top-8'
             )}
             >
-                <div className={classNames(
-                    'height-176',
-                    'align-c',
-                    'padding-vertical-4'
-                )}
+                <div
+                    className={classNames(
+                        'height-176',
+                        'align-c',
+                        'padding-vertical-4'
+                    )}
+                    tabIndex="-1"
+                    role="button"
+                    onKeyDown={() => {}}
+                    onClick={() => {
+                        actions.selectToolPathById();
+                    }}
                 >
                     {toolPaths.length === 0 && (
                         <div className={classNames(

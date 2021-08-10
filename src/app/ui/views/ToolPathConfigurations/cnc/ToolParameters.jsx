@@ -47,9 +47,6 @@ function SettingItem(props) {
             });
         });
     }
-    if (settingName === 'enableTab') {
-        console.log('enableTab', setting.isGcodeConfig, setting.value);
-    }
 
     return (
         <TipTrigger
@@ -81,7 +78,7 @@ function SettingItem(props) {
                         max={max}
                         size={styleSize}
                         className="sm-flex-auto"
-                        onChange={value => {
+                        onChange={(value) => {
                             if (setting.isGcodeConfig) {
                                 const gcodeOptions = {};
                                 gcodeOptions[toHump(settingName)] = value;
