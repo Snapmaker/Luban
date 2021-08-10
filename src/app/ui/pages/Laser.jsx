@@ -534,8 +534,8 @@ function Laser({ location }) {
             let pathConfig = {};
             if (isRotate) {
                 pathConfig = {
-                    path: './UserCase/A250/A250_4th_Laser.snaplzr',
-                    name: 'A250_4th_Laser.snaplzr'
+                    path: './UserCase/A350/A350_4th_Laser.snaplzr',
+                    name: 'A350_4th_Laser.snaplzr'
                 };
             } else {
                 pathConfig = {
