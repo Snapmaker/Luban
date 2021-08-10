@@ -6,7 +6,7 @@
     bottom: 16px;
     left: 0;
     width: calc(100% - 280px);
-    height: 70px;
+    height: 96px;
     overflow: hidden;
     padding: 0 24px;
     margin-left: 172px;
@@ -23,6 +23,10 @@
         color: #D5D6D9;
         :global(.ant-progress-inner) {
             top: -8px;
+            height: 12px;
+            :global(.ant-progress-bg) {
+                height 100% !important;
+            }
         }
         :global(.ant-progress-outer) {
             margin-right: 0!important;

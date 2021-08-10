@@ -43,7 +43,7 @@ class ProgressBar extends React.PureComponent {
                 style={{ display }}
                 className={classNames(styles.progressbar, 'module-default-shadow')}
             >
-                <div className="position-re height-16 margin-top-16 margin-bottom-8 align-c">
+                <div className="position-re height-16 margin-top-24 margin-bottom-16 align-c">
                     <span>{tips}</span>
                 </div>
                 <Progress

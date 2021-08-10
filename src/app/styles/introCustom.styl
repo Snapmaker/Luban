@@ -1,6 +1,6 @@
 .introjs-tooltip {
     width 480px;
-    max-width: 480px;
+    max-width: 480px !important;
     color: #545659;
     font-size 14px
 }
@@ -14,12 +14,9 @@
 }
 
 .introjs-prevbutton {
-    display none
+    display none !important
 }
 
-.introjs-skipbutton {
-    // display none
-}
 .introjs-tooltipbuttons {
     border none
     .introjs-nextbutton {
@@ -35,6 +32,12 @@
         &:hover {
             cursor pointer
             color #fff
+            background #545659
+        }
+        &:active {
+            background: #2A2C2E;
+            text-shadow: none;
+            color: #fff;
         }
     }
 }
@@ -103,6 +106,8 @@
 
 .introjs-button {
     &:focus {
-        box-shadow none
+        box-shadow none !important
+        background: #2a2c2e !important;
+        color #fff !important
     }
 }

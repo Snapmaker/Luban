@@ -127,13 +127,18 @@ const Begin = () => {
                             <div className={classNames(styles.nearlyFile, 'margin-vertical-48')}>
                                 <div className={classNames(styles['recent-file-list'])}>
                                     {slice(newRecentFile, 0, newRecentFile.length >= 10 ? 10 : newRecentFile.length + 1).map((item) => {
+                                        const tempArr = item.name.split('.');
+                                        const fileName = tempArr.slice(0, tempArr.length - 1).join('.');
+                                        const suffixName = tempArr[tempArr.length - 1];
+                                        console.log({ tempArr });
                                         return (
                                             <div
-                                                className={styles['file-item']}
+                                                className={classNames(styles['file-item'], 'heading-3-normal-with-hover')}
                                                 onClick={() => dispatch(projectActions.openProject(item, history))}
                                                 aria-hidden="true"
                                             >
-                                                <span className={classNames('heading-3-normal-with-hover')}>{item.name}</span>
+                                                <span className={classNames(styles['file-name'])}>{fileName}</span>
+                                                <span className={classNames(styles['suffix-name'])}>{`(.${suffixName})`}</span>
                                             </div>
                                         );
                                     })}

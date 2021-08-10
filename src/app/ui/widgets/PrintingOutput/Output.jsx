@@ -22,6 +22,7 @@ import ModelExporter from '../PrintingVisualizer/ModelExporter';
 import { renderPopup } from '../../utils';
 
 import Workspace from '../../pages/Workspace';
+import SvgIcon from '../../components/SvgIcon';
 
 class Output extends PureComponent {
     static propTypes = {
@@ -176,7 +177,7 @@ class Output extends PureComponent {
                     onClick={actions.onClickLoadGcode}
                     disabled={workflowState === 'running' || !gcodeLine || inProgress}
                 >
-                    <div className={classNames('align-c')}>
+                    <div className={classNames('align-c', 'padding-vertical-4')}>
                         {i18n._('Load G-code to Workspace')}
                     </div>
                 </Menu.Item>
@@ -184,7 +185,7 @@ class Output extends PureComponent {
                     disabled={!gcodeLine || inProgress}
                     onClick={actions.onClickExportGcode}
                 >
-                    <div className={classNames('align-c')}>
+                    <div className={classNames('align-c', 'padding-vertical-4')}>
                         {i18n._('Export G-code to File')}
                     </div>
                 </Menu.Item>
@@ -221,11 +222,12 @@ class Output extends PureComponent {
                             role="button"
                             className={classNames('position-re', 'height-40', 'margin-top-10')}
                             tabIndex={0}
-                            onMouseEnter={actions.handleMouseOver}
-                            onMouseLeave={actions.handleMouseOut}
+                            // onMouseEnter={actions.handleMouseOver}
+                            // onMouseLeave={actions.handleMouseOut}
                         >
                             <Dropdown
                                 overlay={menu}
+                                trigger="click"
                             >
                                 <Button
                                     type="primary"
@@ -237,6 +239,7 @@ class Output extends PureComponent {
                                         // 'margin-top-10',
                                         displayedType === gcodeLine ? 'display-block' : 'display-none'
                                     )}
+                                    suffixIcon={<SvgIcon name="DropdownOpen" type="static" />}
                                 >
                                     {i18n._('Export')}
                                 </Button>

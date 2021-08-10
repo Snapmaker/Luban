@@ -129,7 +129,7 @@ export const actions = {
         const getStartedSubmenu = fileMenu.submenu.find(item => item.id === 'get-started');
         const recentFilesSubmenu = fileMenu.submenu.find(item => item.id === 'recent-files');
         const toggleDeveloperToolsSubmenu = windowMenu.submenu.find(item => item.id === 'toggle-developer-tools');
-
+        const helpMenu = menu.find(item => item.id === 'help');
         if (toggleDeveloperToolsSubmenu) {
             toggleDeveloperToolsSubmenu.enabled = isElectron();
         }
@@ -206,6 +206,10 @@ export const actions = {
                 }
             });
 
+            helpMenu.submenu.forEach(item => {
+                item.enabled = true;
+            });
+
             // update Edit menu status
             for (const item of editMenu.submenu) {
                 switch (item.id) {
@@ -246,6 +250,16 @@ export const actions = {
                 }
             });
             editMenu.submenu.forEach(item => { item.enabled = false; });
+            helpMenu.submenu.forEach(item => {
+                switch (item.id) {
+                    case 'guided-tour':
+                        item.enabled = false;
+                        break;
+                    default:
+                        item.enabled = true;
+                        break;
+                }
+            });
         }
         if (currentPath === '#/workspace') {
             const { gcodeFile } = getState().workspace;
@@ -260,6 +274,16 @@ export const actions = {
             });
             editMenu.submenu.forEach(item => {
                 item.enabled = false;
+            });
+            helpMenu.submenu.forEach(item => {
+                switch (item.id) {
+                    case 'guided-tour':
+                        item.enabled = false;
+                        break;
+                    default:
+                        item.enabled = true;
+                        break;
+                }
             });
         }
 
