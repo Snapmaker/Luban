@@ -956,7 +956,12 @@ class SvgModel extends BaseModel {
         if (this.processObject3D) {
             this.processObject3D.visible = !this.showOrigin;
         }
-
+        if (this.sourceType === 'svg') {
+            return {
+                showOrigin: this.showOrigin,
+                showImageName: this.showOrigin ? this.uploadName.replace('parsed.svg', '.svg') : this.processImageName
+            };
+        }
         return {
             showOrigin: this.showOrigin,
             showImageName: this.showOrigin ? this.uploadName : this.processImageName

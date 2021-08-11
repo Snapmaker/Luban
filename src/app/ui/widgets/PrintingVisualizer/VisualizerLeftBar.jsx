@@ -18,8 +18,8 @@ class VisualizerLeftBar extends PureComponent {
     static propTypes = {
         size: PropTypes.object.isRequired,
         selectedModelArray: PropTypes.array,
-        hasModel: PropTypes.bool,
-        gcodeLine: PropTypes.object,
+        // hasModel: PropTypes.bool,
+        // gcodeLine: PropTypes.object,
         transformMode: PropTypes.string.isRequired,
         transformation: PropTypes.shape({
             positionX: PropTypes.number,
@@ -36,7 +36,7 @@ class VisualizerLeftBar extends PureComponent {
         defaultSupportSize: PropTypes.shape({
             x: PropTypes.number,
             y: PropTypes.number
-        }).isRequired,
+        }),
         inProgress: PropTypes.bool.isRequired,
         isSupporting: PropTypes.bool.isRequired,
         isSupportSelected: PropTypes.bool.isRequired,
@@ -204,8 +204,8 @@ class VisualizerLeftBar extends PureComponent {
 
     render() {
         const actions = this.actions;
-        const { size, hasModel, selectedModelArray, transformMode,
-            transformation, defaultSupportSize, isSupporting, gcodeLine,
+        const { size, selectedModelArray, transformMode,
+            transformation, defaultSupportSize, isSupporting,
             isSupportSelected, modelSize, supportActions, inProgress } = this.props;
         let moveX = 0;
         let moveY = 0;
@@ -248,7 +248,7 @@ class VisualizerLeftBar extends PureComponent {
                         multiple={false}
                         onChange={actions.onChangeFile}
                     />
-                    <div className="position-ab height-percent-100 border-radius-8 background-color-white width-56">
+                    <div className="position-ab height-percent-100 border-radius-8 background-color-white width-56 box-shadow-module">
                         <nav className={styles.navbar}>
                             <ul className={classNames(styles.nav, 'border-bottom-normal')}>
                                 <li
@@ -257,7 +257,7 @@ class VisualizerLeftBar extends PureComponent {
                                     <SvgIcon
                                         type={['hoverSpecial', 'pressSpecial']}
                                         name="ToolbarOpen"
-                                        className="padding-horizontal-4"
+                                        className="padding-horizontal-4 print-tool-bar-open"
                                         onClick={() => {
                                             actions.onClickToUpload();
                                         }}
@@ -267,118 +267,103 @@ class VisualizerLeftBar extends PureComponent {
                                     />
                                 </li>
                             </ul>
-                            <ul className={classNames(styles.nav, 'border-bottom-normal')}>
-                                <li
-                                    className="margin-vertical-4"
-                                >
-                                    <SvgIcon
-                                        color="#545659"
-                                        className={classNames(
-                                            { [styles.selected]: (!transformDisabled && transformMode === 'translate') },
-                                            'padding-horizontal-4'
-                                        )}
-                                        // Todo: Add selected props
-                                        type={['hoverSpecial', 'pressSpecial']}
-                                        name="ToolbarMove"
-                                        size={48}
-                                        onClick={() => {
-                                            actions.setTransformMode('translate');
-                                        }}
-                                        disabled={transformDisabled}
-                                    />
-                                </li>
-                                <li
-                                    className="margin-vertical-4"
-                                >
-                                    <SvgIcon
-                                        color="#545659"
-                                        className={classNames(
-                                            { [styles.selected]: (!transformDisabled && transformMode === 'scale') },
-                                            'padding-horizontal-4'
-                                        )}
-                                        type={['hoverSpecial', 'pressSpecial']}
-                                        name="ToolbarScale"
-                                        size={48}
-                                        onClick={() => {
-                                            actions.setTransformMode('scale');
-                                        }}
-                                        disabled={transformDisabled}
-                                    />
-                                </li>
-                                <li
-                                    className="margin-vertical-4"
-                                >
-                                    <SvgIcon
-                                        color="#545659"
-                                        className={classNames(
-                                            { [styles.selected]: (!transformDisabled && transformMode === 'rotate') },
-                                            'padding-horizontal-4'
-                                        )}
-                                        type={['hoverSpecial', 'pressSpecial']}
-                                        name="ToolbarRotate"
-                                        size={48}
-                                        onClick={() => {
-                                            actions.setTransformMode('rotate');
-                                        }}
-                                        disabled={transformDisabled || isSupportSelected}
-                                    />
-                                </li>
-                                <li
-                                    className="margin-vertical-4"
-                                >
-                                    <SvgIcon
-                                        color="#545659"
-                                        className={classNames(
-                                            { [styles.selected]: (!transformDisabled && transformMode === 'mirror') },
-                                            'padding-horizontal-4'
-                                        )}
-                                        type={['hoverSpecial', 'pressSpecial']}
-                                        name="ToolbarMirror"
-                                        size={48}
-                                        onClick={() => {
-                                            actions.setTransformMode('mirror');
-                                        }}
-                                        disabled={transformDisabled || isSupportSelected}
-                                    />
-                                </li>
-                            </ul>
-                            <ul className={classNames(styles.nav, 'border-bottom-normal')}>
-                                <li
-                                    className="margin-vertical-4"
-                                >
-                                    <SvgIcon
-                                        color="#545659"
-                                        type={['hoverSpecial', 'pressSpecial']}
-                                        name="ToolbarAutoLayout"
-                                        size={48}
-                                        className="padding-horizontal-4"
-                                        onClick={() => {
-                                            actions.arrangeAllModels();
-                                        }}
-                                        disabled={inProgress || !hasModel || isSupportSelected || gcodeLine}
-                                    />
-                                </li>
-                            </ul>
-                            <ul className={styles.nav}>
-                                <li
-                                    className="margin-vertical-4"
-                                >
-                                    <SvgIcon
-                                        color="#545659"
-                                        className={classNames(
-                                            { [styles.selected]: (!transformDisabled && transformMode === 'support') },
-                                            'padding-horizontal-4'
-                                        )}
-                                        type={['hoverSpecial', 'pressSpecial']}
-                                        name="ToolbarSupport"
-                                        size={48}
-                                        onClick={() => {
-                                            actions.setTransformMode('support');
-                                        }}
-                                        disabled={supportDisabled}
-                                    />
-                                </li>
-                            </ul>
+                            <span className="print-intro-three">
+                                <ul className={classNames(styles.nav, 'border-bottom-normal')}>
+                                    <li
+                                        className="margin-vertical-4"
+                                    >
+                                        <SvgIcon
+                                            color="#545659"
+                                            className={classNames(
+                                                { [styles.selected]: (!transformDisabled && transformMode === 'translate') },
+                                                'padding-horizontal-4'
+                                            )}
+                                            // Todo: Add selected props
+                                            type={['hoverSpecial', 'pressSpecial']}
+                                            name="ToolbarMove"
+                                            size={48}
+                                            onClick={() => {
+                                                actions.setTransformMode('translate');
+                                            }}
+                                            disabled={transformDisabled}
+                                        />
+                                    </li>
+                                    <li
+                                        className="margin-vertical-4"
+                                    >
+                                        <SvgIcon
+                                            color="#545659"
+                                            className={classNames(
+                                                { [styles.selected]: (!transformDisabled && transformMode === 'scale') },
+                                                'padding-horizontal-4'
+                                            )}
+                                            type={['hoverSpecial', 'pressSpecial']}
+                                            name="ToolbarScale"
+                                            size={48}
+                                            onClick={() => {
+                                                actions.setTransformMode('scale');
+                                            }}
+                                            disabled={transformDisabled}
+                                        />
+                                    </li>
+                                    <li
+                                        className="margin-vertical-4"
+                                    >
+                                        <SvgIcon
+                                            color="#545659"
+                                            className={classNames(
+                                                { [styles.selected]: (!transformDisabled && transformMode === 'rotate') },
+                                                'padding-horizontal-4'
+                                            )}
+                                            type={['hoverSpecial', 'pressSpecial']}
+                                            name="ToolbarRotate"
+                                            size={48}
+                                            onClick={() => {
+                                                actions.setTransformMode('rotate');
+                                            }}
+                                            disabled={transformDisabled || isSupportSelected}
+                                        />
+                                    </li>
+                                    <li
+                                        className="margin-vertical-4"
+                                    >
+                                        <SvgIcon
+                                            color="#545659"
+                                            className={classNames(
+                                                { [styles.selected]: (!transformDisabled && transformMode === 'mirror') },
+                                                'padding-horizontal-4'
+                                            )}
+                                            type={['hoverSpecial', 'pressSpecial']}
+                                            name="ToolbarMirror"
+                                            size={48}
+                                            onClick={() => {
+                                                actions.setTransformMode('mirror');
+                                            }}
+                                            disabled={transformDisabled || isSupportSelected}
+                                        />
+                                    </li>
+                                </ul>
+                                <ul className={classNames(styles.nav)}>
+                                    <li
+                                        className="margin-vertical-4"
+                                    >
+                                        <SvgIcon
+                                            color="#545659"
+                                            className={classNames(
+                                                { [styles.selected]: (!transformDisabled && transformMode === 'support') },
+                                                'padding-horizontal-4'
+                                            )}
+                                            type={['hoverSpecial', 'pressSpecial']}
+                                            name="ToolbarSupport"
+                                            size={48}
+                                            onClick={() => {
+                                                actions.setTransformMode('support');
+                                            }}
+                                            disabled={supportDisabled}
+                                        />
+                                    </li>
+                                </ul>
+                            </span>
                         </nav>
                     </div>
                     {!transformDisabled && transformMode === 'translate' && (
@@ -760,7 +745,7 @@ class VisualizerLeftBar extends PureComponent {
                                             size="small"
                                             min={1}
                                             max={size.x / 2}
-                                            value={defaultSupportSize.x}
+                                            value={defaultSupportSize?.x}
                                             onChange={(value) => {
                                                 supportActions.setDefaultSupportSize({ x: value });
                                             }}
@@ -775,7 +760,7 @@ class VisualizerLeftBar extends PureComponent {
                                             size="small"
                                             min={1}
                                             max={size.y / 2}
-                                            value={defaultSupportSize.y}
+                                            value={defaultSupportSize?.y}
                                             onChange={(value) => {
                                                 supportActions.setDefaultSupportSize({ y: value });
                                             }}
@@ -846,7 +831,7 @@ const mapStateToProps = (state) => {
         size: machine.size,
         selectedModelArray: modelGroup.selectedModelArray,
         transformation: modelGroup.getSelectedModelTransformationForPrinting(),
-        // defaultSupportSize: modelGroup.defaultSupportSize,
+        defaultSupportSize: modelGroup.defaultSupportSize,
         hasModel,
         gcodeLine,
         isSupportSelected,

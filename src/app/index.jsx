@@ -3,6 +3,7 @@ import series from 'async/series';
 import moment from 'moment';
 import React from 'react';
 import ReactDOM from 'react-dom';
+import { ConfigProvider } from 'antd';
 import { createStore, applyMiddleware } from 'redux';
 import { Provider } from 'react-redux';
 import thunk from 'redux-thunk';
@@ -112,9 +113,11 @@ series([
     const reduxStore = createStore(reducer, applyMiddleware(thunk, appbarMenuMiddleware));
 
     ReactDOM.render(
-        <Provider store={reduxStore}>
-            <App />
-        </Provider>,
+        <ConfigProvider autoInsertSpaceInButton={false}>
+            <Provider store={reduxStore}>
+                <App />
+            </Provider>
+        </ConfigProvider>,
         container
     );
 });

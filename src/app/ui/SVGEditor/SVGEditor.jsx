@@ -58,7 +58,8 @@ class SVGEditor extends PureComponent {
         onChangeFile: PropTypes.func.isRequired,
         onClickToUpload: PropTypes.func.isRequired,
         fileInput: PropTypes.object.isRequired,
-        allowedFiles: PropTypes.string.isRequired
+        allowedFiles: PropTypes.string.isRequired,
+        headType: PropTypes.string
     };
 
     flag = (Math.random() * 100).toFixed();
@@ -218,6 +219,7 @@ class SVGEditor extends PureComponent {
                             fileInput={this.props.fileInput}
                             allowedFiles={this.props.allowedFiles}
                             editable={this.props.editable}
+                            headType={this.props.headType}
                         />
                     </div>
                 </div>

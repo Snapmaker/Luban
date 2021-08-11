@@ -17,7 +17,7 @@ import {
     PAGE_PROCESS,
     SOURCE_TYPE_IMAGE3D,
     DATA_PREFIX,
-    COORDINATE_MODE_BOTTOM_CENTER, DISPLAYED_TYPE_MODEL
+    COORDINATE_MODE_BOTTOM_CENTER, DISPLAYED_TYPE_MODEL, COORDINATE_MODE_CENTER
 } from '../../constants';
 import { baseActions } from './actions-base';
 import { processActions } from './actions-process';
@@ -25,7 +25,6 @@ import { processActions } from './actions-process';
 import LoadModelWorker from '../../workers/LoadModel.worker';
 import { controller } from '../../lib/controller';
 import { isEqual, round } from '../../../shared/lib/utils';
-import { machineStore } from '../../store/local-storage';
 
 import { CNC_LASER_STAGE } from './utils';
 import VisibleOperation2D from '../operation-history/VisibleOperation2D';
@@ -96,7 +95,7 @@ export const actions = {
     ...processActions,
 
     _init: (headType) => (dispatch, getState) => {
-        const { modelGroup, toolPathGroup } = getState()[headType];
+        const { modelGroup, toolPathGroup, initFlag } = getState()[headType];
         modelGroup.removeAllModels();
         modelGroup.setDataChangedCallback(() => {
             dispatch(baseActions.render(headType));
@@ -104,7 +103,12 @@ export const actions = {
         toolPathGroup.setUpdatedCallBack(() => {
             dispatch(baseActions.render(headType));
         });
-        dispatch(actions.__initOnControllerEvents(headType));
+        if (!initFlag) {
+            dispatch(actions.__initOnControllerEvents(headType));
+            dispatch(baseActions.updateState(headType, {
+                initFlag: true
+            }));
+        }
     },
 
     __initOnControllerEvents: (headType) => {
@@ -152,15 +156,17 @@ export const actions = {
     },
 
     onSizeUpdated: (headType, size) => (dispatch, getState) => {
-        const { SVGActions, materials } = getState()[headType];
+        const { SVGActions, materials, coordinateMode } = getState()[headType];
 
         SVGActions.updateSize(size);
 
         const isRotate = materials.isRotate;
-        dispatch(actions.changeCoordinateMode(headType, null, (!isRotate ? size : {
+        const newMode = (coordinateMode ?? (isRotate ? COORDINATE_MODE_BOTTOM_CENTER : COORDINATE_MODE_CENTER));
+        const newSize = (!isRotate ? size : {
             x: materials.diameter * Math.PI,
             y: materials.length
-        })));
+        });
+        dispatch(actions.changeCoordinateMode(headType, newMode, newSize));
     },
 
     /**
@@ -340,7 +346,7 @@ export const actions = {
      */
     generateModel: (headType, originalName, uploadName, sourceWidth, sourceHeight, mode, sourceType, config, gcodeConfig, transformation, modelID, zIndex) => (dispatch, getState) => {
         const { size } = getState().machine;
-        const { materials, modelGroup, SVGActions, contentGroup, toolPathGroup } = getState()[headType];
+        const { materials, modelGroup, SVGActions, contentGroup, toolPathGroup, coordinateMode, coordinateSize } = getState()[headType];
 
         sourceType = sourceType || getSourceType(originalName);
 
@@ -357,7 +363,7 @@ export const actions = {
 
         // Limit image size by machine size
         const newModelSize = sourceType !== SOURCE_TYPE_IMAGE3D
-            ? limitModelSizeByMachineSize(size, sourceWidth, sourceHeight)
+            ? limitModelSizeByMachineSize(coordinateSize, sourceWidth, sourceHeight)
             : sizeModel(size, materials, sourceWidth, sourceHeight);
 
         let { width, height } = newModelSize;
@@ -372,6 +378,18 @@ export const actions = {
             width,
             height
         };
+        if (sourceType !== SOURCE_TYPE_IMAGE3D) {
+            const coorDelta = {
+                dx: coordinateSize.x / 2 * coordinateMode.setting.sizeMultiplyFactor.x,
+                dy: coordinateSize.y / 2 * coordinateMode.setting.sizeMultiplyFactor.y
+            };
+            defaultTransformation.positionX = coorDelta.dx;
+            if (materials.isRotate) {
+                defaultTransformation.positionY = height / 2;
+            } else {
+                defaultTransformation.positionY = coorDelta.dy;
+            }
+        }
 
         config = {
             ...defaultConfig,
@@ -1202,6 +1220,7 @@ export const actions = {
         dispatch(actions.resetProcessState(headType));
         dispatch(operationHistoryActions.setOperations(headType, operations));
         dispatch(baseActions.render(headType));
+        dispatch(actions._checkModelsInChunkArea(headType));
     },
 
     /**
@@ -1237,6 +1256,7 @@ export const actions = {
         dispatch(actions.resetProcessState(headType));
 
         dispatch(baseActions.render(headType));
+        dispatch(actions._checkModelsInChunkArea(headType));
     },
 
     /**
@@ -1310,11 +1330,12 @@ export const actions = {
             return;
         }
         const selectedModel = selectedModels[0];
-        if (selectedModel.sourceType !== 'image3d') {
+        if (selectedModel.sourceType !== 'image3d' && selectedModel.config.svgNodeName === 'image') {
             dispatch(actions.processSelectedModel(headType));
         }
 
         dispatch(baseActions.render(headType));
+        dispatch(actions._checkModelsInChunkArea(headType));
     },
 
     /**
@@ -1349,6 +1370,7 @@ export const actions = {
         dispatch(actions.resetProcessState(headType));
 
         dispatch(baseActions.render(headType));
+        dispatch(actions._checkModelsInChunkArea(headType));
     },
 
     /**
@@ -1531,6 +1553,7 @@ export const actions = {
         dispatch(actions.resetProcessState(headType));
         dispatch(operationHistoryActions.setOperations(headType, operations));
         dispatch(baseActions.render(headType));
+        dispatch(actions._checkModelsInChunkArea(headType));
     },
 
     /**
@@ -1566,15 +1589,19 @@ export const actions = {
         dispatch(actions.resetProcessState(headType));
 
         dispatch(baseActions.render(headType));
+        dispatch(actions._checkModelsInChunkArea(headType));
     },
 
     /**
      * Create text element (but not its corresponding model).
      */
     createText: (headType, content) => async (dispatch, getState) => {
-        const { SVGActions } = getState()[headType];
-
-        return SVGActions.createText(content);
+        const { SVGActions, coordinateMode, coordinateSize } = getState()[headType];
+        const position = {
+            x: coordinateSize.x / 2 * coordinateMode.setting.sizeMultiplyFactor.x,
+            y: -coordinateSize.y / 2 * coordinateMode.setting.sizeMultiplyFactor.y
+        };
+        return SVGActions.createText(content, position);
     },
 
     /**
@@ -1584,7 +1611,7 @@ export const actions = {
         const { SVGActions } = getState()[headType];
 
         SVGActions.modifyText(element, options);
-        dispatch(actions.resetProcessState());
+        dispatch(actions.resetProcessState(headType));
     },
 
     /**
@@ -1615,8 +1642,6 @@ export const actions = {
             ...newMaterials
         };
 
-        machineStore.set(`${headType}.materials`, allMaterials);
-
         if (allMaterials.isRotate) {
             allMaterials.x = round(allMaterials.diameter * Math.PI, 2);
             allMaterials.y = allMaterials.length;
@@ -1635,6 +1660,7 @@ export const actions = {
             },
             showSimulation: false
         }));
+
         if (materials.isRotate !== allMaterials.isRotate) {
             dispatch(actions.processSelectedModel(headType));
         }
@@ -1681,17 +1707,17 @@ export const actions = {
             x: size.x,
             y: size.y
         };
-        if (coordinateMode !== oldCoordinateMode) { // move all elements
+        if (coordinateMode.value !== oldCoordinateMode.value) { // move all elements
             const coorDelta = {
                 dx: 0,
                 dy: 0
             };
-            if (oldCoordinateMode !== COORDINATE_MODE_BOTTOM_CENTER) {
+            if (oldCoordinateMode.value !== COORDINATE_MODE_BOTTOM_CENTER.value) {
                 coorDelta.dx -= coordinateSize.x / 2 * oldCoordinateMode.setting.sizeMultiplyFactor.x;
                 coorDelta.dy += coordinateSize.y / 2 * oldCoordinateMode.setting.sizeMultiplyFactor.y;
             }
 
-            if (coordinateMode !== COORDINATE_MODE_BOTTOM_CENTER) {
+            if (coordinateMode.value !== COORDINATE_MODE_BOTTOM_CENTER.value) {
                 coorDelta.dx += coordinateSize.x / 2 * coordinateMode.setting.sizeMultiplyFactor.x;
                 coorDelta.dy -= coordinateSize.y / 2 * coordinateMode.setting.sizeMultiplyFactor.y;
             }

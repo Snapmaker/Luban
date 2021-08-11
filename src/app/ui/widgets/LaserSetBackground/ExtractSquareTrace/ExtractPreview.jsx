@@ -6,6 +6,7 @@ import { DATA_PREFIX } from '../../../../constants';
 import api from '../../../../api';
 import ExtractControls from '../../../../three-extensions/ExtractControls';
 import RectangleGridHelper from '../../../../three-extensions/RectangleGridHelper';
+import WebGLRendererWrapper from '../../../../three-extensions/WebGLRendererWrapper';
 
 
 class ExtractPreview extends Component {
@@ -49,6 +50,11 @@ class ExtractPreview extends Component {
 
     componentWillUnmount() {
         cancelAnimationFrame(this.frameId);
+
+        if (this.renderer) {
+            this.renderer.dispose();
+            this.renderer = null;
+        }
     }
 
     onChangeImage(filename, width, height) {
@@ -98,7 +104,7 @@ class ExtractPreview extends Component {
         this.camera.position.set(0, 0, Math.max(this.props.size.x, this.props.size.y) * 0.5);
         this.camera.lookAt(new THREE.Vector3(0, 0, 0));
 
-        this.renderer = new THREE.WebGLRenderer({ antialias: true });
+        this.renderer = new WebGLRendererWrapper({ antialias: true });
         this.renderer.setClearColor(new THREE.Color(0xfafafa), 1);
         this.renderer.setSize(width, height);
 

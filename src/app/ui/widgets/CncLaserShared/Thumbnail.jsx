@@ -1,8 +1,9 @@
 import React, { PureComponent } from 'react';
-import { Color, HemisphereLight, PerspectiveCamera, Scene, Vector3, WebGLRenderer } from 'three';
+import { Color, HemisphereLight, PerspectiveCamera, Scene, Vector3 } from 'three';
 import PropTypes from 'prop-types';
 
 import ThreeUtils from '../../../three-extensions/ThreeUtils';
+import WebGLRendererWrapper from '../../../three-extensions/WebGLRendererWrapper';
 
 class Thumbnail extends PureComponent {
     static propTypes = {
@@ -32,10 +33,9 @@ class Thumbnail extends PureComponent {
         this.camera.position.copy(new Vector3(0, 120, 500));
 
 
-        this.renderer = new WebGLRenderer({ antialias: true, preserveDrawingBuffer: true });
+        this.renderer = new WebGLRendererWrapper({ antialias: true, preserveDrawingBuffer: true });
         this.renderer.setClearColor(new Color(0xfafafa), 1);
         this.renderer.setSize(width, height);
-        this.renderer.shadowMap.enabled = true;
 
         this.scene = new Scene();
         this.scene.add(this.camera);
@@ -44,6 +44,13 @@ class Thumbnail extends PureComponent {
 
         this.node.current.appendChild(this.renderer.domElement);
         this.renderScene();
+    }
+
+    componentWillUnmount() {
+        if (this.renderer) {
+            this.renderer.dispose();
+            this.renderer = null;
+        }
     }
 
     // componentDidUpdate(prevProps) {

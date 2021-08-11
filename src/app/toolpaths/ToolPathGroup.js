@@ -27,6 +27,8 @@ class ToolPathGroup {
 
     materialsObject = null;
 
+    thumbnail = '';
+
     constructor(modelGroup, headType) {
         this.modelGroup = modelGroup;
         this.headType = headType;
@@ -50,6 +52,14 @@ class ToolPathGroup {
 
     get count() {
         return this.toolPaths.length + 1;
+    }
+
+    get isSingleSelected() {
+        return this.toolPaths && this.selectedToolPathArray.length === 1;
+    }
+
+    get firstSelectedToolpath() {
+        return this.toolPaths && this.toolPaths.find(v => v.id === this.selectedToolPathArray[0]);
     }
 
     /**
@@ -311,6 +321,40 @@ class ToolPathGroup {
         this._updated();
     }
 
+    toolPathToTop(toolPathId) {
+        let index = -1;
+        for (let i = 0; i < this.toolPaths.length; i++) {
+            if (toolPathId === this.toolPaths[i].id) {
+                index = i;
+                break;
+            }
+        }
+        if (index <= 0) {
+            return;
+        }
+        const toolPath = this.toolPaths.splice(index, 1)[0];
+        this.toolPaths.unshift(toolPath);
+
+        this._updated();
+    }
+
+    toolPathToBottom(toolPathId) {
+        let index = -1;
+        for (let i = 0; i < this.toolPaths.length; i++) {
+            if (toolPathId === this.toolPaths[i].id) {
+                index = i;
+                break;
+            }
+        }
+        if (index === -1 || index === this.toolPaths.length - 1) {
+            return;
+        }
+        const toolPath = this.toolPaths.splice(index, 1)[0];
+        this.toolPaths.push(toolPath);
+
+        this._updated();
+    }
+
     deleteToolPath(toolPathId) {
         const toolPath = this._getToolPath(toolPathId);
 
@@ -371,6 +415,10 @@ class ToolPathGroup {
         }
 
         return object;
+    }
+
+    updateThumbnail(thumbnail) {
+        this.thumbnail = thumbnail;
     }
 
     updateMaterials(materials) {

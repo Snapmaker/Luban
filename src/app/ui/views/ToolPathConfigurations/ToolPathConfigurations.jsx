@@ -1,4 +1,5 @@
-import React, { useState, useEffect, useLayoutEffect } from 'react';
+import React, { useState, useEffect } from 'react';
+// import React, { useState, useEffect, useLayoutEffect } from 'react';
 import { useDispatch, useSelector, shallowEqual } from 'react-redux';
 import PropTypes from 'prop-types';
 import classNames from 'classnames';
@@ -23,13 +24,10 @@ function ToolPathConfigurations(props) {
     const dispatch = useDispatch();
 
     const [currentToolDefinition, setCurrentToolDefinition] = useState(activeToolListDefinition);
-    useLayoutEffect(() => {
-        setCurrentToolDefinition(_.cloneDeep(activeToolListDefinition));
-    }, [activeToolListDefinition]);
 
     const updateCncActiveToolDefinition = async (toolPath) => {
         const { toolParams, gcodeConfig } = toolPath;
-        const activeToolDefinition = _.cloneDeep(activeToolListDefinition);
+        const activeToolDefinition = _.cloneDeep(currentToolDefinition);
 
         const oldTooldefinition = toolDefinitions.find((d) => {
             return d.name === toolParams.definitionName && d.definitionId === toolParams.definitionId;
@@ -46,16 +44,14 @@ function ToolPathConfigurations(props) {
             activeToolDefinition.settings.step_down.default_value = gcodeConfig?.stepDown;
             activeToolDefinition.settings.step_over.default_value = gcodeConfig?.stepOver;
         }
-        await dispatch(cncActions.changeActiveToolListDefinition(activeToolDefinition.definitionId, activeToolDefinition.name));
         setCurrentToolDefinition(activeToolDefinition);
     };
 
     const [toolPath, setToolPath] = useState(toolpath);
     useEffect(() => {
-        const newToolPath = _.cloneDeep(toolpath);
-        setToolPath(newToolPath);
+        setToolPath(toolpath);
         if (!_.isNull(toolpath) && props.headType === HEAD_CNC) {
-            updateCncActiveToolDefinition(newToolPath);
+            updateCncActiveToolDefinition(toolpath);
         }
     }, [toolpath]);
 
@@ -67,7 +63,10 @@ function ToolPathConfigurations(props) {
         },
         checkIfDefinitionModified() {
             if (props.headType === HEAD_CNC) {
-                return !Object.entries(activeToolListDefinition.settings).every(([key, setting]) => {
+                const oldTooldefinition = toolDefinitions.find((d) => {
+                    return d.definitionId === currentToolDefinition.definitionId;
+                });
+                return !Object.entries(oldTooldefinition.settings).every(([key, setting]) => {
                     return currentToolDefinition && currentToolDefinition.settings[key].default_value === setting.default_value;
                 });
             } else {
@@ -103,6 +102,12 @@ function ToolPathConfigurations(props) {
                 toolParams
             };
             await dispatch(editorActions.saveToolPath(props.headType, newToolPath));
+            if (props.headType === HEAD_CNC) {
+                await dispatch(cncActions.changeActiveToolListDefinition(currentToolDefinition?.definitionId, currentToolDefinition?.name));
+            }
+            await dispatch(editorActions.selectToolPathById(props.headType));
+            await dispatch(editorActions.selectToolPathById(props.headType, toolpath?.id));
+
             props.onClose && props.onClose();
         },
         updateToolPath(option) {
@@ -117,7 +122,7 @@ function ToolPathConfigurations(props) {
                 name: inputValue
             };
             await dispatch(cncActions.duplicateToolListDefinition(newToolDefinition));
-            await dispatch(cncActions.changeActiveToolListDefinition(newToolDefinition.definitionId, newToolDefinition.name));
+            // await dispatch(cncActions.changeActiveToolListDefinition(newToolDefinition.definitionId, newToolDefinition.name));
         },
         setCurrentValueAsProfile: () => {
             const activeToolDefinition = currentToolDefinition;
@@ -137,16 +142,17 @@ function ToolPathConfigurations(props) {
                 ),
                 defaultInputValue: activeToolDefinition.name,
                 footer: (
-                    <button
-                        type="button"
-                        className="sm-btn-large sm-btn-primary"
+                    <Button
+                        priority="level-two"
+                        className="margin-left-8"
+                        width="96px"
                         onClick={async () => {
                             await actions.onDuplicateToolNameDefinition(popupActions.getInputValue());
                             popupActions.close();
                         }}
                     >
                         {i18n._('OK')}
-                    </button>
+                    </Button>
                 )
             });
         },
@@ -175,7 +181,7 @@ function ToolPathConfigurations(props) {
             >
                 <Modal.Header>
                     {/* <Modal.Title> */}
-                    {i18n._('Toolpath Profile')}
+                    {i18n._('Toolpath Settings')}
                     {/* </Modal.Title> */}
                 </Modal.Header>
                 <Modal.Body
@@ -187,6 +193,7 @@ function ToolPathConfigurations(props) {
                     {props.headType === HEAD_CNC && (
                         <CncParameters
                             toolPath={toolPath}
+                            setCurrentToolDefinition={setCurrentToolDefinition}
                             toolDefinitions={toolDefinitions}
                             isModifiedDefinition={isModifiedDefinition}
                             activeToolDefinition={currentToolDefinition}

@@ -15,7 +15,7 @@ import TWEEN from '@tweenjs/tween.js';
 import Controls, { EVENTS } from './Controls';
 import log from '../../../lib/log';
 import Detector from '../../../three-extensions/Detector';
-import WebGLRenderer from '../../../three-extensions/WebGLRenderer';
+import WebGLRendererWrapper from '../../../three-extensions/WebGLRendererWrapper';
 
 
 const ANIMATION_DURATION = 500;
@@ -157,6 +157,10 @@ class Canvas extends Component {
         if (this.controls) {
             this.controls.dispose();
         }
+        if (this.renderer) {
+            this.renderer.dispose();
+            this.renderer = null;
+        }
     }
 
     onScale = () => {
@@ -212,7 +216,7 @@ class Canvas extends Component {
             this.camera.up = this.props.cameraUp;
         }
 
-        this.renderer = new WebGLRenderer({ antialias: true });
+        this.renderer = new WebGLRendererWrapper({ antialias: true });
         this.renderer.setSize(width, height);
 
         this.scene = new Scene();

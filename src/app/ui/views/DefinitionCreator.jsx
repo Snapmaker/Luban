@@ -46,7 +46,7 @@ class DefinitionCreator extends PureComponent {
     renderMaterialCreate() {
         return (
             <div>
-                <span className="font-size-base display-block margin-vertical-8">{i18n._('Enter material name:')}</span>
+                <span className="font-size-base display-block margin-vertical-8">{i18n._('Enter material name')}</span>
                 <Input
                     size="432px"
                     onChange={(event) => {
@@ -77,7 +77,7 @@ class DefinitionCreator extends PureComponent {
                 )}
                 {!this.props.disableCategory && (
                     <div>
-                        <span className="font-size-base display-block margin-vertical-8">{i18n._('Enter tool name:')}</span>
+                        <span className="font-size-base display-block margin-vertical-8">{i18n._('Enter tool name')}</span>
                         <Input
                             size="432px"
                             onChange={(event) => {
@@ -87,7 +87,7 @@ class DefinitionCreator extends PureComponent {
                             value={this.state.toolName}
                         />
                         <p className="margin-top-16 font-size-base">
-                            {i18n._('Select material type:')}
+                            {i18n._('Select material type')}
                         </p>
                         <Select
                             size="432px"

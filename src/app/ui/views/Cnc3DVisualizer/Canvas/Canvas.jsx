@@ -1,10 +1,11 @@
 import React, { Component } from 'react';
-import { Vector3, Matrix4, Color, PerspectiveCamera, Scene, Group, WebGLRenderer, DirectionalLight, HemisphereLight } from 'three';
+import { Vector3, Matrix4, Color, PerspectiveCamera, Scene, Group, DirectionalLight, HemisphereLight } from 'three';
 import Detector from 'three/examples/js/Detector';
 import PropTypes from 'prop-types';
 import TWEEN from '@tweenjs/tween.js';
 
 import Controls from './Controls';
+import WebGLRendererWrapper from '../../../../three-extensions/WebGLRendererWrapper';
 
 const ANIMATION_DURATION = 500;
 const DEFAULT_MODEL_POSITION = new Vector3(0, 0, 0);
@@ -42,7 +43,7 @@ class Canvas extends Component {
         this.scene = new Scene();
         this.light = new DirectionalLight(0x666666, 1);
         // this.light = new HemisphereLight(0xffffff, 0xffffff);
-        this.renderer = new WebGLRenderer({ antialias: true });
+        this.renderer = new WebGLRendererWrapper({ antialias: true });
 
         this.controls = new Controls(this.camera, this.group, this.renderer.domElement);
     }
@@ -93,6 +94,11 @@ class Canvas extends Component {
         }
 
         this.transformControls && this.transformControls.dispose();
+
+        if (this.renderer) {
+            this.renderer.dispose();
+            this.renderer = null;
+        }
     }
 
 
@@ -114,7 +120,6 @@ class Canvas extends Component {
 
         this.renderer.setClearColor(new Color(0xffffff), 1);
         this.renderer.setSize(width, height);
-        this.renderer.shadowMap.enabled = true;
 
         this.scene.add(this.camera);
         this.scene.add(this.light);

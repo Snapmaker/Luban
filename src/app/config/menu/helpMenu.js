@@ -8,7 +8,13 @@ export default {
         {
             label: 'Guided Tour',
             enabled: true,
-            click: () => {}
+            click: (menuItem, browserWindow) => {
+                if (isElectron()) {
+                    browserWindow.webContents.send('guided-tours-begin');
+                } else {
+                    UniApi.Event.emit('appbar-menu:guided-tours-begin');
+                }
+            }
         },
         {
             label: 'Software Manual',
@@ -38,7 +44,7 @@ export default {
             }
         },
         {
-            label: 'Myminifactory',
+            label: 'MyMiniFactory',
             enabled: true,
             click: (menuItem, browserWindow) => {
                 if (isElectron()) {

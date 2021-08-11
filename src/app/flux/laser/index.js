@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 // import { DATA_PREFIX, EPSILON } from '../../constants';
 import {
+    COORDINATE_MODE_BOTTOM_CENTER,
     COORDINATE_MODE_BOTTOM_LEFT,
     COORDINATE_MODE_CENTER,
     DATA_PREFIX,
@@ -18,7 +19,6 @@ import {
     ACTION_UPDATE_TRANSFORMATION
 } from '../actionType';
 import { actions as editorActions } from '../editor';
-import { machineStore } from '../../store/local-storage';
 import ToolPathGroup from '../../toolpaths/ToolPathGroup';
 import { CNC_LASER_STAGE } from '../editor/utils';
 
@@ -108,7 +108,10 @@ const INITIAL_STATE = {
 
     // check to remove models
     removingModelsWarning: false,
-    emptyToolPaths: []
+    emptyToolPaths: [],
+
+    // check not to duplicated create event
+    initEventFlag: false
 };
 
 const ACTION_SET_BACKGROUND_ENABLED = 'laser/ACTION_SET_BACKGROUND_ENABLED';
@@ -118,18 +121,25 @@ export const actions = {
     init: () => (dispatch, getState) => {
         dispatch(editorActions._init(HEAD_LASER));
 
-        const materials = machineStore.get('laser.materials');
-        if (materials) {
-            dispatch(editorActions.updateMaterials('laser', materials));
-        }
-
         // Set machine size into coordinate default size
         const { size } = getState().machine;
-        const { coordinateSize } = getState().laser;
-        if (size && coordinateSize.x === 0 && coordinateSize.y === 0) {
-            dispatch(editorActions.updateState('laser', {
-                coordinateSize: size
-            }));
+        const { coordinateSize, materials, useBackground } = getState().laser;
+        const { isRotate } = materials;
+        if (isRotate) {
+            const newCoordinateSize = {
+                x: materials.diameter * Math.PI,
+                y: materials.length
+            };
+            dispatch(editorActions.changeCoordinateMode(HEAD_LASER, COORDINATE_MODE_BOTTOM_CENTER, newCoordinateSize));
+        } else {
+            if (size && coordinateSize.x === 0 && coordinateSize.y === 0) {
+                dispatch(editorActions.updateState(HEAD_LASER, {
+                    coordinateSize: size
+                }));
+            }
+        }
+        if (useBackground) {
+            dispatch(actions.removeBackgroundImage());
         }
     },
 

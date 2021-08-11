@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useRef } from 'react';
 import classNames from 'classnames';
 import PropTypes from 'prop-types';
+// import { useSelector, shallowEqual } from 'react-redux';
 import { isUndefined, cloneDeep, uniqWith } from 'lodash';
 // import { PRINTING_QUALITY_CONFIG_GROUP } from '../../../constants';
 import modal from '../../../lib/modal';
@@ -94,9 +95,9 @@ function useGetDefinitions(allDefinitions, definitionState, setDefinitionState, 
     return definitionsRef;
 }
 
-function ProfileManager({ optionConfigGroup, disableCategory = true, managerTitle, defaultKeysAndId, allDefinitions, outsideActions, isDefinitionEditable, isOfficialDefinition }) {
+function ProfileManager({ optionConfigGroup, disableCategory = true, managerTitle, defaultKeysAndId, allDefinitions, outsideActions, isDefinitionEditable, isOfficialDefinition, activeDefinition }) {
     const [definitionState, setDefinitionState] = useSetState({
-        definitionForManager: null,
+        definitionForManager: activeDefinition,
         definitionOptions: [],
         selectedName: '',
         isCategorySelected: false,
@@ -655,6 +656,7 @@ function ProfileManager({ optionConfigGroup, disableCategory = true, managerTitl
 }
 ProfileManager.propTypes = {
     outsideActions: PropTypes.object.isRequired,
+    activeDefinition: PropTypes.object,
     defaultKeysAndId: PropTypes.object.isRequired,
     managerTitle: PropTypes.string.isRequired,
     disableCategory: PropTypes.bool,

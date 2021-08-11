@@ -14,6 +14,7 @@ class ImageProcessMode extends PureComponent {
         mode: PropTypes.string.isRequired,
         showOrigin: PropTypes.bool,
         disabled: PropTypes.bool,
+        isDXF: PropTypes.bool,
 
         changeSelectedModelMode: PropTypes.func.isRequired,
         changeSelectedModelShowOrigin: PropTypes.func.isRequired
@@ -34,7 +35,7 @@ class ImageProcessMode extends PureComponent {
     };
 
     render() {
-        const { sourceType, mode, showOrigin, disabled } = this.props;
+        const { sourceType, mode, showOrigin, disabled, isDXF } = this.props;
         const actions = this.actions;
         const isGreyscale = mode === 'greyscale';
         const isSvg = sourceType === 'svg';
@@ -55,15 +56,17 @@ class ImageProcessMode extends PureComponent {
                     {this.state.expanded && (
                         <React.Fragment>
                             <div className={classNames('sm-flex', 'margin-vertical-8', 'align-c', 'justify-space-between', 'width-percent-50')}>
-                                <div className={classNames(this.props.mode === 'greyscale' ? styles.selected : styles.unselected)}>
-                                    <Anchor
-                                        disabled={disabled}
-                                        onClick={() => actions.changeSelectedModelMode('greyscale')}
-                                    >
-                                        <i className={styles['cnc-mode__icon-greyscale']} />
-                                    </Anchor>
-                                    <span>{i18n._('RELIEF')}</span>
-                                </div>
+                                { !isDXF && (
+                                    <div className={classNames(this.props.mode === 'greyscale' ? styles.selected : styles.unselected)}>
+                                        <Anchor
+                                            disabled={disabled}
+                                            onClick={() => actions.changeSelectedModelMode('greyscale')}
+                                        >
+                                            <i className={styles['cnc-mode__icon-greyscale']} />
+                                        </Anchor>
+                                        <span>{i18n._('RELIEF')}</span>
+                                    </div>
+                                )}
                                 {isSvg && (
                                     <div className={classNames(this.props.mode === 'vector' ? styles.selected : styles.unselected)}>
                                         <Anchor

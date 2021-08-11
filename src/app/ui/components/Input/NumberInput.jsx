@@ -68,7 +68,8 @@ class NumberInput extends PureComponent {
     onKeyUp = (event) => {
         // Pressed carriage return (CR or '\r')
         if (event.keyCode === 13) {
-            this.onAfterChangeWrapper(event.target.value);
+            // this.onAfterChangeWrapper(event.target.value);
+            event.target.blur();
         }
     };
 

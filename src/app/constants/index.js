@@ -308,7 +308,8 @@ export const CNC_DEFAULT_GCODE_PARAMETERS_DEFINITION = {
         max: 100,
         value: 'stopHeight',
         default_value: 'stopHeight',
-        type: 'float'
+        type: 'float',
+        unit: 'mm'
     },
     'enableTab': {
         label: 'Use Tab',
@@ -348,14 +349,54 @@ export const CNC_DEFAULT_GCODE_PARAMETERS_DEFINITION = {
         type: 'float',
         unit: 'mm'
     },
-    'step_over': {
+    'stepOver': {
         label: 'Stepover',
         description: 'Set the space between parallel toolpaths.',
         min: 0.01,
         step: 0.01,
         default_value: 0.25,
         value: 'step_over',
+        type: 'float',
+        unit: 'mm'
+    },
+    'workSpeed': {
+        description: 'Determines how fast the tool moves on the material.',
+        label: 'Work Speed',
+        min: 0.01,
+        step: 0.01,
+        default_value: 0.25,
+        value: 'step_over',
+        unit: 'mm/min',
         type: 'float'
+    },
+    'plungeSpeed': {
+        default_value: 300,
+        type: 'float',
+        min: 0.1,
+        max: 1000,
+        step: 0.01,
+        label: 'Plunge Speed',
+        unit: 'mm/min',
+        description: 'Determines how fast the tool feeds into the material.'
+    },
+    'jogSpeed': {
+        default_value: 1500,
+        type: 'float',
+        min: 1,
+        max: 6000,
+        step: 0.01,
+        label: 'Jog Speed',
+        unit: 'mm/min',
+        description: 'Determines how fast the tool moves when it’s not carving.'
+    },
+    'stepDown': {
+        default_value: 0.5,
+        type: 'float',
+        min: 0.01,
+        step: 0.01,
+        label: 'Stepdown',
+        description: 'Enter the depth of each carving step.',
+        unit: 'mm'
     }
 };
 
@@ -733,7 +774,7 @@ export const COORDINATE_MODE_CENTER = {
     }
 };
 export const COORDINATE_MODE_TOP_RIGHT = {
-    label: 'Top-Right',
+    label: 'Top Right',
     value: 'top-right',
     setting: {
         sizeMultiplyFactor: {
@@ -743,7 +784,7 @@ export const COORDINATE_MODE_TOP_RIGHT = {
     }
 };
 export const COORDINATE_MODE_BOTTOM_RIGHT = {
-    label: 'Bottom-Right',
+    label: 'Bottom Right',
     value: 'bottom-right',
     setting: {
         sizeMultiplyFactor: {
@@ -753,7 +794,7 @@ export const COORDINATE_MODE_BOTTOM_RIGHT = {
     }
 };
 export const COORDINATE_MODE_TOP_LEFT = {
-    label: 'Top-Left',
+    label: 'Top Left',
     value: 'top-left',
     setting: {
         sizeMultiplyFactor: {
@@ -763,7 +804,7 @@ export const COORDINATE_MODE_TOP_LEFT = {
     }
 };
 export const COORDINATE_MODE_BOTTOM_LEFT = {
-    label: 'Bottom-Left',
+    label: 'Bottom Left',
     value: 'bottom-left',
     setting: {
         sizeMultiplyFactor: {
@@ -773,7 +814,7 @@ export const COORDINATE_MODE_BOTTOM_LEFT = {
     }
 };
 export const COORDINATE_MODE_BOTTOM_CENTER = {
-    label: 'Bottom-Center',
+    label: 'Top',
     value: 'bottom-center',
     setting: {
         sizeMultiplyFactor: {

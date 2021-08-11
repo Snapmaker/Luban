@@ -38,7 +38,7 @@ class WorkspaceLayout extends PureComponent {
         const visualizerContainer = this.visualizerContainer.current;
         const secondaryContainer = this.secondaryContainer.current;
         if (visualizerContainer) {
-            visualizerContainer.style.width = `calc(100vw - ${primaryContainer.clientWidth}px - ${secondaryContainer.clientWidth}px)`;
+            visualizerContainer.style.width = `calc(100vw - ${primaryContainer.clientWidth < 360 ? 360 : primaryContainer.clientWidth}px - ${secondaryContainer.clientWidth < 360 ? 360 : secondaryContainer.clientWidth}px - 48px)`;
         }
     }
 
@@ -76,7 +76,8 @@ class WorkspaceLayout extends PureComponent {
                             'border-radius-8',
                             'background-color-white',
                             'margin-8',
-                            'sm-flex-auto'
+                            'box-shadow-module'
+                            // 'sm-flex-auto'
                         )}
                     >
                         {renderLeftView && (
@@ -99,7 +100,8 @@ class WorkspaceLayout extends PureComponent {
                             'border-radius-8',
                             'background-color-white',
                             'margin-8',
-                            'sm-flex-auto'
+                            'sm-flex-auto',
+                            'box-shadow-module'
                         )}
                     >
                         {renderRightView && (

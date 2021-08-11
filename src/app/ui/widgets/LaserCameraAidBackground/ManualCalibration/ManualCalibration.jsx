@@ -5,6 +5,7 @@ import Detector from 'three/examples/js/Detector';
 import { DATA_PREFIX } from '../../../../constants';
 import ManualCalibrationControls from '../../../../three-extensions/ManualCalibrationControls';
 import RectangleGridHelper from '../../../../three-extensions/RectangleGridHelper';
+import WebGLRendererWrapper from '../../../../three-extensions/WebGLRendererWrapper';
 
 
 class ManualCalibration extends Component {
@@ -55,6 +56,11 @@ class ManualCalibration extends Component {
 
     componentWillUnmount() {
         cancelAnimationFrame(this.frameId);
+
+        if (this.renderer) {
+            this.renderer.dispose();
+            this.renderer = null;
+        }
     }
 
     onChangeImage(filename, width, height) {
@@ -138,7 +144,7 @@ class ManualCalibration extends Component {
         this.camera.position.set(0, 0, Math.max(this.props.width, this.props.height) * 0.5);
         this.camera.lookAt(new THREE.Vector3(0, 0, 0));
 
-        this.renderer = new THREE.WebGLRenderer({ antialias: true });
+        this.renderer = new WebGLRendererWrapper({ antialias: true });
         this.renderer.setClearColor(new THREE.Color(0xfafafa), 1);
         this.renderer.setSize(width, height);
 

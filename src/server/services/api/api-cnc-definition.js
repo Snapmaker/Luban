@@ -105,7 +105,7 @@ export const getToolDefinitions = (req, res) => {
                     min: 0.01,
                     max: 20,
                     unit: 'mm',
-                    label: 'Step Over',
+                    label: 'Stepover',
                     description: 'Set the density of the tool head movements. The highest density is 10 dot/mm. When generating G-code, the density will be re-calculated to ensure the process work normally.'
                 };
                 fs.writeFileSync(filePath, JSON.stringify(json));

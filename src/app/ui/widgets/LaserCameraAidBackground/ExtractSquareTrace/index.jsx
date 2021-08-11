@@ -451,8 +451,8 @@ class ExtractSquareTrace extends PureComponent {
                                 styles['modal-body']
                             )}
                         >
-                            <div style={{ margin: '0 auto', width: '509px' }}>
-                                {i18n._('The camera on the laser module captures images of the work area, and stitch them together as the background. The accuracy of Camera Calibration affects how the captured image is mapped with machine coordinates. If you have reinstalled the laser module, please redo Camera Calibration on the touchscreen before proceeding.')}
+                            <div style={{ margin: '0 auto 16px', width: '509px' }}>
+                                {i18n._('The camera on the Laser Module captures nine images of the Laser Engraving and Cutting Platform, and stitches them as a background.')}
                             </div>
                             <div
                                 className={classNames(styles['photo-display'], 'border-radius-8')}
@@ -505,7 +505,7 @@ class ExtractSquareTrace extends PureComponent {
                                 priority="level-two"
                                 width="96px"
                                 className={classNames(
-                                    styles[this.state.isStitched ? 'btn-right-camera' : 'btn-right-camera-disabled'],
+                                    styles[this.state.isStitched ? 'btn-right-camera' : 'btn-right-camera-disabled border-radius-8'],
                                 )}
                                 onClick={this.actions.setBackgroundImage}
                                 disabled={!this.state.isStitched}

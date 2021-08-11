@@ -116,7 +116,7 @@ export const processActions = {
                 const selectedModels = modelGroup.getSelectedToolPathModels();
                 if (getToolPathType([...selectedModels, model]).length !== 1) {
                     if (!toastId || !toast.isActive(toastId)) {
-                        toastId = toast(i18n._('Cannot generate toolpath; format of objects have to be the same.'));
+                        toastId = toast(i18n._('Failed to generate a toolpath. Selected objects should be of the same type.'));
                     }
                 } else if (selectedModels.findIndex(m => m === model) === -1) {
                     modelGroup.addSelectedToolPathModelIDs([model.modelID]);
@@ -141,7 +141,7 @@ export const processActions = {
         const selectedModels = modelGroup.getSelectedModelArray();
         if (getToolPathType(selectedModels).length !== 1) {
             if (!toastId || !toast.isActive(toastId)) {
-                toastId = toast(i18n._('Cannot generate toolpath; format of objects have to be the same.'));
+                toastId = toast(i18n._('Failed to generate a toolpath. Selected objects should be of the same type.'));
             }
             return null;
         }
@@ -234,6 +234,22 @@ export const processActions = {
         }));
     },
 
+    toolPathToTop: (headType, toolPathId) => (dispatch, getState) => {
+        const { toolPathGroup } = getState()[headType];
+        toolPathGroup.toolPathToTop(toolPathId);
+        dispatch(baseActions.updateState(headType, {
+            isChangedAfterGcodeGenerating: true
+        }));
+    },
+
+    toolPathToBottom: (headType, toolPathId) => (dispatch, getState) => {
+        const { toolPathGroup } = getState()[headType];
+        toolPathGroup.toolPathToBottom(toolPathId);
+        dispatch(baseActions.updateState(headType, {
+            isChangedAfterGcodeGenerating: true
+        }));
+    },
+
     deleteToolPath: (headType, selectedToolPathIDArray) => (dispatch, getState) => {
         const { toolPathGroup } = getState()[headType];
 
@@ -286,6 +302,11 @@ export const processActions = {
         }
     },
 
+    setThumbnail: (headType, thumbnail) => (dispatch, getState) => {
+        const { toolPathGroup } = getState()[headType];
+        toolPathGroup.updateThumbnail(thumbnail);
+    },
+
     /**
      * Commit Generate G-code Task.
      *
@@ -293,7 +314,7 @@ export const processActions = {
      * @param thumbnail G-code thumbnail should be included in G-code header.
      * @returns {Function}
      */
-    commitGenerateGcode: (headType, thumbnail) => (dispatch, getState) => {
+    commitGenerateGcode: (headType) => (dispatch, getState) => {
         const { toolPathGroup } = getState()[headType];
 
         const toolPaths = toolPathGroup.getCommitGenerateGcodeInfos();
@@ -301,7 +322,7 @@ export const processActions = {
             return;
         }
 
-        toolPaths[0].thumbnail = thumbnail;
+        toolPaths[0].thumbnail = toolPathGroup.thumbnail;
 
         dispatch(baseActions.updateState(
             headType, {
@@ -388,8 +409,8 @@ export const processActions = {
     },
 
     onGenerateViewPath: (headType, taskResult) => async (dispatch, getState) => {
-        const { size } = getState().machine;
-        const { toolPathGroup, materials } = getState()[headType];
+        const size = getState()[headType]?.coordinateSize;
+        const { toolPathGroup, materials, coordinateMode } = getState()[headType];
         const { isRotate } = materials;
 
         if (taskResult.taskStatus === 'failed') {
@@ -400,7 +421,17 @@ export const processActions = {
             return;
         }
         const { viewPathFile } = taskResult;
-        await toolPathGroup.onGenerateViewPath(viewPathFile, isRotate ? materials : size);
+        const coorDelta = {
+            dx: size.x / 2 * coordinateMode.setting.sizeMultiplyFactor.x,
+            dy: size.y / 2 * coordinateMode.setting.sizeMultiplyFactor.y
+        };
+        const boundarySize = {
+            minX: -size.x / 2 + coorDelta?.dx,
+            maxX: size.x / 2 + coorDelta?.dx,
+            minY: -size.y / 2 + coorDelta?.dy,
+            maxY: size.y / 2 + coorDelta?.dy
+        };
+        await toolPathGroup.onGenerateViewPath(viewPathFile, isRotate ? materials : boundarySize);
         dispatch(baseActions.updateState(headType, {
             showSimulation: true
         }));
@@ -412,5 +443,25 @@ export const processActions = {
             gcodeFile: null
         }));
         dispatch(baseActions.render(headType));
+    },
+
+    _checkModelsInChunkArea: (headType) => (dispatch, getState) => {
+        const { materials, SVGActions } = getState()[headType];
+        if (materials.isRotate) {
+            const { size } = getState().machine;
+            const { y = 0, fixtureLength = 0 } = materials;
+
+            const height = Math.min(fixtureLength, y);
+            const posY = size.y - y;
+            const ChunkAreaY = height + posY;
+
+            const svgSelectedGroupBoundingBox = SVGActions.getSelectedElementsBoundingBox();
+            if (svgSelectedGroupBoundingBox.y < ChunkAreaY) {
+                if (!toastId || !toast.isActive(toastId)) {
+                    toastId = toast(i18n._('Moving objects to this area may cause a machine collision.'));
+                }
+            }
+        }
+        return null;
     }
 };

@@ -20,15 +20,23 @@ class ConfigRasterVector extends PureComponent {
     };
 
     state = {
-        expanded: true
+        expanded: true,
+        vectorThreshold: 0
     };
 
     actions = {
         onToggleExpand: () => {
             this.setState(state => ({ expanded: !state.expanded }));
         },
-        changeVectorThreshold: (vectorThreshold) => {
+        onChangeVectorThreshold: (vectorThreshold) => {
+            this.setState({
+                vectorThreshold
+            });
+        },
+        onAfterChangeVectorThreshold: () => {
+            const { vectorThreshold } = this.state;
             this.props.updateSelectedModelConfig({ vectorThreshold });
+            this.props.processSelectedModel();
         },
         onChangeTurdSize: (turdSize) => {
             this.props.updateSelectedModelConfig({ turdSize });
@@ -38,8 +46,25 @@ class ConfigRasterVector extends PureComponent {
         }
     };
 
+    componentDidMount() {
+        const { vectorThreshold } = this.props;
+        this.setState({
+            vectorThreshold
+        });
+    }
+
+    getSnapshotBeforeUpdate(prevProps) {
+        const { vectorThreshold } = this.props;
+        if (vectorThreshold !== prevProps.vectorThreshold) {
+            this.setState({
+                vectorThreshold
+            });
+        }
+        return this.props;
+    }
+
     render() {
-        const { vectorThreshold, invert, turdSize, disabled } = this.props;
+        const { invert, turdSize, disabled } = this.props;
 
         return (
             <div>
@@ -72,22 +97,22 @@ class ConfigRasterVector extends PureComponent {
                                 <Slider
                                     disabled={disabled}
                                     size="middle"
-                                    value={vectorThreshold}
+                                    value={this.state.vectorThreshold}
                                     min={0}
                                     max={255}
                                     step={1}
-                                    onChange={this.actions.changeVectorThreshold}
-                                    onAfterChange={this.props.processSelectedModel}
+                                    onChange={this.actions.onChangeVectorThreshold}
+                                    onAfterChange={this.actions.onAfterChangeVectorThreshold}
                                 />
                                 <Input
                                     disabled={disabled}
                                     size="super-small"
-                                    value={vectorThreshold}
+                                    value={this.state.vectorThreshold}
                                     min={0}
                                     max={255}
-                                    onChange={(value) => {
-                                        this.actions.changeVectorThreshold(value);
-                                        this.props.processSelectedModel();
+                                    onChange={async (value) => {
+                                        await this.actions.onChangeVectorThreshold(value);
+                                        this.actions.onAfterChangeVectorThreshold();
                                     }}
                                 />
                             </div>

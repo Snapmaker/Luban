@@ -35,7 +35,7 @@ class ProgressBar extends React.PureComponent {
         if (this.props.tips === 'Failed to load model.') {
             this.setState({ display: 'none' });
         }
-        return this.props;
+        return prevProps;
     }
 
     render() {
