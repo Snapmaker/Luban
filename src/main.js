@@ -265,7 +265,13 @@ const showLoadingWindow = (loadingWindow) => {
             updateHandle();
         }, 50);
     });
-    loadingWindow.show();
+    if (process.platform === 'darwin') {
+        setTimeout(() => {
+            loadingWindow.show();
+        }, 3000);
+    } else {
+        loadingWindow.show();
+    }
 };
 
 const createWindow = () => {
