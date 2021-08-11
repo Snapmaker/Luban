@@ -852,4 +852,5 @@ export const MARKET_EN_URL = 'https://shop.snapmaker.com/';
 export const MYMINIFACTORY_URL = 'https://www.myminifactory.com/';
 
 // Project and Menu
-export const MAX_RECENT_FILES_LENGTH = 15;
+// once you change this number, make sure the number in `electron-app/Menu.js` also changed
+export const MAX_RECENT_FILES_LENGTH = 12;

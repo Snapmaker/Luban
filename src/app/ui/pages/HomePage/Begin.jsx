@@ -11,7 +11,7 @@ import styles from './styles.styl';
 import i18n from '../../../lib/i18n';
 import { actions as projectActions } from '../../../flux/project';
 import Workspace from '../Workspace';
-import { HEAD_LASER, HEAD_CNC, HEAD_3DP } from '../../../constants';
+import { HEAD_3DP, HEAD_LASER, HEAD_CNC, MAX_RECENT_FILES_LENGTH } from '../../../constants';
 import UniApi from '../../../lib/uni-api';
 
 const Begin = () => {
@@ -126,11 +126,10 @@ const Begin = () => {
                         beginSelected === 'nearly-file' && (
                             <div className={classNames(styles.nearlyFile, 'margin-vertical-48')}>
                                 <div className={classNames(styles['recent-file-list'])}>
-                                    {slice(newRecentFile, 0, newRecentFile.length >= 10 ? 10 : newRecentFile.length + 1).map((item) => {
+                                    {slice(newRecentFile, 0, newRecentFile.length >= MAX_RECENT_FILES_LENGTH ? MAX_RECENT_FILES_LENGTH : newRecentFile.length + 1).map((item) => {
                                         const tempArr = item.name.split('.');
                                         const fileName = tempArr.slice(0, tempArr.length - 1).join('.');
                                         const suffixName = tempArr[tempArr.length - 1];
-                                        console.log({ tempArr });
                                         return (
                                             <div
                                                 className={classNames(styles['file-item'], 'heading-3-normal-with-hover')}

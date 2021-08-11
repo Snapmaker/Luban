@@ -22,7 +22,7 @@ export function appCopyDevelopment() {
 //
 export function appCopyProduction() {
     const files = [
-        'src/app/*.{ico,png}',
+        'src/app/*.{ico,png,html}',
         'src/app/resources/{images,textures}/**/*',
         'src/app/resources/i18n/**/*'
     ];
