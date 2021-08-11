@@ -672,7 +672,7 @@ export const actions = {
         const state = getState().printing;
 
         const newMaterialDefinitions = [];
-        const defaultDefinitionIds = ['material.pla', 'material.abs'];
+        const defaultDefinitionIds = ['material.pla', 'material.abs', 'material.petg'];
         for (const definition of state.materialDefinitions) {
             if (defaultDefinitionIds.includes(definition.definitionId)) {
                 newMaterialDefinitions.push(definition);

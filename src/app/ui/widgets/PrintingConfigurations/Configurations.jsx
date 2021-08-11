@@ -196,7 +196,7 @@ class Configurations extends PureComponent {
         const qualityDefinition = this.state.selectedDefinition;
         const selectedSettingDefaultValue = this.state.selectedSettingDefaultValue;
         const isProfile = defaultQualityId
-            && includes(['material.pla', 'material.abs', 'quality.fast_print', 'quality.normal_quality', 'quality.high_quality'], defaultQualityId);
+            && includes(['material.pla', 'material.abs', 'material.petg', 'quality.fast_print', 'quality.normal_quality', 'quality.high_quality'], defaultQualityId);
 
         const customDefinitionOptions = qualityDefinitions.map(d => ({
             label: d.name,
