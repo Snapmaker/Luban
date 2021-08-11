@@ -125,7 +125,7 @@ class SvgIcon extends PureComponent {
                     role="button"
                     tabIndex={0}
                     onClick={(e) => {
-                        if (!disabled) {
+                        if (!disabled && onClick) {
                             onClick(e);
                         }
                     }}

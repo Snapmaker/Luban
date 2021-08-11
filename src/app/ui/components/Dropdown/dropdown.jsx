@@ -21,7 +21,12 @@ const Dropdown = (props) => {
 };
 
 Dropdown.propTypes = {
-    children: PropTypes.string | PropTypes.number | PropTypes.element,
+    children: PropTypes.oneOfType([
+        PropTypes.number,
+        PropTypes.element,
+        PropTypes.string
+    ]),
+    // PropTypes.string | PropTypes.number | PropTypes.element,
     className: PropTypes.string,
     placement: PropTypes.string,
     overlay: PropTypes.element

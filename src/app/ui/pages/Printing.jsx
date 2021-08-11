@@ -15,7 +15,7 @@ import { actions as projectActions } from '../../flux/project';
 import ProjectLayout from '../layouts/ProjectLayout';
 import MainToolBar from '../layouts/MainToolBar';
 import { HEAD_3DP } from '../../constants';
-import { renderPopup, renderWidgetList } from '../utils';
+import { renderPopup, renderWidgetList, logPageView } from '../utils';
 import { machineStore } from '../../store/local-storage';
 
 import ControlWidget from '../widgets/Control';
@@ -90,14 +90,24 @@ function useRenderMainToolBar() {
     const [showWorkspace, setShowWorkspace] = useState(false);
     const dispatch = useDispatch();
     function renderHomepage() {
-        const onClose = () => setShowHomePage(false);
+        const onClose = () => {
+            setShowHomePage(false);
+            logPageView({
+                pathname: '/3dp'
+            });
+        };
         return showHomePage && renderPopup({
             onClose,
             component: HomePage
         });
     }
     function renderWorkspace() {
-        const onClose = () => setShowWorkspace(false);
+        const onClose = () => {
+            setShowWorkspace(false);
+            logPageView({
+                pathname: '/3dp'
+            });
+        };
         return showWorkspace && renderPopup({
             onClose,
             component: Workspace
@@ -186,6 +196,9 @@ function Printing() {
             setEnabledIntro(false);
         }
         dispatch(printingActions.init());
+        logPageView({
+            pathname: '/3dp'
+        });
     }, []);
 
     async function onDropAccepted(file) {
