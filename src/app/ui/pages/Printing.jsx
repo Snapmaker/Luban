@@ -173,8 +173,6 @@ function useRenderMainToolBar() {
     return [renderHomepage, renderMainToolBar, renderWorkspace];
 }
 
-const nextLabel = i18n._('Next');
-
 function Printing() {
     const widgets = useSelector(state => state?.widget[pageHeadType].default.widgets, shallowEqual);
     const [isDraggingWidget, setIsDraggingWidget] = useState(false);
@@ -296,7 +294,7 @@ function Printing() {
                     // onBeforeChange={handleBeforeChange}
                     options={{
                         showBullets: false,
-                        nextLabel: nextLabel,
+                        nextLabel: i18n._('Next'),
                         doneLabel: i18n._('Complete'),
                         keyboardNavigation: false,
                         exitOnOverlayClick: false
