@@ -164,8 +164,7 @@ function useRenderWarning() {
     });
 }
 function useRenderMainToolBar(setShowHomePage, setShowJobType, setShowWorkspace) {
-    // const unSaved = useSelector(state => state?.project[HEAD_CNC]?.unSaved, shallowEqual);
-    // const hasModel = useSelector(state => state[HEAD_CNC]?.hasModel, shallowEqual);
+    const unSaved = useSelector(state => state?.project[HEAD_CNC]?.unSaved, shallowEqual);
     const canRedo = useSelector(state => state[HEAD_CNC]?.history?.canRedo, shallowEqual);
     const canUndo = useSelector(state => state[HEAD_CNC]?.history?.canUndo, shallowEqual);
     const isRotate = useSelector(state => state[HEAD_CNC]?.materials?.isRotate, shallowEqual);
@@ -239,7 +238,7 @@ function useRenderMainToolBar(setShowHomePage, setShowJobType, setShowWorkspace)
         },
         {
             title: i18n._('Save'),
-            // disabled: !hasModel,
+            disabled: !unSaved,
             type: 'button',
             name: 'MainToolbarSave',
             iconClassName: 'cnc-save-icon',
@@ -398,6 +397,7 @@ function Cnc({ location }) {
     const dispatch = useDispatch();
     const history = useHistory();
     const page = useSelector(state => state?.cnc.page);
+    // useUnsavedTitle(pageHeadType);
     const thumbnail = useRef();
 
     useEffect(() => {

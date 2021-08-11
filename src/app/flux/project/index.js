@@ -1,5 +1,5 @@
 import cloneDeep from 'lodash/cloneDeep';
-import find from 'lodash/find';
+import { find } from 'lodash';
 import {
     HEAD_CNC,
     HEAD_LASER,
@@ -17,6 +17,8 @@ import { actions as editorActions } from '../editor';
 // import machineAction from '../machine/action-base';
 import { actions as workspaceActions } from '../workspace';
 import { bubbleSortByAttribute } from '../../lib/numeric-utils';
+import { UniformToolpathConfig } from '../../lib/uniform-toolpath-config';
+
 import { actions as operationHistoryActions } from '../operation-history';
 import { machineStore } from '../../store/local-storage';
 
@@ -66,14 +68,14 @@ export const actions = {
     },
 
     initRecoverService: () => (dispatch, getState) => {
-        const startService = (envHeadType) => {
+        const startService = async (envHeadType) => {
             // disable auto recovery if openedFile set
             const { openedFile } = getState().project[envHeadType];
             if (!openedFile) {
-                dispatch(actions.getLastEnvironment(envHeadType));
+                await dispatch(actions.getLastEnvironment(envHeadType));
             }
 
-            const action = actions.autoSaveEnvironment(envHeadType);
+            const action = await actions.autoSaveEnvironment(envHeadType);
             setInterval(() => dispatch(action), 1000);
         };
 
@@ -86,9 +88,7 @@ export const actions = {
         const fluxMod = headType2FluxMod(headType);
         const editorState = getState()[fluxMod];
         const { initState, content: lastString } = getState().project[headType];
-
         const models = editorState.modelGroup.getModels();
-        // dispatch(actions.updateState(headType, { hasModel: !!models.length }));
         if (!models.length && initState) return;
 
         const machineState = getState().machine;
@@ -116,7 +116,7 @@ export const actions = {
         }
         const content = JSON.stringify(envObj);
 
-        if (force || content !== lastString) {
+        if (force || (content !== lastString)) {
             dispatch(actions.updateState(headType, { content, unSaved: true, initState: false }));
             await api.saveEnv({ content });
         }
@@ -204,7 +204,8 @@ export const actions = {
         }
 
         for (let k = 0; k < models.length; k++) {
-            const { headType, originalName, uploadName, config, sourceType, gcodeConfig, sourceWidth, sourceHeight, mode, transformation, modelID, supportTag } = models[k];
+            const { headType, originalName, uploadName, config, sourceType, gcodeConfig,
+                sourceWidth, sourceHeight, mode, transformation, modelID, supportTag } = models[k];
             // prevent project recovery recorded into operation history
             if (supportTag) {
                 continue;
@@ -237,7 +238,6 @@ export const actions = {
         }
         // // TODO: set current content to avoid <unSaved> flag mis-set
         // await dispatch(actions.clearSavedEnvironment(envHeadType));
-
         for (const type of [HEAD_3DP, HEAD_CNC, HEAD_LASER]) {
             await dispatch(actions.clearSavedEnvironment(type));
         }
@@ -261,10 +261,20 @@ export const actions = {
         }
         await UniApi.File.exportAs(targetFile, configFile);
     },
+
     setOpenedFileWithType: (headType, openedFile) => async (dispatch) => {
         openedFile && UniApi.Window.setOpenedFile(openedFile?.name);
         await dispatch(actions.updateState(headType, { findLastEnvironment: false, openedFile, unSaved: false }));
         UniApi.Menu.setItemEnabled('save', !!openedFile);
+    },
+
+    setOpenedFileWithUnSaved: (headType, unSaved) => async (dispatch, getState) => {
+        const { openedFile } = getState().project[headType];
+        if (openedFile) {
+            UniApi.Window.setOpenedFile(unSaved ? `${openedFile?.name} *` : openedFile?.name);
+        } else {
+            UniApi.Window.setOpenedFile(unSaved ? 'New *' : 'New');
+        }
     },
 
     saveAsFile: (headType) => async (dispatch) => {
@@ -361,7 +371,8 @@ export const actions = {
             }
             const machineInfo = envObj.machineInfo;
             let headType;
-            // Compatible with old project file
+            // Start of Compatible with old project file
+
             if (machineInfo) {
                 // new verison of project file
                 headType = machineInfo.headType;
@@ -369,6 +380,10 @@ export const actions = {
                 // old verison of project file
                 headType = envObj.headType;
             }
+            UniformToolpathConfig(envObj);
+
+            // End of Compatible with old project file
+
             const oldHeadType = getCurrentHeadType(history?.location?.pathname) || headType;
             await dispatch(actions.save(oldHeadType, {
                 message: i18n._('Save the changes you made in the {{headType}} G-code Generator? Your changes will be lost if you don’t save them.', { headType: HEAD_TYPE_ENV_NAME[oldHeadType] })
@@ -387,9 +402,10 @@ export const actions = {
                 } else {
                     await dispatch(actions.setOpenedFileWithType(headType, JSON.parse(file)));
                 }
-                dispatch(actions.updateState(headType, { unSaved: false }));
+                await dispatch(actions.updateState(headType, { unSaved: false, content }));
             } else {
-                dispatch(actions.updateState(headType, { unSaved: false, openedFile: null }));
+                await dispatch(actions.updateState(headType, { unSaved: false, openedFile: null }));
+                // await dispatch(actions.setOpenedFileWithUnSaved(headType, true));
             }
         } else if (tail === 'gcode') {
             dispatch(workspaceActions.uploadGcodeFile(file));

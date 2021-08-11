@@ -89,9 +89,9 @@ const allWidgets = {
 const ACCEPT = '.svg, .png, .jpg, .jpeg, .bmp, .dxf';
 const pageHeadType = HEAD_LASER;
 
-
 function useRenderMainToolBar(setShowHomePage, setShowJobType, setShowWorkspace, isRotate) {
     // (!workPosition.isFourAxis && (connectionType === CONNECTION_TYPE_WIFI && isConnected && !hasBackground))
+    const unSaved = useSelector(state => state?.project[pageHeadType]?.unSaved, shallowEqual);
     const isConnected = useSelector(state => state?.machine?.isConnected, shallowEqual);
     const series = useSelector(state => state?.machine?.series, shallowEqual);
     const canRedo = useSelector(state => state[HEAD_LASER]?.history?.canRedo, shallowEqual);
@@ -158,6 +158,7 @@ function useRenderMainToolBar(setShowHomePage, setShowJobType, setShowWorkspace,
         {
             title: i18n._('Save'),
             type: 'button',
+            disabled: !unSaved,
             name: 'MainToolbarSave',
             iconClassName: 'laser-save-icon',
             action: () => {
@@ -346,7 +347,8 @@ function Laser({ location }) {
     const thumbnail = useRef();
     const modelGroup = useSelector(state => state[HEAD_LASER]?.modelGroup, shallowEqual);
     const toolPathGroup = useSelector(state => state[HEAD_LASER]?.toolPathGroup, shallowEqual);
-    // const guideToursSetting = machineStore.get('guideTours');
+    // useUnsavedTitle(pageHeadType);
+
     useEffect(() => {
         dispatch(laserActions.init());
         logPageView({

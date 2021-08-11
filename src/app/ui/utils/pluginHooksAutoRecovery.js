@@ -5,8 +5,6 @@ import renderRecoveryModal from './renderRecoveryModal';
 // this is an example of hooks plugin
 export function useRecoveringProject(headType) {
     const findLastEnvironment = useSelector(state => state?.project[headType].findLastEnvironment, shallowEqual);
-    // const openedFile = useSelecto`r(state => state?.project[headType].openedFile, shallowEqual);
-    // UniApi.Window.setOpenedFile(o`penedFile ? openedFile.name : undefined);
 
     const [recoveringProject, setRecoveringProject] = useState(findLastEnvironment);
 
