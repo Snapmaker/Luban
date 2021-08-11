@@ -249,7 +249,7 @@ export const CNC_TOOL_CONFIG_GROUP = [
 export const CNC_DEFAULT_GCODE_PARAMETERS_DEFINITION = {
     'allowance': {
         label: 'Allowance',
-        description: 'Allowance',
+        description: 'Set the amount of the material remaining on the object that needs to be carved in future operations.',
         min: 0,
         step: 0.1,
         unit: 'mm',
@@ -280,7 +280,7 @@ export const CNC_DEFAULT_GCODE_PARAMETERS_DEFINITION = {
     },
     'targetDepth': {
         label: 'Target Depth',
-        description: 'Enter the depth of the carved image. The depth cannot be deeper than the flute length.',
+        description: 'Set the depth of the object to be carved. The depth should be smaller than the flute length. ',
         min: 0.01,
         step: 0.1,
         max: 100,
@@ -291,7 +291,7 @@ export const CNC_DEFAULT_GCODE_PARAMETERS_DEFINITION = {
     },
     'safetyHeight': {
         label: 'Jog Height',
-        description: 'The distance between the tool and the material when it’s not carving.',
+        description: 'Set the distance between the tool and the material when the tool is not carving.',
         min: 0.1,
         step: 1,
         max: 100,
@@ -302,7 +302,7 @@ export const CNC_DEFAULT_GCODE_PARAMETERS_DEFINITION = {
     },
     'stopHeight': {
         label: 'Stop Height',
-        description: 'The distance between the tool and the material when the machine stops.',
+        description: 'Set the distance between the tool and the material when the tool stops.',
         min: 0.1,
         step: 0.1,
         max: 100,
@@ -313,14 +313,14 @@ export const CNC_DEFAULT_GCODE_PARAMETERS_DEFINITION = {
     },
     'enableTab': {
         label: 'Use Tab',
-        description: 'Switch to use tab',
+        description: 'Use tabs to hold the pieces in place.',
         type: 'bool',
         default_value: false,
         value: 'enableTab'
     },
     'tabHeight': {
         label: 'Tab Height',
-        description: 'Enter the height of the tabs.',
+        description: 'Set the height of tabs.',
         // min: '-targetDepth',
         max: 0,
         step: 0.5,
@@ -331,7 +331,7 @@ export const CNC_DEFAULT_GCODE_PARAMETERS_DEFINITION = {
     },
     'tabSpace': {
         label: 'Tab Space',
-        description: 'Enter the space between any two tabs.',
+        description: 'Set the distance between each tab.',
         min: 1,
         step: 1,
         value: 'tabSpace',
@@ -341,7 +341,7 @@ export const CNC_DEFAULT_GCODE_PARAMETERS_DEFINITION = {
     },
     'tabWidth': {
         label: 'Tab Width',
-        description: 'Enter the width of the tabs.',
+        description: 'Set the width of tabs.',
         min: 1,
         step: 1,
         value: 'tabWidth',
@@ -360,7 +360,7 @@ export const CNC_DEFAULT_GCODE_PARAMETERS_DEFINITION = {
         unit: 'mm'
     },
     'workSpeed': {
-        description: 'Determines how fast the tool moves on the material.',
+        description: 'Set the speed at which the tool moves on the material when it is carving.',
         label: 'Work Speed',
         min: 0.01,
         step: 0.01,
@@ -377,7 +377,7 @@ export const CNC_DEFAULT_GCODE_PARAMETERS_DEFINITION = {
         step: 0.01,
         label: 'Plunge Speed',
         unit: 'mm/min',
-        description: 'Determines how fast the tool feeds into the material.'
+        description: 'Set the speed at which the tool is driven down into the material.'
     },
     'jogSpeed': {
         default_value: 1500,
@@ -387,7 +387,7 @@ export const CNC_DEFAULT_GCODE_PARAMETERS_DEFINITION = {
         step: 0.01,
         label: 'Jog Speed',
         unit: 'mm/min',
-        description: 'Determines how fast the tool moves when it’s not carving.'
+        description: 'Set the speed at which the tool moves on the material when it is not carving.'
     },
     'stepDown': {
         default_value: 0.5,
@@ -395,13 +395,16 @@ export const CNC_DEFAULT_GCODE_PARAMETERS_DEFINITION = {
         min: 0.01,
         step: 0.01,
         label: 'Stepdown',
-        description: 'Enter the depth of each carving step.',
+        description: 'Set the distance along the Z axis per step that the tool is plunged into the material.',
         unit: 'mm'
     }
 };
 
 export const LASER_DEFAULT_GCODE_PARAMETERS_DEFINITION = {
     'fillEnabled': {
+        description: 'Set the processing method of the object. \n \
+            - Fill: Fills the object with lines or dots.\n \
+            - On the Path: Engraves along the shape of the object.',
         label: 'Method', // 'Fill'
         type: 'enum',
         default_value: 'false',
@@ -412,7 +415,7 @@ export const LASER_DEFAULT_GCODE_PARAMETERS_DEFINITION = {
     },
     'workSpeed': {
         label: 'Work Speed',
-        description: 'Determines how fast the machine moves when it’s engraving.',
+        description: 'Set the speed at which the toolhead moves on the material when it is engraving or cutting.',
         type: 'float',
         min: 1,
         max: 6000,
@@ -422,7 +425,7 @@ export const LASER_DEFAULT_GCODE_PARAMETERS_DEFINITION = {
     },
     'multiPasses': {
         label: 'Number of Passes',
-        description: 'Determines how many times the printer will run the G-code automatically.',
+        description: 'Set how many times the laser will trace the same path in a G-code file. ',
         type: 'float',
         min: 1,
         max: 50,
@@ -430,7 +433,7 @@ export const LASER_DEFAULT_GCODE_PARAMETERS_DEFINITION = {
     },
     'multiPassDepth': {
         label: 'Z Step per Pass',
-        description: 'Determines how much the laser module will be lowered after each pass.',
+        description: 'Set the amount at which the Laser Module is lowered with each pass. ',
         type: 'float',
         min: 0.01,
         max: 10,
@@ -439,7 +442,7 @@ export const LASER_DEFAULT_GCODE_PARAMETERS_DEFINITION = {
     },
     'fixedPower': {
         label: 'Laser Power',
-        description: 'Power to use when laser is working.',
+        description: 'Set the laser power.',
         type: 'float',
         min: 0,
         max: 100,
@@ -448,7 +451,7 @@ export const LASER_DEFAULT_GCODE_PARAMETERS_DEFINITION = {
     },
     'movementMode': {
         label: 'Movement Mode',
-        description: 'Choose Movement Mode',
+        description: 'Set whether the object is filled with lines or dots.',
         type: 'enum',
         options: {
             'greyscale-line': 'Line', // 'Line (Normal Quality)',
@@ -501,7 +504,7 @@ The bigger this value is, the better quality you will get. The range is 1-10 dot
     },
     'jogSpeed': {
         label: 'Jog Speed',
-        description: 'Determines how fast the machine moves when it’s not engraving.',
+        description: 'Set the speed at which the toolhead moves on the material when it is not engraving or cutting.',
         min: 1,
         max: 6000,
         step: 1,
@@ -512,7 +515,7 @@ The bigger this value is, the better quality you will get. The range is 1-10 dot
     },
     'direction': {
         label: 'Line Direction',
-        description: 'Select the direction of the engraving path.',
+        description: 'Set the direction of the engraved path. Engraves the path in a horizontal, vertical, or diagonal direction.',
         options: {
             Horizontal: 'Horizontal',
             Vertical: 'Vertical',

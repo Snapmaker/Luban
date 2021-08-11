@@ -60,14 +60,19 @@ class LaserParameters extends PureComponent {
             <React.Fragment>
                 <div className="border-default-grey-1 border-radius-8 padding-vertical-8 padding-horizontal-16">
                     <div className="sm-parameter-container">
-                        <div className="position-re sm-flex justify-space-between height-32 margin-vertical-8">
-                            <span>{i18n._('Name')}</span>
-                            <TextInput
-                                size="large"
-                                value={name}
-                                onChange={(event) => { this.props.updateToolPath({ name: event.target.value }); }}
-                            />
-                        </div>
+                        <TipTrigger
+                            title={i18n._('Name')}
+                            content={i18n._('Enter the toolpath name.')}
+                        >
+                            <div className="position-re sm-flex justify-space-between height-32 margin-vertical-8">
+                                <span>{i18n._('Name')}</span>
+                                <TextInput
+                                    size="large"
+                                    value={name}
+                                    onChange={(event) => { this.props.updateToolPath({ name: event.target.value }); }}
+                                />
+                            </div>
+                        </TipTrigger>
                         {multipleEngine && (
                             <div className="position-re sm-flex justify-space-between height-32 margin-vertical-8">
                                 <span>{i18n._('Use legacy engine')}</span>
@@ -82,8 +87,16 @@ class LaserParameters extends PureComponent {
                         <div>
                             {isSVG && (
                                 <TipTrigger
-                                    title={i18n._('Line Direction')}
-                                    content={i18n._('Select the direction of the engraving path.')}
+                                    title={i18n._('Method')}
+                                    content={(
+                                        <div>
+                                            <p>{i18n._('Set the processing method of the object.')}</p>
+                                            <ul>
+                                                <li><b>{i18n._('Fill')}</b>: {i18n._('Fills the object with lines or dots.')}</li>
+                                                <li><b>{i18n._('On the Path')}</b>: {i18n._('Engraves along the shape of the object.')}</li>
+                                            </ul>
+                                        </div>
+                                    )}
                                 >
                                     <div className="position-re sm-flex justify-space-between height-32 margin-vertical-8">
                                         <span>{i18n._('Method')}</span>
@@ -110,7 +123,7 @@ class LaserParameters extends PureComponent {
                             {isImage && (
                                 <TipTrigger
                                     title={i18n._('Line Direction')}
-                                    content={i18n._('Select the direction of the engraving path.')}
+                                    content={i18n._('Set the direction of the engraved path. Engraves the path in a horizontal, vertical, or diagonal direction.')}
                                 >
                                     <div className="position-re sm-flex justify-space-between height-32 margin-vertical-8">
                                         <span>{i18n._('Method')}</span>
