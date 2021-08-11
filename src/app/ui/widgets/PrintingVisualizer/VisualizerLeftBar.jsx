@@ -745,7 +745,7 @@ class VisualizerLeftBar extends PureComponent {
                                             size="small"
                                             min={1}
                                             max={size.x / 2}
-                                            value={defaultSupportSize?.x}
+                                            value={defaultSupportSize.x}
                                             onChange={(value) => {
                                                 supportActions.setDefaultSupportSize({ x: value });
                                             }}
@@ -760,7 +760,7 @@ class VisualizerLeftBar extends PureComponent {
                                             size="small"
                                             min={1}
                                             max={size.y / 2}
-                                            value={defaultSupportSize?.y}
+                                            value={defaultSupportSize.y}
                                             onChange={(value) => {
                                                 supportActions.setDefaultSupportSize({ y: value });
                                             }}
@@ -831,7 +831,6 @@ const mapStateToProps = (state) => {
         size: machine.size,
         selectedModelArray: modelGroup.selectedModelArray,
         transformation: modelGroup.getSelectedModelTransformationForPrinting(),
-        defaultSupportSize: modelGroup.defaultSupportSize,
         hasModel,
         gcodeLine,
         isSupportSelected,
@@ -844,7 +843,6 @@ const mapDispatchToProps = (dispatch) => ({
     uploadModel: (file) => dispatch(printingActions.uploadModel(file)),
     onModelAfterTransform: () => dispatch(printingActions.onModelAfterTransform()),
     updateSelectedModelTransformation: (transformation, newUniformScalingState) => dispatch(printingActions.updateSelectedModelTransformation(transformation, newUniformScalingState))
-    // setDefaultSupportSize: (size) => dispatch(printingActions.setDefaultSupportSize(size)),
 });
 
 
