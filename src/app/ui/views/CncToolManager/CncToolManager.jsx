@@ -124,7 +124,7 @@ function CncToolManager({ closeToolManager, shouldSaveToolpath = false, saveTool
             optionConfigGroup={optionConfigGroup}
             allDefinitions={allDefinitions}
             disableCategory={false}
-            managerTitle="Tool Profile"
+            managerTitle="Tool Settings"
             defaultKeysAndId={defaultKeysAndId}
         />
     );

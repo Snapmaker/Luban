@@ -17,7 +17,7 @@ class PolylineTagParser extends BaseTagParser {
             }
         }
 
-        this.commitPath(!!attributes.fill);
+        this.commitPath();
 
         return this.createShape();
     }

@@ -1,9 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { shallowEqual, useSelector, useDispatch } from 'react-redux';
 import path from 'path';
 import PropTypes from 'prop-types';
-import { withRouter } from 'react-router-dom';
+import { useHistory, withRouter } from 'react-router-dom';
 // import classNames from 'classnames';
+import 'intro.js/introjs.css';
+// import { Steps } from 'intro.js-react';
 import i18n from '../../lib/i18n';
 // import Anchor from '../components/Anchor';
 import Dropdown from '../components/Dropdown';
@@ -20,6 +22,7 @@ import { actions as laserActions } from '../../flux/laser';
 import { actions as projectActions } from '../../flux/project';
 import ProjectLayout from '../layouts/ProjectLayout';
 import MainToolBar from '../layouts/MainToolBar';
+import { machineStore } from '../../store/local-storage';
 // import WidgetContainer from '../Layouts/Widget';
 
 import { HEAD_LASER, PAGE_EDITOR, PAGE_PROCESS, MACHINE_SERIES, PROCESS_MODE_GREYSCALE, PROCESS_MODE_VECTOR } from '../../constants';
@@ -52,6 +55,9 @@ import PrintingVisualizer from '../widgets/PrintingVisualizer';
 import HomePage from './HomePage';
 import ToolPathListBox from '../widgets/CncLaserList/ToolPathList';
 import Workspace from './Workspace';
+import Thumbnail from '../widgets/CncLaserShared/Thumbnail';
+import { laserCncIntroStepOne, laserCncIntroStepTwo, laserCncIntroStepFive, laserCncIntroStepSix, laser4AxisStepOne } from './introContent';
+import Steps from '../components/Steps';
 
 const allWidgets = {
     'control': ControlWidget,
@@ -154,6 +160,7 @@ function useRenderMainToolBar(setShowHomePage, setShowJobType, setShowWorkspace,
             type: 'button',
             disabled: !unSaved,
             name: 'MainToolbarSave',
+            iconClassName: 'laser-save-icon',
             action: () => {
                 dispatch(projectActions.save(HEAD_LASER));
             }
@@ -288,7 +295,7 @@ function useRenderRemoveModelsWarning() {
         onClose,
         renderBody: () => (
             <div>
-                <div>{i18n._('Remove all empty toolPath(s)?')}</div>
+                <div>{i18n._('Delete the object? The toolpath created will be deleted together.')}</div>
                 {emptyToolPaths.map((item) => {
                     return (<div key={item.name}>{item.name}</div>);
                 })}
@@ -300,7 +307,7 @@ function useRenderRemoveModelsWarning() {
                 onClick: () => { onClose(); }
             },
             {
-                name: i18n._('Yes'),
+                name: i18n._('Delete'),
                 isPrimary: true,
                 onClick: () => {
                     dispatch(editorActions.removeSelectedModel(HEAD_LASER));
@@ -322,8 +329,11 @@ function Laser({ location }) {
     const [showHomePage, setShowHomePage] = useState(false);
     const [showWorkspace, setShowWorkspace] = useState(false);
     const [showJobType, setShowJobType] = useState(true);
+    const [enabledIntro, setEnabledIntro] = useState(null);
+    const initIndex = 0;
     const coordinateMode = useSelector(state => state[HEAD_LASER]?.coordinateMode, shallowEqual);
     const coordinateSize = useSelector(state => state[HEAD_LASER]?.coordinateSize, shallowEqual);
+    const toolPaths = useSelector(state => state[HEAD_LASER]?.toolPathGroup?.getToolPaths(), shallowEqual);
     const materials = useSelector(state => state[HEAD_LASER]?.materials, shallowEqual);
     const { isRotate } = materials;
     const [jobTypeState, setJobTypeState] = useState({
@@ -333,7 +343,12 @@ function Laser({ location }) {
     });
     const dispatch = useDispatch();
     const page = useSelector(state => state?.laser?.page);
+    const history = useHistory();
+    const thumbnail = useRef();
+    const modelGroup = useSelector(state => state[HEAD_LASER]?.modelGroup, shallowEqual);
+    const toolPathGroup = useSelector(state => state[HEAD_LASER]?.toolPathGroup, shallowEqual);
     useUnsavedTitle(pageHeadType);
+
     useEffect(() => {
         dispatch(laserActions.init());
     }, []);
@@ -353,6 +368,20 @@ function Laser({ location }) {
             setShowJobType(false);
         }
     }, [location?.state?.shouldShowJobType]);
+
+    useEffect(() => {
+        if (location?.state?.shouldShowGuideTours) {
+            setEnabledIntro(true);
+        } else {
+            setEnabledIntro(false);
+        }
+    }, [location?.state?.shouldShowGuideTours]);
+
+    useEffect(() => {
+        if (typeof (enabledIntro) === 'boolean' && !enabledIntro) {
+            machineStore.set(isRotate ? 'guideTours.guideTourslaser4Axis' : 'guideTours.guideTourslaser', true); // mock   ---> true
+        }
+    }, [enabledIntro]);
 
     const { setBackgroundModal,
         renderMainToolBar } = useRenderMainToolBar(setShowHomePage, setShowJobType, setShowWorkspace, isRotate);
@@ -388,7 +417,7 @@ function Laser({ location }) {
                 }
             },
             {
-                name: i18n._('Save'),
+                name: i18n._('Confirm'),
                 isPrimary: true,
                 onClick: () => {
                     dispatch(editorActions.changeCoordinateMode(HEAD_LASER,
@@ -424,8 +453,9 @@ function Laser({ location }) {
             }
             dispatch(editorActions.uploadImage('laser', file, mode, () => {
                 modal({
-                    title: i18n._('Parse Error'),
-                    body: i18n._('Failed to parse image file {{filename}}.', { filename: file.name })
+                    cancelTitle: i18n._('Close'),
+                    title: i18n._('Import Error'),
+                    body: i18n._('Failed to import this object. \nPlease select a supported file format.')
                 });
             }));
         },
@@ -442,7 +472,7 @@ function Laser({ location }) {
     function renderRightView() {
         const widgetProps = { headType: 'laser' };
         return (
-            <div>
+            <div className="laser-intro-edit-panel">
                 <Tabs
                     options={[
                         {
@@ -478,6 +508,39 @@ function Laser({ location }) {
         });
     }
 
+    function handleExit() {
+        // machineStore.set(isRotate ? 'guideTours.guideTourslaser4Axis' : 'guideTours.guideTourslaser', true); // mock   ---> true
+        setEnabledIntro(false);
+    }
+
+    function handleChange(nextIndex) {
+        if (nextIndex === 1) {
+            let pathConfig = {};
+            if (isRotate) {
+                pathConfig = {
+                    path: './UserCase/A250/A250_4th_Laser.snaplzr',
+                    name: 'A250_4th_Laser.snaplzr'
+                };
+            } else {
+                pathConfig = {
+                    path: './UserCase/A150/A150_Laser.snaplzr',
+                    name: 'A150_Laser.snaplzr'
+                };
+            }
+            dispatch(projectActions.openProject(pathConfig, history, true));
+        }
+    }
+    async function handleBeforeChange(nextIndex) {
+        if (nextIndex === 4) {
+            dispatch(editorActions.switchToPage(HEAD_LASER, 'process'));
+            dispatch(editorActions.selectToolPathId(HEAD_LASER, toolPaths[0].id));
+        } else if (nextIndex === 6) {
+            const thumbnailRef = thumbnail.current.getThumbnail();
+            await dispatch(editorActions.preview(HEAD_LASER));
+            await dispatch(editorActions.commitGenerateGcode(HEAD_LASER, thumbnailRef));
+        }
+    }
+
     return (
         <div>
             <ProjectLayout
@@ -494,7 +557,94 @@ function Laser({ location }) {
                     <LaserVisualizer
                         widgetId="laserVisualizer"
                     />
+                    <Steps
+                        enabled={enabledIntro}
+                        initialStep={initIndex}
+                        onChange={handleChange}
+                        onBeforeChange={handleBeforeChange}
+                        options={{
+                            showBullets: false,
+                            nextLabel: i18n._('Next'),
+                            doneLabel: i18n._('Complete'),
+                            hidePrev: false,
+                            exitOnEsc: false,
+                            exitOnOverlayClick: false
+                        }}
+                        steps={[{
+                            intro: isRotate ? laser4AxisStepOne(
+                                i18n._('Set the work size and where the work origin will be.'),
+                                i18n._('D is the diameter of the material,  and L is the length of the material.'),
+                                i18n._('Origin is fixed at the edge of the cross-section of the cylinder, far way from the chuck.')
+                            ) : laserCncIntroStepOne(
+                                i18n._('Set the work size and where the work origin will be.'),
+                                i18n._('X is the width of the material,  and Y is the height of the material.'),
+                                i18n._('Origin can be set at any corner or the middle of the job. This point (X0, Y0) is the origin of the design coordinate system. It also represents the origin of the workpiece coordinate system that you should set on the material using the machine tool.')
+                            ),
+                            title: `${i18n._('Job Setup')} (1/8)`
+                        }, {
+                            element: '.laser-tool-bar-open-icon',
+                            title: `${i18n._('Import Object')} (2/8)`,
+                            intro: laserCncIntroStepTwo(i18n._('Import an object, or drag an object to Luban.')),
+                            disableInteraction: true,
+                            tooltipClass: 'laser-import-intro',
+                            position: 'right'
+                        }, {
+                            element: '.laser-draw-intro-part',
+                            title: `${i18n._('Draw Object')} (3/8)`,
+                            intro: laserCncIntroStepTwo(i18n._('Alternatively, you can draw simple objects or add text for laser engrave or CNC carve.')),
+                            disableInteraction: true,
+                            tooltipClass: 'laser-draw-intro',
+                            position: 'right'
+                        }, {
+                            // element: '.laser-intro-edit-panel',
+                            element: '.widget-list-intro',
+                            title: `${i18n._('Edit Panel')} (4/8)`,
+                            intro: laserCncIntroStepTwo(i18n._('The Edit panel shows the property related to object. When an object is selected, Luban displays this panel where you can transform the object, switch the Processing Mode, or enter the Process Panel.')),
+                            disableInteraction: true,
+                            tooltipClass: 'laser-edit-panel-intro',
+                            position: 'left'
+                        }, {
+                            element: '.laser-widget-list-intro',
+                            title: `${i18n._('Process Panel')} (5/8)`,
+                            intro: laserCncIntroStepFive(
+                                i18n._('The Process panel shows the Toolpath List and the relevant property of the toolpath.'),
+                                i18n._('After the selected object is edited, you can create, edit, and sort the toolpaths of the object. Below the Toolpath List are the parameters you often use.'),
+                                i18n._('Create Toolpath')
+                            ),
+                            disableInteraction: true,
+                            position: 'left'
+                        }, {
+                            element: '.laser-preview-export-intro-part',
+                            title: `${i18n._('Generate G-code and Preview')} (6/8)`,
+                            position: 'top',
+                            disableInteraction: true,
+                            intro: laserCncIntroStepSix(
+                                i18n._('Click to generate and preview the G-code file.'),
+                                i18n._('For laser engraving, you can preview the toolpath. For CNC carving, you can preview the toolpath and simulate the operation result.')
+                            )
+                        }, {
+                            element: '.laser-preview-export-intro-part',
+                            title: `${i18n._('Export')} (7/8)`,
+                            position: 'top',
+                            disableInteraction: true,
+                            intro: laserCncIntroStepTwo(
+                                i18n._('Export the G-code file to a local device or load it to Workspace. Use Touchscreen or Luban to start laser engraving or CNC carving.')
+                            )
+                        }, {
+                            element: '.laser-save-icon',
+                            title: `${i18n._('Save Project')} (8/8)`,
+                            position: 'bottom',
+                            disableInteraction: true,
+                            intro: laserCncIntroStepTwo(i18n._('Save the project to a local device for reuse.'))
+                        }]}
+                        onExit={handleExit}
+                    />
                 </Dropzone>
+                <Thumbnail
+                    ref={thumbnail}
+                    toolPathGroup={toolPathGroup}
+                    modelGroup={modelGroup}
+                />
             </ProjectLayout>
             {warningRemovingModels}
             {jobTypeModal}

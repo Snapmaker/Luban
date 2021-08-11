@@ -1,10 +1,12 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 
 import { shallowEqual, useSelector, useDispatch } from 'react-redux';
 import PropTypes from 'prop-types';
-import { withRouter } from 'react-router-dom';
+import { useHistory, withRouter } from 'react-router-dom';
 import path from 'path';
 import { Trans } from 'react-i18next';
+import 'intro.js/introjs.css';
+import Steps from '../components/Steps';
 import Dropdown from '../components/Dropdown';
 import Menu from '../components/Menu';
 import i18n from '../../lib/i18n';
@@ -63,6 +65,9 @@ import PrintingVisualizer from '../widgets/PrintingVisualizer';
 import HomePage from './HomePage';
 // import Anchor from '../components/Anchor';
 import Workspace from './Workspace';
+import { machineStore } from '../../store/local-storage';
+import Thumbnail from '../widgets/CncLaserShared/Thumbnail';
+import { laserCncIntroStepOne, laserCncIntroStepTwo, laserCncIntroStepFive, laserCncIntroStepSix, cnc4AxisStepOne } from './introContent';
 
 const allWidgets = {
     'control': ControlWidget,
@@ -120,7 +125,7 @@ function useRenderWarning() {
                 </div>
                 <div>
                     <Trans i18nKey="key_CNC_loading_warning">
-                                This is an alpha feature that helps you get started with CNC Carving. Make sure you
+                        This is an alpha version that gets you started with CNC carving. Ensure you have read
                         <Space width={4} />
                         <a
                             style={{ color: '#28a7e1' }}
@@ -128,10 +133,10 @@ function useRenderWarning() {
                             target="_blank"
                             rel="noopener noreferrer"
                         >
-                                    Read This First - Safety Information
+                            the Safety Information
                         </a>
                         <Space width={4} />
-                                before proceeding.
+                        before proceeding.
                     </Trans>
                 </div>
             </div>
@@ -237,6 +242,7 @@ function useRenderMainToolBar(setShowHomePage, setShowJobType, setShowWorkspace)
             // disabled: !hasModel,
             type: 'button',
             name: 'MainToolbarSave',
+            iconClassName: 'cnc-save-icon',
             action: () => {
                 dispatch(projectActions.save(HEAD_CNC));
             }
@@ -346,7 +352,7 @@ function useRenderRemoveModelsWarning() {
         onClose,
         renderBody: () => (
             <div>
-                <div>{i18n._('Remove all empty toolPath(s)?')}</div>
+                <div>{i18n._('Delete the object? The toolpath created will be deleted together.')}</div>
                 {emptyToolPaths.map((item) => {
                     return (<div key={item.name}>{item.name}</div>);
                 })}
@@ -358,7 +364,7 @@ function useRenderRemoveModelsWarning() {
                 onClick: () => { onClose(); }
             },
             {
-                name: i18n._('Yes'),
+                name: i18n._('Delete'),
                 isPrimary: true,
                 onClick: () => {
                     dispatch(editorActions.removeSelectedModel(HEAD_CNC));
@@ -375,6 +381,11 @@ function Cnc({ location }) {
     const [showHomePage, setShowHomePage] = useState(false);
     const [showWorkspace, setShowWorkspace] = useState(false);
     const [showJobType, setShowJobType] = useState(true);
+    const [enabledIntro, setEnabledIntro] = useState(null);
+    const initIndex = 0;
+    const toolPaths = useSelector(state => state[HEAD_CNC]?.toolPathGroup?.getToolPaths(), shallowEqual);
+    const modelGroup = useSelector(state => state[HEAD_CNC]?.modelGroup, shallowEqual);
+    const toolPathGroup = useSelector(state => state[HEAD_CNC]?.toolPathGroup, shallowEqual);
     const coordinateMode = useSelector(state => state[HEAD_CNC]?.coordinateMode, shallowEqual);
     const coordinateSize = useSelector(state => state[HEAD_CNC]?.coordinateSize, shallowEqual);
     const materials = useSelector(state => state[HEAD_CNC]?.materials, shallowEqual);
@@ -383,10 +394,20 @@ function Cnc({ location }) {
         coordinateSize,
         materials
     });
+    const { isRotate } = materials;
     const dispatch = useDispatch();
+    const history = useHistory();
     const page = useSelector(state => state?.cnc.page);
     useUnsavedTitle(pageHeadType);
+    const thumbnail = useRef();
+
     useEffect(() => {
+        // const setting = machineStore.get('guideTours');
+        // if (!setting?.guideTourscnc) {
+        //     setEnabledIntro(true);
+        // } else {
+        //     setEnabledIntro(false);
+        // }
         dispatch(cncActions.init());
     }, []);
 
@@ -405,6 +426,21 @@ function Cnc({ location }) {
             setShowJobType(false);
         }
     }, [location?.state?.shouldShowJobType]);
+
+    useEffect(() => {
+        if (location?.state?.shouldShowGuideTours) {
+            setEnabledIntro(true);
+        } else {
+            setEnabledIntro(false);
+        }
+    }, [location?.state?.shouldShowGuideTours]);
+
+    useEffect(() => {
+        if (typeof (enabledIntro) === 'boolean' && !enabledIntro) {
+            machineStore.set(isRotate ? 'guideTours.guideTourscnc4Axis' : 'guideTours.guideTourscnc', true); // mock   ---> true
+        }
+    }, [enabledIntro]);
+
     const { renderStlModal, renderMainToolBar } = useRenderMainToolBar(
         setShowHomePage,
         setShowJobType,
@@ -443,7 +479,7 @@ function Cnc({ location }) {
                 }
             },
             {
-                name: i18n._('Save'),
+                name: i18n._('Confirm'),
                 isPrimary: true,
                 onClick: () => {
                     dispatch(editorActions.changeCoordinateMode(HEAD_CNC,
@@ -488,8 +524,9 @@ function Cnc({ location }) {
             }
             dispatch(editorActions.uploadImage('cnc', file, uploadMode, () => {
                 modal({
-                    title: i18n._('Parse Error'),
-                    body: i18n._('Failed to parse image file {{filename}}.', { filename: file.name })
+                    cancelTitle: i18n._('Close'),
+                    title: i18n._('Import Error'),
+                    body: i18n._('Failed to import this object. \nPlease select a supported file format.')
                 });
             }));
         },
@@ -540,6 +577,37 @@ function Cnc({ location }) {
         });
     }
 
+    function handleChange(nextIndex) {
+        if (nextIndex === 1) {
+            let pathConfig = {};
+            if (isRotate) {
+                pathConfig = {
+                    path: './UserCase/A250/4th_CNC.snapcnc',
+                    name: '4th_CNC.snapcnc'
+                };
+            } else {
+                pathConfig = {
+                    path: './UserCase/A150/A150_CNC.snapcnc',
+                    name: 'A150_CNC.snapcnc'
+                };
+            }
+            dispatch(projectActions.openProject(pathConfig, history, true));
+        }
+    }
+    async function handleBeforeChange(nextIndex) {
+        if (nextIndex === 4) {
+            dispatch(editorActions.switchToPage(HEAD_CNC, 'process'));
+            dispatch(editorActions.selectToolPathId(HEAD_CNC, toolPaths[0].id));
+        } else if (nextIndex === 6) {
+            const thumbnailRef = thumbnail.current.getThumbnail();
+            await dispatch(editorActions.preview(HEAD_CNC));
+            await dispatch(editorActions.commitGenerateGcode(HEAD_CNC, thumbnailRef));
+        }
+    }
+    function handleExit() {
+        // machineStore.set('guideTours.guideTourscnc', true); // mock   ---> true
+        setEnabledIntro(false);
+    }
     return (
         <div>
             <ProjectLayout
@@ -554,7 +622,93 @@ function Cnc({ location }) {
                     onDropRejected={actions.onDropRejected}
                 >
                     <CNCVisualizer />
+                    <Steps
+                        options={{
+                            showBullets: false,
+                            nextLabel: i18n._('Next'),
+                            doneLabel: i18n._('Complete')
+                        }}
+                        enabled={enabledIntro}
+                        initialStep={initIndex}
+                        onChange={handleChange}
+                        onBeforeChange={handleBeforeChange}
+                        onExit={handleExit}
+                        steps={[
+                            {
+                                intro: isRotate ? cnc4AxisStepOne(
+                                    i18n._('Set the work size and where the work origin will be.'),
+                                    i18n._('D is the diameter of the material,  and L is the length of the material.'),
+                                    i18n._('Origin is fixed at the center of the cross-section of the cylinder, far way from the chuck.')
+                                ) : laserCncIntroStepOne(
+                                    i18n._('Set the work size and where the work origin will be.'),
+                                    i18n._('X is the width of the material,  and Y is the height of the material.'),
+                                    i18n._('Origin can be set at any corner or the middle of the job. This point (X0, Y0) is the origin of the design coordinate system. It also represents the origin of the workpiece coordinate system that you should set on the material using the machine tool.')
+                                ),
+                                title: `${i18n._('Job Setup')} (1/8)`
+                            }, {
+                                element: '.cnc-tool-bar-open-icon',
+                                title: `${i18n._('Import Object')} (2/8)`,
+                                intro: laserCncIntroStepTwo(i18n._('Import an object, or drag an object to Luban.')),
+                                disableInteraction: true,
+                                tooltipClass: 'cnc-import-intro',
+                                position: 'right'
+                            }, {
+                                element: '.cnc-draw-intro-part',
+                                title: `${i18n._('Draw Object')} (3/8)`,
+                                intro: laserCncIntroStepTwo(i18n._('Alternatively, you can draw simple objects or add text for laser engrave or CNC carve.')),
+                                disableInteraction: true,
+                                tooltipClass: 'cnc-draw-intro',
+                                position: 'right'
+                            }, {
+                                // element: '.laser-intro-edit-panel',
+                                element: '.widget-list-intro',
+                                title: `${i18n._('Edit Panel')} (4/8)`,
+                                intro: laserCncIntroStepTwo(i18n._('The Edit panel shows the property related to object. When an object is selected, Luban displays this panel where you can transform the object, switch the Processing Mode, or enter the Process Panel.')),
+                                disableInteraction: true,
+                                tooltipClass: 'cnc-edit-panel-intro',
+                                position: 'left'
+                            }, {
+                                element: '.cnc-widget-list-intro',
+                                title: `${i18n._('Process Panel')} (5/8)`,
+                                intro: laserCncIntroStepFive(
+                                    i18n._('The Process panel shows the Toolpath List and the relevant property of the toolpath.'),
+                                    i18n._('After the selected object is edited, you can create, edit, and sort the toolpaths of the object. Below the Toolpath List are the parameters you often use.'),
+                                    i18n._('Create Toolpath')
+                                ),
+                                disableInteraction: true,
+                                position: 'left'
+                            }, {
+                                element: '.cnc-preview-export-intro-part',
+                                title: `${i18n._('Generate G-code and Preview')} (6/8)`,
+                                position: 'top',
+                                disableInteraction: true,
+                                intro: laserCncIntroStepSix(
+                                    i18n._('Click to generate and preview the G-code file.'),
+                                    i18n._('For laser engraving, you can preview the toolpath. For CNC carving, you can preview the toolpath and simulate the operation result.')
+                                )
+                            }, {
+                                element: '.cnc-preview-export-intro-part',
+                                title: `${i18n._('Export')} (7/8)`,
+                                position: 'top',
+                                disableInteraction: true,
+                                intro: laserCncIntroStepTwo(
+                                    i18n._('Export the G-code file to a local device or load it to Workspace. Use Touchscreen or Luban to start laser engraving or CNC carving.')
+                                )
+                            }, {
+                                element: '.cnc-save-icon',
+                                title: `${i18n._('Save Project')} (8/8)`,
+                                position: 'bottom',
+                                disableInteraction: true,
+                                intro: laserCncIntroStepTwo(i18n._('Save the project to a local device for reuse.'))
+                            }
+                        ]}
+                    />
                 </Dropzone>
+                <Thumbnail
+                    ref={thumbnail}
+                    toolPathGroup={toolPathGroup}
+                    modelGroup={modelGroup}
+                />
             </ProjectLayout>
             {warningModal}
             {removeModelsWarningModal}

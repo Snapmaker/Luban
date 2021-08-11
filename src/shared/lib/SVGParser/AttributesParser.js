@@ -239,15 +239,11 @@ class AttributesParser {
             isTextElement = true;
         }
 
+        node.$.fill = 'none';
+        node.$.stroke = '#000000';
+        node.$['stroke-width'] = 1;
         Object.keys(node.$).forEach((key) => {
             const value = node.$[key];
-            if (key === 'fill') {
-                node.$.fill = 'none';
-            } else if (key === 'stroke') {
-                node.$.stroke = '#000000';
-            } else if (key === 'strokeWidth') {
-                node.$.strokeWidth = 1;
-            }
             this.parseAttribute(attributes, parentAttributes, key, value, isTextElement);
         });
         // make text have the right x

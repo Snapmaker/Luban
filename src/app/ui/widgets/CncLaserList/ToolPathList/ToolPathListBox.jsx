@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import PropTypes from 'prop-types';
 import { useSelector, useDispatch, shallowEqual } from 'react-redux';
 import classNames from 'classnames';
@@ -20,10 +20,13 @@ import {
     PAGE_EDITOR,
     PAGE_PROCESS
 } from '../../../../constants';
-// import { actions as cncActions } from '../../../../flux/cnc';
+import ContextMenu from '../../../components/ContextMenu';
 
 
-const ToolpathItem = ({ toolPath, selectedToolPathIDArray, selectToolPathId, selectOneToolPathId, selectToolPathById, onClickVisible, setEditingToolpath, disabled }) => {
+const ToolpathItem = ({
+    toolPath, selectedToolPathIDArray, selectToolPathId, selectOneToolPathId, selectToolPathById,
+    onClickVisible, setEditingToolpath, disabled, showContextMenu
+}) => {
     if (!toolPath) {
         return null;
     }
@@ -58,6 +61,17 @@ const ToolpathItem = ({ toolPath, selectedToolPathIDArray, selectToolPathId, sel
                     'justify-space-between',
                     selectedToolPathIDArray.includes(toolPath.id) ? styles.selected : null
                 )}
+                role="button"
+                tabIndex="0"
+                onMouseUp={(e) => {
+                    if (e.button === 2) { // right click
+                        // item is selected, do not select again
+                        if (!(selectedToolPathIDArray.length === 1 && selectedToolPathIDArray[0] === toolPath.id)) {
+                            selectOneToolPathId(toolPath.id);
+                        }
+                        showContextMenu(e);
+                    }
+                }}
             >
                 <Anchor
                     className={classNames(
@@ -114,6 +128,7 @@ ToolpathItem.propTypes = {
     selectOneToolPathId: PropTypes.func.isRequired,
     selectToolPathById: PropTypes.func.isRequired,
     onClickVisible: PropTypes.func.isRequired,
+    showContextMenu: PropTypes.func.isRequired,
 
     setEditingToolpath: PropTypes.func.isRequired,
     disabled: PropTypes.bool.isRequired
@@ -130,7 +145,9 @@ const ToolPathListBox = (props) => {
 
     const selectedToolPathId = firstSelectedToolpath.id;
     const [editingToolpath, setEditingToolpath] = useState(null);
-
+    const contextMenuRef = useRef(null);
+    let contextMenuDisabled = true;
+    const contextMenuArrangementDisabled = (toolPaths.length === 1);
     const actions = {
         selectOneToolPathId: (id) => {
             dispatch(editorActions.selectOneToolPathId(props.headType, id));
@@ -160,6 +177,16 @@ const ToolPathListBox = (props) => {
                 dispatch(editorActions.toolPathToDown(props.headType, selectedToolPathIDArray[0]));
             }
         },
+        toolPathToTop: () => {
+            if (selectedToolPathIDArray.length === 1) {
+                dispatch(editorActions.toolPathToTop(props.headType, selectedToolPathIDArray[0]));
+            }
+        },
+        toolPathToBottom: () => {
+            if (selectedToolPathIDArray.length === 1) {
+                dispatch(editorActions.toolPathToBottom(props.headType, selectedToolPathIDArray[0]));
+            }
+        },
         createToolPath: () => {
             const toolpath = dispatch(editorActions.createToolPath(props.headType));
             setEditingToolpath(toolpath);
@@ -170,6 +197,9 @@ const ToolPathListBox = (props) => {
                     actions.commitGenerateToolPath(toolPath.id);
                 }
             });
+        },
+        showContextMenu: (event) => {
+            contextMenuRef.current.show(event);
         }
     };
     useEffect(() => {
@@ -181,7 +211,8 @@ const ToolPathListBox = (props) => {
         } else if (page === PAGE_PROCESS) {
             props.widgetActions.setDisplay(true);
         }
-    }, [page]);
+        contextMenuDisabled = (!selectedToolPathId);
+    }, [page, selectedToolPathId]);
 
     return (
         <div className="clearfix">
@@ -208,7 +239,7 @@ const ToolPathListBox = (props) => {
                             'background-color-blue'
                         )}
                         >
-                            {i18n._('Select object to create toolPath')}
+                            {i18n._('Select object to create toolpath')}
                         </div>
                     )}
 
@@ -224,10 +255,64 @@ const ToolPathListBox = (props) => {
                                     selectToolPathById={actions.selectToolPathById}
                                     onClickVisible={actions.onClickVisible}
                                     setEditingToolpath={setEditingToolpath}
+                                    showContextMenu={actions.showContextMenu}
                                     disabled={inProgress}
                                 />
                             );
                         })}
+                        <ContextMenu
+                            id="toolPathListBoxContextmenu"
+                            ref={contextMenuRef}
+                            menuItems={
+                                [
+                                    {
+                                        type: 'item',
+                                        label: i18n._('Edit'),
+                                        disabled: contextMenuDisabled,
+                                        onClick: () => {
+                                            setEditingToolpath(firstSelectedToolpath);
+                                        }
+                                    },
+                                    {
+                                        type: 'item',
+                                        label: i18n._('Delete'),
+                                        disabled: contextMenuDisabled,
+                                        onClick: () => actions.deleteToolPath(selectedToolPathId)
+                                    },
+                                    {
+                                        type: 'subMenu',
+                                        label: i18n._('Sort'),
+                                        disabled: contextMenuDisabled || contextMenuArrangementDisabled,
+                                        items: [
+                                            {
+                                                type: 'item',
+                                                label: i18n._('Prioritize'),
+                                                disabled: contextMenuDisabled,
+                                                onClick: () => actions.toolPathToUp(selectedToolPathIDArray)
+                                            },
+                                            {
+                                                type: 'item',
+                                                label: i18n._('Deprioritize'),
+                                                disabled: contextMenuDisabled,
+                                                onClick: () => actions.toolPathToDown(selectedToolPathIDArray)
+                                            },
+                                            {
+                                                type: 'item',
+                                                label: i18n._('Top'),
+                                                disabled: contextMenuDisabled,
+                                                onClick: () => actions.toolPathToTop(selectedToolPathIDArray)
+                                            },
+                                            {
+                                                type: 'item',
+                                                label: i18n._('Bottom'),
+                                                disabled: contextMenuDisabled,
+                                                onClick: () => actions.toolPathToBottom(selectedToolPathIDArray)
+                                            }
+                                        ]
+                                    }
+                                ]
+                            }
+                        />
                     </div>
                 </div>
                 <div className={classNames(

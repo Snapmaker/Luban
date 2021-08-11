@@ -20,6 +20,7 @@ import { bubbleSortByAttribute } from '../../lib/numeric-utils';
 import { UniformToolpathConfig } from '../../lib/uniform-toolpath-config';
 
 import { actions as operationHistoryActions } from '../operation-history';
+import { machineStore } from '../../store/local-storage';
 
 import i18n from '../../lib/i18n';
 import UniApi from '../../lib/uni-api';
@@ -344,7 +345,7 @@ export const actions = {
         await dispatch(actions.clearSavedEnvironment(headType));
     },
 
-    openProject: (file, history) => async (dispatch) => {
+    openProject: (file, history, unReload = false) => async (dispatch) => {
         // file: { path, name }
         const [, tail] = file.name.split('.');
         if (!tail) return;
@@ -384,11 +385,11 @@ export const actions = {
 
             const oldHeadType = getCurrentHeadType(history?.location?.pathname) || headType;
             await dispatch(actions.save(oldHeadType, {
-                message: i18n._('Do you want to save the changes in the {{headType}} editor?', { headType: HEAD_TYPE_ENV_NAME[oldHeadType] })
+                message: i18n._('Save the changes you made in the {{headType}} G-code Generator? Your changes will be lost if you don’t save them.', { headType: HEAD_TYPE_ENV_NAME[oldHeadType] })
             }));
             await dispatch(actions.closeProject(oldHeadType));
             content && dispatch(actions.updateState(headType, { findLastEnvironment: false, content, unSaved: false }));
-            if (oldHeadType === headType) {
+            if (oldHeadType === headType && !unReload) {
                 history.push('/');
             }
             history.push(`/${headType}`);
@@ -412,7 +413,7 @@ export const actions = {
         }
     },
 
-    startProject: (from, to, history) => async (dispatch) => {
+    startProject: (from, to, history, restartGuide = false) => async (dispatch, getState) => {
         const newHeadType = getCurrentHeadType(to);
         const oldHeadType = getCurrentHeadType(from) || newHeadType;
         if (oldHeadType === null) {
@@ -420,7 +421,7 @@ export const actions = {
             return;
         }
         await dispatch(actions.save(oldHeadType, {
-            message: i18n._('Do you want to save the changes in the {{headType}} editor?', { headType: HEAD_TYPE_ENV_NAME[oldHeadType] })
+            message: i18n._('Save the changes you made in the {{headType}} G-code Generator? Your changes will be lost if you don’t save them.', { headType: HEAD_TYPE_ENV_NAME[oldHeadType] })
         }));
         await dispatch(actions.closeProject(oldHeadType));
 
@@ -434,13 +435,41 @@ export const actions = {
                 displayedType: DISPLAYED_TYPE_MODEL
             }));
         }
+        let isGuideTours = false;
+        let shouldShowGuideTours = false;
+        const toPath = to.slice(1);
+        const isRotate = getState()[toPath]?.materials?.isRotate;
         if (from === to) {
+            const currentGuideTours = machineStore.get('guideTours');
             history.push('/');
+            if (toPath !== '3dp') {
+                if (isRotate) {
+                    const propName = `guideTours${toPath}4Axis`;
+                    shouldShowGuideTours = currentGuideTours ? !!currentGuideTours[propName] : undefined;
+                } else {
+                    const propName = `guideTours${toPath}`;
+                    shouldShowGuideTours = currentGuideTours ? !!currentGuideTours[propName] : undefined;
+                }
+            }
         }
         dispatch(actions.updateState(newHeadType, { unSaved: false, openedFile: null }));
+        if (restartGuide && to === '/3dp') {
+            machineStore.set('guideTours.guideTours3dp', false);
+        }
+        if (toPath !== '3dp') {
+            if (isRotate) {
+                const propName = `guideTours${toPath}4Axis`;
+                isGuideTours = machineStore.get('guideTours') ? !!machineStore.get('guideTours')[propName] : undefined;
+            } else {
+                const propName = `guideTours${toPath}`;
+                isGuideTours = machineStore.get('guideTours') ? !!machineStore.get('guideTours')[propName] : undefined;
+            }
+        } else {
+            isGuideTours = machineStore.get('guideTours')?.guideTours3dp;
+        }
         history.push({
             pathname: to,
-            state: { shouldShowJobType: true }
+            state: { shouldShowJobType: restartGuide ? false : !!isGuideTours, shouldShowGuideTours: to === from ? (!shouldShowGuideTours || restartGuide) : (!isGuideTours || restartGuide) }
         });
 
         // clear operation history

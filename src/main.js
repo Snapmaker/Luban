@@ -21,7 +21,10 @@ function getBrowserWindowOptions() {
     const defaultOptions = {
         width: 1440,
         height: 900,
+        minHeight: 708,
+        minWidth: 1024,
         show: false,
+        useContentSize: true,
         title: `${pkg.name} ${pkg.version}`,
         webPreferences: {
             nodeIntegration: true
@@ -62,14 +65,18 @@ function getBrowserWindowOptions() {
         }
     } else {
         const display = screen.getPrimaryDisplay();
-        const { x, y, width, height } = display.workArea;
-
+        // const { x, y, width, height } = display.workArea;
+        const { x, y, width } = display.workArea;
+        const nx = x + (width - 1440) / 2;
         windowOptions = {
             id: display.id,
-            x,
+            // x,
+            // y,
+            x: nx,
             y,
-            width,
-            height
+            center: true
+            // width,
+            // height
         };
     }
 

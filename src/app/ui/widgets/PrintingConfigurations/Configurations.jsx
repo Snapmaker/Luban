@@ -247,7 +247,7 @@ class Configurations extends PureComponent {
                             onClick={actions.toggleShowCustomConfigPannel}
                         />
                     </div>
-                    <div className="padding-horizontal-16 padding-vertical-16">
+                    <div className="padding-horizontal-16 padding-vertical-16 overflow-y-auto height-max-400">
                         { printingCustomConfigs.map((key) => {
                             return (
                                 <SettingItem
@@ -274,14 +274,17 @@ class Configurations extends PureComponent {
                         style={{ minWidth: '700px' }}
                         onClose={actions.closePannel}
                     >
+                        <Modal.Header>
+                            {i18n._('Custom Parameter Visibility ')}
+                        </Modal.Header>
                         <Modal.Body>
-                            <div className={classNames(styles['manager-type-wrapper'])}>
+                            {/* <div className={classNames(styles['manager-type-wrapper'])}>
                                 <div
                                     className={classNames(styles['manager-type'], 'font-weight-blod')}
                                 >
                                     {i18n._('Custom Parameter Visibility ')}
                                 </div>
-                            </div>
+                            </div> */}
 
                             <div
                                 className={classNames(styles['manager-content'])}

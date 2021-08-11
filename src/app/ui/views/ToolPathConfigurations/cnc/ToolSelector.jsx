@@ -108,7 +108,7 @@ function ToolSelector({ toolDefinitions, setCurrentToolDefinition, setCurrentVal
                     <span className="sm-flex-auto sm-flex-order-negative height-32">
                         {i18n._('Tool')}
                     </span>
-                    <div className="sm-flex">
+                    <div className="sm-flex position-re padding-bottom-24">
                         {(isModifiedDefinition
                             && (
                                 <span
@@ -135,12 +135,12 @@ function ToolSelector({ toolDefinitions, setCurrentToolDefinition, setCurrentVal
                             size={24}
                             onClick={onShowCncToolManager}
                         />
+                        <div className="position-ab height-16 bottom-0">
+                            <p className="additional-message">
+                                {foundDefinition && `${i18n._('Material')}: ${foundDefinition.label}`}
+                            </p>
+                        </div>
                     </div>
-                </div>
-                <div className="position-re height-8 margin-bottom-8">
-                    <p className="sm-flex__input-unit-104 tooltip-message">
-                        {foundDefinition && `${i18n._('Material')}: ${foundDefinition.label}`}
-                    </p>
                 </div>
                 {renderModalView()}
             </React.Fragment>

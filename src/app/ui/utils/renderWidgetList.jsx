@@ -1,4 +1,5 @@
 import React from 'react';
+import classNames from 'classnames';
 import WidgetList from '../views/widget-list';
 import Widget from '../layouts/Widget';
 
@@ -13,10 +14,11 @@ const getWidgetByName = (name, allWidgets) => {
 
 export default function renderWidgetList(tab, container, widgetIds, Widgets, listActions, widgetProps) {
     return (
-        <div>
+        <div className={classNames(`${widgetProps.headType === '3dp' ? 'threedp' : widgetProps.headType}-widget-list-intro`, 'overflow-y-auto')} style={{ height: `${widgetProps.headType === '3dp' ? 'calc(100vh - 185px)' : `${widgetProps.headType === 'cnc' || widgetProps.headType === 'laser' ? 'calc(100vh - 230px)' : 'auto'}`}` }}>
             <WidgetList
                 tab={tab}
                 container={container}
+                className="padding-bottom-176 widget-list-intro"
                 {...listActions}
                 // widgets={Widgets}
                 // toggleToDefault={this.actions.toggleToDefault}

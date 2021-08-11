@@ -73,7 +73,7 @@ const Update = {
 
             const dialogOpts = {
                 type: 'info',
-                buttons: [i18n._('Later'), i18n._('Download now')],
+                buttons: [i18n._('Later'), i18n._('Update Now')],
                 defaultId: 1,
                 checkboxLabel: i18n._('Automatically check for updates'),
                 checkboxChecked: shouldCheckForUpdate,
@@ -112,10 +112,10 @@ const Update = {
 
             const dialogOpts = {
                 type: 'info',
-                buttons: [i18n._('No'), i18n._('Yes')],
+                buttons: [i18n._('Later'), i18n._('Install Now')],
                 defaultId: 1,
                 title: i18n._(`Luban ${releaseName} has been downloaded.`),
-                detail: i18n._('Do you want to exit the program to install now?')
+                detail: i18n._('A new version has been downloaded. Install now?')
             };
 
             dialog.showMessageBox(remote.getCurrentWindow(), dialogOpts).then((returnValue) => {

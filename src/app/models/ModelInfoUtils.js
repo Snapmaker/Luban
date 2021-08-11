@@ -34,12 +34,12 @@ const limitModelSizeByMachineSize = (size, width, height) => {
     let height_ = height;
     let width_ = width;
     if (width_ * size.y >= height_ * size.x && width_ > size.x) {
-        height_ = size.x * height_ / width_;
-        width_ = size.x;
+        height_ = size.x * height_ / width_ * 0.6;
+        width_ = size.x * 0.6;
     }
     if (height_ * size.x >= width_ * size.y && height_ > size.y) {
-        width_ = size.y * width_ / height_;
-        height_ = size.y;
+        width_ = size.y * width_ / height_ * 0.6;
+        height_ = size.y * 0.6;
     }
     return { width: width_, height: height_, scale: round(width_ / width, 2) };
 };

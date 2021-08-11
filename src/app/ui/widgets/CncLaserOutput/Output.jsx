@@ -43,7 +43,7 @@ class Output extends PureComponent {
         isGcodeGenerating: PropTypes.bool.isRequired,
         workflowState: PropTypes.string.isRequired,
         gcodeFile: PropTypes.object,
-        commitGenerateGcode: PropTypes.func.isRequired,
+        setThumbnail: PropTypes.func.isRequired,
         commitGenerateViewPath: PropTypes.func.isRequired,
         renderGcodeFile: PropTypes.func.isRequired,
         createToolPath: PropTypes.func.isRequired,
@@ -72,9 +72,9 @@ class Output extends PureComponent {
         switchToProcess: () => {
             this.props.switchToPage(PAGE_PROCESS);
         },
-        onGenerateGcode: () => {
+        onGenerateThumbnail: () => {
             const thumbnail = this.thumbnail.current.getThumbnail();
-            this.props.commitGenerateGcode(thumbnail);
+            this.props.setThumbnail(thumbnail);
         },
         onLoadGcode: async () => {
             const { gcodeFile } = this.props;
@@ -104,9 +104,6 @@ class Output extends PureComponent {
         preview: async () => {
             if (this.props.needToPreview) {
                 await this.props.preview();
-                if (this.props.canGenerateGcode) {
-                    this.actions.onGenerateGcode();
-                }
             } else {
                 this.props.showToolPathGroupObject();
             }
@@ -144,6 +141,9 @@ class Output extends PureComponent {
                 body: i18n._('Failed to preview, please modify parameters and try again.')
             });
         }
+        if (nextProps.canGenerateGcode !== this.props.canGenerateGcode && nextProps.canGenerateGcode) {
+            this.actions.onGenerateThumbnail();
+        }
     }
 
     componentWillUnmount() {
@@ -162,7 +162,7 @@ class Output extends PureComponent {
     render() {
         const actions = this.actions;
         const { workflowState, isGcodeGenerating, gcodeFile, hasModel, page,
-            disablePreview, hasToolPathModel, inProgress, displayedType, needToPreview } = this.props;
+            disablePreview, hasToolPathModel, inProgress, displayedType, needToPreview, headType } = this.props;
         const menu = (
             <Menu>
                 <Menu.Item
@@ -185,8 +185,8 @@ class Output extends PureComponent {
         );
         const isEditor = page === PAGE_EDITOR;
         return (
-            <div className={classNames('position-fixed', 'border-radius-bottom-8', 'bottom-8', 'background-color-white', styles['output-wrapper'])}>
-                <div className={classNames('position-re', 'margin-horizontal-16', 'margin-vertical-16',)}>
+            <div className={classNames('position-fixed', 'border-radius-bottom-8', 'bottom-8', 'background-color-white', styles['output-wrapper'], `${headType}-preview-export-intro-part`)}>
+                <div className={classNames('position-re', 'margin-horizontal-16', 'margin-vertical-16')}>
                     {isEditor && (
                         <Button
                             type="primary"
@@ -237,7 +237,7 @@ class Output extends PureComponent {
                             onKeyDown={noop}
                             role="button"
                             tabIndex={0}
-                            className={classNames('position-re', 'height-40',)}
+                            className={classNames('position-re', 'height-40', 'margin-top-10')}
                             onMouseEnter={actions.handleMouseOver}
                             onMouseLeave={actions.handleMouseOut}
                         >
@@ -250,8 +250,8 @@ class Output extends PureComponent {
                                     disabled={inProgress || !hasModel || workflowState === 'running' || isGcodeGenerating || gcodeFile === null}
                                     className={classNames(
                                         'position-ab',
-                                        'bottom-ne-8',
-                                        'margin-top-10',
+                                        // 'bottom-ne-8',
+                                        // 'margin-top-10',
                                         displayedType === DISPLAYED_TYPE_TOOLPATH ? 'display-block' : 'display-none'
                                     )}
                                 >
@@ -313,7 +313,7 @@ const mapDispatchToProps = (dispatch, ownProps) => {
         showModelGroupObject: () => dispatch(editorActions.showModelGroupObject(headType)),
         clearGcodeFile: () => dispatch(editorActions.clearGcodeFile(headType)),
         // togglePage: (page) => dispatch(editorActions.togglePage(headType, page)),
-        commitGenerateGcode: (thumbnail) => dispatch(editorActions.commitGenerateGcode(headType, thumbnail)),
+        setThumbnail: (thumbnail) => dispatch(editorActions.setThumbnail(headType, thumbnail)),
         renderGcodeFile: (fileName) => dispatch(workspaceActions.renderGcodeFile(fileName)),
         createToolPath: () => dispatch(editorActions.createToolPath(headType)),
         exportFile: (targetFile) => dispatch(projectActions.exportFile(targetFile)),

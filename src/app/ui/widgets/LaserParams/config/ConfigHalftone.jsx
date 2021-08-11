@@ -26,7 +26,10 @@ class ConfigHalftone extends PureComponent {
     processTimeout = null;
 
     state = {
-        expanded: true
+        expanded: true,
+        npSize: 0,
+        npAngle: 0,
+        threshold: 0
     };
 
     actions = {
@@ -34,20 +37,70 @@ class ConfigHalftone extends PureComponent {
             this.props.updateSelectedModelConfig({ npType });
         },
         onChangeSize: (npSize) => {
+            this.setState({
+                npSize
+            });
+        },
+        onAfterChangeSize: () => {
+            const { npSize } = this.state;
             this.props.updateSelectedModelConfig({ npSize });
+            this.props.processSelectedModel();
         },
         onChangeAngle: (npAngle) => {
             npAngle %= 180;
             if (npAngle < 0) npAngle += 180;
+            this.setState({
+                npAngle
+            });
+        },
+        onAfterChangeAngle: () => {
+            const { npAngle } = this.state;
             this.props.updateSelectedModelConfig({ npAngle });
+            this.props.processSelectedModel();
         },
         onChangeBWThreshold: (threshold) => {
+            this.setState({
+                threshold
+            });
+        },
+        onAfterChangeBWThreshold: () => {
+            const { threshold } = this.state;
             this.props.updateSelectedModelConfig({ threshold });
+            this.props.processSelectedModel();
         }
     };
 
+    componentDidMount() {
+        const { npSize, npAngle, threshold } = this.props;
+        this.setState({
+            npSize,
+            npAngle,
+            threshold
+        });
+    }
+
+    getSnapshotBeforeUpdate(prevProps) {
+        const { npSize, npAngle, threshold } = this.props;
+        if (npSize !== prevProps.npSize) {
+            this.setState({
+                npSize
+            });
+        }
+        if (npAngle !== prevProps.npAngle) {
+            this.setState({
+                npAngle
+            });
+        }
+        if (threshold !== prevProps.threshold) {
+            this.setState({
+                threshold
+            });
+        }
+        return this.props;
+    }
+
     render() {
-        const { disabled, npType, npSize, npAngle, threshold } = this.props;
+        const { disabled, npType } = this.props;
         return (
             <div>
                 {this.state.expanded && (
@@ -84,21 +137,21 @@ class ConfigHalftone extends PureComponent {
                                 <Slider
                                     disabled={disabled}
                                     size="middle"
-                                    value={npSize}
+                                    value={this.state.npSize}
                                     min={5}
                                     max={50}
                                     onChange={this.actions.onChangeSize}
-                                    onAfterChange={this.props.processSelectedModel}
+                                    onAfterChange={this.actions.onAfterChangeSize}
                                 />
                                 <NumberInput
                                     disabled={disabled}
                                     size="super-small"
-                                    value={npSize}
+                                    value={this.state.npSize}
                                     min={5}
                                     max={50}
-                                    onChange={(value) => {
-                                        this.actions.onChangeSize(value);
-                                        this.props.processSelectedModel();
+                                    onChange={async (value) => {
+                                        await this.actions.onChangeSize(value);
+                                        this.actions.onAfterChangeSize();
                                     }}
                                 />
                             </div>
@@ -112,21 +165,21 @@ class ConfigHalftone extends PureComponent {
                                 <Slider
                                     disabled={disabled}
                                     size="middle"
-                                    value={npAngle}
+                                    value={this.state.npAngle}
                                     min={0}
                                     max={180}
                                     onChange={this.actions.onChangeAngle}
-                                    onAfterChange={this.props.processSelectedModel}
+                                    onAfterChange={this.actions.onAfterChangeAngle}
                                 />
                                 <NumberInput
                                     disabled={disabled}
                                     size="super-small"
-                                    value={npAngle}
+                                    value={this.state.npAngle}
                                     min={0}
                                     max={180}
-                                    onChange={(value) => {
-                                        this.actions.onChangeAngle(value);
-                                        this.props.processSelectedModel();
+                                    onChange={async (value) => {
+                                        await this.actions.onChangeAngle(value);
+                                        this.actions.onAfterChangeAngle();
                                     }}
                                 />
                             </div>
@@ -140,21 +193,21 @@ class ConfigHalftone extends PureComponent {
                                 <Slider
                                     disabled={disabled}
                                     size="middle"
-                                    value={threshold}
+                                    value={this.state.threshold}
                                     min={0}
                                     max={255}
                                     onChange={this.actions.onChangeBWThreshold}
-                                    onAfterChange={this.props.processSelectedModel}
+                                    onAfterChange={this.actions.onAfterChangeBWThreshold}
                                 />
                                 <NumberInput
                                     disabled={disabled}
                                     size="super-small"
-                                    value={threshold}
+                                    value={this.state.threshold}
                                     min={0}
                                     max={255}
-                                    onChange={(value) => {
-                                        this.actions.onChangeBWThreshold(value);
-                                        this.props.processSelectedModel();
+                                    onChange={async (value) => {
+                                        await this.actions.onChangeBWThreshold(value);
+                                        this.actions.onAfterChangeBWThreshold();
                                     }}
                                 />
                             </div>

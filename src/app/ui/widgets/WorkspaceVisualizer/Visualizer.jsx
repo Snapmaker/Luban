@@ -716,7 +716,7 @@ class Visualizer extends Component {
                 {(state.isEmergencyStopped) && (
                     <ModalSmall
                         title={i18n._('Emergency Stop')}
-                        text={i18n._('The network connection has been interrupted, please follow the on-screen instructions to solve the problem.')}
+                        text={i18n._('You have pressed the Emergency Stop Button. Solve the emergency and reconnect Luban.')}
                         img="WarningTipsEmergencyStop"
                         onClose={this.actions.closeModal}
                     />
