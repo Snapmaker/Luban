@@ -3,9 +3,10 @@ import renderPopup from './renderPopup';
 import renderWidgetList from './renderWidgetList';
 import { useRecoveringProject, useRenderRecoveryModal } from './pluginHooksAutoRecovery';
 import renderRecoveryModal from './renderRecoveryModal';
+import { logPageView } from './gaEvent';
 
 export { renderModal, renderPopup, renderWidgetList, renderRecoveryModal,
-    useRecoveringProject, useRenderRecoveryModal };
+    useRecoveringProject, useRenderRecoveryModal, logPageView };
 
 export default {
     renderModal,
@@ -13,5 +14,6 @@ export default {
     renderWidgetList,
     renderRecoveryModal,
     useRenderRecoveryModal,
-    useRecoveringProject
+    useRecoveringProject,
+    logPageView
 };

@@ -126,6 +126,7 @@ class ModalWrapper extends PureComponent {
                 title={this.renderTitle()}
                 footer={this.renderFooter()}
                 onCancel={onClose}
+                maskClosable={false}
                 centered
                 mask={!tile}
                 className={classNames(styles.modal, `${this.renderTitle() ? className : `${className} no-header`}`)}

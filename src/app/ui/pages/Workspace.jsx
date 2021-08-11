@@ -29,7 +29,7 @@ import { actions as projectActions } from '../../flux/project';
 import { actions as workspaceActions } from '../../flux/workspace';
 import { actions as widgetActions } from '../../flux/widget';
 
-import { renderWidgetList } from '../utils';
+import { renderWidgetList, logPageView } from '../utils';
 
 import ControlWidget from '../widgets/Control';
 import ConnectionWidget from '../widgets/Connection';
@@ -193,6 +193,9 @@ class Workspace extends PureComponent {
         if (this.props.isPopup && this.props.onClose) {
             this.actions.addReturnButton();
         }
+        logPageView({
+            pathname: '/workspace'
+        });
         // setTimeout(() => {
         //     A workaround solution to trigger componentDidUpdate on initial render
         // this.setState({ mounted: true });

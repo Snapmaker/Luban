@@ -425,7 +425,10 @@ export const actions = {
         const isRotate = getState()[toPath]?.materials?.isRotate;
         if (from === to) {
             const currentGuideTours = machineStore.get('guideTours');
-            history.push('/');
+            history.push({
+                pathname: '/',
+                state: { shouldNotLogPageView: true }
+            });
             if (toPath !== '3dp') {
                 if (isRotate) {
                     const propName = `guideTours${toPath}4Axis`;
