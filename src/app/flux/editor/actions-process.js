@@ -39,7 +39,7 @@ export const processActions = {
             toolPath.object = toolPath.object.clone();
             toolPathGroup.toolPathObjects.add(toolPath.object);
         });
-        toolPathGroup.selectToolPathById();
+        // toolPathGroup.selectToolPathById();
         dispatch(baseActions.updateState(headType, {
             needToPreview: false
         }));
