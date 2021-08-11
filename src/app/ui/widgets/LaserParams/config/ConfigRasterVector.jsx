@@ -103,6 +103,7 @@ class ConfigRasterVector extends PureComponent {
                                     step={1}
                                     onChange={this.actions.onChangeVectorThreshold}
                                     onAfterChange={this.actions.onAfterChangeVectorThreshold}
+                                    className="padding-right-8"
                                 />
                                 <Input
                                     disabled={disabled}

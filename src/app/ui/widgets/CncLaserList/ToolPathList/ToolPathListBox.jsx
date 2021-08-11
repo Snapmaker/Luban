@@ -223,7 +223,7 @@ const ToolPathListBox = (props) => {
             )}
             >
                 <div className={classNames(
-                    'height-176',
+                    'height-184',
                     'align-c',
                     'padding-vertical-4'
                 )}
@@ -235,11 +235,14 @@ const ToolPathListBox = (props) => {
                             'display-inline',
                             'height-40',
                             'padding-horizontal-16',
-                            'border-default-blue',
-                            'background-color-blue'
                         )}
                         >
-                            {i18n._('Select object to create toolpath')}
+                            <SvgIcon
+                                name="WarningTipsTips"
+                                type="static"
+                                color="#1890ff"
+                            />
+                            <span className={classNames('display-inline', 'height-40')}>{i18n._('Select object to create toolpath')}</span>
                         </div>
                     )}
 
@@ -320,7 +323,10 @@ const ToolPathListBox = (props) => {
                     'padding-horizontal-16',
                     'module-default-shadow',
                     'padding-bottom-16',
-                    'clearfix'
+                    'clearfix',
+                    // 'height-96',
+                    // 'padding-top-8'
+                    `${toolPaths.length !== 0 ? 'padding-top-8' : ''}`
                 )}
                 >
                     <div className={classNames(
@@ -360,8 +366,8 @@ const ToolPathListBox = (props) => {
                         />
                     </div>
                     <Button
-                        type="primary"
-                        priority="level-three"
+                        type="default"
+                        priority="level-two"
                         width="100%"
                         onClick={actions.createToolPath}
                         disabled={inProgress}

@@ -123,7 +123,7 @@ function ToolSelector({ toolDefinitions, setCurrentToolDefinition, setCurrentVal
                             className="sm-flex align-r"
                             clearable={false}
                             isGroup
-                            size="large"
+                            size="super-large"
                             valueObj={valueObj}
                             options={toolDefinitionOptions}
                             placeholder={i18n._('Choose profile')}

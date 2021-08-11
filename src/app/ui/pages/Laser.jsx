@@ -636,7 +636,8 @@ function Laser({ location }) {
                             disableInteraction: true,
                             intro: laserCncIntroStepSix(
                                 i18n._('Click to generate and preview the G-code file.'),
-                                i18n._('For laser engraving, you can preview the toolpath. For CNC carving, you can preview the toolpath and simulate the operation result.')
+                                i18n._('For laser engraving, you can preview the toolpath. For CNC carving, you can preview the toolpath and simulate the operation result.'),
+                                isRotate ? '/resources/images/guide-tours/laser_4_axis_priview.png' : '/resources/images/guide-tours/laser_3_axis_priview.png'
                             )
                         }, {
                             element: '.laser-preview-export-intro-part',

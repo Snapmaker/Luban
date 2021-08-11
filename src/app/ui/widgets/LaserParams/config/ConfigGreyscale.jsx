@@ -140,6 +140,7 @@ class ConfigGreyscale extends PureComponent {
                                         max={100}
                                         onChange={this.actions.onChangeContrast}
                                         onAfterChange={this.actions.onAfterChangeContrast}
+                                        className="padding-right-8"
                                     />
                                     <Input
                                         disabled={disabled}
@@ -169,6 +170,7 @@ class ConfigGreyscale extends PureComponent {
                                         max={100}
                                         onChange={this.actions.onChangeBrightness}
                                         onAfterChange={this.actions.onAfterChangeBrightness}
+                                        className="padding-right-8"
                                     />
                                     <Input
                                         disabled={disabled}
@@ -198,6 +200,7 @@ class ConfigGreyscale extends PureComponent {
                                         max={255}
                                         onChange={this.actions.onChangeWhiteClip}
                                         onAfterChange={this.actions.onAfterChangeWhiteClip}
+                                        className="padding-right-8"
                                     />
                                     <Input
                                         disabled={disabled}

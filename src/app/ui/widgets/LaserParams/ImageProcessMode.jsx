@@ -48,7 +48,7 @@ class ImageProcessMode extends PureComponent {
 
         return (
             <React.Fragment>
-                <div className={styles['laser-mode']}>
+                <div className={classNames(styles['laser-mode'], 'border-top-normal', 'margin-top-16', 'margin-bottom-8')}>
                     <Anchor className="sm-flex height-32 margin-vertical-8" onClick={this.actions.onToggleExpand}>
                         <span className="sm-flex-width heading-3">{i18n._('Processing Mode')}</span>
                         <SvgIcon

@@ -147,6 +147,7 @@ class ConfigHalftone extends PureComponent {
                                     max={50}
                                     onChange={this.actions.onChangeSize}
                                     onAfterChange={this.actions.onAfterChangeSize}
+                                    className="padding-right-8"
                                 />
                                 <NumberInput
                                     disabled={disabled}
@@ -175,6 +176,7 @@ class ConfigHalftone extends PureComponent {
                                     max={180}
                                     onChange={this.actions.onChangeAngle}
                                     onAfterChange={this.actions.onAfterChangeAngle}
+                                    className="padding-right-8"
                                 />
                                 <NumberInput
                                     disabled={disabled}
@@ -203,6 +205,7 @@ class ConfigHalftone extends PureComponent {
                                     max={255}
                                     onChange={this.actions.onChangeBWThreshold}
                                     onAfterChange={this.actions.onAfterChangeBWThreshold}
+                                    className="padding-right-8"
                                 />
                                 <NumberInput
                                     disabled={disabled}

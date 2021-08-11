@@ -8,7 +8,7 @@ import Anchor from '../components/Anchor';
 import SvgIcon from '../components/SvgIcon';
 import { normalizeNameDisplay } from '../../lib/normalize-range';
 
-function ModelItem({ model, visible, isSelected, styles, onSelect, onToggleVisible, inProgress }) {
+function ModelItem({ model, visible, isSelected, styles, onSelect, onToggleVisible, inProgress, placment }) {
     if (!model) {
         return null;
     }
@@ -32,12 +32,12 @@ function ModelItem({ model, visible, isSelected, styles, onSelect, onToggleVisib
     }
     const suffixLength = 7;
     const { prefixName, suffixName } = normalizeNameDisplay(modelName, suffixLength);
-
     return (
         <TipTrigger
             key={model.modelName}
             title={i18n._('Object')}
             content={model.modelName}
+            placement={placment || undefined}
         >
             <div
                 className={classNames(
@@ -89,7 +89,8 @@ ModelItem.propTypes = {
     isSelected: PropTypes.bool.isRequired,
     onSelect: PropTypes.func.isRequired,
     onToggleVisible: PropTypes.func.isRequired,
-    inProgress: PropTypes.bool.isRequired
+    inProgress: PropTypes.bool.isRequired,
+    placment: PropTypes.string
 };
 
 export default React.memo(ModelItem);

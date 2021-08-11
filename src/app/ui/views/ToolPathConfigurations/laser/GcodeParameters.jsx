@@ -123,7 +123,7 @@ class GcodeParameters extends PureComponent {
             <React.Fragment>
                 {(!isSVG || isMethodFill) && (
                     <div>
-                        <div className="border-bottom-normal padding-bottom-4 margin-bottom-16">
+                        <div className="border-bottom-normal padding-bottom-4 margin-vertical-16">
                             <SvgIcon
                                 name="TitleSetting"
                                 size={24}
@@ -140,7 +140,7 @@ class GcodeParameters extends PureComponent {
                     </div>
                 )}
                 <div>
-                    <div className="border-bottom-normal padding-bottom-4 margin-bottom-16">
+                    <div className="border-bottom-normal padding-bottom-4 margin-vertical-16">
                         <SvgIcon
                             name="TitleSetting"
                             size={24}
@@ -157,7 +157,7 @@ class GcodeParameters extends PureComponent {
                 </div>
                 {isSVG && !isMethodFill && (
                     <div>
-                        <div className="border-bottom-normal padding-bottom-4 margin-bottom-16">
+                        <div className="border-bottom-normal padding-bottom-4 margin-vertical-16">
                             <SvgIcon
                                 name="TitleSetting"
                                 size={24}
@@ -175,7 +175,7 @@ class GcodeParameters extends PureComponent {
                 )}
                 {fixedPowerEnabled !== undefined && (
                     <div>
-                        <div className="border-bottom-normal padding-bottom-4 margin-bottom-16">
+                        <div className="border-bottom-normal padding-bottom-4 margin-vertical-16">
                             <SvgIcon
                                 name="TitleSetting"
                                 size={24}

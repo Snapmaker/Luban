@@ -240,7 +240,7 @@ class Configurations extends PureComponent {
                 )}
                 >
                     <div className="sm-flex height-40 border-bottom-normal padding-horizontal-16">
-                        <span className="sm-flex-width heading-3">{i18n._('General Parameters')}</span>
+                        <span className="sm-flex-width main-text-normal">{i18n._('General Parameters')}</span>
                         <SvgIcon
                             name="Manage"
                             size={32}

@@ -98,6 +98,7 @@ class ConfigRasterBW extends PureComponent {
                                     max={255}
                                     onChange={this.actions.onChangeBWThreshold}
                                     onAfterChange={this.actions.onAfterChangeBWThreshold}
+                                    className="padding-right-8"
                                 />
                                 <NumberInput
                                     disabled={disabled}

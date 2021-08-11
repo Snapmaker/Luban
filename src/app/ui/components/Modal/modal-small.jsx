@@ -87,7 +87,7 @@ class ModalSmallHOC extends PureComponent {
                         )}
                         {isImage && (<img src={img} alt="......" />)}
                     </div>
-                    <div className={styles['modal-small-body-text']}>
+                    <div className={styles[`${isImage ? 'modal-small-body-text' : 'modal-small-body-text-svg'}`]}>
                         {i18n._(title)}
                     </div>
                     {text && (

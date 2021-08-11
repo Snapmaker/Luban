@@ -239,7 +239,7 @@ class Output extends PureComponent {
                                         // 'margin-top-10',
                                         displayedType === gcodeLine ? 'display-block' : 'display-none'
                                     )}
-                                    suffixIcon={<SvgIcon name="DropdownOpen" type="static" />}
+                                    suffixIcon={<SvgIcon name="DropdownOpen" type="static" color="#D5D6D9" />}
                                 >
                                     {i18n._('Export')}
                                 </Button>
