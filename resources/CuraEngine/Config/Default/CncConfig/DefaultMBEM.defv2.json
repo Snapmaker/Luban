@@ -64,7 +64,7 @@
             "description": "Enter the depth of each carving step."
         },
         "step_over": {
-            "default_value": 0.25,
+            "default_value": 1.2,
             "type": "float",
             "min": 0.01,
             "unit": "mm",

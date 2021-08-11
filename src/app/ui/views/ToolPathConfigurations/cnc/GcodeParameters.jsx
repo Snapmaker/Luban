@@ -115,9 +115,9 @@ class GcodeParameters extends PureComponent {
                                             <Input
                                                 className="sm-parameter-row__input"
                                                 value={tabHeight}
-                                                min={-targetDepth}
-                                                max={0}
-                                                step={0.5}
+                                                min={0}
+                                                max={targetDepth}
+                                                step={0.1}
                                                 onChange={(value) => { this.props.updateGcodeConfig({ tabHeight: value }); }}
                                                 disabled={!enableTab}
                                             />

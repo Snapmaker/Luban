@@ -180,6 +180,7 @@ export function loadMaterialDefinitions() {
     const defaultDefinitionLoader = loadDefinitionLoaderByFilename('material.pla.def.json');
     predefined.push('material.pla.def.json');
     predefined.push('material.abs.def.json');
+    predefined.push('material.petg.def.json');
 
 
     const configDir = DataStorage.configDir;
@@ -262,6 +263,7 @@ export function loadDefaultDefinitions(series) {
     predefined.push('quality.high_quality.def.json');
     predefined.push('material.pla.def.json');
     predefined.push('material.abs.def.json');
+    predefined.push('material.petg.def.json');
 
     const configDir = `${DataStorage.configDir}`;
     let defaultFilenames = fs.readdirSync(`${configDir}/${configPath}`);
