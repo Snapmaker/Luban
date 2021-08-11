@@ -115,7 +115,8 @@ export const actions = {
             envObj.toolpaths = toolPaths;
         }
         const content = JSON.stringify(envObj);
-        if (force || (lastString && content !== lastString)) {
+
+        if (force || (content !== lastString)) {
             dispatch(actions.updateState(headType, { content, unSaved: true, initState: false }));
             await api.saveEnv({ content });
         }
@@ -401,14 +402,13 @@ export const actions = {
                 } else {
                     await dispatch(actions.setOpenedFileWithType(headType, JSON.parse(file)));
                 }
-                console.log('opened content', content);
                 await dispatch(actions.updateState(headType, { unSaved: false, content }));
             } else {
                 await dispatch(actions.updateState(headType, { unSaved: false, openedFile: null }));
-                await dispatch(actions.setOpenedFileWithUnSaved(headType, true));
+                // await dispatch(actions.setOpenedFileWithUnSaved(headType, true));
             }
         } else if (tail === 'gcode') {
-            await dispatch(workspaceActions.uploadGcodeFile(file));
+            dispatch(workspaceActions.uploadGcodeFile(file));
             history.push('/workspace');
         }
     },
