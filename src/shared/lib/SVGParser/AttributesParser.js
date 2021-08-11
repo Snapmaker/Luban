@@ -246,6 +246,7 @@ class AttributesParser {
             const value = node.$[key];
             this.parseAttribute(attributes, parentAttributes, key, value, isTextElement);
         });
+        node.$.style = '';
         // make text have the right x
         if (isTextElement) {
             if ((isUndefined(attributes.x))) {
