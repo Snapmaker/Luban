@@ -19,11 +19,11 @@ import { HEAD_3DP, PRINTING_MANAGER_TYPE_MATERIAL } from '../../../constants';
 //     'material_flow',
 //     'material_print_temperature',
 //     'material_print_temperature_layer_0',
-//     'material_final_print_temperature',
 //     'cool_fan_speed',
 //     'machine_heated_bed',
 //     'material_bed_temperature',
-//     'material_bed_temperature_layer_0'
+//     'material_bed_temperature_layer_0',
+//     'material_flow_layer_0'
 // ];
 function Material({ widgetActions }) {
     const materialDefinitions = useSelector(state => state?.printing?.materialDefinitions, shallowEqual);

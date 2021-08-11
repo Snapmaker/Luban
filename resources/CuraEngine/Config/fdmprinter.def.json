@@ -2239,8 +2239,9 @@
                     "default_value": 100,
                     "value": "material_flow",
                     "type": "float",
-                    "minimum_value": "0.0001",
+                    "minimum_value": "1",
                     "minimum_value_warning": "50",
+                    "maximum_value": "1000",
                     "maximum_value_warning": "150",
                     "settable_per_mesh": true
                 },
@@ -5479,8 +5480,7 @@
                     "options":
                     {
                         "normal": "Normal",
-                        "surface": "Surface",
-                        "both": "Both"
+                        "surface": "Surface"
                     },
                     "default_value": "normal",
                     "settable_per_mesh": true

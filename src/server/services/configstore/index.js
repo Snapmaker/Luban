@@ -14,7 +14,7 @@ const defaultState = { // default state
 const allMacros = [
     {
         name: 'M502&M500 Restore Factory Defaults',
-        content: 'M500'
+        content: 'M502\nM500'
     },
     {
         name: 'M200 S0 Controller Status',

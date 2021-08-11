@@ -32,11 +32,11 @@ class Menu extends PureComponent {
     }
 
     componentDidMount() {
-        window.document.body.addEventListener('click', this.actions.hideMenu);
+        window.document.body.childNodes[0].addEventListener('click', this.actions.hideMenu);
     }
 
     componentWillUnmount() {
-        window.document.body.removeEventListener('click', this.actions.hideMenu);
+        window.document.body.childNodes[0].removeEventListener('click', this.actions.hideMenu);
     }
 
     render() {

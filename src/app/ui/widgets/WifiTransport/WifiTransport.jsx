@@ -221,6 +221,9 @@ class WifiTransport extends PureComponent {
         }
         UniApi.Event.on('appbar-menu:workspace.export-gcode', this.actions.onExport);
         UniApi.Event.on('appbar-menu:workspace.import', this.actions.importFile);
+        if (this.props.gcodeFiles.length > 0) {
+            this.actions.onSelectFile(this.props.gcodeFiles[0].uploadName);
+        }
     }
 
     componentWillReceiveProps(nextProps) {

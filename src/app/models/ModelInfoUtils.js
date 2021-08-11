@@ -304,7 +304,7 @@ const defaultGcodeConfigs = {
         stopHeight: 10,
         enableTab: false,
         tabWidth: 2,
-        tabHeight: -0.5,
+        tabHeight: 1,
         tabSpace: 24,
         anchor: 'Center',
         jogSpeed: 1500,
