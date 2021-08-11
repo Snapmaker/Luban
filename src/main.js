@@ -266,7 +266,7 @@ const showLoadingWindow = (loadingWindow) => {
         }, 50);
     });
     loadingWindow.show();
-}
+};
 
 const createWindow = () => {
     MenuBuilder.hideMenu();
@@ -279,7 +279,7 @@ const createWindow = () => {
     if (process.platform === 'win32') {
         loadingWindow.once('ready-to-show', () => {
             showLoadingWindow(loadingWindow);
-        })
+        });
     } else {
         showLoadingWindow(loadingWindow);
     }

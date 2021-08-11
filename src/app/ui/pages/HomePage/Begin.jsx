@@ -11,7 +11,7 @@ import styles from './styles.styl';
 import i18n from '../../../lib/i18n';
 import { actions as projectActions } from '../../../flux/project';
 import Workspace from '../Workspace';
-import { COORDINATE_MODE_CENTER, COORDINATE_MODE_BOTTOM_CENTER, HEAD_LASER, HEAD_CNC, MAX_RECENT_FILES_LENGTH } from '../../../constants';
+import { HEAD_3DP, HEAD_LASER, HEAD_CNC, MAX_RECENT_FILES_LENGTH } from '../../../constants';
 import UniApi from '../../../lib/uni-api';
 
 const Begin = () => {
