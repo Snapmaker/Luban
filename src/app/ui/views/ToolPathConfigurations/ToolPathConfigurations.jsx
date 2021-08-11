@@ -60,6 +60,7 @@ function ToolPathConfigurations(props) {
             const newDefinition = _.cloneDeep(currentToolDefinition);
             newDefinition.settings[key].default_value = value;
             setCurrentToolDefinition(newDefinition);
+            dispatch(editorActions.refreshToolPathPreview(props.headType));
         },
         checkIfDefinitionModified() {
             if (props.headType === HEAD_CNC) {
@@ -108,6 +109,7 @@ function ToolPathConfigurations(props) {
             await dispatch(editorActions.selectToolPathById(props.headType));
             await dispatch(editorActions.selectToolPathById(props.headType, toolpath?.id));
 
+            dispatch(editorActions.refreshToolPathPreview(props.headType));
             props.onClose && props.onClose();
         },
         updateToolPath(option) {
@@ -165,6 +167,7 @@ function ToolPathConfigurations(props) {
                 }
             };
             setToolPath(nToolPath);
+            dispatch(editorActions.refreshToolPathPreview(props.headType));
         }
     };
     if (!toolPath) {

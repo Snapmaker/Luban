@@ -395,6 +395,7 @@ class ToolPathGroup {
         const toolPath = this._getToolPath(toolPathId);
         if (toolPath) {
             toolPath.updateState({ ...newState, ...options });
+            toolPath.setWarningStatus();
             // toolPath.commitGenerateToolPath();
         }
 
@@ -480,7 +481,7 @@ class ToolPathGroup {
         if (!toolPaths) {
             return null;
         }
-        return toolPaths.map(v => v.getState());
+        return toolPaths.map(v => v.getState(true));
     }
 
     getCommitGenerateViewPathInfos(options) {

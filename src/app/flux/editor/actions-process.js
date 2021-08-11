@@ -15,10 +15,20 @@ import Operations from '../operation-history/Operations';
 let toastId;
 export const processActions = {
     recalculateAllToolPath: (headType) => (dispatch, getState) => {
-        const { toolPathGroup } = getState()[headType];
+        const { toolPathGroup, shouldGenerateGcodeCounter } = getState()[headType];
+        dispatch(baseActions.updateState(headType, {
+            shouldGenerateGcodeCounter: shouldGenerateGcodeCounter + 1
+        }));
         toolPathGroup.toolPaths.forEach((toolPath) => {
             dispatch(processActions.commitGenerateToolPath(headType, toolPath.id));
         });
+    },
+
+    refreshToolPathPreview: (headType) => (dispatch, getState) => {
+        const { displayedType } = getState()[headType];
+        if (displayedType === DISPLAYED_TYPE_TOOLPATH) {
+            dispatch(processActions.preview(headType));
+        }
     },
 
     preview: (headType) => (dispatch, getState) => {
@@ -28,7 +38,7 @@ export const processActions = {
             toolPath.object = toolPath.object.clone();
             toolPathGroup.toolPathObjects.add(toolPath.object);
         });
-        toolPathGroup.selectToolPathById();
+        // toolPathGroup.selectToolPathById();
         dispatch(baseActions.updateState(headType, {
             needToPreview: false
         }));
@@ -189,7 +199,7 @@ export const processActions = {
     },
 
     saveToolPath: (headType, toolPath) => (dispatch, getState) => {
-        const { toolPathGroup, materials, autoPreviewEnabled } = getState()[headType];
+        const { toolPathGroup, materials, autoPreviewEnabled, displayedType } = getState()[headType];
         if (toolPathGroup.getToolPath(toolPath.id)) {
             toolPathGroup.updateToolPath(toolPath.id, toolPath, { materials });
         } else {
@@ -198,13 +208,15 @@ export const processActions = {
         if (autoPreviewEnabled) {
             dispatch(processActions.preview(headType));
         }
-        dispatch(baseActions.updateState(headType, {
-            simulationNeedToPreview: true,
-            displayedType: DISPLAYED_TYPE_MODEL,
-            needToPreview: true,
-            updatingToolPath: null,
-            isChangedAfterGcodeGenerating: true
-        }));
+        if (displayedType !== DISPLAYED_TYPE_TOOLPATH) {
+            dispatch(baseActions.updateState(headType, {
+                simulationNeedToPreview: true,
+                displayedType: DISPLAYED_TYPE_MODEL,
+                needToPreview: true,
+                updatingToolPath: null,
+                isChangedAfterGcodeGenerating: true
+            }));
+        }
     },
 
     updateToolPath: (headType, toolPathId, newState) => (dispatch, getState) => {
@@ -265,8 +277,8 @@ export const processActions = {
         dispatch(operationHistoryActions.setOperations(headType, operations));
         dispatch(processActions.showSimulationInPreview(headType, false));
         dispatch(baseActions.updateState(headType, {
-            displayedType: DISPLAYED_TYPE_MODEL,
-            needToPreview: true,
+            // displayedType: DISPLAYED_TYPE_MODEL,
+            needToPreview: false,
             isChangedAfterGcodeGenerating: true
         }));
     },
@@ -283,7 +295,7 @@ export const processActions = {
     },
 
     onGenerateToolPath: (headType, taskResult) => async (dispatch, getState) => {
-        const { toolPathGroup } = getState()[headType];
+        const { toolPathGroup, shouldGenerateGcodeCounter } = getState()[headType];
         await toolPathGroup.onGenerateToolPath(taskResult);
         if (taskResult.taskStatus === 'failed') {
             dispatch(baseActions.updateState(headType, {
@@ -295,9 +307,12 @@ export const processActions = {
                 stage: CNC_LASER_STAGE.GENERATE_TOOLPATH_SUCCESS,
                 progress: 1
             }));
-            if (toolPathGroup.canGenerateGcode()) {
-                dispatch(processActions.commitGenerateGcode(headType));
-            }
+            // if (toolPathGroup.canGenerateGcode()) {
+            //     dispatch(processActions.commitGenerateGcode(headType));
+            // }
+            dispatch(baseActions.updateState(headType, {
+                shouldGenerateGcodeCounter: shouldGenerateGcodeCounter + 1
+            }));
         }
     },
 

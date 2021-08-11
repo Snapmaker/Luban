@@ -494,6 +494,7 @@ function Cnc({ location }) {
                     dispatch(editorActions.changeCoordinateMode(HEAD_CNC,
                         jobTypeState.coordinateMode, jobTypeState.coordinateSize));
                     dispatch(editorActions.updateMaterials(HEAD_CNC, jobTypeState.materials));
+                    dispatch(editorActions.scaleCanvasToFit(HEAD_CNC));
                     setShowJobType(false);
                 }
             }

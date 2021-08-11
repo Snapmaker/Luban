@@ -36,7 +36,7 @@ class Output extends PureComponent {
 
         modelGroup: PropTypes.object.isRequired,
         toolPathGroup: PropTypes.object.isRequired,
-        canGenerateGcode: PropTypes.bool.isRequired,
+        shouldGenerateGcodeCounter: PropTypes.number.isRequired,
         hasModel: PropTypes.bool,
         hasToolPathModel: PropTypes.bool,
         displayedType: PropTypes.string.isRequired,
@@ -45,6 +45,7 @@ class Output extends PureComponent {
         workflowState: PropTypes.string.isRequired,
         gcodeFile: PropTypes.object,
         setThumbnail: PropTypes.func.isRequired,
+        commitGenerateGcode: PropTypes.func.isRequired,
         commitGenerateViewPath: PropTypes.func.isRequired,
         renderGcodeFile: PropTypes.func.isRequired,
         createToolPath: PropTypes.func.isRequired,
@@ -142,8 +143,9 @@ class Output extends PureComponent {
                 body: i18n._('Failed to preview, please modify parameters and try again.')
             });
         }
-        if (nextProps.canGenerateGcode !== this.props.canGenerateGcode && nextProps.canGenerateGcode) {
+        if (nextProps.shouldGenerateGcodeCounter !== this.props.shouldGenerateGcodeCounter) {
             this.actions.onGenerateThumbnail();
+            this.props.commitGenerateGcode();
         }
     }
 
@@ -168,14 +170,14 @@ class Output extends PureComponent {
             <Menu>
                 <Menu.Item
                     onClick={actions.onLoadGcode}
-                    disabled={inProgress || !hasModel || workflowState === 'running' || isGcodeGenerating || gcodeFile === null}
+                    disabled={inProgress || disablePreview || !hasModel || workflowState === 'running' || isGcodeGenerating || gcodeFile === null}
                 >
                     <div className={classNames('align-c', 'padding-vertical-4')}>
                         {i18n._('Load G-code to Workspace')}
                     </div>
                 </Menu.Item>
                 <Menu.Item
-                    disabled={inProgress || !hasModel || workflowState === 'running' || isGcodeGenerating || gcodeFile === null}
+                    disabled={inProgress || disablePreview || !hasModel || workflowState === 'running' || isGcodeGenerating || gcodeFile === null}
                     onClick={actions.onExport}
                 >
                     <div className={classNames('align-c', 'padding-vertical-4')}>
@@ -249,7 +251,7 @@ class Output extends PureComponent {
                                 <Button
                                     type="primary"
                                     priority="level-one"
-                                    disabled={inProgress || !hasModel || workflowState === 'running' || isGcodeGenerating || gcodeFile === null}
+                                    disabled={inProgress || disablePreview || !hasModel || workflowState === 'running' || isGcodeGenerating || gcodeFile === null}
                                     className={classNames(
                                         'position-ab',
                                         // 'bottom-ne-8',
@@ -280,12 +282,16 @@ const mapStateToProps = (state, ownProps) => {
     const { workflowState } = state.machine;
     const { widgets } = state.widget;
     const { headType } = ownProps;
-    const { isGcodeGenerating, autoPreviewEnabled, needToPreview,
+    const { isGcodeGenerating, autoPreviewEnabled, needToPreview, shouldGenerateGcodeCounter,
         previewFailed, modelGroup, toolPathGroup, displayedType, gcodeFile, inProgress, page } = state[headType];
 
-    const canGenerateGcode = toolPathGroup.canGenerateGcode();
+    // const canGenerateGcode = toolPathGroup.canGenerateGcode();
     const hasToolPathModel = (toolPathGroup.toolPaths.length > 0);
-    const disablePreview = toolPathGroup.toolPaths.every(item => item.visible === false);
+    const toolPathRelatedModelInvisible = toolPathGroup.toolPaths.every(toolPath => {
+        const toolPathRelatedModels = modelGroup.models.filter(model => toolPath.modelIDs.includes(model.modelID));
+        return toolPathRelatedModels.every(model => model.visible === false);
+    });
+    const disablePreview = toolPathGroup.toolPaths.every(item => item.visible === false) || toolPathRelatedModelInvisible;
 
     return {
         page,
@@ -296,7 +302,7 @@ const mapStateToProps = (state, ownProps) => {
         hasToolPathModel,
         displayedType,
         toolPathGroup,
-        canGenerateGcode,
+        shouldGenerateGcodeCounter,
         isGcodeGenerating,
         workflowState,
         previewFailed,
@@ -321,6 +327,7 @@ const mapDispatchToProps = (dispatch, ownProps) => {
         createToolPath: () => dispatch(editorActions.createToolPath(headType)),
         exportFile: (targetFile) => dispatch(projectActions.exportFile(targetFile)),
         commitGenerateViewPath: () => dispatch(editorActions.commitGenerateViewPath(headType)),
+        commitGenerateGcode: () => dispatch(editorActions.commitGenerateGcode(headType)),
         setAutoPreview: (autoPreviewEnabled) => dispatch(editorActions.setAutoPreview(headType, autoPreviewEnabled)),
         preview: () => dispatch(editorActions.preview(headType))
     };

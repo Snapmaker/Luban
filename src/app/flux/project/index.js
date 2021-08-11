@@ -309,7 +309,7 @@ export const actions = {
             const result = await UniApi.Dialog.showMessageBox({
                 ...dialogOptions,
                 type: 'warning',
-                defaultId: 2,
+                defaultId: 0,
                 cancelId: 1,
                 buttons: [
                     i18n._('Save'),

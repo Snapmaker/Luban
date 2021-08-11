@@ -127,6 +127,7 @@ function ToolPathFastConfigurations(props) {
             await dispatch(cncActions.changeActiveToolListDefinition(value?.definitionId, value?.name, true));
         }
         saveToolPath(value);
+        dispatch(editorActions.refreshToolPathPreview(props.headType));
     }
     function handleSetEditingToolpath() {
         props.setEditingToolpath(toolPath);
@@ -175,6 +176,7 @@ function ToolPathFastConfigurations(props) {
                 }
             };
             dispatch(editorActions.saveToolPath(props.headType, newToolPath));
+            dispatch(editorActions.refreshToolPathPreview(props.headType));
         },
         // checkIfDefinitionModified() {
         //     if (props.headType === HEAD_CNC) {
@@ -234,6 +236,7 @@ function ToolPathFastConfigurations(props) {
                 }
             };
             dispatch(editorActions.saveToolPath(props.headType, newToolPath));
+            dispatch(editorActions.refreshToolPathPreview(props.headType));
         }
     };
     if (!toolPath) {

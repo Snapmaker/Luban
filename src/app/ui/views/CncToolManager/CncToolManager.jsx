@@ -55,6 +55,7 @@ function CncToolManager({ closeToolManager, shouldSaveToolpath = false, saveTool
                 saveToolPath && saveToolPath(newDefinition);
                 setCurrentToolDefinition && setCurrentToolDefinition(newDefinition);
             }
+            dispatch(editorActions.refreshToolPathPreview(HEAD_CNC));
         },
         onSaveDefinitionForManager: async (definition) => {
             dispatch(cncActions.updateToolListDefinition(definition));
