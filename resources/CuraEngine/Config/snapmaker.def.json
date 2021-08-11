@@ -143,8 +143,7 @@
             "description": "Treat the model as a surface only, a volume, or volumes with loose surfaces. The normal print mode only prints enclosed volumes. \"Surface\" prints a single wall tracing the mesh surface with no infill and no top/bottom skin. \"Both\" prints enclosed volumes like normal and any remaining polygons as surfaces.",
             "options": {
                 "normal": "Normal",
-                "surface": "Surface",
-                "both": "Both"
+                "surface": "Surface"
             }
         },
         "magic_spiralize": {
@@ -158,6 +157,10 @@
         "material_bed_temperature_layer_0": {
             "label": "Initial Heated Bed Temperature",
             "description": "The temperature used for the heated bed at the first layer."
+        },
+        "material_flow_layer_0": {
+            "label": "Initial Layer Flow",
+            "description": "Flow compensation for the first layer: the amount of material extruded on the initial layer is multiplied by this value."
         },
         "material_bed_temp_prepend": {
             "label": "Include Heated Bed Temperature",

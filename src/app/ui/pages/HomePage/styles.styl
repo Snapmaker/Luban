@@ -151,16 +151,23 @@
               margin-right: 2.88vw;
               height 55.3px
               line-height 75.3px;
-              > span {
-                display inline-block;
-                width 90%
-                overflow hidden
-                white-space nowrap
-                text-overflow ellipsis
-                &:hover {
+              &:hover {
                   cursor pointer
-                }
               }
+                .file-name {
+                    display: inline-block;
+                    max-width: calc(95% - 90px);
+                    overflow hidden
+                    white-space nowrap
+                    text-overflow: ellipsis
+                }
+                .suffix-name {
+                    display: inline-block;
+                    width: 90px;
+                    overflow hidden
+                    white-space nowrap
+                    text-overflow ellipsis
+                }
             }
             .file-item:nth-child(4n+4) {
               margin-right 0px

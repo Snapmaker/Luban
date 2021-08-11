@@ -133,15 +133,20 @@ class CncParameters extends PureComponent {
             <React.Fragment>
                 <div className="border-default-grey-1 border-radius-8 padding-vertical-8 padding-horizontal-16">
                     <div className="sm-parameter-container">
-                        <div className="sm-parameter-row">
-                            <span className="sm-parameter-row__label">{i18n._('Name')}</span>
-                            <TextInput
-                                className="sm-parameter-row__input"
-                                size="large"
-                                value={name}
-                                onChange={(event) => { this.props.updateToolPath({ name: event.target.value }); }}
-                            />
-                        </div>
+                        <TipTrigger
+                            title={i18n._('Name')}
+                            content={i18n._('Enter the toolpath name.')}
+                        >
+                            <div className="sm-parameter-row">
+                                <span className="sm-parameter-row__label">{i18n._('Name')}</span>
+                                <TextInput
+                                    className="sm-parameter-row__input"
+                                    size="large"
+                                    value={name}
+                                    onChange={(event) => { this.props.updateToolPath({ name: event.target.value }); }}
+                                />
+                            </div>
+                        </TipTrigger>
                         {multipleEngine && (
                             <div className="sm-parameter-row">
                                 <span className="sm-parameter-row__label">{i18n._('Use legacy engine')}</span>
@@ -159,11 +164,11 @@ class CncParameters extends PureComponent {
                                     title={i18n._('method')}
                                     content={(
                                         <div>
-                                            <p>{i18n._('Select a carving path:')}</p>
+                                            <p>{i18n._('Set the processing method of the object.')}</p>
                                             <ul>
-                                                <li><b>{i18n._('On the Path')}</b>: {i18n._('Carve along the shape of the image.')}</li>
-                                                <li><b>{i18n._('Outline')}</b>: {i18n._('Carve along the contour of the image.')}</li>
-                                                <li><b>{i18n._('Fill')}</b>: {i18n._('Carve away the inner of the image.')}</li>
+                                                <li><b>{i18n._('On the Path')}</b>: {i18n._('Carves along the shape of the object.')}</li>
+                                                <li><b>{i18n._('Outline')}</b>: {i18n._('Carves along the outline of the object.')}</li>
+                                                <li><b>{i18n._('Fill')}</b>: {i18n._('Carves away the inner area of the object.')}</li>
                                             </ul>
                                         </div>
                                     )}
@@ -209,7 +214,7 @@ class CncParameters extends PureComponent {
                         {isImage && (
                             <TipTrigger
                                 title={i18n._('Method')}
-                                content={i18n._('Method')}
+                                content={i18n._('Set the processing method of the 2D object or 3D model.')}
                             >
                                 <div className="sm-parameter-row">
                                     <span className="sm-parameter-row__label">{i18n._('Method')}</span>
@@ -227,7 +232,7 @@ class CncParameters extends PureComponent {
                                 {!isRotate && (
                                     <TipTrigger
                                         title={i18n._('Method')}
-                                        content={i18n._('Method')}
+                                        content={i18n._('Set the processing method of the 2D object or 3D model.')}
                                     >
                                         <div className="sm-parameter-row">
                                             <span className="sm-parameter-row__label">{i18n._('Method')}</span>
@@ -244,7 +249,15 @@ class CncParameters extends PureComponent {
                                     <React.Fragment>
                                         <TipTrigger
                                             title={i18n._('Slicing Mode')}
-                                            content={i18n._('Select the slicing mode of the mesh toolpath')}
+                                            content={(
+                                                <div>
+                                                    <p>{i18n._('Set the processing method of the 3D model.')}</p>
+                                                    <ul>
+                                                        <li><b>{i18n._('Rotation')}</b>: {i18n._('The X axis is fixed during machining.')}</li>
+                                                        <li><b>{i18n._('Linkage')}</b>: {i18n._('The X, Y, Z, and B axes will move during machining. Suitable for machining complicated models.')}</li>
+                                                    </ul>
+                                                </div>
+                                            )}
                                         >
                                             <div className="sm-parameter-row">
                                                 <span className="sm-parameter-row__label">{i18n._('Method')}</span>
@@ -285,7 +298,7 @@ class CncParameters extends PureComponent {
                         />
                     </div>
                     <div>
-                        <div className="border-bottom-normal padding-bottom-4 margin-bottom-16">
+                        <div className="border-bottom-normal padding-bottom-4 margin-vertical-16">
                             <SvgIcon
                                 name="TitleSetting"
                                 size={24}
@@ -307,7 +320,7 @@ class CncParameters extends PureComponent {
                         />
                     </div>
                     <div>
-                        <div className="border-bottom-normal padding-bottom-4 margin-bottom-16">
+                        <div className="border-bottom-normal padding-bottom-4 margin-vertical-16">
                             <SvgIcon
                                 name="TitleSetting"
                                 size={24}
@@ -323,7 +336,7 @@ class CncParameters extends PureComponent {
                     </div>
                     {useCncTabConfig && (
                         <div>
-                            <div className="border-bottom-normal padding-bottom-4 margin-bottom-16">
+                            <div className="border-bottom-normal padding-bottom-4 margin-vertical-16">
                                 <SvgIcon
                                     name="TitleSetting"
                                     size={24}

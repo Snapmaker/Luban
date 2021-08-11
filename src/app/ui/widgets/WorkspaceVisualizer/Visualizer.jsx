@@ -718,6 +718,7 @@ class Visualizer extends Component {
                         title={i18n._('Emergency Stop')}
                         text={i18n._('You have pressed the Emergency Stop Button. Solve the emergency and reconnect Luban.')}
                         img="WarningTipsEmergencyStop"
+                        iconColor="#FF4D4F"
                         onClose={this.actions.closeModal}
                     />
                 )}
@@ -728,6 +729,7 @@ class Visualizer extends Component {
                         text={i18n._('One or both of the enclosure panels is/are opened. Please close the panel(s) to continue printing.')}
                         subtext={i18n._('Please wait one second after you close the door to proceed.')}
                         img="WarningTipsWarning"
+                        iconColor="#FF4D4F"
                     />
                 )}
             </div>

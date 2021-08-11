@@ -40,6 +40,38 @@ class LaserParameters extends PureComponent {
                     movementMode: options.value
                 });
             }
+        },
+        updateGcodeConfig: (option) => {
+            // Movement Mode
+            if (option.movementMode === 'greyscale-dot') {
+                option.dwellTime = 5;
+                option.fillInterval = 0.14;
+                option.jogSpeed = 2500;
+                option.workSpeed = 2500;
+                option.fixedPower = 60;
+            }
+            if (option.movementMode === 'greyscale-line') {
+                option.fillInterval = 0.25;
+                option.jogSpeed = 3000;
+                option.workSpeed = 500;
+                option.fixedPower = 100;
+            }
+
+            // Fill Enabled
+            if (option.fillEnabled === true) {
+                option.fillInterval = 0.25;
+                option.jogSpeed = 3000;
+                option.workSpeed = 500;
+                option.fixedPower = 100;
+            }
+            if (option.fillEnabled === false) {
+                option.jogSpeed = 3000;
+                option.workSpeed = 140;
+                option.multiPasses = 2;
+                option.multiPassDepth = 0.6;
+                option.fixedPower = 100;
+            }
+            this.props.updateGcodeConfig(option);
         }
     };
 
@@ -60,14 +92,19 @@ class LaserParameters extends PureComponent {
             <React.Fragment>
                 <div className="border-default-grey-1 border-radius-8 padding-vertical-8 padding-horizontal-16">
                     <div className="sm-parameter-container">
-                        <div className="position-re sm-flex justify-space-between height-32 margin-vertical-8">
-                            <span>{i18n._('Name')}</span>
-                            <TextInput
-                                size="large"
-                                value={name}
-                                onChange={(event) => { this.props.updateToolPath({ name: event.target.value }); }}
-                            />
-                        </div>
+                        <TipTrigger
+                            title={i18n._('Name')}
+                            content={i18n._('Enter the toolpath name.')}
+                        >
+                            <div className="position-re sm-flex justify-space-between height-32 margin-vertical-8">
+                                <span>{i18n._('Name')}</span>
+                                <TextInput
+                                    size="large"
+                                    value={name}
+                                    onChange={(event) => { this.props.updateToolPath({ name: event.target.value }); }}
+                                />
+                            </div>
+                        </TipTrigger>
                         {multipleEngine && (
                             <div className="position-re sm-flex justify-space-between height-32 margin-vertical-8">
                                 <span>{i18n._('Use legacy engine')}</span>
@@ -82,8 +119,16 @@ class LaserParameters extends PureComponent {
                         <div>
                             {isSVG && (
                                 <TipTrigger
-                                    title={i18n._('Line Direction')}
-                                    content={i18n._('Select the direction of the engraving path.')}
+                                    title={i18n._('Method')}
+                                    content={(
+                                        <div>
+                                            <p>{i18n._('Set the processing method of the object.')}</p>
+                                            <ul>
+                                                <li><b>{i18n._('Fill')}</b>: {i18n._('Fills the object with lines or dots.')}</li>
+                                                <li><b>{i18n._('On the Path')}</b>: {i18n._('Engraves along the shape of the object.')}</li>
+                                            </ul>
+                                        </div>
+                                    )}
                                 >
                                     <div className="position-re sm-flex justify-space-between height-32 margin-vertical-8">
                                         <span>{i18n._('Method')}</span>
@@ -102,7 +147,7 @@ class LaserParameters extends PureComponent {
                                                 label: i18n._('On The Path')
                                             }]}
                                             value={fillMethod}
-                                            onChange={(option) => { this.props.updateGcodeConfig({ fillEnabled: option.value === 'fill' }); }}
+                                            onChange={(option) => { this.actions.updateGcodeConfig({ fillEnabled: option.value === 'fill' }); }}
                                         />
                                     </div>
                                 </TipTrigger>
@@ -110,7 +155,7 @@ class LaserParameters extends PureComponent {
                             {isImage && (
                                 <TipTrigger
                                     title={i18n._('Line Direction')}
-                                    content={i18n._('Select the direction of the engraving path.')}
+                                    content={i18n._('Set the direction of the engraved path. Engraves the path in a horizontal, vertical, or diagonal direction.')}
                                 >
                                     <div className="position-re sm-flex justify-space-between height-32 margin-vertical-8">
                                         <span>{i18n._('Method')}</span>
@@ -129,6 +174,7 @@ class LaserParameters extends PureComponent {
                                             searchable={false}
                                             value={defaultFillEnabled}
                                             onChange={() => {}}
+                                            disabled="true"
                                         />
                                     </div>
                                 </TipTrigger>
@@ -137,7 +183,7 @@ class LaserParameters extends PureComponent {
                     </div>
                     <GcodeParameters
                         toolPath={this.props.toolPath}
-                        updateGcodeConfig={this.props.updateGcodeConfig}
+                        updateGcodeConfig={this.actions.updateGcodeConfig}
                     />
                 </div>
             </React.Fragment>

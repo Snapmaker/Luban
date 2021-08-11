@@ -13,7 +13,6 @@ import DeleteToolPathOperation from '../operation-history/DeleteToolPathOperatio
 import Operations from '../operation-history/Operations';
 
 let toastId;
-
 export const processActions = {
     recalculateAllToolPath: (headType) => (dispatch, getState) => {
         const { toolPathGroup } = getState()[headType];

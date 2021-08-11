@@ -133,12 +133,16 @@ class DataStorage {
              for (const file of files) {
                  const srcPath = path.join(src, file);
                  const dstPath = path.join(dst, file);
+                 const overwriteTag = dstPath.indexOf('Config/Default/') >= 0;
                  if (fs.statSync(srcPath).isFile()) {
-                     if (fs.existsSync(dstPath)) {
+                     if (fs.existsSync(dstPath) && !overwriteTag) {
                          return;
                      }
                      fs.copyFileSync(srcPath, dstPath);
                  } else {
+                     if (overwriteTag) {
+                         rmDir(dstPath);
+                     }
                      // Todo: cause dead cycle?
                      await this.copyDirForInitSlicer(srcPath, dstPath);
                  }

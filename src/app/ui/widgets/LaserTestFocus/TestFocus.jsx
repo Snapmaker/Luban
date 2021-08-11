@@ -187,7 +187,7 @@ class TestFocus extends PureComponent {
                         placement="right"
                         className="sm-flex-auto"
                         title={i18n._('Laser Power')}
-                        content={i18n._('Power to use when laser is working.')}
+                        content={i18n._('Set the laser power.')}
                     >
                         <Input
                             suffix="%"

@@ -1,5 +1,6 @@
 import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
+import { isNil } from 'lodash';
 // import Slider from '../../../components/Slider';
 import {
     TOOLPATH_TYPE_IMAGE,
@@ -34,12 +35,14 @@ class GcodeParameters extends PureComponent {
         const { fillEnabled, movementMode,
             multiPasses, fixedPowerEnabled } = gcodeConfig;
 
-        //Todo
+        // Todo
         const isMethodFill = (fillEnabled === 'true' || fillEnabled === true);
 
         const gcodeDefinition = LASER_DEFAULT_GCODE_PARAMETERS_DEFINITION;
         Object.keys(gcodeDefinition).forEach((key) => {
-            gcodeDefinition[key].default_value = gcodeConfig[key];
+            if (!isNil(gcodeConfig[key])) {
+                gcodeDefinition[key].default_value = gcodeConfig[key];
+            }
             // isGcodeConfig is true means to use updateGcodeConfig, false means to use updateToolConfig
             gcodeDefinition[key].isGcodeConfig = true;
         });
@@ -120,7 +123,7 @@ class GcodeParameters extends PureComponent {
             <React.Fragment>
                 {(!isSVG || isMethodFill) && (
                     <div>
-                        <div className="border-bottom-normal padding-bottom-4 margin-bottom-16">
+                        <div className="border-bottom-normal padding-bottom-4 margin-vertical-16">
                             <SvgIcon
                                 name="TitleSetting"
                                 size={24}
@@ -137,7 +140,7 @@ class GcodeParameters extends PureComponent {
                     </div>
                 )}
                 <div>
-                    <div className="border-bottom-normal padding-bottom-4 margin-bottom-16">
+                    <div className="border-bottom-normal padding-bottom-4 margin-vertical-16">
                         <SvgIcon
                             name="TitleSetting"
                             size={24}
@@ -154,7 +157,7 @@ class GcodeParameters extends PureComponent {
                 </div>
                 {isSVG && !isMethodFill && (
                     <div>
-                        <div className="border-bottom-normal padding-bottom-4 margin-bottom-16">
+                        <div className="border-bottom-normal padding-bottom-4 margin-vertical-16">
                             <SvgIcon
                                 name="TitleSetting"
                                 size={24}
@@ -172,7 +175,7 @@ class GcodeParameters extends PureComponent {
                 )}
                 {fixedPowerEnabled !== undefined && (
                     <div>
-                        <div className="border-bottom-normal padding-bottom-4 margin-bottom-16">
+                        <div className="border-bottom-normal padding-bottom-4 margin-vertical-16">
                             <SvgIcon
                                 name="TitleSetting"
                                 size={24}

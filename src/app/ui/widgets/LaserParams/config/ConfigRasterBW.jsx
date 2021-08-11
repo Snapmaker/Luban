@@ -50,6 +50,10 @@ class ConfigRasterBW extends PureComponent {
         });
     }
 
+    componentDidUpdate() {
+
+    }
+
     getSnapshotBeforeUpdate(prevProps) {
         const { bwThreshold } = this.props;
         if (bwThreshold !== prevProps.bwThreshold) {
@@ -67,18 +71,23 @@ class ConfigRasterBW extends PureComponent {
             <div>
                 {this.state.expanded && (
                     <React.Fragment>
-                        <div className="sm-flex height-32 margin-vertical-8">
-                            <span className="sm-flex-width">{i18n._('Invert')}</span>
-                            <Checkbox
-                                disabled={disabled}
-                                className="sm-flex-auto"
-                                checked={invert}
-                                onChange={() => {
-                                    this.actions.onInverseBW();
-                                    this.props.processSelectedModel();
-                                }}
-                            />
-                        </div>
+                        <TipTrigger
+                            title={i18n._('Invert')}
+                            content={i18n._('Inverts the color of images, white becomes black, and black becomes white. ')}
+                        >
+                            <div className="sm-flex height-32 margin-vertical-8">
+                                <span className="sm-flex-width">{i18n._('Invert')}</span>
+                                <Checkbox
+                                    disabled={disabled}
+                                    className="sm-flex-auto"
+                                    checked={invert}
+                                    onChange={() => {
+                                        this.actions.onInverseBW();
+                                        this.props.processSelectedModel();
+                                    }}
+                                />
+                            </div>
+                        </TipTrigger>
                         <TipTrigger
                             title={i18n._('Threshold')}
                             content={i18n._('Set a value above which colors will be rendered in white.')}
@@ -93,6 +102,7 @@ class ConfigRasterBW extends PureComponent {
                                     max={255}
                                     onChange={this.actions.onChangeBWThreshold}
                                     onAfterChange={this.actions.onAfterChangeBWThreshold}
+                                    className="padding-right-8"
                                 />
                                 <NumberInput
                                     disabled={disabled}

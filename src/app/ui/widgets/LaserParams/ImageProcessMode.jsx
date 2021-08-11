@@ -10,6 +10,7 @@ import ConfigRasterBW from './config/ConfigRasterBW';
 import ConfigGreyscale from './config/ConfigGreyscale';
 import ConfigRasterVector from './config/ConfigRasterVector';
 import ConfigHalftone from './config/ConfigHalftone';
+import TipTrigger from '../../components/TipTrigger';
 
 class ImageProcessMode extends PureComponent {
     static propTypes = {
@@ -47,7 +48,7 @@ class ImageProcessMode extends PureComponent {
 
         return (
             <React.Fragment>
-                <div className={styles['laser-mode']}>
+                <div className={classNames(styles['laser-mode'], 'border-top-normal', 'margin-top-16', 'margin-bottom-8')}>
                     <Anchor className="sm-flex height-32 margin-vertical-8" onClick={this.actions.onToggleExpand}>
                         <span className="sm-flex-width heading-3">{i18n._('Processing Mode')}</span>
                         <SvgIcon
@@ -104,15 +105,20 @@ class ImageProcessMode extends PureComponent {
                                     </div>
                                 )}
                             </div>
-                            <div className="sm-flex height-32 margin-vertical-8">
-                                <span className="sm-flex-width">{i18n._('Show Original Image')}</span>
-                                <Checkbox
-                                    disabled={disabled}
-                                    className="sm-flex-auto"
-                                    checked={showOrigin}
-                                    onChange={this.props.changeSelectedModelShowOrigin}
-                                />
-                            </div>
+                            <TipTrigger
+                                title={i18n._('Show Original Image')}
+                                content={i18n._('Shows the original image.')}
+                            >
+                                <div className="sm-flex height-32 margin-vertical-8">
+                                    <span className="sm-flex-width">{i18n._('Show Original Image')}</span>
+                                    <Checkbox
+                                        disabled={disabled}
+                                        className="sm-flex-auto"
+                                        checked={showOrigin}
+                                        onChange={this.props.changeSelectedModelShowOrigin}
+                                    />
+                                </div>
+                            </TipTrigger>
                             {isBW && <ConfigRasterBW disabled={disabled} />}
                             {isGreyscale && <ConfigGreyscale disabled={disabled} />}
                             {isRasterVector && <ConfigRasterVector disabled={disabled} />}

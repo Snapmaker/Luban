@@ -89,9 +89,9 @@ const allWidgets = {
 const ACCEPT = '.svg, .png, .jpg, .jpeg, .bmp, .dxf';
 const pageHeadType = HEAD_LASER;
 
-
 function useRenderMainToolBar(setShowHomePage, setShowJobType, setShowWorkspace, isRotate) {
     // (!workPosition.isFourAxis && (connectionType === CONNECTION_TYPE_WIFI && isConnected && !hasBackground))
+    const unSaved = useSelector(state => state?.project[pageHeadType]?.unSaved, shallowEqual);
     const isConnected = useSelector(state => state?.machine?.isConnected, shallowEqual);
     const series = useSelector(state => state?.machine?.series, shallowEqual);
     const canRedo = useSelector(state => state[HEAD_LASER]?.history?.canRedo, shallowEqual);
@@ -158,6 +158,7 @@ function useRenderMainToolBar(setShowHomePage, setShowJobType, setShowWorkspace,
         {
             title: i18n._('Save'),
             type: 'button',
+            disabled: !unSaved,
             name: 'MainToolbarSave',
             iconClassName: 'laser-save-icon',
             action: () => {
@@ -346,7 +347,8 @@ function Laser({ location }) {
     const thumbnail = useRef();
     const modelGroup = useSelector(state => state[HEAD_LASER]?.modelGroup, shallowEqual);
     const toolPathGroup = useSelector(state => state[HEAD_LASER]?.toolPathGroup, shallowEqual);
-    // const guideToursSetting = machineStore.get('guideTours');
+    // useUnsavedTitle(pageHeadType);
+
     useEffect(() => {
         dispatch(laserActions.init());
         logPageView({
@@ -532,8 +534,8 @@ function Laser({ location }) {
             let pathConfig = {};
             if (isRotate) {
                 pathConfig = {
-                    path: './UserCase/A250/A250_4th_Laser.snaplzr',
-                    name: 'A250_4th_Laser.snaplzr'
+                    path: './UserCase/A350/A350_4th_Laser.snaplzr',
+                    name: 'A350_4th_Laser.snaplzr'
                 };
             } else {
                 pathConfig = {
@@ -634,7 +636,8 @@ function Laser({ location }) {
                             disableInteraction: true,
                             intro: laserCncIntroStepSix(
                                 i18n._('Click to generate and preview the G-code file.'),
-                                i18n._('For laser engraving, you can preview the toolpath. For CNC carving, you can preview the toolpath and simulate the operation result.')
+                                i18n._('For laser engraving, you can preview the toolpath. For CNC carving, you can preview the toolpath and simulate the operation result.'),
+                                isRotate ? '/resources/images/guide-tours/laser_4_axis_priview.png' : '/resources/images/guide-tours/laser_3_axis_priview.png'
                             )
                         }, {
                             element: '.laser-preview-export-intro-part',

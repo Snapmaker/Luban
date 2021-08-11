@@ -5,6 +5,7 @@ import { connect } from 'react-redux';
 import i18n from '../../../../lib/i18n';
 import { actions as editorActions } from '../../../../flux/editor';
 import Checkbox from '../../../components/Checkbox';
+import TipTrigger from '../../../components/TipTrigger';
 
 class ReliefParameters extends PureComponent {
     static propTypes = {
@@ -32,18 +33,23 @@ class ReliefParameters extends PureComponent {
             <div>
                 {this.state.expanded && (
                     <React.Fragment>
-                        <div className="sm-flex height-32 margin-vertical-8">
-                            <span className="sm-flex-width">{i18n._('Invert')}</span>
-                            <Checkbox
-                                disabled={disabled}
-                                className="sm-flex-auto"
-                                defaultChecked={invert}
-                                onChange={() => {
-                                    this.actions.onToggleInvert();
-                                    this.props.processSelectedModel();
-                                }}
-                            />
-                        </div>
+                        <TipTrigger
+                            title={i18n._('Invert')}
+                            content={i18n._('Inverts the color of images, white becomes black, and black becomes white. ')}
+                        >
+                            <div className="sm-flex height-32 margin-vertical-8">
+                                <span className="sm-flex-width">{i18n._('Invert')}</span>
+                                <Checkbox
+                                    disabled={disabled}
+                                    className="sm-flex-auto"
+                                    defaultChecked={invert}
+                                    onChange={() => {
+                                        this.actions.onToggleInvert();
+                                        this.props.processSelectedModel();
+                                    }}
+                                />
+                            </div>
+                        </TipTrigger>
                     </React.Fragment>
                 )}
             </div>

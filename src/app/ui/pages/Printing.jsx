@@ -183,8 +183,9 @@ function Printing() {
     const [renderHomepage, renderMainToolBar, renderWorkspace] = useRenderMainToolBar();
     const modelGroup = useSelector(state => state.printing.modelGroup);
     const thumbnail = useRef();
-    const nextLabel = i18n._('Next');
     const stepRef = useRef();
+    // useUnsavedTitle(pageHeadType);
+
     useEffect(() => {
         const setting = machineStore.get('guideTours');
         if (!setting?.guideTours3dp) {
@@ -293,7 +294,7 @@ function Printing() {
                     // onBeforeChange={handleBeforeChange}
                     options={{
                         showBullets: false,
-                        nextLabel: nextLabel,
+                        nextLabel: i18n._('Next'),
                         doneLabel: i18n._('Complete'),
                         keyboardNavigation: false,
                         exitOnOverlayClick: false

@@ -119,6 +119,7 @@ const generateLaserToolPathFromEngine = async (modelInfos, onProgress) => {
             modelInfo.gcodeConfig.stepOver = modelInfo.gcodeConfig.fillInterval;
         } else {
             modelInfo.gcodeConfig.fillDensity = 1 / modelInfo.gcodeConfig.stepOver;
+            modelInfo.gcodeConfig.tabHeight -= modelInfo.gcodeConfig.targetDepth;
         }
         modelInfo.toolpathFileName = generateRandomPathName('json');
     }

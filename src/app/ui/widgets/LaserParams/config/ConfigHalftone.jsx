@@ -79,6 +79,10 @@ class ConfigHalftone extends PureComponent {
         });
     }
 
+    componentDidUpdate() {
+
+    }
+
     getSnapshotBeforeUpdate(prevProps) {
         const { npSize, npAngle, threshold } = this.props;
         if (npSize !== prevProps.npSize) {
@@ -105,32 +109,37 @@ class ConfigHalftone extends PureComponent {
             <div>
                 {this.state.expanded && (
                     <React.Fragment>
-                        <div className="sm-flex height-32 margin-vertical-8">
-                            <span className="sm-flex-width">{i18n._('Type')}</span>
-                            <Select
-                                size="middle"
-                                clearable={false}
-                                options={[{
-                                    value: 'line',
-                                    label: i18n._('Line')
-                                }, {
-                                    value: 'round',
-                                    label: i18n._('Round')
-                                }, {
-                                    value: 'diamond',
-                                    label: i18n._('Diamond')
-                                }]}
-                                value={npType}
-                                searchable={false}
-                                onChange={({ value }) => {
-                                    this.actions.onChangeType(value);
-                                    this.props.processSelectedModel();
-                                }}
-                            />
-                        </div>
+                        <TipTrigger
+                            title={i18n._('Type')}
+                            content={i18n._('Select the way that the dots are arranged.\n- Line: Dots are arranged into lines.\n- Round: Dots are arranged into rounds.\n- Diamond: Dots are arranged into diamonds.')}
+                        >
+                            <div className="sm-flex height-32 margin-vertical-8">
+                                <span className="sm-flex-width">{i18n._('Type')}</span>
+                                <Select
+                                    size="middle"
+                                    clearable={false}
+                                    options={[{
+                                        value: 'line',
+                                        label: i18n._('Line')
+                                    }, {
+                                        value: 'round',
+                                        label: i18n._('Round')
+                                    }, {
+                                        value: 'diamond',
+                                        label: i18n._('Diamond')
+                                    }]}
+                                    value={npType}
+                                    searchable={false}
+                                    onChange={({ value }) => {
+                                        this.actions.onChangeType(value);
+                                        this.props.processSelectedModel();
+                                    }}
+                                />
+                            </div>
+                        </TipTrigger>
                         <TipTrigger
                             title={i18n._('Size')}
-                            content={i18n._('Set halftone size')}
+                            content={i18n._('Set the size of dots.')}
                         >
                             <div className="sm-flex height-32 margin-vertical-8">
                                 <span className="sm-flex-width">{i18n._('Size')}</span>
@@ -142,6 +151,7 @@ class ConfigHalftone extends PureComponent {
                                     max={50}
                                     onChange={this.actions.onChangeSize}
                                     onAfterChange={this.actions.onAfterChangeSize}
+                                    className="padding-right-8"
                                 />
                                 <NumberInput
                                     disabled={disabled}
@@ -158,7 +168,7 @@ class ConfigHalftone extends PureComponent {
                         </TipTrigger>
                         <TipTrigger
                             title={i18n._('Angle')}
-                            content={i18n._('Set Halftone rotation angle')}
+                            content={i18n._('Set the rotation angle of the halftone image through the arrange of dots.')}
                         >
                             <div className="sm-flex height-32 margin-vertical-8">
                                 <span className="sm-flex-width">{i18n._('Angle')}</span>
@@ -170,6 +180,7 @@ class ConfigHalftone extends PureComponent {
                                     max={180}
                                     onChange={this.actions.onChangeAngle}
                                     onAfterChange={this.actions.onAfterChangeAngle}
+                                    className="padding-right-8"
                                 />
                                 <NumberInput
                                     disabled={disabled}
@@ -186,7 +197,7 @@ class ConfigHalftone extends PureComponent {
                         </TipTrigger>
                         <TipTrigger
                             title={i18n._('Threshold')}
-                            content={i18n._('Color over threshold will turn to white')}
+                            content={i18n._('Colors above this value will be rendered in white.')}
                         >
                             <div className="sm-flex height-32 margin-vertical-8">
                                 <span className="sm-flex-width">{i18n._('Threshold')}</span>
@@ -198,6 +209,7 @@ class ConfigHalftone extends PureComponent {
                                     max={255}
                                     onChange={this.actions.onChangeBWThreshold}
                                     onAfterChange={this.actions.onAfterChangeBWThreshold}
+                                    className="padding-right-8"
                                 />
                                 <NumberInput
                                     disabled={disabled}

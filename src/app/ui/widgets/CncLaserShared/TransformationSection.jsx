@@ -165,7 +165,7 @@ class TransformationSection extends PureComponent {
                     {/* X */}
                     <TipTrigger
                         title={i18n._('Move')}
-                        content={i18n._('Set the coordinate of the selected image or text. You can also drag the image directly.')}
+                        content={i18n._('Set the coordinate of the selected object. You can also drag the object directly. The object should not be moved beyond work area.')}
                     >
                         <div className="sm-flex height-32 margin-vertical-8 ">
                             <span className="sm-flex-auto sm-flex-order-negative width-64">{i18n._('Move')}</span>
@@ -213,7 +213,7 @@ class TransformationSection extends PureComponent {
                     </TipTrigger>
                     <TipTrigger
                         title={i18n._('Size')}
-                        content={i18n._('Enter the size of the engraved picture. The size cannot be larger than 125 x 125 mm or the size of your material.')}
+                        content={i18n._('Set the size of the selected object. You can also resize the object directly. The object should not exceed the work size.')}
                     >
                         <div className="sm-flex height-32 margin-vertical-8">
                             <span className="sm-flex-auto sm-flex-order-negative width-64">{i18n._('Size')}</span>
@@ -274,7 +274,7 @@ class TransformationSection extends PureComponent {
                     </TipTrigger>
                     <TipTrigger
                         title={i18n._('Rotate')}
-                        content={i18n._('Rotate the image to the angle you need.')}
+                        content={i18n._('Rotate the selected object to the angle you need.')}
                     >
                         <div className="sm-flex height-32 margin-vertical-8">
                             <span className="sm-flex-auto sm-flex-order-negative width-56">{i18n._('Rotate')}</span>

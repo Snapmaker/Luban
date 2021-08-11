@@ -6,6 +6,7 @@ export default {
     label: 'Help',
     submenu: [
         {
+            id: 'guided-tour',
             label: 'Guided Tour',
             enabled: true,
             click: (menuItem, browserWindow) => {
@@ -18,11 +19,13 @@ export default {
         },
         {
             label: 'Software Manual',
+            id: 'software-manual',
             enabled: true,
             click: () => {}
         },
         {
             label: 'Video Tutorials',
+            id: 'video-tutorials',
             enabled: true,
             click: (menuItem, browserWindow) => {
                 if (isElectron()) {
@@ -34,6 +37,7 @@ export default {
         },
         {
             label: 'Snapmaker.com',
+            id: 'official-website',
             enabled: true,
             click: (menuItem, browserWindow) => {
                 if (isElectron()) {
@@ -45,6 +49,7 @@ export default {
         },
         {
             label: 'MyMiniFactory',
+            id: 'my-minifactory',
             enabled: true,
             click: (menuItem, browserWindow) => {
                 if (isElectron()) {
@@ -56,6 +61,7 @@ export default {
         },
         {
             label: 'Supports',
+            id: 'supports',
             enabled: true,
             click: (menuItem, browserWindow) => {
                 if (isElectron()) {
@@ -67,6 +73,7 @@ export default {
         },
         {
             label: 'Forum',
+            id: 'forum',
             enabled: true,
             click: (menuItem, browserWindow) => {
                 if (isElectron()) {
@@ -78,6 +85,7 @@ export default {
         },
         {
             label: 'Shopify',
+            id: 'shopify',
             enabled: true,
             click: (menuItem, browserWindow) => {
                 if (isElectron()) {
@@ -89,6 +97,7 @@ export default {
         },
         {
             label: 'Software Update',
+            id: 'software-update',
             enabled: true,
             click: (menuItem, browserWindow) => {
                 if (isElectron()) {
@@ -100,6 +109,7 @@ export default {
         },
         {
             label: 'Firmware Tool',
+            id: 'firmware-tool',
             enabled: true,
             click: (menuItem, browserWindow) => {
                 if (isElectron()) {

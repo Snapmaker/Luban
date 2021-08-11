@@ -196,13 +196,34 @@ function ToolPathFastConfigurations(props) {
         },
         updateGcodeConfig: (option) => {
             if (props.headType === HEAD_LASER) {
-                if (!option.fixedPower) {
-                    if (option.movementMode === 'greyscale-line') {
-                        option.fixedPower = 50;
-                    }
-                    if (option.movementMode === 'greyscale-dot') {
-                        option.fixedPower = 30;
-                    }
+                // Movement Mode
+                if (option.movementMode === 'greyscale-dot') {
+                    option.dwellTime = 5;
+                    option.fillInterval = 0.14;
+                    option.jogSpeed = 2500;
+                    option.workSpeed = 2500;
+                    option.fixedPower = 60;
+                }
+                if (option.movementMode === 'greyscale-line') {
+                    option.fillInterval = 0.25;
+                    option.jogSpeed = 3000;
+                    option.workSpeed = 500;
+                    option.fixedPower = 100;
+                }
+
+                // Fill Enabled
+                if (option.fillEnabled === true) {
+                    option.fillInterval = 0.25;
+                    option.jogSpeed = 3000;
+                    option.workSpeed = 500;
+                    option.fixedPower = 100;
+                }
+                if (option.fillEnabled === false) {
+                    option.jogSpeed = 3000;
+                    option.workSpeed = 140;
+                    option.multiPasses = 2;
+                    option.multiPassDepth = 0.6;
+                    option.fixedPower = 100;
                 }
             }
             const newToolPath = {
@@ -259,7 +280,7 @@ function ToolPathFastConfigurations(props) {
             )}
             >
                 <div className="sm-flex height-40 border-bottom-normal padding-horizontal-16">
-                    <span className="sm-flex-width heading-3">{i18n._('General Parameters')}</span>
+                    <span className="sm-flex-width main-text-normal">{i18n._('General Parameters')}</span>
                 </div>
                 <div className="padding-horizontal-16 padding-vertical-16">
                     {toolPath.headType === HEAD_CNC && currentToolDefinition && (

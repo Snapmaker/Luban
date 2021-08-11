@@ -41,7 +41,7 @@ class GcodeParameters extends PureComponent {
                     {!(isSculpt && isRotate) && (
                         <TipTrigger
                             title={i18n._('Target Depth')}
-                            content={i18n._('Enter the depth of the carved image. The depth cannot be deeper than the flute length.')}
+                            content={i18n._('Set the depth of the object to be carved. The depth should be smaller than the flute length.')}
                         >
                             <div className="sm-parameter-row">
                                 <span className="sm-parameter-row__label">{i18n._('Target Depth')}</span>
@@ -61,7 +61,7 @@ class GcodeParameters extends PureComponent {
                     )}
                     <TipTrigger
                         title={i18n._('Jog Height')}
-                        content={i18n._('The distance between the tool and the material when it’s not carving.')}
+                        content={i18n._('Set the distance between the tool and the material when the tool is not carving.')}
                     >
                         <div className="sm-parameter-row">
                             <span className="sm-parameter-row__label">{i18n._('Jog Height')}</span>
@@ -115,9 +115,9 @@ class GcodeParameters extends PureComponent {
                                             <Input
                                                 className="sm-parameter-row__input"
                                                 value={tabHeight}
-                                                min={-targetDepth}
-                                                max={0}
-                                                step={0.5}
+                                                min={0}
+                                                max={targetDepth}
+                                                step={0.1}
                                                 onChange={(value) => { this.props.updateGcodeConfig({ tabHeight: value }); }}
                                                 disabled={!enableTab}
                                             />

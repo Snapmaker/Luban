@@ -259,9 +259,11 @@ export const saveEnv = async (req, res) => {
     config.models.forEach((model) => {
         // why copy all not just 'uploadName'
         const { uploadName } = model;
-        // const { originalName, uploadName } = model;
+        if (/\.svg$/.test(uploadName) && !(/parsed\.svg$/.test(uploadName))) {
+            const parseName = uploadName.replace(/\.svg$/, 'parsed.svg');
+            copyFileSync(`${DataStorage.tmpDir}/${parseName}`, `${envDir}/${parseName}`);
+        }
 
-        // copyFileSync(`${DataStorage.tmpDir}/${originalName}`, `${envDir}/${originalName}`);
         copyFileSync(`${DataStorage.tmpDir}/${uploadName}`, `${envDir}/${uploadName}`);
     });
     if (config.defaultMaterialId && /^material.([0-9_]+)$/.test(config.defaultMaterialId)) {
