@@ -7,6 +7,7 @@ import styles from '../CncLaserShared/styles.styl';
 import ReliefParameters from './config/ReliefParameters';
 import SvgIcon from '../../components/SvgIcon';
 import Checkbox from '../../components/Checkbox';
+import TipTrigger from '../../components/TipTrigger';
 
 class ImageProcessMode extends PureComponent {
     static propTypes = {
@@ -79,15 +80,20 @@ class ImageProcessMode extends PureComponent {
                                     </div>
                                 )}
                             </div>
-                            <div className="sm-flex height-32 margin-vertical-8">
-                                <span className="sm-flex-width">{i18n._('Show Original Image')}</span>
-                                <Checkbox
-                                    disabled={disabled}
-                                    className="sm-flex-auto"
-                                    checked={showOrigin}
-                                    onChange={this.props.changeSelectedModelShowOrigin}
-                                />
-                            </div>
+                            <TipTrigger
+                                title={i18n._('Show Original Image')}
+                                content={i18n._('Shows the original image.')}
+                            >
+                                <div className="sm-flex height-32 margin-vertical-8">
+                                    <span className="sm-flex-width">{i18n._('Show Original Image')}</span>
+                                    <Checkbox
+                                        disabled={disabled}
+                                        className="sm-flex-auto"
+                                        checked={showOrigin}
+                                        onChange={this.props.changeSelectedModelShowOrigin}
+                                    />
+                                </div>
+                            </TipTrigger>
                             {isGreyscale && (
                                 <ReliefParameters disabled={disabled} />
                             )}

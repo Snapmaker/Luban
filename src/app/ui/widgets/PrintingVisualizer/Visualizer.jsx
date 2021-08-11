@@ -303,6 +303,7 @@ class Visualizer extends PureComponent {
         this.props.clearOperationHistory();
         this.canvas.current.resizeWindow();
         this.canvas.current.enable3D();
+        this.setState({ defaultSupportSize: { x: 5, y: 5 } });
         ShortcutManager.register(this.shortcutHandler);
         window.addEventListener(
             'hashchange',

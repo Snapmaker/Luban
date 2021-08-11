@@ -109,21 +109,26 @@ class ConfigGreyscale extends PureComponent {
                 {this.state.expanded && (
                     <React.Fragment>
                         <div>
-                            <div className="sm-flex height-32 margin-vertical-8">
-                                <span className="sm-flex-width">{i18n._('Invert')}</span>
-                                <Checkbox
-                                    disabled={disabled}
-                                    className="sm-flex-auto"
-                                    checked={invert}
-                                    onChange={() => {
-                                        this.actions.onInverseBW();
-                                        this.props.processSelectedModel();
-                                    }}
-                                />
-                            </div>
+                            <TipTrigger
+                                title={i18n._('Invert')}
+                                content={i18n._('Inverts the color of images, white becomes black, and black becomes white. ')}
+                            >
+                                <div className="sm-flex height-32 margin-vertical-8">
+                                    <span className="sm-flex-width">{i18n._('Invert')}</span>
+                                    <Checkbox
+                                        disabled={disabled}
+                                        className="sm-flex-auto"
+                                        checked={invert}
+                                        onChange={() => {
+                                            this.actions.onInverseBW();
+                                            this.props.processSelectedModel();
+                                        }}
+                                    />
+                                </div>
+                            </TipTrigger>
                             <TipTrigger
                                 title={i18n._('Contrast')}
-                                content={i18n._('The difference between the lightest color and the darkest color.')}
+                                content={i18n._('Set the disparity between darkness and brightness.')}
                             >
                                 <div className="sm-flex height-32 margin-vertical-8">
                                     <span className="sm-flex-width">{i18n._('Contrast')}</span>
@@ -152,7 +157,7 @@ class ConfigGreyscale extends PureComponent {
 
                             <TipTrigger
                                 title={i18n._('Brightness')}
-                                content={i18n._('The engraved picture is brighter when this value is larger.')}
+                                content={i18n._('Set the brightness of the image. The bigger the value is, the brighter the image will be.')}
                             >
                                 <div className="sm-flex height-32 margin-vertical-8">
                                     <span className="sm-flex-width">{i18n._('Brightness')}</span>
@@ -180,7 +185,7 @@ class ConfigGreyscale extends PureComponent {
                             </TipTrigger>
                             <TipTrigger
                                 title={i18n._('White Clip')}
-                                content={i18n._('Set the threshold to turn the color that is not pure white into pure white.')}
+                                content={i18n._('Set the threshold to turn the color that is not pure white into pure white. Zero is taken to be black, and 255 is taken to be white. Colors above this value will be rendered into pure white.')}
                             >
 
                                 <div className="sm-flex height-32 margin-vertical-8">
@@ -209,7 +214,7 @@ class ConfigGreyscale extends PureComponent {
                             </TipTrigger>
                             <TipTrigger
                                 title={i18n._('Algorithm')}
-                                content={i18n._('Choose an algorithm for image processing.')}
+                                content={i18n._('Select an algorithm for image processing.')}
                             >
 
                                 <div className="sm-flex height-32 margin-vertical-8">

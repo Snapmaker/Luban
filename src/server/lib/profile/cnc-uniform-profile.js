@@ -17,7 +17,8 @@ const defaultParameters = {
         min: 0.1,
         max: 10,
         unit: 'mm',
-        label: 'Cutting Diameter'
+        label: 'Cutting Diameter',
+        description: 'Set the diameter of the carving tool.'
     },
     angle: {
         default_value: 30,
@@ -25,7 +26,8 @@ const defaultParameters = {
         min: 1,
         max: 180,
         unit: '°',
-        label: 'Point Angle'
+        label: 'Point Angle',
+        description: 'Set the point angle of the carving tool.'
     },
     shaft_diameter: {
         default_value: 3.175,
@@ -33,7 +35,8 @@ const defaultParameters = {
         min: 0.1,
         max: 10,
         unit: 'mm',
-        label: 'Shank Diameter'
+        label: 'Shank Diameter',
+        description: 'Set the shank diameter of the carving tool.'
     },
     jog_speed: {
         default_value: 1500,
@@ -42,7 +45,7 @@ const defaultParameters = {
         max: 6000,
         unit: 'mm/min',
         label: 'Jog Speed',
-        description: 'Determines how fast the tool moves when it’s not carving.'
+        description: 'Set the speed at which the toolhead moves on the material when it is not engraving or cutting.'
     },
     work_speed: {
         default_value: 300,
@@ -51,7 +54,7 @@ const defaultParameters = {
         max: 6000,
         unit: 'mm/min',
         label: 'Work Speed',
-        description: 'Determines how fast the tool moves on the material.'
+        description: 'Set the speed at which the tool moves on the material when it is carving.'
     },
     plunge_speed: {
         default_value: 300,

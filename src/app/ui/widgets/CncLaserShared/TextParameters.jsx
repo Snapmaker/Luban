@@ -85,9 +85,7 @@ class TextParameters extends PureComponent {
                     <React.Fragment>
                         <TipTrigger
                             title={i18n._('Text')}
-                            content={i18n._('Enter the text you want to engrave. \
-                        The maximum length of the text is 125 mm. When the text is too long, it will be shrunk automatically. \
-                        Start a new line manually according to your needs.')}
+                            content={i18n._('Enter the text you want to laser engrave or CNC carve.')}
                         >
                             <div className="sm-flex height-80 margin-vertical-8">
                                 <TextAreaInput
@@ -109,7 +107,7 @@ class TextParameters extends PureComponent {
                         </TipTrigger>
                         <TipTrigger
                             title={i18n._('Font')}
-                            content={i18n._('Select a font')}
+                            content={i18n._('Select the font of the text.')}
                         >
                             <div className="sm-flex height-32 margin-vertical-8">
                                 <span className="sm-flex-auto sm-flex-order-negative width-56">{i18n._('Font')}</span>
@@ -127,7 +125,7 @@ class TextParameters extends PureComponent {
                         </TipTrigger>
                         <TipTrigger
                             title={i18n._('Font Size')}
-                            content={i18n._('Enter the font size in pt (points).')}
+                            content={i18n._('Select the font size of the text.')}
                         >
                             <div className="sm-flex height-32 margin-vertical-8">
                                 <span className="sm-flex-auto sm-flex-order-negative width-64">{i18n._('Font Size')}</span>

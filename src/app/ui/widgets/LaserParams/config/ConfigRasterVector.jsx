@@ -72,7 +72,7 @@ class ConfigRasterVector extends PureComponent {
                     <React.Fragment>
                         <TipTrigger
                             title={i18n._('Invert')}
-                            content={i18n._('Inverts black to white and vise versa.')}
+                            content={i18n._('Inverts the color of images, white becomes black, and black becomes white. ')}
                         >
                             <div className="sm-flex height-32 margin-vertical-8">
                                 <span className="sm-flex-width">{i18n._('Invert')}</span>
@@ -119,7 +119,7 @@ class ConfigRasterVector extends PureComponent {
                         </TipTrigger>
                         <TipTrigger
                             title={i18n._('Impurity Size')}
-                            content={i18n._('Determines the minimum size of impurity which allows to be showed.')}
+                            content={i18n._('Set the minimum size of impurities allowed to be shown.')}
                         >
                             <div className="sm-flex height-32 margin-vertical-8">
                                 <span className="sm-flex-width">{i18n._('Impurity Size')}</span>
