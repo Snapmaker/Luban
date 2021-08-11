@@ -37,7 +37,6 @@ class ConfigGreyscale extends PureComponent {
             this.props.updateSelectedModelConfig({ invert: !this.props.invert });
         },
         onChangeContrast: (contrast) => {
-            console.log('contrast', contrast);
             this.setState({
                 contrast
             });
@@ -79,6 +78,10 @@ class ConfigGreyscale extends PureComponent {
             brightness,
             whiteClip
         });
+    }
+
+    componentDidUpdate() {
+
     }
 
     getSnapshotBeforeUpdate(prevProps) {

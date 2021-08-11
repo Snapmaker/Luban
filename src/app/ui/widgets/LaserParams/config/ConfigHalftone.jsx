@@ -79,6 +79,10 @@ class ConfigHalftone extends PureComponent {
         });
     }
 
+    componentDidUpdate() {
+
+    }
+
     getSnapshotBeforeUpdate(prevProps) {
         const { npSize, npAngle, threshold } = this.props;
         if (npSize !== prevProps.npSize) {

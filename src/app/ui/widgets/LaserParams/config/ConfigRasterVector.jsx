@@ -53,6 +53,10 @@ class ConfigRasterVector extends PureComponent {
         });
     }
 
+    componentDidUpdate() {
+
+    }
+
     getSnapshotBeforeUpdate(prevProps) {
         const { vectorThreshold } = this.props;
         if (vectorThreshold !== prevProps.vectorThreshold) {

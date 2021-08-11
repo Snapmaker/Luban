@@ -50,6 +50,10 @@ class ConfigRasterBW extends PureComponent {
         });
     }
 
+    componentDidUpdate() {
+
+    }
+
     getSnapshotBeforeUpdate(prevProps) {
         const { bwThreshold } = this.props;
         if (bwThreshold !== prevProps.bwThreshold) {
