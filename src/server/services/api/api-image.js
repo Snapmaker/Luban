@@ -56,10 +56,9 @@ export const set = (req, res) => {
                 if (extname === '.svg') {
                     const svgParser = new SVGParser();
                     const svg = await svgParser.parseFile(tempPath);
-
                     res.send({
                         originalName: originalName,
-                        uploadName: svg.uploadName,
+                        uploadName: tempName,
                         width: svg.width,
                         height: svg.height
                     });

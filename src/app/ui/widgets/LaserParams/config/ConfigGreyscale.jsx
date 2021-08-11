@@ -80,6 +80,10 @@ class ConfigGreyscale extends PureComponent {
         });
     }
 
+    componentDidUpdate() {
+
+    }
+
     getSnapshotBeforeUpdate(prevProps) {
         const { contrast, brightness, whiteClip } = this.props;
         if (contrast !== prevProps.contrast) {
