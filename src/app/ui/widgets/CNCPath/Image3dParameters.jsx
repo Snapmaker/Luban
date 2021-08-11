@@ -78,9 +78,9 @@ class Image3dParameters extends PureComponent {
         const actions = this.actions;
 
         return (
-            <div className={styles['cnc-mode']}>
+            <div className={classNames(styles['cnc-mode'], 'border-top-normal', 'margin-top-16')}>
                 <Anchor className="sm-flex height-32 margin-vertical-8" onClick={this.actions.onToggleExpand}>
-                    <span className="sm-flex-width">{i18n._('Model')}</span>
+                    <span className="sm-flex-width heading-3">{i18n._('Model')}</span>
                     <SvgIcon
                         name="DropdownLine"
                         className={classNames(

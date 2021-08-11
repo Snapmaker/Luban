@@ -168,6 +168,7 @@ class WifiConnection extends PureComponent {
                     text: i18n._(data || err.message),
                     title: err.status ? i18n._(`Error ${err.status}`) : i18n._('Error'),
                     img: 'WarningTipsError',
+                    iconColor: '#FF4D4F',
                     showCloseButton: true,
                     onCancel: null,
                     onConfirm: null
@@ -392,7 +393,7 @@ class WifiConnection extends PureComponent {
                     {isConnected && (
                         <Button
                             width="120px"
-                            type="primary"
+                            type="default"
                             priority="level-two"
                             onClick={this.actions.closeServer}
                         >

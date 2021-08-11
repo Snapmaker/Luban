@@ -298,7 +298,7 @@ class CncParameters extends PureComponent {
                         />
                     </div>
                     <div>
-                        <div className="border-bottom-normal padding-bottom-4 margin-bottom-16">
+                        <div className="border-bottom-normal padding-bottom-4 margin-vertical-16">
                             <SvgIcon
                                 name="TitleSetting"
                                 size={24}
@@ -320,7 +320,7 @@ class CncParameters extends PureComponent {
                         />
                     </div>
                     <div>
-                        <div className="border-bottom-normal padding-bottom-4 margin-bottom-16">
+                        <div className="border-bottom-normal padding-bottom-4 margin-vertical-16">
                             <SvgIcon
                                 name="TitleSetting"
                                 size={24}
@@ -336,7 +336,7 @@ class CncParameters extends PureComponent {
                     </div>
                     {useCncTabConfig && (
                         <div>
-                            <div className="border-bottom-normal padding-bottom-4 margin-bottom-16">
+                            <div className="border-bottom-normal padding-bottom-4 margin-vertical-16">
                                 <SvgIcon
                                     name="TitleSetting"
                                     size={24}

@@ -21,6 +21,7 @@ import Workspace from '../../pages/Workspace';
 import i18n from '../../../lib/i18n';
 import UniApi from '../../../lib/uni-api';
 import Thumbnail from '../CncLaserShared/Thumbnail';
+import SvgIcon from '../../components/SvgIcon';
 
 
 class Output extends PureComponent {
@@ -169,7 +170,7 @@ class Output extends PureComponent {
                     onClick={actions.onLoadGcode}
                     disabled={inProgress || !hasModel || workflowState === 'running' || isGcodeGenerating || gcodeFile === null}
                 >
-                    <div className={classNames('align-c')}>
+                    <div className={classNames('align-c', 'padding-vertical-4')}>
                         {i18n._('Load G-code to Workspace')}
                     </div>
                 </Menu.Item>
@@ -177,7 +178,7 @@ class Output extends PureComponent {
                     disabled={inProgress || !hasModel || workflowState === 'running' || isGcodeGenerating || gcodeFile === null}
                     onClick={actions.onExport}
                 >
-                    <div className={classNames('align-c')}>
+                    <div className={classNames('align-c', 'padding-vertical-4')}>
                         {i18n._('Export G-code to File')}
                     </div>
                 </Menu.Item>
@@ -238,11 +239,12 @@ class Output extends PureComponent {
                             role="button"
                             tabIndex={0}
                             className={classNames('position-re', 'height-40', 'margin-top-10')}
-                            onMouseEnter={actions.handleMouseOver}
-                            onMouseLeave={actions.handleMouseOut}
+                            // onMouseEnter={actions.handleMouseOver}
+                            // onMouseLeave={actions.handleMouseOut}
                         >
                             <Dropdown
                                 overlay={menu}
+                                trigger="click"
                             >
                                 <Button
                                     type="primary"
@@ -254,6 +256,7 @@ class Output extends PureComponent {
                                         // 'margin-top-10',
                                         displayedType === DISPLAYED_TYPE_TOOLPATH ? 'display-block' : 'display-none'
                                     )}
+                                    suffixIcon={<SvgIcon name="DropdownOpen" type="static" color="#d5d6d9" />}
                                 >
                                     {i18n._('Export')}
                                 </Button>

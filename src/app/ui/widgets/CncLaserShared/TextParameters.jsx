@@ -70,7 +70,7 @@ class TextParameters extends PureComponent {
         const actions = this.actions;
 
         return (
-            <div className="margin-vertical-8">
+            <div className="margin-top-16 margin-bottom-8 border-top-normal">
                 <Anchor className="sm-flex height-32 margin-vertical-8" onClick={this.actions.onToggleExpand}>
                     <span className="sm-flex-width heading-3">{i18n._('Text')}</span>
                     <SvgIcon
@@ -115,7 +115,7 @@ class TextParameters extends PureComponent {
                                     disabled={disabled}
                                     className="sm-flex-width align-r"
                                     clearable={false}
-                                    size="large"
+                                    size="super-large"
                                     options={fontOptions}
                                     placeholder={i18n._('Choose font')}
                                     value={fontFamily}

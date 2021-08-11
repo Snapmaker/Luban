@@ -46,6 +46,7 @@ function PrintingObjectListBox() {
                         onSelect={actions.onClickModelNameBox}
                         onToggleVisible={actions.onClickModelHideBox}
                         inProgress={inProgress}
+                        placment="right"
                     />
                 );
             })}

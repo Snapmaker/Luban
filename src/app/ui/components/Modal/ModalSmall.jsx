@@ -58,16 +58,12 @@ class ModalSmall extends PureComponent {
                         )}
                         {isImage && (<img src={img} alt="......" />)}
                     </div>
-                    <div className={styles['modal-small-body-text']}>
+                    <div className={styles[`${!isImage ? 'modal-small-body-text-svg' : 'modal-small-body-text'}`]}>
                         {i18n._(title)}
                     </div>
                     {text && (
                         <div
                             className={styles['modal-small-body-hit']}
-                            style={{
-                                color: '#808080',
-                                lineHeight: '24px'
-                            }}
                         >
                             {i18n._(text)}
                         </div>
