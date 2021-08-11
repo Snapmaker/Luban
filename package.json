@@ -116,6 +116,7 @@
       "target": [
         "nsis"
       ],
+      "artifactName": "${productName} ${version}.${ext}",
       "verifyUpdateCodeSignature": false,
       "icon": "build/electron/snapmaker-luban.ico"
     },
@@ -131,6 +132,12 @@
       "target": [
         "deb",
         "rpm"
+      ]
+    },
+    "deb": {
+      "depends": [
+          "gconf2", "gconf-service", "libnotify4", "libappindicator1", "libxtst6", "libnss3",
+          "libasound2"
       ]
     }
   },
