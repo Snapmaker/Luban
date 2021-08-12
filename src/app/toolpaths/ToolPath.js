@@ -116,6 +116,10 @@ class ToolPath {
         this.status = WARNING;
     }
 
+    hasVisibleModels() {
+        return this.getState(true).modelIDs.length > 0;
+    }
+
     updateState(toolPath) {
         const {
             name = this.name, check = this.check, visible = this.visible, useLegacyEngine = this.useLegacyEngine, gcodeConfig = this.gcodeConfig,
@@ -190,6 +194,9 @@ class ToolPath {
                 data.push(taskInfo);
                 this.modelMap.get(taskInfo.modelID).status = RUNNING;
             }
+        }
+        if (data.length === 0) { // if all the model in toolpath is invisible, do not generate toolpath
+            return false;
         }
 
         const task = {
@@ -303,8 +310,8 @@ class ToolPath {
 
     checkoutStatus() {
         const values = [];
-        for (const value of this.modelMap.values()) {
-            values.push(value);
+        for (const visibleModelID of this.getState(true).modelIDs) {
+            values.push(this.modelMap.get(visibleModelID));
         }
         if (values.find(v => v.status === RUNNING)) {
             this.status = RUNNING;

@@ -310,9 +310,11 @@ export const processActions = {
             // if (toolPathGroup.canGenerateGcode()) {
             //     dispatch(processActions.commitGenerateGcode(headType));
             // }
-            dispatch(baseActions.updateState(headType, {
-                shouldGenerateGcodeCounter: shouldGenerateGcodeCounter + 1
-            }));
+            setTimeout(() => {
+                dispatch(baseActions.updateState(headType, {
+                    shouldGenerateGcodeCounter: shouldGenerateGcodeCounter + 1
+                }));
+            }, 0);
         }
     },
 
@@ -343,7 +345,6 @@ export const processActions = {
                 isGcodeGenerating: true
             }
         ));
-
         controller.commitGcodeTask({
             taskId: uuid.v4(),
             headType: headType,

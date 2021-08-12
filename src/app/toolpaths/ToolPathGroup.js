@@ -461,11 +461,8 @@ class ToolPathGroup {
         if (this.toolPaths.length === 0) {
             return null;
         }
-        const toolPaths = this.toolPaths.filter(v => v.check === true);
+        const toolPaths = this.toolPaths.filter(v => v.visible === true && v.hasVisibleModels());
         if (toolPaths.find(v => v.status !== SUCCESS)) {
-            return null;
-        }
-        if (!toolPaths.find(v => v.visible)) {
             return null;
         }
         return toolPaths;

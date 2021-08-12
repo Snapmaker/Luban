@@ -32,6 +32,7 @@ class Output extends PureComponent {
         // page: PropTypes.string.isRequired,
         inProgress: PropTypes.bool.isRequired,
         disablePreview: PropTypes.bool.isRequired,
+        disableExport: PropTypes.bool.isRequired,
         needToPreview: PropTypes.bool.isRequired,
 
         modelGroup: PropTypes.object.isRequired,
@@ -165,19 +166,19 @@ class Output extends PureComponent {
     render() {
         const actions = this.actions;
         const { workflowState, isGcodeGenerating, gcodeFile, hasModel, page,
-            disablePreview, hasToolPathModel, inProgress, displayedType, needToPreview, headType } = this.props;
+            disablePreview, hasToolPathModel, inProgress, displayedType, needToPreview, headType, disableExport } = this.props;
         const menu = (
             <Menu>
                 <Menu.Item
                     onClick={actions.onLoadGcode}
-                    disabled={inProgress || disablePreview || !hasModel || workflowState === 'running' || isGcodeGenerating || gcodeFile === null}
+                    disabled={inProgress || disableExport || !hasModel || workflowState === 'running' || isGcodeGenerating || gcodeFile === null}
                 >
                     <div className={classNames('align-c', 'padding-vertical-4')}>
                         {i18n._('Load G-code to Workspace')}
                     </div>
                 </Menu.Item>
                 <Menu.Item
-                    disabled={inProgress || disablePreview || !hasModel || workflowState === 'running' || isGcodeGenerating || gcodeFile === null}
+                    disabled={inProgress || disableExport || !hasModel || workflowState === 'running' || isGcodeGenerating || gcodeFile === null}
                     onClick={actions.onExport}
                 >
                     <div className={classNames('align-c', 'padding-vertical-4')}>
@@ -251,7 +252,7 @@ class Output extends PureComponent {
                                 <Button
                                     type="primary"
                                     priority="level-one"
-                                    disabled={inProgress || disablePreview || !hasModel || workflowState === 'running' || isGcodeGenerating || gcodeFile === null}
+                                    disabled={inProgress || disableExport || !hasModel || workflowState === 'running' || isGcodeGenerating || gcodeFile === null}
                                     className={classNames(
                                         'position-ab',
                                         // 'bottom-ne-8',
@@ -292,9 +293,18 @@ const mapStateToProps = (state, ownProps) => {
         return toolPathRelatedModels.every(model => model.visible === false);
     });
     const disablePreview = toolPathGroup.toolPaths.every(item => item.visible === false) || toolPathRelatedModelInvisible;
+    const disableExport = toolPathGroup.toolPaths.every(toolPath => {
+        if (toolPath.visible === false) {
+            return true;
+        } else {
+            const toolPathRelatedModels = modelGroup.models.filter(model => toolPath.modelIDs.includes(model.modelID));
+            return toolPathRelatedModels.every(model => model.visible === false);
+        }
+    });
 
     return {
         page,
+        disableExport,
         disablePreview,
         headType,
         modelGroup,
