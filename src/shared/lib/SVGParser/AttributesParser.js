@@ -240,13 +240,13 @@ class AttributesParser {
         }
 
         node.$.fill = 'none';
-        node.$.stroke = '#000000';
-        node.$['stroke-width'] = 1;
         Object.keys(node.$).forEach((key) => {
             const value = node.$[key];
             this.parseAttribute(attributes, parentAttributes, key, value, isTextElement);
         });
-        node.$.style = '';
+        node.$.stroke = '#000000';
+        node.$['stroke-width'] = 1;
+        node.$.style += 'fill: none; stroke: #000; stroke-width: 1px; vector-effect: non-scaling-stroke;';
         // make text have the right x
         if (isTextElement) {
             if ((isUndefined(attributes.x))) {
