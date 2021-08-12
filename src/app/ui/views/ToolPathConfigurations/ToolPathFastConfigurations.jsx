@@ -227,6 +227,13 @@ function ToolPathFastConfigurations(props) {
                     option.multiPassDepth = 0.6;
                     option.fixedPower = 100;
                 }
+
+                // Fiexd Power Enabled
+                if (option.fixedPower && option.fixedPower > 0) {
+                    option.fixedPowerEnabled = true;
+                } else {
+                    option.fixedPowerEnabled = false;
+                }
             }
             const newToolPath = {
                 ...toolPath,
