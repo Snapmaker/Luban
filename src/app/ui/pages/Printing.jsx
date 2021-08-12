@@ -15,7 +15,7 @@ import { actions as projectActions } from '../../flux/project';
 import ProjectLayout from '../layouts/ProjectLayout';
 import MainToolBar from '../layouts/MainToolBar';
 import { HEAD_3DP } from '../../constants';
-import { renderPopup, renderWidgetList, logPageView } from '../utils';
+import { renderPopup, renderWidgetList, logPageView, useUnsavedTitle } from '../utils';
 import { machineStore } from '../../store/local-storage';
 
 import ControlWidget from '../widgets/Control';
@@ -184,7 +184,7 @@ function Printing() {
     const modelGroup = useSelector(state => state.printing.modelGroup);
     const thumbnail = useRef();
     const stepRef = useRef();
-    // useUnsavedTitle(pageHeadType);
+    useUnsavedTitle(pageHeadType);
 
     useEffect(() => {
         const setting = machineStore.get('guideTours');

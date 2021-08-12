@@ -67,15 +67,12 @@ function useGetDefinitions(allDefinitions, definitionState, setDefinitionState, 
 
         const definitionOptions = allDefinitions.map(d => {
             const checkboxAndSelectGroup = {};
-            defaultKeysAndId.keysArray.forEach((key) => {
-                checkboxAndSelectGroup[key] = d.settings[key].default_value;
-            });
             checkboxAndSelectGroup.label = d.name;
             checkboxAndSelectGroup.value = d.definitionId;
             if (d?.category) {
                 checkboxAndSelectGroup.category = d.category;
             }
-            if (Object.keys(d.settings).length === 0 || isUndefined(d.settings)) {
+            if (d.settings && (Object.keys(d.settings).length === 0 || isUndefined(d.settings))) {
                 checkboxAndSelectGroup.isHidden = true;
             }
             return checkboxAndSelectGroup;

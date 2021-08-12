@@ -67,8 +67,9 @@ function ToolPathConfigurations(props) {
                 const oldTooldefinition = toolDefinitions.find((d) => {
                     return d.definitionId === currentToolDefinition.definitionId;
                 });
+                console.log('oldTooldefinition.settings', oldTooldefinition, currentToolDefinition);
                 return !Object.entries(oldTooldefinition.settings).every(([key, setting]) => {
-                    return currentToolDefinition && currentToolDefinition.settings[key].default_value === setting.default_value;
+                    return currentToolDefinition && currentToolDefinition.settings[key] && currentToolDefinition.settings[key].default_value === setting.default_value;
                 });
             } else {
                 return false;
