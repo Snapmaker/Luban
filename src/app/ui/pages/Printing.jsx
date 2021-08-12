@@ -84,6 +84,7 @@ const pageHeadType = HEAD_3DP;
 function useRenderMainToolBar() {
     const unSaved = useSelector(state => state?.project[pageHeadType]?.unSaved, shallowEqual);
     const hasModel = useSelector(state => state?.printing?.hasModel, shallowEqual);
+    const inProgress = useSelector(state => state?.printing?.inProgress, shallowEqual);
     const canRedo = useSelector(state => state?.printing?.history?.canRedo, shallowEqual);
     const canUndo = useSelector(state => state?.printing?.history?.canUndo, shallowEqual);
     const [showHomePage, setShowHomePage] = useState(false);
@@ -118,6 +119,7 @@ function useRenderMainToolBar() {
         const leftItems = [
             {
                 title: i18n._('Home'),
+                disabled: inProgress,
                 type: 'button',
                 name: 'MainToolbarHome',
                 action: () => {

@@ -17,6 +17,7 @@ import UniApi from '../../../lib/uni-api';
 import { actions as printingActions, PRINTING_STAGE } from '../../../flux/printing';
 import { actions as workspaceActions } from '../../../flux/workspace';
 import { actions as projectActions } from '../../../flux/project';
+import { actions as menuActions } from '../../../flux/appbar-menu';
 import Thumbnail from './Thumbnail';
 import ModelExporter from '../PrintingVisualizer/ModelExporter';
 import { renderPopup } from '../../utils';
@@ -148,6 +149,14 @@ class Output extends PureComponent {
         // this.props.onRef(this);
         UniApi.Event.on('appbar-menu:printing.export-gcode', this.actions.onClickExportGcode);
         UniApi.Event.on('appbar-menu:printing.export-model', this.actions.onClickExportModel);
+    }
+
+    componentWillReceiveProps(nextProps) {
+        if (this.props.inProgress !== nextProps.inProgress && nextProps.inProgress) {
+            this.props.disableMenu();
+        } else {
+            this.props.enableMenu();
+        }
     }
 
     componentWillUnmount() {
@@ -282,6 +291,8 @@ const mapStateToProps = (state) => {
 
 const mapDispatchToProps = (dispatch) => {
     return {
+        enableMenu: () => dispatch(menuActions.enableMenu()),
+        disableMenu: () => dispatch(menuActions.disableMenu()),
         generateGcode: (thumbnail) => dispatch(printingActions.generateGcode(thumbnail)),
         renderGcodeFile: (file) => dispatch(workspaceActions.renderGcodeFile(file)),
         displayGcode: () => dispatch(printingActions.displayGcode()),
