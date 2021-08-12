@@ -111,10 +111,8 @@ function CncToolManager({ closeToolManager, shouldSaveToolpath = false, saveTool
     };
     const optionConfigGroup = CNC_TOOL_CONFIG_GROUP;
     const allDefinitions = toolDefinitions;
-    const defaultKeysAndId = {
-        id: 'DefaultCVbit',
-        name: 'Carving V-bit',
-        keysArray: []
+    const selectedId = {
+        id: 'DefaultCVbit'
     };
     return (
         <ProfileManager
@@ -126,7 +124,7 @@ function CncToolManager({ closeToolManager, shouldSaveToolpath = false, saveTool
             allDefinitions={allDefinitions}
             disableCategory={false}
             managerTitle="Tool Settings"
-            defaultKeysAndId={defaultKeysAndId}
+            selectedId={selectedId.id}
         />
     );
 }

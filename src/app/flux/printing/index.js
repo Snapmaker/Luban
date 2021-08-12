@@ -84,8 +84,8 @@ const INITIAL_STATE = {
     materialDefinitions: [],
     qualityDefinitions: [],
     isRecommended: true, // Using recommended settings
-    defaultMaterialId: 'material.pla',
-    defaultQualityId: '',
+    defaultMaterialId: 'material.pla', // TODO: selectedMaterialId
+    defaultQualityId: '', // TODO: selectedQualityId
     // Active definition
     // Hierarchy: FDM Printer -> Snapmaker -> Active Definition (combination of machine, material, adhesion configurations)
     activeDefinition: ABSENT_OBJECT,
@@ -708,9 +708,9 @@ export const actions = {
     updateIsRecommended: (isRecommended) => (dispatch) => {
         dispatch(actions.updateState({ isRecommended }));
     },
-    updateDefaultIdByType: (type, materialId) => (dispatch) => {
+    updateDefaultIdByType: (type, newDefinitionId) => (dispatch) => {
         const defaultId = defaultDefinitionKeys[type].id;
-        dispatch(actions.updateState({ [defaultId]: materialId }));
+        dispatch(actions.updateState({ [defaultId]: newDefinitionId }));
         dispatch(actions.destroyGcodeLine());
         dispatch(actions.displayModel());
     },

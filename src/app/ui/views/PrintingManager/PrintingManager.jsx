@@ -9,24 +9,6 @@ import { PRINTING_MANAGER_TYPE_MATERIAL, PRINTING_MANAGER_TYPE_QUALITY,
 import ProfileManager from '../ProfileManager';
 import i18n from '../../../lib/i18n';
 
-// checkbox and select
-const MATERIAL_CHECKBOX_AND_SELECT_KEY_ARRAY = [
-    'machine_heated_bed'
-];
-const QUALITY_CHECKBOX_AND_SELECT_KEY_ARRAY = [
-    'adhesion_type',
-    'infill_pattern',
-    'magic_mesh_surface_mode',
-    'magic_spiralize',
-    'outer_inset_first',
-    'retract_at_layer_change',
-    'retraction_enable',
-    'retraction_hop',
-    'retraction_hop_enabled',
-    'support_enable',
-    'support_pattern',
-    'support_type'
-];
 // Only custom material is editable, changes on diameter is not allowed as well
 function isDefinitionEditable(definition, key) {
     return !definition?.metadata?.readonly
@@ -40,6 +22,8 @@ function isOfficialDefinition(definition) {
 
 function PrintingManager() {
     const showPrintingManager = useSelector(state => state?.printing?.showPrintingManager, shallowEqual);
+    const defaultMaterialId = useSelector(state => state?.printing?.defaultMaterialId, shallowEqual);
+    const defaultQualityId = useSelector(state => state?.printing?.defaultQualityId, shallowEqual);
     // const series = useSelector(state => state?.machine?.series, shallowEqual);
     const managerDisplayType = useSelector(state => state?.printing?.managerDisplayType, shallowEqual);
     const materialDefinitions = useSelector(state => state?.printing?.materialDefinitions);
@@ -129,14 +113,12 @@ function PrintingManager() {
     const optionConfigGroup = managerDisplayType === PRINTING_MANAGER_TYPE_MATERIAL ? PRINTING_MATERIAL_CONFIG_GROUP : PRINTING_QUALITY_CONFIG_GROUP;
     const allDefinitions = managerDisplayType === PRINTING_MANAGER_TYPE_MATERIAL ? materialDefinitions : qualityDefinitions;
 
-    const defaultKeysAndId = {
+    const selectedIds = {
         [PRINTING_MANAGER_TYPE_MATERIAL]: {
-            id: 'material.pla',
-            keysArray: MATERIAL_CHECKBOX_AND_SELECT_KEY_ARRAY
+            id: defaultMaterialId
         },
         [PRINTING_MANAGER_TYPE_QUALITY]: {
-            id: 'quality.fast_print',
-            keysArray: QUALITY_CHECKBOX_AND_SELECT_KEY_ARRAY
+            id: defaultQualityId
         }
     };
     return (
@@ -147,7 +129,7 @@ function PrintingManager() {
             optionConfigGroup={optionConfigGroup}
             allDefinitions={allDefinitions}
             managerTitle={managerDisplayType === PRINTING_MANAGER_TYPE_MATERIAL ? 'Material Settings' : 'Printing Settings'}
-            defaultKeysAndId={defaultKeysAndId[managerDisplayType]}
+            selectedId={selectedIds[managerDisplayType].id}
         />
     );
 }
