@@ -49,7 +49,7 @@ const Begin = () => {
         setBeginSelected(type);
     };
 
-    const handleChangeAxis = async (isRotate, headType) => {
+    const handleNewFile = async (isRotate, headType) => {
         UniApi.Event.emit('appbar-menu:new-file', { headType, isRotate });
     };
 
@@ -73,7 +73,7 @@ const Begin = () => {
                     {beginSelected === 'start-project' && (
                         <div className={classNames(styles['link-bar'], 'margin-vertical-48')}>
                             <div className={classNames(styles['3dp'], 'margin-horizontal-16')}>
-                                <Anchor onClick={() => handleChangeAxis(false, HEAD_3DP)} title={i18n._('3D Printing G-code Generator')}>
+                                <Anchor onClick={() => handleNewFile(false, HEAD_3DP)} title={i18n._('3D Printing G-code Generator')}>
                                     <div className={classNames(styles.imgWrapper)}>
                                         <img src={require('./images/icon_3d_120x120.svg')} alt="" />
                                     </div>
@@ -85,10 +85,10 @@ const Begin = () => {
                                     <div className={classNames(styles.imgWrapper)}>
                                         <img className={classNames(styles['laser-img'])} src={require('./images/icon_laser_120x120.svg')} alt="" />
                                         <div className={styles['laser-axis-select']}>
-                                            <Button onClick={() => { handleChangeAxis(false, HEAD_LASER); }} className={classNames(styles['three-axis-select'])} type="default" priority="level-three">
+                                            <Button onClick={() => { handleNewFile(false, HEAD_LASER); }} className={classNames(styles['three-axis-select'])} type="default" priority="level-three">
                                                 {i18n._('3-axis')}
                                             </Button>
-                                            <Button onClick={() => { handleChangeAxis(true, HEAD_LASER); }} className={classNames(styles['four-axis-select'])} type="default" priority="level-three">
+                                            <Button onClick={() => { handleNewFile(true, HEAD_LASER); }} className={classNames(styles['four-axis-select'])} type="default" priority="level-three">
                                                 {i18n._('4-axis')}
                                             </Button>
                                         </div>
@@ -101,10 +101,10 @@ const Begin = () => {
                                     <div className={classNames(styles.imgWrapper)}>
                                         <img className={classNames(styles['cnc-img'])} src={require('./images/icon_cnc_120x120.svg')} alt="" />
                                         <div className={styles['cnc-axis-select']}>
-                                            <Button onClick={() => { handleChangeAxis(false, HEAD_CNC); }} className={classNames(styles['three-axis-select'])} type="default" priority="level-three">
+                                            <Button onClick={() => { handleNewFile(false, HEAD_CNC); }} className={classNames(styles['three-axis-select'])} type="default" priority="level-three">
                                                 {i18n._('3-axis')}
                                             </Button>
-                                            <Button onClick={() => { handleChangeAxis(true, HEAD_CNC); }} className={classNames(styles['four-axis-select'])} type="default" priority="level-three">
+                                            <Button onClick={() => { handleNewFile(true, HEAD_CNC); }} className={classNames(styles['four-axis-select'])} type="default" priority="level-three">
                                                 {i18n._('4-axis')}
                                             </Button>
                                         </div>
