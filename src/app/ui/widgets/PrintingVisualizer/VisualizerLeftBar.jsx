@@ -484,7 +484,7 @@ class VisualizerLeftBar extends PureComponent {
                                 <div className="sm-flex height-32 margin-bottom-8">
                                     <Checkbox
                                         defaultChecked={uniformScalingState}
-                                        value={uniformScalingState}
+                                        checked={uniformScalingState}
                                         onClick={() => {
                                             actions.changeUniformScalingState(uniformScalingState); // Todo: bug, state error
                                         }}
