@@ -268,7 +268,7 @@ export const CNC_DEFAULT_GCODE_PARAMETERS_DEFINITION = {
         default_value: 'rotation'
     },
     'pathType': {
-        label: 'Path',
+        label: 'Method',
         description: 'Choose carving path',
         type: 'enum',
         options: {

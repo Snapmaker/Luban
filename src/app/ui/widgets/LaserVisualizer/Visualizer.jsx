@@ -240,7 +240,7 @@ class Visualizer extends Component {
         },
         rotateModel: (angle) => {
             const elements = this.props.SVGActions.svgContentGroup.selectedElements;
-            const startAngle = this.props.SVGActions.svgContentGroup.getElementAngel();
+            const startAngle = this.props.SVGActions.svgContentGroup.getElementAngle();
             let endAngle = (startAngle + angle) % 360;
             if (endAngle > 180) {
                 endAngle -= 360;

@@ -5475,7 +5475,7 @@
                 "magic_mesh_surface_mode":
                 {
                     "label": "Surface Mode",
-                    "description": "Treat the model as a surface only, a volume, or volumes with loose surfaces. The normal print mode only prints enclosed volumes. \"Surface\" prints a single wall tracing the mesh surface with no infill and no top/bottom skin. \"Both\" prints enclosed volumes like normal and any remaining polygons as surfaces.",
+                    "description": "Treat the model as a surface only, a volume, or volumes with loose surfaces. The normal print mode only prints enclosed volumes. \"Surface\" prints a single wall tracing the mesh surface with no infill and no top/bottom skin.",
                     "type": "enum",
                     "options":
                     {

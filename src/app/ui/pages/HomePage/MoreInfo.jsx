@@ -14,37 +14,37 @@ const MoreInfo = () => {
             <div className={classNames(styles['resource-list'])}>
                 <a href="javascript;" target="_blank" rel="noopener noreferrer" className={classNames(styles.listItem)}>
                     <span className={classNames('heading-3-normal-with-hover')}>
-                      Software Manual
+                        {i18n._('Software Manual')}
                     </span>
                 </a>
                 <a className={classNames(styles.listItem, styles['right-part'])} href={lang === 'en' ? 'https://support.snapmaker.com/hc/en-us' : 'https://support.snapmaker.com/hc/zh-cn'} target="_blank" rel="noopener noreferrer">
                     <span className={classNames('heading-3-normal-with-hover')}>
-                      Support
+                        {i18n._('Support')}
                     </span>
                 </a>
                 <a className={classNames(styles.listItem)} href="https://www.youtube.com/c/Snapmaker/playlists" target="_blank" rel="noopener noreferrer">
                     <span className={classNames('heading-3-normal-with-hover')}>
-                      Video Tutorial
+                        {i18n._('Video Tutorial')}
                     </span>
                 </a>
                 <a className={classNames(styles.listItem, styles['right-part'])} href="https://forum.snapmaker.com/" target="_blank" rel="noopener noreferrer">
                     <span className={classNames('heading-3-normal-with-hover')}>
-                      Forum
+                        {i18n._('Forum')}
                     </span>
                 </a>
                 <a className={classNames(styles.listItem)} href={lang === 'en' ? 'https://snapmaker.com' : 'https://snapmaker.cn/'} target="_blank" rel="noopener noreferrer">
                     <span className={classNames('heading-3-normal-with-hover')}>
-                      Snapmaker.com
+                        {i18n._('Snapmaker.com')}
                     </span>
                 </a>
                 <a className={classNames(styles.listItem, styles['right-part'])} href="https://shop.snapmaker.com/" target="_blank" rel="noopener noreferrer">
                     <span className={classNames('heading-3-normal-with-hover')}>
-                      Shopify
+                        {i18n._('Shopify')}
                     </span>
                 </a>
                 <a className={classNames(styles.listItem)} href="https://www.myminifactory.com/" target="_blank" rel="noopener noreferrer">
                     <span className={classNames('heading-3-normal-with-hover')}>
-                      MyMiniFactory
+                        {i18n._('MyMiniFactory')}
                     </span>
                 </a>
             </div>
