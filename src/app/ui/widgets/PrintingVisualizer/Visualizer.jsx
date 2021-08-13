@@ -56,6 +56,7 @@ class Visualizer extends PureComponent {
         removeAllModels: PropTypes.func.isRequired,
         arrangeAllModels: PropTypes.func.isRequired,
         onModelTransform: PropTypes.func.isRequired,
+        onModelTransformAsNeed: PropTypes.func.isRequired,
         onModelAfterTransform: PropTypes.func.isRequired,
         updateSelectedModelTransformation: PropTypes.func.isRequired,
         duplicateSelectedModel: PropTypes.func.isRequired,
@@ -114,11 +115,15 @@ class Visualizer extends PureComponent {
             this.props.recordModelBeforeTransform(this.props.modelGroup);
         },
         onModelAfterTransform: (transformMode) => {
+            this.actions.onModelTransform();
             this.props.recordModelAfterTransform(transformMode, this.props.modelGroup);
             this.props.onModelAfterTransform();
         },
         onModelTransform: () => {
             this.props.onModelTransform();
+        },
+        onModelTransformAsNeed: () => {
+            this.props.onModelTransformAsNeed();
         },
         // context menu
         centerSelectedModel: () => {
@@ -490,7 +495,7 @@ class Visualizer extends PureComponent {
                         onSelectModels={this.actions.onSelectModels}
                         onModelAfterTransform={this.actions.onModelAfterTransform}
                         onModelBeforeTransform={this.actions.onModelBeforeTransform}
-                        onModelTransform={this.actions.onModelTransform}
+                        onModelTransform={this.actions.onModelTransformAsNeed}
                         showContextMenu={this.showContextMenu}
                     />
                 </div>
@@ -613,6 +618,7 @@ const mapDispatchToProps = (dispatch) => ({
     removeAllModels: () => dispatch(printingActions.removeAllModels()),
     arrangeAllModels: () => dispatch(printingActions.arrangeAllModels()),
     onModelTransform: () => dispatch(printingActions.onModelTransform()),
+    onModelTransformAsNeed: () => dispatch(printingActions.onModelTransformAsNeed()),
     onModelAfterTransform: () => dispatch(printingActions.onModelAfterTransform()),
     updateSelectedModelTransformation: (transformation, newUniformScalingState) => dispatch(printingActions.updateSelectedModelTransformation(transformation, newUniformScalingState)),
     duplicateSelectedModel: () => dispatch(printingActions.duplicateSelectedModel()),
