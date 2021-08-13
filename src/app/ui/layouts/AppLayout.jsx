@@ -257,13 +257,15 @@ class AppLayout extends PureComponent {
             } else {
                 format = path.split('.').pop();
             }
-            const output = new ModelExporter().parse(this.props.modelGroup.object, format, isBinary);
-            if (!output) {
-                // export error
-                return;
+            if (this.props.modelGroup.hasModel()) {
+                const output = new ModelExporter().parse(this.props.modelGroup.object, format, isBinary);
+                if (!output) {
+                    // export error
+                    return;
+                }
+                const blob = new Blob([output], { type: 'text/plain;charset=utf-8' });
+                UniApi.File.writeBlobToFile(blob, path);
             }
-            const blob = new Blob([output], { type: 'text/plain;charset=utf-8' });
-            UniApi.File.writeBlobToFile(blob, path);
         },
         initUniEvent: () => {
             UniApi.Event.on('message', (event, message) => {
