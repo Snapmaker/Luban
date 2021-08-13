@@ -36,9 +36,11 @@ import { actions as operationHistoryActions } from '../../flux/operation-history
 import styles from './styles/appbar.styl';
 import HomePage from '../pages/HomePage';
 import Workspace from '../pages/Workspace';
+import ModelExporter from '../widgets/PrintingVisualizer/ModelExporter';
 
 class AppLayout extends PureComponent {
     static propTypes = {
+        modelGroup: PropTypes.object.isRequired,
         store: PropTypes.object.isRequired,
         currentModalPath: PropTypes.string,
         updateCurrentModalPath: PropTypes.func.isRequired,
@@ -237,6 +239,31 @@ class AppLayout extends PureComponent {
             // start recover service after file opened on startup
             // to ensure opened file set before service run
             this.props.initRecoverService();
+        },
+        exportModel: (path) => {
+            const isBinary = true;
+            let format;
+            if (!path) {
+                format = 'stl';
+                path = 'export';
+                if (format === 'stl') {
+                    if (isBinary === true) {
+                        path += '_binary';
+                    } else {
+                        path += '_ascii';
+                    }
+                }
+                path += `.${format}`;
+            } else {
+                format = path.split('.').pop();
+            }
+            const output = new ModelExporter().parse(this.props.modelGroup.object, format, isBinary);
+            if (!output) {
+                // export error
+                return;
+            }
+            const blob = new Blob([output], { type: 'text/plain;charset=utf-8' });
+            UniApi.File.writeBlobToFile(blob, path);
         },
         initUniEvent: () => {
             UniApi.Event.on('message', (event, message) => {
@@ -458,7 +485,24 @@ class AppLayout extends PureComponent {
             UniApi.Event.on('appbar-menu:export-model', () => {
                 const pathname = this.props.currentModalPath || this.props.history.location.pathname;
                 if (pathname === '/3dp') {
-                    UniApi.Event.emit('appbar-menu:printing.export-model');
+                    const promise = UniApi.Dialog.showSaveDialog({
+                        title: i18n._('Export Model'),
+                        filters: [
+                            { name: 'STL Binary', extensions: ['stl'] },
+                            { name: 'OBJ', extensions: ['obj'] }
+                        ]
+                    });
+                    if (promise) {
+                        // called from Electron
+                        promise.then((result) => {
+                            if (result.filePath) {
+                                this.actions.exportModel(result.filePath);
+                            }
+                        });
+                    } else {
+                        // called in browser
+                        this.actions.exportModel();
+                    }
                 }
             });
             UniApi.Event.on('appbar-menu:get-started', (caseItem) => {
@@ -549,12 +593,14 @@ const mapStateToProps = (state) => {
     const machineInfo = state.machine;
     const { currentModalPath } = state.appbarMenu;
     const { shouldCheckForUpdate } = machineInfo;
+    const { modelGroup } = state.printing;
     // const projectState = state.project;
     return {
         currentModalPath: currentModalPath ? currentModalPath.slice(1) : currentModalPath, // exclude hash character `#`
         machineInfo,
         shouldCheckForUpdate,
-        store: state
+        store: state,
+        modelGroup
         // projectState
     };
 };

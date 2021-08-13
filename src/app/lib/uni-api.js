@@ -158,6 +158,17 @@ const Menu = {
  * File control in electron
  */
 const File = {
+    writeBlobToFile(blob, path) {
+        if (isElectron()) {
+            const fileReader = new FileReader();
+            fileReader.onload = () => {
+                window.require('fs').writeFileSync(path, Buffer.from(new Uint8Array(fileReader.result)));
+            };
+            fileReader.readAsArrayBuffer(blob);
+        } else {
+            FileSaver.saveAs(blob, path, true);
+        }
+    },
     save(targetFile, tmpFile) {
         if (isElectron()) {
             const fs = window.require('fs');

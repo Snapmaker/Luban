@@ -5,7 +5,6 @@ import path from 'path';
 import classNames from 'classnames';
 import { noop } from 'lodash';
 import PropTypes from 'prop-types';
-import FileSaver from 'file-saver';
 import Menu from '../../components/Menu';
 import { Button } from '../../components/Buttons';
 import Dropdown from '../../components/Dropdown';
@@ -19,7 +18,6 @@ import { actions as workspaceActions } from '../../../flux/workspace';
 import { actions as projectActions } from '../../../flux/project';
 import { actions as menuActions } from '../../../flux/appbar-menu';
 import Thumbnail from './Thumbnail';
-import ModelExporter from '../PrintingVisualizer/ModelExporter';
 import { renderPopup } from '../../utils';
 
 import Workspace from '../../pages/Workspace';
@@ -50,7 +48,6 @@ class Output extends PureComponent {
     };
 
     state = {
-        exportModelFormatInfo: 'stl_binary',
         showExportOptions: false
     };
 
@@ -115,40 +112,12 @@ class Output extends PureComponent {
             const { gcodeFile } = this.props;
             const filename = path.basename(gcodeFile.name);
             this.props.exportFile(filename);
-        },
-        onChangeExportModelFormat: (option) => {
-            this.setState({
-                exportModelFormatInfo: option.value
-            });
-        },
-        onClickExportModel: () => {
-            const infos = this.state.exportModelFormatInfo.split('_');
-            const format = infos[0];
-            const isBinary = (infos.length > 1) ? (infos[1] === 'binary') : false;
-            // const output = new ModelExporter().parse(this.props.modelGroup, format, isBinary);
-            const output = new ModelExporter().parse(this.props.modelGroup.object, format, isBinary);
-            if (!output) {
-                // export error
-                return;
-            }
-            const blob = new Blob([output], { type: 'text/plain;charset=utf-8' });
-            let fileName = 'export';
-            if (format === 'stl') {
-                if (isBinary === true) {
-                    fileName += '_binary';
-                } else {
-                    fileName += '_ascii';
-                }
-            }
-            fileName += `.${format}`;
-            FileSaver.saveAs(blob, fileName, true);
         }
     };
 
     componentDidMount() {
         // this.props.onRef(this);
         UniApi.Event.on('appbar-menu:printing.export-gcode', this.actions.onClickExportGcode);
-        UniApi.Event.on('appbar-menu:printing.export-model', this.actions.onClickExportModel);
     }
 
     componentWillReceiveProps(nextProps) {
@@ -161,7 +130,6 @@ class Output extends PureComponent {
 
     componentWillUnmount() {
         UniApi.Event.off('appbar-menu:printing.export-gcode', this.actions.onClickExportGcode);
-        UniApi.Event.off('appbar-menu:printing.export-model', this.actions.onClickExportModel);
     }
 
     renderWorkspace() {
