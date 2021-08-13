@@ -54,7 +54,6 @@ class Output extends PureComponent {
         switchToPage: PropTypes.func.isRequired,
         showToolPathGroupObject: PropTypes.func.isRequired,
         showModelGroupObject: PropTypes.func.isRequired,
-        clearGcodeFile: PropTypes.func.isRequired,
         setAutoPreview: PropTypes.func.isRequired,
         preview: PropTypes.func.isRequired
     };
@@ -67,7 +66,6 @@ class Output extends PureComponent {
         switchToEditPage: () => {
             if (this.props.displayedType === DISPLAYED_TYPE_TOOLPATH) {
                 this.props.showModelGroupObject();
-                this.props.clearGcodeFile();
             } else {
                 this.props.showToolPathGroupObject();
             }
@@ -330,7 +328,6 @@ const mapDispatchToProps = (dispatch, ownProps) => {
         switchToPage: (page) => dispatch(editorActions.switchToPage(headType, page)),
         showToolPathGroupObject: () => dispatch(editorActions.showToolPathGroupObject(headType)),
         showModelGroupObject: () => dispatch(editorActions.showModelGroupObject(headType)),
-        clearGcodeFile: () => dispatch(editorActions.clearGcodeFile(headType)),
         // togglePage: (page) => dispatch(editorActions.togglePage(headType, page)),
         setThumbnail: (thumbnail) => dispatch(editorActions.setThumbnail(headType, thumbnail)),
         renderGcodeFile: (fileName) => dispatch(workspaceActions.renderGcodeFile(fileName)),
