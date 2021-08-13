@@ -7,7 +7,7 @@ export default {
     submenu: [
         {
             id: 'guided-tour',
-            label: 'Guided Tour',
+            label: 'Beginner\'s Guide',
             enabled: true,
             click: (menuItem, browserWindow) => {
                 if (isElectron()) {
@@ -24,7 +24,7 @@ export default {
             click: () => {}
         },
         {
-            label: 'Video Tutorials',
+            label: 'Video Tutorial',
             id: 'video-tutorials',
             enabled: true,
             click: (menuItem, browserWindow) => {
@@ -60,7 +60,7 @@ export default {
             }
         },
         {
-            label: 'Supports',
+            label: 'Support',
             id: 'supports',
             enabled: true,
             click: (menuItem, browserWindow) => {

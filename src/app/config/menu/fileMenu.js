@@ -109,7 +109,7 @@ export default {
                 { id: 'line-0', type: 'separator' },
                 {
                     id: 'remove-recent',
-                    label: 'Clear All Recent Project',
+                    label: 'Clear All Recent Projects',
                     enabled: true,
                     click: (menuItem, browserWindow) => {
                         if (isElectron()) {

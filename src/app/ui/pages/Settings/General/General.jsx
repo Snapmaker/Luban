@@ -168,7 +168,7 @@ function General({ state: generalState, actions }) {
                         >
                             {i18n._('Check for updates')}
                         </Button>
-                        <div className="display-inline margin-left-8 height-32">
+                        <div className="display-block margin-left-8 height-32">
                             <Checkbox
                                 checked={shouldCheckForUpdate}
                                 onChange={(event) => { updateShouldCheckForUpdate(event.target.checked); }}
