@@ -146,6 +146,7 @@ const ToolPathListBox = (props) => {
     const inProgress = useSelector(state => state[props.headType]?.inProgress);
     const firstSelectedToolpath = useSelector(state => state[props.headType]?.toolPathGroup?.isSingleSelected && state[props.headType]?.toolPathGroup?.firstSelectedToolpath, shallowEqual);
     const displayedType = useSelector(state => state[props.headType]?.displayedType);
+    const selectedModelArray = useSelector(state => state[props.headType]?.modelGroup?.getSelectedModelArray());
     const dispatch = useDispatch();
 
     const selectedToolPathId = firstSelectedToolpath.id;
@@ -394,7 +395,7 @@ const ToolPathListBox = (props) => {
                         priority="level-two"
                         width="100%"
                         onClick={actions.createToolPath}
-                        disabled={inProgress}
+                        disabled={inProgress || (!selectedModelArray || selectedModelArray.length === 0)}
                     >
                         {i18n._('Create Toolpath')}
                     </Button>
