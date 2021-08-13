@@ -256,7 +256,7 @@ class Configurations extends PureComponent {
                                     definitionKey={key}
                                     key={key}
                                     onChangeDefinition={actions.onChangeDefinition}
-                                    isDefinitionEditable={() => {
+                                    isDefaultDefinition={() => {
                                         return !isProfile;
                                     }}
                                     defaultValue={{
