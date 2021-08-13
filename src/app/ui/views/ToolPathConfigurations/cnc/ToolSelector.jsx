@@ -137,7 +137,7 @@ function ToolSelector({ toolDefinitions, setCurrentToolDefinition, setCurrentVal
                             onClick={onShowCncToolManager}
                             borderRadius={8}
                         />
-                        <div className="position-ab height-16 bottom-0">
+                        <div className={`position-ab bottom-0 height-16 ${isModifiedDefinition ? 'left-16' : ''}`}>
                             <p className="additional-message">
                                 {foundDefinition && `${i18n._('Material')}: ${foundDefinition.label}`}
                             </p>
