@@ -51,6 +51,7 @@ class LaserParameters extends PureComponent {
                 option.fixedPower = 60;
             }
             if (option.movementMode === 'greyscale-line') {
+                option.direction = (!this.props.toolPath.materials?.isRotate ? 'Horizontal' : 'Vertical');
                 option.fillInterval = 0.25;
                 option.jogSpeed = 3000;
                 option.workSpeed = 500;
