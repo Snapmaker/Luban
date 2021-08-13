@@ -288,7 +288,7 @@ class AppLayout extends PureComponent {
                     this.actions.updateRecentFile(arr, 'update');
                 }
             });
-            UniApi.Event.on('save-as-file', (event, file) => {
+            UniApi.Event.on('appbar-menu:save-as-file', (event, file) => {
                 const pathname = this.props.currentModalPath || this.props.history.location.pathname;
                 switch (pathname) {
                     case '/3dp':
@@ -297,7 +297,7 @@ class AppLayout extends PureComponent {
                     default: break;
                 }
             });
-            UniApi.Event.on('save', () => {
+            UniApi.Event.on('appbar-menu:save', () => {
                 const pathname = this.props.currentModalPath || this.props.history.location.pathname;
                 switch (pathname) {
                     case '/3dp':
@@ -343,6 +343,12 @@ class AppLayout extends PureComponent {
             });
             UniApi.Event.on('new-file', (event, ...args) => {
                 UniApi.Event.emit('appbar-menu:new-file', ...args);
+            });
+            UniApi.Event.on('save', (event, ...args) => {
+                UniApi.Event.emit('appbar-menu:save', ...args);
+            });
+            UniApi.Event.on('save-as-file', (event, ...args) => {
+                UniApi.Event.emit('appbar-menu:save-as-file', ...args);
             });
             UniApi.Event.on('export-model', (event, ...args) => {
                 UniApi.Event.emit('appbar-menu:export-model', ...args);

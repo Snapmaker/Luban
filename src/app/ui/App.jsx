@@ -46,10 +46,10 @@ class App extends PureComponent {
                 UniApi.Event.emit('appbar-menu:open-file');
             },
             [shortcutActions.SAVE]: () => {
-                UniApi.Event.emit('save');
+                UniApi.Event.emit('appbar-menu:save');
             },
             [shortcutActions.SAVE_AS]: () => {
-                UniApi.Event.emit('save-as-file');
+                UniApi.Event.emit('appbar-menu:save-as-file');
             },
             [shortcutActions.IMPORT]: () => {
                 UniApi.Event.emit('appbar-menu:import');
