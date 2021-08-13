@@ -21,6 +21,8 @@ class SvgIcon extends PureComponent {
         spanClassName: PropTypes.string,
         size: PropTypes.number,
         inputInfo: PropTypes.object,
+        hoverSize: PropTypes.number, // hover background size
+        borderRadius: PropTypes.number,
         /** type value:
          * 1. hoverNormal: isHovered background: #EEEFF0, color: the same as this.props.color;
          * 2. hoverNoBackground: isHovered background: transparent, color: #2A2C2E;
@@ -79,12 +81,15 @@ class SvgIcon extends PureComponent {
             hasBorderBottom,
             type,
             children,
+            borderRadius = 4,
             ...props
         } = this.props;
         let {
+            hoverSize = 30,
             color = '#85888C'
         } = this.props;
         let iconBackground = 'transparent';
+        let iconLineHeight = '30px';
         const Component = Icons[name];
         // if (!Component) {
         //     console.log(`Can't find the icon named '${name}', please check your icon name`);
@@ -95,6 +100,7 @@ class SvgIcon extends PureComponent {
         const pressedBackground = includes(type, 'pressSpecial') ? '#E7F3FF' : '#D5D6D9';// '#D5D6D9'
         const pressedIconColor = includes(type, 'pressSpecial') ? '#1890FF' : '#545659'; // '#545659'
         const isStaticIcon = includes(type, 'static');
+        const onlyIcon = !(spanText || children || this.props.size > 24);
         if (isHovered && !isPressed) {
             color = isStaticIcon ? color : hoverIconColor;
             iconBackground = isStaticIcon ? 'transparent' : hoverBackgroundColor;
@@ -105,9 +111,14 @@ class SvgIcon extends PureComponent {
             iconBackground = 'transparent';
             color = color || '#85888C';
         }
-
+        if (this.props.size > 24 || isStaticIcon) {
+            hoverSize = 'auto';
+            iconLineHeight = 'normal';
+        }
         return (
-            <span title={title} className={classNames(className, 'display-inline')} style={{ verticalAlign: 'top', background: iconBackground, fontSize: '0' }}>
+            <span title={title} className={classNames(className, 'display-inline')} style={{ verticalAlign: 'top', background: onlyIcon ? 'transparent' : iconBackground, fontSize: '0', borderRadius: borderRadius }}>
+                {/* , borderRadius: 4, height: hoverSize, width: hoverSize, textAlign: 'center', lineHeight: iconLineHeight */}
+                {/* width: hoverSize, height: hoverSize, textAlign: 'center'  */}
                 { inputInfo !== undefined && (
                     <input
                         ref={inputInfo.fileInput}
@@ -137,13 +148,15 @@ class SvgIcon extends PureComponent {
                     onMouseUp={this.actions.handleMouseUp}
                 >
                     {Component && (
-                        <Component
-                            {...props}
-                            disabled={disabled}
+                        <div className={classNames('display-inline')} style={{ height: hoverSize, width: hoverSize, textAlign: 'center', lineHeight: iconLineHeight, background: iconBackground, borderRadius: borderRadius }}>
+                            <Component
+                                {...props}
+                                disabled={disabled}
 
-                            color={disabled ? '#D5D6D9' : color}
-                            style={{ background: iconBackground, borderBottom: hasBorderBottom ? '1px solid #D5D6D9' : 0 }}
-                        />
+                                color={disabled ? '#D5D6D9' : color}
+                                style={{ background: iconBackground, borderBottom: hasBorderBottom ? '1px solid #D5D6D9' : 0 }}
+                            />
+                        </div>
                     )}
                     {children}
                     { spanText && isHorizontal && (

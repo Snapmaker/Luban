@@ -83,6 +83,8 @@ class Image3dParameters extends PureComponent {
                     <span className="sm-flex-width heading-3">{i18n._('Model')}</span>
                     <SvgIcon
                         name="DropdownLine"
+                        size={24}
+                        type={['static']}
                         className={classNames(
                             this.state.expanded ? '' : 'rotate180'
                         )}

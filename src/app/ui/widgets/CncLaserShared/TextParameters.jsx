@@ -75,7 +75,8 @@ class TextParameters extends PureComponent {
                     <span className="sm-flex-width heading-3">{i18n._('Text')}</span>
                     <SvgIcon
                         name="DropdownLine"
-                        size={32}
+                        size={24}
+                        type={['static']}
                         className={classNames(
                             this.state.expanded ? '' : 'rotate180'
                         )}

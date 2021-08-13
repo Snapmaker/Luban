@@ -221,7 +221,7 @@ class JobType extends PureComponent {
                                 draggable="false"
                                 style={{
                                     width: '330px',
-                                    margin: '0 auto'
+                                    margin: '0'
                                 }}
                                 src="/resources/images/cnc-laser/working-size-4.png"
                                 role="presentation"

@@ -99,7 +99,7 @@ class WorkflowControl extends PureComponent {
             <div className="">
                 <SvgIcon
                     name="WorkspacePlay"
-                    className="border-default-black-5 padding-vertical-4 padding-horizontal-4 border-radius-left-8"
+                    className="border-default-black-5 border-radius-left-8"
                     size={22}
                     title={i18n._('Run')}
                     onClick={this.actions.handleRun}
@@ -107,7 +107,7 @@ class WorkflowControl extends PureComponent {
                 />
                 <SvgIcon
                     name="WorkspaceSuspend"
-                    className="border-default-black-5 padding-vertical-4 padding-horizontal-4"
+                    className="border-default-black-5"
                     size={22}
                     title={i18n._('Pause')}
                     onClick={this.actions.handlePause}
@@ -115,7 +115,7 @@ class WorkflowControl extends PureComponent {
                 />
                 <SvgIcon
                     name="WorkspaceStop"
-                    className="border-default-black-5 padding-vertical-4 padding-horizontal-4"
+                    className="border-default-black-5"
                     size={22}
                     title={i18n._('Stop')}
                     onClick={this.actions.handleStop}
@@ -123,7 +123,7 @@ class WorkflowControl extends PureComponent {
                 />
                 <SvgIcon
                     name="WorkspaceCancel"
-                    className="border-default-black-5 padding-vertical-4 padding-horizontal-4 border-radius-right-8"
+                    className="border-default-black-5 border-radius-right-8"
                     size={22}
                     title={i18n._('Close')}
                     onClick={this.actions.handleClose}

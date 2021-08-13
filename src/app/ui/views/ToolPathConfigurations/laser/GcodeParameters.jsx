@@ -127,6 +127,7 @@ class GcodeParameters extends PureComponent {
                             <SvgIcon
                                 name="TitleSetting"
                                 size={24}
+                                type={['static']}
                             />
                             <span>{i18n._('Fill')}</span>
                         </div>
@@ -144,6 +145,7 @@ class GcodeParameters extends PureComponent {
                         <SvgIcon
                             name="TitleSetting"
                             size={24}
+                            type={['static']}
                         />
                         <span>{i18n._('Speed')}</span>
                     </div>
@@ -160,6 +162,7 @@ class GcodeParameters extends PureComponent {
                         <div className="border-bottom-normal padding-bottom-4 margin-vertical-16">
                             <SvgIcon
                                 name="TitleSetting"
+                                type={['static']}
                                 size={24}
                             />
                             <span>{i18n._('Pass')}</span>
@@ -178,6 +181,7 @@ class GcodeParameters extends PureComponent {
                         <div className="border-bottom-normal padding-bottom-4 margin-vertical-16">
                             <SvgIcon
                                 name="TitleSetting"
+                                type={['static']}
                                 size={24}
                             />
                             <span>{i18n._('Power')}</span>

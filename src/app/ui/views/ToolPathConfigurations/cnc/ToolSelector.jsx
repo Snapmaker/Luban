@@ -130,10 +130,12 @@ function ToolSelector({ toolDefinitions, setCurrentToolDefinition, setCurrentVal
                             onChange={onChangeActiveToolListValue}
                         />
                         <SvgIcon
-                            className="border-radius-8 border-default-grey-1 padding-vertical-2 padding-horizontal-2 margin-left-4"
+                            // className="border-radius-8 border-default-grey-1 padding-vertical-2 padding-horizontal-2 margin-left-4"
+                            className="border-default-black-5 margin-left-4"
                             name="PrintingSettingNormal"
                             size={24}
                             onClick={onShowCncToolManager}
+                            borderRadius={8}
                         />
                         <div className="position-ab height-16 bottom-0">
                             <p className="additional-message">

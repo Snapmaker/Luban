@@ -452,6 +452,7 @@ function ProfileManager({ optionConfigGroup, disableCategory = true, managerTitl
                                                             configExpanded[cate.category] ? 'rotate270' : ''
                                                         )}
                                                         onClick={() => { actions.foldCategory(cate.category); }}
+                                                        type={['static']}
                                                     />
                                                     {(definitionState?.isCategorySelected && isCategorySelected && definitionState?.renamingStatus) ? (
                                                         <input
@@ -593,11 +594,12 @@ function ProfileManager({ optionConfigGroup, disableCategory = true, managerTitl
                                     </div>
 
 
-                                    <div className="sm-tabs padding-bottom-16 padding-horizontal-16">
+                                    <div className="sm-flex justify-space-between padding-bottom-16 padding-horizontal-16">
                                         <SvgIcon
                                             name="NewNormal"
                                             size={24}
-                                            className={classNames(styles['manager-file'], 'sm-tab')}
+                                            type={['static']}
+                                            className={classNames(styles['manager-file'], 'sm-tab', 'align-c')}
                                             onClick={() => { actions.showNewModal(); }}
                                             spanText={i18n._('Create')}
                                             spanClassName={classNames(styles['action-title'])}
@@ -605,7 +607,8 @@ function ProfileManager({ optionConfigGroup, disableCategory = true, managerTitl
                                         <SvgIcon
                                             name="CopyNormal"
                                             size={24}
-                                            className={classNames(styles['manager-file'], 'sm-tab')}
+                                            type={['static']}
+                                            className={classNames(styles['manager-file'], 'sm-tab', 'align-c')}
                                             onClick={() => { actions.showDuplicateModal(); }}
                                             spanText={i18n._('Copy')}
                                             spanClassName={classNames(styles['action-title'])}

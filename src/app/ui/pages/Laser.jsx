@@ -222,20 +222,23 @@ function useRenderMainToolBar(setShowHomePage, setShowJobType, setShowWorkspace,
                 customRender: function () {
                     return (
                         <Dropdown
-                            className="display-inline align-c padding-top-4 padding-horizontal-2"
+                            className="display-inline align-c padding-top-4 padding-horizontal-2 height-50"
                             overlay={menu}
                         >
                             <div
-                                className="display-inline font-size-0 v-align-t"
+                                className="display-inline font-size-0 v-align-t hover-normal-grey-2 border-radius-4"
                             >
                                 <SvgIcon
                                     name="MainToolbarCameraCapture"
+                                    type={['static']}
                                 >
-                                    <div className="font-size-base color-black-3">
+                                    <div className="font-size-base color-black-3 height-16 margin-top-4">
                                         {i18n._('Camera Capture')}
                                         <SvgIcon
-                                            type="static"
-                                            name="DropdownLine"
+                                            type={['static']}
+                                            name="DropdownOpen"
+                                            size={20}
+                                            // className="margin-top-4"
                                         />
                                     </div>
                                 </SvgIcon>

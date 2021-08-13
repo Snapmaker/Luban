@@ -209,7 +209,8 @@ class Console extends PureComponent {
             {
                 title: 'Eliminate',
                 name: 'Eliminate',
-                onClick: this.actions.clearAll
+                onClick: this.actions.clearAll,
+                type: ['static']
             },
             'SMMinimize'
         ]);

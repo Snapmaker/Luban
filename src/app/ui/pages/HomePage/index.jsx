@@ -19,11 +19,10 @@ import MainToolBar from '../../layouts/MainToolBar';
 
 const HomePage = (props) => { // Todo, what's the props ?
     const [modalShow, setModalShow] = useState(false);
-
     useEffect(() => {
-        document.querySelector('body').setAttribute('style', 'height: calc(100vh - 82px); background: #f5f5f7;');
         const settingStore = machineStore.get('settings');
-        if (gte(machineStore?.version, '3.16.0') && (!settingStore?.finishGuide || settingStore?.guideVersion !== 1)) {
+        document.querySelector('body').setAttribute('style', 'height: calc(100vh - 82px); background: #f5f5f7;');
+        if (gte(machineStore?.version, '3.16.0') && (!settingStore || !settingStore?.finishGuide || settingStore?.guideVersion !== 1)) {
             setModalShow(true);
         } else {
             setModalShow(false);
@@ -37,7 +36,7 @@ const HomePage = (props) => { // Todo, what's the props ?
                 pathname: '/'
             });
         }
-    }, []);
+    }, [machineStore.get('settings'), machineStore.version]);
     const printingModal = useRenderRecoveryModal(HEAD_3DP);
     const laserModal = useRenderRecoveryModal(HEAD_LASER);
     const cncModal = useRenderRecoveryModal(HEAD_CNC);

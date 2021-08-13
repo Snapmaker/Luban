@@ -184,6 +184,7 @@ function MachineSettings() {
             <div className="border-bottom-normal padding-bottom-4">
                 <SvgIcon
                     name="TitleSetting"
+                    type={['static']}
                 />
                 <span className="margin-left-4">{i18n._('Machine')}</span>
             </div>

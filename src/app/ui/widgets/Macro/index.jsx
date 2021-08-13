@@ -90,7 +90,8 @@ class MacroWidget extends PureComponent {
                 {
                     title: 'New Macro',
                     onClick: this.actions.openAddMacroModal,
-                    name: 'Increase'
+                    name: 'Increase',
+                    type: ['static']
                 },
                 'SMMinimize',
                 'SMDropdown'
