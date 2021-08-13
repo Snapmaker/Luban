@@ -53,6 +53,13 @@ class LaserTestFocusWidget extends PureComponent {
         }
     }
 
+    componentDidUpdate(prevProps) {
+        const { isConnected } = this.props;
+        if (isConnected !== prevProps.isConnected) {
+            this.props.widgetActions.setDisplay(isConnected);
+        }
+    }
+
     render() {
         const state = this.state;
         // const actions = this.actions;
