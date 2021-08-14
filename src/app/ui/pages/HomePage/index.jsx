@@ -20,7 +20,11 @@ import MainToolBar from '../../layouts/MainToolBar';
 const HomePage = (props) => { // Todo, what's the props ?
     const [modalShow, setModalShow] = useState(false);
     useEffect(() => {
+        console.log('firsttime', machineStore, gte(machineStore.version, '3.16.0'), settingStore);
+    }, []);
+    useEffect(() => {
         const settingStore = machineStore.get('settings');
+        console.log(machineStore, gte(machineStore.version, '3.16.0'), settingStore);
         document.querySelector('body').setAttribute('style', 'height: calc(100vh - 82px); background: #f5f5f7;');
         if (gte(machineStore?.version, '3.16.0') && (!settingStore || !settingStore?.finishGuide || settingStore?.guideVersion !== 1)) {
             setModalShow(true);
