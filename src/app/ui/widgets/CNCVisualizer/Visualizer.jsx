@@ -300,6 +300,7 @@ class Visualizer extends Component {
 
         if (renderingTimestamp !== this.props.renderingTimestamp) {
             this.canvas.current.renderScene();
+            this.canvas.current.setCameraOnTop();
         }
 
         if (nextProps.displayedType !== this.props.displayedType) {
