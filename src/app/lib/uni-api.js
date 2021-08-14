@@ -78,8 +78,8 @@ const Update = {
                 checkboxLabel: i18n._('Automatically check for updates'),
                 checkboxChecked: shouldCheckForUpdate,
                 title: i18n._('Update Snapmaker Luban'),
-                message: i18n._(`Snapmaker Luban ${releaseName} Update`),
-                detail: i18n._(`Current version : ${oldVersion}`)
+                message: `Snapmaker Luban ${releaseName} ${i18n._('Update')}`,
+                detail: `${i18n._('Current version')} : ${oldVersion}`
                 // detail: 'A new version has been detected. Should i download it now?'
             };
             dialog.showMessageBox(remote.getCurrentWindow(), dialogOpts).then((returnValue) => {

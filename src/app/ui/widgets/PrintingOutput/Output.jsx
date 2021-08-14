@@ -213,7 +213,7 @@ class Output extends PureComponent {
                             onClick={actions.onToggleDisplayGcode}
                             className={classNames('position-re', 'bottom-0', 'left-0')}
                         >
-                            {displayedType === 'gcode' ? i18n._('Close Preview') : i18n._('Preview ')}
+                            {displayedType === 'gcode' ? i18n._('Close Preview') : i18n._('Preview')}
                         </Button>
                     )}
                     {gcodeLine && (

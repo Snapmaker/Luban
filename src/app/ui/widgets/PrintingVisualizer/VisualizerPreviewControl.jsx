@@ -177,7 +177,7 @@ class VisualizerPreviewControl extends PureComponent {
                                 <div>
                                     <span className="display-inline width-16 height-16 v-align-m border-radius-4" style={{ backgroundColor: '#00ff00' }} />
                                     <span className="v-align-m margin-left-8">
-                                            Inner Wall
+                                        {i18n._('Inner Wall')}
                                     </span>
                                 </div>
                                 <Checkbox
@@ -189,7 +189,7 @@ class VisualizerPreviewControl extends PureComponent {
                                 <div>
                                     <span className="display-inline width-16 height-16 v-align-m border-radius-4" style={{ backgroundColor: '#ff2121' }} />
                                     <span className="v-align-m margin-left-8">
-                                            Outer Wall
+                                        {i18n._('Outer Wall')}
                                     </span>
                                 </div>
                                 <Checkbox
@@ -201,7 +201,7 @@ class VisualizerPreviewControl extends PureComponent {
                                 <div>
                                     <span className="display-inline width-16 height-16 v-align-m border-radius-4" style={{ backgroundColor: '#ffff00' }} />
                                     <span className="v-align-m margin-left-8">
-                                            Skin
+                                        {i18n._('Skin')}
                                     </span>
                                 </div>
                                 <Checkbox
@@ -213,7 +213,7 @@ class VisualizerPreviewControl extends PureComponent {
                                 <div>
                                     <span className="display-inline width-16 height-16 v-align-m border-radius-4" style={{ backgroundColor: '#4b0082' }} />
                                     <span className="v-align-m margin-left-8">
-                                            Helper
+                                        {i18n._('Helper')}
                                     </span>
                                 </div>
                                 <Checkbox
@@ -225,7 +225,7 @@ class VisualizerPreviewControl extends PureComponent {
                                 <div>
                                     <span className="display-inline width-16 height-16 v-align-m border-radius-4" style={{ backgroundColor: '#8d4bbb' }} />
                                     <span className="v-align-m margin-left-8">
-                                            Fill
+                                        {i18n._('Fill')}
                                     </span>
                                 </div>
                                 <Checkbox
@@ -237,7 +237,7 @@ class VisualizerPreviewControl extends PureComponent {
                                 <div>
                                     <span className="display-inline width-16 height-16 v-align-m border-radius-4" style={{ backgroundColor: '#44cef6' }} />
                                     <span className="v-align-m margin-left-8">
-                                            Travel
+                                        {i18n._('Travel')}
                                     </span>
                                 </div>
                                 <Checkbox
@@ -249,7 +249,7 @@ class VisualizerPreviewControl extends PureComponent {
                                 <div>
                                     <span className="display-inline width-16 height-16 v-align-m border-radius-4" style={{ backgroundColor: '#4b0082' }} />
                                     <span className="v-align-m margin-left-8">
-                                            Unknown
+                                        {i18n._('Unknown')}
                                     </span>
                                 </div>
                                 <Checkbox

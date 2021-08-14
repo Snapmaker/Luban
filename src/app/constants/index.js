@@ -607,7 +607,7 @@ export const MACHINE_SERIES = {
     ORIGINAL_LZ: {
         value: 'Original Long Z-axis',
         configPath: 'Original',
-        label: 'Snapmaker Original with Z-axis Extension Module ',
+        label: 'Snapmaker Original with Z-axis Extension Module',
         setting: {
             size: {
                 x: 125,

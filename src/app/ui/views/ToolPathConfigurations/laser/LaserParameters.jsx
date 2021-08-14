@@ -152,7 +152,7 @@ class LaserParameters extends PureComponent {
                                                 label: i18n._('Fill')
                                             }, {
                                                 value: 'path',
-                                                label: i18n._('On The Path')
+                                                label: i18n._('On the Path')
                                             }]}
                                             value={fillMethod}
                                             onChange={(option) => { this.actions.updateGcodeConfig({ fillEnabled: option.value === 'fill' }); }}
