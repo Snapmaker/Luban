@@ -401,6 +401,7 @@ function Cnc({ location }) {
     const page = useSelector(state => state?.cnc.page);
     // useUnsavedTitle(pageHeadType);
     const thumbnail = useRef();
+    const series = useSelector(state => state.machine.series, shallowEqual);
 
     useEffect(() => {
         // const setting = machineStore.get('guideTours');
@@ -604,10 +605,35 @@ function Cnc({ location }) {
                     name: '4th_CNC.snapcnc'
                 };
             } else {
-                pathConfig = {
-                    path: './UserCase/A150/A150_CNC.snapcnc',
-                    name: 'A150_CNC.snapcnc'
-                };
+                switch (series) {
+                    case 'Original Long Z-axis':
+                    case 'Original':
+                        pathConfig = {
+                            path: './UserCase/Origin/Original_CNC.snapcnc',
+                            name: 'Original_CNC.snapcnc'
+                        };
+                        break;
+                    case 'A150':
+                        pathConfig = {
+                            path: './UserCase/A150/A150_CNC.snapcnc',
+                            name: 'A150_CNC.snapcnc'
+                        };
+                        break;
+                    case 'A250':
+                        pathConfig = {
+                            path: './UserCase/A250/A250_CNC.snapcnc',
+                            name: 'A250_CNC.snapcnc'
+                        };
+                        break;
+                    case 'A350':
+                        pathConfig = {
+                            path: './UserCase/A350/A350_CNC.snapcnc',
+                            name: 'A350_CNC.snapcnc'
+                        };
+                        break;
+                    default:
+                        break;
+                }
             }
             dispatch(projectActions.openProject(pathConfig, history, true));
         }

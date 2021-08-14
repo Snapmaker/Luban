@@ -45,7 +45,8 @@ class Output extends PureComponent {
         inProgress: PropTypes.bool.isRequired,
         generateGcode: PropTypes.func.isRequired,
         exportFile: PropTypes.func.isRequired,
-        renderGcodeFile: PropTypes.func.isRequired
+        renderGcodeFile: PropTypes.func.isRequired,
+        thumbnail: PropTypes.string
         // onRef: PropTypes.func
     };
 
@@ -87,10 +88,9 @@ class Output extends PureComponent {
                 });
                 return;
             }
-            const { gcodeFile } = this.props;
+            const { gcodeFile, thumbnail } = this.props;
 
-            gcodeFile.thumbnail = this.thumbnail.current.getDataURL();
-
+            gcodeFile.thumbnail = this.thumbnail.current.getDataURL() || thumbnail;
             this.props.renderGcodeFile(gcodeFile);
             this.setState({ showWorkspace: true });
 
@@ -263,7 +263,7 @@ const mapStateToProps = (state) => {
     const {
         stage,
         modelGroup, hasModel, isAnyModelOverstepped,
-        isGcodeOverstepped, gcodeLine, gcodeFile, displayedType, inProgress
+        isGcodeOverstepped, gcodeLine, gcodeFile, displayedType, inProgress, thumbnail
     } = printing;
 
     return {
@@ -277,7 +277,8 @@ const mapStateToProps = (state) => {
         gcodeLine,
         displayedType,
         gcodeFile,
-        inProgress
+        inProgress,
+        thumbnail
     };
 };
 

@@ -254,7 +254,7 @@ function Printing() {
             dispatch(projectActions.openProject(pathConfig, history, true));
         } else if (nextIndex === 4) {
             const thumbnailRef = thumbnail.current.getThumbnail();
-            await dispatch(printingActions.generateGcode(thumbnailRef));
+            await dispatch(printingActions.generateGcode(thumbnailRef, true));
         }
     };
     // const handleBeforeChange = async (nextIndex) => {

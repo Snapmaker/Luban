@@ -802,7 +802,7 @@ export const actions = {
         }
     },
 
-    generateGcode: (thumbnail) => async (dispatch, getState) => {
+    generateGcode: (thumbnail, isGuideTours = false) => async (dispatch, getState) => {
         const { hasModel, activeDefinition, modelGroup } = getState().printing;
 
         if (!hasModel) {
@@ -816,6 +816,11 @@ export const actions = {
         }
 
         modelGroup.unselectAllModels();
+        if (isGuideTours) {
+            dispatch(actions.updateState({
+                thumbnail: thumbnail
+            }));
+        }
         // Info user that slice has started
         dispatch(actions.updateState({
             stage: PRINTING_STAGE.SLICE_PREPARING,
