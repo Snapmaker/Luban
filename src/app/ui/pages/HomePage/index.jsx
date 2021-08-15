@@ -21,7 +21,6 @@ const HomePage = (props) => { // Todo, what's the props ?
     const [modalShow, setModalShow] = useState(false);
     useEffect(() => {
         const settingStore = machineStore.get('settings');
-        console.log(pkg?.version, gte(pkg?.version, '3.16.0'), settingStore);
         document.querySelector('body').setAttribute('style', 'height: calc(100vh - 82px); background: #f5f5f7;');
         if (gte(pkg?.version, '3.16.0') && (!settingStore || !settingStore?.finishGuide || settingStore?.guideVersion !== 1)) {
             setModalShow(true);
