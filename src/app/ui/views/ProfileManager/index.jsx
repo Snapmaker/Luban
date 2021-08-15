@@ -389,7 +389,6 @@ function ProfileManager({ optionConfigGroup, disableCategory = true, managerTitl
             ref.current.click();
         },
         onChangeDefinition: (key, value) => {
-            console.log('onchange def', key, value);
             // now setDefinitionState is synchronize, so remove setTimeout
             const { definitionForManager } = definitionState;
             const newDefinitionForManager = cloneDeep(definitionForManager);
