@@ -312,7 +312,7 @@ class SerialConnection extends PureComponent {
                         searchable={false}
                         disabled={!canChangePort}
                         name="port"
-                        noResultsText={i18n._('No ports available')}
+                        noResultsText={i18n._('No ports available.')}
                         onChange={this.actions.onChangePortOption}
                         optionRenderer={this.renderPortOption}
                         options={map(ports, (o) => ({

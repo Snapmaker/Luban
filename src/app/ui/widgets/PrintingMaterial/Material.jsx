@@ -26,8 +26,6 @@ import { HEAD_3DP, PRINTING_MANAGER_TYPE_MATERIAL } from '../../../constants';
 //     'material_flow_layer_0'
 // ];
 function Material({ widgetActions }) {
-    widgetActions.setTitle(i18n._('Material Settings'));
-
     const materialDefinitions = useSelector(state => state?.printing?.materialDefinitions, shallowEqual);
     const defaultMaterialId = useSelector(state => state?.printing?.defaultMaterialId, shallowEqual);
     const inProgress = useSelector(state => state?.printing?.inProgress);
@@ -64,6 +62,9 @@ function Material({ widgetActions }) {
             dispatch(printingActions.displayModel());
         }
     }
+    useEffect(() => {
+        widgetActions.setTitle(i18n._('Material Settings'));
+    }, [widgetActions]);
     useEffect(() => {
         const newMaterialDefinitionOptions = materialDefinitions.map(d => ({
             label: d.name,

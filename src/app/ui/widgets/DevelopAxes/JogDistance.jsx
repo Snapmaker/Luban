@@ -101,7 +101,7 @@ const JogDistance = (props) => {
                         const value = event.target.value;
                         actions.changeCustomDistance(value);
                     }}
-                    title={i18n._('Custom distance for every move operation')}
+                    title={i18n._('Custom distance for every move')}
                 />
                 <div className="input-group-btn">
                     <RepeatButton

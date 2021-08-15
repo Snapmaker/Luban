@@ -164,7 +164,7 @@ export const PRINTING_QUALITY_CONFIG_GROUP = [
         ]
     },
     {
-        name: 'Retraction & Z-hop',
+        name: 'Retract & Z Hop',
         fields: [
             'retraction_enable',
             'retract_at_layer_change',
@@ -280,7 +280,7 @@ export const CNC_DEFAULT_GCODE_PARAMETERS_DEFINITION = {
     },
     'targetDepth': {
         label: 'Target Depth',
-        description: 'Set the depth of the object to be carved. The depth should be smaller than the flute length. ',
+        description: 'Set the depth of the object to be carved. The depth should be smaller than the flute length.',
         min: 0.01,
         step: 0.1,
         max: 100,
@@ -402,9 +402,7 @@ export const CNC_DEFAULT_GCODE_PARAMETERS_DEFINITION = {
 
 export const LASER_DEFAULT_GCODE_PARAMETERS_DEFINITION = {
     'fillEnabled': {
-        description: 'Set the processing method of the object. \n \
-            - Fill: Fills the object with lines or dots.\n \
-            - On the Path: Engraves along the shape of the object.',
+        description: 'Set the processing method of the object. \n - Fill: Fills the object with lines or dots.\n - On the Path: Engraves along the shape of the object.',
         label: 'Method', // 'Fill'
         type: 'enum',
         default_value: 'false',
@@ -425,7 +423,7 @@ export const LASER_DEFAULT_GCODE_PARAMETERS_DEFINITION = {
     },
     'multiPasses': {
         label: 'Number of Passes',
-        description: 'Set how many times the laser will trace the same path in a G-code file. ',
+        description: 'Set how many times the laser will trace the same path in a G-code file.',
         type: 'float',
         min: 1,
         max: 50,
@@ -433,7 +431,7 @@ export const LASER_DEFAULT_GCODE_PARAMETERS_DEFINITION = {
     },
     'multiPassDepth': {
         label: 'Z Step per Pass',
-        description: 'Set the amount at which the Laser Module is lowered with each pass. ',
+        description: 'Set the amount at which the Laser Module is lowered with each pass.',
         type: 'float',
         min: 0.01,
         max: 10,

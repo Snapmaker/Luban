@@ -328,7 +328,7 @@ function Printing() {
                     }, {
                         element: '.print-output-intro',
                         intro: printIntroStepFour(
-                            i18n._('Slice and preview the object. '),
+                            i18n._('Slice and preview the object.'),
                             i18n._('In Preview, you can see printing paths using features, including Line Type and Layer View.')
                         ),
                         position: 'top',

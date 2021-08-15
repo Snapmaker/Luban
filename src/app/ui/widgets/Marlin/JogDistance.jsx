@@ -125,7 +125,7 @@ class JogDistance extends PureComponent {
                             onChange={(event) => {
                                 actions.onChangeCustomValue(event.target.value);
                             }}
-                            title={i18n._('Custom distance for every move operation')}
+                            title={i18n._('Custom distance for every move')}
                         />
                     )}
                     {needCustom && (

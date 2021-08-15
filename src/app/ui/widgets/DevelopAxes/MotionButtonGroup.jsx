@@ -60,7 +60,7 @@ run into the fixtures before you use this feature.')}
                 <div className="col-12">
                     <TipTrigger
                         title={i18n._('Set Work Origin')}
-                        content={i18n._('Set the current position of the head as the work origin.')}
+                        content={i18n._('Set the current position of the toolhead as the work origin.')}
                     >
                         <button
                             type="button"

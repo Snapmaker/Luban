@@ -90,7 +90,7 @@ class Settings extends PureComponent {
         }));
         videoDeviceOptions.unshift({
             value: '',
-            label: i18n._('Automatic detection')
+            label: i18n._('Auto Detection')
         });
 
         return (
@@ -118,7 +118,7 @@ class Settings extends PureComponent {
                                         this.setState({ mediaSource: MEDIA_SOURCE_LOCAL });
                                     }}
                                 />
-                                {i18n._('Use a built-in camera or a connected webcam')}
+                                {i18n._('Use a built-in camera or a webcam')}
                             </span>
                         </div>
                         <div style={{ marginLeft: 20 }}>
@@ -127,7 +127,7 @@ class Settings extends PureComponent {
                                 clearable={false}
                                 disabled={mediaSource !== MEDIA_SOURCE_LOCAL}
                                 name="videoDevice"
-                                noResultsText={i18n._('No video devices available')}
+                                noResultsText={i18n._('No video devices available.')}
                                 onChange={this.handleChangeVideoDevice}
                                 optionRenderer={(device) => device.label || device.deviceId}
                                 options={videoDeviceOptions}

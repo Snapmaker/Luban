@@ -77,7 +77,7 @@ const Begin = () => {
                                     <div className={classNames(styles.imgWrapper)}>
                                         <img src={require('./images/icon_3d_120x120.svg')} alt="" />
                                     </div>
-                                    <span className={classNames('heading-2')}>{i18n._('3DP')}</span>
+                                    <span className={classNames('heading-2')}>{i18n._('3D Printing')}</span>
                                 </Anchor>
                             </div>
                             <div className={classNames(styles.laser, 'margin-horizontal-16')}>

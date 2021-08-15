@@ -163,8 +163,7 @@ class LaserParameters extends PureComponent {
                             {isImage && (
                                 <TipTrigger
                                     title={i18n._('Method')}
-                                    content={i18n._('Set the processing method of the object. \n \
-                                        - Fill: Fills the object with lines or dots.')}
+                                    content={i18n._('Set the processing method of the object. \n - Fill: Fills the object with lines or dots.')}
                                 >
                                     <div className="position-re sm-flex justify-space-between height-32 margin-vertical-8">
                                         <span>{i18n._('Method')}</span>

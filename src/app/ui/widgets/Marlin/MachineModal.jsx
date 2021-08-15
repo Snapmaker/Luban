@@ -45,7 +45,7 @@ class MachineModal extends PureComponent {
             <React.Fragment>
                 <Anchor className="sm-parameter-header" onClick={toggleMachineModalSection}>
                     <span className="fa fa-gear sm-parameter-header__indicator" />
-                    <span className="sm-parameter-header__title">{i18n._('Machine Modal')}</span>
+                    <span className="sm-parameter-header__title">{i18n._('Machine Model')}</span>
                     <span className={classNames(
                         'fa',
                         expanded ? 'fa-angle-double-up' : 'fa-angle-double-down',
