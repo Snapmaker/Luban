@@ -831,6 +831,11 @@ export const actions = {
 
 
         // Prepare definition file
+        const { size } = getState().machine;
+        await dispatch(actions.updateActiveDefinitionMachineSize(size));
+        // console.log('activeDefinition', size, activeDefinition,);
+        console.log('activeDefinition', size, activeDefinition, activeDefinition.settings.machine_width);
+
         const finalDefinition = definitionManager.finalizeActiveDefinition(activeDefinition);
         await api.printingConfigs.createDefinition(finalDefinition);
 

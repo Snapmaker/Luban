@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { shallowEqual, useSelector, useDispatch } from 'react-redux';
-// import PropTypes from 'prop-types';
+import PropTypes from 'prop-types';
 import { useHistory, withRouter } from 'react-router-dom';
 // import { Steps } from 'intro.js-react';
 import 'intro.js/introjs.css';
@@ -173,7 +173,7 @@ function useRenderMainToolBar() {
     return [renderHomepage, renderMainToolBar, renderWorkspace];
 }
 
-function Printing() {
+function Printing({ location }) {
     const widgets = useSelector(state => state?.widget[pageHeadType].default.widgets, shallowEqual);
     const [isDraggingWidget, setIsDraggingWidget] = useState(false);
     const [enabledIntro, setEnabledIntro] = useState(false);
@@ -187,17 +187,18 @@ function Printing() {
     useUnsavedTitle(pageHeadType);
 
     useEffect(() => {
-        const setting = machineStore.get('guideTours');
-        if (!setting?.guideTours3dp) {
-            setEnabledIntro(true);
-        } else {
-            setEnabledIntro(false);
-        }
         dispatch(printingActions.init());
         logPageView({
             pathname: '/3dp'
         });
     }, []);
+    useEffect(() => {
+        if (location?.state?.shouldShowGuideTours) {
+            setEnabledIntro(true);
+        } else {
+            setEnabledIntro(false);
+        }
+    }, [location?.state?.shouldShowGuideTours]);
 
     async function onDropAccepted(file) {
         try {
@@ -362,6 +363,6 @@ function Printing() {
     );
 }
 Printing.propTypes = {
-    // history: PropTypes.object
+    location: PropTypes.object
 };
 export default (withRouter(Printing));
