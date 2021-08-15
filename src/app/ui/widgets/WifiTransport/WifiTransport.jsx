@@ -180,14 +180,14 @@ class WifiTransport extends PureComponent {
                     isSendingFile.current.removeContainer();
                     if (err) {
                         modalSmallHOC({
-                            title: i18n._('Failed to Send File'),
+                            title: i18n._('Failed to send file.'),
                             text: text,
                             iconColor: '#FF4D4F',
                             img: 'WarningTipsError'
                         });
                     } else {
                         (modalSmallHOC({
-                            title: i18n._('File Sent Successfully'),
+                            title: i18n._('File sent successfully.'),
                             text: i18n._('Your file was successfully sent. Receive it on the Touchscreen.'),
                             iconColor: '#4CB518',
                             img: 'WarningTipsSuccess'

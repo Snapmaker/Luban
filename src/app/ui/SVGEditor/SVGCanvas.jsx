@@ -497,7 +497,7 @@ class SVGCanvas extends PureComponent {
                     x: draw.bbox.x + draw.bbox.width / 2,
                     y: draw.bbox.y + draw.bbox.height / 2
                 };
-                draw.angle = this.svgContentGroup.getElementAngel();
+                draw.angle = this.svgContentGroup.getElementAngle();
 
                 // Save scale ratio before scaling
                 const transformList = element.transform.baseVal;
@@ -515,7 +515,7 @@ class SVGCanvas extends PureComponent {
                 draw.startY = y;
 
                 const bbox = this.svgContentGroup.getSelectedElementsBBox();
-                draw.startAngle = this.svgContentGroup.getElementAngel(); // FIXME: angle
+                draw.startAngle = this.svgContentGroup.getElementAngle();
 
                 const cx = bbox.x + bbox.width / 2;
                 const cy = bbox.y + bbox.height / 2;

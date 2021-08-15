@@ -390,7 +390,7 @@ class Canvas extends Component {
         this.startTween(tween);
     }
 
-    _getCameraPositionByRotation(positionStart, target, angelEW, angleNS) {
+    _getCameraPositionByRotation(positionStart, target, angleEW, angleNS) {
         const positionRotateNS = {
             x: positionStart.x,
             y: target.y + (positionStart.y - target.y) * Math.cos(angleNS) - (positionStart.z - target.z) * Math.sin(angleNS),
@@ -398,8 +398,8 @@ class Canvas extends Component {
         };
 
         const positionRotateEW = {
-            x: target.x + (positionRotateNS.x - target.x) * Math.cos(angelEW) - (positionRotateNS.y - target.y) * Math.sin(angelEW),
-            y: target.y + (positionRotateNS.x - target.x) * Math.sin(angelEW) + (positionRotateNS.y - target.y) * Math.cos(angelEW),
+            x: target.x + (positionRotateNS.x - target.x) * Math.cos(angleEW) - (positionRotateNS.y - target.y) * Math.sin(angleEW),
+            y: target.y + (positionRotateNS.x - target.x) * Math.sin(angleEW) + (positionRotateNS.y - target.y) * Math.cos(angleEW),
             z: positionRotateNS.z
         };
 

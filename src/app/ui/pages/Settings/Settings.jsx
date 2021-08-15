@@ -5,6 +5,7 @@ import _ from 'lodash';
 import camelCase from 'lodash/camelCase';
 import Uri from 'jsuri';
 import React, { PureComponent } from 'react';
+import { withRouter } from 'react-router-dom';
 // import { Link } from 'react-router-dom';
 import settings from '../../../config/settings';
 import Anchor from '../../components/Anchor';
@@ -23,6 +24,7 @@ const mapSectionPathToId = (path = '') => {
 
 class Settings extends PureComponent {
     static propTypes = {
+        ...withRouter,
         // resetAllUserSettings: PropTypes.func.isRequired,
         location: PropTypes.object.isRequired
     };
@@ -92,12 +94,12 @@ class Settings extends PureComponent {
 
                 if (lang !== i18next.language) {
                     i18next.changeLanguage(lang, () => {
+                        this.props.history.push('/');
                         const uri = new Uri(window.location.search);
                         uri.replaceQueryParam('lang', lang);
                         window.location.search = uri.toString();
                     });
                 }
-                window.location.href = '/';
             },
             restoreSettings: () => {
                 // Restore settings from initialState
@@ -227,4 +229,4 @@ class Settings extends PureComponent {
     }
 }
 
-export default Settings;
+export default withRouter(Settings);

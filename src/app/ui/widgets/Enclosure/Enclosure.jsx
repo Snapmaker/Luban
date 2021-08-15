@@ -157,7 +157,7 @@ class Enclosure extends PureComponent {
             <div>
                 <div className="margin-bottom-8">
                     <div className="sm-flex justify-space-between margin-vertical-8">
-                        <span>{i18n._('LED Strip')}</span>
+                        <span>{i18n._('LED Strips')}</span>
                         <Switch
                             onClick={this.actions.onHandleLed}
                             checked={led}
@@ -165,7 +165,7 @@ class Enclosure extends PureComponent {
                         />
                     </div>
                     <div className="sm-flex justify-space-between margin-vertical-8 ">
-                        <span>{i18n._('Cooling Fan')}</span>
+                        <span>{i18n._('Exhaust Fan')}</span>
                         <Switch
                             onClick={this.actions.onHandleCoolingFans}
                             checked={Boolean(fan)}

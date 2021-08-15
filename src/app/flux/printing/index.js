@@ -84,8 +84,8 @@ const INITIAL_STATE = {
     materialDefinitions: [],
     qualityDefinitions: [],
     isRecommended: true, // Using recommended settings
-    defaultMaterialId: 'material.pla',
-    defaultQualityId: '',
+    defaultMaterialId: 'material.pla', // TODO: selectedMaterialId
+    defaultQualityId: '', // TODO: selectedQualityId
     // Active definition
     // Hierarchy: FDM Printer -> Snapmaker -> Active Definition (combination of machine, material, adhesion configurations)
     activeDefinition: ABSENT_OBJECT,
@@ -304,7 +304,7 @@ export const actions = {
                 dispatch(actions.updateState({
                     stage: PRINTING_STAGE.SLICING,
                     inProgress: true,
-                    progress: 0
+                    progress: 0.01
                 }));
             });
             controller.on('slice:completed', (args) => {
@@ -582,7 +582,7 @@ export const actions = {
         if (!name || name.trim().length === 0) {
             return Promise.reject(i18n._('Failed to rename. Please enter a new name.'));
         }
-        const definitionsKey = defaultDefinitionKeys[type].definitions;
+        const definitionsKey = defaultDefinitionKeys[type]?.definitions;
 
         const definitions = getState().printing[definitionsKey];
         const duplicated = definitions.find(d => d.name === name);
@@ -595,8 +595,11 @@ export const actions = {
             definitionId: definition.definitionId,
             name
         });
-
-        definition.name = name;
+        const index = definitions.findIndex(d => d.definitionId === definition?.definitionId);
+        definitions[index].name = name;
+        dispatch(actions.updateState({
+            [definitionsKey]: [...definitions]
+        }));
         return null;
     },
 
@@ -708,9 +711,9 @@ export const actions = {
     updateIsRecommended: (isRecommended) => (dispatch) => {
         dispatch(actions.updateState({ isRecommended }));
     },
-    updateDefaultIdByType: (type, materialId) => (dispatch) => {
+    updateDefaultIdByType: (type, newDefinitionId) => (dispatch) => {
         const defaultId = defaultDefinitionKeys[type].id;
-        dispatch(actions.updateState({ [defaultId]: materialId }));
+        dispatch(actions.updateState({ [defaultId]: newDefinitionId }));
         dispatch(actions.destroyGcodeLine());
         dispatch(actions.displayModel());
     },

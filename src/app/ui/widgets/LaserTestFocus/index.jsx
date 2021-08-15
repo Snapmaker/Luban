@@ -2,18 +2,11 @@ import React, { PureComponent } from 'react';
 import { connect } from 'react-redux';
 import PropTypes from 'prop-types';
 import i18n from '../../../lib/i18n';
-// import Widget from '../../components/Widget';
 import {
     WidgetState
-    // SMSortableHandle
-    // SMMinimizeButton,
-    // SMDropdownButton
 } from '../../components/SMWidget';
-// import SvgIcon from '../../components/SvgIcon';
-// import Anchor from '../../components/Anchor';
-// import styles from '../styles.styl';
 import TestFocus from './TestFocus';
-import { MACHINE_HEAD_TYPE } from '../../../constants';
+import { HEAD_LASER, MACHINE_HEAD_TYPE } from '../../../constants';
 
 
 class LaserTestFocusWidget extends PureComponent {
@@ -45,11 +38,22 @@ class LaserTestFocusWidget extends PureComponent {
     }
 
     componentDidMount() {
-        const { isConnected } = this.props;
-        if (isConnected) {
+        const { isConnected, headType } = this.props;
+        if (headType === HEAD_LASER && isConnected) {
             this.props.widgetActions.setDisplay(true);
         } else {
             this.props.widgetActions.setDisplay(false);
+        }
+    }
+
+    componentDidUpdate(prevProps) {
+        const { isConnected, headType } = this.props;
+        if (isConnected !== prevProps.isConnected || headType !== prevProps.headType) {
+            if (headType === HEAD_LASER && isConnected) {
+                this.props.widgetActions.setDisplay(true);
+            } else {
+                this.props.widgetActions.setDisplay(false);
+            }
         }
     }
 

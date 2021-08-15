@@ -26,13 +26,15 @@ import { HEAD_3DP, PRINTING_MANAGER_TYPE_MATERIAL } from '../../../constants';
 //     'material_flow_layer_0'
 // ];
 function Material({ widgetActions }) {
-    const materialDefinitions = useSelector(state => state?.printing?.materialDefinitions, shallowEqual);
+    const materialDefinitions = useSelector(state => state?.printing?.materialDefinitions,);
     const defaultMaterialId = useSelector(state => state?.printing?.defaultMaterialId, shallowEqual);
     const inProgress = useSelector(state => state?.printing?.inProgress);
     const dispatch = useDispatch();
-    // const [showOfficialMaterialDetails, setShowOfficialMaterialDetails] = useState(true);
-    const [currentDefinition, setCurrentDefinition] = useState(null);
-    const [materialDefinitionOptions, setMaterialDefinitionOptions] = useState([]);
+    const newOptions = materialDefinitions.map(d => ({
+        label: d.name,
+        value: d.definitionId
+    }));
+    const [materialDefinitionOptions, setMaterialDefinitionOptions] = useState([newOptions]);
 
     function onShowPrintingManager() {
         dispatch(printingActions.updateManagerDisplayType(PRINTING_MANAGER_TYPE_MATERIAL));
@@ -45,56 +47,31 @@ function Material({ widgetActions }) {
             dispatch(projectActions.autoSaveEnvironment(HEAD_3DP, true));
         }
     }, [dispatch]);
+
     function onChangeMaterialValue(option) {
         const definitionId = option.value;
         const definition = materialDefinitions.find(d => d.definitionId === definitionId);
         if (definition) {
-            setCurrentDefinition(definition);
+            // update selectedId
             dispatch(printingActions.updateState({ defaultMaterialId: definition.definitionId }));
+            // update active definition
             updateActiveDefinition(definition);
+
+            // on after changes
             dispatch(printingActions.destroyGcodeLine());
             dispatch(printingActions.displayModel());
         }
     }
-
-    const onChangeMaterial = useCallback((definitionId) => {
-        const definition = materialDefinitions.find(d => d.definitionId === definitionId);
-        if (definition) {
-            setCurrentDefinition(definition);
-            dispatch(printingActions.updateState({ defaultMaterialId: definition.definitionId }));
-            updateActiveDefinition(definition);
-        }
-    }, [dispatch, updateActiveDefinition, materialDefinitions]);
     useEffect(() => {
-        if (materialDefinitions.length === 0) {
-            const definition = materialDefinitions.find(d => d.definitionId === 'material.pla');
-            setCurrentDefinition(definition);
-            updateActiveDefinition(definition);
-        } else {
-            const definition = materialDefinitions.find(d => d.definitionId === (currentDefinition?.definitionId))
-                || materialDefinitions.find(d => d.definitionId === 'material.pla');
-            setCurrentDefinition(definition);
-            updateActiveDefinition(definition);
-        }
+        widgetActions.setTitle(i18n._('Material Settings'));
+    }, [widgetActions]);
+    useEffect(() => {
         const newMaterialDefinitionOptions = materialDefinitions.map(d => ({
             label: d.name,
             value: d.definitionId
         }));
-
         setMaterialDefinitionOptions(newMaterialDefinitionOptions);
-    }, [materialDefinitions, updateActiveDefinition, currentDefinition?.definitionId]);
-
-    useEffect(() => {
-        onChangeMaterial(defaultMaterialId);
-    }, [defaultMaterialId, onChangeMaterial]);
-
-    useEffect(() => {
-        widgetActions.setTitle(i18n._('Material Settings'));
-    }, [widgetActions]);
-
-    if (!currentDefinition) {
-        return null;
-    }
+    }, [materialDefinitions]);
 
     return (
         <React.Fragment>
@@ -108,7 +85,7 @@ function Material({ widgetActions }) {
                     size="294px"
                     searchable
                     options={materialDefinitionOptions}
-                    value={currentDefinition.definitionId}
+                    value={defaultMaterialId}
                     onChange={onChangeMaterialValue}
                     disabled={inProgress}
                 />

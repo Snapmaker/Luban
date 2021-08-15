@@ -15,7 +15,7 @@ import modal from '../../lib/modal';
 import LaserVisualizer from '../widgets/LaserVisualizer';
 import Tabs from '../components/Tabs';
 
-import { renderPopup, renderWidgetList, renderModal, logPageView } from '../utils';
+import { renderPopup, renderWidgetList, renderModal, logPageView, useUnsavedTitle } from '../utils';
 import Dropzone from '../components/Dropzone';
 import { actions as editorActions } from '../../flux/editor';
 import { actions as laserActions } from '../../flux/laser';
@@ -347,7 +347,7 @@ function Laser({ location }) {
     const thumbnail = useRef();
     const modelGroup = useSelector(state => state[HEAD_LASER]?.modelGroup, shallowEqual);
     const toolPathGroup = useSelector(state => state[HEAD_LASER]?.toolPathGroup, shallowEqual);
-    // useUnsavedTitle(pageHeadType);
+    useUnsavedTitle(pageHeadType);
 
     useEffect(() => {
         dispatch(laserActions.init());

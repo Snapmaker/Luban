@@ -66,7 +66,7 @@ class VisualizerLeftBar extends PureComponent {
                 await this.props.uploadModel(file);
             } catch (e) {
                 modal({
-                    title: i18n._('Failed to upload model'),
+                    title: i18n._('Failed to upload model.'),
                     body: e.message
                 });
             }
@@ -370,7 +370,7 @@ class VisualizerLeftBar extends PureComponent {
                         <div
                             className="position-ab width-280 margin-left-72 border-default-grey-1 border-radius-8 background-color-white"
                             style={{
-                                marginTop: '72px'
+                                marginTop: '60px'
                             }}
                         >
                             <div className="border-bottom-normal padding-vertical-10 padding-horizontal-16 height-40">
@@ -429,7 +429,7 @@ class VisualizerLeftBar extends PureComponent {
                         <div
                             className="position-ab width-280 margin-left-72 border-default-grey-1 border-radius-8 background-color-white"
                             style={{
-                                marginTop: '124px'
+                                marginTop: '112px'
                             }}
                         >
                             <div className="border-bottom-normal padding-vertical-10 padding-horizontal-16 height-40">
@@ -599,7 +599,7 @@ class VisualizerLeftBar extends PureComponent {
                         <div
                             className="position-ab width-280 margin-left-72 border-default-grey-1 border-radius-8 background-color-white"
                             style={{
-                                marginTop: '176px'
+                                marginTop: '164px'
                             }}
                         >
                             <div className="border-bottom-normal padding-vertical-10 padding-horizontal-16 height-40">
@@ -682,7 +682,7 @@ class VisualizerLeftBar extends PureComponent {
                         <div
                             className="position-ab width-280 margin-left-72 border-default-grey-1 border-radius-8 background-color-white"
                             style={{
-                                marginTop: '228px'
+                                marginTop: '216px'
                             }}
                         >
                             <div className="border-bottom-normal padding-vertical-10 padding-horizontal-16 height-40">
@@ -729,7 +729,7 @@ class VisualizerLeftBar extends PureComponent {
                         <div
                             className="position-ab width-280 margin-left-72 border-default-grey-1 border-radius-8 background-color-white"
                             style={{
-                                marginTop: '332px'
+                                marginTop: '268px'
                             }}
                         >
                             <div className="border-bottom-normal padding-vertical-10 padding-horizontal-16 height-40">

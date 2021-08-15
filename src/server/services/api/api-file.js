@@ -395,6 +395,6 @@ export const recoverProjectFile = async (req, res) => {
         }
     }
 
-    res.send({ content });
+    res.send({ content, projectPath: file.path });
     res.end();
 };

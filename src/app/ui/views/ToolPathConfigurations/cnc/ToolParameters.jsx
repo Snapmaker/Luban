@@ -1,6 +1,6 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-import _ from 'lodash';
+import { includes, isUndefined } from 'lodash';
 import i18n from '../../../../lib/i18n';
 import TipTrigger from '../../../components/TipTrigger';
 import { NumberInput as Input } from '../../../components/Input';
@@ -23,7 +23,7 @@ function SettingItem(props) {
     const type = setting.type;
 
     const isToolParams = (k) => {
-        return _.includes(['angle', 'shaft_diameter', 'diameter'], k);
+        return includes(['angle', 'shaft_diameter', 'diameter'], k);
     };
 
     if (settingName === 'density' && isSVG) {
@@ -109,6 +109,26 @@ function SettingItem(props) {
                             }
                         }}
                         disabled={Object.keys(options).length === 1 || isToolParams(settingName)}
+                    />
+                )}
+                {isUndefined(type) && (
+                    <Input
+                        suffix={unit}
+                        value={defaultValue}
+                        min={min}
+                        max={max}
+                        size={styleSize}
+                        className="sm-flex-auto"
+                        onChange={(value) => {
+                            if (setting.isGcodeConfig) {
+                                const gcodeOptions = {};
+                                gcodeOptions[toHump(settingName)] = value;
+                                updateGcodeConfig(gcodeOptions);
+                            } else {
+                                updateToolConfig(toLine(settingName), value);
+                            }
+                        }}
+                        disabled={isToolParams(settingName)}
                     />
                 )}
             </div>

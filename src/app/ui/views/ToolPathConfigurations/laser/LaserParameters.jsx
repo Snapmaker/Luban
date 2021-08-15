@@ -51,6 +51,7 @@ class LaserParameters extends PureComponent {
                 option.fixedPower = 60;
             }
             if (option.movementMode === 'greyscale-line') {
+                option.direction = (!this.props.toolPath.materials?.isRotate ? 'Horizontal' : 'Vertical');
                 option.fillInterval = 0.25;
                 option.jogSpeed = 3000;
                 option.workSpeed = 500;
@@ -151,7 +152,7 @@ class LaserParameters extends PureComponent {
                                                 label: i18n._('Fill')
                                             }, {
                                                 value: 'path',
-                                                label: i18n._('On The Path')
+                                                label: i18n._('On the Path')
                                             }]}
                                             value={fillMethod}
                                             onChange={(option) => { this.actions.updateGcodeConfig({ fillEnabled: option.value === 'fill' }); }}
@@ -162,8 +163,7 @@ class LaserParameters extends PureComponent {
                             {isImage && (
                                 <TipTrigger
                                     title={i18n._('Method')}
-                                    content={i18n._('Set the processing method of the object. \n \
-                                        - Fill: Fills the object with lines or dots.')}
+                                    content={i18n._('Set the processing method of the object. \n - Fill: Fills the object with lines or dots.')}
                                 >
                                     <div className="position-re sm-flex justify-space-between height-32 margin-vertical-8">
                                         <span>{i18n._('Method')}</span>

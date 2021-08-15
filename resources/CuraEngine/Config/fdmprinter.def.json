@@ -1123,7 +1123,7 @@
                         "top_thickness":
                         {
                             "label": "Top Thickness",
-                            "description": "The thickness of the top layers in the print. This value divided by the layer height defines the number of top layers.",
+                            "description": "The thickness of the top layers of the print. This value divided by the layer height defines the number of top layers.",
                             "unit": "mm",
                             "default_value": 0.8,
                             "minimum_value": "0",
@@ -1153,7 +1153,7 @@
                         "bottom_thickness":
                         {
                             "label": "Bottom Thickness",
-                            "description": "The thickness of the bottom layers in the print. This value divided by the layer height defines the number of bottom layers.",
+                            "description": "The thickness of the bottom layers of the print. This value divided by the layer height defines the number of bottom layers.",
                             "unit": "mm",
                             "default_value": 0.6,
                             "minimum_value": "0",
@@ -2073,7 +2073,7 @@
                 },
                 "material_print_temperature_layer_0":
                 {
-                    "label": "Printing Temperature Initial Layer",
+                    "label": "Initial Layer Printing Temperature",
                     "description": "The temperature used for printing the first layer. Set at 0 to disable special handling of the initial layer.",
                     "unit": "°C",
                     "type": "float",
@@ -5475,7 +5475,7 @@
                 "magic_mesh_surface_mode":
                 {
                     "label": "Surface Mode",
-                    "description": "Treat the model as a surface only, a volume, or volumes with loose surfaces. The normal print mode only prints enclosed volumes. \"Surface\" prints a single wall tracing the mesh surface with no infill and no top/bottom skin. \"Both\" prints enclosed volumes like normal and any remaining polygons as surfaces.",
+                    "description": "Treat the model as a surface only, a volume, or volumes with loose surfaces. The normal print mode only prints enclosed volumes. \"Surface\" prints a single wall tracing the mesh surface with no infill and no top/bottom skin.",
                     "type": "enum",
                     "options":
                     {

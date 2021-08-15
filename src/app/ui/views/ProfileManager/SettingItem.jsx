@@ -8,10 +8,10 @@ import Checkbox from '../../components/Checkbox';
 import TipTrigger from '../../components/TipTrigger';
 import SvgIcon from '../../components/SvgIcon';
 
-function SettingItem({ definitionKey, settings, isDefinitionEditable = () => true, onChangeDefinition, defaultValue, styleSize = 'large' }) {
+function SettingItem({ definitionKey, settings, isDefaultDefinition = () => true, onChangeDefinition, defaultValue, styleSize = 'large' }) {
     const setting = settings[definitionKey];
 
-    const isProfile = !isDefinitionEditable();
+    const isProfile = !isDefaultDefinition();
     const { label, description, type, unit = '', enabled, options } = setting;
     const settingDefaultValue = setting.default_value;
     const isDefault = defaultValue && (defaultValue.value === settingDefaultValue);
@@ -190,7 +190,7 @@ function SettingItem({ definitionKey, settings, isDefinitionEditable = () => tru
 SettingItem.propTypes = {
     settings: PropTypes.object.isRequired,
     definitionKey: PropTypes.string.isRequired,
-    isDefinitionEditable: PropTypes.func,
+    isDefaultDefinition: PropTypes.func,
     onChangeDefinition: PropTypes.func.isRequired,
     defaultValue: PropTypes.object,
     styleSize: PropTypes.string

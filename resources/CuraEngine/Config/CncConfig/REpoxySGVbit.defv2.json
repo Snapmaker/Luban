@@ -10,6 +10,7 @@
             "min": 0.1,
             "max": 10,
             "unit": "mm",
+            "description": "Set the diameter of the carving tool.",
             "label": "Cutting Diameter"
         },
         "angle": {
@@ -18,6 +19,7 @@
             "min": 1,
             "max": 180,
             "unit": "°",
+            "description": "Set the point angle of the carving tool.",
             "label": "Point Angle"
         },
         "shaft_diameter": {
@@ -26,6 +28,7 @@
             "min": 0.1,
             "max": 10,
             "unit": "mm",
+            "description": "Set the shank diameter of the carving tool.",
             "label": "Shank Diameter"
         },
         "jog_speed": {
@@ -35,7 +38,7 @@
             "max": 6000,
             "unit": "mm/min",
             "label": "Jog Speed",
-            "description": "Determines how fast the tool moves when it’s not carving."
+            "description": "Set the speed at which the tool moves on the material when it is not carving."
         },
         "work_speed": {
             "default_value": 300,
@@ -44,7 +47,7 @@
             "max": 6000,
             "unit": "mm/min",
             "label": "Work Speed",
-            "description": "Determines how fast the tool moves on the material."
+            "description": "Set the speed at which the tool moves on the material when it is carving."
         },
         "plunge_speed": {
             "default_value": 300,
@@ -53,7 +56,7 @@
             "max": 1000,
             "unit": "mm/min",
             "label": "Plunge Speed",
-            "description": "Determines how fast the tool feeds into the material."
+            "description": "Set the speed at which the tool is driven down into the material."
         },
         "step_down": {
             "default_value": 17.5,
@@ -61,7 +64,7 @@
             "min": 0.01,
             "unit": "mm",
             "label": "Stepdown",
-            "description": "Enter the depth of each carving step."
+            "description": "Set the distance along the Z axis per step that the tool is plunged into the material."
         },
         "step_over": {
             "default_value": 0.12,

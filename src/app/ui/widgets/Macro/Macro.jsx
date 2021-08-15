@@ -116,7 +116,7 @@ class Macro extends PureComponent {
             >
                 {macros.length === 0 && (
                     <div className={styles.emptyResult}>
-                        {i18n._('No macros')}
+                        {i18n._('No macros.')}
                     </div>
                 )}
                 {ensureArray(macros).map((macro) => (

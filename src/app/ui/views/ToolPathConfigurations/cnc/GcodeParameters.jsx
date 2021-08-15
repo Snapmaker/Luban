@@ -80,7 +80,7 @@ class GcodeParameters extends PureComponent {
                     </TipTrigger>
                     <TipTrigger
                         title={i18n._('Stop Height')}
-                        content={i18n._('The distance between the tool and the material when the machine stops.')}
+                        content={i18n._('The distance between the bit and the material when the machine stops.')}
                     >
                         <div className="sm-parameter-row">
                             <span className="sm-parameter-row__label">{i18n._('Stop Height')}</span>
