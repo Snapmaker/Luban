@@ -337,8 +337,10 @@ class ToolPath {
             this.status = WARNING;
         }
 
-        if (!taskInfos || taskInfos.length === 0 || !taskInfos.find(v => v.visible)) {
+        if (!taskInfos || taskInfos.length === 0) {
             console.error('The models of tool path is empty');
+            this.status = FAILED;
+        } else if (!taskInfos.find(v => v.visible)) {
             this.status = WARNING;
         }
 
