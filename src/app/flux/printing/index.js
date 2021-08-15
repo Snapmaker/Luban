@@ -1289,11 +1289,6 @@ export const actions = {
         dispatch(operationHistoryActions.setOperations(INITIAL_STATE.name, operations));
     },
 
-    onModelTransformAsNeed: () => (dispatch, getState) => {
-        const { modelGroup } = getState().printing;
-        modelGroup.onModelTransformAsNeed();
-    },
-
     onModelTransform: () => (dispatch, getState) => {
         const { modelGroup } = getState().printing;
         modelGroup.onModelTransform();

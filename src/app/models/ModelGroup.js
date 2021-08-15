@@ -905,12 +905,6 @@ class ModelGroup extends EventEmitter {
         return this.getState();
     }
 
-    onModelTransformAsNeed() {
-        this.selectedModelArray.forEach((item) => {
-            item.onTransformAsNeed();
-        });
-    }
-
     onModelTransform() {
         // this.selectedModelIDArray.splice(0);
         this.selectedModelArray.forEach((item) => {

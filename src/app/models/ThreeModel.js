@@ -93,7 +93,8 @@ class ThreeModel extends BaseModel {
         this.modelName = newName;
     }
 
-    computeTransform(geometrySize) {
+    onTransform() {
+        const geometrySize = ThreeUtils.getGeometrySize(this.meshObject.geometry, true);
         const { uniformScalingState } = this.meshObject;
 
         const position = new THREE.Vector3();
@@ -114,8 +115,8 @@ class ThreeModel extends BaseModel {
             scaleX: scale.x,
             scaleY: scale.y,
             scaleZ: scale.z,
-            width: geometrySize ? geometrySize.x * scale.x : this.transformation.width,
-            height: geometrySize ? geometrySize.y * scale.y : this.transformation.height,
+            width: geometrySize.x * scale.x,
+            height: geometrySize.y * scale.y,
             uniformScalingState
         };
 
@@ -125,20 +126,6 @@ class ThreeModel extends BaseModel {
         };
 
         return this.transformation;
-    }
-
-    onTransformAsNeed() {
-        let geometrySize;
-        if (!this.meshObject.geometry.boundingBox) {
-            // frequently compute bounding box will cause stop when transform models
-            geometrySize = ThreeUtils.getGeometrySize(this.meshObject.geometry, true);
-        }
-        return this.computeTransform(geometrySize);
-    }
-
-    onTransform() {
-        const geometrySize = ThreeUtils.getGeometrySize(this.meshObject.geometry, true);
-        return this.computeTransform(geometrySize);
     }
 
     updateTransformation(transformation) {
