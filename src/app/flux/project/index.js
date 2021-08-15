@@ -472,7 +472,10 @@ export const actions = {
         }
         history.push({
             pathname: to,
-            state: { shouldShowJobType: restartGuide ? false : !!isGuideTours, shouldShowGuideTours: to === from ? (!shouldShowGuideTours || restartGuide) : (!isGuideTours || restartGuide) }
+            state: {
+                shouldShowJobType: restartGuide ? false : !!isGuideTours,
+                shouldShowGuideTours: to === from ? (!shouldShowGuideTours || restartGuide) : (!isGuideTours || restartGuide)
+            }
         });
 
         // clear operation history

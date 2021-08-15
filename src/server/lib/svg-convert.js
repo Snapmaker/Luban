@@ -34,9 +34,9 @@ const TEMPLATE = `<?xml version="1.0" encoding="utf-8"?>
 const convertRasterToSvg = (options) => {
     const { uploadName, vectorThreshold, invert, turdSize } = options;
     // svg may get here, return the original file
-    if (/\.svg$/.test(uploadName) && !(/parsed\.svg$/.test(uploadName))) {
+    if (/\.svg$/i.test(uploadName)) {
         return Promise.resolve({
-            filename: uploadName.replace(/\.svg$/, 'parsed.svg')
+            filename: /parsed\.svg$/i.test(uploadName) ? uploadName : uploadName.replace(/\.svg$/i, 'parsed.svg')
         });
     }
     const outputFilename = pathWithRandomSuffix(`${uploadName}.svg`);
