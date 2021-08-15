@@ -26,7 +26,7 @@ import { HEAD_3DP, PRINTING_MANAGER_TYPE_MATERIAL } from '../../../constants';
 //     'material_flow_layer_0'
 // ];
 function Material({ widgetActions }) {
-    const materialDefinitions = useSelector(state => state?.printing?.materialDefinitions, shallowEqual);
+    const materialDefinitions = useSelector(state => state?.printing?.materialDefinitions,);
     const defaultMaterialId = useSelector(state => state?.printing?.defaultMaterialId, shallowEqual);
     const inProgress = useSelector(state => state?.printing?.inProgress);
     const dispatch = useDispatch();

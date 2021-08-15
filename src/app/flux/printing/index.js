@@ -304,7 +304,7 @@ export const actions = {
                 dispatch(actions.updateState({
                     stage: PRINTING_STAGE.SLICING,
                     inProgress: true,
-                    progress: 0
+                    progress: 0.01
                 }));
             });
             controller.on('slice:completed', (args) => {
@@ -582,7 +582,7 @@ export const actions = {
         if (!name || name.trim().length === 0) {
             return Promise.reject(i18n._('Failed to rename. Please enter a new name.'));
         }
-        const definitionsKey = defaultDefinitionKeys[type].definitions;
+        const definitionsKey = defaultDefinitionKeys[type]?.definitions;
 
         const definitions = getState().printing[definitionsKey];
         const duplicated = definitions.find(d => d.name === name);
@@ -595,8 +595,11 @@ export const actions = {
             definitionId: definition.definitionId,
             name
         });
-
-        definition.name = name;
+        const index = definitions.findIndex(d => d.definitionId === definition?.definitionId);
+        definitions[index].name = name;
+        dispatch(actions.updateState({
+            [definitionsKey]: [...definitions]
+        }));
         return null;
     },
 

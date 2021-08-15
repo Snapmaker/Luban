@@ -1,5 +1,6 @@
 import cloneDeep from 'lodash/cloneDeep';
 import { find } from 'lodash';
+import pkg from '../../../package.json';
 import {
     HEAD_CNC,
     HEAD_LASER,
@@ -100,6 +101,7 @@ export const actions = {
         machineInfo.series = series;
 
         const envObj = { machineInfo, defaultMaterialId, defaultQualityId, isRecommended, models: [], toolpaths: [] };
+        envObj.version = pkg?.version;
         if (headType === HEAD_CNC || headType === HEAD_LASER) {
             const { materials, coordinateMode, coordinateSize } = getState()[headType];
             envObj.materials = materials;
@@ -268,15 +270,6 @@ export const actions = {
         UniApi.Menu.setItemEnabled('save', !!openedFile);
     },
 
-    setOpenedFileWithUnSaved: (headType, unSaved) => async (dispatch, getState) => {
-        const { openedFile } = getState().project[headType];
-        if (openedFile) {
-            UniApi.Window.setOpenedFile(unSaved ? `${openedFile?.name} *` : openedFile?.name);
-        } else {
-            UniApi.Window.setOpenedFile(unSaved ? 'New *' : 'New');
-        }
-    },
-
     saveAsFile: (headType) => async (dispatch) => {
         const { body: { targetFile } } = await api.packageEnv({ headType });
         const tmpFile = `/Tmp/${targetFile}`;
@@ -361,7 +354,7 @@ export const actions = {
                 file = JSON.stringify(file);
             }
             formData.append('file', file);
-            const { body: { content } } = await api.recoverProjectFile(formData);
+            const { body: { content, projectPath } } = await api.recoverProjectFile(formData);
             let envObj;
             try {
                 envObj = JSON.parse(content);
@@ -398,7 +391,11 @@ export const actions = {
             await dispatch(actions.onRecovery(headType, envObj, false));
             if (shouldSetFileName) {
                 if (file instanceof File) {
-                    await dispatch(actions.setOpenedFileWithType(headType, file));
+                    const newOpenedFile = {
+                        name: file.name,
+                        path: projectPath
+                    };
+                    await dispatch(actions.setOpenedFileWithType(headType, newOpenedFile));
                 } else {
                     await dispatch(actions.setOpenedFileWithType(headType, JSON.parse(file)));
                 }
@@ -548,6 +545,16 @@ export const actions = {
         state.recentFiles = newRecentFiles;
         state.recentFilesLength = newRecentFiles.length;
         dispatch(actions.updateState('general', state));
+    },
+
+
+    setOpenedFileWithUnSaved: (headType, unSaved) => async (dispatch, getState) => {
+        const { openedFile } = getState().project[headType];
+        if (openedFile) {
+            UniApi.Window.setOpenedFile(unSaved ? `${openedFile?.name} *` : openedFile?.name);
+        } else {
+            UniApi.Window.setOpenedFile(unSaved ? 'New *' : 'New');
+        }
     }
 };
 

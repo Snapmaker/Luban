@@ -70,7 +70,7 @@ function useGetDefinitions(allDefinitions, definitionState, setDefinitionState, 
             if (d?.category) {
                 checkboxAndSelectGroup.category = d.category;
             }
-            if (Object.keys(d.settings).length === 0 || isUndefined(d.settings)) {
+            if (d.settings && (Object.keys(d.settings).length === 0 || isUndefined(d.settings))) {
                 checkboxAndSelectGroup.isHidden = true;
             }
             return checkboxAndSelectGroup;

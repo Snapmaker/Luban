@@ -2,6 +2,7 @@ import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
 import classNames from 'classnames';
 import { connect } from 'react-redux';
+import { cloneDeep } from 'lodash';
 import Select from '../../../components/Select';
 import { CNC_MESH_SLICE_MODE_LINKAGE, CNC_MESH_SLICE_MODE_ROTATION,
     TOOLPATH_TYPE_IMAGE, TOOLPATH_TYPE_SCULPT, TOOLPATH_TYPE_VECTOR,
@@ -12,6 +13,7 @@ import { TextInput } from '../../../components/Input';
 import ToolParameters from './ToolParameters';
 import TipTrigger from '../../../components/TipTrigger';
 import ToolSelector from './ToolSelector';
+import { toHump } from '../../../../../shared/lib/utils';
 import SvgIcon from '../../../components/SvgIcon';
 
 class CncParameters extends PureComponent {
@@ -67,9 +69,14 @@ class CncParameters extends PureComponent {
             // isGcodeConfig is true means to use updateGcodeConfig, false means to use updateToolConfig
             gcodeDefinition[key].isGcodeConfig = true;
         });
+        const newSettings = {};
+        Object.entries(cloneDeep(this.props.activeToolDefinition?.settings)).forEach(([key, value]) => {
+            newSettings[toHump(key)] = value;
+        });
+
         const allDefinition = {
             ...gcodeDefinition,
-            ...this.props.activeToolDefinition.settings
+            ...newSettings
         };
         // Session First
         const toolDefinitionFirstKeys = [];
@@ -88,7 +95,7 @@ class CncParameters extends PureComponent {
 
         // Session Tool
         const toolDefinitionToolKeys = [
-            'work_speed', 'plunge_speed', 'step_down', 'step_over'
+            'workSpeed', 'plungeSpeed', 'stepDown', 'stepOver'
         ];
         const toolDefinitionTool = {};
         toolDefinitionToolKeys.forEach((key) => {
@@ -99,7 +106,7 @@ class CncParameters extends PureComponent {
 
         // Session Jog
         const toolDefinitionJogKeys = [
-            'jog_speed', 'safetyHeight', 'stopHeight'
+            'jogSpeed', 'safetyHeight', 'stopHeight'
         ];
         const toolDefinitionJog = {};
         toolDefinitionJogKeys.forEach((key) => {
