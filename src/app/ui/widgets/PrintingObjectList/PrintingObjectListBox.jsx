@@ -32,6 +32,7 @@ function PrintingObjectListBox() {
         <div className={classNames(
             'width-264',
             'background-color-white',
+            styles['object-list-box'],
             allModels.length > 0 ? 'border-radius-8 border-default-grey-1 padding-vertical-4' : '',
         )}
         >

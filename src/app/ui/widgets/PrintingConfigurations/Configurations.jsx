@@ -218,7 +218,7 @@ class Configurations extends PureComponent {
                     <Select
                         clearable={false}
                         searchable
-                        size="294px"
+                        size="292px"
                         options={customDefinitionOptions}
                         value={qualityDefinition.definitionId}
                         onChange={(option) => {
@@ -227,10 +227,12 @@ class Configurations extends PureComponent {
                         disabled={inProgress}
                     />
                     <SvgIcon
-                        className="border-radius-8 border-default-grey-1 padding-vertical-2 padding-horizontal-2 margin-left-4"
+                        // className="border-radius-8 border-default-grey-1 padding-vertical-2 padding-horizontal-2 margin-left-4"
+                        className="border-default-black-5 margin-left-4"
                         name="PrintingSettingNormal"
                         disabled={inProgress}
                         onClick={actions.onShowMaterialManager}
+                        borderRadius={8}
                     />
                 </div>
                 <div className={classNames(
@@ -243,7 +245,7 @@ class Configurations extends PureComponent {
                         <span className="sm-flex-width main-text-normal">{i18n._('General Parameters')}</span>
                         <SvgIcon
                             name="Manage"
-                            size={32}
+                            size={24}
                             onClick={actions.toggleShowCustomConfigPannel}
                         />
                     </div>

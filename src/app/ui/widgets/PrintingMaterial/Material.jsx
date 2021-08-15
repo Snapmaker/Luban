@@ -82,7 +82,7 @@ function Material({ widgetActions }) {
             >
                 <Select
                     clearable={false}
-                    size="294px"
+                    size="292px"
                     searchable
                     options={materialDefinitionOptions}
                     value={defaultMaterialId}
@@ -90,11 +90,13 @@ function Material({ widgetActions }) {
                     disabled={inProgress}
                 />
                 <SvgIcon
-                    className="border-radius-8 border-default-grey-1 padding-vertical-2 padding-horizontal-2 margin-left-4"
+                    // className="border-radius-8 border-default-grey-1 padding-vertical-2 padding-horizontal-2 margin-left-4"
+                    className="border-default-black-5 margin-left-4"
                     name="PrintingSettingNormal"
                     size={24}
                     disabled={inProgress}
                     onClick={onShowPrintingManager}
+                    borderRadius={8}
                 />
             </div>
         </React.Fragment>

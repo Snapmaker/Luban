@@ -140,6 +140,7 @@ function General({ state: generalState, actions }) {
                     <div className="border-bottom-normal padding-bottom-4">
                         <SvgIcon
                             name="TitleSetting"
+                            type={['static']}
                         />
                         <span className="margin-left-4">{i18n._('Language')}</span>
                     </div>
@@ -156,6 +157,7 @@ function General({ state: generalState, actions }) {
                         <div className="border-bottom-normal padding-bottom-4">
                             <SvgIcon
                                 name="TitleSetting"
+                                type={['static']}
                             />
                             <span className="margin-left-4">{i18n._('Software Update')}</span>
                         </div>

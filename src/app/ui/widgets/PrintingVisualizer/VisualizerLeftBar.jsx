@@ -279,7 +279,7 @@ class VisualizerLeftBar extends PureComponent {
                                                 'padding-horizontal-4'
                                             )}
                                             // Todo: Add selected props
-                                            type={['hoverSpecial', 'pressSpecial']}
+                                            type={[`${!transformDisabled && transformMode === 'translate' ? 'hoverNoBackground' : 'hoverSpecial'}`, 'pressSpecial']}
                                             name="ToolbarMove"
                                             size={48}
                                             onClick={() => {
@@ -297,7 +297,7 @@ class VisualizerLeftBar extends PureComponent {
                                                 { [styles.selected]: (!transformDisabled && transformMode === 'scale') },
                                                 'padding-horizontal-4'
                                             )}
-                                            type={['hoverSpecial', 'pressSpecial']}
+                                            type={[`${!transformDisabled && transformMode === 'scale' ? 'hoverNoBackground' : 'hoverSpecial'}`, 'pressSpecial']}
                                             name="ToolbarScale"
                                             size={48}
                                             onClick={() => {
@@ -315,7 +315,7 @@ class VisualizerLeftBar extends PureComponent {
                                                 { [styles.selected]: (!transformDisabled && transformMode === 'rotate') },
                                                 'padding-horizontal-4'
                                             )}
-                                            type={['hoverSpecial', 'pressSpecial']}
+                                            type={[`${!transformDisabled && transformMode === 'rotate' ? 'hoverNoBackground' : 'hoverSpecial'}`, 'pressSpecial']}
                                             name="ToolbarRotate"
                                             size={48}
                                             onClick={() => {
@@ -333,7 +333,7 @@ class VisualizerLeftBar extends PureComponent {
                                                 { [styles.selected]: (!transformDisabled && transformMode === 'mirror') },
                                                 'padding-horizontal-4'
                                             )}
-                                            type={['hoverSpecial', 'pressSpecial']}
+                                            type={[`${!transformDisabled && transformMode === 'mirror' ? 'hoverNoBackground' : 'hoverSpecial'}`, 'pressSpecial']}
                                             name="ToolbarMirror"
                                             size={48}
                                             onClick={() => {
@@ -353,7 +353,7 @@ class VisualizerLeftBar extends PureComponent {
                                                 { [styles.selected]: (!transformDisabled && transformMode === 'support') },
                                                 'padding-horizontal-4'
                                             )}
-                                            type={['hoverSpecial', 'pressSpecial']}
+                                            type={[`${!transformDisabled && transformMode === 'support' ? 'hoverNoBackground' : 'hoverSpecial'}`, 'pressSpecial']}
                                             name="ToolbarSupport"
                                             size={48}
                                             onClick={() => {
@@ -484,6 +484,7 @@ class VisualizerLeftBar extends PureComponent {
                                 <div className="sm-flex height-32 margin-bottom-8">
                                     <Checkbox
                                         defaultChecked={uniformScalingState}
+                                        checked={uniformScalingState}
                                         onClick={() => {
                                             actions.changeUniformScalingState(uniformScalingState); // Todo: bug, state error
                                         }}

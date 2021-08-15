@@ -75,6 +75,7 @@ function ConfigValueBox({ optionConfigGroup, calculateTextIndex, isCategorySelec
                                     <div className="border-bottom-normal padding-bottom-8 margin-vertical-16">
                                         <SvgIcon
                                             name="TitleSetting"
+                                            type={['static']}
                                         />
                                         <span className="margin-left-2">{i18n._(group.name)}</span>
                                     </div>

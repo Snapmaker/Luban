@@ -308,6 +308,7 @@ class CncParameters extends PureComponent {
                         <div className="border-bottom-normal padding-bottom-4 margin-vertical-16">
                             <SvgIcon
                                 name="TitleSetting"
+                                type={['static']}
                                 size={24}
                             />
                             <span>{i18n._('Tool')}</span>
@@ -331,6 +332,7 @@ class CncParameters extends PureComponent {
                             <SvgIcon
                                 name="TitleSetting"
                                 size={24}
+                                type={['static']}
                             />
                             <span>{i18n._('Jog')}</span>
                         </div>
@@ -346,6 +348,7 @@ class CncParameters extends PureComponent {
                             <div className="border-bottom-normal padding-bottom-4 margin-vertical-16">
                                 <SvgIcon
                                     name="TitleSetting"
+                                    type={['static']}
                                     size={24}
                                 />
                                 <span>{i18n._('Tab')}</span>

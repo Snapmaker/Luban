@@ -91,7 +91,7 @@ class WidgetContainer extends PureComponent {
                     <div>
                         {state.buttons && _.isArray(state.buttons) && state.buttons.map(v => {
                             if (typeof v === 'object') {
-                                const { disabled = false, title = '', onClick, className = '', name = 'CopyNomral' } = v;
+                                const { disabled = false, title = '', onClick, className = '', name = 'CopyNomral', type = ['hoverNormal', 'pressNormal'] } = v;
                                 return (
                                     <SvgIcon
                                         key={title}
@@ -100,6 +100,7 @@ class WidgetContainer extends PureComponent {
                                         className={className}
                                         title={i18n._(title)}
                                         onClick={onClick}
+                                        type={type}
                                     />
                                 );
                             } else if (v === 'SMMinimize') {

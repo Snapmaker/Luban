@@ -33,30 +33,30 @@ class VisualizerBottomLeft extends PureComponent {
                 <div className={classNames('margin-horizontal-8', 'height-30')}>
                     <SvgIcon
                         name="ViewIsometric"
-                        size={30}
+                        size={24}
                         onClick={actions.toTopFrontRight}
                     />
                     <SvgIcon
                         name="ViewFront"
-                        size={30}
+                        size={24}
                         className="margin-left-2"
                         onClick={actions.toFront}
                     />
                     <SvgIcon
                         name="ViewTop"
-                        size={30}
+                        size={24}
                         className="margin-left-2"
                         onClick={actions.toTop}
                     />
                     <SvgIcon
                         name="ViewLeft"
-                        size={30}
+                        size={24}
                         className="margin-left-2"
                         onClick={actions.toLeft}
                     />
                     <SvgIcon
                         name="ViewRight"
-                        size={30}
+                        size={24}
                         className="margin-left-2"
                         onClick={actions.toRight}
                     />

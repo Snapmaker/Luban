@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
-// import { useSelector, shallowEqual } from 'redux';
 import isElectron from 'is-electron';
 import i18next from 'i18next';
 import { gte } from 'lodash';
 import { withRouter } from 'react-router-dom';
 import styles from './styles.styl';
 import { machineStore } from '../../../store/local-storage';
+import pkg from '../../../../package.json';
 
 import { useRenderRecoveryModal, logPageView } from '../../utils';
 import { HEAD_3DP, HEAD_CNC, HEAD_LASER } from '../../../constants';
@@ -19,11 +19,10 @@ import MainToolBar from '../../layouts/MainToolBar';
 
 const HomePage = (props) => { // Todo, what's the props ?
     const [modalShow, setModalShow] = useState(false);
-
     useEffect(() => {
-        document.querySelector('body').setAttribute('style', 'height: calc(100vh - 82px); background: #f5f5f7;');
         const settingStore = machineStore.get('settings');
-        if (gte(machineStore?.version, '3.16.0') && (!settingStore?.finishGuide || settingStore?.guideVersion !== 1)) {
+        document.querySelector('body').setAttribute('style', 'height: calc(100vh - 82px); background: #f5f5f7;');
+        if (gte(pkg?.version, '3.16.0') && (!settingStore || !settingStore?.finishGuide || settingStore?.guideVersion !== 1)) {
             setModalShow(true);
         } else {
             setModalShow(false);

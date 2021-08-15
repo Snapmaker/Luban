@@ -185,6 +185,7 @@ const SettingGuideModal = (props) => {
                                             size={48}
                                             name='LeftSlipNormal'
                                             onClick={() => handleMachineChange('up')}
+                                            borderRadius={8}
                                         />
                                         <div>
                                             <img
@@ -198,6 +199,7 @@ const SettingGuideModal = (props) => {
                                             size={48}
                                             name='RightSlipNormal'
                                             onClick={() => handleMachineChange('down')}
+                                            borderRadius={8}
                                         />
                                     </div>
                                     <div className={classNames(styles.machineInfo, 'margin-left-16')}>

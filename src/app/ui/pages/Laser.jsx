@@ -222,20 +222,23 @@ function useRenderMainToolBar(setShowHomePage, setShowJobType, setShowWorkspace,
                 customRender: function () {
                     return (
                         <Dropdown
-                            className="display-inline align-c padding-top-4 padding-horizontal-2"
+                            className="display-inline align-c padding-top-4 padding-horizontal-2 height-50"
                             overlay={menu}
                         >
                             <div
-                                className="display-inline font-size-0 v-align-t"
+                                className="display-inline font-size-0 v-align-t hover-normal-grey-2 border-radius-4"
                             >
                                 <SvgIcon
                                     name="MainToolbarCameraCapture"
+                                    type={['static']}
                                 >
-                                    <div className="font-size-base color-black-3">
+                                    <div className="font-size-base color-black-3 height-16 margin-top-4">
                                         {i18n._('Camera Capture')}
                                         <SvgIcon
-                                            type="static"
-                                            name="DropdownLine"
+                                            type={['static']}
+                                            name="DropdownOpen"
+                                            size={20}
+                                            // className="margin-top-4"
                                         />
                                     </div>
                                 </SvgIcon>
@@ -335,6 +338,7 @@ function Laser({ location }) {
     const coordinateSize = useSelector(state => state[HEAD_LASER]?.coordinateSize, shallowEqual);
     const toolPaths = useSelector(state => state[HEAD_LASER]?.toolPathGroup?.getToolPaths(), shallowEqual);
     const materials = useSelector(state => state[HEAD_LASER]?.materials, shallowEqual);
+    const series = useSelector(state => state.machine.series, shallowEqual);
     const { isRotate } = materials;
     const [jobTypeState, setJobTypeState] = useState({
         coordinateMode,
@@ -534,15 +538,54 @@ function Laser({ location }) {
         if (nextIndex === 1) {
             let pathConfig = {};
             if (isRotate) {
-                pathConfig = {
-                    path: './UserCase/A350/A350_4th_Laser.snaplzr',
-                    name: 'A350_4th_Laser.snaplzr'
-                };
+                switch (series) {
+                    case 'A250':
+                        pathConfig = {
+                            path: './UserCase/A250/A250_4th_Laser.snaplzr',
+                            name: 'A250_4th_Laser.snaplzr'
+                        };
+                        break;
+                    default:
+                        pathConfig = {
+                            path: './UserCase/A350/A350_4th_Laser.snaplzr',
+                            name: 'A350_4th_Laser.snaplzr'
+                        };
+                        break;
+                }
             } else {
-                pathConfig = {
-                    path: './UserCase/A150/A150_Laser.snaplzr',
-                    name: 'A150_Laser.snaplzr'
-                };
+                switch (series) {
+                    case 'Original Long Z-axis':
+                    case 'Original':
+                        pathConfig = {
+                            path: './UserCase/Origin/Original_Laser.snaplzr',
+                            name: 'Original_Laser.snaplzr'
+                        };
+                        break;
+                    case 'A150':
+                        pathConfig = {
+                            path: './UserCase/A150/A150_Laser.snaplzr',
+                            name: 'A150_Laser.snaplzr'
+                        };
+                        break;
+                    case 'A250':
+                        pathConfig = {
+                            path: './UserCase/A250/A250_Laser.snaplzr',
+                            name: 'A250_Laser.snaplzr'
+                        };
+                        break;
+                    case 'A350':
+                        pathConfig = {
+                            path: './UserCase/A350/A350_Laser.snaplzr',
+                            name: 'A350_Laser.snaplzr'
+                        };
+                        break;
+                    default:
+                        pathConfig = {
+                            path: './UserCase/Origin/Original_Laser.snaplzr',
+                            name: 'Original_Laser.snaplzr'
+                        };
+                        break;
+                }
             }
             dispatch(projectActions.openProject(pathConfig, history, true));
         }

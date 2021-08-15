@@ -300,20 +300,22 @@ function useRenderMainToolBar(setShowHomePage, setShowJobType, setShowWorkspace)
                 customRender: function () {
                     return (
                         <Dropdown
-                            className="display-inline align-c padding-top-4 padding-horizontal-2"
+                            className="display-inline align-c padding-top-4 padding-horizontal-2 height-50"
                             overlay={menu}
                         >
                             <div
-                                className="display-inline font-size-0 v-align-t"
+                                className="display-inline font-size-0 v-align-t hover-normal-grey-2 border-radius-4"
                             >
                                 <SvgIcon
                                     name="MainToolbarStl3dView"
+                                    type={['static']}
                                 >
-                                    <div className="font-size-base color-black-3">
+                                    <div className="font-size-base color-black-3 height-16 margin-top-4">
                                         {i18n._('STL 3D View')}
                                         <SvgIcon
-                                            type="static"
-                                            name="DropdownLine"
+                                            type={['static']}
+                                            name="DropdownOpen"
+                                            size={20}
                                         />
                                     </div>
                                 </SvgIcon>
@@ -399,6 +401,7 @@ function Cnc({ location }) {
     const page = useSelector(state => state?.cnc.page);
     useUnsavedTitle(pageHeadType);
     const thumbnail = useRef();
+    const series = useSelector(state => state.machine.series, shallowEqual);
 
     useEffect(() => {
         // const setting = machineStore.get('guideTours');
@@ -602,10 +605,35 @@ function Cnc({ location }) {
                     name: '4th_CNC.snapcnc'
                 };
             } else {
-                pathConfig = {
-                    path: './UserCase/A150/A150_CNC.snapcnc',
-                    name: 'A150_CNC.snapcnc'
-                };
+                switch (series) {
+                    case 'Original Long Z-axis':
+                    case 'Original':
+                        pathConfig = {
+                            path: './UserCase/Origin/Original_CNC.snapcnc',
+                            name: 'Original_CNC.snapcnc'
+                        };
+                        break;
+                    case 'A150':
+                        pathConfig = {
+                            path: './UserCase/A150/A150_CNC.snapcnc',
+                            name: 'A150_CNC.snapcnc'
+                        };
+                        break;
+                    case 'A250':
+                        pathConfig = {
+                            path: './UserCase/A250/A250_CNC.snapcnc',
+                            name: 'A250_CNC.snapcnc'
+                        };
+                        break;
+                    case 'A350':
+                        pathConfig = {
+                            path: './UserCase/A350/A350_CNC.snapcnc',
+                            name: 'A350_CNC.snapcnc'
+                        };
+                        break;
+                    default:
+                        break;
+                }
             }
             dispatch(projectActions.openProject(pathConfig, history, true));
         }

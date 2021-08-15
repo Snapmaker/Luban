@@ -170,8 +170,8 @@ class TransformationSection extends PureComponent {
                         <div className="sm-flex height-32 margin-vertical-8 ">
                             <span className="sm-flex-auto sm-flex-order-negative width-64">{i18n._('Move')}</span>
                             <span className="sm-flex-width sm-flex justify-space-between">
-                                <div className="display-inline position-re">
-                                    <span className="width-16 display-inline">
+                                <div className="position-re sm-flex align-flex-start">
+                                    <span className="width-16 height-32 display-inline unit-text align-c">
                                             X
                                     </span>
                                     <span>
@@ -189,8 +189,8 @@ class TransformationSection extends PureComponent {
                                         />
                                     </span>
                                 </div>
-                                <div className="display-inline position-re">
-                                    <span className="width-16 display-inline">
+                                <div className="position-re sm-flex align-flex-start">
+                                    <span className="width-16 height-32 display-inline unit-text align-c">
                                             Y
                                     </span>
                                     <span>
@@ -218,8 +218,8 @@ class TransformationSection extends PureComponent {
                         <div className="sm-flex height-32 margin-vertical-8">
                             <span className="sm-flex-auto sm-flex-order-negative width-64">{i18n._('Size')}</span>
                             <div className="sm-flex-width sm-flex justify-space-between">
-                                <div className="display-inline position-re">
-                                    <span className="width-16 display-inline">
+                                <div className="position-re sm-flex align-flex-start">
+                                    <span className="width-16 height-32 display-inline unit-text align-c">
                                            W
                                     </span>
                                     <span>
@@ -243,15 +243,16 @@ class TransformationSection extends PureComponent {
                                     className={classNames(
                                         uniformScalingState ? styles.icon_size_lock : styles.icon_size_unlock,
                                         'display-inline',
-                                        'width-24',
-                                        'height-32'
+                                        // 'width-30',
+                                        // 'height-30'
+                                        'square-30'
                                     )}
                                     onClick={() => {
                                         actions.onChangeUniformScalingState(!uniformScalingState);
                                     }}
                                 />
-                                <div className="display-inline position-re">
-                                    <span className="width-16 display-inline">
+                                <div className="position-re sm-flex align-flex-start">
+                                    <span className="width-16 height-32 display-inline unit-text align-c">
                                            H
                                     </span>
                                     <span>
@@ -282,6 +283,7 @@ class TransformationSection extends PureComponent {
                                 <div className="display-inline">
                                     <SvgIcon
                                         name="RotationAngle"
+                                        type={['static']}
                                     />
                                     <DegreeInput
                                         disabled={disabled || !selectedNotHide || !canRotate}
@@ -298,6 +300,9 @@ class TransformationSection extends PureComponent {
                                             className="padding-horizontal-8 border-radius-8 border-default-grey-1"
                                             disabled={disabled || !selectedNotHide}
                                             onClick={actions.onFlipHorizontally}
+                                            // type={['static']}
+                                            size={26}
+                                            borderRadius={8}
                                         />
                                     )}
                                     {selectedModelArray.length === 1 && (
@@ -306,6 +311,8 @@ class TransformationSection extends PureComponent {
                                             className="padding-horizontal-8 border-radius-8 border-default-grey-1"
                                             disabled={disabled || !selectedNotHide}
                                             onClick={actions.onFlipVertically}
+                                            size={26}
+                                            borderRadius={8}
                                         />
                                     )}
                                 </div>

@@ -82,7 +82,7 @@ class SVGLeftBar extends PureComponent {
                             <div className="margin-vertical-4">
                                 <SvgIcon
                                     color="#545659"
-                                    type={['hoverNormal', 'pressSpecial']}
+                                    type={[`${mode === 'select' ? 'hoverNoBackground' : 'hoverNormal'}`, 'pressSpecial']}
                                     size={48}
                                     name="ToolbarSelect"
                                     disabled={!editable}
@@ -95,7 +95,7 @@ class SVGLeftBar extends PureComponent {
                             </div>
                             <div className="margin-vertical-4">
                                 <SvgIcon
-                                    type={['hoverNormal', 'pressSpecial']}
+                                    type={[`${mode === 'rect' ? 'hoverNoBackground' : 'hoverNormal'}`, 'pressSpecial']}
                                     color="#545659"
                                     size={48}
                                     name="ToolbarRectangle"
@@ -109,7 +109,7 @@ class SVGLeftBar extends PureComponent {
                             </div>
                             <div className="margin-vertical-4">
                                 <SvgIcon
-                                    type={['hoverNormal', 'pressSpecial']}
+                                    type={[`${mode === 'ellipse' ? 'hoverNoBackground' : 'hoverNormal'}`, 'pressSpecial']}
                                     color="#545659"
                                     size={48}
                                     name="ToolbarOval"

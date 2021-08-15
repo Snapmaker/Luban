@@ -125,7 +125,7 @@ class Macro extends PureComponent {
                         className={classNames(
                             'sm-flex',
                             'justify-space-between',
-                            'height-24',
+                            'height-32',
                             'margin-vertical-4'
                         )}
                     >

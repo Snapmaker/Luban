@@ -77,6 +77,8 @@ function ModelItem({ model, visible, isSelected, styles, onSelect, onToggleVisib
                     color={visible ? '#545659' : '#B9BCBF'}
                     onClick={() => onToggleVisible(model)}
                     disabled={inProgress}
+                    // type={isSelected ? ['static'] : ['hoverNormal', 'pressNormal']}
+                    type={['static']}
                 />
             </div>
         </TipTrigger>
