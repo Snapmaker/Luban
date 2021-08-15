@@ -86,10 +86,10 @@ const ToolpathItem = ({
                     onDoubleClick={handleOnDoubleClick}
                     onClick={handleOnClick}
                 >
-                    <span>
+                    <span className={classNames(styles['prefix-name'])}>
                         {prefixName}
                     </span>
-                    <span>
+                    <span className={classNames(styles['suffix-name'])}>
                         {suffixName}
                     </span>
                 </Anchor>

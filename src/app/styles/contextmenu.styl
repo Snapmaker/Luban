@@ -1,0 +1,48 @@
+@import "./global-var.styl"
+
+.react-contexify {
+    border-radius: 8px;
+    border: 1px solid $black-5;
+    box-shadow: 0 0 8px -3px #A5A5A5;
+}
+.react-contexify__item:not(.react-contexify__item--disabled):hover {
+    >.react-contexify__item__content{
+        color: $black-3 !important;
+        background: $grey-2 !important;
+    }
+    >.react-contexify__submenu {
+        ::before {
+            content: '';
+            display: block;
+            position: absolute;
+            width: calc(100% + 12px);
+            height: 100%;
+            left: -6px;
+            top: 0;
+        }
+    }
+}
+.react-contexify__item--disabled {
+    color: $black-5;
+}
+.react-contexify__submenu {
+    // left: 103% !important;
+    margin: 0 5px;
+}
+.react-contexify__submenu-arrow {
+    font-size: 0 !important;
+    background-size: contain;
+    background-position: center;
+    height: 12px;
+    width: 6px;
+    background-repeat: no-repeat;
+    display: inline-block;
+    top: 50%;
+    transform: translate(0, -50%);
+    background-image: url('../resources/images/24x24/ic_right_arrow.png');
+}
+.react-contexify__separator {
+    height: 0;
+    border-top: 1px solid rgba(0,0,0,.2);
+    background-color: unset;
+}

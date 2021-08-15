@@ -799,6 +799,7 @@ export const actions = {
             gcodeLineGroup.remove(gcodeLine);
             gcodeLine.geometry.dispose();
             dispatch(actions.updateState({
+                gcodeFile: null,
                 gcodeLine: null,
                 displayedType: 'model'
             }));
@@ -996,16 +997,6 @@ export const actions = {
         gcodeLineGroup.visible = false;
         dispatch(actions.updateState({
             displayedType: 'model'
-        }));
-        dispatch(actions.render());
-    },
-
-    clearGcodeFile: () => (dispatch, getState) => {
-        const { gcodeLineGroup, gcodeLine } = getState().printing;
-        gcodeLineGroup.remove(gcodeLine);
-        dispatch(actions.updateState({
-            gcodeFile: null,
-            gcodeLine: null
         }));
         dispatch(actions.render());
     },

@@ -114,6 +114,7 @@ class Visualizer extends PureComponent {
             this.props.recordModelBeforeTransform(this.props.modelGroup);
         },
         onModelAfterTransform: (transformMode) => {
+            this.actions.onModelTransform();
             this.props.recordModelAfterTransform(transformMode, this.props.modelGroup);
             this.props.onModelAfterTransform();
         },

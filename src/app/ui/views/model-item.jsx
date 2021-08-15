@@ -64,10 +64,10 @@ function ModelItem({ model, visible, isSelected, styles, onSelect, onToggleVisib
                             modelIcon
                         )}
                     />
-                    <span>
+                    <span className={classNames(styles['prefix-name'])}>
                         {prefixName}
                     </span>
-                    <span>
+                    <span className={classNames(styles['suffix-name'])}>
                         {suffixName}
                     </span>
                 </Anchor>
