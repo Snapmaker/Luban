@@ -743,6 +743,7 @@ class VisualizerLeftBar extends PureComponent {
                                         <Input
                                             suffix="mm"
                                             size="small"
+                                            disabled={isSupporting}
                                             min={1}
                                             max={size.x / 2}
                                             value={defaultSupportSize.x}
@@ -757,6 +758,7 @@ class VisualizerLeftBar extends PureComponent {
                                     <div className="position-ab sm-flex-auto margin-horizontal-24">
                                         <Input
                                             suffix="mm"
+                                            disabled={isSupporting}
                                             size="small"
                                             min={1}
                                             max={size.y / 2}
