@@ -404,12 +404,6 @@ function Cnc({ location }) {
     const series = useSelector(state => state.machine.series, shallowEqual);
 
     useEffect(() => {
-        // const setting = machineStore.get('guideTours');
-        // if (!setting?.guideTourscnc) {
-        //     setEnabledIntro(true);
-        // } else {
-        //     setEnabledIntro(false);
-        // }
         dispatch(cncActions.init());
         logPageView({
             pathname: '/cnc',
@@ -436,8 +430,10 @@ function Cnc({ location }) {
     useEffect(() => {
         if (location?.state?.shouldShowGuideTours) {
             setEnabledIntro(true);
-        } else {
+        } else if (!location?.state?.shouldShowGuideTours && typeof (location?.state?.shouldShowGuideTours) === 'boolean') {
             setEnabledIntro(false);
+        } else {
+            setEnabledIntro(null);
         }
     }, [location?.state?.shouldShowGuideTours]);
 
@@ -649,7 +645,6 @@ function Cnc({ location }) {
         }
     }
     function handleExit() {
-        // machineStore.set('guideTours.guideTourscnc', true); // mock   ---> true
         setEnabledIntro(false);
     }
     return (
