@@ -184,7 +184,7 @@ const JogDistance = (props) => {
                                 type="number"
                                 className="form-control"
                                 style={{ borderColor: '#6c757d' }}
-                                title={i18n._('Custom distance for every move operation')}
+                                title={i18n._('Custom distance for every move')}
                                 min={DISTANCE_MIN}
                                 max={DISTANCE_MAX}
                                 step={DISTANCE_STEP}

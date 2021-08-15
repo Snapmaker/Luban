@@ -60,7 +60,7 @@ export default {
             }
         },
         {
-            label: 'Support',
+            label: 'Software Support',
             id: 'supports',
             enabled: true,
             click: (menuItem, browserWindow) => {

@@ -227,7 +227,7 @@ class TestFocus extends PureComponent {
                                             className={classNames({
                                                 [styles['btn-test-laser-focus-z-selected']]: this.state.z === zValue,
                                                 [styles['btn-test-laser-focus-z-normal']]: this.state.z !== zValue
-                                            }, 'border-color-blue-2')}
+                                            })}
                                         />
                                     </td>
                                 );

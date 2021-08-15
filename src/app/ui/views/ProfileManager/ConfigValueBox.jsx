@@ -87,10 +87,10 @@ function ConfigValueBox({ optionConfigGroup, calculateTextIndex, isCategorySelec
                                                 definitionKey={key}
                                                 width="160px"
                                                 key={key}
-                                                isDefinitionEditable={isEditable}
+                                                isDefaultDefinition={isEditable}
                                                 onChangeDefinition={onChangeDefinition}
                                                 isProfile="true"
-                                                defaultValue={{
+                                                defaultValue={{ // Check to reset
                                                     value: selectedSettingDefaultValue && selectedSettingDefaultValue[key].default_value
                                                 }}
                                                 styleSize="large"

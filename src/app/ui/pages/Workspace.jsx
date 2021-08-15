@@ -163,7 +163,7 @@ class Workspace extends PureComponent {
         },
         onDropRejected: () => {
             const title = i18n._('Warning');
-            const body = i18n._('Only G-code files are supported');
+            const body = i18n._('Only G-code files are supported.');
             modal({
                 title: title,
                 body: body
@@ -235,8 +235,8 @@ class Workspace extends PureComponent {
                         <div className="sm-flex">
                             <i className="fa fa-exclamation-circle fa-4x text-danger" />
                             <div className="margin-left-24">
-                                <h5>{i18n._('Server has stopped working')}</h5>
-                                <p>{i18n._('A problem caused the server to stop working correctly. Check out the server status and try again.')}</p>
+                                <h5>{i18n._('Server has stopped working.')}</h5>
+                                <p>{i18n._('A problem caused the server to stop working correctly. Check the server status and try again.')}</p>
                             </div>
                         </div>
                     </Modal.Body>

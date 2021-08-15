@@ -19,7 +19,7 @@ const MoreInfo = () => {
                 </a>
                 <a className={classNames(styles.listItem, styles['right-part'])} href={lang === 'en' ? 'https://support.snapmaker.com/hc/en-us' : 'https://support.snapmaker.com/hc/zh-cn'} target="_blank" rel="noopener noreferrer">
                     <span className={classNames('heading-3-normal-with-hover')}>
-                        {i18n._('Support')}
+                        {i18n._('Software Support')}
                     </span>
                 </a>
                 <a className={classNames(styles.listItem)} href="https://www.youtube.com/c/Snapmaker/playlists" target="_blank" rel="noopener noreferrer">

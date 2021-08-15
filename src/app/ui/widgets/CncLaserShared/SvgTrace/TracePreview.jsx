@@ -244,7 +244,7 @@ class TracePreview extends Component {
                                 <td className={styles['trace-td-title']}>
                                     <TipTrigger
                                         title={i18n._('Black')}
-                                        content={i18n._('Adjust the black trace.')}
+                                        content={i18n._('Adjusts the black trace.')}
                                     >
                                         <p className={styles['trace-td-title-p']}>{i18n._('Black')}</p>
                                     </TipTrigger>
@@ -271,7 +271,7 @@ class TracePreview extends Component {
                                 <td className={styles['trace-td-title']}>
                                     <TipTrigger
                                         title={i18n._('Foreground')}
-                                        content={i18n._('Adjust the foreground.')}
+                                        content={i18n._('Adjusts the foreground.')}
                                     >
                                         <p className={styles['trace-td-title-p']}>{i18n._('Foreground')}</p>
                                     </TipTrigger>
@@ -325,7 +325,7 @@ class TracePreview extends Component {
                                 <td className={styles['trace-td-title']}>
                                     <TipTrigger
                                         title={i18n._('Color Range')}
-                                        content={i18n._('Adjust the color range of each trace.')}
+                                        content={i18n._('Adjusts the color range of each trace.')}
                                     >
                                         <p className={styles['trace-td-title-p']}>{i18n._('Color Range')}</p>
                                     </TipTrigger>

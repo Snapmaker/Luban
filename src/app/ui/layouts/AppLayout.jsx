@@ -406,8 +406,8 @@ class AppLayout extends PureComponent {
                 if (headType === 'cnc' || headType === 'laser') {
                     if (!isRotate) {
                         const { materials } = this.props.store?.[headType];
+                        await this.props.changeCoordinateMode(headType, COORDINATE_MODE_CENTER);
                         if (materials.isRotate !== isRotate) {
-                            await this.props.changeCoordinateMode(headType, COORDINATE_MODE_CENTER);
                             await this.props.updateMaterials(headType, { isRotate });
                         }
                     } else {

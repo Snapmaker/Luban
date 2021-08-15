@@ -293,14 +293,14 @@ class Visualizer extends Component {
                             if (err.status === 202) {
                                 modalSmallHOC({
                                     title: i18n._('Filament Runout Recovery'),
-                                    text: i18n._('Filament has run out. Please load the new filament to continue printing.'),
+                                    text: i18n._('Filament has run out. Please load new filament to continue printing.'),
                                     img: IMAGE_WIFI_ERROR
                                 });
                             } else if (err.status === 203) {
                                 modalSmallHOC({
                                     title: i18n._('Enclosure Door Open'),
                                     text: i18n._('One or both of the enclosure panels is/are opened. Please close the panel(s) to continue printing.'),
-                                    subtext: i18n._('Please wait one second after you close the door to proceed.'),
+                                    subtext: i18n._('Please wait one second after you close the panel(s) to continue printing.'),
                                     img: IMAGE_WIFI_WARNING
                                 });
                             } else {
@@ -319,14 +319,14 @@ class Visualizer extends Component {
                             if (err.status === 202) {
                                 modalSmallHOC({
                                     title: i18n._('Filament Runout Recovery'),
-                                    text: i18n._('Filament has run out. Please load the new filament to continue printing.'),
+                                    text: i18n._('Filament has run out. Please load new filament to continue printing.'),
                                     img: IMAGE_WIFI_ERROR
                                 });
                             } else if (err.status === 203) {
                                 modalSmallHOC({
                                     title: i18n._('Enclosure Door Open'),
                                     text: i18n._('One or both of the enclosure panels is/are opened. Please close the panel(s) to continue printing.'),
-                                    subtext: i18n._('Please wait one second after you close the door to proceed.'),
+                                    subtext: i18n._('Please wait one second after you close the panel(s) to continue printing.'),
                                     img: IMAGE_WIFI_WARNING
                                 });
                             } else {
@@ -727,7 +727,7 @@ class Visualizer extends Component {
                         title={i18n._('Enclosure Door Open')}
                         onClose={this.actions.closeModal}
                         text={i18n._('One or both of the enclosure panels is/are opened. Please close the panel(s) to continue printing.')}
-                        subtext={i18n._('Please wait one second after you close the door to proceed.')}
+                        subtext={i18n._('Please wait one second after you close the panel(s) to continue printing.')}
                         img="WarningTipsWarning"
                         iconColor="#FF4D4F"
                     />

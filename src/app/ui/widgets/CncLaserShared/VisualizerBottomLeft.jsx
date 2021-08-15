@@ -1,6 +1,7 @@
 import React, { PureComponent } from 'react';
 import classNames from 'classnames';
 import PropTypes from 'prop-types';
+import i18n from '../../../lib/i18n';
 import Slider from '../../components/Slider';
 import Card from '../../components/Card';
 import SvgIcon from '../../components/SvgIcon';
@@ -27,7 +28,7 @@ class VisualizerBottomLeft extends PureComponent {
             <React.Fragment>
                 <Card
                     className={classNames('margin-horizontal-8')}
-                    title="Object List"
+                    title={i18n._('Object List')}
                 >
                     <CncLaserObjectList
                         headType={this.props.headType}

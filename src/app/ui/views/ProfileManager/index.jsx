@@ -47,16 +47,14 @@ function creatCateArray(optionList) {
     return cates;
 }
 
-function useGetDefinitions(allDefinitions, definitionState, setDefinitionState, defaultKeysAndId, getDefaultDefinition) {
+function useGetDefinitions(allDefinitions, definitionState, setDefinitionState, selectedId, getDefaultDefinition) {
     const definitionsRef = useRef([]);
     useEffect(() => {
         const newState = {};
         const lastDefinitionForManager = definitionState?.definitionForManager;
         let definitionForManager = allDefinitions.find(d => d.definitionId === lastDefinitionForManager?.definitionId && d.name === lastDefinitionForManager?.name);
-        if (!definitionForManager && defaultKeysAndId?.name) {
-            definitionForManager = allDefinitions.find(d => d.definitionId === defaultKeysAndId?.id && d.name === defaultKeysAndId?.name);
-        } else if (!definitionForManager && !defaultKeysAndId?.name) {
-            definitionForManager = allDefinitions.find(d => d.definitionId === defaultKeysAndId?.id);
+        if (!definitionForManager) {
+            definitionForManager = allDefinitions.find(d => d.definitionId === selectedId);
         }
         const selectedSettingDefaultValue = getDefaultDefinition && getDefaultDefinition(definitionForManager?.definitionId);
 
@@ -67,9 +65,6 @@ function useGetDefinitions(allDefinitions, definitionState, setDefinitionState, 
 
         const definitionOptions = allDefinitions.map(d => {
             const checkboxAndSelectGroup = {};
-            defaultKeysAndId.keysArray.forEach((key) => {
-                checkboxAndSelectGroup[key] = d.settings[key].default_value;
-            });
             checkboxAndSelectGroup.label = d.name;
             checkboxAndSelectGroup.value = d.definitionId;
             if (d?.category) {
@@ -91,11 +86,11 @@ function useGetDefinitions(allDefinitions, definitionState, setDefinitionState, 
         return () => {
             definitionsRef.current = [];
         };
-    }, [allDefinitions, definitionState.definitionForManager, setDefinitionState, defaultKeysAndId]);
+    }, [allDefinitions, definitionState.definitionForManager, setDefinitionState, selectedId]);
     return definitionsRef;
 }
 
-function ProfileManager({ optionConfigGroup, disableCategory = true, managerTitle, defaultKeysAndId, allDefinitions, outsideActions, isDefinitionEditable, isOfficialDefinition, activeDefinition }) {
+function ProfileManager({ optionConfigGroup, disableCategory = true, managerTitle, selectedId, allDefinitions, outsideActions, isDefinitionEditable, isOfficialDefinition, activeDefinition }) {
     const [definitionState, setDefinitionState] = useSetState({
         definitionForManager: activeDefinition,
         definitionOptions: [],
@@ -110,7 +105,7 @@ function ProfileManager({ optionConfigGroup, disableCategory = true, managerTitl
         renameInput: useRef(null),
         refCreateModal: useRef(null)
     };
-    const currentDefinitions = useGetDefinitions(allDefinitions, definitionState, setDefinitionState, defaultKeysAndId, outsideActions.getDefaultDefinition);
+    const currentDefinitions = useGetDefinitions(allDefinitions, definitionState, setDefinitionState, selectedId, outsideActions.getDefaultDefinition);
     const actions = {
         isCategorySelectedNow: (category) => {
             const { definitionForManager, isCategorySelected } = definitionState;
@@ -657,7 +652,7 @@ function ProfileManager({ optionConfigGroup, disableCategory = true, managerTitl
 ProfileManager.propTypes = {
     outsideActions: PropTypes.object.isRequired,
     activeDefinition: PropTypes.object,
-    defaultKeysAndId: PropTypes.object.isRequired,
+    selectedId: PropTypes.string.isRequired,
     managerTitle: PropTypes.string.isRequired,
     disableCategory: PropTypes.bool,
     optionConfigGroup: PropTypes.array.isRequired,

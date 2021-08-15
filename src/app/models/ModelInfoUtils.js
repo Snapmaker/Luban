@@ -158,7 +158,21 @@ const defaultGcodeConfigs = {
         multiPasses: 1,
         multiPassDepth: 1
     },
-    [toKey(HEAD_LASER, PROCESS_MODE_BW)]: {
+    [toKey(HEAD_LASER, PROCESS_MODE_BW, true)]: {
+        direction: 'Vertical',
+        movementMode: 'greyscale-line', // greyscale-line, greyscale-dot
+        fillInterval: DEFAULT_FILL_INTERVAL, // density: DEFAULT_FILL_DENSITY,
+        jogSpeed: 2500,
+        workSpeed: 2500,
+        plungeSpeed: 800,
+        dwellTime: 5,
+        fixedPowerEnabled: true,
+        fixedPower: 60,
+        multiPassEnabled: true,
+        multiPasses: 1,
+        multiPassDepth: 1
+    },
+    [toKey(HEAD_LASER, PROCESS_MODE_BW, false)]: {
         direction: 'Horizontal',
         movementMode: 'greyscale-line', // greyscale-line, greyscale-dot
         fillInterval: DEFAULT_FILL_INTERVAL, // density: DEFAULT_FILL_DENSITY,
@@ -172,7 +186,21 @@ const defaultGcodeConfigs = {
         multiPasses: 1,
         multiPassDepth: 1
     },
-    [toKey(HEAD_LASER, PROCESS_MODE_HALFTONE)]: {
+    [toKey(HEAD_LASER, PROCESS_MODE_HALFTONE, true)]: {
+        direction: 'Vertical',
+        movementMode: 'greyscale-line', // greyscale-line, greyscale-dot
+        fillInterval: DEFAULT_FILL_INTERVAL, // density: DEFAULT_FILL_DENSITY,
+        jogSpeed: 2500,
+        workSpeed: 2500,
+        plungeSpeed: 800,
+        dwellTime: 5,
+        fixedPowerEnabled: true,
+        fixedPower: 60,
+        multiPassEnabled: true,
+        multiPasses: 1,
+        multiPassDepth: 1
+    },
+    [toKey(HEAD_LASER, PROCESS_MODE_HALFTONE, false)]: {
         direction: 'Horizontal',
         movementMode: 'greyscale-line', // greyscale-line, greyscale-dot
         fillInterval: DEFAULT_FILL_INTERVAL, // density: DEFAULT_FILL_DENSITY,
