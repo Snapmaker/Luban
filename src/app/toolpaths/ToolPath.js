@@ -69,20 +69,15 @@ class ToolPath {
         this.checkoutToolPathStatus();
     }
 
-    getState(filterInvisible = false) {
+    getState() {
         let modelIDs = [];
         let toolPathFiles = [];
-        if (filterInvisible) {
-            const modelsInModelIDs = this.modelGroup.models.filter(model => {
-                return this.modelIDs.includes(model.modelID) && model.visible === true;
-            });
-            if (modelsInModelIDs) {
-                modelIDs = [...modelsInModelIDs.map(model => model.modelID)];
-                toolPathFiles = [...modelIDs.map(v => this.modelMap.get(v).toolPathFile)];
-            }
-        } else {
-            modelIDs = this.modelIDs.map(v => v);
-            toolPathFiles = this._getToolPathFiles();
+        const modelsInModelIDs = this.modelGroup.models.filter(model => {
+            return this.modelIDs.includes(model.modelID) && model.visible === true;
+        });
+        if (modelsInModelIDs) {
+            modelIDs = [...modelsInModelIDs.map(model => model.modelID)];
+            toolPathFiles = [...modelIDs.map(v => this.modelMap.get(v).toolPathFile)];
         }
         return {
             id: this.id,
@@ -152,7 +147,9 @@ class ToolPath {
 
     _getModels() {
         const models = this.modelGroup.getModels();
-        return models.filter(model => includes(this.modelIDs, model.modelID));
+        return models.filter(model => {
+            return includes(this.modelIDs, model.modelID) && model.visible;
+        });
     }
 
     deleteModel(modelId) {
@@ -178,13 +175,13 @@ class ToolPath {
 
         const taskInfos = this.getSelectModelsAndToolPathInfo();
 
-        if (taskInfos.length !== this.modelIDs.length) {
-            const newIds = taskInfos.map(v => v.modelID);
-            const filterIds = this.modelIDs.filter(v => !newIds.includes(v)) || [];
-            for (const filterId of filterIds) {
-                this.deleteModel(filterId);
-            }
-        }
+        // if (taskInfos.length !== this.modelIDs.length) {
+        //     // const newIds = taskInfos.map(v => v.modelID);
+        //     // const filterIds = this.modelIDs.filter(v => !newIds.includes(v)) || [];
+        //     // for (const filterId of filterIds) {
+        //     //     this.deleteModel(filterId);
+        //     // }
+        // }
 
         const data = [];
 
