@@ -34,6 +34,8 @@ export const processActions = {
     preview: (headType) => (dispatch, getState) => {
         const { SVGActions, toolPathGroup } = getState()[headType];
         toolPathGroup.toolPaths.forEach((toolPath) => {
+            toolPath.setWarningStatus();
+            toolPath.clearModelObjects();
             toolPathGroup.toolPathObjects.remove(toolPath.object);
             toolPath.object = toolPath.object.clone();
             toolPathGroup.toolPathObjects.add(toolPath.object);

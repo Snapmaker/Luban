@@ -339,7 +339,7 @@ class ToolPath {
 
         if (!taskInfos || taskInfos.length === 0 || !taskInfos.find(v => v.visible)) {
             console.error('The models of tool path is empty');
-            this.status = FAILED;
+            this.status = WARNING;
         }
 
         const types = getToolPathType(taskInfos);
