@@ -380,8 +380,10 @@ function Laser({ location }) {
     useEffect(() => {
         if (location?.state?.shouldShowGuideTours) {
             setEnabledIntro(true);
-        } else {
+        } else if (!location?.state?.shouldShowGuideTours && typeof (location?.state?.shouldShowGuideTours) === 'boolean') {
             setEnabledIntro(false);
+        } else {
+            setEnabledIntro(null);
         }
     }, [location?.state?.shouldShowGuideTours]);
 
