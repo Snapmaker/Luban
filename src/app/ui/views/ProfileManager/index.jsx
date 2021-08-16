@@ -472,7 +472,7 @@ function ProfileManager({ optionConfigGroup, disableCategory = true, managerTitl
                                                 {!configExpanded[cate.category] && (
                                                     <ul style={{ listStyle: 'none', paddingLeft: '0' }}>
                                                         {(cate.items.map((currentOption) => {
-                                                            const displayName = limitStringLength(i18n._(currentOption.label), 24);
+                                                            const displayName = limitStringLength(currentOption.label, 24);
                                                             const definitionForManager = definitionState?.definitionForManager;
                                                             const isSelected = !definitionState.isCategorySelected && currentOption.value === definitionForManager.definitionId;
                                                             let isAllValueDefault = isDefault && isSelected;
