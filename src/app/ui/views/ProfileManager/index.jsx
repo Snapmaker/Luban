@@ -52,12 +52,11 @@ function useGetDefinitions(allDefinitions, definitionState, setDefinitionState, 
     useEffect(() => {
         const newState = {};
         const lastDefinitionForManager = definitionState?.definitionForManager;
-        let definitionForManager = allDefinitions.find(d => d.definitionId === lastDefinitionForManager?.definitionId && d.name === lastDefinitionForManager?.name);
+        let definitionForManager = allDefinitions.find(d => d.definitionId === lastDefinitionForManager?.definitionId);
         if (!definitionForManager) {
             definitionForManager = allDefinitions.find(d => d.definitionId === selectedId);
         }
         const selectedSettingDefaultValue = getDefaultDefinition && getDefaultDefinition(definitionForManager?.definitionId);
-
         Object.assign(newState, {
             definitionForManager: definitionForManager,
             selectedSettingDefaultValue: selectedSettingDefaultValue
@@ -428,7 +427,7 @@ function ProfileManager({ optionConfigGroup, disableCategory = true, managerTitl
                                 )}
                                 <ul className={classNames(styles['manager-name-wrapper'])}>
                                     {(cates.map((cate) => {
-                                        const displayCategory = limitStringLength(cate.category, 28);
+                                        const displayCategory = limitStringLength(cate.category ?? '', 28);
                                         const { category } = cate;
                                         const isDefault = category.indexOf('Default') !== -1;
                                         const isCategorySelected = cate.category === definitionState?.definitionForManager.category;
@@ -472,7 +471,7 @@ function ProfileManager({ optionConfigGroup, disableCategory = true, managerTitl
                                                 {!configExpanded[cate.category] && (
                                                     <ul style={{ listStyle: 'none', paddingLeft: '0' }}>
                                                         {(cate.items.map((currentOption) => {
-                                                            const displayName = limitStringLength(currentOption.label, 24);
+                                                            const displayName = limitStringLength(currentOption.label ?? '', 24);
                                                             const definitionForManager = definitionState?.definitionForManager;
                                                             const isSelected = !definitionState.isCategorySelected && currentOption.value === definitionForManager.definitionId;
                                                             let isAllValueDefault = isDefault && isSelected;
