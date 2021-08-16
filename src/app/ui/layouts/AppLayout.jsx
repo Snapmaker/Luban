@@ -18,6 +18,7 @@ import {
     COORDINATE_MODE_BOTTOM_CENTER,
     getCurrentHeadType,
     HEAD_TYPE_ENV_NAME,
+    SOFTWARE_MANUAL,
     FORUM_URL,
     SUPPORT_ZH_URL,
     SUPPORT_EN_URL,
@@ -395,6 +396,9 @@ class AppLayout extends PureComponent {
             });
             UniApi.Event.on('appbar-menu:help.link', (type) => {
                 switch (type) {
+                    case 'softwareManual':
+                        UniApi.Window.openLink(SOFTWARE_MANUAL);
+                        break;
                     case 'forum':
                         UniApi.Window.openLink(FORUM_URL);
                         break;
