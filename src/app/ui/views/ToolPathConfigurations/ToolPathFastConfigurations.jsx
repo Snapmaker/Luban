@@ -256,7 +256,7 @@ function ToolPathFastConfigurations(props) {
         const { gcodeConfig } = toolPath;
         let allDefinition = {};
         if (props.headType === HEAD_CNC && activeToolListDefinition) {
-            const cncGcodeDefinition = CNC_DEFAULT_GCODE_PARAMETERS_DEFINITION;
+            const cncGcodeDefinition = _.cloneDeep(CNC_DEFAULT_GCODE_PARAMETERS_DEFINITION);
             Object.keys(cncGcodeDefinition).forEach((key) => {
                 cncGcodeDefinition[key].default_value = gcodeConfig[key];
                 // isGcodeConfig is true means to use updateGcodeConfig, false means to use updateToolConfig
@@ -267,7 +267,7 @@ function ToolPathFastConfigurations(props) {
             };
         }
         if (props.headType === HEAD_LASER) {
-            allDefinition = LASER_DEFAULT_GCODE_PARAMETERS_DEFINITION;
+            allDefinition = _.cloneDeep(LASER_DEFAULT_GCODE_PARAMETERS_DEFINITION);
             Object.keys(allDefinition).forEach((key) => {
                 allDefinition[key].default_value = gcodeConfig[toHump(key)];
                 allDefinition[key].isGcodeConfig = true;
