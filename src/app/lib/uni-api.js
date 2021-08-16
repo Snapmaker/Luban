@@ -385,7 +385,7 @@ const Window = {
     copySelection(text) {
         if (isElectron()) {
             const clipboard = window.require('electron').clipboard;
-            clipboard.writeText(text, 'selection');
+            clipboard.writeText(text);
         } else {
             navigator.clipboard.writeText(text);
             // execCommand is unstable
