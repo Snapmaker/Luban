@@ -58,7 +58,6 @@ class Output extends PureComponent {
         onToggleDisplayGcode: () => {
             if (this.props.displayedType === 'gcode') {
                 this.props.displayModel();
-                this.props.destroyGcodeLine();
             } else {
                 this.props.displayGcode();
             }
@@ -266,7 +265,6 @@ const mapDispatchToProps = (dispatch) => {
         renderGcodeFile: (file) => dispatch(workspaceActions.renderGcodeFile(file)),
         displayGcode: () => dispatch(printingActions.displayGcode()),
         displayModel: () => dispatch(printingActions.displayModel()),
-        destroyGcodeLine: () => dispatch(printingActions.destroyGcodeLine()),
         exportFile: (targetFile) => dispatch(projectActions.exportFile(targetFile))
     };
 };
