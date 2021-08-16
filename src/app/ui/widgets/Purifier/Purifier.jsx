@@ -134,7 +134,7 @@ class Purifier extends PureComponent {
             <div className="">
                 <div className="sm-flex justify-space-between margin-vertical-8">
                     <span>{i18n._('Switch')}</span>
-                    <button
+                    {/* <button
                         type="button"
                         className={classNames(
                             'sm-btn-small',
@@ -149,7 +149,7 @@ class Purifier extends PureComponent {
                         {!!isFilterEnable && <i className="fa fa-toggle-on" />}
                         <span className="space" />
                         {isFilterEnable ? i18n._('On') : i18n._('Off')}
-                    </button>
+                    </button> */}
                     <Switch
                         onClick={this.actions.onHandleFilterEnabled}
                         checked={isFilterEnable}

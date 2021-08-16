@@ -450,6 +450,8 @@ export const actions = {
                     const propName = `guideTours${toPath}`;
                     shouldShowGuideTours = currentGuideTours ? !!currentGuideTours[propName] : undefined;
                 }
+            } else {
+                shouldShowGuideTours = currentGuideTours ? !!currentGuideTours.guideTours3dp : undefined;
             }
         }
         dispatch(actions.updateState(newHeadType, { unSaved: false, openedFile: null }));

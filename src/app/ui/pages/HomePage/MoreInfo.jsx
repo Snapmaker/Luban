@@ -12,7 +12,7 @@ const MoreInfo = () => {
                 {i18n._('Help')}
             </div>
             <div className={classNames(styles['resource-list'])}>
-                <a href="javascript;" target="_blank" rel="noopener noreferrer" className={classNames(styles.listItem)}>
+                <a href="https://support.snapmaker.com/hc/en-us/articles/4406229926935" target="_blank" rel="noopener noreferrer" className={classNames(styles.listItem)}>
                     <span className={classNames('heading-3-normal-with-hover')}>
                         {i18n._('Software Manual')}
                     </span>
@@ -22,7 +22,7 @@ const MoreInfo = () => {
                         {i18n._('Software Support')}
                     </span>
                 </a>
-                <a className={classNames(styles.listItem)} href="https://www.youtube.com/c/Snapmaker/playlists" target="_blank" rel="noopener noreferrer">
+                <a className={classNames(styles.listItem)} href="https://www.youtube.com/playlist?list=PLEn5aHQNSrHWvLWgQwrnLPY6VcaYnTvcQ" target="_blank" rel="noopener noreferrer">
                     <span className={classNames('heading-3-normal-with-hover')}>
                         {i18n._('Video Tutorial')}
                     </span>

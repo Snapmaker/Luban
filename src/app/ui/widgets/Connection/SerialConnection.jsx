@@ -325,8 +325,9 @@ class SerialConnection extends PureComponent {
                         valueRenderer={this.renderPortValue}
                     />
                     <SvgIcon
-                        className="border-default-black-5 margin-left-8 padding-vertical-4 padding-horizontal-4 border-radius-8"
-                        size={22}
+                        className="border-default-black-5 margin-left-8 border-radius-8"
+                        size={24}
+                        borderRadius={8}
                         name={loadingPorts ? 'Refresh' : 'Reset'}
                         title={i18n._('Refresh')}
                         onClick={this.actions.onRefreshPorts}
@@ -362,7 +363,7 @@ class SerialConnection extends PureComponent {
                     {isConnected && (
                         <Button
                             width="120px"
-                            type="primary"
+                            type="default"
                             priority="level-two"
                             onClick={this.actions.onClosePort}
                         >

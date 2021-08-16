@@ -296,15 +296,18 @@ function useRenderMainToolBar(setShowHomePage, setShowJobType, setShowWorkspace)
     if (isRotate) {
         leftItems.push(
             {
+                type: 'separator'
+            },
+            {
                 type: 'render',
                 customRender: function () {
                     return (
                         <Dropdown
-                            className="display-inline align-c padding-top-4 padding-horizontal-2 height-50"
+                            className="display-inline align-c padding-horizontal-2 height-50"
                             overlay={menu}
                         >
                             <div
-                                className="display-inline font-size-0 v-align-t hover-normal-grey-2 border-radius-4"
+                                className="display-inline font-size-0 v-align-t hover-normal-grey-2 border-radius-4 padding-top-4"
                             >
                                 <SvgIcon
                                     name="MainToolbarStl3dView"

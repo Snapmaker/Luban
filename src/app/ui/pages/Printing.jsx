@@ -197,10 +197,18 @@ function Printing({ location }) {
     useEffect(() => {
         if (location?.state?.shouldShowGuideTours) {
             setEnabledIntro(true);
-        } else {
+        } else if (!location?.state?.shouldShowGuideTours && typeof (location?.state?.shouldShowGuideTours) === 'boolean') {
             setEnabledIntro(false);
+        } else {
+            setEnabledIntro(null);
         }
     }, [location?.state?.shouldShowGuideTours]);
+
+    useEffect(() => {
+        if (typeof (enabledIntro) === 'boolean' && !enabledIntro) {
+            machineStore.set('guideTours.guideTours3dp', true);
+        }
+    }, [enabledIntro]);
 
     async function onDropAccepted(file) {
         try {
@@ -269,7 +277,7 @@ function Printing({ location }) {
     //     }
     // };
     const handleExit = () => {
-        machineStore.set('guideTours.guideTours3dp', true); // mock   ---> true
+        // machineStore.set('guideTours.guideTours3dp', true); // mock   ---> true
         setEnabledIntro(false);
     };
 
