@@ -5,6 +5,7 @@ import { generateToolPath } from './generateToolPath';
 import { generateGcode } from './generateGcode';
 import { generateViewPath } from './generateViewPath';
 import { asyncFor } from '../../../shared/lib/array-async';
+import { EPS } from '../../constants';
 
 const log = logger('service:TaskManager');
 
@@ -98,9 +99,8 @@ class TaskManager extends EventEmitter {
         try {
             let currentProgress = 0;
             const onProgress = (p) => {
-                if (p - currentProgress >= 0.01) {
+                if (p - currentProgress > EPS) {
                     currentProgress = p;
-                    console.log('taskProgress:', taskSelected.taskType);
                     taskSelected.socket.emit(`taskProgress:${taskSelected.taskType}`, {
                         progress: p,
                         headType: taskSelected.headType

@@ -3,7 +3,7 @@ import includes from 'lodash/includes';
 import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
-import Switch from '../../components/Switch';
+// import Switch from '../../components/Switch';
 import Select from '../../components/Select';
 import { Button } from '../../components/Buttons';
 import i18n from '../../../lib/i18n';
@@ -12,7 +12,7 @@ import { preventDefault } from '../../../lib/dom-events';
 import { in2mm, mm2in } from '../../../lib/units';
 import DisplayPanel from './DisplayPanel';
 import ControlPanel from './ControlPanel';
-import KeypadOverlay from './KeypadOverlay';
+// import KeypadOverlay from './KeypadOverlay';
 import { actions as machineActions } from '../../../flux/machine';
 import { actions as widgetActions } from '../../../flux/widget';
 import {
@@ -513,18 +513,20 @@ class Control extends PureComponent {
                     state={state}
                 />
 
-                <div className="sm-flex justify-space-between margin-vertical-8">
+                {/* <div>
                     <KeypadOverlay
                         show={state.canClick && state.keypadJogging}
                     >
-                        <span>{i18n._('Keyboard Shortcuts')}</span>
-                        <Switch
-                            onClick={actions.toggleKeypadJogging}
-                            disabled={!canClick}
-                            checked={state.keypadJogging}
-                        />
+                        <div className="sm-flex justify-space-between margin-vertical-8">
+                            <span>{i18n._('Keyboard Shortcuts')}</span>
+                            <Switch
+                                onClick={actions.toggleKeypadJogging}
+                                disabled={!canClick}
+                                checked={state.keypadJogging}
+                            />
+                        </div>
                     </KeypadOverlay>
-                </div>
+                </div> */}
 
                 <div className="sm-flex justify-space-between margin-vertical-8">
                     <Button

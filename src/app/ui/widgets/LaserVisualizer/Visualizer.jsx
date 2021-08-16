@@ -317,10 +317,12 @@ class Visualizer extends Component {
         if (nextProps.coordinateMode !== this.props.coordinateMode) {
             const { size, materials, coordinateMode } = nextProps;
             this.printableArea = new PrintablePlate(size, materials, coordinateMode);
+            this.actions.autoFocus();
         }
 
         if (nextProps.coordinateSize !== this.props.coordinateSize) {
             this.printableArea = new PrintablePlate(nextProps.coordinateSize, nextProps.materials, nextProps.coordinateMode);
+            this.actions.autoFocus();
         }
     }
 

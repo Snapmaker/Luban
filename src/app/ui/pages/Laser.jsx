@@ -98,16 +98,17 @@ function useRenderMainToolBar(setShowHomePage, setShowJobType, setShowWorkspace,
     const canUndo = useSelector(state => state[HEAD_LASER]?.history?.canUndo, shallowEqual);
     const [showCameraCapture, setShowCameraCapture] = useState(false);
     const dispatch = useDispatch();
+    const isOriginalSeries = (series === MACHINE_SERIES.ORIGINAL?.value || series === MACHINE_SERIES.ORIGINAL_LZ?.value);
     const menu = (
         <Menu style={{ marginTop: '8px' }}>
             <Menu.Item
                 onClick={() => setShowCameraCapture(true)}
-                disabled={series === MACHINE_SERIES.ORIGINAL?.value ? false : !isConnected}
+                disabled={isOriginalSeries ? false : !isConnected}
             >
                 <div className="align-l width-168">
                     <SvgIcon
                         type="static"
-                        disabled={series === MACHINE_SERIES.ORIGINAL?.value ? false : !isConnected}
+                        disabled={isOriginalSeries ? false : !isConnected}
                         name="MainToolbarAddBackground"
                     />
                     <span
@@ -254,14 +255,14 @@ function useRenderMainToolBar(setShowHomePage, setShowJobType, setShowWorkspace,
         renderBody() {
             return (
                 <div>
-                    {series === MACHINE_SERIES.ORIGINAL?.value && (
+                    {isOriginalSeries && (
                         <LaserSetBackground
                             hideModal={() => {
                                 setShowCameraCapture(false);
                             }}
                         />
                     )}
-                    {series !== MACHINE_SERIES.ORIGINAL?.value && (
+                    {!isOriginalSeries && (
                         <LaserCameraAidBackground
                             hideModal={() => {
                                 setShowCameraCapture(false);
