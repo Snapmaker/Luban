@@ -98,7 +98,7 @@ class SVGParser {
             let result = builder.buildObject(newNode);
             /* eslint no-useless-escape: "error"*/
             result = result.replace(/^<\?xml.+\?>/, '');
-            const newUploadName = filePath.replace(/\.svg$/, 'parsed.svg');
+            const newUploadName = filePath.replace(/\.svg$/i, 'parsed.svg');
             fs.writeFile(newUploadName, result, (error) => {
                 if (error) reject(error);
                 resolve(newUploadName);
@@ -193,8 +193,8 @@ class SVGParser {
             boundingBox: boundingBox,
             parsedNode: parsedNode,
             viewBox: root.attributes.viewBox,
-            width: root.attributes.width,
-            height: root.attributes.height
+            width: root.attributes.width * 10,
+            height: root.attributes.height * 10
         };
     }
 

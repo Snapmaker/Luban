@@ -27,14 +27,14 @@ export const set = (req, res) => {
     if (files) {
         const file = files.image;
         originalName = path.basename(file.name);
-        tempName = generateRandomPathName(originalName);
+        tempName = generateRandomPathName(originalName, true);
         tempPath = `${DataStorage.tmpDir}/${tempName}`;
         originalPath = file.path;
     } else {
         const { name, casePath } = req.body;
         originalName = name;
         originalPath = `${DataStorage.userCaseDir}/${casePath}/${name}`;
-        tempName = generateRandomPathName(originalName);
+        tempName = generateRandomPathName(originalName, true);
         tempPath = `${DataStorage.tmpDir}/${tempName}`;
     }
     const extname = path.extname(tempName).toLowerCase();

@@ -336,8 +336,6 @@ class Visualizer extends Component {
                 return '';
             case CNC_LASER_STAGE.GENERATING_TOOLPATH:
                 return i18n._('Generating toolpath... {{progress}}%', { progress: (100.0 * progress).toFixed(1) });
-            case CNC_LASER_STAGE.GENERATE_TOOLPATH_SUCCESS:
-                return i18n._('Generated toolpath successfully.');
             case CNC_LASER_STAGE.GENERATE_TOOLPATH_FAILED:
                 return i18n._('Failed to generate toolpath.');
             case CNC_LASER_STAGE.PREVIEWING:
@@ -347,6 +345,7 @@ class Visualizer extends Component {
             case CNC_LASER_STAGE.PREVIEW_FAILED:
                 return i18n._('Failed to preview toolpath.');
             case CNC_LASER_STAGE.GENERATING_GCODE:
+            case CNC_LASER_STAGE.GENERATE_TOOLPATH_SUCCESS:
                 return i18n._('Generating G-code... {{progress}}%', { progress: (100.0 * progress).toFixed(1) });
             case CNC_LASER_STAGE.GENERATE_GCODE_SUCCESS:
                 return i18n._('Generated G-code successfully.');

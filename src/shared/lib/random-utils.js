@@ -70,10 +70,10 @@ function pathWithRandomSuffix(pathString) {
     }
 }
 
-function generateRandomPathName(suffix) {
+function generateRandomPathName(suffix, shouldLowerCase = false) {
     const dot = suffix.lastIndexOf('.');
     if (dot !== -1) {
-        suffix = suffix.substr(dot + 1);
+        suffix = shouldLowerCase ? (suffix.substr(dot + 1)).toLowerCase() : suffix.substr(dot + 1);
     }
     return `${random(8)}_${timestamp()}.${suffix}`;
 }
