@@ -98,6 +98,7 @@ class Visualizer extends Component {
         getSelectedElementsUniformScalingState: PropTypes.func.isRequired,
         uploadImage: PropTypes.func.isRequired,
         switchToPage: PropTypes.func.isRequired,
+        laserTouring: PropTypes.bool,
 
         elementActions: PropTypes.shape({
             moveElementsStart: PropTypes.func.isRequired,
@@ -494,7 +495,7 @@ class Visualizer extends Component {
                 )}
 
                 <div className={styles['visualizer-progress']}>
-                    <ProgressBar tips={notice} progress={this.props.progress * 100} />
+                    <ProgressBar tips={notice} progress={this.props.progress * 100} touring={this.props.laserTouring} />
                 </div>
                 <ContextMenu
                     ref={this.contextMenuRef}
@@ -591,7 +592,7 @@ const mapStateToProps = (state, ownProps) => {
     const { background } = state.laser;
 
     const { SVGActions, scale, target, materials, page, selectedModelID, modelGroup, svgModelGroup, toolPathGroup, displayedType,
-        isChangedAfterGcodeGenerating, renderingTimestamp, stage, progress, coordinateMode, coordinateSize, inProgress } = state.laser;
+        isChangedAfterGcodeGenerating, renderingTimestamp, stage, progress, coordinateMode, coordinateSize, inProgress, laserTouring } = state.laser;
     const selectedModelArray = modelGroup.getSelectedModelArray();
     const selectedToolPathModelArray = modelGroup.getSelectedToolPathModels();
 
@@ -621,7 +622,8 @@ const mapStateToProps = (state, ownProps) => {
         renderingTimestamp,
         stage,
         progress,
-        inProgress
+        inProgress,
+        laserTouring
     };
 };
 

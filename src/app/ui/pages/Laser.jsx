@@ -353,7 +353,11 @@ function Laser({ location }) {
     const modelGroup = useSelector(state => state[HEAD_LASER]?.modelGroup, shallowEqual);
     const toolPathGroup = useSelector(state => state[HEAD_LASER]?.toolPathGroup, shallowEqual);
     useUnsavedTitle(pageHeadType);
-
+    const updateTouringState = (status) => {
+        dispatch(editorActions.updateState({
+            laserTouring: status
+        }));
+    };
     useEffect(() => {
         dispatch(laserActions.init());
         logPageView({
@@ -381,6 +385,7 @@ function Laser({ location }) {
     useEffect(() => {
         if (location?.state?.shouldShowGuideTours) {
             setEnabledIntro(true);
+            updateTouringState(true);
         } else if (!location?.state?.shouldShowGuideTours && typeof (location?.state?.shouldShowGuideTours) === 'boolean') {
             setEnabledIntro(false);
         } else {
@@ -391,6 +396,11 @@ function Laser({ location }) {
     useEffect(() => {
         if (typeof (enabledIntro) === 'boolean' && !enabledIntro) {
             machineStore.set(isRotate ? 'guideTours.guideTourslaser4Axis' : 'guideTours.guideTourslaser', true); // mock   ---> true
+        }
+        if (!enabledIntro) {
+            updateTouringState(false);
+        } else {
+            updateTouringState(true);
         }
     }, [enabledIntro]);
 

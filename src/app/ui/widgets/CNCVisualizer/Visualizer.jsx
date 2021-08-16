@@ -99,6 +99,7 @@ class Visualizer extends Component {
 
         uploadImage: PropTypes.func.isRequired,
         switchToPage: PropTypes.func.isRequired,
+        cncTouring: PropTypes.bool,
 
         elementActions: PropTypes.shape({
             moveElementsStart: PropTypes.func.isRequired,
@@ -437,7 +438,7 @@ class Visualizer extends Component {
         const estimatedTime = this.props.displayedType === DISPLAYED_TYPE_TOOLPATH && !this.props.isChangedAfterGcodeGenerating ? this.props.getEstimatedTime('selected') : '';
         const notice = this.getNotice();
         const contextMenuDisabled = !isOnlySelectedOneModel || !this.props.selectedModelArray[0].visible;
-        const { displayedType } = this.props;
+        const { displayedType, cncTouring } = this.props;
         const pasteDisabled = (this.props.modelGroup.clipboard.length === 0);
 
         return (
@@ -539,7 +540,7 @@ class Visualizer extends Component {
                     </div>
                 )}
                 <div className={styles['visualizer-progress']}>
-                    <ProgressBar tips={notice} progress={this.props.progress * 100} />
+                    <ProgressBar tips={notice} progress={this.props.progress * 100} touring={cncTouring} />
                 </div>
                 <ContextMenu
                     ref={this.contextMenuRef}
@@ -635,7 +636,7 @@ const mapStateToProps = (state, ownProps) => {
     const { size } = state.machine;
     const { currentModalPath } = state.appbarMenu;
     const { page, materials, modelGroup, toolPathGroup, displayedType, hasModel, isChangedAfterGcodeGenerating,
-        renderingTimestamp, stage, progress, SVGActions, scale, target, coordinateMode, coordinateSize, inProgress, showSimulation } = state.cnc;
+        renderingTimestamp, stage, progress, SVGActions, scale, target, coordinateMode, coordinateSize, inProgress, showSimulation, cncTouring } = state.cnc;
     const selectedModelArray = modelGroup.getSelectedModelArray();
     const selectedModelID = modelGroup.getSelectedModel().modelID;
     const selectedToolPathModels = modelGroup.getSelectedToolPathModels();
@@ -665,7 +666,8 @@ const mapStateToProps = (state, ownProps) => {
         isChangedAfterGcodeGenerating,
         stage,
         progress,
-        inProgress
+        inProgress,
+        cncTouring
     };
 };
 

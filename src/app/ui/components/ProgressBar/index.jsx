@@ -1,3 +1,4 @@
+/* eslint-disable */
 import React from 'react';
 import PropTypes from 'prop-types';
 import { Progress } from 'antd';
@@ -18,14 +19,15 @@ class ProgressBar extends React.PureComponent {
     static propTypes = {
         progress: PropTypes.number,
         tips: PropTypes.string,
-        strokeColor: PropTypes.string
+        strokeColor: PropTypes.string,
+        touring: PropTypes.bool
     };
 
     timeout = null;
 
     constructor(props) {
         super(props);
-        this.state = { display: 'none' };
+        this.state = { display: 'none', touring: true };
     }
 
 
@@ -47,13 +49,16 @@ class ProgressBar extends React.PureComponent {
         if (this.props.tips === 'Failed to load model.') {
             this.setState({ display: 'none' });
         }
+        if (!isEqual(prevProps.touring, this.props.touring)) {
+            this.setState({ touring: this.props.touring });
+        }
         return prevProps;
     }
 
 
     render() {
         const { progress, tips, strokeColor = '#1890ff' } = this.props;
-        const { display } = this.state;
+        const { display, touring } = this.state;
         return (
             <div
                 style={{ display }}
@@ -67,26 +72,31 @@ class ProgressBar extends React.PureComponent {
                     strokeColor={strokeColor}
                     trailColor="#D5D6D9"
                 />
-                <Steps
-                    enabled={display !== 'none'}
-                    initialStep={0}
-                    options={{
-                        showBullets: false,
-                        hidePrev: false,
-                        exitOnEsc: false,
-                        exitOnOverlayClick: false
-                    }}
-                    steps={[
-                        {
-                            intro: progressBarWidget(),
-                            element: '.progress-bar-wrapper',
-                            tooltipClass: 'progress-bar-intro',
-                            highlightClass: 'progress-bar-highlight-part',
-                            disableInteraction: true
-                        }
-                    ]}
-                    onExit={noop}
-                />
+                {
+                    !touring && (
+                        <Steps
+                            id="progress"
+                            enabled={display !== 'none'}
+                            initialStep={0}
+                            options={{
+                                showBullets: false,
+                                hidePrev: false,
+                                exitOnEsc: false,
+                                exitOnOverlayClick: false
+                            }}
+                            steps={[
+                                {
+                                    intro: progressBarWidget(),
+                                    element: '.progress-bar-wrapper',
+                                    tooltipClass: 'progress-bar-intro',
+                                    highlightClass: 'progress-bar-highlight-part',
+                                    disableInteraction: true
+                                }
+                            ]}
+                            onExit={noop}
+                        />
+                    )
+                }
             </div>
 
         );

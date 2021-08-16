@@ -65,7 +65,8 @@ class Visualizer extends PureComponent {
         autoRotateSelectedModel: PropTypes.func.isRequired,
         layFlatSelectedModel: PropTypes.func.isRequired,
         scaleToFitSelectedModel: PropTypes.func.isRequired,
-        resetSelectedModelTransformation: PropTypes.func.isRequired
+        resetSelectedModelTransformation: PropTypes.func.isRequired,
+        printingTouring: PropTypes.bool
     };
 
     state = {
@@ -440,7 +441,7 @@ class Visualizer extends PureComponent {
     };
 
     render() {
-        const { size, selectedModelArray, modelGroup, gcodeLineGroup, progress, inProgress, hasModel } = this.props;
+        const { size, selectedModelArray, modelGroup, gcodeLineGroup, progress, inProgress, hasModel, printingTouring } = this.props;
 
         const isModelSelected = (selectedModelArray.length > 0);
         const isSupportSelected = modelGroup.selectedModelArray.length > 0 && modelGroup.selectedModelArray[0].supportTag === true;
@@ -474,7 +475,7 @@ class Visualizer extends PureComponent {
                     <VisualizerInfo />
                 </div>
 
-                <ProgressBar tips={notice} progress={progress * 100} />
+                <ProgressBar tips={notice} progress={progress * 100} touring={printingTouring} />
 
                 <div className={styles['canvas-wrapper']}>
                     <Canvas
@@ -574,7 +575,7 @@ const mapStateToProps = (state, ownProps) => {
     const printing = state.printing;
     const { size } = machine;
     // TODO: be to organized
-    const { stage, modelGroup, hasModel, gcodeLineGroup, transformMode, progress, displayedType, renderingTimestamp, inProgress } = printing;
+    const { stage, modelGroup, hasModel, gcodeLineGroup, transformMode, progress, displayedType, renderingTimestamp, inProgress, printingTouring } = printing;
     return {
         isActive: !currentModalPath && ownProps.location.pathname.indexOf('3dp') > 0,
         stage,
@@ -589,7 +590,8 @@ const mapStateToProps = (state, ownProps) => {
         progress,
         displayedType,
         renderingTimestamp,
-        inProgress
+        inProgress,
+        printingTouring
     };
 };
 
