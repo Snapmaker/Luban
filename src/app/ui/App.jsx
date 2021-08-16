@@ -77,9 +77,9 @@ class App extends PureComponent {
 
     componentDidMount() {
         // disable select text on document
-        document.onselectstart = () => {
-            return false;
-        };
+        // document.onselectstart = () => {
+        //     return false;
+        // };
         // init machine module
         // TODO: move init to proper page
         this.props.machineInit();
