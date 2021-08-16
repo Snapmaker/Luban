@@ -60,28 +60,28 @@ function main() {
     const worksheet = workbook.Sheets[sheetName];
 
     const col2lang = {
-        B: ['English', 'en'],
-        C: ['Chinese', 'zh-cn'],
-        // C: ['Japanese', 'ja'],
-        // D: ['Korean', 'ko'],
-        D: ['German', 'de'],
-        // F: ['Italian', 'it'],
-        // G: ['Spanish', 'es'],
-        E: ['French', 'fr']
-        // I: ['Russian', 'ru'],
-        // C: ['Ukrainian', 'uk']
+        B: ['German', 'de'],
+        C: ['English', 'en'],
+        D: ['Spanish', 'es'],
+        E: ['French', 'fr'],
+        F: ['Italian', 'it'],
+        G: ['Japanese', 'ja'],
+        H: ['Korean', 'ko'],
+        I: ['Russian', 'ru'],
+        J: ['Ukrainian', 'uk'],
+        K: ['Chinese', 'zh-cn']
     };
 
     Object.keys(col2lang).forEach((col) => {
         const item = col2lang[col];
 
         const cellTitle = worksheet[`${col}1`].v;
-        if (cellTitle !== item[0]) {
+        if (cellTitle !== item[1]) {
             logger.error(':(');
             return;
         }
 
-        logger.info(`importing ${item[0]} to ${item[1]}`);
+        logger.info(`importing ${item[1]} to ${item[1]}`);
 
         const translations = {};
         for (let i = 2; ; i++) {

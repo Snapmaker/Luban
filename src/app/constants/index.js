@@ -269,7 +269,7 @@ export const CNC_DEFAULT_GCODE_PARAMETERS_DEFINITION = {
     },
     'pathType': {
         label: 'Method',
-        description: 'Choose carving path',
+        description: 'Set the processing method of the object.\n -On the Path: Carves along the shape of the object. \n -Outline: Carves along the outline of the object.\n -Fill: Carves away the inner area of the object.',
         type: 'enum',
         options: {
             'path': 'On the Path',
