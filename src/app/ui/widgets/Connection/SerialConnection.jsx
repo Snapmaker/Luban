@@ -363,7 +363,7 @@ class SerialConnection extends PureComponent {
                     {isConnected && (
                         <Button
                             width="120px"
-                            type="primary"
+                            type="default"
                             priority="level-two"
                             onClick={this.actions.onClosePort}
                         >

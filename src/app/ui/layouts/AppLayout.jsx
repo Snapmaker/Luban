@@ -26,7 +26,8 @@ import {
     OFFICIAL_SITE_EN_URL,
     MARKET_ZH_URL,
     MARKET_EN_URL,
-    MYMINIFACTORY_URL
+    MYMINIFACTORY_URL,
+    SOFTWARE_MANUAL_URL
 } from '../../constants';
 import { actions as menuActions } from '../../flux/appbar-menu';
 import { actions as machineActions } from '../../flux/machine';
@@ -424,6 +425,9 @@ class AppLayout extends PureComponent {
                         break;
                     case 'myminifactory':
                         UniApi.Window.openLink(MYMINIFACTORY_URL);
+                        break;
+                    case 'softwareManual':
+                        UniApi.Window.openLink(SOFTWARE_MANUAL_URL);
                         break;
                     default: break;
                 }

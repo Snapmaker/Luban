@@ -21,7 +21,13 @@ export default {
             label: 'Software Manual',
             id: 'software-manual',
             enabled: true,
-            click: () => {}
+            click: (menuItem, browserWindow) => {
+                if (isElectron()) {
+                    browserWindow.webContents.send('help.link', 'softwareManual');
+                } else {
+                    UniApi.Event.emit('appbar-menu:help.link', 'softwareManual');
+                }
+            }
         },
         {
             label: 'Video Tutorial',
