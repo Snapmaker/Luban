@@ -50,6 +50,7 @@ export default {
             id: 'copy',
             label: 'Copy',
             accelerator: 'CommandOrControl+C',
+            selector: 'copy:',
             enabled: true,
             click(menuItem, browserWindow) {
                 if (isElectron()) {
@@ -76,6 +77,7 @@ export default {
             id: 'paste',
             label: 'Paste',
             accelerator: 'CommandOrControl+V',
+            selector: 'paste:',
             enabled: true,
             click(menuItem, browserWindow) {
                 if (isElectron()) {
