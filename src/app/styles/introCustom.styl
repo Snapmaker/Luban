@@ -4,6 +4,10 @@
     color: #545659;
     font-size 14px
 }
+.introjs-overlay {
+    background-color: #2A2C2E;
+    opacity: 0.3;
+}
 .printing-export-highlight-part {
     height: 125px !important;
     bottom 8px !important;
@@ -12,7 +16,12 @@
 .printing-export-intro {
     bottom 142px !important;
 }
-
+.progress-bar-intro {
+    display none !important
+}
+.progress-bar-highlight-part {
+    box-shadow  none !important
+}
 .introjs-prevbutton {
     display none !important
 }
@@ -51,12 +60,7 @@
         margin: 8px 160px 0;
     }
 }
-// .printing-export-highlight-part {
-//     // bottom 0px;
-//     // min-height 120px;
-//     // top: auto !important;
-//     background #f00
-// }
+
 .printing-export-highlight-part + .introjs-tooltipReferenceLayer + .introjs-disableInteraction {
     bottom 0px
     min-height: 130px;

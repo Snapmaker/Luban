@@ -267,18 +267,18 @@ class ToolPath {
                     if (modelMapResult) {
                         modelMapResult.status = SUCCESS;
                         modelMapResult.toolPathFile = result.filenames[i];
-                        const toolPathObj3D = await this.loadToolPathFile(result.filenames[i]);
-                        const oldMeshObj = modelMapResult.meshObj;
-
-                        oldMeshObj && this.object.remove(oldMeshObj);
-                        modelMapResult.meshObj = toolPathObj3D;
-                        this.object.add(toolPathObj3D);
+                        this.loadToolPathFile(result.filenames[i]).then((toolPathObj3D) => {
+                            const oldMeshObj = modelMapResult.meshObj;
+                            oldMeshObj && this.object.remove(oldMeshObj);
+                            modelMapResult.meshObj = toolPathObj3D;
+                            this.object.add(toolPathObj3D);
+                            cb();
+                        });
                     }
                 }
 
                 this.checkoutStatus();
                 this.removeAllNonMeshObj();
-                cb();
                 resolve();
             }
         });

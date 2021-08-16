@@ -25,7 +25,6 @@ const generateLaserToolPath = async (modelInfo, onProgress) => {
     const { sourceType, mode, uploadName } = modelInfo;
     const outputFilename = pathWithRandomSuffix(path.parse(uploadName).name + suffix);
     const outputFilePath = `${DataStorage.tmpDir}/${outputFilename}`;
-
     let modelPath = null;
     // no need to process model
     if (((sourceType === SOURCE_TYPE_SVG)

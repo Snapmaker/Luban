@@ -98,8 +98,9 @@ class TaskManager extends EventEmitter {
         try {
             let currentProgress = 0;
             const onProgress = (p) => {
-                if (p - currentProgress > 0.02) {
+                if (p - currentProgress >= 0.01) {
                     currentProgress = p;
+                    console.log('taskProgress:', taskSelected.taskType);
                     taskSelected.socket.emit(`taskProgress:${taskSelected.taskType}`, {
                         progress: p,
                         headType: taskSelected.headType
