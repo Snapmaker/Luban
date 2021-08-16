@@ -721,7 +721,7 @@ export class Server extends events.EventEmitter {
         let remainingTime = 0;
         if (this.state.gcodePrintingInfo.startTime) {
             elapsedTime = new Date().getTime() - this.state.gcodePrintingInfo.startTime;
-            remainingTime = estimatedTime - elapsedTime;
+            remainingTime = estimatedTime * 1000 - elapsedTime; // TODO
         }
         let finishTime = 0;
         if (received > 0 && received >= totalLines) {

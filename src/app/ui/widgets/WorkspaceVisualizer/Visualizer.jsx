@@ -471,9 +471,9 @@ class Visualizer extends Component {
     }
 
     componentDidMount() {
+        this.setupToolhead();
         this.subscribe();
         this.addControllerEvents();
-        this.setupToolhead();
         this.setupTargetPoint();
         this.visualizerGroup.object.add(this.props.modelGroup);
     }
@@ -616,7 +616,7 @@ class Visualizer extends Component {
     }
 
     stopToolheadRotationAnimation() {
-        this.toolheadRotationAnimation.stop();
+        this.toolheadRotationAnimation && this.toolheadRotationAnimation.stop(); // TODO
     }
 
     updateWorkPositionToZero() {
