@@ -103,7 +103,7 @@ class Connection extends PureComponent {
                     <div className={classNames('sm-tabs', 'margin-vertical-16')}>
                         <button
                             type="button"
-                            className={classNames('sm-tab', { 'sm-selected': (connectionType === CONNECTION_TYPE_SERIAL) })}
+                            className={classNames('sm-tab', { 'sm-selected font-weight-bold': (connectionType === CONNECTION_TYPE_SERIAL) })}
                             onClick={this.actions.onSelectTabSerial}
                             disabled={isConnected}
                         >
@@ -111,7 +111,7 @@ class Connection extends PureComponent {
                         </button>
                         <button
                             type="button"
-                            className={classNames('sm-tab', { 'sm-selected': (connectionType === CONNECTION_TYPE_WIFI) })}
+                            className={classNames('sm-tab', { 'sm-selected font-weight-bold': (connectionType === CONNECTION_TYPE_WIFI) })}
                             onClick={this.actions.onSelectTabWifi}
                             disabled={isConnected}
                         >
