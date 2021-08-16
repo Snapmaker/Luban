@@ -574,6 +574,7 @@
     "Set the processing method of the 2D object or 3D model.": "Set the processing method of the 2D object or 3D model.",
     "Set the processing method of the 3D model.": "Set the processing method of the 3D model.",
     "Set the processing method of the object.": "Set the processing method of the object.",
+    "Set the processing method of the object.\n -On the Path: Carves along the shape of the object. \n -Outline: Carves along the outline of the object.\n -Fill: Carves away the inner area of the object.": "Set the processing method of the object.\n -On the Path: Carves along the shape of the object. \n -Outline: Carves along the outline of the object.\n -Fill: Carves away the inner area of the object.",
     "Set the processing method of the object. \n - Fill: Fills the object with lines or dots.": "Set the processing method of the object. \n - Fill: Fills the object with lines or dots.",
     "Set the processing method of the object. \n - Fill: Fills the object with lines or dots.\n - On the Path: Engraves along the shape of the object.": "Set the processing method of the object. \n - Fill: Fills the object with lines or dots.\n - On the Path: Engraves along the shape of the object.",
     "Set the projection orientation of the 3D model.": "Set the projection orientation of the 3D model.",

@@ -91,7 +91,7 @@ const QuickStart = (props) => {
                             </div>
                             <div className={classNames(styles.caseText)}>
                                 <div className={classNames(styles['case-title'], 'heading-3')}>
-                                    {caseItem.title}
+                                    {i18n._(caseItem.title)}
                                 </div>
                                 <div className={classNames('disabled-text')}>
                                     {i18n._(caseItem.tag_i18n)}
@@ -115,7 +115,7 @@ const QuickStart = (props) => {
                             </div>
                             <div className={classNames(styles.caseText)}>
                                 <div className={classNames(styles['case-title'], 'heading-3')}>
-                                    {caseFourAxisItem.title}
+                                    {i18n._(caseFourAxisItem.title)}
                                 </div>
                                 <div className={classNames('disabled-text')}>
                                     <span style={{ paddingRight: 2 }}>{i18n._('4-axis')}</span>
