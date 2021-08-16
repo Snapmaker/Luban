@@ -254,12 +254,10 @@ const createWindow = () => {
     // MenuBuilder.hideMenu();
     if (process.platform === 'win32') {
         const windowOptions = getBrowserWindowOptions();
-    
         const loadingWindow = new BrowserWindow(windowOptions);
         loadingWindow.setMenuBarVisibility(false);
         loadingWindow.setResizable(false);
         loadingWindow.loadURL(path.resolve(__dirname, 'app', 'loading.html'));
-    
         loadingWindow.once('ready-to-show', () => {
             ipcMain.once('show-main-window', () => {
                 if (loadingWindow.isMinimized()) {
