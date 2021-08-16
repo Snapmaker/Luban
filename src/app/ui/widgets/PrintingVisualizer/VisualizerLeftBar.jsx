@@ -77,7 +77,7 @@ class VisualizerLeftBar extends PureComponent {
             this.props.updateSelectedModelTransformation(transformation);
             this.actions.onModelAfterTransform();
         },
-        onModelTransform: (transformations) => {
+        onModelTransform: (transformations, isReset) => {
             const { size } = this.props;
             const transformation = {};
             for (const type of Object.keys(transformations)) {
@@ -117,7 +117,7 @@ class VisualizerLeftBar extends PureComponent {
                 }
             }
 
-            this.props.updateSelectedModelTransformation(transformation);
+            this.props.updateSelectedModelTransformation(transformation, !isReset);
         },
         resetPosition: () => {
             this.actions.onModelTransform({
@@ -132,7 +132,7 @@ class VisualizerLeftBar extends PureComponent {
                 'scaleY': 1,
                 'scaleZ': 1,
                 'uniformScalingState': true
-            });
+            }, true);
             this.actions.onModelAfterTransform();
         },
         resetRotation: () => {

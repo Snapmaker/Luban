@@ -15,7 +15,6 @@ class TerminalWrapper extends PureComponent {
         onData: PropTypes.func,
         isDefault: PropTypes.bool,
         terminalHistory: PropTypes.object.isRequired,
-        shouldRenderFitaddon: PropTypes.bool.isRequired,
         consoleHistory: PropTypes.object.isRequired,
         inputValue: PropTypes.string.isRequired
     };
@@ -105,6 +104,8 @@ class TerminalWrapper extends PureComponent {
             }
         );
 
+        this.fitAddon = new FitAddon();
+        this.term.loadAddon(this.fitAddon);
         const el = this.terminalContainer.current;
         this.term.open(el);
         const viewport = el.getElementsByClassName('terminal')[0];
@@ -120,14 +121,6 @@ class TerminalWrapper extends PureComponent {
         this.verticalScrollbar = new PerfectScrollbar(viewportElement);
     }
 
-    componentWillReceiveProps(nextProps) {
-        if (this.props.shouldRenderFitaddon !== nextProps.shouldRenderFitaddon && nextProps.shouldRenderFitaddon) {
-            if (!this.fitAddon && this.term) {
-                this.fitAddon = new FitAddon();
-                this.term.loadAddon(this.fitAddon);
-            }
-        }
-    }
 
     componentWillUnmount() {
         if (this.verticalScrollbar) {

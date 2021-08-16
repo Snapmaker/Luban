@@ -44,6 +44,17 @@ i18n._('Import Object');
 i18n._('Export Object');
 i18n._('Export G-code');
 i18n._('Exit');
+i18n._('Window');
+i18n._('Reload');
+i18n._('Force Reload');
+i18n._('View In Browser');
+i18n._('Toggle Developer Tools');
+i18n._('Toggle Fullscreen');
+i18n._('Settings');
+i18n._('Machine Settings');
+i18n._('Language');
+i18n._('Preference');
+i18n._('Beginner\'s Guide');
 
 // case lib
 i18n._('Fabric');
@@ -107,7 +118,7 @@ i18n._('Set the amount of the material remaining on the object that needs to be 
 i18n._('Slicing Mode');
 i18n._('Select the slicing mode of the mesh toolpath');
 i18n._('Method');
-i18n._('Choose carving path');
+i18n._('Set the processing method of the object.\n -On the Path: Carves along the shape of the object. \n -Outline: Carves along the outline of the object.\n -Fill: Carves away the inner area of the object.');
 i18n._('Target Depth');
 i18n._('Set the depth of the object to be carved. The depth should be smaller than the flute length.');
 i18n._('Jog Height');

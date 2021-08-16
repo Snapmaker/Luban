@@ -79,6 +79,7 @@ export const generateGcode = (toolPaths, onProgress) => {
     if (!toolPaths && !_.isArray(toolPaths) && toolPaths.length === 0) {
         return Promise.reject(new Error('modelInfo is empty.'));
     }
+    onProgress(0.05);
 
     const { headType } = toolPaths[0];
     if (!_.includes(['laser', 'cnc'], headType)) {

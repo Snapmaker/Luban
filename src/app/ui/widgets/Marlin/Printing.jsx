@@ -127,9 +127,10 @@ class Printing extends PureComponent {
                         />
                         <SvgIcon
                             name="Reset"
-                            size={22}
-                            className="border-default-black-5 margin-left-4 padding-vertical-4 padding-horizontal-4 border-radius-8"
+                            size={24}
+                            className="border-default-black-5 margin-left-4 border-radius-8"
                             onClick={actions.onClickNozzleTemperature}
+                            borderRadius={8}
                         />
                     </div>
                 </div>
@@ -148,9 +149,10 @@ class Printing extends PureComponent {
                         />
                         <SvgIcon
                             name="Reset"
-                            size={22}
-                            className="border-default-black-5 margin-left-4 padding-vertical-4 padding-horizontal-4 border-radius-8"
+                            size={24}
+                            className="border-default-black-5 margin-left-4 border-radius-8"
                             onClick={actions.onClickHeatedBedTemperature}
+                            borderRadius={8}
                         />
                     </div>
                 </div>

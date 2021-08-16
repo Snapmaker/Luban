@@ -18,6 +18,7 @@ import {
     COORDINATE_MODE_BOTTOM_CENTER,
     getCurrentHeadType,
     HEAD_TYPE_ENV_NAME,
+    SOFTWARE_MANUAL,
     FORUM_URL,
     SUPPORT_ZH_URL,
     SUPPORT_EN_URL,
@@ -26,7 +27,8 @@ import {
     OFFICIAL_SITE_EN_URL,
     MARKET_ZH_URL,
     MARKET_EN_URL,
-    MYMINIFACTORY_URL
+    MYMINIFACTORY_URL,
+    SOFTWARE_MANUAL_URL
 } from '../../constants';
 import { actions as menuActions } from '../../flux/appbar-menu';
 import { actions as machineActions } from '../../flux/machine';
@@ -395,6 +397,9 @@ class AppLayout extends PureComponent {
             });
             UniApi.Event.on('appbar-menu:help.link', (type) => {
                 switch (type) {
+                    case 'softwareManual':
+                        UniApi.Window.openLink(SOFTWARE_MANUAL);
+                        break;
                     case 'forum':
                         UniApi.Window.openLink(FORUM_URL);
                         break;
@@ -424,6 +429,9 @@ class AppLayout extends PureComponent {
                         break;
                     case 'myminifactory':
                         UniApi.Window.openLink(MYMINIFACTORY_URL);
+                        break;
+                    case 'softwareManual':
+                        UniApi.Window.openLink(SOFTWARE_MANUAL_URL);
                         break;
                     default: break;
                 }

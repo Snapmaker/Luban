@@ -69,7 +69,7 @@ export async function processLaserGreyscale(modelInfo, onProgress) {
 
     const { invert, contrast, brightness, whiteClip, algorithm } = modelInfo.config;
     const { density = 4 } = modelInfo.gcodeConfig || {};
-
+    console.log('pathWithRandomSuffix', uploadName);
     const outputFilename = pathWithRandomSuffix(uploadName);
 
     const matrix = algorithms[algorithm];
@@ -86,6 +86,7 @@ export async function processLaserGreyscale(modelInfo, onProgress) {
     onProgress && onProgress(0.4);
     const img = await Jimp.read(`${DataStorage.tmpDir}/${uploadName}`);
     onProgress && onProgress(0.6);
+    img.alphaToWhite();
     if (invert) {
         img.invert();
     }
@@ -149,6 +150,7 @@ export async function processCNCGreyscale(modelInfo, onProgress) {
     const outputFilename = pathWithRandomSuffix(uploadName);
 
     const img = await Jimp.read(`${DataStorage.tmpDir}/${uploadName}`);
+    img.alphaToWhite();
     if (invert) {
         img.invert();
     }
@@ -189,6 +191,7 @@ export async function processBW(modelInfo, onProgress) {
         .rotate(-rotationZ * 180 / Math.PI); // rotate: unit is degree and clockwise
 
     onProgress && onProgress(0.8);
+    img.alphaToWhite();
     if (invert) {
         img.invert();
     }

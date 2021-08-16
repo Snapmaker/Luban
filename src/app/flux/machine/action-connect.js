@@ -7,7 +7,8 @@ import { machineStore } from '../../store/local-storage';
 import baseActions from './action-base';
 
 const init = () => (dispatch) => {
-    const connectionType = machineStore.get('connection.type') || CONNECTION_TYPE_SERIAL;
+    // const connectionType = machineStore.get('connection.type') || CONNECTION_TYPE_SERIAL;
+    const connectionType = machineStore.get('connection.type') || CONNECTION_TYPE_WIFI;
     const connectionTimeout = machineStore.get('connection.timeout') || 3000;
 
     dispatch(baseActions.updateState({
