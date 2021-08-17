@@ -4,7 +4,7 @@ import { Progress } from 'antd';
 import classNames from 'classnames';
 import { isEqual } from 'lodash';
 import styles from './styles.styl';
-// import { EPSILON } from '../../../constants';
+import { EPSILON } from '../../../constants';
 
 class ProgressBar extends React.PureComponent {
     static propTypes = {
@@ -32,9 +32,9 @@ class ProgressBar extends React.PureComponent {
                 clearTimeout(this.timeout);
                 this.timeout = null;
             }
-            // if (this.props.progress > 100 - EPSILON) {
-            //     this.timeout = setTimeout(() => this.setState({ display: 'none' }), 800);
-            // }
+            if (this.props.progress > 100 - EPSILON) {
+                this.timeout = setTimeout(() => this.setState({ display: 'none' }), 800);
+            }
         }
         if (this.props.tips === 'Failed to load model.') {
             this.setState({ display: 'none' });
