@@ -19,6 +19,7 @@ class EnclosureDisplay extends PureComponent {
 
     componentDidMount() {
         this.props.widgetActions.setTitle(i18n._('Enclosure'));
+        this.props.widgetActions.setDisplay(false);
         if (!this.props.isConnected) {
             this.props.widgetActions.setDisplay(false);
             return;
