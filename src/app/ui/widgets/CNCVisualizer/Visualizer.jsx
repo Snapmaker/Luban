@@ -637,6 +637,7 @@ const mapStateToProps = (state, ownProps) => {
     const { currentModalPath } = state.appbarMenu;
     const { page, materials, modelGroup, toolPathGroup, displayedType, hasModel, isChangedAfterGcodeGenerating,
         renderingTimestamp, stage, progress, SVGActions, scale, target, coordinateMode, coordinateSize, inProgress, showSimulation, cncTouring } = state.cnc;
+    console.log({ cncTouring });
     const selectedModelArray = modelGroup.getSelectedModelArray();
     const selectedModelID = modelGroup.getSelectedModel().modelID;
     const selectedToolPathModels = modelGroup.getSelectedToolPathModels();

@@ -177,7 +177,7 @@ function useRenderMainToolBar() {
 function Printing({ location }) {
     const widgets = useSelector(state => state?.widget[pageHeadType].default.widgets, shallowEqual);
     const [isDraggingWidget, setIsDraggingWidget] = useState(false);
-    const [enabledIntro, setEnabledIntro] = useState(false);
+    const [enabledIntro, setEnabledIntro] = useState(null);
     const [initIndex, setInitIndex] = useState(0);
     const dispatch = useDispatch();
     const history = useHistory();
@@ -213,7 +213,7 @@ function Printing({ location }) {
         if (typeof (enabledIntro) === 'boolean' && !enabledIntro) {
             machineStore.set('guideTours.guideTours3dp', true);
         }
-        if (!enabledIntro) {
+        if (enabledIntro === false) {
             updateTouringState(false);
         } else {
             updateTouringState(true);
@@ -278,14 +278,7 @@ function Printing({ location }) {
             await dispatch(printingActions.generateGcode(thumbnailRef, true));
         }
     };
-    // const handleBeforeChange = async (nextIndex) => {
-    //     if (nextIndex === 4) {
-    //         const disableInteractionElement = document.querySelector('.introjs-disableInteraction');
-    //         disableInteractionElement.setAttribute('style', 'height: 130px');
-    //         const thumbnailRef = thumbnail.current.getThumbnail();
-    //         await dispatch(printingActions.generateGcode(thumbnailRef));
-    //     }
-    // };
+
     const handleExit = () => {
         // machineStore.set('guideTours.guideTours3dp', true); // mock   ---> true
         setEnabledIntro(false);
