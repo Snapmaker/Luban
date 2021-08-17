@@ -185,11 +185,6 @@ function Printing({ location }) {
     const modelGroup = useSelector(state => state.printing.modelGroup);
     const thumbnail = useRef();
     const stepRef = useRef();
-    const updateTouringState = (status) => {
-        dispatch(printingActions.updateState({
-            printingTouring: status
-        }));
-    };
     useUnsavedTitle(pageHeadType);
 
     useEffect(() => {
@@ -201,7 +196,6 @@ function Printing({ location }) {
     useEffect(() => {
         if (location?.state?.shouldShowGuideTours) {
             setEnabledIntro(true);
-            updateTouringState(true);
         } else if (!location?.state?.shouldShowGuideTours && typeof (location?.state?.shouldShowGuideTours) === 'boolean') {
             setEnabledIntro(false);
         } else {
@@ -212,11 +206,6 @@ function Printing({ location }) {
     useEffect(() => {
         if (typeof (enabledIntro) === 'boolean' && !enabledIntro) {
             machineStore.set('guideTours.guideTours3dp', true);
-        }
-        if (enabledIntro === false) {
-            updateTouringState(false);
-        } else {
-            updateTouringState(true);
         }
     }, [enabledIntro]);
 

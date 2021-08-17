@@ -1,33 +1,23 @@
-/* eslint-disable */
 import React from 'react';
 import PropTypes from 'prop-types';
 import { Progress } from 'antd';
 import classNames from 'classnames';
-import { isEqual, noop } from 'lodash';
+import { isEqual } from 'lodash';
 import styles from './styles.styl';
-import { EPSILON } from '../../../constants';
-import 'intro.js/introjs.css';
-import Steps from '../Steps';
-
-const progressBarWidget = () => {
-    return (
-        <div />
-    );
-};
+// import { EPSILON } from '../../../constants';
 
 class ProgressBar extends React.PureComponent {
     static propTypes = {
         progress: PropTypes.number,
         tips: PropTypes.string,
-        strokeColor: PropTypes.string,
-        touring: PropTypes.bool
+        strokeColor: PropTypes.string
     };
 
     timeout = null;
 
     constructor(props) {
         super(props);
-        this.state = { display: 'none', touring: true };
+        this.state = { display: 'none' };
     }
 
 
@@ -42,15 +32,12 @@ class ProgressBar extends React.PureComponent {
                 clearTimeout(this.timeout);
                 this.timeout = null;
             }
-            if (this.props.progress > 100 - EPSILON) {
-                this.timeout = setTimeout(() => this.setState({ display: 'none' }), 800);
-            }
+            // if (this.props.progress > 100 - EPSILON) {
+            //     this.timeout = setTimeout(() => this.setState({ display: 'none' }), 800);
+            // }
         }
         if (this.props.tips === 'Failed to load model.') {
             this.setState({ display: 'none' });
-        }
-        if (!isEqual(prevProps.touring, this.props.touring)) {
-            this.setState({ touring: this.props.touring });
         }
         return prevProps;
     }
@@ -58,7 +45,7 @@ class ProgressBar extends React.PureComponent {
 
     render() {
         const { progress, tips, strokeColor = '#1890ff' } = this.props;
-        const { display, touring } = this.state;
+        const { display } = this.state;
         return (
             <div
                 style={{ display }}
@@ -72,31 +59,6 @@ class ProgressBar extends React.PureComponent {
                     strokeColor={strokeColor}
                     trailColor="#D5D6D9"
                 />
-                {
-                    !touring && (
-                        <Steps
-                            id="progress"
-                            enabled={display !== 'none'}
-                            initialStep={0}
-                            options={{
-                                showBullets: false,
-                                hidePrev: false,
-                                exitOnEsc: false,
-                                exitOnOverlayClick: false
-                            }}
-                            steps={[
-                                {
-                                    intro: progressBarWidget(),
-                                    element: '.progress-bar-wrapper',
-                                    tooltipClass: 'progress-bar-intro',
-                                    highlightClass: 'progress-bar-highlight-part',
-                                    disableInteraction: true
-                                }
-                            ]}
-                            onExit={noop}
-                        />
-                    )
-                }
             </div>
 
         );
