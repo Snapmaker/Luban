@@ -406,7 +406,7 @@ function Cnc({ location }) {
     const thumbnail = useRef();
     const series = useSelector(state => state.machine.series, shallowEqual);
     const updateTouringState = (status) => {
-        dispatch(editorActions.updateState({
+        dispatch(editorActions.updateState(HEAD_CNC, {
             cncTouring: status
         }));
     };
@@ -449,7 +449,7 @@ function Cnc({ location }) {
         if (typeof (enabledIntro) === 'boolean' && !enabledIntro) {
             machineStore.set(isRotate ? 'guideTours.guideTourscnc4Axis' : 'guideTours.guideTourscnc', true); // mock   ---> true
         }
-        if (!enabledIntro) {
+        if (enabledIntro === false) {
             updateTouringState(false);
         } else {
             updateTouringState(true);

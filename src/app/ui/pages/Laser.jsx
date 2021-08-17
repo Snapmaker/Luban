@@ -354,7 +354,7 @@ function Laser({ location }) {
     const toolPathGroup = useSelector(state => state[HEAD_LASER]?.toolPathGroup, shallowEqual);
     useUnsavedTitle(pageHeadType);
     const updateTouringState = (status) => {
-        dispatch(editorActions.updateState({
+        dispatch(editorActions.updateState(HEAD_LASER, {
             laserTouring: status
         }));
     };
@@ -397,7 +397,7 @@ function Laser({ location }) {
         if (typeof (enabledIntro) === 'boolean' && !enabledIntro) {
             machineStore.set(isRotate ? 'guideTours.guideTourslaser4Axis' : 'guideTours.guideTourslaser', true); // mock   ---> true
         }
-        if (!enabledIntro) {
+        if (enabledIntro === false) {
             updateTouringState(false);
         } else {
             updateTouringState(true);
