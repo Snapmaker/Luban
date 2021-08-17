@@ -2,6 +2,7 @@ import logger from 'universal-logger';
 import { isUndefined } from 'lodash';
 import { parseFloats, cssColor2Hex, xformMultiply } from './Utils';
 
+const OVERRIDE_STYLE = 'fill: none; stroke: #000; stroke-width: 0.4px; vector-effect: non-scaling-stroke;';
 const log = logger();
 
 
@@ -246,7 +247,11 @@ class AttributesParser {
         });
         node.$.stroke = '#000000';
         node.$['stroke-width'] = 1;
-        node.$.style += ';fill: none; stroke: #000; stroke-width: 1px; vector-effect: non-scaling-stroke;';
+        if (!node.$.style) {
+            node.$.style = OVERRIDE_STYLE;
+        } else {
+            node.$.style += `;${OVERRIDE_STYLE}`;
+        }
         // make text have the right x
         if (isTextElement) {
             if ((isUndefined(attributes.x))) {
