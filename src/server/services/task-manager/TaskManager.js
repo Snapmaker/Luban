@@ -118,6 +118,7 @@ class TaskManager extends EventEmitter {
             };
 
             taskSelected.data.taskAsyncFor = taskAsyncFor;
+            onProgress(0.05);
 
             if (taskSelected.taskType === TASK_TYPE_GENERATE_TOOLPATH) {
                 const res = await generateToolPath(taskSelected.data, onProgress);
