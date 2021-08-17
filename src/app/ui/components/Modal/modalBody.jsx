@@ -7,6 +7,7 @@ class Body extends PureComponent {
     static propTypes = {
         children: PropTypes.node,
         className: PropTypes.string,
+        style: PropTypes.string,
         key: PropTypes.string
     };
 
@@ -18,6 +19,7 @@ class Body extends PureComponent {
         return (
             <div
                 id={this.props.key}
+                style={this.props.style}
                 className={classNames(this.props.className, 'clearfix')}
             >
                 {this.props.children}
