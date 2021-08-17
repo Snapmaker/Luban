@@ -12,6 +12,7 @@ import { angleToPi, round } from '../../../shared/lib/utils';
 import { Vector2 } from '../../../shared/lib/math/Vector2';
 import { bresenhamLine } from '../bresenham-line';
 import { polyOffset } from '../clipper/cLipper-adapter';
+import { EPS } from '../../constants';
 import * as ClipperLib from '../clipper/clipper';
 
 function distance(p, q) {
@@ -347,7 +348,7 @@ export default class CNCToolPathGenerator extends EventEmitter {
                     }
                 }
                 const p = (i / svg.shapes.length + pass) / passes;
-                if (p - progress > 0.05) {
+                if (p - progress > EPS) {
                     progress = p;
                     this.emit('progress', progress);
                 }
@@ -437,6 +438,7 @@ export default class CNCToolPathGenerator extends EventEmitter {
     }
 
     _generateViewPathObj(svg, modelInfo) {
+        this.emit('progress', 0.05);
         const { sourceType, mode, transformation, gcodeConfig, toolParams } = modelInfo;
 
         const { targetDepth } = gcodeConfig;
@@ -494,7 +496,7 @@ export default class CNCToolPathGenerator extends EventEmitter {
                 }
             }
             const p = (i + 1) / svg.shapes.length;
-            if (p - progress > 0.05) {
+            if (p - progress > EPS) {
                 progress = p;
                 this.emit('progress', progress);
             }
