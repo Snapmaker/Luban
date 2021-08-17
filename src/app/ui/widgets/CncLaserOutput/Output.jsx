@@ -143,7 +143,7 @@ class Output extends PureComponent {
             });
         }
         if (nextProps.shouldGenerateGcodeCounter !== this.props.shouldGenerateGcodeCounter) {
-            // this.actions.onGenerateThumbnail();
+            this.actions.onGenerateThumbnail();
             this.props.commitGenerateGcode();
         }
     }
