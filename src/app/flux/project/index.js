@@ -410,7 +410,7 @@ export const actions = {
         }
     },
 
-    startProject: (from, to, history, restartGuide = false) => async (dispatch, getState) => {
+    startProject: (from, to, history, restartGuide = false, newIsRotate) => async (dispatch, getState) => {
         const newHeadType = getCurrentHeadType(to);
         const oldHeadType = getCurrentHeadType(from) || newHeadType;
         if (oldHeadType === null) {
@@ -420,6 +420,13 @@ export const actions = {
         await dispatch(actions.save(oldHeadType, {
             message: i18n._('Save the changes you made in the {{headType}} G-code Generator? Your changes will be lost if you don’t save them.', { headType: HEAD_TYPE_ENV_NAME[oldHeadType] })
         }));
+        if (!restartGuide) {
+            if (newHeadType === 'cnc' || newHeadType === 'laser') {
+                await dispatch(editorActions.resetEnvBeforeStartProject(newHeadType, newIsRotate));
+            }
+            dispatch(operationHistoryActions.clear(newHeadType));
+        }
+
         await dispatch(actions.closeProject(oldHeadType));
 
         for (const type of [HEAD_3DP, HEAD_CNC, HEAD_LASER]) {

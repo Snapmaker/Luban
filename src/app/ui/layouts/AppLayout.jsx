@@ -14,8 +14,6 @@ import Settings from '../pages/Settings/Settings';
 import FirmwareTool from '../pages/Settings/FirmwareTool';
 import SoftwareUpdate from '../pages/Settings/SoftwareUpdate';
 import {
-    COORDINATE_MODE_CENTER,
-    COORDINATE_MODE_BOTTOM_CENTER,
     getCurrentHeadType,
     HEAD_TYPE_ENV_NAME,
     SOFTWARE_MANUAL,
@@ -33,7 +31,6 @@ import { actions as menuActions } from '../../flux/appbar-menu';
 import { actions as machineActions } from '../../flux/machine';
 import { actions as editorActions } from '../../flux/editor';
 import { actions as projectActions } from '../../flux/project';
-import { actions as operationHistoryActions } from '../../flux/operation-history';
 import styles from './styles/appbar.styl';
 import HomePage from '../pages/HomePage';
 import Workspace from '../pages/Workspace';
@@ -42,13 +39,9 @@ import ModelExporter from '../widgets/PrintingVisualizer/ModelExporter';
 class AppLayout extends PureComponent {
     static propTypes = {
         modelGroup: PropTypes.object.isRequired,
-        store: PropTypes.object.isRequired,
         currentModalPath: PropTypes.string,
         updateCurrentModalPath: PropTypes.func.isRequired,
-        clearOperationHistory: PropTypes.func.isRequired,
         startProject: PropTypes.func.isRequired,
-        changeCoordinateMode: PropTypes.func.isRequired,
-        updateMaterials: PropTypes.func.isRequired,
         initRecoverService: PropTypes.func.isRequired,
         save: PropTypes.func.isRequired,
         saveAndClose: PropTypes.func.isRequired,
@@ -437,35 +430,10 @@ class AppLayout extends PureComponent {
                     Mousetrap.trigger(commands[0]);
                 }
             });
-            UniApi.Event.on('appbar-menu:new-file', async ({ headType, isRotate }) => {
+            UniApi.Event.on('appbar-menu:new-file', async ({ headType, isRotate }) => { // TODO: pathName
                 const oldPathname = this.props.history.location.pathname;
                 const history = this.props.history;
-                if (headType === 'cnc' || headType === 'laser') {
-                    if (!isRotate) {
-                        const { materials } = this.props.store?.[headType];
-                        await this.props.changeCoordinateMode(headType, COORDINATE_MODE_CENTER);
-                        if (materials.isRotate !== isRotate) {
-                            await this.props.updateMaterials(headType, { isRotate });
-                        }
-                    } else {
-                        const { SVGActions, materials } = this.props.store?.[headType];
-                        if (materials.isRotate !== isRotate) {
-                            await this.props.changeCoordinateMode(
-                                headType,
-                                COORDINATE_MODE_BOTTOM_CENTER, {
-                                    x: materials.diameter * Math.PI,
-                                    y: materials.length
-                                },
-                                !SVGActions.svgContentGroup
-                            );
-                            await this.props.updateMaterials(headType, { isRotate });
-                        }
-                    }
-                    this.props.clearOperationHistory(headType);
-                } else {
-                    this.props.clearOperationHistory('printing');
-                }
-                await this.props.startProject(oldPathname, `/${headType}`, history);
+                await this.props.startProject(oldPathname, `/${headType}`, history, false, isRotate);
             });
             UniApi.Event.on('appbar-menu:clear-recent-files', () => {
                 this.actions.updateRecentFile([], 'reset');
@@ -617,13 +585,13 @@ const mapStateToProps = (state) => {
 
 const mapDispatchToProps = (dispatch) => {
     return {
-        clearOperationHistory: (headType) => dispatch(operationHistoryActions.clear(headType)),
         initRecoverService: () => dispatch(projectActions.initRecoverService()),
         saveAsFile: (headType) => dispatch(projectActions.saveAsFile(headType)),
         save: (headType, dialogOptions) => dispatch(projectActions.save(headType, dialogOptions)),
         saveAndClose: (headType, opts) => dispatch(projectActions.saveAndClose(headType, opts)),
         openProject: (file, history) => dispatch(projectActions.openProject(file, history)),
-        startProject: (from, to, history) => dispatch(projectActions.startProject(from, to, history)),
+        startProject: (from, to, history, restartGuideTour = false, isRotate) => dispatch(projectActions.startProject(from, to, history, restartGuideTour, isRotate)),
+        restartGuideTours: (pathname, history, restartGuideTour = true, isRotate) => dispatch(projectActions.startProject(pathname, pathname, history, restartGuideTour, isRotate)),
         updateRecentProject: (arr, type) => dispatch(projectActions.updateRecentFile(arr, type)),
         changeCoordinateMode: (headType, coordinateMode, coordinateSize) => dispatch(editorActions.changeCoordinateMode(headType, coordinateMode, coordinateSize)),
         updateMaterials: (headType, newMaterials) => dispatch(editorActions.updateMaterials(headType, newMaterials)),
@@ -635,8 +603,7 @@ const mapDispatchToProps = (dispatch) => {
         disableMenu: () => dispatch(menuActions.disableMenu()),
         updateShouldCheckForUpdate: (shouldAutoUpdate) => dispatch(machineActions.updateShouldCheckForUpdate(shouldAutoUpdate)),
         updateAutoupdateMessage: (message) => dispatch(machineActions.updateAutoupdateMessage(message)),
-        updateIsDownloading: (isDownloading) => dispatch(machineActions.updateIsDownloading(isDownloading)),
-        restartGuideTours: (pathname, history) => dispatch(projectActions.startProject(pathname, pathname, history, true))
+        updateIsDownloading: (isDownloading) => dispatch(machineActions.updateIsDownloading(isDownloading))
     };
 };
 

@@ -157,6 +157,33 @@ export const actions = {
         };
     },
 
+    /**
+     * Reset environment before start project
+     */
+    resetEnvBeforeStartProject: (headType, isRotate) => async (dispatch, getState) => {
+        const { materials } = getState()[headType];
+        isRotate = isRotate ?? materials.isRotate;
+        if (!isRotate) {
+            await dispatch(actions.changeCoordinateMode(headType, COORDINATE_MODE_CENTER));
+            if (materials.isRotate !== isRotate) {
+                await dispatch(actions.updateMaterials(headType, { isRotate }));
+            }
+        } else {
+            const { SVGActions } = getState()[headType];
+            if (materials.isRotate !== isRotate) {
+                await dispatch(actions.changeCoordinateMode(
+                    headType,
+                    COORDINATE_MODE_BOTTOM_CENTER, {
+                        x: materials.diameter * Math.PI,
+                        y: materials.length
+                    },
+                    !SVGActions.svgContentGroup
+                ));
+                await dispatch(actions.updateMaterials(headType, { isRotate }));
+            }
+        }
+    },
+
     onSizeUpdated: (headType, size) => (dispatch, getState) => {
         const { SVGActions, materials, coordinateMode } = getState()[headType];
 
