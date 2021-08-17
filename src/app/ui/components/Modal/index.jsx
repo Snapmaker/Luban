@@ -17,6 +17,7 @@ class ModalWrapper extends PureComponent {
     static propTypes = {
         ...Modal.propTypes,
         modalWrapperClassName: PropTypes.string,
+        centered: PropTypes.bool,
         tile: PropTypes.bool
     };
 
@@ -117,7 +118,8 @@ class ModalWrapper extends PureComponent {
     }
 
     render() {
-        const { onClose, visible = true, tile, className, modalWrapperClassName, size, ...props } = this.props;
+        const { onClose, visible = true, tile, centered = true,
+            className, modalWrapperClassName, size, ...props } = this.props;
         return (
             <Modal
                 {...props}
@@ -127,7 +129,7 @@ class ModalWrapper extends PureComponent {
                 footer={this.renderFooter()}
                 onCancel={onClose}
                 maskClosable={false}
-                centered
+                centered={centered}
                 mask={!tile}
                 className={classNames(styles.modal, `${this.renderTitle() ? className : `${className} no-header`}`)}
                 wrapClassName={tile ? `${modalWrapperClassName} tile-modal` : modalWrapperClassName}

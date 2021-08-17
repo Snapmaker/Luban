@@ -187,12 +187,7 @@ function ToolPathConfigurations(props) {
                     {i18n._('Toolpath Settings')}
                     {/* </Modal.Title> */}
                 </Modal.Header>
-                <Modal.Body
-                    style={{
-                        overflowY: 'auto',
-                        height: '546px'
-                    }}
-                >
+                <Modal.Body>
                     {props.headType === HEAD_CNC && (
                         <CncParameters
                             toolPath={toolPath}

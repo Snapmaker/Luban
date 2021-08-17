@@ -4,6 +4,7 @@ import { Progress } from 'antd';
 import classNames from 'classnames';
 import { isEqual } from 'lodash';
 import styles from './styles.styl';
+import Modal from '../Modal';
 import { EPSILON } from '../../../constants';
 
 class ProgressBar extends React.PureComponent {
@@ -47,23 +48,61 @@ class ProgressBar extends React.PureComponent {
         const { progress, tips, strokeColor = '#1890ff' } = this.props;
         const { display } = this.state;
         return (
-            <div
-                style={{ display }}
-                className={classNames(styles.progressbar, 'module-default-shadow', 'progress-bar-wrapper')}
-            >
-                <div className="position-re height-16 margin-top-24 margin-bottom-16 align-c">
-                    <span>{tips}</span>
-                </div>
-                <Progress
-                    percent={progress}
-                    strokeColor={strokeColor}
-                    trailColor="#D5D6D9"
-                />
+            <div>
+                {display === 'block' && (
+                    <Modal
+                        size="lg"
+                        closable={false}
+                        centered={false}
+                        style={{ top: 'calc(100vh - 126px)', padding: '16px 0 0' }}
+                    >
+                        <Modal.Body style={{ marginBottom: '-24px', marginTop: '-40px' }}>
+                            <div className="position-re height-16 margin-top-24 margin-bottom-16 align-c">
+                                <span>{tips}</span>
+                            </div>
+                            <div className={classNames(styles.progressbar)}>
+
+                                <Progress
+                                    showInfo={false}
+                                    percent={progress}
+                                    strokeColor={strokeColor}
+                                    trailColor="#D5D6D9"
+                                />
+                            </div>
+                        </Modal.Body>
+                    </Modal>
+                )}
             </div>
 
         );
     }
 }
-// rgba(42, 44, 46, 0.19)
+
+// {
+//     !touring && (
+//         <Steps
+//             id="progress"
+//             enabled={display !== 'none'}
+//             initialStep={0}
+//             options={{
+//                 showBullets: false,
+//                 hidePrev: false,
+//                 exitOnEsc: false,
+//                 exitOnOverlayClick: false
+//             }}
+//             steps={[
+//                 {
+//                     intro: progressBarWidget(),
+//                     element: '.progress-bar-wrapper',
+//                     tooltipClass: 'progress-bar-intro',
+//                     highlightClass: 'progress-bar-highlight-part',
+//                     disableInteraction: true
+//                 }
+//             ]}
+//             onExit={noop}
+//         />
+//     )
+// }
+
 
 export default ProgressBar;
