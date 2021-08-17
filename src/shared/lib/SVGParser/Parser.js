@@ -193,8 +193,8 @@ class SVGParser {
             boundingBox: boundingBox,
             parsedNode: parsedNode,
             viewBox: root.attributes.viewBox,
-            width: root.attributes.width * 10,
-            height: root.attributes.height * 10
+            width: root.attributes.width,
+            height: root.attributes.height
         };
     }
 
