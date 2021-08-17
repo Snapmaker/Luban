@@ -405,11 +405,6 @@ function Cnc({ location }) {
     useUnsavedTitle(pageHeadType);
     const thumbnail = useRef();
     const series = useSelector(state => state.machine.series, shallowEqual);
-    const updateTouringState = (status) => {
-        dispatch(editorActions.updateState(HEAD_CNC, {
-            cncTouring: status
-        }));
-    };
     useEffect(() => {
         dispatch(cncActions.init());
         logPageView({
@@ -437,7 +432,6 @@ function Cnc({ location }) {
     useEffect(() => {
         if (location?.state?.shouldShowGuideTours) {
             setEnabledIntro(true);
-            updateTouringState(true);
         } else if (!location?.state?.shouldShowGuideTours && typeof (location?.state?.shouldShowGuideTours) === 'boolean') {
             setEnabledIntro(false);
         } else {
@@ -448,11 +442,6 @@ function Cnc({ location }) {
     useEffect(() => {
         if (typeof (enabledIntro) === 'boolean' && !enabledIntro) {
             machineStore.set(isRotate ? 'guideTours.guideTourscnc4Axis' : 'guideTours.guideTourscnc', true); // mock   ---> true
-        }
-        if (enabledIntro === false) {
-            updateTouringState(false);
-        } else {
-            updateTouringState(true);
         }
     }, [enabledIntro]);
 
