@@ -671,7 +671,7 @@ function Laser({ location }) {
                             title: `${i18n._('Process Panel')} (5/8)`,
                             intro: laserCncIntroStepFive(
                                 i18n._('The Process panel shows the Toolpath List and the relevant property of the toolpath.'),
-                                i18n._('After the selected object is edited, you can create, edit, and sort the toolpaths of the object. Below the Toolpath List are the parameters you often use.'),
+                                i18n._('After the selected object is edited, click Create Toolpath to create a toolpath of the object. Below the Toolpath List are the parameters you often use.'),
                                 i18n._('Create Toolpath')
                             ),
                             disableInteraction: true,
