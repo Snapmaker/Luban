@@ -70,8 +70,10 @@ function Material({ widgetActions }) {
             label: d.name,
             value: d.definitionId
         }));
+        const definition = materialDefinitions.find(d => d.definitionId === defaultMaterialId);
+        updateActiveDefinition(definition);
         setMaterialDefinitionOptions(newMaterialDefinitionOptions);
-    }, [materialDefinitions]);
+    }, [materialDefinitions, defaultMaterialId]);
 
     return (
         <React.Fragment>
