@@ -257,7 +257,6 @@
     "Generate and Load G-code": "Створити та завантажити G-код",
     "Generate structures to support parts of the model which have overhangs. Without these structures, such parts would collapse during printing.": "Створіть опори для підтримки частин моделі, які мають нависання. Без цих опор такі частини руйнуються під час друку.",
     "Generated G-code successfully.": "",
-    "Generated toolpath successfully.": "Шлях інструменту створено успішно.",
     "Generating G-code... {{progress}}%": "",
     "Generating toolpath... {{progress}}%": "Створюється шлях інструменту... {{progress}}%",
     "Get Started": "",

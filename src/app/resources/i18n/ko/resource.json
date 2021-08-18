@@ -257,7 +257,6 @@
     "Generate and Load G-code": "G-code 생성 및 로딩",
     "Generate structures to support parts of the model which have overhangs. Without these structures, such parts would collapse during printing.": "오버행이 있는 모델 부분을 서포트하는 구조를 생성합니다. 이러한 구조가 없으면 이런 부분이 프린팅 중에 붕괴됩니다.",
     "Generated G-code successfully.": "",
-    "Generated toolpath successfully.": "",
     "Generating G-code... {{progress}}%": "",
     "Generating toolpath... {{progress}}%": "",
     "Get Started": "",

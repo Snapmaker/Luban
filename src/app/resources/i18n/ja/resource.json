@@ -257,7 +257,6 @@
     "Generate and Load G-code": "Gコードの生成とロードします",
     "Generate structures to support parts of the model which have overhangs. Without these structures, such parts would collapse during printing.": "オーバーハングするモデルのサポートパーツの構造を形成します。これらのサポートがなければ、印刷は失敗します。",
     "Generated G-code successfully.": "",
-    "Generated toolpath successfully.": "",
     "Generating G-code... {{progress}}%": "",
     "Generating toolpath... {{progress}}%": "",
     "Get Started": "",

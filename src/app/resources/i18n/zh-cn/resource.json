@@ -257,7 +257,6 @@
     "Generate and Load G-code": "生成并加载 G 代码",
     "Generate structures to support parts of the model which have overhangs. Without these structures, such parts would collapse during printing.": "在模型的悬垂部分生成支撑结构。若不这样做，这些部分在打印时将倒塌。",
     "Generated G-code successfully.": "成功生成 G 代码。",
-    "Generated toolpath successfully.": "成功生成工具路径。",
     "Generating G-code... {{progress}}%": "生成 G 代码中... {{progress}}%",
     "Generating toolpath... {{progress}}%": "生成工具路径中... {{progress}}%",
     "Get Started": "开始",

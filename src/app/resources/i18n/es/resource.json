@@ -257,7 +257,6 @@
     "Generate and Load G-code": "Generar y Subir el código G",
     "Generate structures to support parts of the model which have overhangs. Without these structures, such parts would collapse during printing.": "Generar estructuras para soportar piezas del modelo que tengan voladizos. Sin estas estructuras, estas piezas se romperían durante la impresión.",
     "Generated G-code successfully.": "",
-    "Generated toolpath successfully.": "",
     "Generating G-code... {{progress}}%": "",
     "Generating toolpath... {{progress}}%": "",
     "Get Started": "",
