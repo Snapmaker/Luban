@@ -21,6 +21,7 @@
     "Adjusts the diameter of the filament used. Match this value with the diameter of the used filament.": "使用するフィラメントの太さの調整　この値を使用するフィラメントの太さと一致させてください。",
     "Adjusts the foreground.": "",
     "Adjusts the placement of the support structures. The placement can be set to touching heated bed or everywhere. When set to everywhere the support structures will also be printed on the model.": "サポート材の配置を調整します。配置はTouching BuildplateまたはEveryWhereに設定することができます。EveryWhereに設定した場合、サポート材がモデルの上にもプリントされます。",
+    "After the selected object is edited, click Create Toolpath to create a toolpath of the object. Below the Toolpath List are the parameters you often use.": "",
     "After the selected object is edited, you can create, edit, and sort the toolpaths of the object. Below the Toolpath List are the parameters you often use.": "",
     "Air Purifier": "",
     "Algorithm": "アルゴリズム",

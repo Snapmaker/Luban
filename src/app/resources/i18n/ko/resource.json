@@ -21,6 +21,7 @@
     "Adjusts the diameter of the filament used. Match this value with the diameter of the used filament.": "사용 된 필라멘트의 직경을 조정합니다. 이 값을 사용될 필라멘트의 직경과 일치시킵니다.",
     "Adjusts the foreground.": "",
     "Adjusts the placement of the support structures. The placement can be set to touching heated bed or everywhere. When set to everywhere the support structures will also be printed on the model.": "서포트 구조의 배치를 조정합니다. 배치는 빌드 플레이트 또는 모든 곳을 터치하도록 설정할 수 있습니다. 모든 곳에 설정하면 모델에 서포트 구조가 프린팅됩니다.",
+    "After the selected object is edited, click Create Toolpath to create a toolpath of the object. Below the Toolpath List are the parameters you often use.": "",
     "After the selected object is edited, you can create, edit, and sort the toolpaths of the object. Below the Toolpath List are the parameters you often use.": "",
     "Air Purifier": "",
     "Algorithm": "알고리즘",
