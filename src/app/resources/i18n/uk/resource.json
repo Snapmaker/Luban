@@ -22,7 +22,6 @@
     "Adjusts the foreground.": "Відрегулюйте передній план.",
     "Adjusts the placement of the support structures. The placement can be set to touching heated bed or everywhere. When set to everywhere the support structures will also be printed on the model.": "Регулює діаметр використовуваної нитки. Зіставте це значення з діаметром використовуваної нитки.",
     "After the selected object is edited, click Create Toolpath to create a toolpath of the object. Below the Toolpath List are the parameters you often use.": "",
-    "After the selected object is edited, you can create, edit, and sort the toolpaths of the object. Below the Toolpath List are the parameters you often use.": "",
     "Air Purifier": "",
     "Algorithm": "Алгоритм",
     "Align the four corners of the blue quadrilateral with the printed square.": "",
