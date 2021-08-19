@@ -7,7 +7,7 @@ class Body extends PureComponent {
     static propTypes = {
         children: PropTypes.node,
         className: PropTypes.string,
-        style: PropTypes.string,
+        style: PropTypes.object,
         key: PropTypes.string
     };
 

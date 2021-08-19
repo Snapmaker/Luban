@@ -101,9 +101,6 @@ class Visualizer extends PureComponent {
         toTop: () => {
             this.canvas.current.toTop();
         },
-        toBottom: () => {
-            this.canvas.current.toBottom();
-        },
         toTopFrontRight: () => {
             this.canvas.current.toTopFrontRight();
         },
@@ -452,13 +449,11 @@ class Visualizer extends PureComponent {
                 ref={this.visualizerRef}
             >
                 <VisualizerLeftBar
-                    inProgress={inProgress}
                     updateBoundingBox={this.actions.updateBoundingBox}
                     setTransformMode={this.actions.setTransformMode}
                     supportActions={this.supportActions}
                     defaultSupportSize={this.state.defaultSupportSize}
                     isSupporting={this.state.isSupporting}
-                    arrangeAllModels={this.actions.arrangeAllModels}
                     scaleToFitSelectedModel={this.actions.scaleToFitSelectedModel}
                     autoRotateSelectedModel={this.actions.autoRotateSelectedModel}
                 />
