@@ -75,7 +75,7 @@ function SettingItem({ definitionKey, settings, isDefaultDefinition = () => true
                     const m1 = condition.match("resolveOrValue\\('(.[^)|']*)'");
                     const m2 = condition.match("== ?'(.[^)|']*)'");
                     const enabledKey = m1[1];
-                    const enabledValue = m2[1];
+                    const enabledValue = (m2 && m2[1]) || true;
                     if (settings[enabledKey]) {
                         const value = settings[enabledKey].default_value;
                         if (value === enabledValue) {

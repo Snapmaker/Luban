@@ -2,8 +2,8 @@ import fs from 'fs';
 import path from 'path';
 import childProcess from 'child_process';
 
+import { getPath } from 'snapmaker-luban-engine';
 import logger from '../lib/logger';
-import { CURA_ENGINE_MACOS, CURA_ENGINE_WIN64, CURA_ENGINE_LINUX } from '../constants';
 import DataStorage from '../DataStorage';
 import settings from '../config/settings';
 import { DefinitionLoader } from './definition';
@@ -12,25 +12,8 @@ import { generateRandomPathName } from '../../shared/lib/random-utils';
 
 const log = logger('print3d-slice');
 
-let curaEnginePath;
+const enginePath = getPath();
 
-// Determine path of Cura Engine
-(() => {
-    if (process.platform === 'darwin') {
-        curaEnginePath = `${CURA_ENGINE_MACOS}`;
-    } else if (process.platform === 'win32') {
-        if (process.arch === 'x64') {
-            curaEnginePath = `${CURA_ENGINE_WIN64}`;
-        }
-    } else if (process.platform === 'linux') {
-        if (process.arch === 'x64') {
-            curaEnginePath = CURA_ENGINE_LINUX;
-        }
-    }
-    if (!curaEnginePath || !fs.existsSync(curaEnginePath)) {
-        log.error(`Cura Engine not found: ${curaEnginePath}`);
-    }
-})();
 
 /**
      * callCuraEngine
@@ -63,7 +46,7 @@ function callCuraEngine(modelConfig, supportConfig, outputPath) {
 
     // console.log(args);
     return childProcess.spawn(
-        curaEnginePath,
+        enginePath,
         args
     );
 }
@@ -109,9 +92,9 @@ function processGcodeHeaderAfterCuraEngine(gcodeFilePath, boundingBox, thumbnail
 }
 
 function slice(params, onProgress, onSucceed, onError) {
-    if (!fs.existsSync(curaEnginePath)) {
-        log.error(`Cura Engine not found: ${curaEnginePath}`);
-        onError(`Slice Error: Cura Engine not found: ${curaEnginePath}`);
+    if (!fs.existsSync(enginePath)) {
+        log.error(`Cura Engine not found: ${enginePath}`);
+        onError(`Slice Error: Cura Engine not found: ${enginePath}`);
         return;
     }
 
