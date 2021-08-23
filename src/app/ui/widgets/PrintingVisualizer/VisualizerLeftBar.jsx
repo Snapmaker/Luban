@@ -117,7 +117,11 @@ class VisualizerLeftBar extends PureComponent {
                 }
             }
 
-            this.props.updateSelectedModelTransformation(transformation, !isReset);
+            if (isReset) {
+                this.props.updateSelectedModelTransformation(transformation, false);
+            } else {
+                this.props.updateSelectedModelTransformation(transformation);
+            }
         },
         resetPosition: () => {
             this.actions.onModelTransform({
