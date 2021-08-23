@@ -2,9 +2,8 @@ import uuid from 'uuid';
 import { includes } from 'lodash';
 import * as THREE from 'three';
 import { controller } from '../lib/controller';
-import { DATA_PREFIX } from '../constants';
-import { generateToolPathObject3D } from '../flux/generator';
 import { FAILED, getToolPathType, IDLE, RUNNING, SUCCESS, WARNING } from './utils';
+import { MATERIAL_SELECTED, MATERIAL_UNSELECTED } from '../workers/ShaderMaterial/ToolpathRendererMeterial';
 
 class ToolPath {
     id;
@@ -249,39 +248,37 @@ class ToolPath {
     }
 
     /**
-     * Listen generate toolpath result
+     * Handle listening failed
+     * @param taskResult
      */
-    onGenerateToolPath(result, cb) {
-        return new Promise(async (resolve, reject) => {
-            if (result.status === 'failed') {
-                for (let i = 0; i < result.data.length; i++) {
-                    const modelMapResult = this.modelMap.get(result.data[i].modelID);
-                    modelMapResult && (modelMapResult.status = FAILED);
-                }
+    onGenerateToolpathFailed(taskResult) {
+        for (let i = 0; i < taskResult.data.length; i++) {
+            const modelMapResult = this.modelMap.get(taskResult.data[i].modelID);
+            modelMapResult && (modelMapResult.status = FAILED);
+        }
 
-                this.checkoutStatus();
-                reject();
-            } else {
-                for (let i = 0; i < result.data.length; i++) {
-                    const modelMapResult = this.modelMap.get(result.data[i].modelID);
-                    if (modelMapResult) {
-                        modelMapResult.status = SUCCESS;
-                        modelMapResult.toolPathFile = result.filenames[i];
-                        this.loadToolPathFile(result.filenames[i]).then((toolPathObj3D) => {
-                            const oldMeshObj = modelMapResult.meshObj;
-                            oldMeshObj && this.object.remove(oldMeshObj);
-                            modelMapResult.meshObj = toolPathObj3D;
-                            this.object.add(toolPathObj3D);
-                            cb();
-                        });
-                    }
-                }
+        this.checkoutStatus();
+    }
 
-                this.checkoutStatus();
-                this.removeAllNonMeshObj();
-                resolve();
-            }
-        });
+    onGenerateToolpathFinail() {
+        this.checkoutStatus();
+        this.removeAllNonMeshObj();
+    }
+
+    onGenerateToolpathModel(model, filename, renderResult) {
+        const modelMapResult = this.modelMap.get(model.modelID);
+        if (modelMapResult) {
+            modelMapResult.status = SUCCESS;
+            modelMapResult.toolPathFile = filename;
+
+            const oldMeshObj = modelMapResult.meshObj;
+            oldMeshObj && this.object.remove(oldMeshObj);
+
+            const toolPathObj3D = this.renderToolpathObj(renderResult);
+
+            modelMapResult.meshObj = toolPathObj3D;
+            this.object.add(toolPathObj3D);
+        }
     }
 
     removeAllNonMeshObj() {
@@ -348,18 +345,38 @@ class ToolPath {
         }
     }
 
-    loadToolPathFile(filename) {
-        const toolPathFilePath = `${DATA_PREFIX}/${filename}`;
-        return new Promise((resolve) => {
-            new THREE.FileLoader().load(
-                toolPathFilePath,
-                (data) => {
-                    const toolPath = JSON.parse(data);
-                    const toolPathObj3D = generateToolPathObject3D(toolPath);
-                    return resolve(toolPathObj3D);
-                }
-            );
-        });
+
+    renderToolpathObj(renderResult) {
+        const { headType, movementMode, isRotate, isSelected, positions, gCodes, positionX, positionY, rotationB } = renderResult;
+
+        const bufferGeometry = new THREE.BufferGeometry();
+        const positionAttribute = new THREE.Float32BufferAttribute(positions, 3);
+        const gCodeAttribute = new THREE.Float32BufferAttribute(gCodes, 1);
+        bufferGeometry.addAttribute('position', positionAttribute);
+        bufferGeometry.addAttribute('a_g_code', gCodeAttribute);
+        let material;
+        if (isSelected) {
+            material = MATERIAL_SELECTED;
+        } else {
+            material = MATERIAL_UNSELECTED;
+        }
+
+        let obj;
+        if (headType === 'laser') {
+            if (movementMode === 'greyscale-dot') {
+                obj = new THREE.Points(bufferGeometry, material);
+            } else {
+                obj = new THREE.Line(bufferGeometry, material);
+            }
+        } else {
+            obj = new THREE.Line(bufferGeometry, material);
+        }
+        obj.position.set(isRotate ? 0 : positionX, positionY, 0);
+        if (rotationB) {
+            obj.rotation.y = rotationB / 180 * Math.PI;
+        }
+        obj.scale.set(1, 1, 1);
+        return obj;
     }
 
     removeToolPathObject() {

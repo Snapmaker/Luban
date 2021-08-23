@@ -365,6 +365,8 @@ class Visualizer extends Component {
                 return i18n._('Processed object successfully.');
             case CNC_LASER_STAGE.PROCESS_IMAGE_FAILED:
                 return i18n._('Failed to process object.');
+            case CNC_LASER_STAGE.RENDER_TOOLPATH:
+                return i18n._('Rendering toolpath... {{progress}}%', { progress: (100.0 * progress).toFixed(1) });
             default:
                 return '';
         }

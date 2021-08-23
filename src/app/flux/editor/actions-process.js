@@ -297,32 +297,6 @@ export const processActions = {
         }
     },
 
-    onGenerateToolPath: (headType, taskResult) => async (dispatch, getState) => {
-        const { toolPathGroup, shouldGenerateGcodeCounter } = getState()[headType];
-        await toolPathGroup.onGenerateToolPath(taskResult);
-
-        if (toolPathGroup && toolPathGroup._getCheckAndSuccessToolPaths()) {
-            dispatch(baseActions.updateState(headType, {
-                shouldGenerateGcodeCounter: shouldGenerateGcodeCounter + 1
-            }));
-        }
-
-        if (taskResult.taskStatus === 'failed') {
-            dispatch(baseActions.updateState(headType, {
-                stage: CNC_LASER_STAGE.GENERATE_TOOLPATH_FAILED,
-                progress: 1
-            }));
-        } else {
-            dispatch(baseActions.updateState(headType, {
-                stage: CNC_LASER_STAGE.GENERATE_TOOLPATH_SUCCESS,
-                progress: 1
-            }));
-            // if (toolPathGroup.canGenerateGcode()) {
-            //     dispatch(processActions.commitGenerateGcode(headType));
-            // }
-        }
-    },
-
     setThumbnail: (headType, thumbnail) => (dispatch, getState) => {
         const { toolPathGroup } = getState()[headType];
         toolPathGroup.updateThumbnail(thumbnail);
