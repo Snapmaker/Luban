@@ -9,7 +9,7 @@ const defaultOrder = [
     'confirm'
 ];
 
-const ConfirmButton = ({ btnStyle = 'primary', text = 'OK', onClick }) => (
+const ConfirmButton = React.memo(({ btnStyle = 'primary', text = 'OK', onClick }) => (
     <button
         key="confirm"
         type="button"
@@ -22,14 +22,14 @@ const ConfirmButton = ({ btnStyle = 'primary', text = 'OK', onClick }) => (
     >
         {text}
     </button>
-);
+));
 ConfirmButton.propTypes = {
     btnStyle: PropTypes.string,
     text: PropTypes.string,
     onClick: PropTypes.func
 };
 
-const CancelButton = ({ btnStyle = 'default', text = 'Cancel', onClick }) => (
+const CancelButton = React.memo(({ btnStyle = 'default', text = 'Cancel', onClick }) => (
     <button
         key="cancel"
         type="button"
@@ -42,7 +42,7 @@ const CancelButton = ({ btnStyle = 'default', text = 'Cancel', onClick }) => (
     >
         {text}
     </button>
-);
+));
 CancelButton.propTypes = {
     btnStyle: PropTypes.string,
     text: PropTypes.string,

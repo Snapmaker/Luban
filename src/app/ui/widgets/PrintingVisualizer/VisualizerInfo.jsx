@@ -1,5 +1,5 @@
-import React, { PureComponent } from 'react';
-import { connect } from 'react-redux';
+import React from 'react';
+import { useSelector, shallowEqual } from 'react-redux';
 import PropTypes from 'prop-types';
 
 import { humanReadableTime } from '../../../lib/time-utils';
@@ -10,71 +10,64 @@ import Space from '../../components/Space';
  * display gcode info when "displayedType === 'gcode'"
  * display model bbox info when there is a model selected
  */
-class VisualizerInfo extends PureComponent {
-    static propTypes = {
-        // model: PropTypes.object,
-        selectedModelBBoxDes: PropTypes.string,
-        selectedModelArray: PropTypes.array.isRequired,
-        displayedType: PropTypes.string.isRequired,
-        printTime: PropTypes.number.isRequired,
-        filamentLength: PropTypes.number.isRequired,
-        filamentWeight: PropTypes.number.isRequired
-    };
-
-
-    getFilamentDes() {
-        const { filamentLength, filamentWeight } = this.props;
+const GcodeInfo = () => {
+    const printTime = useSelector(state => state?.printing?.printTime, shallowEqual);
+    const filamentLength = useSelector(state => state?.printing?.filamentLength, shallowEqual);
+    const filamentWeight = useSelector(state => state?.printing?.filamentWeight, shallowEqual);
+    function getFilamentDes() {
         if (!filamentLength || !filamentWeight) {
             return '';
         }
         return `${filamentLength.toFixed(1)} m / ${filamentWeight.toFixed(1)} g`;
     }
+    const filamentDes = getFilamentDes();
+    const printTimeDes = humanReadableTime(printTime);
+    return (
+        <React.Fragment>
+            <p>
+                <span className="fa fa-bullseye" />
+                <Space width={4} />
+                {filamentDes}
+            </p>
+            <p>
+                <span className="fa fa-clock-o" />
+                <Space width={4} />
+                {printTimeDes}
+            </p>
+        </React.Fragment>
+    );
+};
 
-    render() {
-        const { selectedModelArray, displayedType, selectedModelBBoxDes } = this.props;
-        if (displayedType === 'gcode') {
-            const filamentDes = this.getFilamentDes();
-            const printTimeDes = humanReadableTime(this.props.printTime);
-            return (
-                <React.Fragment>
-                    <p>
-                        <span className="fa fa-bullseye" />
-                        <Space width={4} />
-                        {filamentDes}
-                    </p>
-                    <p>
-                        <span className="fa fa-clock-o" />
-                        <Space width={4} />
-                        {printTimeDes}
-                    </p>
-                </React.Fragment>
-            );
-        } else if (selectedModelArray.length > 0) {
-            return (
-                <React.Fragment>
-                    <p>
-                        <span />
-                        {selectedModelBBoxDes}
-                    </p>
-                </React.Fragment>
-            );
-        } else {
-            return null;
-        }
+const ModelsInfo = React.memo(({ selectedModelBBoxDes }) => {
+    return (
+        <React.Fragment>
+            <p>
+                <span />
+                {selectedModelBBoxDes}
+            </p>
+        </React.Fragment>
+    );
+});
+ModelsInfo.propTypes = {
+    selectedModelBBoxDes: PropTypes.string.isRequired
+};
+
+function VisualizerInfo() {
+    const selectedModelArray = useSelector(state => state?.printing?.modelGroup?.selectedModelArray, shallowEqual);
+    const displayedType = useSelector(state => state?.printing?.displayedType, shallowEqual);
+    const selectedModelBBoxDes = useSelector(state => state?.printing?.modelGroup?.getSelectedModelBBoxDes(), shallowEqual);
+
+    if (displayedType === 'gcode') {
+        return (
+            <GcodeInfo />
+        );
+    } else if (selectedModelArray.length > 0) {
+        return (
+            <ModelsInfo selectedModelBBoxDes={selectedModelBBoxDes} />
+        );
+    } else {
+        return null;
     }
 }
 
-const mapStateToProps = (state) => {
-    const printing = state.printing;
-    const { modelGroup, displayedType, printTime, filamentLength, filamentWeight } = printing;
-    return {
-        selectedModelArray: modelGroup.selectedModelArray,
-        displayedType,
-        printTime,
-        filamentLength,
-        filamentWeight,
-        selectedModelBBoxDes: modelGroup.getSelectedModelBBoxDes()
-    };
-};
-
-export default connect(mapStateToProps)(VisualizerInfo);
+export default VisualizerInfo;

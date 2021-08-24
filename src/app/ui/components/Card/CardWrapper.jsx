@@ -7,7 +7,7 @@ import styles from './styles.styl';
 import SvgIcon from '../SvgIcon';
 // import i18n from '../../../lib/i18n';
 
-function CardWrapper({ className = '', children, hasToggleBotton = true, ...rest }) {
+const CardWrapper = React.memo(({ className = '', children, hasToggleBotton = true, ...rest }) => {
     const [showList, setShowList] = useState(true);
     let extra;
     if (hasToggleBotton) {
@@ -39,7 +39,7 @@ function CardWrapper({ className = '', children, hasToggleBotton = true, ...rest
         </div>
 
     );
-}
+});
 CardWrapper.propTypes = {
     className: PropTypes.string,
     hasToggleBotton: PropTypes.bool,

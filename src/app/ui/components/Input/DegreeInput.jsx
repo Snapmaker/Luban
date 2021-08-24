@@ -4,7 +4,7 @@ import classNames from 'classnames';
 import { Input } from 'antd';
 import styles from './styles.styl';
 
-
+// useless, can be removed
 class DegreeInput extends PureComponent {
     static propTypes = {
         className: PropTypes.string,

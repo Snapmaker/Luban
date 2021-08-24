@@ -1,94 +1,41 @@
-import React, { PureComponent } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import PropTypes from 'prop-types';
 import classNames from 'classnames';
 import { Input } from 'antd';
 import log from '../../../lib/log';
 import styles from './styles.styl';
 
-class NumberInput extends PureComponent {
-    static propTypes = {
-        className: PropTypes.string,
-        size: PropTypes.string,
-        value: PropTypes.number.isRequired,
-        defaultValue: PropTypes.number,
-        disabled: PropTypes.bool,
-        min: PropTypes.number,
-        max: PropTypes.number,
-        onChange: PropTypes.func
-    };
-
-    ref = React.createRef();
-
-    constructor(props) {
-        super(props);
-
-        if (props.defaultValue !== undefined) {
-            if (props.min !== undefined && props.defaultValue < props.min) {
-                log.warn('.defaultValue should greater than or equal to .min');
-            }
-            if (props.max !== undefined && props.defaultValue > props.max) {
-                log.warn('.defaultValue should less than or equal to .max');
-            }
-        }
-
-        this.state = {
-            displayValue: props.value
-        };
-    }
-
-    componentWillReceiveProps(nextProps) {
-        // If any of .min, .max changed, call .onAfterChangeWrapper once again
-        // to check if value is valid.
-        // const checkKeys = ['min', 'max'];
-        // const changesMade = checkKeys.some(key => this.props[key] !== nextProps[key]);
-        // if (changesMade) {
-        //     this.onAfterChangeWrapper(nextProps.value);
-        // }
-
-        // Changes from outside also reflects on display
-        if (nextProps.value !== this.props.value) {
-            this.setState({
-                displayValue: nextProps.value
-            });
+const NumberInput = React.memo(({
+    className = '', size = 'middle', value, defaultValue, disabled = false, min, max, onChange, ...rest
+}) => {
+    const [displayValue, setDisplayValue] = useState(value);
+    const ref = useRef();
+    function onInsideChange(event) {
+        if (displayValue !== event.target.value) {
+            setDisplayValue(event.target.value);
         }
     }
 
-    onChange = (event) => {
-        if (this.state.displayValue !== event.target.value) {
-            this.setState({
-                displayValue: event.target.value
-            });
+    function getAbsentValue() {
+        if (defaultValue !== undefined) {
+            return defaultValue;
+        } else if (min !== undefined) {
+            return min;
+        } else {
+            return 0;
         }
-    };
+    }
 
-    onBlur = (event) => {
-        this.onAfterChangeWrapper(event.target.value);
-    };
-
-    onKeyUp = (event) => {
-        // Pressed carriage return (CR or '\r')
-        if (event.keyCode === 13) {
-            // this.onAfterChangeWrapper(event.target.value);
-            event.target.blur();
-        }
-    };
-
-    onFocus=() => {
-        this.ref.current.select();
-    };
-
-    onAfterChangeWrapper(value) {
-        const { min, max, onChange } = this.props;
-
-        let numericValue = parseFloat(value);
+    function onAfterChangeWrapper(changedValue) {
+        let numericValue = parseFloat(changedValue);
         let useEdgeValue = false;
 
-        // If value is invalid, use defaultValue
+        // If changedValue is invalid, use defaultValue
         if (Number.isNaN(numericValue)) {
-            const absentValue = this.getAbsentValue();
-            onChange(absentValue);
-            this.onChange({ target: { value: absentValue } });
-            this.ref.current.blur();
+            const absentValue = getAbsentValue();
+            onChange && onChange(absentValue);
+            onInsideChange({ target: { value: absentValue } });
+            ref.current.blur();
             return;
         }
 
@@ -104,46 +51,76 @@ class NumberInput extends PureComponent {
 
         // multiple .setState on edge values won't change props from outside, we
         // need to change display manually
-        useEdgeValue && this.setState({ displayValue: numericValue });
+        useEdgeValue && setDisplayValue(numericValue);
 
         // call onAfterChange to change value
         onChange && onChange(numericValue);
-        this.ref.current.blur();
+        ref.current.blur();
     }
 
-    getAbsentValue() {
-        if (this.props.defaultValue !== undefined) {
-            return this.props.defaultValue;
-        } else if (this.props.min !== undefined) {
-            return this.props.min;
-        } else {
-            return 0;
+
+    const onBlur = (event) => {
+        onAfterChangeWrapper(event.target.value);
+    };
+
+    const onKeyUp = (event) => {
+        // Pressed carriage return (CR or '\r')
+        if (event.keyCode === 13) {
+            // this.onAfterChangeWrapper(event.target.value);
+            event.target.blur();
         }
-    }
+    };
 
-    render() {
-        const { className = '',
-            size = 'middle', disabled = false, ...rest } = this.props;
-        return (
-            <span
-                className={classNames('display-inline', className)}
-            >
-                <Input
-                    ref={this.ref}
-                    {...rest}
-                    type="number"
-                    disabled={disabled}
-                    placeholder="Input a number"
-                    className={classNames(styles.input, styles[size])}
-                    value={this.state.displayValue}
-                    onChange={this.onChange}
-                    onBlur={this.onBlur}
-                    onKeyUp={this.onKeyUp}
-                    onFocus={this.onFocus}
-                />
-            </span>
-        );
-    }
-}
+    const onFocus = () => {
+        ref.current.select();
+    };
+
+
+    useEffect(() => {
+        if (defaultValue !== undefined) {
+            if (min !== undefined && defaultValue < min) {
+                log.warn('.defaultValue should greater than or equal to .min');
+            }
+            if (max !== undefined && defaultValue > max) {
+                log.warn('.defaultValue should less than or equal to .max');
+            }
+        }
+    }, [defaultValue, max, min]);
+
+    useEffect(() => {
+        setDisplayValue(value);
+    }, [value]);
+
+    return (
+        <span
+            className={classNames('display-inline', className)}
+        >
+            <Input
+                ref={ref}
+                {...rest}
+                type="number"
+                disabled={disabled}
+                placeholder="Input a number"
+                className={classNames(styles.input, styles[size])}
+                value={displayValue}
+                onChange={onInsideChange}
+                onBlur={onBlur}
+                onKeyUp={onKeyUp}
+                onFocus={onFocus}
+            />
+        </span>
+    );
+});
+
+NumberInput.propTypes = {
+    className: PropTypes.string,
+    size: PropTypes.string,
+    value: PropTypes.number.isRequired,
+    defaultValue: PropTypes.number,
+    disabled: PropTypes.bool,
+    min: PropTypes.number,
+    max: PropTypes.number,
+    onChange: PropTypes.func
+};
 
 export default NumberInput;
