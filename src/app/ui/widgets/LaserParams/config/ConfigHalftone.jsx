@@ -1,6 +1,6 @@
-import React, { PureComponent } from 'react';
+import React, { useEffect, useState } from 'react';
 import PropTypes from 'prop-types';
-import { connect } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import Slider from '../../../components/Slider';
 import Select from '../../../components/Select';
 
@@ -8,251 +8,186 @@ import i18n from '../../../../lib/i18n';
 import TipTrigger from '../../../components/TipTrigger';
 import { NumberInput } from '../../../components/Input';
 import { actions as editorActions } from '../../../../flux/editor';
+import { HEAD_LASER } from '../../../../constants';
 
+const ConfigHalftone = ({ disabled }) => {
+    const dispatch = useDispatch();
+    const npType = useSelector(state => state?.laser?.modelGroup?.getSelectedModelArray()[0]?.config?.npType);
+    const npSize = useSelector(state => state?.laser?.modelGroup?.getSelectedModelArray()[0]?.config?.npSize);
+    const npAngle = useSelector(state => state?.laser?.modelGroup?.getSelectedModelArray()[0]?.config?.npAngle);
+    const threshold = useSelector(state => state?.laser?.modelGroup?.getSelectedModelArray()[0]?.config?.threshold);
 
-class ConfigHalftone extends PureComponent {
-    static propTypes = {
-        disabled: PropTypes.bool,
+    const [tmpNpSize, setNpSize] = useState(npSize);
+    const [tmpNpAngle, setNpAngle] = useState(npAngle);
+    const [tmpThreshold, setThreshold] = useState(threshold);
+    const [expanded, setExpended] = useState(true);
 
-        npType: PropTypes.string,
-        npSize: PropTypes.number,
-        npAngle: PropTypes.number,
-        threshold: PropTypes.number,
+    useEffect(() => {
+        setNpSize(npSize);
+    }, [npSize]);
+    useEffect(() => {
+        setNpAngle(npAngle);
+    }, [npAngle]);
+    useEffect(() => {
+        setThreshold(threshold);
+    }, [threshold]);
 
-        processSelectedModel: PropTypes.func.isRequired,
-        updateSelectedModelConfig: PropTypes.func.isRequired
-    };
-
-    processTimeout = null;
-
-    state = {
-        expanded: true,
-        npSize: 0,
-        npAngle: 0,
-        threshold: 0
-    };
-
-    actions = {
-        onChangeType: (npType) => {
-            this.props.updateSelectedModelConfig({ npType });
+    const actions = {
+        onToggleExpand: () => {
+            setExpended(!expanded);
         },
-        onChangeSize: (npSize) => {
-            this.setState({
-                npSize
-            });
+        onChangeType: (newNpType) => {
+            dispatch(editorActions.updateSelectedModelConfig(HEAD_LASER, { npType: newNpType }));
         },
-        onAfterChangeSize: () => {
-            const { npSize } = this.state;
-            this.props.updateSelectedModelConfig({ npSize });
-            this.props.processSelectedModel();
+        onChangeSize: (newNpSize) => {
+            setNpSize(newNpSize);
         },
-        onChangeAngle: (npAngle) => {
-            npAngle %= 180;
-            if (npAngle < 0) npAngle += 180;
-            this.setState({
-                npAngle
-            });
+        onAfterChangeSize: (newNpSize = undefined) => {
+            dispatch(editorActions.updateSelectedModelConfig(HEAD_LASER, { npSize: (newNpSize ?? tmpNpSize) }));
+            dispatch(editorActions.processSelectedModel(HEAD_LASER));
         },
-        onAfterChangeAngle: () => {
-            const { npAngle } = this.state;
-            this.props.updateSelectedModelConfig({ npAngle });
-            this.props.processSelectedModel();
+        onChangeAngle: (newNpAngle) => {
+            newNpAngle %= 180;
+            if (newNpAngle < 0) newNpAngle += 180;
+            setNpAngle(newNpAngle);
         },
-        onChangeBWThreshold: (threshold) => {
-            this.setState({
-                threshold
-            });
+        onAfterChangeAngle: (newNpAngle) => {
+            dispatch(editorActions.updateSelectedModelConfig(HEAD_LASER, { npAngle: (newNpAngle ?? tmpNpAngle) }));
+            dispatch(editorActions.processSelectedModel(HEAD_LASER));
         },
-        onAfterChangeBWThreshold: () => {
-            const { threshold } = this.state;
-            this.props.updateSelectedModelConfig({ threshold });
-            this.props.processSelectedModel();
+        onChangeBWThreshold: (newThreshold) => {
+            setThreshold(newThreshold);
+        },
+        onAfterChangeBWThreshold: (newThreshold = undefined) => {
+            dispatch(editorActions.updateSelectedModelConfig(HEAD_LASER, { threshold: (newThreshold ?? tmpThreshold) }));
+            dispatch(editorActions.processSelectedModel(HEAD_LASER));
         }
     };
 
-    componentDidMount() {
-        const { npSize, npAngle, threshold } = this.props;
-        this.setState({
-            npSize,
-            npAngle,
-            threshold
-        });
-    }
-
-    componentDidUpdate() {
-
-    }
-
-    getSnapshotBeforeUpdate(prevProps) {
-        const { npSize, npAngle, threshold } = this.props;
-        if (npSize !== prevProps.npSize) {
-            this.setState({
-                npSize
-            });
-        }
-        if (npAngle !== prevProps.npAngle) {
-            this.setState({
-                npAngle
-            });
-        }
-        if (threshold !== prevProps.threshold) {
-            this.setState({
-                threshold
-            });
-        }
-        return this.props;
-    }
-
-    render() {
-        const { disabled, npType } = this.props;
-        return (
-            <div>
-                {this.state.expanded && (
-                    <React.Fragment>
-                        <TipTrigger
-                            title={i18n._('Type')}
-                            content={i18n._('Select the way that the dots are arranged.\n- Line: Dots are arranged into lines.\n- Round: Dots are arranged into rounds.\n- Diamond: Dots are arranged into diamonds.')}
-                        >
-                            <div className="sm-flex height-32 margin-vertical-8">
-                                <span className="sm-flex-width">{i18n._('Type')}</span>
-                                <Select
-                                    size="middle"
-                                    clearable={false}
-                                    options={[{
-                                        value: 'line',
-                                        label: i18n._('Line')
-                                    }, {
-                                        value: 'round',
-                                        label: i18n._('Round')
-                                    }, {
-                                        value: 'diamond',
-                                        label: i18n._('Diamond')
-                                    }]}
-                                    value={npType}
-                                    searchable={false}
-                                    onChange={({ value }) => {
-                                        this.actions.onChangeType(value);
-                                        this.props.processSelectedModel();
-                                    }}
-                                />
-                            </div>
-                        </TipTrigger>
-                        <TipTrigger
-                            title={i18n._('Size')}
-                            content={i18n._('Set the size of dots.')}
-                        >
-                            <div className="sm-flex height-32 margin-vertical-8">
-                                <span className="sm-flex-width">{i18n._('Size')}</span>
-                                <Slider
-                                    disabled={disabled}
-                                    size="middle"
-                                    value={this.state.npSize}
-                                    min={5}
-                                    max={50}
-                                    onChange={this.actions.onChangeSize}
-                                    onAfterChange={this.actions.onAfterChangeSize}
-                                    className="padding-right-8"
-                                />
-                                <NumberInput
-                                    disabled={disabled}
-                                    size="super-small"
-                                    value={this.state.npSize}
-                                    min={5}
-                                    max={50}
-                                    onChange={async (value) => {
-                                        await this.actions.onChangeSize(value);
-                                        this.actions.onAfterChangeSize();
-                                    }}
-                                />
-                            </div>
-                        </TipTrigger>
-                        <TipTrigger
-                            title={i18n._('Angle')}
-                            content={i18n._('Set the rotation angle of the halftone image through the arrange of dots.')}
-                        >
-                            <div className="sm-flex height-32 margin-vertical-8">
-                                <span className="sm-flex-width">{i18n._('Angle')}</span>
-                                <Slider
-                                    disabled={disabled}
-                                    size="middle"
-                                    value={this.state.npAngle}
-                                    min={0}
-                                    max={180}
-                                    onChange={this.actions.onChangeAngle}
-                                    onAfterChange={this.actions.onAfterChangeAngle}
-                                    className="padding-right-8"
-                                />
-                                <NumberInput
-                                    disabled={disabled}
-                                    size="super-small"
-                                    value={this.state.npAngle}
-                                    min={0}
-                                    max={180}
-                                    onChange={async (value) => {
-                                        await this.actions.onChangeAngle(value);
-                                        this.actions.onAfterChangeAngle();
-                                    }}
-                                />
-                            </div>
-                        </TipTrigger>
-                        <TipTrigger
-                            title={i18n._('Threshold')}
-                            content={i18n._('Colors above this value will be rendered in white.')}
-                        >
-                            <div className="sm-flex height-32 margin-vertical-8">
-                                <span className="sm-flex-width">{i18n._('Threshold')}</span>
-                                <Slider
-                                    disabled={disabled}
-                                    size="middle"
-                                    value={this.state.threshold}
-                                    min={0}
-                                    max={255}
-                                    onChange={this.actions.onChangeBWThreshold}
-                                    onAfterChange={this.actions.onAfterChangeBWThreshold}
-                                    className="padding-right-8"
-                                />
-                                <NumberInput
-                                    disabled={disabled}
-                                    size="super-small"
-                                    value={this.state.threshold}
-                                    min={0}
-                                    max={255}
-                                    onChange={async (value) => {
-                                        await this.actions.onChangeBWThreshold(value);
-                                        this.actions.onAfterChangeBWThreshold();
-                                    }}
-                                />
-                            </div>
-                        </TipTrigger>
-                    </React.Fragment>
-                )}
-            </div>
-        );
-    }
-}
-
-const mapStateToProps = (state) => {
-    const { modelGroup } = state.laser;
-
-    // assume that only one model is selected
-    const selectedModels = modelGroup.getSelectedModelArray();
-    const model = selectedModels[0];
-
-    const { npType, npSize, npAngle, threshold } = model.config;
-
-    return {
-        npType,
-        npSize,
-        npAngle,
-        threshold
-    };
+    return (
+        <div>
+            {expanded && (
+                <React.Fragment>
+                    <TipTrigger
+                        title={i18n._('Type')}
+                        content={i18n._('Select the way that the dots are arranged.\n- Line: Dots are arranged into lines.\n- Round: Dots are arranged into rounds.\n- Diamond: Dots are arranged into diamonds.')}
+                    >
+                        <div className="sm-flex height-32 margin-vertical-8">
+                            <span className="sm-flex-width">{i18n._('Type')}</span>
+                            <Select
+                                size="middle"
+                                clearable={false}
+                                options={[{
+                                    value: 'line',
+                                    label: i18n._('Line')
+                                }, {
+                                    value: 'round',
+                                    label: i18n._('Round')
+                                }, {
+                                    value: 'diamond',
+                                    label: i18n._('Diamond')
+                                }]}
+                                value={npType}
+                                searchable={false}
+                                onChange={({ value }) => {
+                                    actions.onChangeType(value);
+                                    dispatch(editorActions.processSelectedModel(HEAD_LASER));
+                                }}
+                            />
+                        </div>
+                    </TipTrigger>
+                    <TipTrigger
+                        title={i18n._('Size')}
+                        content={i18n._('Set the size of dots.')}
+                    >
+                        <div className="sm-flex height-32 margin-vertical-8">
+                            <span className="sm-flex-width">{i18n._('Size')}</span>
+                            <Slider
+                                disabled={disabled}
+                                size="middle"
+                                value={tmpNpSize}
+                                min={5}
+                                max={50}
+                                onChange={actions.onChangeSize}
+                                onAfterChange={actions.onAfterChangeSize}
+                                className="padding-right-8"
+                            />
+                            <NumberInput
+                                disabled={disabled}
+                                size="super-small"
+                                value={tmpNpSize}
+                                min={5}
+                                max={50}
+                                onChange={(value) => {
+                                    actions.onAfterChangeSize(value);
+                                }}
+                            />
+                        </div>
+                    </TipTrigger>
+                    <TipTrigger
+                        title={i18n._('Angle')}
+                        content={i18n._('Set the rotation angle of the halftone image through the arrange of dots.')}
+                    >
+                        <div className="sm-flex height-32 margin-vertical-8">
+                            <span className="sm-flex-width">{i18n._('Angle')}</span>
+                            <Slider
+                                disabled={disabled}
+                                size="middle"
+                                value={tmpNpAngle}
+                                min={0}
+                                max={180}
+                                onChange={actions.onChangeAngle}
+                                onAfterChange={actions.onAfterChangeAngle}
+                                className="padding-right-8"
+                            />
+                            <NumberInput
+                                disabled={disabled}
+                                size="super-small"
+                                value={tmpNpAngle}
+                                min={0}
+                                max={180}
+                                onChange={(value) => {
+                                    actions.onAfterChangeAngle(value);
+                                }}
+                            />
+                        </div>
+                    </TipTrigger>
+                    <TipTrigger
+                        title={i18n._('Threshold')}
+                        content={i18n._('Colors above this value will be rendered in white.')}
+                    >
+                        <div className="sm-flex height-32 margin-vertical-8">
+                            <span className="sm-flex-width">{i18n._('Threshold')}</span>
+                            <Slider
+                                disabled={disabled}
+                                size="middle"
+                                value={tmpThreshold}
+                                min={0}
+                                max={255}
+                                onChange={actions.onChangeBWThreshold}
+                                onAfterChange={actions.onAfterChangeBWThreshold}
+                                className="padding-right-8"
+                            />
+                            <NumberInput
+                                disabled={disabled}
+                                size="super-small"
+                                value={tmpThreshold}
+                                min={0}
+                                max={255}
+                                onChange={(value) => {
+                                    actions.onAfterChangeBWThreshold(value);
+                                }}
+                            />
+                        </div>
+                    </TipTrigger>
+                </React.Fragment>
+            )}
+        </div>
+    );
 };
 
-const mapDispatchToProps = (dispatch) => {
-    return {
-        updateSelectedModelConfig: (config) => dispatch(editorActions.updateSelectedModelConfig('laser', config)),
-        processSelectedModel: () => dispatch(editorActions.processSelectedModel('laser'))
-    };
+ConfigHalftone.propTypes = {
+    disabled: PropTypes.bool
 };
 
-export default connect(mapStateToProps, mapDispatchToProps)(ConfigHalftone);
+export default ConfigHalftone;

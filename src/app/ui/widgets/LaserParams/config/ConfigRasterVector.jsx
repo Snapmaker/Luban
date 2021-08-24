@@ -1,175 +1,124 @@
-import React, { PureComponent } from 'react';
+import React, { useEffect, useState } from 'react';
 import PropTypes from 'prop-types';
-import { connect } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import Slider from '../../../components/Slider';
 import Checkbox from '../../../components/Checkbox';
 import i18n from '../../../../lib/i18n';
 import { NumberInput as Input } from '../../../components/Input';
 import TipTrigger from '../../../components/TipTrigger';
 import { actions as editorActions } from '../../../../flux/editor';
+import { HEAD_LASER } from '../../../../constants';
 
-class ConfigRasterVector extends PureComponent {
-    static propTypes = {
-        vectorThreshold: PropTypes.number,
-        invert: PropTypes.bool,
-        turdSize: PropTypes.number,
-        disabled: PropTypes.bool,
+const ConfigRasterVector = ({ disabled }) => {
+    const dispatch = useDispatch();
+    const vectorThreshold = useSelector(state => state?.laser?.modelGroup?.getSelectedModelArray()[0]?.config?.vectorThreshold);
+    const invert = useSelector(state => state?.laser?.modelGroup?.getSelectedModelArray()[0]?.config?.invert);
+    const turdSize = useSelector(state => state?.laser?.modelGroup?.getSelectedModelArray()[0]?.config?.turdSize);
 
-        updateSelectedModelConfig: PropTypes.func.isRequired,
-        processSelectedModel: PropTypes.func.isRequired
-    };
+    const [tmpVectorThreshold, setVectorThreshold] = useState(vectorThreshold);
+    const [expanded, setExpended] = useState(true);
 
-    state = {
-        expanded: true,
-        vectorThreshold: 0
-    };
+    useEffect(() => {
+        setVectorThreshold(vectorThreshold);
+    }, [vectorThreshold]);
 
-    actions = {
+    const actions = {
         onToggleExpand: () => {
-            this.setState(state => ({ expanded: !state.expanded }));
+            setExpended(!expanded);
         },
-        onChangeVectorThreshold: (vectorThreshold) => {
-            this.setState({
-                vectorThreshold
-            });
+        onChangeVectorThreshold: (newVectorThreshold) => {
+            setVectorThreshold(newVectorThreshold);
         },
-        onAfterChangeVectorThreshold: () => {
-            const { vectorThreshold } = this.state;
-            this.props.updateSelectedModelConfig({ vectorThreshold });
-            this.props.processSelectedModel();
+        onAfterChangeVectorThreshold: (newVectorThreshold = undefined) => {
+            dispatch(editorActions.updateSelectedModelConfig(HEAD_LASER, { vectorThreshold: (newVectorThreshold ?? tmpVectorThreshold) }));
+            dispatch(editorActions.processSelectedModel(HEAD_LASER));
         },
-        onChangeTurdSize: (turdSize) => {
-            this.props.updateSelectedModelConfig({ turdSize });
+        onChangeTurdSize: (newTurdSize) => {
+            dispatch(editorActions.updateSelectedModelConfig(HEAD_LASER, { turdSize: newTurdSize }));
         },
         onToggleInvert: () => {
-            this.props.updateSelectedModelConfig({ invert: !this.props.invert });
+            dispatch(editorActions.updateSelectedModelConfig(HEAD_LASER, { invert: !invert }));
         }
     };
 
-    componentDidMount() {
-        const { vectorThreshold } = this.props;
-        this.setState({
-            vectorThreshold
-        });
-    }
+    return (
+        <div>
+            {expanded && (
+                <React.Fragment>
+                    <TipTrigger
+                        title={i18n._('Invert')}
+                        content={i18n._('Inverts the color of images, white becomes black, and black becomes white.')}
+                    >
+                        <div className="sm-flex height-32 margin-vertical-8">
+                            <span className="sm-flex-width">{i18n._('Invert')}</span>
+                            <Checkbox
+                                disabled={disabled}
+                                className="sm-flex-auto"
+                                checked={invert}
+                                onChange={() => {
+                                    actions.onToggleInvert();
+                                    dispatch(editorActions.processSelectedModel(HEAD_LASER));
+                                }}
+                            />
+                        </div>
+                    </TipTrigger>
+                    <TipTrigger
+                        title={i18n._('Threshold')}
+                        content={i18n._('Set a value above which colors will be rendered in white.')}
+                    >
+                        <div className="sm-flex height-32 margin-vertical-8">
+                            <span className="sm-flex-width">{i18n._('Threshold')}</span>
 
-    componentDidUpdate() {
+                            <Slider
+                                disabled={disabled}
+                                size="middle"
+                                value={tmpVectorThreshold}
+                                min={0}
+                                max={255}
+                                step={1}
+                                onChange={actions.onChangeVectorThreshold}
+                                onAfterChange={actions.onAfterChangeVectorThreshold}
+                                className="padding-right-8"
+                            />
+                            <Input
+                                disabled={disabled}
+                                size="super-small"
+                                value={tmpVectorThreshold}
+                                min={0}
+                                max={255}
+                                onChange={async (value) => {
+                                    actions.onAfterChangeVectorThreshold(value);
+                                }}
+                            />
+                        </div>
+                    </TipTrigger>
+                    <TipTrigger
+                        title={i18n._('Impurity Size')}
+                        content={i18n._('Set the minimum size of impurities allowed to be shown.')}
+                    >
+                        <div className="sm-flex height-32 margin-vertical-8">
+                            <span className="sm-flex-width">{i18n._('Impurity Size')}</span>
+                            <Input
+                                disabled={disabled}
+                                value={turdSize}
+                                min={0}
+                                max={10000}
+                                onChange={(value) => {
+                                    actions.onChangeTurdSize(value);
+                                    dispatch(editorActions.processSelectedModel(HEAD_LASER));
+                                }}
+                            />
+                        </div>
+                    </TipTrigger>
+                </React.Fragment>
 
-    }
-
-    getSnapshotBeforeUpdate(prevProps) {
-        const { vectorThreshold } = this.props;
-        if (vectorThreshold !== prevProps.vectorThreshold) {
-            this.setState({
-                vectorThreshold
-            });
-        }
-        return this.props;
-    }
-
-    render() {
-        const { invert, turdSize, disabled } = this.props;
-
-        return (
-            <div>
-                {this.state.expanded && (
-                    <React.Fragment>
-                        <TipTrigger
-                            title={i18n._('Invert')}
-                            content={i18n._('Inverts the color of images, white becomes black, and black becomes white.')}
-                        >
-                            <div className="sm-flex height-32 margin-vertical-8">
-                                <span className="sm-flex-width">{i18n._('Invert')}</span>
-                                <Checkbox
-                                    disabled={disabled}
-                                    className="sm-flex-auto"
-                                    checked={invert}
-                                    onChange={() => {
-                                        this.actions.onToggleInvert();
-                                        this.props.processSelectedModel();
-                                    }}
-                                />
-                            </div>
-                        </TipTrigger>
-                        <TipTrigger
-                            title={i18n._('Threshold')}
-                            content={i18n._('Set a value above which colors will be rendered in white.')}
-                        >
-                            <div className="sm-flex height-32 margin-vertical-8">
-                                <span className="sm-flex-width">{i18n._('Threshold')}</span>
-
-                                <Slider
-                                    disabled={disabled}
-                                    size="middle"
-                                    value={this.state.vectorThreshold}
-                                    min={0}
-                                    max={255}
-                                    step={1}
-                                    onChange={this.actions.onChangeVectorThreshold}
-                                    onAfterChange={this.actions.onAfterChangeVectorThreshold}
-                                    className="padding-right-8"
-                                />
-                                <Input
-                                    disabled={disabled}
-                                    size="super-small"
-                                    value={this.state.vectorThreshold}
-                                    min={0}
-                                    max={255}
-                                    onChange={async (value) => {
-                                        await this.actions.onChangeVectorThreshold(value);
-                                        this.actions.onAfterChangeVectorThreshold();
-                                    }}
-                                />
-                            </div>
-                        </TipTrigger>
-                        <TipTrigger
-                            title={i18n._('Impurity Size')}
-                            content={i18n._('Set the minimum size of impurities allowed to be shown.')}
-                        >
-                            <div className="sm-flex height-32 margin-vertical-8">
-                                <span className="sm-flex-width">{i18n._('Impurity Size')}</span>
-                                <Input
-                                    disabled={disabled}
-                                    value={turdSize}
-                                    min={0}
-                                    max={10000}
-                                    onChange={(value) => {
-                                        this.actions.onChangeTurdSize(value);
-                                        this.props.processSelectedModel();
-                                    }}
-                                />
-                            </div>
-                        </TipTrigger>
-                    </React.Fragment>
-
-                )}
-            </div>
-
-        );
-    }
-}
-
-const mapStateToProps = (state) => {
-    const { modelGroup } = state.laser;
-
-    // assume that only one model is selected
-    const selectedModels = modelGroup.getSelectedModelArray();
-    const model = selectedModels[0];
-
-    const { vectorThreshold, invert, turdSize } = model.config;
-
-    return {
-        vectorThreshold,
-        invert,
-        turdSize
-    };
+            )}
+        </div>
+    );
 };
 
-const mapDispatchToProps = (dispatch) => {
-    return {
-        updateSelectedModelConfig: (config) => dispatch(editorActions.updateSelectedModelConfig('laser', config)),
-        processSelectedModel: () => dispatch(editorActions.processSelectedModel('laser'))
-    };
+ConfigRasterVector.propTypes = {
+    disabled: PropTypes.bool
 };
 
-export default connect(mapStateToProps, mapDispatchToProps)(ConfigRasterVector);
+export default ConfigRasterVector;

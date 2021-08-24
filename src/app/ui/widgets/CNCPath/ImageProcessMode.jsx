@@ -1,4 +1,5 @@
-import React, { PureComponent } from 'react';
+import React, { useState } from 'react';
+import { useSelector } from 'react-redux';
 import PropTypes from 'prop-types';
 import classNames from 'classnames';
 import i18n from '../../../lib/i18n';
@@ -9,102 +10,94 @@ import SvgIcon from '../../components/SvgIcon';
 import Checkbox from '../../components/Checkbox';
 import TipTrigger from '../../components/TipTrigger';
 
-class ImageProcessMode extends PureComponent {
-    static propTypes = {
-        sourceType: PropTypes.string.isRequired,
-        mode: PropTypes.string.isRequired,
-        showOrigin: PropTypes.bool,
-        disabled: PropTypes.bool,
-        isDXF: PropTypes.bool,
+const ImageProcessMode = ({ changeSelectedModelMode, changeSelectedModelShowOrigin, disabled }) => {
+    const showOrigin = useSelector(state => state?.cnc?.modelGroup?.getSelectedModel()?.showOrigin);
+    const mode = useSelector(state => state?.cnc?.modelGroup?.getSelectedModel()?.mode);
+    const sourceType = useSelector(state => state?.cnc?.modelGroup?.getSelectedModel()?.sourceType);
+    const originalName = useSelector(state => state?.cnc?.modelGroup?.getSelectedModel()?.originalName);
+    const [expanded, setExpanded] = useState(true);
+    const isGreyscale = mode === 'greyscale';
+    const isSvg = sourceType === 'svg';
+    const isDXF = (originalName ? (originalName.substr(originalName.length - 4, 4).toLowerCase() === '.dxf') : false);
 
-        changeSelectedModelMode: PropTypes.func.isRequired,
-        changeSelectedModelShowOrigin: PropTypes.func.isRequired
-    };
-
-    state = {
-        expanded: true
-    };
-
-    actions = {
+    const actions = {
         onToggleExpand: () => {
-            this.setState(state => ({ expanded: !state.expanded }));
+            setExpanded(!expanded);
         },
-        changeSelectedModelMode: (mode) => {
-            const { sourceType } = this.props;
-            this.props.changeSelectedModelMode(sourceType, mode);
+        changeSelectedModelMode: (newMode) => {
+            changeSelectedModelMode(sourceType, newMode);
         }
     };
 
-    render() {
-        const { sourceType, mode, showOrigin, disabled, isDXF } = this.props;
-        const actions = this.actions;
-        const isGreyscale = mode === 'greyscale';
-        const isSvg = sourceType === 'svg';
-
-        return (
-            <React.Fragment>
-                <div className={classNames(styles['cnc-mode'], 'border-top-normal', 'margin-top-16')}>
-                    <Anchor className="sm-flex height-32 margin-vertical-8" onClick={this.actions.onToggleExpand}>
-                        <span className="sm-flex-width heading-3">{i18n._('Processing Mode')}</span>
-                        <SvgIcon
-                            name="DropdownLine"
-                            size={24}
-                            type={['static']}
-                            className={classNames(
-                                this.state.expanded ? '' : 'rotate180'
-                            )}
-                        />
-                    </Anchor>
-                    {this.state.expanded && (
-                        <React.Fragment>
-                            <div className={classNames('sm-flex', 'margin-vertical-8', 'align-c', 'justify-space-between', 'width-percent-50')}>
-                                { !isDXF && (
-                                    <div className={classNames(this.props.mode === 'greyscale' ? styles.selected : styles.unselected)}>
-                                        <Anchor
-                                            disabled={disabled}
-                                            onClick={() => actions.changeSelectedModelMode('greyscale')}
-                                        >
-                                            <i className={styles['cnc-mode__icon-greyscale']} />
-                                        </Anchor>
-                                        <span>{i18n._('RELIEF')}</span>
-                                    </div>
-                                )}
-                                {isSvg && (
-                                    <div className={classNames(this.props.mode === 'vector' ? styles.selected : styles.unselected)}>
-                                        <Anchor
-                                            disabled={disabled}
-                                            onClick={() => actions.changeSelectedModelMode('vector')}
-                                        >
-                                            <i className={styles['cnc-mode__icon-vector']} />
-                                        </Anchor>
-                                        <span>{i18n._('VECTOR')}</span>
-                                    </div>
-                                )}
-                            </div>
-                            <TipTrigger
-                                title={i18n._('Show Original Image')}
-                                content={i18n._('Shows the original image.')}
-                            >
-                                <div className="sm-flex height-32 margin-vertical-8">
-                                    <span className="sm-flex-width">{i18n._('Show Original Image')}</span>
-                                    <Checkbox
+    return (
+        <React.Fragment>
+            <div className={classNames(styles['cnc-mode'], 'border-top-normal', 'margin-top-16')}>
+                <Anchor className="sm-flex height-32 margin-vertical-8" onClick={actions.onToggleExpand}>
+                    <span className="sm-flex-width heading-3">{i18n._('Processing Mode')}</span>
+                    <SvgIcon
+                        name="DropdownLine"
+                        size={24}
+                        type={['static']}
+                        className={classNames(
+                            expanded ? '' : 'rotate180'
+                        )}
+                    />
+                </Anchor>
+                {expanded && (
+                    <React.Fragment>
+                        <div className={classNames('sm-flex', 'margin-vertical-8', 'align-c', 'justify-space-between', 'width-percent-50')}>
+                            { !isDXF && (
+                                <div className={classNames(mode === 'greyscale' ? styles.selected : styles.unselected)}>
+                                    <Anchor
                                         disabled={disabled}
-                                        className="sm-flex-auto"
-                                        checked={showOrigin}
-                                        onChange={this.props.changeSelectedModelShowOrigin}
-                                    />
+                                        onClick={() => actions.changeSelectedModelMode('greyscale')}
+                                    >
+                                        <i className={styles['cnc-mode__icon-greyscale']} />
+                                    </Anchor>
+                                    <span>{i18n._('RELIEF')}</span>
                                 </div>
-                            </TipTrigger>
-                            {isGreyscale && (
-                                <ReliefParameters disabled={disabled} />
                             )}
-                        </React.Fragment>
-                    )}
-                </div>
-            </React.Fragment>
-        );
-    }
-}
+                            {isSvg && (
+                                <div className={classNames(mode === 'vector' ? styles.selected : styles.unselected)}>
+                                    <Anchor
+                                        disabled={disabled}
+                                        onClick={() => actions.changeSelectedModelMode('vector')}
+                                    >
+                                        <i className={styles['cnc-mode__icon-vector']} />
+                                    </Anchor>
+                                    <span>{i18n._('VECTOR')}</span>
+                                </div>
+                            )}
+                        </div>
+                        <TipTrigger
+                            title={i18n._('Show Original Image')}
+                            content={i18n._('Shows the original image.')}
+                        >
+                            <div className="sm-flex height-32 margin-vertical-8">
+                                <span className="sm-flex-width">{i18n._('Show Original Image')}</span>
+                                <Checkbox
+                                    disabled={disabled}
+                                    className="sm-flex-auto"
+                                    checked={showOrigin}
+                                    onChange={changeSelectedModelShowOrigin}
+                                />
+                            </div>
+                        </TipTrigger>
+                        {isGreyscale && (
+                            <ReliefParameters disabled={disabled} />
+                        )}
+                    </React.Fragment>
+                )}
+            </div>
+        </React.Fragment>
+    );
+};
 
+ImageProcessMode.propTypes = {
+    disabled: PropTypes.bool,
+
+    changeSelectedModelMode: PropTypes.func.isRequired,
+    changeSelectedModelShowOrigin: PropTypes.func.isRequired
+};
 
 export default ImageProcessMode;

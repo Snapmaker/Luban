@@ -66,7 +66,13 @@ class AppLayout extends PureComponent {
         updateAutoupdateMessage: PropTypes.func.isRequired,
         updateShouldCheckForUpdate: PropTypes.func.isRequired,
         children: PropTypes.array.isRequired,
-        restartGuideTours: PropTypes.func.isRequired
+        restartGuideTours: PropTypes.func.isRequired,
+
+        printingGcodeFile: PropTypes.object,
+        laserGcodeFile: PropTypes.object,
+        cncGcodeFile: PropTypes.object,
+        workspaceGcodeFile: PropTypes.object,
+        exportFile: PropTypes.func.isRequired
     };
 
     state = {
@@ -78,6 +84,25 @@ class AppLayout extends PureComponent {
     activeTab = ''
 
     actions = {
+        onExport: (pathName) => {
+            let gcodeFile = null;
+            if (pathName === '/3dp') {
+                gcodeFile = this.props.printingGcodeFile;
+            }
+            if (pathName === '/laser') {
+                gcodeFile = this.props.laserGcodeFile;
+            }
+            if (pathName === '/cnc') {
+                gcodeFile = this.props.cncGcodeFile;
+            }
+            if (pathName === '/workspace') {
+                gcodeFile = this.props.workspaceGcodeFile;
+            }
+            if (gcodeFile === null) {
+                return;
+            }
+            this.props.exportFile(gcodeFile.uploadName);
+        },
         renderSettingModal: () => {
             const onClose = () => {
                 this.setState({
@@ -520,13 +545,7 @@ class AppLayout extends PureComponent {
             });
             UniApi.Event.on('appbar-menu:export-gcode', () => {
                 const pathname = this.props.currentModalPath || this.props.history.location.pathname;
-                switch (pathname) {
-                    case '/3dp': UniApi.Event.emit('appbar-menu:printing.export-gcode'); break;
-                    case '/laser': UniApi.Event.emit('appbar-menu:cnc-laser.export-gcode'); break;
-                    case '/cnc': UniApi.Event.emit('appbar-menu:cnc-laser.export-gcode'); break;
-                    case '/workspace': UniApi.Event.emit('appbar-menu:workspace.export-gcode'); break;
-                    default: break;
-                }
+                this.actions.onExport(pathname);
             });
 
             this.props.history.listen(() => {
@@ -603,15 +622,23 @@ const mapStateToProps = (state) => {
     const machineInfo = state.machine;
     const { currentModalPath } = state.appbarMenu;
     const { shouldCheckForUpdate } = machineInfo;
-    const { modelGroup } = state.printing;
+    const { modelGroup, gcodeFile: printingGcodeFile } = state.printing;
+    const { gcodeFile: laserGcodeFile } = state.laser;
+    const { gcodeFile: cncGcodeFile } = state.cnc;
+    const { gcodeFile: workspaceGcodeFile } = state.workspace;
+
     // const projectState = state.project;
     return {
         currentModalPath: currentModalPath ? currentModalPath.slice(1) : currentModalPath, // exclude hash character `#`
         machineInfo,
         shouldCheckForUpdate,
         store: state,
-        modelGroup
-        // projectState
+        modelGroup,
+
+        printingGcodeFile,
+        laserGcodeFile,
+        cncGcodeFile,
+        workspaceGcodeFile
     };
 };
 
@@ -636,7 +663,8 @@ const mapDispatchToProps = (dispatch) => {
         updateShouldCheckForUpdate: (shouldAutoUpdate) => dispatch(machineActions.updateShouldCheckForUpdate(shouldAutoUpdate)),
         updateAutoupdateMessage: (message) => dispatch(machineActions.updateAutoupdateMessage(message)),
         updateIsDownloading: (isDownloading) => dispatch(machineActions.updateIsDownloading(isDownloading)),
-        restartGuideTours: (pathname, history) => dispatch(projectActions.startProject(pathname, pathname, history, true))
+        restartGuideTours: (pathname, history) => dispatch(projectActions.startProject(pathname, pathname, history, true)),
+        exportFile: (fileName) => dispatch(projectActions.exportFile(fileName))
     };
 };
 

@@ -50,7 +50,6 @@ import PrintingConfigurationsWidget from '../widgets/PrintingConfigurations';
 import PrintingOutputWidget from '../widgets/PrintingOutput';
 import WifiTransport from '../widgets/WifiTransport';
 import EnclosureWidget from '../widgets/Enclosure';
-import CncLaserObjectList from '../widgets/CncLaserList';
 import JobType from '../widgets/JobType';
 import PrintingVisualizer from '../widgets/PrintingVisualizer';
 import HomePage from './HomePage';
@@ -82,7 +81,6 @@ const allWidgets = {
     'laser-test-focus': LaserTestFocusWidget,
     'cnc-path': CNCPathWidget,
     'cnc-output': CncLaserOutputWidget,
-    'cnc-laser-object-list': CncLaserObjectList,
     'toolpath-list': ToolPathListBox
 };
 
@@ -116,7 +114,6 @@ function useRenderMainToolBar(setShowHomePage, setShowJobType, setShowWorkspace,
                     >
                         {i18n._('Add Background')}
                     </span>
-
                 </div>
             </Menu.Item>
             <Menu.Item
@@ -350,7 +347,6 @@ function Laser({ location }) {
     const page = useSelector(state => state?.laser?.page);
     const history = useHistory();
     const thumbnail = useRef();
-    const modelGroup = useSelector(state => state[HEAD_LASER]?.modelGroup, shallowEqual);
     const toolPathGroup = useSelector(state => state[HEAD_LASER]?.toolPathGroup, shallowEqual);
     useUnsavedTitle(pageHeadType);
 
@@ -707,7 +703,6 @@ function Laser({ location }) {
                 <Thumbnail
                     ref={thumbnail}
                     toolPathGroup={toolPathGroup}
-                    modelGroup={modelGroup}
                 />
             </ProjectLayout>
             {warningRemovingModels}

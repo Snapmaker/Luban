@@ -293,7 +293,6 @@ function WifiTransport({ widgetActions }) {
         for (let i = 0; i < 5; i++) {
             changeNameInput[i] = React.createRef();
         }
-        UniApi.Event.on('appbar-menu:workspace.export-gcode', actions.onExport);
         UniApi.Event.on('appbar-menu:workspace.import', actions.importFile);
         if (gcodeFiles.length > 0) {
             onSelectFile(gcodeFiles[0].uploadName);
@@ -303,7 +302,6 @@ function WifiTransport({ widgetActions }) {
             for (let i = 0; i < 5; i++) {
                 changeNameInput[i] = null;
             }
-            UniApi.Event.off('appbar-menu:workspace.export-gcode', actions.onExport);
             UniApi.Event.off('appbar-menu:workspace.import', actions.importFile);
         };
     }, []);

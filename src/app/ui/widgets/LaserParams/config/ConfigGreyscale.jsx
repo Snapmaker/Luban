@@ -1,6 +1,6 @@
-import React, { PureComponent } from 'react';
+import React, { useEffect, useState } from 'react';
 import PropTypes from 'prop-types';
-import { connect } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import Slider from '../../../components/Slider';
 import Select from '../../../components/Select';
 import Checkbox from '../../../components/Checkbox';
@@ -8,297 +8,231 @@ import i18n from '../../../../lib/i18n';
 import { NumberInput as Input } from '../../../components/Input';
 import TipTrigger from '../../../components/TipTrigger';
 import { actions as editorActions } from '../../../../flux/editor';
+import { HEAD_LASER } from '../../../../constants';
 
-class ConfigGreyscale extends PureComponent {
-    static propTypes = {
-        invert: PropTypes.bool,
-        contrast: PropTypes.number.isRequired,
-        brightness: PropTypes.number.isRequired,
-        whiteClip: PropTypes.number.isRequired,
-        algorithm: PropTypes.string.isRequired,
-        disabled: PropTypes.bool,
+const ConfigGreyscale = ({ disabled }) => {
+    const dispatch = useDispatch();
 
-        updateSelectedModelConfig: PropTypes.func.isRequired,
-        processSelectedModel: PropTypes.func.isRequired
-    };
+    const invert = useSelector(state => state?.laser?.modelGroup?.getSelectedModelArray()[0]?.config?.invert);
+    const contrast = useSelector(state => state?.laser?.modelGroup?.getSelectedModelArray()[0]?.config?.contrast);
+    const brightness = useSelector(state => state?.laser?.modelGroup?.getSelectedModelArray()[0]?.config?.brightness);
+    const whiteClip = useSelector(state => state?.laser?.modelGroup?.getSelectedModelArray()[0]?.config?.whiteClip);
+    const algorithm = useSelector(state => state?.laser?.modelGroup?.getSelectedModelArray()[0]?.config?.algorithm);
 
-    state = {
-        expanded: true,
-        contrast: 0,
-        brightness: 0,
-        whiteClip: 0
-    };
+    const [expanded, setExpended] = useState(true);
+    const [tmpContrast, setContrast] = useState(contrast);
+    const [tmpBrightness, setBrightness] = useState(brightness);
+    const [tmpWhiteClip, setWhiteClip] = useState(whiteClip);
 
-    actions = {
+    useEffect(() => {
+        setContrast(contrast);
+    }, [contrast]);
+    useEffect(() => {
+        setBrightness(brightness);
+    }, [brightness]);
+    useEffect(() => {
+        setWhiteClip(whiteClip);
+    }, [whiteClip]);
+
+    const actions = {
         onToggleExpand: () => {
-            this.setState(state => ({ expanded: !state.expanded }));
+            setExpended(!expanded);
         },
         onInverseBW: () => {
-            this.props.updateSelectedModelConfig({ invert: !this.props.invert });
+            dispatch(editorActions.updateSelectedModelConfig(HEAD_LASER, { invert: !invert }));
         },
-        onChangeContrast: (contrast) => {
-            this.setState({
-                contrast
-            });
+        onChangeContrast: (newContrast) => {
+            setContrast(newContrast);
         },
-        onAfterChangeContrast: () => {
-            const { contrast } = this.state;
-            this.props.updateSelectedModelConfig({ contrast });
-            this.props.processSelectedModel();
+        onAfterChangeContrast: (newContrast = undefined) => {
+            dispatch(editorActions.updateSelectedModelConfig(HEAD_LASER, { contrast: (newContrast ?? tmpContrast) }));
+            dispatch(editorActions.processSelectedModel(HEAD_LASER));
         },
-        onChangeBrightness: (brightness) => {
-            this.setState({
-                brightness
-            });
+        onChangeBrightness: (newBrightness) => {
+            setBrightness(newBrightness);
         },
-        onAfterChangeBrightness: () => {
-            const { brightness } = this.state;
-            this.props.updateSelectedModelConfig({ brightness });
-            this.props.processSelectedModel();
+        onAfterChangeBrightness: (newBrightness = undefined) => {
+            dispatch(editorActions.updateSelectedModelConfig(HEAD_LASER, { brightness: (newBrightness ?? tmpBrightness) }));
+            dispatch(editorActions.processSelectedModel(HEAD_LASER));
         },
-        onChangeWhiteClip: (whiteClip) => {
-            this.setState({
-                whiteClip
-            });
+        onChangeWhiteClip: (newWhiteClip) => {
+            setWhiteClip(newWhiteClip);
         },
-        onAfterChangeWhiteClip: () => {
-            const { whiteClip } = this.state;
-            this.props.updateSelectedModelConfig({ whiteClip });
-            this.props.processSelectedModel();
+        onAfterChangeWhiteClip: (newWhiteClip) => {
+            dispatch(editorActions.updateSelectedModelConfig(HEAD_LASER, { whiteClip: (newWhiteClip ?? tmpWhiteClip) }));
+            dispatch(editorActions.processSelectedModel(HEAD_LASER));
         },
         onChangeAlgorithm: (options) => {
-            this.props.updateSelectedModelConfig({ algorithm: options.value });
+            dispatch(editorActions.updateSelectedModelConfig(HEAD_LASER, { algorithm: options.value }));
         }
     };
 
-    componentDidMount() {
-        const { contrast, brightness, whiteClip } = this.props;
-        this.setState({
-            contrast,
-            brightness,
-            whiteClip
-        });
-    }
+    return (
+        <div>
+            {expanded && (
+                <React.Fragment>
+                    <div>
+                        <TipTrigger
+                            title={i18n._('Invert')}
+                            content={i18n._('Inverts the color of images, white becomes black, and black becomes white.')}
+                        >
+                            <div className="sm-flex height-32 margin-vertical-8">
+                                <span className="sm-flex-width">{i18n._('Invert')}</span>
+                                <Checkbox
+                                    disabled={disabled}
+                                    className="sm-flex-auto"
+                                    checked={invert}
+                                    onChange={() => {
+                                        actions.onInverseBW();
+                                        dispatch(editorActions.processSelectedModel(HEAD_LASER));
+                                    }}
+                                />
+                            </div>
+                        </TipTrigger>
+                        <TipTrigger
+                            title={i18n._('Contrast')}
+                            content={i18n._('Set the disparity between darkness and brightness.')}
+                        >
+                            <div className="sm-flex height-32 margin-vertical-8">
+                                <span className="sm-flex-width">{i18n._('Contrast')}</span>
+                                <Slider
+                                    disabled={disabled}
+                                    size="middle"
+                                    value={tmpContrast}
+                                    min={0}
+                                    max={100}
+                                    onChange={actions.onChangeContrast}
+                                    onAfterChange={actions.onAfterChangeContrast}
+                                    className="padding-right-8"
+                                />
+                                <Input
+                                    disabled={disabled}
+                                    size="super-small"
+                                    value={tmpContrast}
+                                    min={0}
+                                    max={100}
+                                    onChange={(value) => {
+                                        actions.onAfterChangeContrast(value);
+                                    }}
+                                />
+                            </div>
+                        </TipTrigger>
 
-    componentDidUpdate() {
+                        <TipTrigger
+                            title={i18n._('Brightness')}
+                            content={i18n._('Set the brightness of the image. The bigger the value is, the brighter the image will be.')}
+                        >
+                            <div className="sm-flex height-32 margin-vertical-8">
+                                <span className="sm-flex-width">{i18n._('Brightness')}</span>
+                                <Slider
+                                    size="middle"
+                                    disabled={disabled}
+                                    value={tmpBrightness}
+                                    min={0}
+                                    max={100}
+                                    onChange={actions.onChangeBrightness}
+                                    onAfterChange={actions.onAfterChangeBrightness}
+                                    className="padding-right-8"
+                                />
+                                <Input
+                                    disabled={disabled}
+                                    size="super-small"
+                                    value={tmpBrightness}
+                                    min={0}
+                                    max={100}
+                                    onChange={(value) => {
+                                        actions.onAfterChangeBrightness(value);
+                                    }}
+                                />
+                            </div>
+                        </TipTrigger>
+                        <TipTrigger
+                            title={i18n._('White Clip')}
+                            content={i18n._('Set the threshold to turn the color that is not pure white into pure white. Zero is taken to be black, and 255 is taken to be white. Colors above this value will be rendered into pure white.')}
+                        >
 
-    }
+                            <div className="sm-flex height-32 margin-vertical-8">
+                                <span className="sm-flex-width">{i18n._('White Clip')}</span>
+                                <Slider
+                                    disabled={disabled}
+                                    size="middle"
+                                    value={tmpWhiteClip}
+                                    min={0}
+                                    max={255}
+                                    onChange={actions.onChangeWhiteClip}
+                                    onAfterChange={actions.onAfterChangeWhiteClip}
+                                    className="padding-right-8"
+                                />
+                                <Input
+                                    disabled={disabled}
+                                    size="super-small"
+                                    value={tmpWhiteClip}
+                                    min={0}
+                                    max={255}
+                                    onChange={(value) => {
+                                        actions.onAfterChangeWhiteClip(value);
+                                    }}
+                                />
+                            </div>
+                        </TipTrigger>
+                        <TipTrigger
+                            title={i18n._('Algorithm')}
+                            content={i18n._('Select an algorithm for image processing.')}
+                        >
 
-    getSnapshotBeforeUpdate(prevProps) {
-        const { contrast, brightness, whiteClip } = this.props;
-        if (contrast !== prevProps.contrast) {
-            this.setState({
-                contrast
-            });
-        }
-        if (brightness !== prevProps.brightness) {
-            this.setState({
-                brightness
-            });
-        }
-        if (whiteClip !== prevProps.whiteClip) {
-            this.setState({
-                whiteClip
-            });
-        }
-        return this.props;
-    }
-
-    render() {
-        const { invert, algorithm, disabled } = this.props;
-
-        return (
-            <div>
-                {this.state.expanded && (
-                    <React.Fragment>
-                        <div>
-                            <TipTrigger
-                                title={i18n._('Invert')}
-                                content={i18n._('Inverts the color of images, white becomes black, and black becomes white.')}
-                            >
-                                <div className="sm-flex height-32 margin-vertical-8">
-                                    <span className="sm-flex-width">{i18n._('Invert')}</span>
-                                    <Checkbox
-                                        disabled={disabled}
-                                        className="sm-flex-auto"
-                                        checked={invert}
-                                        onChange={() => {
-                                            this.actions.onInverseBW();
-                                            this.props.processSelectedModel();
-                                        }}
-                                    />
-                                </div>
-                            </TipTrigger>
-                            <TipTrigger
-                                title={i18n._('Contrast')}
-                                content={i18n._('Set the disparity between darkness and brightness.')}
-                            >
-                                <div className="sm-flex height-32 margin-vertical-8">
-                                    <span className="sm-flex-width">{i18n._('Contrast')}</span>
-                                    <Slider
-                                        disabled={disabled}
-                                        size="middle"
-                                        value={this.state.contrast}
-                                        min={0}
-                                        max={100}
-                                        onChange={this.actions.onChangeContrast}
-                                        onAfterChange={this.actions.onAfterChangeContrast}
-                                        className="padding-right-8"
-                                    />
-                                    <Input
-                                        disabled={disabled}
-                                        size="super-small"
-                                        value={this.state.contrast}
-                                        min={0}
-                                        max={100}
-                                        onChange={async (value) => {
-                                            await this.actions.onChangeContrast(value);
-                                            this.actions.onAfterChangeContrast();
-                                        }}
-                                    />
-                                </div>
-                            </TipTrigger>
-
-                            <TipTrigger
-                                title={i18n._('Brightness')}
-                                content={i18n._('Set the brightness of the image. The bigger the value is, the brighter the image will be.')}
-                            >
-                                <div className="sm-flex height-32 margin-vertical-8">
-                                    <span className="sm-flex-width">{i18n._('Brightness')}</span>
-                                    <Slider
-                                        size="middle"
-                                        disabled={disabled}
-                                        value={this.state.brightness}
-                                        min={0}
-                                        max={100}
-                                        onChange={this.actions.onChangeBrightness}
-                                        onAfterChange={this.actions.onAfterChangeBrightness}
-                                        className="padding-right-8"
-                                    />
-                                    <Input
-                                        disabled={disabled}
-                                        size="super-small"
-                                        value={this.state.brightness}
-                                        min={0}
-                                        max={100}
-                                        onChange={async (value) => {
-                                            await this.actions.onChangeBrightness(value);
-                                            this.actions.onAfterChangeBrightness();
-                                        }}
-                                    />
-                                </div>
-                            </TipTrigger>
-                            <TipTrigger
-                                title={i18n._('White Clip')}
-                                content={i18n._('Set the threshold to turn the color that is not pure white into pure white. Zero is taken to be black, and 255 is taken to be white. Colors above this value will be rendered into pure white.')}
-                            >
-
-                                <div className="sm-flex height-32 margin-vertical-8">
-                                    <span className="sm-flex-width">{i18n._('White Clip')}</span>
-                                    <Slider
-                                        disabled={disabled}
-                                        size="middle"
-                                        value={this.state.whiteClip}
-                                        min={0}
-                                        max={255}
-                                        onChange={this.actions.onChangeWhiteClip}
-                                        onAfterChange={this.actions.onAfterChangeWhiteClip}
-                                        className="padding-right-8"
-                                    />
-                                    <Input
-                                        disabled={disabled}
-                                        size="super-small"
-                                        value={this.state.whiteClip}
-                                        min={0}
-                                        max={255}
-                                        onChange={async (value) => {
-                                            await this.actions.onChangeWhiteClip(value);
-                                            this.actions.onAfterChangeWhiteClip();
-                                        }}
-                                    />
-                                </div>
-                            </TipTrigger>
-                            <TipTrigger
-                                title={i18n._('Algorithm')}
-                                content={i18n._('Select an algorithm for image processing.')}
-                            >
-
-                                <div className="sm-flex height-32 margin-vertical-8">
-                                    <span className="sm-flex-width">{i18n._('Algorithm')}</span>
-                                    <Select
-                                        disabled={disabled}
-                                        backspaceRemoves={false}
-                                        size="large"
-                                        clearable={false}
-                                        menuContainerStyle={{ zIndex: 5 }}
-                                        name="algorithm"
-                                        options={[{
-                                            value: 'FloydSteinburg',
-                                            label: 'Floyd-Steinburg'
-                                        }, {
-                                            value: 'JarvisJudiceNinke',
-                                            label: 'Jarvis-Judice-Ninke'
-                                        }, {
-                                            value: 'Stucki',
-                                            label: 'Stucki'
-                                        }, {
-                                            value: 'Atkinson',
-                                            label: 'Atkinson'
-                                        }, {
-                                            value: 'Burkes',
-                                            label: 'Burkes'
-                                        }, {
-                                            value: 'Sierra2',
-                                            label: 'Sierra-2'
-                                        }, {
-                                            value: 'Sierra3',
-                                            label: 'Sierra-3'
-                                        }, {
-                                            value: 'SierraLite',
-                                            label: 'Sierra Lite'
-                                        }]}
-                                        placeholder=""
-                                        searchable={false}
-                                        value={algorithm}
-                                        onChange={(value) => {
-                                            this.actions.onChangeAlgorithm(value);
-                                            this.props.processSelectedModel();
-                                        }}
-                                    />
-                                </div>
-                            </TipTrigger>
-                        </div>
-                    </React.Fragment>
-                )}
-            </div>
-        );
-    }
-}
-
-
-const mapStateToProps = (state) => {
-    const { modelGroup } = state.laser;
-
-    // assume that only one model is selected
-    const selectedModels = modelGroup.getSelectedModelArray();
-    const model = selectedModels[0];
-
-    const { invert, contrast, brightness, whiteClip, algorithm } = model.config;
-
-    return {
-        invert,
-        contrast,
-        brightness,
-        whiteClip,
-        algorithm
-    };
+                            <div className="sm-flex height-32 margin-vertical-8">
+                                <span className="sm-flex-width">{i18n._('Algorithm')}</span>
+                                <Select
+                                    disabled={disabled}
+                                    backspaceRemoves={false}
+                                    size="large"
+                                    clearable={false}
+                                    menuContainerStyle={{ zIndex: 5 }}
+                                    name="algorithm"
+                                    options={[{
+                                        value: 'FloydSteinburg',
+                                        label: 'Floyd-Steinburg'
+                                    }, {
+                                        value: 'JarvisJudiceNinke',
+                                        label: 'Jarvis-Judice-Ninke'
+                                    }, {
+                                        value: 'Stucki',
+                                        label: 'Stucki'
+                                    }, {
+                                        value: 'Atkinson',
+                                        label: 'Atkinson'
+                                    }, {
+                                        value: 'Burkes',
+                                        label: 'Burkes'
+                                    }, {
+                                        value: 'Sierra2',
+                                        label: 'Sierra-2'
+                                    }, {
+                                        value: 'Sierra3',
+                                        label: 'Sierra-3'
+                                    }, {
+                                        value: 'SierraLite',
+                                        label: 'Sierra Lite'
+                                    }]}
+                                    placeholder=""
+                                    searchable={false}
+                                    value={algorithm}
+                                    onChange={(value) => {
+                                        actions.onChangeAlgorithm(value);
+                                        dispatch(editorActions.processSelectedModel(HEAD_LASER));
+                                    }}
+                                />
+                            </div>
+                        </TipTrigger>
+                    </div>
+                </React.Fragment>
+            )}
+        </div>
+    );
 };
 
-const mapDispatchToProps = (dispatch) => {
-    return {
-        updateSelectedModelConfig: (config) => dispatch(editorActions.updateSelectedModelConfig('laser', config)),
-        processSelectedModel: () => dispatch(editorActions.processSelectedModel('laser'))
-    };
+ConfigGreyscale.propTypes = {
+    disabled: PropTypes.bool
 };
 
-export default connect(mapStateToProps, mapDispatchToProps)(ConfigGreyscale);
+export default ConfigGreyscale;
