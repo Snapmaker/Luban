@@ -71,7 +71,6 @@ import { laserCncIntroStepOne, laserCncIntroStepTwo, laserCncIntroStepFive, lase
 
 const allWidgets = {
     'control': ControlWidget,
-    // 'axesPanel': DevelopAxesWidget,
     'connection': ConnectionWidget,
     'console': ConsoleWidget,
     'gcode': GCodeWidget,

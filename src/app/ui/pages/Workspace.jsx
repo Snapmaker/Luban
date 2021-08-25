@@ -58,7 +58,6 @@ import MachineSettingWidget from '../widgets/MachineSetting';
 
 const allWidgets = {
     'control': ControlWidget,
-    // 'axesPanel': DevelopAxesWidget,
     'connection': ConnectionWidget,
     'console': ConsoleWidget,
     'gcode': GCodeWidget,

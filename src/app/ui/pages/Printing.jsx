@@ -52,7 +52,6 @@ import Steps from '../components/Steps';
 
 const allWidgets = {
     'control': ControlWidget,
-    // 'axesPanel': DevelopAxesWidget,
     'connection': ConnectionWidget,
     'console': ConsoleWidget,
     'gcode': GCodeWidget,
