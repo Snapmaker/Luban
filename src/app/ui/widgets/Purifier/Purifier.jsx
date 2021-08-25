@@ -1,6 +1,6 @@
 import PropTypes from 'prop-types';
-import React, { PureComponent } from 'react';
-import { connect } from 'react-redux';
+import React, { useEffect, useState } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
 import classNames from 'classnames';
 import Switch from '../../components/Switch';
 import styles from './index.styl';
@@ -13,240 +13,195 @@ import i18n from '../../../lib/i18n';
 import log from '../../../lib/log';
 import { actions as machineActions } from '../../../flux/machine';
 
-class Purifier extends PureComponent {
-    static propTypes = {
-        widgetActions: PropTypes.object.isRequired,
-        isConnected: PropTypes.bool.isRequired,
-        connectionType: PropTypes.string.isRequired,
-        executeGcode: PropTypes.func.isRequired,
-        airPurifier: PropTypes.bool.isRequired,
-        airPurifierSwitch: PropTypes.bool.isRequired,
-        airPurifierFanSpeed: PropTypes.number.isRequired,
-        airPurifierFilterHealth: PropTypes.number.isRequired,
-        server: PropTypes.object.isRequired
-    };
+function Purifier({ widgetActions }) {
+    const { isConnected, server, connectionType, airPurifier, airPurifierSwitch, airPurifierFanSpeed, airPurifierFilterHealth } = useSelector(state => state.machine);
+    const [isFilterEnable, setIsFilterEnable] = useState(true);
+    const [workSpeed, setWorkSpeed] = useState(SPEED_HIGH);
+    const [filterLife, setFilterLife] = useState(2);
+    const dispatch = useDispatch();
 
-    state = {
-        isFilterEnable: true,
-        workSpeed: SPEED_HIGH,
-        filterLife: 2
-    };
-
-    actions = {
+    const actions = {
         onHandleFilterEnabled: () => {
-            const { isFilterEnable, workSpeed } = this.state;
-            if (this.props.connectionType === 'wifi') {
-                this.props.server.setFilterSwitch(!isFilterEnable, (errMsg, res) => {
+            if (connectionType === 'wifi') {
+                server.setFilterSwitch(!isFilterEnable, (errMsg, res) => {
                     if (errMsg) {
                         log.error(errMsg);
                         return;
                     }
                     if (res) {
-                        this.setState({
-                            isFilterEnable: res.airPurifierSwitch
-                        });
+                        setIsFilterEnable(res.airPurifierSwitch);
                     }
                 });
             } else {
-                this.props.executeGcode(`M1011 F${isFilterEnable ? 0 : workSpeed};`);
+                dispatch(machineActions.executeGcode(`M1011 F${isFilterEnable ? 0 : workSpeed};`));
             }
-            this.setState({
-                isFilterEnable: !this.state.isFilterEnable
-            });
+            setIsFilterEnable(!isFilterEnable);
         },
-        onChangeFilterSpeed: (workSpeed) => {
-            if (this.props.connectionType === 'wifi') {
-                this.props.server.setFilterWorkSpeed(workSpeed, (errMsg, res) => {
+        onChangeFilterSpeed: (_workSpeed) => {
+            if (connectionType === 'wifi') {
+                server.setFilterWorkSpeed(_workSpeed, (errMsg, res) => {
                     if (errMsg) {
                         log.error(errMsg);
                         return;
                     }
                     if (res) {
-                        this.setState({
-                            workSpeed: res.airPurifierFanSpeed
-                        });
+                        setWorkSpeed(res.airPurifierFanSpeed);
                     }
                 });
             } else {
-                if (this.state.isFilterEnable) {
-                    this.props.executeGcode(`M1011 F${workSpeed};`);
+                if (isFilterEnable) {
+                    dispatch(machineActions.executeGcode(`M1011 F${_workSpeed};`));
                 }
             }
-            this.setState({
-                workSpeed: workSpeed
-            });
+            setWorkSpeed(_workSpeed);
         }
     };
 
-    constructor(props) {
-        super(props);
-        props.widgetActions.setTitle(i18n._('Air Purifier'));
-    }
-
-    componentDidMount() {
-        if (!this.props.isConnected) {
-            this.props.widgetActions.setDisplay(false);
+    useEffect(() => {
+        widgetActions.setTitle(i18n._('Air Purifier'));
+        if (!isConnected) {
+            widgetActions.setDisplay(false);
             return;
         }
-        if (!this.props.airPurifier) {
-            this.props.widgetActions.setDisplay(false);
-            return;
+        if (!airPurifier) {
+            widgetActions.setDisplay(false);
+        } else {
+            widgetActions.setDisplay(true);
         }
-        if (this.props.airPurifier) {
-            this.props.widgetActions.setDisplay(true);
-        }
-    }
+    }, []);
 
-    componentWillReceiveProps(nextProps) {
-        if (!nextProps.isConnected) {
-            this.props.widgetActions.setDisplay(false);
-            return;
+    useEffect(() => {
+        if (!isConnected) {
+            widgetActions.setDisplay(false);
         }
-        if (!nextProps.airPurifier) {
-            this.props.widgetActions.setDisplay(false);
-            return;
-        }
-        if (nextProps.airPurifier) {
-            this.props.widgetActions.setDisplay(true);
-        }
+    }, [isConnected]);
 
-        if (nextProps.airPurifierSwitch !== this.state.isFilterEnable) {
-            this.setState({
-                isFilterEnable: nextProps.airPurifierSwitch
-            });
+    useEffect(() => {
+        if (!airPurifier) {
+            widgetActions.setDisplay(false);
+        } else {
+            widgetActions.setDisplay(true);
         }
-        if (nextProps.airPurifierFanSpeed !== this.state.workSpeed) {
-            this.setState({
-                workSpeed: nextProps.airPurifierFanSpeed
-            });
-        }
-        if (nextProps.airPurifierFilterHealth !== this.state.filterLife) {
-            this.setState({
-                filterLife: nextProps.airPurifierFilterHealth
-            });
-        }
-    }
+    }, [airPurifier]);
 
-    render() {
-        const { isFilterEnable, workSpeed, filterLife } = this.state;
+    useEffect(() => {
+        if (airPurifierSwitch !== isFilterEnable) {
+            setIsFilterEnable(airPurifierSwitch);
+        }
+    }, [airPurifierSwitch, isFilterEnable]);
 
-        return (
-            <div className="">
-                <div className="sm-flex justify-space-between margin-vertical-8">
-                    <span>{i18n._('Switch')}</span>
-                    {/* <button
+    useEffect(() => {
+        if (airPurifierFanSpeed !== workSpeed) {
+            setWorkSpeed(airPurifierFanSpeed);
+        }
+    }, [airPurifierFanSpeed, workSpeed]);
+
+    useEffect(() => {
+        if (airPurifierFilterHealth !== filterLife) {
+            setFilterLife(airPurifierFilterHealth);
+        }
+    }, [airPurifierFilterHealth, filterLife]);
+
+    return (
+        <div className="">
+            <div className="sm-flex justify-space-between margin-vertical-8">
+                <span>{i18n._('Switch')}</span>
+                {/* <button
+                    type="button"
+                    className={classNames(
+                        'sm-btn-small',
+                        isFilterEnable ? 'sm-btn-primary' : 'sm-btn-danger'
+                    )}
+                    style={{
+                        float: 'right'
+                    }}
+                    onClick={this.actions.onHandleFilterEnabled}
+                >
+                    {!isFilterEnable && <i className="fa fa-toggle-off" />}
+                    {!!isFilterEnable && <i className="fa fa-toggle-on" />}
+                    <span className="space" />
+                    {isFilterEnable ? i18n._('On') : i18n._('Off')}
+                </button> */}
+                <Switch
+                    onClick={actions.onHandleFilterEnabled}
+                    checked={isFilterEnable}
+                />
+            </div>
+            <div className="sm-flex justify-space-between margin-vertical-8">
+                <span>{i18n._('Fan Speed')}</span>
+                <span
+                    className={classNames(
+                        'border-radius-8',
+                        styles['btn-3btns']
+                    )}
+                >
+                    <button
                         type="button"
                         className={classNames(
-                            'sm-btn-small',
-                            isFilterEnable ? 'sm-btn-primary' : 'sm-btn-danger'
+                            (workSpeed === SPEED_LOW) ? styles.active : styles.passive,
                         )}
-                        style={{
-                            float: 'right'
-                        }}
-                        onClick={this.actions.onHandleFilterEnabled}
+                        onClick={() => actions.onChangeFilterSpeed(SPEED_LOW)}
                     >
-                        {!isFilterEnable && <i className="fa fa-toggle-off" />}
-                        {!!isFilterEnable && <i className="fa fa-toggle-on" />}
-                        <span className="space" />
-                        {isFilterEnable ? i18n._('On') : i18n._('Off')}
-                    </button> */}
-                    <Switch
-                        onClick={this.actions.onHandleFilterEnabled}
-                        checked={isFilterEnable}
-                    />
-                </div>
-                <div className="sm-flex justify-space-between margin-vertical-8">
-                    <span>{i18n._('Fan Speed')}</span>
-                    <span
+                        {i18n._('Low')}
+                    </button>
+                    <button
+                        type="button"
                         className={classNames(
-                            'border-radius-8',
-                            styles['btn-3btns']
+                            (workSpeed === SPEED_MEDIUM) ? styles.active : styles.passive,
                         )}
+                        onClick={() => actions.onChangeFilterSpeed(SPEED_MEDIUM)}
                     >
-                        <button
-                            type="button"
-                            className={classNames(
-                                (workSpeed === SPEED_LOW) ? styles.active : styles.passive,
-                            )}
-                            onClick={() => this.actions.onChangeFilterSpeed(SPEED_LOW)}
-                        >
-                            {i18n._('Low')}
-                        </button>
-                        <button
-                            type="button"
-                            className={classNames(
-                                (workSpeed === SPEED_MEDIUM) ? styles.active : styles.passive,
-                            )}
-                            onClick={() => this.actions.onChangeFilterSpeed(SPEED_MEDIUM)}
-                        >
-                            {i18n._('Medium')}
-                        </button>
-                        <button
-                            type="button"
-                            className={classNames(
-                                (workSpeed === SPEED_HIGH) ? styles.active : styles.passive,
-                            )}
-                            onClick={() => this.actions.onChangeFilterSpeed(SPEED_HIGH)}
-                        >
-                            {i18n._('High')}
-                        </button>
-                    </span>
-                </div>
-                <div className="sm-flex justify-space-between margin-vertical-8">
-                    <span>{i18n._('Filter Life')}</span>
-                    <span
+                        {i18n._('Medium')}
+                    </button>
+                    <button
+                        type="button"
                         className={classNames(
-                            'border-radius-8',
-                            styles.lifeLength
+                            (workSpeed === SPEED_HIGH) ? styles.active : styles.passive,
                         )}
+                        onClick={() => actions.onChangeFilterSpeed(SPEED_HIGH)}
                     >
-                        <span
-                            className={classNames(
-                                'space',
-                                filterLife >= 0 ? styles.active : styles.passive
-                            )}
-                        />
-                        <span
-                            className={classNames(
-                                'space',
-                                filterLife >= 1 ? styles.active : styles.passive
-                            )}
-                        />
-                        <span
-                            className={classNames(
-                                'space',
-                                filterLife >= 2 ? styles.active : styles.passive
-                            )}
-                        />
-                    </span>
-                </div>
-                {(filterLife === 0) && (
-                    <div className={classNames(styles.notice)}>
-                        {i18n._('You should replace the filter cartridge.')}
-                    </div>
-                )}
+                        {i18n._('High')}
+                    </button>
+                </span>
             </div>
-        );
-    }
+            <div className="sm-flex justify-space-between margin-vertical-8">
+                <span>{i18n._('Filter Life')}</span>
+                <span
+                    className={classNames(
+                        'border-radius-8',
+                        styles.lifeLength
+                    )}
+                >
+                    <span
+                        className={classNames(
+                            'space',
+                            filterLife >= 0 ? styles.active : styles.passive
+                        )}
+                    />
+                    <span
+                        className={classNames(
+                            'space',
+                            filterLife >= 1 ? styles.active : styles.passive
+                        )}
+                    />
+                    <span
+                        className={classNames(
+                            'space',
+                            filterLife >= 2 ? styles.active : styles.passive
+                        )}
+                    />
+                </span>
+            </div>
+            {(filterLife === 0) && (
+                <div className={classNames(styles.notice)}>
+                    {i18n._('You should replace the filter cartridge.')}
+                </div>
+            )}
+        </div>
+    );
 }
-
-const mapStateToProps = (state) => {
-    const { isConnected, server, connectionType, airPurifier, airPurifierSwitch, airPurifierFanSpeed, airPurifierFilterHealth } = state.machine;
-    return {
-        isConnected,
-        connectionType,
-        airPurifier,
-        airPurifierSwitch,
-        airPurifierFanSpeed,
-        airPurifierFilterHealth,
-        server
-    };
+Purifier.propTypes = {
+    widgetActions: PropTypes.object.isRequired
 };
 
-const mapDispatchToProps = (dispatch) => {
-    return {
-        executeGcode: (gcode, context) => dispatch(machineActions.executeGcode(gcode, context))
-    };
-};
-
-export default connect(mapStateToProps, mapDispatchToProps)(Purifier);
+export default Purifier;

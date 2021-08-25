@@ -1,5 +1,5 @@
 import PropTypes from 'prop-types';
-import React, { PureComponent } from 'react';
+import React, { useEffect, useState } from 'react';
 // import classNames from 'classnames';
 import api from '../../../api';
 import i18n from '../../../lib/i18n';
@@ -13,44 +13,29 @@ import {
 } from '../../../constants';
 
 
-class MacroWidget extends PureComponent {
-    static propTypes = {
-        widgetId: PropTypes.string.isRequired,
-        widgetActions: PropTypes.object.isRequired
-    };
+function MacroWidget({ widgetId, widgetActions }) {
+    const [modalName, setModalName] = useState(MODAL_NONE);
+    const [modalParams, setModalParams] = useState({});
+    const [macros, setMacros] = useState([]);
 
-    state = {
-        modalName: MODAL_NONE,
-        modalParams: {},
-        macros: []
-    };
-
-    actions = {
+    const actions = {
         openModal: (name = MODAL_NONE, params = {}) => {
-            this.setState({
-                modalName: name,
-                modalParams: params
-            });
+            setModalName(name);
+            setModalParams(params);
         },
         closeModal: () => {
-            this.setState({
-                modalName: MODAL_NONE,
-                modalParams: {}
-            });
+            setModalName(MODAL_NONE);
+            setModalParams({});
         },
         updateModal: (modal) => {
-            this.setState({
-                ...this.state.modal,
-                modalName: modal.name,
-                modalParams: modal.params
-            });
+            setModalName(modal.name);
+            setModalParams(modal.params);
         },
         addMacro: async ({ name, content, repeat }) => {
             try {
                 await api.macros.create({ name, content, repeat });
                 const res = await api.macros.fetch();
-                const { records: macros } = res.body;
-                this.setState({ macros: macros });
+                setMacros(res.body.records);
             } catch (err) {
                 // Ignore error
             }
@@ -60,8 +45,7 @@ class MacroWidget extends PureComponent {
                 let res;
                 res = await api.macros.delete(id);
                 res = await api.macros.fetch();
-                const { records: macros } = res.body;
-                this.setState({ macros: macros });
+                setMacros(res.body.records);
             } catch (err) {
                 // Ignore error
             }
@@ -71,25 +55,32 @@ class MacroWidget extends PureComponent {
                 let res;
                 res = await api.macros.update(id, { name, content, repeat });
                 res = await api.macros.fetch();
-                const { records: macros } = res.body;
-                this.setState({ macros: macros });
+                setMacros(res.body.records);
             } catch (err) {
                 // Ignore error
             }
         },
         openAddMacroModal: () => {
-            this.actions.openModal(MODAL_ADD_MACRO);
+            actions.openModal(MODAL_ADD_MACRO);
         }
     };
 
-    constructor(props) {
-        super(props);
-        this.props.widgetActions.setTitle(i18n._('Macro'));
-        this.props.widgetActions.setControlButtons(
+    const fetchMacros = async () => {
+        try {
+            const res = await api.macros.fetch();
+            setMacros(res.body.records);
+        } catch (err) {
+            // Ignore error
+        }
+    };
+
+    useEffect(() => {
+        widgetActions.setTitle(i18n._('Macro'));
+        widgetActions.setControlButtons(
             [
                 {
                     title: 'New Macro',
-                    onClick: this.actions.openAddMacroModal,
+                    onClick: actions.openAddMacroModal,
                     name: 'Increase',
                     type: ['static']
                 },
@@ -97,53 +88,38 @@ class MacroWidget extends PureComponent {
                 'SMDropdown'
             ]
         );
-    }
+        fetchMacros();
+    }, []);
 
-    componentDidMount() {
-        this.fetchMacros();
-    }
-
-
-    fetchMacros = async () => {
-        try {
-            const res = await api.macros.fetch();
-            const { records: macros } = res.body;
-            this.setState({ macros: macros });
-        } catch (err) {
-            // Ignore error
-        }
-    };
-
-    render() {
-        const { macros } = this.state;
-        const modalName = this.state.modalName;
-
-        return (
-            <div>
-                {modalName === MODAL_ADD_MACRO && (
-                    <AddMacro
-                        modalParams={this.state.modalParams}
-                        addMacro={this.actions.addMacro}
-                        closeModal={this.actions.closeModal}
-                    />
-                )}
-                {modalName === MODAL_EDIT_MACRO && (
-                    <EditMacro
-                        modalParams={this.state.modalParams}
-                        updateMacro={this.actions.updateMacro}
-                        deleteMacro={this.actions.deleteMacro}
-                        closeModal={this.actions.closeModal}
-                    />
-                )}
-                <Macro
-                    widgetId={this.props.widgetId}
-                    macros={macros}
-                    openModal={this.actions.openModal}
-                    updateModal={this.actions.updateModal}
+    return (
+        <div>
+            {modalName === MODAL_ADD_MACRO && (
+                <AddMacro
+                    modalParams={modalParams}
+                    addMacro={actions.addMacro}
+                    closeModal={actions.closeModal}
                 />
-            </div>
-        );
-    }
+            )}
+            {modalName === MODAL_EDIT_MACRO && (
+                <EditMacro
+                    modalParams={modalParams}
+                    updateMacro={actions.updateMacro}
+                    deleteMacro={actions.deleteMacro}
+                    closeModal={actions.closeModal}
+                />
+            )}
+            <Macro
+                widgetId={widgetId}
+                macros={macros}
+                openModal={actions.openModal}
+                updateModal={actions.updateModal}
+            />
+        </div>
+    );
 }
+MacroWidget.propTypes = {
+    widgetId: PropTypes.string.isRequired,
+    widgetActions: PropTypes.object.isRequired
+};
 
 export default (MacroWidget);

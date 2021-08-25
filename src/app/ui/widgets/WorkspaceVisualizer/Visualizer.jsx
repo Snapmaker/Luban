@@ -567,7 +567,7 @@ class Visualizer extends Component {
 
     setupToolhead() {
         const color = colornames('silver');
-        const url = 'textures/brushed-steel-texture.jpg';
+        const url = 'resources/textures/brushed-steel-texture.jpg';
         loadTexture(url, (err, texture) => {
             this.toolhead = new ToolHead(color, texture);
             this.visualizerGroup.object.add(this.toolhead);

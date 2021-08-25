@@ -1,9 +1,9 @@
-import React, { PureComponent } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import PropTypes from 'prop-types';
 import noop from 'lodash/noop';
 
 import classNames from 'classnames';
-import { connect } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import _ from 'lodash';
 import path from 'path';
 import request from 'superagent';
@@ -31,89 +31,63 @@ import Checkbox from '../../components/Checkbox';
 // import controller from '../../lib/controller';
 
 
-class WifiTransport extends PureComponent {
-    static propTypes = {
-        widgetActions: PropTypes.object.isRequired,
+const changeNameInput = [];
+function WifiTransport({ widgetActions }) {
+    const { gcodeFiles } = useSelector(state => state.workspace);
+    const { server, isConnected, headType, connectionType } = useSelector(state => state.machine);
+    const [loadToWorkspaceOnLoad, setLoadToWorkspaceOnLoad] = useState(true);
+    const [selectFileName, setSelectFileName] = useState('');
+    const [selectFileType, setSelectFileType] = useState('');
+    const dispatch = useDispatch();
+    const fileInput = useRef();
 
-        gcodeFiles: PropTypes.array.isRequired,
-
-        headType: PropTypes.string,
-        isConnected: PropTypes.bool.isRequired,
-        connectionType: PropTypes.string.isRequired,
-        server: PropTypes.object.isRequired,
-
-        renameGcodeFile: PropTypes.func.isRequired,
-        removeGcodeFile: PropTypes.func.isRequired,
-        exportFile: PropTypes.func.isRequired,
-
-        uploadGcodeFile: PropTypes.func.isRequired,
-        renderGcodeFile: PropTypes.func.isRequired,
-        uploadGcodeFileToList: PropTypes.func.isRequired
-    };
-
-    fileInput = React.createRef();
-
-    changeNameInput = [];
-
-
-    state = {
-        loadToWorkspaceOnLoad: true,
-        selectFileName: '',
-        selectFileType: ''
-    };
-
-
-    actions = {
+    const actions = {
         onChangeFile: async (event) => {
             const file = event.target.files[0];
-            const { loadToWorkspaceOnLoad } = this.state;
 
             if (loadToWorkspaceOnLoad) {
-                this.props.uploadGcodeFile(file);
+                dispatch(workspaceActions.uploadGcodeFile(file));
             } else {
-                this.props.uploadGcodeFileToList(file);
+                dispatch(workspaceActions.uploadGcodeFileToList(file));
             }
         },
         onClickToUpload: () => {
-            this.fileInput.current.value = null;
-            this.fileInput.current.click();
+            fileInput.current.value = null;
+            fileInput.current.click();
         },
         onExport: () => {
-            if (!this.state.selectFileName) {
+            if (!selectFileName) {
                 return;
             }
-            this.props.exportFile(this.state.selectFileName);
+            dispatch(projectActions.exportFile(selectFileName));
         },
         onChangeShouldPreview: () => {
-            this.setState(state => ({
-                loadToWorkspaceOnLoad: !state.loadToWorkspaceOnLoad
-            }));
+            setLoadToWorkspaceOnLoad(!loadToWorkspaceOnLoad);
         },
 
         loadGcodeToWorkspace: () => {
-            const selectFileName = this.state.selectFileName;
-            const find = this.props.gcodeFiles.find(v => v.uploadName === selectFileName);
+            const find = gcodeFiles.find(v => v.uploadName === selectFileName);
             if (!find) {
                 return;
             }
-            this.props.renderGcodeFile(find);
+            dispatch(workspaceActions.renderGcodeFile(find, false));
         },
 
         // File item operations
         onRenameStart: (uploadName, index, event) => {
-            this.props.renameGcodeFile(uploadName, null, true);
+            dispatch(workspaceActions.renameGcodeFile(uploadName, null, true));
             event.stopPropagation();
             setTimeout(() => {
-                this.changeNameInput[index].current.focus();
+                changeNameInput[index].current.focus();
             }, 0);
         },
         onRenameEnd: (uploadName, index) => {
-            let newName = this.changeNameInput[index].current.value;
+            let newName = changeNameInput[index].current.value;
             const m = uploadName.match(/(.gcode|.cnc|.nc)$/);
             if (m) {
                 newName += m[0];
             }
-            this.props.renameGcodeFile(uploadName, newName, false);
+            dispatch(workspaceActions.renameGcodeFile(uploadName, newName, false));
         },
         onKeyDown: (e) => {
             let keynum;
@@ -126,12 +100,12 @@ class WifiTransport extends PureComponent {
                 e.target.blur();
             }
         },
-        onSelectFile: (selectFileName, name, event) => {
+        onSelectFile: (_selectFileName, name, event) => {
             if (event && (event.target.className.indexOf('input-select') > -1 || event.target.className.indexOf('fa-check') > -1)) {
                 return;
             }
             // this.props.renameGcodeFile(selectFileName, name, false, true);
-            const filename = path.basename(selectFileName);
+            const filename = path.basename(_selectFileName);
             let type = '';
             if (filename.endsWith('.gcode')) {
                 type = MACHINE_HEAD_TYPE['3DP'].value;
@@ -142,20 +116,16 @@ class WifiTransport extends PureComponent {
             if (filename.endsWith('.cnc')) {
                 type = MACHINE_HEAD_TYPE.CNC.value;
             }
-            if (this.state.selectFileName === selectFileName) {
-                this.setState({
-                    selectFileName: '',
-                    selectFileType: type
-                });
+            if (selectFileName === _selectFileName) {
+                setSelectFileName('');
+                setSelectFileType(type);
             } else {
-                this.setState({
-                    selectFileName: selectFileName,
-                    selectFileType: type
-                });
+                setSelectFileName(_selectFileName);
+                setSelectFileType(type);
             }
         },
         onRemoveFile: (gcodeFile) => {
-            this.props.removeGcodeFile(gcodeFile);
+            dispatch(workspaceActions.removeGcodeFile(gcodeFile));
         },
 
         // Wi-Fi transfer file to Snapmaker
@@ -166,8 +136,7 @@ class WifiTransport extends PureComponent {
                 iconColor: '#4CB518',
                 img: 'WarningTipsProgress'
             }).ref;
-            const selectFileName = this.state.selectFileName;
-            const find = this.props.gcodeFiles.find(v => v.uploadName === selectFileName);
+            const find = gcodeFiles.find(v => v.uploadName === selectFileName);
             if (!find) {
                 return;
             }
@@ -176,7 +145,7 @@ class WifiTransport extends PureComponent {
                 const gcode = res.text;
                 const blob = new Blob([gcode], { type: 'text/plain' });
                 const file = new File([blob], find.name);
-                this.props.server.uploadFile(find.name, file, (err, data, text) => {
+                server.uploadFile(find.name, file, (err, data, text) => {
                     isSendingFile.current.removeContainer();
                     if (err) {
                         modalSmallHOC({
@@ -198,228 +167,196 @@ class WifiTransport extends PureComponent {
         },
         importFile: (fileObj) => {
             if (fileObj) {
-                this.actions.onChangeFile({
+                actions.onChangeFile({
                     target: {
                         files: [fileObj]
                     }
                 });
             } else {
-                this.actions.onClickToUpload();
+                actions.onClickToUpload();
             }
         }
     };
 
+    useEffect(() => {
+        widgetActions.setTitle(i18n._('G-code Files'));
 
-    constructor(props) {
-        super(props);
-        this.props.widgetActions.setTitle(i18n._('G-code Files'));
-    }
-
-    componentDidMount() {
         for (let i = 0; i < 5; i++) {
-            this.changeNameInput[i] = React.createRef();
+            changeNameInput[i] = React.createRef();
         }
-        UniApi.Event.on('appbar-menu:workspace.export-gcode', this.actions.onExport);
-        UniApi.Event.on('appbar-menu:workspace.import', this.actions.importFile);
-        if (this.props.gcodeFiles.length > 0) {
-            this.actions.onSelectFile(this.props.gcodeFiles[0].uploadName);
+        UniApi.Event.on('appbar-menu:workspace.export-gcode', actions.onExport);
+        UniApi.Event.on('appbar-menu:workspace.import', actions.importFile);
+        if (gcodeFiles.length > 0) {
+            actions.onSelectFile(gcodeFiles[0].uploadName);
         }
-    }
 
-    componentWillReceiveProps(nextProps) {
-        if (nextProps.gcodeFiles.length > 0
-            && (nextProps.gcodeFiles.length !== this.props.gcodeFiles.length || nextProps.gcodeFiles[0].uploadName !== this.props.gcodeFiles[0].uploadName)) {
-            this.actions.onSelectFile(nextProps.gcodeFiles[0].uploadName);
+        return () => {
+            for (let i = 0; i < 5; i++) {
+                changeNameInput[i] = null;
+            }
+            UniApi.Event.off('appbar-menu:workspace.export-gcode', actions.onExport);
+            UniApi.Event.off('appbar-menu:workspace.import', actions.importFile);
+        };
+    }, []);
+
+    useEffect(() => {
+        if (gcodeFiles.length > 0) {
+            actions.onSelectFile(gcodeFiles[0].uploadName);
         }
-    }
+    }, [gcodeFiles]);
 
-    componentWillUnmount() {
-        for (let i = 0; i < 5; i++) {
-            this.changeNameInput[i] = null;
-        }
-        UniApi.Event.off('appbar-menu:workspace.export-gcode', this.actions.onExport);
-        UniApi.Event.off('appbar-menu:workspace.import', this.actions.importFile);
-    }
+    const isHeadType = selectFileType === headType;
+    const hasFile = gcodeFiles.length > 0;
 
-    render() {
-        const { gcodeFiles, isConnected, headType, connectionType } = this.props;
-        const { loadToWorkspaceOnLoad, selectFileName, selectFileType } = this.state;
-        const isHeadType = selectFileType === headType;
-        const actions = this.actions;
-        const hasFile = gcodeFiles.length > 0;
-
-        return (
-            <div>
-                <input
-                    ref={this.fileInput}
-                    type="file"
-                    accept=".gcode,.nc,.cnc"
-                    style={{ display: 'none' }}
-                    multiple={false}
-                    onChange={actions.onChangeFile}
+    return (
+        <div>
+            <input
+                ref={fileInput}
+                type="file"
+                accept=".gcode,.nc,.cnc"
+                style={{ display: 'none' }}
+                multiple={false}
+                onChange={actions.onChangeFile}
+            />
+            <Button
+                width="160px"
+                type="primary"
+                className="margin-bottom-8 display-inline"
+                priority="level-three"
+                onClick={actions.onClickToUpload}
+            >
+                {i18n._('Open G-code')}
+            </Button>
+            <Button
+                width="160px"
+                type="primary"
+                className="margin-bottom-8 display-inline margin-left-8"
+                priority="level-three"
+                onClick={actions.onExport}
+            >
+                {i18n._('Export G-code')}
+            </Button>
+            <div className="margin-bottom-8">
+                <Checkbox
+                    checked={loadToWorkspaceOnLoad}
+                    onChange={actions.onChangeShouldPreview}
                 />
-                <Button
-                    width="160px"
-                    type="primary"
-                    className="margin-bottom-8 display-inline"
-                    priority="level-three"
-                    onClick={actions.onClickToUpload}
-                >
-                    {i18n._('Open G-code')}
-                </Button>
-                <Button
-                    width="160px"
-                    type="primary"
-                    className="margin-bottom-8 display-inline margin-left-8"
-                    priority="level-three"
-                    onClick={actions.onExport}
-                >
-                    {i18n._('Export G-code')}
-                </Button>
-                <div className="margin-bottom-8">
-                    <Checkbox
-                        checked={loadToWorkspaceOnLoad}
-                        onChange={actions.onChangeShouldPreview}
-                    />
-                    <span className="margin-left-8">{i18n._('Preview in workspace')}</span>
-                </div>
-                {_.map(gcodeFiles, (gcodeFile, index) => {
-                    const name = gcodeFile.name.length > 25
-                        ? `${gcodeFile.name.substring(0, 15)}...${gcodeFile.name.substring(gcodeFile.name.length - 10, gcodeFile.name.length)}`
-                        : gcodeFile.name;
-                    let size = '';
-                    const { isRenaming, uploadName } = gcodeFile;
-                    if (!gcodeFile.size) {
-                        size = '';
-                    } else if (gcodeFile.size / 1024 / 1024 > 1) {
-                        size = `${(gcodeFile.size / 1024 / 1024).toFixed(2)} MB`;
-                    } else if (gcodeFile.size / 1024 > 1) {
-                        size = `${(gcodeFile.size / 1024).toFixed(2)} KB`;
-                    } else {
-                        size = `${(gcodeFile.size).toFixed(2)} B`;
-                    }
+                <span className="margin-left-8">{i18n._('Preview in workspace')}</span>
+            </div>
+            {_.map(gcodeFiles, (gcodeFile, index) => {
+                const name = gcodeFile.name.length > 25
+                    ? `${gcodeFile.name.substring(0, 15)}...${gcodeFile.name.substring(gcodeFile.name.length - 10, gcodeFile.name.length)}`
+                    : gcodeFile.name;
+                let size = '';
+                const { isRenaming, uploadName } = gcodeFile;
+                if (!gcodeFile.size) {
+                    size = '';
+                } else if (gcodeFile.size / 1024 / 1024 > 1) {
+                    size = `${(gcodeFile.size / 1024 / 1024).toFixed(2)} MB`;
+                } else if (gcodeFile.size / 1024 > 1) {
+                    size = `${(gcodeFile.size / 1024).toFixed(2)} KB`;
+                } else {
+                    size = `${(gcodeFile.size).toFixed(2)} B`;
+                }
 
-                    const lastModified = new Date(gcodeFile.lastModified);
-                    let date = `${lastModified.getFullYear()}.${lastModified.getMonth() + 1}.${lastModified.getDate()}   ${lastModified.getHours()}:${lastModified.getMinutes()}`;
-                    if (!gcodeFile.lastModified) {
-                        date = '';
-                    }
-                    const selected = selectFileName === gcodeFile.uploadName;
-                    return (
-                        <div
-                            className={classNames(
-                                styles['gcode-file'],
-                                { [styles.selected]: selected }
-                            )}
-                            key={pathWithRandomSuffix(gcodeFile.uploadName)}
-                            onClick={
-                                (event) => actions.onSelectFile(gcodeFile.uploadName, name, event)
-                            }
-                            onKeyDown={noop}
-                            role="button"
-                            tabIndex={0}
-                        >
-                            <button
-                                type="button"
-                                className={styles['gcode-file-remove']}
-                                onClick={() => {
-                                    actions.onRemoveFile(gcodeFile);
-                                }}
+                const lastModified = new Date(gcodeFile.lastModified);
+                let date = `${lastModified.getFullYear()}.${lastModified.getMonth() + 1}.${lastModified.getDate()}   ${lastModified.getHours()}:${lastModified.getMinutes()}`;
+                if (!gcodeFile.lastModified) {
+                    date = '';
+                }
+                const selected = selectFileName === gcodeFile.uploadName;
+                return (
+                    <div
+                        className={classNames(
+                            styles['gcode-file'],
+                            { [styles.selected]: selected }
+                        )}
+                        key={pathWithRandomSuffix(gcodeFile.uploadName)}
+                        onClick={
+                            (event) => actions.onSelectFile(gcodeFile.uploadName, name, event)
+                        }
+                        onKeyDown={noop}
+                        role="button"
+                        tabIndex={0}
+                    >
+                        <button
+                            type="button"
+                            className={styles['gcode-file-remove']}
+                            onClick={() => {
+                                actions.onRemoveFile(gcodeFile);
+                            }}
+                        />
+                        {selected && <div className={styles['gcode-file-selected-icon']} />}
+                        <div className={styles['gcode-file-img']}>
+                            <img
+                                src={gcodeFile.thumbnail}
+                                draggable="false"
+                                alt=""
                             />
-                            {selected && <div className={styles['gcode-file-selected-icon']} />}
-                            <div className={styles['gcode-file-img']}>
-                                <img
-                                    src={gcodeFile.thumbnail}
-                                    draggable="false"
-                                    alt=""
+                        </div>
+                        <div className={classNames('input-text', styles['gcode-file-text'])}>
+                            <div
+                                className={classNames(
+                                    styles['gcode-file-text-name'],
+                                    { [styles.haveOpacity]: isRenaming === false }
+                                )}
+                                role="button"
+                                onKeyDown={() => {
+                                }}
+                                tabIndex={0}
+                                onClick={(event) => actions.onRenameStart(uploadName, index, event)}
+                            >
+                                <div
+                                    className={styles['gcode-file-text-rename']}
+                                >
+                                    {name}
+                                </div>
+
+                            </div>
+                            <div className={classNames(
+                                styles['gcode-file-input-name'],
+                                { [styles.haveOpacity]: isRenaming === true }
+                            )}
+                            >
+                                <input
+                                    defaultValue={gcodeFile.name.replace(/(.gcode|.cnc|.nc)$/, '')}
+                                    className={classNames('input-select')}
+                                    onBlur={() => actions.onRenameEnd(uploadName, index)}
+                                    onKeyDown={(event) => actions.onKeyDown(event)}
+                                    ref={changeNameInput[index]}
                                 />
                             </div>
-                            <div className={classNames('input-text', styles['gcode-file-text'])}>
-                                <div
-                                    className={classNames(
-                                        styles['gcode-file-text-name'],
-                                        { [styles.haveOpacity]: isRenaming === false }
-                                    )}
-                                    role="button"
-                                    onKeyDown={() => {
-                                    }}
-                                    tabIndex={0}
-                                    onClick={(event) => actions.onRenameStart(uploadName, index, event)}
-                                >
-                                    <div
-                                        className={styles['gcode-file-text-rename']}
-                                    >
-                                        {name}
-                                    </div>
-
-                                </div>
-                                <div className={classNames(
-                                    styles['gcode-file-input-name'],
-                                    { [styles.haveOpacity]: isRenaming === true }
-                                )}
-                                >
-                                    <input
-                                        defaultValue={gcodeFile.name.replace(/(.gcode|.cnc|.nc)$/, '')}
-                                        className={classNames('input-select')}
-                                        onBlur={() => actions.onRenameEnd(uploadName, index)}
-                                        onKeyDown={(event) => actions.onKeyDown(event)}
-                                        ref={this.changeNameInput[index]}
-                                    />
-                                </div>
-                                <div className={styles['gcode-file-text-info']}>
-                                    <span>{size}</span>
-                                    <span>{date}</span>
-                                </div>
+                            <div className={styles['gcode-file-text-info']}>
+                                <span>{size}</span>
+                                <span>{date}</span>
                             </div>
                         </div>
-                    );
-                })}
-                <Button
-                    type="primary"
-                    className="margin-vertical-8"
-                    priority="level-two"
-                    disabled={!hasFile}
-                    onClick={actions.loadGcodeToWorkspace}
-                >
-                    {i18n._('Load G-code to Workspace')}
-                </Button>
-                <Button
-                    type="primary"
-                    className="margin-bottom-16"
-                    priority="level-two"
-                    disabled={!(hasFile && isConnected && isHeadType && connectionType === CONNECTION_TYPE_WIFI)}
-                    onClick={actions.sendFile}
-                >
-                    {i18n._('Send to Device via Wi-Fi')}
-                </Button>
-            </div>
-        );
-    }
+                    </div>
+                );
+            })}
+            <Button
+                type="primary"
+                className="margin-vertical-8"
+                priority="level-two"
+                disabled={!hasFile}
+                onClick={actions.loadGcodeToWorkspace}
+            >
+                {i18n._('Load G-code to Workspace')}
+            </Button>
+            <Button
+                type="primary"
+                className="margin-bottom-16"
+                priority="level-two"
+                disabled={!(hasFile && isConnected && isHeadType && connectionType === CONNECTION_TYPE_WIFI)}
+                onClick={actions.sendFile}
+            >
+                {i18n._('Send to Device via Wi-Fi')}
+            </Button>
+        </div>
+    );
 }
-
-
-const mapStateToProps = (state) => {
-    const { gcodeFiles } = state.workspace;
-    const { server, isConnected, headType, connectionType } = state.machine;
-
-    return {
-        gcodeFiles,
-        headType,
-        isConnected,
-        connectionType,
-        server
-    };
+WifiTransport.propTypes = {
+    widgetActions: PropTypes.object.isRequired
 };
 
-const mapDispatchToProps = (dispatch) => {
-    return {
-        renameGcodeFile: (uploadName, newName, isRenaming) => dispatch(workspaceActions.renameGcodeFile(uploadName, newName, isRenaming)),
-        uploadGcodeFile: (fileInfo) => dispatch(workspaceActions.uploadGcodeFile(fileInfo)),
-        removeGcodeFile: (fileInfo) => dispatch(workspaceActions.removeGcodeFile(fileInfo)),
-        renderGcodeFile: (file) => dispatch(workspaceActions.renderGcodeFile(file, false)),
-        exportFile: (targetFile) => dispatch(projectActions.exportFile(targetFile)),
-        uploadGcodeFileToList: (fileInfo) => dispatch(workspaceActions.uploadGcodeFileToList(fileInfo))
-    };
-};
-
-export default connect(mapStateToProps, mapDispatchToProps)(WifiTransport);
+export default WifiTransport;
