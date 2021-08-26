@@ -1,6 +1,6 @@
 import map from 'lodash/map';
 import includes from 'lodash/includes';
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState } from 'react';
 import PropTypes from 'prop-types';
 import { useDispatch, useSelector } from 'react-redux';
 // import Switch from '../../components/Switch';
@@ -10,6 +10,7 @@ import i18n from '../../../lib/i18n';
 import { controller } from '../../../lib/controller';
 // import { preventDefault } from '../../../lib/dom-events';
 import { in2mm, mm2in } from '../../../lib/units';
+import usePrevious from '../../../lib/hooks/previous';
 import DisplayPanel from './DisplayPanel';
 import ControlPanel from './ControlPanel';
 // import KeypadOverlay from './KeypadOverlay';
@@ -69,14 +70,6 @@ const normalizeToRange = (n, min, max) => {
     }
     return n;
 };
-
-function usePrevious(value) {
-    const ref = useRef();
-    useEffect(() => {
-        ref.current = value;
-    });
-    return ref.current;
-}
 
 function Control({ widgetId, widgetActions: _widgetActions }) {
     const machine = useSelector(state => state.machine);
@@ -456,8 +449,6 @@ function Control({ widgetId, widgetActions: _widgetActions }) {
 
         // The custom distance will not persist while toggling between in and mm
         if (prevState && (prevState.customDistance !== state.customDistance) && (prevState.units === units)) {
-            prevState.customDistance = state.customDistance;
-            prevState.units = units;
             const distance = (units === IMPERIAL_UNITS) ? in2mm(state.customDistance) : state.customDistance;
             // Save customDistance in mm
             // this.props.config.set('jog.customDistance', Number(distance));

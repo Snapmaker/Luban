@@ -28,10 +28,102 @@ import { Button } from '../../components/Buttons';
 import Checkbox from '../../components/Checkbox';
 
 
-// import controller from '../../lib/controller';
-
-
 const changeNameInput = [];
+
+function GcodePreviewList({ gcodeFiles, selectFileName, actions }) {
+    return _.map(gcodeFiles, (gcodeFile, index) => {
+        const name = gcodeFile.name.length > 25
+            ? `${gcodeFile.name.substring(0, 15)}...${gcodeFile.name.substring(gcodeFile.name.length - 10, gcodeFile.name.length)}`
+            : gcodeFile.name;
+        let size = '';
+        const { isRenaming, uploadName } = gcodeFile;
+        if (!gcodeFile.size) {
+            size = '';
+        } else if (gcodeFile.size / 1024 / 1024 > 1) {
+            size = `${(gcodeFile.size / 1024 / 1024).toFixed(2)} MB`;
+        } else if (gcodeFile.size / 1024 > 1) {
+            size = `${(gcodeFile.size / 1024).toFixed(2)} KB`;
+        } else {
+            size = `${(gcodeFile.size).toFixed(2)} B`;
+        }
+
+        const lastModified = new Date(gcodeFile.lastModified);
+        let date = `${lastModified.getFullYear()}.${lastModified.getMonth() + 1}.${lastModified.getDate()}   ${lastModified.getHours()}:${lastModified.getMinutes()}`;
+        if (!gcodeFile.lastModified) {
+            date = '';
+        }
+        const selected = selectFileName === gcodeFile.uploadName;
+        return (
+            <div
+                className={classNames(
+                    styles['gcode-file'],
+                    { [styles.selected]: selected }
+                )}
+                key={pathWithRandomSuffix(gcodeFile.uploadName)}
+                onClick={
+                    (event) => actions.onSelectFile(gcodeFile.uploadName, name, event)
+                }
+                onKeyDown={noop}
+                role="button"
+                tabIndex={0}
+            >
+                <button
+                    type="button"
+                    className={styles['gcode-file-remove']}
+                    onClick={() => {
+                        actions.onRemoveFile(gcodeFile);
+                    }}
+                />
+                {selected && <div className={styles['gcode-file-selected-icon']} />}
+                <div className={styles['gcode-file-img']}>
+                    <img
+                        src={gcodeFile.thumbnail}
+                        draggable="false"
+                        alt=""
+                    />
+                </div>
+                <div className={classNames('input-text', styles['gcode-file-text'])}>
+                    <div
+                        className={classNames(
+                            styles['gcode-file-text-name'],
+                            { [styles.haveOpacity]: isRenaming === false }
+                        )}
+                        role="button"
+                        onKeyDown={() => {
+                        }}
+                        tabIndex={0}
+                        onClick={(event) => actions.onRenameStart(uploadName, index, event)}
+                    >
+                        <div
+                            className={styles['gcode-file-text-rename']}
+                        >
+                            {name}
+                        </div>
+
+                    </div>
+                    <div className={classNames(
+                        styles['gcode-file-input-name'],
+                        { [styles.haveOpacity]: isRenaming === true }
+                    )}
+                    >
+                        <input
+                            defaultValue={gcodeFile.name.replace(/(.gcode|.cnc|.nc)$/, '')}
+                            className={classNames('input-select')}
+                            onBlur={() => actions.onRenameEnd(uploadName, index)}
+                            onKeyDown={(event) => actions.onKeyDown(event)}
+                            ref={changeNameInput[index]}
+                        />
+                    </div>
+                    <div className={styles['gcode-file-text-info']}>
+                        <span>{size}</span>
+                        <span>{date}</span>
+                    </div>
+                </div>
+            </div>
+        );
+    });
+}
+
 function WifiTransport({ widgetActions }) {
     const { gcodeFiles } = useSelector(state => state.workspace);
     const { server, isConnected, headType, connectionType } = useSelector(state => state.machine);
@@ -243,97 +335,11 @@ function WifiTransport({ widgetActions }) {
                 />
                 <span className="margin-left-8">{i18n._('Preview in workspace')}</span>
             </div>
-            {_.map(gcodeFiles, (gcodeFile, index) => {
-                const name = gcodeFile.name.length > 25
-                    ? `${gcodeFile.name.substring(0, 15)}...${gcodeFile.name.substring(gcodeFile.name.length - 10, gcodeFile.name.length)}`
-                    : gcodeFile.name;
-                let size = '';
-                const { isRenaming, uploadName } = gcodeFile;
-                if (!gcodeFile.size) {
-                    size = '';
-                } else if (gcodeFile.size / 1024 / 1024 > 1) {
-                    size = `${(gcodeFile.size / 1024 / 1024).toFixed(2)} MB`;
-                } else if (gcodeFile.size / 1024 > 1) {
-                    size = `${(gcodeFile.size / 1024).toFixed(2)} KB`;
-                } else {
-                    size = `${(gcodeFile.size).toFixed(2)} B`;
-                }
-
-                const lastModified = new Date(gcodeFile.lastModified);
-                let date = `${lastModified.getFullYear()}.${lastModified.getMonth() + 1}.${lastModified.getDate()}   ${lastModified.getHours()}:${lastModified.getMinutes()}`;
-                if (!gcodeFile.lastModified) {
-                    date = '';
-                }
-                const selected = selectFileName === gcodeFile.uploadName;
-                return (
-                    <div
-                        className={classNames(
-                            styles['gcode-file'],
-                            { [styles.selected]: selected }
-                        )}
-                        key={pathWithRandomSuffix(gcodeFile.uploadName)}
-                        onClick={
-                            (event) => actions.onSelectFile(gcodeFile.uploadName, name, event)
-                        }
-                        onKeyDown={noop}
-                        role="button"
-                        tabIndex={0}
-                    >
-                        <button
-                            type="button"
-                            className={styles['gcode-file-remove']}
-                            onClick={() => {
-                                actions.onRemoveFile(gcodeFile);
-                            }}
-                        />
-                        {selected && <div className={styles['gcode-file-selected-icon']} />}
-                        <div className={styles['gcode-file-img']}>
-                            <img
-                                src={gcodeFile.thumbnail}
-                                draggable="false"
-                                alt=""
-                            />
-                        </div>
-                        <div className={classNames('input-text', styles['gcode-file-text'])}>
-                            <div
-                                className={classNames(
-                                    styles['gcode-file-text-name'],
-                                    { [styles.haveOpacity]: isRenaming === false }
-                                )}
-                                role="button"
-                                onKeyDown={() => {
-                                }}
-                                tabIndex={0}
-                                onClick={(event) => actions.onRenameStart(uploadName, index, event)}
-                            >
-                                <div
-                                    className={styles['gcode-file-text-rename']}
-                                >
-                                    {name}
-                                </div>
-
-                            </div>
-                            <div className={classNames(
-                                styles['gcode-file-input-name'],
-                                { [styles.haveOpacity]: isRenaming === true }
-                            )}
-                            >
-                                <input
-                                    defaultValue={gcodeFile.name.replace(/(.gcode|.cnc|.nc)$/, '')}
-                                    className={classNames('input-select')}
-                                    onBlur={() => actions.onRenameEnd(uploadName, index)}
-                                    onKeyDown={(event) => actions.onKeyDown(event)}
-                                    ref={changeNameInput[index]}
-                                />
-                            </div>
-                            <div className={styles['gcode-file-text-info']}>
-                                <span>{size}</span>
-                                <span>{date}</span>
-                            </div>
-                        </div>
-                    </div>
-                );
-            })}
+            <GcodePreviewList
+                gcodeFiles={gcodeFiles}
+                selectFileName={selectFileName}
+                actions={actions}
+            />
             <Button
                 type="primary"
                 className="margin-vertical-8"

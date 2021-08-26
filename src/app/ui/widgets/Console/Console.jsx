@@ -7,18 +7,11 @@ import pubsub from 'pubsub-js';
 import { useHistory, withRouter } from 'react-router-dom';
 import settings from '../../../config/settings';
 import i18n from '../../../lib/i18n';
+import usePrevious from '../../../lib/hooks/previous';
 import { actions as machineActions } from '../../../flux/machine';
 import { controller } from '../../../lib/controller';
 import Terminal from './Terminal';
 import { ABSENT_OBJECT, CONNECTION_TYPE_SERIAL } from '../../../constants';
-
-function usePrevious(value) {
-    const ref = useRef();
-    useEffect(() => {
-        ref.current = value;
-    });
-    return ref.current;
-}
 
 let pubsubTokens = [];
 let unlisten = null;
@@ -285,9 +278,6 @@ function Console({ widgetId, widgetActions, minimized, isDefault, clearRenderSta
                     }
                 }
             }
-            prevProps.isConnected = isConnected;
-            prevProps.port = port;
-            prevProps.server = server;
         }
     }, [isConnected, port, server]);
 

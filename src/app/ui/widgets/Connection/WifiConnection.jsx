@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState } from 'react';
 // import PropTypes from 'prop-types';
 import classNames from 'classnames';
 import { useDispatch, useSelector } from 'react-redux';
@@ -8,6 +8,7 @@ import { Button } from '../../components/Buttons';
 import Select from '../../components/Select';
 import SvgIcon from '../../components/SvgIcon';
 import i18n from '../../../lib/i18n';
+import usePrevious from '../../../lib/hooks/previous';
 import { actions as machineActions } from '../../../flux/machine';
 import {
     ABSENT_OBJECT,
@@ -33,13 +34,6 @@ import ModalSmall from '../../components/Modal/ModalSmall';
 import ModalSmallInput from '../../components/Modal/ModalSmallInput';
 import { Server } from '../../../flux/machine/Server';
 
-function usePrevious(value) {
-    const ref = useRef();
-    useEffect(() => {
-        ref.current = value;
-    });
-    return ref.current;
-}
 function WifiConnection() {
     const {
         servers,
@@ -251,7 +245,6 @@ function WifiConnection() {
                 if (prevProps.connectionStatus !== CONNECTION_STATUS_IDLE && connectionStatus === CONNECTION_STATUS_IDLE) {
                     actions.showWifiDisconnected();
                 }
-                prevProps.connectionStatus = connectionStatus;
             }
         }
     }, [connectionType, connectionStatus]);
