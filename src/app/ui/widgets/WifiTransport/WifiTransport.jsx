@@ -347,7 +347,7 @@ function WifiTransport({ widgetActions }) {
                 _.map(gcodeFiles, (gcodeFile, index) => {
                     return (
                         <GcodePreviewItem
-                            gcodeFiles={gcodeFile}
+                            gcodeFile={gcodeFile}
                             index={index}
                             selected={selectFileName === gcodeFile.uploadName}
                             onSelectFile={onSelectFile}
