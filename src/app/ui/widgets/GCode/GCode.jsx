@@ -283,16 +283,6 @@ function GCode({ widgetActions }) {
 }
 GCode.propTypes = {
     widgetActions: PropTypes.object.isRequired
-    // boundingBox: PropTypes.object,
-    // gcodePrintingInfo: PropTypes.shape({
-    //     sent: PropTypes.number,
-    //     received: PropTypes.number,
-    //     total: PropTypes.number,
-    //     startTime: PropTypes.number,
-    //     finishTime: PropTypes.number,
-    //     elapsedTime: PropTypes.number,
-    //     remainingTime: PropTypes.number
-    // })
 };
 
 export default GCode;

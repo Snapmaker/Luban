@@ -287,44 +287,6 @@ function Control({ widgetId, widgetActions: _widgetActions }) {
         }
     };
 
-    // const shuttleControlEvents = {
-    //     JOG: (event, { axis = null, direction = 1, factor = 1 }) => {
-    //         const { canClick, keypadJogging, selectedAxis } = state;
-
-    //         if (!canClick) {
-    //             return;
-    //         }
-
-    //         if (axis !== null && !keypadJogging) {
-    //             // keypad jogging is disabled
-    //             return;
-    //         }
-
-    //         // The keyboard events of arrow keys for X-axis/Y-axis and pageup/pagedown for Z-axis
-    //         // are not prevented by default. If a jog command will be executed, it needs to
-    //         // stop the default behavior of a keyboard combination in a browser.
-    //         preventDefault(event);
-
-    //         axis = axis || selectedAxis;
-    //         const distance = actions.getJogDistance();
-    //         const jog = {
-    //             x: () => actions.jog({ X: direction * distance * factor }),
-    //             y: () => actions.jog({ Y: direction * distance * factor }),
-    //             z: () => actions.jog({ Z: direction * distance * factor }),
-    //             a: () => actions.jog({ A: direction * distance * factor })
-    //         }[axis];
-
-    //         jog && jog();
-    //     },
-    //     JOG_LEVER_SWITCH: () => {
-    //         const { selectedDistance } = state;
-    //         const distances = ['1', '0.1', '0.01', '0.001', ''];
-    //         const currentIndex = distances.indexOf(selectedDistance);
-    //         const distance = distances[(currentIndex + 1) % distances.length];
-    //         actions.selectDistance(distance);
-    //     }
-    // };
-
     const controllerEvents = {
         'serialport:close': (options) => {
             const { dataSource: _dataSource } = options;
@@ -350,27 +312,11 @@ function Control({ widgetId, widgetActions: _widgetActions }) {
         });
     }
 
-    function addShuttleControlEvents() {
-        // Object.keys(shuttleControlEvents).forEach(eventName => {
-        //     const callback = shuttleControlEvents[eventName];
-        //     combokeys.on(eventName, callback);
-        // });
-    }
-
-    function removeShuttleControlEvents() {
-        // Object.keys(shuttleControlEvents).forEach(eventName => {
-        //     const callback = shuttleControlEvents[eventName];
-        //     combokeys.removeListener(eventName, callback);
-        // });
-    }
-
     useEffect(() => {
         _widgetActions.setTitle(i18n._('Control'));
         addControllerEvents();
-        addShuttleControlEvents();
         return () => {
             removeControllerEvents();
-            removeShuttleControlEvents();
         };
     }, []);
 
@@ -479,6 +425,7 @@ function Control({ widgetId, widgetActions: _widgetActions }) {
                 state={state}
             />
 
+            {/* Comment this since Luban v4.0 and will be used in the future */}
             {/* <div>
                 <KeypadOverlay
                     show={_canClick && state.keypadJogging}

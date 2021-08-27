@@ -63,11 +63,6 @@ function Purifier({ widgetActions }) {
             widgetActions.setDisplay(false);
             return;
         }
-        if (!airPurifier) {
-            widgetActions.setDisplay(false);
-        } else {
-            widgetActions.setDisplay(true);
-        }
     }, []);
 
     useEffect(() => {
@@ -106,22 +101,6 @@ function Purifier({ widgetActions }) {
         <div className="">
             <div className="sm-flex justify-space-between margin-vertical-8">
                 <span>{i18n._('Switch')}</span>
-                {/* <button
-                    type="button"
-                    className={classNames(
-                        'sm-btn-small',
-                        isFilterEnable ? 'sm-btn-primary' : 'sm-btn-danger'
-                    )}
-                    style={{
-                        float: 'right'
-                    }}
-                    onClick={this.actions.onHandleFilterEnabled}
-                >
-                    {!isFilterEnable && <i className="fa fa-toggle-off" />}
-                    {!!isFilterEnable && <i className="fa fa-toggle-on" />}
-                    <span className="space" />
-                    {isFilterEnable ? i18n._('On') : i18n._('Off')}
-                </button> */}
                 <Switch
                     onClick={actions.onHandleFilterEnabled}
                     checked={isFilterEnable}
