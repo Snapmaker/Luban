@@ -61,7 +61,6 @@ function Purifier({ widgetActions }) {
         widgetActions.setTitle(i18n._('Air Purifier'));
         if (!isConnected) {
             widgetActions.setDisplay(false);
-            return;
         }
     }, []);
 
