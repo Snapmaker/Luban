@@ -4,7 +4,7 @@ import mkdirp from 'mkdirp';
 import { app } from 'electron';
 import isElectron from 'is-electron';
 // import semver from 'semver';
-import { CNC_CONFIG_SUBCATEGORY } from './constants';
+import { CNC_CONFIG_SUBCATEGORY, PRINTING_CONFIG_SUBCATEGORY } from './constants';
 import logger from './lib/logger';
 import { initFonts } from '../shared/lib/FontManager';
 // import settings from './config/settings';
@@ -52,6 +52,8 @@ class DataStorage {
 
      configDir;
 
+     defaultConfigDir;
+
      fontDir;
 
      userCaseDir;
@@ -70,6 +72,7 @@ class DataStorage {
          this.userCaseDir = `${this.userDataDir}/UserCase`;
          this.tmpDir = `${this.userDataDir}/Tmp`;
          this.configDir = `${this.userDataDir}/Config`;
+         this.defaultConfigDir = `${this.userDataDir}/Default`;
          this.fontDir = `${this.userDataDir}/Fonts`;
          this.envDir = `${this.userDataDir}/env`;
      }
@@ -100,31 +103,6 @@ class DataStorage {
          //  await this.versionAdaptation();
      }
 
-     async initSlicer() {
-         mkdirp.sync(this.configDir);
-         mkdirp.sync(`${this.configDir}/${CNC_CONFIG_SUBCATEGORY}`);
-
-         const CURA_ENGINE_CONFIG_LOCAL = '../resources/CuraEngine/Config';
-         if (fs.existsSync(CURA_ENGINE_CONFIG_LOCAL)) {
-             const files = fs.readdirSync(CURA_ENGINE_CONFIG_LOCAL);
-             for (const file of files) {
-                 const src = path.join(CURA_ENGINE_CONFIG_LOCAL, file);
-                 const dst = path.join(this.configDir, file);
-                 if (fs.statSync(src).isFile()) {
-                     if (fs.existsSync(dst)) {
-                         continue;
-                     }
-                     fs.copyFileSync(src, dst, () => {
-                     });
-                 } else {
-                     const srcPath = `${CURA_ENGINE_CONFIG_LOCAL}/${file}`;
-                     const dstPath = `${this.configDir}/${file}`;
-                     await this.copyDirForInitSlicer(srcPath, dstPath);
-                 }
-             }
-         }
-     }
-
      async copyDirForInitSlicer(src, dst) {
          mkdirp.sync(dst);
 
@@ -133,22 +111,49 @@ class DataStorage {
              for (const file of files) {
                  const srcPath = path.join(src, file);
                  const dstPath = path.join(dst, file);
-                 const overwriteTag = dstPath.indexOf('Config/Default/') >= 0;
                  if (fs.statSync(srcPath).isFile()) {
-                     if (fs.existsSync(dstPath) && !overwriteTag) {
-                         return;
-                     }
                      fs.copyFileSync(srcPath, dstPath);
                  } else {
-                     if (overwriteTag) {
-                         rmDir(dstPath);
-                     }
-                     // Todo: cause dead cycle?
                      await this.copyDirForInitSlicer(srcPath, dstPath);
                  }
              }
          }
      }
+
+     async copyDirAndReplace(srcDir, dstDir) {
+         if (fs.existsSync(srcDir)) {
+             const files = fs.readdirSync(srcDir);
+             if (fs.cpSync) {
+                 fs.cpSync(srcDir, dstDir);
+             } else {
+                 for (const file of files) {
+                     const src = path.join(srcDir, file);
+                     const dst = path.join(dstDir, file);
+                     if (fs.statSync(src).isFile()) {
+                         fs.copyFileSync(src, dst, () => {
+                         });
+                     } else {
+                         const srcPath = `${srcDir}/${file}`;
+                         const dstPath = `${dstDir}/${file}`;
+                         await this.copyDirForInitSlicer(srcPath, dstPath);
+                     }
+                 }
+             }
+         }
+     }
+
+     async initSlicer() {
+         mkdirp.sync(this.configDir);
+         console.log('initSlicer', this.configDir, this.defaultConfigDir);
+         mkdirp.sync(this.defaultConfigDir);
+         mkdirp.sync(`${this.configDir}/${CNC_CONFIG_SUBCATEGORY}`);
+         mkdirp.sync(`${this.configDir}/${PRINTING_CONFIG_SUBCATEGORY}`);
+
+         const CURA_ENGINE_CONFIG_LOCAL = '../resources/CuraEngine/Config';
+         await this.copyDirAndReplace(CURA_ENGINE_CONFIG_LOCAL, this.configDir);
+         await this.copyDirAndReplace(CURA_ENGINE_CONFIG_LOCAL, this.defaultConfigDir);
+     }
+
 
      async initFonts() {
          mkdirp.sync(this.fontDir);

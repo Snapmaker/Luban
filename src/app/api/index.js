@@ -253,25 +253,29 @@ printingConfigs.update = defaultAPIFactory((formdata) => request.put('/api/print
 
 printingConfigs.delete = defaultAPIFactory((options) => request.delete('/api/printingConfigs').send(options));
 
-printingConfigs.getRawDefinition = defaultAPIFactory((definitionId, series) => request.get(`/api/printingRawDefinition/${definitionId}`).query({ series }));
-printingConfigs.getDefinition = defaultAPIFactory((definitionId, series) => request.get(`/api/printingDefinition/${definitionId}/${series}`));
+printingConfigs.getRawDefinition = defaultAPIFactory((headType, definitionId, series) => request.get(`/api/printingRawDefinition/${headType}/${definitionId}`).query({
+    series
+}));
+printingConfigs.getDefinition = defaultAPIFactory((headType, definitionId, series) => request.get(`/api/printingDefinition/${headType}/${definitionId}/${series}`));
 
-printingConfigs.getQualityDefinitions = defaultAPIFactory((series) => request.get(`/api/printingQualityDefinitions/${series}`));
-printingConfigs.getMaterialDefinitions = defaultAPIFactory(() => request.get('/api/printingMaterialDefinitions'));
-printingConfigs.getDefaultDefinitions = defaultAPIFactory((series) => request.get(`/api/printingDefaultDefinitions/${series}`));
+// printingConfigs.getQualityDefinitions = defaultAPIFactory((series) => request.get(`/api/printingQualityDefinitions/${headType}/${series}`));
+// printingConfigs.getMaterialDefinitions = defaultAPIFactory((series) => request.get(`/api/printingMaterialDefinitions/${series}`));
+printingConfigs.getDefinitionsByPrefixName = defaultAPIFactory((headType, prefix, series) => request.get(`/api/getDefinitionsByPrefixName/${headType}/${prefix}/${series}`));
+printingConfigs.getDefaultDefinitions = defaultAPIFactory((headType, series) => request.get(`/api/printingDefaultDefinitions/${headType}/${series}`));
 
-printingConfigs.createDefinition = defaultAPIFactory((definition, series) => request.post('/api/printingDefinition').send({
+
+printingConfigs.createDefinition = defaultAPIFactory((headType, definition, series) => request.post(`/api/printingDefinition/${headType}`).send({
     definition,
     series
 }));
 
-printingConfigs.removeDefinition = defaultAPIFactory((definitionId, series) => request.delete(`/api/printingDefinition/${definitionId}`).send({ series }));
+printingConfigs.removeDefinition = defaultAPIFactory((headType, definitionId, series) => request.delete(`/api/printingDefinition/${headType}/${definitionId}`).send({ series }));
 
-printingConfigs.updateDefinition = defaultAPIFactory((definitionId, definition, series) => request.put(`/api/printingDefinition/${definitionId}`).send({
+printingConfigs.updateDefinition = defaultAPIFactory((headType, definitionId, definition, series) => request.put(`/api/printingDefinition/${headType}/${definitionId}`).send({
     definition,
     series
 }));
-printingConfigs.uploadDefinition = defaultAPIFactory((definitionId, tmpPath, series) => request.post('/api/printingDefinition/upload').send({
+printingConfigs.uploadDefinition = defaultAPIFactory((headType, definitionId, tmpPath, series) => request.post(`/api/printingDefinition/${headType}/upload`).send({
     definitionId,
     tmpPath,
     series

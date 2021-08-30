@@ -7,7 +7,7 @@ import styles from './styles/project.styl';
 class ProjectLayout extends PureComponent {
     static propTypes = {
         renderRightView: PropTypes.func,
-        children: PropTypes.object,
+        children: PropTypes.array,
         renderModalView: PropTypes.func,
         renderMainToolBar: PropTypes.func,
         renderSubToolBar: PropTypes.func

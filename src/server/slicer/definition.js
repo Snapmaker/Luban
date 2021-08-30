@@ -3,6 +3,7 @@ import path from 'path';
 import includes from 'lodash/includes';
 import DataStorage from '../DataStorage';
 import logger from '../lib/logger';
+import { CncV1Regex, CncV2Regex } from '../constants';
 
 const log = logger('definition');
 
@@ -25,14 +26,13 @@ export class DefinitionLoader {
 
     metadata = {};
 
-    loadDefinition(definitionId, configPath) {
+    loadDefinition(headType, definitionId, configPath) {
+        // console.log('loadDefinition', headType, definitionId, configPath);
         if (!this.definitionId) {
             this.definitionId = definitionId;
         }
-
-        const filePath = configPath ? path.join(`${DataStorage.configDir}/${configPath}`, `${definitionId}.def.json`)
-            : path.join(DataStorage.configDir, `${definitionId}.def.json`);
-        const data = fs.readFileSync(filePath, 'utf8');
+        const filePath = configPath ? path.join(`${DataStorage.configDir}/${headType}/${configPath}`, `${definitionId}.def.json`)
+            : path.join(`${DataStorage.configDir}/${headType}`, `${definitionId}.def.json`);
         // in case of JSON parse error, set default json inherits from snapmaker2.def.json
         let json = {
             'name': 'Snapmaker Default',
@@ -40,21 +40,22 @@ export class DefinitionLoader {
             'inherits': 'snapmaker2'
         };
         try {
+            console.log('filePath', filePath);
+            const data = fs.readFileSync(filePath, 'utf8');
             json = JSON.parse(data);
         } catch (e) {
             console.error(`JSON Syntax error of: ${definitionId}`);
         }
 
-
-        this.loadJSON(definitionId, json);
+        this.loadJSON(headType, definitionId, json);
     }
 
-    loadJSON(definitionId, json) {
+    loadJSON(headType, definitionId, json) {
         if (!this.definitionId) {
             this.definitionId = definitionId;
         }
         if (json.inherits) {
-            this.loadDefinition(json.inherits);
+            this.loadDefinition(headType, json.inherits);
             this.inherits = json.inherits;
         }
 
@@ -155,8 +156,8 @@ export class DefinitionLoader {
     }
 }
 
-function writeDefinition(filename, definitionLoader) {
-    const filePath = path.join(DataStorage.configDir, filename);
+function writeDefinition(headType, filename, series, definitionLoader) {
+    const filePath = path.join(DataStorage.configDir, headType, series, filename);
     fs.writeFile(filePath, JSON.stringify(definitionLoader.toJSON(), null, 2), 'utf8', (err) => {
         if (err) {
             log.error(`Failed to write definition: err=${JSON.stringify(err)}`);
@@ -164,87 +165,50 @@ function writeDefinition(filename, definitionLoader) {
     });
 }
 
-export function loadDefinitionLoaderByFilename(filename, configPath) {
-    const definitionId = filename.substr(0, filename.length - 9);
-
+export function loadDefinitionLoaderByFilename(headType, filename, configPath) {
+    let definitionId = '';
+    if (CncV1Regex.test(filename)) {
+        definitionId = filename.substr(0, filename.length - 9);
+    } else if (CncV2Regex.test(filename)) {
+        definitionId = filename.substr(0, filename.length - 11);
+    }
     const definitionLoader = new DefinitionLoader();
-    definitionLoader.loadDefinition(definitionId, configPath);
+    definitionLoader.loadDefinition(headType, definitionId, configPath);
 
     return definitionLoader;
 }
 
-export function loadMaterialDefinitions() {
+export function loadMaterialDefinitions(headType, configPath) {
     const predefined = [];
 
     const regex = /^material.([A-Za-z0-9_]+).def.json$/;
-    const defaultDefinitionLoader = loadDefinitionLoaderByFilename('material.pla.def.json');
+    const defaultDefinitionLoader = loadDefinitionLoaderByFilename(headType, 'material.pla.def.json', configPath);
     predefined.push('material.pla.def.json');
     predefined.push('material.abs.def.json');
     predefined.push('material.petg.def.json');
 
-
-    const configDir = DataStorage.configDir;
-    const filenames = fs.readdirSync(configDir);
-
-    // Load pre-defined definitions first
-    const definitions = [];
-    for (const filename of predefined) {
-        if (includes(filenames, filename)) {
-            const definitionLoader = loadDefinitionLoaderByFilename(filename);
-            definitions.push(definitionLoader.toObject());
-        }
-    }
-
-    for (const filename of filenames) {
-        if (!includes(predefined, filename) && regex.test(filename)) {
-            const definitionLoader = loadDefinitionLoaderByFilename(filename);
-            if (defaultDefinitionLoader) {
-                const ownKeys = Array.from(defaultDefinitionLoader.ownKeys).filter(e => !definitionLoader.ownKeys.has(e));
-                if (ownKeys && ownKeys.length > 0) {
-                    for (const ownKey of ownKeys) {
-                        definitionLoader.ownKeys.add(ownKey);
-                    }
-                    writeDefinition(filename, definitionLoader);
-                }
-            }
-            definitions.push(definitionLoader.toObject());
-        }
-    }
-
-    return definitions;
-}
-
-export function loadQualityDefinitions(configPath) {
-    const predefined = [];
-    const regex = /^quality.([A-Za-z0-9_]+).def.json$/;
-    const defaultDefinitionLoader = loadDefinitionLoaderByFilename('quality.fast_print.def.json', configPath);
-    predefined.push('quality.fast_print.def.json');
-    predefined.push('quality.normal_quality.def.json');
-    predefined.push('quality.high_quality.def.json');
-
-    const configDir = `${DataStorage.configDir}`;
-    const filenames = fs.readdirSync(`${configDir}`);
+    const configDir = `${DataStorage.configDir}/${headType}`;
     const defaultFilenames = fs.readdirSync(`${configDir}/${configPath}`);
 
     // Load pre-defined definitions first
     const definitions = [];
     for (const filename of predefined) {
         if (includes(defaultFilenames, filename)) {
-            const definitionLoader = loadDefinitionLoaderByFilename(filename, configPath);
+            const definitionLoader = loadDefinitionLoaderByFilename(headType, filename, configPath);
             definitions.push(definitionLoader.toObject());
         }
     }
 
-    for (const filename of filenames) {
+    for (const filename of defaultFilenames) {
         if (!includes(predefined, filename) && regex.test(filename)) {
-            const definitionLoader = loadDefinitionLoaderByFilename(filename, '');
+            const definitionLoader = loadDefinitionLoaderByFilename(headType, filename, configPath);
             if (defaultDefinitionLoader) {
                 const ownKeys = Array.from(defaultDefinitionLoader.ownKeys).filter(e => !definitionLoader.ownKeys.has(e));
                 if (ownKeys && ownKeys.length > 0) {
                     for (const ownKey of ownKeys) {
                         definitionLoader.ownKeys.add(ownKey);
                     }
-                    writeDefinition(filename, definitionLoader);
+                    writeDefinition(headType, filename, configPath, definitionLoader);
                 }
             }
             definitions.push(definitionLoader.toObject());
@@ -254,10 +218,55 @@ export function loadQualityDefinitions(configPath) {
     return definitions;
 }
 
-export function loadDefaultDefinitions(series) {
-    const configPath = `Default/${series}`;
-    const configPathMaterial = 'Default';
+export function loadQualityDefinitions(headType, configPath) {
     const predefined = [];
+    const regex = /^quality.([A-Za-z0-9_]+).def.json$/;
+    const defaultDefinitionLoader = loadDefinitionLoaderByFilename(headType, 'quality.fast_print.def.json', configPath);
+    predefined.push('quality.fast_print.def.json');
+    predefined.push('quality.normal_quality.def.json');
+    predefined.push('quality.high_quality.def.json');
+
+    const configDir = `${DataStorage.configDir}/${headType}`;
+    const defaultFilenames = fs.readdirSync(`${configDir}/${configPath}`);
+    // Load pre-defined definitions first
+    const definitions = [];
+    for (const filename of predefined) {
+        if (includes(defaultFilenames, filename)) {
+            const definitionLoader = loadDefinitionLoaderByFilename(headType, filename, configPath);
+            definitions.push(definitionLoader.toObject());
+        }
+    }
+
+    for (const filename of defaultFilenames) {
+        if (!includes(predefined, filename) && regex.test(filename)) {
+            const definitionLoader = loadDefinitionLoaderByFilename(headType, filename, configPath);
+            if (defaultDefinitionLoader) {
+                const ownKeys = Array.from(defaultDefinitionLoader.ownKeys).filter(e => !definitionLoader.ownKeys.has(e));
+                if (ownKeys && ownKeys.length > 0) {
+                    for (const ownKey of ownKeys) {
+                        definitionLoader.ownKeys.add(ownKey);
+                    }
+                    writeDefinition(headType, filename, configPath, definitionLoader);
+                }
+            }
+            definitions.push(definitionLoader.toObject());
+        }
+    }
+
+    return definitions;
+}
+
+export function loadDefinitionsByPrefixName(headType, prefix, configPath) {
+    if (prefix === 'material') {
+        return loadMaterialDefinitions(headType, configPath);
+    } else if (prefix === 'quality') {
+        return loadQualityDefinitions(headType, configPath);
+    }
+}
+
+export function loadDefaultDefinitions(headType, series = 'A150') {
+    const predefined = [];
+    const definitions = [];
     predefined.push('quality.fast_print.def.json');
     predefined.push('quality.normal_quality.def.json');
     predefined.push('quality.high_quality.def.json');
@@ -265,22 +274,13 @@ export function loadDefaultDefinitions(series) {
     predefined.push('material.abs.def.json');
     predefined.push('material.petg.def.json');
 
-    const configDir = `${DataStorage.configDir}`;
-    let defaultFilenames = fs.readdirSync(`${configDir}/${configPath}`);
+    const configDir = `${DataStorage.defaultConfigDir}/${headType}`;
 
-    // Load pre-defined definitions first
-    const definitions = [];
+    const defaultFilenames = fs.readdirSync(`${configDir}/${series}`);
+
     for (const filename of predefined) {
         if (includes(defaultFilenames, filename)) {
-            const definitionLoader = loadDefinitionLoaderByFilename(filename, configPath);
-            definitions.push(definitionLoader.toObject());
-        }
-    }
-
-    defaultFilenames = fs.readdirSync(`${configDir}/${configPathMaterial}`);
-    for (const filename of predefined) {
-        if (includes(defaultFilenames, filename)) {
-            const definitionLoader = loadDefinitionLoaderByFilename(filename, configPathMaterial);
+            const definitionLoader = loadDefinitionLoaderByFilename(headType, filename, series);
             definitions.push(definitionLoader.toObject());
         }
     }

@@ -1,23 +1,20 @@
 import fs from 'fs';
 import path from 'path';
-import { ERR_BAD_REQUEST, ERR_INTERNAL_SERVER_ERROR } from '../../constants';
-import { loadQualityDefinitions, loadMaterialDefinitions, loadDefaultDefinitions, DefinitionLoader } from '../../slicer';
+import { ERR_BAD_REQUEST, ERR_INTERNAL_SERVER_ERROR, PRINTING_CONFIG_SUBCATEGORY } from '../../constants';
+import { loadDefinitionsByPrefixName, loadDefaultDefinitions, DefinitionLoader } from '../../slicer';
 import DataStorage from '../../DataStorage';
 
-const isDefaultQualityDefinition = (definitionId) => {
-    return definitionId.indexOf('quality') !== -1
-     && (definitionId.indexOf('fast_print') !== -1
-     || definitionId.indexOf('high_quality') !== -1
-     || definitionId.indexOf('normal_quality') !== -1
-     );
-};
+// const isDefaultQualityDefinition = (definitionId) => {
+//     return definitionId.indexOf('quality') === 0
+//     || definitionId.indexOf('material') === 0;
+// };
 
 /**
  * Get raw definition which is unparsed and override.
  */
 export const getRawDefinition = (req, res) => {
-    const { definitionId } = req.params;
-    const series = isDefaultQualityDefinition(definitionId) ? req.query.series : '';
+    const { definitionId, headType } = req.params;
+    const series = req.query.series;
     if (!definitionId) {
         res.status(ERR_BAD_REQUEST).send({
             err: 'Parameter "definitionId" is required.'
@@ -26,15 +23,15 @@ export const getRawDefinition = (req, res) => {
     }
 
     const filename = `${definitionId}.def.json`;
-    const configDir = `${DataStorage.configDir}/${series}/${filename}`;
+    const configDir = `${DataStorage.configDir}/${headType}/${series}/${filename}`;
     const readFileSync = fs.readFileSync(configDir);
     const parse = JSON.parse(readFileSync);
     res.send({ filename: filename, definition: parse });
 };
 
 export const getDefinition = (req, res) => {
-    const { definitionId } = req.params;
-    const series = isDefaultQualityDefinition(definitionId) ? req.params.series : '';
+    const { definitionId, headType } = req.params;
+    const series = req.params.series;
     if (!definitionId) {
         res.status(ERR_BAD_REQUEST).send({
             err: 'Parameter "definitionId" is required.'
@@ -43,53 +40,63 @@ export const getDefinition = (req, res) => {
     }
 
     const definitionLoader = new DefinitionLoader();
-    definitionLoader.loadDefinition(definitionId, series);
+
+    definitionLoader.loadDefinition(headType, definitionId, series);
 
     res.send({ definition: definitionLoader.toObject() });
 };
 
-export const getMaterialDefinitions = (req, res) => {
-    const definitions = loadMaterialDefinitions();
+export const getDefinitionsByPrefixName = (req, res) => {
+    // const definitions = loadMaterialDefinitions();
+    const { headType, prefix, series } = req.params;
+    const definitions = loadDefinitionsByPrefixName(headType, prefix, series);
     res.send({ definitions });
 };
 
-export const getQualityDefinitions = (req, res) => {
-    const { series } = req.params;
-    const definitions = loadQualityDefinitions(series);
-    res.send({ definitions });
-};
+// export const getMaterialDefinitions = (req, res) => {
+//     const { series } = req.params;
+//     const definitions = loadMaterialDefinitions(series);
+//     res.send({ definitions });
+// };
+//
+// export const getQualityDefinitions = (req, res) => {
+//     const { series } = req.params;
+//     const definitions = loadQualityDefinitions(series);
+//     res.send({ definitions });
+// };
 
 export const getDefaultDefinitions = (req, res) => {
-    const { series } = req.params;
-    const definitions = loadDefaultDefinitions(series);
+    const { series, headType } = req.params;
+    const definitions = loadDefaultDefinitions(headType, series);
     res.send({ definitions });
 };
 
 export const createDefinition = (req, res) => {
-    const { definition } = req.body;
-    const series = isDefaultQualityDefinition(definition.definitionId) ? req.body.series : '';
+    const { headType } = req.params;
+    const { definition, series } = req.body;
 
     const definitionLoader = new DefinitionLoader();
     definitionLoader.fromObject(definition);
 
-    const filePath = path.join(`${DataStorage.configDir}/${series}`, `${definitionLoader.definitionId}.def.json`);
+    const filePath = path.join(`${DataStorage.configDir}/${headType}/${series}`, `${definitionLoader.definitionId}.def.json`);
+    // console.log('filePath', filePath);
     fs.writeFile(filePath, JSON.stringify(definitionLoader.toJSON(), null, 2), 'utf8', (err) => {
         if (err) {
             res.status(ERR_INTERNAL_SERVER_ERROR).send({ err });
         } else {
             // load definition using new loader to avoid potential settings override issues
             const loader = new DefinitionLoader();
-            loader.loadDefinition(definitionLoader.definitionId, series);
+            loader.loadDefinition(headType, definitionLoader.definitionId, series);
             res.send({ definition: loader.toObject() });
         }
     });
 };
 
 export const removeDefinition = (req, res) => {
-    const { definitionId } = req.params;
-    const series = isDefaultQualityDefinition(definitionId) ? req.body.series : '';
+    const { definitionId, headType } = req.params;
+    const series = req.body.series;
 
-    const filePath = path.join(`${DataStorage.configDir}/${series}`, `${definitionId}.def.json`);
+    const filePath = path.join(`${DataStorage.configDir}/${headType}/${series}`, `${definitionId}.def.json`);
     fs.unlink(filePath, (err) => {
         if (err) {
             res.status(ERR_INTERNAL_SERVER_ERROR).send({ err });
@@ -100,11 +107,11 @@ export const removeDefinition = (req, res) => {
 };
 
 export const updateDefinition = (req, res) => {
-    const { definitionId } = req.params;
-    const series = isDefaultQualityDefinition(definitionId) ? req.body.series : '';
+    const { definitionId, headType } = req.params;
+    const series = req.body.series;
 
     const definitionLoader = new DefinitionLoader();
-    definitionLoader.loadDefinition(definitionId, series);
+    definitionLoader.loadDefinition(headType, definitionId, series);
 
     const { definition } = req.body;
 
@@ -116,7 +123,7 @@ export const updateDefinition = (req, res) => {
         definitionLoader.updateSettings(definition.settings);
     }
 
-    const filePath = path.join(`${DataStorage.configDir}/${series}`, `${definitionId}.def.json`);
+    const filePath = path.join(`${DataStorage.configDir}/${headType}/${series}`, `${definitionId}.def.json`);
     fs.writeFile(filePath, JSON.stringify(definitionLoader.toJSON(), null, 2), 'utf8', (err) => {
         if (err) {
             res.status(ERR_INTERNAL_SERVER_ERROR).send({ err });
@@ -128,7 +135,8 @@ export const updateDefinition = (req, res) => {
 };
 
 export const uploadDefinition = (req, res) => {
-    const { definitionId, tmpPath } = req.body;
+    const { headType } = req.params;
+    const { definitionId, tmpPath, series } = req.body;
     const readFileSync = fs.readFileSync(`${DataStorage.tmpDir}/${tmpPath}`, 'utf-8');
     const obj = JSON.parse(readFileSync);
 
@@ -143,8 +151,8 @@ export const uploadDefinition = (req, res) => {
 
     const definitionLoader = new DefinitionLoader();
     try {
-        definitionLoader.loadJSON(definitionId, obj);
-        const filePath = path.join(`${DataStorage.configDir}`, `${definitionId}.def.json`);
+        definitionLoader.loadJSON(headType, definitionId, obj);
+        const filePath = path.join(`${DataStorage.configDir}/${headType}/${series}`, `${definitionId}.def.json`);
         fs.writeFile(filePath, JSON.stringify(definitionLoader.toJSON(), null, 2), 'utf8', (err) => {
             if (err) {
                 res.status(ERR_INTERNAL_SERVER_ERROR).send({ err });

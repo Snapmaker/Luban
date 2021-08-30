@@ -28,6 +28,7 @@ function PrintingManager() {
     const managerDisplayType = useSelector(state => state?.printing?.managerDisplayType, shallowEqual);
     const materialDefinitions = useSelector(state => state?.printing?.materialDefinitions);
     const qualityDefinitions = useSelector(state => state?.printing?.qualityDefinitions);
+    const series = useSelector(state => state?.machine?.series);
     const dispatch = useDispatch();
     if (!showPrintingManager) {
         return null;
@@ -49,7 +50,8 @@ function PrintingManager() {
         exportConfigFile: (definitionForManager) => {
             const definitionId = definitionForManager.definitionId;
             const targetFile = `${definitionId}.def.json`;
-            dispatch(projectActions.exportConfigFile(targetFile));
+            console.log('series', series);
+            dispatch(projectActions.exportConfigFile(targetFile, `printing/${series}`));
         },
         onUpdateDefaultDefinition: (definitionForManager) => {
             const definitionId = definitionForManager.definitionId;

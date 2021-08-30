@@ -1,0 +1,78 @@
+{
+    "category": "Default Material",
+    "definitionId": "DefaultFEM",
+    "version": "1.0.0",
+    "name": "Flat End Mill",
+    "settings": {
+        "diameter": {
+            "default_value": 1.5,
+            "type": "float",
+            "min": 0.1,
+            "max": 10,
+            "unit": "mm",
+            "description": "Set the diameter of the carving tool.",
+            "label": "Cutting Diameter"
+        },
+        "angle": {
+            "default_value": 180,
+            "type": "float",
+            "min": 1,
+            "max": 180,
+            "unit": "°",
+            "description": "Set the point angle of the carving tool.",
+            "label": "Point Angle"
+        },
+        "shaft_diameter": {
+            "default_value": 1.5,
+            "type": "float",
+            "min": 0.1,
+            "max": 10,
+            "unit": "mm",
+            "description": "Set the shank diameter of the carving tool.",
+            "label": "Shank Diameter"
+        },
+        "jog_speed": {
+            "default_value": 1500,
+            "type": "float",
+            "min": 1,
+            "max": 6000,
+            "unit": "mm/min",
+            "label": "Jog Speed",
+            "description": "Set the speed at which the tool moves on the material when it is not carving."
+        },
+        "work_speed": {
+            "default_value": 300,
+            "type": "float",
+            "min": 1,
+            "max": 6000,
+            "unit": "mm/min",
+            "label": "Work Speed",
+            "description": "Set the speed at which the tool moves on the material when it is carving."
+        },
+        "plunge_speed": {
+            "default_value": 300,
+            "type": "float",
+            "min": 0.1,
+            "max": 1000,
+            "unit": "mm/min",
+            "label": "Plunge Speed",
+            "description": "Set the speed at which the tool is driven down into the material."
+        },
+        "step_down": {
+            "default_value": 0.5,
+            "type": "float",
+            "min": 0.01,
+            "unit": "mm",
+            "label": "Stepdown",
+            "description": "Set the distance along the Z axis per step that the tool is plunged into the material."
+        },
+        "step_over": {
+            "default_value": 0.5,
+            "type": "float",
+            "min": 0.01,
+            "unit": "mm",
+            "label": "Stepover",
+            "description": "Set the space between parallel toolpaths."
+        }
+    }
+}

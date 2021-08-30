@@ -61,9 +61,10 @@ export const PROCESS_MODE_GREYSCALE = 'greyscale';
 export const PROCESS_MODE_MESH = 'mesh';
 
 export const CncV1Regex = /([A-Za-z0-9_]+).def.json$/;
-export const CnCV2Regex = /([A-Za-z0-9_]+).defv2.json$/;
+export const CncV2Regex = /([A-Za-z0-9_]+).defv2.json$/;
 export const CncSuffix = '.defv2.json';
 export const CNC_CONFIG_SUBCATEGORY = 'CncConfig';
+export const PRINTING_CONFIG_SUBCATEGORY = 'PrintingConfig';
 // Use a special a value to expand the range of pixels in the picture
 // 255 -> 0 => 255 ->0 -> -255
 export const CNC_IMAGE_NEGATIVE_RANGE_FIELD = 254;

@@ -105,7 +105,7 @@ function useRenderMainToolBar(setShowHomePage, setShowJobType, setShowWorkspace,
             >
                 <div className="align-l width-168">
                     <SvgIcon
-                        type="static"
+                        type={['static']}
                         disabled={isOriginalSeries ? false : !isConnected}
                         name="MainToolbarAddBackground"
                     />
@@ -121,7 +121,7 @@ function useRenderMainToolBar(setShowHomePage, setShowJobType, setShowWorkspace,
             >
                 <div className="align-l width-168">
                     <SvgIcon
-                        type="static"
+                        type={['static']}
                         name="MainToolbarRemoverBackground"
                     />
                     <span
