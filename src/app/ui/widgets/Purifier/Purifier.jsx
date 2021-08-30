@@ -65,18 +65,12 @@ function Purifier({ widgetActions }) {
     }, []);
 
     useEffect(() => {
-        if (!isConnected) {
-            widgetActions.setDisplay(false);
-        }
-    }, [isConnected]);
-
-    useEffect(() => {
-        if (!airPurifier) {
-            widgetActions.setDisplay(false);
-        } else {
+        if (airPurifier && isConnected) {
             widgetActions.setDisplay(true);
+        } else {
+            widgetActions.setDisplay(false);
         }
-    }, [airPurifier]);
+    }, [isConnected, airPurifier]);
 
     useEffect(() => {
         if (airPurifierSwitch !== isFilterEnable) {
