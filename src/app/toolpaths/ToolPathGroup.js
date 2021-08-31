@@ -4,7 +4,7 @@ import { createToolPathNameByType, getModelsByToolPathType, getToolPathType, SUC
 import { generateModelDefaultConfigs } from '../models/ModelInfoUtils';
 import { DATA_PREFIX, HEAD_LASER } from '../constants';
 import { ViewPathRenderer } from '../lib/renderer/ViewPathRenderer';
-import { MATERIAL_UNSELECTED, MATERIAL_SELECTED } from '../lib/renderer/ToolPathRenderer';
+import { MATERIAL_UNSELECTED, MATERIAL_SELECTED } from '../workers/ShaderMaterial/ToolpathRendererMeterial';
 
 class ToolPathGroup {
     toolPaths = [];
@@ -81,11 +81,11 @@ class ToolPathGroup {
         this.simulationObject && (this.simulationObject.visible = show);
     }
 
-    async onGenerateToolPath(taskResult) {
+    async onGenerateToolPath(taskResult, renderResult) {
         const toolPath = this.toolPaths.find(v => v.id === taskResult.taskId);
 
         if (toolPath) {
-            await toolPath.onGenerateToolPath(taskResult, () => { this._updated(); });
+            await toolPath.onGenerateToolPath(taskResult, renderResult, () => { this._updated(); });
             this.addSelectedToolpathColor(true);
             this._updated();
         }

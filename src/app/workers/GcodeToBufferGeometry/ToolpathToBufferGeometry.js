@@ -1,102 +1,62 @@
+import noop from 'lodash/noop';
 import * as THREE from 'three';
 import { Vector2 } from '../../../shared/lib/math/Vector2';
+import { DATA_PREFIX } from '../../constants';
 
-const UNIFORMS = {
-    // rgba
-    u_g1_color: new THREE.Uniform(new THREE.Vector4(0, 0, 0, 1)),
-    u_select_color: new THREE.Uniform(new THREE.Vector4(0.156, 0.655, 0.882, 1))
-};
+class ToolpathToBufferGeometry {
+    parse(filename, onProgress = noop) {
+        const filePath = `${DATA_PREFIX}/${filename}`;
+        return new Promise((resolve, reject) => {
+            try {
+                new THREE.FileLoader().load(
+                    filePath,
+                    (data) => {
+                        const toolPath = JSON.parse(data);
+                        this.toolPath = toolPath;
+                        const renderResult = this.render(onProgress);
 
-const CNC_LASER_VERT_SHADER = [
-    'varying float v_g_code;',
-    'attribute float a_g_code;',
-    'void main(){',
-    '    v_g_code = a_g_code;',
-    '    gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);',
-    '    gl_PointSize = 1.0;',
-    '}'
-].join('');
-
-const CNC_LASER_FRAG_UNSELECT_SHADER = [
-    'uniform vec4 u_g1_color;',
-    'varying float v_g_code;',
-    'void main(){',
-    '    if(v_g_code == 0.0){',
-    '        discard;',
-    '    }',
-    '    gl_FragColor = u_g1_color;',
-    '}'
-].join('');
-
-const CNC_LASER_FRAG_SELECT_SHADER = [
-    'uniform vec4 u_select_color;',
-    'varying float v_g_code;',
-    'void main(){',
-    '    if(v_g_code == 0.0){',
-    '        discard;',
-    '    }',
-    '    gl_FragColor = u_select_color;',
-    '}'
-].join('');
-
-
-export const MATERIAL_UNSELECTED = new THREE.ShaderMaterial({
-    uniforms: UNIFORMS,
-    vertexShader: CNC_LASER_VERT_SHADER,
-    fragmentShader: CNC_LASER_FRAG_UNSELECT_SHADER,
-    side: THREE.DoubleSide,
-    transparent: true,
-    opacity: 0.9,
-    linewidth: 1
-});
-export const MATERIAL_SELECTED = new THREE.ShaderMaterial({
-    uniforms: UNIFORMS,
-    vertexShader: CNC_LASER_VERT_SHADER,
-    fragmentShader: CNC_LASER_FRAG_SELECT_SHADER,
-    side: THREE.DoubleSide,
-    transparent: true,
-    opacity: 0.9,
-    linewidth: 1
-});
-
-// eslint-disable-next-line no-unused-vars
-const motionColor = {
-    'G0': new THREE.Color(0xc8c8c8),
-    'G1': new THREE.Color(0x000000),
-    'unknown': new THREE.Color(0x000000)
-};
-
-class ToolPathRenderer {
-    constructor(toolPath) {
-        this.toolPath = toolPath;
+                        resolve(renderResult);
+                    }
+                );
+            } catch (e) {
+                reject(e);
+            }
+        });
     }
 
-    render() {
-        const { headType, movementMode, data, isRotate, isSelected } = this.toolPath;
+    render(onProgress = noop) {
+        const {
+            headType, movementMode, data, isRotate, positionX, positionY, rotationB, isSelected
+        } = this.toolPath;
 
         // now only support cnc&laser
         if (!['cnc', 'laser'].includes(headType)) {
             return null;
         }
-        let obj;
+        let bufferGeometry;
         if (headType === 'laser') {
             if (movementMode === 'greyscale-dot') {
-                obj = this.parseToPoints(data, isSelected);
+                bufferGeometry = this.parseToPoints(data, onProgress);
             } else {
-                obj = this.parseToLine(data, isRotate, isSelected);
+                bufferGeometry = this.parseToLine(data, isRotate, onProgress);
             }
         } else {
-            obj = this.parseToLine(data, isRotate, isSelected);
+            bufferGeometry = this.parseToLine(data, isRotate, onProgress);
         }
-        obj.position.set(isRotate ? 0 : this.toolPath.positionX, this.toolPath.positionY, 0);
-        if (this.toolPath.rotationB) {
-            obj.rotation.y = this.toolPath.rotationB / 180 * Math.PI;
-        }
-        obj.scale.set(1, 1, 1);
-        return obj;
+        return {
+            headType,
+            movementMode,
+            isRotate,
+            positionX,
+            positionY,
+            rotationB,
+            isSelected,
+            positions: bufferGeometry.positionsAttribute.array,
+            gCodes: bufferGeometry.gCodesAttribute.array
+        };
     }
 
-    parseToLine(data, isRotate, isSelected) {
+    parseToLine(data, isRotate, onProgress) {
         const positions = [];
         const gCodes = [];
 
@@ -107,6 +67,8 @@ class ToolPathRenderer {
             Y: 0,
             Z: 0
         };
+        let p = 0;
+        let lastP = 0;
         for (let i = 0; i < data.length; i++) {
             const item = data[i];
 
@@ -156,23 +118,28 @@ class ToolPathRenderer {
                 }
                 state = newState;
             }
-        }
-        const bufferGeometry = new THREE.BufferGeometry();
-        const positionAttribute = new THREE.Float32BufferAttribute(positions, 3);
-        const gCodeAttribute = new THREE.Float32BufferAttribute(gCodes, 1);
-        bufferGeometry.addAttribute('position', positionAttribute);
-        bufferGeometry.addAttribute('a_g_code', gCodeAttribute);
-        let material;
 
-        if (isSelected) {
-            material = MATERIAL_SELECTED;
-        } else {
-            material = MATERIAL_UNSELECTED;
+            p = i / data.length;
+            if (p - lastP > 0.05) {
+                onProgress(p);
+                lastP = p;
+            }
         }
-        return new THREE.Line(bufferGeometry, material);
+        onProgress(1);
+
+        // const bufferGeometry = new THREE.BufferGeometry();
+        const positionsAttribute = new THREE.Float32BufferAttribute(positions, 3);
+        const gCodesAttribute = new THREE.Float32BufferAttribute(gCodes, 1);
+        // bufferGeometry.addAttribute('position', positionAttribute);
+        // bufferGeometry.addAttribute('a_g_code', gCodeAttribute);
+
+        return {
+            positionsAttribute,
+            gCodesAttribute
+        };
     }
 
-    parseToPoints(data, isSelected) {
+    parseToPoints(data, onProgress) {
         const positions = [];
         const gCodes = [];
         let state = {
@@ -182,6 +149,8 @@ class ToolPathRenderer {
             B: 0,
             Z: 0
         };
+        let p = 0;
+        let lastP = 0;
         for (let i = 0; i < data.length; i++) {
             const item = data[i];
             const newState = { ...state };
@@ -203,19 +172,24 @@ class ToolPathRenderer {
                 positions.push(res.Z);
                 gCodes.push(state.G);
             }
+
+            p = i / data.length;
+            if (p - lastP > 0.05) {
+                onProgress(p);
+                lastP = p;
+            }
         }
-        const bufferGeometry = new THREE.BufferGeometry();
-        const positionAttribute = new THREE.Float32BufferAttribute(positions, 3);
-        const gCodeAttribute = new THREE.Float32BufferAttribute(gCodes, 1);
-        bufferGeometry.addAttribute('position', positionAttribute);
-        bufferGeometry.addAttribute('a_g_code', gCodeAttribute);
-        let material;
-        if (isSelected) {
-            material = MATERIAL_SELECTED;
-        } else {
-            material = MATERIAL_UNSELECTED;
-        }
-        return new THREE.Points(bufferGeometry, material);
+        onProgress(1);
+        // const bufferGeometry = new THREE.BufferGeometry();
+        const positionsAttribute = new THREE.Float32BufferAttribute(positions, 3);
+        const gCodesAttribute = new THREE.Float32BufferAttribute(gCodes, 1);
+        // bufferGeometry.addAttribute('position', positionAttribute);
+        // bufferGeometry.addAttribute('a_g_code', gCodeAttribute);
+
+        return {
+            positionsAttribute,
+            gCodesAttribute
+        };
     }
 
     calculateXYZ(state) {
@@ -224,7 +198,10 @@ class ToolPathRenderer {
         if (isRotate && headType === 'laser') {
             z = diameter / 2;
         }
-        const res = Vector2.rotate({ x: state.X, y: z }, -state.B);
+        const res = Vector2.rotate({
+            x: state.X,
+            y: z
+        }, -state.B);
         return {
             X: res.x,
             Y: state.Y,
@@ -232,4 +209,5 @@ class ToolPathRenderer {
         };
     }
 }
-export default ToolPathRenderer;
+
+export default ToolpathToBufferGeometry;

@@ -3,6 +3,8 @@ import path from 'path';
 import uuid from 'uuid';
 import includes from 'lodash/includes';
 import _ from 'lodash';
+import ToolpathRendererWorker from '../../workers/ToolpathRenderer.worker';
+
 
 import api from '../../api';
 import {
@@ -87,8 +89,15 @@ const sizeModel = (size, materials, sourceWidth, sourceHeight) => {
         height = scale * sourceHeight;
     }
 
-    return { width, height, scale };
+    return {
+        width,
+        height,
+        scale
+    };
 };
+
+const toolpathRendererWorker = new ToolpathRendererWorker();
+
 
 export const actions = {
 
@@ -111,10 +120,12 @@ export const actions = {
                 initFlag: true
             }));
         }
+
+        dispatch(actions.__initToolpathWorker());
     },
 
     __initOnControllerEvents: (headType) => {
-        return (dispatch) => {
+        return (dispatch, getState) => {
             ['processImage', 'generateToolPath', 'generateGcode', 'generateViewPath']
                 .forEach(key => {
                     controller.on(`taskProgress:${key}`, (taskResult) => {
@@ -138,7 +149,19 @@ export const actions = {
                 if (headType !== taskResult.headType) {
                     return;
                 }
-                dispatch(processActions.onGenerateToolPath(headType, taskResult));
+
+                const { toolPathGroup } = getState()[headType];
+                const toolPath = toolPathGroup._getToolPath(taskResult.taskId);
+
+                if (toolPath) {
+                    if (taskResult.taskStatus === 'failed') {
+                        toolPath.onGenerateToolpathFailed(taskResult);
+                    } else {
+                        toolpathRendererWorker.postMessage({
+                            taskResult: taskResult
+                        });
+                    }
+                }
             });
 
             controller.on('taskCompleted:generateGcode', (taskResult) => {
@@ -154,6 +177,72 @@ export const actions = {
                 }
                 dispatch(processActions.onGenerateViewPath(headType, taskResult));
             });
+        };
+    },
+
+    __initToolpathWorker: () => (dispatch, getState) => {
+        toolpathRendererWorker.onmessage = (e) => {
+            const data = e.data;
+            const { status, headType, value } = data;
+            switch (status) {
+                case 'succeed': {
+                    const { taskResult } = value;
+                    const { toolPathGroup, shouldGenerateGcodeCounter } = getState()[headType];
+                    const toolpath = toolPathGroup._getToolPath(taskResult.taskId);
+                    if (toolpath) {
+                        toolpath.onGenerateToolpathFinail();
+                    }
+
+                    if (toolPathGroup && toolPathGroup._getCheckAndSuccessToolPaths()) {
+                        dispatch(baseActions.updateState(headType, {
+                            shouldGenerateGcodeCounter: shouldGenerateGcodeCounter + 1
+                        }));
+                    }
+
+                    dispatch(baseActions.updateState(headType, {
+                        stage: CNC_LASER_STAGE.GENERATE_TOOLPATH_SUCCESS,
+                        progress: 1
+                    }));
+                    break;
+                }
+                case 'data': {
+                    // eslint-disable-next-line no-unused-vars
+                    const { taskResult, index, renderResult } = value;
+
+                    const { toolPathGroup } = getState()[headType];
+
+                    const toolpath = toolPathGroup._getToolPath(taskResult.taskId);
+
+                    if (toolpath) {
+                        toolpath.onGenerateToolpathModel(taskResult.data[index], taskResult.filenames[index], renderResult);
+                    }
+
+                    break;
+                }
+                case 'progress': {
+                    const { progress } = value;
+                    if (progress < 0.1) {
+                        dispatch(actions.updateState(headType, {
+                            stage: CNC_LASER_STAGE.RENDER_TOOLPATH,
+                            progress: progress
+                        }));
+                    } else {
+                        dispatch(actions.updateState(headType, {
+                            progress: progress
+                        }));
+                    }
+                    break;
+                }
+                case 'err': {
+                    dispatch(baseActions.updateState(headType, {
+                        stage: CNC_LASER_STAGE.GENERATE_TOOLPATH_FAILED,
+                        progress: 1
+                    }));
+                    break;
+                }
+                default:
+                    break;
+            }
         };
     },
 
@@ -294,7 +383,11 @@ export const actions = {
 
                     const bufferGeometry = new THREE.BufferGeometry();
                     const modelPositionAttribute = new THREE.BufferAttribute(positions, 3);
-                    const material = new THREE.MeshPhongMaterial({ color: 0xa0a0a0, specular: 0xb0b0b0, shininess: 0 });
+                    const material = new THREE.MeshPhongMaterial({
+                        color: 0xa0a0a0,
+                        specular: 0xb0b0b0,
+                        shininess: 0
+                    });
 
                     bufferGeometry.addAttribute('position', modelPositionAttribute);
                     bufferGeometry.computeVertexNormals();
@@ -454,7 +547,8 @@ export const actions = {
         SVGActions.clearSelection();
         SVGActions.addSelectedSvgModelsByModels([model]);
 
-        if (path.extname(uploadName).toLowerCase() === '.stl') {
+        if (path.extname(uploadName)
+            .toLowerCase() === '.stl') {
             dispatch(actions.prepareStlVisualizer(headType, model));
         }
 
@@ -1266,7 +1360,10 @@ export const actions = {
      */
     moveElementsOnKeyDown: (headType, elements, { dx, dy }) => (dispatch, getState) => {
         const { SVGActions } = getState()[headType];
-        SVGActions.moveElementsOnArrowKeyDown(elements, { dx, dy });
+        SVGActions.moveElementsOnArrowKeyDown(elements, {
+            dx,
+            dy
+        });
     },
 
     /**
@@ -1733,7 +1830,10 @@ export const actions = {
         }
 
         dispatch(actions.resetProcessState(headType));
-        dispatch(actions.updateState(headType, { coordinateMode, coordinateSize }));
+        dispatch(actions.updateState(headType, {
+            coordinateMode,
+            coordinateSize
+        }));
     },
 
     scaleCanvasToFit: (headType) => (dispatch, getState) => {

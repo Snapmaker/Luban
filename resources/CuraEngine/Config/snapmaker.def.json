@@ -213,9 +213,6 @@
         "z_seam_relative": {
             "description": "When enabled, the z seam coordinates are relative to each part's centre. When disabled, the coordinates define an absolute position on the heated bed."
         },
-        "max_feedrate_z_override": {
-            "description": "The maximum speed with which the heated bed is moved. Setting this to zero causes the print to use the firmware defaults for the maximum z speed."
-        },
         "speed_slowdown_layers": {
             "description": "The first few layers are printed slower than the rest of the model, to get better adhesion to the heated bed and improve the overall success rate of prints. The speed is gradually increased over these layers."
         },
