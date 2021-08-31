@@ -2,13 +2,9 @@ import api from '../../api';
 import { MACHINE_SERIES } from '../../constants';
 
 class DefinitionManager {
-    snapmakerDefinition = null;
+    // snapmakerDefinition = null;
 
     activeDefinition = null;
-
-    materialDefinitions = [];
-
-    qualityDefinitions = [];
 
     defaultDefinitions = [];
 
@@ -16,8 +12,8 @@ class DefinitionManager {
 
     async init(headType, series) {
         this.series = series;
-        // let res;
-        // TODO useless?
+        let res;
+        // TODO useless
         // let definitionId = 'snapmaker2';
         // if (
         //     this.series === MACHINE_SERIES.ORIGINAL.value
@@ -29,17 +25,16 @@ class DefinitionManager {
         //     definitionId = 'snapmaker2';
         // }
         //
-        // res = await api.printingConfigs.getDefinition(headType, definitionId, this.series);
+        // res = await api.profileDefinitions.getDefinition(headType, definitionId, this.series);
         // this.snapmakerDefinition = res.body.definition;
         // End TODO useless?
 
         // active definition
-        // res = await this.getDefinition(headType, 'active', false);
-        // this.activeDefinition = res.body.definition;
+        res = await this.getDefinition(headType, 'active', false);
+        this.activeDefinition = res;
 
-        const res = await api.printingConfigs.getDefaultDefinitions(headType, this.series);
+        res = await api.profileDefinitions.getDefaultDefinitions(headType, this.series);
         this.defaultDefinitions = res.body.definitions;
-        // console.log('getDefaultDefinitions', newRes.body.definitions[0].definitionId, newRes.body.definitions[0].settings && newRes.body.definitions[0].settings.material_flow.default_value);
     }
 
     get series() {
@@ -61,13 +56,23 @@ class DefinitionManager {
      * Get raw definition file (for download).
      */
     async getRawDefinition(headType, definitionId) {
-        const res = await api.printingConfigs.getRawDefinition(headType, definitionId, this.series);
+        const res = await api.profileDefinitions.getRawDefinition(headType, definitionId, this.series);
         return res.body;
     }
 
-    async getDefinition(headType, definitionId) {
-        const res = await api.printingConfigs.getDefinition(headType, definitionId, this.series);
+    async getDefinition(headType, definitionId, isInsideCategory = true) {
+        let res = {};
+        if (isInsideCategory) {
+            res = await api.profileDefinitions.getDefinition(headType, definitionId, this.series);
+        } else {
+            res = await api.profileDefinitions.getDefinition(headType, definitionId);
+        }
         return res.body.definition;
+    }
+
+    async getConfigDefinitions(headType) {
+        const res = await api.profileDefinitions.getConfigDefinitions(headType, this.series);
+        return res.body.definitions;
     }
 
     async getDefinitionsByPrefixName(headType, prefix) {
@@ -79,23 +84,22 @@ class DefinitionManager {
         ) {
             series = MACHINE_SERIES.ORIGINAL.value;
         }
-        const res = await api.printingConfigs.getDefinitionsByPrefixName(headType, prefix, series);
+        const res = await api.profileDefinitions.getDefinitionsByPrefixName(headType, prefix, series);
         return res.body.definitions;
     }
 
 
     async createDefinition(headType, definition) {
-        const res = await api.printingConfigs.createDefinition(headType, definition, this.series);
+        const res = await api.profileDefinitions.createDefinition(headType, definition, this.series);
         return res.body.definition;
     }
 
     async removeDefinition(headType, definition) {
-        await api.printingConfigs.removeDefinition(headType, definition.definitionId, this.series);
+        await api.profileDefinitions.removeDefinition(headType, definition.definitionId, this.series);
     }
 
-    async uploadDefinition(headType, definitionId, tmpPath) {
-        console.log('headType, definitionId, tmpPath', headType, definitionId, tmpPath);
-        const res = await api.printingConfigs.uploadDefinition(headType, definitionId, tmpPath, this.series);
+    async uploadDefinition(headType, definitionId, uploadName) {
+        const res = await api.profileDefinitions.uploadDefinition(headType, definitionId, uploadName, this.series);
         const { err, definition } = res.body;
         if (err) {
             console.error(err);
@@ -116,9 +120,10 @@ class DefinitionManager {
         ) {
             series = MACHINE_SERIES.ORIGINAL.value;
         }
-        await api.printingConfigs.updateDefinition(headType, definition.definitionId, definition, series);
+        await api.profileDefinitions.updateDefinition(headType, definition.definitionId, definition, series);
     }
 
+    // Start Notice: only used for printing config
     // Calculate hidden settings
     calculateDependencies(definition, settings, hasSupportModel) {
         if (settings.infill_sparse_density) {
@@ -315,6 +320,8 @@ class DefinitionManager {
 
         definition.settings.machine_end_gcode = { default_value: gcode.join('\n') };
     }
+
+    // End Notice: only used for printing config
 }
 
 const definitionManager = new DefinitionManager();

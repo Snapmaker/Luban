@@ -1,9 +1,10 @@
 import fs from 'fs';
 import path from 'path';
-import includes from 'lodash/includes';
+import { includes, isNil } from 'lodash';
 import DataStorage from '../DataStorage';
+// import pkg from '../../package.json';
 import logger from '../lib/logger';
-import { CncV1Regex, CncV2Regex } from '../constants';
+import { CncV1Regex, CncV2Regex, ConfigV1Suffix } from '../constants';
 
 const log = logger('definition');
 
@@ -13,10 +14,29 @@ const SETTING_FIELDS = [
     'sm_value'
 ];
 
+const DEFAULT_PREDEFINED = {
+    'printing': [
+        'quality.fast_print.def.json',
+        'quality.normal_quality.def.json',
+        'quality.high_quality.def.json',
+        'material.pla.def.json',
+        'material.abs.def.json',
+        'material.petg.def.json'
+    ],
+    'cnc': [
+        'DefaultCVbit.def.json',
+        'DefaultMBEM.def.json',
+        'DefaultFEM.def.json',
+        'DefaultSGVbit.def.json'
+    ]
+};
+
 export class DefinitionLoader {
     definitionId = '';
 
     name = '';
+
+    category = '';
 
     inherits = '';
 
@@ -27,12 +47,16 @@ export class DefinitionLoader {
     metadata = {};
 
     loadDefinition(headType, definitionId, configPath) {
-        // console.log('loadDefinition', headType, definitionId, configPath);
         if (!this.definitionId) {
             this.definitionId = definitionId;
         }
-        const filePath = configPath ? path.join(`${DataStorage.configDir}/${headType}/${configPath}`, `${definitionId}.def.json`)
-            : path.join(`${DataStorage.configDir}/${headType}`, `${definitionId}.def.json`);
+        const suffix = ConfigV1Suffix;
+        let filePath = '';
+        if (isNil(configPath) || configPath === 'undefined') {
+            filePath = path.join(`${DataStorage.configDir}/${headType}`, `${definitionId}${suffix}`);
+        } else {
+            filePath = path.join(`${DataStorage.configDir}/${headType}/${configPath}`, `${definitionId}${suffix}`);
+        }
         // in case of JSON parse error, set default json inherits from snapmaker2.def.json
         let json = {
             'name': 'Snapmaker Default',
@@ -40,14 +64,38 @@ export class DefinitionLoader {
             'inherits': 'snapmaker2'
         };
         try {
-            console.log('filePath', filePath);
             const data = fs.readFileSync(filePath, 'utf8');
             json = JSON.parse(data);
+            this.loadJSON(headType, definitionId, json);
         } catch (e) {
             console.error(`JSON Syntax error of: ${definitionId}`);
         }
+    }
 
-        this.loadJSON(headType, definitionId, json);
+    loadDefaultDefinition(headType, definitionId, configPath) {
+        if (!this.definitionId) {
+            this.definitionId = definitionId;
+        }
+        const suffix = ConfigV1Suffix;
+        let filePath = '';
+        if (isNil(configPath) || configPath === 'undefined') {
+            filePath = path.join(`${DataStorage.defaultConfigDir}/${headType}`, `${definitionId}${suffix}`);
+        } else {
+            filePath = path.join(`${DataStorage.defaultConfigDir}/${headType}/${configPath}`, `${definitionId}${suffix}`);
+        }
+        // in case of JSON parse error, set default json inherits from snapmaker2.def.json
+        let json = {
+            'name': 'Snapmaker Default',
+            'version': 2,
+            'inherits': 'snapmaker2'
+        };
+        try {
+            const data = fs.readFileSync(filePath, 'utf8');
+            json = JSON.parse(data);
+            this.loadJSON(headType, definitionId, json);
+        } catch (e) {
+            console.error(`JSON Syntax error of: ${definitionId}`);
+        }
     }
 
     loadJSON(headType, definitionId, json) {
@@ -66,6 +114,9 @@ export class DefinitionLoader {
 
         if (json.name) {
             this.name = json.name;
+        }
+        if (json.category) {
+            this.category = json.category;
         }
 
         // settings
@@ -107,14 +158,17 @@ export class DefinitionLoader {
         const overrides = {};
 
         for (const key of this.ownKeys) {
-            overrides[key] = {
-                default_value: this.settings[key].default_value
-            };
+            if (this.settings[key]) {
+                overrides[key] = {
+                    default_value: this.settings[key].default_value
+                };
+            }
         }
 
         return {
             version: 1,
             name: this.name,
+            category: this.category,
             inherits: this.inherits,
             metadata: this.metadata,
             overrides
@@ -125,6 +179,7 @@ export class DefinitionLoader {
         return {
             definitionId: this.definitionId,
             name: this.name,
+            category: this.category,
             inherits: this.inherits,
             settings: this.settings,
             metadata: this.metadata,
@@ -135,6 +190,7 @@ export class DefinitionLoader {
     fromObject(object) {
         this.definitionId = object.definitionId;
         this.name = object.name;
+        this.category = object.category;
         this.inherits = object.inherits;
         this.ownKeys = new Set(object.ownKeys);
         this.settings = object.settings;
@@ -143,6 +199,10 @@ export class DefinitionLoader {
 
     updateName(name) {
         this.name = name;
+    }
+
+    updateCategory(category) {
+        this.category = category;
     }
 
     updateSettings(settings) {
@@ -165,7 +225,7 @@ function writeDefinition(headType, filename, series, definitionLoader) {
     });
 }
 
-export function loadDefinitionLoaderByFilename(headType, filename, configPath) {
+export function loadDefinitionLoaderByFilename(headType, filename, configPath, isDefault = false) {
     let definitionId = '';
     if (CncV1Regex.test(filename)) {
         definitionId = filename.substr(0, filename.length - 9);
@@ -173,11 +233,16 @@ export function loadDefinitionLoaderByFilename(headType, filename, configPath) {
         definitionId = filename.substr(0, filename.length - 11);
     }
     const definitionLoader = new DefinitionLoader();
-    definitionLoader.loadDefinition(headType, definitionId, configPath);
+    if (isDefault) {
+        definitionLoader.loadDefaultDefinition(headType, definitionId, configPath);
+    } else {
+        definitionLoader.loadDefinition(headType, definitionId, configPath);
+    }
 
     return definitionLoader;
 }
 
+// TODO: merge 'loadMaterialDefinitions' and 'loadQualityDefinitions' function
 export function loadMaterialDefinitions(headType, configPath) {
     const predefined = [];
 
@@ -261,29 +326,43 @@ export function loadDefinitionsByPrefixName(headType, prefix, configPath) {
         return loadMaterialDefinitions(headType, configPath);
     } else if (prefix === 'quality') {
         return loadQualityDefinitions(headType, configPath);
+    } else {
+        return [];
     }
 }
 
-export function loadDefaultDefinitions(headType, series = 'A150') {
-    const predefined = [];
+export function loadAllSeriesDefinitions(isDefault = false, headType, series = 'A150') {
+    const predefined = DEFAULT_PREDEFINED[headType];
     const definitions = [];
-    predefined.push('quality.fast_print.def.json');
-    predefined.push('quality.normal_quality.def.json');
-    predefined.push('quality.high_quality.def.json');
-    predefined.push('material.pla.def.json');
-    predefined.push('material.abs.def.json');
-    predefined.push('material.petg.def.json');
 
-    const configDir = `${DataStorage.defaultConfigDir}/${headType}`;
-
+    const configDir = isDefault ? `${DataStorage.defaultConfigDir}/${headType}`
+        : `${DataStorage.configDir}/${headType}`;
     const defaultFilenames = fs.readdirSync(`${configDir}/${series}`);
 
-    for (const filename of predefined) {
-        if (includes(defaultFilenames, filename)) {
-            const definitionLoader = loadDefinitionLoaderByFilename(headType, filename, series);
+    if (isDefault) {
+        for (const filename of predefined) {
+            if (includes(defaultFilenames, filename)) {
+                const definitionLoader = loadDefinitionLoaderByFilename(headType, filename, series, isDefault);
+                definitions.push(definitionLoader.toObject());
+            }
+        }
+    } else {
+        const defaultDefinitionLoader = loadDefinitionLoaderByFilename(headType, predefined[0], series);
+        for (const filename of defaultFilenames) {
+            const definitionLoader = loadDefinitionLoaderByFilename(headType, filename, series, isDefault);
+            if (defaultDefinitionLoader) {
+                const ownKeys = Array.from(defaultDefinitionLoader.ownKeys).filter(e => !definitionLoader.ownKeys.has(e));
+                if (ownKeys && ownKeys.length > 0) {
+                    for (const ownKey of ownKeys) {
+                        definitionLoader.ownKeys.add(ownKey);
+                    }
+                    writeDefinition(headType, filename, series, definitionLoader);
+                }
+            }
             definitions.push(definitionLoader.toObject());
         }
     }
+
 
     return definitions;
 }

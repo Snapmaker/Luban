@@ -1,11 +1,12 @@
 {
     "category": "Default Material",
-    "definitionId": "DefaultMBEM",
+    "inherits": "snapmaker2",
+    "definitionId": "DefaultCVbit",
     "version": "1.0.0",
-    "name": "Ball End Mill",
+    "name": "Carving V-bit",
     "settings": {
         "diameter": {
-            "default_value": 3.175,
+            "default_value": 0.2,
             "type": "float",
             "min": 0.1,
             "max": 10,
@@ -14,7 +15,7 @@
             "label": "Cutting Diameter"
         },
         "angle": {
-            "default_value": 180,
+            "default_value": 30,
             "type": "float",
             "min": 1,
             "max": 180,
@@ -67,7 +68,7 @@
             "description": "Set the distance along the Z axis per step that the tool is plunged into the material."
         },
         "step_over": {
-            "default_value": 1.2,
+            "default_value": 0.12,
             "type": "float",
             "min": 0.01,
             "unit": "mm",

@@ -1,11 +1,12 @@
 {
     "category": "Default Material",
-    "definitionId": "DefaultMBEM",
+    "definitionId": "DefaultFEM",
+    "inherits": "snapmaker2",
     "version": "1.0.0",
-    "name": "Ball End Mill",
+    "name": "Flat End Mill",
     "settings": {
         "diameter": {
-            "default_value": 3.175,
+            "default_value": 1.5,
             "type": "float",
             "min": 0.1,
             "max": 10,
@@ -23,7 +24,7 @@
             "label": "Point Angle"
         },
         "shaft_diameter": {
-            "default_value": 3.175,
+            "default_value": 1.5,
             "type": "float",
             "min": 0.1,
             "max": 10,
@@ -67,7 +68,7 @@
             "description": "Set the distance along the Z axis per step that the tool is plunged into the material."
         },
         "step_over": {
-            "default_value": 1.2,
+            "default_value": 0.5,
             "type": "float",
             "min": 0.01,
             "unit": "mm",

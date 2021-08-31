@@ -50,7 +50,6 @@ function PrintingManager() {
         exportConfigFile: (definitionForManager) => {
             const definitionId = definitionForManager.definitionId;
             const targetFile = `${definitionId}.def.json`;
-            console.log('series', series);
             dispatch(projectActions.exportConfigFile(targetFile, `printing/${series}`));
         },
         onUpdateDefaultDefinition: (definitionForManager) => {

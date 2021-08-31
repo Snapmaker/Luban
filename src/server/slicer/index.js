@@ -1,8 +1,8 @@
-import { loadDefinitionsByPrefixName, loadDefaultDefinitions, DefinitionLoader } from './definition';
+import { loadDefinitionsByPrefixName, loadAllSeriesDefinitions, DefinitionLoader } from './definition';
 
 
 export {
     loadDefinitionsByPrefixName,
-    loadDefaultDefinitions,
+    loadAllSeriesDefinitions,
     DefinitionLoader
 };

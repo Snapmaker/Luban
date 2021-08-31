@@ -1,11 +1,12 @@
 {
     "category": "Default Material",
-    "definitionId": "DefaultCVbit",
+    "definitionId": "DefaultSGVbit",
     "version": "1.0.0",
-    "name": "Carving V-bit",
+    "inherits": "snapmaker2",
+    "name": "Straight Groove V-bit",
     "settings": {
         "diameter": {
-            "default_value": 0.2,
+            "default_value": 0.3,
             "type": "float",
             "min": 0.1,
             "max": 10,
@@ -14,7 +15,7 @@
             "label": "Cutting Diameter"
         },
         "angle": {
-            "default_value": 30,
+            "default_value": 20,
             "type": "float",
             "min": 1,
             "max": 180,

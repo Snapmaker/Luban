@@ -2,6 +2,7 @@
     "category": "Epoxy Tooling Board",
     "definitionId": "REpoxySGVbit",
     "version": "1.0.0",
+    "inherits": "snapmaker2",
     "name": "Straight Groove V-bit",
     "settings": {
         "diameter": {

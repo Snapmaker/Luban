@@ -3,6 +3,7 @@
     "definitionId": "RAcrylicFEM",
     "version": "1.0.0",
     "name": "Flat End Mill",
+    "inherits": "snapmaker2",
     "settings": {
         "diameter": {
             "default_value": 1.5,

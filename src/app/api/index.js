@@ -243,63 +243,43 @@ watch.readFile = defaultAPIFactory(({ file }) => request.post('/api/watch/file')
 //
 // print3dConfigs
 //
-const printingConfigs = {};
+const profileDefinitions = {};
 
-printingConfigs.fetch = defaultAPIFactory((type) => request.get(`/api/printingConfigs/${type}`));
+profileDefinitions.fetch = defaultAPIFactory((type) => request.get(`/api/profileDefinition/${type}`));
 
-printingConfigs.create = defaultAPIFactory((formdata) => request.post('/api/printingConfigs').send(formdata));
+profileDefinitions.create = defaultAPIFactory((formdata) => request.post('/api/profileDefinition').send(formdata));
 
-printingConfigs.update = defaultAPIFactory((formdata) => request.put('/api/printingConfigs').send(formdata));
+profileDefinitions.update = defaultAPIFactory((formdata) => request.put('/api/profileDefinition').send(formdata));
 
-printingConfigs.delete = defaultAPIFactory((options) => request.delete('/api/printingConfigs').send(options));
+profileDefinitions.delete = defaultAPIFactory((options) => request.delete('/api/profileDefinition').send(options));
 
-printingConfigs.getRawDefinition = defaultAPIFactory((headType, definitionId, series) => request.get(`/api/printingRawDefinition/${headType}/${definitionId}`).query({
+profileDefinitions.getRawDefinition = defaultAPIFactory((headType, definitionId, series) => request.get(`/api/profileRawDefinition/${headType}/${definitionId}`).query({
     series
 }));
-printingConfigs.getDefinition = defaultAPIFactory((headType, definitionId, series) => request.get(`/api/printingDefinition/${headType}/${definitionId}/${series}`));
+profileDefinitions.getDefinition = defaultAPIFactory((headType, definitionId, series) => request.get(`/api/profileDefinition/${headType}/${definitionId}/${series}`));
 
-// printingConfigs.getQualityDefinitions = defaultAPIFactory((series) => request.get(`/api/printingQualityDefinitions/${headType}/${series}`));
-// printingConfigs.getMaterialDefinitions = defaultAPIFactory((series) => request.get(`/api/printingMaterialDefinitions/${series}`));
-printingConfigs.getDefinitionsByPrefixName = defaultAPIFactory((headType, prefix, series) => request.get(`/api/getDefinitionsByPrefixName/${headType}/${prefix}/${series}`));
-printingConfigs.getDefaultDefinitions = defaultAPIFactory((headType, series) => request.get(`/api/printingDefaultDefinitions/${headType}/${series}`));
+profileDefinitions.getDefinitionsByPrefixName = defaultAPIFactory((headType, prefix, series) => request.get(`/api/getDefinitionsByPrefixName/${headType}/${prefix}/${series}`));
+profileDefinitions.getDefaultDefinitions = defaultAPIFactory((headType, series) => request.get(`/api/profileDefaultDefinitions/${headType}/${series}`));
+profileDefinitions.getConfigDefinitions = defaultAPIFactory((headType, series) => request.get(`/api/profileConfigDefinitions/${headType}/${series}`));
 
 
-printingConfigs.createDefinition = defaultAPIFactory((headType, definition, series) => request.post(`/api/printingDefinition/${headType}`).send({
+profileDefinitions.createDefinition = defaultAPIFactory((headType, definition, series) => request.post(`/api/profileDefinition/${headType}`).send({
     definition,
     series
 }));
 
-printingConfigs.removeDefinition = defaultAPIFactory((headType, definitionId, series) => request.delete(`/api/printingDefinition/${headType}/${definitionId}`).send({ series }));
+profileDefinitions.removeDefinition = defaultAPIFactory((headType, definitionId, series) => request.delete(`/api/profileDefinition/${headType}/${definitionId}`).send({ series }));
 
-printingConfigs.updateDefinition = defaultAPIFactory((headType, definitionId, definition, series) => request.put(`/api/printingDefinition/${headType}/${definitionId}`).send({
+profileDefinitions.updateDefinition = defaultAPIFactory((headType, definitionId, definition, series) => request.put(`/api/profileDefinition/${headType}/${definitionId}`).send({
     definition,
     series
 }));
-printingConfigs.uploadDefinition = defaultAPIFactory((headType, definitionId, tmpPath, series) => request.post(`/api/printingDefinition/${headType}/upload`).send({
+profileDefinitions.uploadDefinition = defaultAPIFactory((headType, definitionId, uploadName, series) => request.post(`/api/profileDefinition/${headType}/upload`).send({
     definitionId,
-    tmpPath,
+    uploadName,
     series
 }));
 
-//
-// cncConfigs
-//
-const cncConfigs = {};
-cncConfigs.getAllDefinitions = defaultAPIFactory(() => request.get('/api/cncToolDefinitions'));
-cncConfigs.getDefaultDefinitions = defaultAPIFactory(() => request.get('/api/cncDefaultDefinitions'));
-cncConfigs.getToolListDefinition = defaultAPIFactory((definitionId, name) => request.get(`/api/cncToolListDefinition/${definitionId}`).query({ name }));
-// cncConfigs.createToolCategoryDefinition = defaultAPIFactory((activeToolCategory) => request.post('/api/cncToolCategoryDefinition').send({ activeToolCategory }));
-cncConfigs.createToolListDefinition = defaultAPIFactory((activeToolList) => request.post('/api/cncToolListDefinition/').send({ activeToolList }));
-// cncConfigs.removeToolCategoryDefinition = defaultAPIFactory((definitionId) => request.delete('/api/cncToolCategoryDefinition').send({ definitionId }));
-cncConfigs.removeToolListDefinition = defaultAPIFactory((activeToolList) => request.delete('/api/cncToolListDefinition').send({
-    activeToolList
-}));
-cncConfigs.uploadToolDefinition = defaultAPIFactory((uploadName, toolDefinitions) => request.post('/api/cncToolDefinitions/upload').send({
-    uploadName,
-    toolDefinitions
-}));
-cncConfigs.updateToolDefinition = defaultAPIFactory((activeToolList) => request.put('/api/cncToolDefinitions/update').send({ activeToolList }));
-cncConfigs.changeActiveToolListDefinition = defaultAPIFactory((definitionId, name) => request.post(`/api/cncToolListDefinition/${definitionId}`).query({ name }));
 //
 // Macros
 //
@@ -352,8 +332,7 @@ export default {
 
     generateToolPath,
 
-    printingConfigs,
-    cncConfigs,
+    profileDefinitions,
 
     // State
     getState,

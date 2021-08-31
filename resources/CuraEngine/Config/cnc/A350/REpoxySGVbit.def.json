@@ -1,7 +1,8 @@
 {
-    "category": "Default Material",
-    "definitionId": "DefaultSGVbit",
+    "category": "Epoxy Tooling Board",
+    "definitionId": "REpoxySGVbit",
     "version": "1.0.0",
+    "inherits": "snapmaker2",
     "name": "Straight Groove V-bit",
     "settings": {
         "diameter": {
@@ -59,7 +60,7 @@
             "description": "Set the speed at which the tool is driven down into the material."
         },
         "step_down": {
-            "default_value": 0.5,
+            "default_value": 17.5,
             "type": "float",
             "min": 0.01,
             "unit": "mm",
@@ -70,6 +71,7 @@
             "default_value": 0.12,
             "type": "float",
             "min": 0.01,
+            "max": 20,
             "unit": "mm",
             "label": "Stepover",
             "description": "Set the space between parallel toolpaths."

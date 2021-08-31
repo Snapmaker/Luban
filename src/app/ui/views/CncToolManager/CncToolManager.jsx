@@ -11,7 +11,6 @@ import { CNC_TOOL_CONFIG_GROUP, HEAD_CNC } from '../../../constants';
 import ProfileManager from '../ProfileManager';
 import i18n from '../../../lib/i18n';
 
-const SUBCATEGORY = 'CncConfig';
 // const defaultToolListNames = [
 //     'Carving V-bit',
 //     'Flat End Mill',
@@ -31,6 +30,7 @@ function isDefinitionEditable(activeToolList) {
 function CncToolManager({ closeToolManager, shouldSaveToolpath = false, saveToolPath, setCurrentToolDefinition }) {
     const toolDefinitions = useSelector(state => state?.cnc?.toolDefinitions);
     const activeToolListDefinition = useSelector(state => state?.cnc?.activeToolListDefinition, shallowEqual);
+    const series = useSelector(state => state?.machine?.series);
     const dispatch = useDispatch();
 
     const actions = {
@@ -43,8 +43,8 @@ function CncToolManager({ closeToolManager, shouldSaveToolpath = false, saveTool
         },
         exportConfigFile: (definitionForManager) => {
             const definitionId = definitionForManager.definitionId;
-            const targetFile = `${definitionId}.defv2.json`;
-            dispatch(projectActions.exportConfigFile(targetFile, SUBCATEGORY));
+            const targetFile = `${definitionId}.def.json`;
+            dispatch(projectActions.exportConfigFile(targetFile, `cnc/${series}`));
         },
         onUpdateDefaultDefinition: (definitionForManager) => {
             const { definitionId, name } = definitionForManager;

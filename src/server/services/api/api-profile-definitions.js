@@ -1,7 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 import { ERR_BAD_REQUEST, ERR_INTERNAL_SERVER_ERROR, PRINTING_CONFIG_SUBCATEGORY } from '../../constants';
-import { loadDefinitionsByPrefixName, loadDefaultDefinitions, DefinitionLoader } from '../../slicer';
+import { loadDefinitionsByPrefixName, loadAllSeriesDefinitions, DefinitionLoader } from '../../slicer';
 import DataStorage from '../../DataStorage';
 
 // const isDefaultQualityDefinition = (definitionId) => {
@@ -46,6 +46,7 @@ export const getDefinition = (req, res) => {
     res.send({ definition: definitionLoader.toObject() });
 };
 
+
 export const getDefinitionsByPrefixName = (req, res) => {
     // const definitions = loadMaterialDefinitions();
     const { headType, prefix, series } = req.params;
@@ -53,21 +54,17 @@ export const getDefinitionsByPrefixName = (req, res) => {
     res.send({ definitions });
 };
 
-// export const getMaterialDefinitions = (req, res) => {
-//     const { series } = req.params;
-//     const definitions = loadMaterialDefinitions(series);
-//     res.send({ definitions });
-// };
-//
-// export const getQualityDefinitions = (req, res) => {
-//     const { series } = req.params;
-//     const definitions = loadQualityDefinitions(series);
-//     res.send({ definitions });
-// };
 
 export const getDefaultDefinitions = (req, res) => {
     const { series, headType } = req.params;
-    const definitions = loadDefaultDefinitions(headType, series);
+    const definitions = loadAllSeriesDefinitions(true, headType, series);
+    res.send({ definitions });
+};
+
+
+export const getConfigDefinitions = (req, res) => {
+    const { series, headType } = req.params;
+    const definitions = loadAllSeriesDefinitions(false, headType, series);
     res.send({ definitions });
 };
 
@@ -79,7 +76,6 @@ export const createDefinition = (req, res) => {
     definitionLoader.fromObject(definition);
 
     const filePath = path.join(`${DataStorage.configDir}/${headType}/${series}`, `${definitionLoader.definitionId}.def.json`);
-    // console.log('filePath', filePath);
     fs.writeFile(filePath, JSON.stringify(definitionLoader.toJSON(), null, 2), 'utf8', (err) => {
         if (err) {
             res.status(ERR_INTERNAL_SERVER_ERROR).send({ err });
@@ -118,6 +114,9 @@ export const updateDefinition = (req, res) => {
     if (definition.name) {
         definitionLoader.updateName(definition.name);
     }
+    if (definition.category) {
+        definitionLoader.updateCategory(definition.category);
+    }
 
     if (definition.settings) {
         definitionLoader.updateSettings(definition.settings);
@@ -136,12 +135,16 @@ export const updateDefinition = (req, res) => {
 
 export const uploadDefinition = (req, res) => {
     const { headType } = req.params;
-    const { definitionId, tmpPath, series } = req.body;
-    const readFileSync = fs.readFileSync(`${DataStorage.tmpDir}/${tmpPath}`, 'utf-8');
+    const { definitionId, uploadName, series } = req.body;
+    const readFileSync = fs.readFileSync(`${DataStorage.tmpDir}/${uploadName}`, 'utf-8');
     const obj = JSON.parse(readFileSync);
 
     if (!obj.inherits) {
-        obj.inherits = 'fdmprinter';
+        // todo: how about cnc & laser
+        obj.inherits = 'snapmaker2';
+    }
+    if (!obj.category) {
+        obj.category = 'Custom';
     }
 
     if (!obj.metadata) {
