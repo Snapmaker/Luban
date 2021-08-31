@@ -10,6 +10,7 @@ import request from 'superagent';
 import { pathWithRandomSuffix } from '../../../../shared/lib/random-utils';
 import i18n from '../../../lib/i18n';
 import UniApi from '../../../lib/uni-api';
+import { normalizeNameDisplay } from '../../../lib/normalize-range';
 // import widgetStyles from '../styles.styl';
 import styles from './index.styl';
 import {
@@ -32,9 +33,11 @@ const changeNameInput = [];
 
 const GcodePreviewItem = React.memo(({ gcodeFile, index, selected, onSelectFile }) => {
     const dispatch = useDispatch();
-    const name = gcodeFile.name.length > 25
-        ? `${gcodeFile.name.substring(0, 15)}...${gcodeFile.name.substring(gcodeFile.name.length - 10, gcodeFile.name.length)}`
-        : gcodeFile.name;
+    // const name = gcodeFile.name.length > 25
+    //     ? `${gcodeFile.name.substring(0, 15)}...${gcodeFile.name.substring(gcodeFile.name.length - 10, gcodeFile.name.length)}`
+    //     : gcodeFile.name;
+    const suffixLength = 7;
+    const { prefixName, suffixName } = normalizeNameDisplay(gcodeFile.name, suffixLength);
     let size = '';
     const { isRenaming, uploadName } = gcodeFile;
     if (!gcodeFile.size) {
@@ -94,7 +97,7 @@ const GcodePreviewItem = React.memo(({ gcodeFile, index, selected, onSelectFile 
             )}
             key={pathWithRandomSuffix(gcodeFile.uploadName)}
             onClick={
-                (event) => onSelectFile(gcodeFile.uploadName, name, event)
+                (event) => onSelectFile(gcodeFile.uploadName, null, event)
             }
             onKeyDown={noop}
             role="button"
@@ -130,7 +133,13 @@ const GcodePreviewItem = React.memo(({ gcodeFile, index, selected, onSelectFile 
                     <div
                         className={styles['gcode-file-text-rename']}
                     >
-                        {name}
+                        {/* {name} */}
+                        <span className={classNames(styles['prefix-name'])}>
+                            {prefixName}
+                        </span>
+                        <span className={classNames(styles['suffix-name'])}>
+                            {suffixName}
+                        </span>
                     </div>
 
                 </div>
