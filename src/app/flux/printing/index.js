@@ -6,7 +6,7 @@ import LoadModelWorker from '../../workers/LoadModel.worker';
 import GcodeToBufferGeometryWorker from '../../workers/GcodeToBufferGeometry.worker';
 import { ABSENT_OBJECT, EPSILON, DATA_PREFIX, PRINTING_MANAGER_TYPE_MATERIAL } from '../../constants';
 import { timestamp } from '../../../shared/lib/random-utils';
-
+import { machineStore } from '../../store/local-storage';
 
 import i18n from '../../lib/i18n';
 import definitionManager from '../manager/DefinitionManager';
@@ -44,6 +44,10 @@ const defaultDefinitionKeys = {
         definitions: 'qualityDefinitions',
         id: 'defaultQualityId'
     }
+};
+const CONFIG_ID = {
+    material: 'material.pla',
+    quality: 'quality.fast_print'
 };
 const CONFIG_HEADTYPE = 'printing';
 // eslint-disable-next-line no-unused-vars
@@ -228,10 +232,9 @@ export const actions = {
         const { modelGroup, gcodeLineGroup } = printingState;
         const { series, size } = getState().machine;
         await definitionManager.init(CONFIG_HEADTYPE, series);
+
         dispatch(actions.updateState({
-            activeDefinition: definitionManager.activeDefinition
-        }));
-        dispatch(actions.updateState({
+            activeDefinition: definitionManager.activeDefinition,
             materialDefinitions: await definitionManager.getDefinitionsByPrefixName(CONFIG_HEADTYPE, 'material'),
             qualityDefinitions: await definitionManager.getDefinitionsByPrefixName(CONFIG_HEADTYPE, 'quality')
         }));
@@ -257,6 +260,16 @@ export const actions = {
         const { series } = getState().machine;
         await definitionManager.init(CONFIG_HEADTYPE, series);
 
+        const defaultConfigId = machineStore.get('defaultConfigId');
+        if (defaultConfigId && Object.prototype.toString.call(defaultConfigId) === '[object String]') {
+            const newConfigId = JSON.parse(defaultConfigId);
+            if (newConfigId[series]) {
+                dispatch(actions.updateState({
+                    defaultMaterialId: newConfigId[series]?.material,
+                    defaultQualityId: newConfigId[series]?.quality
+                }));
+            }
+        }
         dispatch(actions.updateState({
             activeDefinition: definitionManager.activeDefinition
         }));
@@ -280,6 +293,19 @@ export const actions = {
 
         // Re-position model group
         gcodeLineGroup.position.set(-size.x / 2, -size.y / 2, 0);
+    },
+
+    updateDefaultConfigId: (type, defaultId) => (dispatch, getState) => {
+        const { series } = getState().machine;
+        let originalConfigId = {};
+        if (machineStore.get('defaultConfigId')) {
+            originalConfigId = JSON.parse(machineStore.get('defaultConfigId'));
+        }
+        originalConfigId[series] = {
+            ...CONFIG_ID,
+            [type]: defaultId
+        };
+        machineStore.set('defaultConfigId', JSON.stringify(originalConfigId));
     },
 
     // TODO: init should be  re-called

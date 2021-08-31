@@ -1,6 +1,6 @@
 import fs from 'fs';
 import path from 'path';
-import { ERR_BAD_REQUEST, ERR_INTERNAL_SERVER_ERROR, PRINTING_CONFIG_SUBCATEGORY } from '../../constants';
+import { ERR_BAD_REQUEST, ERR_INTERNAL_SERVER_ERROR } from '../../constants';
 import { loadDefinitionsByPrefixName, loadAllSeriesDefinitions, DefinitionLoader } from '../../slicer';
 import DataStorage from '../../DataStorage';
 
