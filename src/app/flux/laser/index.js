@@ -21,10 +21,10 @@ import {
 } from '../actionType';
 import { actions as editorActions } from '../editor';
 import ToolPathGroup from '../../toolpaths/ToolPathGroup';
-import { CNC_LASER_STAGE } from '../editor/utils';
 import definitionManager from '../manager/DefinitionManager';
 import i18n from '../../lib/i18n';
 import { timestamp } from '../../../shared/lib/random-utils';
+import ProgressStatesManager, { CNC_LASER_STAGE } from '../editor/utils';
 
 const initModelGroup = new ModelGroup('laser');
 const operationHistory = new OperationHistory();
@@ -111,7 +111,10 @@ const INITIAL_STATE = {
     // check not to duplicated create event
     initEventFlag: false,
     // used to manually control the gcode ganeration including thumbnails
-    shouldGenerateGcodeCounter: 0
+    shouldGenerateGcodeCounter: 0,
+
+    // ProgressStatesManager
+    progressStatesManager: new ProgressStatesManager()
 };
 
 const ACTION_SET_BACKGROUND_ENABLED = 'laser/ACTION_SET_BACKGROUND_ENABLED';

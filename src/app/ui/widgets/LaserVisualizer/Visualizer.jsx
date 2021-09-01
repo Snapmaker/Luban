@@ -99,6 +99,8 @@ class Visualizer extends Component {
         uploadImage: PropTypes.func.isRequired,
         switchToPage: PropTypes.func.isRequired,
 
+        progressStatesManager: PropTypes.object.isRequired,
+
         elementActions: PropTypes.shape({
             moveElementsStart: PropTypes.func.isRequired,
             moveElements: PropTypes.func.isRequired,
@@ -337,18 +339,21 @@ class Visualizer extends Component {
             case CNC_LASER_STAGE.EMPTY:
                 return '';
             case CNC_LASER_STAGE.GENERATING_TOOLPATH:
-                return i18n._('Generating toolpath... {{progress}}%', { progress: (100.0 * progress).toFixed(1) });
+                return this.props.progressStatesManager.getNotice(1, stage, progress);
+                // return i18n._('Generating toolpath... {{progress}}%', { progress: (100.0 * progress).toFixed(1) });
             case CNC_LASER_STAGE.GENERATE_TOOLPATH_FAILED:
                 return i18n._('Failed to generate toolpath.');
             case CNC_LASER_STAGE.PREVIEWING:
-                return i18n._('Previewing toolpath...');
+                return this.props.progressStatesManager.getNotice(1, stage, progress);
+                // return i18n._('Previewing toolpath...');
             case CNC_LASER_STAGE.PREVIEW_SUCCESS:
                 return i18n._('Previewed toolpath successfully');
             case CNC_LASER_STAGE.PREVIEW_FAILED:
                 return i18n._('Failed to preview toolpath.');
             case CNC_LASER_STAGE.GENERATING_GCODE:
             case CNC_LASER_STAGE.GENERATE_TOOLPATH_SUCCESS:
-                return i18n._('Generating G-code... {{progress}}%', { progress: (100.0 * progress).toFixed(1) });
+                return this.props.progressStatesManager.getNotice(1, stage, progress);
+                // return i18n._('Generating G-code... {{progress}}%', { progress: (100.0 * progress).toFixed(1) });
             case CNC_LASER_STAGE.GENERATE_GCODE_SUCCESS:
                 return i18n._('Generated G-code successfully.');
             case CNC_LASER_STAGE.GENERATE_GCODE_FAILED:
@@ -590,7 +595,7 @@ class Visualizer extends Component {
 const mapStateToProps = (state, ownProps) => {
     const { size } = state.machine;
     const { currentModalPath } = state.appbarMenu;
-    const { background } = state.laser;
+    const { background, progressStatesManager } = state.laser;
 
     const { SVGActions, scale, target, materials, page, selectedModelID, modelGroup, svgModelGroup, toolPathGroup, displayedType,
         isChangedAfterGcodeGenerating, renderingTimestamp, stage, progress, coordinateMode, coordinateSize, inProgress } = state.laser;
@@ -599,6 +604,7 @@ const mapStateToProps = (state, ownProps) => {
 
     return {
         currentModalPath,
+        progressStatesManager,
         // switch pages trigger pathname change
         pathname: ownProps.location.pathname,
         page,

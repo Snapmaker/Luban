@@ -5,7 +5,6 @@ import includes from 'lodash/includes';
 import _ from 'lodash';
 import ToolpathRendererWorker from '../../workers/ToolpathRenderer.worker';
 
-
 import api from '../../api';
 import {
     checkParams,
@@ -97,7 +96,6 @@ const sizeModel = (size, materials, sourceWidth, sourceHeight) => {
 };
 
 const toolpathRendererWorker = new ToolpathRendererWorker();
-
 
 export const actions = {
 
@@ -308,7 +306,6 @@ export const actions = {
     uploadImage: (headType, file, mode, onError) => (dispatch, getState) => {
         dispatch(actions.updateState(headType, {
             stage: CNC_LASER_STAGE.UPLOADING_IMAGE,
-            inProgress: true,
             progress: 0.25
         }));
         const { materials } = getState()[headType];
@@ -321,7 +318,6 @@ export const actions = {
             .then((res) => {
                 dispatch(actions.updateState(headType, {
                     stage: CNC_LASER_STAGE.UPLOAD_IMAGE_SUCCESS,
-                    inProgress: false,
                     progress: 1
                 }));
                 const { width, height, originalName, uploadName } = res.body;
@@ -332,7 +328,6 @@ export const actions = {
                 onError && onError(err);
                 dispatch(actions.updateState(headType, {
                     stage: CNC_LASER_STAGE.UPLOAD_IMAGE_FAILED,
-                    inProgress: false,
                     progress: 1
                 }));
             });
@@ -341,7 +336,6 @@ export const actions = {
     uploadCaseImage: (headType, file, mode, caseConfigs, caseTransformation, onError) => (dispatch, getState) => {
         dispatch(actions.updateState(headType, {
             stage: CNC_LASER_STAGE.UPLOADING_IMAGE,
-            inProgress: true,
             progress: 0.25
         }));
         const { materials } = getState()[headType];
@@ -350,7 +344,6 @@ export const actions = {
             .then((res) => {
                 dispatch(actions.updateState(headType, {
                     stage: CNC_LASER_STAGE.UPLOAD_IMAGE_SUCCESS,
-                    inProgress: false,
                     progress: 1
                 }));
                 const { width, height, originalName, uploadName } = res.body;
@@ -413,7 +406,6 @@ export const actions = {
                     worker.terminate();
                     dispatch(actions.updateState(headType, {
                         stage: CNC_LASER_STAGE.PREVIEW_FAILED,
-                        inProgress: false,
                         progress: 0
                     }));
                     break;
@@ -703,7 +695,6 @@ export const actions = {
 
         dispatch(baseActions.updateState(headType, {
             stage: CNC_LASER_STAGE.PROCESSING_IMAGE,
-            inProgress: true,
             progress: 0
         }));
 
@@ -875,7 +866,6 @@ export const actions = {
                 displayedType: DISPLAYED_TYPE_MODEL,
                 needToPreview: true,
                 stage: CNC_LASER_STAGE.EMPTY,
-                inProgress: false,
                 progress: 0
             }));
         }
@@ -1035,7 +1025,6 @@ export const actions = {
         dispatch(baseActions.render(headType));
         dispatch(baseActions.updateState(headType, {
             stage: CNC_LASER_STAGE.PROCESS_IMAGE_SUCCESS,
-            inProgress: false,
             progress: 1
         }));
     },
