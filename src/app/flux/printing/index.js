@@ -863,7 +863,7 @@ export const actions = {
         await dispatch(actions.updateActiveDefinitionMachineSize(size));
 
         const finalDefinition = definitionManager.finalizeActiveDefinition(activeDefinition);
-        await api.printingConfigs.createDefinition(finalDefinition);
+        await api.profileDefinitions.createDefinition(CONFIG_HEADTYPE, finalDefinition);
 
         dispatch(actions.updateState({
             stage: PRINTING_STAGE.SLICING,

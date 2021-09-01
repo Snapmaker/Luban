@@ -177,12 +177,10 @@ class DataStorage {
                  }
              }
          }
-         console.log('seriesFiles, outside', printingConfigNames, cncConfigPaths);
 
          if (printingConfigNames.length) {
              const printingDir = `${srcDir}/${PRINTING_CONFIG_SUBCATEGORY}`;
              const seriesFiles = fs.readdirSync(printingDir);
-             console.log('seriesFiles printing', printingDir, seriesFiles);
              for (const oldFileName of printingConfigNames) {
                  for (const file of seriesFiles) {
                      const src = path.join(printingDir, file);
@@ -194,7 +192,6 @@ class DataStorage {
                  }
              }
          }
-
          if (cncConfigPaths.length) {
              const cncDir = `${srcDir}/${CNC_CONFIG_SUBCATEGORY}`;
              const seriesFiles = fs.readdirSync(cncDir);
@@ -207,7 +204,6 @@ class DataStorage {
                              newFileName = newFileName.replace(/.defv2.json$/, '.def.json');
                          }
                          const newFilePath = `${src}/${newFileName}`;
-                         console.log('seriesFiles cnc', src, newFileName, oldFilePath, newFilePath);
                          fs.copyFileSync(oldFilePath, newFilePath);
                      }
                  }

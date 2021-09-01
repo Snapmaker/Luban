@@ -138,7 +138,6 @@ function ProfileManager({ optionConfigGroup, disableCategory = true, managerTitl
             if (!isCategorySelected && definitionId === definitionForManager.definitionId) {
                 return;
             }
-            // const selected = currentDefinitions.current.find(d => d.definitionId === definitionId);
             let selected;
             if (!name) {
                 selected = currentDefinitions.current.find(d => d.definitionId === definitionId);

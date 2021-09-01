@@ -126,9 +126,6 @@ function SettingItem({ definitionKey, settings, isDefaultDefinition = () => true
                             // disabled={!isDefinitionEditable()}
                             size={styleSize}
                             onChange={(value) => {
-                                if (definitionKey.indexOf('flow') >= 0) {
-                                    console.log('ddd float', definitionKey, value);
-                                }
                                 onChangeDefinition(definitionKey, value);
                             }}
                         />
@@ -141,9 +138,6 @@ function SettingItem({ definitionKey, settings, isDefaultDefinition = () => true
                             size={styleSize}
                             // disabled={!isDefinitionEditable()}
                             onChange={(value) => {
-                                if (definitionKey.indexOf('flow') >= 0) {
-                                    console.log('ddd int', definitionKey, value);
-                                }
                                 onChangeDefinition(definitionKey, value);
                             }}
                         />

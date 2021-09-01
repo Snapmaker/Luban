@@ -60,8 +60,8 @@ export const PROCESS_MODE_HALFTONE = 'halftone';
 export const PROCESS_MODE_GREYSCALE = 'greyscale';
 export const PROCESS_MODE_MESH = 'mesh';
 
-export const CncV1Regex = /([A-Za-z0-9_]+).def.json$/;
-export const CncV2Regex = /([A-Za-z0-9_]+).defv2.json$/;
+export const ConfigV1Regex = /([A-Za-z0-9_]+).def.json$/;
+export const ConfigV2Regex = /([A-Za-z0-9_]+).defv2.json$/;
 export const CncSuffix = '.defv2.json';
 export const ConfigV1Suffix = '.def.json';
 export const ConfigV2Suffix = '.defv2.json';

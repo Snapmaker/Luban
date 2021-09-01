@@ -140,7 +140,6 @@ export const uploadDefinition = (req, res) => {
     const obj = JSON.parse(readFileSync);
 
     if (!obj.inherits) {
-        // todo: how about cnc & laser
         obj.inherits = 'snapmaker2';
     }
     if (!obj.category) {

@@ -4,7 +4,7 @@ import { includes, isNil } from 'lodash';
 import DataStorage from '../DataStorage';
 import pkg from '../../package.json';
 import logger from '../lib/logger';
-import { CncV1Regex, CncV2Regex, ConfigV1Suffix } from '../constants';
+import { ConfigV1Regex, ConfigV1Suffix } from '../constants';
 
 const log = logger('definition');
 
@@ -227,10 +227,8 @@ function writeDefinition(headType, filename, series, definitionLoader) {
 
 export function loadDefinitionLoaderByFilename(headType, filename, configPath, isDefault = false) {
     let definitionId = '';
-    if (CncV1Regex.test(filename)) {
+    if (ConfigV1Regex.test(filename)) {
         definitionId = filename.substr(0, filename.length - 9);
-    } else if (CncV2Regex.test(filename)) {
-        definitionId = filename.substr(0, filename.length - 11);
     }
     const definitionLoader = new DefinitionLoader();
     if (isDefault) {
@@ -349,17 +347,19 @@ export function loadAllSeriesDefinitions(isDefault = false, headType, series = '
     } else {
         const defaultDefinitionLoader = loadDefinitionLoaderByFilename(headType, predefined[0], series);
         for (const filename of defaultFilenames) {
-            const definitionLoader = loadDefinitionLoaderByFilename(headType, filename, series, isDefault);
-            if (defaultDefinitionLoader) {
-                const ownKeys = Array.from(defaultDefinitionLoader.ownKeys).filter(e => !definitionLoader.ownKeys.has(e));
-                if (ownKeys && ownKeys.length > 0) {
-                    for (const ownKey of ownKeys) {
-                        definitionLoader.ownKeys.add(ownKey);
+            if (ConfigV1Regex.test(filename)) {
+                const definitionLoader = loadDefinitionLoaderByFilename(headType, filename, series, isDefault);
+                if (defaultDefinitionLoader) {
+                    const ownKeys = Array.from(defaultDefinitionLoader.ownKeys).filter(e => !definitionLoader.ownKeys.has(e));
+                    if (ownKeys && ownKeys.length > 0) {
+                        for (const ownKey of ownKeys) {
+                            definitionLoader.ownKeys.add(ownKey);
+                        }
+                        writeDefinition(headType, filename, series, definitionLoader);
                     }
-                    writeDefinition(headType, filename, series, definitionLoader);
                 }
+                definitions.push(definitionLoader.toObject());
             }
-            definitions.push(definitionLoader.toObject());
         }
     }
 

@@ -1,7 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 import { isNil, includes } from 'lodash';
-import { CncSuffix, CncV1Regex, CncV2Regex } from '../../constants';
+import { CncSuffix, ConfigV1Regex, ConfigV2Regex } from '../../constants';
 
 
 const defaultToolListNames = [
@@ -98,7 +98,7 @@ export const addNewParameter = (settings) => {
 export const cncUniformProfile = (filename, configDir) => {
     // return new Promise(async (resolve) => {
     let json;
-    if (CncV1Regex.test(filename) && filename.substr(0, filename.length - 9) !== 'active') {
+    if (ConfigV1Regex.test(filename) && filename.substr(0, filename.length - 9) !== 'active') {
         const filePath = path.join(configDir, filename);
         const data = fs.readFileSync(filePath, 'utf8');
         json = JSON.parse(data);
@@ -132,7 +132,7 @@ export const cncUniformProfile = (filename, configDir) => {
         return definitions;
     }
 
-    if (CncV2Regex.test(filename) && filename.substr(0, filename.length - CncSuffix.length) !== 'active') {
+    if (ConfigV2Regex.test(filename) && filename.substr(0, filename.length - CncSuffix.length) !== 'active') {
         const filePath = path.join(configDir, filename);
         const data = fs.readFileSync(filePath, 'utf8');
         json = JSON.parse(data);
