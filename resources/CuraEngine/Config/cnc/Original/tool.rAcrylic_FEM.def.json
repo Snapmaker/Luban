@@ -1,6 +1,5 @@
 {
     "category": "Acrylic",
-    "definitionId": "RAcrylicFEM",
     "version": "1.0.0",
     "name": "Flat End Mill",
     "inherits": "snapmaker2",

@@ -1,6 +1,5 @@
 {
     "category": "Default Material",
-    "definitionId": "DefaultFEM",
     "inherits": "snapmaker2",
     "version": "1.0.0",
     "name": "Flat End Mill",

@@ -1,6 +1,7 @@
 import path from 'path';
 import fs from 'fs';
 import mkdirp from 'mkdirp';
+import { includes } from 'lodash';
 import { app } from 'electron';
 import isElectron from 'is-electron';
 // import semver from 'semver';
@@ -142,15 +143,89 @@ class DataStorage {
          }
      }
 
+     // v4.0.0 to v4.1.0 : upgrade to make all configs move to new config directory
+     upgradeConfigFile(srcDir) {
+         const printingConfigNames = [];
+         const cncConfigPaths = [];
+         if (fs.existsSync(srcDir)) {
+             const files = fs.readdirSync(srcDir);
+             const materialRegex = /^material.([0-9]{7}).def.json$/;
+             const qualityRegex = /^quality.([0-9]{7}).def.json$/;
+             for (const file of files) {
+                 const src = path.join(srcDir, file);
+                 // const dst = path.join(dstDir, file);
+                 if (fs.statSync(src).isFile()) {
+                     if (materialRegex.test(file) || qualityRegex.test(file)) {
+                         printingConfigNames.push(file);
+                     }
+                 } else {
+                     if (file === 'CncConfig') {
+                         const cncConfigFiles = fs.readdirSync(src);
+                         for (const cncFile of cncConfigFiles) {
+                             if (!includes(['DefaultCVbit.def.json',
+                                 'DefaultMBEM.def.json',
+                                 'DefaultFEM.def.json',
+                                 'DefaultSGVbit.def.json',
+                                 'RAcrylicFEM.defv2.json'], cncFile)) {
+                                 const cncConfigPath = path.join(src, cncFile);
+                                 cncConfigPaths.push(cncConfigPath);
+                             }
+                         }
+                     } else if (file !== 'cnc' && file !== 'laser' && file !== 'printing') {
+                         rmDir(src);
+                     }
+                 }
+             }
+         }
+         console.log('seriesFiles, outside', printingConfigNames, cncConfigPaths);
+
+         if (printingConfigNames.length) {
+             const printingDir = `${srcDir}/${PRINTING_CONFIG_SUBCATEGORY}`;
+             const seriesFiles = fs.readdirSync(printingDir);
+             console.log('seriesFiles printing', printingDir, seriesFiles);
+             for (const oldFileName of printingConfigNames) {
+                 for (const file of seriesFiles) {
+                     const src = path.join(printingDir, file);
+                     if (!fs.statSync(src).isFile()) {
+                         const oldFilePath = `${srcDir}/${oldFileName}`;
+                         const newFilePath = `${src}/${oldFileName}`;
+                         fs.copyFileSync(oldFilePath, newFilePath);
+                     }
+                 }
+             }
+         }
+
+         if (cncConfigPaths.length) {
+             const cncDir = `${srcDir}/${CNC_CONFIG_SUBCATEGORY}`;
+             const seriesFiles = fs.readdirSync(cncDir);
+             for (const oldFilePath of cncConfigPaths) {
+                 for (const file of seriesFiles) {
+                     const src = path.join(cncDir, file);
+                     if (!fs.statSync(src).isFile()) {
+                         let newFileName = `tool.${path.basename(oldFilePath)}`;
+                         if (/([A-Za-z0-9_]+).defv2.json$/.test(newFileName)) {
+                             newFileName = newFileName.replace(/.defv2.json$/, '.def.json');
+                         }
+                         const newFilePath = `${src}/${newFileName}`;
+                         console.log('seriesFiles cnc', src, newFileName, oldFilePath, newFilePath);
+                         fs.copyFileSync(oldFilePath, newFilePath);
+                     }
+                 }
+             }
+         }
+     }
+
+
      async initSlicer() {
          mkdirp.sync(this.configDir);
-         console.log('initSlicer', this.configDir, this.defaultConfigDir);
          mkdirp.sync(this.defaultConfigDir);
          mkdirp.sync(`${this.configDir}/${CNC_CONFIG_SUBCATEGORY}`);
          mkdirp.sync(`${this.configDir}/${PRINTING_CONFIG_SUBCATEGORY}`);
 
          const CURA_ENGINE_CONFIG_LOCAL = '../resources/CuraEngine/Config';
          await this.copyDirAndReplace(CURA_ENGINE_CONFIG_LOCAL, this.configDir);
+         // //TODO
+         this.upgradeConfigFile(this.configDir);
          await this.copyDirAndReplace(CURA_ENGINE_CONFIG_LOCAL, this.defaultConfigDir);
      }
 

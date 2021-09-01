@@ -2,7 +2,7 @@ import fs from 'fs';
 import path from 'path';
 import { includes, isNil } from 'lodash';
 import DataStorage from '../DataStorage';
-// import pkg from '../../package.json';
+import pkg from '../../package.json';
 import logger from '../lib/logger';
 import { CncV1Regex, CncV2Regex, ConfigV1Suffix } from '../constants';
 
@@ -24,10 +24,10 @@ const DEFAULT_PREDEFINED = {
         'material.petg.def.json'
     ],
     'cnc': [
-        'DefaultCVbit.def.json',
-        'DefaultMBEM.def.json',
-        'DefaultFEM.def.json',
-        'DefaultSGVbit.def.json'
+        'tool.default_CVbit.def.json',
+        'tool.default_FEM.def.json',
+        'tool.default_MBEM.def.json',
+        'tool.default_SGVbit.def.json'
     ]
 };
 
@@ -166,7 +166,7 @@ export class DefinitionLoader {
         }
 
         return {
-            version: 1,
+            version: pkg.version,
             name: this.name,
             category: this.category,
             inherits: this.inherits,

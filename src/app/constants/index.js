@@ -225,6 +225,13 @@ export const PRINTING_QUALITY_CONFIG_INDEX = {
 export const PRINTING_MANAGER_TYPE_MATERIAL = 'material';
 export const PRINTING_MANAGER_TYPE_QUALITY = 'quality';
 
+export const DEFAULT_CNC_CONFIG_IDS = [
+    'tool.default_CVbit',
+    'tool.default_FEM',
+    'tool.default_MBEM',
+    'tool.default_SGVbit'
+];
+
 export const CNC_TOOL_CONFIG_GROUP = [
     {
         name: 'Carving Tool',
