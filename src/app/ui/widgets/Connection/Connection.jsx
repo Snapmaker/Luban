@@ -1,7 +1,7 @@
-import React, { PureComponent } from 'react';
+import React, { useEffect, useState } from 'react';
 import PropTypes from 'prop-types';
 import classNames from 'classnames';
-import { connect } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { Button } from '../../components/Buttons';
 
 import {
@@ -20,159 +20,118 @@ import WifiConnection from './WifiConnection';
 import { actions as machineActions } from '../../../flux/machine';
 
 
-class Connection extends PureComponent {
-    static propTypes = {
-        widgetActions: PropTypes.object.isRequired,
-        dataSource: PropTypes.string.isRequired,
-        connectionType: PropTypes.string.isRequired,
-        series: PropTypes.string.isRequired,
-        isHomed: PropTypes.bool,
-        isConnected: PropTypes.bool.isRequired,
+function Connection({ widgetId, widgetActions }) {
+    const { widgets } = useSelector(state => state.widget);
+    const dataSource = widgets[widgetId].dataSource;
+    const { connectionType, isConnected, series, isHomed } = useSelector(state => state.machine);
+    const [alertMessage, setAlertMessage] = useState('');
+    const [showHomeReminder, setShowHomeReminder] = useState(false);
+    const dispatch = useDispatch();
 
-        setConnectionType: PropTypes.func.isRequired,
-        executeGcodeAutoHome: PropTypes.func.isRequired
-    };
-
-    state = {
-        alertMessage: '',
-        showHomeReminder: false
-    };
-
-    actions = {
+    const actions = {
         clearAlert: () => {
-            this.setState({
-                alertMessage: ''
-            });
+            setAlertMessage('');
         },
         onSelectTabSerial: () => {
-            this.props.setConnectionType(CONNECTION_TYPE_SERIAL);
+            dispatch(machineActions.connect.setConnectionType(CONNECTION_TYPE_SERIAL));
         },
         onSelectTabWifi: () => {
-            this.props.setConnectionType(CONNECTION_TYPE_WIFI);
+            dispatch(machineActions.connect.setConnectionType(CONNECTION_TYPE_WIFI));
         },
         openHomeModal: () => {
-            this.setState({
-                showHomeReminder: true
-            });
+            setShowHomeReminder(true);
         },
         closeHomeModal: () => {
-            this.setState({
-                showHomeReminder: false
-            });
+            setShowHomeReminder(false);
         },
         clickHomeModalOk: () => {
-            this.props.executeGcodeAutoHome();
-            this.setState({
-                showHomeReminder: false
-            });
+            dispatch(machineActions.executeGcodeAutoHome());
+            setShowHomeReminder(false);
         }
     };
 
-    constructor(props) {
-        super(props);
-        this.props.widgetActions.setTitle(i18n._('Connection'));
-    }
+    useEffect(() => {
+        widgetActions.setTitle(i18n._('Connection'));
+    }, []);
 
-    componentWillReceiveProps(nextProps) {
-        const { isHomed } = nextProps;
-        if (this.props.isHomed !== isHomed && !isHomed) {
-            if (this.props.dataSource === PROTOCOL_TEXT) {
-                this.actions.openHomeModal();
+    useEffect(() => {
+        if (!isHomed) {
+            if (dataSource === PROTOCOL_TEXT) {
+                actions.openHomeModal();
+            }
+        } else {
+            if (dataSource === PROTOCOL_TEXT) {
+                actions.closeHomeModal();
             }
         }
-        if (this.props.isHomed !== isHomed && isHomed) {
-            if (this.props.dataSource === PROTOCOL_TEXT) {
-                this.actions.closeHomeModal();
-            }
-        }
-    }
+    }, [isHomed]);
 
-    render() {
-        const { connectionType, isConnected, series, isHomed } = this.props;
-        const { alertMessage, showHomeReminder } = this.state;
-        const isOriginal = series === MACHINE_SERIES.ORIGINAL.value;
-        return (
-            <div className="padding-bottom-16">
-                {alertMessage && (
-                    <Notifications bsStyle="danger" onDismiss={this.actions.clearAlert}>
-                        {alertMessage}
-                    </Notifications>
-                )}
+    const isOriginal = series === MACHINE_SERIES.ORIGINAL.value;
+    return (
+        <div className="padding-bottom-16">
+            {alertMessage && (
+                <Notifications bsStyle="danger" onDismiss={actions.clearAlert}>
+                    {alertMessage}
+                </Notifications>
+            )}
 
-                {EXPERIMENTAL_WIFI_CONTROL && (
-                    <div className={classNames('sm-tabs', 'margin-vertical-16')}>
-                        <button
-                            type="button"
-                            className={classNames('sm-tab', { 'sm-selected font-weight-bold': (connectionType === CONNECTION_TYPE_SERIAL) })}
-                            onClick={this.actions.onSelectTabSerial}
-                            disabled={isConnected}
+            {EXPERIMENTAL_WIFI_CONTROL && (
+                <div className={classNames('sm-tabs', 'margin-vertical-16')}>
+                    <button
+                        type="button"
+                        className={classNames('sm-tab', { 'sm-selected font-weight-bold': (connectionType === CONNECTION_TYPE_SERIAL) })}
+                        onClick={actions.onSelectTabSerial}
+                        disabled={isConnected}
+                    >
+                        {i18n._('Serial Port')}
+                    </button>
+                    <button
+                        type="button"
+                        className={classNames('sm-tab', { 'sm-selected font-weight-bold': (connectionType === CONNECTION_TYPE_WIFI) })}
+                        onClick={actions.onSelectTabWifi}
+                        disabled={isConnected}
+                    >
+                        {i18n._('Wi-Fi')}
+                    </button>
+                </div>
+            )}
+            {!EXPERIMENTAL_WIFI_CONTROL && (
+                <p>{i18n._('Serial Port')}</p>
+            )}
+            {connectionType === CONNECTION_TYPE_SERIAL && (
+                <SerialConnection dataSource={dataSource} />
+            )}
+            {connectionType === CONNECTION_TYPE_WIFI && (
+                <WifiConnection />
+            )}
+            {isConnected && showHomeReminder && !isOriginal && isHomed !== null && !isHomed && (
+                <Modal disableOverlay size="sm" showCloseButton={false}>
+                    <Modal.Header>
+                        {i18n._('Go Home')}
+                    </Modal.Header>
+                    <Modal.Body>
+                        <div>
+                            {i18n._('To continue, the machine needs to return to the start position of the X, Y, and Z axes.')}
+                        </div>
+                    </Modal.Body>
+                    <Modal.Footer>
+                        <Button
+                            priority="level-two"
+                            className="align-r"
+                            width="96px"
+                            onClick={actions.clickHomeModalOk}
                         >
-                            {i18n._('Serial Port')}
-                        </button>
-                        <button
-                            type="button"
-                            className={classNames('sm-tab', { 'sm-selected font-weight-bold': (connectionType === CONNECTION_TYPE_WIFI) })}
-                            onClick={this.actions.onSelectTabWifi}
-                            disabled={isConnected}
-                        >
-                            {i18n._('Wi-Fi')}
-                        </button>
-                    </div>
-                )}
-                {!EXPERIMENTAL_WIFI_CONTROL && (
-                    <p>{i18n._('Serial Port')}</p>
-                )}
-                {connectionType === CONNECTION_TYPE_SERIAL && (
-                    <SerialConnection dataSource={this.props.dataSource} />
-                )}
-                {connectionType === CONNECTION_TYPE_WIFI && (
-                    <WifiConnection />
-                )}
-                {isConnected && showHomeReminder && !isOriginal && isHomed !== null && !isHomed && (
-                    <Modal disableOverlay size="sm" showCloseButton={false}>
-                        <Modal.Header>
-                            {i18n._('Go Home')}
-                        </Modal.Header>
-                        <Modal.Body>
-                            <div>
-                                {i18n._('To continue, the machine needs to return to the start position of the X, Y, and Z axes.')}
-                            </div>
-                        </Modal.Body>
-                        <Modal.Footer>
-                            <Button
-                                priority="level-two"
-                                className="align-r"
-                                width="96px"
-                                onClick={this.actions.clickHomeModalOk}
-                            >
-                                {i18n._('OK')}
-                            </Button>
-                        </Modal.Footer>
-                    </Modal>
-                )}
-            </div>
-        );
-    }
+                            {i18n._('OK')}
+                        </Button>
+                    </Modal.Footer>
+                </Modal>
+            )}
+        </div>
+    );
 }
-
-const mapStateToProps = (state, ownPros) => {
-    const { widgets } = state.widget;
-    const dataSource = widgets[ownPros.widgetId].dataSource;
-
-    const { connectionType, isConnected, series, isHomed } = state.machine;
-
-    return {
-        dataSource,
-        connectionType,
-        isConnected,
-        series,
-        isHomed
-    };
+Connection.propTypes = {
+    widgetId: PropTypes.string.isRequired,
+    widgetActions: PropTypes.object.isRequired
 };
 
-const mapDispatchToProps = (dispatch) => ({
-    executeGcodeAutoHome: () => dispatch(machineActions.executeGcodeAutoHome()),
-    setConnectionType: (connectionType) => dispatch(machineActions.connect.setConnectionType(connectionType))
-});
-
-export default connect(mapStateToProps, mapDispatchToProps)(Connection);
+export default Connection;

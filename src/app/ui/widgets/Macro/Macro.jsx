@@ -1,8 +1,8 @@
 import ensureArray from 'ensure-array';
 import PropTypes from 'prop-types';
 import classNames from 'classnames';
-import React, { PureComponent } from 'react';
-import { connect } from 'react-redux';
+import React, { useEffect, useState } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
 import TipTrigger from '../../components/TipTrigger';
 import SvgIcon from '../../components/SvgIcon';
 import {
@@ -23,33 +23,19 @@ import styles from './index.styl';
 
 const STATUS_IDLE = 'idle';
 
-class Macro extends PureComponent {
-    static propTypes = {
-        macros: PropTypes.array,
-        updateModal: PropTypes.func.isRequired,
-        openModal: PropTypes.func.isRequired,
-        dataSource: PropTypes.string.isRequired,
+function Macro({ widgetId, updateModal, openModal, macros }) {
+    const { workflowState, workflowStatus, isConnected, connectionType } = useSelector(state => state.machine);
+    const { dataSource } = useSelector(state => state.widget.widgets[widgetId]);
+    const [macrosState, setMacrosState] = useState([]);
+    const dispatch = useDispatch();
 
-        // redux
-        connectionType: PropTypes.string.isRequired,
-        isConnected: PropTypes.bool.isRequired,
-        workflowState: PropTypes.string.isRequired,
-        workflowStatus: PropTypes.string.isRequired,
-        executeGcode: PropTypes.func.isRequired,
-        developToolsExecuteGcode: PropTypes.func.isRequired
-    };
-
-    state = {
-        macros: []
-    }
-
-    actions = {
+    const actions = {
         executeGcode: (gcode) => {
             gcode = gcode.trim();
-            if (this.props.dataSource === PROTOCOL_SCREEN) {
-                this.props.developToolsExecuteGcode(gcode);
+            if (dataSource === PROTOCOL_SCREEN) {
+                dispatch(developToolsActions.executeGcode(gcode));
             } else {
-                this.props.executeGcode(gcode);
+                dispatch(machineActions.executeGcode(gcode));
             }
         },
         runMacro: (macro) => {
@@ -60,23 +46,22 @@ class Macro extends PureComponent {
                         name: MODAL_RUN_MACRO,
                         params: { id, name, content, repeat }
                     };
-                    this.props.updateModal(modal);
+                    updateModal(modal);
                 });
             let gcode = '';
             for (let i = 0; i < macro.repeat; i++) {
                 gcode = gcode.concat(macro.content, '\n');
             }
-            this.actions.executeGcode(gcode);
+            actions.executeGcode(gcode);
         },
         openEditMacroModal: (id) => {
             api.macros.read(id)
                 .then((res) => {
                     const { name, content, repeat, isDefault } = res.body;
-                    this.props.openModal(MODAL_EDIT_MACRO, { id: res.body.id, name, content, repeat, isDefault });
+                    openModal(MODAL_EDIT_MACRO, { id: res.body.id, name, content, repeat, isDefault });
                 });
         },
         canClick: () => {
-            const { workflowState, workflowStatus, isConnected } = this.props;
             if (!isConnected) {
                 return false;
             }
@@ -88,94 +73,75 @@ class Macro extends PureComponent {
         }
     };
 
-    componentWillReceiveProps(nextProps) {
-        if (nextProps.macros && Array.isArray(nextProps.macros)) {
-            this.setState({
-                macros: nextProps.macros
-            });
+    useEffect(() => {
+        if (macros && Array.isArray(macros)) {
+            setMacrosState(macros);
         }
+    }, [macros]);
+
+    useEffect(() => {
         // When connecting to wifi, some gcode is not implemented. Temporarily hide the default macro
-        if (nextProps.connectionType === CONNECTION_TYPE_WIFI) {
-            const macros = nextProps.macros.filter((item) => {
+        if (connectionType === CONNECTION_TYPE_WIFI) {
+            const _macros = macros.filter((item) => {
                 return item.isDefault !== true;
             });
-            this.setState({
-                macros: macros
-            });
+            setMacrosState(_macros);
         }
-    }
+    }, [connectionType, macros]);
 
-    render() {
-        const canClick = this.actions.canClick();
-        const { macros } = this.state;
-
-        return (
-            <div className="padding-horizontal-16 height-176 padding-vertical-4
-                overflow-y-auto border-default-grey-1 border-radius-8
-                margin-bottom-16"
-            >
-                {macros.length === 0 && (
-                    <div className={styles.emptyResult}>
-                        {i18n._('No macros.')}
-                    </div>
-                )}
-                {ensureArray(macros).map((macro) => (
-                    <div
+    const canClick = actions.canClick();
+    return (
+        <div className="padding-horizontal-16 height-176 padding-vertical-4
+            overflow-y-auto border-default-grey-1 border-radius-8
+            margin-bottom-16"
+        >
+            {macrosState.length === 0 && (
+                <div className={styles.emptyResult}>
+                    {i18n._('No macros.')}
+                </div>
+            )}
+            {ensureArray(macrosState).map((macro) => (
+                <div
+                    key={macro.id}
+                    className={classNames(
+                        'sm-flex',
+                        'justify-space-between',
+                        'height-32',
+                        'margin-vertical-4'
+                    )}
+                >
+                    <TipTrigger
                         key={macro.id}
-                        className={classNames(
-                            'sm-flex',
-                            'justify-space-between',
-                            'height-32',
-                            'margin-vertical-4'
-                        )}
+                        title={i18n._('Macro')}
+                        content={macro.name}
                     >
-                        <TipTrigger
-                            key={macro.id}
-                            title={i18n._('Macro')}
-                            content={macro.name}
-                        >
-                            <SvgIcon
-                                name="StartPlay"
-                                className="margin-right-4"
-                                title={i18n._('Run Macro')}
-                                disabled={!canClick}
-                                onClick={() => {
-                                    this.actions.runMacro(macro);
-                                }}
-                            />
-                            {limitStringLength(macro.name, 30)}
-                        </TipTrigger>
                         <SvgIcon
-                            name="Edit"
+                            name="StartPlay"
+                            className="margin-right-4"
+                            title={i18n._('Run Macro')}
+                            disabled={!canClick}
                             onClick={() => {
-                                this.actions.openEditMacroModal(macro.id);
+                                actions.runMacro(macro);
                             }}
                         />
-                    </div>
-                ))}
-            </div>
-        );
-    }
+                        {limitStringLength(macro.name, 30)}
+                    </TipTrigger>
+                    <SvgIcon
+                        name="Edit"
+                        onClick={() => {
+                            actions.openEditMacroModal(macro.id);
+                        }}
+                    />
+                </div>
+            ))}
+        </div>
+    );
 }
-
-const mapStateToProps = (state, ownProps) => {
-    const { workflowState, workflowStatus, isConnected, connectionType } = state.machine;
-    const { dataSource } = state.widget.widgets[ownProps.widgetId];
-
-    return {
-        isConnected,
-        connectionType,
-        workflowState,
-        workflowStatus,
-        dataSource
-    };
+Macro.propTypes = {
+    macros: PropTypes.array,
+    updateModal: PropTypes.func.isRequired,
+    openModal: PropTypes.func.isRequired,
+    widgetId: PropTypes.string.isRequired
 };
 
-const mapDispatchToProps = (dispatch) => {
-    return {
-        executeGcode: (gcode) => dispatch(machineActions.executeGcode(gcode)),
-        developToolsExecuteGcode: (gcode) => dispatch(developToolsActions.executeGcode(gcode))
-    };
-};
-
-export default connect(mapStateToProps, mapDispatchToProps)(Macro);
+export default Macro;

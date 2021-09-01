@@ -68,6 +68,7 @@ import Workspace from './Workspace';
 import { machineStore } from '../../store/local-storage';
 import Thumbnail from '../widgets/CncLaserShared/Thumbnail';
 import { laserCncIntroStepOne, laserCncIntroStepTwo, laserCncIntroStepFive, laserCncIntroStepSix, cnc4AxisStepOne } from './introContent';
+import useSetState from '../../lib/hooks/set-state';
 
 const allWidgets = {
     'control': ControlWidget,
@@ -393,7 +394,7 @@ function Cnc({ location }) {
     const coordinateMode = useSelector(state => state[HEAD_CNC]?.coordinateMode, shallowEqual);
     const coordinateSize = useSelector(state => state[HEAD_CNC]?.coordinateSize, shallowEqual);
     const materials = useSelector(state => state[HEAD_CNC]?.materials, shallowEqual);
-    const [jobTypeState, setJobTypeState] = useState({
+    const [jobTypeState, setJobTypeState] = useSetState({
         coordinateMode,
         coordinateSize,
         materials

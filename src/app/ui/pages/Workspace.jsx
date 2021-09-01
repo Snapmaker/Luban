@@ -1,35 +1,31 @@
 import _ from 'lodash';
 import classNames from 'classnames';
-import { connect } from 'react-redux';
-import React, { PureComponent } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import includes from 'lodash/includes';
-import { withRouter } from 'react-router-dom';
+import { useHistory } from 'react-router-dom';
+import { useDispatch, useSelector } from 'react-redux';
 import PropTypes from 'prop-types';
 import { Button } from '../components/Buttons';
 import Modal from '../components/Modal';
+import Dropzone from '../components/Dropzone';
+
 import { controller } from '../../lib/controller';
 import i18n from '../../lib/i18n';
-// import DefaultWidgets from './WorkspaceWidgets/DefaultWidgets';
-// import PrimaryWidgets from './WorkspaceWidgets/PrimaryWidgets';
-// import SecondaryWidgets from './WorkspaceWidgets/SecondaryWidgets';
-
-import Dropzone from '../components/Dropzone';
-import styles from '../layouts/styles/workspace.styl';
-import WorkspaceLayout from '../layouts/WorkspaceLayout';
-import MainToolBar from '../layouts/MainToolBar';
-
+import modal from '../../lib/modal';
 import {
     WORKFLOW_STATE_IDLE,
     LASER_GCODE_SUFFIX,
     CNC_GCODE_SUFFIX,
     PRINTING_GCODE_SUFFIX
 } from '../../constants';
-import modal from '../../lib/modal';
-import { actions as projectActions } from '../../flux/project';
 import { actions as workspaceActions } from '../../flux/workspace';
 import { actions as widgetActions } from '../../flux/widget';
 
 import { renderWidgetList, logPageView } from '../utils';
+
+import styles from '../layouts/styles/workspace.styl';
+import WorkspaceLayout from '../layouts/WorkspaceLayout';
+import MainToolBar from '../layouts/MainToolBar';
 
 import ControlWidget from '../widgets/Control';
 import ConnectionWidget from '../widgets/Connection';
@@ -44,14 +40,10 @@ import LaserParamsWidget from '../widgets/LaserParams';
 import LaserSetBackground from '../widgets/LaserSetBackground';
 import LaserTestFocusWidget from '../widgets/LaserTestFocus';
 import CNCPathWidget from '../widgets/CNCPath';
-// import PrintingMaterialWidget from '../widgets/PrintingMaterial';
-// import PrintingConfigurationsWidget from '../widgets/PrintingConfigurations';
-// import PrintingOutputWidget from '../widgets/PrintingOutput';
 import WifiTransport from '../widgets/WifiTransport';
 import EnclosureWidget from '../widgets/Enclosure';
 
 import CncLaserObjectList from '../widgets/CncLaserList';
-// import PrintingObjectList from '../widgets/PrintingObjectList';
 import JobType from '../widgets/JobType';
 import PrintingVisualizer from '../widgets/PrintingVisualizer';
 import MachineSettingWidget from '../widgets/MachineSetting';
@@ -90,76 +82,63 @@ const reloadPage = (forcedReload = true) => {
     window.location.reload(forcedReload);
 };
 
-class Workspace extends PureComponent {
-    static propTypes = {
-        ...withRouter.propTypes,
-        defaultWidgets: PropTypes.array.isRequired,
-        primaryWidgets: PropTypes.array.isRequired,
-        secondaryWidgets: PropTypes.array.isRequired,
-        updateTabContainer: PropTypes.func.isRequired,
-        // save: PropTypes.func.isRequired,
-
-        uploadGcodeFile: PropTypes.func.isRequired
-    };
-
-    state = {
-        leftItems: [
-            {
-                title: i18n._('Back'),
-                type: 'button',
-                name: 'MainToolbarBack',
-                action: () => {
-                    this.props.history.push('/');
-                }
+function Workspace({ isPopup, onClose, style, className }) {
+    const history = useHistory();
+    const dispatch = useDispatch();
+    const primaryWidgets = useSelector(state => state.widget.workspace.left.widgets);
+    const secondaryWidgets = useSelector(state => state.widget.workspace.right.widgets);
+    const defaultWidgets = useSelector(state => state.widget.workspace.default.widgets);
+    const [isDraggingWidget, setIsDraggingWidget] = useState(false);
+    const [connected, setConnected] = useState(controller.connected);
+    const [leftItems, setLeftItems] = useState([
+        {
+            title: i18n._('Back'),
+            type: 'button',
+            name: 'MainToolbarBack',
+            action: () => {
+                history.push('/');
             }
-        ],
-        connected: controller.connected,
-        isDraggingWidget: false
-    };
+        }
+    ]);
 
-    primaryContainer = React.createRef();
+    const defaultContainer = useRef();
 
-    secondaryContainer = React.createRef();
-
-    primaryToggler = React.createRef();
-
-    secondaryToggler = React.createRef();
-
-    defaultContainer = React.createRef();
-
-    controllerEvents = {
+    const controllerEvents = {
         'connect': () => {
-            this.setState({ connected: controller.connected });
+            setConnected(controller.connected);
         },
         'disconnect': () => {
-            this.setState({ connected: controller.connected });
+            setConnected(controller.connected);
         }
     };
 
-    listActions = {
-        // toggleToDefault: this.actions.toggleToDefault,
+    const listActions = {
+        // toggleToDefault: actions.toggleToDefault,
         onDragStart: () => {
-            this.setState({ isDraggingWidget: true });
+            setIsDraggingWidget(true);
         },
         onDragEnd: () => {
-            this.setState({ isDraggingWidget: false });
+            setIsDraggingWidget(false);
         }
     };
 
-    actions = {
+    const actions = {
+        updateTabContainer: (container, value) => {
+            dispatch(widgetActions.updateTabContainer('workspace', container, value));
+        },
         addReturnButton: () => {
-            if (!this.props.onClose) {
+            if (!onClose) {
                 return;
             }
             const returnButton = {
                 title: 'Back',
                 name: 'MainToolbarBack',
-                action: this.props.onClose
+                action: onClose
             };
-            this.setState({ leftItems: [returnButton] });
+            setLeftItems([returnButton]);
         },
         onDropAccepted: (file) => {
-            this.props.uploadGcodeFile(file);
+            dispatch(workspaceActions.uploadGcodeFile(file));
         },
         onDropRejected: () => {
             const title = i18n._('Warning');
@@ -171,59 +150,53 @@ class Workspace extends PureComponent {
         },
         toggleFromDefault: (widgetId) => () => {
             // clone
-            const defaultWidgets = _.slice(this.props.defaultWidgets);
-            if (includes(defaultWidgets, widgetId)) {
-                defaultWidgets.splice(defaultWidgets.indexOf(widgetId), 1);
-                this.props.updateTabContainer('default', { widgets: defaultWidgets });
+            const widgets = _.slice(defaultWidgets);
+            if (includes(widgets, widgetId)) {
+                widgets.splice(widgets.indexOf(widgetId), 1);
+                actions.updateTabContainer('default', { widgets: widgets });
             }
         },
         toggleToDefault: (widgetId) => () => {
             // clone
-            const defaultWidgets = _.slice(this.props.defaultWidgets);
-            if (!includes(defaultWidgets, widgetId)) {
-                defaultWidgets.push(widgetId);
-                this.props.updateTabContainer('default', { widgets: defaultWidgets });
+            const widgets = _.slice(defaultWidgets);
+            if (!includes(widgets, widgetId)) {
+                widgets.push(widgetId);
+                actions.updateTabContainer('default', { widgets: widgets });
             }
         }
     };
 
-    componentDidMount() {
-        this.addControllerEvents();
-
-        if (this.props.isPopup && this.props.onClose) {
-            this.actions.addReturnButton();
-        }
-        logPageView({
-            pathname: '/workspace'
-        });
-        // setTimeout(() => {
-        //     A workaround solution to trigger componentDidUpdate on initial render
-        // this.setState({ mounted: true });
-        // }, 0);
-    }
-
-    componentWillUnmount() {
-        this.removeControllerEvents();
-        // this.props.save('3dp');
-    }
-
-
-    addControllerEvents() {
-        Object.keys(this.controllerEvents).forEach(eventName => {
-            const callback = this.controllerEvents[eventName];
+    function addControllerEvents() {
+        Object.keys(controllerEvents).forEach(eventName => {
+            const callback = controllerEvents[eventName];
             controller.on(eventName, callback);
         });
     }
 
-    removeControllerEvents() {
-        Object.keys(this.controllerEvents).forEach(eventName => {
-            const callback = this.controllerEvents[eventName];
+    function removeControllerEvents() {
+        Object.keys(controllerEvents).forEach(eventName => {
+            const callback = controllerEvents[eventName];
             controller.off(eventName, callback);
         });
     }
 
-    renderModalView(connected) {
-        if (connected) {
+    useEffect(() => {
+        addControllerEvents();
+
+        if (isPopup && onClose) {
+            actions.addReturnButton();
+        }
+        logPageView({
+            pathname: '/workspace'
+        });
+
+        return () => {
+            removeControllerEvents();
+        };
+    }, []);
+
+    function renderModalView(_connected) {
+        if (_connected) {
             return null;
         } else {
             return (
@@ -254,68 +227,51 @@ class Workspace extends PureComponent {
     }
 
 
-    renderMainToolBar = () => {
+    const renderMainToolBar = () => {
         return (
             <MainToolBar
-                leftItems={this.state.leftItems}
+                leftItems={leftItems}
             />
         );
-    }
-
-    render() {
-        const { style, className, primaryWidgets, secondaryWidgets } = this.props;
-        const {
-            isDraggingWidget,
-            connected
-        } = this.state;
-
-        const widgetProps = { };
-        return (
-            <div style={style} className={classNames(className)}>
-                <WorkspaceLayout
-                    renderMainToolBar={this.renderMainToolBar}
-                    renderLeftView={() => renderWidgetList('workspace', 'left', primaryWidgets, allWidgets, this.listActions, widgetProps)}
-                    renderRightView={() => renderWidgetList('workspace', 'right', secondaryWidgets, allWidgets, this.listActions, widgetProps)}
-                    updateTabContainer={this.props.updateTabContainer}
-                >
-                    <Dropzone
-                        disabled={isDraggingWidget || controller.workflowState !== WORKFLOW_STATE_IDLE}
-                        accept={ACCEPT}
-                        dragEnterMsg={i18n._('Drop a G-code file here.')}
-                        onDropAccepted={this.actions.onDropAccepted}
-                        onDropRejected={this.actions.onDropRejected}
-                    >
-                        <div
-                            ref={this.defaultContainer}
-                            className={classNames(
-                                styles.defaultContainer,
-                            )}
-                        >
-                            <VisualizerWidget />
-
-                        </div>
-                    </Dropzone>
-                    {this.renderModalView(connected)}
-                </WorkspaceLayout>
-            </div>
-        );
-    }
-}
-const mapStateToProps = (state) => {
-    const widget = state.widget;
-    const primaryWidgets = widget.workspace.left.widgets;
-    const secondaryWidgets = widget.workspace.right.widgets;
-    const defaultWidgets = widget.workspace.default.widgets;
-    return {
-        defaultWidgets,
-        primaryWidgets,
-        secondaryWidgets
     };
-};
-const mapDispatchToProps = (dispatch) => ({
-    uploadGcodeFile: (file) => dispatch(workspaceActions.uploadGcodeFile(file)),
-    save: (pageHeadType) => dispatch(projectActions.save(pageHeadType)),
-    updateTabContainer: (container, value) => dispatch(widgetActions.updateTabContainer('workspace', container, value))
-});
 
-export default connect(mapStateToProps, mapDispatchToProps)(withRouter(Workspace));
+    const widgetProps = { };
+    return (
+        <div style={style} className={classNames(className)}>
+            <WorkspaceLayout
+                renderMainToolBar={renderMainToolBar}
+                renderLeftView={() => renderWidgetList('workspace', 'left', primaryWidgets, allWidgets, listActions, widgetProps)}
+                renderRightView={() => renderWidgetList('workspace', 'right', secondaryWidgets, allWidgets, listActions, widgetProps)}
+                updateTabContainer={actions.updateTabContainer}
+            >
+                <Dropzone
+                    disabled={isDraggingWidget || controller.workflowState !== WORKFLOW_STATE_IDLE}
+                    accept={ACCEPT}
+                    dragEnterMsg={i18n._('Drop a G-code file here.')}
+                    onDropAccepted={actions.onDropAccepted}
+                    onDropRejected={actions.onDropRejected}
+                >
+                    <div
+                        ref={defaultContainer}
+                        className={classNames(
+                            styles.defaultContainer,
+                        )}
+                    >
+                        <VisualizerWidget />
+
+                    </div>
+                </Dropzone>
+                {renderModalView(connected)}
+            </WorkspaceLayout>
+        </div>
+    );
+}
+
+Workspace.propTypes = {
+    onClose: PropTypes.func,
+    isPopup: PropTypes.bool,
+    style: PropTypes.object,
+    className: PropTypes.string
+};
+
+export default Workspace;
