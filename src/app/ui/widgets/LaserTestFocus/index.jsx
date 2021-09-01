@@ -6,7 +6,7 @@ import {
     WidgetState
 } from '../../components/SMWidget';
 import TestFocus from './TestFocus';
-import { HEAD_LASER, MACHINE_HEAD_TYPE } from '../../../constants';
+import { HEAD_LASER } from '../../../constants';
 
 
 class LaserTestFocusWidget extends PureComponent {
@@ -61,7 +61,7 @@ class LaserTestFocusWidget extends PureComponent {
         const state = this.state;
         // const actions = this.actions;
 
-        if (!(this.props.headType === MACHINE_HEAD_TYPE.LASER.value)) {
+        if (!(this.props.headType === HEAD_LASER)) {
             return null;
         }
 

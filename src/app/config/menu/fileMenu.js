@@ -1,5 +1,6 @@
 import isElectron from 'is-electron';
 import UniApi from '../../lib/uni-api';
+import { HEAD_CNC, HEAD_LASER, HEAD_PRINTING } from '../../constants';
 
 export default {
     id: 'file',
@@ -16,9 +17,9 @@ export default {
                     enabled: true,
                     click(menuItem, browserWindow) {
                         if (isElectron()) {
-                            browserWindow.webContents.send('new-file', { headType: '3dp', isRotate: false });
+                            browserWindow.webContents.send('new-file', { headType: HEAD_PRINTING, isRotate: false });
                         } else {
-                            UniApi.Event.emit('appbar-menu:new-file', { headType: '3dp', isRotate: false });
+                            UniApi.Event.emit('appbar-menu:new-file', { headType: HEAD_PRINTING, isRotate: false });
                         }
                     }
                 },
@@ -34,9 +35,9 @@ export default {
                             enabled: true,
                             click(menuItem, browserWindow) {
                                 if (isElectron()) {
-                                    browserWindow.webContents.send('new-file', { headType: 'laser', isRotate: false });
+                                    browserWindow.webContents.send('new-file', { headType: HEAD_LASER, isRotate: false });
                                 } else {
-                                    UniApi.Event.emit('appbar-menu:new-file', { headType: 'laser', isRotate: false });
+                                    UniApi.Event.emit('appbar-menu:new-file', { headType: HEAD_LASER, isRotate: false });
                                 }
                             }
                         },
@@ -46,9 +47,9 @@ export default {
                             enabled: true,
                             click(menuItem, browserWindow) {
                                 if (isElectron()) {
-                                    browserWindow.webContents.send('new-file', { headType: 'laser', isRotate: true });
+                                    browserWindow.webContents.send('new-file', { headType: HEAD_LASER, isRotate: true });
                                 } else {
-                                    UniApi.Event.emit('appbar-menu:new-file', { headType: 'laser', isRotate: true });
+                                    UniApi.Event.emit('appbar-menu:new-file', { headType: HEAD_LASER, isRotate: true });
                                 }
                             }
                         }
@@ -66,9 +67,9 @@ export default {
                             enabled: true,
                             click(menuItem, browserWindow) {
                                 if (isElectron()) {
-                                    browserWindow.webContents.send('new-file', { headType: 'cnc', isRotate: false });
+                                    browserWindow.webContents.send('new-file', { headType: HEAD_CNC, isRotate: false });
                                 } else {
-                                    UniApi.Event.emit('appbar-menu:new-file', { headType: 'cnc', isRotate: false });
+                                    UniApi.Event.emit('appbar-menu:new-file', { headType: HEAD_CNC, isRotate: false });
                                 }
                             }
                         },
@@ -78,9 +79,9 @@ export default {
                             enabled: true,
                             click(menuItem, browserWindow) {
                                 if (isElectron()) {
-                                    browserWindow.webContents.send('new-file', { headType: 'cnc', isRotate: true });
+                                    browserWindow.webContents.send('new-file', { headType: HEAD_CNC, isRotate: true });
                                 } else {
-                                    UniApi.Event.emit('appbar-menu:new-file', { headType: 'cnc', isRotate: true });
+                                    UniApi.Event.emit('appbar-menu:new-file', { headType: HEAD_CNC, isRotate: true });
                                 }
                             }
                         }

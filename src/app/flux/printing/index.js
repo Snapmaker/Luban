@@ -777,7 +777,7 @@ export const actions = {
      * @private
      */
     __loadModel: (originalName, uploadName) => (dispatch) => {
-        const headType = '3dp';
+        const headType = 'printing';
         const sourceType = '3d';
         const mode = '3d';
         const width = 0;

@@ -13,12 +13,20 @@ import styles from './index.styl';
 import { controller } from '../../../lib/controller';
 import {
     CONNECTION_TYPE_SERIAL,
-    MACHINE_HEAD_TYPE,
     MARLIN,
-    PROTOCOL_TEXT, WORKFLOW_STATUS_IDLE, WORKFLOW_STATUS_PAUSED, WORKFLOW_STATUS_RUNNING,
+    PROTOCOL_TEXT,
+    WORKFLOW_STATUS_IDLE,
+    WORKFLOW_STATUS_PAUSED,
+    WORKFLOW_STATUS_RUNNING,
     WORKFLOW_STATE_IDLE,
     WORKFLOW_STATE_PAUSED,
-    WORKFLOW_STATE_RUNNING, WORKFLOW_STATUS_UNKNOWN, IMAGE_WIFI_ERROR, IMAGE_WIFI_WARNING
+    WORKFLOW_STATE_RUNNING,
+    WORKFLOW_STATUS_UNKNOWN,
+    IMAGE_WIFI_ERROR,
+    IMAGE_WIFI_WARNING,
+    HEAD_CNC,
+    HEAD_PRINTING,
+    HEAD_LASER
 } from '../../../constants';
 import { ensureRange } from '../../../lib/numeric-utils';
 import TargetPoint from '../../../three-extensions/TargetPoint';
@@ -235,13 +243,13 @@ class Visualizer extends Component {
 
     actions = {
         isCNC: () => {
-            return (this.props.headType === MACHINE_HEAD_TYPE.CNC.value);
+            return (this.props.headType === HEAD_CNC);
         },
         is3DP: () => {
-            return (this.props.headType === MACHINE_HEAD_TYPE['3DP'].value);
+            return (this.props.headType === HEAD_PRINTING);
         },
         isLaser: () => {
-            return (this.props.headType === MACHINE_HEAD_TYPE.LASER.value);
+            return (this.props.headType === HEAD_LASER);
         },
         handleRun: () => {
             const { connectionType } = this.props;

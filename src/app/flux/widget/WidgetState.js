@@ -23,7 +23,7 @@ const DEFAULT_STATE = {
             ]
         }
     },
-    '3dp': {
+    printing: {
         default: {
             widgets: ['3dp-material', '3dp-configurations']
         }
@@ -287,8 +287,8 @@ class WidgetState {
         }
 
         // Check 3D printing tab
-        if (!arrayEqual(widgetState.defaultState['3dp'].default.widgets, DEFAULT_STATE['3dp'].default.widgets)) {
-            widgetState.defaultState['3dp'].default.widgets = DEFAULT_STATE['3dp'].default.widgets;
+        if (!arrayEqual(widgetState.defaultState.printing.default.widgets, DEFAULT_STATE.printing.default.widgets)) {
+            widgetState.defaultState.printing.default.widgets = DEFAULT_STATE.printing.default.widgets;
         }
         // Check Laser tab
         if (!arrayEqual(widgetState.defaultState.laser.default.widgets, DEFAULT_STATE.laser.default.widgets)) {

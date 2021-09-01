@@ -47,6 +47,11 @@ export const RIGHT = 'right';
 export const TOP = 'top';
 export const BOTTOM = 'bottom';
 
+// Head Type
+export const HEAD_CNC = 'cnc';
+export const HEAD_LASER = 'laser';
+export const HEAD_PRINTING = 'printing';
+
 // Model
 export const SOURCE_TYPE_3DP = '3dp';
 export const SOURCE_TYPE_SVG = 'svg';

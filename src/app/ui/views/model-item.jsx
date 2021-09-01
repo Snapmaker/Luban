@@ -7,6 +7,7 @@ import TipTrigger from '../components/TipTrigger';
 import Anchor from '../components/Anchor';
 import SvgIcon from '../components/SvgIcon';
 import { normalizeNameDisplay } from '../../lib/normalize-range';
+import { HEAD_PRINTING } from '../../constants';
 
 let svgName = '';
 let modelName = '';

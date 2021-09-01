@@ -1,7 +1,7 @@
 
 export const CaseConfigOriginal = [
     {
-        tag: '3dp', // 3dp、laser、cnc
+        tag: 'printing', // printing、laser、cnc
         tag_i18n: '3DP',
         // title: '3D Printed Fabric',
         title: 'Fabric',
@@ -42,7 +42,7 @@ export const CaseConfigOriginal = [
 
 export const CaseConfig150 = [
     {
-        tag: '3dp', // 3dp、laser、cnc
+        tag: 'printing', // printing、laser、cnc
         tag_i18n: '3DP',
         // title: '3D Printed Spiral Vase',
         title: 'Spiral Vase',
@@ -83,7 +83,7 @@ export const CaseConfig150 = [
 
 export const CaseConfig250 = [
     {
-        tag: '3dp', // 3dp、laser、cnc
+        tag: 'printing', // printing、laser、cnc
         tag_i18n: '3DP',
         // title: '3D Printed Spiral Vase',
         title: 'Spiral Vase',
@@ -128,7 +128,7 @@ export const CaseConfig250 = [
 
 export const CaseConfig350 = [
     {
-        tag: '3dp', // 3dp、laser、cnc
+        tag: 'printing', // printing、laser、cnc
         tag_i18n: '3DP',
         // title: '3D Printed Spiral Vase',
         title: 'Spiral Vase',

@@ -9,7 +9,7 @@ import i18n from '../../../lib/i18n';
 import { actions as printingActions } from '../../../flux/printing';
 import { actions as projectActions } from '../../../flux/project';
 // import styles from './styles.styl';
-import { HEAD_3DP, PRINTING_MANAGER_TYPE_MATERIAL } from '../../../constants';
+import { HEAD_PRINTING, PRINTING_MANAGER_TYPE_MATERIAL } from '../../../constants';
 // import OptionalDropdown from '../../components/OptionalDropdown';
 // import Space from '../../components/Space';
 
@@ -44,7 +44,7 @@ function Material({ widgetActions }) {
     const updateActiveDefinition = useCallback((definition, shouldSave = false) => {
         if (definition) {
             dispatch(printingActions.updateActiveDefinition(definition, shouldSave));
-            dispatch(projectActions.autoSaveEnvironment(HEAD_3DP, true));
+            dispatch(projectActions.autoSaveEnvironment(HEAD_PRINTING, true));
         }
     }, [dispatch]);
 

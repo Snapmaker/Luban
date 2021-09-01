@@ -15,12 +15,11 @@ import {
     CONNECTION_STATUS_CONNECTED,
     CONNECTION_STATUS_CONNECTING,
     CONNECTION_STATUS_IDLE,
-    CONNECTION_TYPE_WIFI,
+    CONNECTION_TYPE_WIFI, HEAD_LASER, HEAD_PRINTING,
     IMAGE_WIFI_CONNECTED,
     IMAGE_WIFI_CONNECTING,
     // IMAGE_WIFI_ERROR,
     IMAGE_WIFI_WAITING,
-    MACHINE_HEAD_TYPE,
     WORKFLOW_STATUS_IDLE,
     WORKFLOW_STATUS_PAUSED,
     WORKFLOW_STATUS_RUNNING,
@@ -316,8 +315,8 @@ function WifiConnection() {
                             marginTop: '10px'
                         }}
                     />
-                    {headType === MACHINE_HEAD_TYPE['3DP'].value && <PrintingState headType={headType} />}
-                    {headType === MACHINE_HEAD_TYPE.LASER.value && <LaserState headType={headType} />}
+                    {headType === HEAD_PRINTING && <PrintingState headType={headType} />}
+                    {headType === HEAD_LASER && <LaserState headType={headType} />}
                 </div>
             )}
             <div>

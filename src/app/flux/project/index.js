@@ -4,7 +4,7 @@ import pkg from '../../../package.json';
 import {
     HEAD_CNC,
     HEAD_LASER,
-    HEAD_3DP,
+    HEAD_PRINTING,
     HEAD_TYPE_ENV_NAME,
     SOURCE_TYPE_IMAGE3D,
     PROCESS_MODE_MESH,
@@ -27,7 +27,7 @@ import i18n from '../../lib/i18n';
 import UniApi from '../../lib/uni-api';
 
 const INITIAL_STATE = {
-    [HEAD_3DP]: {
+    [HEAD_PRINTING]: {
         findLastEnvironment: false,
         openedFile: null,
         unSaved: false,
@@ -55,10 +55,6 @@ const INITIAL_STATE = {
 };
 const ACTION_UPDATE_STATE = 'EDITOR_ACTION_UPDATE_STATE';
 
-const headType2FluxMod = (headType) => {
-    return headType === '3dp' ? 'printing' : headType;
-};
-
 export const actions = {
     updateState: (headType, state) => {
         return {
@@ -82,12 +78,11 @@ export const actions = {
 
         startService(HEAD_LASER);
         startService(HEAD_CNC);
-        startService(HEAD_3DP);
+        startService(HEAD_PRINTING);
     },
 
     autoSaveEnvironment: (headType, force = false) => async (dispatch, getState) => {
-        const fluxMod = headType2FluxMod(headType);
-        const editorState = getState()[fluxMod];
+        const editorState = getState()[headType];
         const { initState, content: lastString } = getState().project[headType];
         const models = editorState.modelGroup.getModels();
         if (!models.length && initState) return;
@@ -158,18 +153,16 @@ export const actions = {
         }
         // const envObj = JSON.parse(content);
         let modActions = null;
-        let modState = null;
+        const modState = getState()[envHeadType];
+        dispatch(operationHistoryActions.clear(envHeadType));
         if (envHeadType === HEAD_CNC || envHeadType === HEAD_LASER) {
             // clear operation history
-            dispatch(operationHistoryActions.clear(envHeadType));
             modActions = editorActions;
-            modState = getState()[envHeadType];
         }
-        if (envHeadType === HEAD_3DP) {
+        if (envHeadType === HEAD_PRINTING) {
             // clear operation history
-            dispatch(operationHistoryActions.clear('printing'));
+            dispatch(operationHistoryActions.clear());
             modActions = printingActions;
-            modState = getState().printing;
             await dispatch(printingActions.initSize());
         }
         const { modelGroup } = modState;
@@ -212,11 +205,7 @@ export const actions = {
             if (supportTag) {
                 continue;
             }
-            if (envHeadType === HEAD_3DP) {
-                dispatch(operationHistoryActions.excludeModelById('printing', modelID));
-            } else {
-                dispatch(operationHistoryActions.excludeModelById(envHeadType, modelID));
-            }
+            dispatch(operationHistoryActions.excludeModelById(envHeadType, modelID));
             await dispatch(modActions.generateModel(headType, originalName, uploadName, sourceWidth, sourceHeight, mode,
                 sourceType, config, gcodeConfig, transformation, modelID));
         }
@@ -233,20 +222,16 @@ export const actions = {
         }
         dispatch(modActions.updateState(envHeadType, restState));
 
-        if (envHeadType === HEAD_3DP) {
+        if (envHeadType === HEAD_PRINTING) {
             dispatch(modActions.updateState(restState));
         } else {
             dispatch(modActions.updateState(envHeadType, restState));
         }
         // // TODO: set current content to avoid <unSaved> flag mis-set
         // await dispatch(actions.clearSavedEnvironment(envHeadType));
-        for (const type of [HEAD_3DP, HEAD_CNC, HEAD_LASER]) {
+        for (const type of [HEAD_PRINTING, HEAD_CNC, HEAD_LASER]) {
             await dispatch(actions.clearSavedEnvironment(type));
         }
-    },
-
-    quitRecovery: (headType) => async (dispatch) => {
-        dispatch(actions.clearSavedEnvironment(headType));
     },
 
     exportFile: (targetFile) => async () => {
@@ -281,12 +266,7 @@ export const actions = {
     },
     save: (headType, dialogOptions = false) => async (dispatch, getState) => {
         // save should return when no model in editor
-        let modelGroup;
-        if (headType === HEAD_3DP) {
-            modelGroup = getState().printing.modelGroup;
-        } else {
-            modelGroup = getState()[headType].modelGroup;
-        }
+        const modelGroup = getState()[headType].modelGroup;
         if (!modelGroup || !modelGroup.hasModel()) {
             return;
         }
@@ -422,7 +402,7 @@ export const actions = {
         }));
         await dispatch(actions.closeProject(oldHeadType));
 
-        for (const type of [HEAD_3DP, HEAD_CNC, HEAD_LASER]) {
+        for (const type of [HEAD_PRINTING, HEAD_CNC, HEAD_LASER]) {
             await dispatch(actions.clearSavedEnvironment(type));
         }
 
@@ -442,7 +422,8 @@ export const actions = {
                 pathname: '/',
                 state: { shouldNotLogPageView: true }
             });
-            if (toPath !== '3dp') {
+            // if (toPath !== '3dp') {
+            if (toPath !== HEAD_PRINTING) {
                 if (isRotate) {
                     const propName = `guideTours${toPath}4Axis`;
                     shouldShowGuideTours = currentGuideTours ? !!currentGuideTours[propName] : undefined;
@@ -455,10 +436,10 @@ export const actions = {
             }
         }
         dispatch(actions.updateState(newHeadType, { unSaved: false, openedFile: null }));
-        if (restartGuide && to === '/3dp') {
+        if (restartGuide && to === '/printing') {
             machineStore.set('guideTours.guideTours3dp', false);
         }
-        if (toPath !== '3dp') {
+        if (toPath !== HEAD_PRINTING) {
             if (isRotate) {
                 const propName = `guideTours${toPath}4Axis`;
                 isGuideTours = machineStore.get('guideTours') ? !!machineStore.get('guideTours')[propName] : undefined;
@@ -478,28 +459,18 @@ export const actions = {
         });
 
         // clear operation history
-        if (newHeadType === HEAD_CNC || newHeadType === HEAD_LASER) {
-            dispatch(operationHistoryActions.clear(newHeadType));
-        } else if (newHeadType === HEAD_3DP) {
-            dispatch(operationHistoryActions.clear('printing'));
-        }
+        dispatch(operationHistoryActions.clear(newHeadType));
     },
 
     saveAndClose: (headType, opts) => async (dispatch, getState) => {
-        let modState = null;
-        if (headType === HEAD_CNC || headType === HEAD_LASER) {
-            modState = getState()[headType];
-        }
-        if (headType === HEAD_3DP) {
-            modState = getState().printing;
-        }
+        const modState = getState()[headType];
 
         if (modState.modelGroup.hasModel()) {
             await dispatch(actions.save(headType, opts));
             await dispatch(actions.updateState(headType, { openedFile: undefined }));
         }
 
-        if (headType === HEAD_3DP) {
+        if (headType === HEAD_PRINTING) {
             dispatch(printingActions.destroyGcodeLine());
             await dispatch(printingActions.initSize());
         }
@@ -510,15 +481,9 @@ export const actions = {
         UniApi.Window.setOpenedFile();
     },
     closeProject: (headType) => async (dispatch, getState) => {
-        let modState = null;
-        if (headType === HEAD_CNC || headType === HEAD_LASER) {
-            modState = getState()[headType];
-        }
-        if (headType === HEAD_3DP) {
-            modState = getState().printing;
-        }
+        const modState = getState()[headType];
 
-        if (headType === HEAD_3DP) {
+        if (headType === HEAD_PRINTING) {
             dispatch(printingActions.destroyGcodeLine());
             await dispatch(printingActions.initSize());
         }

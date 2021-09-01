@@ -8,7 +8,7 @@ import { machineStore } from '../../../store/local-storage';
 import pkg from '../../../../package.json';
 
 import { useRenderRecoveryModal, logPageView } from '../../utils';
-import { HEAD_3DP, HEAD_CNC, HEAD_LASER } from '../../../constants';
+import { HEAD_PRINTING, HEAD_CNC, HEAD_LASER } from '../../../constants';
 
 // component
 import Begin from './Begin';
@@ -37,7 +37,7 @@ const HomePage = (props) => { // Todo, what's the props ?
             });
         }
     }, []);
-    const printingModal = useRenderRecoveryModal(HEAD_3DP);
+    const printingModal = useRenderRecoveryModal(HEAD_PRINTING);
     const laserModal = useRenderRecoveryModal(HEAD_LASER);
     const cncModal = useRenderRecoveryModal(HEAD_CNC);
 

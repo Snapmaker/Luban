@@ -292,7 +292,7 @@ class AppLayout extends PureComponent {
             UniApi.Event.on('appbar-menu:save-as-file', (event, file) => {
                 const pathname = this.props.currentModalPath || this.props.history.location.pathname;
                 switch (pathname) {
-                    case '/3dp':
+                    case '/printing':
                     case '/laser':
                     case '/cnc': this.actions.saveAsFile(file); break;
                     default: break;
@@ -301,7 +301,7 @@ class AppLayout extends PureComponent {
             UniApi.Event.on('appbar-menu:save', () => {
                 const pathname = this.props.currentModalPath || this.props.history.location.pathname;
                 switch (pathname) {
-                    case '/3dp':
+                    case '/printing':
                     case '/laser':
                     case '/cnc': this.actions.save(); break;
                     default: break;
@@ -485,7 +485,7 @@ class AppLayout extends PureComponent {
                     fileObj = UniApi.File.constructFileObj(file.path, file.name.split('\\').pop());
                 }
                 switch (pathname) {
-                    case '/3dp': UniApi.Event.emit('appbar-menu:printing.import', fileObj); break;
+                    case '/printing': UniApi.Event.emit('appbar-menu:printing.import', fileObj); break;
                     case '/laser': UniApi.Event.emit('appbar-menu:laser.import', fileObj); break;
                     case '/cnc': UniApi.Event.emit('appbar-menu:cnc.import', fileObj); break;
                     case '/workspace': UniApi.Event.emit('appbar-menu:workspace.import', fileObj); break;
@@ -494,7 +494,7 @@ class AppLayout extends PureComponent {
             });
             UniApi.Event.on('appbar-menu:export-model', () => {
                 const pathname = this.props.currentModalPath || this.props.history.location.pathname;
-                if (pathname === '/3dp' && this.props.modelGroup.hasModel()) {
+                if (pathname === '/printing' && this.props.modelGroup.hasModel()) {
                     const promise = UniApi.Dialog.showSaveDialog({
                         title: i18n._('Export Model'),
                         filters: [
@@ -521,7 +521,7 @@ class AppLayout extends PureComponent {
             UniApi.Event.on('appbar-menu:export-gcode', () => {
                 const pathname = this.props.currentModalPath || this.props.history.location.pathname;
                 switch (pathname) {
-                    case '/3dp': UniApi.Event.emit('appbar-menu:printing.export-gcode'); break;
+                    case '/printing': UniApi.Event.emit('appbar-menu:printing.export-gcode'); break;
                     case '/laser': UniApi.Event.emit('appbar-menu:cnc-laser.export-gcode'); break;
                     case '/cnc': UniApi.Event.emit('appbar-menu:cnc-laser.export-gcode'); break;
                     case '/workspace': UniApi.Event.emit('appbar-menu:workspace.export-gcode'); break;
