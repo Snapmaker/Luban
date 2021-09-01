@@ -2,7 +2,7 @@ import color from 'cli-color';
 // import trimEnd from 'lodash/trimEnd';
 import PerfectScrollbar from 'perfect-scrollbar';
 import PropTypes from 'prop-types';
-import React, { PureComponent } from 'react';
+import React, { useEffect, useRef, useState, forwardRef, useImperativeHandle } from 'react';
 import { Terminal } from 'xterm';
 import { FitAddon } from 'xterm-addon-fit';
 import UniApi from '../../../lib/uni-api';
@@ -10,69 +10,50 @@ import log from '../../../lib/log';
 import styles from './index.styl';
 
 // .widget-header-absolute widget-content-absolute
-class TerminalWrapper extends PureComponent {
-    static propTypes = {
-        onData: PropTypes.func,
-        isDefault: PropTypes.bool,
-        terminalHistory: PropTypes.object.isRequired,
-        consoleHistory: PropTypes.object.isRequired,
-        inputValue: PropTypes.string.isRequired
+const prompt = '> ';
+let verticalScrollbar = null;
+let term = null;
+let fitAddon = null;
+
+const TerminalWrapper = forwardRef(({ inputValue: inputValueProp, terminalHistory, onData, consoleHistory, isDefault }, ref) => {
+    const [inputValue, setInputValue] = useState(inputValueProp);
+    const [inputHeight, setInputHeight] = useState(20);
+    const terminalContainer = useRef();
+    const input = useRef();
+    const actions = {
+        changeInputValue: (event) => {
+            setInputValue(event.target.value);
+            terminalHistory.set(0, event.target.value);
+        }
     };
 
-    state = {
-        inputValue: this.props.inputValue,
-        inputHeight: 20
-    }
-
-    actions = {
-        changeInputValue: (event) => {
-            this.setState({
-                inputValue: event.target.value
-            });
-            this.props.terminalHistory.set(0, event.target.value);
-        }
-    }
-
-    prompt = '> ';
-
-    verticalScrollbar = null;
-
-    terminalContainer = React.createRef();
-
-    input = React.createRef();
-
-    term = null;
-
-    fitAddon = null;
-
-    eventHandler = {
+    const eventHandler = {
         onResize: () => {
-            const { rows, cols } = this.term;
+            const { rows, cols } = term;
             log.debug(`Resizing the terminal to ${rows} rows and ${cols} cols`);
 
-            if (this.verticalScrollbar) {
-                this.verticalScrollbar.update();
+            if (verticalScrollbar) {
+                verticalScrollbar.update();
             }
         },
         onPaste: (data) => {
-            if (document.activeElement === this.input) {
-                const { onData } = this.props;
+            if (document.activeElement === input) {
                 const lines = String(data).replace(/(\r\n|\r|\n)/g, '\n').split('\n');
                 for (let i = 0; i < lines.length; ++i) {
                     const line = lines[i];
                     onData(line);
-                    this.term.write(color.white(line));
-                    this.term.prompt();
+                    term.write(color.white(line));
+                    term.prompt();
                 }
             }
         },
         onFocus: () => {
-            this.input.current.focus();
+            input.current.focus();
         }
     };
 
-    componentDidMount() {
-        this.term = new Terminal({
+    useEffect(() => {
+        term = new Terminal({
             rows: 16,
             // bar, block, underline
             cursorStyle: 'block',
@@ -84,114 +65,96 @@ class TerminalWrapper extends PureComponent {
             scrollback: 1000,
             tabStopWidth: 4
         });
-        this.term.prompt = () => {
-            this.term.write('\r\n');
+        term.prompt = () => {
+            term.write('\r\n');
         };
-        this.term.onResize(this.eventHandler.onResize);
-        this.term.onData(this.eventHandler.onPaste);
-        this.term.onKey(
+        term.onResize(eventHandler.onResize);
+        term.onData(eventHandler.onPaste);
+        term.onKey(
             (e) => {
                 const { domEvent } = e;
                 // // control + a
                 // if (domEvent.ctrlKey && domEvent.key === 'a') {
-                //     this.term.selectAll();
+                //     term.selectAll();
                 //     document.execCommand('copy');
                 // }
                 // control + c
                 if (domEvent.ctrlKey && domEvent.key === 'c') {
-                    UniApi.Window.copySelection(this.term.getSelection());
+                    UniApi.Window.copySelection(term.getSelection());
                 }
             }
         );
 
-        this.fitAddon = new FitAddon();
-        this.term.loadAddon(this.fitAddon);
-        const el = this.terminalContainer.current;
-        this.term.open(el);
+        fitAddon = new FitAddon();
+        term.loadAddon(fitAddon);
+        const el = terminalContainer.current;
+        term.open(el);
         const viewport = el.getElementsByClassName('terminal')[0];
         viewport.addEventListener('wheel', (e) => {
             e.preventDefault();
         });
-        this.term.focus(false);
+        term.focus(false);
 
-        this.term.setOption('fontFamily', 'Consolas, Menlo, Monaco, Lucida Console, Liberation Mono, DejaVu Sans Mono, Bitstream Vera Sans Mono, Courier New, monospace, serif');
+        term.setOption('fontFamily', 'Consolas, Menlo, Monaco, Lucida Console, Liberation Mono, DejaVu Sans Mono, Bitstream Vera Sans Mono, Courier New, monospace, serif');
         const xtermElement = el.querySelector('.xterm');
         xtermElement.style.paddingLeft = '3px';
         const viewportElement = el.querySelector('.xterm-viewport');
-        this.verticalScrollbar = new PerfectScrollbar(viewportElement);
-    }
+        verticalScrollbar = new PerfectScrollbar(viewportElement);
 
+        return () => {
+            if (verticalScrollbar) {
+                verticalScrollbar.destroy();
+                verticalScrollbar = null;
+            }
+            if (term) {
+                term.dispose();
+                term = null;
+            }
+        };
+    }, []);
 
-    componentWillUnmount() {
-        if (this.verticalScrollbar) {
-            this.verticalScrollbar.destroy();
-            this.verticalScrollbar = null;
+    function writeln(data, isHistory = true) {
+        if (term) {
+            term.write('\r');
+            term.write(data);
+            term.prompt();
+            if (isHistory) {
+                terminalHistory.push(data);
+            }
         }
-        if (this.term) {
-            this.term.dispose();
-            this.term = null;
-        }
     }
 
-    // http://www.alexandre-gomes.com/?p=115
-    getScrollbarWidth() {
-        const inner = document.createElement('p');
-        inner.style.width = '100%';
-        inner.style.height = '200px';
-
-        const outer = document.createElement('div');
-        outer.style.position = 'absolute';
-        outer.style.top = '0px';
-        outer.style.left = '0px';
-        outer.style.visibility = 'hidden';
-        outer.style.width = '200px';
-        outer.style.height = '150px';
-        outer.style.overflow = 'hidden';
-        outer.appendChild(inner);
-
-        document.body.appendChild(outer);
-        const w1 = inner.offsetWidth;
-        outer.style.overflow = 'scroll';
-        const w2 = (w1 === inner.offsetWidth) ? outer.clientWidth : inner.offsetWidth;
-        document.body.removeChild(outer);
-
-        return (w1 - w2);
-    }
-
-    setTerminalInput(event) {
+    function setTerminalInput(event) {
         // Enter
         if (event.keyCode === 13) {
-            this.writeln(`${this.prompt}${event.target.value}`);
-            this.props.onData(event.target.value);
+            writeln(`${prompt}${event.target.value}`);
+            onData(event.target.value);
             // Reset the index to the last position of the location array
-            this.props.consoleHistory.push(event.target.value);
+            consoleHistory.push(event.target.value);
             event.target.value = '';
 
-            this.setState({
-                inputValue: event.target.value
-            });
-            this.props.terminalHistory.set(0, event.target.value);
+            setInputValue(event.target.value);
+            terminalHistory.set(0, event.target.value);
         }
 
         // Arrow Up
         if (event.keyCode === 38) {
-            event.target.value = this.props.consoleHistory.back() || '';
-            this.props.terminalHistory.set(0, event.target.value);
+            event.target.value = consoleHistory.back() || '';
+            terminalHistory.set(0, event.target.value);
         }
 
         // Arrow Down
         if (event.keyCode === 40) {
-            event.target.value = this.props.consoleHistory.forward() || '';
-            this.props.terminalHistory.set(0, event.target.value);
+            event.target.value = consoleHistory.forward() || '';
+            terminalHistory.set(0, event.target.value);
         }
     }
 
-
-    resize() {
-        if (!(this.term && this.term.element)) {
+    function resize() {
+        if (!(term && term.element)) {
             return;
         }
-        const geometry = this.fitAddon && this.fitAddon.proposeDimensions(this.term);
+        const geometry = fitAddon && fitAddon.proposeDimensions(term);
         if (!geometry) {
             return;
         }
@@ -204,94 +167,92 @@ class TerminalWrapper extends PureComponent {
         const lineHeight = 18;
         const minRows = 12;
         const rowOffset = 2;
-        const height = this.terminalContainer.current.parentElement.clientHeight < 300
-            ? 300 : this.terminalContainer.current.parentElement.clientHeight;
+        const height = terminalContainer.current.parentElement.clientHeight < 300
+            ? 300 : terminalContainer.current.parentElement.clientHeight;
         const rows = Math.floor(height / lineHeight) - rowOffset;
         if (rows > minRows) {
-            this.term.resize(cols, rows);
+            term.resize(cols, rows);
         } else {
-            this.term.resize(cols, minRows);
+            term.resize(cols, minRows);
         }
-        const inputHeight = height - (this.terminalContainer.current.clientHeight || rows * lineHeight) - 1;
-        this.setState({
-            inputHeight
-        });
+        const _inputHeight = height - (terminalContainer.current.clientHeight || rows * lineHeight) - 1;
+        setInputHeight(_inputHeight);
     }
 
-    clear(isHistory = true) {
-        if (this.term) {
-            this.term.clear();
+    function clear(isHistory = true) {
+        if (term) {
+            term.clear();
             if (isHistory) {
-                this.props.terminalHistory.clear();
-                this.props.terminalHistory.push('');
+                terminalHistory.clear();
+                terminalHistory.push('');
             }
         }
     }
 
-    selectAll() {
-        if (this.term) {
-            this.term.selectAll();
+    function selectAll() {
+        if (term) {
+            term.selectAll();
         }
     }
 
-    clearSelection() {
-        if (this.term) {
-            this.term.clearSelection();
+    function clearSelection() {
+        if (term) {
+            term.clearSelection();
         }
     }
 
-    write(data) {
-        if (this.term) {
-            this.term.write(data);
+    function write(data) {
+        if (term) {
+            term.write(data);
         }
     }
 
-    writeln(data, isHistory = true) {
-        if (this.term) {
-            this.term.write('\r');
-            this.term.write(data);
-            this.term.prompt();
-            if (isHistory) {
-                this.props.terminalHistory.push(data);
-            }
-        }
-    }
+    useImperativeHandle(ref, () => ({
+        writeln,
+        setTerminalInput,
+        resize,
+        clear,
+        selectAll,
+        clearSelection,
+        write
+    }));
 
-    render() {
-        const { isDefault, terminalHistory } = this.props;
-        const { inputValue } = this.state;
-
-        const inputHeight = `${this.state.inputHeight}px`;
-        return (
-            <div
-                className={isDefault ? styles['terminal-content-absolute'] : styles['terminal-content']}
-            >
-                <div ref={this.terminalContainer} />
-                <div style={{
-                    height: '1px',
-                    backgroundColor: '#676869'
+    return (
+        <div
+            className={isDefault ? styles['terminal-content-absolute'] : styles['terminal-content']}
+        >
+            <div ref={terminalContainer} />
+            <div style={{
+                height: '1px',
+                backgroundColor: '#676869'
+            }}
+            />
+            <input
+                ref={input}
+                style={{
+                    width: '100%',
+                    height: `${inputHeight}px`,
+                    backgroundColor: '#000000',
+                    color: '#FFFFFF',
+                    border: 'none'
                 }}
-                />
-                <input
-                    ref={this.input}
-                    style={{
-                        width: '100%',
-                        height: inputHeight,
-                        backgroundColor: '#000000',
-                        color: '#FFFFFF',
-                        border: 'none'
-                    }}
-                    type="text"
-                    placeholder="Send Command"
-                    value={terminalHistory.get(0) === undefined ? inputValue : terminalHistory.get(0)}
-                    onChange={this.actions.changeInputValue}
-                    onKeyDown={(event) => {
-                        this.setTerminalInput(event);
-                    }}
-                />
-            </div>
-        );
-    }
-}
+                type="text"
+                placeholder="Send Command"
+                value={terminalHistory.get(0) === undefined ? inputValue : terminalHistory.get(0)}
+                onChange={actions.changeInputValue}
+                onKeyDown={(event) => {
+                    setTerminalInput(event);
+                }}
+            />
+        </div>
+    );
+});
 
+TerminalWrapper.propTypes = {
+    onData: PropTypes.func,
+    isDefault: PropTypes.bool,
+    terminalHistory: PropTypes.object.isRequired,
+    consoleHistory: PropTypes.object.isRequired,
+    inputValue: PropTypes.string.isRequired
+};
 export default TerminalWrapper;

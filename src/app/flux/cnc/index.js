@@ -77,11 +77,6 @@ const INITIAL_STATE = {
     activeToolListDefinition: null,
     showCncToolManager: false,
 
-    // snapshot state
-    undoSnapshots: [{ models: [], toolPathModels: [] }], // snapshot { models, toolPathModels }
-    redoSnapshots: [], // snapshot { models, toolPathModels }
-    canUndo: false,
-    canRedo: false,
     history: operationHistory,
     targetTmpState: {},
     // When project recovered, the operation history should be cleared,

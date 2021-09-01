@@ -1,6 +1,6 @@
-import React, { PureComponent } from 'react';
+import React, { useEffect } from 'react';
 import PropTypes from 'prop-types';
-import { connect } from 'react-redux';
+import { useSelector } from 'react-redux';
 import log from '../../../lib/log';
 import Enclosure from './Enclosure';
 import i18n from '../../../lib/i18n';
@@ -8,81 +8,68 @@ import i18n from '../../../lib/i18n';
 // import { actions as machineActions } from '../../flux/machine';
 import { CONNECTION_TYPE_SERIAL, CONNECTION_TYPE_WIFI } from '../../../constants';
 
-class EnclosureDisplay extends PureComponent {
-    static propTypes = {
-        server: PropTypes.object.isRequired,
-        isConnected: PropTypes.bool.isRequired,
-        enclosureOnline: PropTypes.bool.isRequired,
-        widgetActions: PropTypes.object.isRequired,
-        connectionType: PropTypes.string.isRequired
-    }
+function EnclosureDisplay({ widgetActions }) {
+    const { server, isConnected, connectionType, enclosureOnline } = useSelector(state => state.machine);
 
-    componentDidMount() {
-        this.props.widgetActions.setTitle(i18n._('Enclosure'));
-        this.props.widgetActions.setDisplay(false);
-        if (!this.props.isConnected) {
-            this.props.widgetActions.setDisplay(false);
+    useEffect(() => {
+        widgetActions.setTitle(i18n._('Enclosure'));
+        widgetActions.setDisplay(false);
+        if (!isConnected) {
+            widgetActions.setDisplay(false);
             return;
         }
-        if (this.props.isConnected && this.props.enclosureOnline
-            && this.props.connectionType === CONNECTION_TYPE_SERIAL) {
-            this.props.widgetActions.setDisplay(true);
+        if (isConnected && enclosureOnline
+            && connectionType === CONNECTION_TYPE_SERIAL) {
+            widgetActions.setDisplay(true);
         }
 
-        if (this.props.isConnected && this.props.connectionType === CONNECTION_TYPE_WIFI) {
-            this.props.server.getEnclosureStatus((errMsg, res) => {
+        if (isConnected && connectionType === CONNECTION_TYPE_WIFI) {
+            server.getEnclosureStatus((errMsg, res) => {
                 if (errMsg) {
                     log.warn(errMsg);
                 } else {
                     const { isReady } = res;
                     if (isReady === true) {
-                        this.props.widgetActions.setDisplay(true);
+                        widgetActions.setDisplay(true);
                     }
                 }
             });
         }
-    }
+    }, []);
 
-    componentWillReceiveProps(nextProps) {
-        if (!nextProps.isConnected) {
-            this.props.widgetActions.setDisplay(false);
+    useEffect(() => {
+        if (!isConnected) {
+            widgetActions.setDisplay(false);
         }
-        if (nextProps.enclosureOnline !== this.props.enclosureOnline && nextProps.isConnected
-         && nextProps.enclosureOnline && this.props.connectionType === CONNECTION_TYPE_SERIAL) {
-            this.props.widgetActions.setDisplay(true);
-        }
+    }, [isConnected]);
 
-        if (nextProps.isConnected && this.props.connectionType === CONNECTION_TYPE_WIFI) {
-            this.props.server.getEnclosureStatus((errMsg, res) => {
+    useEffect(() => {
+        if (isConnected && enclosureOnline && connectionType === CONNECTION_TYPE_SERIAL) {
+            widgetActions.setDisplay(true);
+        }
+    }, [enclosureOnline, isConnected, connectionType]);
+
+    useEffect(() => {
+        if (isConnected && connectionType === CONNECTION_TYPE_WIFI) {
+            server.getEnclosureStatus((errMsg, res) => {
                 if (errMsg) {
                     log.warn(errMsg);
                 } else {
                     const { isReady } = res;
                     if (isReady === true) {
-                        this.props.widgetActions.setDisplay(true);
+                        widgetActions.setDisplay(true);
                     }
                 }
             });
         }
-    }
+    }, [isConnected, connectionType]);
 
-    render() {
-        return (
-            <Enclosure />
-        );
-    }
+    return (
+        <Enclosure />
+    );
 }
-const mapStateToProps = (state) => {
-    const { server, isConnected, headType, connectionType, enclosureOnline } = state.machine;
-
-    return {
-        headType,
-        enclosureOnline,
-        isConnected,
-        connectionType,
-        server
-    };
+EnclosureDisplay.propTypes = {
+    widgetActions: PropTypes.object.isRequired
 };
 
-
-export default connect(mapStateToProps)(EnclosureDisplay);
+export default EnclosureDisplay;

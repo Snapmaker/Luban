@@ -1,6 +1,6 @@
-import React, { PureComponent } from 'react';
-import PropTypes from 'prop-types';
-import { connect } from 'react-redux';
+import React, { useEffect, useState } from 'react';
+// import PropTypes from 'prop-types';
+import { shallowEqual, useDispatch, useSelector } from 'react-redux';
 import TipTrigger from '../../components/TipTrigger';
 import Switch from '../../components/Switch';
 import { actions as machineActions } from '../../../flux/machine';
@@ -8,211 +8,158 @@ import i18n from '../../../lib/i18n';
 import log from '../../../lib/log';
 
 
-class Enclosure extends PureComponent {
-    static propTypes = {
-        executeGcode: PropTypes.func.isRequired,
-        enclosureLight: PropTypes.number.isRequired,
-        headType: PropTypes.string,
-        enclosureFan: PropTypes.number.isRequired,
-        isConnected: PropTypes.bool.isRequired,
-        connectionType: PropTypes.string.isRequired,
-        server: PropTypes.object.isRequired
-    }
+function Enclosure() {
+    const { server, isConnected, headType, connectionType, enclosureLight, enclosureFan } = useSelector(state => state.machine, shallowEqual);
+    const [led, setLed] = useState(0);
+    const [fan, setFan] = useState(0);
+    const [isLedReady, setIsLedReady] = useState(true);
+    const [isFanReady, setIsFanReady] = useState(true);
+    const [isDoorEnabled, setIsDoorEnabled] = useState(true);
+    const dispatch = useDispatch();
 
-    state = {
-        led: 0,
-        fan: 0,
-        isLedReady: true,
-        isFanReady: true,
-        isDoorEnabled: true
-    }
-
-    actions = {
+    const actions = {
         onHandleLed: async () => {
-            let led;
-            if (this.state.led === 0) {
-                led = 100;
+            let _led;
+            if (led === 0) {
+                _led = 100;
             } else {
-                led = 0;
+                _led = 0;
             }
-            if (this.props.connectionType === 'wifi') {
-                this.props.server.setEnclosureLight(led, (errMsg, res) => {
+            if (connectionType === 'wifi') {
+                server.setEnclosureLight(_led, (errMsg, res) => {
                     if (errMsg) {
                         log.error(errMsg);
                         return;
                     }
                     if (res) {
-                        this.setState({
-                            ...this.state,
-                            led: res.led
-                        });
+                        setLed(res.led);
                     }
                 });
             } else {
-                await this.props.executeGcode(`M1010 S3 P${led};`);
-                this.setState({
-                    ...this.state,
-                    isLedReady: false
-                });
+                await dispatch(machineActions.executeGcode(`M1010 S3 P${_led};`, null));
+                setIsLedReady(false);
             }
         },
         onHandleCoolingFans: async () => {
-            let fan;
-            if (this.state.fan === 0) {
-                fan = 100;
+            let _fan;
+            if (fan === 0) {
+                _fan = 100;
             } else {
-                fan = 0;
+                _fan = 0;
             }
-            if (this.props.connectionType === 'wifi') {
-                this.props.server.setEnclosureFan(fan, (errMsg, res) => {
+            if (connectionType === 'wifi') {
+                server.setEnclosureFan(_fan, (errMsg, res) => {
                     if (errMsg) {
                         log.error(errMsg);
                         return;
                     }
                     if (res) {
-                        this.setState({
-                            ...this.state,
-                            fan: res.fan
-                        });
+                        setFan(res.fan);
                     }
                 });
             } else {
-                await this.props.executeGcode(`M1010 S4 P${fan};`);
-                this.setState({
-                    ...this.state,
-                    isFanReady: false
-                });
+                await dispatch(machineActions.executeGcode(`M1010 S4 P${_fan};`, null));
+                setIsFanReady(false);
             }
         },
         onHandleDoorEnabled: () => {
-            const isDoorEnabled = !this.state.isDoorEnabled;
-            this.props.server.setDoorDetection(isDoorEnabled, (errMsg, res) => {
+            server.setDoorDetection(!isDoorEnabled, (errMsg, res) => {
                 if (errMsg) {
                     log.error(errMsg);
                     return;
                 }
                 if (res) {
-                    this.setState({
-                        ...this.state,
-                        isDoorEnabled: res.isDoorEnabled
-                    });
+                    setIsDoorEnabled(res.isDoorEnabled);
                 }
             });
         }
-    }
+    };
 
-    componentDidMount() {
-        if (this.props.isConnected && this.props.connectionType === 'wifi') {
-            this.props.server.getEnclosureStatus((errMsg, res) => {
+    useEffect(() => {
+        if (isConnected && connectionType === 'wifi') {
+            server.getEnclosureStatus((errMsg, res) => {
                 if (errMsg) {
                     log.warn(errMsg);
                 } else {
-                    const { isDoorEnabled, led, fan } = res;
-                    this.setState({
-                        isDoorEnabled,
-                        led,
-                        fan
-                    });
+                    setLed(res.led);
+                    setFan(res.fan);
+                    setIsDoorEnabled(res.isDoorEnabled);
                 }
             });
         }
-    }
+    }, []);
 
+    useEffect(() => {
+        if (connectionType === 'serial') {
+            setLed(enclosureLight);
+            setIsLedReady(true);
+        }
+    }, [enclosureLight]);
 
-    componentWillReceiveProps(nextProps) {
-        if (nextProps.enclosureLight !== this.props.enclosureLight && this.props.connectionType === 'serial') {
-            this.setState({
-                led: nextProps.enclosureLight,
-                isLedReady: true
-            });
+    useEffect(() => {
+        if (connectionType === 'serial') {
+            setFan(enclosureFan);
+            setIsFanReady(true);
         }
-        if (nextProps.enclosureFan !== this.props.enclosureFan
-            && this.props.connectionType === 'serial') {
-            this.setState({
-                fan: nextProps.enclosureFan,
-                isFanReady: true
-            });
-        }
-        if (nextProps.isConnected && this.props.connectionType === 'wifi') {
-            this.props.server.getEnclosureStatus((errMsg, res) => {
+    }, [enclosureFan]);
+
+    useEffect(() => {
+        if (isConnected && connectionType === 'wifi') {
+            server.getEnclosureStatus((errMsg, res) => {
                 if (errMsg) {
                     log.warn(errMsg);
                 } else {
-                    const { isDoorEnabled, led, fan } = res;
-                    this.setState({
-                        isDoorEnabled,
-                        led,
-                        fan
-                    });
+                    setLed(res.led);
+                    setFan(res.fan);
+                    setIsDoorEnabled(res.isDoorEnabled);
                 }
             });
         }
-    }
+    }, [isConnected]);
 
-    render() {
-        const { isDoorEnabled, led, fan, isLedReady, isFanReady } = this.state;
-        const { isConnected, connectionType, headType } = this.props;
-
-        return (
-            <div>
-                <div className="margin-bottom-8">
-                    <div className="sm-flex justify-space-between margin-vertical-8">
-                        <span>{i18n._('LED Strips')}</span>
-                        <Switch
-                            onClick={this.actions.onHandleLed}
-                            checked={led}
-                            disabled={(connectionType === 'serial' && !isLedReady) || !isConnected}
-                        />
-                    </div>
-                    <div className="sm-flex justify-space-between margin-vertical-8 ">
-                        <span>{i18n._('Exhaust Fan')}</span>
-                        <Switch
-                            onClick={this.actions.onHandleCoolingFans}
-                            checked={Boolean(fan)}
-                            disabled={(connectionType === 'serial' && !isFanReady) || !isConnected}
-                        />
-                    </div>
-                    { (isConnected && connectionType === 'wifi' && headType !== '3dp') && (
-                        <TipTrigger
-                            title={i18n._('Door Detection')}
-                            content={(
-                                <div>
-                                    <p>{i18n._('If you disable the Door Detection feature, your job will not pause when one of both of the enclosure panels is/are opened.')}</p>
-                                </div>
-                            )}
-                        >
-                            <div className="sm-flex justify-space-between margin-vertical-8 ">
-                                <span>{i18n._('Door Detection')}</span>
-                                <Switch
-                                    onClick={this.actions.onHandleDoorEnabled}
-                                    checked={isDoorEnabled}
-                                    disabled={(connectionType === 'serial' && !isFanReady) || !isConnected}
-                                />
-                            </div>
-                        </TipTrigger>
-                    )}
+    return (
+        <div>
+            <div className="margin-bottom-8">
+                <div className="sm-flex justify-space-between margin-vertical-8">
+                    <span>{i18n._('LED Strips')}</span>
+                    <Switch
+                        onClick={actions.onHandleLed}
+                        checked={Boolean(led)}
+                        disabled={(connectionType === 'serial' && !isLedReady) || !isConnected}
+                    />
                 </div>
+                <div className="sm-flex justify-space-between margin-vertical-8 ">
+                    <span>{i18n._('Exhaust Fan')}</span>
+                    <Switch
+                        onClick={actions.onHandleCoolingFans}
+                        checked={Boolean(fan)}
+                        disabled={(connectionType === 'serial' && !isFanReady) || !isConnected}
+                    />
+                </div>
+                { (isConnected && connectionType === 'wifi' && headType !== '3dp') && (
+                    <TipTrigger
+                        title={i18n._('Door Detection')}
+                        content={(
+                            <div>
+                                <p>{i18n._('If you disable the Door Detection feature, your job will not pause when one of both of the enclosure panels is/are opened.')}</p>
+                            </div>
+                        )}
+                    >
+                        <div className="sm-flex justify-space-between margin-vertical-8 ">
+                            <span>{i18n._('Door Detection')}</span>
+                            <Switch
+                                onClick={actions.onHandleDoorEnabled}
+                                checked={isDoorEnabled}
+                                disabled={(connectionType === 'serial' && !isFanReady) || !isConnected}
+                            />
+                        </div>
+                    </TipTrigger>
+                )}
             </div>
-        );
-    }
+        </div>
+    );
 }
-const mapStateToProps = (state) => {
-    const { server, isConnected, headType, connectionType, enclosureLight, enclosureFan } = state.machine;
-
-    return {
-        headType,
-        enclosureLight,
-        enclosureFan,
-        isConnected,
-        connectionType,
-        server
-    };
+Enclosure.propTypes = {
 };
 
-const mapDispatchToProps = (dispatch) => {
-    return {
-        executeGcode: (gcode, context) => dispatch(machineActions.executeGcode(gcode, context))
-    };
-};
-
-export default connect(mapStateToProps, mapDispatchToProps)(Enclosure);
+export default Enclosure;

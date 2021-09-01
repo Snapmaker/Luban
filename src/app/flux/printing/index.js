@@ -125,11 +125,6 @@ const INITIAL_STATE = {
         uniformScalingState: true
     },
 
-    // snapshots state
-    undoSnapshots: [{ models: [] }], // snapshot { models }
-    redoSnapshots: [], // snapshot { models }
-    canUndo: false,
-    canRedo: false,
     history: operationHistory,
     targetTmpState: {},
     // When project recovered, the operation history should be cleared,
@@ -1035,7 +1030,6 @@ export const actions = {
         modelGroup.onModelAfterTransform();
 
         dispatch(actions.recordModelAfterTransform(transformMode, modelGroup));
-        // dispatch(actions.recordSnapshot());
         dispatch(actions.destroyGcodeLine());
         dispatch(actions.displayModel());
     },
@@ -1111,7 +1105,6 @@ export const actions = {
 
         dispatch(operationHistoryActions.setOperations(INITIAL_STATE.name, operations));
         dispatch(actions.updateState(modelState));
-        // dispatch(actions.recordSnapshot());
         dispatch(actions.destroyGcodeLine());
         dispatch(actions.displayModel());
     },
@@ -1134,7 +1127,6 @@ export const actions = {
 
         dispatch(operationHistoryActions.setOperations(INITIAL_STATE.name, operations));
         dispatch(actions.updateState(modelState));
-        // dispatch(actions.recordSnapshot());
         dispatch(actions.destroyGcodeLine());
         dispatch(actions.displayModel());
     },
@@ -1179,7 +1171,6 @@ export const actions = {
         dispatch(actions.updateState(
             modelState
         ));
-        // dispatch(actions.recordSnapshot());
         dispatch(actions.destroyGcodeLine());
         dispatch(actions.displayModel());
     },
@@ -1217,7 +1208,6 @@ export const actions = {
             progress: 0
         }));
         dispatch(actions.updateState(modelState));
-        // dispatch(actions.recordSnapshot());
         dispatch(actions.destroyGcodeLine());
         dispatch(actions.render());
     },
@@ -1232,7 +1222,6 @@ export const actions = {
         dispatch(actions.recordModelAfterTransform('translate', modelGroup));
         dispatch(actions.updateState(modelState));
         dispatch(actions.destroyGcodeLine());
-        // dispatch(actions.recordSnapshot());
         dispatch(actions.render());
     },
 
@@ -1312,7 +1301,6 @@ export const actions = {
         const modelState = modelGroup.onModelAfterTransform();
         // if (!customCompareTransformation(modelState.transformation, transformation)) {
         dispatch(actions.updateState(modelState));
-        // dispatch(actions.recordSnapshot());
         dispatch(actions.destroyGcodeLine());
         dispatch(actions.displayModel());
         // }
@@ -1339,7 +1327,6 @@ export const actions = {
         dispatch(operationHistoryActions.setOperations(INITIAL_STATE.name, operations));
 
         dispatch(actions.updateState(modelState));
-        // dispatch(actions.recordSnapshot());
         dispatch(actions.destroyGcodeLine());
         dispatch(actions.displayModel());
     },
@@ -1375,7 +1362,6 @@ export const actions = {
         dispatch(operationHistoryActions.setOperations(INITIAL_STATE.name, operations));
 
         dispatch(actions.updateState(modelState));
-        // dispatch(actions.recordSnapshot());
         dispatch(actions.destroyGcodeLine());
         dispatch(actions.displayModel());
     },
@@ -1389,7 +1375,6 @@ export const actions = {
 
         dispatch(actions.recordModelAfterTransform('rotate', modelGroup));
         dispatch(actions.updateState(modelState));
-        // dispatch(actions.recordSnapshot());
         dispatch(actions.destroyGcodeLine());
         dispatch(actions.displayModel());
     },
@@ -1403,7 +1388,6 @@ export const actions = {
 
         dispatch(actions.recordModelAfterTransform('rotate', modelGroup));
         dispatch(actions.updateState(modelState));
-        // dispatch(actions.recordSnapshot());
         dispatch(actions.destroyGcodeLine());
         dispatch(actions.displayModel());
     },
@@ -1417,7 +1401,6 @@ export const actions = {
 
         dispatch(actions.recordModelAfterTransform('scale', modelGroup));
         dispatch(actions.updateState(modelState));
-        // dispatch(actions.recordSnapshot());
         dispatch(actions.destroyGcodeLine());
         dispatch(actions.displayModel());
     },
@@ -1431,7 +1414,6 @@ export const actions = {
 
         dispatch(actions.recordModelAfterTransform('scale', modelGroup));
         dispatch(actions.updateState(modelState));
-        // dispatch(actions.recordSnapshot());
         dispatch(actions.destroyGcodeLine());
         dispatch(actions.displayModel());
     },
@@ -1456,22 +1438,6 @@ export const actions = {
             dispatch(actions.render());
         }
     },
-
-    recordSnapshot: () => (dispatch, getState) => {
-        const { modelGroup, undoSnapshots, redoSnapshots } = getState().printing;
-        const cloneModels = modelGroup.cloneModels();
-        undoSnapshots.push({
-            models: cloneModels
-        });
-        redoSnapshots.splice(0);
-        dispatch(actions.updateState({
-            undoSnapshots: undoSnapshots,
-            redoSnapshots: redoSnapshots,
-            canUndo: undoSnapshots.length > 1,
-            canRedo: redoSnapshots.length > 0
-        }));
-    },
-
 
     displayGcode: () => (dispatch, getState) => {
         const { gcodeLineGroup, modelGroup } = getState().printing;
@@ -1506,7 +1472,6 @@ export const actions = {
             operations.push(operation);
             dispatch(operationHistoryActions.setOperations(INITIAL_STATE.name, operations));
         }
-        // dispatch(actions.recordSnapshot());
     },
     clearAllManualSupport: () => (dispatch, getState) => {
         const { modelGroup } = getState().printing;
@@ -1522,7 +1487,6 @@ export const actions = {
             dispatch(operationHistoryActions.setOperations(INITIAL_STATE.name, operations));
 
             modelGroup.removeAllManualSupport();
-            // dispatch(actions.recordSnapshot());
         }
     },
     setDefaultSupportSize: (size) => (dispatch, getState) => {
@@ -1576,7 +1540,6 @@ export const actions = {
                     dispatch(actions.updateState(modelState));
                     dispatch(actions.displayModel());
                     dispatch(actions.destroyGcodeLine());
-                    // dispatch(actions.recordSnapshot());
                     dispatch(actions.updateState({
                         stage: PRINTING_STAGE.LOAD_MODEL_SUCCEED,
                         inProgress: false,

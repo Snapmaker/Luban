@@ -880,7 +880,6 @@ export const actions = {
             }));
         }
         dispatch(actions.resetProcessState(headType));
-        // dispatch(actions.recordSnapshot(headType));
         dispatch(baseActions.render(headType));
     },
 
@@ -976,7 +975,6 @@ export const actions = {
 
                 dispatch(baseActions.updateState(headType, { modelState }));
                 dispatch(baseActions.updateTransformation(headType, modelState.transformation));
-                // dispatch(actions.recordSnapshot(headType));
             }
         }
     },
@@ -1033,7 +1031,6 @@ export const actions = {
         // SVGActions.updateElementImage(processImageName);
         SVGActions.updateSvgModelImage(model, processImageName);
 
-        // dispatch(baseActions.recordSnapshot(headType));
         dispatch(baseActions.resetCalculatedState(headType));
         dispatch(baseActions.render(headType));
         dispatch(baseActions.updateState(headType, {
@@ -1076,7 +1073,6 @@ export const actions = {
         const modelState = modelGroup.onModelTransform();
 
         dispatch(baseActions.updateTransformation(headType, modelState.transformation));
-        // dispatch(actions.recordSnapshot(headType));
         dispatch(baseActions.render(headType));
     },
 
@@ -1096,21 +1092,6 @@ export const actions = {
             dispatch(actions.resetProcessState(headType));
             dispatch(baseActions.render(headType));
         }
-    },
-
-    recordSnapshot: (headType) => (dispatch, getState) => {
-        const { modelGroup, undoSnapshots, redoSnapshots } = getState()[headType];
-        const cloneModels = modelGroup.cloneModels();
-        undoSnapshots.push({
-            models: cloneModels
-        });
-        redoSnapshots.splice(0);
-        dispatch(baseActions.updateState(headType, {
-            undoSnapshots: undoSnapshots,
-            redoSnapshots: redoSnapshots,
-            canUndo: undoSnapshots.length > 1,
-            canRedo: redoSnapshots.length > 0
-        }));
     },
 
     hideSelectedModel: (headType, model) => (dispatch, getState) => {

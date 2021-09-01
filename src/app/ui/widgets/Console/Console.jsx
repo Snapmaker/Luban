@@ -1,94 +1,77 @@
 import color from 'cli-color';
-import React, { PureComponent } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import PropTypes from 'prop-types';
 // import classNames from 'classnames';
-import { connect } from 'react-redux';
+import { shallowEqual, useDispatch, useSelector } from 'react-redux';
 import pubsub from 'pubsub-js';
-import { withRouter } from 'react-router-dom';
+import { useHistory, withRouter } from 'react-router-dom';
 import settings from '../../../config/settings';
 import i18n from '../../../lib/i18n';
+import usePrevious from '../../../lib/hooks/previous';
 import { actions as machineActions } from '../../../flux/machine';
 import { controller } from '../../../lib/controller';
 import Terminal from './Terminal';
 import { ABSENT_OBJECT, CONNECTION_TYPE_SERIAL } from '../../../constants';
 
-class Console extends PureComponent {
-    static propTypes = {
-        ...withRouter.propTypes,
-        clearRenderStamp: PropTypes.number,
-        widgetId: PropTypes.string.isRequired,
-        minimized: PropTypes.bool,
-        // minimized: PropTypes.bool.isRequired,
-        isDefault: PropTypes.bool,
-        // isDefault: PropTypes.bool.isRequired,
-        terminalHistory: PropTypes.object.isRequired,
-        consoleHistory: PropTypes.object.isRequired,
-        consoleLogs: PropTypes.array,
-
-        // redux
-        port: PropTypes.string.isRequired,
-        server: PropTypes.object.isRequired,
-        isConnected: PropTypes.bool.isRequired,
-        connectionType: PropTypes.string.isRequired,
-        executeGcode: PropTypes.func.isRequired
-    };
-
-    state = {
-        shouldRenderFitaddon: false
-    }
-
-    terminal = React.createRef();
-
-    pubsubTokens = [];
-
-    controllerEvents = {
+let pubsubTokens = [];
+let unlisten = null;
+function Console({ widgetId, widgetActions, minimized, isDefault, clearRenderStamp }) {
+    const { port, server, isConnected, connectionType, terminalHistory, consoleHistory, consoleLogs } = useSelector(state => state.machine, shallowEqual);
+    const [shouldRenderFitaddon, setShouldRenderFitaddon] = useState(false);
+    const history = useHistory();
+    const dispatch = useDispatch();
+    const terminalRef = useRef();
+    const prevProps = usePrevious({
+        isConnected, port, server, clearRenderStamp, consoleLogs, minimized, isDefault
+    });
+    const controllerEvents = {
         'serialport:close': () => {
             // now, not to clear logs after disconnect
-            // this.actions.clearAll();
+            // actions.clearAll();
         },
         // 'serialport:write': (data, context, dataSource) => {
         'serialport:write': (options) => {
             const { context } = options;
             let data = options.data;
-            if (context && (context.__sender__ === this.props.widgetId)) {
+            if (context && (context.__sender__ === widgetId)) {
                 // Do not write to the terminal console if the sender is the widget itself
                 return;
             }
             if (data.endsWith('\n')) {
                 data = data.slice(0, -1);
             }
-            const terminal = this.terminal.current;
+            const terminal = terminalRef.current;
             terminal && terminal.writeln(data);
         },
         // 'serialport:read': (data, dataSource) => {
         'serialport:read': (options) => {
             const { data } = options;
-            const terminal = this.terminal.current;
+            const terminal = terminalRef.current;
             terminal && terminal.writeln(data);
         }
     };
 
-    actions = {
+    const actions = {
         onTerminalData: (data) => {
             if (data === '') {
                 // ignore
             } else if (data === 'help' || data === 'h' || data === 'H') {
-                this.actions.getHelp();
+                actions.getHelp();
             } else if (data === 'v' || data === 'V') {
-                this.actions.queryVersion();
+                actions.queryVersion();
             } else if (data === 'g' || data === 'G') {
-                this.actions.queryGCommands();
+                actions.queryGCommands();
             } else if (data === 'm' || data === 'M') {
-                this.actions.queryMCommands();
+                actions.queryMCommands();
             } else if (data === 'clear') {
-                this.actions.clearAll();
+                actions.clearAll();
             } else {
-                this.props.executeGcode(data);
+                dispatch(machineActions.executeGcode(data));
             }
         },
 
         getHelp: () => {
-            const terminal = this.terminal.current;
+            const terminal = terminalRef.current;
             if (terminal) {
                 terminal.writeln(color.yellow('Welcome to the makers\' world!'));
                 terminal.writeln(color.yellow('Supported commands: '));
@@ -103,7 +86,7 @@ class Console extends PureComponent {
         },
 
         queryVersion: () => {
-            const terminal = this.terminal.current;
+            const terminal = terminalRef.current;
             if (terminal) {
                 const { name, version } = settings;
                 terminal.writeln(`${name} ${version}`);
@@ -112,7 +95,7 @@ class Console extends PureComponent {
 
         // green: motion; cyan: mode; yellow: set; blue: get; red: emergent
         queryGCommands: () => {
-            const terminal = this.terminal.current;
+            const terminal = terminalRef.current;
             if (terminal) {
                 terminal.writeln(color.green('Common G-Commands: '));
                 terminal.writeln(color.blue('------------------------------------'));
@@ -130,7 +113,7 @@ class Console extends PureComponent {
         },
 
         queryMCommands: () => {
-            const terminal = this.terminal.current;
+            const terminal = terminalRef.current;
             if (terminal) {
                 terminal.writeln(color.yellow('Common M-Commands: '));
                 terminal.writeln(color.blue('------------------------------------'));
@@ -163,17 +146,17 @@ class Console extends PureComponent {
             }
         },
         greetings: () => {
-            const terminal = this.terminal.current;
-            if (this.props.isConnected && this.props.port) {
+            const terminal = terminalRef.current;
+            if (isConnected && port) {
                 const { name, version } = settings;
 
                 if (terminal) {
                     terminal.writeln(`${name} ${version}`);
-                    terminal.writeln(i18n._('Connected to {{-port}}', { port: this.props.port }));
+                    terminal.writeln(i18n._('Connected to {{-port}}', { port: port }));
                 }
             }
 
-            if (this.props.isConnected && this.props.server !== ABSENT_OBJECT) {
+            if (isConnected && server !== ABSENT_OBJECT) {
                 const { name, version } = settings;
 
                 if (terminal) {
@@ -184,16 +167,16 @@ class Console extends PureComponent {
         },
 
         clearAll: () => {
-            const terminal = this.terminal.current;
+            const terminal = terminalRef.current;
             terminal && terminal.clear();
         },
 
-        printConsoleLogs: (consoleLogs) => {
-            for (let consoleLog of consoleLogs) {
+        printConsoleLogs: (_consoleLogs) => {
+            for (let consoleLog of _consoleLogs) {
                 if (consoleLog.endsWith('\n')) {
                     consoleLog = consoleLog.slice(0, -1);
                 }
-                const terminal = this.terminal.current;
+                const terminal = terminalRef.current;
                 const split = consoleLog.split('\n');
                 for (const splitElement of split) {
                     terminal && terminal.writeln(splitElement);
@@ -202,176 +185,160 @@ class Console extends PureComponent {
         }
     };
 
-    constructor(props) {
-        super(props);
-        props.widgetActions.setTitle(i18n._('Console'));
-        props.widgetActions.setControlButtons([
-            {
-                title: 'Eliminate',
-                name: 'Eliminate',
-                onClick: this.actions.clearAll,
-                type: ['static']
-            },
-            'SMMinimize'
-        ]);
-    }
-
-    componentWillMount() {
-        this.unlisten = this.props.history.listen((location) => {
-            if (location.pathname === '/workspace') {
-                this.setState({
-                    shouldRenderFitaddon: true
-                });
-            } else {
-                this.setState({
-                    shouldRenderFitaddon: false
-                });
-            }
-        });
-    }
-
-
-    componentDidMount() {
-        if (this.props.terminalHistory.getLength() === 0) {
-            this.props.terminalHistory.push('');
-            this.actions.getHelp();
-            this.actions.greetings();
-        } else {
-            const terminal = this.terminal.current;
-            const data = [];
-            for (let i = 1; i < this.props.terminalHistory.getLength(); i++) {
-                data.push(`\r${this.props.terminalHistory.get(i)}\r\n`);
-            }
-            terminal.write(data.join(''));
-        }
-        this.addControllerEvents();
-        this.subscribe();
-    }
-
-    componentWillReceiveProps(nextProps) {
-        if (nextProps.isConnected && (this.props.isConnected !== nextProps.isConnected
-            || nextProps.port !== this.props.port
-            || nextProps.server !== this.props.server)) {
-            const { name, version } = settings;
-
-            const terminal = this.terminal.current;
-            if (terminal) {
-                if (nextProps.connectionType === CONNECTION_TYPE_SERIAL) {
-                    terminal.writeln(`${name} ${version}`);
-                    terminal.writeln(i18n._('Connected to {{-port}}', { port: nextProps.port }));
-                } else {
-                    terminal.writeln(`${name} ${version}`);
-                    terminal.writeln(i18n._('Connected via Wi-Fi'));
-                }
-            }
-        }
-
-        if (nextProps.clearRenderStamp !== this.props.clearRenderStamp) {
-            this.actions.clearAll();
-        }
-
-        if (nextProps.consoleLogs !== this.props.consoleLogs) {
-            this.actions.printConsoleLogs(nextProps.consoleLogs);
-        }
-    }
-
-    componentDidUpdate(prevProps) {
-        if (prevProps.minimized !== this.props.minimized) {
-            this.resizeTerminal();
-        }
-        if (prevProps.isDefault !== this.props.isDefault) {
-            const terminal = this.terminal.current;
-            if (terminal) {
-                terminal.clear(false);
-                const data = [];
-                for (let i = 1; i < this.props.terminalHistory.getLength(); i++) {
-                    data.push(`\r${this.props.terminalHistory.get(i)}\r\n`);
-                }
-                terminal.write(data.join(''));
-            }
-        }
-    }
-
-    componentWillUnmount() {
-        this.unlisten();
-        this.removeControllerEvents();
-        this.unsubscribe();
-    }
-
-    subscribe() {
-        const tokens = [
-            pubsub.subscribe('resize', () => {
-                this.resizeTerminal();
-            })
-        ];
-        this.pubsubTokens = this.pubsubTokens.concat(tokens);
-    }
-
-    unsubscribe() {
-        this.pubsubTokens.forEach((token) => {
-            pubsub.unsubscribe(token);
-        });
-        this.pubsubTokens = [];
-    }
-
-    addControllerEvents() {
-        Object.keys(this.controllerEvents).forEach(eventName => {
-            const callback = this.controllerEvents[eventName];
+    function addControllerEvents() {
+        Object.keys(controllerEvents).forEach(eventName => {
+            const callback = controllerEvents[eventName];
             controller.on(eventName, callback);
         });
     }
 
-    removeControllerEvents() {
-        Object.keys(this.controllerEvents).forEach(eventName => {
-            const callback = this.controllerEvents[eventName];
+    function removeControllerEvents() {
+        Object.keys(controllerEvents).forEach(eventName => {
+            const callback = controllerEvents[eventName];
             controller.off(eventName, callback);
         });
     }
 
-    resizeTerminal() {
-        const terminal = this.terminal.current;
+    function resizeTerminal() {
+        const terminal = terminalRef.current;
         terminal && terminal.resize();
     }
 
-    render() {
-        const { isDefault, terminalHistory, consoleHistory } = this.props;
-        const inputValue = terminalHistory.get(0) || '';
-        return (
-            <div className="padding-bottom-16">
-                <Terminal
-                    ref={this.terminal}
-                    onData={this.actions.onTerminalData}
-                    isDefault={isDefault}
-                    shouldRenderFitaddon={this.state.shouldRenderFitaddon}
-                    terminalHistory={terminalHistory}
-                    consoleHistory={consoleHistory}
-                    inputValue={inputValue}
-                />
-            </div>
-
-        );
+    function subscribe() {
+        const tokens = [
+            pubsub.subscribe('resize', () => {
+                resizeTerminal();
+            })
+        ];
+        pubsubTokens = pubsubTokens.concat(tokens);
     }
+
+    function unsubscribe() {
+        pubsubTokens.forEach((token) => {
+            pubsub.unsubscribe(token);
+        });
+        pubsubTokens = [];
+    }
+
+    useEffect(() => {
+        widgetActions.setTitle(i18n._('Console'));
+        widgetActions.setControlButtons([
+            {
+                title: 'Eliminate',
+                name: 'Eliminate',
+                onClick: actions.clearAll,
+                type: ['static']
+            },
+            'SMMinimize'
+        ]);
+        unlisten = history.listen((location) => {
+            if (location.pathname === '/workspace') {
+                setShouldRenderFitaddon(true);
+            } else {
+                setShouldRenderFitaddon(false);
+            }
+        });
+
+        if (terminalHistory.getLength() === 0) {
+            terminalHistory.push('');
+            actions.getHelp();
+            actions.greetings();
+        } else {
+            const terminal = terminalRef.current;
+            const data = [];
+            for (let i = 1; i < terminalHistory.getLength(); i++) {
+                data.push(`\r${terminalHistory.get(i)}\r\n`);
+            }
+            terminal.write(data.join(''));
+        }
+        addControllerEvents();
+        subscribe();
+
+        return () => {
+            unlisten();
+            removeControllerEvents();
+            unsubscribe();
+        };
+    }, []);
+
+    useEffect(() => {
+        if (prevProps) {
+            if (isConnected && (isConnected !== prevProps.isConnected
+                || prevProps.port !== port
+                || prevProps.server !== server)) {
+                const { name, version } = settings;
+                const terminal = terminalRef.current;
+                if (terminal) {
+                    if (connectionType === CONNECTION_TYPE_SERIAL) {
+                        terminal.writeln(`${name} ${version}`);
+                        terminal.writeln(i18n._('Connected to {{-port}}', { port: port }));
+                    } else {
+                        terminal.writeln(`${name} ${version}`);
+                        terminal.writeln(i18n._('Connected via Wi-Fi'));
+                    }
+                }
+            }
+        }
+    }, [isConnected, port, server]);
+
+    useEffect(() => {
+        if (prevProps && prevProps.clearRenderStamp !== clearRenderStamp) {
+            prevProps.clearRenderStamp = clearRenderStamp;
+            actions.clearAll();
+        }
+    }, [clearRenderStamp]);
+
+    useEffect(() => {
+        if (prevProps && prevProps.consoleLogs !== consoleLogs) {
+            prevProps.consoleLogs = consoleLogs;
+            actions.printConsoleLogs(consoleLogs);
+        }
+    }, [consoleLogs]);
+
+    useEffect(() => {
+        if (prevProps && prevProps.minimized !== minimized) {
+            prevProps.minimized = minimized;
+            resizeTerminal();
+        }
+    }, [minimized]);
+
+    useEffect(() => {
+        if (prevProps && prevProps.isDefault !== isDefault) {
+            prevProps.isDefault = isDefault;
+            const terminal = terminalRef.current;
+            if (terminal) {
+                terminal.clear(false);
+                const data = [];
+                for (let i = 1; i < terminalHistory.getLength(); i++) {
+                    data.push(`\r${terminalHistory.get(i)}\r\n`);
+                }
+                terminal.write(data.join(''));
+            }
+        }
+    }, [isDefault]);
+
+    const inputValue = terminalHistory.get(0) || '';
+    return (
+        <div className="padding-bottom-16">
+            <Terminal
+                ref={terminalRef}
+                onData={actions.onTerminalData}
+                isDefault={isDefault}
+                shouldRenderFitaddon={shouldRenderFitaddon}
+                terminalHistory={terminalHistory}
+                consoleHistory={consoleHistory}
+                inputValue={inputValue}
+            />
+        </div>
+
+    );
 }
-
-const mapStateToProps = (state) => {
-    const machine = state.machine;
-    const { port, server, isConnected, connectionType, terminalHistory, consoleHistory, consoleLogs } = machine;
-
-    return {
-        port,
-        server,
-        isConnected,
-        connectionType,
-        terminalHistory,
-        consoleHistory,
-        consoleLogs
-    };
+Console.propTypes = {
+    ...withRouter.propTypes,
+    clearRenderStamp: PropTypes.number,
+    widgetId: PropTypes.string.isRequired,
+    minimized: PropTypes.bool,
+    isDefault: PropTypes.bool
 };
 
-const mapDispatchToProps = (dispatch) => {
-    return {
-        executeGcode: (gcode) => dispatch(machineActions.executeGcode(gcode))
-    };
-};
-
-export default connect(mapStateToProps, mapDispatchToProps)(withRouter(Console));
+export default withRouter(Console);

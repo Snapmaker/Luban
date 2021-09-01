@@ -7,6 +7,7 @@ import { useHistory, withRouter } from 'react-router-dom';
 import 'intro.js/introjs.css';
 // import { Steps } from 'intro.js-react';
 import i18n from '../../lib/i18n';
+import useSetState from '../../lib/hooks/set-state';
 // import Anchor from '../components/Anchor';
 import Dropdown from '../components/Dropdown';
 import Menu from '../components/Menu';
@@ -340,7 +341,7 @@ function Laser({ location }) {
     const materials = useSelector(state => state[HEAD_LASER]?.materials, shallowEqual);
     const series = useSelector(state => state.machine.series, shallowEqual);
     const { isRotate } = materials;
-    const [jobTypeState, setJobTypeState] = useState({
+    const [jobTypeState, setJobTypeState] = useSetState({
         coordinateMode,
         coordinateSize,
         materials
