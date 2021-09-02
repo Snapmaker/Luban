@@ -8,6 +8,7 @@ import DataStorage from '../DataStorage';
 import settings from '../config/settings';
 import { DefinitionLoader } from './definition';
 import { generateRandomPathName } from '../../shared/lib/random-utils';
+import { PRINTING_CONFIG_SUBCATEGORY } from '../constants';
 
 
 const log = logger('print3d-slice');
@@ -55,7 +56,7 @@ let sliceProgress, filamentLength, filamentWeight, printTime;
 
 function processGcodeHeaderAfterCuraEngine(gcodeFilePath, boundingBox, thumbnail) {
     const definitionLoader = new DefinitionLoader();
-    definitionLoader.loadDefinition('active_final');
+    definitionLoader.loadDefinition(PRINTING_CONFIG_SUBCATEGORY, 'active_final');
     const readFileSync = fs.readFileSync(gcodeFilePath, 'utf8');
 
     const date = new Date();
@@ -100,7 +101,7 @@ function slice(params, onProgress, onSucceed, onError) {
 
     const { originalName, model, support, boundingBox, thumbnail } = params;
     const modelConfig = {
-        configFilePath: `${DataStorage.configDir}/active_final.def.json`,
+        configFilePath: `${DataStorage.configDir}/${PRINTING_CONFIG_SUBCATEGORY}/active_final.def.json`,
         path: []
     };
     for (const modelName of model) {
@@ -115,7 +116,7 @@ function slice(params, onProgress, onSucceed, onError) {
     }
 
     const supportConfig = {
-        configFilePath: `${DataStorage.configDir}/support.def.json`,
+        configFilePath: `${DataStorage.configDir}/${PRINTING_CONFIG_SUBCATEGORY}/support.def.json`,
         path: []
     };
     for (const modelName of support) {

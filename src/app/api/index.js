@@ -256,7 +256,9 @@ profileDefinitions.delete = defaultAPIFactory((options) => request.delete('/api/
 profileDefinitions.getRawDefinition = defaultAPIFactory((headType, definitionId, series) => request.get(`/api/profileRawDefinition/${headType}/${definitionId}`).query({
     series
 }));
-profileDefinitions.getDefinition = defaultAPIFactory((headType, definitionId, series) => request.get(`/api/profileDefinition/${headType}/${definitionId}/${series}`));
+profileDefinitions.getDefinition = defaultAPIFactory((headType, definitionId, series) => request.get(`/api/profileDefinition/${headType}/${definitionId}`).query({
+    series
+}));
 
 profileDefinitions.getDefinitionsByPrefixName = defaultAPIFactory((headType, prefix, series) => request.get(`/api/getDefinitionsByPrefixName/${headType}/${prefix}/${series}`));
 profileDefinitions.getDefaultDefinitions = defaultAPIFactory((headType, series) => request.get(`/api/profileDefaultDefinitions/${headType}/${series}`));

@@ -11,7 +11,14 @@ class DefinitionManager {
     series = '';
 
     async init(headType, series) {
-        this.series = series;
+        if (
+            series === MACHINE_SERIES.ORIGINAL_LZ.value
+           || series === MACHINE_SERIES.CUSTOM.value
+        ) {
+            this.series = MACHINE_SERIES.ORIGINAL.value;
+        } else {
+            this.series = series;
+        }
         let res;
         // TODO useless
         // let definitionId = 'snapmaker2';
@@ -35,21 +42,6 @@ class DefinitionManager {
 
         res = await api.profileDefinitions.getDefaultDefinitions(headType, this.series);
         this.defaultDefinitions = res.body.definitions;
-    }
-
-    get series() {
-        return this.series;
-    }
-
-    set series(newSeries) {
-        if (
-            newSeries === MACHINE_SERIES.ORIGINAL_LZ.value
-            || newSeries === MACHINE_SERIES.CUSTOM.value
-        ) {
-            this.series = MACHINE_SERIES.ORIGINAL.value;
-        } else {
-            this.series = newSeries;
-        }
     }
 
     /**

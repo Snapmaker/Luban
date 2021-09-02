@@ -104,40 +104,21 @@ class DataStorage {
          //  await this.versionAdaptation();
      }
 
-     async copyDirForInitSlicer(src, dst) {
-         mkdirp.sync(dst);
-
-         if (fs.existsSync(src)) {
-             const files = fs.readdirSync(src);
-             for (const file of files) {
-                 const srcPath = path.join(src, file);
-                 const dstPath = path.join(dst, file);
-                 if (fs.statSync(srcPath).isFile()) {
-                     fs.copyFileSync(srcPath, dstPath);
-                 } else {
-                     await this.copyDirForInitSlicer(srcPath, dstPath);
-                 }
-             }
-         }
-     }
-
-     async copyDirAndReplace(srcDir, dstDir) {
+     async copyDirForInitSlicer(srcDir, dstDir, overwriteTag = false) {
+         mkdirp.sync(dstDir);
          if (fs.existsSync(srcDir)) {
              const files = fs.readdirSync(srcDir);
-             if (fs.cpSync) {
-                 fs.cpSync(srcDir, dstDir);
-             } else {
-                 for (const file of files) {
-                     const src = path.join(srcDir, file);
-                     const dst = path.join(dstDir, file);
-                     if (fs.statSync(src).isFile()) {
-                         fs.copyFileSync(src, dst, () => {
-                         });
-                     } else {
-                         const srcPath = `${srcDir}/${file}`;
-                         const dstPath = `${dstDir}/${file}`;
-                         await this.copyDirForInitSlicer(srcPath, dstPath);
+             for (const file of files) {
+                 const src = path.join(srcDir, file);
+                 const dst = path.join(dstDir, file);
+                 if (fs.statSync(src).isFile()) {
+                     if (fs.existsSync(dst) && !overwriteTag) {
+                         return;
                      }
+                     fs.copyFileSync(src, dst, () => {
+                     });
+                 } else {
+                     await this.copyDirForInitSlicer(src, dst, overwriteTag);
                  }
              }
          }
@@ -149,8 +130,8 @@ class DataStorage {
          const cncConfigPaths = [];
          if (fs.existsSync(srcDir)) {
              const files = fs.readdirSync(srcDir);
-             const materialRegex = /^material.([0-9]{7}).def.json$/;
-             const qualityRegex = /^quality.([0-9]{7}).def.json$/;
+             const materialRegex = /^material\.([0-9]{7})\.def\.json$/;
+             const qualityRegex = /^quality\.([0-9]{7})\.def\.json$/;
              for (const file of files) {
                  const src = path.join(srcDir, file);
                  // const dst = path.join(dstDir, file);
@@ -200,8 +181,8 @@ class DataStorage {
                      const src = path.join(cncDir, file);
                      if (!fs.statSync(src).isFile()) {
                          let newFileName = `tool.${path.basename(oldFilePath)}`;
-                         if (/([A-Za-z0-9_]+).defv2.json$/.test(newFileName)) {
-                             newFileName = newFileName.replace(/.defv2.json$/, '.def.json');
+                         if (/([A-Za-z0-9_]+)\.defv2\.json$/.test(newFileName)) {
+                             newFileName = newFileName.replace(/\.defv2\.json$/, '.def.json');
                          }
                          const newFilePath = `${src}/${newFileName}`;
                          fs.copyFileSync(oldFilePath, newFilePath);
@@ -219,10 +200,9 @@ class DataStorage {
          mkdirp.sync(`${this.configDir}/${PRINTING_CONFIG_SUBCATEGORY}`);
 
          const CURA_ENGINE_CONFIG_LOCAL = '../resources/CuraEngine/Config';
-         await this.copyDirAndReplace(CURA_ENGINE_CONFIG_LOCAL, this.configDir);
-         // //TODO
+         await this.copyDirForInitSlicer(CURA_ENGINE_CONFIG_LOCAL, this.configDir);
          this.upgradeConfigFile(this.configDir);
-         await this.copyDirAndReplace(CURA_ENGINE_CONFIG_LOCAL, this.defaultConfigDir);
+         await this.copyDirForInitSlicer(CURA_ENGINE_CONFIG_LOCAL, this.defaultConfigDir, true);
      }
 
 

@@ -1,6 +1,6 @@
 import fs from 'fs';
 import path from 'path';
-import { includes, isNil } from 'lodash';
+import { includes } from 'lodash';
 import DataStorage from '../DataStorage';
 import pkg from '../../package.json';
 import logger from '../lib/logger';
@@ -51,12 +51,10 @@ export class DefinitionLoader {
             this.definitionId = definitionId;
         }
         const suffix = ConfigV1Suffix;
-        let filePath = '';
-        if (isNil(configPath) || configPath === 'undefined') {
-            filePath = path.join(`${DataStorage.configDir}/${headType}`, `${definitionId}${suffix}`);
-        } else {
-            filePath = path.join(`${DataStorage.configDir}/${headType}/${configPath}`, `${definitionId}${suffix}`);
-        }
+        const filePath = configPath ? path.join(`${DataStorage.configDir}/${headType}/${configPath}`,
+            `${definitionId}${suffix}`)
+            : path.join(`${DataStorage.configDir}/${headType}`, `${definitionId}${suffix}`);
+
         // in case of JSON parse error, set default json inherits from snapmaker2.def.json
         let json = {
             'name': 'Snapmaker Default',
@@ -77,12 +75,10 @@ export class DefinitionLoader {
             this.definitionId = definitionId;
         }
         const suffix = ConfigV1Suffix;
-        let filePath = '';
-        if (isNil(configPath) || configPath === 'undefined') {
-            filePath = path.join(`${DataStorage.defaultConfigDir}/${headType}`, `${definitionId}${suffix}`);
-        } else {
-            filePath = path.join(`${DataStorage.defaultConfigDir}/${headType}/${configPath}`, `${definitionId}${suffix}`);
-        }
+        const filePath = configPath ? path.join(`${DataStorage.defaultConfigDir}/${headType}/${configPath}`,
+            `${definitionId}${suffix}`)
+            : path.join(`${DataStorage.defaultConfigDir}/${headType}`, `${definitionId}${suffix}`);
+
         // in case of JSON parse error, set default json inherits from snapmaker2.def.json
         let json = {
             'name': 'Snapmaker Default',
@@ -158,11 +154,9 @@ export class DefinitionLoader {
         const overrides = {};
 
         for (const key of this.ownKeys) {
-            if (this.settings[key]) {
-                overrides[key] = {
-                    default_value: this.settings[key].default_value
-                };
-            }
+            overrides[key] = {
+                default_value: this.settings[key].default_value
+            };
         }
 
         return {
