@@ -1,7 +1,7 @@
 import uuid from 'uuid';
 import { baseActions } from './actions-base';
 import { controller } from '../../lib/controller';
-import { CNC_LASER_STAGE } from './utils';
+import { CNC_LASER_STAGE, CNC_LASER_PROCESS_STAGE } from './utils';
 import { DISPLAYED_TYPE_MODEL, DISPLAYED_TYPE_TOOLPATH, HEAD_LASER, SELECTEVENT } from '../../constants';
 import { getToolPathType } from '../../toolpaths/utils';
 
@@ -19,11 +19,16 @@ import api from '../../api';
 let toastId;
 export const processActions = {
     recalculateAllToolPath: (headType) => (dispatch, getState) => {
-        const { toolPathGroup } = getState()[headType];
-        // const { toolPathGroup, shouldGenerateGcodeCounter } = getState()[headType];
-        // dispatch(baseActions.updateState(headType, {
-        //     shouldGenerateGcodeCounter: shouldGenerateGcodeCounter + 1
-        // }));
+        const { toolPathGroup, progressStatesManager } = getState()[headType];
+
+        // start progress
+        progressStatesManager.startProgress(CNC_LASER_PROCESS_STAGE.GENERATE_TOOLPATH_AND_PREVIEW, [toolPathGroup.toolPaths.length, toolPathGroup.toolPaths.length, 1]);
+        dispatch(baseActions.updateState(headType, {
+            stage: CNC_LASER_STAGE.GENERATE_TOOLPATH_AND_PREVIEW,
+            progress: 0
+        }));
+
+        // start generate toolpath
         toolPathGroup.toolPaths.forEach((toolPath) => {
             dispatch(processActions.commitGenerateToolPath(headType, toolPath.id));
         });
@@ -356,7 +361,7 @@ export const processActions = {
                 lastModified: gcodeFile.lastModified,
                 thumbnail: gcodeFile.thumbnail
             },
-            stage: CNC_LASER_STAGE.GENERATE_GCODE_SUCCESS,
+            stage: CNC_LASER_STAGE.GENERATING_GCODE,
             isGcodeGenerating: false,
             progress: 1
         }));

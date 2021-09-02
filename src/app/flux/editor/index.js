@@ -124,17 +124,42 @@ export const actions = {
 
     __initOnControllerEvents: (headType) => {
         return (dispatch, getState) => {
-            ['processImage', 'generateToolPath', 'generateGcode', 'generateViewPath']
-                .forEach(key => {
-                    controller.on(`taskProgress:${key}`, (taskResult) => {
-                        if (headType !== taskResult.headType) {
-                            return;
-                        }
-                        dispatch(actions.updateState(headType, {
-                            progress: taskResult.progress
-                        }));
-                    });
-                });
+            controller.on('taskProgress:processImage', (taskResult) => {
+                if (headType !== taskResult.headType) {
+                    return;
+                }
+                dispatch(actions.updateState(headType, {
+                    progress: taskResult.progress
+                }));
+            });
+
+            controller.on('taskProgress:generateToolPath', (taskResult) => {
+                if (headType !== taskResult.headType) {
+                    return;
+                }
+                const { progressStatesManager } = getState()[headType];
+                dispatch(actions.updateState(headType, {
+                    progress: progressStatesManager.updateProgress(CNC_LASER_STAGE.GENERATING_TOOLPATH, taskResult.progress)
+                }));
+            });
+
+            controller.on('taskProgress:generateGcode', (taskResult) => {
+                if (headType !== taskResult.headType) {
+                    return;
+                }
+                dispatch(actions.updateState(headType, {
+                    progress: taskResult.progress
+                }));
+            });
+
+            controller.on('taskProgress:generateViewPath', (taskResult) => {
+                if (headType !== taskResult.headType) {
+                    return;
+                }
+                dispatch(actions.updateState(headType, {
+                    progress: taskResult.progress
+                }));
+            });
 
             controller.on('taskCompleted:processImage', (taskResult) => {
                 if (headType !== taskResult.headType) {
@@ -148,13 +173,15 @@ export const actions = {
                     return;
                 }
 
-                const { toolPathGroup } = getState()[headType];
+                const { toolPathGroup, progressStatesManager } = getState()[headType];
                 const toolPath = toolPathGroup._getToolPath(taskResult.taskId);
 
                 if (toolPath) {
                     if (taskResult.taskStatus === 'failed') {
                         toolPath.onGenerateToolpathFailed(taskResult);
                     } else {
+                        progressStatesManager.startNextStep();
+
                         toolpathRendererWorker.postMessage({
                             taskResult: taskResult
                         });
@@ -196,11 +223,6 @@ export const actions = {
                             shouldGenerateGcodeCounter: shouldGenerateGcodeCounter + 1
                         }));
                     }
-
-                    dispatch(baseActions.updateState(headType, {
-                        stage: CNC_LASER_STAGE.GENERATE_TOOLPATH_SUCCESS,
-                        progress: 1
-                    }));
                     break;
                 }
                 case 'data': {
@@ -218,15 +240,17 @@ export const actions = {
                     break;
                 }
                 case 'progress': {
+                    const { progressStatesManager } = getState()[headType];
                     const { progress } = value;
                     if (progress < 0.1) {
+                        progressStatesManager.startNextStep();
                         dispatch(actions.updateState(headType, {
-                            stage: CNC_LASER_STAGE.RENDER_TOOLPATH,
-                            progress: progress
+                            stage: CNC_LASER_STAGE.GENERATE_TOOLPATH_AND_PREVIEW,
+                            progress: progressStatesManager.updateProgress(CNC_LASER_STAGE.RENDER_TOOLPATH, progress)
                         }));
                     } else {
                         dispatch(actions.updateState(headType, {
-                            progress: progress
+                            progress: progressStatesManager.updateProgress(CNC_LASER_STAGE.RENDER_TOOLPATH, progress)
                         }));
                     }
                     break;

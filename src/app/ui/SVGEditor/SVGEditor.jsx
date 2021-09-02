@@ -21,7 +21,7 @@ class SVGEditor extends PureComponent {
         target: PropTypes.object,
         coordinateMode: PropTypes.object.isRequired,
         coordinateSize: PropTypes.object.isRequired,
-        editable: PropTypes.bool.isRequired,
+        editable: PropTypes.bool,
 
         updateScale: PropTypes.func.isRequired,
         updateTarget: PropTypes.func.isRequired,

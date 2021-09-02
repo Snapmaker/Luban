@@ -41,7 +41,6 @@ class Visualizer extends Component {
         page: PropTypes.string.isRequired,
         stage: PropTypes.number.isRequired,
         progress: PropTypes.number.isRequired,
-        inProgress: PropTypes.bool.isRequired,
         materials: PropTypes.object,
 
         coordinateMode: PropTypes.object.isRequired,
@@ -100,6 +99,8 @@ class Visualizer extends Component {
         switchToPage: PropTypes.func.isRequired,
 
         progressStatesManager: PropTypes.object.isRequired,
+        progressCount: PropTypes.number,
+        totalProgressCount: PropTypes.number,
 
         elementActions: PropTypes.shape({
             moveElementsStart: PropTypes.func.isRequired,
@@ -333,13 +334,27 @@ class Visualizer extends Component {
         UniApi.Event.off('appbar-menu:laser.import', this.actions.importFile);
     }
 
+    getProgress() {
+        const { stage, progress, progressCount, totalProgressCount } = this.props;
+        switch (stage) {
+            case CNC_LASER_STAGE.GENERATING_TOOLPATH:
+            case CNC_LASER_STAGE.RENDER_TOOLPATH:
+                console.log('xx', progressCount, totalProgressCount);
+                return this.props.progressStatesManager.getProgress(1, stage, progress, progressCount, totalProgressCount);
+            case CNC_LASER_STAGE.GENERATING_GCODE:
+                return this.props.progressStatesManager.getProgress(1, stage, progress);
+            default:
+                return progress;
+        }
+    }
+
     getNotice() {
-        const { stage, progress } = this.props;
+        const { stage, progress, progressCount, totalProgressCount } = this.props;
         switch (stage) {
             case CNC_LASER_STAGE.EMPTY:
                 return '';
             case CNC_LASER_STAGE.GENERATING_TOOLPATH:
-                return this.props.progressStatesManager.getNotice(1, stage, progress);
+                return this.props.progressStatesManager.getNotice(1, stage, progress, progressCount, totalProgressCount);
                 // return i18n._('Generating toolpath... {{progress}}%', { progress: (100.0 * progress).toFixed(1) });
             case CNC_LASER_STAGE.GENERATE_TOOLPATH_FAILED:
                 return i18n._('Failed to generate toolpath.');
@@ -351,9 +366,9 @@ class Visualizer extends Component {
             case CNC_LASER_STAGE.PREVIEW_FAILED:
                 return i18n._('Failed to preview toolpath.');
             case CNC_LASER_STAGE.GENERATING_GCODE:
-            case CNC_LASER_STAGE.GENERATE_TOOLPATH_SUCCESS:
                 return this.props.progressStatesManager.getNotice(1, stage, progress);
-                // return i18n._('Generating G-code... {{progress}}%', { progress: (100.0 * progress).toFixed(1) });
+            case CNC_LASER_STAGE.GENERATE_TOOLPATH_SUCCESS:
+                return i18n._('Generating G-code... {{progress}}%', { progress: (100.0 * progress).toFixed(1) });
             case CNC_LASER_STAGE.GENERATE_GCODE_SUCCESS:
                 return i18n._('Generated G-code successfully.');
             case CNC_LASER_STAGE.GENERATE_GCODE_FAILED:
@@ -371,7 +386,10 @@ class Visualizer extends Component {
             case CNC_LASER_STAGE.PROCESS_IMAGE_FAILED:
                 return i18n._('Failed to process object.');
             case CNC_LASER_STAGE.RENDER_TOOLPATH:
-                return i18n._('Rendering toolpath... {{progress}}%', { progress: (100.0 * progress).toFixed(1) });
+                return this.props.progressStatesManager.getNotice(1, stage, progress, progressCount, totalProgressCount);
+                // return i18n._('Rendering toolpath... {{progress}}%', { progress: (100.0 * progress).toFixed(1) });
+            case CNC_LASER_STAGE.GENERATE_TOOLPATH_AND_PREVIEW:
+                return 'XXXXX'.concat(progress);
             default:
                 return '';
         }
@@ -396,6 +414,8 @@ class Visualizer extends Component {
 
         const estimatedTime = this.props.displayedType === DISPLAYED_TYPE_TOOLPATH && !this.props.isChangedAfterGcodeGenerating ? this.props.getEstimatedTime('selected') : '';
         const notice = this.getNotice();
+        const newProgress = this.getProgress();
+        console.log('progress', this.props.stage, newProgress);
         const contextMenuDisabled = !isOnlySelectedOneModel || !this.props.selectedModelArray[0].visible;
         const displayedType = this.props.displayedType;
         const pasteDisabled = (this.props.modelGroup.clipboard.length === 0);
@@ -416,9 +436,9 @@ class Visualizer extends Component {
                 }}
                 >
                     <SVGEditor
+                        editable="true"
                         isActive={!this.props.currentModalPath && this.props.pathname.indexOf('laser') > 0}
                         ref={this.svgCanvas}
-                        editable={!this.props.inProgress}
                         size={this.props.size}
                         initContentGroup={this.props.initContentGroup}
                         scale={this.props.scale}
@@ -501,7 +521,7 @@ class Visualizer extends Component {
                 )}
 
                 <div>
-                    <ProgressBar tips={notice} progress={this.props.progress * 100} />
+                    <ProgressBar tips={notice} progress={newProgress * 100} />
                 </div>
                 <ContextMenu
                     ref={this.contextMenuRef}
@@ -595,14 +615,16 @@ class Visualizer extends Component {
 const mapStateToProps = (state, ownProps) => {
     const { size } = state.machine;
     const { currentModalPath } = state.appbarMenu;
-    const { background, progressStatesManager } = state.laser;
+    const { background, progressStatesManager, progressCount, totalProgressCount } = state.laser;
 
     const { SVGActions, scale, target, materials, page, selectedModelID, modelGroup, svgModelGroup, toolPathGroup, displayedType,
-        isChangedAfterGcodeGenerating, renderingTimestamp, stage, progress, coordinateMode, coordinateSize, inProgress } = state.laser;
+        isChangedAfterGcodeGenerating, renderingTimestamp, stage, progress, coordinateMode, coordinateSize } = state.laser;
     const selectedModelArray = modelGroup.getSelectedModelArray();
     const selectedToolPathModelArray = modelGroup.getSelectedToolPathModels();
 
     return {
+        progressCount,
+        totalProgressCount,
         currentModalPath,
         progressStatesManager,
         // switch pages trigger pathname change
@@ -628,8 +650,7 @@ const mapStateToProps = (state, ownProps) => {
         backgroundGroup: background.group,
         renderingTimestamp,
         stage,
-        progress,
-        inProgress
+        progress
     };
 };
 
