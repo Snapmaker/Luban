@@ -18,7 +18,7 @@ import {
 } from '../../constants';
 import definitionManager from '../manager/DefinitionManager';
 import ToolPathGroup from '../../toolpaths/ToolPathGroup';
-import { CNC_LASER_STAGE } from '../editor/utils';
+import ProgressStatesManager, { CNC_LASER_STAGE } from '../editor/utils';
 import OperationHistory from '../operation-history/OperationHistory';
 
 const ACTION_CHANGE_TOOL_PARAMS = 'cnc/ACTION_CHANGE_TOOL_PARAMS';
@@ -110,7 +110,10 @@ const INITIAL_STATE = {
     // check not to duplicated create event
     initEventFlag: false,
     // used to manually control the gcode ganeration including thumbnails
-    shouldGenerateGcodeCounter: 0
+    shouldGenerateGcodeCounter: 0,
+
+    // ProgressStatesManager
+    progressStatesManager: new ProgressStatesManager()
 };
 
 export const actions = {

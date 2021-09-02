@@ -99,8 +99,6 @@ class Visualizer extends Component {
         switchToPage: PropTypes.func.isRequired,
 
         progressStatesManager: PropTypes.object.isRequired,
-        progressCount: PropTypes.number,
-        totalProgressCount: PropTypes.number,
 
         elementActions: PropTypes.shape({
             moveElementsStart: PropTypes.func.isRequired,
@@ -335,12 +333,11 @@ class Visualizer extends Component {
     }
 
     getProgress() {
-        const { stage, progress, progressCount, totalProgressCount } = this.props;
+        const { stage, progress } = this.props;
         switch (stage) {
             case CNC_LASER_STAGE.GENERATING_TOOLPATH:
             case CNC_LASER_STAGE.RENDER_TOOLPATH:
-                console.log('xx', progressCount, totalProgressCount);
-                return this.props.progressStatesManager.getProgress(1, stage, progress, progressCount, totalProgressCount);
+                return this.props.progressStatesManager.getProgress(1, stage, progress);
             case CNC_LASER_STAGE.GENERATING_GCODE:
                 return this.props.progressStatesManager.getProgress(1, stage, progress);
             default:
@@ -349,12 +346,12 @@ class Visualizer extends Component {
     }
 
     getNotice() {
-        const { stage, progress, progressCount, totalProgressCount } = this.props;
+        const { stage, progress } = this.props;
         switch (stage) {
             case CNC_LASER_STAGE.EMPTY:
                 return '';
             case CNC_LASER_STAGE.GENERATING_TOOLPATH:
-                return this.props.progressStatesManager.getNotice(1, stage, progress, progressCount, totalProgressCount);
+                return this.props.progressStatesManager.getNotice(1, stage, progress);
                 // return i18n._('Generating toolpath... {{progress}}%', { progress: (100.0 * progress).toFixed(1) });
             case CNC_LASER_STAGE.GENERATE_TOOLPATH_FAILED:
                 return i18n._('Failed to generate toolpath.');
@@ -386,10 +383,10 @@ class Visualizer extends Component {
             case CNC_LASER_STAGE.PROCESS_IMAGE_FAILED:
                 return i18n._('Failed to process object.');
             case CNC_LASER_STAGE.RENDER_TOOLPATH:
-                return this.props.progressStatesManager.getNotice(1, stage, progress, progressCount, totalProgressCount);
+                return this.props.progressStatesManager.getNotice(1, stage, progress);
                 // return i18n._('Rendering toolpath... {{progress}}%', { progress: (100.0 * progress).toFixed(1) });
             case CNC_LASER_STAGE.GENERATE_TOOLPATH_AND_PREVIEW:
-                return 'XXXXX'.concat(progress);
+                return i18n._('Generate toolpath and preview: {{progress}}%', { progress: (100.0 * progress).toFixed(1) });
             default:
                 return '';
         }
@@ -615,7 +612,7 @@ class Visualizer extends Component {
 const mapStateToProps = (state, ownProps) => {
     const { size } = state.machine;
     const { currentModalPath } = state.appbarMenu;
-    const { background, progressStatesManager, progressCount, totalProgressCount } = state.laser;
+    const { background, progressStatesManager } = state.laser;
 
     const { SVGActions, scale, target, materials, page, selectedModelID, modelGroup, svgModelGroup, toolPathGroup, displayedType,
         isChangedAfterGcodeGenerating, renderingTimestamp, stage, progress, coordinateMode, coordinateSize } = state.laser;
@@ -623,8 +620,6 @@ const mapStateToProps = (state, ownProps) => {
     const selectedToolPathModelArray = modelGroup.getSelectedToolPathModels();
 
     return {
-        progressCount,
-        totalProgressCount,
         currentModalPath,
         progressStatesManager,
         // switch pages trigger pathname change

@@ -147,8 +147,9 @@ export const actions = {
                 if (headType !== taskResult.headType) {
                     return;
                 }
+                const { progressStatesManager } = getState()[headType];
                 dispatch(actions.updateState(headType, {
-                    progress: taskResult.progress
+                    progress: progressStatesManager.updateProgress(CNC_LASER_STAGE.GENERATING_GCODE, taskResult.progress)
                 }));
             });
 
@@ -193,6 +194,7 @@ export const actions = {
                 if (headType !== taskResult.headType) {
                     return;
                 }
+                console.log('on generate g-code');
                 dispatch(processActions.onGenerateGcode(headType, taskResult));
             });
 
