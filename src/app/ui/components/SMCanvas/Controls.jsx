@@ -20,7 +20,8 @@ const STATE = {
     DOLLY: 1,
     PAN: 2,
     TRANSFORM: 3,
-    SUPPORT: 4
+    SUPPORT: 4,
+    ROTATE_PLACEMENT: 5
 };
 
 // Events sent by Controls
@@ -31,7 +32,8 @@ export const EVENTS = {
     // UNSELECT_OBJECT: 'object:unselect',
     BEFORE_TRANSFORM_OBJECT: 'object:beforetransform',
     TRANSFORM_OBJECT: 'object:transform',
-    AFTER_TRANSFORM_OBJECT: 'object:aftertransform'
+    AFTER_TRANSFORM_OBJECT: 'object:aftertransform',
+    SELECT_PLACEMENT_FACE: 'placement:select'
 };
 
 class Controls extends EventEmitter {
@@ -238,6 +240,9 @@ class Controls extends EventEmitter {
             // }
             // return;
         }
+        if (this.state === STATE.ROTATE_PLACEMENT) {
+            this.prevState = STATE.ROTATE_PLACEMENT;
+        }
 
         switch (event.button) {
             case THREE.MOUSE.LEFT: {
@@ -295,6 +300,11 @@ class Controls extends EventEmitter {
             this.supportActions.moveSupport(mousePosition);
             this.emit(EVENTS.UPDATE);
         }
+        if (this.state === STATE.ROTATE_PLACEMENT) {
+            // Let transform control deal with mouse move
+            const coord = this.getMouseCoord(event);
+            this.transformControl.onMouseHover(coord);
+        }
         if (!(this.selectedGroup && this.selectedGroup.children.length > 0) || this.state !== STATE.NONE) {
             return;
         }
@@ -335,6 +345,8 @@ class Controls extends EventEmitter {
                         // stop support mode on right click
                         this.prevState = null;
                         this.supportActions.stopSupportMode();
+                    } else if (this.prevState === STATE.ROTATE_PLACEMENT) {
+                        break;
                     } else {
                         // check if any model selected
                         this.onClick(event, true);
@@ -360,7 +372,7 @@ class Controls extends EventEmitter {
 
         document.removeEventListener('mousemove', this.onDocumentMouseMove, false);
         // mouse up needed no matter mousedowm on support mode
-        // document.removeEventListener('mouseup', this.onDocumentMouseUp, false);
+        document.removeEventListener('mouseup', this.onDocumentMouseUp, false);
     };
 
     disableClick() {
@@ -382,6 +394,15 @@ class Controls extends EventEmitter {
     onClick = (event, isRightClick = false) => {
         if (this.state === STATE.SUPPORT) {
             this.supportActions.saveSupport();
+            return;
+        }
+        if (this.state === STATE.ROTATE_PLACEMENT) {
+            const coord = this.getMouseCoord(event);
+            this.ray.setFromCamera(coord, this.camera);
+            const _intersect = this.ray.intersectObjects(this.transformControl.objectConvexMeshGroup.children, false)[0];
+            if (_intersect) {
+                this.emit(EVENTS.SELECT_PLACEMENT_FACE, _intersect.object.userData);
+            }
             return;
         }
         if (!this.clickEnabled) {
@@ -481,14 +502,12 @@ class Controls extends EventEmitter {
     };
 
     onMouseWheel = (event) => {
-        if (this.state !== STATE.NONE) {
-            return;
+        if (this.state === STATE.NONE || this.state === STATE.ROTATE_PLACEMENT) {
+            event.preventDefault();
+            event.stopPropagation();
+
+            this.handleMouseWheel(event);
         }
-
-        event.preventDefault();
-        event.stopPropagation();
-
-        this.handleMouseWheel(event);
     };
 
     onDocumentContextMenu = (event) => {
@@ -655,6 +674,11 @@ class Controls extends EventEmitter {
         document.removeEventListener('mousemove', this.onDocumentMouseMove, false);
         document.removeEventListener('mouseup', this.onDocumentMouseUp, false);
         document.removeEventListener('contextmenu', this.onDocumentContextMenu, false);
+    }
+
+    setSelectedModelConvexMeshGroup(group) {
+        this.state = STATE.ROTATE_PLACEMENT;
+        this.transformControl.setObjectConvexMeshGroup(group);
     }
 }
 

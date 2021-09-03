@@ -37,6 +37,7 @@ class Visualizer extends PureComponent {
         renderingTimestamp: PropTypes.number.isRequired,
         inProgress: PropTypes.bool.isRequired,
         hasModel: PropTypes.bool.isRequired,
+        leftBarOverlayVisible: PropTypes.bool.isRequired,
 
         hideSelectedModel: PropTypes.func.isRequired,
         recordAddOperation: PropTypes.func.isRequired,
@@ -67,7 +68,8 @@ class Visualizer extends PureComponent {
         layFlatSelectedModel: PropTypes.func.isRequired,
         scaleToFitSelectedModel: PropTypes.func.isRequired,
         resetSelectedModelTransformation: PropTypes.func.isRequired,
-        progressStatesManager: PropTypes.object.isRequired
+        progressStatesManager: PropTypes.object.isRequired,
+        setRotationPlacementFace: PropTypes.func.isRequired
     };
 
     state = {
@@ -178,6 +180,9 @@ class Visualizer extends PureComponent {
         setTransformMode: (value) => {
             this.props.setTransformMode(value);
             this.canvas.current.setTransformMode(value);
+        },
+        onRotationPlacementSelect: (userData) => {
+            this.props.setRotationPlacementFace(userData);
         }
     };
 
@@ -321,7 +326,9 @@ class Visualizer extends PureComponent {
         const { size, transformMode, selectedModelArray, renderingTimestamp, modelGroup, stage } = nextProps;
         if (transformMode !== this.props.transformMode) {
             this.canvas.current.setTransformMode(transformMode);
-            if (transformMode !== 'support') {
+            if (transformMode === 'rotate-placement') {
+                this.canvas.current.setSelectedModelConvexMeshGroup(modelGroup.selectedModelConvexMeshGroup);
+            } else if (transformMode !== 'support') {
                 this.supportActions.stopSupportMode();
             }
         }
@@ -333,7 +340,9 @@ class Visualizer extends PureComponent {
             this.canvas.current.updateBoundingBox();
             this.canvas.current.attach(modelGroup.selectedGroup);
 
-            this.supportActions.stopSupportMode();
+            if (transformMode !== 'rotate-placement') {
+                this.supportActions.stopSupportMode();
+            }
             if (selectedModelArray.length === 1 && selectedModelArray[0].supportTag && !['translate', 'scale'].includes(transformMode)) {
                 this.actions.setTransformMode('translate');
             }
@@ -351,7 +360,9 @@ class Visualizer extends PureComponent {
             // Re-position model group
             gcodeLineGroup.position.set(-size.x / 2, -size.y / 2, 0);
             this.canvas.current.setCamera(new Vector3(0, -Math.max(size.x, size.y, size.z) * 2, size.z / 2), new Vector3(0, 0, size.z / 2));
-            this.supportActions.stopSupportMode();
+            if (transformMode !== 'rotate-placement') {
+                this.supportActions.stopSupportMode();
+            }
         }
         if (renderingTimestamp !== this.props.renderingTimestamp) {
             this.canvas.current.renderScene();
@@ -410,7 +421,7 @@ class Visualizer extends PureComponent {
     }
 
     showContextMenu = (event) => {
-        this.contextMenuRef.current.show(event);
+        !this.props.leftBarOverlayVisible && this.contextMenuRef.current.show(event);
     };
 
     render() {
@@ -463,6 +474,7 @@ class Visualizer extends PureComponent {
                         supportActions={this.supportActions}
                         onSelectModels={this.actions.onSelectModels}
                         onModelAfterTransform={this.actions.onModelAfterTransform}
+                        onRotationPlacementSelect={this.actions.onRotationPlacementSelect}
                         onModelBeforeTransform={this.actions.onModelBeforeTransform}
                         onModelTransform={this.actions.onModelTransform}
                         showContextMenu={this.showContextMenu}
@@ -547,9 +559,33 @@ const mapStateToProps = (state, ownProps) => {
     const printing = state.printing;
     const { size } = machine;
     // TODO: be to organized
-    const { progressStatesManager, stage, modelGroup, hasModel, gcodeLineGroup, transformMode, progress, displayedType, renderingTimestamp, inProgress } = printing;
+    const {
+        progressStatesManager,
+        stage,
+        modelGroup,
+        hasModel,
+        gcodeLineGroup,
+        transformMode,
+        progress,
+        displayedType,
+        renderingTimestamp,
+        inProgress,
+        enableShortcut,
+        leftBarOverlayVisible
+    } = printing;
+    let isActive = true;
+    if (enableShortcut) {
+        if (!currentModalPath && ownProps.location.pathname.indexOf('3dp') > 0) {
+            isActive = true;
+        } else {
+            isActive = false;
+        }
+    } else {
+        isActive = false;
+    }
     return {
-        isActive: !currentModalPath && ownProps.location.pathname.indexOf('3dp') > 0,
+        leftBarOverlayVisible,
+        isActive,
         stage,
         size,
         allModel: modelGroup.models,
@@ -597,7 +633,8 @@ const mapDispatchToProps = (dispatch) => ({
     scaleToFitSelectedModel: () => dispatch(printingActions.scaleToFitSelectedModel()),
     setTransformMode: (value) => dispatch(printingActions.setTransformMode(value)),
     clearAllManualSupport: () => dispatch(printingActions.clearAllManualSupport()),
-    saveSupport: (model) => dispatch(printingActions.saveSupport(model))
+    saveSupport: (model) => dispatch(printingActions.saveSupport(model)),
+    setRotationPlacementFace: (userData) => dispatch(printingActions.setRotationPlacementFace(userData))
 
 });
 

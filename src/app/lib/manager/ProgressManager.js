@@ -37,7 +37,8 @@ export const STEP_STAGE = {
     PRINTING_SLICE_FAILED: 29,
     PRINTING_PREVIEWING: 30,
     PRINTING_PREVIEW_SUCCEED: 31,
-    PRINTING_PREVIEW_FAILED: 32
+    PRINTING_PREVIEW_FAILED: 32,
+    PRINTING_ROTATE_ANALYZE: 33
 };
 
 export const PROCESS_STAGE = {
@@ -51,7 +52,8 @@ export const PROCESS_STAGE = {
 
     // printing
     PRINTING_LOAD_MODEL: 5,
-    PRINTING_SLICE_AND_PREVIEW: 6
+    PRINTING_SLICE_AND_PREVIEW: 6,
+    PRINTING_ROTATE_ANALYZE: 7
 };
 
 const _STATE = {
@@ -182,6 +184,16 @@ class ProgressStatesManager {
             'Previewing G-code...{{progress}}%',
             'Previewed G-code successfully.',
             'Failed to preview G-code.');
+        this.push(PROCESS_STAGE.PRINTING_ROTATE_ANALYZE,
+            [
+                {
+                    stageID: STEP_STAGE.PRINTING_ROTATE_ANALYZE,
+                    percent: 1
+                }
+            ],
+            'Analyzing model rotation...{{progress}}%',
+            'Analyzed model rotation successfully.',
+            'Failed to analyze model rotation.');
     }
 
     push(processStageID, stages, notice, successNotice, failedNotice) {

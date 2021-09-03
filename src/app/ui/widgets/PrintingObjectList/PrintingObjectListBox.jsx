@@ -10,13 +10,21 @@ function PrintingObjectListBox() {
     const selectedModelArray = useSelector(state => state?.printing?.modelGroup?.selectedModelArray);
     const models = useSelector(state => state?.printing?.modelGroup?.models);
     const inProgress = useSelector(state => state?.printing?.inProgress, shallowEqual);
+    const leftBarOverlayVisible = useSelector(state => state?.printing?.leftBarOverlayVisible, shallowEqual);
+    const disabled = leftBarOverlayVisible;
     // const [showList, setShowList] = useState(true);
     const dispatch = useDispatch();
     const actions = {
         onClickModelNameBox(targetModel, event) {
+            if (disabled) {
+                return;
+            }
             dispatch(printingActions.selectTargetModel(targetModel, event.shiftKey));
         },
         onClickModelHideBox(targetModel) {
+            if (disabled) {
+                return;
+            }
             const visible = targetModel.visible;
             actions.onClickModelNameBox(targetModel, { shiftKey: false });
             if (visible === true) {
@@ -48,6 +56,7 @@ function PrintingObjectListBox() {
                         onToggleVisible={actions.onClickModelHideBox}
                         inProgress={inProgress}
                         placment="right"
+                        disabled={disabled}
                     />
                 );
             })}
