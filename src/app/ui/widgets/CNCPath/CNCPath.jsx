@@ -1,7 +1,15 @@
 import React, { useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import PropTypes from 'prop-types';
-import { PAGE_EDITOR, SOURCE_TYPE_IMAGE3D, HEAD_CNC } from '../../../constants';
+import {
+    PAGE_EDITOR,
+    SOURCE_TYPE_IMAGE3D,
+    HEAD_CNC,
+    SOURCE_TYPE_RASTER,
+    SOURCE_TYPE_SVG,
+    SVG_NODE_NAME_IMAGE,
+    SVG_NODE_NAME_TEXT
+} from '../../../constants';
 import i18n from '../../../lib/i18n';
 import TextParameters from '../CncLaserShared/TextParameters';
 import TransformationSection from '../CncLaserShared/TransformationSection';
@@ -22,10 +30,10 @@ const CNCPath = ({ widgetActions }) => {
     } = selectedModel;
     const selectedNotHide = selectedModelArray && selectedModelArray.length === 1 && selectedModelVisible;
 
-    const isTextVector = (config.svgNodeName === 'text');
+    const isTextVector = (config.svgNodeName === SVG_NODE_NAME_TEXT);
     const isImage3d = (sourceType === SOURCE_TYPE_IMAGE3D);
     const isEditor = page === PAGE_EDITOR;
-    const showImageProcessMode = (sourceType === 'raster' || sourceType === 'svg') && config.svgNodeName === 'image';
+    const showImageProcessMode = (sourceType === SOURCE_TYPE_RASTER || sourceType === SOURCE_TYPE_SVG) && config.svgNodeName === SVG_NODE_NAME_IMAGE;
 
     const dispatch = useDispatch();
     useEffect(() => {

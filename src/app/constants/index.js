@@ -728,6 +728,9 @@ export const LASER_MOCK_PLATE_HEIGHT = 6;
 
 
 // Model
+export const SVG_NODE_NAME_TEXT = 'text';
+export const SVG_NODE_NAME_IMAGE = 'image';
+
 export const SOURCE_TYPE_3DP = '3dp';
 export const SOURCE_TYPE_SVG = 'svg';
 export const SOURCE_TYPE_TEXT = 'text';

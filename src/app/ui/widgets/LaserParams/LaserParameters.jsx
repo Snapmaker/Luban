@@ -4,7 +4,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import i18n from '../../../lib/i18n';
 import TextParameters from '../CncLaserShared/TextParameters';
 import TransformationSection from '../CncLaserShared/TransformationSection';
-import { HEAD_LASER, PAGE_EDITOR } from '../../../constants';
+import { HEAD_LASER, PAGE_EDITOR, SVG_NODE_NAME_TEXT, SOURCE_TYPE_RASTER, SOURCE_TYPE_SVG, SVG_NODE_NAME_IMAGE } from '../../../constants';
 
 
 import ImageProcessMode from './ImageProcessMode';
@@ -24,10 +24,10 @@ const LaserParameters = ({ widgetActions }) => {
         config
     } = selectedModel;
 
-    const isTextVector = (config.svgNodeName === 'text');
+    const isTextVector = (config.svgNodeName === SVG_NODE_NAME_TEXT);
     const isEditor = page === PAGE_EDITOR;
 
-    const showImageProcessMode = (sourceType === 'raster' || sourceType === 'svg') && config.svgNodeName === 'image';
+    const showImageProcessMode = (sourceType === SOURCE_TYPE_RASTER || sourceType === SOURCE_TYPE_SVG) && config.svgNodeName === SVG_NODE_NAME_IMAGE;
 
     useEffect(() => {
         widgetActions.setTitle(i18n._('Transformation'));
