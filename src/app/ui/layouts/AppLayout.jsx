@@ -611,7 +611,6 @@ const mapStateToProps = (state) => {
         shouldCheckForUpdate,
         store: state,
         modelGroup
-        // projectState
     };
 };
 

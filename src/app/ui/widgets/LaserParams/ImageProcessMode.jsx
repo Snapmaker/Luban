@@ -1,4 +1,5 @@
-import React, { PureComponent } from 'react';
+import React, { useState } from 'react';
+import { useSelector, useDispatch } from 'react-redux';
 import PropTypes from 'prop-types';
 import classNames from 'classnames';
 import i18n from '../../../lib/i18n';
@@ -11,127 +12,123 @@ import ConfigGreyscale from './config/ConfigGreyscale';
 import ConfigRasterVector from './config/ConfigRasterVector';
 import ConfigHalftone from './config/ConfigHalftone';
 import TipTrigger from '../../components/TipTrigger';
+import { actions as editorActions } from '../../../flux/editor';
+import { HEAD_LASER, PROCESS_MODE_GREYSCALE, PROCESS_MODE_BW, SOURCE_TYPE_RASTER, PROCESS_MODE_VECTOR, PROCESS_MODE_HALFTONE } from '../../../constants';
 
-class ImageProcessMode extends PureComponent {
-    static propTypes = {
-        sourceType: PropTypes.string.isRequired,
-        mode: PropTypes.string.isRequired,
-        showOrigin: PropTypes.bool,
-        disabled: PropTypes.bool,
-        isDXF: PropTypes.bool.isRequired,
+const ImageProcessMode = ({ disabled }) => {
+    const dispatch = useDispatch();
 
-        changeSelectedModelMode: PropTypes.func.isRequired,
-        changeSelectedModelShowOrigin: PropTypes.func.isRequired
-    };
+    const sourceType = useSelector(state => state?.laser?.modelGroup?.getSelectedModel()?.sourceType);
+    const mode = useSelector(state => state?.laser?.modelGroup?.getSelectedModel()?.mode);
+    const originalName = useSelector(state => state?.laser?.modelGroup?.getSelectedModel()?.originalName);
+    const showOrigin = useSelector(state => state?.laser?.modelGroup?.getSelectedModel()?.showOrigin);
+    const isBW = mode === PROCESS_MODE_BW;
+    const isGreyscale = mode === PROCESS_MODE_GREYSCALE;
+    const isRasterVector = sourceType === SOURCE_TYPE_RASTER && mode === PROCESS_MODE_VECTOR;
+    const isHalftone = mode === PROCESS_MODE_HALFTONE;
+    const isDXF = (originalName ? (originalName.substr(originalName.length - 4, 4).toLowerCase() === '.dxf') : false);
 
-    state = {
-        expanded: true
-    };
+    const [expanded, setExpanded] = useState(true);
 
-    actions = {
+    const actions = {
         onToggleExpand: () => {
-            this.setState(state => ({ expanded: !state.expanded }));
+            setExpanded(!expanded);
         },
-        changeSelectedModelMode: (mode) => {
-            const { sourceType } = this.props;
-            this.props.changeSelectedModelMode(sourceType, mode);
+        changeSelectedModelMode: (newMode) => {
+            dispatch(editorActions.changeSelectedModelMode(HEAD_LASER, sourceType, newMode));
         }
     };
 
-    render() {
-        const { sourceType, mode, showOrigin, disabled, isDXF } = this.props;
-        const actions = this.actions;
-        const isBW = mode === 'bw';
-        const isGreyscale = mode === 'greyscale';
-        const isRasterVector = sourceType === 'raster' && mode === 'vector';
-        const isHalftone = mode === 'halftone';
-
-        return (
-            <React.Fragment>
-                <div className={classNames(styles['laser-mode'], 'border-top-normal', 'margin-top-16', 'margin-bottom-8')}>
-                    <Anchor className="sm-flex height-32 margin-vertical-8" onClick={this.actions.onToggleExpand}>
-                        <span className="sm-flex-width heading-3">{i18n._('Processing Mode')}</span>
-                        <SvgIcon
-                            name="DropdownLine"
-                            size={24}
-                            type={['static']}
-                            className={classNames(
-                                this.state.expanded ? '' : 'rotate180'
-                            )}
-                        />
-                    </Anchor>
-                    {this.state.expanded && (
-                        <React.Fragment>
-                            <div className={classNames('sm-flex', 'margin-vertical-8', 'align-c', 'justify-space-between')}>
-                                { !isDXF && (
-                                    <div className={classNames(this.props.mode === 'bw' ? styles.selected : styles.unselected)}>
-                                        <Anchor
-                                            disabled={disabled}
-                                            onClick={() => actions.changeSelectedModelMode('bw')}
-                                        >
-                                            <i className={styles['laser-mode__icon-bw']} />
-                                        </Anchor>
-                                        <span>{i18n._('B&W')}</span>
-                                    </div>
-                                )}
-                                { !isDXF && (
-                                    <div className={classNames(this.props.mode === 'greyscale' ? styles.selected : styles.unselected)}>
-                                        <Anchor
-                                            disabled={disabled}
-                                            onClick={() => actions.changeSelectedModelMode('greyscale')}
-                                        >
-                                            <i className={styles['laser-mode__icon-greyscale']} />
-                                        </Anchor>
-                                        <span>{i18n._('GREYSCALE')}</span>
-                                    </div>
-                                )}
-                                <div className={classNames(this.props.mode === 'vector' ? styles.selected : styles.unselected)}>
+    return (
+        <React.Fragment>
+            <div className={classNames(styles['laser-mode'], 'border-top-normal', 'margin-top-16', 'margin-bottom-8')}>
+                <Anchor className="sm-flex height-32 margin-vertical-8" onClick={actions.onToggleExpand}>
+                    <span className="sm-flex-width heading-3">{i18n._('Processing Mode')}</span>
+                    <SvgIcon
+                        name="DropdownLine"
+                        size={24}
+                        type={['static']}
+                        className={classNames(
+                            expanded ? '' : 'rotate180'
+                        )}
+                    />
+                </Anchor>
+                {expanded && (
+                    <React.Fragment>
+                        <div className={classNames('sm-flex', 'margin-vertical-8', 'align-c', 'justify-space-between')}>
+                            { !isDXF && (
+                                <div className={classNames(mode === 'bw' ? styles.selected : styles.unselected)}>
                                     <Anchor
                                         disabled={disabled}
-                                        onClick={() => actions.changeSelectedModelMode('vector')}
+                                        onClick={() => actions.changeSelectedModelMode('bw')}
                                     >
-                                        <i className={styles['laser-mode__icon-vector']} />
+                                        <i className={styles['laser-mode__icon-bw']} />
                                     </Anchor>
-                                    <span>{i18n._('VECTOR')}</span>
+                                    <span>{i18n._('B&W')}</span>
                                 </div>
-                                { !isDXF && (
-                                    <div className={classNames(this.props.mode === 'halftone' ? styles.selected : styles.unselected)}>
-                                        <Anchor
-                                            disabled={disabled}
-                                            onClick={() => actions.changeSelectedModelMode('halftone')}
-                                        >
-                                            <i className={styles['laser-mode__icon-halftone']} />
-                                        </Anchor>
-                                        <span>{i18n._('HALFTONE')}</span>
-                                    </div>
-                                )}
-                            </div>
-                            <TipTrigger
-                                title={i18n._('Show Original Image')}
-                                content={i18n._('Shows the original image.')}
-                            >
-                                <div className="sm-flex height-32 margin-vertical-8">
-                                    <span className="sm-flex-width">{i18n._('Show Original Image')}</span>
-                                    <Checkbox
+                            )}
+                            { !isDXF && (
+                                <div className={classNames(mode === 'greyscale' ? styles.selected : styles.unselected)}>
+                                    <Anchor
                                         disabled={disabled}
-                                        className="sm-flex-auto"
-                                        checked={showOrigin}
-                                        onChange={this.props.changeSelectedModelShowOrigin}
-                                    />
+                                        onClick={() => actions.changeSelectedModelMode('greyscale')}
+                                    >
+                                        <i className={styles['laser-mode__icon-greyscale']} />
+                                    </Anchor>
+                                    <span>{i18n._('GREYSCALE')}</span>
                                 </div>
-                            </TipTrigger>
-                            {isBW && <ConfigRasterBW disabled={disabled} />}
-                            {isGreyscale && <ConfigGreyscale disabled={disabled} />}
-                            {isRasterVector && <ConfigRasterVector disabled={disabled} />}
-                            {isHalftone && <ConfigHalftone disabled={disabled} />}
-                        </React.Fragment>
-                    )}
-                </div>
+                            )}
+                            <div className={classNames(mode === 'vector' ? styles.selected : styles.unselected)}>
+                                <Anchor
+                                    disabled={disabled}
+                                    onClick={() => actions.changeSelectedModelMode('vector')}
+                                >
+                                    <i className={styles['laser-mode__icon-vector']} />
+                                </Anchor>
+                                <span>{i18n._('VECTOR')}</span>
+                            </div>
+                            { !isDXF && (
+                                <div className={classNames(mode === 'halftone' ? styles.selected : styles.unselected)}>
+                                    <Anchor
+                                        disabled={disabled}
+                                        onClick={() => actions.changeSelectedModelMode('halftone')}
+                                    >
+                                        <i className={styles['laser-mode__icon-halftone']} />
+                                    </Anchor>
+                                    <span>{i18n._('HALFTONE')}</span>
+                                </div>
+                            )}
+                        </div>
+                        <TipTrigger
+                            title={i18n._('Show Original Image')}
+                            content={i18n._('Shows the original image.')}
+                        >
+                            <div className="sm-flex height-32 margin-vertical-8">
+                                <span className="sm-flex-width">{i18n._('Show Original Image')}</span>
+                                <Checkbox
+                                    disabled={disabled}
+                                    className="sm-flex-auto"
+                                    checked={showOrigin}
+                                    onChange={() => {
+                                        dispatch(editorActions.changeSelectedModelShowOrigin(HEAD_LASER, !showOrigin));
+                                    }}
+                                />
+                            </div>
+                        </TipTrigger>
+                        {isBW && <ConfigRasterBW disabled={disabled} />}
+                        {isGreyscale && <ConfigGreyscale disabled={disabled} />}
+                        {isRasterVector && <ConfigRasterVector disabled={disabled} />}
+                        {isHalftone && <ConfigHalftone disabled={disabled} />}
+                    </React.Fragment>
+                )}
+            </div>
 
-            </React.Fragment>
-        );
-    }
-}
+        </React.Fragment>
+    );
+};
 
+ImageProcessMode.propTypes = {
+    disabled: PropTypes.bool
+};
 
 export default ImageProcessMode;

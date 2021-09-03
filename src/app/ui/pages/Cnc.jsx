@@ -388,7 +388,6 @@ function Cnc({ location }) {
     const [enabledIntro, setEnabledIntro] = useState(null);
     const initIndex = 0;
     const toolPaths = useSelector(state => state[HEAD_CNC]?.toolPathGroup?.getToolPaths(), shallowEqual);
-    const modelGroup = useSelector(state => state[HEAD_CNC]?.modelGroup, shallowEqual);
     const toolPathGroup = useSelector(state => state[HEAD_CNC]?.toolPathGroup, shallowEqual);
     const coordinateMode = useSelector(state => state[HEAD_CNC]?.coordinateMode, shallowEqual);
     const coordinateSize = useSelector(state => state[HEAD_CNC]?.coordinateSize, shallowEqual);
@@ -749,7 +748,6 @@ function Cnc({ location }) {
                 <Thumbnail
                     ref={thumbnail}
                     toolPathGroup={toolPathGroup}
-                    modelGroup={modelGroup}
                 />
             </ProjectLayout>
             {warningModal}

@@ -38,7 +38,6 @@ import PrintingConfigurationsWidget from '../widgets/PrintingConfigurations';
 import PrintingOutputWidget from '../widgets/PrintingOutput';
 import WifiTransport from '../widgets/WifiTransport';
 import EnclosureWidget from '../widgets/Enclosure';
-import CncLaserObjectList from '../widgets/CncLaserList';
 import Thumbnail from '../widgets/PrintingOutput/Thumbnail';
 import JobType from '../widgets/JobType';
 import HomePage from './HomePage';
@@ -73,7 +72,6 @@ const allWidgets = {
     'laser-test-focus': LaserTestFocusWidget,
     'cnc-path': CNCPathWidget,
     'cnc-output': CncLaserOutputWidget,
-    'cnc-laser-object-list': CncLaserObjectList,
     'job-type': JobType
 };
 

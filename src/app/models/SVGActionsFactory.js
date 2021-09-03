@@ -786,6 +786,17 @@ class SVGActionsFactory {
      * @returns {{scaleX: number, scaleY: number, x: number, width: number, y: number, angle: number, height: number}}
      */
     getSelectedElementsTransformation() {
+        if (this.selectedSvgModels.length === 0) {
+            return {
+                x: 0,
+                y: 0,
+                width: 0,
+                height: 0,
+                scaleX: 1,
+                scaleY: 1,
+                angle: 0
+            };
+        }
         return this.selectedElementsTransformation;
     }
 

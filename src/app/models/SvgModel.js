@@ -950,8 +950,12 @@ class SvgModel extends BaseModel {
         this.updateTransformation(this.transformation);
     }
 
-    changeShowOrigin() {
-        this.showOrigin = !this.showOrigin;
+    changeShowOrigin(show = undefined) {
+        if (show === undefined) {
+            this.showOrigin = !this.showOrigin;
+        } else {
+            this.showOrigin = show;
+        }
         this.modelObject3D.visible = this.showOrigin;
         if (this.processObject3D) {
             this.processObject3D.visible = !this.showOrigin;

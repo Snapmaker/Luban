@@ -62,7 +62,6 @@ function Output() {
             }
         },
         onClickGenerateGcode: () => {
-            console.log('thumbnail.current', thumbnail.current);
             const gcodeThumbnail = thumbnail.current.getThumbnail();
             dispatch(printingActions.generateGcode(gcodeThumbnail));
         },
@@ -97,7 +96,7 @@ function Output() {
         return () => {
             UniApi.Event.off('appbar-menu:printing.export-gcode', actions.onClickExportGcode);
         };
-    }, []);
+    }, [isGcodeOverstepped, gcodeFile]);
 
 
     const isSlicing = stage === PRINTING_STAGE.SLICING;

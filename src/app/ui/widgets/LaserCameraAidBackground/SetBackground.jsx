@@ -1,188 +1,118 @@
-import React, { PureComponent } from 'react';
+import React, { useState } from 'react';
 import PropTypes from 'prop-types';
-import { connect } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import api from '../../../api';
-// import { CONNECTION_TYPE_WIFI, WORKFLOW_STATUS_IDLE } from '../../../constants';
 import i18n from '../../../lib/i18n';
 import WarningModal from '../../../lib/modal-warning';
 import Modal from '../../components/Modal';
 import Space from '../../components/Space';
 
-import { actions } from '../../../flux/laser';
+import { actions as laserActions } from '../../../flux/laser';
 import ExtractSquareTrace from './ExtractSquareTrace';
-// import ManualCalibration from './ManualCalibration';
 
 const PANEL_EXTRACT_TRACE = 1;
 const PANEL_NOT_CALIBRATION = 3;
 const iconSrc = 'images/camera-aid/ic_warning-64x64.png';
 
-class SetBackground extends PureComponent {
-    static propTypes = {
-        // isConnected: PropTypes.bool.isRequired,
-        // workflowStatus: PropTypes.string.isRequired,
-        // connectionType: PropTypes.string.isRequired,
-        // hasBackground: PropTypes.bool.isRequired,
-        // workPosition: PropTypes.object,
-        server: PropTypes.object.isRequired,
+const SetBackground = ({ hideModal }) => {
+    const dispatch = useDispatch();
+    const address = useSelector(state => state?.machine?.server?.address);
+    const size = useSelector(state => state?.machine?.size);
 
-        // redux
-        hideModal: PropTypes.func.isRequired,
-        size: PropTypes.object.isRequired,
-        setBackgroundImage: PropTypes.func.isRequired
-    };
+    const [canTakePhoto, setCanTakePhoto] = useState(true);
+    const [xSize, setXSize] = useState([]);
+    const [ySize, setYSize] = useState([]);
+    const [lastFileNames, setLastFileNames] = useState([]);
+    const [panel, setPanel] = useState(PANEL_EXTRACT_TRACE);
 
-    state = {
-        canTakePhoto: true,
-        xSize: [],
-        ySize: [],
-        lastFileNames: [],
-        showCalibrationModal: true,
-        panel: PANEL_EXTRACT_TRACE
-    };
-
-    actions = {
+    const actions = {
         showModal: async () => {
-            const resPro = await api.getCameraCalibration({ 'address': this.props.server.address });
+            const resPro = await api.getCameraCalibration({ 'address': address });
             if (!('res' in resPro.body) || !('points' in JSON.parse(resPro.body.res.text))) {
-                this.setState({
-                    panel: PANEL_NOT_CALIBRATION
-                });
+                setPanel(PANEL_NOT_CALIBRATION);
             } else {
-                this.setState({
-                    panel: PANEL_EXTRACT_TRACE
-                });
+                setPanel(PANEL_EXTRACT_TRACE);
             }
         },
-        changeLastFileNames: (lastFileNames) => {
-            this.setState({
-                lastFileNames: lastFileNames
-            });
+        changeLastFileNames: (newLastFileNames) => {
+            setLastFileNames(newLastFileNames);
         },
-        updateEachPicSize: (size, value) => {
-            this.setState({
-                size: value
-            });
+        updateEachPicSize: (sizeName, value) => {
+            if (sizeName === 'xSize') {
+                setXSize(value);
+            }
+            if (sizeName === 'ySize') {
+                setYSize(value);
+            }
         },
-        changeCanTakePhoto: (bool) => {
-            this.setState({
-                canTakePhoto: bool
-            });
-        },
-        updateAffinePoints: (manualPoints) => {
-            this.setState({
-                manualPoints
-            });
+        changeCanTakePhoto: (newCanTakePhoto) => {
+            setCanTakePhoto(newCanTakePhoto);
         },
         hideModal: () => {
-            if (!this.state.canTakePhoto && this.state.panel === PANEL_EXTRACT_TRACE) {
+            if (!canTakePhoto && panel === PANEL_EXTRACT_TRACE) {
                 WarningModal({
                     body: i18n._('This action cannot be undone. Are you sure you want to stop the job?'),
                     iconSrc,
                     bodyTitle: i18n._('Warning'),
-                    insideHideModal: this.props.hideModal
+                    insideHideModal: hideModal
                 });
             } else {
-                this.props.hideModal();
+                hideModal();
             }
         },
         setBackgroundImage: (filename) => {
-            const { size } = this.props;
-            this.props.setBackgroundImage(filename, size.x, size.y, 0, 0);
+            dispatch(laserActions.setBackgroundImage(filename, size.x, size.y, 0, 0));
 
-            this.actions.hideModal();
+            actions.hideModal();
         }
-
     };
 
-    componentDidMount() {
-    }
+    return (
+        <React.Fragment>
+            <div>
+                <ExtractSquareTrace
+                    canTakePhoto={canTakePhoto}
+                    changeCanTakePhoto={actions.changeCanTakePhoto}
+                    ySize={ySize}
+                    xSize={xSize}
+                    hideModal={hideModal}
+                    lastFileNames={lastFileNames}
+                    updateEachPicSize={actions.updateEachPicSize}
+                    changeLastFileNames={actions.changeLastFileNames}
+                    setBackgroundImage={actions.setBackgroundImage}
+                />
 
-
-    render() {
-        const state = { ...this.state };
-        // const { connectionType, isConnected, workflowStatus } = this.props;
-        // const canCameraCapture = workflowStatus === WORKFLOW_STATUS_IDLE;
-        return (
-            <React.Fragment>
-                <div>
-                    <ExtractSquareTrace
-                        canTakePhoto={this.state.canTakePhoto}
-                        changeCanTakePhoto={this.actions.changeCanTakePhoto}
-                        ySize={this.state.ySize}
-                        xSize={this.state.xSize}
-                        hideModal={this.actions.hideModal}
-                        lastFileNames={this.state.lastFileNames}
-                        updateEachPicSize={this.actions.updateEachPicSize}
-                        changeLastFileNames={this.actions.changeLastFileNames}
-                        setBackgroundImage={this.actions.setBackgroundImage}
-                        updateAffinePoints={this.actions.updateAffinePoints}
-                    />
-
-                    {state.panel === PANEL_NOT_CALIBRATION && (
-                        <Modal style={{ paddingBottom: '10px' }} size="lg" onClose={this.actions.hideModal}>
-                            <Modal.Header>
-                                {/* <Modal.Title> */}
-                                {i18n._('Warning')}
-                                {/* </Modal.Title> */}
-                            </Modal.Header>
-                            <Modal.Body style={{ margin: '0', paddingBottom: '15px', height: '100%' }}>
-                                <div>
-                                    {i18n._('Information')}
-                                    <br />
-                                    <Space width={4} />
-                                    {i18n._('The camera hasn\'t been calibrated yet. Please go through the Camera Calibration procedures on touchscreen first.')}
-                                </div>
-                            </Modal.Body>
-                            <Modal.Footer>
-                                <div style={{ display: 'inline-block', marginRight: '8px' }}>
-                                    <input
-                                        type="checkbox"
-                                        defaultChecked={false}
-                                    />
-                                    <span style={{ paddingLeft: '4px' }}>{i18n._('Don\'t show again in current session')}</span>
-                                </div>
-                            </Modal.Footer>
-                        </Modal>
-                    )}
-                </div>
-                {/* <button
-                    type="button"
-                    className={classNames(
-                        'sm-btn-large',
-                        'sm-btn-default',
-                        styles['btn-addbackground'],
-                    )}
-                    disabled={!canCameraCapture}
-                    onClick={this.actions.showModal}
-                    style={{ display: (!workPosition.isFourAxis && (connectionType === CONNECTION_TYPE_WIFI && isConnected && !hasBackground)) ? 'block' : 'none' }}
-                >
-                    {i18n._('Camera Capture')}
-                </button>*/}
-            </React.Fragment>
-        );
-    }
-}
-
-const mapStateToProps = (state) => {
-    const machine = state.machine;
-    const laser = state.laser;
-    return {
-        isConnected: machine.isConnected,
-        connectionType: machine.connectionType,
-        server: machine.server,
-        series: machine.series,
-        hasBackground: laser.background.enabled,
-        laserSize: machine.laserSize,
-        size: machine.size,
-        workPosition: machine.workPosition,
-        workflowStatus: machine.workflowStatus
-    };
+                {panel === PANEL_NOT_CALIBRATION && (
+                    <Modal style={{ paddingBottom: '10px' }} size="lg" onClose={actions.hideModal}>
+                        <Modal.Header>
+                            {i18n._('Warning')}
+                        </Modal.Header>
+                        <Modal.Body style={{ margin: '0', paddingBottom: '15px', height: '100%' }}>
+                            <div>
+                                {i18n._('Information')}
+                                <br />
+                                <Space width={4} />
+                                {i18n._('The camera hasn\'t been calibrated yet. Please go through the Camera Calibration procedures on touchscreen first.')}
+                            </div>
+                        </Modal.Body>
+                        <Modal.Footer>
+                            <div style={{ display: 'inline-block', marginRight: '8px' }}>
+                                <input
+                                    type="checkbox"
+                                    defaultChecked={false}
+                                />
+                                <span style={{ paddingLeft: '4px' }}>{i18n._('Don\'t show again in current session')}</span>
+                            </div>
+                        </Modal.Footer>
+                    </Modal>
+                )}
+            </div>
+        </React.Fragment>
+    );
 };
 
-const mapDispatchToProps = (dispatch) => {
-    return {
-        setBackgroundImage: (filename, width, height, dx, dy) => dispatch(actions.setBackgroundImage(filename, width, height, dx, dy))
-    };
+SetBackground.propTypes = {
+    hideModal: PropTypes.func.isRequired
 };
 
-export default connect(mapStateToProps, mapDispatchToProps)(SetBackground);
+export default SetBackground;

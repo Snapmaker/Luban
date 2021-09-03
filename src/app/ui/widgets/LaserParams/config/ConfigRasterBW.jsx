@@ -1,151 +1,101 @@
-import React, { PureComponent } from 'react';
+import React, { useEffect, useState } from 'react';
 import PropTypes from 'prop-types';
-import { connect } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import Slider from '../../../components/Slider';
 import Checkbox from '../../../components/Checkbox';
 import i18n from '../../../../lib/i18n';
 import TipTrigger from '../../../components/TipTrigger';
 import { NumberInput } from '../../../components/Input';
 import { actions as editorActions } from '../../../../flux/editor';
+import { HEAD_LASER } from '../../../../constants';
 
+const ConfigRasterBW = ({ disabled }) => {
+    const dispatch = useDispatch();
+    const bwThreshold = useSelector(state => state?.laser?.modelGroup?.getSelectedModelArray()[0]?.config?.bwThreshold);
+    const invert = useSelector(state => state?.laser?.modelGroup?.getSelectedModelArray()[0]?.config?.invert);
 
-class ConfigRasterBW extends PureComponent {
-    static propTypes = {
-        invert: PropTypes.bool,
-        bwThreshold: PropTypes.number,
-        disabled: PropTypes.bool,
+    const [tmpBwThreshold, setBwThreshold] = useState(bwThreshold);
+    const [expanded, setExpended] = useState(true);
 
-        updateSelectedModelConfig: PropTypes.func.isRequired,
-        processSelectedModel: PropTypes.func.isRequired
-    };
+    useEffect(() => {
+        setBwThreshold(bwThreshold);
+    }, [bwThreshold]);
 
-    state = {
-        bwThreshold: 0,
-        expanded: true
-    };
-
-    actions = {
+    const actions = {
         onToggleExpand: () => {
-            this.setState(state => ({ expanded: !state.expanded }));
+            setExpended(!expanded);
         },
         onInverseBW: () => {
-            this.props.updateSelectedModelConfig({ invert: !this.props.invert });
+            dispatch(editorActions.updateSelectedModelConfig(HEAD_LASER, { invert: !invert }));
         },
-        onChangeBWThreshold: (bwThreshold) => {
-            this.setState({
-                bwThreshold
-            });
+        onChangeBWThreshold: (newBwThreshold) => {
+            setBwThreshold(newBwThreshold);
         },
-        onAfterChangeBWThreshold: () => {
-            const { bwThreshold } = this.state;
-            this.props.updateSelectedModelConfig({ bwThreshold });
-            this.props.processSelectedModel();
+        onAfterChangeBWThreshold: (newBwThreshold = undefined) => {
+            dispatch(editorActions.updateSelectedModelConfig(HEAD_LASER, { bwThreshold: (newBwThreshold ?? tmpBwThreshold) }));
+            dispatch(editorActions.processSelectedModel(HEAD_LASER));
         }
     };
 
-    componentDidMount() {
-        const { bwThreshold } = this.props;
-        this.setState({
-            bwThreshold
-        });
-    }
+    return (
+        <div>
+            {expanded && (
+                <React.Fragment>
+                    <TipTrigger
+                        title={i18n._('Invert')}
+                        content={i18n._('Inverts the color of images, white becomes black, and black becomes white.')}
+                    >
+                        <div className="sm-flex height-32 margin-vertical-8">
+                            <span className="sm-flex-width">{i18n._('Invert')}</span>
+                            <Checkbox
+                                disabled={disabled}
+                                className="sm-flex-auto"
+                                checked={invert}
+                                onChange={() => {
+                                    actions.onInverseBW();
+                                    dispatch(editorActions.processSelectedModel(HEAD_LASER));
+                                }}
+                            />
+                        </div>
+                    </TipTrigger>
+                    <TipTrigger
+                        title={i18n._('Threshold')}
+                        content={i18n._('Set a value above which colors will be rendered in white.')}
+                    >
+                        <div className="sm-flex height-32 margin-vertical-8">
+                            <span className="sm-flex-width">{i18n._('Threshold')}</span>
+                            <Slider
+                                disabled={disabled}
+                                size="middle"
+                                value={tmpBwThreshold}
+                                min={0}
+                                max={255}
+                                onChange={actions.onChangeBWThreshold}
+                                onAfterChange={actions.onAfterChangeBWThreshold}
+                                className="padding-right-8"
+                            />
+                            <NumberInput
+                                disabled={disabled}
+                                value={tmpBwThreshold}
+                                className="sm-flex-auto"
+                                size="super-small"
+                                min={0}
+                                max={255}
+                                onChange={(value) => {
+                                    actions.onAfterChangeBWThreshold(value);
+                                }}
+                            />
 
-    componentDidUpdate() {
-
-    }
-
-    getSnapshotBeforeUpdate(prevProps) {
-        const { bwThreshold } = this.props;
-        if (bwThreshold !== prevProps.bwThreshold) {
-            this.setState({
-                bwThreshold
-            });
-        }
-        return this.props;
-    }
-
-    render() {
-        const { invert, disabled } = this.props;
-
-        return (
-            <div>
-                {this.state.expanded && (
-                    <React.Fragment>
-                        <TipTrigger
-                            title={i18n._('Invert')}
-                            content={i18n._('Inverts the color of images, white becomes black, and black becomes white.')}
-                        >
-                            <div className="sm-flex height-32 margin-vertical-8">
-                                <span className="sm-flex-width">{i18n._('Invert')}</span>
-                                <Checkbox
-                                    disabled={disabled}
-                                    className="sm-flex-auto"
-                                    checked={invert}
-                                    onChange={() => {
-                                        this.actions.onInverseBW();
-                                        this.props.processSelectedModel();
-                                    }}
-                                />
-                            </div>
-                        </TipTrigger>
-                        <TipTrigger
-                            title={i18n._('Threshold')}
-                            content={i18n._('Set a value above which colors will be rendered in white.')}
-                        >
-                            <div className="sm-flex height-32 margin-vertical-8">
-                                <span className="sm-flex-width">{i18n._('Threshold')}</span>
-                                <Slider
-                                    disabled={disabled}
-                                    size="middle"
-                                    value={this.state.bwThreshold}
-                                    min={0}
-                                    max={255}
-                                    onChange={this.actions.onChangeBWThreshold}
-                                    onAfterChange={this.actions.onAfterChangeBWThreshold}
-                                    className="padding-right-8"
-                                />
-                                <NumberInput
-                                    disabled={disabled}
-                                    value={this.state.bwThreshold}
-                                    className="sm-flex-auto"
-                                    size="super-small"
-                                    min={0}
-                                    max={255}
-                                    onChange={async (value) => {
-                                        await this.actions.onChangeBWThreshold(value);
-                                        this.actions.onAfterChangeBWThreshold();
-                                    }}
-                                />
-
-                            </div>
-                        </TipTrigger>
-                    </React.Fragment>
-                )}
-            </div>
-        );
-    }
-}
-
-const mapStateToProps = (state) => {
-    const { modelGroup } = state.laser;
-
-    // assume that only one model is selected
-    const selectedModels = modelGroup.getSelectedModelArray();
-    const model = selectedModels[0];
-
-    const { invert, bwThreshold } = model.config;
-
-    return {
-        invert,
-        bwThreshold
-    };
+                        </div>
+                    </TipTrigger>
+                </React.Fragment>
+            )}
+        </div>
+    );
 };
 
-const mapDispatchToProps = (dispatch) => {
-    return {
-        updateSelectedModelConfig: (config) => dispatch(editorActions.updateSelectedModelConfig('laser', config)),
-        processSelectedModel: () => dispatch(editorActions.processSelectedModel('laser'))
-    };
+ConfigRasterBW.propTypes = {
+    disabled: PropTypes.bool
 };
 
-export default connect(mapStateToProps, mapDispatchToProps)(ConfigRasterBW);
+export default ConfigRasterBW;

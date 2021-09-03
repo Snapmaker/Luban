@@ -1,14 +1,13 @@
-import React, { PureComponent } from 'react';
-import { withRouter } from 'react-router-dom';
+import React, { useState, useEffect, useRef } from 'react';
+import { useSelector, useDispatch } from 'react-redux';
 import PropTypes from 'prop-types';
 import classNames from 'classnames';
 import { noop } from 'lodash';
-import { connect } from 'react-redux';
 import { actions as workspaceActions } from '../../../flux/workspace';
 import { actions as editorActions } from '../../../flux/editor';
 import { actions as projectActions } from '../../../flux/project';
 import {
-    DISPLAYED_TYPE_TOOLPATH, PAGE_PROCESS, PAGE_EDITOR
+    DISPLAYED_TYPE_TOOLPATH, PAGE_EDITOR, PAGE_PROCESS
 } from '../../../constants';
 
 import modal from '../../../lib/modal';
@@ -23,274 +22,114 @@ import UniApi from '../../../lib/uni-api';
 import Thumbnail from '../CncLaserShared/Thumbnail';
 import SvgIcon from '../../components/SvgIcon';
 
+const Output = ({ headType }) => {
+    const displayedType = useSelector(state => state[headType]?.displayedType);
+    const gcodeFile = useSelector(state => state[headType]?.gcodeFile);
+    const needToPreview = useSelector(state => state[headType]?.needToPreview);
+    const page = useSelector(state => state[headType]?.page);
+    const previewFailed = useSelector(state => state[headType]?.previewFailed);
+    const shouldGenerateGcodeCounter = useSelector(state => state[headType]?.shouldGenerateGcodeCounter);
+    const modelGroup = useSelector(state => state[headType]?.modelGroup);
+    const toolPathGroup = useSelector(state => state[headType]?.toolPathGroup);
+    const workflowState = useSelector(state => state.machine?.workflowState);
+    const isGcodeGenerating = useSelector(state => state[headType]?.isGcodeGenerating);
 
-class Output extends PureComponent {
-    static propTypes = {
-        ...withRouter.propTypes,
-        // autoPreviewEnabled: PropTypes.bool.isRequired,
+    const [showWorkspace, setShowWorkspace] = useState(false);
+    const [showExportOptions, setShowExportOptions] = useState(false);
 
-        // page: PropTypes.string.isRequired,
-        inProgress: PropTypes.bool.isRequired,
-        disablePreview: PropTypes.bool.isRequired,
-        disableExport: PropTypes.bool.isRequired,
-        needToPreview: PropTypes.bool.isRequired,
+    const dispatch = useDispatch();
+    const thumbnail = useRef();
 
-        modelGroup: PropTypes.object.isRequired,
-        toolPathGroup: PropTypes.object.isRequired,
-        shouldGenerateGcodeCounter: PropTypes.number.isRequired,
-        hasModel: PropTypes.bool,
-        hasToolPathModel: PropTypes.bool,
-        displayedType: PropTypes.string.isRequired,
-        previewFailed: PropTypes.bool.isRequired,
-        isGcodeGenerating: PropTypes.bool.isRequired,
-        workflowState: PropTypes.string.isRequired,
-        gcodeFile: PropTypes.object,
-        setThumbnail: PropTypes.func.isRequired,
-        commitGenerateGcode: PropTypes.func.isRequired,
-        commitGenerateViewPath: PropTypes.func.isRequired,
-        renderGcodeFile: PropTypes.func.isRequired,
-        createToolPath: PropTypes.func.isRequired,
-        exportFile: PropTypes.func.isRequired,
-        switchToPage: PropTypes.func.isRequired,
-        showToolPathGroupObject: PropTypes.func.isRequired,
-        showModelGroupObject: PropTypes.func.isRequired,
-        setAutoPreview: PropTypes.func.isRequired,
-        preview: PropTypes.func.isRequired
-    };
-
-    state= { showWorkspace: false, showExportOptions: false }
-
-    thumbnail = React.createRef();
-
-    actions = {
+    const actions = {
         switchToEditPage: () => {
-            if (this.props.displayedType === DISPLAYED_TYPE_TOOLPATH) {
-                this.props.showModelGroupObject();
+            if (displayedType === DISPLAYED_TYPE_TOOLPATH) {
+                dispatch(editorActions.showModelGroupObject(headType));
             } else {
-                this.props.showToolPathGroupObject();
+                dispatch(editorActions.showToolPathGroupObject(headType));
             }
         },
         switchToProcess: () => {
-            this.props.switchToPage(PAGE_PROCESS);
+            dispatch(editorActions.switchToPage(headType, PAGE_PROCESS));
         },
         onGenerateThumbnail: () => {
-            const thumbnail = this.thumbnail.current.getThumbnail();
-            this.props.setThumbnail(thumbnail);
+            dispatch(editorActions.setThumbnail(headType, thumbnail?.current?.getThumbnail()));
         },
         onLoadGcode: async () => {
-            const { gcodeFile } = this.props;
             if (gcodeFile === null) {
                 return;
             }
-            await this.props.renderGcodeFile(gcodeFile);
-            this.setState({ showWorkspace: true });
+            await dispatch(workspaceActions.renderGcodeFile(gcodeFile));
+            setShowWorkspace(true);
             window.scrollTo(0, 0);
         },
         onExport: () => {
-            const { gcodeFile } = this.props;
             if (gcodeFile === null) {
                 return;
             }
-            this.props.exportFile(gcodeFile.uploadName);
+            dispatch(projectActions.exportFile(gcodeFile.uploadName));
         },
         onProcess: () => {
-            this.props.createToolPath();
+            dispatch(editorActions.createToolPath(headType));
         },
         onSimulation: () => {
-            this.props.commitGenerateViewPath();
+            dispatch(editorActions.commitGenerateViewPath(headType));
         },
         showToolPathObject: () => {
-            this.props.showToolPathGroupObject();
+            dispatch(editorActions.showToolPathGroupObject(headType));
         },
         preview: async () => {
-            if (this.props.needToPreview) {
-                await this.props.preview();
+            if (needToPreview) {
+                await dispatch(editorActions.preview(headType));
             } else {
-                this.props.showToolPathGroupObject();
+                dispatch(editorActions.showToolPathGroupObject(headType));
             }
         },
         setAutoPreview: (enable) => {
-            this.props.setAutoPreview(enable);
+            dispatch(editorActions.setAutoPreview(headType, enable));
         },
         showAndHideToolPathObject: () => {
-            if (this.props.displayedType === DISPLAYED_TYPE_TOOLPATH) {
-                this.props.showModelGroupObject();
+            if (displayedType === DISPLAYED_TYPE_TOOLPATH) {
+                dispatch(editorActions.showModelGroupObject(headType));
             } else {
-                this.props.showToolPathGroupObject();
+                dispatch(editorActions.showToolPathGroupObject(headType));
             }
         },
         handleMouseOver: () => {
-            this.setState({
-                showExportOptions: true
-            });
+            setShowExportOptions(true);
         },
         handleMouseOut: () => {
-            this.setState({
-                showExportOptions: false
-            });
+            setShowExportOptions(false);
         }
     };
 
-    componentDidMount() {
-        UniApi.Event.on('appbar-menu:cnc-laser.export-gcode', this.actions.onExport);
-    }
-
-    componentWillReceiveProps(nextProps) {
-        if (nextProps.previewFailed && !this.props.previewFailed) {
+    useEffect(() => {
+        UniApi.Event.on('appbar-menu:cnc-laser.export-gcode', actions.onExport);
+        return () => {
+            UniApi.Event.off('appbar-menu:cnc-laser.export-gcode', actions.onExport);
+        };
+    }, [gcodeFile]);
+    useEffect(() => {
+        if (previewFailed) {
             modal({
                 title: i18n._('Failed to preview'),
                 body: i18n._('Failed to preview, please modify parameters and try again.')
             });
         }
-        if (nextProps.shouldGenerateGcodeCounter !== this.props.shouldGenerateGcodeCounter) {
-            this.actions.onGenerateThumbnail();
-            this.props.commitGenerateGcode();
-        }
-    }
+    }, [previewFailed]);
+    useEffect(() => {
+        actions.onGenerateThumbnail();
+        dispatch(editorActions.commitGenerateGcode(headType));
+    }, [shouldGenerateGcodeCounter]);
 
-    componentWillUnmount() {
-        UniApi.Event.off('appbar-menu:cnc-laser.export-gcode', this.actions.onExport);
-    }
 
-    renderWorkspace() {
-        const onClose = () => this.setState({ showWorkspace: false });
-        return this.state.showWorkspace && renderPopup({
+    function renderWorkspace() {
+        const onClose = () => setShowWorkspace(false);
+        return showWorkspace && renderPopup({
             onClose,
             component: Workspace
         });
     }
-    // {i18n._('Export G-code to File')}
 
-    render() {
-        const actions = this.actions;
-        const { workflowState, isGcodeGenerating, gcodeFile, hasModel, page,
-            disablePreview, hasToolPathModel, inProgress, displayedType, needToPreview, headType, disableExport } = this.props;
-        const menu = (
-            <Menu>
-                <Menu.Item
-                    onClick={actions.onLoadGcode}
-                    disabled={inProgress || disableExport || !hasModel || workflowState === 'running' || isGcodeGenerating || gcodeFile === null}
-                >
-                    <div className={classNames('align-c', 'padding-vertical-4')}>
-                        {i18n._('Load G-code to Workspace')}
-                    </div>
-                </Menu.Item>
-                <Menu.Item
-                    disabled={inProgress || disableExport || !hasModel || workflowState === 'running' || isGcodeGenerating || gcodeFile === null}
-                    onClick={actions.onExport}
-                >
-                    <div className={classNames('align-c', 'padding-vertical-4')}>
-                        {i18n._('Export G-code to File')}
-                    </div>
-                </Menu.Item>
-            </Menu>
-        );
-        const isEditor = page === PAGE_EDITOR;
-        return (
-            <div className={classNames('position-fixed', 'border-radius-bottom-8', 'bottom-8', 'background-color-white', styles['output-wrapper'], `${headType}-preview-export-intro-part`)}>
-                <div className={classNames('position-re', 'margin-horizontal-16', 'margin-vertical-16')}>
-                    {isEditor && (
-                        <Button
-                            type="primary"
-                            priority="level-one"
-                            onClick={this.actions.switchToProcess}
-                            disabled={!hasModel ?? false}
-                        >
-                            {i18n._('Next')}
-                        </Button>
-                    )}
-                    {(!isEditor && needToPreview) && (
-                        <Button
-                            type="primary"
-                            priority="level-one"
-                            onClick={this.actions.preview}
-                            disabled={inProgress || (!hasToolPathModel ?? false) || disablePreview}
-                        >
-                            {i18n._('Generate G-code and Preview')}
-                        </Button>
-                    )}
-                    {!isEditor && !needToPreview && displayedType === DISPLAYED_TYPE_TOOLPATH && !this.state.showExportOptions && (
-                        <Button
-                            type="default"
-                            priority="level-one"
-                            onClick={() => {
-                                this.actions.switchToEditPage();
-                                this.actions.handleMouseOut();
-                            }}
-                            className={classNames('position-re', 'bottom-0', 'left-0')}
-                        >
-                            {i18n._('Close Preview')}
-                        </Button>
-                    )}
-                    {!isEditor && !needToPreview && displayedType !== DISPLAYED_TYPE_TOOLPATH && !this.state.showExportOptions && (
-                        <Button
-                            type="default"
-                            priority="level-one"
-                            onClick={() => {
-                                this.props.showToolPathGroupObject();
-                            }}
-                            className={classNames('position-re', 'bottom-0', 'left-0')}
-                        >
-                            {i18n._('Preview')}
-                        </Button>
-                    )}
-                    {!isEditor && !needToPreview && (
-                        <div
-                            onKeyDown={noop}
-                            role="button"
-                            tabIndex={0}
-                            className={classNames('position-re', 'height-40', 'margin-top-10')}
-                            // onMouseEnter={actions.handleMouseOver}
-                            // onMouseLeave={actions.handleMouseOut}
-                        >
-                            <Dropdown
-                                overlay={menu}
-                                trigger="click"
-                            >
-                                <Button
-                                    type="primary"
-                                    priority="level-one"
-                                    disabled={inProgress || disableExport || !hasModel || workflowState === 'running' || isGcodeGenerating || gcodeFile === null}
-                                    className={classNames(
-                                        'position-ab',
-                                        // 'bottom-ne-8',
-                                        // 'margin-top-10',
-                                        displayedType === DISPLAYED_TYPE_TOOLPATH ? 'display-block' : 'display-none'
-                                    )}
-                                    suffixIcon={<SvgIcon name="DropdownOpen" type="static" color="#d5d6d9" />}
-                                >
-                                    {i18n._('Export')}
-                                </Button>
-                            </Dropdown>
-                        </div>
-                    )}
-
-                </div>
-                <Thumbnail
-                    ref={this.thumbnail}
-                    modelGroup={this.props.modelGroup}
-                    toolPathGroup={this.props.toolPathGroup}
-                />
-                {this.renderWorkspace()}
-            </div>
-        );
-    }
-}
-
-const mapStateToProps = (state, ownProps) => {
-    const { workflowState } = state.machine;
-    const { widgets } = state.widget;
-    const { headType } = ownProps;
-    const { isGcodeGenerating, autoPreviewEnabled, needToPreview, shouldGenerateGcodeCounter,
-        previewFailed, modelGroup, toolPathGroup, displayedType, gcodeFile, inProgress, page } = state[headType];
-
-    // const canGenerateGcode = toolPathGroup.canGenerateGcode();
-    const hasToolPathModel = (toolPathGroup.toolPaths.length > 0);
-    const toolPathRelatedModelInvisible = toolPathGroup.toolPaths.every(toolPath => {
-        const toolPathRelatedModels = modelGroup.models.filter(model => toolPath.modelIDs.includes(model.modelID));
-        return toolPathRelatedModels.every(model => model.visible === false);
-    });
-    const disablePreview = toolPathGroup.toolPaths.every(item => item.visible === false) || toolPathRelatedModelInvisible;
     const disableExport = toolPathGroup.toolPaths.every(toolPath => {
         if (toolPath.visible === false) {
             return true;
@@ -300,44 +139,126 @@ const mapStateToProps = (state, ownProps) => {
         }
     });
 
-    return {
-        page,
-        disableExport,
-        disablePreview,
-        headType,
-        modelGroup,
-        hasModel: modelGroup.hasModel(),
-        hasToolPathModel,
-        displayedType,
-        toolPathGroup,
-        shouldGenerateGcodeCounter,
-        isGcodeGenerating,
-        workflowState,
-        previewFailed,
-        gcodeFile,
-        autoPreview: widgets[`${headType}-output`].autoPreview, // Todo
-        autoPreviewEnabled,
-        inProgress,
-        needToPreview
-    };
+    const hasModel = modelGroup.hasModel();
+    const isEditor = page === PAGE_EDITOR;
+    const hasToolPathModel = (toolPathGroup.toolPaths.length > 0);
+    const toolPathRelatedModelInvisible = toolPathGroup.toolPaths.every(toolPath => {
+        const toolPathRelatedModels = modelGroup.models.filter(model => toolPath.modelIDs.includes(model.modelID));
+        return toolPathRelatedModels.every(model => model.visible === false);
+    });
+    const disablePreview = toolPathGroup.toolPaths.every(item => item.visible === false) || toolPathRelatedModelInvisible;
+
+    const menu = (
+        <Menu>
+            <Menu.Item
+                onClick={actions.onLoadGcode}
+                disabled={disableExport || !hasModel || workflowState === 'running' || isGcodeGenerating || gcodeFile === null}
+            >
+                <div className={classNames('align-c', 'padding-vertical-4')}>
+                    {i18n._('Load G-code to Workspace')}
+                </div>
+            </Menu.Item>
+            <Menu.Item
+                disabled={disableExport || !hasModel || workflowState === 'running' || isGcodeGenerating || gcodeFile === null}
+                onClick={actions.onExport}
+            >
+                <div className={classNames('align-c', 'padding-vertical-4')}>
+                    {i18n._('Export G-code to File')}
+                </div>
+            </Menu.Item>
+        </Menu>
+    );
+
+    return (
+        <div className={classNames('position-fixed', 'border-radius-bottom-8', 'bottom-8', 'background-color-white', styles['output-wrapper'], `${headType}-preview-export-intro-part`)}>
+            <div className={classNames('position-re', 'margin-horizontal-16', 'margin-vertical-16')}>
+                {isEditor && (
+                    <Button
+                        type="primary"
+                        priority="level-one"
+                        onClick={actions.switchToProcess}
+                        disabled={!hasModel ?? false}
+                    >
+                        {i18n._('Next')}
+                    </Button>
+                )}
+                {(!isEditor && needToPreview) && (
+                    <Button
+                        type="primary"
+                        priority="level-one"
+                        onClick={actions.preview}
+                        disabled={(!hasToolPathModel ?? false) || disablePreview}
+                    >
+                        {i18n._('Generate G-code and Preview')}
+                    </Button>
+                )}
+                {!isEditor && !needToPreview && displayedType === DISPLAYED_TYPE_TOOLPATH && !showExportOptions && (
+                    <Button
+                        type="default"
+                        priority="level-one"
+                        onClick={() => {
+                            actions.switchToEditPage();
+                            actions.handleMouseOut();
+                        }}
+                        className={classNames('position-re', 'bottom-0', 'left-0')}
+                    >
+                        {i18n._('Close Preview')}
+                    </Button>
+                )}
+                {!isEditor && !needToPreview && displayedType !== DISPLAYED_TYPE_TOOLPATH && !showExportOptions && (
+                    <Button
+                        type="default"
+                        priority="level-one"
+                        onClick={() => {
+                            actions.showToolPathObject();
+                        }}
+                        className={classNames('position-re', 'bottom-0', 'left-0')}
+                    >
+                        {i18n._('Preview')}
+                    </Button>
+                )}
+                {!isEditor && !needToPreview && (
+                    <div
+                        onKeyDown={noop}
+                        role="button"
+                        tabIndex={0}
+                        className={classNames('position-re', 'height-40', 'margin-top-10')}
+                    >
+                        <Dropdown
+                            overlay={menu}
+                            trigger="click"
+                        >
+                            <Button
+                                type="primary"
+                                priority="level-one"
+                                disabled={disableExport || !hasModel || workflowState === 'running' || isGcodeGenerating || gcodeFile === null}
+                                className={classNames(
+                                    'position-ab',
+                                    // 'bottom-ne-8',
+                                    // 'margin-top-10',
+                                    displayedType === DISPLAYED_TYPE_TOOLPATH ? 'display-block' : 'display-none'
+                                )}
+                                suffixIcon={<SvgIcon name="DropdownOpen" type="static" color="#d5d6d9" />}
+                            >
+                                {i18n._('Export')}
+                            </Button>
+                        </Dropdown>
+                    </div>
+                )}
+
+            </div>
+            <Thumbnail
+                ref={thumbnail}
+                myRef={thumbnail}
+                toolPathGroup={toolPathGroup}
+            />
+            {renderWorkspace()}
+        </div>
+    );
 };
 
-const mapDispatchToProps = (dispatch, ownProps) => {
-    const { headType } = ownProps;
-    return {
-        switchToPage: (page) => dispatch(editorActions.switchToPage(headType, page)),
-        showToolPathGroupObject: () => dispatch(editorActions.showToolPathGroupObject(headType)),
-        showModelGroupObject: () => dispatch(editorActions.showModelGroupObject(headType)),
-        // togglePage: (page) => dispatch(editorActions.togglePage(headType, page)),
-        setThumbnail: (thumbnail) => dispatch(editorActions.setThumbnail(headType, thumbnail)),
-        renderGcodeFile: (fileName) => dispatch(workspaceActions.renderGcodeFile(fileName)),
-        createToolPath: () => dispatch(editorActions.createToolPath(headType)),
-        exportFile: (targetFile) => dispatch(projectActions.exportFile(targetFile)),
-        commitGenerateViewPath: () => dispatch(editorActions.commitGenerateViewPath(headType)),
-        commitGenerateGcode: () => dispatch(editorActions.commitGenerateGcode(headType)),
-        setAutoPreview: (autoPreviewEnabled) => dispatch(editorActions.setAutoPreview(headType, autoPreviewEnabled)),
-        preview: () => dispatch(editorActions.preview(headType))
-    };
+Output.propTypes = {
+    headType: PropTypes.string
 };
 
-export default connect(mapStateToProps, mapDispatchToProps)(withRouter(Output));
+export default Output;
