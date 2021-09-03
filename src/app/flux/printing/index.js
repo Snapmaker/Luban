@@ -4,7 +4,8 @@ import { cloneDeep, isNil } from 'lodash';
 // import FileSaver from 'file-saver';
 import LoadModelWorker from '../../workers/LoadModel.worker';
 import GcodeToBufferGeometryWorker from '../../workers/GcodeToBufferGeometry.worker';
-import { ABSENT_OBJECT, EPSILON, DATA_PREFIX, PRINTING_MANAGER_TYPE_MATERIAL } from '../../constants';
+import { ABSENT_OBJECT, EPSILON, DATA_PREFIX, PRINTING_MANAGER_TYPE_MATERIAL,
+    PRINTING_MANAGER_TYPE_QUALITY, MACHINE_SERIES } from '../../constants';
 import { timestamp } from '../../../shared/lib/random-utils';
 import { machineStore } from '../../store/local-storage';
 
@@ -33,6 +34,15 @@ const isDefaultQualityDefinition = (definitionId) => {
             || definitionId.indexOf('high_quality') !== -1
             || definitionId.indexOf('normal_quality') !== -1
         );
+};
+const getRealSeries = (series) => {
+    if (
+        series === MACHINE_SERIES.ORIGINAL_LZ.value
+       || series === MACHINE_SERIES.CUSTOM.value
+    ) {
+        series = MACHINE_SERIES.ORIGINAL.value;
+    }
+    return series;
 };
 
 const defaultDefinitionKeys = {
@@ -257,7 +267,8 @@ export const actions = {
             dispatch(actions.render());
         });
 
-        const { series } = getState().machine;
+        let { series } = getState().machine;
+        series = getRealSeries(series);
         await definitionManager.init(CONFIG_HEADTYPE, series);
 
         const defaultConfigId = machineStore.get('defaultConfigId');
@@ -296,7 +307,8 @@ export const actions = {
     },
 
     updateDefaultConfigId: (type, defaultId) => (dispatch, getState) => {
-        const { series } = getState().machine;
+        let { series } = getState().machine;
+        series = getRealSeries(series);
         let originalConfigId = {};
         if (machineStore.get('defaultConfigId')) {
             originalConfigId = JSON.parse(machineStore.get('defaultConfigId'));
@@ -735,15 +747,18 @@ export const actions = {
     },
     updateDefaultIdByType: (type, newDefinitionId) => (dispatch) => {
         const defaultId = defaultDefinitionKeys[type].id;
+        dispatch(actions.updateDefaultConfigId(type, newDefinitionId));
         dispatch(actions.updateState({ [defaultId]: newDefinitionId }));
         dispatch(actions.destroyGcodeLine());
         dispatch(actions.displayModel());
     },
     updateDefaultMaterialId: (materialId) => (dispatch) => {
+        dispatch(actions.updateDefaultConfigId(PRINTING_MANAGER_TYPE_MATERIAL, materialId));
         dispatch(actions.updateState({ defaultMaterialId: materialId }));
     },
 
     updateDefaultQualityId: (qualityId) => (dispatch) => {
+        dispatch(actions.updateDefaultConfigId(PRINTING_MANAGER_TYPE_QUALITY, qualityId));
         dispatch(actions.updateState({ defaultQualityId: qualityId }));
     },
 

@@ -239,6 +239,7 @@ export const saveEnv = async (req, res) => {
     const { content } = req.body;
     const config = JSON.parse(content);
     const headType = config?.machineInfo?.headType;
+    const series = config?.machineInfo?.series;
     const envDir = `${DataStorage.envDir}/${headType}`;
     // TODO: not just remove the category but only change the file when model changed
     rmDir(envDir, false);
@@ -267,10 +268,10 @@ export const saveEnv = async (req, res) => {
         copyFileSync(`${DataStorage.tmpDir}/${uploadName}`, `${envDir}/${uploadName}`);
     });
     if (config.defaultMaterialId && /^material.([0-9_]+)$/.test(config.defaultMaterialId)) {
-        copyFileSync(`${DataStorage.configDir}/${headType}/${config.defaultMaterialId}.def.json`, `${envDir}/${config.defaultMaterialId}.def.json`);
+        copyFileSync(`${DataStorage.configDir}/${headType}/${series}/${config.defaultMaterialId}.def.json`, `${envDir}/${config.defaultMaterialId}.def.json`);
     }
     if (config.defaultQualityId && /^quality.([0-9_]+)$/.test(config.defaultQualityId)) {
-        copyFileSync(`${DataStorage.configDir}/${headType}/${config.defaultQualityId}.def.json`, `${envDir}/${config.defaultQualityId}.def.json`);
+        copyFileSync(`${DataStorage.configDir}/${headType}/${series}/${config.defaultQualityId}.def.json`, `${envDir}/${config.defaultQualityId}.def.json`);
     }
     res.send(result);
     res.end();
@@ -299,6 +300,7 @@ export const recoverEnv = async (req, res) => {
     const { content } = req.body;
     const config = JSON.parse(content);
     const headType = config?.machineInfo?.headType;
+    const series = config?.machineInfo?.series;
     const envDir = `${DataStorage.envDir}/${headType}`;
     config.models.forEach((model) => {
         const { originalName, uploadName } = model;
@@ -308,10 +310,10 @@ export const recoverEnv = async (req, res) => {
     });
 
     if (config.defaultMaterialId && /^material.([0-9_]+)$/.test(config.defaultMaterialId)) {
-        copyFileSync(`${envDir}/${config.defaultMaterialId}.def.json`, `${DataStorage.configDir}/${headType}/${config.defaultMaterialId}.def.json`);
+        copyFileSync(`${envDir}/${config.defaultMaterialId}.def.json`, `${DataStorage.configDir}/${headType}/${series}/${config.defaultMaterialId}.def.json`);
     }
     if (config.defaultQualityId && /^quality.([0-9_]+)$/.test(config.defaultQualityId)) {
-        copyFileSync(`${envDir}/${config.defaultQualityId}.def.json`, `${DataStorage.configDir}/${headType}/${config.defaultQualityId}.def.json`);
+        copyFileSync(`${envDir}/${config.defaultQualityId}.def.json`, `${DataStorage.configDir}/${headType}/${series}/${config.defaultQualityId}.def.json`);
     }
     res.send({ result: 1 });
     res.end();
@@ -383,16 +385,17 @@ export const recoverProjectFile = async (req, res) => {
 
     const config = JSON.parse(content);
     const headType = config?.machineInfo?.headType;
+    const series = config?.machineInfo?.series;
     if (config.defaultMaterialId && /^material.([0-9_]+)$/.test(config.defaultMaterialId)) {
         const fname = `${DataStorage.tmpDir}/${config.defaultMaterialId}.def.json`;
         if (fs.existsSync(fname)) {
-            fs.copyFileSync(fname, `${DataStorage.configDir}/${headType}/${config.defaultMaterialId}.def.json`);
+            fs.copyFileSync(fname, `${DataStorage.configDir}/${headType}/${series}/${config.defaultMaterialId}.def.json`);
         }
     }
     if (config.defaultQualityId && /^quality.([0-9_]+)$/.test(config.defaultQualityId)) {
         const fname = `${DataStorage.tmpDir}/${config.defaultQualityId}.def.json`;
         if (fs.existsSync(fname)) {
-            fs.copyFileSync(fname, `${DataStorage.configDir}/${headType}/${config.defaultQualityId}.def.json`);
+            fs.copyFileSync(fname, `${DataStorage.configDir}/${headType}/${series}/${config.defaultQualityId}.def.json`);
         }
     }
 
