@@ -1322,6 +1322,12 @@ class ModelGroup extends EventEmitter {
         return !!this.models.find(i => i.supportTag === true);
     }
 
+    isSupportSelected() {
+        return this.selectedModelArray.length === 1 && this.selectedModelArray.every((model) => {
+            return model.supportTag;
+        });
+    }
+
     addSupportOnSelectedModel(defaultSupportSize) {
         if (this.selectedModelArray.length !== 1) {
             return null;

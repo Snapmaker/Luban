@@ -4,7 +4,7 @@ import classNames from 'classnames';
 import { Dropdown as AntDropdown } from 'antd';
 import '../../../styles/global.styl';
 
-const Dropdown = (props) => {
+const Dropdown = React.memo((props) => {
     const { className, placement = 'bottomCenter', overlay = <div />, ...rest } = props;
     return (
         <div className={classNames(className)}>
@@ -18,7 +18,7 @@ const Dropdown = (props) => {
             </AntDropdown>
         </div>
     );
-};
+});
 
 Dropdown.propTypes = {
     children: PropTypes.oneOfType([

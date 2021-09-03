@@ -5,7 +5,7 @@ import { Button as AntdButton } from 'antd';
 import styles from './styles.styl';
 import '../../../styles/global.styl';
 
-const Button = (props) => {
+const Button = React.memo((props) => {
     const { priority = 'level-three', className, suffixIcon, width = '100%', ...rest } = props;
     const ref = useRef();
     const type = priority === 'level-three' ? 'default' : (props.type || 'primary');
@@ -41,7 +41,7 @@ const Button = (props) => {
             </AntdButton>
         </div>
     );
-};
+});
 
 Button.propTypes = {
     width: PropTypes.string,

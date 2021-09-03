@@ -72,7 +72,6 @@ import useSetState from '../../lib/hooks/set-state';
 
 const allWidgets = {
     'control': ControlWidget,
-    // 'axesPanel': DevelopAxesWidget,
     'connection': ConnectionWidget,
     'console': ConsoleWidget,
     'gcode': GCodeWidget,
