@@ -107,7 +107,7 @@ const Output = ({ headType }) => {
         return () => {
             UniApi.Event.off('appbar-menu:cnc-laser.export-gcode', actions.onExport);
         };
-    }, []);
+    }, [gcodeFile]);
     useEffect(() => {
         if (previewFailed) {
             modal({
