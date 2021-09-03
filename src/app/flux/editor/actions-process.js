@@ -392,7 +392,7 @@ export const processActions = {
         });
 
         dispatch(baseActions.updateState(headType, {
-            stage: CNC_LASER_STAGE.GENERATING_GCODE,
+            stage: CNC_LASER_STAGE.GENERATING_VIEWPATH,
             simulationNeedToPreview: false,
             progress: 0
         }));

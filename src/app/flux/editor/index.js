@@ -124,12 +124,14 @@ export const actions = {
 
     __initOnControllerEvents: (headType) => {
         return (dispatch, getState) => {
+            // task progress
             controller.on('taskProgress:processImage', (taskResult) => {
                 if (headType !== taskResult.headType) {
                     return;
                 }
+                const { progressStatesManager } = getState()[headType];
                 dispatch(actions.updateState(headType, {
-                    progress: taskResult.progress
+                    progress: progressStatesManager.updateProgress(CNC_LASER_STAGE.PROCESSING_IMAGE, taskResult.progress)
                 }));
             });
 
@@ -157,11 +159,13 @@ export const actions = {
                 if (headType !== taskResult.headType) {
                     return;
                 }
+                const { progressStatesManager } = getState()[headType];
                 dispatch(actions.updateState(headType, {
-                    progress: taskResult.progress
+                    progress: progressStatesManager.updateProgress(CNC_LASER_STAGE.GENERATING_VIEWPATH, taskResult.progress)
                 }));
             });
 
+            // task completed
             controller.on('taskCompleted:processImage', (taskResult) => {
                 if (headType !== taskResult.headType) {
                     return;
@@ -194,7 +198,6 @@ export const actions = {
                 if (headType !== taskResult.headType) {
                     return;
                 }
-                console.log('on generate g-code');
                 dispatch(processActions.onGenerateGcode(headType, taskResult));
             });
 

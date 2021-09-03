@@ -77,13 +77,19 @@ class ProgressStatesManager {
                 stageID: CNC_LASER_STAGE.UPLOADING_IMAGE,
                 percent: 1
             }
-        ], '222');
+        ], 'Loading object {{progress}}%');
         this.push(CNC_LASER_PROCESS_STAGE.PROCESS_IMAGE, [
             {
-                stageID: CNC_LASER_STAGE.UPLOADING_IMAGE,
+                stageID: CNC_LASER_STAGE.PROCESSING_IMAGE,
                 percent: 1
             }
-        ], '333');
+        ], 'Processing object {{progress}}%');
+        this.push(CNC_LASER_PROCESS_STAGE.VIEW_PATH, [
+            {
+                stageID: CNC_LASER_STAGE.GENERATING_VIEWPATH,
+                percent: 1
+            }
+        ], 'Generating simulation {{progress}}%');
     }
 
     push(processStageID, stages, notice) {

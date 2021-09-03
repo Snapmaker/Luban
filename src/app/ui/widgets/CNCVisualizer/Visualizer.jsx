@@ -376,13 +376,13 @@ class Visualizer extends Component {
             case CNC_LASER_STAGE.GENERATE_GCODE_FAILED:
                 return i18n._('Failed to generate G-code.');
             case CNC_LASER_STAGE.UPLOADING_IMAGE:
-                return i18n._('Loading object {{progress}}%', { progress: (100.0 * progress).toFixed(1) });
+                return this.props.progressStatesManager.getNotice(2, stage, progress);
             case CNC_LASER_STAGE.UPLOAD_IMAGE_SUCCESS:
                 return i18n._('Loaded object successfully.');
             case CNC_LASER_STAGE.UPLOAD_IMAGE_FAILED:
                 return i18n._('Failed to load object.');
             case CNC_LASER_STAGE.PROCESSING_IMAGE:
-                return i18n._('Processing object {{progress}}%', { progress: (100.0 * progress).toFixed(1) });
+                return this.props.progressStatesManager.getNotice(3, stage, progress);
             case CNC_LASER_STAGE.PROCESS_IMAGE_SUCCESS:
                 return i18n._('Processed object successfully.');
             case CNC_LASER_STAGE.PROCESS_IMAGE_FAILED:
@@ -392,6 +392,8 @@ class Visualizer extends Component {
             // return i18n._('Rendering toolpath... {{progress}}%', { progress: (100.0 * progress).toFixed(1) });
             case CNC_LASER_STAGE.GENERATE_TOOLPATH_AND_PREVIEW:
                 return i18n._('Generate toolpath and preview: {{progress}}%', { progress: (100.0 * progress).toFixed(1) });
+            case CNC_LASER_STAGE.GENERATING_VIEWPATH:
+                return this.props.progressStatesManager.getNotice(4, stage, progress);
             default:
                 return '';
         }
