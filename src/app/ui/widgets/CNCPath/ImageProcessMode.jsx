@@ -9,6 +9,7 @@ import ReliefParameters from './config/ReliefParameters';
 import SvgIcon from '../../components/SvgIcon';
 import Checkbox from '../../components/Checkbox';
 import TipTrigger from '../../components/TipTrigger';
+import { PROCESS_MODE_GREYSCALE, SOURCE_TYPE_SVG } from '../../../constants';
 
 const ImageProcessMode = ({ changeSelectedModelMode, changeSelectedModelShowOrigin, disabled }) => {
     const showOrigin = useSelector(state => state?.cnc?.modelGroup?.getSelectedModel()?.showOrigin);
@@ -16,8 +17,8 @@ const ImageProcessMode = ({ changeSelectedModelMode, changeSelectedModelShowOrig
     const sourceType = useSelector(state => state?.cnc?.modelGroup?.getSelectedModel()?.sourceType);
     const originalName = useSelector(state => state?.cnc?.modelGroup?.getSelectedModel()?.originalName);
     const [expanded, setExpanded] = useState(true);
-    const isGreyscale = mode === 'greyscale';
-    const isSvg = sourceType === 'svg';
+    const isGreyscale = mode === PROCESS_MODE_GREYSCALE;
+    const isSvg = sourceType === SOURCE_TYPE_SVG;
     const isDXF = (originalName ? (originalName.substr(originalName.length - 4, 4).toLowerCase() === '.dxf') : false);
 
     const actions = {

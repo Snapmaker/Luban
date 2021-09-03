@@ -13,6 +13,12 @@ import { actions as editorActions } from '../../../flux/editor';
 
 import styles from './styles.styl';
 
+function convertSVGPointToLogicalPoint(p, size) {
+    return {
+        x: p.x - size.x,
+        y: -p.y + size.y
+    };
+}
 /**
  * Transformation section.
  *
@@ -32,15 +38,10 @@ const TransformationSection = ({ headType, updateSelectedModelUniformScalingStat
     const selectedModelArray = modelGroup.getSelectedModelArray();
     const sourceType = (selectedModelArray.length === 1) ? selectedModelArray[0].sourceType : null;
     const { x, y, width, height, scaleX, scaleY, angle } = selectedElementsTransformation;
-    function convertSVGPointToLogicalPoint(p) {
-        return {
-            x: p.x - size.x,
-            y: -p.y + size.y
-        };
-    }
+
     // calculate logical transformation
     // TODO: convert positions in flux
-    const { x: logicalX, y: logicalY } = convertSVGPointToLogicalPoint({ x, y });
+    const { x: logicalX, y: logicalY } = convertSVGPointToLogicalPoint({ x, y }, size);
     const logicalWidth = width * Math.abs(scaleX);
     const logicalHeight = height * Math.abs(scaleY);
     const logicalAngle = -angle;

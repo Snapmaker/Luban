@@ -13,7 +13,7 @@ import ConfigRasterVector from './config/ConfigRasterVector';
 import ConfigHalftone from './config/ConfigHalftone';
 import TipTrigger from '../../components/TipTrigger';
 import { actions as editorActions } from '../../../flux/editor';
-import { HEAD_LASER } from '../../../constants';
+import { HEAD_LASER, PROCESS_MODE_GREYSCALE, PROCESS_MODE_BW, SOURCE_TYPE_RASTER, PROCESS_MODE_VECTOR, PROCESS_MODE_HALFTONE } from '../../../constants';
 
 const ImageProcessMode = ({ disabled }) => {
     const dispatch = useDispatch();
@@ -22,10 +22,10 @@ const ImageProcessMode = ({ disabled }) => {
     const mode = useSelector(state => state?.laser?.modelGroup?.getSelectedModel()?.mode);
     const originalName = useSelector(state => state?.laser?.modelGroup?.getSelectedModel()?.originalName);
     const showOrigin = useSelector(state => state?.laser?.modelGroup?.getSelectedModel()?.showOrigin);
-    const isBW = mode === 'bw';
-    const isGreyscale = mode === 'greyscale';
-    const isRasterVector = sourceType === 'raster' && mode === 'vector';
-    const isHalftone = mode === 'halftone';
+    const isBW = mode === PROCESS_MODE_BW;
+    const isGreyscale = mode === PROCESS_MODE_GREYSCALE;
+    const isRasterVector = sourceType === SOURCE_TYPE_RASTER && mode === PROCESS_MODE_VECTOR;
+    const isHalftone = mode === PROCESS_MODE_HALFTONE;
     const isDXF = (originalName ? (originalName.substr(originalName.length - 4, 4).toLowerCase() === '.dxf') : false);
 
     const [expanded, setExpanded] = useState(true);
