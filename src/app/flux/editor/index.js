@@ -29,7 +29,7 @@ import LoadModelWorker from '../../workers/LoadModel.worker';
 import { controller } from '../../lib/controller';
 import { isEqual, round } from '../../../shared/lib/utils';
 
-import { CNC_LASER_STAGE } from './utils';
+import { CNC_LASER_PROCESS_STAGE, CNC_LASER_STAGE } from './utils';
 import VisibleOperation2D from '../operation-history/VisibleOperation2D';
 import AddOperation2D from '../operation-history/AddOperation2D';
 import DeleteOperation2D from '../operation-history/DeleteOperation2D';
@@ -333,11 +333,12 @@ export const actions = {
      * 2. Create Mold from image information
      */
     uploadImage: (headType, file, mode, onError) => (dispatch, getState) => {
+        const { materials, progressStatesManager } = getState()[headType];
+        progressStatesManager.startProgress(CNC_LASER_PROCESS_STAGE.UPLOAD_IMAGE, [1]);
         dispatch(actions.updateState(headType, {
             stage: CNC_LASER_STAGE.UPLOADING_IMAGE,
             progress: 0.25
         }));
-        const { materials } = getState()[headType];
         const formData = new FormData();
         formData.append('image', file);
         formData.append('isRotate', materials.isRotate);
@@ -346,7 +347,7 @@ export const actions = {
         api.uploadImage(formData)
             .then((res) => {
                 dispatch(actions.updateState(headType, {
-                    stage: CNC_LASER_STAGE.UPLOAD_IMAGE_SUCCESS,
+                    stage: CNC_LASER_STAGE.UPLOADING_IMAGE,
                     progress: 1
                 }));
                 const { width, height, originalName, uploadName } = res.body;
@@ -697,7 +698,7 @@ export const actions = {
 
     // TODO: temporary workaround for model image processing
     processSelectedModel: (headType) => async (dispatch, getState) => {
-        const { materials, modelGroup, toolParams = {} } = getState()[headType];
+        const { materials, modelGroup, toolParams = {}, progressStatesManager } = getState()[headType];
 
         const selectedModels = modelGroup.getSelectedModelArray();
         if (selectedModels.length !== 1) {
@@ -722,6 +723,7 @@ export const actions = {
         options.materials = materials;
         options.toolParams = toolParams;
 
+        progressStatesManager.startProgress(CNC_LASER_PROCESS_STAGE.PROCESS_IMAGE, [1]);
         dispatch(baseActions.updateState(headType, {
             stage: CNC_LASER_STAGE.PROCESSING_IMAGE,
             progress: 0

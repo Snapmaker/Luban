@@ -132,6 +132,8 @@ class ProgressStatesManager {
             this.stage += 1;
         }
     }
+
+    finishProgress() {}
 }
 
 export default ProgressStatesManager;
