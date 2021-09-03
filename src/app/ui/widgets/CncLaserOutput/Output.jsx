@@ -18,6 +18,7 @@ import { renderPopup } from '../../utils';
 import styles from './styles.styl';
 import Workspace from '../../pages/Workspace';
 import i18n from '../../../lib/i18n';
+import UniApi from '../../../lib/uni-api';
 import Thumbnail from '../CncLaserShared/Thumbnail';
 import SvgIcon from '../../components/SvgIcon';
 
@@ -101,6 +102,12 @@ const Output = ({ headType }) => {
         }
     };
 
+    useEffect(() => {
+        UniApi.Event.on('appbar-menu:cnc-laser.export-gcode', actions.onExport);
+        return () => {
+            UniApi.Event.off('appbar-menu:cnc-laser.export-gcode', actions.onExport);
+        };
+    }, []);
     useEffect(() => {
         if (previewFailed) {
             modal({
