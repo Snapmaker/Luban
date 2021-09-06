@@ -74,6 +74,7 @@ export const actions = {
         let menuDisabledCount = getState().appbarMenu.menuDisabledCount;
         menuDisabledCount++;
         traverseMenu(menu, (item) => {
+            console.log('disableMenu, ', menu, item);
             item.enabled = false;
         });
         dispatch({
