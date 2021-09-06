@@ -393,6 +393,7 @@ class Visualizer extends Component {
             case CNC_LASER_STAGE.GENERATE_TOOLPATH_AND_PREVIEW:
                 return i18n._('Generate toolpath and preview: {{progress}}%', { progress: (100.0 * progress).toFixed(1) });
             case CNC_LASER_STAGE.GENERATING_VIEWPATH:
+            case CNC_LASER_STAGE.RENDER_VIEWPATH:
                 return this.props.progressStatesManager.getNotice(4, stage, progress);
             default:
                 return '';

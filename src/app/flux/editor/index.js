@@ -205,6 +205,12 @@ export const actions = {
                 if (headType !== taskResult.headType) {
                     return;
                 }
+                const { progressStatesManager } = getState()[headType];
+                progressStatesManager.startNextStep();
+                dispatch(actions.updateState(headType, {
+                    stage: CNC_LASER_STAGE.RENDER_VIEWPATH,
+                    progress: progressStatesManager.updateProgress(CNC_LASER_STAGE.RENDER_VIEWPATH, 0)
+                }));
                 dispatch(processActions.onGenerateViewPath(headType, taskResult));
             });
         };

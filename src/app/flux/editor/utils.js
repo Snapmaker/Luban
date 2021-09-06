@@ -22,7 +22,8 @@ export const CNC_LASER_STAGE = {
     GENERATE_VIEWPATH_SUCCESS: 18,
     GENERATE_VIEWPATH_FAILED: 19,
     RENDER_TOOLPATH: 20,
-    GENERATE_TOOLPATH_AND_PREVIEW: 21
+    GENERATE_TOOLPATH_AND_PREVIEW: 21,
+    RENDER_VIEWPATH: 22
 };
 
 export const CNC_LASER_PROCESS_STAGE = {
@@ -87,6 +88,10 @@ class ProgressStatesManager {
         this.push(CNC_LASER_PROCESS_STAGE.VIEW_PATH, [
             {
                 stageID: CNC_LASER_STAGE.GENERATING_VIEWPATH,
+                percent: 0.9
+            },
+            {
+                stageID: CNC_LASER_STAGE.RENDER_VIEWPATH,
                 percent: 1
             }
         ], 'Generating simulation {{progress}}%');

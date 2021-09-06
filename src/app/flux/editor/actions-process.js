@@ -430,8 +430,11 @@ export const processActions = {
             maxY: size.y / 2 + coorDelta?.dy
         };
         await toolPathGroup.onGenerateViewPath(viewPathFile, isRotate ? materials : boundarySize);
+
         dispatch(baseActions.updateState(headType, {
-            showSimulation: true
+            showSimulation: true,
+            stage: CNC_LASER_STAGE.RENDER_VIEWPATH,
+            progress: 1
         }));
         dispatch(baseActions.render(headType));
     },
