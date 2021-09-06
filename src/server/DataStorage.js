@@ -5,7 +5,7 @@ import { includes } from 'lodash';
 import { app } from 'electron';
 import isElectron from 'is-electron';
 // import semver from 'semver';
-import { CNC_CONFIG_SUBCATEGORY, PRINTING_CONFIG_SUBCATEGORY } from './constants';
+import { CNC_CONFIG_SUBCATEGORY, LASER_CONFIG_SUBCATEGORY, PRINTING_CONFIG_SUBCATEGORY } from './constants';
 import logger from './lib/logger';
 import { initFonts } from '../shared/lib/FontManager';
 // import settings from './config/settings';
@@ -197,6 +197,7 @@ class DataStorage {
          mkdirp.sync(this.configDir);
          mkdirp.sync(this.defaultConfigDir);
          mkdirp.sync(`${this.configDir}/${CNC_CONFIG_SUBCATEGORY}`);
+         mkdirp.sync(`${this.configDir}/${LASER_CONFIG_SUBCATEGORY}`);
          mkdirp.sync(`${this.configDir}/${PRINTING_CONFIG_SUBCATEGORY}`);
 
          const CURA_ENGINE_CONFIG_LOCAL = '../resources/CuraEngine/Config';

@@ -7,6 +7,8 @@ import i18n from '../../../../lib/i18n';
 import { TextInput } from '../../../components/Input';
 import TipTrigger from '../../../components/TipTrigger';
 import GcodeParameters from './GcodeParameters';
+// import SvgIcon from '../../../components/SvgIcon';
+// import PresentSelector from './PresentSelector';
 
 class LaserParameters extends PureComponent {
     static propTypes = {
@@ -113,6 +115,23 @@ class LaserParameters extends PureComponent {
                                 />
                             </div>
                         </TipTrigger>
+                        {/*<div>*/}
+                        {/*    <div className="border-bottom-normal padding-bottom-4 margin-vertical-16">*/}
+                        {/*        <SvgIcon*/}
+                        {/*            name="TitleSetting"*/}
+                        {/*            type={['static']}*/}
+                        {/*            size={24}*/}
+                        {/*        />*/}
+                        {/*        <span>{i18n._('Tool')}</span>*/}
+                        {/*    </div>*/}
+                        {/*    <PresentSelector*/}
+                        {/*        toolDefinition={this.props.activeToolDefinition}*/}
+                        {/*        toolDefinitions={this.props.toolDefinitions}*/}
+                        {/*        setCurrentToolDefinition={this.props.setCurrentToolDefinition}*/}
+                        {/*        isModifiedDefinition={this.props.isModifiedDefinition}*/}
+                        {/*        setCurrentValueAsProfile={this.props.setCurrentValueAsProfile}*/}
+                        {/*    />*/}
+                        {/*</div>*/}
                         {multipleEngine && (
                             <div className="position-re sm-flex justify-space-between height-32 margin-vertical-8">
                                 <span>{i18n._('Use legacy engine')}</span>

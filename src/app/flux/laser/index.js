@@ -21,6 +21,7 @@ import {
 import { actions as editorActions } from '../editor';
 import ToolPathGroup from '../../toolpaths/ToolPathGroup';
 import { CNC_LASER_STAGE } from '../editor/utils';
+import definitionManager from '../manager/DefinitionManager';
 
 
 const initModelGroup = new ModelGroup('laser');
@@ -115,8 +116,16 @@ const ACTION_SET_BACKGROUND_ENABLED = 'laser/ACTION_SET_BACKGROUND_ENABLED';
 
 export const actions = {
     // TODO: init should be  re-called
-    init: () => (dispatch, getState) => {
+    init: () => async (dispatch, getState) => {
         dispatch(editorActions._init(HEAD_LASER));
+        const { series } = getState().machine;
+
+        await definitionManager.init(HEAD_LASER, series);
+        dispatch(editorActions.updateState(HEAD_LASER, {
+            toolDefinitions: await definitionManager.getConfigDefinitions(),
+            activeToolListDefinition: definitionManager?.activeDefinition,
+            defaultDefinitions: definitionManager?.defaultDefinitions
+        }));
 
         // Set machine size into coordinate default size
         const { size } = getState().machine;
