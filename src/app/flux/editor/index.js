@@ -363,34 +363,6 @@ export const actions = {
             });
     },
 
-    uploadCaseImage: (headType, file, mode, caseConfigs, caseTransformation, onError) => (dispatch, getState) => {
-        dispatch(actions.updateState(headType, {
-            stage: CNC_LASER_STAGE.UPLOADING_IMAGE,
-            progress: 0.25
-        }));
-        const { materials } = getState()[headType];
-        file.isRotate = materials.isRotate;
-        api.uploadImage(file)
-            .then((res) => {
-                dispatch(actions.updateState(headType, {
-                    stage: CNC_LASER_STAGE.UPLOAD_IMAGE_SUCCESS,
-                    progress: 1
-                }));
-                const { width, height, originalName, uploadName } = res.body;
-                const { config } = caseConfigs;
-                const { gcodeConfig } = caseConfigs;
-                if (gcodeConfig.toolSnap) {
-                    dispatch(baseActions.updateState(headType, {
-                        toolSnap: gcodeConfig.toolSnap
-                    }));
-                }
-                dispatch(actions.generateModel(headType, originalName, uploadName, width, height, mode, null, { svgNodeName: 'image', ...config }, gcodeConfig, caseTransformation));
-            })
-            .catch((err) => {
-                onError && onError(err);
-            });
-    },
-
     prepareStlVisualizer: (headType, model) => (dispatch) => {
         const uploadPath = `${DATA_PREFIX}/${model.uploadName}`;
         const worker = new LoadModelWorker();
@@ -1055,7 +1027,7 @@ export const actions = {
         dispatch(baseActions.resetCalculatedState(headType));
         dispatch(baseActions.render(headType));
         dispatch(baseActions.updateState(headType, {
-            stage: CNC_LASER_STAGE.PROCESS_IMAGE_SUCCESS,
+            stage: CNC_LASER_STAGE.PROCESSING_IMAGE,
             progress: 1
         }));
     },

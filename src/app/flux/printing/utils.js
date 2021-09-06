@@ -1,36 +1,23 @@
 import i18n from '../../lib/i18n';
 
-export const CNC_LASER_STAGE = {
+export const PRINTING_STAGE = {
     EMPTY: 0,
-    GENERATING_TOOLPATH: 1,
-    GENERATE_TOOLPATH_SUCCESS: 2,
-    GENERATE_TOOLPATH_FAILED: 3,
-    PREVIEWING: 4,
-    PREVIEW_SUCCESS: 5,
-    PREVIEW_FAILED: 6,
-    RE_PREVIEW: 7,
-    GENERATING_GCODE: 8,
-    GENERATE_GCODE_SUCCESS: 9,
-    GENERATE_GCODE_FAILED: 10,
-    UPLOADING_IMAGE: 11,
-    UPLOAD_IMAGE_SUCCESS: 12,
-    UPLOAD_IMAGE_FAILED: 13,
-    PROCESSING_IMAGE: 14,
-    PROCESS_IMAGE_SUCCESS: 15,
-    PROCESS_IMAGE_FAILED: 16,
-    GENERATING_VIEWPATH: 17,
-    GENERATE_VIEWPATH_SUCCESS: 18,
-    GENERATE_VIEWPATH_FAILED: 19,
-    RENDER_TOOLPATH: 20,
-    GENERATE_TOOLPATH_AND_PREVIEW: 21
+    LOADING_MODEL: 1,
+    LOAD_MODEL_SUCCEED: 2,
+    LOAD_MODEL_FAILED: 3,
+    SLICE_PREPARING: 4,
+    SLICING: 5,
+    SLICE_SUCCEED: 6,
+    SLICE_FAILED: 7,
+    PREVIEWING: 8,
+    PREVIEW_SUCCEED: 9,
+    PREVIEW_FAILED: 10
 };
 
-export const CNC_LASER_PROCESS_STAGE = {
+export const PRINTING_PROCESS_STAGE = {
     EMPTY: 0,
-    GENERATE_TOOLPATH_AND_PREVIEW: 1,
-    UPLOAD_IMAGE: 2, // upload and process
-    PROCESS_IMAGE: 3,
-    VIEW_PATH: 4 // simulation
+    LOAD_MODEL: 1,
+    SLICE_AND_PREVIEW: 2
 };
 
 class ProgressState {
@@ -58,38 +45,22 @@ class ProgressStatesManager {
         this.processStageID = 0;
         this.progressStates = {};
 
-        this.push(CNC_LASER_PROCESS_STAGE.GENERATE_TOOLPATH_AND_PREVIEW, [
+        this.push(PRINTING_PROCESS_STAGE.LOAD_MODEL, [
             {
-                stageID: CNC_LASER_STAGE.GENERATING_TOOLPATH,
-                percent: 0.4
+                stageID: PRINTING_STAGE.LOADING_MODEL,
+                percent: 1
+            }
+        ], 'Loading model...');
+        this.push(PRINTING_PROCESS_STAGE.SLICE_AND_PREVIEW, [
+            {
+                stageID: PRINTING_STAGE.SLICING,
+                percent: 0.5
             },
             {
-                stageID: CNC_LASER_STAGE.RENDER_TOOLPATH,
-                percent: 0.8
-            },
-            {
-                stageID: CNC_LASER_STAGE.GENERATING_GCODE,
+                stageID: PRINTING_STAGE.PREVIEWING,
                 percent: 1
             }
-        ], 'Generate toolpath and preview: {{progress}}%');
-        this.push(CNC_LASER_PROCESS_STAGE.UPLOAD_IMAGE, [
-            {
-                stageID: CNC_LASER_STAGE.UPLOADING_IMAGE,
-                percent: 1
-            }
-        ], 'Loading object {{progress}}%');
-        this.push(CNC_LASER_PROCESS_STAGE.PROCESS_IMAGE, [
-            {
-                stageID: CNC_LASER_STAGE.PROCESSING_IMAGE,
-                percent: 1
-            }
-        ], 'Processing object {{progress}}%');
-        this.push(CNC_LASER_PROCESS_STAGE.VIEW_PATH, [
-            {
-                stageID: CNC_LASER_STAGE.GENERATING_VIEWPATH,
-                percent: 1
-            }
-        ], 'Generating simulation {{progress}}%');
+        ], 'Previewing G-code...{{progress}}%');
     }
 
     push(processStageID, stages, notice) {
@@ -104,7 +75,7 @@ class ProgressStatesManager {
         return this.progressStates[processStageID].getNotice(stageID, progress);
     }
 
-    startProgress(processStageID = CNC_LASER_PROCESS_STAGE.EMPTY, counts = []) {
+    startProgress(processStageID = PRINTING_PROCESS_STAGE.EMPTY, counts = []) {
         this.processStageID = processStageID;
         this.progress = 0;
         this.stage = 0;

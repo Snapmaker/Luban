@@ -13,7 +13,8 @@ import ProgressBar from '../../components/ProgressBar';
 import ContextMenu from '../../components/ContextMenu';
 import { Button } from '../../components/Buttons';
 import Canvas from '../../components/SMCanvas';
-import { actions as printingActions, PRINTING_STAGE } from '../../../flux/printing';
+import { actions as printingActions } from '../../../flux/printing';
+import { PRINTING_STAGE, PRINTING_PROCESS_STAGE } from '../../../flux/printing/utils';
 import { actions as operationHistoryActions } from '../../../flux/operation-history';
 import VisualizerLeftBar from './VisualizerLeftBar';
 import VisualizerPreviewControl from './VisualizerPreviewControl';
@@ -65,7 +66,8 @@ class Visualizer extends PureComponent {
         autoRotateSelectedModel: PropTypes.func.isRequired,
         layFlatSelectedModel: PropTypes.func.isRequired,
         scaleToFitSelectedModel: PropTypes.func.isRequired,
-        resetSelectedModelTransformation: PropTypes.func.isRequired
+        resetSelectedModelTransformation: PropTypes.func.isRequired,
+        progressStatesManager: PropTypes.object.isRequired
     };
 
     state = {
@@ -402,6 +404,19 @@ class Visualizer extends PureComponent {
         this.props.modelGroup.off('add', this.props.recordAddOperation);
     }
 
+    getProgress() {
+        const { stage, progress } = this.props;
+        switch (stage) {
+            case PRINTING_STAGE.PREVIEWING:
+            case PRINTING_STAGE.SLICING:
+                return this.props.progressStatesManager.getProgress(PRINTING_PROCESS_STAGE.SLICE_AND_PREVIEW, stage, progress);
+            case PRINTING_STAGE.LOADING_MODEL:
+                return this.props.progressStatesManager.getProgress(PRINTING_PROCESS_STAGE.LOAD_MODEL, stage, progress);
+            default:
+                return progress;
+        }
+    }
+
     getNotice() {
         const { stage, progress } = this.props;
         switch (stage) {
@@ -437,11 +452,12 @@ class Visualizer extends PureComponent {
     };
 
     render() {
-        const { size, selectedModelArray, modelGroup, gcodeLineGroup, progress, inProgress, hasModel } = this.props;
+        const { size, selectedModelArray, modelGroup, gcodeLineGroup, inProgress, hasModel } = this.props;
 
         const isModelSelected = (selectedModelArray.length > 0);
         const isSupportSelected = modelGroup.selectedModelArray.length > 0 && modelGroup.selectedModelArray[0].supportTag === true;
         const notice = this.getNotice();
+        const newProgress = this.getProgress();
         const pasteDisabled = (modelGroup.clipboard.length === 0);
         return (
             <div
@@ -469,7 +485,7 @@ class Visualizer extends PureComponent {
                     <VisualizerInfo />
                 </div>
 
-                <ProgressBar tips={notice} progress={progress * 100} />
+                <ProgressBar tips={notice} progress={newProgress * 100} />
 
                 <div className={styles['canvas-wrapper']}>
                     <Canvas
@@ -569,7 +585,7 @@ const mapStateToProps = (state, ownProps) => {
     const printing = state.printing;
     const { size } = machine;
     // TODO: be to organized
-    const { stage, modelGroup, hasModel, gcodeLineGroup, transformMode, progress, displayedType, renderingTimestamp, inProgress } = printing;
+    const { progressStatesManager, stage, modelGroup, hasModel, gcodeLineGroup, transformMode, progress, displayedType, renderingTimestamp, inProgress } = printing;
     return {
         isActive: !currentModalPath && ownProps.location.pathname.indexOf('3dp') > 0,
         stage,
@@ -584,7 +600,8 @@ const mapStateToProps = (state, ownProps) => {
         progress,
         displayedType,
         renderingTimestamp,
-        inProgress
+        inProgress,
+        progressStatesManager
     };
 };
 
