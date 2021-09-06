@@ -7,17 +7,25 @@ import i18n from '../../../../lib/i18n';
 import { TextInput } from '../../../components/Input';
 import TipTrigger from '../../../components/TipTrigger';
 import GcodeParameters from './GcodeParameters';
-// import SvgIcon from '../../../components/SvgIcon';
-// import PresentSelector from './PresentSelector';
+import SvgIcon from '../../../components/SvgIcon';
+import PresentSelector from './PresentSelector';
 
 class LaserParameters extends PureComponent {
     static propTypes = {
+        toolDefinitions: PropTypes.array.isRequired,
+        activeToolDefinition: PropTypes.object.isRequired,
+        isModifiedDefinition: PropTypes.bool.isRequired,
         toolPath: PropTypes.object.isRequired,
 
+        setCurrentToolDefinition: PropTypes.func.isRequired,
         updateToolPath: PropTypes.func.isRequired,
         updateGcodeConfig: PropTypes.func.isRequired,
+        // updateToolConfig: PropTypes.func.isRequired,
+        setCurrentValueAsProfile: PropTypes.func.isRequired,
 
-        multipleEngine: PropTypes.bool.isRequired
+        // size: PropTypes.object.isRequired,
+        multipleEngine: PropTypes.bool.isRequired,
+        materials: PropTypes.object.isRequired
     };
 
     state = {
@@ -61,19 +69,19 @@ class LaserParameters extends PureComponent {
             }
 
             // Fill Enabled
-            if (option.fillEnabled === true) {
-                option.fillInterval = 0.25;
-                option.jogSpeed = 3000;
-                option.workSpeed = 500;
-                option.fixedPower = 100;
-            }
-            if (option.fillEnabled === false) {
-                option.jogSpeed = 3000;
-                option.workSpeed = 140;
-                option.multiPasses = 2;
-                option.multiPassDepth = 0.6;
-                option.fixedPower = 100;
-            }
+            // if (option.fillEnabled === true) {
+            //     option.fillInterval = 0.25;
+            //     option.jogSpeed = 3000;
+            //     option.workSpeed = 500;
+            //     option.fixedPower = 100;
+            // }
+            // if (option.fillEnabled === false) {
+            //     option.jogSpeed = 3000;
+            //     option.workSpeed = 140;
+            //     option.multiPasses = 2;
+            //     option.multiPassDepth = 0.6;
+            //     option.fixedPower = 100;
+            // }
 
             // Fiexd Power Enabled
             if (option.fixedPower && option.fixedPower > 0) {
@@ -86,17 +94,19 @@ class LaserParameters extends PureComponent {
     };
 
     render() {
-        const { toolPath, multipleEngine } = this.props;
+        const { toolPath, multipleEngine, activeToolDefinition } = this.props;
 
-        const { name, type, gcodeConfig, useLegacyEngine } = toolPath;
+        const { name, type, useLegacyEngine, gcodeConfig } = toolPath;
 
         const { fillEnabled } = gcodeConfig;
+        console.log('activeToolDefinition', activeToolDefinition.settings.jog_speed.default_value, fillEnabled, typeof fillEnabled);
 
         // eslint-disable-next-line no-unused-vars
         const isSVG = type === TOOLPATH_TYPE_VECTOR;
         const isImage = type === TOOLPATH_TYPE_IMAGE;
         const defaultFillEnabled = true;
-        const fillMethod = (fillEnabled ? 'fill' : 'path');
+        // TODO: fill method into a param
+        const fillMethod = ((fillEnabled === 'true' || fillEnabled === true) ? 'fill' : 'path');
 
         return (
             <React.Fragment>
@@ -115,23 +125,24 @@ class LaserParameters extends PureComponent {
                                 />
                             </div>
                         </TipTrigger>
-                        {/*<div>*/}
-                        {/*    <div className="border-bottom-normal padding-bottom-4 margin-vertical-16">*/}
-                        {/*        <SvgIcon*/}
-                        {/*            name="TitleSetting"*/}
-                        {/*            type={['static']}*/}
-                        {/*            size={24}*/}
-                        {/*        />*/}
-                        {/*        <span>{i18n._('Tool')}</span>*/}
-                        {/*    </div>*/}
-                        {/*    <PresentSelector*/}
-                        {/*        toolDefinition={this.props.activeToolDefinition}*/}
-                        {/*        toolDefinitions={this.props.toolDefinitions}*/}
-                        {/*        setCurrentToolDefinition={this.props.setCurrentToolDefinition}*/}
-                        {/*        isModifiedDefinition={this.props.isModifiedDefinition}*/}
-                        {/*        setCurrentValueAsProfile={this.props.setCurrentValueAsProfile}*/}
-                        {/*    />*/}
-                        {/*</div>*/}
+                        <div>
+                            <div className="border-bottom-normal padding-bottom-4 margin-vertical-16">
+                                <SvgIcon
+                                    name="TitleSetting"
+                                    type={['static']}
+                                    size={24}
+                                />
+                                <span>{i18n._('Tool')}</span>
+                            </div>
+                            <PresentSelector
+                                toolDefinition={this.props.activeToolDefinition}
+                                toolDefinitions={this.props.toolDefinitions}
+                                setCurrentToolDefinition={this.props.setCurrentToolDefinition}
+                                isModifiedDefinition={this.props.isModifiedDefinition}
+                                setCurrentValueAsProfile={this.props.setCurrentValueAsProfile}
+
+                            />
+                        </div>
                         {multipleEngine && (
                             <div className="position-re sm-flex justify-space-between height-32 margin-vertical-8">
                                 <span>{i18n._('Use legacy engine')}</span>
@@ -210,6 +221,7 @@ class LaserParameters extends PureComponent {
                     </div>
                     <GcodeParameters
                         toolPath={this.props.toolPath}
+                        activeToolDefinition={this.props.activeToolDefinition}
                         updateGcodeConfig={this.actions.updateGcodeConfig}
                     />
                 </div>
@@ -220,8 +232,10 @@ class LaserParameters extends PureComponent {
 
 const mapStateToProps = (state) => {
     const { multipleEngine } = state.machine;
+    const { materials } = state.laser;
     return {
-        multipleEngine
+        multipleEngine,
+        materials
     };
 };
 

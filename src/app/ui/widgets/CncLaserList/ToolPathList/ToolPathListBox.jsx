@@ -206,6 +206,7 @@ const ToolPathListBox = (props) => {
         },
         createToolPath: () => {
             const toolpath = dispatch(editorActions.createToolPath(props.headType));
+            console.log('create toolPath', toolpath);
             setEditingToolpath(toolpath);
         },
         recalculateAllToolPath: () => {

@@ -167,17 +167,6 @@ export const processActions = {
         return toolPath;
     },
 
-    fastCreateToolPath: (headType, toolParams) => async (dispatch, getState) => {
-        const { toolPathGroup, materials, autoPreviewEnabled } = getState()[headType];
-        await toolPathGroup.fastCreateToolPath({ materials, toolParams });
-        if (autoPreviewEnabled) {
-            dispatch(processActions.preview(headType));
-        }
-        dispatch(baseActions.updateState(headType, {
-            isChangedAfterGcodeGenerating: true
-        }));
-    },
-
     selectToolPathById: (headType, toolPathId) => (dispatch, getState) => {
         const { toolPathGroup } = getState()[headType];
         toolPathGroup.selectToolPathById(toolPathId);

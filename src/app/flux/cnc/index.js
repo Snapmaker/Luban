@@ -299,10 +299,6 @@ export const actions = {
                 // Ignore error
             });
     },
-    updateStlVisualizer: (obj) => (dispatch, getState) => {
-        const { stlVisualizer } = getState().cnc;
-        dispatch(editorActions.updateState('cnc', { stlVisualizer: { ...stlVisualizer, ...obj } }));
-    },
     changeActiveToolListDefinition: (definitionId, name, shouldSaveToolpath = false) => async (dispatch, getState) => {
         const { toolDefinitions } = getState().cnc;
         const activeToolListDefinition = toolDefinitions.find(d => d.definitionId === definitionId);
@@ -311,14 +307,9 @@ export const actions = {
             activeToolListDefinition
         }));
     },
-    updateShowCncToolManager: (showCncToolManager) => (dispatch) => {
-        dispatch(editorActions.updateState('cnc', { showCncToolManager }));
-    },
-    changeToolParams: (toolParams) => {
-        return {
-            type: ACTION_CHANGE_TOOL_PARAMS,
-            toolParams
-        };
+    updateStlVisualizer: (obj) => (dispatch, getState) => {
+        const { stlVisualizer } = getState().cnc;
+        dispatch(editorActions.updateState('cnc', { stlVisualizer: { ...stlVisualizer, ...obj } }));
     }
 };
 

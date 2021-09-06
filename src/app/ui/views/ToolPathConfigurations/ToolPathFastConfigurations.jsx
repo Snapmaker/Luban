@@ -215,19 +215,19 @@ function ToolPathFastConfigurations(props) {
                 }
 
                 // Fill Enabled
-                if (option.fillEnabled === true) {
-                    option.fillInterval = 0.25;
-                    option.jogSpeed = 3000;
-                    option.workSpeed = 500;
-                    option.fixedPower = 100;
-                }
-                if (option.fillEnabled === false) {
-                    option.jogSpeed = 3000;
-                    option.workSpeed = 140;
-                    option.multiPasses = 2;
-                    option.multiPassDepth = 0.6;
-                    option.fixedPower = 100;
-                }
+                // if (option.fillEnabled === true) {
+                //     option.fillInterval = 0.25;
+                //     option.jogSpeed = 3000;
+                //     option.workSpeed = 500;
+                //     option.fixedPower = 100;
+                // }
+                // if (option.fillEnabled === false) {
+                //     option.jogSpeed = 3000;
+                //     option.workSpeed = 140;
+                //     option.multiPasses = 2;
+                //     option.multiPassDepth = 0.6;
+                //     option.fixedPower = 100;
+                // }
 
                 // Fiexd Power Enabled
                 if (option.fixedPower && option.fixedPower > 0) {
