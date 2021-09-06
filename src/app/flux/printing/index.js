@@ -245,8 +245,8 @@ export const actions = {
 
         dispatch(actions.updateState({
             activeDefinition: definitionManager.activeDefinition,
-            materialDefinitions: await definitionManager.getDefinitionsByPrefixName(CONFIG_HEADTYPE, 'material'),
-            qualityDefinitions: await definitionManager.getDefinitionsByPrefixName(CONFIG_HEADTYPE, 'quality')
+            materialDefinitions: await definitionManager.getDefinitionsByPrefixName('material'),
+            qualityDefinitions: await definitionManager.getDefinitionsByPrefixName('quality')
         }));
         // model group
         modelGroup.updateBoundingBox(new THREE.Box3(
@@ -292,8 +292,8 @@ export const actions = {
         dispatch(actions.updateActiveDefinitionMachineSize(size));
         dispatch(actions.updateState({
             defaultDefinitions: definitionManager?.defaultDefinitions,
-            materialDefinitions: await definitionManager.getDefinitionsByPrefixName(CONFIG_HEADTYPE, 'material'),
-            qualityDefinitions: await definitionManager.getDefinitionsByPrefixName(CONFIG_HEADTYPE, 'quality')
+            materialDefinitions: await definitionManager.getDefinitionsByPrefixName('material'),
+            qualityDefinitions: await definitionManager.getDefinitionsByPrefixName('quality')
         }));
 
         // model group
@@ -313,10 +313,15 @@ export const actions = {
         if (machineStore.get('defaultConfigId')) {
             originalConfigId = JSON.parse(machineStore.get('defaultConfigId'));
         }
-        originalConfigId[series] = {
-            ...CONFIG_ID,
-            [type]: defaultId
-        };
+        if (originalConfigId[series]) {
+            originalConfigId[series][type] = defaultId;
+        } else {
+            originalConfigId[series] = {
+                ...CONFIG_ID,
+                [type]: defaultId
+            };
+        }
+
         machineStore.set('defaultConfigId', JSON.stringify(originalConfigId));
     },
 
@@ -464,7 +469,7 @@ export const actions = {
     resetDefinitionById: (definitionId) => (dispatch, getState) => {
         const { defaultDefinitions, qualityDefinitions, materialDefinitions } = getState().printing;
         const newDef = cloneDeep(defaultDefinitions.find(d => d.definitionId === definitionId));
-        definitionManager.updateDefinition(CONFIG_HEADTYPE, newDef);
+        definitionManager.updateDefinition(newDef);
         dispatch(actions.updateActiveDefinition(newDef));
         // const definition =
         if (definitionId.indexOf('quality') !== -1
@@ -498,7 +503,7 @@ export const actions = {
     updateDefinitionSettings: (definition, settings) => (dispatch, getState) => {
         const { modelGroup } = getState().printing;
         settings = definitionManager.calculateDependencies(definition, settings, modelGroup && modelGroup.hasSupportModel());
-        return definitionManager.updateDefinition(CONFIG_HEADTYPE, {
+        return definitionManager.updateDefinition({
             definitionId: definition.definitionId,
             settings
         });
@@ -565,7 +570,7 @@ export const actions = {
 
     updateDefinitionsForManager: (definitionId, type) => async (dispatch, getState) => {
         const state = getState().printing;
-        const savedDefinition = await definitionManager.getDefinition(CONFIG_HEADTYPE, definitionId);
+        const savedDefinition = await definitionManager.getDefinition(definitionId);
         if (!savedDefinition) {
             return;
         }
@@ -589,7 +594,7 @@ export const actions = {
             .then(async (res) => {
                 const response = res.body;
                 const definitionId = `${type}.${timestamp()}`;
-                const definition = await definitionManager.uploadDefinition(CONFIG_HEADTYPE, definitionId, response.uploadName);
+                const definition = await definitionManager.uploadDefinition(definitionId, response.uploadName);
                 let name = definition.name;
                 const definitionsKey = defaultDefinitionKeys[type].definitions;
                 const defaultId = defaultDefinitionKeys[type].id;
@@ -598,7 +603,7 @@ export const actions = {
                     name = `#${name}`;
                 }
                 definition.name = name;
-                await definitionManager.updateDefinition(CONFIG_HEADTYPE, {
+                await definitionManager.updateDefinition({
                     definitionId: definition.definitionId,
                     name
                 });
@@ -625,7 +630,7 @@ export const actions = {
             return Promise.reject(i18n._('Failed to rename. "{{name}}" already exists.', { name }));
         }
 
-        await definitionManager.updateDefinition(CONFIG_HEADTYPE, {
+        await definitionManager.updateDefinition({
             definitionId: definition.definitionId,
             name
         });
@@ -681,7 +686,7 @@ export const actions = {
             };
         }
 
-        const createdDefinition = await definitionManager.createDefinition(CONFIG_HEADTYPE, newDefinition);
+        const createdDefinition = await definitionManager.createDefinition(newDefinition);
 
 
         dispatch(actions.updateState({
@@ -695,7 +700,7 @@ export const actions = {
     removeDefinitionByType: (type, definition) => async (dispatch, getState) => {
         const state = getState().printing;
 
-        await definitionManager.removeDefinition(CONFIG_HEADTYPE, definition);
+        await definitionManager.removeDefinition(definition);
         const definitionsKey = defaultDefinitionKeys[type].definitions;
 
         dispatch(actions.updateState({
@@ -715,7 +720,7 @@ export const actions = {
                 newMaterialDefinitions.push(definition);
                 continue;
             }
-            definitionManager.removeDefinition(CONFIG_HEADTYPE, definition);
+            definitionManager.removeDefinition(definition);
         }
 
         dispatch(actions.updateState({
@@ -734,7 +739,7 @@ export const actions = {
                 newQualityDefinitions.push(definition);
                 continue;
             }
-            definitionManager.removeDefinition(CONFIG_HEADTYPE, definition);
+            definitionManager.removeDefinition(definition);
         }
 
         dispatch(actions.updateState({
