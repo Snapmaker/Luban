@@ -418,7 +418,7 @@ class Visualizer extends PureComponent {
     }
 
     getNotice() {
-        const { stage, progress } = this.props;
+        const { stage } = this.props;
         switch (stage) {
             case PRINTING_STAGE.EMPTY:
                 return '';
@@ -431,13 +431,13 @@ class Visualizer extends PureComponent {
             case PRINTING_STAGE.SLICE_PREPARING:
                 return i18n._('Preparing for slicing...');
             case PRINTING_STAGE.SLICING:
-                return i18n._('Slicing...{{progress}}%', { progress: (100.0 * progress).toFixed(1) });
+                return i18n._('Slicing...{{progress}}%', { progress: (100.0 * this.getProgress()).toFixed(1) });
             case PRINTING_STAGE.SLICE_SUCCEED:
                 return i18n._('Sliced model successfully.');
             case PRINTING_STAGE.SLICE_FAILED:
                 return i18n._('Failed to slice model.');
             case PRINTING_STAGE.PREVIEWING:
-                return i18n._('Previewing G-code...{{progress}}%', { progress: (100.0 * progress).toFixed(1) });
+                return i18n._('Previewing G-code...{{progress}}%', { progress: (100.0 * this.getProgress()).toFixed(1) });
             case PRINTING_STAGE.PREVIEW_SUCCEED:
                 return i18n._('Previewed G-code successfully.');
             case PRINTING_STAGE.PREVIEW_FAILED:
