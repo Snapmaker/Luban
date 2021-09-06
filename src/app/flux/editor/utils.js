@@ -76,6 +76,10 @@ class ProgressStatesManager {
         this.push(CNC_LASER_PROCESS_STAGE.UPLOAD_IMAGE, [
             {
                 stageID: CNC_LASER_STAGE.UPLOADING_IMAGE,
+                percent: 0.5
+            },
+            {
+                stageID: CNC_LASER_STAGE.PROCESSING_IMAGE,
                 percent: 1
             }
         ], 'Loading object {{progress}}%');
@@ -110,6 +114,7 @@ class ProgressStatesManager {
     }
 
     startProgress(processStageID = CNC_LASER_PROCESS_STAGE.EMPTY, counts = []) {
+        console.log('start', processStageID);
         this.processStageID = processStageID;
         this.progress = 0;
         this.stage = 0;
@@ -118,6 +123,7 @@ class ProgressStatesManager {
     }
 
     updateProgress(stageID, progress) {
+        console.log('update', stageID, progress);
         const totalCount = this.totalCounts && this.totalCounts[this.stage];
         const count = this.counts && this.counts[this.stage];
         const newProgress = this.getProgress(this.processStageID, stageID, progress, (totalCount ?? 1) + 1 - (count ?? 1), totalCount ?? 1);
@@ -131,6 +137,7 @@ class ProgressStatesManager {
     }
 
     startNextStep() {
+        console.log('next');
         if (this.counts && this.counts[this.stage] && this.counts[this.stage] - 1 > 0) {
             this.counts[this.stage] -= 1;
         } else {
@@ -138,7 +145,15 @@ class ProgressStatesManager {
         }
     }
 
-    finishProgress() {}
+    finishProgress() {
+        console.log('finish');
+        this.processStageID = CNC_LASER_PROCESS_STAGE.EMPTY;
+        this.progress = 0;
+    }
+
+    getProgressStage() {
+        return this.processStageID;
+    }
 }
 
 export default ProgressStatesManager;

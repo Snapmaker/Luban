@@ -256,7 +256,7 @@ export const actions = {
                     if (progress < 0.1) {
                         progressStatesManager.startNextStep();
                         dispatch(actions.updateState(headType, {
-                            stage: CNC_LASER_STAGE.GENERATE_TOOLPATH_AND_PREVIEW,
+                            stage: CNC_LASER_STAGE.RENDER_TOOLPATH,
                             progress: progressStatesManager.updateProgress(CNC_LASER_STAGE.RENDER_TOOLPATH, progress)
                         }));
                     } else {
@@ -267,10 +267,12 @@ export const actions = {
                     break;
                 }
                 case 'err': {
+                    const { progressStatesManager } = getState()[headType];
                     dispatch(baseActions.updateState(headType, {
                         stage: CNC_LASER_STAGE.GENERATE_TOOLPATH_FAILED,
                         progress: 1
                     }));
+                    progressStatesManager.finishProgress();
                     break;
                 }
                 default:
@@ -340,10 +342,10 @@ export const actions = {
      */
     uploadImage: (headType, file, mode, onError) => (dispatch, getState) => {
         const { materials, progressStatesManager } = getState()[headType];
-        progressStatesManager.startProgress(CNC_LASER_PROCESS_STAGE.UPLOAD_IMAGE, [1]);
+        progressStatesManager.startProgress(CNC_LASER_PROCESS_STAGE.UPLOAD_IMAGE, [1, 1]);
         dispatch(actions.updateState(headType, {
             stage: CNC_LASER_STAGE.UPLOADING_IMAGE,
-            progress: 0.25
+            progress: progressStatesManager.updateProgress(CNC_LASER_STAGE.UPLOADING_IMAGE, 0.25)
         }));
         const formData = new FormData();
         formData.append('image', file);
@@ -354,7 +356,7 @@ export const actions = {
             .then((res) => {
                 dispatch(actions.updateState(headType, {
                     stage: CNC_LASER_STAGE.UPLOADING_IMAGE,
-                    progress: 1
+                    progress: progressStatesManager.updateProgress(CNC_LASER_STAGE.UPLOADING_IMAGE, 1)
                 }));
                 const { width, height, originalName, uploadName } = res.body;
                 dispatch(actions.generateModel(headType, originalName, uploadName, width, height, mode, undefined, { svgNodeName: 'image' }));
@@ -366,6 +368,7 @@ export const actions = {
                     stage: CNC_LASER_STAGE.UPLOAD_IMAGE_FAILED,
                     progress: 1
                 }));
+                progressStatesManager.finishProgress();
             });
     },
 
@@ -701,10 +704,14 @@ export const actions = {
         options.materials = materials;
         options.toolParams = toolParams;
 
-        progressStatesManager.startProgress(CNC_LASER_PROCESS_STAGE.PROCESS_IMAGE, [1]);
+        if (progressStatesManager.getProgressStage() !== CNC_LASER_PROCESS_STAGE.UPLOAD_IMAGE) {
+            progressStatesManager.startProgress(CNC_LASER_PROCESS_STAGE.PROCESS_IMAGE, [1]);
+        } else {
+            progressStatesManager.startNextStep();
+        }
         dispatch(baseActions.updateState(headType, {
             stage: CNC_LASER_STAGE.PROCESSING_IMAGE,
-            progress: 0
+            progress: progressStatesManager.updateProgress(CNC_LASER_STAGE.PROCESSING_IMAGE, 0)
         }));
 
         dispatch(actions.resetProcessState(headType));
@@ -995,7 +1002,7 @@ export const actions = {
      * @returns {Function}
      */
     onReceiveProcessImageTaskResult: (headType, taskResult) => async (dispatch, getState) => {
-        const { SVGActions, modelGroup } = getState()[headType];
+        const { SVGActions, modelGroup, progressStatesManager } = getState()[headType];
         const model = modelGroup.getModel(taskResult.data.modelID);
         if (!model) {
             return;
@@ -1034,8 +1041,9 @@ export const actions = {
         dispatch(baseActions.render(headType));
         dispatch(baseActions.updateState(headType, {
             stage: CNC_LASER_STAGE.PROCESSING_IMAGE,
-            progress: 1
+            progress: progressStatesManager.updateProgress(CNC_LASER_STAGE.PROCESSING_IMAGE, 1)
         }));
+        progressStatesManager.finishProgress();
     },
 
     getEstimatedTime: (headType, type) => (dispatch, getState) => {
