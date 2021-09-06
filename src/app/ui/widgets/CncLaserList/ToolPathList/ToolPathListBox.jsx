@@ -104,7 +104,7 @@ const ToolpathItem = ({
                             size={24}
                             color="#BFBFBF"
                             name="HideNormal"
-                            type="static"
+                            type={['static']}
                             title={i18n._('Hide')}
                             onClick={() => onClickVisible(toolPath.id, toolPath.visible, toolPath.check)}
                             disabled={disabled}
@@ -112,7 +112,7 @@ const ToolpathItem = ({
                     )}
                     {toolPath.visible && (
                         <SvgIcon
-                            type="static"
+                            type={['static']}
                             size={24}
                             name="ShowNormal"
                             title={i18n._('Show')}
@@ -264,7 +264,7 @@ const ToolPathListBox = (props) => {
                         >
                             <SvgIcon
                                 name="WarningTipsTips"
-                                type="static"
+                                type={['static']}
                                 color="#1890ff"
                             />
                             <span className={classNames('display-inline', 'height-40')}>{i18n._('Select object to create toolpath')}</span>

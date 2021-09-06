@@ -7,30 +7,25 @@ import { actions as cncActions } from '../../../flux/cnc';
 import { actions as projectActions } from '../../../flux/project';
 import { actions as editorActions } from '../../../flux/editor';
 
-import { CNC_TOOL_CONFIG_GROUP, HEAD_CNC } from '../../../constants';
+import { CNC_TOOL_CONFIG_GROUP, HEAD_CNC, DEFAULT_CNC_CONFIG_IDS } from '../../../constants';
 import ProfileManager from '../ProfileManager';
 import i18n from '../../../lib/i18n';
 
-const SUBCATEGORY = 'CncConfig';
-// const defaultToolListNames = [
-//     'Carving V-bit',
-//     'Flat End Mill',
-//     'Ball End Mill',
-//     'Straight Groove V-bit'
-// ];
+const selectedId = DEFAULT_CNC_CONFIG_IDS[0];
 
 function isOfficialDefinition(activeToolList) {
-    return includes(['DefaultCVbit', 'DefaultMBEM', 'DefaultFEM', 'DefaultSGVbit'],
+    return includes(DEFAULT_CNC_CONFIG_IDS,
         activeToolList.definitionId);
 }
 function isDefinitionEditable(activeToolList) {
-    return !(includes(['DefaultCVbit', 'DefaultMBEM', 'DefaultFEM', 'DefaultSGVbit'],
+    return !(includes(DEFAULT_CNC_CONFIG_IDS,
         activeToolList.definitionId));
 }
 
 function CncToolManager({ closeToolManager, shouldSaveToolpath = false, saveToolPath, setCurrentToolDefinition }) {
     const toolDefinitions = useSelector(state => state?.cnc?.toolDefinitions);
     const activeToolListDefinition = useSelector(state => state?.cnc?.activeToolListDefinition, shallowEqual);
+    const series = useSelector(state => state?.machine?.series);
     const dispatch = useDispatch();
 
     const actions = {
@@ -43,8 +38,8 @@ function CncToolManager({ closeToolManager, shouldSaveToolpath = false, saveTool
         },
         exportConfigFile: (definitionForManager) => {
             const definitionId = definitionForManager.definitionId;
-            const targetFile = `${definitionId}.defv2.json`;
-            dispatch(projectActions.exportConfigFile(targetFile, SUBCATEGORY));
+            const targetFile = `${definitionId}.def.json`;
+            dispatch(projectActions.exportConfigFile(targetFile, `cnc/${series}`));
         },
         onUpdateDefaultDefinition: (definitionForManager) => {
             const { definitionId, name } = definitionForManager;
@@ -111,9 +106,7 @@ function CncToolManager({ closeToolManager, shouldSaveToolpath = false, saveTool
     };
     const optionConfigGroup = CNC_TOOL_CONFIG_GROUP;
     const allDefinitions = toolDefinitions;
-    const selectedId = {
-        id: 'DefaultCVbit'
-    };
+
     return (
         <ProfileManager
             outsideActions={actions}
@@ -124,7 +117,7 @@ function CncToolManager({ closeToolManager, shouldSaveToolpath = false, saveTool
             allDefinitions={allDefinitions}
             disableCategory={false}
             managerTitle="Tool Settings"
-            selectedId={selectedId.id}
+            selectedId={selectedId}
         />
     );
 }

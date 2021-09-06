@@ -4,12 +4,13 @@ import { cloneDeep, isNil } from 'lodash';
 // import FileSaver from 'file-saver';
 import LoadModelWorker from '../../workers/LoadModel.worker';
 import GcodeToBufferGeometryWorker from '../../workers/GcodeToBufferGeometry.worker';
-import { ABSENT_OBJECT, EPSILON, DATA_PREFIX, PRINTING_MANAGER_TYPE_MATERIAL } from '../../constants';
+import { ABSENT_OBJECT, EPSILON, DATA_PREFIX, PRINTING_MANAGER_TYPE_MATERIAL,
+    PRINTING_MANAGER_TYPE_QUALITY, MACHINE_SERIES } from '../../constants';
 import { timestamp } from '../../../shared/lib/random-utils';
-
+import { machineStore } from '../../store/local-storage';
 
 import i18n from '../../lib/i18n';
-import definitionManager from './DefinitionManager';
+import definitionManager from '../manager/DefinitionManager';
 import api from '../../api';
 import ModelGroup from '../../models/ModelGroup';
 import gcodeBufferGeometryToObj3d from '../../workers/GcodeToBufferGeometry/gcodeBufferGeometryToObj3d';
@@ -34,6 +35,15 @@ const isDefaultQualityDefinition = (definitionId) => {
             || definitionId.indexOf('normal_quality') !== -1
         );
 };
+const getRealSeries = (series) => {
+    if (
+        series === MACHINE_SERIES.ORIGINAL_LZ.value
+       || series === MACHINE_SERIES.CUSTOM.value
+    ) {
+        series = MACHINE_SERIES.ORIGINAL.value;
+    }
+    return series;
+};
 
 const defaultDefinitionKeys = {
     material: {
@@ -45,6 +55,11 @@ const defaultDefinitionKeys = {
         id: 'defaultQualityId'
     }
 };
+const CONFIG_ID = {
+    material: 'material.pla',
+    quality: 'quality.fast_print'
+};
+const CONFIG_HEADTYPE = 'printing';
 // eslint-disable-next-line no-unused-vars
 /*
 const customCompareTransformation = (tran1, tran2) => {
@@ -226,12 +241,12 @@ export const actions = {
         const printingState = getState().printing;
         const { modelGroup, gcodeLineGroup } = printingState;
         const { series, size } = getState().machine;
-        await definitionManager.init(series);
+        await definitionManager.init(CONFIG_HEADTYPE, series);
+
         dispatch(actions.updateState({
-            activeDefinition: definitionManager.activeDefinition
-        }));
-        dispatch(actions.updateState({
-            qualityDefinitions: definitionManager.qualityDefinitions
+            activeDefinition: definitionManager.activeDefinition,
+            materialDefinitions: await definitionManager.getDefinitionsByPrefixName('material'),
+            qualityDefinitions: await definitionManager.getDefinitionsByPrefixName('quality')
         }));
         // model group
         modelGroup.updateBoundingBox(new THREE.Box3(
@@ -252,23 +267,33 @@ export const actions = {
             dispatch(actions.render());
         });
 
-        const { series } = getState().machine;
-        await definitionManager.init(series);
+        let { series } = getState().machine;
+        series = getRealSeries(series);
+        await definitionManager.init(CONFIG_HEADTYPE, series);
 
+        const defaultConfigId = machineStore.get('defaultConfigId');
+        if (defaultConfigId && Object.prototype.toString.call(defaultConfigId) === '[object String]') {
+            const newConfigId = JSON.parse(defaultConfigId);
+            if (newConfigId[series]) {
+                dispatch(actions.updateState({
+                    defaultMaterialId: newConfigId[series]?.material,
+                    defaultQualityId: newConfigId[series]?.quality
+                }));
+            }
+        }
         dispatch(actions.updateState({
             activeDefinition: definitionManager.activeDefinition
         }));
-
-        dispatch(actions.updateActiveDefinition(definitionManager.snapmakerDefinition));
+        // todo：init 'activeDefinition' by localStorage
+        // dispatch(actions.updateActiveDefinition(definitionManager.snapmakerDefinition));
 
         // Update machine size after active definition is loaded
         const { size } = getState().machine;
         dispatch(actions.updateActiveDefinitionMachineSize(size));
-
         dispatch(actions.updateState({
-            defaultDefinitions: definitionManager.defaultDefinitions,
-            materialDefinitions: definitionManager.materialDefinitions,
-            qualityDefinitions: definitionManager.qualityDefinitions
+            defaultDefinitions: definitionManager?.defaultDefinitions,
+            materialDefinitions: await definitionManager.getDefinitionsByPrefixName('material'),
+            qualityDefinitions: await definitionManager.getDefinitionsByPrefixName('quality')
         }));
 
         // model group
@@ -279,6 +304,25 @@ export const actions = {
 
         // Re-position model group
         gcodeLineGroup.position.set(-size.x / 2, -size.y / 2, 0);
+    },
+
+    updateDefaultConfigId: (type, defaultId) => (dispatch, getState) => {
+        let { series } = getState().machine;
+        series = getRealSeries(series);
+        let originalConfigId = {};
+        if (machineStore.get('defaultConfigId')) {
+            originalConfigId = JSON.parse(machineStore.get('defaultConfigId'));
+        }
+        if (originalConfigId[series]) {
+            originalConfigId[series][type] = defaultId;
+        } else {
+            originalConfigId[series] = {
+                ...CONFIG_ID,
+                [type]: defaultId
+            };
+        }
+
+        machineStore.set('defaultConfigId', JSON.stringify(originalConfigId));
     },
 
     // TODO: init should be  re-called
@@ -708,15 +752,18 @@ export const actions = {
     },
     updateDefaultIdByType: (type, newDefinitionId) => (dispatch) => {
         const defaultId = defaultDefinitionKeys[type].id;
+        dispatch(actions.updateDefaultConfigId(type, newDefinitionId));
         dispatch(actions.updateState({ [defaultId]: newDefinitionId }));
         dispatch(actions.destroyGcodeLine());
         dispatch(actions.displayModel());
     },
     updateDefaultMaterialId: (materialId) => (dispatch) => {
+        dispatch(actions.updateDefaultConfigId(PRINTING_MANAGER_TYPE_MATERIAL, materialId));
         dispatch(actions.updateState({ defaultMaterialId: materialId }));
     },
 
     updateDefaultQualityId: (qualityId) => (dispatch) => {
+        dispatch(actions.updateDefaultConfigId(PRINTING_MANAGER_TYPE_QUALITY, qualityId));
         dispatch(actions.updateState({ defaultQualityId: qualityId }));
     },
 
@@ -836,7 +883,7 @@ export const actions = {
         await dispatch(actions.updateActiveDefinitionMachineSize(size));
 
         const finalDefinition = definitionManager.finalizeActiveDefinition(activeDefinition);
-        await api.printingConfigs.createDefinition(finalDefinition);
+        await api.profileDefinitions.createDefinition(CONFIG_HEADTYPE, finalDefinition);
 
         dispatch(actions.updateState({
             stage: PRINTING_STAGE.SLICING,

@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useLayoutEffect, useState, useRef } from 'react';
 import classNames from 'classnames';
 import PropTypes from 'prop-types';
 // import { useSelector, shallowEqual } from 'react-redux';
@@ -49,7 +49,7 @@ function creatCateArray(optionList) {
 
 function useGetDefinitions(allDefinitions, definitionState, setDefinitionState, selectedId, getDefaultDefinition) {
     const definitionsRef = useRef([]);
-    useEffect(() => {
+    useLayoutEffect(() => {
         const newState = {};
         const lastDefinitionForManager = definitionState?.definitionForManager;
         let definitionForManager = allDefinitions.find(d => d.definitionId === lastDefinitionForManager?.definitionId);
@@ -168,7 +168,6 @@ function ProfileManager({ optionConfigGroup, disableCategory = true, managerTitl
                 actions.setRenamingStatus(false);
             }
             const activeToolCategory = currentDefinitions.current.find(d => d.category === category);
-
             const selectedSettingDefaultValue = outsideActions.getDefaultDefinition(activeToolCategory.definitionId);
             setDefinitionState({
                 definitionForManager: activeToolCategory,

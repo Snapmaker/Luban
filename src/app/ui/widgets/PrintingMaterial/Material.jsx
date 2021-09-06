@@ -53,7 +53,8 @@ function Material({ widgetActions }) {
         const definition = materialDefinitions.find(d => d.definitionId === definitionId);
         if (definition) {
             // update selectedId
-            dispatch(printingActions.updateState({ defaultMaterialId: definition.definitionId }));
+            dispatch(printingActions.updateDefaultConfigId(PRINTING_MANAGER_TYPE_MATERIAL, definition.definitionId));
+            dispatch(printingActions.updateDefaultMaterialId(definition.definitionId));
             // update active definition
             updateActiveDefinition(definition);
 

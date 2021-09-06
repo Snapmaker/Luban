@@ -16,14 +16,20 @@ import CncParameters from './cnc/CncParameters';
 import { toHump } from '../../../../shared/lib/utils';
 import LaserParameters from './laser/LaserParameters';
 
+function getDefaultDefinition(headType, toolDefinitions) {
+    if (headType === HEAD_CNC && toolDefinitions.length) {
+        return toolDefinitions[0];
+    } else {
+        return null;
+    }
+}
 function ToolPathConfigurations(props) {
-    const activeToolListDefinition = useSelector(state => state[props.headType]?.activeToolListDefinition, shallowEqual);
     const toolpath = props.toolpath;
     const toolDefinitions = useSelector(state => state[props.headType]?.toolDefinitions, shallowEqual);
 
     const dispatch = useDispatch();
 
-    const [currentToolDefinition, setCurrentToolDefinition] = useState(activeToolListDefinition);
+    const [currentToolDefinition, setCurrentToolDefinition] = useState(getDefaultDefinition(props.headType, toolDefinitions));
 
     const updateCncActiveToolDefinition = async (toolPath) => {
         const { toolParams, gcodeConfig } = toolPath;
@@ -65,7 +71,7 @@ function ToolPathConfigurations(props) {
         checkIfDefinitionModified() {
             if (props.headType === HEAD_CNC) {
                 const oldTooldefinition = toolDefinitions.find((d) => {
-                    return d.definitionId === currentToolDefinition.definitionId;
+                    return d.definitionId === currentToolDefinition?.definitionId;
                 });
                 return oldTooldefinition?.settings && !Object.entries(oldTooldefinition.settings).every(([key, setting]) => {
                     return currentToolDefinition && currentToolDefinition.settings[key] && currentToolDefinition.settings[key].default_value === setting.default_value;
@@ -124,7 +130,6 @@ function ToolPathConfigurations(props) {
                 name: inputValue
             };
             await dispatch(cncActions.duplicateToolListDefinition(newToolDefinition));
-            // await dispatch(cncActions.changeActiveToolListDefinition(newToolDefinition.definitionId, newToolDefinition.name));
         },
         setCurrentValueAsProfile: () => {
             const activeToolDefinition = currentToolDefinition;
