@@ -5,7 +5,7 @@
     "version": "1.0.0",
     "name": "Path Engrave",
     "settings": {
-        "fillEnabled": {
+        "fill_enabled": {
             "default_value": "false",
             "description": "Set the processing method of the object. \n - Fill: Fills the object with lines or dots.\n - On the Path: Engraves along the shape of the object.",
             "label": "Method",
@@ -15,7 +15,7 @@
                 "true": "Fill"
             }
         },
-        "workSpeed": {
+        "work_speed": {
             "default_value": 2500,
             "label": "Work Speed",
             "description": "Set the speed at which the toolhead moves on the material when it is engraving or cutting.",
@@ -25,16 +25,16 @@
             "step": 1,
             "unit": "mm/min"
         },
-        "multiPasses": {
-            "default_value": 1,
+        "multi_passes": {
+            "default_value": 2,
             "label": "Number of Passes",
             "description": "Set how many times the laser will trace the same path in a G-code file.",
             "type": "float",
             "min": 1,
             "max": 50
         },
-        "multiPassDepth": {
-            "default_value": 1,
+        "multi_pass_depth": {
+            "default_value": 0.6,
             "label": "Z Step per Pass",
             "description": "Set the amount at which the Laser Module is lowered with each pass.",
             "type": "float",
@@ -42,7 +42,7 @@
             "max": 10,
             "unit": "mm"
         },
-        "fixedPower": {
+        "fixed_power": {
             "default_value": 50,
             "label": "Laser Power",
             "description": "Set the laser power.",
@@ -51,7 +51,7 @@
             "max": 100,
             "unit": "%"
         },
-        "movementMode": {
+        "movement_mode": {
             "default_value": "greyscale-line",
             "label": "Movement Mode",
             "description": "Set whether the object is filled with lines or dots.",
@@ -61,7 +61,7 @@
                 "greyscale-dot": "Dot"
             }
         },
-        "fillInterval": {
+        "fill_interval": {
             "default_value": 0.25,
             "label": "Fill Interval",
             "description": "Set the degree to which an area is filled with laser lines or dots. The minimal interval is 0.05 mm.",
@@ -70,7 +70,7 @@
             "step": 0.01,
             "unit": "mm"
         },
-        "dwellTime": {
+        "dwell_time": {
             "default_value": 5,
             "label": "Dwell Time",
             "description": "Determines how long the laser keeps on when it’s engraving a dot.",
@@ -80,7 +80,7 @@
             "step": 0.1,
             "unit": "ms/dot"
         },
-        "jogSpeed": {
+        "jog_speed": {
             "default_value": 2500,
             "label": "Jog Speed",
             "description": "Set the speed at which the toolhead moves on the material when it is not engraving or cutting.",
@@ -100,7 +100,8 @@
                 "Diagonal": "Diagonal",
                 "Diagonal2": "Diagonal2"
             },
-            "type": "enum"
+            "type": "enum",
+            "enabled": "movement_mode = 'greyscale-line'"
         }
     }
 }

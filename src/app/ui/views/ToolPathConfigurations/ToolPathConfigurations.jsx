@@ -24,18 +24,24 @@ function ToolPathConfigurations({ toolpath, onClose, headType }) {
 
     const [currentToolDefinition, setCurrentToolDefinition] = useState(toolDefinitions[0]);
 
-    const updateCncActiveToolDefinition = async (toolPath) => {
+    /**
+     *
+     * @params {
+     *     gcodeConfig: g-code config default value
+     *     toolParams: toolPath's definition id and name
+     * }
+     **/
+    const updateActiveToolDefinition = async (toolPath) => {
         const { toolParams, gcodeConfig } = toolPath;
         const activeToolDefinition = _.cloneDeep(currentToolDefinition);
 
-        console.log('activeToolDefinition', activeToolDefinition);
-        if (headType === HEAD_CNC) {
-            const oldTooldefinition = toolDefinitions.find((d) => {
-                return d.definitionId === toolParams.definitionId;
-            });
-            if (oldTooldefinition) {
-                activeToolDefinition.definitionId = oldTooldefinition.definitionId;
-                activeToolDefinition.name = oldTooldefinition.name;
+        const oldTooldefinition = toolDefinitions.find((d) => {
+            return d.definitionId === toolParams.definitionId;
+        });
+        if (oldTooldefinition) {
+            activeToolDefinition.definitionId = oldTooldefinition.definitionId;
+            activeToolDefinition.name = oldTooldefinition.name;
+            if (headType === HEAD_CNC) {
                 activeToolDefinition.settings.angle.default_value = toolParams?.toolAngle;
                 activeToolDefinition.settings.diameter.default_value = toolParams?.toolDiameter;
                 activeToolDefinition.settings.shaft_diameter.default_value = toolParams?.toolShaftDiameter;
@@ -45,28 +51,28 @@ function ToolPathConfigurations({ toolpath, onClose, headType }) {
                 activeToolDefinition.settings.step_down.default_value = gcodeConfig?.stepDown;
                 activeToolDefinition.settings.step_over.default_value = gcodeConfig?.stepOver;
             }
+            if (headType === HEAD_LASER) {
+                activeToolDefinition.settings.fill_enabled.default_value = gcodeConfig?.fillEnabled;
+                activeToolDefinition.settings.movement_mode.default_value = gcodeConfig?.movementMode;
+                activeToolDefinition.settings.direction.default_value = gcodeConfig?.direction;
+                activeToolDefinition.settings.fill_interval.default_value = gcodeConfig?.fillInterval;
+                activeToolDefinition.settings.jog_speed.default_value = gcodeConfig?.jogSpeed;
+                activeToolDefinition.settings.work_speed.default_value = gcodeConfig?.workSpeed;
+                activeToolDefinition.settings.dwell_time.default_value = gcodeConfig?.dwellTime;
+                activeToolDefinition.settings.multi_passes.default_value = gcodeConfig?.multiPasses;
+                activeToolDefinition.settings.multi_pass_depth.default_value = gcodeConfig?.multiPassDepth;
+                activeToolDefinition.settings.fixed_power.default_value = gcodeConfig?.fixedPower;
+            }
         }
-        if (headType === HEAD_LASER) {
-            activeToolDefinition.settings.fill_enabled.default_value = gcodeConfig?.fillEnabled;
-            activeToolDefinition.settings.movement_mode.default_value = gcodeConfig?.movementMode;
-            activeToolDefinition.settings.direction.default_value = gcodeConfig?.direction;
-            activeToolDefinition.settings.fill_interval.default_value = gcodeConfig?.fillInterval;
-            activeToolDefinition.settings.jog_speed.default_value = gcodeConfig?.jogSpeed;
-            activeToolDefinition.settings.work_speed.default_value = gcodeConfig?.workSpeed;
-            activeToolDefinition.settings.dwell_time.default_value = gcodeConfig?.dwellTime;
-            activeToolDefinition.settings.multi_passes.default_value = gcodeConfig?.multiPasses;
-            activeToolDefinition.settings.multi_pass_depth.default_value = gcodeConfig?.multiPassDepth;
-            activeToolDefinition.settings.fixed_power.default_value = gcodeConfig?.fixedPower;
-        }
+
         setCurrentToolDefinition(activeToolDefinition);
     };
 
     const [toolPath, setToolPath] = useState(toolpath);
     useEffect(() => {
-        console.log('toolpath', toolpath);
         setToolPath(toolpath);
         if (!_.isNull(toolpath)) {
-            updateCncActiveToolDefinition(toolpath);
+            updateActiveToolDefinition(toolpath);
         }
     }, [toolpath]);
 

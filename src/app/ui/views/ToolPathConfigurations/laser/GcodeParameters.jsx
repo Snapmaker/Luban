@@ -48,7 +48,6 @@ class GcodeParameters extends PureComponent {
             ...gcodeDefinition,
             ...newSettings
         };
-        console.log('allDefinition', newSettings, allDefinition);
         Object.keys(allDefinition).forEach((key) => {
             // isGcodeConfig is true means to use updateGcodeConfig, false means to use updateToolConfig
             allDefinition[key].isGcodeConfig = true;

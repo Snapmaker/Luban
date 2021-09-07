@@ -94,12 +94,11 @@ class LaserParameters extends PureComponent {
     };
 
     render() {
-        const { toolPath, multipleEngine, activeToolDefinition } = this.props;
+        const { toolPath, multipleEngine } = this.props;
 
         const { name, type, useLegacyEngine, gcodeConfig } = toolPath;
 
         const { fillEnabled } = gcodeConfig;
-        console.log('activeToolDefinition', activeToolDefinition.settings.jog_speed.default_value, fillEnabled, typeof fillEnabled);
 
         // eslint-disable-next-line no-unused-vars
         const isSVG = type === TOOLPATH_TYPE_VECTOR;

@@ -48,7 +48,6 @@ function LaserPresentManager({ closeToolManager, shouldSaveToolpath = false, sav
             if (shouldSaveToolpath) {
                 const newDefinition = toolDefinitions.find(d => d.definitionId === definitionId);
                 saveToolPath && saveToolPath(newDefinition);
-                console.log('newDefinition', newDefinition);
                 setCurrentToolDefinition && setCurrentToolDefinition(newDefinition);
             }
             dispatch(editorActions.refreshToolPathPreview(HEAD_LASER));
