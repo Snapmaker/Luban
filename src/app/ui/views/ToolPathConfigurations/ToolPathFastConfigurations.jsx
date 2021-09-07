@@ -19,6 +19,7 @@ import {
     HEAD_CNC,
     HEAD_LASER
 } from '../../../constants';
+import PresentSelector from './laser/PresentSelector';
 
 function getFastEditSettingsKeys(toolPath) {
     const { headType, type: toolPathType, gcodeConfig } = toolPath;
@@ -99,19 +100,27 @@ function ToolPathFastConfigurations(props) {
         };
         const definition = toolDefinition;
         if (definition) {
-            toolParams.definitionId = definition.definitionId;
-            toolParams.definitionName = definition.name;
-            toolParams.toolDiameter = definition.settings.diameter.default_value;
-            toolParams.toolAngle = definition.settings.angle.default_value;
-            toolParams.toolShaftDiameter = definition.settings.shaft_diameter.default_value;
+            if (props.headType === HEAD_CNC) {
+                toolParams.definitionId = definition.definitionId;
+                toolParams.definitionName = definition.name;
+                toolParams.toolDiameter = definition.settings.diameter.default_value;
+                toolParams.toolAngle = definition.settings.angle.default_value;
+                toolParams.toolShaftDiameter = definition.settings.shaft_diameter.default_value;
 
-            for (const key of Object.keys(definition.settings)) {
-                if (['diameter', 'angle', 'shaft_diameter'].includes(key)) {
-                    continue;
+                for (const key of Object.keys(definition.settings)) {
+                    if (['diameter', 'angle', 'shaft_diameter'].includes(key)) {
+                        continue;
+                    }
+                    gcodeConfig[toHump(key)] = definition.settings[key].default_value;
                 }
-                gcodeConfig[toHump(key)] = definition.settings[key].default_value;
+            }
+            if (props.headType === HEAD_LASER) {
+                for (const key of Object.keys(definition.settings)) {
+                    gcodeConfig[toHump(key)] = definition.settings[key].default_value;
+                }
             }
         }
+
 
         const newToolPath = {
             ...toolPath,
@@ -296,6 +305,17 @@ function ToolPathFastConfigurations(props) {
                 <div className="padding-horizontal-16 padding-vertical-16">
                     {toolPath.headType === HEAD_CNC && currentToolDefinition && (
                         <ToolSelector
+                            toolDefinition={currentToolDefinition}
+                            setCurrentToolDefinition={handleToolSelectorChange}
+                            toolDefinitions={toolDefinitions}
+                            isModifiedDefinition={false}
+                            shouldSaveToolpath
+                            saveToolPath={saveToolPath}
+                            setCurrentValueAsProfile={() => {}}
+                        />
+                    )}
+                    {toolPath.headType === HEAD_LASER && currentToolDefinition && (
+                        <PresentSelector
                             toolDefinition={currentToolDefinition}
                             setCurrentToolDefinition={handleToolSelectorChange}
                             toolDefinitions={toolDefinitions}
