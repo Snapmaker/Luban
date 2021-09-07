@@ -36,7 +36,6 @@ export default {
         {
             id: 'cut',
             label: 'Cut',
-            accelerator: 'CommandOrControl+X',
             enabled: true,
             click(menuItem, browserWindow) {
                 if (isElectron()) {
@@ -49,28 +48,14 @@ export default {
         {
             id: 'copy',
             label: 'Copy',
-            submenu: [
-                {
-                    id: 'copy',
-                    role: 'copy',
-                    label: 'Copy Origin',
-                    accelerator: 'CommandOrControl+C'
-                },
-                {
-                    id: 'copy',
-                    label: 'Copy Model',
-                    accelerator: 'CommandOrControl+C',
-                    enabled: true,
-                    selector: 'copy:',
-                    click(menuItem, browserWindow) {
-                        if (isElectron()) {
-                            browserWindow.webContents.send('shortcut', 'mod+c');
-                        } else {
-                            UniApi.Event.emit('appbar-menu:shortcut', 'mod+c');
-                        }
-                    }
+            enabled: true,
+            click(menuItem, browserWindow) {
+                if (isElectron()) {
+                    browserWindow.webContents.send('shortcut', 'mod+c');
+                } else {
+                    UniApi.Event.emit('appbar-menu:shortcut', 'mod+c');
                 }
-            ]
+            }
         },
         {
             id: 'duplicate',
@@ -88,27 +73,14 @@ export default {
         {
             id: 'paste',
             label: 'Paste',
-            submenu: [
-                {
-                    id: 'paste',
-                    role: 'paste',
-                    label: 'Paste Origin',
-                    accelerator: 'CommandOrControl+V'
-                },
-                {
-                    id: 'copy',
-                    label: 'Paste Model',
-                    accelerator: 'CommandOrControl+V',
-                    enabled: true,
-                    click(menuItem, browserWindow) {
-                        if (isElectron()) {
-                            browserWindow.webContents.send('shortcut', 'mod+v');
-                        } else {
-                            UniApi.Event.emit('appbar-menu:shortcut', 'mod+v');
-                        }
-                    }
+            enabled: true,
+            click(menuItem, browserWindow) {
+                if (isElectron()) {
+                    browserWindow.webContents.send('shortcut', 'mod+v');
+                } else {
+                    UniApi.Event.emit('appbar-menu:shortcut', 'mod+v');
                 }
-            ]
+            }
         },
         { id: 'line-2', type: 'separator' },
         {
@@ -150,6 +122,31 @@ export default {
                     UniApi.Event.emit('appbar-menu:shortcut', 'del');
                 }
             }
+        },
+        { id: 'line-4', type: 'separator' },
+        {
+            id: 'text-editor',
+            label: 'Text-editor',
+            submenu: [
+                {
+                    id: 'cut original',
+                    role: 'cut',
+                    label: 'Cut Original',
+                    accelerator: 'CommandOrControl+X'
+                },
+                {
+                    id: 'copy original',
+                    role: 'copy',
+                    label: 'Copy Original',
+                    accelerator: 'CommandOrControl+C'
+                },
+                {
+                    id: 'paste original',
+                    role: 'paste',
+                    label: 'Paste Original',
+                    accelerator: 'CommandOrControl+V'
+                }
+            ]
         }
     ]
 };

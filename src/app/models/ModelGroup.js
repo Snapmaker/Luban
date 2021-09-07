@@ -642,7 +642,7 @@ class ModelGroup extends EventEmitter {
             ThreeUtils.liftObjectOnlyChildMatrix(this.selectedGroup);
             this.selectedGroup.uniformScalingState = this.selectedGroup.children[0].uniformScalingState;
         } else {
-            this.selectedGroup.uniformScalingState = true;
+            // this.selectedGroup.uniformScalingState = true;
             const p = this.calculateSelectedGroupPosition(this.selectedGroup);
             // set selected group position need to remove children temporarily
             const children = [...this.selectedGroup.children];
@@ -1025,6 +1025,10 @@ class ModelGroup extends EventEmitter {
             this.selectedGroup.uniformScalingState = uniformScalingState;
             if (this.selectedGroup.children.length === 1) {
                 this.selectedGroup.children[0].uniformScalingState = uniformScalingState;
+            } else {
+                this.selectedGroup.children.forEach((item) => {
+                    item.uniformScalingState = uniformScalingState;
+                });
             }
         }
         if (rotationX !== undefined) {

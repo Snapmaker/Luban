@@ -11,10 +11,13 @@ import UniApi from '../../lib/uni-api';
 import i18n from '../../lib/i18n';
 
 export const ACTION_UPDATE_STATE = 'appbar-menu/ACTION_UPDATE_STATE';
-const DEFAULT_LABELS = [
-    'Copy',
-    'Cut',
-    'Paste'
+const DEFAULT_IDS = [
+    'copy original',
+    'cut original',
+    'paste original',
+    'copy',
+    'cut',
+    'paste'
 ];
 const INITIAL_STATE = {
     menuDisabledCount: 0,
@@ -78,10 +81,9 @@ export const actions = {
         let menuDisabledCount = getState().appbarMenu.menuDisabledCount;
         menuDisabledCount++;
         traverseMenu(menu, (item) => {
-            if (!includes(DEFAULT_LABELS, item.label)) {
+            if (!includes(DEFAULT_IDS, item.id)) {
                 item.enabled = false;
             } else {
-                console.log('enableMenu, ', menu, item);
                 item.enabled = true;
             }
         });
@@ -243,7 +245,9 @@ export const actions = {
                             item.enabled = false;
                         }
                         break;
-                    default: break;
+                    default:
+                        item.enabled = true;
+                        break;
                 }
             }
         }
@@ -281,9 +285,6 @@ export const actions = {
                     default: item.enabled = true; break;
                 }
             });
-            // editMenu.submenu.forEach(item => {
-            //     item.enabled = false;
-            // });
             helpMenu.submenu.forEach(item => {
                 switch (item.id) {
                     case 'guided-tour':

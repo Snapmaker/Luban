@@ -141,7 +141,8 @@ function Control({ widgetId, widgetActions: _widgetActions }) {
     const [state, setState] = useState(() => getInitialState());
     const prevState = usePrevious({
         customDistance: state.customDistance,
-        units: state.units
+        units: state.units,
+        bbox: state.bbox
     });
 
     const actions = {
@@ -251,7 +252,6 @@ function Control({ widgetId, widgetActions: _widgetActions }) {
         },
         runBoundary: () => {
             const { bbox } = state;
-
             const gcode = [];
             if (headType === HEAD_TYPE_CNC) {
                 gcode.push('G91', 'G0 Z5 F400', 'G90');
@@ -296,7 +296,12 @@ function Control({ widgetId, widgetActions: _widgetActions }) {
                 return;
             }
             const initialState = getInitialState();
-            setState({ ...state, ...initialState });
+            const newState = {
+                ...state,
+                ...initialState,
+                bbox: prevState.bbox
+            };
+            setState(newState);
         }
     };
 
@@ -320,7 +325,7 @@ function Control({ widgetId, widgetActions: _widgetActions }) {
         return () => {
             removeControllerEvents();
         };
-    }, []);
+    }, [prevState]);
 
     useEffect(() => {
         const { keypadJogging, selectedAxis } = state;

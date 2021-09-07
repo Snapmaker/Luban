@@ -7,8 +7,9 @@ import _ from 'lodash';
 import i18n from '../../../lib/i18n';
 import { actions as editorActions } from '../../../flux/editor';
 import Anchor from '../../components/Anchor';
-// import CncParameters from './cnc/CncParameters';
-import { toHump } from '../../../../shared/lib/utils';
+import modal from '../../../lib/modal';
+import { Button } from '../../components/Buttons';
+import { toHump, toLine } from '../../../../shared/lib/utils';
 import ToolParameters from './cnc/ToolParameters';
 import ToolSelector from './cnc/ToolSelector';
 
@@ -19,6 +20,12 @@ import {
     HEAD_LASER
 } from '../../../constants';
 import PresentSelector from './laser/PresentSelector';
+
+function ifDefinitionModified(activeToolListDefinition, currentToolDefinition) {
+    return activeToolListDefinition.settings && !Object.entries(activeToolListDefinition.settings).every(([key, setting]) => {
+        return currentToolDefinition && currentToolDefinition.settings[key].default_value === setting.default_value;
+    });
+}
 
 function getFastEditSettingsKeys(toolPath) {
     const { headType, type: toolPathType, gcodeConfig } = toolPath;
@@ -185,6 +192,38 @@ function ToolPathFastConfigurations({ setEditingToolpath, headType, toolpath }) 
     }, [toolpath]);
 
     const actions = {
+        setCurrentValueAsProfile: () => {
+            const activeToolDefinition = currentToolDefinition;
+            const definitionsWithSameCategory = toolDefinitions.filter(d => d.category === activeToolDefinition.category);
+            // make sure name is not repeated
+            while (definitionsWithSameCategory.find(d => d.name === activeToolDefinition.name)) {
+                activeToolDefinition.name = `#${activeToolDefinition.name}`;
+            }
+
+            const popupActions = modal({
+                title: i18n._('Create Profile'),
+                body: (
+                    <React.Fragment>
+                        <p>{i18n._('Enter Tool Name')}</p>
+                    </React.Fragment>
+
+                ),
+                defaultInputValue: activeToolDefinition.name,
+                footer: (
+                    <Button
+                        priority="level-two"
+                        className="margin-left-8"
+                        width="96px"
+                        onClick={async () => {
+                            await actions.onDuplicateToolNameDefinition(popupActions.getInputValue());
+                            popupActions.close();
+                        }}
+                    >
+                        {i18n._('OK')}
+                    </Button>
+                )
+            });
+        },
         updateToolConfig: async (settingName, value) => {
             const option = {};
             option[toHump(settingName)] = value;
@@ -197,6 +236,9 @@ function ToolPathFastConfigurations({ setEditingToolpath, headType, toolpath }) 
             };
             dispatch(editorActions.saveToolPath(headType, newToolPath));
             dispatch(editorActions.refreshToolPathPreview(headType));
+        },
+        checkIfDefinitionModified() {
+            return ifDefinitionModified(activeToolListDefinition, currentToolDefinition);
         },
         onDuplicateToolNameDefinition: async (inputValue) => {
             const newToolDefinition = {
@@ -253,6 +295,17 @@ function ToolPathFastConfigurations({ setEditingToolpath, headType, toolpath }) 
                     ...option
                 }
             };
+            // todo merge 'updateGcodeConfig' and 'updateToolConfig' function
+            if (currentToolDefinition.settings) {
+                Object.entries(option).forEach(([itemKey, itemValue]) => {
+                    const newKey = toLine(itemKey);
+                    if (currentToolDefinition.settings[newKey]) {
+                        currentToolDefinition.settings[newKey].default_value = itemValue;
+                    }
+                });
+                setCurrentToolDefinition(currentToolDefinition);
+            }
+
             dispatch(editorActions.saveToolPath(headType, newToolPath));
             dispatch(editorActions.refreshToolPathPreview(headType));
         }
@@ -283,7 +336,7 @@ function ToolPathFastConfigurations({ setEditingToolpath, headType, toolpath }) 
             }
         });
     }
-    // const isModifiedDefinition = actions.checkIfDefinitionModified();
+    const isModifiedDefinition = actions.checkIfDefinitionModified();
     return (
         <React.Fragment>
             <div className={classNames(
@@ -313,10 +366,10 @@ function ToolPathFastConfigurations({ setEditingToolpath, headType, toolpath }) 
                             toolDefinition={currentToolDefinition}
                             setCurrentToolDefinition={handleSelectorChange}
                             toolDefinitions={toolDefinitions}
-                            isModifiedDefinition={false}
+                            isModifiedDefinition={isModifiedDefinition}
                             shouldSaveToolpath
                             saveToolPath={saveToolPath}
-                            setCurrentValueAsProfile={() => {}}
+                            setCurrentValueAsProfile={actions.setCurrentValueAsProfile}
                         />
                     )}
                     <ToolParameters
