@@ -8,26 +8,30 @@ import Anchor from '../components/Anchor';
 import SvgIcon from '../components/SvgIcon';
 import { normalizeNameDisplay } from '../../lib/normalize-range';
 
+let svgName = '';
+let modelName = '';
+const objectList3d = 'ObjectList3d';
+const objectListShape = 'ObjectListShape';
+const objectListPicture = 'ObjectListPicture';
 function ModelItem({ model, visible, isSelected, styles, onSelect, onToggleVisible, inProgress, placment }) {
     if (!model) {
         return null;
     }
-    let modelName = '';
-    let svgName = '';
+
     if (model.headType === '3dp') {
         modelName = path.basename(model.modelName);
-        svgName = 'ObjectList3d';
+        svgName = objectList3d;
     } else {
         const taskInfo = model.getTaskInfo();
         modelName = taskInfo.modelName;
         svgName = (() => {
             if (taskInfo.sourceType === 'text') {
-                return 'ObjectListShape';
+                return objectListShape;
             }
             if (taskInfo.mode !== 'vector') {
-                return 'ObjectListPicture';
+                return objectListPicture;
             }
-            return 'ObjectListShape';
+            return objectListShape;
         })();
     }
     const suffixLength = 7;
