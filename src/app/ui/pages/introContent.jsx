@@ -75,7 +75,6 @@ const laserCncIntroStepFive = (text1, text2, text3) => {
 };
 const laserCncIntroStepSix = (text1, text2, isRotate, series, headType) => {
     let imgSrc = '';
-    console.log({ isRotate, series, headType });
     if (isRotate) {
         imgSrc = headType === 'cnc' ? '/resources/images/guide-tours/cnc_4_axis_priview.png' : '/resources/images/guide-tours/laser_4_axis_priview.png';
     } else {

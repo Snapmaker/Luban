@@ -9,7 +9,7 @@ import styles from './styles.styl';
 class SwitchWrapper extends PureComponent {
     static propTypes = {
         className: PropTypes.string,
-        checked: PropTypes.bool.isRequired,
+        checked: PropTypes.bool,
         checkedChildren: PropTypes.string,
         unCheckedChildren: PropTypes.string
     };

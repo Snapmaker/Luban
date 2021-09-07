@@ -6,7 +6,7 @@ import TipTrigger from '../../../components/TipTrigger';
 import { NumberInput as Input } from '../../../components/Input';
 import { TOOLPATH_TYPE_VECTOR } from '../../../../constants';
 import Select from '../../../components/Select';
-// import Checkbox from '../../../components/Checkbox';
+import Checkbox from '../../../components/Checkbox';
 import Switch from '../../../components/Switch';
 import { toHump, toLine } from '../../../../../shared/lib/utils';
 
@@ -56,7 +56,7 @@ function SettingItem(props) {
         >
             <div key={settingName} className="position-re sm-flex justify-space-between height-32 margin-vertical-8">
                 <span className="sm-flex-auto sm-flex-order-negative main-text-normal">{i18n._(label)}</span>
-                {type === 'bool' && (
+                {type === 'bool-switch' && (
                     <div className="height-32">
                         <Switch
                             className="align-r"
@@ -73,6 +73,21 @@ function SettingItem(props) {
                             }}
                         />
                     </div>
+                )}
+                {type === 'bool' && (
+                    <Checkbox
+                        className="align-r"
+                        checked={defaultValue}
+                        onChange={(event) => {
+                            if (setting.isGcodeConfig) {
+                                const gcodeOptions = {};
+                                gcodeOptions[toHump(settingName)] = event.target.checked;
+                                updateGcodeConfig(gcodeOptions);
+                            } else {
+                                updateToolConfig(toLine(settingName), event.target.checked);
+                            }
+                        }}
+                    />
                 )}
                 {type === 'float' && (
                     <Input
