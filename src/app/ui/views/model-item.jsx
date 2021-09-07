@@ -13,21 +13,21 @@ function ModelItem({ model, visible, isSelected, styles, onSelect, onToggleVisib
         return null;
     }
     let modelName = '';
-    let modelIcon = '';
+    let svgName = '';
     if (model.headType === '3dp') {
         modelName = path.basename(model.modelName);
-        modelIcon = styles.iconShape;
+        svgName = 'ObjectList3d';
     } else {
         const taskInfo = model.getTaskInfo();
         modelName = taskInfo.modelName;
-        modelIcon = (() => {
+        svgName = (() => {
             if (taskInfo.sourceType === 'text') {
-                return styles.iconText;
+                return 'ObjectListShape';
             }
             if (taskInfo.mode !== 'vector') {
-                return styles.iconPic;
+                return 'ObjectListPicture';
             }
-            return styles.iconShape;
+            return 'ObjectListShape';
         })();
     }
     const suffixLength = 7;
@@ -56,13 +56,10 @@ function ModelItem({ model, visible, isSelected, styles, onSelect, onToggleVisib
                     )}
                     onClick={(event) => onSelect(model, event)}
                 >
-                    <span
-                        className={classNames(
-                            'height-24',
-                            'width-24',
-                            styles.icon,
-                            modelIcon
-                        )}
+                    <SvgIcon
+                        type={['static']}
+                        name={svgName}
+                        className="margin-right-4"
                     />
                     <span className={classNames(styles['prefix-name'])}>
                         {prefixName}

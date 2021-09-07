@@ -23,7 +23,7 @@ function unblockScrolling() {
     bodyDom.style.overflowY = 'auto';
 }
 const ModalWrapper = React.memo(({
-    centered,
+    centered = true,
     modalWrapperClassName = 'modal-wrapper',
     tile = false,
     visible = true,

@@ -83,7 +83,7 @@ class ManualCalibration extends PureComponent {
 
     render() {
         return (
-            <Modal>
+            <Modal onClose={this.actions.previousPanel}>
                 <div className="clearfix" />
                 <Modal.Header>
                     <div className={styles['laser-set-background-calibration-title']}>

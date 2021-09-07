@@ -14,7 +14,7 @@ const getWidgetByName = (name, allWidgets) => {
 
 export default function renderWidgetList(tab, container, widgetIds, Widgets, listActions, widgetProps) {
     return (
-        <div className={classNames(`${widgetProps.headType === '3dp' ? 'threedp' : widgetProps.headType}-widget-list-intro`, 'overflow-y-auto')} style={{ height: `${widgetProps.headType === '3dp' ? 'calc(100vh - 185px)' : `${widgetProps.headType === 'cnc' || widgetProps.headType === 'laser' ? 'calc(100vh - 230px)' : 'auto'}`}` }}>
+        <div className={classNames(`scroll-bar-none ${widgetProps.headType === '3dp' ? 'threedp' : widgetProps.headType}-widget-list-intro`, 'overflow-y-auto')} style={{ height: `${widgetProps.headType === '3dp' ? 'calc(100vh - 185px)' : `${widgetProps.headType === 'cnc' || widgetProps.headType === 'laser' ? 'calc(100vh - 230px)' : 'auto'}`}` }}>
             <WidgetList
                 tab={tab}
                 container={container}
