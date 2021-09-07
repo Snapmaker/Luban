@@ -49,16 +49,28 @@ export default {
         {
             id: 'copy',
             label: 'Copy',
-            accelerator: 'CommandOrControl+C',
-            selector: 'copy:',
-            enabled: true,
-            click(menuItem, browserWindow) {
-                if (isElectron()) {
-                    browserWindow.webContents.send('shortcut', 'mod+c');
-                } else {
-                    UniApi.Event.emit('appbar-menu:shortcut', 'mod+c');
+            submenu: [
+                {
+                    id: 'copy',
+                    role: 'copy',
+                    label: 'Copy Origin',
+                    accelerator: 'CommandOrControl+C'
+                },
+                {
+                    id: 'copy',
+                    label: 'Copy Model',
+                    accelerator: 'CommandOrControl+C',
+                    enabled: true,
+                    selector: 'copy:',
+                    click(menuItem, browserWindow) {
+                        if (isElectron()) {
+                            browserWindow.webContents.send('shortcut', 'mod+c');
+                        } else {
+                            UniApi.Event.emit('appbar-menu:shortcut', 'mod+c');
+                        }
+                    }
                 }
-            }
+            ]
         },
         {
             id: 'duplicate',
@@ -76,16 +88,27 @@ export default {
         {
             id: 'paste',
             label: 'Paste',
-            accelerator: 'CommandOrControl+V',
-            selector: 'paste:',
-            enabled: true,
-            click(menuItem, browserWindow) {
-                if (isElectron()) {
-                    browserWindow.webContents.send('shortcut', 'mod+v');
-                } else {
-                    UniApi.Event.emit('appbar-menu:shortcut', 'mod+v');
+            submenu: [
+                {
+                    id: 'paste',
+                    role: 'paste',
+                    label: 'Paste Origin',
+                    accelerator: 'CommandOrControl+V'
+                },
+                {
+                    id: 'copy',
+                    label: 'Paste Model',
+                    accelerator: 'CommandOrControl+V',
+                    enabled: true,
+                    click(menuItem, browserWindow) {
+                        if (isElectron()) {
+                            browserWindow.webContents.send('shortcut', 'mod+v');
+                        } else {
+                            UniApi.Event.emit('appbar-menu:shortcut', 'mod+v');
+                        }
+                    }
                 }
-            }
+            ]
         },
         { id: 'line-2', type: 'separator' },
         {

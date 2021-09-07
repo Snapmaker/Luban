@@ -1,5 +1,5 @@
 import isElectron from 'is-electron';
-import { cloneDeep, reverse } from 'lodash';
+import { cloneDeep, reverse, includes } from 'lodash';
 import { getMenuItems } from '../../config/menu';
 import { MACHINE_SERIES } from '../../constants';
 import {
@@ -11,7 +11,11 @@ import UniApi from '../../lib/uni-api';
 import i18n from '../../lib/i18n';
 
 export const ACTION_UPDATE_STATE = 'appbar-menu/ACTION_UPDATE_STATE';
-
+const DEFAULT_LABELS = [
+    'Copy',
+    'Cut',
+    'Paste'
+];
 const INITIAL_STATE = {
     menuDisabledCount: 0,
     currentModalPath: null, // used for HomePage and Workspace modal
@@ -74,8 +78,12 @@ export const actions = {
         let menuDisabledCount = getState().appbarMenu.menuDisabledCount;
         menuDisabledCount++;
         traverseMenu(menu, (item) => {
-            console.log('disableMenu, ', menu, item);
-            item.enabled = false;
+            if (!includes(DEFAULT_LABELS, item.label)) {
+                item.enabled = false;
+            } else {
+                console.log('enableMenu, ', menu, item);
+                item.enabled = true;
+            }
         });
         dispatch({
             type: ACTION_UPDATE_STATE,
@@ -182,8 +190,8 @@ export const actions = {
                 gcodeFile,
                 hasModel,
                 modelGroup: {
-                    selectedModelArray,
-                    clipboard
+                    selectedModelArray
+                    // clipboard
                 }
             } = getState()[stateName];
             const {
@@ -217,15 +225,15 @@ export const actions = {
                     case 'select-all': item.enabled = true; break;
                     case 'undo': item.enabled = canUndo; break;
                     case 'redo': item.enabled = canRedo; break;
-                    case 'paste':
-                        if (clipboard.length > 0) {
-                            item.enabled = true;
-                        } else {
-                            item.enabled = false;
-                        }
-                        break;
-                    case 'cut':
-                    case 'copy':
+                    // case 'paste':
+                    //     if (clipboard.length > 0) {
+                    //         item.enabled = true;
+                    //     } else {
+                    //         item.enabled = false;
+                    //     }
+                    //     break;
+                    // case 'cut':
+                    // case 'copy':
                     case 'duplicate':
                     case 'unselect':
                     case 'delete':
@@ -250,7 +258,7 @@ export const actions = {
                     default: item.enabled = true; break;
                 }
             });
-            editMenu.submenu.forEach(item => { item.enabled = false; });
+            // editMenu.submenu.forEach(item => { item.enabled = false; });
             helpMenu.submenu.forEach(item => {
                 switch (item.id) {
                     case 'guided-tour':
@@ -273,9 +281,9 @@ export const actions = {
                     default: item.enabled = true; break;
                 }
             });
-            editMenu.submenu.forEach(item => {
-                item.enabled = false;
-            });
+            // editMenu.submenu.forEach(item => {
+            //     item.enabled = false;
+            // });
             helpMenu.submenu.forEach(item => {
                 switch (item.id) {
                     case 'guided-tour':
