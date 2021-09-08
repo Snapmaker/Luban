@@ -106,6 +106,7 @@ const INITIAL_STATE = {
 
     // check to remove models
     removingModelsWarning: false,
+    removingModelsWarningCallback: () => {},
     emptyToolPaths: [],
 
     // check not to duplicated create event

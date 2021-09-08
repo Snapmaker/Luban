@@ -148,6 +148,7 @@ const ToolPathListBox = (props) => {
     const displayedType = useSelector(state => state[props.headType]?.displayedType);
     const selectedModelArray = useSelector(state => state[props.headType]?.modelGroup?.getSelectedModelArray());
     const dispatch = useDispatch();
+    console.log(selectedToolPathIDArray);
 
     const selectedToolPathId = firstSelectedToolpath.id;
     const [editingToolpath, setEditingToolpath] = useState(null);
@@ -288,59 +289,6 @@ const ToolPathListBox = (props) => {
                                 />
                             );
                         })}
-                        <ContextMenu
-                            id="toolPathListBoxContextmenu"
-                            ref={contextMenuRef}
-                            menuItems={
-                                [
-                                    {
-                                        type: 'item',
-                                        label: i18n._('Edit'),
-                                        disabled: contextMenuDisabled,
-                                        onClick: () => {
-                                            setEditingToolpath(firstSelectedToolpath);
-                                        }
-                                    },
-                                    {
-                                        type: 'item',
-                                        label: i18n._('Delete'),
-                                        disabled: contextMenuDisabled,
-                                        onClick: () => actions.deleteToolPath(selectedToolPathId)
-                                    },
-                                    {
-                                        type: 'subMenu',
-                                        label: i18n._('Sort'),
-                                        disabled: contextMenuDisabled || contextMenuArrangementDisabled,
-                                        items: [
-                                            {
-                                                type: 'item',
-                                                label: i18n._('Prioritize'),
-                                                disabled: contextMenuDisabled,
-                                                onClick: () => actions.toolPathToUp(selectedToolPathIDArray)
-                                            },
-                                            {
-                                                type: 'item',
-                                                label: i18n._('Deprioritize'),
-                                                disabled: contextMenuDisabled,
-                                                onClick: () => actions.toolPathToDown(selectedToolPathIDArray)
-                                            },
-                                            {
-                                                type: 'item',
-                                                label: i18n._('Top'),
-                                                disabled: contextMenuDisabled,
-                                                onClick: () => actions.toolPathToTop(selectedToolPathIDArray)
-                                            },
-                                            {
-                                                type: 'item',
-                                                label: i18n._('Bottom'),
-                                                disabled: contextMenuDisabled,
-                                                onClick: () => actions.toolPathToBottom(selectedToolPathIDArray)
-                                            }
-                                        ]
-                                    }
-                                ]
-                            }
-                        />
                     </div>
                 </div>
                 <div className={classNames(
@@ -401,6 +349,59 @@ const ToolPathListBox = (props) => {
                     </Button>
                 </div>
             </div>
+            <ContextMenu
+                id="toolPathListBoxContextmenu"
+                ref={contextMenuRef}
+                menuItems={
+                    [
+                        {
+                            type: 'item',
+                            label: i18n._('Edit'),
+                            disabled: contextMenuDisabled,
+                            onClick: () => {
+                                setEditingToolpath(firstSelectedToolpath);
+                            }
+                        },
+                        {
+                            type: 'item',
+                            label: i18n._('Delete'),
+                            disabled: contextMenuDisabled,
+                            onClick: () => actions.deleteToolPath(selectedToolPathId)
+                        },
+                        {
+                            type: 'subMenu',
+                            label: i18n._('Sort'),
+                            disabled: contextMenuDisabled || contextMenuArrangementDisabled,
+                            items: [
+                                {
+                                    type: 'item',
+                                    label: i18n._('Prioritize'),
+                                    disabled: contextMenuDisabled,
+                                    onClick: () => actions.toolPathToUp(selectedToolPathIDArray)
+                                },
+                                {
+                                    type: 'item',
+                                    label: i18n._('Deprioritize'),
+                                    disabled: contextMenuDisabled,
+                                    onClick: () => actions.toolPathToDown(selectedToolPathIDArray)
+                                },
+                                {
+                                    type: 'item',
+                                    label: i18n._('Top'),
+                                    disabled: contextMenuDisabled,
+                                    onClick: () => actions.toolPathToTop(selectedToolPathIDArray)
+                                },
+                                {
+                                    type: 'item',
+                                    label: i18n._('Bottom'),
+                                    disabled: contextMenuDisabled,
+                                    onClick: () => actions.toolPathToBottom(selectedToolPathIDArray)
+                                }
+                            ]
+                        }
+                    ]
+                }
+            />
             {editingToolpath && (
                 <ToolPathConfigurations
                     headType={props.headType}

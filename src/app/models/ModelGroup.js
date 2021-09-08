@@ -1066,6 +1066,15 @@ class ModelGroup extends EventEmitter {
         this.selectedGroup.shouldUpdateBoundingbox = false;
 
         this.prepareSelectedGroup();
+        // update model's boundingbox which has supports
+        selectedModelArray.forEach((selected) => {
+            if (selected.supportTag && selected.isSelected) {
+                this.removeModelFromSelectedGroup(selected);
+                this.stickToPlateAndCheckOverstepped(selected.target);
+                this.addModelToSelectedGroup(selected);
+            }
+        });
+
         if (selectedModelArray.length === 0) {
             return {};
         } else {
@@ -1485,6 +1494,13 @@ class ModelGroup extends EventEmitter {
     setAllSelectedToolPathModelIDs() {
         this.selectedToolPathModelIDs = this.models.map(v => v.modelID);
         this.modelChanged();
+    }
+
+    stickToPlateAndCheckOverstepped(model) {
+        model.computeBoundingBox();
+        model.stickToPlate();
+        const overstepped = this._checkOverstepped(model);
+        model.setOversteppedAndSelected(overstepped, model.isSelected);
     }
 }
 

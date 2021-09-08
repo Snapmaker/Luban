@@ -20,13 +20,12 @@ export default class MoveOperation3D extends Operation {
             model.meshObject.parent.position.set(this.state.to.positionX, this.state.to.positionY, 0);
             model.meshObject.parent.updateMatrix();
             modelGroup.unselectAllModels();
+
+            modelGroup.stickToPlateAndCheckOverstepped(model.target);
         } else {
             model.meshObject.position.set(this.state.to.positionX, this.state.to.positionY, this.state.to.positionZ);
         }
-        model.computeBoundingBox();
-        model.stickToPlate();
-        const overstepped = modelGroup._checkOverstepped(model);
-        model.setOversteppedAndSelected(overstepped, model.isSelected);
+        modelGroup.stickToPlateAndCheckOverstepped(model);
     }
 
     undo() {
@@ -38,12 +37,11 @@ export default class MoveOperation3D extends Operation {
             model.meshObject.parent.position.set(this.state.from.positionX, this.state.from.positionY, 0);
             model.meshObject.parent.updateMatrix();
             modelGroup.unselectAllModels();
+
+            modelGroup.stickToPlateAndCheckOverstepped(model.target);
         } else {
             model.meshObject.position.set(this.state.from.positionX, this.state.from.positionY, this.state.from.positionZ);
         }
-        model.computeBoundingBox();
-        model.stickToPlate();
-        const overstepped = modelGroup._checkOverstepped(model);
-        model.setOversteppedAndSelected(overstepped, model.isSelected);
+        modelGroup.stickToPlateAndCheckOverstepped(model);
     }
 }

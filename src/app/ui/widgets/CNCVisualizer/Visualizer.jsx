@@ -690,7 +690,7 @@ const mapDispatchToProps = (dispatch) => {
         onFlipSelectedModel: (flip) => dispatch(editorActions.onFlipSelectedModel('cnc', flip)),
         selectModelInProcess: (intersect, selectEvent) => dispatch(editorActions.selectModelInProcess('cnc', intersect, selectEvent)),
         duplicateSelectedModel: () => dispatch(editorActions.duplicateSelectedModel('cnc')),
-        removeSelectedModel: () => dispatch(editorActions.checkToRemoveSelectedModels('cnc')),
+        removeSelectedModel: () => dispatch(editorActions.removeSelectedModelsByCallback('cnc')),
 
         cut: () => dispatch(editorActions.cut('cnc')),
         copy: () => dispatch(editorActions.copy('cnc')),

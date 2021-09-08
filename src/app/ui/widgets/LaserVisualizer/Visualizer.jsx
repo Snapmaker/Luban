@@ -645,7 +645,7 @@ const mapDispatchToProps = (dispatch) => {
         onSetSelectedModelPosition: (position) => dispatch(editorActions.onSetSelectedModelPosition('laser', position)),
         onFlipSelectedModel: (flip) => dispatch(editorActions.onFlipSelectedModel('laser', flip)),
         selectModelInProcess: (intersect, selectEvent) => dispatch(editorActions.selectModelInProcess('laser', intersect, selectEvent)),
-        removeSelectedModel: () => dispatch(editorActions.checkToRemoveSelectedModels('laser')),
+        removeSelectedModel: () => dispatch(editorActions.removeSelectedModelsByCallback('laser')),
         duplicateSelectedModel: () => dispatch(editorActions.duplicateSelectedModel('laser')),
 
         cut: () => dispatch(editorActions.cut('laser')),

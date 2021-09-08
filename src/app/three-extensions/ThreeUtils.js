@@ -229,7 +229,8 @@ const ThreeUtils = {
             if (!cache) {
                 cache = {
                     lastMatrix: new THREE.Matrix4(),
-                    lastBbox: new THREE.Box3()
+                    lastBbox: new THREE.Box3(),
+                    childrenMatrix: []
                 };
                 caches[obj.uuid] = cache;
             }
@@ -237,7 +238,9 @@ const ThreeUtils = {
 
             obj.updateMatrixWorld();
             if (obj.geometry) {
-                if (lastBbox.isEmpty() || !lastMatrix.equals(obj.matrixWorld)) {
+                const isChildrenMatrixChanged = obj.children.some((child, j) => !(cache.childrenMatrix[j] && child.matrixWorld.equals(cache.childrenMatrix[j])));
+                if (lastBbox.isEmpty() || !lastMatrix.equals(obj.matrixWorld) || isChildrenMatrixChanged) {
+                    cache.childrenMatrix = obj.children.map(child => child.matrixWorld.clone());
                     lastBbox.copy(initialBox);
                     compute(obj, lastBbox);
                     lastMatrix.copy(obj.matrixWorld);
