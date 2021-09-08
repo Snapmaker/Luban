@@ -118,6 +118,7 @@ function LaserPresentManager({ closeToolManager, shouldSaveToolpath = false, sav
             disableCategory={false}
             managerTitle="Present Settings"
             selectedId={selectedId}
+            headType={HEAD_LASER}
         />
     );
 }

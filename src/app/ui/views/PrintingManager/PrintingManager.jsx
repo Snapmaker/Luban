@@ -131,6 +131,7 @@ function PrintingManager() {
             allDefinitions={allDefinitions}
             managerTitle={managerDisplayType === PRINTING_MANAGER_TYPE_MATERIAL ? 'Material Settings' : 'Printing Settings'}
             selectedId={selectedIds[managerDisplayType].id}
+            headType="printing"
         />
     );
 }

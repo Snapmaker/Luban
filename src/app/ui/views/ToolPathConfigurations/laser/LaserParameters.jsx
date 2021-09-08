@@ -175,7 +175,7 @@ class LaserParameters extends PureComponent {
                                             className="sm-parameter-row__select-md"
                                             clearable={false}
                                             menuContainerStyle={{ zIndex: 5 }}
-                                            name="line_direction"
+                                            name="method"
                                             options={[{
                                                 value: 'fill',
                                                 label: i18n._('Fill')
@@ -202,7 +202,7 @@ class LaserParameters extends PureComponent {
                                             className="sm-parameter-row__select-md"
                                             clearable={false}
                                             menuContainerStyle={{ zIndex: 5 }}
-                                            name="line_direction"
+                                            name="method"
                                             options={[{
                                                 value: true,
                                                 label: i18n._('Fill')

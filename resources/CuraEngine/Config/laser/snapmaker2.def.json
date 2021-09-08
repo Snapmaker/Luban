@@ -39,7 +39,8 @@
             "type": "float",
             "min": 0.01,
             "max": 10,
-            "unit": "mm"
+            "unit": "mm",
+            "enabled": "multi_passes > 1"
         },
         "fixed_power": {
             "default_value": 100,
@@ -58,7 +59,8 @@
             "options": {
                 "greyscale-line": "Line",
                 "greyscale-dot": "Dot"
-            }
+            },
+            "enabled": "resolveOrValue('fill_enabled') == 'true'"
         },
         "fill_interval": {
             "default_value": 0.25,
@@ -67,7 +69,8 @@
             "type": "float",
             "min": 0.05,
             "step": 0.01,
-            "unit": "mm"
+            "unit": "mm",
+            "enabled": "resolveOrValue('fill_enabled') == 'true'"
         },
         "dwell_time": {
             "default_value": 5,
@@ -77,7 +80,8 @@
             "min": 0.1,
             "max": 1000,
             "step": 0.1,
-            "unit": "ms/dot"
+            "unit": "ms/dot",
+            "enabled": "resolveOrValue('movement_mode') == 'greyscale-dot'"
         },
         "jog_speed": {
             "default_value": 2500,
@@ -100,7 +104,7 @@
                 "Diagonal2": "Diagonal2"
             },
             "type": "enum",
-            "enabled": "movement_mode = 'greyscale-line'"
+            "enabled": "resolveOrValue('fill_enabled') == 'true' and resolveOrValue('movement_mode') == 'greyscale-line'"
         }
     }
 }

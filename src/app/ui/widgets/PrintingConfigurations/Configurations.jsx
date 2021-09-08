@@ -57,7 +57,6 @@ function Configurations({ widgetActions }) {
             } else if (!value) {
                 printingCustomConfigs = printingCustomConfigs.filter((a) => a !== key);
             }
-            console.log('onChangeCustomConfig',);
             dispatch(machineActions.updatePrintingCustomConfigs(printingCustomConfigs));
         },
         displayModel: () => {
@@ -234,6 +233,7 @@ function Configurations({ widgetActions }) {
                                 type="checkbox"
                                 onChangeDefinition={actions.onChangeCustomConfig}
                                 onResetDefinition={actions.onResetDefinition}
+                                headType="printing"
                             />
                         </div>
                     </Modal.Body>

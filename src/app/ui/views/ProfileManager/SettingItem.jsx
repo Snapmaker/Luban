@@ -15,6 +15,9 @@ function SettingItem({ definitionKey, settings, isDefaultDefinition = () => true
     const { label, description, type, unit = '', enabled, options } = setting;
     const settingDefaultValue = setting.default_value;
     const isDefault = defaultValue && (defaultValue.value === settingDefaultValue);
+    if (label === 'Line Direction') {
+        console.log('direction', type, options, settings, enabled);
+    }
     if (typeof enabled === 'string') {
         if (enabled.indexOf(' and ') !== -1) {
             const andConditions = enabled.split(' and ').map(c => c.trim());
@@ -82,6 +85,7 @@ function SettingItem({ definitionKey, settings, isDefaultDefinition = () => true
                             result = true;
                         }
                     }
+                    console.log('condition', condition, m1, m2, enabledKey, settings[enabledKey], enabledValue);
                 }
             }
             if (!result) {
