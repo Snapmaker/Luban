@@ -19,7 +19,8 @@ function ModelItem({ model, visible, isSelected, styles, onSelect, onToggleVisib
         return null;
     }
 
-    if (model.headType === '3dp') {
+    // TODO: '3dp' for project file of "< version 4.1"
+    if (model.headType === '3dp' || model.headType === HEAD_PRINTING) {
         modelName = path.basename(model.modelName);
         svgName = objectList3d;
     } else {

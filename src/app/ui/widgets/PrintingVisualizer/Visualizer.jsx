@@ -6,7 +6,7 @@ import isEqual from 'lodash/isEqual';
 import { Vector3, Box3 } from 'three';
 
 import { shortcutActions, priorities, ShortcutManager } from '../../../lib/shortcut';
-import { EPSILON } from '../../../constants';
+import { EPSILON, HEAD_PRINTING } from '../../../constants';
 import i18n from '../../../lib/i18n';
 import modal from '../../../lib/modal';
 import ProgressBar from '../../components/ProgressBar';
@@ -607,7 +607,7 @@ const mapDispatchToProps = (dispatch) => ({
     recordAddOperation: (model) => dispatch(printingActions.recordAddOperation(model)),
     recordModelBeforeTransform: (modelGroup) => dispatch(printingActions.recordModelBeforeTransform(modelGroup)),
     recordModelAfterTransform: (transformMode, modelGroup) => dispatch(printingActions.recordModelAfterTransform(transformMode, modelGroup)),
-    clearOperationHistory: () => dispatch(operationHistoryActions.clear('printing')),
+    clearOperationHistory: () => dispatch(operationHistoryActions.clear(HEAD_PRINTING)),
 
     hideSelectedModel: () => dispatch(printingActions.hideSelectedModel()),
     destroyGcodeLine: () => dispatch(printingActions.destroyGcodeLine()),
@@ -618,8 +618,8 @@ const mapDispatchToProps = (dispatch) => ({
     cut: () => dispatch(printingActions.cut()),
     copy: () => dispatch(printingActions.copy()),
     paste: () => dispatch(printingActions.paste()),
-    undo: () => dispatch(printingActions.undo('printing')),
-    redo: () => dispatch(printingActions.redo('printing')),
+    undo: () => dispatch(printingActions.undo(HEAD_PRINTING)),
+    redo: () => dispatch(printingActions.redo(HEAD_PRINTING)),
     removeSelectedModel: () => dispatch(printingActions.removeSelectedModel()),
     removeAllModels: () => dispatch(printingActions.removeAllModels()),
     arrangeAllModels: () => dispatch(printingActions.arrangeAllModels()),

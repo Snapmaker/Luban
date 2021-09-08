@@ -151,17 +151,13 @@ export const actions = {
         if (!envObj) {
             envObj = JSON.parse(content);
         }
-        // const envObj = JSON.parse(content);
         let modActions = null;
         const modState = getState()[envHeadType];
         dispatch(operationHistoryActions.clear(envHeadType));
         if (envHeadType === HEAD_CNC || envHeadType === HEAD_LASER) {
-            // clear operation history
             modActions = editorActions;
         }
         if (envHeadType === HEAD_PRINTING) {
-            // clear operation history
-            dispatch(operationHistoryActions.clear());
             modActions = printingActions;
             await dispatch(printingActions.initSize());
         }
@@ -349,6 +345,10 @@ export const actions = {
             if (machineInfo) {
                 // new verison of project file
                 headType = machineInfo.headType;
+                // TODO: for project file of "< version 4.1"
+                if (headType === '3dp') {
+                    headType = 'printing';
+                }
             } else {
                 // old verison of project file
                 headType = envObj.headType;
