@@ -191,7 +191,7 @@ function Configurations({ widgetActions }) {
                         onClick={actions.toggleShowCustomConfigPannel}
                     />
                 </div>
-                <div className="padding-horizontal-16 padding-vertical-16 overflow-y-auto height-max-400">
+                <div className="padding-horizontal-16 padding-vertical-8 overflow-y-auto height-max-400">
                     { printingCustomConfigs.map((key) => {
                         return (
                             <SettingItem

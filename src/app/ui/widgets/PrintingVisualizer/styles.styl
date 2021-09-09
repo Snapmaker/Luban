@@ -141,7 +141,7 @@ $bottom-bar-height = 0px
     // top: 160px
     top: 50%;
     transform: translateY(-50%);
-    width: 22px
+    width: 26px
 
     .vertical-slider
         // position: absolute
@@ -149,6 +149,10 @@ $bottom-bar-height = 0px
         top: 55px
         height: 288px
         left: 1px
+
+    .layer-wrapper
+        display flex
+        flex-direction column
 
     .vertical-handle
         position: absolute
@@ -184,6 +188,7 @@ $bottom-bar-height = 0px
         text-align: center
         color: $desc-text-color
         font-size: 12px;
+        margin-left: -4px;
 
     .preview-panel {
         display: block

@@ -41,7 +41,7 @@ function GcodeLayout() {
         dispatch(printingActions.showGcodeLayers(value));
     }
     return (
-        <div>
+        <div className={styles['layer-wrapper']}>
             <span className={styles['layer-label']}>{layerCountDisplayed}</span>
             <div
                 style={{
