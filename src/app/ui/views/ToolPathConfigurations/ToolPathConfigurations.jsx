@@ -79,6 +79,45 @@ function ToolPathConfigurations({ toolpath, onClose, headType }) {
         updateToolConfig(key, value) {
             const newDefinition = _.cloneDeep(currentToolDefinition);
             newDefinition.settings[key].default_value = value;
+            if (headType === HEAD_LASER) {
+                // Movement Mode
+                if (key === 'movement_mode' && value === 'greyscale-dot') {
+                    newDefinition.dwell_time.default_value = 5;
+                    newDefinition.fill_interval.default_value = 0.14;
+                    newDefinition.jog_speed.default_value = 2500;
+                    newDefinition.work_speed.default_value = 2500;
+                    newDefinition.fixed_power.default_value = 60;
+                }
+                if (key === 'movement_mode' && value === 'greyscale-line') {
+                    newDefinition.direction.default_value = (!toolPath.materials?.isRotate ? 'Horizontal' : 'Vertical');
+                    newDefinition.fill_interval.default_value = 0.25;
+                    newDefinition.jog_speed.default_value = 3000;
+                    newDefinition.work_speed.default_value = 500;
+                    newDefinition.fixed_power.default_value = 100;
+                }
+
+                // Fill Enabled
+                // if (option.fillEnabled === true) {
+                //     option.fillInterval = 0.25;
+                //     option.jogSpeed = 3000;
+                //     option.workSpeed = 500;
+                //     option.fixedPower = 100;
+                // }
+                // if (option.fillEnabled === false) {
+                //     option.jogSpeed = 3000;
+                //     option.workSpeed = 140;
+                //     option.multiPasses = 2;
+                //     option.multiPassDepth = 0.6;
+                //     option.fixedPower = 100;
+                // }
+
+                // Fiexd Power Enabled
+                if (key === 'fixed_power' && value > 0) {
+                    newDefinition.fixed_power_enabled.default_value = true;
+                } else {
+                    newDefinition.fixed_power_enabled.default_value = false;
+                }
+            }
             setCurrentToolDefinition(newDefinition);
             dispatch(editorActions.refreshToolPathPreview(headType));
         },
@@ -183,6 +222,7 @@ function ToolPathConfigurations({ toolpath, onClose, headType }) {
             });
         },
         updateGcodeConfig: (option) => {
+            console.log('option', option);
             const nToolPath = {
                 ...toolPath,
                 gcodeConfig: {

@@ -20,7 +20,7 @@ class LaserParameters extends PureComponent {
         setCurrentToolDefinition: PropTypes.func.isRequired,
         updateToolPath: PropTypes.func.isRequired,
         updateGcodeConfig: PropTypes.func.isRequired,
-        // updateToolConfig: PropTypes.func.isRequired,
+        updateToolConfig: PropTypes.func.isRequired,
         setCurrentValueAsProfile: PropTypes.func.isRequired,
 
         // size: PropTypes.object.isRequired,
@@ -50,6 +50,9 @@ class LaserParameters extends PureComponent {
                     movementMode: options.value
                 });
             }
+        },
+        updateToolConfig: (key, value) => {
+            this.props.updateToolConfig(key, value);
         },
         updateGcodeConfig: (option) => {
             // Movement Mode
@@ -222,6 +225,7 @@ class LaserParameters extends PureComponent {
                         toolPath={this.props.toolPath}
                         activeToolDefinition={this.props.activeToolDefinition}
                         updateGcodeConfig={this.actions.updateGcodeConfig}
+                        updateToolConfig={this.actions.updateToolConfig}
                     />
                 </div>
             </React.Fragment>

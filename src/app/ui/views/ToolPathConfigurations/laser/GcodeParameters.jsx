@@ -16,7 +16,8 @@ class GcodeParameters extends PureComponent {
     static propTypes = {
         toolPath: PropTypes.object.isRequired,
         activeToolDefinition: PropTypes.object.isRequired,
-        updateGcodeConfig: PropTypes.func.isRequired
+        updateGcodeConfig: PropTypes.func.isRequired,
+        updateToolConfig: PropTypes.func.isRequired
     };
 
     state = {
@@ -36,27 +37,17 @@ class GcodeParameters extends PureComponent {
         const { fillEnabled, movementMode,
             multiPasses, fixedPowerEnabled } = gcodeConfig;
 
-        const newSettings = {};
-        Object.entries(cloneDeep(activeToolDefinition?.settings)).forEach(([key, value]) => {
-            newSettings[toHump(key)] = value;
-        });
-        // Todo
-        const isMethodFill = (fillEnabled === 'true' || fillEnabled === true);
-
-        let allDefinition = {};
-        const gcodeDefinition = LASER_DEFAULT_GCODE_PARAMETERS_DEFINITION;
-        allDefinition = {
-            ...gcodeDefinition
-        };
+        const allDefinition = LASER_DEFAULT_GCODE_PARAMETERS_DEFINITION;
         Object.keys(allDefinition).forEach((key) => {
             allDefinition[key].default_value = gcodeConfig[key];
             // isGcodeConfig is true means to use updateGcodeConfig, false means to use updateToolConfig
-            allDefinition[key].isGcodeConfig = true;
+            allDefinition[key].isGcodeConfig = false;
         });
-        allDefinition = {
-            ...allDefinition,
-            ...newSettings
-        };
+        Object.entries(cloneDeep(activeToolDefinition?.settings)).forEach(([key, value]) => {
+            allDefinition[toHump(key)].default_value = value.default_value;
+        });
+        // Todo
+        const isMethodFill = (fillEnabled === 'true' || fillEnabled === true);
 
 
         // Session Fill
@@ -145,7 +136,7 @@ class GcodeParameters extends PureComponent {
                         </div>
                         <ToolParameters
                             settings={laserDefinitionFill}
-                            updateToolConfig={() => {}}
+                            updateToolConfig={this.props.updateToolConfig}
                             updateGcodeConfig={this.props.updateGcodeConfig}
                             toolPath={this.props.toolPath}
                             styleSize="large"
@@ -163,7 +154,7 @@ class GcodeParameters extends PureComponent {
                     </div>
                     <ToolParameters
                         settings={laserDefinitionSpeed}
-                        updateToolConfig={() => {}}
+                        updateToolConfig={this.props.updateToolConfig}
                         updateGcodeConfig={this.props.updateGcodeConfig}
                         toolPath={this.props.toolPath}
                         styleSize="large"
@@ -181,7 +172,7 @@ class GcodeParameters extends PureComponent {
                         </div>
                         <ToolParameters
                             settings={laserDefinitionRepetition}
-                            updateToolConfig={() => {}}
+                            updateToolConfig={this.props.updateToolConfig}
                             updateGcodeConfig={this.props.updateGcodeConfig}
                             toolPath={this.props.toolPath}
                             styleSize="large"
@@ -200,7 +191,7 @@ class GcodeParameters extends PureComponent {
                         </div>
                         <ToolParameters
                             settings={laserDefinitionPower}
-                            updateToolConfig={() => {}}
+                            updateToolConfig={this.props.updateToolConfig}
                             updateGcodeConfig={this.props.updateGcodeConfig}
                             toolPath={this.props.toolPath}
                             styleSize="large"
