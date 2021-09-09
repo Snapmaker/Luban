@@ -39,7 +39,7 @@ function CncToolManager({ closeToolManager, shouldSaveToolpath = false, saveTool
         exportConfigFile: (definitionForManager) => {
             const definitionId = definitionForManager.definitionId;
             const targetFile = `${definitionId}.def.json`;
-            dispatch(projectActions.exportConfigFile(targetFile, `cnc/${series}`));
+            dispatch(projectActions.exportConfigFile(targetFile, `${HEAD_CNC}/${series}`));
         },
         onUpdateDefaultDefinition: (definitionForManager) => {
             const { definitionId, name } = definitionForManager;

@@ -43,16 +43,21 @@ class GcodeParameters extends PureComponent {
         // Todo
         const isMethodFill = (fillEnabled === 'true' || fillEnabled === true);
 
+        let allDefinition = {};
         const gcodeDefinition = LASER_DEFAULT_GCODE_PARAMETERS_DEFINITION;
-        const allDefinition = {
-            ...gcodeDefinition,
-            ...newSettings
+        allDefinition = {
+            ...gcodeDefinition
         };
         Object.keys(allDefinition).forEach((key) => {
             allDefinition[key].default_value = gcodeConfig[key];
             // isGcodeConfig is true means to use updateGcodeConfig, false means to use updateToolConfig
             allDefinition[key].isGcodeConfig = true;
         });
+        allDefinition = {
+            ...allDefinition,
+            ...newSettings
+        };
+
 
         // Session Fill
         const laserDefinitionFillKeys = [];

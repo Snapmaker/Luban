@@ -94,11 +94,12 @@ class LaserParameters extends PureComponent {
     };
 
     render() {
-        const { toolPath, multipleEngine } = this.props;
+        const { toolPath, multipleEngine, activeToolDefinition } = this.props;
 
         const { name, type, useLegacyEngine, gcodeConfig } = toolPath;
 
-        const { fillEnabled } = gcodeConfig;
+        // TODO: fill method into a param
+        const fillEnabled = (activeToolDefinition?.settings['fill_enabled']['default_value'] ?? gcodeConfig.fillEnabled);
 
         // eslint-disable-next-line no-unused-vars
         const isSVG = type === TOOLPATH_TYPE_VECTOR;
@@ -139,7 +140,6 @@ class LaserParameters extends PureComponent {
                                 setCurrentToolDefinition={this.props.setCurrentToolDefinition}
                                 isModifiedDefinition={this.props.isModifiedDefinition}
                                 setCurrentValueAsProfile={this.props.setCurrentValueAsProfile}
-
                             />
                         </div>
                         {multipleEngine && (

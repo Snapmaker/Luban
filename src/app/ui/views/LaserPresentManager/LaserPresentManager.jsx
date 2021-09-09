@@ -39,7 +39,7 @@ function LaserPresentManager({ closeToolManager, shouldSaveToolpath = false, sav
         exportConfigFile: (definitionForManager) => {
             const definitionId = definitionForManager.definitionId;
             const targetFile = `${definitionId}.def.json`;
-            dispatch(projectActions.exportConfigFile(targetFile, `laser/${series}`));
+            dispatch(projectActions.exportConfigFile(targetFile, `${HEAD_LASER}/${series}`));
         },
         onUpdateDefaultDefinition: (definitionForManager) => {
             const { definitionId, name } = definitionForManager;
