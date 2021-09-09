@@ -499,6 +499,10 @@ export const LASER_DEFAULT_GCODE_PARAMETERS_DEFINITION = {
         default_value: 'fixedPower',
         unit: '%'
     },
+    'fixedPowerEnabled': {
+        type: 'bool',
+        default_value: true
+    },
     'movementMode': {
         label: 'Movement Mode',
         description: 'Set whether the object is filled with lines or dots.',

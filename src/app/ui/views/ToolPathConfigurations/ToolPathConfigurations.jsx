@@ -82,18 +82,18 @@ function ToolPathConfigurations({ toolpath, onClose, headType }) {
             if (headType === HEAD_LASER) {
                 // Movement Mode
                 if (key === 'movement_mode' && value === 'greyscale-dot') {
-                    newDefinition.dwell_time.default_value = 5;
-                    newDefinition.fill_interval.default_value = 0.14;
-                    newDefinition.jog_speed.default_value = 2500;
-                    newDefinition.work_speed.default_value = 2500;
-                    newDefinition.fixed_power.default_value = 60;
+                    newDefinition.settings.dwell_time.default_value = 5;
+                    newDefinition.settings.fill_interval.default_value = 0.14;
+                    newDefinition.settings.jog_speed.default_value = 2500;
+                    newDefinition.settings.work_speed.default_value = 2500;
+                    newDefinition.settings.fixed_power.default_value = 60;
                 }
                 if (key === 'movement_mode' && value === 'greyscale-line') {
-                    newDefinition.direction.default_value = (!toolPath.materials?.isRotate ? 'Horizontal' : 'Vertical');
-                    newDefinition.fill_interval.default_value = 0.25;
-                    newDefinition.jog_speed.default_value = 3000;
-                    newDefinition.work_speed.default_value = 500;
-                    newDefinition.fixed_power.default_value = 100;
+                    newDefinition.settings.direction.default_value = (!toolPath.materials?.isRotate ? 'Horizontal' : 'Vertical');
+                    newDefinition.settings.fill_interval.default_value = 0.25;
+                    newDefinition.settings.jog_speed.default_value = 3000;
+                    newDefinition.settings.work_speed.default_value = 500;
+                    newDefinition.settings.fixed_power.default_value = 100;
                 }
 
                 // Fill Enabled
@@ -112,26 +112,24 @@ function ToolPathConfigurations({ toolpath, onClose, headType }) {
                 // }
 
                 // Fiexd Power Enabled
-                if (key === 'fixed_power' && value > 0) {
-                    newDefinition.fixed_power_enabled.default_value = true;
-                } else {
-                    newDefinition.fixed_power_enabled.default_value = false;
+                if (key === 'fixed_power') {
+                    if (value > 0) {
+                        newDefinition.settings.fixed_power_enabled.default_value = true;
+                    } else {
+                        newDefinition.settings.fixed_power_enabled.default_value = false;
+                    }
                 }
             }
             setCurrentToolDefinition(newDefinition);
             dispatch(editorActions.refreshToolPathPreview(headType));
         },
         checkIfDefinitionModified() {
-            if (headType === HEAD_CNC) {
-                const oldTooldefinition = toolDefinitions.find((d) => {
-                    return d.definitionId === currentToolDefinition?.definitionId;
-                });
-                return oldTooldefinition?.settings && !Object.entries(oldTooldefinition.settings).every(([key, setting]) => {
-                    return currentToolDefinition && currentToolDefinition.settings[key] && currentToolDefinition.settings[key].default_value === setting.default_value;
-                });
-            } else {
-                return false;
-            }
+            const oldTooldefinition = toolDefinitions.find((d) => {
+                return d.definitionId === currentToolDefinition?.definitionId;
+            });
+            return oldTooldefinition?.settings && !Object.entries(oldTooldefinition.settings).every(([key, setting]) => {
+                return currentToolDefinition && currentToolDefinition.settings[key] && currentToolDefinition.settings[key].default_value === setting.default_value;
+            });
         },
         cancelUpdateToolPath() {
             onClose && onClose();

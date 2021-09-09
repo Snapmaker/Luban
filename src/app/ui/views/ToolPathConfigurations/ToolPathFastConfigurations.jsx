@@ -267,19 +267,15 @@ function ToolPathFastConfigurations({ setEditingToolpath, headType, toolpath }) 
         let allDefinition = {};
         if (headType === HEAD_CNC && activeToolListDefinition) {
             allDefinition = _.cloneDeep(CNC_DEFAULT_GCODE_PARAMETERS_DEFINITION);
-            Object.keys(allDefinition).forEach((key) => {
-                allDefinition[key].default_value = gcodeConfig[key];
-                // isGcodeConfig is true means to use updateGcodeConfig, false means to use updateToolConfig
-                allDefinition[key].isGcodeConfig = true;
-            });
         }
         if (headType === HEAD_LASER && activeToolListDefinition) {
             allDefinition = _.cloneDeep(LASER_DEFAULT_GCODE_PARAMETERS_DEFINITION);
-            Object.keys(allDefinition).forEach((key) => {
-                allDefinition[key].default_value = gcodeConfig[key];
-                allDefinition[key].isGcodeConfig = true;
-            });
         }
+        Object.keys(allDefinition).forEach((key) => {
+            allDefinition[key].default_value = gcodeConfig[key];
+            // isGcodeConfig is true means to use updateGcodeConfig, false means to use updateToolConfig
+            allDefinition[key].isGcodeConfig = true;
+        });
         const fastEditSettingsKeys = getFastEditSettingsKeys(toolPath);
         fastEditSettingsKeys.forEach((key) => {
             if (allDefinition[key]) {
