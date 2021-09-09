@@ -1563,7 +1563,7 @@ export const actions = {
                     dispatch(actions.displayModel());
                     dispatch(actions.destroyGcodeLine());
                     dispatch(actions.updateState({
-                        stage: STEP_STAGE.PRINTING_LOADING_MODEL,
+                        stage: STEP_STAGE.PRINTING_LOAD_MODEL_SUCCEED,
                         progress: 1
                     }));
                     break;

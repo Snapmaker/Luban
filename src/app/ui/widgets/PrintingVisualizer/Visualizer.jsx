@@ -368,14 +368,14 @@ class Visualizer extends PureComponent {
             this.canvas.current.renderScene();
         }
 
-        if (stage !== this.props.stage && stage === STEP_STAGE.LOAD_MODEL_FAILED) {
+        if (stage !== this.props.stage && stage === STEP_STAGE.PRINTING_LOAD_MODEL_FAILED) {
             modal({
                 cancelTitle: i18n._(''),
                 title: i18n._('Import Error'),
                 body: i18n._('Failed to import this object. \nPlease select a supported file format.')
             });
         }
-        if (stage !== this.props.stage && stage === STEP_STAGE.LOAD_MODEL_SUCCEED) {
+        if (stage !== this.props.stage && stage === STEP_STAGE.PRINTING_LOAD_MODEL_SUCCEED) {
             const modelSize = new Vector3();
             selectedModelArray[0].boundingBox.getSize(modelSize);
             const isLarge = ['x', 'y', 'x'].some((key) => modelSize[key] >= size[key]);
