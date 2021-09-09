@@ -51,6 +51,10 @@
             "max": 100,
             "unit": "%"
         },
+        "fixed_power_enabled": {
+            "default_value": true,
+            "type": "bool"
+        },
         "movement_mode": {
             "default_value": "greyscale-line",
             "label": "Movement Mode",
