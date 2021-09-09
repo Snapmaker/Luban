@@ -471,7 +471,7 @@ class ExtractSquareTrace extends PureComponent {
                                 })}
                                 <div
                                     className={styles['start-background']}
-                                    style={{ display: this.state.canStart ? 'inline-block' : 'none', margin: '0 auto' }}
+                                    style={{ display: this.state.canStart ? 'inline-block' : 'none', margin: '0 auto', width: 'auto' }}
 
                                 >
                                     <Button

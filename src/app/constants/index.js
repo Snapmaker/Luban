@@ -321,7 +321,7 @@ export const CNC_DEFAULT_GCODE_PARAMETERS_DEFINITION = {
     'enableTab': {
         label: 'Use Tab',
         description: 'Use tabs to hold the pieces in place.',
-        type: 'bool',
+        type: 'bool-switch', // bool type use switch component
         default_value: false,
         value: 'enableTab'
     },

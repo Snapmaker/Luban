@@ -148,7 +148,7 @@ function General({ state: generalState, actions }) {
                         className={classNames(
                             'margin-top-16'
                         )}
-                        size="middle"
+                        size="200px"
                         value={lang}
                         onChange={handlers.changeLanguage}
                         options={languageOptions}

@@ -320,7 +320,7 @@ function ToolPathFastConfigurations(props) {
                         )}
                         onClick={handleSetEditingToolpath}
                     >
-                        {i18n._('More')}
+                        {`${i18n._('More')} >`}
                     </Anchor>
                 </div>
             </div>

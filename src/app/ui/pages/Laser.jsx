@@ -110,7 +110,7 @@ function useRenderMainToolBar(setShowHomePage, setShowJobType, setShowWorkspace,
                         name="MainToolbarAddBackground"
                     />
                     <span
-                        className="margin-left-4"
+                        className="margin-left-4 height-24 display-inline"
                     >
                         {i18n._('Add Background')}
                     </span>
@@ -125,7 +125,7 @@ function useRenderMainToolBar(setShowHomePage, setShowJobType, setShowWorkspace,
                         name="MainToolbarRemoverBackground"
                     />
                     <span
-                        className="margin-left-4"
+                        className="margin-left-4 height-24 display-inline"
                     >
                         {i18n._('Remove Background')}
                     </span>
@@ -680,7 +680,10 @@ function Laser({ location }) {
                             intro: laserCncIntroStepSix(
                                 i18n._('Click to generate and preview the G-code file.'),
                                 i18n._('For laser engraving, you can preview the toolpath. For CNC carving, you can preview the toolpath and simulate the operation result.'),
-                                isRotate ? '/resources/images/guide-tours/laser_4_axis_priview.png' : '/resources/images/guide-tours/laser_3_axis_priview.png'
+                                // isRotate ? '/resources/images/guide-tours/laser_4_axis_priview.png' : '/resources/images/guide-tours/laser_3_axis_priview.png'
+                                isRotate,
+                                series,
+                                'laser'
                             )
                         }, {
                             element: '.laser-preview-export-intro-part',

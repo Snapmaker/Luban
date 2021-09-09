@@ -73,7 +73,25 @@ const laserCncIntroStepFive = (text1, text2, text3) => {
         </div>
     );
 };
-const laserCncIntroStepSix = (text1, text2, imgSrc) => {
+const laserCncIntroStepSix = (text1, text2, isRotate, series, headType) => {
+    let imgSrc = '';
+    if (isRotate) {
+        imgSrc = headType === 'cnc' ? '/resources/images/guide-tours/cnc_4_axis_priview.png' : '/resources/images/guide-tours/laser_4_axis_priview.png';
+    } else {
+        switch (series) {
+            case 'Original':
+            case 'Original Long Z-axis':
+                imgSrc = headType === 'cnc' ? '/resources/images/guide-tours/original_cnc_3_axis_preview.png' : '/resources/images/guide-tours/original_laser_3_axis_preview.png';
+                break;
+            case 'A150':
+                imgSrc = headType === 'cnc' ? '/resources/images/guide-tours/cnc_3_axis_priview.png' : '/resources/images/guide-tours/laser_3_axis_priview.png';
+                break;
+            default:
+                imgSrc = headType === 'cnc' ? '/resources/images/guide-tours/a250_a350_cnc_3_axis_preview.png' : '/resources/images/guide-tours/laser_3_axis_priview.png';
+                break;
+        }
+    }
+
     return (
         <div>
             <div>{text1}</div>

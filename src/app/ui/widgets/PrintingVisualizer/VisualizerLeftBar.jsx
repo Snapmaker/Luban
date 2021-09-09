@@ -484,7 +484,12 @@ function VisualizerLeftBar({ defaultSupportSize, setTransformMode, isSupporting,
                 )}
 
                 {!transformDisabled && isSupportSelected && transformMode === 'scale' && (
-                    <div className="position-ab width-280 margin-left-72 border-default-grey-1 border-radius-8 background-color-white">
+                    <div
+                        className="position-ab width-280 margin-left-72 border-default-grey-1 border-radius-8 background-color-white"
+                        style={{
+                            marginTop: '112px'
+                        }}
+                    >
                         <div className="border-bottom-normal padding-vertical-10 padding-horizontal-16 height-40">
                             {i18n._('Scale')}
                         </div>

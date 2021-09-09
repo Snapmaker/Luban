@@ -8,26 +8,30 @@ import Anchor from '../components/Anchor';
 import SvgIcon from '../components/SvgIcon';
 import { normalizeNameDisplay } from '../../lib/normalize-range';
 
+let svgName = '';
+let modelName = '';
+const objectList3d = 'ObjectList3d';
+const objectListShape = 'ObjectListShape';
+const objectListPicture = 'ObjectListPicture';
 function ModelItem({ model, visible, isSelected, styles, onSelect, onToggleVisible, inProgress, placment }) {
     if (!model) {
         return null;
     }
-    let modelName = '';
-    let modelIcon = '';
+
     if (model.headType === '3dp') {
         modelName = path.basename(model.modelName);
-        modelIcon = styles.iconShape;
+        svgName = objectList3d;
     } else {
         const taskInfo = model.getTaskInfo();
         modelName = taskInfo.modelName;
-        modelIcon = (() => {
+        svgName = (() => {
             if (taskInfo.sourceType === 'text') {
-                return styles.iconText;
+                return objectListShape;
             }
             if (taskInfo.mode !== 'vector') {
-                return styles.iconPic;
+                return objectListPicture;
             }
-            return styles.iconShape;
+            return objectListShape;
         })();
     }
     const suffixLength = 7;
@@ -56,13 +60,10 @@ function ModelItem({ model, visible, isSelected, styles, onSelect, onToggleVisib
                     )}
                     onClick={(event) => onSelect(model, event)}
                 >
-                    <span
-                        className={classNames(
-                            'height-24',
-                            'width-24',
-                            styles.icon,
-                            modelIcon
-                        )}
+                    <SvgIcon
+                        type={['static']}
+                        name={svgName}
+                        className="margin-right-4"
                     />
                     <span className={classNames(styles['prefix-name'])}>
                         {prefixName}

@@ -6,6 +6,7 @@ import { DISPLAYED_TYPE_MODEL, DISPLAYED_TYPE_TOOLPATH, HEAD_LASER, SELECTEVENT 
 import { getToolPathType } from '../../toolpaths/utils';
 
 import { toast } from '../../ui/components/Toast';
+import { ToastWapper } from '../../ui/components/Toast/toastContainer';
 
 import i18n from '../../lib/i18n';
 import { actions as operationHistoryActions } from '../operation-history';
@@ -126,9 +127,11 @@ export const processActions = {
                 modelGroup.setSelectedToolPathModelIDs([model.modelID]);
             } else if (selectEvent === SELECTEVENT.ADDSELECT) {
                 const selectedModels = modelGroup.getSelectedToolPathModels();
+                const text1 = i18n._('Failed to generate a toolpath. Selected objects should be of the same type.');
                 if (getToolPathType([...selectedModels, model]).length !== 1) {
                     if (!toastId || !toast.isActive(toastId)) {
-                        toastId = toast(i18n._('Failed to generate a toolpath. Selected objects should be of the same type.'));
+                        // toastId = toast(i18n._('Failed to generate a toolpath. Selected objects should be of the same type.'));
+                        toastId = toast(ToastWapper(text1, 'WarningTipsTips', '#1890ff'));
                     }
                 } else if (selectedModels.findIndex(m => m === model) === -1) {
                     modelGroup.addSelectedToolPathModelIDs([model.modelID]);
@@ -151,9 +154,11 @@ export const processActions = {
     createToolPath: (headType) => (dispatch, getState) => {
         const { toolPathGroup, materials, modelGroup } = getState()[headType];
         const selectedModels = modelGroup.getSelectedModelArray();
+        const text1 = i18n._('Failed to generate a toolpath. Selected objects should be of the same type.');
         if (getToolPathType(selectedModels).length !== 1) {
             if (!toastId || !toast.isActive(toastId)) {
-                toastId = toast(i18n._('Failed to generate a toolpath. Selected objects should be of the same type.'));
+                // toastId = toast(i18n._('Failed to generate a toolpath. Selected objects should be of the same type.'));
+                toastId = toast(ToastWapper(text1, 'WarningTipsTips', '#1890ff'));
             }
             return null;
         }
@@ -450,9 +455,10 @@ export const processActions = {
             const ChunkAreaY = height + posY;
 
             const svgSelectedGroupBoundingBox = SVGActions.getSelectedElementsBoundingBox();
+            const text1 = i18n._('Moving objects to this area may cause a machine collision.');
             if (svgSelectedGroupBoundingBox.y < ChunkAreaY) {
                 if (!toastId || !toast.isActive(toastId)) {
-                    toastId = toast(i18n._('Moving objects to this area may cause a machine collision.'));
+                    toastId = toast(ToastWapper(text1, 'WarningTipsWarning', '#FFA940'));
                 }
             }
         }
