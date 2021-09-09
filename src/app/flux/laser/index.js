@@ -21,7 +21,6 @@ import {
 } from '../actionType';
 import { actions as editorActions } from '../editor';
 import ToolPathGroup from '../../toolpaths/ToolPathGroup';
-<<<<<<< HEAD
 import definitionManager from '../manager/DefinitionManager';
 import i18n from '../../lib/i18n';
 import { timestamp } from '../../../shared/lib/random-utils';
