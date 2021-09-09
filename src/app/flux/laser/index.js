@@ -25,8 +25,6 @@ import { CNC_LASER_STAGE } from '../editor/utils';
 import definitionManager from '../manager/DefinitionManager';
 import i18n from '../../lib/i18n';
 import { timestamp } from '../../../shared/lib/random-utils';
-import api from '../../api';
-
 
 const initModelGroup = new ModelGroup('laser');
 const operationHistory = new OperationHistory();
@@ -331,25 +329,6 @@ export const actions = {
         const { defaultDefinitions } = getState().laser;
         const defaultDefinition = defaultDefinitions.find(d => d.definitionId === definitionId);
         dispatch(actions.updateToolListDefinition(defaultDefinition));
-    },
-    onUploadToolDefinition: (file) => async (dispatch, getState) => {
-        const { toolDefinitions } = getState().laser;
-        const formData = new FormData();
-        formData.append('file', file);
-        // set a new name that cannot be repeated
-        formData.append('uploadName', `${file.name.substr(0, file.name.length - 9)}${timestamp()}.def.json`);
-        api.uploadFile(formData)
-            .then(async (res) => {
-                const response = res.body;
-                const definitionId = `New.${timestamp()}`;
-                const definition = await definitionManager.uploadDefinition(definitionId, response.uploadName);
-                dispatch(editorActions.updateState('laser', {
-                    toolDefinitions: [...toolDefinitions, definition]
-                }));
-            })
-            .catch(() => {
-                // Ignore error
-            });
     }
 };
 

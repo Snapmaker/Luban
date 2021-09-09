@@ -13,6 +13,7 @@ import DeleteToolPathOperation from '../operation-history/DeleteToolPathOperatio
 import Operations from '../operation-history/Operations';
 import { timestamp } from '../../../shared/lib/random-utils';
 import definitionManager from '../manager/DefinitionManager';
+import api from '../../api';
 
 let toastId;
 export const processActions = {
@@ -479,5 +480,33 @@ export const processActions = {
             toolDefinitions: [...newToolDefinitions, createdDefinition]
         }));
         return createdDefinition;
+    },
+    onUploadToolDefinition: (headType, file) => async (dispatch, getState) => {
+        const { toolDefinitions } = getState()[headType];
+        const formData = new FormData();
+        formData.append('file', file);
+        // set a new name that cannot be repeated
+        formData.append('uploadName', `${file.name.substr(0, file.name.length - 9)}${timestamp()}.def.json`);
+        api.uploadFile(formData)
+            .then(async (res) => {
+                const response = res.body;
+                const definitionId = `New.${timestamp()}`;
+                const definition = await definitionManager.uploadDefinition(definitionId, response.uploadName);
+                let name = definition.name;
+                while (toolDefinitions.find(e => e.name === name)) {
+                    name = `#${name}`;
+                }
+                definition.name = name;
+                await definitionManager.updateDefinition({
+                    definitionId: definition.definitionId,
+                    name
+                });
+                dispatch(baseActions.updateState(headType, {
+                    toolDefinitions: [...toolDefinitions, definition]
+                }));
+            })
+            .catch(() => {
+                // Ignore error
+            });
     }
 };

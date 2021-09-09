@@ -2,7 +2,6 @@ import { cloneDeep } from 'lodash';
 import ModelGroup from '../../models/ModelGroup';
 import i18n from '../../lib/i18n';
 import SVGActionsFactory from '../../models/SVGActionsFactory';
-import api from '../../api';
 import {
     ACTION_UPDATE_CONFIG,
     ACTION_UPDATE_STATE,
@@ -259,25 +258,6 @@ export const actions = {
         const { defaultDefinitions } = getState().cnc;
         const defaultDefinition = defaultDefinitions.find(d => d.definitionId === definitionId);
         dispatch(actions.updateToolListDefinition(defaultDefinition));
-    },
-    onUploadToolDefinition: (file) => async (dispatch, getState) => {
-        const { toolDefinitions } = getState().cnc;
-        const formData = new FormData();
-        formData.append('file', file);
-        // set a new name that cannot be repeated
-        formData.append('uploadName', `${file.name.substr(0, file.name.length - 9)}${timestamp()}.def.json`);
-        api.uploadFile(formData)
-            .then(async (res) => {
-                const response = res.body;
-                const definitionId = `New.${timestamp()}`;
-                const definition = await definitionManager.uploadDefinition(definitionId, response.uploadName);
-                dispatch(editorActions.updateState('cnc', {
-                    toolDefinitions: [...toolDefinitions, definition]
-                }));
-            })
-            .catch(() => {
-                // Ignore error
-            });
     },
     updateStlVisualizer: (obj) => (dispatch, getState) => {
         const { stlVisualizer } = getState().cnc;
