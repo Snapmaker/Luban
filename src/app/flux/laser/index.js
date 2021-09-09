@@ -21,10 +21,11 @@ import {
 } from '../actionType';
 import { actions as editorActions } from '../editor';
 import ToolPathGroup from '../../toolpaths/ToolPathGroup';
+<<<<<<< HEAD
 import definitionManager from '../manager/DefinitionManager';
 import i18n from '../../lib/i18n';
 import { timestamp } from '../../../shared/lib/random-utils';
-import ProgressStatesManager, { CNC_LASER_STAGE } from '../editor/utils';
+import ProgressStatesManager, { STEP_STAGE } from '../../lib/manager/ProgressManager';
 
 const initModelGroup = new ModelGroup('laser');
 const operationHistory = new OperationHistory();
@@ -42,7 +43,7 @@ const INITIAL_STATE = {
         z: 0
     },
 
-    stage: CNC_LASER_STAGE.EMPTY,
+    stage: STEP_STAGE.EMPTY,
     progress: 0,
     inProgress: false,
     scale: 1,

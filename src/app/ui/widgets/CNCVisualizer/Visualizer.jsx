@@ -27,7 +27,7 @@ import {
     SELECTEVENT
 } from '../../../constants';
 import SVGEditor from '../../SVGEditor';
-import { CNC_LASER_STAGE } from '../../../flux/editor/utils';
+import { STEP_STAGE } from '../../../lib/manager/ProgressManager';
 import { actions as operationHistoryActions } from '../../../flux/operation-history';
 import modal from '../../../lib/modal';
 import UniApi from '../../../lib/uni-api';
@@ -338,66 +338,58 @@ class Visualizer extends Component {
     }
 
     getProgress() {
-        const { stage, progress } = this.props;
-        switch (stage) {
-            case CNC_LASER_STAGE.GENERATING_TOOLPATH:
-            case CNC_LASER_STAGE.RENDER_TOOLPATH:
-                return this.props.progressStatesManager.getProgress(1, stage, progress);
-            case CNC_LASER_STAGE.GENERATING_GCODE:
-                return this.props.progressStatesManager.getProgress(1, stage, progress);
-            default:
-                return progress;
-        }
+        return this.props.progress;
     }
 
     getNotice() {
         const { stage, progress } = this.props;
-        switch (stage) {
-            case CNC_LASER_STAGE.EMPTY:
-                return '';
-            case CNC_LASER_STAGE.GENERATING_TOOLPATH:
-                return this.props.progressStatesManager.getNotice(1, stage, progress);
-            // return i18n._('Generating toolpath... {{progress}}%', { progress: (100.0 * progress).toFixed(1) });
-            case CNC_LASER_STAGE.GENERATE_TOOLPATH_FAILED:
-                return i18n._('Failed to generate toolpath.');
-            case CNC_LASER_STAGE.PREVIEWING:
-                return this.props.progressStatesManager.getNotice(1, stage, progress);
-            // return i18n._('Previewing toolpath...');
-            case CNC_LASER_STAGE.PREVIEW_SUCCESS:
-                return i18n._('Previewed toolpath successfully');
-            case CNC_LASER_STAGE.PREVIEW_FAILED:
-                return i18n._('Failed to preview toolpath.');
-            case CNC_LASER_STAGE.GENERATING_GCODE:
-                return this.props.progressStatesManager.getNotice(1, stage, progress);
-            case CNC_LASER_STAGE.GENERATE_TOOLPATH_SUCCESS:
-                return i18n._('Generating G-code... {{progress}}%', { progress: (100.0 * progress).toFixed(1) });
-            case CNC_LASER_STAGE.GENERATE_GCODE_SUCCESS:
-                return i18n._('Generated G-code successfully.');
-            case CNC_LASER_STAGE.GENERATE_GCODE_FAILED:
-                return i18n._('Failed to generate G-code.');
-            case CNC_LASER_STAGE.UPLOADING_IMAGE:
-                return this.props.progressStatesManager.getNotice(2, stage, progress);
-            case CNC_LASER_STAGE.UPLOAD_IMAGE_SUCCESS:
-                return i18n._('Loaded object successfully.');
-            case CNC_LASER_STAGE.UPLOAD_IMAGE_FAILED:
-                return i18n._('Failed to load object.');
-            case CNC_LASER_STAGE.PROCESSING_IMAGE:
-                return this.props.progressStatesManager.getNotice(3, stage, progress);
-            case CNC_LASER_STAGE.PROCESS_IMAGE_SUCCESS:
-                return i18n._('Processed object successfully.');
-            case CNC_LASER_STAGE.PROCESS_IMAGE_FAILED:
-                return i18n._('Failed to process object.');
-            case CNC_LASER_STAGE.RENDER_TOOLPATH:
-                return this.props.progressStatesManager.getNotice(1, stage, progress);
-            // return i18n._('Rendering toolpath... {{progress}}%', { progress: (100.0 * progress).toFixed(1) });
-            case CNC_LASER_STAGE.GENERATE_TOOLPATH_AND_PREVIEW:
-                return i18n._('Generate toolpath and preview: {{progress}}%', { progress: (100.0 * progress).toFixed(1) });
-            case CNC_LASER_STAGE.GENERATING_VIEWPATH:
-            case CNC_LASER_STAGE.RENDER_VIEWPATH:
-                return this.props.progressStatesManager.getNotice(4, stage, progress);
-            default:
-                return '';
-        }
+        return this.props.progressStatesManager
+        // switch (stage) {
+        //     case CNC_LASER_STAGE.EMPTY:
+        //         return '';
+        //     case CNC_LASER_STAGE.GENERATING_TOOLPATH:
+        //         return this.props.progressStatesManager.getNotice(1, stage, progress);
+        //     // return i18n._('Generating toolpath... {{progress}}%', { progress: (100.0 * progress).toFixed(1) });
+        //     case CNC_LASER_STAGE.GENERATE_TOOLPATH_FAILED:
+        //         return i18n._('Failed to generate toolpath.');
+        //     case CNC_LASER_STAGE.PREVIEWING:
+        //         return this.props.progressStatesManager.getNotice(1, stage, progress);
+        //     // return i18n._('Previewing toolpath...');
+        //     case CNC_LASER_STAGE.PREVIEW_SUCCESS:
+        //         return i18n._('Previewed toolpath successfully');
+        //     case CNC_LASER_STAGE.PREVIEW_FAILED:
+        //         return i18n._('Failed to preview toolpath.');
+        //     case CNC_LASER_STAGE.GENERATING_GCODE:
+        //         return this.props.progressStatesManager.getNotice(1, stage, progress);
+        //     case CNC_LASER_STAGE.GENERATE_TOOLPATH_SUCCESS:
+        //         return i18n._('Generating G-code... {{progress}}%', { progress: (100.0 * progress).toFixed(1) });
+        //     case CNC_LASER_STAGE.GENERATE_GCODE_SUCCESS:
+        //         return i18n._('Generated G-code successfully.');
+        //     case CNC_LASER_STAGE.GENERATE_GCODE_FAILED:
+        //         return i18n._('Failed to generate G-code.');
+        //     case CNC_LASER_STAGE.UPLOADING_IMAGE:
+        //         return this.props.progressStatesManager.getNotice(2, stage, progress);
+        //     case CNC_LASER_STAGE.UPLOAD_IMAGE_SUCCESS:
+        //         return i18n._('Loaded object successfully.');
+        //     case CNC_LASER_STAGE.UPLOAD_IMAGE_FAILED:
+        //         return i18n._('Failed to load object.');
+        //     case CNC_LASER_STAGE.PROCESSING_IMAGE:
+        //         return this.props.progressStatesManager.getNotice(3, stage, progress);
+        //     case CNC_LASER_STAGE.PROCESS_IMAGE_SUCCESS:
+        //         return i18n._('Processed object successfully.');
+        //     case CNC_LASER_STAGE.PROCESS_IMAGE_FAILED:
+        //         return i18n._('Failed to process object.');
+        //     case CNC_LASER_STAGE.RENDER_TOOLPATH:
+        //         return this.props.progressStatesManager.getNotice(1, stage, progress);
+        //     // return i18n._('Rendering toolpath... {{progress}}%', { progress: (100.0 * progress).toFixed(1) });
+        //     case CNC_LASER_STAGE.GENERATE_TOOLPATH_AND_PREVIEW:
+        //         return i18n._('Generate toolpath and preview: {{progress}}%', { progress: (100.0 * progress).toFixed(1) });
+        //     case CNC_LASER_STAGE.GENERATING_VIEWPATH:
+        //     case CNC_LASER_STAGE.RENDER_VIEWPATH:
+        //         return this.props.progressStatesManager.getNotice(4, stage, progress);
+        //     default:
+        //         return '';
+        // }
     }
 
     showContextMenu = (event) => {

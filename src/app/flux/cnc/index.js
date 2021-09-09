@@ -18,7 +18,7 @@ import {
 } from '../../constants';
 import definitionManager from '../manager/DefinitionManager';
 import ToolPathGroup from '../../toolpaths/ToolPathGroup';
-import ProgressStatesManager, { CNC_LASER_STAGE } from '../editor/utils';
+import ProgressStatesManager, { STEP_STAGE } from '../../lib/manager/ProgressManager';
 import OperationHistory from '../operation-history/OperationHistory';
 
 const ACTION_CHANGE_TOOL_PARAMS = 'cnc/ACTION_CHANGE_TOOL_PARAMS';
@@ -39,7 +39,7 @@ const INITIAL_STATE = {
 
     page: PAGE_EDITOR,
 
-    stage: CNC_LASER_STAGE.EMPTY,
+    stage: STEP_STAGE.EMPTY,
     progress: 0,
     inProgress: false,
     scale: 1,
