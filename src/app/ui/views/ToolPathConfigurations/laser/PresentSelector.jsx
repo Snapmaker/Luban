@@ -106,7 +106,7 @@ function PresentSelector({ toolDefinitions, setCurrentToolDefinition, setCurrent
             <React.Fragment>
                 <div className="position-re sm-flex justify-space-between margin-vertical-8">
                     <span className="sm-flex-auto sm-flex-order-negative height-32">
-                        {i18n._('Tool')}
+                        {i18n._('Present')}
                     </span>
                     <div className="sm-flex position-re padding-bottom-24">
                         {(isModifiedDefinition

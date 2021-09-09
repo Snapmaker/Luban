@@ -298,26 +298,6 @@ export const actions = {
         }));
         return allDupliateDefinitions[0];
     },
-    duplicateToolListDefinition: (activeToolListDefinition) => async (dispatch, getState) => {
-        const state = getState().laser;
-        const newToolDefinitions = state.toolDefinitions;
-        const category = activeToolListDefinition.category;
-        const newToolListDefinition = {
-            ...activeToolListDefinition,
-            definitionId: `tool.${timestamp()}`
-        };
-        const definitionsWithSameCategory = newToolDefinitions.filter(d => d.category === category);
-        // make sure name is not repeated
-        while (definitionsWithSameCategory.find(d => d.name === newToolListDefinition.name)) {
-            newToolListDefinition.name = `#${newToolListDefinition.name}`;
-        }
-        const createdDefinition = await definitionManager.createDefinition(newToolListDefinition);
-
-        dispatch(editorActions.updateState('laser', {
-            toolDefinitions: [...newToolDefinitions, createdDefinition]
-        }));
-        return createdDefinition;
-    },
 
     removeToolCategoryDefinition: (category) => async (dispatch, getState) => {
         const state = getState().laser;
@@ -370,14 +350,6 @@ export const actions = {
             .catch(() => {
                 // Ignore error
             });
-    },
-    changeActiveToolListDefinition: (definitionId, name, shouldSaveToolpath = false) => async (dispatch, getState) => {
-        const { toolDefinitions } = getState().laser;
-        const activeToolListDefinition = toolDefinitions.find(d => d.definitionId === definitionId);
-        activeToolListDefinition.shouldSaveToolpath = shouldSaveToolpath;
-        dispatch(editorActions.updateState('laser', {
-            activeToolListDefinition
-        }));
     }
 };
 

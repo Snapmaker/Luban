@@ -9,8 +9,6 @@ import styles from './styles.styl';
 import { HEAD_CNC, HEAD_LASER } from '../../../constants';
 import i18n from '../../../lib/i18n';
 import { actions as editorActions } from '../../../flux/editor';
-import { actions as cncActions } from '../../../flux/cnc';
-import { actions as laserActions } from '../../../flux/laser';
 import Modal from '../../components/Modal';
 import { Button } from '../../components/Buttons';
 import CncParameters from './cnc/CncParameters';
@@ -36,7 +34,8 @@ function ToolPathConfigurations({ toolpath, onClose, headType }) {
         const activeToolDefinition = _.cloneDeep(currentToolDefinition);
 
         const oldTooldefinition = toolDefinitions.find((d) => {
-            return d.definitionId === toolParams.definitionId;
+            return d.name === toolParams.definitionName;
+            // return d.definitionId === toolParams.definitionId;
         });
         if (oldTooldefinition) {
             activeToolDefinition.definitionId = oldTooldefinition.definitionId;
@@ -131,12 +130,7 @@ function ToolPathConfigurations({ toolpath, onClose, headType }) {
                 toolParams
             };
             await dispatch(editorActions.saveToolPath(headType, newToolPath));
-            if (headType === HEAD_CNC) {
-                await dispatch(cncActions.changeActiveToolListDefinition(currentToolDefinition?.definitionId, currentToolDefinition?.name));
-            }
-            if (headType === HEAD_LASER) {
-                await dispatch(laserActions.changeActiveToolListDefinition(currentToolDefinition?.definitionId, currentToolDefinition?.name));
-            }
+            await dispatch(editorActions.changeActiveToolListDefinition(headType, currentToolDefinition?.definitionId, currentToolDefinition?.name));
             await dispatch(editorActions.selectToolPathById(headType));
             await dispatch(editorActions.selectToolPathById(headType, toolpath?.id));
 
@@ -154,7 +148,7 @@ function ToolPathConfigurations({ toolpath, onClose, headType }) {
                 ...currentToolDefinition,
                 name: inputValue
             };
-            await dispatch(cncActions.duplicateToolListDefinition(newToolDefinition));
+            await dispatch(editorActions.duplicateToolListDefinition(headType, newToolDefinition));
         },
         setCurrentValueAsProfile: () => {
             const activeToolDefinition = currentToolDefinition;

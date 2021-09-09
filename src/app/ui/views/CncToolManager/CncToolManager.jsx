@@ -43,7 +43,7 @@ function CncToolManager({ closeToolManager, shouldSaveToolpath = false, saveTool
         },
         onUpdateDefaultDefinition: (definitionForManager) => {
             const { definitionId, name } = definitionForManager;
-            dispatch(cncActions.changeActiveToolListDefinition(definitionId, name));
+            dispatch(editorActions.changeActiveToolListDefinition(HEAD_CNC, definitionId, name));
             dispatch(editorActions.resetProcessState(HEAD_CNC));
             if (shouldSaveToolpath) {
                 const newDefinition = toolDefinitions.find(d => d.definitionId === definitionId);
@@ -87,7 +87,7 @@ function CncToolManager({ closeToolManager, shouldSaveToolpath = false, saveTool
                 result = await dispatch(cncActions.duplicateToolCategoryDefinition(definition, isCreate, oldCategoryName));
             } else {
                 definition.name = name;
-                result = await dispatch(cncActions.duplicateToolListDefinition(definition));
+                result = await dispatch(editorActions.duplicateToolListDefinition(HEAD_CNC, definition));
             }
             return result;
         },

@@ -43,7 +43,7 @@ function LaserPresentManager({ closeToolManager, shouldSaveToolpath = false, sav
         },
         onUpdateDefaultDefinition: (definitionForManager) => {
             const { definitionId, name } = definitionForManager;
-            dispatch(laserActions.changeActiveToolListDefinition(definitionId, name));
+            dispatch(editorActions.changeActiveToolListDefinition(HEAD_LASER, definitionId, name));
             dispatch(editorActions.resetProcessState(HEAD_LASER));
             if (shouldSaveToolpath) {
                 const newDefinition = toolDefinitions.find(d => d.definitionId === definitionId);
@@ -87,7 +87,7 @@ function LaserPresentManager({ closeToolManager, shouldSaveToolpath = false, sav
                 result = await dispatch(laserActions.duplicateToolCategoryDefinition(definition, isCreate, oldCategoryName));
             } else {
                 definition.name = name;
-                result = await dispatch(laserActions.duplicateToolListDefinition(definition));
+                result = await dispatch(editorActions.duplicateToolListDefinition(HEAD_LASER, definition));
             }
             return result;
         },

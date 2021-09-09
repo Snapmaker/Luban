@@ -70,7 +70,6 @@ function ConfigValueBox({ optionConfigGroup, calculateTextIndex, isCategorySelec
             >
                 <div className="sm-parameter-container" ref={scrollDom}>
                     {!isCategorySelected && optionConfigGroup.map((group) => {
-                        console.log('group', group);
                         return (
                             <div key={group.name || group.fields[0]}>
                                 { group.name && (

@@ -131,7 +131,7 @@ class LaserParameters extends PureComponent {
                                     type={['static']}
                                     size={24}
                                 />
-                                <span>{i18n._('Tool')}</span>
+                                <span>{i18n._('Present')}</span>
                             </div>
                             <PresentSelector
                                 toolDefinition={this.props.activeToolDefinition}

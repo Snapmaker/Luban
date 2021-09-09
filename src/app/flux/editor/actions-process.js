@@ -11,6 +11,8 @@ import i18n from '../../lib/i18n';
 import { actions as operationHistoryActions } from '../operation-history';
 import DeleteToolPathOperation from '../operation-history/DeleteToolPathOperation';
 import Operations from '../operation-history/Operations';
+import { timestamp } from '../../../shared/lib/random-utils';
+import definitionManager from '../manager/DefinitionManager';
 
 let toastId;
 export const processActions = {
@@ -446,5 +448,36 @@ export const processActions = {
             }
         }
         return null;
+    },
+
+    // profile manager
+    changeActiveToolListDefinition: (headType, definitionId, name, shouldSaveToolpath = false) => async (dispatch, getState) => {
+        const { toolDefinitions } = getState()[headType];
+        const activeToolListDefinition = toolDefinitions.find(d => d.definitionId === definitionId);
+        activeToolListDefinition.shouldSaveToolpath = shouldSaveToolpath;
+        dispatch(baseActions.updateState(headType, {
+            activeToolListDefinition
+        }));
+    },
+
+    duplicateToolListDefinition: (headType, activeToolListDefinition) => async (dispatch, getState) => {
+        const state = getState()[headType];
+        const newToolDefinitions = state.toolDefinitions;
+        const category = activeToolListDefinition.category;
+        const newToolListDefinition = {
+            ...activeToolListDefinition,
+            definitionId: `tool.${timestamp()}`
+        };
+        const definitionsWithSameCategory = newToolDefinitions.filter(d => d.category === category);
+        // make sure name is not repeated
+        while (definitionsWithSameCategory.find(d => d.name === newToolListDefinition.name)) {
+            newToolListDefinition.name = `#${newToolListDefinition.name}`;
+        }
+        const createdDefinition = await definitionManager.createDefinition(newToolListDefinition);
+
+        dispatch(baseActions.updateState(headType, {
+            toolDefinitions: [...newToolDefinitions, createdDefinition]
+        }));
+        return createdDefinition;
     }
 };
