@@ -69,7 +69,7 @@ class ProgressState {
     }
 
     getNotice(stageID, progress) {
-        return i18n._(this.notice, { progress: (this.getNewProgress(stageID, progress) * 100.0).toFixed(1) });
+        return i18n._(this.notice, { progress: (progress * 100.0).toFixed(1) });
     }
 }
 
@@ -79,6 +79,7 @@ class ProgressStatesManager {
         this.processStageID = 0;
         this.progressStates = {};
 
+        // cnc & laser
         this.push(PROCESS_STAGE.CNC_LASER_GENERATE_TOOLPATH_AND_PREVIEW, [
             {
                 stageID: STEP_STAGE.CNC_LASER_GENERATING_TOOLPATH,
@@ -119,6 +120,23 @@ class ProgressStatesManager {
                 percent: 1
             }
         ], 'Generating simulation {{progress}}%');
+        // Printing
+        this.push(PROCESS_STAGE.PRINTING_LOAD_MODEL, [
+            {
+                stageID: STEP_STAGE.PRINTING_LOADING_MODEL,
+                percent: 1
+            }
+        ], 'Loading model...');
+        this.push(PROCESS_STAGE.PRINTING_SLICE_AND_PREVIEW, [
+            {
+                stageID: STEP_STAGE.PRINTING_SLICING,
+                percent: 0.5
+            },
+            {
+                stageID: STEP_STAGE.PRINTING_PREVIEWING,
+                percent: 1
+            }
+        ], 'Previewing G-code...{{progress}}%');
     }
 
     push(processStageID, stages, notice) {
@@ -129,12 +147,86 @@ class ProgressStatesManager {
         return this.progressStates[processStageID].getNewProgress(stageID, progress, count, totalCount);
     }
 
-    getNotice(processStageID, stageID, progress) {
-        return this.progressStates[processStageID].getNotice(stageID, progress);
+    getNotice(stageID, progress) {
+        if (this.processStageID === PROCESS_STAGE.EMPTY) {
+            return '';
+        }
+        return this.progressStates[this.processStageID].getNotice(stageID, progress);
+        // switch (stage) {
+        //     case CNC_LASER_STAGE.EMPTY:
+        //         return '';
+        //     case CNC_LASER_STAGE.GENERATING_TOOLPATH:
+        //         return this.props.progressStatesManager.getNotice(1, stage, progress);
+        //     // return i18n._('Generating toolpath... {{progress}}%', { progress: (100.0 * progress).toFixed(1) });
+        //     case CNC_LASER_STAGE.GENERATE_TOOLPATH_FAILED:
+        //         return i18n._('Failed to generate toolpath.');
+        //     case CNC_LASER_STAGE.PREVIEWING:
+        //         return this.props.progressStatesManager.getNotice(1, stage, progress);
+        //     // return i18n._('Previewing toolpath...');
+        //     case CNC_LASER_STAGE.PREVIEW_SUCCESS:
+        //         return i18n._('Previewed toolpath successfully');
+        //     case CNC_LASER_STAGE.PREVIEW_FAILED:
+        //         return i18n._('Failed to preview toolpath.');
+        //     case CNC_LASER_STAGE.GENERATING_GCODE:
+        //         return this.props.progressStatesManager.getNotice(1, stage, progress);
+        //     case CNC_LASER_STAGE.GENERATE_TOOLPATH_SUCCESS:
+        //         return i18n._('Generating G-code... {{progress}}%', { progress: (100.0 * progress).toFixed(1) });
+        //     case CNC_LASER_STAGE.GENERATE_GCODE_SUCCESS:
+        //         return i18n._('Generated G-code successfully.');
+        //     case CNC_LASER_STAGE.GENERATE_GCODE_FAILED:
+        //         return i18n._('Failed to generate G-code.');
+        //     case CNC_LASER_STAGE.UPLOADING_IMAGE:
+        //         return this.props.progressStatesManager.getNotice(2, stage, progress);
+        //     case CNC_LASER_STAGE.UPLOAD_IMAGE_SUCCESS:
+        //         return i18n._('Loaded object successfully.');
+        //     case CNC_LASER_STAGE.UPLOAD_IMAGE_FAILED:
+        //         return i18n._('Failed to load object.');
+        //     case CNC_LASER_STAGE.PROCESSING_IMAGE:
+        //         return this.props.progressStatesManager.getNotice(3, stage, progress);
+        //     case CNC_LASER_STAGE.PROCESS_IMAGE_SUCCESS:
+        //         return i18n._('Processed object successfully.');
+        //     case CNC_LASER_STAGE.PROCESS_IMAGE_FAILED:
+        //         return i18n._('Failed to process object.');
+        //     case CNC_LASER_STAGE.RENDER_TOOLPATH:
+        //         return this.props.progressStatesManager.getNotice(1, stage, progress);
+        //     // return i18n._('Rendering toolpath... {{progress}}%', { progress: (100.0 * progress).toFixed(1) });
+        //     case CNC_LASER_STAGE.GENERATE_TOOLPATH_AND_PREVIEW:
+        //         return i18n._('Generate toolpath and preview: {{progress}}%', { progress: (100.0 * progress).toFixed(1) });
+        //     case CNC_LASER_STAGE.GENERATING_VIEWPATH:
+        //     case CNC_LASER_STAGE.RENDER_VIEWPATH:
+        //         return this.props.progressStatesManager.getNotice(4, stage, progress);
+        //     default:
+        //         return '';
+        // }
+        // switch (stage) {
+        //     case PRINTING_STAGE.EMPTY:
+        //         return '';
+        //     case PRINTING_STAGE.LOADING_MODEL:
+        //         return i18n._('Loading model...');
+        //     case PRINTING_STAGE.LOAD_MODEL_SUCCEED:
+        //         return i18n._('Loaded model successfully.');
+        //     case PRINTING_STAGE.LOAD_MODEL_FAILED:
+        //         return i18n._('Failed to load model.');
+        //     case PRINTING_STAGE.SLICE_PREPARING:
+        //         return i18n._('Preparing for slicing...');
+        //     case PRINTING_STAGE.SLICING:
+        //         return i18n._('Slicing...{{progress}}%', { progress: (100.0 * this.getProgress()).toFixed(1) });
+        //     case PRINTING_STAGE.SLICE_SUCCEED:
+        //         return i18n._('Sliced model successfully.');
+        //     case PRINTING_STAGE.SLICE_FAILED:
+        //         return i18n._('Failed to slice model.');
+        //     case PRINTING_STAGE.PREVIEWING:
+        //         return i18n._('Previewing G-code...{{progress}}%', { progress: (100.0 * this.getProgress()).toFixed(1) });
+        //     case PRINTING_STAGE.PREVIEW_SUCCEED:
+        //         return i18n._('Previewed G-code successfully.');
+        //     case PRINTING_STAGE.PREVIEW_FAILED:
+        //         return i18n._('Failed to load G-code.');
+        //     default:
+        //         return '';
+        // }
     }
 
     startProgress(processStageID = PROCESS_STAGE.EMPTY, counts = []) {
-        console.log('start', processStageID);
         this.processStageID = processStageID;
         this.progress = 0;
         this.stage = 0;
@@ -143,7 +235,6 @@ class ProgressStatesManager {
     }
 
     updateProgress(stageID, progress) {
-        console.log('update', stageID, progress);
         const totalCount = this.totalCounts && this.totalCounts[this.stage];
         const count = this.counts && this.counts[this.stage];
         const newProgress = this.getProgress(this.processStageID, stageID, progress, (totalCount ?? 1) + 1 - (count ?? 1), totalCount ?? 1);
@@ -157,7 +248,6 @@ class ProgressStatesManager {
     }
 
     startNextStep() {
-        console.log('next');
         if (this.counts && this.counts[this.stage] && this.counts[this.stage] - 1 > 0) {
             this.counts[this.stage] -= 1;
         } else {
@@ -166,7 +256,6 @@ class ProgressStatesManager {
     }
 
     finishProgress() {
-        console.log('finish');
         this.processStageID = PROCESS_STAGE.EMPTY;
         this.progress = 0;
     }

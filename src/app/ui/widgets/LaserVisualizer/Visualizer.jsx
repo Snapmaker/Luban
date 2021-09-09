@@ -28,7 +28,6 @@ import {
     PROCESS_MODE_VECTOR, PROCESS_MODE_GREYSCALE
 } from '../../../constants';
 import SVGEditor from '../../SVGEditor';
-import { CNC_LASER_STAGE } from '../../../flux/editor/utils';
 import { actions as operationHistoryActions } from '../../../flux/operation-history';
 import modal from '../../../lib/modal';
 import UniApi from '../../../lib/uni-api';
@@ -332,64 +331,9 @@ class Visualizer extends Component {
         UniApi.Event.off('appbar-menu:laser.import', this.actions.importFile);
     }
 
-    getProgress() {
-        const { stage, progress } = this.props;
-        switch (stage) {
-            case CNC_LASER_STAGE.GENERATING_TOOLPATH:
-            case CNC_LASER_STAGE.RENDER_TOOLPATH:
-                return this.props.progressStatesManager.getProgress(1, stage, progress);
-            case CNC_LASER_STAGE.GENERATING_GCODE:
-                return this.props.progressStatesManager.getProgress(1, stage, progress);
-            default:
-                return progress;
-        }
-    }
-
     getNotice() {
         const { stage, progress } = this.props;
-        switch (stage) {
-            case CNC_LASER_STAGE.EMPTY:
-                return '';
-            case CNC_LASER_STAGE.GENERATING_TOOLPATH:
-                return this.props.progressStatesManager.getNotice(1, stage, progress);
-                // return i18n._('Generating toolpath... {{progress}}%', { progress: (100.0 * progress).toFixed(1) });
-            case CNC_LASER_STAGE.GENERATE_TOOLPATH_FAILED:
-                return i18n._('Failed to generate toolpath.');
-            case CNC_LASER_STAGE.PREVIEWING:
-                return this.props.progressStatesManager.getNotice(1, stage, progress);
-                // return i18n._('Previewing toolpath...');
-            case CNC_LASER_STAGE.PREVIEW_SUCCESS:
-                return i18n._('Previewed toolpath successfully');
-            case CNC_LASER_STAGE.PREVIEW_FAILED:
-                return i18n._('Failed to preview toolpath.');
-            case CNC_LASER_STAGE.GENERATING_GCODE:
-                return this.props.progressStatesManager.getNotice(1, stage, progress);
-            case CNC_LASER_STAGE.GENERATE_TOOLPATH_SUCCESS:
-                return i18n._('Generating G-code... {{progress}}%', { progress: (100.0 * progress).toFixed(1) });
-            case CNC_LASER_STAGE.GENERATE_GCODE_SUCCESS:
-                return i18n._('Generated G-code successfully.');
-            case CNC_LASER_STAGE.GENERATE_GCODE_FAILED:
-                return i18n._('Failed to generate G-code.');
-            case CNC_LASER_STAGE.UPLOADING_IMAGE:
-                return this.props.progressStatesManager.getNotice(2, stage, progress);
-            case CNC_LASER_STAGE.UPLOAD_IMAGE_SUCCESS:
-                return i18n._('Loaded object successfully.');
-            case CNC_LASER_STAGE.UPLOAD_IMAGE_FAILED:
-                return i18n._('Failed to load object.');
-            case CNC_LASER_STAGE.PROCESSING_IMAGE:
-                return this.props.progressStatesManager.getNotice(3, stage, progress);
-            case CNC_LASER_STAGE.PROCESS_IMAGE_SUCCESS:
-                return i18n._('Processed object successfully.');
-            case CNC_LASER_STAGE.PROCESS_IMAGE_FAILED:
-                return i18n._('Failed to process object.');
-            case CNC_LASER_STAGE.RENDER_TOOLPATH:
-                return this.props.progressStatesManager.getNotice(1, stage, progress);
-                // return i18n._('Rendering toolpath... {{progress}}%', { progress: (100.0 * progress).toFixed(1) });
-            case CNC_LASER_STAGE.GENERATE_TOOLPATH_AND_PREVIEW:
-                return i18n._('Generate toolpath and preview: {{progress}}%', { progress: (100.0 * progress).toFixed(1) });
-            default:
-                return '';
-        }
+        return this.props.progressStatesManager.getNotice(stage, progress);
     }
 
     showContextMenu = (event) => {
@@ -411,8 +355,7 @@ class Visualizer extends Component {
 
         const estimatedTime = this.props.displayedType === DISPLAYED_TYPE_TOOLPATH && !this.props.isChangedAfterGcodeGenerating ? this.props.getEstimatedTime('selected') : '';
         const notice = this.getNotice();
-        const newProgress = this.getProgress();
-        console.log('progress', this.props.stage, newProgress);
+        const progress = this.props.progress;
         const contextMenuDisabled = !isOnlySelectedOneModel || !this.props.selectedModelArray[0].visible;
         const displayedType = this.props.displayedType;
         const pasteDisabled = (this.props.modelGroup.clipboard.length === 0);
@@ -518,7 +461,7 @@ class Visualizer extends Component {
                 )}
 
                 <div>
-                    <ProgressBar tips={notice} progress={newProgress * 100} />
+                    <ProgressBar tips={notice} progress={progress * 100} />
                 </div>
                 <ContextMenu
                     ref={this.contextMenuRef}

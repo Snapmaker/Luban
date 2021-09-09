@@ -44,23 +44,6 @@ class ProgressStatesManager {
         this.progress = 0;
         this.processStageID = 0;
         this.progressStates = {};
-
-        this.push(PRINTING_PROCESS_STAGE.LOAD_MODEL, [
-            {
-                stageID: PRINTING_STAGE.LOADING_MODEL,
-                percent: 1
-            }
-        ], 'Loading model...');
-        this.push(PRINTING_PROCESS_STAGE.SLICE_AND_PREVIEW, [
-            {
-                stageID: PRINTING_STAGE.SLICING,
-                percent: 0.5
-            },
-            {
-                stageID: PRINTING_STAGE.PREVIEWING,
-                percent: 1
-            }
-        ], 'Previewing G-code...{{progress}}%');
     }
 
     push(processStageID, stages, notice) {

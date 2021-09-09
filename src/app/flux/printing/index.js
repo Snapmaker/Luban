@@ -8,7 +8,7 @@ import { ABSENT_OBJECT, EPSILON, DATA_PREFIX, PRINTING_MANAGER_TYPE_MATERIAL,
     PRINTING_MANAGER_TYPE_QUALITY, MACHINE_SERIES } from '../../constants';
 import { timestamp } from '../../../shared/lib/random-utils';
 import { machineStore } from '../../store/local-storage';
-import ProgressStatesManager, { PRINTING_PROCESS_STAGE, PRINTING_STAGE } from './utils';
+import ProgressStatesManager, { PROCESS_STAGE, STEP_STAGE } from '../../lib/manager/ProgressManager';
 
 import i18n from '../../lib/i18n';
 import definitionManager from '../manager/DefinitionManager';
@@ -93,7 +93,7 @@ const INITIAL_STATE = {
     activeDefinition: ABSENT_OBJECT,
 
     // Stage reflects current state of visualizer
-    stage: PRINTING_STAGE.EMPTY,
+    stage: STEP_STAGE.EMPTY,
 
     selectedModelIDArray: [],
     selectedModelArray: [],
@@ -331,9 +331,9 @@ export const actions = {
             // generate gcode event
             controller.on('slice:started', () => {
                 const { progressStatesManager } = getState().printing;
-                progressStatesManager.startProgress(PRINTING_PROCESS_STAGE.SLICE_AND_PREVIEW);
+                progressStatesManager.startProgress(PROCESS_STAGE.PRINTING_SLICE_AND_PREVIEW);
                 dispatch(actions.updateState({
-                    stage: PRINTING_STAGE.SLICING,
+                    stage: STEP_STAGE.PRINTING_SLICING,
                     progress: 0.01
                 }));
             });
@@ -351,7 +351,7 @@ export const actions = {
                     printTime,
                     filamentLength,
                     filamentWeight,
-                    stage: PRINTING_STAGE.SLICING,
+                    stage: STEP_STAGE.PRINTING_SLICING,
                     progress: 1
                 }));
                 progressStatesManager.startNextStep();
@@ -364,13 +364,13 @@ export const actions = {
                 const { progressStatesManager } = state;
                 if (progress - state.progress > 0.01 || progress > 1 - EPSILON) {
                     dispatch(actions.updateState({
-                        progress: progressStatesManager.updateProgress(PRINTING_STAGE.SLICING, progress)
+                        progress: progressStatesManager.updateProgress(STEP_STAGE.PRINTING_SLICING, progress)
                     }));
                 }
             });
             controller.on('slice:error', () => {
                 dispatch(actions.updateState({
-                    stage: PRINTING_STAGE.SLICE_FAILED
+                    stage: STEP_STAGE.PRINTING_SLICE_FAILED
                 }));
             });
         }
@@ -428,7 +428,7 @@ export const actions = {
                     dispatch(actions.displayGcode());
 
                     dispatch(actions.updateState({
-                        stage: PRINTING_STAGE.PREVIEWING
+                        stage: STEP_STAGE.PRINTING_PREVIEWING
                     }));
                     break;
                 }
@@ -441,7 +441,7 @@ export const actions = {
                 }
                 case 'err': {
                     dispatch(actions.updateState({
-                        stage: PRINTING_STAGE.PREVIEW_FAILED,
+                        stage: STEP_STAGE.PRINTING_PREVIEW_FAILED,
                         progress: 0
                     }));
                     break;
@@ -784,9 +784,9 @@ export const actions = {
     uploadModel: (file) => async (dispatch, getState) => {
         // Notice user that model is being loading
         const { progressStatesManager } = getState().printing;
-        progressStatesManager.startProgress(PRINTING_PROCESS_STAGE.LOAD_MODEL);
+        progressStatesManager.startProgress(PROCESS_STAGE.PRINTING_LOAD_MODEL);
         dispatch(actions.updateState({
-            stage: PRINTING_STAGE.LOADING_MODEL,
+            stage: STEP_STAGE.PRINTING_LOADING_MODEL,
             progress: 0
         }));
 
@@ -842,9 +842,9 @@ export const actions = {
             }));
         }
         // Info user that slice has started
-        progressStatesManager.startProgress(PRINTING_PROCESS_STAGE.SLICE_AND_PREVIEW);
+        progressStatesManager.startProgress(PROCESS_STAGE.PRINTING_SLICE_AND_PREVIEW);
         dispatch(actions.updateState({
-            stage: PRINTING_STAGE.SLICING,
+            stage: STEP_STAGE.PRINTING_SLICING,
             progress: 0
         }));
 
@@ -1163,7 +1163,7 @@ export const actions = {
             const modelState = modelGroup.getState();
             if (!modelState.hasModel) {
                 dispatch(actions.updateState({
-                    stage: PRINTING_STAGE.EMPTY,
+                    stage: STEP_STAGE.EMPTY,
                     progress: 0
                 }));
             }
@@ -1176,7 +1176,7 @@ export const actions = {
         const modelState = modelGroup.removeSelectedModel();
         if (!modelState.hasModel) {
             dispatch(actions.updateState({
-                stage: PRINTING_STAGE.EMPTY,
+                stage: STEP_STAGE.EMPTY,
                 progress: 0
             }));
         }
@@ -1202,7 +1202,7 @@ export const actions = {
             const modelState = modelGroup.getState();
             if (!modelState.hasModel) {
                 dispatch(actions.updateState({
-                    stage: PRINTING_STAGE.EMPTY,
+                    stage: STEP_STAGE.EMPTY,
                     progress: 0
                 }));
             }
@@ -1215,7 +1215,7 @@ export const actions = {
         const modelState = modelGroup.removeAllModels();
 
         dispatch(actions.updateState({
-            stage: PRINTING_STAGE.EMPTY,
+            stage: STEP_STAGE.EMPTY,
             progress: 0
         }));
         dispatch(actions.updateState(modelState));
@@ -1465,7 +1465,7 @@ export const actions = {
         const { progressStatesManager } = getState().printing;
         progressStatesManager.startNextStep();
         dispatch(actions.updateState({
-            stage: PRINTING_STAGE.PREVIEWING,
+            stage: STEP_STAGE.PRINTING_PREVIEWING,
             progress: 0
         }));
         gcodeRenderingWorker.postMessage({ func: '3DP', gcodeFilename });
@@ -1553,7 +1553,7 @@ export const actions = {
                     dispatch(actions.displayModel());
                     dispatch(actions.destroyGcodeLine());
                     dispatch(actions.updateState({
-                        stage: PRINTING_STAGE.LOADING_MODEL,
+                        stage: STEP_STAGE.PRINTING_LOADING_MODEL,
                         progress: 1
                     }));
                     break;
@@ -1580,7 +1580,7 @@ export const actions = {
                 }
                 case 'LOAD_MODEL_FAILED': {
                     dispatch(actions.updateState({
-                        stage: PRINTING_STAGE.LOAD_MODEL_FAILED,
+                        stage: STEP_STAGE.PRINTING_LOAD_MODEL_FAILED,
                         progress: 0
                     }));
                     break;
@@ -1605,7 +1605,7 @@ export const actions = {
                 const modelState = modelGroup.getState();
                 if (!modelState.hasModel) {
                     dispatch(actions.updateState({
-                        stage: PRINTING_STAGE.EMPTY,
+                        stage: STEP_STAGE.EMPTY,
                         progress: 0
                     }));
                 }
