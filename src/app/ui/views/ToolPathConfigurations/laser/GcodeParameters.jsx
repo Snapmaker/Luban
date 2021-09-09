@@ -1,6 +1,6 @@
 import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
-import { isNil } from 'lodash';
+import { cloneDeep } from 'lodash';
 // import Slider from '../../../components/Slider';
 import {
     TOOLPATH_TYPE_IMAGE,
@@ -10,12 +10,14 @@ import {
 import i18n from '../../../../lib/i18n';
 import SvgIcon from '../../../components/SvgIcon';
 import ToolParameters from '../cnc/ToolParameters';
+import { toHump } from '../../../../../shared/lib/utils';
 
 class GcodeParameters extends PureComponent {
     static propTypes = {
         toolPath: PropTypes.object.isRequired,
-
-        updateGcodeConfig: PropTypes.func.isRequired
+        activeToolDefinition: PropTypes.object.isRequired,
+        updateGcodeConfig: PropTypes.func.isRequired,
+        updateToolConfig: PropTypes.func.isRequired
     };
 
     state = {
@@ -25,7 +27,7 @@ class GcodeParameters extends PureComponent {
     };
 
     render() {
-        const { toolPath } = this.props;
+        const { toolPath, activeToolDefinition } = this.props;
 
         const { type, gcodeConfig } = toolPath;
 
@@ -35,17 +37,18 @@ class GcodeParameters extends PureComponent {
         const { fillEnabled, movementMode,
             multiPasses, fixedPowerEnabled } = gcodeConfig;
 
+        const allDefinition = LASER_DEFAULT_GCODE_PARAMETERS_DEFINITION;
+        Object.keys(allDefinition).forEach((key) => {
+            allDefinition[key].default_value = gcodeConfig[key];
+            // isGcodeConfig is true means to use updateGcodeConfig, false means to use updateToolConfig
+            allDefinition[key].isGcodeConfig = false;
+        });
+        Object.entries(cloneDeep(activeToolDefinition?.settings)).forEach(([key, value]) => {
+            allDefinition[toHump(key)].default_value = value.default_value;
+        });
         // Todo
         const isMethodFill = (fillEnabled === 'true' || fillEnabled === true);
 
-        const gcodeDefinition = LASER_DEFAULT_GCODE_PARAMETERS_DEFINITION;
-        Object.keys(gcodeDefinition).forEach((key) => {
-            if (!isNil(gcodeConfig[key])) {
-                gcodeDefinition[key].default_value = gcodeConfig[key];
-            }
-            // isGcodeConfig is true means to use updateGcodeConfig, false means to use updateToolConfig
-            gcodeDefinition[key].isGcodeConfig = true;
-        });
 
         // Session Fill
         const laserDefinitionFillKeys = [];
@@ -62,8 +65,8 @@ class GcodeParameters extends PureComponent {
                 laserDefinitionFillKeys.push('fillInterval');
             }
             laserDefinitionFillKeys.forEach((key) => {
-                if (gcodeDefinition[key]) {
-                    laserDefinitionFill[key] = gcodeDefinition[key];
+                if (allDefinition[key]) {
+                    laserDefinitionFill[key] = allDefinition[key];
                 }
                 if (key === 'movementMode') {
                     if (isSVG) {
@@ -90,8 +93,8 @@ class GcodeParameters extends PureComponent {
         }
         const laserDefinitionSpeed = {};
         laserDefinitionSpeedKeys.forEach((key) => {
-            if (gcodeDefinition[key]) {
-                laserDefinitionSpeed[key] = gcodeDefinition[key];
+            if (allDefinition[key]) {
+                laserDefinitionSpeed[key] = allDefinition[key];
             }
         });
 
@@ -104,8 +107,8 @@ class GcodeParameters extends PureComponent {
                 laserDefinitionRepetitionKeys.push('multiPassDepth');
             }
             laserDefinitionRepetitionKeys.forEach((key) => {
-                if (gcodeDefinition[key]) {
-                    laserDefinitionRepetition[key] = gcodeDefinition[key];
+                if (allDefinition[key]) {
+                    laserDefinitionRepetition[key] = allDefinition[key];
                 }
             });
         }
@@ -114,8 +117,8 @@ class GcodeParameters extends PureComponent {
         const laserDefinitionPowerKeys = ['fixedPower'];
         const laserDefinitionPower = {};
         laserDefinitionPowerKeys.forEach((key) => {
-            if (gcodeDefinition[key]) {
-                laserDefinitionPower[key] = gcodeDefinition[key];
+            if (allDefinition[key]) {
+                laserDefinitionPower[key] = allDefinition[key];
             }
         });
 
@@ -133,7 +136,7 @@ class GcodeParameters extends PureComponent {
                         </div>
                         <ToolParameters
                             settings={laserDefinitionFill}
-                            updateToolConfig={() => {}}
+                            updateToolConfig={this.props.updateToolConfig}
                             updateGcodeConfig={this.props.updateGcodeConfig}
                             toolPath={this.props.toolPath}
                             styleSize="large"
@@ -151,7 +154,7 @@ class GcodeParameters extends PureComponent {
                     </div>
                     <ToolParameters
                         settings={laserDefinitionSpeed}
-                        updateToolConfig={() => {}}
+                        updateToolConfig={this.props.updateToolConfig}
                         updateGcodeConfig={this.props.updateGcodeConfig}
                         toolPath={this.props.toolPath}
                         styleSize="large"
@@ -169,7 +172,7 @@ class GcodeParameters extends PureComponent {
                         </div>
                         <ToolParameters
                             settings={laserDefinitionRepetition}
-                            updateToolConfig={() => {}}
+                            updateToolConfig={this.props.updateToolConfig}
                             updateGcodeConfig={this.props.updateGcodeConfig}
                             toolPath={this.props.toolPath}
                             styleSize="large"
@@ -188,7 +191,7 @@ class GcodeParameters extends PureComponent {
                         </div>
                         <ToolParameters
                             settings={laserDefinitionPower}
-                            updateToolConfig={() => {}}
+                            updateToolConfig={this.props.updateToolConfig}
                             updateGcodeConfig={this.props.updateGcodeConfig}
                             toolPath={this.props.toolPath}
                             styleSize="large"

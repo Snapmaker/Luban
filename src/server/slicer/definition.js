@@ -28,6 +28,12 @@ const DEFAULT_PREDEFINED = {
         'tool.default_FEM.def.json',
         'tool.default_MBEM.def.json',
         'tool.default_SGVbit.def.json'
+    ],
+    'laser': [
+        'present.default_CUT.def.json',
+        'present.default_HDFill.def.json',
+        'present.default_SDFill.def.json',
+        'present.default_PathEngrave.def.json'
     ]
 };
 

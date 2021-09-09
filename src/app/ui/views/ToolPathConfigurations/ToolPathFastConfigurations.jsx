@@ -6,7 +6,6 @@ import classNames from 'classnames';
 import _ from 'lodash';
 import i18n from '../../../lib/i18n';
 import { actions as editorActions } from '../../../flux/editor';
-import { actions as cncActions } from '../../../flux/cnc';
 import Anchor from '../../components/Anchor';
 // import CncParameters from './cnc/CncParameters';
 import { toHump } from '../../../../shared/lib/utils';
@@ -19,6 +18,7 @@ import {
     HEAD_CNC,
     HEAD_LASER
 } from '../../../constants';
+import PresentSelector from './laser/PresentSelector';
 
 function getFastEditSettingsKeys(toolPath) {
     const { headType, type: toolPathType, gcodeConfig } = toolPath;
@@ -84,10 +84,9 @@ function getFastEditSettingsKeys(toolPath) {
 }
 
 
-function ToolPathFastConfigurations(props) {
-    const activeToolListDefinition = useSelector(state => state[props.headType]?.activeToolListDefinition, shallowEqual);
-    const toolpath = props.toolpath;
-    const toolDefinitions = useSelector(state => state[props.headType]?.toolDefinitions, shallowEqual);
+function ToolPathFastConfigurations({ setEditingToolpath, headType, toolpath }) {
+    const activeToolListDefinition = useSelector(state => state[headType]?.activeToolListDefinition, shallowEqual);
+    const toolDefinitions = useSelector(state => state[headType]?.toolDefinitions, shallowEqual);
 
     const dispatch = useDispatch();
     const [toolPath, setToolPath] = useState(toolpath);
@@ -97,21 +96,28 @@ function ToolPathFastConfigurations(props) {
         const gcodeConfig = {
             ...toolPath.gcodeConfig
         };
-        const definition = toolDefinition;
-        if (definition) {
-            toolParams.definitionId = definition.definitionId;
-            toolParams.definitionName = definition.name;
-            toolParams.toolDiameter = definition.settings.diameter.default_value;
-            toolParams.toolAngle = definition.settings.angle.default_value;
-            toolParams.toolShaftDiameter = definition.settings.shaft_diameter.default_value;
+        if (toolDefinition) {
+            toolParams.definitionId = toolDefinition.definitionId;
+            toolParams.definitionName = toolDefinition.name;
+            if (headType === HEAD_CNC) {
+                toolParams.toolDiameter = toolDefinition.settings.diameter.default_value;
+                toolParams.toolAngle = toolDefinition.settings.angle.default_value;
+                toolParams.toolShaftDiameter = toolDefinition.settings.shaft_diameter.default_value;
 
-            for (const key of Object.keys(definition.settings)) {
-                if (['diameter', 'angle', 'shaft_diameter'].includes(key)) {
-                    continue;
+                for (const key of Object.keys(toolDefinition.settings)) {
+                    if (['diameter', 'angle', 'shaft_diameter'].includes(key)) {
+                        continue;
+                    }
+                    gcodeConfig[toHump(key)] = toolDefinition.settings[key].default_value;
                 }
-                gcodeConfig[toHump(key)] = definition.settings[key].default_value;
+            }
+            if (headType === HEAD_LASER) {
+                for (const key of Object.keys(toolDefinition.settings)) {
+                    gcodeConfig[toHump(key)] = toolDefinition.settings[key].default_value;
+                }
             }
         }
+
 
         const newToolPath = {
             ...toolPath,
@@ -119,48 +125,62 @@ function ToolPathFastConfigurations(props) {
             toolParams
         };
         setToolPath(newToolPath);
-        await dispatch(editorActions.saveToolPath(props.headType, newToolPath));
+        await dispatch(editorActions.saveToolPath(headType, newToolPath));
     };
-    async function handleToolSelectorChange(value) {
+    async function handleSelectorChange(value) {
         setCurrentToolDefinition(value);
-        if (props.headType === HEAD_CNC && value?.definitionId !== activeToolListDefinition?.definitionId) {
-            await dispatch(cncActions.changeActiveToolListDefinition(value?.definitionId, value?.name, true));
+        if (value?.definitionId !== activeToolListDefinition?.definitionId) {
+            await dispatch(editorActions.changeActiveToolListDefinition(headType, value?.definitionId, value?.name, true));
         }
         saveToolPath(value);
-        dispatch(editorActions.refreshToolPathPreview(props.headType));
+        dispatch(editorActions.refreshToolPathPreview(headType));
     }
     function handleSetEditingToolpath() {
-        props.setEditingToolpath(toolPath);
+        setEditingToolpath(toolPath);
     }
-    const updateCncActiveToolDefinition = async (currentToolPath) => {
+    const updateActiveToolDefinition = async (currentToolPath) => {
         const { toolParams, gcodeConfig } = currentToolPath;
         const activeToolDefinition = _.cloneDeep(activeToolListDefinition);
 
         const oldTooldefinition = toolDefinitions.find((d) => {
-            return d.name === toolParams.definitionName && d.definitionId === toolParams.definitionId;
+            return d.name === toolParams.definitionName;
         });
         if (oldTooldefinition) {
             activeToolDefinition.definitionId = oldTooldefinition.definitionId;
             activeToolDefinition.name = oldTooldefinition.name;
-            activeToolDefinition.settings.angle.default_value = toolParams?.toolAngle;
-            activeToolDefinition.settings.diameter.default_value = toolParams?.toolDiameter;
-            activeToolDefinition.settings.shaft_diameter.default_value = toolParams?.toolShaftDiameter;
-            activeToolDefinition.settings.jog_speed.default_value = gcodeConfig?.jogSpeed;
-            activeToolDefinition.settings.plunge_speed.default_value = gcodeConfig?.plungeSpeed;
-            activeToolDefinition.settings.work_speed.default_value = gcodeConfig?.workSpeed;
-            activeToolDefinition.settings.step_down.default_value = gcodeConfig?.stepDown;
-            activeToolDefinition.settings.step_over.default_value = gcodeConfig?.stepOver;
+            if (headType === HEAD_CNC) {
+                activeToolDefinition.settings.angle.default_value = toolParams?.toolAngle;
+                activeToolDefinition.settings.diameter.default_value = toolParams?.toolDiameter;
+                activeToolDefinition.settings.shaft_diameter.default_value = toolParams?.toolShaftDiameter;
+                activeToolDefinition.settings.jog_speed.default_value = gcodeConfig?.jogSpeed;
+                activeToolDefinition.settings.plunge_speed.default_value = gcodeConfig?.plungeSpeed;
+                activeToolDefinition.settings.work_speed.default_value = gcodeConfig?.workSpeed;
+                activeToolDefinition.settings.step_down.default_value = gcodeConfig?.stepDown;
+                activeToolDefinition.settings.step_over.default_value = gcodeConfig?.stepOver;
+            }
+            if (headType === HEAD_LASER) {
+                activeToolDefinition.settings.fill_enabled.default_value = gcodeConfig?.fillEnabled;
+                activeToolDefinition.settings.movement_mode.default_value = gcodeConfig?.movementMode;
+                activeToolDefinition.settings.direction.default_value = gcodeConfig?.direction;
+                activeToolDefinition.settings.fill_interval.default_value = gcodeConfig?.fillInterval;
+                activeToolDefinition.settings.jog_speed.default_value = gcodeConfig?.jogSpeed;
+                activeToolDefinition.settings.work_speed.default_value = gcodeConfig?.workSpeed;
+                activeToolDefinition.settings.dwell_time.default_value = gcodeConfig?.dwellTime;
+                activeToolDefinition.settings.multi_passes.default_value = gcodeConfig?.multiPasses;
+                activeToolDefinition.settings.multi_pass_depth.default_value = gcodeConfig?.multiPassDepth;
+                activeToolDefinition.settings.fixed_power.default_value = gcodeConfig?.fixedPower;
+            }
         }
         if (currentToolDefinition?.definitionId !== activeToolDefinition?.definitionId) {
-            await dispatch(cncActions.changeActiveToolListDefinition(activeToolDefinition?.definitionId, activeToolDefinition?.name));
+            await dispatch(editorActions.changeActiveToolListDefinition(headType, activeToolDefinition?.definitionId, activeToolDefinition?.name));
         }
         setCurrentToolDefinition(activeToolDefinition);
     };
 
     useEffect(() => {
         setToolPath(toolpath);
-        if (!_.isNull(toolpath) && props.headType === HEAD_CNC) {
-            updateCncActiveToolDefinition(toolpath);
+        if (!_.isNull(toolpath)) {
+            updateActiveToolDefinition(toolpath);
         }
     }, [toolpath]);
 
@@ -175,29 +195,19 @@ function ToolPathFastConfigurations(props) {
                     ...option
                 }
             };
-            dispatch(editorActions.saveToolPath(props.headType, newToolPath));
-            dispatch(editorActions.refreshToolPathPreview(props.headType));
+            dispatch(editorActions.saveToolPath(headType, newToolPath));
+            dispatch(editorActions.refreshToolPathPreview(headType));
         },
-        // checkIfDefinitionModified() {
-        //     if (props.headType === HEAD_CNC) {
-        //         console.log('activeToolListDefinition.settings', activeToolListDefinition?.settings, toolPath.gcodeConfig);
-        //         return !Object.entries(activeToolListDefinition.settings).every(([key, setting]) => {
-        //             return currentToolDefinition && currentToolDefinition.settings[key].default_value === setting.default_value;
-        //         });
-        //     } else {
-        //         return false;
-        //     }
-        // },
         onDuplicateToolNameDefinition: async (inputValue) => {
             const newToolDefinition = {
                 ...currentToolDefinition,
                 name: inputValue
             };
-            await dispatch(cncActions.duplicateToolListDefinition(newToolDefinition));
-            await dispatch(cncActions.changeActiveToolListDefinition(newToolDefinition.definitionId, newToolDefinition.name));
+            await dispatch(editorActions.duplicateToolListDefinition(headType, newToolDefinition));
+            await dispatch(editorActions.changeActiveToolListDefinition(headType, newToolDefinition.definitionId, newToolDefinition.name));
         },
         updateGcodeConfig: (option) => {
-            if (props.headType === HEAD_LASER) {
+            if (headType === HEAD_LASER) {
                 // Movement Mode
                 if (option.movementMode === 'greyscale-dot') {
                     option.dwellTime = 5;
@@ -215,19 +225,19 @@ function ToolPathFastConfigurations(props) {
                 }
 
                 // Fill Enabled
-                if (option.fillEnabled === true) {
-                    option.fillInterval = 0.25;
-                    option.jogSpeed = 3000;
-                    option.workSpeed = 500;
-                    option.fixedPower = 100;
-                }
-                if (option.fillEnabled === false) {
-                    option.jogSpeed = 3000;
-                    option.workSpeed = 140;
-                    option.multiPasses = 2;
-                    option.multiPassDepth = 0.6;
-                    option.fixedPower = 100;
-                }
+                // if (option.fillEnabled === true) {
+                //     option.fillInterval = 0.25;
+                //     option.jogSpeed = 3000;
+                //     option.workSpeed = 500;
+                //     option.fixedPower = 100;
+                // }
+                // if (option.fillEnabled === false) {
+                //     option.jogSpeed = 3000;
+                //     option.workSpeed = 140;
+                //     option.multiPasses = 2;
+                //     option.multiPassDepth = 0.6;
+                //     option.fixedPower = 100;
+                // }
 
                 // Fiexd Power Enabled
                 if (option.fixedPower && option.fixedPower > 0) {
@@ -243,8 +253,8 @@ function ToolPathFastConfigurations(props) {
                     ...option
                 }
             };
-            dispatch(editorActions.saveToolPath(props.headType, newToolPath));
-            dispatch(editorActions.refreshToolPathPreview(props.headType));
+            dispatch(editorActions.saveToolPath(headType, newToolPath));
+            dispatch(editorActions.refreshToolPathPreview(headType));
         }
     };
     if (!toolPath) {
@@ -255,24 +265,17 @@ function ToolPathFastConfigurations(props) {
     if (toolPath) {
         const { gcodeConfig } = toolPath;
         let allDefinition = {};
-        if (props.headType === HEAD_CNC && activeToolListDefinition) {
-            const cncGcodeDefinition = _.cloneDeep(CNC_DEFAULT_GCODE_PARAMETERS_DEFINITION);
-            Object.keys(cncGcodeDefinition).forEach((key) => {
-                cncGcodeDefinition[key].default_value = gcodeConfig[key];
-                // isGcodeConfig is true means to use updateGcodeConfig, false means to use updateToolConfig
-                cncGcodeDefinition[key].isGcodeConfig = true;
-            });
-            allDefinition = {
-                ...cncGcodeDefinition
-            };
+        if (headType === HEAD_CNC && activeToolListDefinition) {
+            allDefinition = _.cloneDeep(CNC_DEFAULT_GCODE_PARAMETERS_DEFINITION);
         }
-        if (props.headType === HEAD_LASER) {
+        if (headType === HEAD_LASER && activeToolListDefinition) {
             allDefinition = _.cloneDeep(LASER_DEFAULT_GCODE_PARAMETERS_DEFINITION);
-            Object.keys(allDefinition).forEach((key) => {
-                allDefinition[key].default_value = gcodeConfig[toHump(key)];
-                allDefinition[key].isGcodeConfig = true;
-            });
         }
+        Object.keys(allDefinition).forEach((key) => {
+            allDefinition[key].default_value = gcodeConfig[key];
+            // isGcodeConfig is true means to use updateGcodeConfig, false means to use updateToolConfig
+            allDefinition[key].isGcodeConfig = true;
+        });
         const fastEditSettingsKeys = getFastEditSettingsKeys(toolPath);
         fastEditSettingsKeys.forEach((key) => {
             if (allDefinition[key]) {
@@ -297,7 +300,18 @@ function ToolPathFastConfigurations(props) {
                     {toolPath.headType === HEAD_CNC && currentToolDefinition && (
                         <ToolSelector
                             toolDefinition={currentToolDefinition}
-                            setCurrentToolDefinition={handleToolSelectorChange}
+                            setCurrentToolDefinition={handleSelectorChange}
+                            toolDefinitions={toolDefinitions}
+                            isModifiedDefinition={false}
+                            shouldSaveToolpath
+                            saveToolPath={saveToolPath}
+                            setCurrentValueAsProfile={() => {}}
+                        />
+                    )}
+                    {toolPath.headType === HEAD_LASER && currentToolDefinition && (
+                        <PresentSelector
+                            toolDefinition={currentToolDefinition}
+                            setCurrentToolDefinition={handleSelectorChange}
                             toolDefinitions={toolDefinitions}
                             isModifiedDefinition={false}
                             shouldSaveToolpath

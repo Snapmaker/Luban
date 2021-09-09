@@ -232,6 +232,51 @@ export const DEFAULT_CNC_CONFIG_IDS = [
     'tool.default_SGVbit'
 ];
 
+export const DEFAULT_LASER_CONFIG_IDS = [
+    'present.default_CUT',
+    'present.default_HDFill',
+    'present.default_SDFill',
+    'present.default_PathEngrave'
+];
+
+export const LASER_PRESENT_CONFIG_GROUP = [
+    {
+        name: 'Method',
+        fields: [
+            'fill_enabled'
+        ]
+    },
+    {
+        name: 'Fill',
+        fields: [
+            'movement_mode',
+            'direction',
+            'fill_interval'
+        ]
+    },
+    {
+        name: 'Speed',
+        fields: [
+            'jog_speed',
+            'work_speed',
+            'dwell_time'
+        ]
+    },
+    {
+        name: 'Repetition',
+        fields: [
+            'multi_passes',
+            'multi_pass_depth'
+        ]
+    },
+    {
+        name: 'Power',
+        fields: [
+            'fixed_power'
+        ]
+    }
+];
+
 export const CNC_TOOL_CONFIG_GROUP = [
     {
         name: 'Carving Tool',
@@ -453,6 +498,10 @@ export const LASER_DEFAULT_GCODE_PARAMETERS_DEFINITION = {
         max: 100,
         default_value: 'fixedPower',
         unit: '%'
+    },
+    'fixedPowerEnabled': {
+        type: 'bool',
+        default_value: true
     },
     'movementMode': {
         label: 'Movement Mode',

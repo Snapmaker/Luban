@@ -89,7 +89,7 @@ function useGetDefinitions(allDefinitions, definitionState, setDefinitionState, 
     return definitionsRef;
 }
 
-function ProfileManager({ optionConfigGroup, disableCategory = true, managerTitle, selectedId, allDefinitions, outsideActions, isDefinitionEditable, isOfficialDefinition, activeDefinition }) {
+function ProfileManager({ optionConfigGroup, disableCategory = true, managerTitle, selectedId, allDefinitions, outsideActions, isDefinitionEditable, isOfficialDefinition, activeDefinition, headType }) {
     const [definitionState, setDefinitionState] = useSetState({
         definitionForManager: activeDefinition,
         definitionOptions: [],
@@ -616,6 +616,7 @@ function ProfileManager({ optionConfigGroup, disableCategory = true, managerTitl
                                 isDefinitionEditable={isDefinitionEditable}
                                 onChangeDefinition={actions.onChangeDefinition}
                                 selectedSettingDefaultValue={definitionState?.selectedSettingDefaultValue}
+                                headType={headType}
                             />
 
                         </div>
@@ -659,7 +660,8 @@ ProfileManager.propTypes = {
     optionConfigGroup: PropTypes.array.isRequired,
     allDefinitions: PropTypes.array.isRequired,
     isDefinitionEditable: PropTypes.func.isRequired,
-    isOfficialDefinition: PropTypes.func.isRequired
+    isOfficialDefinition: PropTypes.func.isRequired,
+    headType: PropTypes.string
 };
 
 export default ProfileManager;

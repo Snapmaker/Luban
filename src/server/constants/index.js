@@ -66,6 +66,7 @@ export const CncSuffix = '.defv2.json';
 export const ConfigV1Suffix = '.def.json';
 export const ConfigV2Suffix = '.defv2.json';
 export const CNC_CONFIG_SUBCATEGORY = 'cnc';
+export const LASER_CONFIG_SUBCATEGORY = 'laser';
 export const PRINTING_CONFIG_SUBCATEGORY = 'printing';
 // Use a special a value to expand the range of pixels in the picture
 // 255 -> 0 => 255 ->0 -> -255

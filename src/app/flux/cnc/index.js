@@ -2,7 +2,6 @@ import { cloneDeep } from 'lodash';
 import ModelGroup from '../../models/ModelGroup';
 import i18n from '../../lib/i18n';
 import SVGActionsFactory from '../../models/SVGActionsFactory';
-import api from '../../api';
 import {
     ACTION_UPDATE_CONFIG,
     ACTION_UPDATE_STATE,
@@ -121,7 +120,7 @@ export const actions = {
         const { series } = getState().machine;
 
         await definitionManager.init(HEAD_CNC, series);
-        dispatch(editorActions.updateState('cnc', {
+        dispatch(editorActions.updateState(HEAD_CNC, {
             toolDefinitions: await definitionManager.getConfigDefinitions(),
             activeToolListDefinition: definitionManager?.activeDefinition,
             defaultDefinitions: definitionManager?.defaultDefinitions
@@ -226,26 +225,6 @@ export const actions = {
         }));
         return allDupliateDefinitions[0];
     },
-    duplicateToolListDefinition: (activeToolListDefinition) => async (dispatch, getState) => {
-        const state = getState().cnc;
-        const newToolDefinitions = state.toolDefinitions;
-        const category = activeToolListDefinition.category;
-        const newToolListDefinition = {
-            ...activeToolListDefinition,
-            definitionId: `tool.${timestamp()}`
-        };
-        const definitionsWithSameCategory = newToolDefinitions.filter(d => d.category === category);
-        // make sure name is not repeated
-        while (definitionsWithSameCategory.find(d => d.name === newToolListDefinition.name)) {
-            newToolListDefinition.name = `#${newToolListDefinition.name}`;
-        }
-        const createdDefinition = await definitionManager.createDefinition(newToolListDefinition);
-
-        dispatch(editorActions.updateState('cnc', {
-            toolDefinitions: [...newToolDefinitions, createdDefinition]
-        }));
-        return createdDefinition;
-    },
 
     removeToolCategoryDefinition: (category) => async (dispatch, getState) => {
         const state = getState().cnc;
@@ -280,45 +259,9 @@ export const actions = {
         const defaultDefinition = defaultDefinitions.find(d => d.definitionId === definitionId);
         dispatch(actions.updateToolListDefinition(defaultDefinition));
     },
-    onUploadToolDefinition: (file) => async (dispatch, getState) => {
-        const { toolDefinitions } = getState().cnc;
-        const formData = new FormData();
-        formData.append('file', file);
-        // set a new name that cannot be repeated
-        formData.append('uploadName', `${file.name.substr(0, file.name.length - 9)}${timestamp()}.def.json`);
-        api.uploadFile(formData)
-            .then(async (res) => {
-                const response = res.body;
-                const definitionId = `New.${timestamp()}`;
-                const definition = await definitionManager.uploadDefinition(definitionId, response.uploadName);
-                dispatch(editorActions.updateState('cnc', {
-                    toolDefinitions: [...toolDefinitions, definition]
-                }));
-            })
-            .catch(() => {
-                // Ignore error
-            });
-    },
     updateStlVisualizer: (obj) => (dispatch, getState) => {
         const { stlVisualizer } = getState().cnc;
         dispatch(editorActions.updateState('cnc', { stlVisualizer: { ...stlVisualizer, ...obj } }));
-    },
-    changeActiveToolListDefinition: (definitionId, name, shouldSaveToolpath = false) => async (dispatch, getState) => {
-        const { toolDefinitions } = getState().cnc;
-        const activeToolListDefinition = toolDefinitions.find(d => d.definitionId === definitionId);
-        activeToolListDefinition.shouldSaveToolpath = shouldSaveToolpath;
-        dispatch(editorActions.updateState('cnc', {
-            activeToolListDefinition
-        }));
-    },
-    updateShowCncToolManager: (showCncToolManager) => (dispatch) => {
-        dispatch(editorActions.updateState('cnc', { showCncToolManager }));
-    },
-    changeToolParams: (toolParams) => {
-        return {
-            type: ACTION_CHANGE_TOOL_PARAMS,
-            toolParams
-        };
     }
 };
 

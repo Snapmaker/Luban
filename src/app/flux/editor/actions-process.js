@@ -12,6 +12,9 @@ import i18n from '../../lib/i18n';
 import { actions as operationHistoryActions } from '../operation-history';
 import DeleteToolPathOperation from '../operation-history/DeleteToolPathOperation';
 import Operations from '../operation-history/Operations';
+import { timestamp } from '../../../shared/lib/random-utils';
+import definitionManager from '../manager/DefinitionManager';
+import api from '../../api';
 
 let toastId;
 export const processActions = {
@@ -170,17 +173,6 @@ export const processActions = {
             }));
         }
         return toolPath;
-    },
-
-    fastCreateToolPath: (headType, toolParams) => async (dispatch, getState) => {
-        const { toolPathGroup, materials, autoPreviewEnabled } = getState()[headType];
-        await toolPathGroup.fastCreateToolPath({ materials, toolParams });
-        if (autoPreviewEnabled) {
-            dispatch(processActions.preview(headType));
-        }
-        dispatch(baseActions.updateState(headType, {
-            isChangedAfterGcodeGenerating: true
-        }));
     },
 
     selectToolPathById: (headType, toolPathId) => (dispatch, getState) => {
@@ -463,5 +455,64 @@ export const processActions = {
             }
         }
         return null;
+    },
+
+    // profile manager
+    changeActiveToolListDefinition: (headType, definitionId, name, shouldSaveToolpath = false) => async (dispatch, getState) => {
+        const { toolDefinitions } = getState()[headType];
+        const activeToolListDefinition = toolDefinitions.find(d => d.definitionId === definitionId);
+        activeToolListDefinition.shouldSaveToolpath = shouldSaveToolpath;
+        dispatch(baseActions.updateState(headType, {
+            activeToolListDefinition
+        }));
+    },
+
+    duplicateToolListDefinition: (headType, activeToolListDefinition) => async (dispatch, getState) => {
+        const state = getState()[headType];
+        const newToolDefinitions = state.toolDefinitions;
+        const category = activeToolListDefinition.category;
+        const newToolListDefinition = {
+            ...activeToolListDefinition,
+            definitionId: `tool.${timestamp()}`
+        };
+        const definitionsWithSameCategory = newToolDefinitions.filter(d => d.category === category);
+        // make sure name is not repeated
+        while (definitionsWithSameCategory.find(d => d.name === newToolListDefinition.name)) {
+            newToolListDefinition.name = `#${newToolListDefinition.name}`;
+        }
+        const createdDefinition = await definitionManager.createDefinition(newToolListDefinition);
+
+        dispatch(baseActions.updateState(headType, {
+            toolDefinitions: [...newToolDefinitions, createdDefinition]
+        }));
+        return createdDefinition;
+    },
+    onUploadToolDefinition: (headType, file) => async (dispatch, getState) => {
+        const { toolDefinitions } = getState()[headType];
+        const formData = new FormData();
+        formData.append('file', file);
+        // set a new name that cannot be repeated
+        formData.append('uploadName', `${file.name.substr(0, file.name.length - 9)}${timestamp()}.def.json`);
+        api.uploadFile(formData)
+            .then(async (res) => {
+                const response = res.body;
+                const definitionId = `New.${timestamp()}`;
+                const definition = await definitionManager.uploadDefinition(definitionId, response.uploadName);
+                let name = definition.name;
+                while (toolDefinitions.find(e => e.name === name)) {
+                    name = `#${name}`;
+                }
+                definition.name = name;
+                await definitionManager.updateDefinition({
+                    definitionId: definition.definitionId,
+                    name
+                });
+                dispatch(baseActions.updateState(headType, {
+                    toolDefinitions: [...toolDefinitions, definition]
+                }));
+            })
+            .catch(() => {
+                // Ignore error
+            });
     }
 };
