@@ -384,6 +384,7 @@ export const processActions = {
     commitGenerateViewPath: (headType) => (dispatch, getState) => {
         const { toolPathGroup, materials, progressStatesManager } = getState()[headType];
 
+        progressStatesManager.startProgress(PROCESS_STAGE.CNC_LASER_VIEW_PATH, [1, 1]);
 
         const viewPathInfos = toolPathGroup.getCommitGenerateViewPathInfos({ materials });
 
@@ -391,8 +392,6 @@ export const processActions = {
             return;
         }
 
-
-        progressStatesManager.startProgress(PROCESS_STAGE.CNC_LASER_VIEW_PATH, [1, 1]);
         controller.commitViewPathTask({
             taskId: uuid.v4(),
             headType: headType,
