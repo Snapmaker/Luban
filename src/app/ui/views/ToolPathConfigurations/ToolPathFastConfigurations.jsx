@@ -282,10 +282,8 @@ function ToolPathFastConfigurations({ setEditingToolpath, headType, toolpath }) 
                 // }
 
                 // Fiexd Power Enabled
-                if (option.fixedPower && option.fixedPower > 0) {
-                    option.fixedPowerEnabled = true;
-                } else {
-                    option.fixedPowerEnabled = false;
+                if (option.fixedPower) {
+                    option.fixedPowerEnabled = option.fixedPower > 0;
                 }
             }
             const newToolPath = {
@@ -297,13 +295,17 @@ function ToolPathFastConfigurations({ setEditingToolpath, headType, toolpath }) 
             };
             // todo merge 'updateGcodeConfig' and 'updateToolConfig' function
             if (currentToolDefinition.settings) {
+                let shouldUpdateDefinition = false;
                 Object.entries(option).forEach(([itemKey, itemValue]) => {
                     const newKey = toLine(itemKey);
                     if (currentToolDefinition.settings[newKey]) {
+                        shouldUpdateDefinition = true;
                         currentToolDefinition.settings[newKey].default_value = itemValue;
                     }
                 });
-                setCurrentToolDefinition(currentToolDefinition);
+                if (shouldUpdateDefinition) {
+                    setCurrentToolDefinition(currentToolDefinition);
+                }
             }
 
             dispatch(editorActions.saveToolPath(headType, newToolPath));
@@ -355,10 +357,10 @@ function ToolPathFastConfigurations({ setEditingToolpath, headType, toolpath }) 
                             toolDefinition={currentToolDefinition}
                             setCurrentToolDefinition={handleSelectorChange}
                             toolDefinitions={toolDefinitions}
-                            isModifiedDefinition={false}
+                            isModifiedDefinition={isModifiedDefinition}
                             shouldSaveToolpath
                             saveToolPath={saveToolPath}
-                            setCurrentValueAsProfile={() => {}}
+                            setCurrentValueAsProfile={actions.setCurrentValueAsProfile}
                         />
                     )}
                     {toolPath.headType === HEAD_LASER && currentToolDefinition && (

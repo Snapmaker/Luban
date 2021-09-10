@@ -10,7 +10,6 @@ import { DefinitionLoader } from './definition';
 import { generateRandomPathName } from '../../shared/lib/random-utils';
 import { PRINTING_CONFIG_SUBCATEGORY } from '../constants';
 
-
 const log = logger('print3d-slice');
 
 const enginePath = getPath();
@@ -44,8 +43,8 @@ function callCuraEngine(modelConfig, supportConfig, outputPath) {
             args.push('-j', supportConfig.configFilePath);
         }
     }
+    // log.info(`${enginePath} ${args.join(' ')}`);
 
-    // console.log(args);
     return childProcess.spawn(
         enginePath,
         args
@@ -134,7 +133,6 @@ function slice(params, onProgress, onSucceed, onError) {
     const gcodeFilename = generateRandomPathName(`${path.parse(originalName).name}.gcode`);
     const gcodeFilePath = `${DataStorage.tmpDir}/${gcodeFilename}`;
     const process = callCuraEngine(modelConfig, supportConfig, gcodeFilePath);
-    log.info(`slice process gcodeFilename before ${modelConfig}, ${supportConfig} ${gcodeFilename} && ${gcodeFilePath}`);
 
     process.stderr.on('data', (data) => {
         const array = data.toString().split('\n');
@@ -160,7 +158,6 @@ function slice(params, onProgress, onSucceed, onError) {
     });
 
     process.on('close', (code) => {
-        log.info(`slice progress closed before ${filamentLength} && ${filamentWeight} && ${printTime}`);
         if (filamentLength && filamentWeight && printTime) {
             sliceProgress = 1;
             onProgress(sliceProgress);

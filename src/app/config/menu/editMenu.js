@@ -129,19 +129,19 @@ export default {
             label: 'Text-editor',
             submenu: [
                 {
-                    id: 'cut original',
+                    id: 'cut-original',
                     role: 'cut',
                     label: 'Cut Original',
                     accelerator: 'CommandOrControl+X'
                 },
                 {
-                    id: 'copy original',
+                    id: 'copy-original',
                     role: 'copy',
                     label: 'Copy Original',
                     accelerator: 'CommandOrControl+C'
                 },
                 {
-                    id: 'paste original',
+                    id: 'paste-original',
                     role: 'paste',
                     label: 'Paste Original',
                     accelerator: 'CommandOrControl+V'
