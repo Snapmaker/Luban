@@ -42,7 +42,13 @@ export const processActions = {
 
     preview: (headType) => (dispatch, getState) => {
         const { SVGActions, toolPathGroup, progressStatesManager } = getState()[headType];
-        progressStatesManager.startProgress(PROCESS_STAGE.CNC_LASER_GENERATE_TOOLPATH_AND_PREVIEW, [toolPathGroup.toolPaths.length, toolPathGroup.toolPaths.length, 1]);
+        let visibleToolPathsLength = 0;
+        toolPathGroup.toolPaths.forEach((toolPath) => {
+            if (toolPath.visible) {
+                visibleToolPathsLength += 1;
+            }
+        });
+        progressStatesManager.startProgress(PROCESS_STAGE.CNC_LASER_GENERATE_TOOLPATH_AND_PREVIEW, [visibleToolPathsLength, visibleToolPathsLength, 1]);
         toolPathGroup.toolPaths.forEach((toolPath) => {
             toolPath.setWarningStatus();
             toolPath.clearModelObjects();

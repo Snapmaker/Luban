@@ -19,7 +19,8 @@ import ToolPathFastConfigurations from '../../../views/ToolPathConfigurations/To
 import {
     PAGE_EDITOR,
     PAGE_PROCESS,
-    DISPLAYED_TYPE_TOOLPATH
+    DISPLAYED_TYPE_TOOLPATH,
+    DISPLAYED_TYPE_MODEL
 } from '../../../../constants';
 import ContextMenu from '../../../components/ContextMenu';
 
@@ -170,7 +171,19 @@ const ToolPathListBox = (props) => {
                 check: !check
             }));
             if (displayedType === DISPLAYED_TYPE_TOOLPATH) {
-                dispatch(editorActions.refreshToolPathPreview(props.headType));
+                let allToolPathHide = true;
+                toolPaths.forEach((toolPath) => {
+                    if ((toolPath.id === id && !visible) || (toolPath.id !== id && toolPath.visible)) {
+                        allToolPathHide = false;
+                    }
+                });
+                if (!allToolPathHide) {
+                    dispatch(editorActions.refreshToolPathPreview(props.headType));
+                } else {
+                    dispatch(editorActions.updateState(props.headType, {
+                        displayedType: DISPLAYED_TYPE_MODEL
+                    }));
+                }
             } else {
                 dispatch(editorActions.resetProcessState(props.headType));
             }
