@@ -498,7 +498,7 @@ class ModelGroup extends EventEmitter {
             return new Vector3(
                 (boundingBoxTempMax.x + boundingBoxTempMin.x) / 2,
                 (boundingBoxTempMax.y + boundingBoxTempMin.y) / 2,
-                boundingBoxTempMax.z
+                boundingBoxTempMax.z / 2
             );
         } else if (this.selectedGroup.children.length === 1) {
             return new Vector3(

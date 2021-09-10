@@ -1060,11 +1060,11 @@ export const actions = {
 
         let transformMode;
         switch (true) {
-            case ['positionX', 'positionY'].some(item => item in transformation):
-                transformMode = 'translate';
-                break;
             case ['scaleX', 'scaleY', 'scaleZ'].some(item => item in transformation):
                 transformMode = 'scale';
+                break;
+            case ['positionX', 'positionY'].some(item => item in transformation):
+                transformMode = 'translate';
                 break;
             case ['rotationX', 'rotationY', 'rotationZ'].some(item => item in transformation):
                 transformMode = 'rotate';
