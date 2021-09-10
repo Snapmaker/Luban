@@ -13,7 +13,7 @@ import ProgressBar from '../../components/ProgressBar';
 import ContextMenu from '../../components/ContextMenu';
 import { Button } from '../../components/Buttons';
 import Canvas from '../../components/SMCanvas';
-import { actions as printingActions, PRINTING_STAGE } from '../../../flux/printing';
+import { actions as printingActions } from '../../../flux/printing';
 import { actions as operationHistoryActions } from '../../../flux/operation-history';
 import VisualizerLeftBar from './VisualizerLeftBar';
 import VisualizerPreviewControl from './VisualizerPreviewControl';
@@ -21,6 +21,7 @@ import VisualizerBottomLeft from './VisualizerBottomLeft';
 import VisualizerInfo from './VisualizerInfo';
 import PrintableCube from './PrintableCube';
 import styles from './styles.styl';
+import { STEP_STAGE } from '../../../lib/manager/ProgressManager';
 
 class Visualizer extends PureComponent {
     static propTypes = {
@@ -65,7 +66,8 @@ class Visualizer extends PureComponent {
         autoRotateSelectedModel: PropTypes.func.isRequired,
         layFlatSelectedModel: PropTypes.func.isRequired,
         scaleToFitSelectedModel: PropTypes.func.isRequired,
-        resetSelectedModelTransformation: PropTypes.func.isRequired
+        resetSelectedModelTransformation: PropTypes.func.isRequired,
+        progressStatesManager: PropTypes.object.isRequired
     };
 
     state = {
@@ -355,14 +357,14 @@ class Visualizer extends PureComponent {
             this.canvas.current.renderScene();
         }
 
-        if (stage !== this.props.stage && stage === PRINTING_STAGE.LOAD_MODEL_FAILED) {
+        if (stage !== this.props.stage && stage === STEP_STAGE.LOAD_MODEL_FAILED) {
             modal({
                 cancelTitle: i18n._(''),
                 title: i18n._('Import Error'),
                 body: i18n._('Failed to import this object. \nPlease select a supported file format.')
             });
         }
-        if (stage !== this.props.stage && stage === PRINTING_STAGE.LOAD_MODEL_SUCCEED) {
+        if (stage !== this.props.stage && stage === STEP_STAGE.LOAD_MODEL_SUCCEED) {
             const modelSize = new Vector3();
             selectedModelArray[0].boundingBox.getSize(modelSize);
             const isLarge = ['x', 'y', 'x'].some((key) => modelSize[key] >= size[key]);
@@ -404,32 +406,7 @@ class Visualizer extends PureComponent {
 
     getNotice() {
         const { stage, progress } = this.props;
-        switch (stage) {
-            case PRINTING_STAGE.EMPTY:
-                return '';
-            case PRINTING_STAGE.LOADING_MODEL:
-                return i18n._('Loading model...');
-            case PRINTING_STAGE.LOAD_MODEL_SUCCEED:
-                return i18n._('Loaded model successfully.');
-            case PRINTING_STAGE.LOAD_MODEL_FAILED:
-                return i18n._('Failed to load model.');
-            case PRINTING_STAGE.SLICE_PREPARING:
-                return i18n._('Preparing for slicing...');
-            case PRINTING_STAGE.SLICING:
-                return i18n._('Slicing...{{progress}}%', { progress: (100.0 * progress).toFixed(1) });
-            case PRINTING_STAGE.SLICE_SUCCEED:
-                return i18n._('Sliced model successfully.');
-            case PRINTING_STAGE.SLICE_FAILED:
-                return i18n._('Failed to slice model.');
-            case PRINTING_STAGE.PREVIEWING:
-                return i18n._('Previewing G-code...{{progress}}%', { progress: (100.0 * progress).toFixed(1) });
-            case PRINTING_STAGE.PREVIEW_SUCCEED:
-                return i18n._('Previewed G-code successfully.');
-            case PRINTING_STAGE.PREVIEW_FAILED:
-                return i18n._('Failed to load G-code.');
-            default:
-                return '';
-        }
+        return this.props.progressStatesManager.getNotice(stage, progress);
     }
 
     showContextMenu = (event) => {
@@ -437,11 +414,12 @@ class Visualizer extends PureComponent {
     };
 
     render() {
-        const { size, selectedModelArray, modelGroup, gcodeLineGroup, progress, inProgress, hasModel } = this.props;
+        const { size, selectedModelArray, modelGroup, gcodeLineGroup, inProgress, hasModel } = this.props;
 
         const isModelSelected = (selectedModelArray.length > 0);
         const isSupportSelected = modelGroup.selectedModelArray.length > 0 && modelGroup.selectedModelArray[0].supportTag === true;
         const notice = this.getNotice();
+        const progress = this.props.progress;
         const pasteDisabled = (modelGroup.clipboard.length === 0);
         return (
             <div
@@ -569,7 +547,7 @@ const mapStateToProps = (state, ownProps) => {
     const printing = state.printing;
     const { size } = machine;
     // TODO: be to organized
-    const { stage, modelGroup, hasModel, gcodeLineGroup, transformMode, progress, displayedType, renderingTimestamp, inProgress } = printing;
+    const { progressStatesManager, stage, modelGroup, hasModel, gcodeLineGroup, transformMode, progress, displayedType, renderingTimestamp, inProgress } = printing;
     return {
         isActive: !currentModalPath && ownProps.location.pathname.indexOf('3dp') > 0,
         stage,
@@ -584,7 +562,8 @@ const mapStateToProps = (state, ownProps) => {
         progress,
         displayedType,
         renderingTimestamp,
-        inProgress
+        inProgress,
+        progressStatesManager
     };
 };
 

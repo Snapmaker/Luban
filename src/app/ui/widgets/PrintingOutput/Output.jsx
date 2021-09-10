@@ -12,7 +12,7 @@ import Dropdown from '../../components/Dropdown';
 import i18n from '../../../lib/i18n';
 import modal from '../../../lib/modal';
 import UniApi from '../../../lib/uni-api';
-import { actions as printingActions, PRINTING_STAGE } from '../../../flux/printing';
+import { actions as printingActions } from '../../../flux/printing';
 import { actions as workspaceActions } from '../../../flux/workspace';
 import { actions as projectActions } from '../../../flux/project';
 // import { actions as menuActions } from '../../../flux/appbar-menu';
@@ -21,6 +21,7 @@ import { renderPopup } from '../../utils';
 
 import Workspace from '../../pages/Workspace';
 import SvgIcon from '../../components/SvgIcon';
+import { STEP_STAGE } from '../../../lib/manager/ProgressManager';
 
 function useRenderWorkspace() {
     const [showWorkspace, setShowWorkspace] = useState(false);
@@ -99,7 +100,7 @@ function Output() {
     }, [isGcodeOverstepped, gcodeFile]);
 
 
-    const isSlicing = stage === PRINTING_STAGE.SLICING;
+    const isSlicing = stage === STEP_STAGE.PRINTING_SLICING;
     const menu = (
         <Menu>
             <Menu.Item

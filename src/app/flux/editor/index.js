@@ -5,7 +5,6 @@ import includes from 'lodash/includes';
 import _ from 'lodash';
 import ToolpathRendererWorker from '../../workers/ToolpathRenderer.worker';
 
-
 import api from '../../api';
 import {
     checkParams,
@@ -30,7 +29,7 @@ import LoadModelWorker from '../../workers/LoadModel.worker';
 import { controller } from '../../lib/controller';
 import { isEqual, round } from '../../../shared/lib/utils';
 
-import { CNC_LASER_STAGE } from './utils';
+import { PROCESS_STAGE, STEP_STAGE } from '../../lib/manager/ProgressManager';
 import VisibleOperation2D from '../operation-history/VisibleOperation2D';
 import AddOperation2D from '../operation-history/AddOperation2D';
 import DeleteOperation2D from '../operation-history/DeleteOperation2D';
@@ -98,7 +97,6 @@ const sizeModel = (size, materials, sourceWidth, sourceHeight) => {
 
 const toolpathRendererWorker = new ToolpathRendererWorker();
 
-
 export const actions = {
 
     ...baseActions,
@@ -126,18 +124,48 @@ export const actions = {
 
     __initOnControllerEvents: (headType) => {
         return (dispatch, getState) => {
-            ['processImage', 'generateToolPath', 'generateGcode', 'generateViewPath']
-                .forEach(key => {
-                    controller.on(`taskProgress:${key}`, (taskResult) => {
-                        if (headType !== taskResult.headType) {
-                            return;
-                        }
-                        dispatch(actions.updateState(headType, {
-                            progress: taskResult.progress
-                        }));
-                    });
-                });
+            // task progress
+            controller.on('taskProgress:processImage', (taskResult) => {
+                if (headType !== taskResult.headType) {
+                    return;
+                }
+                const { progressStatesManager } = getState()[headType];
+                dispatch(actions.updateState(headType, {
+                    progress: progressStatesManager.updateProgress(STEP_STAGE.CNC_LASER_PROCESSING_IMAGE, taskResult.progress)
+                }));
+            });
 
+            controller.on('taskProgress:generateToolPath', (taskResult) => {
+                if (headType !== taskResult.headType) {
+                    return;
+                }
+                const { progressStatesManager } = getState()[headType];
+                dispatch(actions.updateState(headType, {
+                    progress: progressStatesManager.updateProgress(STEP_STAGE.CNC_LASER_GENERATING_TOOLPATH, taskResult.progress)
+                }));
+            });
+
+            controller.on('taskProgress:generateGcode', (taskResult) => {
+                if (headType !== taskResult.headType) {
+                    return;
+                }
+                const { progressStatesManager } = getState()[headType];
+                dispatch(actions.updateState(headType, {
+                    progress: progressStatesManager.updateProgress(STEP_STAGE.CNC_LASER_GENERATING_GCODE, taskResult.progress)
+                }));
+            });
+
+            controller.on('taskProgress:generateViewPath', (taskResult) => {
+                if (headType !== taskResult.headType) {
+                    return;
+                }
+                const { progressStatesManager } = getState()[headType];
+                dispatch(actions.updateState(headType, {
+                    progress: progressStatesManager.updateProgress(STEP_STAGE.CNC_LASER_GENERATING_VIEWPATH, taskResult.progress)
+                }));
+            });
+
+            // task completed
             controller.on('taskCompleted:processImage', (taskResult) => {
                 if (headType !== taskResult.headType) {
                     return;
@@ -150,13 +178,15 @@ export const actions = {
                     return;
                 }
 
-                const { toolPathGroup } = getState()[headType];
+                const { toolPathGroup, progressStatesManager } = getState()[headType];
                 const toolPath = toolPathGroup._getToolPath(taskResult.taskId);
 
                 if (toolPath) {
                     if (taskResult.taskStatus === 'failed') {
                         toolPath.onGenerateToolpathFailed(taskResult);
                     } else {
+                        progressStatesManager.startNextStep();
+
                         toolpathRendererWorker.postMessage({
                             taskResult: taskResult
                         });
@@ -175,6 +205,12 @@ export const actions = {
                 if (headType !== taskResult.headType) {
                     return;
                 }
+                const { progressStatesManager } = getState()[headType];
+                progressStatesManager.startNextStep();
+                dispatch(actions.updateState(headType, {
+                    stage: STEP_STAGE.CNC_LASER_RENDER_VIEWPATH,
+                    progress: progressStatesManager.updateProgress(STEP_STAGE.CNC_LASER_RENDER_VIEWPATH, 0)
+                }));
                 dispatch(processActions.onGenerateViewPath(headType, taskResult));
             });
         };
@@ -198,11 +234,6 @@ export const actions = {
                             shouldGenerateGcodeCounter: shouldGenerateGcodeCounter + 1
                         }));
                     }
-
-                    dispatch(baseActions.updateState(headType, {
-                        stage: CNC_LASER_STAGE.GENERATE_TOOLPATH_SUCCESS,
-                        progress: 1
-                    }));
                     break;
                 }
                 case 'data': {
@@ -220,24 +251,27 @@ export const actions = {
                     break;
                 }
                 case 'progress': {
+                    const { progressStatesManager } = getState()[headType];
                     const { progress } = value;
                     if (progress < 0.1) {
+                        progressStatesManager.startNextStep();
                         dispatch(actions.updateState(headType, {
-                            stage: CNC_LASER_STAGE.RENDER_TOOLPATH,
-                            progress: progress
+                            stage: STEP_STAGE.CNC_LASER_RENDER_TOOLPATH,
+                            progress: progressStatesManager.updateProgress(STEP_STAGE.CNC_LASER_RENDER_TOOLPATH, progress)
                         }));
                     } else {
                         dispatch(actions.updateState(headType, {
-                            progress: progress
+                            progress: progressStatesManager.updateProgress(STEP_STAGE.CNC_LASER_RENDER_TOOLPATH, progress)
                         }));
                     }
                     break;
                 }
                 case 'err': {
                     dispatch(baseActions.updateState(headType, {
-                        stage: CNC_LASER_STAGE.GENERATE_TOOLPATH_FAILED,
+                        stage: STEP_STAGE.CNC_LASER_GENERATE_TOOLPATH_FAILED,
                         progress: 1
                     }));
+                    // progressStatesManager.finishProgress(false);
                     break;
                 }
                 default:
@@ -306,12 +340,12 @@ export const actions = {
      * 2. Create Mold from image information
      */
     uploadImage: (headType, file, mode, onError) => (dispatch, getState) => {
+        const { materials, progressStatesManager } = getState()[headType];
+        progressStatesManager.startProgress(PROCESS_STAGE.CNC_LASER_UPLOAD_IMAGE, [1, 1]);
         dispatch(actions.updateState(headType, {
-            stage: CNC_LASER_STAGE.UPLOADING_IMAGE,
-            inProgress: true,
-            progress: 0.25
+            stage: STEP_STAGE.CNC_LASER_UPLOADING_IMAGE,
+            progress: progressStatesManager.updateProgress(STEP_STAGE.CNC_LASER_UPLOADING_IMAGE, 0.25)
         }));
-        const { materials } = getState()[headType];
         const formData = new FormData();
         formData.append('image', file);
         formData.append('isRotate', materials.isRotate);
@@ -320,9 +354,8 @@ export const actions = {
         api.uploadImage(formData)
             .then((res) => {
                 dispatch(actions.updateState(headType, {
-                    stage: CNC_LASER_STAGE.UPLOAD_IMAGE_SUCCESS,
-                    inProgress: false,
-                    progress: 1
+                    stage: STEP_STAGE.CNC_LASER_UPLOADING_IMAGE,
+                    progress: progressStatesManager.updateProgress(STEP_STAGE.CNC_LASER_UPLOADING_IMAGE, 1)
                 }));
                 const { width, height, originalName, uploadName } = res.body;
                 dispatch(actions.generateModel(headType, originalName, uploadName, width, height, mode, undefined, { svgNodeName: 'image' }));
@@ -331,40 +364,10 @@ export const actions = {
             .catch((err) => {
                 onError && onError(err);
                 dispatch(actions.updateState(headType, {
-                    stage: CNC_LASER_STAGE.UPLOAD_IMAGE_FAILED,
-                    inProgress: false,
+                    stage: STEP_STAGE.CNC_LASER_UPLOAD_IMAGE_FAILED,
                     progress: 1
                 }));
-            });
-    },
-
-    uploadCaseImage: (headType, file, mode, caseConfigs, caseTransformation, onError) => (dispatch, getState) => {
-        dispatch(actions.updateState(headType, {
-            stage: CNC_LASER_STAGE.UPLOADING_IMAGE,
-            inProgress: true,
-            progress: 0.25
-        }));
-        const { materials } = getState()[headType];
-        file.isRotate = materials.isRotate;
-        api.uploadImage(file)
-            .then((res) => {
-                dispatch(actions.updateState(headType, {
-                    stage: CNC_LASER_STAGE.UPLOAD_IMAGE_SUCCESS,
-                    inProgress: false,
-                    progress: 1
-                }));
-                const { width, height, originalName, uploadName } = res.body;
-                const { config } = caseConfigs;
-                const { gcodeConfig } = caseConfigs;
-                if (gcodeConfig.toolSnap) {
-                    dispatch(baseActions.updateState(headType, {
-                        toolSnap: gcodeConfig.toolSnap
-                    }));
-                }
-                dispatch(actions.generateModel(headType, originalName, uploadName, width, height, mode, null, { svgNodeName: 'image', ...config }, gcodeConfig, caseTransformation));
-            })
-            .catch((err) => {
-                onError && onError(err);
+                // progressStatesManager.finishProgress(false);
             });
     },
 
@@ -412,8 +415,7 @@ export const actions = {
                 case 'LOAD_MODEL_FAILED': {
                     worker.terminate();
                     dispatch(actions.updateState(headType, {
-                        stage: CNC_LASER_STAGE.PREVIEW_FAILED,
-                        inProgress: false,
+                        stage: STEP_STAGE.CNC_LASER_PREVIEW_FAILED,
                         progress: 0
                     }));
                     break;
@@ -676,7 +678,7 @@ export const actions = {
 
     // TODO: temporary workaround for model image processing
     processSelectedModel: (headType) => async (dispatch, getState) => {
-        const { materials, modelGroup, toolParams = {} } = getState()[headType];
+        const { materials, modelGroup, toolParams = {}, progressStatesManager } = getState()[headType];
 
         const selectedModels = modelGroup.getSelectedModelArray();
         if (selectedModels.length !== 1) {
@@ -701,10 +703,14 @@ export const actions = {
         options.materials = materials;
         options.toolParams = toolParams;
 
+        if (progressStatesManager.getProgressStage() !== PROCESS_STAGE.CNC_LASER_UPLOAD_IMAGE) {
+            progressStatesManager.startProgress(PROCESS_STAGE.CNC_LASER_PROCESS_IMAGE, [1]);
+        } else {
+            progressStatesManager.startNextStep();
+        }
         dispatch(baseActions.updateState(headType, {
-            stage: CNC_LASER_STAGE.PROCESSING_IMAGE,
-            inProgress: true,
-            progress: 0
+            stage: STEP_STAGE.CNC_LASER_PROCESSING_IMAGE,
+            progress: progressStatesManager.updateProgress(STEP_STAGE.CNC_LASER_PROCESSING_IMAGE, 0)
         }));
 
         dispatch(actions.resetProcessState(headType));
@@ -874,8 +880,7 @@ export const actions = {
             dispatch(baseActions.updateState(headType, {
                 displayedType: DISPLAYED_TYPE_MODEL,
                 needToPreview: true,
-                stage: CNC_LASER_STAGE.EMPTY,
-                inProgress: false,
+                stage: STEP_STAGE.EMPTY,
                 progress: 0
             }));
         }
@@ -996,7 +1001,7 @@ export const actions = {
      * @returns {Function}
      */
     onReceiveProcessImageTaskResult: (headType, taskResult) => async (dispatch, getState) => {
-        const { SVGActions, modelGroup } = getState()[headType];
+        const { SVGActions, modelGroup, progressStatesManager } = getState()[headType];
         const model = modelGroup.getModel(taskResult.data.modelID);
         if (!model) {
             return;
@@ -1034,10 +1039,11 @@ export const actions = {
         dispatch(baseActions.resetCalculatedState(headType));
         dispatch(baseActions.render(headType));
         dispatch(baseActions.updateState(headType, {
-            stage: CNC_LASER_STAGE.PROCESS_IMAGE_SUCCESS,
-            inProgress: false,
-            progress: 1
+            stage: STEP_STAGE.CNC_LASER_PROCESSING_IMAGE,
+            progress: progressStatesManager.updateProgress(STEP_STAGE.CNC_LASER_PROCESSING_IMAGE, 1)
         }));
+        // progressStatesManager.finishProgress(true);
+        progressStatesManager.reset();
     },
 
     getEstimatedTime: (headType, type) => (dispatch, getState) => {

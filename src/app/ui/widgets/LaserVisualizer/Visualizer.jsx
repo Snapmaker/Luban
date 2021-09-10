@@ -28,7 +28,6 @@ import {
     PROCESS_MODE_VECTOR, PROCESS_MODE_GREYSCALE
 } from '../../../constants';
 import SVGEditor from '../../SVGEditor';
-import { CNC_LASER_STAGE } from '../../../flux/editor/utils';
 import { actions as operationHistoryActions } from '../../../flux/operation-history';
 import modal from '../../../lib/modal';
 import UniApi from '../../../lib/uni-api';
@@ -41,7 +40,6 @@ class Visualizer extends Component {
         page: PropTypes.string.isRequired,
         stage: PropTypes.number.isRequired,
         progress: PropTypes.number.isRequired,
-        inProgress: PropTypes.bool.isRequired,
         materials: PropTypes.object,
 
         coordinateMode: PropTypes.object.isRequired,
@@ -98,6 +96,8 @@ class Visualizer extends Component {
         getSelectedElementsUniformScalingState: PropTypes.func.isRequired,
         uploadImage: PropTypes.func.isRequired,
         switchToPage: PropTypes.func.isRequired,
+
+        progressStatesManager: PropTypes.object.isRequired,
 
         elementActions: PropTypes.shape({
             moveElementsStart: PropTypes.func.isRequired,
@@ -333,43 +333,7 @@ class Visualizer extends Component {
 
     getNotice() {
         const { stage, progress } = this.props;
-        switch (stage) {
-            case CNC_LASER_STAGE.EMPTY:
-                return '';
-            case CNC_LASER_STAGE.GENERATING_TOOLPATH:
-                return i18n._('Generating toolpath... {{progress}}%', { progress: (100.0 * progress).toFixed(1) });
-            case CNC_LASER_STAGE.GENERATE_TOOLPATH_FAILED:
-                return i18n._('Failed to generate toolpath.');
-            case CNC_LASER_STAGE.PREVIEWING:
-                return i18n._('Previewing toolpath...');
-            case CNC_LASER_STAGE.PREVIEW_SUCCESS:
-                return i18n._('Previewed toolpath successfully');
-            case CNC_LASER_STAGE.PREVIEW_FAILED:
-                return i18n._('Failed to preview toolpath.');
-            case CNC_LASER_STAGE.GENERATING_GCODE:
-            case CNC_LASER_STAGE.GENERATE_TOOLPATH_SUCCESS:
-                return i18n._('Generating G-code... {{progress}}%', { progress: (100.0 * progress).toFixed(1) });
-            case CNC_LASER_STAGE.GENERATE_GCODE_SUCCESS:
-                return i18n._('Generated G-code successfully.');
-            case CNC_LASER_STAGE.GENERATE_GCODE_FAILED:
-                return i18n._('Failed to generate G-code.');
-            case CNC_LASER_STAGE.UPLOADING_IMAGE:
-                return i18n._('Loading object {{progress}}%', { progress: (100.0 * progress).toFixed(1) });
-            case CNC_LASER_STAGE.UPLOAD_IMAGE_SUCCESS:
-                return i18n._('Loaded object successfully.');
-            case CNC_LASER_STAGE.UPLOAD_IMAGE_FAILED:
-                return i18n._('Failed to load object.');
-            case CNC_LASER_STAGE.PROCESSING_IMAGE:
-                return i18n._('Processing object {{progress}}%', { progress: (100.0 * progress).toFixed(1) });
-            case CNC_LASER_STAGE.PROCESS_IMAGE_SUCCESS:
-                return i18n._('Processed object successfully.');
-            case CNC_LASER_STAGE.PROCESS_IMAGE_FAILED:
-                return i18n._('Failed to process object.');
-            case CNC_LASER_STAGE.RENDER_TOOLPATH:
-                return i18n._('Rendering toolpath... {{progress}}%', { progress: (100.0 * progress).toFixed(1) });
-            default:
-                return '';
-        }
+        return this.props.progressStatesManager.getNotice(stage, progress);
     }
 
     showContextMenu = (event) => {
@@ -391,6 +355,7 @@ class Visualizer extends Component {
 
         const estimatedTime = this.props.displayedType === DISPLAYED_TYPE_TOOLPATH && !this.props.isChangedAfterGcodeGenerating ? this.props.getEstimatedTime('selected') : '';
         const notice = this.getNotice();
+        const progress = this.props.progress;
         const contextMenuDisabled = !isOnlySelectedOneModel || !this.props.selectedModelArray[0].visible;
         const displayedType = this.props.displayedType;
         const pasteDisabled = (this.props.modelGroup.clipboard.length === 0);
@@ -411,9 +376,9 @@ class Visualizer extends Component {
                 }}
                 >
                     <SVGEditor
+                        editable="true"
                         isActive={!this.props.currentModalPath && this.props.pathname.indexOf('laser') > 0}
                         ref={this.svgCanvas}
-                        editable={!this.props.inProgress}
                         size={this.props.size}
                         initContentGroup={this.props.initContentGroup}
                         scale={this.props.scale}
@@ -496,7 +461,7 @@ class Visualizer extends Component {
                 )}
 
                 <div>
-                    <ProgressBar tips={notice} progress={this.props.progress * 100} />
+                    <ProgressBar tips={notice} progress={progress * 100} />
                 </div>
                 <ContextMenu
                     ref={this.contextMenuRef}
@@ -590,15 +555,16 @@ class Visualizer extends Component {
 const mapStateToProps = (state, ownProps) => {
     const { size } = state.machine;
     const { currentModalPath } = state.appbarMenu;
-    const { background } = state.laser;
+    const { background, progressStatesManager } = state.laser;
 
     const { SVGActions, scale, target, materials, page, selectedModelID, modelGroup, svgModelGroup, toolPathGroup, displayedType,
-        isChangedAfterGcodeGenerating, renderingTimestamp, stage, progress, coordinateMode, coordinateSize, inProgress } = state.laser;
+        isChangedAfterGcodeGenerating, renderingTimestamp, stage, progress, coordinateMode, coordinateSize } = state.laser;
     const selectedModelArray = modelGroup.getSelectedModelArray();
     const selectedToolPathModelArray = modelGroup.getSelectedToolPathModels();
 
     return {
         currentModalPath,
+        progressStatesManager,
         // switch pages trigger pathname change
         pathname: ownProps.location.pathname,
         page,
@@ -622,8 +588,7 @@ const mapStateToProps = (state, ownProps) => {
         backgroundGroup: background.group,
         renderingTimestamp,
         stage,
-        progress,
-        inProgress
+        progress
     };
 };
 

@@ -16,7 +16,7 @@ class SVGLeftBar extends PureComponent {
         onClickToUpload: PropTypes.func.isRequired,
         fileInput: PropTypes.object.isRequired,
         allowedFiles: PropTypes.string.isRequired,
-        editable: PropTypes.bool.isRequired,
+        editable: PropTypes.bool,
         headType: PropTypes.string
     };
 
