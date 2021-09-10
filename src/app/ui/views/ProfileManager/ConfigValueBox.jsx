@@ -1,7 +1,6 @@
 import React, { useState, useRef, useCallback } from 'react';
 import PropTypes from 'prop-types';
 import classNames from 'classnames';
-import { includes } from 'lodash';
 import i18n from '../../../lib/i18n';
 import SettingItem from './SettingItem';
 import CheckboxItem from './CheckboxItem';
@@ -103,7 +102,7 @@ function ConfigValueBox({ optionConfigGroup, calculateTextIndex, isCategorySelec
                                             <CheckboxItem
                                                 calculateTextIndex={calculateTextIndex}
                                                 settings={definitionForManager?.settings}
-                                                defaultValue={includes(customConfigs, key)}
+                                                customConfigs={customConfigs}
                                                 definitionKey={key}
                                                 key={key}
                                                 isDefinitionEditable={isDefinitionEditable}
