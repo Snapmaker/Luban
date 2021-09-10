@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import PropTypes from 'prop-types';
 import { useDispatch, useSelector, shallowEqual } from 'react-redux';
 import classNames from 'classnames';
@@ -32,7 +32,7 @@ function Configurations({ widgetActions }) {
     const [showCustomConfigPannel, setShowCustomConfigPannel] = useState(false);
     const qualityDefinitions = useSelector(state => state?.printing?.qualityDefinitions);
     const defaultQualityId = useSelector(state => state?.printing?.defaultQualityId, shallowEqual);
-    let printingCustomConfigs = useSelector(state => state?.machine?.printingCustomConfigs, shallowEqual);
+    let printingCustomConfigs = useSelector(state => state?.machine?.printingCustomConfigs);
     const dispatch = useDispatch();
 
     const actions = {
@@ -49,15 +49,6 @@ function Configurations({ widgetActions }) {
         },
         closePannel: () => {
             setShowCustomConfigPannel(false);
-        },
-        onChangeCustomConfig: (key, value) => {
-            if (value && !includes(printingCustomConfigs, key)) {
-                printingCustomConfigs.push(key);
-                printingCustomConfigs = [...printingCustomConfigs];
-            } else if (!value) {
-                printingCustomConfigs = printingCustomConfigs.filter((a) => a !== key);
-            }
-            dispatch(machineActions.updatePrintingCustomConfigs(printingCustomConfigs));
         },
         displayModel: () => {
             dispatch(printingActions.destroyGcodeLine());
@@ -121,6 +112,16 @@ function Configurations({ widgetActions }) {
             actions.updateActiveDefinition(definition);
         }
     };
+
+    const onChangeCustomConfig = useCallback((key, value) => {
+        if (value && !includes(printingCustomConfigs, key)) {
+            printingCustomConfigs.push(key);
+            printingCustomConfigs = [...printingCustomConfigs];
+        } else if (!value) {
+            printingCustomConfigs = printingCustomConfigs.filter((a) => a !== key);
+        }
+        dispatch(machineActions.updatePrintingCustomConfigs(printingCustomConfigs));
+    }, []);
 
     useEffect(() => {
         widgetActions.setTitle(i18n._('Printing Settings'));
@@ -231,7 +232,7 @@ function Configurations({ widgetActions }) {
                                 optionConfigGroup={PRINTING_QUALITY_CONFIG_GROUP}
                                 isDefinitionEditable={isDefinitionEditable}
                                 type="checkbox"
-                                onChangeDefinition={actions.onChangeCustomConfig}
+                                onChangeDefinition={onChangeCustomConfig}
                                 onResetDefinition={actions.onResetDefinition}
                                 headType="printing"
                             />

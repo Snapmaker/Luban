@@ -19,7 +19,7 @@ function VisualizerLeftBar({ defaultSupportSize, setTransformMode, isSupporting,
     const selectedModelArray = useSelector(state => state?.printing?.modelGroup?.selectedModelArray);
     const isSupportSelected = useSelector(state => state?.printing?.modelGroup?.isSupportSelected());
     const transformMode = useSelector(state => state?.printing?.transformMode, shallowEqual);
-    const transformation = useSelector(state => state?.printing?.modelGroup?.getSelectedModelTransformationForPrinting());
+    const transformation = useSelector(state => state?.printing?.modelGroup?.getSelectedModelTransformationForPrinting(), shallowEqual);
 
     let modelSize = {};
     if (isSupportSelected) {

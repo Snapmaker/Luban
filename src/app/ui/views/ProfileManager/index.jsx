@@ -199,11 +199,12 @@ function ProfileManager({ optionConfigGroup, disableCategory = true, managerTitl
                 shouldSelectDefinition = true;
                 newDefinition = allDefinitions[0];
             }
+            const deleteName = isCategorySelected ? definition.category : definition.name;
             const popupActions = modal({
                 title: i18n._('Delete Profile'),
                 body: (
                     <React.Fragment>
-                        <p>{`Are you sure to delete profile "${definition.name}"?`}</p>
+                        <p>{`Are you sure to delete profile "${deleteName}"?`}</p>
                     </React.Fragment>
                 ),
 

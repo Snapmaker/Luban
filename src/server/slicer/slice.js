@@ -10,7 +10,6 @@ import { DefinitionLoader } from './definition';
 import { generateRandomPathName } from '../../shared/lib/random-utils';
 import { PRINTING_CONFIG_SUBCATEGORY } from '../constants';
 
-
 const log = logger('print3d-slice');
 
 const enginePath = getPath();
@@ -44,8 +43,8 @@ function callCuraEngine(modelConfig, supportConfig, outputPath) {
             args.push('-j', supportConfig.configFilePath);
         }
     }
+    // log.info(`${enginePath} ${args.join(' ')}`);
 
-    // console.log(args);
     return childProcess.spawn(
         enginePath,
         args

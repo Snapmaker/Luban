@@ -220,7 +220,6 @@ function ToolPathConfigurations({ toolpath, onClose, headType }) {
             });
         },
         updateGcodeConfig: (option) => {
-            console.log('option', option);
             const nToolPath = {
                 ...toolPath,
                 gcodeConfig: {

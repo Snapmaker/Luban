@@ -208,7 +208,11 @@ export const actions = {
         while (toolDefinitions.find(d => d.category === newCategoryName)) {
             newCategoryName = `#${newCategoryName}`;
         }
-        const definitionsWithSameCategory = isCreate ? [{ ...activeToolList, name: 'Default Tool' }]
+        const definitionsWithSameCategory = isCreate ? [{
+            ...activeToolList,
+            name: 'Default Tool',
+            settings: toolDefinitions[0]?.settings
+        }]
             : state.toolDefinitions.filter(d => d.category === oldCategory);
         for (let i = 0; i < definitionsWithSameCategory.length; i++) {
             const newDefinition = definitionsWithSameCategory[i];

@@ -355,12 +355,14 @@ function WifiTransport({ widgetActions }) {
             {
                 _.map(gcodeFiles, (gcodeFile, index) => {
                     return (
-                        <GcodePreviewItem
-                            gcodeFile={gcodeFile}
-                            index={index}
-                            selected={selectFileName === gcodeFile.uploadName}
-                            onSelectFile={onSelectFile}
-                        />
+                        <React.Fragment key={index}>
+                            <GcodePreviewItem
+                                gcodeFile={gcodeFile}
+                                index={index}
+                                selected={selectFileName === gcodeFile.uploadName}
+                                onSelectFile={onSelectFile}
+                            />
+                        </React.Fragment>
                     );
                 })
             }
