@@ -14,6 +14,9 @@ import Settings from '../pages/Settings/Settings';
 import FirmwareTool from '../pages/Settings/FirmwareTool';
 import SoftwareUpdate from '../pages/Settings/SoftwareUpdate';
 import {
+    // HEAD_PRINTING,
+    HEAD_LASER,
+    HEAD_CNC,
     COORDINATE_MODE_CENTER,
     COORDINATE_MODE_BOTTOM_CENTER,
     getCurrentHeadType,
@@ -27,10 +30,7 @@ import {
     OFFICIAL_SITE_EN_URL,
     MARKET_ZH_URL,
     MARKET_EN_URL,
-    MYMINIFACTORY_URL,
-    HEAD_PRINTING,
-    HEAD_LASER,
-    HEAD_CNC
+    MYMINIFACTORY_URL
 } from '../../constants';
 import { actions as menuActions } from '../../flux/appbar-menu';
 import { actions as machineActions } from '../../flux/machine';
@@ -48,7 +48,6 @@ class AppLayout extends PureComponent {
         store: PropTypes.object.isRequired,
         currentModalPath: PropTypes.string,
         updateCurrentModalPath: PropTypes.func.isRequired,
-        clearOperationHistory: PropTypes.func.isRequired,
         startProject: PropTypes.func.isRequired,
         changeCoordinateMode: PropTypes.func.isRequired,
         updateMaterials: PropTypes.func.isRequired,
@@ -443,6 +442,7 @@ class AppLayout extends PureComponent {
             UniApi.Event.on('appbar-menu:new-file', async ({ headType, isRotate }) => {
                 const oldPathname = this.props.history.location.pathname;
                 const history = this.props.history;
+                await this.props.startProject(oldPathname, `/${headType}`, history);
                 if (headType === HEAD_CNC || headType === HEAD_LASER) {
                     if (!isRotate) {
                         const { materials } = this.props.store?.[headType];
@@ -464,11 +464,7 @@ class AppLayout extends PureComponent {
                             await this.props.updateMaterials(headType, { isRotate });
                         }
                     }
-                    this.props.clearOperationHistory(headType);
-                } else {
-                    this.props.clearOperationHistory(HEAD_PRINTING);
                 }
-                await this.props.startProject(oldPathname, `/${headType}`, history);
             });
             UniApi.Event.on('appbar-menu:clear-recent-files', () => {
                 this.actions.updateRecentFile([], 'reset');

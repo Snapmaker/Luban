@@ -1506,7 +1506,7 @@ class ModelGroup extends EventEmitter {
         const overstepped = this._checkOverstepped(model);
         model.setOversteppedAndSelected(overstepped, model.isSelected);
     }
-  
+
     analyzeSelectedModelRotation() {
         if (this.selectedModelArray.length === 1) {
             const model = this.selectedModelArray[0];
