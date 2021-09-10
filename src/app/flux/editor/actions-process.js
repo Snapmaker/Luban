@@ -385,6 +385,11 @@ export const processActions = {
         const { toolPathGroup, materials, progressStatesManager } = getState()[headType];
 
         progressStatesManager.startProgress(PROCESS_STAGE.CNC_LASER_VIEW_PATH, [1, 1]);
+        dispatch(baseActions.updateState(headType, {
+            stage: STEP_STAGE.CNC_LASER_GENERATING_VIEWPATH,
+            simulationNeedToPreview: false,
+            progress: progressStatesManager.updateProgress(STEP_STAGE.CNC_LASER_GENERATING_VIEWPATH, 0.01)
+        }));
 
         const viewPathInfos = toolPathGroup.getCommitGenerateViewPathInfos({ materials });
 
@@ -397,12 +402,6 @@ export const processActions = {
             headType: headType,
             data: viewPathInfos
         });
-
-        dispatch(baseActions.updateState(headType, {
-            stage: STEP_STAGE.CNC_LASER_GENERATING_VIEWPATH,
-            simulationNeedToPreview: false,
-            progress: progressStatesManager.updateProgress(STEP_STAGE.CNC_LASER_GENERATING_VIEWPATH, 0)
-        }));
     },
 
     setAutoPreview: (headType, autoPreviewEnabled) => (dispatch) => {
