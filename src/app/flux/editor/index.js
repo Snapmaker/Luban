@@ -267,12 +267,11 @@ export const actions = {
                     break;
                 }
                 case 'err': {
-                    const { progressStatesManager } = getState()[headType];
                     dispatch(baseActions.updateState(headType, {
                         stage: STEP_STAGE.CNC_LASER_GENERATE_TOOLPATH_FAILED,
                         progress: 1
                     }));
-                    progressStatesManager.finishProgress(false);
+                    // progressStatesManager.finishProgress(false);
                     break;
                 }
                 default:
@@ -368,7 +367,7 @@ export const actions = {
                     stage: STEP_STAGE.CNC_LASER_UPLOAD_IMAGE_FAILED,
                     progress: 1
                 }));
-                progressStatesManager.finishProgress(false);
+                // progressStatesManager.finishProgress(false);
             });
     },
 
@@ -1043,7 +1042,8 @@ export const actions = {
             stage: STEP_STAGE.CNC_LASER_PROCESSING_IMAGE,
             progress: progressStatesManager.updateProgress(STEP_STAGE.CNC_LASER_PROCESSING_IMAGE, 1)
         }));
-        progressStatesManager.finishProgress(true);
+        // progressStatesManager.finishProgress(true);
+        progressStatesManager.reset();
     },
 
     getEstimatedTime: (headType, type) => (dispatch, getState) => {

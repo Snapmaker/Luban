@@ -22,7 +22,6 @@ export const processActions = {
         const { toolPathGroup, progressStatesManager } = getState()[headType];
 
         // start progress
-        progressStatesManager.startProgress(PROCESS_STAGE.CNC_LASER_GENERATE_TOOLPATH_AND_PREVIEW, [toolPathGroup.toolPaths.length, toolPathGroup.toolPaths.length, 1]);
         dispatch(baseActions.updateState(headType, {
             stage: STEP_STAGE.CNC_LASER_GENERATING_TOOLPATH,
             progress: progressStatesManager.updateProgress(STEP_STAGE.CNC_LASER_GENERATING_TOOLPATH, 0)
@@ -42,7 +41,8 @@ export const processActions = {
     },
 
     preview: (headType) => (dispatch, getState) => {
-        const { SVGActions, toolPathGroup } = getState()[headType];
+        const { SVGActions, toolPathGroup, progressStatesManager } = getState()[headType];
+        progressStatesManager.startProgress(PROCESS_STAGE.CNC_LASER_GENERATE_TOOLPATH_AND_PREVIEW, [toolPathGroup.toolPaths.length, toolPathGroup.toolPaths.length, 1]);
         toolPathGroup.toolPaths.forEach((toolPath) => {
             toolPath.setWarningStatus();
             toolPath.clearModelObjects();
@@ -416,7 +416,7 @@ export const processActions = {
                 stage: STEP_STAGE.CNC_LASER_GENERATE_GCODE_FAILED,
                 progress: 1
             }));
-            progressStatesManager.finishProgress(false);
+            // progressStatesManager.finishProgress(false);
             return;
         }
         const { viewPathFile } = taskResult;
@@ -437,7 +437,7 @@ export const processActions = {
             stage: STEP_STAGE.CNC_LASER_RENDER_VIEWPATH,
             progress: progressStatesManager.updateProgress(STEP_STAGE.CNC_LASER_RENDER_VIEWPATH, 1)
         }));
-        progressStatesManager.finishProgress(true);
+        // progressStatesManager.finishProgress(true);
         dispatch(baseActions.render(headType));
     },
 

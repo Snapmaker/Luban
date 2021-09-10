@@ -94,6 +94,11 @@ class ProgressState {
 class ProgressStatesManager {
     constructor() {
         this.reset();
+        this._init();
+    }
+
+    _init() {
+        this.progressStates = {};
 
         // cnc & laser
         this.push(PROCESS_STAGE.CNC_LASER_GENERATE_TOOLPATH_AND_PREVIEW,
@@ -235,8 +240,7 @@ class ProgressStatesManager {
 
     reset() {
         this.progress = 0;
-        this.processStageID = 0;
-        this.progressStates = {};
+        this.processStageID = PROCESS_STAGE.EMPTY;
         this.state = _STATE.EMPTY;
     }
 
