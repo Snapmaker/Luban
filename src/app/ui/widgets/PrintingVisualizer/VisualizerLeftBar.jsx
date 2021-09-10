@@ -177,17 +177,15 @@ function VisualizerLeftBar({ defaultSupportSize, setTransformMode, isSupporting,
         },
         scaleToFitSelectedModel: () => {
             const scalar = ['x', 'y', 'z'].reduce((prev, key) => Math.min((size[key] - 5) / selectedModelBBoxDes[key], prev), Number.POSITIVE_INFINITY);
-            if (scalar !== 1) {
-                const newTransformation = {
-                    scaleX: scalar,
-                    scaleY: scalar,
-                    scaleZ: scalar,
-                    positionX: 0,
-                    positionY: 0
-                };
-                dispatch(printingActions.updateSelectedModelTransformation(newTransformation));
-                actions.onModelAfterTransform();
-            }
+            const newTransformation = {
+                scaleX: scalar * transformation.scaleX,
+                scaleY: scalar * transformation.scaleY,
+                scaleZ: scalar * transformation.scaleZ,
+                positionX: 0,
+                positionY: 0
+            };
+            dispatch(printingActions.updateSelectedModelTransformation(newTransformation));
+            actions.onModelAfterTransform();
         }
     };
     let moveX = 0;
