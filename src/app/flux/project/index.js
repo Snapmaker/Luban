@@ -287,7 +287,7 @@ export const actions = {
         } else {
             modelGroup = getState()[headType].modelGroup;
         }
-        if (!modelGroup || !modelGroup.hasModel()) {
+        if (!modelGroup || !modelGroup.hasModelWhole()) {
             return;
         }
 
