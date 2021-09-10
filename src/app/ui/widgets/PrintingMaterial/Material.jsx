@@ -25,6 +25,7 @@ import { HEAD_PRINTING, PRINTING_MANAGER_TYPE_MATERIAL } from '../../../constant
 //     'material_bed_temperature_layer_0',
 //     'material_flow_layer_0'
 // ];
+const plaMaterialId = 'material.pla';
 function Material({ widgetActions }) {
     const materialDefinitions = useSelector(state => state?.printing?.materialDefinitions,);
     const defaultMaterialId = useSelector(state => state?.printing?.defaultMaterialId, shallowEqual);
@@ -63,6 +64,10 @@ function Material({ widgetActions }) {
             dispatch(printingActions.displayModel());
         }
     }
+    function onSelectOfficialDefinition(definitionId) {
+        dispatch(printingActions.updateDefaultMaterialId(definitionId));
+    }
+
     useEffect(() => {
         widgetActions.setTitle(i18n._('Material Settings'));
     }, [widgetActions]);
@@ -72,6 +77,9 @@ function Material({ widgetActions }) {
             value: d.definitionId
         }));
         const definition = materialDefinitions.find(d => d.definitionId === defaultMaterialId);
+        if (!definition) {
+            onSelectOfficialDefinition(plaMaterialId);
+        }
         updateActiveDefinition(definition);
         setMaterialDefinitionOptions(newMaterialDefinitionOptions);
     }, [materialDefinitions, defaultMaterialId]);

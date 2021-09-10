@@ -1,4 +1,4 @@
-import { Vector3, Group, Matrix4, BufferGeometry, MeshPhongMaterial, Mesh, DoubleSide, Float32BufferAttribute, MeshBasicMaterial } from 'three';
+import { Vector3, Group, Matrix4, BufferGeometry, MeshPhongMaterial, Mesh, DoubleSide, Float32BufferAttribute, MeshBasicMaterial, Box3 } from 'three';
 import EventEmitter from 'events';
 // import { EPSILON } from '../../constants';
 import uuid from 'uuid';
@@ -160,13 +160,21 @@ class ModelGroup extends EventEmitter {
     }
 
     // Calculate selectedGroup's BBox in modelGroup
-    getSelectedModelBBoxDes() {
+    getSelectedModelBBoxDes(docs = true) {
         const selectedGroup = this.selectedGroup;
         if (selectedGroup.children.length > 0 && selectedGroup.shouldUpdateBoundingbox) {
             const whd = new Vector3(0, 0, 0);
             ThreeUtils.computeBoundingBox(this.selectedGroup).getSize(whd);
+            if (docs) {
+                return `${whd.x.toFixed(1)} × ${whd.y.toFixed(1)} × ${whd.z.toFixed(1)} mm`;
+            } else {
+                return {
+                    x: whd.x,
+                    y: whd.y,
+                    z: whd.z
+                };
+            }
             // width-depth-height
-            return `${whd.x.toFixed(1)} × ${whd.y.toFixed(1)} × ${whd.z.toFixed(1)} mm`;
         } else {
             return '';
         }
@@ -475,29 +483,28 @@ class ModelGroup extends EventEmitter {
 
 
     calculateSelectedGroupPosition() {
-        const maxObjectPosition = new Vector3(-Number.MAX_VALUE, -Number.MAX_VALUE, -Number.MAX_VALUE);
-        const minObjectPosition = new Vector3(Number.MAX_VALUE, Number.MAX_VALUE, Number.MAX_VALUE);
-        this.selectedGroup.children.forEach((meshObject) => {
-            const position = new Vector3();
-            meshObject.getWorldPosition(position);
-            maxObjectPosition.x = Math.max(position.x, maxObjectPosition.x);
-            maxObjectPosition.y = Math.max(position.y, maxObjectPosition.y);
-            maxObjectPosition.z = Math.max(position.z, maxObjectPosition.z);
+        const boundingBoxTempMax = new Vector3(-Number.MAX_VALUE, -Number.MAX_VALUE, -Number.MAX_VALUE);
+        const boundingBoxTempMin = new Vector3(Number.MAX_VALUE, Number.MAX_VALUE, Number.MAX_VALUE);
+        let boundingBoxTemp = new Box3();
+        boundingBoxTemp = ThreeUtils.computeBoundingBox(this.selectedGroup);
+        boundingBoxTempMax.x = boundingBoxTemp.max.x;
+        boundingBoxTempMax.y = boundingBoxTemp.max.y;
+        boundingBoxTempMax.z = boundingBoxTemp.max.z;
 
-            minObjectPosition.x = Math.min(position.x, minObjectPosition.x);
-            minObjectPosition.y = Math.min(position.y, minObjectPosition.y);
-        });
+        boundingBoxTempMin.x = boundingBoxTemp.min.x;
+        boundingBoxTempMin.y = boundingBoxTemp.min.y;
+        boundingBoxTempMin.z = boundingBoxTemp.min.z;
         if (this.selectedGroup.children.length > 1) {
             return new Vector3(
-                (maxObjectPosition.x + minObjectPosition.x) / 2,
-                (maxObjectPosition.y + minObjectPosition.y) / 2,
-                maxObjectPosition.z
+                (boundingBoxTempMax.x + boundingBoxTempMin.x) / 2,
+                (boundingBoxTempMax.y + boundingBoxTempMin.y) / 2,
+                boundingBoxTempMax.z
             );
         } else if (this.selectedGroup.children.length === 1) {
             return new Vector3(
-                maxObjectPosition.x,
-                maxObjectPosition.y,
-                maxObjectPosition.z
+                boundingBoxTempMax.x,
+                boundingBoxTempMax.y,
+                boundingBoxTempMax.z
             );
         } else {
             return new Vector3(
@@ -641,7 +648,7 @@ class ModelGroup extends EventEmitter {
             ThreeUtils.applyObjectMatrix(this.selectedGroup, new Matrix4().getInverse(this.selectedGroup.matrix));
             ThreeUtils.liftObjectOnlyChildMatrix(this.selectedGroup);
             this.selectedGroup.uniformScalingState = this.selectedGroup.children[0].uniformScalingState;
-        } else {
+        } else if (this.selectedModelArray.length > 1) {
             // this.selectedGroup.uniformScalingState = true;
             const p = this.calculateSelectedGroupPosition(this.selectedGroup);
             // set selected group position need to remove children temporarily
@@ -873,7 +880,6 @@ class ModelGroup extends EventEmitter {
         if (selected.length === 0) {
             return null;
         }
-
         selected.forEach((item) => {
             item.scaleToFit(size);
             item.computeBoundingBox();
@@ -1209,6 +1215,11 @@ class ModelGroup extends EventEmitter {
 
     hasModel() {
         return this.getModels().filter(v => v.visible).length > 0;
+    }
+
+    // include visible and hidden model
+    hasModelWhole() {
+        return this.getModels();
     }
 
     // not include p1, p2
