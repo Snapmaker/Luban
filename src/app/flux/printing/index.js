@@ -369,6 +369,8 @@ export const actions = {
                 }
             });
             controller.on('slice:error', () => {
+                const { progressStatesManager } = getState().printing;
+                progressStatesManager.finishProgress(false);
                 dispatch(actions.updateState({
                     stage: STEP_STAGE.PRINTING_SLICE_FAILED
                 }));
@@ -440,6 +442,8 @@ export const actions = {
                     break;
                 }
                 case 'err': {
+                    const { progressStatesManager } = getState().printing;
+                    progressStatesManager.finish(false);
                     dispatch(actions.updateState({
                         stage: STEP_STAGE.PRINTING_PREVIEW_FAILED,
                         progress: 0
@@ -1579,6 +1583,8 @@ export const actions = {
                     break;
                 }
                 case 'LOAD_MODEL_FAILED': {
+                    const { progressStatesManager } = getState().printing;
+                    progressStatesManager.finishProgress(false);
                     dispatch(actions.updateState({
                         stage: STEP_STAGE.PRINTING_LOAD_MODEL_FAILED,
                         progress: 0
