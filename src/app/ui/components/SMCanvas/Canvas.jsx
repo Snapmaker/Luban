@@ -39,6 +39,7 @@ class Canvas extends Component {
         scale: PropTypes.number,
         minScale: PropTypes.number,
         maxScale: PropTypes.number,
+        scaleSize: PropTypes.number,
         target: PropTypes.object,
 
         supportActions: PropTypes.object,
@@ -247,7 +248,7 @@ class Canvas extends Component {
         const sourceType = this.props.transformSourceType === '2D' ? '2D' : '3D';
 
         this.controls = new Controls(sourceType, this.camera, this.group, this.renderer.domElement, this.onScale, this.onChangeTarget,
-            this.props.supportActions);
+            this.props.supportActions, this.props.minScale, this.props.maxScale, this.props.scaleSize);
         this.controls.canOperateModel = this.props.canOperateModel;
         this.setCamera(this.cameraInitialPosition, this.initialTarget);
 

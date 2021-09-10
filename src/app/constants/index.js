@@ -890,6 +890,7 @@ export function getCurrentHeadType(pathname) {
 
 
 // Laser | CNC canvas min | max scale rate
+export const VISUALIZER_CAMERA_HEIGHT = 300;
 export const MAX_LASER_CNC_CANVAS_SCALE = 5;
 export const MIN_LASER_CNC_CANVAS_SCALE = 0.5;
 export const SOFTWARE_MANUAL = 'https://support.snapmaker.com/hc/en-us/articles/4406229926935';

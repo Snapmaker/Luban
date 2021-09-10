@@ -106,7 +106,7 @@ class Controls extends EventEmitter {
 
     clickEnabled = true;
 
-    constructor(sourceType, camera, group, domElement, onScale, onPan, supportActions) {
+    constructor(sourceType, camera, group, domElement, onScale, onPan, supportActions, minScale = 0.5, maxScale = 5, scaleSize = 300) {
         super();
 
         this.sourceType = sourceType;
@@ -119,6 +119,10 @@ class Controls extends EventEmitter {
 
         this.initTransformControls();
         this.supportActions = supportActions;
+
+        this.minScale = minScale;
+        this.maxScale = maxScale;
+        this.scaleSize = scaleSize;
 
         this.bindEventListeners();
     }
@@ -625,6 +629,12 @@ class Controls extends EventEmitter {
             const prevRadius = this.spherical.radius;
             this.spherical.radius *= this.scale;
             this.spherical.radius = Math.max(this.spherical.radius, 0.05);
+            if (this.spherical.radius < this.scaleSize / this.maxScale) {
+                this.spherical.radius = this.scaleSize / this.maxScale;
+            }
+            if (this.spherical.radius > this.scaleSize / this.minScale) {
+                this.spherical.radius = this.scaleSize / this.minScale;
+            }
             // suport zoomToCursor (mouse only)
             if (this.zoomToCursor) {
                 this.target.lerp(this.mouse3D, 1 - this.spherical.radius / prevRadius);

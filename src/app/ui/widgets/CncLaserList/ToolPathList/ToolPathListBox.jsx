@@ -19,8 +19,7 @@ import ToolPathFastConfigurations from '../../../views/ToolPathConfigurations/To
 import {
     PAGE_EDITOR,
     PAGE_PROCESS,
-    DISPLAYED_TYPE_TOOLPATH,
-    DISPLAYED_TYPE_MODEL
+    DISPLAYED_TYPE_TOOLPATH
 } from '../../../../constants';
 import ContextMenu from '../../../components/ContextMenu';
 
@@ -179,10 +178,6 @@ const ToolPathListBox = (props) => {
                 });
                 if (!allToolPathHide) {
                     dispatch(editorActions.refreshToolPathPreview(props.headType));
-                } else {
-                    dispatch(editorActions.updateState(props.headType, {
-                        displayedType: DISPLAYED_TYPE_MODEL
-                    }));
                 }
             } else {
                 dispatch(editorActions.resetProcessState(props.headType));
