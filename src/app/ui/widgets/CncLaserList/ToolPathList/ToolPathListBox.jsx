@@ -148,7 +148,6 @@ const ToolPathListBox = (props) => {
     const displayedType = useSelector(state => state[props.headType]?.displayedType);
     const selectedModelArray = useSelector(state => state[props.headType]?.modelGroup?.getSelectedModelArray());
     const dispatch = useDispatch();
-    console.log(selectedToolPathIDArray);
 
     const selectedToolPathId = firstSelectedToolpath.id;
     const [editingToolpath, setEditingToolpath] = useState(null);
