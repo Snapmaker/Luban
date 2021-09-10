@@ -14,13 +14,13 @@ import SvgIcon from '../../components/SvgIcon';
 import { Button } from '../../components/Buttons';
 import Checkbox from '../../components/Checkbox';
 
-function VisualizerLeftBar({ defaultSupportSize, setTransformMode, isSupporting, supportActions, updateBoundingBox, scaleToFitSelectedModel, autoRotateSelectedModel }) {
+function VisualizerLeftBar({ defaultSupportSize, setTransformMode, isSupporting, supportActions, updateBoundingBox, autoRotateSelectedModel }) {
     const size = useSelector(state => state?.machine?.size, shallowEqual);
     const selectedModelArray = useSelector(state => state?.printing?.modelGroup?.selectedModelArray);
     const isSupportSelected = useSelector(state => state?.printing?.modelGroup?.isSupportSelected());
     const transformMode = useSelector(state => state?.printing?.transformMode, shallowEqual);
     const transformation = useSelector(state => state?.printing?.modelGroup?.getSelectedModelTransformationForPrinting());
-
+    const selectedModelBBoxDes = useSelector(state => state?.printing?.modelGroup?.getSelectedModelBBoxDes(false), shallowEqual);
     let modelSize = {};
     if (isSupportSelected) {
         const model = selectedModelArray[0];
@@ -164,6 +164,20 @@ function VisualizerLeftBar({ defaultSupportSize, setTransformMode, isSupporting,
                 });
             } else {
                 actions.onClickToUpload();
+            }
+        },
+        scaleToFitSelectedModel: () => {
+            const scalar = ['x', 'y', 'z'].reduce((prev, key) => Math.min((size[key] - 5) / selectedModelBBoxDes[key], prev), Number.POSITIVE_INFINITY);
+            if (scalar !== 1) {
+                const newTransformation = {
+                    scaleX: scalar,
+                    scaleY: scalar,
+                    scaleZ: scalar,
+                    positionX: 0,
+                    positionY: 0
+                };
+                dispatch(printingActions.updateSelectedModelTransformation(newTransformation));
+                actions.onModelAfterTransform();
             }
         }
     };
@@ -465,7 +479,7 @@ function VisualizerLeftBar({ defaultSupportSize, setTransformMode, isSupporting,
                                     type="primary"
                                     priority="level-three"
                                     width="100%"
-                                    onClick={scaleToFitSelectedModel}
+                                    onClick={actions.scaleToFitSelectedModel}
                                 >
                                     <span>{i18n._('Scale to Fit')}</span>
                                 </Button>
@@ -781,7 +795,7 @@ VisualizerLeftBar.propTypes = {
         y: PropTypes.number
     }),
     supportActions: PropTypes.object,
-    scaleToFitSelectedModel: PropTypes.func.isRequired,
+    // scaleToFitSelectedModel: PropTypes.func.isRequired,
     autoRotateSelectedModel: PropTypes.func.isRequired,
     setTransformMode: PropTypes.func.isRequired,
     updateBoundingBox: PropTypes.func.isRequired,
