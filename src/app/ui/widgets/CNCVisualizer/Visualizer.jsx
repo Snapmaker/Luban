@@ -39,7 +39,6 @@ class Visualizer extends Component {
         materials: PropTypes.object,
         stage: PropTypes.number.isRequired,
         progress: PropTypes.number.isRequired,
-        inProgress: PropTypes.bool.isRequired,
         showSimulation: PropTypes.bool.isRequired,
 
         coordinateMode: PropTypes.object.isRequired,
@@ -405,6 +404,7 @@ class Visualizer extends Component {
         const contextMenuDisabled = !isOnlySelectedOneModel || !this.props.selectedModelArray[0].visible;
         const { displayedType } = this.props;
         const pasteDisabled = (this.props.modelGroup.clipboard.length === 0);
+        const editable = true;
 
         return (
             <div
@@ -424,7 +424,7 @@ class Visualizer extends Component {
                     <SVGEditor
                         isActive={!this.props.currentModalPath && this.props.pathname.indexOf('cnc') > 0}
                         ref={this.svgCanvas}
-                        editable={!this.props.inProgress}
+                        editable={editable}
                         size={this.props.size}
                         initContentGroup={this.props.initContentGroup}
                         scale={this.props.scale}
@@ -602,7 +602,7 @@ const mapStateToProps = (state, ownProps) => {
     const { size } = state.machine;
     const { currentModalPath } = state.appbarMenu;
     const { page, materials, modelGroup, toolPathGroup, displayedType, hasModel, isChangedAfterGcodeGenerating,
-        renderingTimestamp, stage, progress, SVGActions, scale, target, coordinateMode, coordinateSize, inProgress, showSimulation, progressStatesManager } = state.cnc;
+        renderingTimestamp, stage, progress, SVGActions, scale, target, coordinateMode, coordinateSize, showSimulation, progressStatesManager } = state.cnc;
     const selectedModelArray = modelGroup.getSelectedModelArray();
     const selectedModelID = modelGroup.getSelectedModel().modelID;
     const selectedToolPathModels = modelGroup.getSelectedToolPathModels();
@@ -632,8 +632,7 @@ const mapStateToProps = (state, ownProps) => {
         renderingTimestamp,
         isChangedAfterGcodeGenerating,
         stage,
-        progress,
-        inProgress
+        progress
     };
 };
 

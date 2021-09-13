@@ -360,6 +360,7 @@ class Visualizer extends Component {
         const contextMenuDisabled = !isOnlySelectedOneModel || !this.props.selectedModelArray[0].visible;
         const displayedType = this.props.displayedType;
         const pasteDisabled = (this.props.modelGroup.clipboard.length === 0);
+        const editable = true;
 
         return (
             <div
@@ -377,7 +378,7 @@ class Visualizer extends Component {
                 }}
                 >
                     <SVGEditor
-                        editable="true"
+                        editable={editable}
                         isActive={!this.props.currentModalPath && this.props.pathname.indexOf('laser') > 0}
                         ref={this.svgCanvas}
                         size={this.props.size}
