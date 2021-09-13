@@ -347,7 +347,7 @@ export const actions = {
                 headType = machineInfo.headType;
                 // TODO: for project file of "< version 4.1"
                 if (headType === '3dp') {
-                    headType = 'printing';
+                    headType = HEAD_PRINTING;
                 }
             } else {
                 // old verison of project file
