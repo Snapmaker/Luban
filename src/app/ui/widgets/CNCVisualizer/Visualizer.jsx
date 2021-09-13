@@ -83,7 +83,7 @@ class Visualizer extends Component {
         onSetSelectedModelPosition: PropTypes.func.isRequired,
         onFlipSelectedModel: PropTypes.func.isRequired,
         selectModelInProcess: PropTypes.func.isRequired,
-        removeSelectedModel: PropTypes.func.isRequired,
+        removeSelectedModelsByCallback: PropTypes.func.isRequired,
         duplicateSelectedModel: PropTypes.func.isRequired,
         // onModelTransform: PropTypes.func.isRequired,
         // onModelAfterTransform: PropTypes.func.isRequired,
@@ -231,7 +231,7 @@ class Visualizer extends Component {
             this.props.onSetSelectedModelPosition(position);
         },
         deleteSelectedModel: () => {
-            this.props.removeSelectedModel();
+            this.props.removeSelectedModelsByCallback();
         },
         arrangeAllModels: () => {
             this.props.arrangeAllModels2D();
@@ -690,7 +690,7 @@ const mapDispatchToProps = (dispatch) => {
         onFlipSelectedModel: (flip) => dispatch(editorActions.onFlipSelectedModel('cnc', flip)),
         selectModelInProcess: (intersect, selectEvent) => dispatch(editorActions.selectModelInProcess('cnc', intersect, selectEvent)),
         duplicateSelectedModel: () => dispatch(editorActions.duplicateSelectedModel('cnc')),
-        removeSelectedModel: () => dispatch(editorActions.removeSelectedModelsByCallback('cnc')),
+        removeSelectedModelsByCallback: () => dispatch(editorActions.removeSelectedModelsByCallback('cnc')),
 
         cut: () => dispatch(editorActions.cut('cnc')),
         copy: () => dispatch(editorActions.copy('cnc')),
