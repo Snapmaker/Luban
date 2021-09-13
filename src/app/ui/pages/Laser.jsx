@@ -287,6 +287,7 @@ function useRenderMainToolBar(setShowHomePage, setShowJobType, setShowWorkspace,
 
 function useRenderRemoveModelsWarning() {
     const removingModelsWarning = useSelector(state => state?.laser?.removingModelsWarning);
+    const removingModelsWarningCallback = useSelector(state => state?.laser?.removingModelsWarningCallback, shallowEqual);
     const emptyToolPaths = useSelector(state => state?.laser?.emptyToolPaths);
     const dispatch = useDispatch();
     const onClose = () => dispatch(editorActions.updateState(HEAD_LASER, {
@@ -311,7 +312,7 @@ function useRenderRemoveModelsWarning() {
                 name: i18n._('Delete'),
                 isPrimary: true,
                 onClick: () => {
-                    dispatch(editorActions.removeSelectedModel(HEAD_LASER));
+                    removingModelsWarningCallback();
                     dispatch(editorActions.removeEmptyToolPaths(HEAD_LASER));
                     onClose();
                 }

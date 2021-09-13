@@ -1070,6 +1070,15 @@ class ModelGroup extends EventEmitter {
         this.selectedGroup.shouldUpdateBoundingbox = false;
 
         this.prepareSelectedGroup();
+        // update model's boundingbox which has supports
+        selectedModelArray.forEach((selected) => {
+            if (selected.supportTag && selected.isSelected) {
+                this.removeModelFromSelectedGroup(selected);
+                this.stickToPlateAndCheckOverstepped(selected.target);
+                this.addModelToSelectedGroup(selected);
+            }
+        });
+
         if (selectedModelArray.length === 0) {
             return {};
         } else {
@@ -1491,6 +1500,13 @@ class ModelGroup extends EventEmitter {
         this.modelChanged();
     }
 
+    stickToPlateAndCheckOverstepped(model) {
+        model.computeBoundingBox();
+        model.stickToPlate();
+        const overstepped = this._checkOverstepped(model);
+        model.setOversteppedAndSelected(overstepped, model.isSelected);
+    }
+  
     analyzeSelectedModelRotation() {
         if (this.selectedModelArray.length === 1) {
             const model = this.selectedModelArray[0];

@@ -81,7 +81,7 @@ class Visualizer extends Component {
         onSetSelectedModelPosition: PropTypes.func.isRequired,
         onFlipSelectedModel: PropTypes.func.isRequired,
         selectModelInProcess: PropTypes.func.isRequired,
-        removeSelectedModel: PropTypes.func.isRequired,
+        removeSelectedModelsByCallback: PropTypes.func.isRequired,
         duplicateSelectedModel: PropTypes.func.isRequired,
         // onModelTransform: PropTypes.func.isRequired,
         // onModelAfterTransform: PropTypes.func.isRequired,
@@ -230,7 +230,7 @@ class Visualizer extends Component {
             this.props.onSetSelectedModelPosition(position);
         },
         deleteSelectedModel: () => {
-            this.props.removeSelectedModel();
+            this.props.removeSelectedModelsByCallback();
         },
         arrangeAllModels: () => {
             this.props.arrangeAllModels2D();
@@ -610,7 +610,7 @@ const mapDispatchToProps = (dispatch) => {
         onSetSelectedModelPosition: (position) => dispatch(editorActions.onSetSelectedModelPosition('laser', position)),
         onFlipSelectedModel: (flip) => dispatch(editorActions.onFlipSelectedModel('laser', flip)),
         selectModelInProcess: (intersect, selectEvent) => dispatch(editorActions.selectModelInProcess('laser', intersect, selectEvent)),
-        removeSelectedModel: () => dispatch(editorActions.checkToRemoveSelectedModels('laser')),
+        removeSelectedModelsByCallback: () => dispatch(editorActions.removeSelectedModelsByCallback('laser')),
         duplicateSelectedModel: () => dispatch(editorActions.duplicateSelectedModel('laser')),
 
         cut: () => dispatch(editorActions.cut('laser')),

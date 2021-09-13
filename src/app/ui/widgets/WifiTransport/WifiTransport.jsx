@@ -293,17 +293,14 @@ function WifiTransport({ widgetActions }) {
         for (let i = 0; i < 5; i++) {
             changeNameInput[i] = React.createRef();
         }
-        UniApi.Event.on('appbar-menu:workspace.export-gcode', actions.onExport);
-        UniApi.Event.on('appbar-menu:workspace.import', actions.importFile);
         if (gcodeFiles.length > 0) {
             onSelectFile(gcodeFiles[0].uploadName);
         }
-
+        UniApi.Event.on('appbar-menu:workspace.import', actions.importFile);
         return () => {
             for (let i = 0; i < 5; i++) {
                 changeNameInput[i] = null;
             }
-            UniApi.Event.off('appbar-menu:workspace.export-gcode', actions.onExport);
             UniApi.Event.off('appbar-menu:workspace.import', actions.importFile);
         };
     }, []);
@@ -313,6 +310,13 @@ function WifiTransport({ widgetActions }) {
             onSelectFile(gcodeFiles[0].uploadName);
         }
     }, [gcodeFiles]);
+
+    useEffect(() => {
+        UniApi.Event.on('appbar-menu:workspace.export-gcode', actions.onExport);
+        return () => {
+            UniApi.Event.off('appbar-menu:workspace.export-gcode', actions.onExport);
+        };
+    }, [selectFileName]);
 
     const isHeadType = selectFileType === headType;
     const hasFile = gcodeFiles.length > 0;

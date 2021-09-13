@@ -347,6 +347,7 @@ function useRenderMainToolBar(setShowHomePage, setShowJobType, setShowWorkspace)
 
 function useRenderRemoveModelsWarning() {
     const removingModelsWarning = useSelector(state => state?.cnc?.removingModelsWarning);
+    const removingModelsWarningCallback = useSelector(state => state?.cnc?.removingModelsWarningCallback, shallowEqual);
     const emptyToolPaths = useSelector(state => state?.cnc?.emptyToolPaths);
     const dispatch = useDispatch();
     const onClose = () => dispatch(editorActions.updateState(HEAD_CNC, {
@@ -371,7 +372,7 @@ function useRenderRemoveModelsWarning() {
                 name: i18n._('Delete'),
                 isPrimary: true,
                 onClick: () => {
-                    dispatch(editorActions.removeSelectedModel(HEAD_CNC));
+                    removingModelsWarningCallback();
                     dispatch(editorActions.removeEmptyToolPaths(HEAD_CNC));
                     onClose();
                 }
