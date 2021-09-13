@@ -434,6 +434,8 @@ export const actions = {
                     dispatch(actions.showGcodeLayers(layerCount - 1));
                     dispatch(actions.displayGcode());
 
+                    const { progressStatesManager } = getState().printing;
+                    progressStatesManager.startNextStep();
                     dispatch(actions.updateState({
                         stage: STEP_STAGE.PRINTING_PREVIEWING
                     }));
@@ -441,8 +443,11 @@ export const actions = {
                 }
                 case 'progress': {
                     const state = getState().printing;
+                    const { progressStatesManager } = state;
                     if (Math.abs(value - state.progress) > 0.01 || value > 1 - EPSILON) {
-                        dispatch(actions.updateState({ progress: value }));
+                        dispatch(actions.updateState({
+                            progress: progressStatesManager.updateProgress(STEP_STAGE.PRINTING_PREVIEWING, value)
+                        }));
                     }
                     break;
                 }
@@ -792,20 +797,10 @@ export const actions = {
     // @param file
     uploadModel: (file) => async (dispatch, getState) => {
         // Notice user that model is being loading
-        const { progressStatesManager } = getState().printing;
-        progressStatesManager.startProgress(PROCESS_STAGE.PRINTING_LOAD_MODEL);
-        dispatch(actions.updateState({
-            stage: STEP_STAGE.PRINTING_LOADING_MODEL,
-            progress: 0
-        }));
-
         const formData = new FormData();
         formData.append('file', file);
         const res = await api.uploadFile(formData);
-
         const { originalName, uploadName } = res.body;
-
-        dispatch(actions.updateState({ progress: 0.25 }));
 
         actions.__loadModel(originalName, uploadName)(dispatch, getState);
     },
@@ -854,7 +849,7 @@ export const actions = {
         progressStatesManager.startProgress(PROCESS_STAGE.PRINTING_SLICE_AND_PREVIEW);
         dispatch(actions.updateState({
             stage: STEP_STAGE.PRINTING_SLICING,
-            progress: 0
+            progress: progressStatesManager.updateProgress(STEP_STAGE.PRINTING_SLICING, 0)
         }));
 
         // Prepare model file
@@ -1476,7 +1471,7 @@ export const actions = {
         progressStatesManager.startNextStep();
         dispatch(actions.updateState({
             stage: STEP_STAGE.PRINTING_PREVIEWING,
-            progress: 0
+            progress: progressStatesManager.updateProgress(STEP_STAGE.PRINTING_SLICING, 0)
         }));
         gcodeRenderingWorker.postMessage({ func: '3DP', gcodeFilename });
     },
@@ -1519,6 +1514,13 @@ export const actions = {
         headType, originalName, uploadName, sourceWidth, sourceHeight,
         mode, sourceType, config, gcodeConfig, transformation, modelID
     ) => async (dispatch, getState) => {
+        const { progressStatesManager } = getState().printing;
+        progressStatesManager.startProgress(PROCESS_STAGE.PRINTING_LOAD_MODEL);
+        dispatch(actions.updateState({
+            stage: STEP_STAGE.PRINTING_LOADING_MODEL,
+            progress: progressStatesManager.updateProgress(STEP_STAGE.PRINTING_LOADING_MODEL, 0.25)
+        }));
+
         const { size } = getState().machine;
         const uploadPath = `${DATA_PREFIX}/${uploadName}`;
         const { modelGroup } = getState().printing;
@@ -1564,7 +1566,7 @@ export const actions = {
                     dispatch(actions.destroyGcodeLine());
                     dispatch(actions.updateState({
                         stage: STEP_STAGE.PRINTING_LOAD_MODEL_SUCCEED,
-                        progress: 1
+                        progress: progressStatesManager.updateProgress(STEP_STAGE.PRINTING_LOADING_MODEL, 1)
                     }));
                     break;
                 }
