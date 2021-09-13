@@ -84,9 +84,9 @@ class ProgressState {
             case _STATE.RUNNING:
                 return i18n._(this.notice, { progress: (progress * 100.0).toFixed(1) });
             case _STATE.SUCCESS:
-                return this.successNotice;
+                return i18n._(this.successNotice);
             case _STATE.FAILED:
-                return this.failedNotice;
+                return i18n._(this.failedNotice);
             default:
                 return i18n._(this.notice, { progress: (progress * 100.0).toFixed(1) });
         }
@@ -242,7 +242,7 @@ class ProgressStatesManager {
     }
 
     finishProgress(success = true) {
-        this.reset();
+        // this.reset();
         if (success) {
             this.state = _STATE.SUCCESS;
         } else {
@@ -258,6 +258,10 @@ class ProgressStatesManager {
 
     getProgressStage() {
         return this.processStageID;
+    }
+
+    inProgress() {
+        return this.state === _STATE.RUNNING;
     }
 }
 

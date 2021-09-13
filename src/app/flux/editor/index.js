@@ -703,7 +703,7 @@ export const actions = {
         options.materials = materials;
         options.toolParams = toolParams;
 
-        if (progressStatesManager.getProgressStage() !== PROCESS_STAGE.CNC_LASER_UPLOAD_IMAGE) {
+        if (!progressStatesManager.inProgress()) {
             progressStatesManager.startProgress(PROCESS_STAGE.CNC_LASER_PROCESS_IMAGE, [1]);
         } else {
             progressStatesManager.startNextStep();
@@ -1042,8 +1042,7 @@ export const actions = {
             stage: STEP_STAGE.CNC_LASER_PROCESSING_IMAGE,
             progress: progressStatesManager.updateProgress(STEP_STAGE.CNC_LASER_PROCESSING_IMAGE, 1)
         }));
-        // progressStatesManager.finishProgress(true);
-        progressStatesManager.reset();
+        progressStatesManager.finishProgress(true);
     },
 
     getEstimatedTime: (headType, type) => (dispatch, getState) => {
