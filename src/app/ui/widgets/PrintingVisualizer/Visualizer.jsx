@@ -575,7 +575,7 @@ const mapStateToProps = (state, ownProps) => {
     } = printing;
     let isActive = true;
     if (enableShortcut) {
-        if (!currentModalPath && ownProps.location.pathname.indexOf('3dp') > 0) {
+        if (!currentModalPath && ownProps.location.pathname.indexOf(HEAD_PRINTING) > 0) {
             isActive = true;
         } else {
             isActive = false;
