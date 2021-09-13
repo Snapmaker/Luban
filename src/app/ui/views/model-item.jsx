@@ -13,7 +13,7 @@ let modelName = '';
 const objectList3d = 'ObjectList3d';
 const objectListShape = 'ObjectListShape';
 const objectListPicture = 'ObjectListPicture';
-function ModelItem({ model, visible, isSelected, styles, onSelect, onToggleVisible, inProgress, placment }) {
+function ModelItem({ model, visible, isSelected, styles, onSelect, onToggleVisible, inProgress, placment, disabled }) {
     if (!model) {
         return null;
     }
@@ -58,12 +58,14 @@ function ModelItem({ model, visible, isSelected, styles, onSelect, onToggleVisib
                         'sm-flex-width',
                         'sm-flex'
                     )}
+                    style={{ color: disabled ? '#D5D6D9' : '' }}
                     onClick={(event) => onSelect(model, event)}
                 >
                     <SvgIcon
                         type={['static']}
                         name={svgName}
                         className="margin-right-4"
+                        disabled={disabled}
                     />
                     <span className={classNames(styles['prefix-name'])}>
                         {prefixName}
@@ -77,7 +79,7 @@ function ModelItem({ model, visible, isSelected, styles, onSelect, onToggleVisib
                     title={visible ? i18n._('Hide') : i18n._('Show')}
                     color={visible ? '#545659' : '#B9BCBF'}
                     onClick={() => onToggleVisible(model)}
-                    disabled={inProgress}
+                    disabled={inProgress || disabled}
                     // type={isSelected ? ['static'] : ['hoverNormal', 'pressNormal']}
                     type={['static']}
                 />
@@ -93,6 +95,7 @@ ModelItem.propTypes = {
     onSelect: PropTypes.func.isRequired,
     onToggleVisible: PropTypes.func.isRequired,
     inProgress: PropTypes.bool.isRequired,
+    disabled: PropTypes.bool.isRequired,
     placment: PropTypes.string
 };
 

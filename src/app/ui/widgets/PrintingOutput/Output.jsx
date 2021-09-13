@@ -49,6 +49,7 @@ function Output() {
     const gcodeFile = useSelector(state => state?.printing?.gcodeFile);
     const displayedType = useSelector(state => state?.printing?.displayedType, shallowEqual);
     const defaultThumbnail = useSelector(state => state?.printing?.thumbnail);
+    const leftBarOverlayVisible = useSelector(state => state?.printing?.leftBarOverlayVisible, shallowEqual);
     const workflowState = useSelector(state => state?.machine?.workflowState, shallowEqual);
 
     const dispatch = useDispatch();
@@ -132,7 +133,7 @@ function Output() {
                         type="primary"
                         priority="level-one"
                         onClick={actions.onClickGenerateGcode}
-                        disabled={!hasModel || !hasAnyModelVisible || isSlicing || isAnyModelOverstepped}
+                        disabled={!hasModel || !hasAnyModelVisible || isSlicing || isAnyModelOverstepped || leftBarOverlayVisible}
                     >
                         {i18n._('Generate G-code')}
                     </Button>

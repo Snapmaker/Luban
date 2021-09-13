@@ -156,7 +156,13 @@ const INITIAL_STATE = {
     initEventFlag: false,
 
     // progress states manager
-    progressStatesManager: new ProgressStatesManager()
+    progressStatesManager: new ProgressStatesManager(),
+
+    rotationAnalysisTable: [],
+    rotationAnalysisSelectedRowId: -1,
+    leftBarOverlayVisible: false,
+
+    enableShortcut: true
 };
 
 
@@ -1405,6 +1411,7 @@ export const actions = {
         dispatch(actions.destroyGcodeLine());
         dispatch(actions.displayModel());
     },
+
     scaleToFitSelectedModel: () => (dispatch, getState) => {
         const { modelGroup } = getState().printing;
         const { size } = getState().machine;
@@ -1619,6 +1626,75 @@ export const actions = {
             });
             dispatch(operationHistoryActions.setOperations(INITIAL_STATE.name, operations));
         }
+    },
+
+    startAnalyzeRotationProgress: () => (dispatch, getState) => {
+        const { progressStatesManager } = getState().printing;
+        progressStatesManager.startProgress(PROCESS_STAGE.PRINTING_ROTATE_ANALYZE);
+        dispatch(actions.updateState({
+            stage: STEP_STAGE.PRINTING_ROTATE_ANALYZE,
+            progress: progressStatesManager.updateProgress(STEP_STAGE.PRINTING_ROTATE_ANALYZE, 0.25)
+        }));
+    },
+
+    rotateByPlane: (targetPlane) => (dispatch, getState) => {
+        const { modelGroup } = getState().printing;
+        const modelState = modelGroup.rotateByPlane(targetPlane);
+        modelGroup.onModelAfterTransform();
+
+        dispatch(actions.updateState(modelState));
+        dispatch(actions.destroyGcodeLine());
+        dispatch(actions.displayModel());
+    },
+
+    analyzeSelectedModelRotation: () => (dispatch, getState) => {
+        const { modelGroup, progressStatesManager } = getState().printing;
+        // clear supports in selected model
+        dispatch(actions.clearAllManualSupport());
+        // calculate model rotation info, use settimeout to let progress bar shown
+        setTimeout(() => {
+            const tableResult = modelGroup.analyzeSelectedModelRotation();
+            if (tableResult) {
+                dispatch(actions.updateState({
+                    rotationAnalysisTable: tableResult
+                }));
+            }
+            dispatch(actions.setTransformMode('rotate-placement'));
+            dispatch(actions.updateState({
+                stage: STEP_STAGE.PRINTING_ROTATE_ANALYZE,
+                progress: progressStatesManager.updateProgress(STEP_STAGE.PRINTING_ROTATE_ANALYZE, 1)
+            }));
+            dispatch(actions.destroyGcodeLine());
+            dispatch(actions.displayModel());
+        }, 0);
+    },
+
+    clearRotationAnalysisTableData: () => (dispatch, getState) => {
+        const { modelGroup } = getState().printing;
+        modelGroup.resetSelectedModelConvexMeshGroup();
+        dispatch(actions.updateState({
+            rotationAnalysisTable: []
+        }));
+        dispatch(actions.destroyGcodeLine());
+        dispatch(actions.displayModel());
+    },
+
+    setRotationPlacementFace: (userData) => (dispatch) => {
+        dispatch(actions.updateState({
+            rotationAnalysisSelectedRowId: userData.index
+        }));
+    },
+
+    setShortcutStatus: (enabled) => (dispatch) => {
+        dispatch(actions.updateState({
+            enableShortcut: enabled
+        }));
+    },
+
+    setLeftBarOverlayVisible: (visible) => (dispatch) => {
+        dispatch(actions.updateState({
+            leftBarOverlayVisible: visible
+        }));
     }
 };
 

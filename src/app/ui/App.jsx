@@ -30,6 +30,7 @@ class App extends PureComponent {
         workspaceInit: PropTypes.func.isRequired,
         textInit: PropTypes.func.isRequired,
         shouldCheckForUpdate: PropTypes.bool.isRequired,
+        enableShortcut: PropTypes.bool.isRequired,
         updateMultipleEngine: PropTypes.func.isRequired
     };
 
@@ -37,7 +38,7 @@ class App extends PureComponent {
 
     shortcutHandler = {
         title: this.constructor.name,
-        isActive: () => true,
+        isActive: () => this.props.enableShortcut,
         // active: false,
         priority: priorities.APP,
         shortcuts: {
@@ -140,8 +141,10 @@ class App extends PureComponent {
 
 const mapStateToProps = (state) => {
     const machineInfo = state.machine;
+    const enableShortcutIn3dp = !state.printing.leftBarOverlayVisible;
     const { shouldCheckForUpdate } = machineInfo;
     return {
+        enableShortcut: enableShortcutIn3dp,
         shouldCheckForUpdate
     };
 };
