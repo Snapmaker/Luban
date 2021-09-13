@@ -1,4 +1,4 @@
-import React, { useRef, useEffect } from 'react';
+import React, { useRef, useEffect, useState } from 'react';
 import { useDispatch, useSelector, shallowEqual } from 'react-redux';
 import PropTypes from 'prop-types';
 import classNames from 'classnames';
@@ -13,13 +13,16 @@ import modal from '../../../lib/modal';
 import SvgIcon from '../../components/SvgIcon';
 import { Button } from '../../components/Buttons';
 import Checkbox from '../../components/Checkbox';
+import RotationAnalysisOverlay from './Overlay/RotationAnalysisOverlay';
 
 function VisualizerLeftBar({ defaultSupportSize, setTransformMode, isSupporting, supportActions, updateBoundingBox, scaleToFitSelectedModel, autoRotateSelectedModel }) {
     const size = useSelector(state => state?.machine?.size, shallowEqual);
     const selectedModelArray = useSelector(state => state?.printing?.modelGroup?.selectedModelArray);
     const isSupportSelected = useSelector(state => state?.printing?.modelGroup?.isSupportSelected());
     const transformMode = useSelector(state => state?.printing?.transformMode, shallowEqual);
-    const transformation = useSelector(state => state?.printing?.modelGroup?.getSelectedModelTransformationForPrinting());
+    const transformation = useSelector(state => state?.printing?.modelGroup?.getSelectedModelTransformationForPrinting(), shallowEqual);
+    const enableShortcut = useSelector(state => state?.printing?.enableShortcut, shallowEqual);
+    const [showRotationAnalyzeModal, setShowRotationAnalyzeModal] = useState(false);
 
     let modelSize = {};
     if (isSupportSelected) {
@@ -33,6 +36,12 @@ function VisualizerLeftBar({ defaultSupportSize, setTransformMode, isSupporting,
     }
     const dispatch = useDispatch();
     const fileInput = useRef(null);
+
+    const renderRotationAnalyzeModal = () => {
+        return (
+            <RotationAnalysisOverlay onClose={() => { setShowRotationAnalyzeModal(false); }} />
+        );
+    };
     const actions = {
         onClickToUpload: () => {
             fileInput.current.value = null;
@@ -177,11 +186,14 @@ function VisualizerLeftBar({ defaultSupportSize, setTransformMode, isSupporting,
     let rotateZ = 0;
     let uniformScalingState = true;
     // TODO: refactor these flags
-    const transformDisabled = !(selectedModelArray.length > 0 && selectedModelArray.every((model) => {
+    const transformDisabled = showRotationAnalyzeModal || !(selectedModelArray.length > 0 && selectedModelArray.every((model) => {
         return model.visible === true;
     }));
-    const supportDisabled = !(selectedModelArray.length === 1 && selectedModelArray.every((model) => {
+    const supportDisabled = showRotationAnalyzeModal || !(selectedModelArray.length === 1 && selectedModelArray.every((model) => {
         return model.visible === true && !model.supportTag;
+    }));
+    const rotationAnalysisEnable = (selectedModelArray.length === 1 && selectedModelArray.every((model) => {
+        return model.visible === true;
     }));
 
     if (selectedModelArray.length >= 1) {
@@ -224,6 +236,7 @@ function VisualizerLeftBar({ defaultSupportSize, setTransformMode, isSupporting,
                                     type={['hoverSpecial', 'pressSpecial']}
                                     name="ToolbarOpen"
                                     className="padding-horizontal-4 print-tool-bar-open"
+                                    disabled={!enableShortcut}
                                     onClick={() => {
                                         actions.onClickToUpload();
                                     }}
@@ -564,7 +577,7 @@ function VisualizerLeftBar({ defaultSupportSize, setTransformMode, isSupporting,
                         )}
                     </div>
                 )}
-
+                {showRotationAnalyzeModal && renderRotationAnalyzeModal()}
                 {!transformDisabled && transformMode === 'rotate' && (
                     <div
                         className="position-ab width-280 margin-left-72 border-default-grey-1 border-radius-8 background-color-white"
@@ -642,6 +655,23 @@ function VisualizerLeftBar({ defaultSupportSize, setTransformMode, isSupporting,
                                     onClick={actions.resetRotation}
                                 >
                                     <span>{i18n._('Reset')}</span>
+                                </Button>
+                            </div>
+                            <div className="sm-flex">
+                                <Button
+                                    className="margin-top-16"
+                                    type="primary"
+                                    priority="level-three"
+                                    width="100%"
+                                    disabled={!rotationAnalysisEnable}
+                                    onClick={() => {
+                                        dispatch(printingActions.startAnalyzeRotationProgress());
+                                        setTimeout(() => {
+                                            setShowRotationAnalyzeModal(true);
+                                        }, 100);
+                                    }}
+                                >
+                                    <span>{i18n._('Rotation Analyze')}</span>
                                 </Button>
                             </div>
                         </div>

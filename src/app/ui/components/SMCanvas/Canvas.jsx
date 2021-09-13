@@ -50,6 +50,7 @@ class Canvas extends Component {
         onModelAfterTransform: PropTypes.func,
         onModelBeforeTransform: PropTypes.func,
         onModelTransform: PropTypes.func,
+        onRotationPlacementSelect: PropTypes.func,
 
         // tmp
         canOperateModel: PropTypes.bool,
@@ -89,6 +90,7 @@ class Canvas extends Component {
         this.onSelectModels = this.props.onSelectModels || noop;
         this.onModelBeforeTransform = this.props.onModelBeforeTransform || noop;
         this.onModelAfterTransform = this.props.onModelAfterTransform || noop;
+        this.onRotationPlacementSelect = this.props.onRotationPlacementSelect || noop;
         this.onModelTransform = this.props.onModelTransform || noop;
 
         // threejs
@@ -275,10 +277,13 @@ class Canvas extends Component {
         this.controls.on(EVENTS.AFTER_TRANSFORM_OBJECT, () => {
             this.onModelAfterTransform(this.controls.transformControl.mode);
         });
+        this.controls.on(EVENTS.SELECT_PLACEMENT_FACE, (userData) => {
+            this.onRotationPlacementSelect(userData);
+        });
     }
 
     setTransformMode(mode) {
-        if (['translate', 'scale', 'rotate', 'mirror'].includes(mode)) {
+        if (['translate', 'scale', 'rotate', 'mirror', 'rotate-placement'].includes(mode)) {
             this.controls && this.controls.setTransformMode(mode);
         } else {
             this.controls && this.controls.setTransformMode(null);
@@ -310,6 +315,10 @@ class Canvas extends Component {
         this.camera.position.copy(new Vector3(0, 0, dist));
         this.controls.setTarget(new Vector3(0, 0, 0));
         this.controls.updateCamera();
+    };
+
+    setSelectedModelConvexMeshGroup = (group) => {
+        this.controls.setSelectedModelConvexMeshGroup(group);
     };
 
     resizeWindow = () => {

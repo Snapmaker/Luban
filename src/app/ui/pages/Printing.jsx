@@ -81,6 +81,7 @@ function useRenderMainToolBar() {
     const unSaved = useSelector(state => state?.project[pageHeadType]?.unSaved, shallowEqual);
     const hasModel = useSelector(state => state?.printing?.hasModel, shallowEqual);
     const inProgress = useSelector(state => state?.printing?.inProgress, shallowEqual);
+    const enableShortcut = useSelector(state => state?.printing?.enableShortcut, shallowEqual);
     const canRedo = useSelector(state => state?.printing?.history?.canRedo, shallowEqual);
     const canUndo = useSelector(state => state?.printing?.history?.canUndo, shallowEqual);
     const [showHomePage, setShowHomePage] = useState(false);
@@ -135,7 +136,7 @@ function useRenderMainToolBar() {
             },
             {
                 title: i18n._('Save'),
-                disabled: !unSaved || !hasModel,
+                disabled: !unSaved || !hasModel || !enableShortcut,
                 type: 'button',
                 name: 'MainToolbarSave',
                 iconClassName: 'printing-save-icon',
@@ -145,7 +146,7 @@ function useRenderMainToolBar() {
             },
             {
                 title: i18n._('Undo'),
-                disabled: !canUndo,
+                disabled: !canUndo || !enableShortcut,
                 type: 'button',
                 name: 'MainToolbarUndo',
                 action: () => {
@@ -154,7 +155,7 @@ function useRenderMainToolBar() {
             },
             {
                 title: i18n._('Redo'),
-                disabled: !canRedo,
+                disabled: !canRedo || !enableShortcut,
                 type: 'button',
                 name: 'MainToolbarRedo',
                 action: () => {

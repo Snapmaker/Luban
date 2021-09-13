@@ -1,4 +1,4 @@
-import { Vector3, Group, Matrix4, BufferGeometry, MeshPhongMaterial, Mesh, DoubleSide } from 'three';
+import { Vector3, Group, Matrix4, BufferGeometry, MeshPhongMaterial, Mesh, DoubleSide, Float32BufferAttribute, MeshBasicMaterial } from 'three';
 import EventEmitter from 'events';
 // import { EPSILON } from '../../constants';
 import uuid from 'uuid';
@@ -37,7 +37,7 @@ class ModelGroup extends EventEmitter {
 
         this.candidatePoints = null;
         this._bbox = null;
-
+        this.selectedModelConvexMeshGroup = new Group();
         // The selectedToolPathModelIDs is used to generate the toolpath
         this.selectedToolPathModelIDs = [];
     }
@@ -642,7 +642,7 @@ class ModelGroup extends EventEmitter {
             ThreeUtils.liftObjectOnlyChildMatrix(this.selectedGroup);
             this.selectedGroup.uniformScalingState = this.selectedGroup.children[0].uniformScalingState;
         } else {
-            this.selectedGroup.uniformScalingState = true;
+            // this.selectedGroup.uniformScalingState = true;
             const p = this.calculateSelectedGroupPosition(this.selectedGroup);
             // set selected group position need to remove children temporarily
             const children = [...this.selectedGroup.children];
@@ -1025,6 +1025,10 @@ class ModelGroup extends EventEmitter {
             this.selectedGroup.uniformScalingState = uniformScalingState;
             if (this.selectedGroup.children.length === 1) {
                 this.selectedGroup.children[0].uniformScalingState = uniformScalingState;
+            } else {
+                this.selectedGroup.children.forEach((item) => {
+                    item.uniformScalingState = uniformScalingState;
+                });
             }
         }
         if (rotationX !== undefined) {
@@ -1501,6 +1505,74 @@ class ModelGroup extends EventEmitter {
         model.stickToPlate();
         const overstepped = this._checkOverstepped(model);
         model.setOversteppedAndSelected(overstepped, model.isSelected);
+    }
+  
+    analyzeSelectedModelRotation() {
+        if (this.selectedModelArray.length === 1) {
+            const model = this.selectedModelArray[0];
+            const rotationInfo = model.analyzeRotation();
+            const tableResult = [];
+            if (rotationInfo) {
+                const len = Math.min(20, rotationInfo.rates.length);
+                for (let i = 0; i < len; i++) {
+                    const row = {
+                        faceId: i,
+                        rate: rotationInfo.rates[i],
+                        area: rotationInfo.areas[i],
+                        plane: rotationInfo.planes[i],
+                        planesPosition: rotationInfo.planesPosition[i],
+                        supportVolume: rotationInfo.supportVolumes[i]
+                    };
+                    tableResult.push(row);
+                }
+                // sort desc according to rates
+                tableResult.sort((a, b) => b.rate - a.rate);
+
+                const group = this.resetSelectedModelConvexMeshGroup();
+                ThreeUtils.setObjectParent(group, model.meshObject);
+                tableResult.forEach((rowInfo) => {
+                    const geometry = new BufferGeometry();
+                    geometry.addAttribute('position', new Float32BufferAttribute(rowInfo.planesPosition, 3));
+                    // Fix Z-fighting
+                    // https://sites.google.com/site/threejstuts/home/polygon_offset
+                    // https://stackoverflow.com/questions/40328722/how-can-i-solve-z-fighting-using-three-js
+                    const material = new MeshBasicMaterial({ color: 0x2A2C2E, depthWrite: false, transparent: true, opacity: 0.2, polygonOffset: true, polygonOffsetFactor: -1, polygonOffsetUnits: -5 });
+                    const mesh = new Mesh(geometry, material);
+                    mesh.userData = {
+                        index: rowInfo.faceId
+                    };
+                    mesh.renderOrder = 9999999999;
+                    group.add(mesh);
+                    model.meshObject.add(group);
+                });
+            }
+            return tableResult;
+        }
+        return null;
+    }
+
+    rotateByPlane(targetPlane) {
+        if (this.selectedModelArray.length === 1) {
+            const model = this.selectedModelArray[0];
+            model.rotateByPlane(targetPlane);
+            model.stickToPlate();
+            model.computeBoundingBox();
+            const overstepped = this._checkOverstepped(model);
+            model.setOversteppedAndSelected(overstepped, model.isSelected);
+        }
+        return this.getState();
+    }
+
+    resetSelectedModelConvexMeshGroup() {
+        if (this.selectedModelArray.length === 1) {
+            const model = this.selectedModelArray[0];
+            for (let i = model.meshObject.children.length - 1; i >= 0; i--) {
+                model.meshObject.remove(model.meshObject.children[i]);
+            }
+            this.selectedModelConvexMeshGroup = new Group();
+            return this.selectedModelConvexMeshGroup;
+        }
+        return null;
     }
 }
 

@@ -16,7 +16,8 @@ import {
     OctahedronBufferGeometry,
     TorusBufferGeometry,
     MeshBasicMaterial,
-    LineBasicMaterial
+    LineBasicMaterial,
+    Color
 } from 'three';
 // import * as THREE from 'three';
 
@@ -82,11 +83,18 @@ class TransformControls extends Object3D {
 
     pointEnd = new Vector3();
 
+    colorHover = new Color(0x1890FF);
+
+    colorDefault = new Color(0x2A2C2E);
+
+    prevMeshHover = null;
+
     constructor(camera) {
         super();
 
         this.camera = camera;
         this.visible = false;
+        this.objectConvexMeshGroup = new Group();
 
         this.initDefaults();
         this.initTranslatePeripherals();
@@ -745,6 +753,9 @@ class TransformControls extends Object3D {
             case 'scale':
                 picker = this.scalePicker;
                 break;
+            case 'rotate-placement':
+                picker = this.objectConvexMeshGroup;
+                break;
             default:
                 break;
         }
@@ -756,6 +767,21 @@ class TransformControls extends Object3D {
             this.axis = intersect.object.label;
         } else {
             this.axis = null;
+        }
+        if (this.mode === 'rotate-placement') {
+            if (intersect) {
+                if (this.prevMeshHover !== intersect.object) {
+                    if (!intersect.object.material.color.equals(this.colorHover)) {
+                        intersect.object.material.color.set(this.colorHover);
+                    }
+                    this.prevMeshHover && this.prevMeshHover.material.color.set(this.colorDefault);
+                    this.prevMeshHover = intersect.object;
+                }
+            } else {
+                this.prevMeshHover && this.prevMeshHover.material.color.set(this.colorDefault);
+                this.prevMeshHover = null;
+            }
+            this.dispatchEvent(EVENTS.UPDATE);
         }
 
         return true;
@@ -893,6 +919,10 @@ class TransformControls extends Object3D {
     // Calculate the bbox of each model in the selectedGroup
     updateBoundingBox() {
         this.object.shouldUpdateBoundingbox = true;
+    }
+
+    setObjectConvexMeshGroup(group) {
+        this.objectConvexMeshGroup = group;
     }
 }
 

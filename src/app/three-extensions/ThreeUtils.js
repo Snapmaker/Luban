@@ -270,6 +270,7 @@ const ThreeUtils = {
         let planes = [];
         let areas = [];
         let supportVolumes = [];
+        const planesPosition = [];
         // if allPlanes provided, then do not add new planes into planes
         // this can speed up geometry computing
         if (allPlanes.length) {
@@ -306,9 +307,11 @@ const ThreeUtils = {
                 const idx = planes.findIndex(p => isSimilarPlanes(p, plane));
                 if (idx !== -1) {
                     areas[idx] += area;
+                    planesPosition[idx].push(...a.toArray(), ...b.toArray(), ...c.toArray());
                 } else {
                     planes.push(new THREE.Plane().copy(plane));
                     areas.push(area);
+                    planesPosition.push([...a.toArray(), ...b.toArray(), ...c.toArray()]);
                 }
             } else {
                 // eslint-disable-next-line no-shadow
@@ -326,7 +329,7 @@ const ThreeUtils = {
             }
         }
 
-        return { planes, areas, supportVolumes };
+        return { planes, areas, supportVolumes, planesPosition };
     }
 };
 

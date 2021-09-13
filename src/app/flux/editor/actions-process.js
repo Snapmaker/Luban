@@ -1,7 +1,7 @@
 import uuid from 'uuid';
 import { baseActions } from './actions-base';
 import { controller } from '../../lib/controller';
-import { CNC_LASER_STAGE } from './utils';
+import { STEP_STAGE, PROCESS_STAGE } from '../../lib/manager/ProgressManager';
 import { DISPLAYED_TYPE_MODEL, DISPLAYED_TYPE_TOOLPATH, HEAD_LASER, SELECTEVENT } from '../../constants';
 import { getToolPathType } from '../../toolpaths/utils';
 
@@ -19,11 +19,15 @@ import api from '../../api';
 let toastId;
 export const processActions = {
     recalculateAllToolPath: (headType) => (dispatch, getState) => {
-        const { toolPathGroup } = getState()[headType];
-        // const { toolPathGroup, shouldGenerateGcodeCounter } = getState()[headType];
-        // dispatch(baseActions.updateState(headType, {
-        //     shouldGenerateGcodeCounter: shouldGenerateGcodeCounter + 1
-        // }));
+        const { toolPathGroup, progressStatesManager } = getState()[headType];
+
+        // start progress
+        dispatch(baseActions.updateState(headType, {
+            stage: STEP_STAGE.CNC_LASER_GENERATING_TOOLPATH,
+            progress: progressStatesManager.updateProgress(STEP_STAGE.CNC_LASER_GENERATING_TOOLPATH, 0)
+        }));
+
+        // start generate toolpath
         toolPathGroup.toolPaths.forEach((toolPath) => {
             dispatch(processActions.commitGenerateToolPath(headType, toolPath.id));
         });
@@ -37,7 +41,8 @@ export const processActions = {
     },
 
     preview: (headType) => (dispatch, getState) => {
-        const { SVGActions, toolPathGroup } = getState()[headType];
+        const { SVGActions, toolPathGroup, progressStatesManager } = getState()[headType];
+        progressStatesManager.startProgress(PROCESS_STAGE.CNC_LASER_GENERATE_TOOLPATH_AND_PREVIEW, [toolPathGroup.toolPaths.length, toolPathGroup.toolPaths.length, 1]);
         toolPathGroup.toolPaths.forEach((toolPath) => {
             toolPath.setWarningStatus();
             toolPath.clearModelObjects();
@@ -284,12 +289,12 @@ export const processActions = {
     },
 
     commitGenerateToolPath: (headType, toolPathId) => (dispatch, getState) => {
-        const { toolPathGroup, materials } = getState()[headType];
+        const { toolPathGroup, materials, progressStatesManager } = getState()[headType];
         if (toolPathGroup.commitToolPath(toolPathId, { materials })) {
             dispatch(baseActions.updateState(headType, {
-                stage: CNC_LASER_STAGE.GENERATING_TOOLPATH,
+                stage: STEP_STAGE.CNC_LASER_GENERATING_TOOLPATH,
                 isChangedAfterGcodeGenerating: true,
-                progress: 0
+                progress: progressStatesManager.updateProgress(STEP_STAGE.CNC_LASER_GENERATING_TOOLPATH, 0)
             }));
         }
     },
@@ -307,7 +312,7 @@ export const processActions = {
      * @returns {Function}
      */
     commitGenerateGcode: (headType) => (dispatch, getState) => {
-        const { toolPathGroup } = getState()[headType];
+        const { toolPathGroup, progressStatesManager } = getState()[headType];
         const toolPaths = toolPathGroup.getCommitGenerateGcodeInfos();
 
         if (!toolPaths || toolPaths.length === 0) {
@@ -322,8 +327,8 @@ export const processActions = {
             }
         ));
         dispatch(baseActions.updateState(headType, {
-            stage: CNC_LASER_STAGE.GENERATING_GCODE,
-            progress: 0.1
+            stage: STEP_STAGE.CNC_LASER_GENERATING_GCODE,
+            progress: progressStatesManager.updateProgress(STEP_STAGE.CNC_LASER_GENERATING_GCODE, 0.1)
         }));
         controller.commitGcodeTask({
             taskId: uuid.v4(),
@@ -333,11 +338,11 @@ export const processActions = {
     },
 
     onGenerateGcode: (headType, taskResult) => async (dispatch, getState) => {
-        const { modelGroup, toolPathGroup } = getState()[headType];
+        const { modelGroup, toolPathGroup, progressStatesManager } = getState()[headType];
         if (taskResult.taskStatus === 'failed') {
             modelGroup.estimatedTime = 0;
             await dispatch(baseActions.updateState(headType, {
-                stage: CNC_LASER_STAGE.GENERATE_GCODE_FAILED,
+                stage: STEP_STAGE.CNC_LASER_GENERATE_GCODE_FAILED,
                 isGcodeGenerating: false,
                 progress: 1
             }));
@@ -356,9 +361,9 @@ export const processActions = {
                 lastModified: gcodeFile.lastModified,
                 thumbnail: gcodeFile.thumbnail
             },
-            stage: CNC_LASER_STAGE.GENERATE_GCODE_SUCCESS,
+            stage: STEP_STAGE.CNC_LASER_GENERATING_GCODE,
             isGcodeGenerating: false,
-            progress: 1
+            progress: progressStatesManager.updateProgress(STEP_STAGE.CNC_LASER_GENERATING_GCODE, 1)
         }));
         dispatch(baseActions.render(headType));
     },
@@ -371,7 +376,7 @@ export const processActions = {
      * @returns {Function}
      */
     commitGenerateViewPath: (headType) => (dispatch, getState) => {
-        const { toolPathGroup, materials } = getState()[headType];
+        const { toolPathGroup, materials, progressStatesManager } = getState()[headType];
 
 
         const viewPathInfos = toolPathGroup.getCommitGenerateViewPathInfos({ materials });
@@ -380,6 +385,8 @@ export const processActions = {
             return;
         }
 
+
+        progressStatesManager.startProgress(PROCESS_STAGE.CNC_LASER_VIEW_PATH, [1, 1]);
         controller.commitViewPathTask({
             taskId: uuid.v4(),
             headType: headType,
@@ -387,9 +394,9 @@ export const processActions = {
         });
 
         dispatch(baseActions.updateState(headType, {
-            stage: CNC_LASER_STAGE.GENERATING_GCODE,
+            stage: STEP_STAGE.CNC_LASER_GENERATING_VIEWPATH,
             simulationNeedToPreview: false,
-            progress: 0
+            progress: progressStatesManager.updateProgress(STEP_STAGE.CNC_LASER_GENERATING_VIEWPATH, 0)
         }));
     },
 
@@ -401,14 +408,15 @@ export const processActions = {
 
     onGenerateViewPath: (headType, taskResult) => async (dispatch, getState) => {
         const size = getState()[headType]?.coordinateSize;
-        const { toolPathGroup, materials, coordinateMode } = getState()[headType];
+        const { toolPathGroup, materials, coordinateMode, progressStatesManager } = getState()[headType];
         const { isRotate } = materials;
 
         if (taskResult.taskStatus === 'failed') {
             dispatch(baseActions.updateState(headType, {
-                stage: CNC_LASER_STAGE.GENERATE_GCODE_FAILED,
+                stage: STEP_STAGE.CNC_LASER_GENERATE_GCODE_FAILED,
                 progress: 1
             }));
+            // progressStatesManager.finishProgress(false);
             return;
         }
         const { viewPathFile } = taskResult;
@@ -423,9 +431,13 @@ export const processActions = {
             maxY: size.y / 2 + coorDelta?.dy
         };
         await toolPathGroup.onGenerateViewPath(viewPathFile, isRotate ? materials : boundarySize);
+
         dispatch(baseActions.updateState(headType, {
-            showSimulation: true
+            showSimulation: true,
+            stage: STEP_STAGE.CNC_LASER_RENDER_VIEWPATH,
+            progress: progressStatesManager.updateProgress(STEP_STAGE.CNC_LASER_RENDER_VIEWPATH, 1)
         }));
+        // progressStatesManager.finishProgress(true);
         dispatch(baseActions.render(headType));
     },
 

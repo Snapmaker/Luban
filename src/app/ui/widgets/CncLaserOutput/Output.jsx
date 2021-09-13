@@ -238,7 +238,7 @@ const Output = ({ headType }) => {
                                     // 'margin-top-10',
                                     displayedType === DISPLAYED_TYPE_TOOLPATH ? 'display-block' : 'display-none'
                                 )}
-                                suffixIcon={<SvgIcon name="DropdownOpen" type="static" color="#d5d6d9" />}
+                                suffixIcon={<SvgIcon name="DropdownOpen" type={['static']} color="#d5d6d9" />}
                             >
                                 {i18n._('Export')}
                             </Button>

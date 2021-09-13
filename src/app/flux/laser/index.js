@@ -21,10 +21,10 @@ import {
 } from '../actionType';
 import { actions as editorActions } from '../editor';
 import ToolPathGroup from '../../toolpaths/ToolPathGroup';
-import { CNC_LASER_STAGE } from '../editor/utils';
 import definitionManager from '../manager/DefinitionManager';
 import i18n from '../../lib/i18n';
 import { timestamp } from '../../../shared/lib/random-utils';
+import ProgressStatesManager, { STEP_STAGE } from '../../lib/manager/ProgressManager';
 
 const initModelGroup = new ModelGroup('laser');
 const operationHistory = new OperationHistory();
@@ -42,7 +42,7 @@ const INITIAL_STATE = {
         z: 0
     },
 
-    stage: CNC_LASER_STAGE.EMPTY,
+    stage: STEP_STAGE.EMPTY,
     progress: 0,
     inProgress: false,
     scale: 1,
@@ -112,7 +112,10 @@ const INITIAL_STATE = {
     // check not to duplicated create event
     initEventFlag: false,
     // used to manually control the gcode ganeration including thumbnails
-    shouldGenerateGcodeCounter: 0
+    shouldGenerateGcodeCounter: 0,
+
+    // ProgressStatesManager
+    progressStatesManager: new ProgressStatesManager()
 };
 
 const ACTION_SET_BACKGROUND_ENABLED = 'laser/ACTION_SET_BACKGROUND_ENABLED';
@@ -280,7 +283,11 @@ export const actions = {
         while (toolDefinitions.find(d => d.category === newCategoryName)) {
             newCategoryName = `#${newCategoryName}`;
         }
-        const definitionsWithSameCategory = isCreate ? [{ ...activeToolList, name: 'Default Tool' }]
+        const definitionsWithSameCategory = isCreate ? [{
+            ...activeToolList,
+            name: 'Default Tool',
+            settings: toolDefinitions[0]?.settings
+        }]
             : state.toolDefinitions.filter(d => d.category === oldCategory);
         for (let i = 0; i < definitionsWithSameCategory.length; i++) {
             const newDefinition = definitionsWithSameCategory[i];

@@ -13,7 +13,7 @@ import ProgressBar from '../../components/ProgressBar';
 import ContextMenu from '../../components/ContextMenu';
 import { Button } from '../../components/Buttons';
 import Canvas from '../../components/SMCanvas';
-import { actions as printingActions, PRINTING_STAGE } from '../../../flux/printing';
+import { actions as printingActions } from '../../../flux/printing';
 import { actions as operationHistoryActions } from '../../../flux/operation-history';
 import VisualizerLeftBar from './VisualizerLeftBar';
 import VisualizerPreviewControl from './VisualizerPreviewControl';
@@ -21,6 +21,7 @@ import VisualizerBottomLeft from './VisualizerBottomLeft';
 import VisualizerInfo from './VisualizerInfo';
 import PrintableCube from './PrintableCube';
 import styles from './styles.styl';
+import { STEP_STAGE } from '../../../lib/manager/ProgressManager';
 
 class Visualizer extends PureComponent {
     static propTypes = {
@@ -36,6 +37,7 @@ class Visualizer extends PureComponent {
         renderingTimestamp: PropTypes.number.isRequired,
         inProgress: PropTypes.bool.isRequired,
         hasModel: PropTypes.bool.isRequired,
+        leftBarOverlayVisible: PropTypes.bool.isRequired,
 
         hideSelectedModel: PropTypes.func.isRequired,
         recordAddOperation: PropTypes.func.isRequired,
@@ -65,7 +67,9 @@ class Visualizer extends PureComponent {
         autoRotateSelectedModel: PropTypes.func.isRequired,
         layFlatSelectedModel: PropTypes.func.isRequired,
         scaleToFitSelectedModel: PropTypes.func.isRequired,
-        resetSelectedModelTransformation: PropTypes.func.isRequired
+        resetSelectedModelTransformation: PropTypes.func.isRequired,
+        progressStatesManager: PropTypes.object.isRequired,
+        setRotationPlacementFace: PropTypes.func.isRequired
     };
 
     state = {
@@ -176,6 +180,9 @@ class Visualizer extends PureComponent {
         setTransformMode: (value) => {
             this.props.setTransformMode(value);
             this.canvas.current.setTransformMode(value);
+        },
+        onRotationPlacementSelect: (userData) => {
+            this.props.setRotationPlacementFace(userData);
         }
     };
 
@@ -319,7 +326,9 @@ class Visualizer extends PureComponent {
         const { size, transformMode, selectedModelArray, renderingTimestamp, modelGroup, stage } = nextProps;
         if (transformMode !== this.props.transformMode) {
             this.canvas.current.setTransformMode(transformMode);
-            if (transformMode !== 'support') {
+            if (transformMode === 'rotate-placement') {
+                this.canvas.current.setSelectedModelConvexMeshGroup(modelGroup.selectedModelConvexMeshGroup);
+            } else if (transformMode !== 'support') {
                 this.supportActions.stopSupportMode();
             }
         }
@@ -331,7 +340,9 @@ class Visualizer extends PureComponent {
             this.canvas.current.updateBoundingBox();
             this.canvas.current.attach(modelGroup.selectedGroup);
 
-            this.supportActions.stopSupportMode();
+            if (transformMode !== 'rotate-placement') {
+                this.supportActions.stopSupportMode();
+            }
             if (selectedModelArray.length === 1 && selectedModelArray[0].supportTag && !['translate', 'scale'].includes(transformMode)) {
                 this.actions.setTransformMode('translate');
             }
@@ -349,20 +360,22 @@ class Visualizer extends PureComponent {
             // Re-position model group
             gcodeLineGroup.position.set(-size.x / 2, -size.y / 2, 0);
             this.canvas.current.setCamera(new Vector3(0, -Math.max(size.x, size.y, size.z) * 2, size.z / 2), new Vector3(0, 0, size.z / 2));
-            this.supportActions.stopSupportMode();
+            if (transformMode !== 'rotate-placement') {
+                this.supportActions.stopSupportMode();
+            }
         }
         if (renderingTimestamp !== this.props.renderingTimestamp) {
             this.canvas.current.renderScene();
         }
 
-        if (stage !== this.props.stage && stage === PRINTING_STAGE.LOAD_MODEL_FAILED) {
+        if (stage !== this.props.stage && stage === STEP_STAGE.LOAD_MODEL_FAILED) {
             modal({
                 cancelTitle: i18n._(''),
                 title: i18n._('Import Error'),
                 body: i18n._('Failed to import this object. \nPlease select a supported file format.')
             });
         }
-        if (stage !== this.props.stage && stage === PRINTING_STAGE.LOAD_MODEL_SUCCEED) {
+        if (stage !== this.props.stage && stage === STEP_STAGE.LOAD_MODEL_SUCCEED) {
             const modelSize = new Vector3();
             selectedModelArray[0].boundingBox.getSize(modelSize);
             const isLarge = ['x', 'y', 'x'].some((key) => modelSize[key] >= size[key]);
@@ -404,44 +417,20 @@ class Visualizer extends PureComponent {
 
     getNotice() {
         const { stage, progress } = this.props;
-        switch (stage) {
-            case PRINTING_STAGE.EMPTY:
-                return '';
-            case PRINTING_STAGE.LOADING_MODEL:
-                return i18n._('Loading model...');
-            case PRINTING_STAGE.LOAD_MODEL_SUCCEED:
-                return i18n._('Loaded model successfully.');
-            case PRINTING_STAGE.LOAD_MODEL_FAILED:
-                return i18n._('Failed to load model.');
-            case PRINTING_STAGE.SLICE_PREPARING:
-                return i18n._('Preparing for slicing...');
-            case PRINTING_STAGE.SLICING:
-                return i18n._('Slicing...{{progress}}%', { progress: (100.0 * progress).toFixed(1) });
-            case PRINTING_STAGE.SLICE_SUCCEED:
-                return i18n._('Sliced model successfully.');
-            case PRINTING_STAGE.SLICE_FAILED:
-                return i18n._('Failed to slice model.');
-            case PRINTING_STAGE.PREVIEWING:
-                return i18n._('Previewing G-code...{{progress}}%', { progress: (100.0 * progress).toFixed(1) });
-            case PRINTING_STAGE.PREVIEW_SUCCEED:
-                return i18n._('Previewed G-code successfully.');
-            case PRINTING_STAGE.PREVIEW_FAILED:
-                return i18n._('Failed to load G-code.');
-            default:
-                return '';
-        }
+        return this.props.progressStatesManager.getNotice(stage, progress);
     }
 
     showContextMenu = (event) => {
-        this.contextMenuRef.current.show(event);
+        !this.props.leftBarOverlayVisible && this.contextMenuRef.current.show(event);
     };
 
     render() {
-        const { size, selectedModelArray, modelGroup, gcodeLineGroup, progress, inProgress, hasModel } = this.props;
+        const { size, selectedModelArray, modelGroup, gcodeLineGroup, inProgress, hasModel } = this.props;
 
         const isModelSelected = (selectedModelArray.length > 0);
         const isSupportSelected = modelGroup.selectedModelArray.length > 0 && modelGroup.selectedModelArray[0].supportTag === true;
         const notice = this.getNotice();
+        const progress = this.props.progress;
         const pasteDisabled = (modelGroup.clipboard.length === 0);
         return (
             <div
@@ -485,6 +474,7 @@ class Visualizer extends PureComponent {
                         supportActions={this.supportActions}
                         onSelectModels={this.actions.onSelectModels}
                         onModelAfterTransform={this.actions.onModelAfterTransform}
+                        onRotationPlacementSelect={this.actions.onRotationPlacementSelect}
                         onModelBeforeTransform={this.actions.onModelBeforeTransform}
                         onModelTransform={this.actions.onModelTransform}
                         showContextMenu={this.showContextMenu}
@@ -569,9 +559,33 @@ const mapStateToProps = (state, ownProps) => {
     const printing = state.printing;
     const { size } = machine;
     // TODO: be to organized
-    const { stage, modelGroup, hasModel, gcodeLineGroup, transformMode, progress, displayedType, renderingTimestamp, inProgress } = printing;
+    const {
+        progressStatesManager,
+        stage,
+        modelGroup,
+        hasModel,
+        gcodeLineGroup,
+        transformMode,
+        progress,
+        displayedType,
+        renderingTimestamp,
+        inProgress,
+        enableShortcut,
+        leftBarOverlayVisible
+    } = printing;
+    let isActive = true;
+    if (enableShortcut) {
+        if (!currentModalPath && ownProps.location.pathname.indexOf('3dp') > 0) {
+            isActive = true;
+        } else {
+            isActive = false;
+        }
+    } else {
+        isActive = false;
+    }
     return {
-        isActive: !currentModalPath && ownProps.location.pathname.indexOf('3dp') > 0,
+        leftBarOverlayVisible,
+        isActive,
         stage,
         size,
         allModel: modelGroup.models,
@@ -584,7 +598,8 @@ const mapStateToProps = (state, ownProps) => {
         progress,
         displayedType,
         renderingTimestamp,
-        inProgress
+        inProgress,
+        progressStatesManager
     };
 };
 
@@ -618,7 +633,8 @@ const mapDispatchToProps = (dispatch) => ({
     scaleToFitSelectedModel: () => dispatch(printingActions.scaleToFitSelectedModel()),
     setTransformMode: (value) => dispatch(printingActions.setTransformMode(value)),
     clearAllManualSupport: () => dispatch(printingActions.clearAllManualSupport()),
-    saveSupport: (model) => dispatch(printingActions.saveSupport(model))
+    saveSupport: (model) => dispatch(printingActions.saveSupport(model)),
+    setRotationPlacementFace: (userData) => dispatch(printingActions.setRotationPlacementFace(userData))
 
 });
 

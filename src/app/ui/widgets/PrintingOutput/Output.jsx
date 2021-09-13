@@ -12,7 +12,7 @@ import Dropdown from '../../components/Dropdown';
 import i18n from '../../../lib/i18n';
 import modal from '../../../lib/modal';
 import UniApi from '../../../lib/uni-api';
-import { actions as printingActions, PRINTING_STAGE } from '../../../flux/printing';
+import { actions as printingActions } from '../../../flux/printing';
 import { actions as workspaceActions } from '../../../flux/workspace';
 import { actions as projectActions } from '../../../flux/project';
 // import { actions as menuActions } from '../../../flux/appbar-menu';
@@ -21,6 +21,7 @@ import { renderPopup } from '../../utils';
 
 import Workspace from '../../pages/Workspace';
 import SvgIcon from '../../components/SvgIcon';
+import { STEP_STAGE } from '../../../lib/manager/ProgressManager';
 
 function useRenderWorkspace() {
     const [showWorkspace, setShowWorkspace] = useState(false);
@@ -48,6 +49,7 @@ function Output() {
     const gcodeFile = useSelector(state => state?.printing?.gcodeFile);
     const displayedType = useSelector(state => state?.printing?.displayedType, shallowEqual);
     const defaultThumbnail = useSelector(state => state?.printing?.thumbnail);
+    const leftBarOverlayVisible = useSelector(state => state?.printing?.leftBarOverlayVisible, shallowEqual);
     const workflowState = useSelector(state => state?.machine?.workflowState, shallowEqual);
 
     const dispatch = useDispatch();
@@ -99,7 +101,7 @@ function Output() {
     }, [isGcodeOverstepped, gcodeFile]);
 
 
-    const isSlicing = stage === PRINTING_STAGE.SLICING;
+    const isSlicing = stage === STEP_STAGE.PRINTING_SLICING;
     const menu = (
         <Menu>
             <Menu.Item
@@ -131,7 +133,7 @@ function Output() {
                         type="primary"
                         priority="level-one"
                         onClick={actions.onClickGenerateGcode}
-                        disabled={!hasModel || !hasAnyModelVisible || isSlicing || isAnyModelOverstepped}
+                        disabled={!hasModel || !hasAnyModelVisible || isSlicing || isAnyModelOverstepped || leftBarOverlayVisible}
                     >
                         {i18n._('Generate G-code')}
                     </Button>
