@@ -27,6 +27,7 @@ class ProgressBar extends React.PureComponent {
     }
 
     getSnapshotBeforeUpdate(prevProps) {
+        console.log('get snap', prevProps.progress, this.props.progress, this.props.tips);
         if (!isEqual(prevProps.progress, this.props.progress) && this.props.progress !== 0) {
             this.setState({ display: 'block' });
             if (this.timeout) {

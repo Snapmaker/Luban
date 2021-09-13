@@ -336,8 +336,8 @@ class Visualizer extends Component {
     }
 
     getNotice() {
-        const { stage, progress } = this.props;
-        return this.props.progressStatesManager.getNotice(stage, progress);
+        const { stage } = this.props;
+        return this.props.progressStatesManager.getNotice(stage);
     }
 
     showContextMenu = (event) => {
