@@ -666,7 +666,9 @@ function VisualizerLeftBar({ defaultSupportSize, setTransformMode, isSupporting,
                                     disabled={!rotationAnalysisEnable}
                                     onClick={() => {
                                         dispatch(printingActions.startAnalyzeRotationProgress());
-                                        setShowRotationAnalyzeModal(true);
+                                        setTimeout(() => {
+                                            setShowRotationAnalyzeModal(true);
+                                        }, 100);
                                     }}
                                 >
                                     <span>{i18n._('Rotation Analyze')}</span>

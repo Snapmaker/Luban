@@ -1500,6 +1500,7 @@ class ModelGroup extends EventEmitter {
                 const len = Math.min(20, rotationInfo.rates.length);
                 for (let i = 0; i < len; i++) {
                     const row = {
+                        faceId: i,
                         rate: rotationInfo.rates[i],
                         area: rotationInfo.areas[i],
                         plane: rotationInfo.planes[i],
@@ -1513,7 +1514,7 @@ class ModelGroup extends EventEmitter {
 
                 const group = this.resetSelectedModelConvexMeshGroup();
                 ThreeUtils.setObjectParent(group, model.meshObject);
-                tableResult.forEach((rowInfo, i) => {
+                tableResult.forEach((rowInfo) => {
                     const geometry = new BufferGeometry();
                     geometry.addAttribute('position', new Float32BufferAttribute(rowInfo.planesPosition, 3));
                     // Fix Z-fighting
@@ -1522,7 +1523,7 @@ class ModelGroup extends EventEmitter {
                     const material = new MeshBasicMaterial({ color: 0x2A2C2E, depthWrite: false, transparent: true, opacity: 0.2, polygonOffset: true, polygonOffsetFactor: -1, polygonOffsetUnits: -5 });
                     const mesh = new Mesh(geometry, material);
                     mesh.userData = {
-                        index: i
+                        index: rowInfo.faceId
                     };
                     mesh.renderOrder = 9999999999;
                     group.add(mesh);

@@ -45,7 +45,7 @@ function initColumns() {
 let columns = [];
 let initialTransformation = {};
 let loopIndex = 1;
-const Table = React.memo(({ tableColumns, onRowSelect, selectedRow, data, setData }) => {
+const Table = React.memo(({ tableColumns, onRowSelect, selectedRow, data, setData, scrollToSelectedRow }) => {
     const refThead = useRef();
     const refTbody = useRef();
     const refScroll = useRef();
@@ -103,7 +103,7 @@ const Table = React.memo(({ tableColumns, onRowSelect, selectedRow, data, setDat
     }, [tableColumns, data]);
     useEffect(() => {
         const index = data.indexOf(selectedRow);
-        if (index > -1) {
+        if (index > -1 && scrollToSelectedRow) {
             refTbody.current.children[index].scrollIntoView();
         }
     }, [selectedRow]);
@@ -161,6 +161,7 @@ Table.propTypes = {
     data: PropTypes.array.isRequired,
     setData: PropTypes.func.isRequired,
     onRowSelect: PropTypes.func.isRequired,
+    scrollToSelectedRow: PropTypes.bool.isRequired,
     selectedRow: PropTypes.object
 };
 
@@ -170,6 +171,7 @@ function RotationAnalysisOverlay({ onClose }) {
     const rotationAnalysisSelectedRowId = useSelector(state => state.printing.rotationAnalysisSelectedRowId, shallowEqual);
     const modelGroup = useSelector(state => state.printing.modelGroup, shallowEqual);
     const [selectedRow, setSelectedRow] = useState(null);
+    const [scrollToSelectedRow, setScrollToSelectedRow] = useState(null);
     const [data, setData] = useState([]);
 
     const actions = {
@@ -180,9 +182,10 @@ function RotationAnalysisOverlay({ onClose }) {
             dispatch(printingActions.setTransformMode('rotate'));
             onClose();
         },
-        onRowSelect: (record) => {
-            if (record && selectedRow !== record) {
-                setSelectedRow(record);
+        onRowSelect: (row, scrollIntoView = false) => {
+            if (row && selectedRow !== row) {
+                setSelectedRow(row);
+                setScrollToSelectedRow(scrollIntoView);
                 // restore initial transformation
                 const model = modelGroup.selectedModelArray[0];
                 modelGroup.unselectAllModels();
@@ -195,8 +198,8 @@ function RotationAnalysisOverlay({ onClose }) {
                 const overstepped = modelGroup._checkOverstepped(model);
                 model.setOversteppedAndSelected(overstepped, model.isSelected);
 
-                dispatch(printingActions.rotateByPlane(record.plane));
-                dispatch(printingActions.setRotationPlacementFace({ index: data.indexOf(record) }));
+                dispatch(printingActions.rotateByPlane(row.plane));
+                dispatch(printingActions.setRotationPlacementFace({ index: row.faceId }));
             }
         },
         exitModal: (e) => {
@@ -248,7 +251,8 @@ function RotationAnalysisOverlay({ onClose }) {
 
     useEffect(() => {
         if (rotationAnalysisSelectedRowId > -1) {
-            actions.onRowSelect(data[rotationAnalysisSelectedRowId]);
+            const row = data.find(item => item.faceId === rotationAnalysisSelectedRowId);
+            actions.onRowSelect(row, true);
         }
     }, [rotationAnalysisSelectedRowId]);
     return (
@@ -265,7 +269,7 @@ function RotationAnalysisOverlay({ onClose }) {
                 </span>
             </header>
             <section>
-                <Table tableColumns={columns} data={data} setData={setData} selectedRow={selectedRow} onRowSelect={actions.onRowSelect} />
+                <Table tableColumns={columns} data={data} setData={setData} selectedRow={selectedRow} onRowSelect={actions.onRowSelect} scrollToSelectedRow={scrollToSelectedRow} />
             </section>
             <footer>
                 <Button
