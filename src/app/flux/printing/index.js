@@ -1031,6 +1031,7 @@ export const actions = {
 
         let transformMode;
         switch (true) {
+            // TODO: transformMode update to Array
             case ['scaleX', 'scaleY', 'scaleZ'].some(item => item in transformation):
                 transformMode = 'scale';
                 break;

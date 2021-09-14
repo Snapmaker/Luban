@@ -1,4 +1,4 @@
-import { Vector3, Group, Matrix4, BufferGeometry, MeshPhongMaterial, Mesh, DoubleSide, Float32BufferAttribute, MeshBasicMaterial, Box3 } from 'three';
+import { Vector3, Group, Matrix4, BufferGeometry, MeshPhongMaterial, Mesh, DoubleSide, Float32BufferAttribute, MeshBasicMaterial } from 'three';
 import EventEmitter from 'events';
 // import { EPSILON } from '../../constants';
 import uuid from 'uuid';
@@ -160,24 +160,27 @@ class ModelGroup extends EventEmitter {
     }
 
     // Calculate selectedGroup's BBox in modelGroup
-    getSelectedModelBBoxDes(docs = true) {
+    getSelectedModelBBoxDes() {
         const selectedGroup = this.selectedGroup;
         if (selectedGroup.children.length > 0 && selectedGroup.shouldUpdateBoundingbox) {
             const whd = new Vector3(0, 0, 0);
             ThreeUtils.computeBoundingBox(this.selectedGroup).getSize(whd);
-            if (docs) {
-                return `${whd.x.toFixed(1)} × ${whd.y.toFixed(1)} × ${whd.z.toFixed(1)} mm`;
-            } else {
-                return {
-                    x: whd.x,
-                    y: whd.y,
-                    z: whd.z
-                };
-            }
+            return `${whd.x.toFixed(1)} × ${whd.y.toFixed(1)} × ${whd.z.toFixed(1)} mm`;
             // width-depth-height
         } else {
             return '';
         }
+    }
+
+    // get selected Model bounding box width & height & depth
+    getSelectedModelBBoxWHD() {
+        const whd = new Vector3(0, 0, 0);
+        ThreeUtils.computeBoundingBox(this.selectedGroup).getSize(whd);
+        return {
+            x: whd.x,
+            y: whd.y,
+            z: whd.z
+        };
     }
 
     changeShowOrigin() {
@@ -483,28 +486,18 @@ class ModelGroup extends EventEmitter {
 
 
     calculateSelectedGroupPosition() {
-        const boundingBoxTempMax = new Vector3(-Number.MAX_VALUE, -Number.MAX_VALUE, -Number.MAX_VALUE);
-        const boundingBoxTempMin = new Vector3(Number.MAX_VALUE, Number.MAX_VALUE, Number.MAX_VALUE);
-        let boundingBoxTemp = new Box3();
-        boundingBoxTemp = ThreeUtils.computeBoundingBox(this.selectedGroup);
-        boundingBoxTempMax.x = boundingBoxTemp.max.x;
-        boundingBoxTempMax.y = boundingBoxTemp.max.y;
-        boundingBoxTempMax.z = boundingBoxTemp.max.z;
-
-        boundingBoxTempMin.x = boundingBoxTemp.min.x;
-        boundingBoxTempMin.y = boundingBoxTemp.min.y;
-        boundingBoxTempMin.z = boundingBoxTemp.min.z;
+        const boundingBoxTemp = ThreeUtils.computeBoundingBox(this.selectedGroup);
         if (this.selectedGroup.children.length > 1) {
             return new Vector3(
-                (boundingBoxTempMax.x + boundingBoxTempMin.x) / 2,
-                (boundingBoxTempMax.y + boundingBoxTempMin.y) / 2,
-                boundingBoxTempMax.z / 2
+                (boundingBoxTemp.max.x + boundingBoxTemp.min.x) / 2,
+                (boundingBoxTemp.max.y + boundingBoxTemp.min.y) / 2,
+                boundingBoxTemp.max.z / 2
             );
         } else if (this.selectedGroup.children.length === 1) {
             return new Vector3(
-                boundingBoxTempMax.x,
-                boundingBoxTempMax.y,
-                boundingBoxTempMax.z
+                boundingBoxTemp.max.x,
+                boundingBoxTemp.max.y,
+                boundingBoxTemp.max.z
             );
         } else {
             return new Vector3(

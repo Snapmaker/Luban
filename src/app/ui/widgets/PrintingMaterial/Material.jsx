@@ -64,9 +64,6 @@ function Material({ widgetActions }) {
             dispatch(printingActions.displayModel());
         }
     }
-    function onSelectOfficialDefinition(definitionId) {
-        dispatch(printingActions.updateDefaultMaterialId(definitionId));
-    }
 
     useEffect(() => {
         widgetActions.setTitle(i18n._('Material Settings'));
@@ -78,7 +75,7 @@ function Material({ widgetActions }) {
         }));
         const definition = materialDefinitions.find(d => d.definitionId === defaultMaterialId);
         if (!definition) {
-            onSelectOfficialDefinition(plaMaterialId);
+            dispatch(printingActions.updateDefaultMaterialId(plaMaterialId));
         }
         updateActiveDefinition(definition);
         setMaterialDefinitionOptions(newMaterialDefinitionOptions);
