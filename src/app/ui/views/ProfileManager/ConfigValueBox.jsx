@@ -1,7 +1,7 @@
 import React, { useState, useRef, useCallback } from 'react';
 import PropTypes from 'prop-types';
-import classNames from 'classnames';
 import { includes } from 'lodash';
+import classNames from 'classnames';
 import i18n from '../../../lib/i18n';
 import SettingItem from './SettingItem';
 import CheckboxItem from './CheckboxItem';

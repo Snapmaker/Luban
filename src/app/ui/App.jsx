@@ -116,7 +116,7 @@ class App extends PureComponent {
                     <Switch>
                         <Route path="/" exact component={HomePage} />
                         <Route path="/workspace" component={Workspace} />
-                        <Route path="/3dp" component={Printing} />
+                        <Route path="/printing" component={Printing} />
                         <Route path="/laser" component={Laser} />
                         <Route path="/cnc" component={Cnc} />
                         <Route path="/settings" component={Settings} />

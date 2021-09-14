@@ -1,10 +1,12 @@
+import { HEAD_CNC, HEAD_LASER, HEAD_PRINTING } from '../../constants';
+
 class GcodeGenerator {
     parseToolPathObjToGcode(toolPathObj, gcodeConfig) {
         if (!toolPathObj || !gcodeConfig) {
             return null;
         }
         const { headType } = toolPathObj;
-        if (!['cnc', 'laser', '3dp'].includes(headType)) {
+        if (![HEAD_PRINTING, HEAD_LASER, HEAD_CNC].includes(headType)) {
             return null;
         }
 

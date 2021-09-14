@@ -9,7 +9,6 @@ import {
     CONNECTION_TYPE_SERIAL, CONNECTION_TYPE_WIFI,
     DATA_PREFIX,
     LASER_MOCK_PLATE_HEIGHT,
-    MACHINE_HEAD_TYPE,
     MACHINE_SERIES,
     HEAD_CNC,
     HEAD_LASER,
@@ -568,9 +567,9 @@ export const actions = {
                             }
                             dispatch(workspaceActions.clearGcode());
                             let suffix = 'gcode';
-                            if (headType === MACHINE_HEAD_TYPE.LASER.value) {
+                            if (headType === HEAD_LASER) {
                                 suffix = 'nc';
-                            } else if (headType === MACHINE_HEAD_TYPE.CNC.value) {
+                            } else if (headType === HEAD_CNC) {
                                 suffix = 'cnc';
                             }
                             dispatch(workspaceActions.clearGcode());
@@ -794,8 +793,8 @@ export const actions = {
     executeGcodeG54: (series, headType) => (dispatch) => {
         if (series !== MACHINE_SERIES.ORIGINAL.value
             && series !== MACHINE_SERIES.CUSTOM.value
-            && (headType === MACHINE_HEAD_TYPE.LASER.value
-                || headType === MACHINE_HEAD_TYPE.CNC.value)) {
+            && (headType === HEAD_LASER
+                || headType === HEAD_CNC)) {
             dispatch(actions.executeGcode('G54'));
         }
     },
@@ -848,7 +847,7 @@ export const actions = {
                 const blob = new Blob([gcode], { type: 'text/plain' });
                 const file = new File([blob], gcodeFile.name);
                 const promises = [];
-                if (series !== MACHINE_SERIES.ORIGINAL.value && series !== MACHINE_SERIES.CUSTOM.value && headType === MACHINE_HEAD_TYPE.LASER.value) {
+                if (series !== MACHINE_SERIES.ORIGINAL.value && series !== MACHINE_SERIES.CUSTOM.value && headType === HEAD_LASER) {
                     if (isLaserPrintAutoMode && laserFocalLength) {
                         const promise = new Promise((resolve) => {
                             server.executeGcode(`G53;\nG0 Z${laserFocalLength + materialThickness} F1500;\nG54;`, () => {

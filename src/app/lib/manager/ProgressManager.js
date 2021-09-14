@@ -63,6 +63,8 @@ const _STATE = {
     FAILED: 3
 };
 
+const EPSILON = 1e-6;
+
 class ProgressState {
     constructor(stages, notice = '', successNotice = '', failedNotice = '') {
         this.stages = stages;
@@ -84,9 +86,9 @@ class ProgressState {
             case _STATE.RUNNING:
                 return i18n._(this.notice, { progress: (progress * 100.0).toFixed(1) });
             case _STATE.SUCCESS:
-                return this.successNotice;
+                return i18n._(this.successNotice);
             case _STATE.FAILED:
-                return this.failedNotice;
+                return i18n._(this.failedNotice);
             default:
                 return i18n._(this.notice, { progress: (progress * 100.0).toFixed(1) });
         }
@@ -204,7 +206,8 @@ class ProgressStatesManager {
         return this.progressStates[processStageID].getNewProgress(stageID, progress, count, totalCount);
     }
 
-    getNotice(stageID, progress) {
+    getNotice(stageID) {
+        const progress = this.progress;
         if (this.processStageID === PROCESS_STAGE.EMPTY) {
             return '';
         }
@@ -224,11 +227,12 @@ class ProgressStatesManager {
         const totalCount = this.totalCounts && this.totalCounts[this.stage];
         const count = this.counts && this.counts[this.stage];
         const newProgress = this.getProgress(this.processStageID, stageID, progress, (totalCount ?? 1) + 1 - (count ?? 1), totalCount ?? 1);
-        if (newProgress > this.progress) {
-            this.progress = newProgress;
-        }
-        if (this.progress > 1) {
+        if (newProgress >= 1 - EPSILON) {
             this.progress = 1;
+        } else {
+            if (newProgress > this.progress) {
+                this.progress = newProgress;
+            }
         }
         return this.progress;
     }
@@ -242,7 +246,7 @@ class ProgressStatesManager {
     }
 
     finishProgress(success = true) {
-        this.reset();
+        // this.reset();
         if (success) {
             this.state = _STATE.SUCCESS;
         } else {
@@ -258,6 +262,10 @@ class ProgressStatesManager {
 
     getProgressStage() {
         return this.processStageID;
+    }
+
+    inProgress() {
+        return this.state === _STATE.RUNNING;
     }
 }
 

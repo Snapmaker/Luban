@@ -3,7 +3,7 @@ import PropTypes from 'prop-types';
 import classNames from 'classnames';
 import i18n from '../../../lib/i18n';
 
-import { MACHINE_HEAD_TYPE } from '../../../constants';
+import { HEAD_CNC } from '../../../constants';
 import styles from './index.styl';
 
 class CNCState extends PureComponent {
@@ -13,7 +13,7 @@ class CNCState extends PureComponent {
 
     render() {
         const { headType } = this.props;
-        const isCNC = headType === MACHINE_HEAD_TYPE.CNC.value;
+        const isCNC = headType === HEAD_CNC;
 
         return (
             <div className="container-fluid px-0">

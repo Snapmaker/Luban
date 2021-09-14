@@ -12,7 +12,7 @@ import { actions as printingActions } from '../../../flux/printing';
 import { actions as projectActions } from '../../../flux/project';
 import { actions as machineActions } from '../../../flux/machine';
 
-import { HEAD_3DP, PRINTING_MANAGER_TYPE_QUALITY, PRINTING_QUALITY_CONFIG_INDEX,
+import { HEAD_PRINTING, PRINTING_MANAGER_TYPE_QUALITY, PRINTING_QUALITY_CONFIG_INDEX,
     PRINTING_QUALITY_CUSTOMIZE_FIELDS, PRINTING_QUALITY_CONFIG_GROUP } from '../../../constants';
 import SettingItem from '../../views/ProfileManager/SettingItem';
 import ConfigValueBox from '../../views/ProfileManager/ConfigValueBox';
@@ -88,7 +88,7 @@ function Configurations({ widgetActions }) {
         },
         updateActiveDefinition: (definition) => {
             dispatch(printingActions.updateActiveDefinition(definition));
-            dispatch(projectActions.autoSaveEnvironment(HEAD_3DP, true));
+            dispatch(projectActions.autoSaveEnvironment(HEAD_PRINTING, true));
         },
         /**
          * Select `definition`.

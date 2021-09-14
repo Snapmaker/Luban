@@ -14,7 +14,7 @@ import { actions as printingActions } from '../../flux/printing';
 import { actions as projectActions } from '../../flux/project';
 import ProjectLayout from '../layouts/ProjectLayout';
 import MainToolBar from '../layouts/MainToolBar';
-import { HEAD_3DP } from '../../constants';
+import { HEAD_PRINTING } from '../../constants';
 import { renderPopup, renderWidgetList, logPageView, useUnsavedTitle } from '../utils';
 import { machineStore } from '../../store/local-storage';
 
@@ -76,7 +76,7 @@ const allWidgets = {
 };
 
 
-const pageHeadType = HEAD_3DP;
+const pageHeadType = HEAD_PRINTING;
 function useRenderMainToolBar() {
     const unSaved = useSelector(state => state?.project[pageHeadType]?.unSaved, shallowEqual);
     const hasModel = useSelector(state => state?.printing?.hasModel, shallowEqual);
@@ -91,7 +91,7 @@ function useRenderMainToolBar() {
         const onClose = () => {
             setShowHomePage(false);
             logPageView({
-                pathname: '/3dp'
+                pathname: '/printing'
             });
         };
         return showHomePage && renderPopup({
@@ -103,7 +103,7 @@ function useRenderMainToolBar() {
         const onClose = () => {
             setShowWorkspace(false);
             logPageView({
-                pathname: '/3dp'
+                pathname: '/printing'
             });
         };
         return showWorkspace && renderPopup({
@@ -141,7 +141,7 @@ function useRenderMainToolBar() {
                 name: 'MainToolbarSave',
                 iconClassName: 'printing-save-icon',
                 action: () => {
-                    dispatch(projectActions.save(HEAD_3DP));
+                    dispatch(projectActions.save(HEAD_PRINTING));
                 }
             },
             {
@@ -188,7 +188,7 @@ function Printing({ location }) {
     useEffect(() => {
         dispatch(printingActions.init());
         logPageView({
-            pathname: '/3dp'
+            pathname: '/printing'
         });
     }, []);
     useEffect(() => {

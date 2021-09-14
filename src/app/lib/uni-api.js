@@ -281,7 +281,7 @@ const Dialog = {
         type = typeof type === 'string' ? type.slice(1) : '';
         let extensions = ['snap3dp', 'snaplzr', 'snapcnc'];
         switch (type) { // substring '/3dp' to '3dp'
-            case '3dp':
+            case 'printing':
                 extensions = ['stl', 'obj'];
                 break;
             case 'laser':

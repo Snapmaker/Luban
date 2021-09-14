@@ -43,7 +43,7 @@ function SettingItem(props) {
                 value = false;
             }
             return optionsArray.push({
-                'label': options[key],
+                'label': i18n._(options[key]),
                 'value': value
             });
         });

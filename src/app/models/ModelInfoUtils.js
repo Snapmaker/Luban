@@ -1,5 +1,5 @@
 import {
-    CNC_MESH_SLICE_MODE_ROTATION, BOTTOM, FRONT, HEAD_CNC, HEAD_LASER,
+    CNC_MESH_SLICE_MODE_ROTATION, BOTTOM, FRONT, HEAD_CNC, HEAD_LASER, HEAD_PRINTING,
     PROCESS_MODE_BW,
     PROCESS_MODE_GREYSCALE,
     PROCESS_MODE_HALFTONE,
@@ -58,7 +58,7 @@ const sizeModelByMinSize = (size = MIN_SIZE, width, height) => {
 };
 
 const checkParams = (headType, sourceType, mode) => {
-    if (headType !== 'laser' && headType !== 'cnc' && headType !== '3dp') {
+    if (headType !== HEAD_LASER && headType !== HEAD_CNC && headType !== HEAD_PRINTING) {
         return false;
     }
     if (![SOURCE_TYPE_3DP, SOURCE_TYPE_RASTER, SOURCE_TYPE_SVG, SOURCE_TYPE_TEXT, SOURCE_TYPE_IMAGE3D].includes(sourceType)) {

@@ -170,7 +170,15 @@ const ToolPathListBox = (props) => {
                 check: !check
             }));
             if (displayedType === DISPLAYED_TYPE_TOOLPATH) {
-                dispatch(editorActions.refreshToolPathPreview(props.headType));
+                let allToolPathHide = true;
+                toolPaths.forEach((toolPath) => {
+                    if ((toolPath.id === id && !visible) || (toolPath.id !== id && toolPath.visible)) {
+                        allToolPathHide = false;
+                    }
+                });
+                if (!allToolPathHide) {
+                    dispatch(editorActions.refreshToolPathPreview(props.headType));
+                }
             } else {
                 dispatch(editorActions.resetProcessState(props.headType));
             }

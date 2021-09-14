@@ -133,7 +133,12 @@ export const uploadDefinition = (req, res) => {
     const { headType } = req.params;
     const { definitionId, uploadName, series } = req.body;
     const readFileSync = fs.readFileSync(`${DataStorage.tmpDir}/${uploadName}`, 'utf-8');
-    const obj = JSON.parse(readFileSync);
+    let obj;
+    try {
+        obj = JSON.parse(readFileSync);
+    } catch (e) {
+        obj = {};
+    }
 
     if (!obj.inherits) {
         obj.inherits = 'snapmaker2';

@@ -6,7 +6,7 @@ import isEqual from 'lodash/isEqual';
 import { Vector3, Box3 } from 'three';
 
 import { shortcutActions, priorities, ShortcutManager } from '../../../lib/shortcut';
-import { EPSILON } from '../../../constants';
+import { EPSILON, HEAD_PRINTING } from '../../../constants';
 import i18n from '../../../lib/i18n';
 import modal from '../../../lib/modal';
 import ProgressBar from '../../components/ProgressBar';
@@ -368,14 +368,14 @@ class Visualizer extends PureComponent {
             this.canvas.current.renderScene();
         }
 
-        if (stage !== this.props.stage && stage === STEP_STAGE.LOAD_MODEL_FAILED) {
+        if (stage !== this.props.stage && stage === STEP_STAGE.PRINTING_LOAD_MODEL_FAILED) {
             modal({
                 cancelTitle: i18n._(''),
                 title: i18n._('Import Error'),
                 body: i18n._('Failed to import this object. \nPlease select a supported file format.')
             });
         }
-        if (stage !== this.props.stage && stage === STEP_STAGE.LOAD_MODEL_SUCCEED) {
+        if (stage !== this.props.stage && stage === STEP_STAGE.PRINTING_LOAD_MODEL_SUCCEED) {
             const modelSize = new Vector3();
             selectedModelArray[0].boundingBox.getSize(modelSize);
             const isLarge = ['x', 'y', 'x'].some((key) => modelSize[key] >= size[key]);
@@ -416,8 +416,8 @@ class Visualizer extends PureComponent {
     }
 
     getNotice() {
-        const { stage, progress } = this.props;
-        return this.props.progressStatesManager.getNotice(stage, progress);
+        const { stage } = this.props;
+        return this.props.progressStatesManager.getNotice(stage);
     }
 
     showContextMenu = (event) => {
@@ -575,7 +575,7 @@ const mapStateToProps = (state, ownProps) => {
     } = printing;
     let isActive = true;
     if (enableShortcut) {
-        if (!currentModalPath && ownProps.location.pathname.indexOf('3dp') > 0) {
+        if (!currentModalPath && ownProps.location.pathname.indexOf(HEAD_PRINTING) > 0) {
             isActive = true;
         } else {
             isActive = false;
@@ -607,7 +607,7 @@ const mapDispatchToProps = (dispatch) => ({
     recordAddOperation: (model) => dispatch(printingActions.recordAddOperation(model)),
     recordModelBeforeTransform: (modelGroup) => dispatch(printingActions.recordModelBeforeTransform(modelGroup)),
     recordModelAfterTransform: (transformMode, modelGroup) => dispatch(printingActions.recordModelAfterTransform(transformMode, modelGroup)),
-    clearOperationHistory: () => dispatch(operationHistoryActions.clear('printing')),
+    clearOperationHistory: () => dispatch(operationHistoryActions.clear(HEAD_PRINTING)),
 
     hideSelectedModel: () => dispatch(printingActions.hideSelectedModel()),
     destroyGcodeLine: () => dispatch(printingActions.destroyGcodeLine()),
@@ -618,8 +618,8 @@ const mapDispatchToProps = (dispatch) => ({
     cut: () => dispatch(printingActions.cut()),
     copy: () => dispatch(printingActions.copy()),
     paste: () => dispatch(printingActions.paste()),
-    undo: () => dispatch(printingActions.undo('printing')),
-    redo: () => dispatch(printingActions.redo('printing')),
+    undo: () => dispatch(printingActions.undo(HEAD_PRINTING)),
+    redo: () => dispatch(printingActions.redo(HEAD_PRINTING)),
     removeSelectedModel: () => dispatch(printingActions.removeSelectedModel()),
     removeAllModels: () => dispatch(printingActions.removeAllModels()),
     arrangeAllModels: () => dispatch(printingActions.arrangeAllModels()),

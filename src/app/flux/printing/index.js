@@ -5,7 +5,7 @@ import { cloneDeep, isNil } from 'lodash';
 import LoadModelWorker from '../../workers/LoadModel.worker';
 import GcodeToBufferGeometryWorker from '../../workers/GcodeToBufferGeometry.worker';
 import { ABSENT_OBJECT, EPSILON, DATA_PREFIX, PRINTING_MANAGER_TYPE_MATERIAL,
-    PRINTING_MANAGER_TYPE_QUALITY, MACHINE_SERIES } from '../../constants';
+    PRINTING_MANAGER_TYPE_QUALITY, MACHINE_SERIES, HEAD_PRINTING } from '../../constants';
 import { timestamp } from '../../../shared/lib/random-utils';
 import { machineStore } from '../../store/local-storage';
 import ProgressStatesManager, { PROCESS_STAGE, STEP_STAGE } from '../../lib/manager/ProgressManager';
@@ -97,7 +97,7 @@ const INITIAL_STATE = {
 
     selectedModelIDArray: [],
     selectedModelArray: [],
-    modelGroup: new ModelGroup('printing'),
+    modelGroup: new ModelGroup(HEAD_PRINTING),
 
     // G-code
     gcodeFile: null,
@@ -340,7 +340,7 @@ export const actions = {
                 progressStatesManager.startProgress(PROCESS_STAGE.PRINTING_SLICE_AND_PREVIEW);
                 dispatch(actions.updateState({
                     stage: STEP_STAGE.PRINTING_SLICING,
-                    progress: 0.01
+                    progress: progressStatesManager.updateProgress(STEP_STAGE.PRINTING_SLICING, 0.01)
                 }));
             });
             controller.on('slice:completed', (args) => {
@@ -358,7 +358,7 @@ export const actions = {
                     filamentLength,
                     filamentWeight,
                     stage: STEP_STAGE.PRINTING_SLICING,
-                    progress: 1
+                    progress: progressStatesManager.updateProgress(STEP_STAGE.PRINTING_SLICING, 1)
                 }));
                 progressStatesManager.startNextStep();
 
@@ -434,6 +434,8 @@ export const actions = {
                     dispatch(actions.showGcodeLayers(layerCount - 1));
                     dispatch(actions.displayGcode());
 
+                    const { progressStatesManager } = getState().printing;
+                    progressStatesManager.startNextStep();
                     dispatch(actions.updateState({
                         stage: STEP_STAGE.PRINTING_PREVIEWING
                     }));
@@ -441,8 +443,11 @@ export const actions = {
                 }
                 case 'progress': {
                     const state = getState().printing;
+                    const { progressStatesManager } = state;
                     if (Math.abs(value - state.progress) > 0.01 || value > 1 - EPSILON) {
-                        dispatch(actions.updateState({ progress: value }));
+                        dispatch(actions.updateState({
+                            progress: progressStatesManager.updateProgress(STEP_STAGE.PRINTING_PREVIEWING, value)
+                        }));
                     }
                     break;
                 }
@@ -777,13 +782,12 @@ export const actions = {
      * @private
      */
     __loadModel: (originalName, uploadName) => (dispatch) => {
-        const headType = '3dp';
+        const headType = 'printing';
         const sourceType = '3d';
         const mode = '3d';
         const width = 0;
         const height = 0;
 
-        dispatch(actions.updateState({ progress: 0.25 }));
         dispatch(actions.generateModel(headType, originalName, uploadName, width, height,
             mode, sourceType, null, null, {}));
     },
@@ -792,20 +796,10 @@ export const actions = {
     // @param file
     uploadModel: (file) => async (dispatch, getState) => {
         // Notice user that model is being loading
-        const { progressStatesManager } = getState().printing;
-        progressStatesManager.startProgress(PROCESS_STAGE.PRINTING_LOAD_MODEL);
-        dispatch(actions.updateState({
-            stage: STEP_STAGE.PRINTING_LOADING_MODEL,
-            progress: 0
-        }));
-
         const formData = new FormData();
         formData.append('file', file);
         const res = await api.uploadFile(formData);
-
         const { originalName, uploadName } = res.body;
-
-        dispatch(actions.updateState({ progress: 0.25 }));
 
         actions.__loadModel(originalName, uploadName)(dispatch, getState);
     },
@@ -854,7 +848,7 @@ export const actions = {
         progressStatesManager.startProgress(PROCESS_STAGE.PRINTING_SLICE_AND_PREVIEW);
         dispatch(actions.updateState({
             stage: STEP_STAGE.PRINTING_SLICING,
-            progress: 0
+            progress: progressStatesManager.updateProgress(STEP_STAGE.PRINTING_SLICING, 0)
         }));
 
         // Prepare model file
@@ -1476,7 +1470,7 @@ export const actions = {
         progressStatesManager.startNextStep();
         dispatch(actions.updateState({
             stage: STEP_STAGE.PRINTING_PREVIEWING,
-            progress: 0
+            progress: progressStatesManager.updateProgress(STEP_STAGE.PRINTING_SLICING, 0)
         }));
         gcodeRenderingWorker.postMessage({ func: '3DP', gcodeFilename });
     },
@@ -1519,6 +1513,13 @@ export const actions = {
         headType, originalName, uploadName, sourceWidth, sourceHeight,
         mode, sourceType, config, gcodeConfig, transformation, modelID
     ) => async (dispatch, getState) => {
+        const { progressStatesManager } = getState().printing;
+        progressStatesManager.startProgress(PROCESS_STAGE.PRINTING_LOAD_MODEL);
+        dispatch(actions.updateState({
+            stage: STEP_STAGE.PRINTING_LOADING_MODEL,
+            progress: progressStatesManager.updateProgress(STEP_STAGE.PRINTING_LOADING_MODEL, 0.25)
+        }));
+
         const { size } = getState().machine;
         const uploadPath = `${DATA_PREFIX}/${uploadName}`;
         const { modelGroup } = getState().printing;
@@ -1563,8 +1564,8 @@ export const actions = {
                     dispatch(actions.displayModel());
                     dispatch(actions.destroyGcodeLine());
                     dispatch(actions.updateState({
-                        stage: STEP_STAGE.PRINTING_LOADING_MODEL,
-                        progress: 1
+                        stage: STEP_STAGE.PRINTING_LOAD_MODEL_SUCCEED,
+                        progress: progressStatesManager.updateProgress(STEP_STAGE.PRINTING_LOADING_MODEL, 1)
                     }));
                     break;
                 }

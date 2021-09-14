@@ -11,21 +11,16 @@ import { pathWithRandomSuffix } from '../../../../shared/lib/random-utils';
 import i18n from '../../../lib/i18n';
 import UniApi from '../../../lib/uni-api';
 import { normalizeNameDisplay } from '../../../lib/normalize-range';
-// import widgetStyles from '../styles.styl';
 import styles from './index.styl';
 import {
     CONNECTION_TYPE_WIFI,
-    DATA_PREFIX,
-    // IMAGE_WIFI_CONNECTED,
-    // IMAGE_WIFI_ERROR,
-    MACHINE_HEAD_TYPE
+    DATA_PREFIX, HEAD_CNC, HEAD_LASER, HEAD_PRINTING
 } from '../../../constants';
 import { actions as workspaceActions } from '../../../flux/workspace';
 import { actions as projectActions } from '../../../flux/project';
 
 import modalSmallHOC from '../../components/Modal/modal-small';
 import { Button } from '../../components/Buttons';
-// import SvgIcon from '../../components/SvgIcon';
 import Checkbox from '../../components/Checkbox';
 
 
@@ -188,13 +183,13 @@ function WifiTransport({ widgetActions }) {
         const filename = path.basename(_selectFileName);
         let type = '';
         if (filename.endsWith('.gcode')) {
-            type = MACHINE_HEAD_TYPE['3DP'].value;
+            type = HEAD_PRINTING;
         }
         if (filename.endsWith('.nc')) {
-            type = MACHINE_HEAD_TYPE.LASER.value;
+            type = HEAD_LASER;
         }
         if (filename.endsWith('.cnc')) {
-            type = MACHINE_HEAD_TYPE.CNC.value;
+            type = HEAD_CNC;
         }
         // select and unselect
         if (selectFileName === _selectFileName) {

@@ -88,7 +88,7 @@ class DataStorage {
 
      async init() {
          mkdirp.sync(this.envDir);
-         mkdirp.sync(`${this.envDir}/3dp`);
+         mkdirp.sync(`${this.envDir}/printing`);
          mkdirp.sync(`${this.envDir}/laser`);
          mkdirp.sync(`${this.envDir}/cnc`);
 

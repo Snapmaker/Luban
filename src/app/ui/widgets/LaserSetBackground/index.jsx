@@ -2,7 +2,7 @@ import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
 import SetBackground from './SetBackground';
-import { MACHINE_HEAD_TYPE } from '../../../constants';
+import { HEAD_LASER } from '../../../constants';
 
 
 class LaserSetBackgroundWidget extends PureComponent {
@@ -30,7 +30,7 @@ class LaserSetBackgroundWidget extends PureComponent {
         const { isConnected, headType, hideModal } = this.props;
         const state = this.state;
         const actions = this.actions;
-        const isLaser = headType === MACHINE_HEAD_TYPE.LASER.value;
+        const isLaser = headType === HEAD_LASER;
 
         return (
             <SetBackground

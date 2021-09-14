@@ -11,7 +11,7 @@ import { parseLubanGcodeHeader } from '../../lib/parseGcodeHeader';
 import { zipFolder, unzipFile } from '../../lib/archive';
 import { packFirmware } from '../../lib/firmware-build';
 import {
-    ERR_INTERNAL_SERVER_ERROR
+    ERR_INTERNAL_SERVER_ERROR, HEAD_PRINTING
 } from '../../constants';
 import { removeSpecialChars } from '../../../shared/lib/utils';
 import { generateRandomPathName } from '../../../shared/lib/random-utils';
@@ -325,7 +325,7 @@ export const recoverEnv = async (req, res) => {
  */
 export const packageEnv = async (req, res) => {
     const tails = {
-        '3dp': '.snap3dp',
+        'printing': '.snap3dp',
         'laser': '.snaplzr',
         'cnc': '.snapcnc'
     };
@@ -384,7 +384,11 @@ export const recoverProjectFile = async (req, res) => {
     content = content.toString();
 
     const config = JSON.parse(content);
-    const headType = config?.machineInfo?.headType;
+    let headType = config?.machineInfo?.headType;
+    // TODO: for project file of "< version 4.1"
+    if (headType === '3dp') {
+        headType = HEAD_PRINTING;
+    }
     const series = config?.machineInfo?.series;
     if (config.defaultMaterialId && /^material.([0-9_]+)$/.test(config.defaultMaterialId)) {
         const fname = `${DataStorage.tmpDir}/${config.defaultMaterialId}.def.json`;

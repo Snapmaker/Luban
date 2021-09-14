@@ -6,7 +6,7 @@ import classNames from 'classnames';
 import { Button } from '../components/Buttons';
 import i18n from '../../lib/i18n';
 import Modal from '../components/Modal';
-import { MACHINE_HEAD_TYPE, MACHINE_SERIES } from '../../constants';
+import { HEAD_LASER, HEAD_PRINTING, HEAD_CNC, MACHINE_HEAD_TYPE, MACHINE_SERIES } from '../../constants';
 import Anchor from '../components/Anchor';
 import styles from './styles.styl';
 
@@ -26,7 +26,7 @@ class MachineSelectModal extends PureComponent {
 
     state = {
         series: this.props.series || MACHINE_SERIES.ORIGINAL.value,
-        headType: this.props.headType || MACHINE_HEAD_TYPE['3DP'].value
+        headType: this.props.headType || HEAD_PRINTING
     };
 
     actions = {
@@ -94,18 +94,18 @@ class MachineSelectModal extends PureComponent {
         ];
         const machineHeadTypeOptions = [
             {
-                value: MACHINE_HEAD_TYPE['3DP'].value,
+                value: HEAD_PRINTING,
                 label: MACHINE_HEAD_TYPE['3DP'].label,
                 img: '/resources/images/machine/function-3d-printing.jpg'
             },
             {
-                value: MACHINE_HEAD_TYPE.LASER.value,
+                value: HEAD_LASER,
                 label: MACHINE_HEAD_TYPE.LASER.label,
                 img: '/resources/images/machine/function-laser.jpg'
 
             },
             {
-                value: MACHINE_HEAD_TYPE.CNC.value,
+                value: HEAD_CNC,
                 label: MACHINE_HEAD_TYPE.CNC.label,
                 img: '/resources/images/machine/function-cnc.jpg'
             }

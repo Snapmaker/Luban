@@ -17,7 +17,7 @@ import ControlPanel from './ControlPanel';
 import { actions as machineActions } from '../../../flux/machine';
 import { actions as widgetActions } from '../../../flux/widget';
 import {
-    HEAD_TYPE_CNC,
+    HEAD_CNC,
     // Units
     IMPERIAL_UNITS,
     METRIC_UNITS, WORKFLOW_STATUS_IDLE,
@@ -253,7 +253,7 @@ function Control({ widgetId, widgetActions: _widgetActions }) {
         runBoundary: () => {
             const { bbox } = state;
             const gcode = [];
-            if (headType === HEAD_TYPE_CNC) {
+            if (headType === HEAD_CNC) {
                 gcode.push('G91', 'G0 Z5 F400', 'G90');
             }
             if (workPosition.isFourAxis) {
@@ -281,7 +281,7 @@ function Control({ widgetId, widgetActions: _widgetActions }) {
                 );
             }
 
-            if (headType === HEAD_TYPE_CNC) {
+            if (headType === HEAD_CNC) {
                 gcode.push('G91', 'G0 Z-5 F400', 'G90');
             }
 

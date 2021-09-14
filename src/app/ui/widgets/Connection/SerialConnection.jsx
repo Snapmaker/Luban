@@ -12,7 +12,7 @@ import i18n from '../../../lib/i18n';
 import { controller } from '../../../lib/controller';
 import {
     MACHINE_SERIES,
-    MACHINE_HEAD_TYPE
+    MACHINE_HEAD_TYPE, HEAD_PRINTING, HEAD_LASER, HEAD_CNC
 } from '../../../constants';
 import { valueOf } from '../../../lib/contants-utils';
 import { actions as machineActions } from '../../../flux/machine';
@@ -291,9 +291,9 @@ function SerialConnection() {
 
             {isConnected && (
                 <div className="margin-bottom-16">
-                    {headType === MACHINE_HEAD_TYPE['3DP'].value && <PrintingState headType={headType} />}
-                    {headType === MACHINE_HEAD_TYPE.LASER.value && <LaserState headType={headType} />}
-                    {headType === MACHINE_HEAD_TYPE.CNC.value && <CNCState headType={headType} />}
+                    {headType === HEAD_PRINTING && <PrintingState headType={headType} />}
+                    {headType === HEAD_LASER && <LaserState headType={headType} />}
+                    {headType === HEAD_CNC && <CNCState headType={headType} />}
                 </div>
             )}
             {isConnected && enclosureOnline && (

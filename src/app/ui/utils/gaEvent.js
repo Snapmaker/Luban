@@ -8,7 +8,7 @@ export function logPageView({ pathname, isRotate }) {
                 // ReactGA.set({ page: path });
                 ReactGA.pageview('/#/home');
                 break;
-            case '/3dp':
+            case '/printing':
             case '/workspace':
                 ReactGA.pageview(`/#${pathname}`);
                 break;

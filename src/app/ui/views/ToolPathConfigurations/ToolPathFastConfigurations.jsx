@@ -238,7 +238,7 @@ function ToolPathFastConfigurations({ setEditingToolpath, headType, toolpath }) 
             dispatch(editorActions.refreshToolPathPreview(headType));
         },
         checkIfDefinitionModified() {
-            return ifDefinitionModified(activeToolListDefinition, currentToolDefinition);
+            return (activeToolListDefinition && currentToolDefinition) && ifDefinitionModified(activeToolListDefinition, currentToolDefinition);
         },
         onDuplicateToolNameDefinition: async (inputValue) => {
             const newToolDefinition = {

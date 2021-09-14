@@ -5,7 +5,9 @@ import Printing from './Printing';
 import Laser from './Laser';
 import CNC from './CNC';
 import {
-    MACHINE_HEAD_TYPE
+    HEAD_CNC,
+    HEAD_LASER,
+    HEAD_PRINTING
 } from '../../../constants';
 
 
@@ -15,13 +17,13 @@ function MarlinWidget({ widgetActions }) {
     const actions = {
         setTitle: (_headType) => {
             let title = 'Detecting...';
-            if (_headType === MACHINE_HEAD_TYPE['3DP'].value) {
+            if (_headType === HEAD_PRINTING) {
                 title = '3D Printer';
             }
-            if (_headType === MACHINE_HEAD_TYPE.LASER.value) {
+            if (_headType === HEAD_LASER) {
                 title = 'Laser';
             }
-            if (_headType === MACHINE_HEAD_TYPE.CNC.value) {
+            if (_headType === HEAD_CNC) {
                 title = 'CNC';
             }
             widgetActions.setTitle(title);
@@ -47,9 +49,9 @@ function MarlinWidget({ widgetActions }) {
 
     return (
         <div>
-            {headType === MACHINE_HEAD_TYPE['3DP'].value && <Printing />}
-            {headType === MACHINE_HEAD_TYPE.LASER.value && <Laser />}
-            {headType === MACHINE_HEAD_TYPE.CNC.value && <CNC />}
+            {headType === HEAD_PRINTING && <Printing />}
+            {headType === HEAD_LASER && <Laser />}
+            {headType === HEAD_CNC && <CNC />}
         </div>
     );
 }

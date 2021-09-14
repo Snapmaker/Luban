@@ -1,6 +1,14 @@
 import request from 'superagent';
 import events from 'events';
-import { MACHINE_HEAD_TYPE, MACHINE_SERIES, WORKFLOW_STATUS_IDLE, WORKFLOW_STATUS_UNKNOWN } from '../../constants';
+import {
+    HEAD_CNC,
+    HEAD_LASER,
+    HEAD_PRINTING,
+    MACHINE_HEAD_TYPE,
+    MACHINE_SERIES,
+    WORKFLOW_STATUS_IDLE,
+    WORKFLOW_STATUS_UNKNOWN
+} from '../../constants';
 import { valueOf } from '../../lib/contants-utils';
 
 /**
@@ -123,6 +131,9 @@ export class Server extends events.EventEmitter {
                     const headTypeValue = valueOf(MACHINE_HEAD_TYPE, 'alias', headType);
                     data.series = seriesValue ? seriesValue.value : null;
                     data.headType = headTypeValue ? headTypeValue.value : null;
+                    if (data.headType === '3dp') {
+                        data.headType = HEAD_PRINTING;
+                    }
                     this.state.series = data.series;
                     this.state.headType = data.headType;
                 }
@@ -254,11 +265,11 @@ export class Server extends events.EventEmitter {
             return;
         }
         const api = `${this.host}/api/v1/prepare_print`;
-        if (type === MACHINE_HEAD_TYPE['3DP'].value) {
+        if (type === HEAD_PRINTING) {
             type = '3DP';
-        } else if (type === MACHINE_HEAD_TYPE.LASER.value) {
+        } else if (type === HEAD_LASER) {
             type = 'Laser';
-        } else if (type === MACHINE_HEAD_TYPE.CNC.value) {
+        } else if (type === HEAD_CNC) {
             type = 'CNC';
         }
         request

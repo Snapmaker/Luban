@@ -121,7 +121,6 @@ function ToolPathConfigurations({ toolpath, onClose, headType }) {
                 }
             }
             setCurrentToolDefinition(newDefinition);
-            dispatch(editorActions.refreshToolPathPreview(headType));
         },
         checkIfDefinitionModified() {
             const oldTooldefinition = toolDefinitions.find((d) => {

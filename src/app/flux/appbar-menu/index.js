@@ -28,7 +28,7 @@ const INITIAL_STATE = {
 };
 
 const hashStateMap = {
-    '#/3dp': 'printing',
+    '#/printing': 'printing',
     '#/laser': 'laser',
     '#/cnc': 'cnc'
 };
@@ -204,7 +204,7 @@ export const actions = {
             fileMenu.submenu.forEach(item => {
                 switch (item.id) {
                     case 'export-models':
-                        if (currentPath === '#/3dp' && hasModel) {
+                        if (currentPath === '#/printing' && hasModel) {
                             item.enabled = true;
                         } else {
                             item.enabled = false;

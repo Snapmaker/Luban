@@ -6,7 +6,7 @@ import classNames from 'classnames';
 import { Dropdown, DropdownButton } from 'react-bootstrap';
 import i18n from '../../../lib/i18n';
 import {
-    MACHINE_HEAD_TYPE,
+    HEAD_PRINTING,
     METRIC_UNITS
 } from '../../../constants';
 import styles from './index.styl';
@@ -38,7 +38,7 @@ class DisplayPanel extends PureComponent {
         let machinePositionY = (Math.round((parseFloat(workPosition.y) - y) * 1000) / 1000).toFixed(3);
         let machinePositionZ = (Math.round((parseFloat(workPosition.z) - z) * 1000) / 1000).toFixed(3);
         let machinePositionB = (Math.round(parseFloat(workPosition.b)* 1000) / 1000).toFixed(3);
-        if (headType === MACHINE_HEAD_TYPE['3DP'].value) {
+        if (headType === HEAD_PRINTING) {
             machinePositionX = workPosition.x;
             machinePositionY = workPosition.y;
             machinePositionZ = workPosition.z;

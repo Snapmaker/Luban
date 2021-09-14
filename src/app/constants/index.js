@@ -18,13 +18,7 @@ export const WORKFLOW_STATUS_IDLE = 'idle';
 export const WORKFLOW_STATUS_RUNNING = 'running';
 export const WORKFLOW_STATUS_PAUSED = 'paused';
 
-// Head Type
-export const HEAD_TYPE_UNKNOWN = 'UNKNOWN';
-export const HEAD_TYPE_3DP = '3DP';
-export const HEAD_TYPE_LASER = 'LASER';
-export const HEAD_TYPE_CNC = 'CNC';
 // Workflow State
-
 
 // Connection Status
 export const CONNECTION_STATUS_IDLE = 'idle';
@@ -622,7 +616,7 @@ export const TEMPERATURE_MAX = 300;
 export const SPEED_FACTOR_MIN = 0;
 export const SPEED_FACTOR_MAX = 500;
 
-export const HEAD_3DP = '3dp';
+export const HEAD_PRINTING = 'printing';
 export const HEAD_LASER = 'laser';
 export const HEAD_CNC = 'cnc';
 export const HEAD_UNKNOWN = 'unknown';
@@ -776,7 +770,7 @@ export const IMAGE_WIFI_WAITING = '/resources/images/connection/ic_WI-FI_64x64.p
 export const IMAGE_WIFI_WARNING = '/resources/images/ic_warning-64x64.png';
 export const IMAGE_EMERGENCY_STOP = '/resources/images/connection/ic_emergency_stop.png';
 export const HEAD_TYPE_ENV_NAME = {
-    '3dp': '3D printing',
+    'printing': '3D printing',
     'laser': 'Laser',
     'cnc': 'CNC'
 };
@@ -890,13 +884,14 @@ export function getCurrentHeadType(pathname) {
     let headType = null;
     if (pathname.indexOf(HEAD_CNC) >= 0) headType = HEAD_CNC;
     if (pathname.indexOf(HEAD_LASER) >= 0) headType = HEAD_LASER;
-    if (pathname.indexOf(HEAD_3DP) >= 0) headType = HEAD_3DP;
+    if (pathname.indexOf(HEAD_PRINTING) >= 0) headType = HEAD_PRINTING;
     return headType;
 }
 
 
 // Laser | CNC canvas min | max scale rate
-export const MAX_LASER_CNC_CANVAS_SCALE = 4;
+export const VISUALIZER_CAMERA_HEIGHT = 300;
+export const MAX_LASER_CNC_CANVAS_SCALE = 5;
 export const MIN_LASER_CNC_CANVAS_SCALE = 0.5;
 export const SOFTWARE_MANUAL = 'https://support.snapmaker.com/hc/en-us/articles/4406229926935';
 export const FORUM_URL = 'https://forum.snapmaker.com/';

@@ -11,7 +11,7 @@ import styles from './styles.styl';
 import i18n from '../../../lib/i18n';
 import { actions as projectActions } from '../../../flux/project';
 import Workspace from '../Workspace';
-import { HEAD_3DP, HEAD_LASER, HEAD_CNC, MAX_RECENT_FILES_LENGTH } from '../../../constants';
+import { HEAD_PRINTING, HEAD_LASER, HEAD_CNC, MAX_RECENT_FILES_LENGTH } from '../../../constants';
 import UniApi from '../../../lib/uni-api';
 
 const Begin = () => {
@@ -73,7 +73,7 @@ const Begin = () => {
                     {beginSelected === 'start-project' && (
                         <div className={classNames(styles['link-bar'], 'margin-vertical-48')}>
                             <div className={classNames(styles['3dp'], 'margin-horizontal-16')}>
-                                <Anchor onClick={() => handleNewFile(false, HEAD_3DP)} title={i18n._('3D Printing G-code Generator')}>
+                                <Anchor onClick={() => handleNewFile(false, HEAD_PRINTING)} title={i18n._('3D Printing G-code Generator')}>
                                     <div className={classNames(styles.imgWrapper)}>
                                         <img src={require('./images/icon_3d_120x120.svg')} alt="" />
                                     </div>

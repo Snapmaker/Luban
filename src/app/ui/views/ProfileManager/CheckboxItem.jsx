@@ -4,7 +4,7 @@ import i18n from '../../../lib/i18n';
 import TipTrigger from '../../components/TipTrigger';
 import Checkbox from '../../components/Checkbox';
 
-function CheckboxItem({ definitionKey, settings, calculateTextIndex = () => 0, defaultValue, width = 'auto', isDefinitionEditable = () => true, onChangeDefinition }) {
+function CheckboxItem({ definitionKey, settings, calculateTextIndex = () => 0, width = 'auto', isDefinitionEditable = () => true, onChangeDefinition, defaultValue }) {
     const setting = settings[definitionKey];
     const { label, description } = setting;
     return (

@@ -27,7 +27,10 @@ import {
     OFFICIAL_SITE_EN_URL,
     MARKET_ZH_URL,
     MARKET_EN_URL,
-    MYMINIFACTORY_URL
+    MYMINIFACTORY_URL,
+    HEAD_PRINTING,
+    HEAD_LASER,
+    HEAD_CNC
 } from '../../constants';
 import { actions as menuActions } from '../../flux/appbar-menu';
 import { actions as machineActions } from '../../flux/machine';
@@ -292,7 +295,7 @@ class AppLayout extends PureComponent {
             UniApi.Event.on('appbar-menu:save-as-file', (event, file) => {
                 const pathname = this.props.currentModalPath || this.props.history.location.pathname;
                 switch (pathname) {
-                    case '/3dp':
+                    case '/printing':
                     case '/laser':
                     case '/cnc': this.actions.saveAsFile(file); break;
                     default: break;
@@ -301,7 +304,7 @@ class AppLayout extends PureComponent {
             UniApi.Event.on('appbar-menu:save', () => {
                 const pathname = this.props.currentModalPath || this.props.history.location.pathname;
                 switch (pathname) {
-                    case '/3dp':
+                    case '/printing':
                     case '/laser':
                     case '/cnc': this.actions.save(); break;
                     default: break;
@@ -440,7 +443,7 @@ class AppLayout extends PureComponent {
             UniApi.Event.on('appbar-menu:new-file', async ({ headType, isRotate }) => {
                 const oldPathname = this.props.history.location.pathname;
                 const history = this.props.history;
-                if (headType === 'cnc' || headType === 'laser') {
+                if (headType === HEAD_CNC || headType === HEAD_LASER) {
                     if (!isRotate) {
                         const { materials } = this.props.store?.[headType];
                         await this.props.changeCoordinateMode(headType, COORDINATE_MODE_CENTER);
@@ -463,7 +466,7 @@ class AppLayout extends PureComponent {
                     }
                     this.props.clearOperationHistory(headType);
                 } else {
-                    this.props.clearOperationHistory('printing');
+                    this.props.clearOperationHistory(HEAD_PRINTING);
                 }
                 await this.props.startProject(oldPathname, `/${headType}`, history);
             });
@@ -485,7 +488,7 @@ class AppLayout extends PureComponent {
                     fileObj = UniApi.File.constructFileObj(file.path, file.name.split('\\').pop());
                 }
                 switch (pathname) {
-                    case '/3dp': UniApi.Event.emit('appbar-menu:printing.import', fileObj); break;
+                    case '/printing': UniApi.Event.emit('appbar-menu:printing.import', fileObj); break;
                     case '/laser': UniApi.Event.emit('appbar-menu:laser.import', fileObj); break;
                     case '/cnc': UniApi.Event.emit('appbar-menu:cnc.import', fileObj); break;
                     case '/workspace': UniApi.Event.emit('appbar-menu:workspace.import', fileObj); break;
@@ -494,7 +497,7 @@ class AppLayout extends PureComponent {
             });
             UniApi.Event.on('appbar-menu:export-model', () => {
                 const pathname = this.props.currentModalPath || this.props.history.location.pathname;
-                if (pathname === '/3dp' && this.props.modelGroup.hasModel()) {
+                if (pathname === '/printing' && this.props.modelGroup.hasModel()) {
                     const promise = UniApi.Dialog.showSaveDialog({
                         title: i18n._('Export Model'),
                         filters: [
@@ -521,7 +524,7 @@ class AppLayout extends PureComponent {
             UniApi.Event.on('appbar-menu:export-gcode', () => {
                 const pathname = this.props.currentModalPath || this.props.history.location.pathname;
                 switch (pathname) {
-                    case '/3dp': UniApi.Event.emit('appbar-menu:printing.export-gcode'); break;
+                    case '/printing': UniApi.Event.emit('appbar-menu:printing.export-gcode'); break;
                     case '/laser': UniApi.Event.emit('appbar-menu:cnc-laser.export-gcode'); break;
                     case '/cnc': UniApi.Event.emit('appbar-menu:cnc-laser.export-gcode'); break;
                     case '/workspace': UniApi.Event.emit('appbar-menu:workspace.export-gcode'); break;

@@ -63,8 +63,5 @@ function PrintingObjectListBox() {
         </div>
     );
 }
-// PrintingObjectListBox.propTypes = {
-//     headType: PropTypes.string
-// };
 
 export default PrintingObjectListBox;
