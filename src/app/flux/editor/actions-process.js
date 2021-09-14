@@ -371,6 +371,7 @@ export const processActions = {
             isGcodeGenerating: false,
             progress: progressStatesManager.updateProgress(STEP_STAGE.CNC_LASER_GENERATING_GCODE, 1)
         }));
+        progressStatesManager.finishProgress(true);
         dispatch(baseActions.render(headType));
     },
 
@@ -420,7 +421,7 @@ export const processActions = {
                 stage: STEP_STAGE.CNC_LASER_GENERATE_GCODE_FAILED,
                 progress: 1
             }));
-            // progressStatesManager.finishProgress(false);
+            progressStatesManager.finishProgress(false);
             return;
         }
         const { viewPathFile } = taskResult;
@@ -441,7 +442,7 @@ export const processActions = {
             stage: STEP_STAGE.CNC_LASER_RENDER_VIEWPATH,
             progress: progressStatesManager.updateProgress(STEP_STAGE.CNC_LASER_RENDER_VIEWPATH, 1)
         }));
-        // progressStatesManager.finishProgress(true);
+        progressStatesManager.finishProgress(true);
         dispatch(baseActions.render(headType));
     },
 
