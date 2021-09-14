@@ -10,3 +10,7 @@ export const formatBytes = (bytes, decimals = 3) => {
     const value = (bytes / (k ** i)).toFixed(decimals);
     return parseFloat(`${value} ${sizes[i]}`);
 };
+
+export const mmToPixel = (mm) => {
+    return mm * 3.7795275591;
+};
