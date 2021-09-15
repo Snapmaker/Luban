@@ -487,7 +487,7 @@ class ModelGroup extends EventEmitter {
 
     calculateSelectedGroupPosition() {
         const boundingBoxTemp = ThreeUtils.computeBoundingBox(this.selectedGroup);
-        if (this.selectedGroup.children.length > 1) {
+        if (this.selectedGroup.children.length >= 1) {
             return new Vector3(
                 (boundingBoxTemp.max.x + boundingBoxTemp.min.x) / 2,
                 (boundingBoxTemp.max.y + boundingBoxTemp.min.y) / 2,
