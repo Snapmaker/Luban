@@ -162,6 +162,18 @@ export class MeshProcess {
         return this.mesh.getSize(this.isRotate);
     }
 
+    slice(thickness) {
+        const aabb = this.mesh.aabb;
+
+        const layerThickness = thickness;
+        const initialLayerThickness = layerThickness / 2;
+        const imageHeight = Math.floor((aabb.length.z - initialLayerThickness) / layerThickness) + 1;
+
+        this.slicer = new Slicer(this.mesh, layerThickness, imageHeight, initialLayerThickness);
+
+        return this.slicer;
+    }
+
     convertTo3AxisData(density) {
         const { width, height } = this.getWidthAndHeight();
 

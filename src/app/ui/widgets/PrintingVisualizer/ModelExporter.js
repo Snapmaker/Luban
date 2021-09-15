@@ -1,4 +1,4 @@
-import STLExporter from '../../../three-extensions/STLExporter';
+import STLExporter from '../../../../shared/lib/STL/STLExporter';
 // import STLBinaryExporter from '../../components/three-extensions/STLBinaryExporter';
 import OBJExporter from '../../../three-extensions/OBJExporter';
 
