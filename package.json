@@ -289,7 +289,8 @@
     "xml2js": "~0.4.19",
     "xmldom": "^0.3.0",
     "xterm": "^4.8.1",
-    "xterm-addon-fit": "^0.3.0"
+    "xterm-addon-fit": "^0.3.0",
+    "earcut": "^2.2.3"
   },
   "devDependencies": {
     "@babel/cli": "~7.8.4",
