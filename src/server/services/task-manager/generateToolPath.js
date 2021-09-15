@@ -27,9 +27,13 @@ const generateLaserToolPath = async (modelInfo, onProgress) => {
     const outputFilePath = `${DataStorage.tmpDir}/${outputFilename}`;
     let modelPath = null;
     // no need to process model
+    console.log('sourceType', sourceType, mode);
     if (((sourceType === SOURCE_TYPE_SVG)
         && (mode === PROCESS_MODE_VECTOR))) {
-        modelPath = `${DataStorage.tmpDir}/${uploadName}`;
+        const newUploadName = /parsed\.svg$/i.test(uploadName) ? uploadName
+            : uploadName.replace(/\.svg$/i, 'parsed.svg');
+        console.log('toolPathFiles[j]', uploadName, newUploadName);
+        modelPath = `${DataStorage.tmpDir}/${newUploadName}`;
     } else {
         if (uploadName.indexOf('svg') > 0) {
             log.error('process image need an image uploadName');
@@ -112,6 +116,13 @@ const generateLaserToolPathFromEngine = async (modelInfos, onProgress) => {
         if ([TOOLPATH_TYPE_VECTOR + SOURCE_TYPE_RASTER].includes(type + sourceType)) {
             const result = await editorProcess(modelInfo);
             modelInfo.uploadName = result.filename;
+        }
+        if (!(/parsed\.svg$/i.test(modelInfo.uploadName))) {
+            const newUploadName = modelInfo.uploadName.replace(/\.svg$/i, 'parsed.svg');
+            const uploadPath = `${DataStorage.tmpDir}/${newUploadName}`;
+            if (fs.existsSync(uploadPath)) {
+                modelInfo.uploadName = newUploadName;
+            }
         }
         if (headType === 'laser') {
             modelInfo.gcodeConfig.fillDensity = 1 / modelInfo.gcodeConfig.fillInterval;

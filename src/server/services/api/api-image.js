@@ -110,7 +110,7 @@ export const set = (req, res) => {
         }
     ], (err) => {
         if (err) {
-            log.error(`Failed to read image ${tempName}`);
+            log.error(`Failed to read image ${tempName} ,${err} `);
             res.status(ERR_INTERNAL_SERVER_ERROR).end();
         } else {
             res.end();

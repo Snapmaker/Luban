@@ -4,7 +4,9 @@ import { parseFloats, cssColor2Hex, xformMultiply } from './Utils';
 
 const OVERRIDE_STYLE = 'fill: none; stroke: #000; stroke-width: 0.4px; vector-effect: non-scaling-stroke;';
 const log = logger();
-
+const SVG_ATTR_ID = 'id';
+const XLINK_HREF = 'xlink:href';
+const SVG_HREF = 'href';
 
 function parseDAttribute(value) {
     const items = [];
@@ -365,6 +367,15 @@ class AttributesParser {
                 break;
             }
             case 'fill-rule': {
+                attributes[key] = value;
+                break;
+            }
+            case SVG_ATTR_ID: {
+                attributes[key] = `#${value}`;
+                break;
+            }
+            case XLINK_HREF:
+            case SVG_HREF: {
                 attributes[key] = value;
                 break;
             }
