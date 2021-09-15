@@ -21,6 +21,17 @@ export function logPageView({ pathname, isRotate }) {
     }
 }
 
+export function logEvent({ category, action, label }) {
+    if (category && action) {
+        ReactGA.event({
+            category,
+            action,
+            label
+        });
+    }
+}
+
 export default {
-    logPageView
+    logPageView,
+    logEvent
 };

@@ -10,6 +10,7 @@ import request from 'superagent';
 import { pathWithRandomSuffix } from '../../../../shared/lib/random-utils';
 import i18n from '../../../lib/i18n';
 import UniApi from '../../../lib/uni-api';
+import { logEvent } from '../../utils';
 // import widgetStyles from '../styles.styl';
 import styles from './index.styl';
 import {
@@ -67,7 +68,11 @@ class WifiTransport extends PureComponent {
         onChangeFile: async (event) => {
             const file = event.target.files[0];
             const { loadToWorkspaceOnLoad } = this.state;
-
+            logEvent({
+                action: 'Open G-code',
+                category: 'Workspace Function',
+                label: 'G-code File Widget'
+            });
             if (loadToWorkspaceOnLoad) {
                 this.props.uploadGcodeFile(file);
             } else {
