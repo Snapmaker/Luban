@@ -248,6 +248,9 @@ function ToolPathFastConfigurations({ setEditingToolpath, headType, toolpath }) 
             await dispatch(editorActions.duplicateToolListDefinition(headType, newToolDefinition));
             await dispatch(editorActions.changeActiveToolListDefinition(headType, newToolDefinition.definitionId, newToolDefinition.name));
         },
+
+        // only used in setting item
+        // option has only one pair (key, value)
         updateGcodeConfig: (option) => {
             if (headType === HEAD_LASER) {
                 // Movement Mode
@@ -272,6 +275,7 @@ function ToolPathFastConfigurations({ setEditingToolpath, headType, toolpath }) 
                 //     option.jogSpeed = 3000;
                 //     option.workSpeed = 500;
                 //     option.fixedPower = 100;
+                //     option.multiPasses = 1;
                 // }
                 // if (option.fillEnabled === false) {
                 //     option.jogSpeed = 3000;
