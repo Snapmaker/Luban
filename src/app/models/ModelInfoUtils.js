@@ -241,8 +241,8 @@ const defaultGcodeConfigs = {
         fixedPowerEnabled: true,
         fixedPower: 100,
         multiPassEnabled: true,
-        multiPasses: 1,
-        multiPassDepth: 1
+        multiPasses: 2,
+        multiPassDepth: 0.6
     },
     [toKey(HEAD_LASER, PROCESS_MODE_VECTOR, SOURCE_TYPE_RASTER)]: {
         optimizePath: true,
@@ -271,8 +271,8 @@ const defaultGcodeConfigs = {
         fixedPowerEnabled: true,
         fixedPower: 100,
         multiPassEnabled: true,
-        multiPasses: 1,
-        multiPassDepth: 1
+        multiPasses: 2,
+        multiPassDepth: 0.6
     },
 
     // Cnc

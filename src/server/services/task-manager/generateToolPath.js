@@ -112,7 +112,18 @@ const generateLaserToolPathFromEngine = async (modelInfos, onProgress) => {
         if ([TOOLPATH_TYPE_VECTOR + SOURCE_TYPE_RASTER].includes(type + sourceType)) {
             const result = await editorProcess(modelInfo);
             modelInfo.uploadName = result.filename;
+        } else if ([TOOLPATH_TYPE_VECTOR + SOURCE_TYPE_SVG].includes(type + sourceType)) {
+            // Make all toolpaths whose sourceType is 'svg' and toopathType is 'vector' are created using the parsed svg,
+            // except for the internal text svg
+            if (!(/parsed\.svg$/i.test(modelInfo.uploadName))) {
+                const newUploadName = modelInfo.uploadName.replace(/\.svg$/i, 'parsed.svg');
+                const uploadPath = `${DataStorage.tmpDir}/${newUploadName}`;
+                if (fs.existsSync(uploadPath)) {
+                    modelInfo.uploadName = newUploadName;
+                }
+            }
         }
+
         if (headType === 'laser') {
             modelInfo.gcodeConfig.fillDensity = 1 / modelInfo.gcodeConfig.fillInterval;
             modelInfo.gcodeConfig.stepOver = modelInfo.gcodeConfig.fillInterval;
