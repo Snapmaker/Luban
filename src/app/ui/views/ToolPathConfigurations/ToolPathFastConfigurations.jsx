@@ -196,6 +196,9 @@ function ToolPathFastConfigurations(props) {
             await dispatch(cncActions.duplicateToolListDefinition(newToolDefinition));
             await dispatch(cncActions.changeActiveToolListDefinition(newToolDefinition.definitionId, newToolDefinition.name));
         },
+
+        // only used in setting item
+        // option has only one pair (key, value)
         updateGcodeConfig: (option) => {
             if (props.headType === HEAD_LASER) {
                 // Movement Mode
@@ -220,6 +223,7 @@ function ToolPathFastConfigurations(props) {
                     option.jogSpeed = 3000;
                     option.workSpeed = 500;
                     option.fixedPower = 100;
+                    option.multiPasses = 1;
                 }
                 if (option.fillEnabled === false) {
                     option.jogSpeed = 3000;

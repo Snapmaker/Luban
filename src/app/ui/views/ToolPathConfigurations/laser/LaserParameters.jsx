@@ -41,6 +41,9 @@ class LaserParameters extends PureComponent {
                 });
             }
         },
+
+        // only used in setting item
+        // option has only one pair (key, value)
         updateGcodeConfig: (option) => {
             // Movement Mode
             if (option.movementMode === 'greyscale-dot') {
@@ -64,6 +67,7 @@ class LaserParameters extends PureComponent {
                 option.jogSpeed = 3000;
                 option.workSpeed = 500;
                 option.fixedPower = 100;
+                option.multiPasses = 1;
             }
             if (option.fillEnabled === false) {
                 option.jogSpeed = 3000;
