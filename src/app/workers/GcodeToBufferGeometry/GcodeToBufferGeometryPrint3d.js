@@ -152,10 +152,10 @@ class GcodeToBufferGeometryPrint3d {
         const layerIndexAttribute = new THREE.Float32BufferAttribute(layerIndices, 1);
         const typeCodeAttribute = new THREE.Float32BufferAttribute(typeCodes, 1);
 
-        bufferGeometry.addAttribute('position', positionAttribute);
-        bufferGeometry.addAttribute('a_color', colorAttribute);
-        bufferGeometry.addAttribute('a_layer_index', layerIndexAttribute);
-        bufferGeometry.addAttribute('a_type_code', typeCodeAttribute);
+        bufferGeometry.setAttribute('position', positionAttribute);
+        bufferGeometry.setAttribute('a_color', colorAttribute);
+        bufferGeometry.setAttribute('a_layer_index', layerIndexAttribute);
+        bufferGeometry.setAttribute('a_type_code', typeCodeAttribute);
 
         onParsed(bufferGeometry, layerCount, bounds);
     }

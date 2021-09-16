@@ -35,9 +35,22 @@ const convertRasterToSvg = (options) => {
     const { uploadName, vectorThreshold, invert, turdSize } = options;
     // svg may get here, return the original file
     if (/\.svg$/i.test(uploadName)) {
-        return Promise.resolve({
-            filename: /parsed\.svg$/i.test(uploadName) ? uploadName : uploadName.replace(/\.svg$/i, 'parsed.svg')
-        });
+        if (!(/parsed\.svg$/i.test(uploadName))) {
+            const newUploadName = uploadName.replace(/\.svg$/i, 'parsed.svg');
+            const uploadPath = `${DataStorage.tmpDir}/${newUploadName}`;
+            if (fs.existsSync(uploadPath)) {
+                return Promise.resolve({
+                    filename: newUploadName
+                });
+            }
+            return Promise.resolve({
+                filename: uploadName
+            });
+        } else {
+            return Promise.resolve({
+                filename: uploadName
+            });
+        }
     }
     const outputFilename = pathWithRandomSuffix(`${uploadName}.svg`);
     const modelPath = `${DataStorage.tmpDir}/${uploadName}`;

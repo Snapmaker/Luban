@@ -674,8 +674,8 @@ class ThreeDxfLoader {
                         const positionAttribute = new THREE.Float32BufferAttribute(positions, 3);
                         const colorAttribute = new THREE.Uint8BufferAttribute(colors, 4);
 
-                        bufferGeometry.addAttribute('position', positionAttribute);
-                        bufferGeometry.addAttribute('a_color', colorAttribute);
+                        bufferGeometry.setAttribute('position', positionAttribute);
+                        bufferGeometry.setAttribute('a_color', colorAttribute);
 
                         const obj3d = new DxfShader.Line(bufferGeometry);
 

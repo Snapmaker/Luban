@@ -44,6 +44,7 @@ function startServices(server) {
     socketServer.registerEvent('taskCommit:generateViewPath', TaskManager.addGenerateViewPathTask);
     socketServer.registerEvent('taskCommit:generateGcode', TaskManager.addGenerateGcodeTask);
     socketServer.registerEvent('taskCommit:processImage', TaskManager.addProcessImageTask);
+    socketServer.registerEvent('taskCommit:cutModel', TaskManager.addCutModelTask);
 
     socketServer.start(server);
 

@@ -59,6 +59,7 @@ class Visualizer extends Component {
         displayedType: PropTypes.string.isRequired,
         renderingTimestamp: PropTypes.number.isRequired,
         isChangedAfterGcodeGenerating: PropTypes.bool.isRequired,
+        enableShortcut: PropTypes.bool.isRequired,
 
         // func
         selectAllElements: PropTypes.func.isRequired,
@@ -96,6 +97,7 @@ class Visualizer extends Component {
         updateTextTransformationAfterEdit: PropTypes.func.isRequired,
         getSelectedElementsUniformScalingState: PropTypes.func.isRequired,
         uploadImage: PropTypes.func.isRequired,
+        cutModel: PropTypes.func.isRequired,
         switchToPage: PropTypes.func.isRequired,
 
         progressStatesManager: PropTypes.object.isRequired,
@@ -125,6 +127,10 @@ class Visualizer extends Component {
     canvas = React.createRef();
 
     fileInput = React.createRef();
+
+    uploadExts = '.svg, .png, .jpg, .jpeg, .bmp, .dxf';
+
+    allowedFiles = '';
 
     actions = {
         undo: () => {
@@ -163,13 +169,24 @@ class Visualizer extends Component {
             // Switch to PAGE_EDITOR page if new image being uploaded
             this.props.switchToPage(PAGE_EDITOR);
 
-            this.props.uploadImage(file, uploadMode, () => {
-                modal({
-                    cancelTitle: i18n._('key-Laser/Edit/ContextMenu-Close'),
-                    title: i18n._('key-Laser/Edit/ContextMenu-Import Error'),
-                    body: i18n._('Failed to import this object. \nPlease select a supported file format.')
+            
+            if (extname === '.stl') {
+                this.props.cutModel(file, () => {
+                    modal({
+                        cancelTitle: i18n._('key-Laser/Edit/ContextMenu-Close'),
+                        title: i18n._('key-Laser/Edit/ContextMenu-Import Error'),
+                        body: i18n._('Failed to import this object. \nPlease select a supported file format.')
+                    });
                 });
-            });
+            } else {
+                this.props.uploadImage(file, uploadMode, () => {
+                    modal({
+                        cancelTitle: i18n._('key-Laser/Edit/ContextMenu-Close'),
+                        title: i18n._('key-Laser/Edit/ContextMenu-Import Error'),
+                        body: i18n._('Failed to import this object. \nPlease select a supported file format.')
+                    });
+                });
+            }
         },
         onClickToUpload: () => {
             this.fileInput.current.value = null;
@@ -325,6 +342,8 @@ class Visualizer extends Component {
             this.printableArea = new PrintablePlate(nextProps.coordinateSize, nextProps.materials, nextProps.coordinateMode);
             this.actions.autoFocus();
         }
+
+        this.allowedFiles = (nextProps.materials.isRotate ? this.uploadExts : `${this.uploadExts}, .stl`);
     }
 
     componentWillUnmount() {
@@ -379,7 +398,7 @@ class Visualizer extends Component {
                 >
                     <SVGEditor
                         editable={editable}
-                        isActive={!this.props.currentModalPath && this.props.pathname.indexOf('laser') > 0}
+                        isActive={!this.props.currentModalPath && this.props.pathname.indexOf('laser') > 0 && this.props.enableShortcut}
                         ref={this.svgCanvas}
                         size={this.props.size}
                         initContentGroup={this.props.initContentGroup}
@@ -407,7 +426,7 @@ class Visualizer extends Component {
                         onChangeFile={this.actions.onChangeFile}
                         onClickToUpload={this.actions.onClickToUpload}
                         fileInput={this.fileInput}
-                        allowedFiles=".svg, .png, .jpg, .jpeg, .bmp, .dxf"
+                        allowedFiles={this.allowedFiles}
                         headType={HEAD_LASER}
                     />
                 </div>
@@ -561,11 +580,12 @@ const mapStateToProps = (state, ownProps) => {
     const { background, progressStatesManager } = state.laser;
 
     const { SVGActions, scale, target, materials, page, selectedModelID, modelGroup, svgModelGroup, toolPathGroup, displayedType,
-        isChangedAfterGcodeGenerating, renderingTimestamp, stage, progress, coordinateMode, coordinateSize } = state.laser;
+        isChangedAfterGcodeGenerating, renderingTimestamp, stage, progress, coordinateMode, coordinateSize, enableShortcut } = state.laser;
     const selectedModelArray = modelGroup.getSelectedModelArray();
     const selectedToolPathModelArray = modelGroup.getSelectedToolPathModels();
 
     return {
+        enableShortcut,
         currentModalPath,
         progressStatesManager,
         // switch pages trigger pathname change
@@ -630,6 +650,7 @@ const mapDispatchToProps = (dispatch) => {
         updateTextTransformationAfterEdit: (element, transformation) => dispatch(editorActions.updateModelTransformationByElement('laser', element, transformation)),
 
         uploadImage: (file, mode, onFailure) => dispatch(editorActions.uploadImage('laser', file, mode, onFailure)),
+        cutModel: (file, onFailure) => dispatch(editorActions.cutModel('laser', file, onFailure)),
         switchToPage: (page) => dispatch(editorActions.switchToPage('laser', page)),
 
         elementActions: {

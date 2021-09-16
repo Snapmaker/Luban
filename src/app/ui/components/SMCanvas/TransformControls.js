@@ -141,7 +141,7 @@ class TransformControls extends Object3D {
     initDefaults() {
         // geometries
         const lineGeometry = new BufferGeometry();
-        lineGeometry.addAttribute('position', new Float32BufferAttribute([0, 0, 0, 10, 0, 0], 3));
+        lineGeometry.setAttribute('position', new Float32BufferAttribute([0, 0, 0, 10, 0, 0], 3));
 
         // materials
         const meshMaterial = new MeshBasicMaterial({
@@ -250,7 +250,7 @@ class TransformControls extends Object3D {
         };
 
 
-        this.defaults.LINE.addAttribute('position', new Float32BufferAttribute([0, 0, 0, 1, 0, 0], 3));
+        this.defaults.LINE.setAttribute('position', new Float32BufferAttribute([0, 0, 0, 1, 0, 0], 3));
     }
 
     destroyDefaults() {

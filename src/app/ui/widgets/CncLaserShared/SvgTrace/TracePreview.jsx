@@ -1,7 +1,6 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import PropTypes from 'prop-types';
-import Detector from 'three/examples/js/Detector';
 import Slider from '../../../components/Slider';
 import Select from '../../../components/Select';
 import i18n from '../../../../lib/i18n';
@@ -9,6 +8,7 @@ import TipTrigger from '../../../components/TipTrigger';
 import { DATA_PREFIX } from '../../../../constants';
 import { actions } from '../../../../flux/editor';
 import styles from '../styles.styl';
+import Detector from '../../../../three-extensions/Detector';
 
 class TracePreview extends Component {
     static propTypes = {
@@ -222,7 +222,7 @@ class TracePreview extends Component {
     };
 
     render() {
-        if (!Detector.webgl) {
+        if (!Detector.isWebGLAvailable()) {
             return null;
         }
         let status = this.props.status;

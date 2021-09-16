@@ -70,7 +70,9 @@ class SerialPortClient {
         'taskCompleted:generateGcode': [],
         'taskCompleted:processImage': [],
         'taskProgress:generateViewPath': [],
-        'taskCompleted:generateViewPath': []
+        'taskCompleted:generateViewPath': [],
+        'taskProgress:cutModel': [],
+        'taskCompleted:cutModel': []
     };
 
     dataSource = '';
@@ -250,6 +252,10 @@ class SerialPortClient {
 
     commitProcessImage(task) {
         socketController.emit('taskCommit:processImage', task);
+    }
+
+    commitCutModelTask(task) {
+        socketController.emit('taskCommit:cutModel', task);
     }
 
     // command(cmd, ...args) {

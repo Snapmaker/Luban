@@ -25,7 +25,7 @@ class ArcBufferGeometry extends THREE.BufferGeometry {
             vertices.push(Math.cos(i / segments * Math.PI * 2) * radius, Math.sin(i / segments * Math.PI * 2) * radius, 0);
         }
 
-        this.addAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
+        this.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
     }
 }
 

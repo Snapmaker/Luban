@@ -352,8 +352,8 @@ class ToolPath {
         const bufferGeometry = new THREE.BufferGeometry();
         const positionAttribute = new THREE.Float32BufferAttribute(positions, 3);
         const gCodeAttribute = new THREE.Float32BufferAttribute(gCodes, 1);
-        bufferGeometry.addAttribute('position', positionAttribute);
-        bufferGeometry.addAttribute('a_g_code', gCodeAttribute);
+        bufferGeometry.setAttribute('position', positionAttribute);
+        bufferGeometry.setAttribute('a_g_code', gCodeAttribute);
         let material;
         if (isSelected) {
             material = MATERIAL_SELECTED;

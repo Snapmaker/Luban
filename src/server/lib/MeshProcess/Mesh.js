@@ -48,26 +48,28 @@ export class Mesh {
 
         const data = fs.readFileSync(filePath);
 
-        const stlParse = new STLParse().parse(new Uint8Array(data).buffer);
+        const { vertices } = new STLParse().parse(new Uint8Array(data).buffer);
 
-        if (!stlParse) {
+        if (!vertices) {
             return new Error('stl file parse error');
         }
 
-        for (let i = 0; i < stlParse.vertices.length; i += 9) {
-            if (i + 9 > stlParse.vertices.length) {
+        for (let i = 0; i < vertices.length; i += 9) {
+            if (i + 9 > vertices.length) {
                 continue;
             }
             // const v0 = mesh.getVector3ByPlane({ x: stlParse.vertices[i], y: stlParse.vertices[i + 1], z: stlParse.vertices[i + 2] });
             // const v1 = mesh.getVector3ByPlane({ x: stlParse.vertices[i + 3], y: stlParse.vertices[i + 4], z: stlParse.vertices[i + 5] });
             // const v2 = mesh.getVector3ByPlane({ x: stlParse.vertices[i + 6], y: stlParse.vertices[i + 7], z: stlParse.vertices[i + 8] });
 
-            const v0 = { x: stlParse.vertices[i], y: stlParse.vertices[i + 1], z: stlParse.vertices[i + 2] };
-            const v1 = { x: stlParse.vertices[i + 3], y: stlParse.vertices[i + 4], z: stlParse.vertices[i + 5] };
-            const v2 = { x: stlParse.vertices[i + 6], y: stlParse.vertices[i + 7], z: stlParse.vertices[i + 8] };
+            const v0 = { x: vertices[i], y: vertices[i + 1], z: vertices[i + 2] };
+            const v1 = { x: vertices[i + 3], y: vertices[i + 4], z: vertices[i + 5] };
+            const v2 = { x: vertices[i + 6], y: vertices[i + 7], z: vertices[i + 8] };
 
             mesh.addFace(v0, v1, v2);
         }
+
+        delete mesh.vertexHashMap;
 
         mesh.finish();
 
@@ -86,20 +88,20 @@ export class Mesh {
 
         const data = fs.readFileSync(filePath);
 
-        const stlParse = new STLParse().parse(new Uint8Array(data).buffer);
+        const { vertices } = new STLParse().parse(new Uint8Array(data).buffer);
 
-        if (!stlParse) {
+        if (!vertices) {
             return new Error('stl file parse error');
         }
 
-        for (let i = 0; i < stlParse.vertices.length; i += 9) {
-            if (i + 9 > stlParse.vertices.length) {
+        for (let i = 0; i < vertices.length; i += 9) {
+            if (i + 9 > vertices.length) {
                 continue;
             }
 
-            const v0 = { x: stlParse.vertices[i], y: stlParse.vertices[i + 1], z: stlParse.vertices[i + 2] };
-            const v1 = { x: stlParse.vertices[i + 3], y: stlParse.vertices[i + 4], z: stlParse.vertices[i + 5] };
-            const v2 = { x: stlParse.vertices[i + 6], y: stlParse.vertices[i + 7], z: stlParse.vertices[i + 8] };
+            const v0 = { x: vertices[i], y: vertices[i + 1], z: vertices[i + 2] };
+            const v1 = { x: vertices[i + 3], y: vertices[i + 4], z: vertices[i + 5] };
+            const v2 = { x: vertices[i + 6], y: vertices[i + 7], z: vertices[i + 8] };
 
             mesh.aabb.include(v0);
             mesh.aabb.include(v1);
@@ -121,16 +123,16 @@ export class Mesh {
 
         const idx = this.faces.length;
         this.faces.push({
-            vertexIndex: [-1, -1, -1],
-            connectedFaceIndex: []
+            vi: [-1, -1, -1],
+            cf: []
         });
         const face = this.faces[idx];
-        face.vertexIndex[0] = vi0;
-        face.vertexIndex[1] = vi1;
-        face.vertexIndex[2] = vi2;
-        this.vertices[face.vertexIndex[0]].connectedFaces.push(idx);
-        this.vertices[face.vertexIndex[1]].connectedFaces.push(idx);
-        this.vertices[face.vertexIndex[2]].connectedFaces.push(idx);
+        face.vi[0] = vi0;
+        face.vi[1] = vi1;
+        face.vi[2] = vi2;
+        this.vertices[face.vi[0]].c.push(idx);
+        this.vertices[face.vi[1]].c.push(idx);
+        this.vertices[face.vi[2]].c.push(idx);
     }
 
     findIndexOfVertex(v) {
@@ -138,16 +140,16 @@ export class Mesh {
         if (!this.vertexHashMap.has(hash)) {
             this.vertexHashMap.set(hash, []);
         }
-        for (const vertexIndex of this.vertexHashMap.get(hash)) {
-            const p = this.vertices[vertexIndex].p;
+        for (const vi of this.vertexHashMap.get(hash)) {
+            const p = this.vertices[vi].p;
             if (Vector3.testLength(Vector3.sub(p, v), VERTEX_MELD_DISTANCE)) {
-                return vertexIndex;
+                return vi;
             }
         }
         this.vertexHashMap.get(hash).push(this.vertices.length);
         this.vertices.push({
             p: { x: v.x, y: v.y, z: v.z },
-            connectedFaces: []
+            c: []
         });
         this.aabb.include(v);
 
@@ -156,13 +158,13 @@ export class Mesh {
 
     getFaceIdxWithPoints(idx0, idx1, notFaceIdx) {
         const candidateFaces = [];
-        for (const f of this.vertices[idx0].connectedFaces) {
+        for (const f of this.vertices[idx0].c) {
             if (f === notFaceIdx) {
                 continue;
             }
-            if (this.faces[f].vertexIndex[0] === idx1 // && faces[f].vertex_index[1] == idx0 // next face should have the right direction!
-                || this.faces[f].vertexIndex[1] === idx1 // && faces[f].vertex_index[2] == idx0
-                || this.faces[f].vertexIndex[2] === idx1 // && faces[f].vertex_index[0] == idx0
+            if (this.faces[f].vi[0] === idx1 // && faces[f].vertex_index[1] == idx0 // next face should have the right direction!
+                || this.faces[f].vi[1] === idx1 // && faces[f].vertex_index[2] == idx0
+                || this.faces[f].vi[2] === idx1 // && faces[f].vertex_index[0] == idx0
             ) candidateFaces.push(f);
         }
         if (candidateFaces.length === 1) { return candidateFaces[0]; }
@@ -227,12 +229,10 @@ export class Mesh {
     finish() {
         for (let i = 0; i < this.faces.length; i++) {
             const face = this.faces[i];
-            face.connectedFaceIndex[0] = this.getFaceIdxWithPoints(face.vertexIndex[0], face.vertexIndex[1], i);
-            face.connectedFaceIndex[1] = this.getFaceIdxWithPoints(face.vertexIndex[1], face.vertexIndex[2], i);
-            face.connectedFaceIndex[2] = this.getFaceIdxWithPoints(face.vertexIndex[2], face.vertexIndex[0], i);
+            face.cf[0] = this.getFaceIdxWithPoints(face.vi[0], face.vi[1], i);
+            face.cf[1] = this.getFaceIdxWithPoints(face.vi[1], face.vi[2], i);
+            face.cf[2] = this.getFaceIdxWithPoints(face.vi[2], face.vi[0], i);
         }
-
-        this.vertexHashMap.clear();
     }
 
     getSize(isRotate = false) {

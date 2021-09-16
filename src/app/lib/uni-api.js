@@ -284,8 +284,11 @@ const Dialog = {
             case 'printing':
                 extensions = ['stl', 'obj'];
                 break;
-            case 'laser':
+            case 'laser-rotate':
                 extensions = ['svg', 'png', 'jpg', 'jpeg', 'bmp', 'dxf'];
+                break;
+            case 'laser':
+                extensions = ['svg', 'png', 'jpg', 'jpeg', 'bmp', 'dxf', 'stl'];
                 break;
             case 'cnc':
                 extensions = ['svg', 'png', 'jpg', 'jpeg', 'bmp', 'dxf', 'stl'];

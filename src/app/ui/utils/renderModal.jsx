@@ -19,8 +19,9 @@ export default function renderModal(options) {
     if (!renderFooter) {
         renderFooter = () => (
             <React.Fragment>
-                {actions.map(({ name, isPrimary, isAutoWidth, onClick }) => (
+                {actions.map(({ name, isPrimary, isAutoWidth, onClick, disabled = false }) => (
                     <Button
+                        disabled={disabled}
                         key={name}
                         priority="level-two"
                         className="margin-left-8"

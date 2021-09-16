@@ -408,10 +408,10 @@ export const actions = {
                     const layerIndexAttribute = new THREE.Float32BufferAttribute(layerIndices, 1);
                     const typeCodeAttribute = new THREE.Float32BufferAttribute(typeCodes, 1);
 
-                    bufferGeometry.addAttribute('position', positionAttribute);
-                    bufferGeometry.addAttribute('a_color', colorAttribute);
-                    bufferGeometry.addAttribute('a_layer_index', layerIndexAttribute);
-                    bufferGeometry.addAttribute('a_type_code', typeCodeAttribute);
+                    bufferGeometry.setAttribute('position', positionAttribute);
+                    bufferGeometry.setAttribute('a_color', colorAttribute);
+                    bufferGeometry.setAttribute('a_layer_index', layerIndexAttribute);
+                    bufferGeometry.setAttribute('a_type_code', typeCodeAttribute);
 
                     const object3D = gcodeBufferGeometryToObj3d('3DP', bufferGeometry);
 
@@ -1551,7 +1551,7 @@ export const actions = {
                     const modelPositionAttribute = new THREE.BufferAttribute(positions, 3);
                     const material = new THREE.MeshPhongMaterial({ color: 0xa0a0a0, specular: 0xb0b0b0, shininess: 0 });
 
-                    bufferGeometry.addAttribute('position', modelPositionAttribute);
+                    bufferGeometry.setAttribute('position', modelPositionAttribute);
                     bufferGeometry.computeVertexNormals();
                     // Create model
                     // modelGroup.generateModel(modelInfo);
@@ -1586,7 +1586,7 @@ export const actions = {
 
                     const convexGeometry = new THREE.BufferGeometry();
                     const positionAttribute = new THREE.BufferAttribute(positions, 3);
-                    convexGeometry.addAttribute('position', positionAttribute);
+                    convexGeometry.setAttribute('position', positionAttribute);
 
                     // const model = modelGroup.children.find(m => m.uploadName === uploadName);
                     modelGroup.setConvexGeometry(uploadName, convexGeometry);

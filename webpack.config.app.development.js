@@ -23,6 +23,7 @@ const timestamp = new Date().getTime();
 module.exports = {
     mode: 'development',
     target: 'web',
+    devtool: 'source-map',
     cache: true,
     context: path.resolve(__dirname, 'src/app'),
     resolve: {

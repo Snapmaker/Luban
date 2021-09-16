@@ -28,12 +28,15 @@ import Workspace from './Workspace';
 import Thumbnail from '../widgets/CncLaserShared/Thumbnail';
 import { laserCncIntroStepOne, laserCncIntroStepTwo, laserCncIntroStepFive, laserCncIntroStepSix, laser4AxisStepOne } from './introContent';
 import Steps from '../components/Steps';
+import StackedModel from '../widgets/LaserStackedModel';
 
 const ACCEPT = '.svg, .png, .jpg, .jpeg, .bmp, .dxf';
 const pageHeadType = HEAD_LASER;
 
 function Laser({ location }) {
     const widgets = useSelector(state => state?.widget[pageHeadType]?.default?.widgets, shallowEqual);
+    const showImportStackedModelModal = useSelector(state => state[pageHeadType].showImportStackedModelModal, shallowEqual);
+    const [stackedModelModalDsiabled, setStackedModelModalDsiabled] = useState(false);
     const [isDraggingWidget, setIsDraggingWidget] = useState(false);
     const [showHomePage, setShowHomePage] = useState(false);
     const [showWorkspace, setShowWorkspace] = useState(false);
@@ -131,16 +134,27 @@ function Laser({ location }) {
     const actions = {
         onDropAccepted: (file) => {
             let mode = PROCESS_MODE_GREYSCALE;
-            if (path.extname(file.name).toLowerCase() === '.svg' || path.extname(file.name).toLowerCase() === '.dxf') {
+            const extname = path.extname(file.name).toLowerCase();
+            if (extname === '.svg' || extname === '.dxf') {
                 mode = PROCESS_MODE_VECTOR;
             }
-            dispatch(editorActions.uploadImage('laser', file, mode, () => {
-                modal({
-                    cancelTitle: i18n._('key-Laser/Page-Close'),
-                    title: i18n._('key-Laser/Page-Import Error'),
-                    body: i18n._('Failed to import this object. \nPlease select a supported file format.')
-                });
-            }));
+            if (extname === '.stl') {
+                dispatch(editorActions.cutModel(HEAD_LASER, file, () => {
+                    modal({
+                        cancelTitle: i18n._('key-Laser/Page-Close'),
+                        title: i18n._('key-Laser/Page-Import Error'),
+                        body: i18n._('Failed to import this object. \nPlease select a supported file format.')
+                    });
+                }));
+            } else {
+                dispatch(editorActions.uploadImage('laser', file, mode, () => {
+                    modal({
+                        cancelTitle: i18n._('key-Laser/Page-Close'),
+                        title: i18n._('key-Laser/Page-Import Error'),
+                        body: i18n._('Failed to import this object. \nPlease select a supported file format.')
+                    });
+                }));
+            }
         },
         onDropRejected: () => {
             modal({
@@ -162,6 +176,33 @@ function Laser({ location }) {
         return showWorkspace && renderPopup({
             onClose,
             component: Workspace
+        });
+    }
+    function renderStackedModelModal() {
+        const onClose = () => {
+            dispatch(editorActions.updateState(pageHeadType, {
+                showImportStackedModelModal: false
+            }));
+        };
+        return showImportStackedModelModal && renderModal({
+            title: i18n._('Import Stacked Model'),
+            onClose,
+            renderBody: () => (<StackedModel setStackedModelModalDsiabled={setStackedModelModalDsiabled} />),
+            actions: [
+                {
+                    name: i18n._('Cancel'),
+                    onClick: () => { onClose(); }
+                },
+                {
+                    name: i18n._('Import'),
+                    isPrimary: true,
+                    disabled: stackedModelModalDsiabled,
+                    onClick: () => {
+                        dispatch(editorActions.importStackedModelSVG(HEAD_LASER));
+                        onClose();
+                    }
+                }
+            ]
         });
     }
 
@@ -247,7 +288,7 @@ function Laser({ location }) {
             >
                 <Dropzone
                     disabled={isDraggingWidget}
-                    accept={ACCEPT}
+                    accept={isRotate ? ACCEPT : `${ACCEPT}, .stl`}
                     dragEnterMsg={i18n._('key-Laser/Page-Drop an image file here.')}
                     onDropAccepted={actions.onDropAccepted}
                     onDropRejected={actions.onDropRejected}
@@ -350,6 +391,7 @@ function Laser({ location }) {
             {setBackgroundModal}
             {renderHomepage()}
             {renderWorkspace()}
+            {renderStackedModelModal()}
         </div>
     );
 }

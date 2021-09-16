@@ -1,6 +1,7 @@
 import EventEmitter from 'events';
 import logger from '../../lib/logger';
 import { processImage } from './processImage';
+import { cutModel } from './cutModel';
 import { generateToolPath } from './generateToolPath';
 import { generateGcode } from './generateGcode';
 import { generateViewPath } from './generateViewPath';
@@ -20,6 +21,7 @@ export const TASK_TYPE_GENERATE_TOOLPATH = 'generateToolPath';
 export const TASK_TYPE_GENERATE_VIEWPATH = 'generateViewPath';
 export const TASK_TYPE_GENERATE_GCODE = 'generateGcode';
 export const TASK_TYPE_PROCESS_IMAGE = 'processImage';
+export const TASK_TYPE_CUT_MODEL = 'cutModel';
 
 export class Task {
     constructor(taskId, socket, data, taskType, headType, modelId = '') {
@@ -134,6 +136,10 @@ class TaskManager extends EventEmitter {
                 taskSelected.filename = res.filename;
                 taskSelected.width = res.width;
                 taskSelected.height = res.height;
+            } else if (taskSelected.taskType === TASK_TYPE_CUT_MODEL) {
+                const res = await cutModel(taskSelected.data, onProgress);
+                taskSelected.stlInfo = res.stlFile;
+                taskSelected.svgInfo = res.svgFiles;
             }
 
 

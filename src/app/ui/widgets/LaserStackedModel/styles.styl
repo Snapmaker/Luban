@@ -1,0 +1,45 @@
+@import "../../../styles/global-var.styl"
+
+.model-cut-modal {
+    margin-bottom: -10px;
+    .model-viewer-container {
+        width: 196px;
+        height: 196px;
+        display: inline-block;
+        background-color: #F5F5F7;
+        border-radius: 8px;
+        overflow: hidden;
+    }
+    .description {
+        color: #86868B;
+        font-size: 12px;
+        .desc-split {
+            display: inline-block;
+            padding: 0 1em;
+        }
+    }
+    .model-size-container {
+        display: inline-block;
+        vertical-align: top;
+        width: 280px;
+        padding-left: 24px;
+        margin-top: -2px;
+        .title {
+            color: #545659;
+            margin-bottom: 16px;
+            &.thickness {
+                margin-top: 14px;
+            }
+        }
+    }
+}
+.spin {
+    background: $grey-3;
+    border-radius: 8px;
+    height: 196px !important;
+}
+:global(.ant-spin-text) {
+    color: #85888C;
+    font-size: 12px;
+    padding-top: 8px;
+}

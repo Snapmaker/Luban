@@ -1,11 +1,11 @@
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 import * as THREE from 'three';
-import Detector from 'three/examples/js/Detector';
 import { DATA_PREFIX } from '../../../../constants';
 import ManualCalibrationControls from '../../../../three-extensions/ManualCalibrationControls';
 import RectangleGridHelper from '../../../../three-extensions/RectangleGridHelper';
 import WebGLRendererWrapper from '../../../../three-extensions/WebGLRendererWrapper';
+import Detector from '../../../../three-extensions/Detector';
 
 
 class ManualCalibration extends Component {
@@ -262,7 +262,7 @@ class ManualCalibration extends Component {
     }
 
     render() {
-        if (!Detector.webgl) {
+        if (!Detector.isWebGLAvailable()) {
             return null;
         }
         return (

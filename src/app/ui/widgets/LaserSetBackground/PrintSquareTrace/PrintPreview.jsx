@@ -1,9 +1,9 @@
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 import * as THREE from 'three';
-import Detector from 'three/examples/js/Detector';
 import RectangleGridHelper from '../../../../three-extensions/RectangleGridHelper';
 import WebGLRendererWrapper from '../../../../three-extensions/WebGLRendererWrapper';
+import Detector from '../../../../three-extensions/Detector';
 
 
 class PrintPreview extends Component {
@@ -117,7 +117,7 @@ class PrintPreview extends Component {
     }
 
     render() {
-        if (!Detector.webgl) {
+        if (!Detector.isWebGLAvailable()) {
             return null;
         }
         return (
