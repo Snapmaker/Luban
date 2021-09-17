@@ -665,9 +665,7 @@ function Cnc({ location }) {
                     <CNCVisualizer />
                     <Steps
                         options={{
-                            showBullets: false,
-                            nextLabel: i18n._('Next'),
-                            doneLabel: i18n._('Complete')
+                            showBullets: false
                         }}
                         enabled={enabledIntro}
                         initialStep={initIndex}

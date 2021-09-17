@@ -624,8 +624,6 @@ function Laser({ location }) {
                         onBeforeChange={handleBeforeChange}
                         options={{
                             showBullets: false,
-                            nextLabel: i18n._('Next'),
-                            doneLabel: i18n._('Complete'),
                             hidePrev: false,
                             exitOnEsc: false,
                             exitOnOverlayClick: false

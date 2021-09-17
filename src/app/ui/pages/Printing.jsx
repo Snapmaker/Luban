@@ -295,8 +295,6 @@ function Printing({ location }) {
                     // onBeforeChange={handleBeforeChange}
                     options={{
                         showBullets: false,
-                        nextLabel: i18n._('Next'),
-                        doneLabel: i18n._('Complete'),
                         keyboardNavigation: false,
                         exitOnOverlayClick: false
                     }}
@@ -320,7 +318,6 @@ function Printing({ location }) {
                             i18n._('Select the material settings and printing settings.'),
                             i18n._('Click'),
                             i18n._('to set and manage detailed parameters.')
-                            // i18n._('Click [按钮] to set and manage detailed parameters.')
                         ),
                         position: 'left',
                         title: `${i18n._('Configure Parameters')} (3/6)`,
