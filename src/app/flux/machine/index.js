@@ -16,7 +16,9 @@ import {
     WORKFLOW_STATUS_IDLE,
     WORKFLOW_STATUS_PAUSED,
     WORKFLOW_STATUS_RUNNING,
-    WORKFLOW_STATUS_UNKNOWN
+    WORKFLOW_STATUS_UNKNOWN,
+    MACHINE_TOOL_HEAD,
+    getMachineSeriesWithToolhead
 } from '../../constants';
 
 import { valueOf } from '../../lib/contants-utils';
@@ -36,7 +38,11 @@ import baseActions, { ACTION_UPDATE_STATE } from './action-base';
 import discoverActions from './action-discover';
 import connectActions from './action-connect';
 
-
+const INITIAL_MACHINE_SERIES_WITH_HEADTOOL = getMachineSeriesWithToolhead(MACHINE_SERIES.ORIGINAL.value, {
+    printingToolhead: MACHINE_TOOL_HEAD.singleExtruderToolheadForOriginal.value,
+    laserToolhead: MACHINE_TOOL_HEAD.levelOneLaserToolheadForOriginal.value,
+    cncToolhead: MACHINE_TOOL_HEAD.standardCNCToolheadForOriginal.value
+});
 const INITIAL_STATE = {
     // region server discover
     // HTTP connection
@@ -74,9 +80,14 @@ const INITIAL_STATE = {
 
     // Machine Info
     series: MACHINE_SERIES.ORIGINAL.value,
+    toolHead: {
+        printingToolhead: MACHINE_TOOL_HEAD.singleExtruderToolheadForOriginal.value,
+        laserToolhead: MACHINE_TOOL_HEAD.levelOneLaserToolheadForOriginal.value,
+        cncToolhead: MACHINE_TOOL_HEAD.standardCNCToolheadForOriginal.value
+    },
     headType: null,
     canReselectMachine: false,
-
+    seriesWithToolhead: INITIAL_MACHINE_SERIES_WITH_HEADTOOL,
     size: MACHINE_SERIES.ORIGINAL.setting.size,
     laserSize: MACHINE_SERIES.ORIGINAL.setting.laserSize,
     // endregion
@@ -226,9 +237,10 @@ export const actions = {
      */
     __initMachineStatus: (dispatch) => {
         // Machine
-        const { series = INITIAL_STATE.series, size = INITIAL_STATE.size, laserSize = INITIAL_STATE.laserSize } = machineStore.get('machine') || {};
+        const { series = INITIAL_STATE.series, size = INITIAL_STATE.size, laserSize = INITIAL_STATE.laserSize, toolHead = INITIAL_STATE.toolHead } = machineStore.get('machine') || {};
 
         const seriesInfo = valueOf(MACHINE_SERIES, 'value', series);
+        const seriesWithToolhead = getMachineSeriesWithToolhead(series, toolHead);
         if (seriesInfo === MACHINE_SERIES.CUSTOM) {
             seriesInfo.setting.size = size;
             seriesInfo.setting.laserSize = seriesInfo.setting.size;
@@ -237,7 +249,9 @@ export const actions = {
         dispatch(baseActions.updateState({
             series: series,
             size: seriesInfo ? seriesInfo.setting.size : size,
-            laserSize: seriesInfo ? seriesInfo.setting.laserSize : laserSize
+            laserSize: seriesInfo ? seriesInfo.setting.laserSize : laserSize,
+            toolHead: toolHead,
+            seriesWithToolhead: seriesWithToolhead
         }));
 
         dispatch(editorActions.onSizeUpdated('laser', seriesInfo ? seriesInfo.setting.size : size));
@@ -457,6 +471,20 @@ export const actions = {
             dispatch(widgetActions.updateMachineSeries(series));
         }
     },
+
+    updateMachineToolHead: (toolHead, series) => (dispatch, getState) => {
+        machineStore.set('machine.toolHead', toolHead);
+        const oldToolHead = getState().machine.toolHead;
+        const oldSeries = getState().machine.series;
+        if (!_.isEqual(oldToolHead, toolHead) || oldSeries !== series) {
+            const seriesWithToolhead = getMachineSeriesWithToolhead(series, toolHead);
+            dispatch(baseActions.updateState({ seriesWithToolhead }));
+            if (!_.isEqual(oldToolHead, toolHead)) {
+                dispatch(baseActions.updateState({ toolHead }));
+            }
+        }
+    },
+
     updateMachineSize: (size) => (dispatch, getState) => {
         const { series } = getState().machine;
 
