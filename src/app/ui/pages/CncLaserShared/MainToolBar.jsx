@@ -15,7 +15,7 @@ import { renderModal } from '../../utils';
 import LaserSetBackground from '../../widgets/LaserSetBackground';
 import LaserCameraAidBackground from '../../widgets/LaserCameraAidBackground';
 
-function useRenderMainToolBar(headType, setShowHomePage, setShowJobType, setShowWorkspace) {
+function useRenderMainToolBar({ headType, setShowHomePage, setShowJobType, setShowWorkspace }) {
     const unSaved = useSelector(state => state?.project[headType]?.unSaved, shallowEqual);
     const canRedo = useSelector(state => state[headType]?.history?.canRedo, shallowEqual);
     const canUndo = useSelector(state => state[headType]?.history?.canUndo, shallowEqual);

@@ -8,73 +8,26 @@ import i18n from '../../lib/i18n';
 import useSetState from '../../lib/hooks/set-state';
 import modal from '../../lib/modal';
 import LaserVisualizer from '../widgets/LaserVisualizer';
-import Tabs from '../components/Tabs';
 
-import { renderPopup, renderWidgetList, logPageView, useUnsavedTitle } from '../utils';
+import { renderPopup, logPageView, useUnsavedTitle } from '../utils';
 import Dropzone from '../components/Dropzone';
 import { actions as editorActions } from '../../flux/editor';
 import { actions as laserActions } from '../../flux/laser';
 import { actions as projectActions } from '../../flux/project';
 import ProjectLayout from '../layouts/ProjectLayout';
 import { machineStore } from '../../store/local-storage';
-import useRenderMainToolBar from './Shared/MainToolBar';
-import useRenderRemoveModelsWarning from './Shared/RemoveAllModelsWarning';
-import renderJobTypeModal from './Shared/JobTypeModal';
+import useRenderMainToolBar from './CncLaserShared/MainToolBar';
+import useRenderRemoveModelsWarning from './CncLaserShared/RemoveAllModelsWarning';
+import renderJobTypeModal from './CncLaserShared/JobTypeModal';
+import renderRightView from './CncLaserShared/RightView';
 
-import { HEAD_LASER, PAGE_EDITOR, PAGE_PROCESS, PROCESS_MODE_GREYSCALE, PROCESS_MODE_VECTOR } from '../../constants';
+import { HEAD_LASER, PAGE_PROCESS, PROCESS_MODE_GREYSCALE, PROCESS_MODE_VECTOR } from '../../constants';
 
-
-import ControlWidget from '../widgets/Control';
-import ConnectionWidget from '../widgets/Connection';
-import ConsoleWidget from '../widgets/Console';
-import GCodeWidget from '../widgets/GCode';
-import MacroWidget from '../widgets/Macro';
-import PurifierWidget from '../widgets/Purifier';
-import MarlinWidget from '../widgets/Marlin';
-import VisualizerWidget from '../widgets/WorkspaceVisualizer';
-import WebcamWidget from '../widgets/Webcam';
-import LaserParamsWidget from '../widgets/LaserParams';
-import LaserTestFocusWidget from '../widgets/LaserTestFocus';
-import CNCPathWidget from '../widgets/CNCPath';
-import CncLaserOutputWidget from '../widgets/CncLaserOutput';
-
-import PrintingMaterialWidget from '../widgets/PrintingMaterial';
-import PrintingConfigurationsWidget from '../widgets/PrintingConfigurations';
-import PrintingOutputWidget from '../widgets/PrintingOutput';
-import WifiTransport from '../widgets/WifiTransport';
-import EnclosureWidget from '../widgets/Enclosure';
-import PrintingVisualizer from '../widgets/PrintingVisualizer';
 import HomePage from './HomePage';
-import ToolPathListBox from '../widgets/CncLaserList/ToolPathList';
 import Workspace from './Workspace';
 import Thumbnail from '../widgets/CncLaserShared/Thumbnail';
 import { laserCncIntroStepOne, laserCncIntroStepTwo, laserCncIntroStepFive, laserCncIntroStepSix, laser4AxisStepOne } from './introContent';
 import Steps from '../components/Steps';
-
-const allWidgets = {
-    'control': ControlWidget,
-    'connection': ConnectionWidget,
-    'console': ConsoleWidget,
-    'gcode': GCodeWidget,
-    'macro': MacroWidget,
-    'macroPanel': MacroWidget,
-    'purifier': PurifierWidget,
-    'marlin': MarlinWidget,
-    'visualizer': VisualizerWidget,
-    'webcam': WebcamWidget,
-    'printing-visualizer': PrintingVisualizer,
-    'wifi-transport': WifiTransport,
-    'enclosure': EnclosureWidget,
-    '3dp-material': PrintingMaterialWidget,
-    '3dp-configurations': PrintingConfigurationsWidget,
-    '3dp-output': PrintingOutputWidget,
-    'laser-params': LaserParamsWidget,
-    // 'laser-output': CncLaserOutputWidget,
-    'laser-test-focus': LaserTestFocusWidget,
-    'cnc-path': CNCPathWidget,
-    'cnc-output': CncLaserOutputWidget,
-    'toolpath-list': ToolPathListBox
-};
 
 const ACCEPT = '.svg, .png, .jpg, .jpeg, .bmp, .dxf';
 const pageHeadType = HEAD_LASER;
@@ -92,6 +45,7 @@ function Laser({ location }) {
     const toolPaths = useSelector(state => state[HEAD_LASER]?.toolPathGroup?.getToolPaths(), shallowEqual);
     const materials = useSelector(state => state[HEAD_LASER]?.materials, shallowEqual);
     const series = useSelector(state => state.machine.series, shallowEqual);
+    const page = useSelector(state => state[HEAD_LASER]?.page, shallowEqual);
     const { isRotate } = materials;
     const [jobTypeState, setJobTypeState] = useSetState({
         coordinateMode,
@@ -99,7 +53,6 @@ function Laser({ location }) {
         materials
     });
     const dispatch = useDispatch();
-    const page = useSelector(state => state?.laser?.page);
     const history = useHistory();
     const thumbnail = useRef();
     const toolPathGroup = useSelector(state => state[HEAD_LASER]?.toolPathGroup, shallowEqual);
@@ -146,7 +99,12 @@ function Laser({ location }) {
     }, [enabledIntro]);
 
     const { setBackgroundModal,
-        renderMainToolBar } = useRenderMainToolBar(HEAD_LASER, setShowHomePage, setShowJobType, setShowWorkspace);
+        renderMainToolBar } = useRenderMainToolBar({
+        headType: HEAD_LASER,
+        setShowHomePage,
+        setShowJobType,
+        setShowWorkspace
+    });
     const renderHomepage = () => {
         const onClose = () => {
             setShowHomePage(false);
@@ -161,7 +119,7 @@ function Laser({ location }) {
         });
     };
     const jobTypeModal = renderJobTypeModal(HEAD_LASER, dispatch, showJobType, setShowJobType, jobTypeState, setJobTypeState, coordinateMode, coordinateSize, materials);
-    const warningRemovingModels = useRenderRemoveModelsWarning(HEAD_LASER);
+    const warningRemovingModels = useRenderRemoveModelsWarning({ headType: HEAD_LASER });
     const listActions = {
         onDragStart: () => {
             setIsDraggingWidget(true);
@@ -193,38 +151,6 @@ function Laser({ location }) {
         }
     };
 
-
-    function renderRightView() {
-        const widgetProps = { headType: 'laser' };
-        return (
-            <div className="laser-intro-edit-panel">
-                <Tabs
-                    options={[
-                        {
-                            tab: i18n._('Edit'),
-                            key: PAGE_EDITOR
-                        },
-                        {
-                            tab: i18n._('Process'),
-                            key: PAGE_PROCESS
-                        }
-                    ]}
-                    activeKey={page}
-                    onChange={(key) => {
-                        dispatch(editorActions.switchToPage(HEAD_LASER, key));
-                        if (key === PAGE_EDITOR) {
-                            dispatch(editorActions.showModelGroupObject(HEAD_LASER));
-                        }
-                    }}
-                />
-                {renderWidgetList('laser', 'default', widgets, allWidgets, listActions, widgetProps)}
-                <CncLaserOutputWidget
-                    headType={HEAD_LASER}
-                />
-            </div>
-
-        );
-    }
     function renderWorkspace() {
         const onClose = () => {
             setShowWorkspace(false);
@@ -302,7 +228,7 @@ function Laser({ location }) {
     }
     async function handleBeforeChange(nextIndex) {
         if (nextIndex === 4) {
-            dispatch(editorActions.switchToPage(HEAD_LASER, 'process'));
+            dispatch(editorActions.switchToPage(HEAD_LASER, PAGE_PROCESS));
             dispatch(editorActions.selectToolPathId(HEAD_LASER, toolPaths[0].id));
         } else if (nextIndex === 6) {
             const thumbnailRef = thumbnail.current.getThumbnail();
@@ -315,7 +241,9 @@ function Laser({ location }) {
         <div>
             <ProjectLayout
                 renderMainToolBar={renderMainToolBar}
-                renderRightView={renderRightView}
+                renderRightView={
+                    () => renderRightView({ headType: HEAD_LASER, dispatch, page, widgets, listActions })
+                }
             >
                 <Dropzone
                     disabled={isDraggingWidget}

@@ -5,7 +5,7 @@ import { actions as editorActions } from '../../../flux/editor';
 import { renderModal } from '../../utils';
 import i18n from '../../../lib/i18n';
 
-function useRenderRemoveModelsWarning(headType) {
+function useRenderRemoveModelsWarning({ headType }) {
     const removingModelsWarning = useSelector(state => state[headType]?.removingModelsWarning);
     const removingModelsWarningCallback = useSelector(state => state[headType]?.removingModelsWarningCallback, shallowEqual);
     const emptyToolPaths = useSelector(state => state[headType]?.emptyToolPaths);

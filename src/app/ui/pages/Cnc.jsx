@@ -12,8 +12,7 @@ import modal from '../../lib/modal';
 import Dropzone from '../components/Dropzone';
 import SvgIcon from '../components/SvgIcon';
 import Space from '../components/Space';
-import { renderModal, renderPopup, renderWidgetList, logPageView, useUnsavedTitle } from '../utils';
-import Tabs from '../components/Tabs';
+import { renderModal, renderPopup, logPageView, useUnsavedTitle } from '../utils';
 import Checkbox from '../components/Checkbox';
 import { Button } from '../components/Buttons';
 
@@ -30,70 +29,20 @@ import {
     PROCESS_MODE_GREYSCALE,
     PROCESS_MODE_MESH,
     PROCESS_MODE_VECTOR,
-    PAGE_EDITOR,
-    PAGE_PROCESS,
     HEAD_CNC
 } from '../../constants';
 
-import useRenderMainToolBar from './Shared/MainToolBar';
-import useRenderRemoveModelsWarning from './Shared/RemoveAllModelsWarning';
-import renderJobTypeModal from './Shared/JobTypeModal';
+import useRenderMainToolBar from './CncLaserShared/MainToolBar';
+import useRenderRemoveModelsWarning from './CncLaserShared/RemoveAllModelsWarning';
+import renderJobTypeModal from './CncLaserShared/JobTypeModal';
+import renderRightView from './CncLaserShared/RightView';
 
-import ControlWidget from '../widgets/Control';
-import ConnectionWidget from '../widgets/Connection';
-import ConsoleWidget from '../widgets/Console';
-import GCodeWidget from '../widgets/GCode';
-import MacroWidget from '../widgets/Macro';
-import PurifierWidget from '../widgets/Purifier';
-import MarlinWidget from '../widgets/Marlin';
-import VisualizerWidget from '../widgets/WorkspaceVisualizer';
-import WebcamWidget from '../widgets/Webcam';
-import LaserParamsWidget from '../widgets/LaserParams';
-import LaserSetBackground from '../widgets/LaserSetBackground';
-import LaserTestFocusWidget from '../widgets/LaserTestFocus';
-import CNCPathWidget from '../widgets/CNCPath';
-import CncLaserOutputWidget from '../widgets/CncLaserOutput';
-
-import PrintingMaterialWidget from '../widgets/PrintingMaterial';
-import PrintingConfigurationsWidget from '../widgets/PrintingConfigurations';
-import PrintingOutputWidget from '../widgets/PrintingOutput';
-import WifiTransport from '../widgets/WifiTransport';
-import EnclosureWidget from '../widgets/Enclosure';
-import ToolPathListBox from '../widgets/CncLaserList/ToolPathList';
-import PrintingVisualizer from '../widgets/PrintingVisualizer';
 import HomePage from './HomePage';
 import Workspace from './Workspace';
 import { machineStore } from '../../store/local-storage';
 import Thumbnail from '../widgets/CncLaserShared/Thumbnail';
 import { laserCncIntroStepOne, laserCncIntroStepTwo, laserCncIntroStepFive, laserCncIntroStepSix, cnc4AxisStepOne } from './introContent';
 import useSetState from '../../lib/hooks/set-state';
-
-const allWidgets = {
-    'control': ControlWidget,
-    'connection': ConnectionWidget,
-    'console': ConsoleWidget,
-    'gcode': GCodeWidget,
-    'macro': MacroWidget,
-    'macroPanel': MacroWidget,
-    'purifier': PurifierWidget,
-    'marlin': MarlinWidget,
-    'visualizer': VisualizerWidget,
-    'webcam': WebcamWidget,
-    'printing-visualizer': PrintingVisualizer,
-    'wifi-transport': WifiTransport,
-    'enclosure': EnclosureWidget,
-    '3dp-material': PrintingMaterialWidget,
-    '3dp-configurations': PrintingConfigurationsWidget,
-    '3dp-output': PrintingOutputWidget,
-    'laser-params': LaserParamsWidget,
-    // 'laser-output': CncLaserOutputWidget,
-    'laser-set-background': LaserSetBackground,
-    'laser-test-focus': LaserTestFocusWidget,
-    'cnc-path': CNCPathWidget,
-    // 'cnc-output': CncLaserOutputWidget,
-    'toolpath-list': ToolPathListBox
-};
-
 
 const ACCEPT = '.svg, .png, .jpg, .jpeg, .bmp, .dxf, .stl';
 const pageHeadType = HEAD_CNC;
@@ -227,12 +176,12 @@ function Cnc({ location }) {
         }
     }, [enabledIntro]);
 
-    const { renderStlModal, renderMainToolBar } = useRenderMainToolBar(
-        HEAD_CNC,
+    const { renderStlModal, renderMainToolBar } = useRenderMainToolBar({
+        headType: HEAD_CNC,
         setShowHomePage,
         setShowJobType,
         setShowWorkspace
-    );
+    });
 
     const renderHomepage = () => {
         const onClose = () => {
@@ -249,7 +198,7 @@ function Cnc({ location }) {
     };
     const jobTypeModal = renderJobTypeModal(HEAD_CNC, dispatch, showJobType, setShowJobType, jobTypeState, setJobTypeState, coordinateMode, coordinateSize, materials);
     const warningModal = useRenderWarning();
-    const removeModelsWarningModal = useRenderRemoveModelsWarning(HEAD_CNC);
+    const removeModelsWarningModal = useRenderRemoveModelsWarning({ headType: HEAD_CNC });
     const listActions = {
         onDragStart: () => {
             setIsDraggingWidget(true);
@@ -289,36 +238,6 @@ function Cnc({ location }) {
         }
     };
 
-    function renderRightView() {
-        const widgetProps = { headType: 'cnc' };
-        return (
-            <div>
-                <Tabs
-                    options={[
-                        {
-                            tab: i18n._('Edit'),
-                            key: PAGE_EDITOR
-                        },
-                        {
-                            tab: i18n._('Process'),
-                            key: PAGE_PROCESS
-                        }
-                    ]}
-                    activeKey={page}
-                    onChange={(key) => {
-                        dispatch(editorActions.switchToPage(HEAD_CNC, key));
-                        if (key === PAGE_EDITOR) {
-                            dispatch(editorActions.showModelGroupObject(HEAD_CNC));
-                        }
-                    }}
-                />
-                {renderWidgetList('cnc', 'default', widgets, allWidgets, listActions, widgetProps)}
-                <CncLaserOutputWidget
-                    headType={HEAD_CNC}
-                />
-            </div>
-        );
-    }
     function renderWorkspace() {
         const onClose = () => {
             setShowWorkspace(false);
@@ -392,7 +311,9 @@ function Cnc({ location }) {
         <div>
             <ProjectLayout
                 renderMainToolBar={renderMainToolBar}
-                renderRightView={renderRightView}
+                renderRightView={
+                    () => renderRightView({ headType: HEAD_CNC, dispatch, page, widgets, listActions })
+                }
             >
                 <Dropzone
                     disabled={isDraggingWidget}
