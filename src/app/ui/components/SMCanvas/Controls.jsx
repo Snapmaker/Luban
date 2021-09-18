@@ -400,15 +400,6 @@ class Controls extends EventEmitter {
             this.supportActions.saveSupport();
             return;
         }
-        if (this.state === STATE.ROTATE_PLACEMENT) {
-            const coord = this.getMouseCoord(event);
-            this.ray.setFromCamera(coord, this.camera);
-            const _intersect = this.ray.intersectObjects(this.transformControl.objectConvexMeshGroup.children, false)[0];
-            if (_intersect) {
-                this.emit(EVENTS.SELECT_PLACEMENT_FACE, _intersect.object.userData);
-            }
-            return;
-        }
         if (!this.clickEnabled) {
             return;
         }
@@ -416,6 +407,15 @@ class Controls extends EventEmitter {
         const distance = Math.sqrt((this.mouseDownPosition.x - mousePosition.x) ** 2 + (this.mouseDownPosition.y - mousePosition.y) ** 2);
 
         if (distance < 0.004 && this.selectableObjects.children) {
+            if (this.state === STATE.ROTATE_PLACEMENT) {
+                const coord = this.getMouseCoord(event);
+                this.ray.setFromCamera(coord, this.camera);
+                const _intersect = this.ray.intersectObjects(this.transformControl.objectConvexMeshGroup.children, false)[0];
+                if (_intersect) {
+                    this.emit(EVENTS.SELECT_PLACEMENT_FACE, _intersect.object.userData);
+                }
+                return;
+            }
             // TODO: selectable objects should not change when objects are selected
             let allObjects = this.selectableObjects.children;
 

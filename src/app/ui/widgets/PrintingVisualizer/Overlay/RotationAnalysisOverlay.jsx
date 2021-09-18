@@ -161,7 +161,7 @@ Table.propTypes = {
     data: PropTypes.array.isRequired,
     setData: PropTypes.func.isRequired,
     onRowSelect: PropTypes.func.isRequired,
-    scrollToSelectedRow: PropTypes.bool.isRequired,
+    scrollToSelectedRow: PropTypes.bool,
     selectedRow: PropTypes.object
 };
 

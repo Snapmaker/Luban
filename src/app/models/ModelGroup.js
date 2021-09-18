@@ -1569,6 +1569,9 @@ class ModelGroup extends EventEmitter {
             for (let i = model.meshObject.children.length - 1; i >= 0; i--) {
                 model.meshObject.remove(model.meshObject.children[i]);
             }
+            for (let i = this.selectedModelConvexMeshGroup.children.length - 1; i >= 0; i--) {
+                this.selectedModelConvexMeshGroup.remove(this.selectedModelConvexMeshGroup.children[i]);
+            }
             this.selectedModelConvexMeshGroup = new Group();
             return this.selectedModelConvexMeshGroup;
         }
