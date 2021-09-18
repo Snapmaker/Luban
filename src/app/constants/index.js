@@ -55,14 +55,22 @@ export const STAGES_3DP = {
 // !important: keys in PRINTING_QUALITY_CONFIG_KEYS, PRINTING_QUALITY_CONFIG_GROUP should change togethor
 export const PRINTING_MATERIAL_CONFIG_KEYS = [
     'material_diameter',
-    'material_flow',
     'material_print_temperature',
     'material_print_temperature_layer_0',
     'cool_fan_speed',
     'machine_heated_bed',
     'material_bed_temperature',
     'material_bed_temperature_layer_0',
-    'material_flow_layer_0'
+    //Extrude
+    'material_flow',
+    'material_flow_layer_0',
+    // retraction
+    'retraction_enable',
+    'retract_at_layer_change',
+    'retraction_amount',
+    'retraction_speed',
+    'retraction_hop_enabled',
+    'retraction_hop'
 ];
 export const PRINTING_QUALITY_CONFIG_KEYS = [
     'layer_height',
@@ -82,12 +90,6 @@ export const PRINTING_QUALITY_CONFIG_KEYS = [
     'speed_topbottom',
     'speed_travel',
     'speed_travel_layer_0',
-    'retraction_enable',
-    'retract_at_layer_change',
-    'retraction_amount',
-    'retraction_speed',
-    'retraction_hop_enabled',
-    'retraction_hop',
     // 'Surface'
     'magic_spiralize',
     'magic_mesh_surface_mode',
@@ -106,16 +108,33 @@ export const PRINTING_QUALITY_CONFIG_KEYS = [
 ];
 export const PRINTING_MATERIAL_CONFIG_GROUP = [
     {
+        name: 'Temperature',
         fields: [
             'material_diameter',
-            'material_flow',
             'material_print_temperature',
             'material_print_temperature_layer_0',
             'cool_fan_speed',
             'machine_heated_bed',
             'material_bed_temperature',
-            'material_bed_temperature_layer_0',
+            'material_bed_temperature_layer_0'
+        ]
+    },
+    {
+        name: 'Extrude',
+        fields: [
+            'material_flow',
             'material_flow_layer_0'
+        ]
+    },
+    {
+        name: 'Retract & Z Hop',
+        fields: [
+            'retraction_enable',
+            'retract_at_layer_change',
+            'retraction_amount',
+            'retraction_speed',
+            'retraction_hop_enabled',
+            'retraction_hop'
         ]
     }
 ];
@@ -155,17 +174,6 @@ export const PRINTING_QUALITY_CONFIG_GROUP = [
             'speed_topbottom',
             'speed_travel',
             'speed_travel_layer_0'
-        ]
-    },
-    {
-        name: 'Retract & Z Hop',
-        fields: [
-            'retraction_enable',
-            'retract_at_layer_change',
-            'retraction_amount',
-            'retraction_speed',
-            'retraction_hop_enabled',
-            'retraction_hop'
         ]
     },
     {
