@@ -3,30 +3,25 @@ import { shallowEqual, useSelector, useDispatch } from 'react-redux';
 import path from 'path';
 import PropTypes from 'prop-types';
 import { useHistory, withRouter } from 'react-router-dom';
-// import classNames from 'classnames';
 import 'intro.js/introjs.css';
-// import { Steps } from 'intro.js-react';
 import i18n from '../../lib/i18n';
 import useSetState from '../../lib/hooks/set-state';
-// import Anchor from '../components/Anchor';
-import Dropdown from '../components/Dropdown';
-import Menu from '../components/Menu';
-import SvgIcon from '../components/SvgIcon';
 import modal from '../../lib/modal';
 import LaserVisualizer from '../widgets/LaserVisualizer';
 import Tabs from '../components/Tabs';
 
-import { renderPopup, renderWidgetList, renderModal, logPageView, useUnsavedTitle } from '../utils';
+import { renderPopup, renderWidgetList, logPageView, useUnsavedTitle } from '../utils';
 import Dropzone from '../components/Dropzone';
 import { actions as editorActions } from '../../flux/editor';
 import { actions as laserActions } from '../../flux/laser';
 import { actions as projectActions } from '../../flux/project';
 import ProjectLayout from '../layouts/ProjectLayout';
-import MainToolBar from '../layouts/MainToolBar';
 import { machineStore } from '../../store/local-storage';
-// import WidgetContainer from '../Layouts/Widget';
+import useRenderMainToolBar from './Shared/MainToolBar';
+import useRenderRemoveModelsWarning from './Shared/RemoveAllModelsWarning';
+import renderJobTypeModal from './Shared/JobTypeModal';
 
-import { HEAD_LASER, PAGE_EDITOR, PAGE_PROCESS, MACHINE_SERIES, PROCESS_MODE_GREYSCALE, PROCESS_MODE_VECTOR } from '../../constants';
+import { HEAD_LASER, PAGE_EDITOR, PAGE_PROCESS, PROCESS_MODE_GREYSCALE, PROCESS_MODE_VECTOR } from '../../constants';
 
 
 import ControlWidget from '../widgets/Control';
@@ -39,8 +34,6 @@ import MarlinWidget from '../widgets/Marlin';
 import VisualizerWidget from '../widgets/WorkspaceVisualizer';
 import WebcamWidget from '../widgets/Webcam';
 import LaserParamsWidget from '../widgets/LaserParams';
-import LaserSetBackground from '../widgets/LaserSetBackground';
-import LaserCameraAidBackground from '../widgets/LaserCameraAidBackground';
 import LaserTestFocusWidget from '../widgets/LaserTestFocus';
 import CNCPathWidget from '../widgets/CNCPath';
 import CncLaserOutputWidget from '../widgets/CncLaserOutput';
@@ -50,7 +43,6 @@ import PrintingConfigurationsWidget from '../widgets/PrintingConfigurations';
 import PrintingOutputWidget from '../widgets/PrintingOutput';
 import WifiTransport from '../widgets/WifiTransport';
 import EnclosureWidget from '../widgets/Enclosure';
-import JobType from '../widgets/JobType';
 import PrintingVisualizer from '../widgets/PrintingVisualizer';
 import HomePage from './HomePage';
 import ToolPathListBox from '../widgets/CncLaserList/ToolPathList';
@@ -87,244 +79,6 @@ const allWidgets = {
 const ACCEPT = '.svg, .png, .jpg, .jpeg, .bmp, .dxf';
 const pageHeadType = HEAD_LASER;
 
-function useRenderMainToolBar(setShowHomePage, setShowJobType, setShowWorkspace, isRotate) {
-    // (!workPosition.isFourAxis && (connectionType === CONNECTION_TYPE_WIFI && isConnected && !hasBackground))
-    const unSaved = useSelector(state => state?.project[pageHeadType]?.unSaved, shallowEqual);
-    const isConnected = useSelector(state => state?.machine?.isConnected, shallowEqual);
-    const series = useSelector(state => state?.machine?.series, shallowEqual);
-    const canRedo = useSelector(state => state[HEAD_LASER]?.history?.canRedo, shallowEqual);
-    const canUndo = useSelector(state => state[HEAD_LASER]?.history?.canUndo, shallowEqual);
-    const [showCameraCapture, setShowCameraCapture] = useState(false);
-    const dispatch = useDispatch();
-    const isOriginalSeries = (series === MACHINE_SERIES.ORIGINAL?.value || series === MACHINE_SERIES.ORIGINAL_LZ?.value);
-    const menu = (
-        <Menu style={{ marginTop: '8px' }}>
-            <Menu.Item
-                onClick={() => setShowCameraCapture(true)}
-                disabled={isOriginalSeries ? false : !isConnected}
-            >
-                <div className="align-l width-168">
-                    <SvgIcon
-                        type={['static']}
-                        disabled={isOriginalSeries ? false : !isConnected}
-                        name="MainToolbarAddBackground"
-                    />
-                    <span
-                        className="margin-left-4 height-24 display-inline"
-                    >
-                        {i18n._('Add Background')}
-                    </span>
-                </div>
-            </Menu.Item>
-            <Menu.Item
-                onClick={() => dispatch(laserActions.removeBackgroundImage())}
-            >
-                <div className="align-l width-168">
-                    <SvgIcon
-                        type={['static']}
-                        name="MainToolbarRemoverBackground"
-                    />
-                    <span
-                        className="margin-left-4 height-24 display-inline"
-                    >
-                        {i18n._('Remove Background')}
-                    </span>
-                </div>
-            </Menu.Item>
-        </Menu>
-    );
-    const leftItems = [
-        {
-            title: i18n._('Home'),
-            type: 'button',
-            name: 'MainToolbarHome',
-            action: () => {
-                setShowHomePage(true);
-            }
-        },
-        {
-            title: i18n._('Workspace'),
-            type: 'button',
-            name: 'MainToolbarWorkspace',
-            action: () => {
-                setShowWorkspace(true);
-            }
-        },
-        {
-            type: 'separator'
-        },
-        {
-            title: i18n._('Save'),
-            type: 'button',
-            disabled: !unSaved,
-            name: 'MainToolbarSave',
-            iconClassName: 'laser-save-icon',
-            action: () => {
-                dispatch(projectActions.save(HEAD_LASER));
-            }
-        },
-        {
-            title: i18n._('Undo'),
-            disabled: !canUndo,
-            type: 'button',
-            name: 'MainToolbarUndo',
-            action: () => {
-                dispatch(editorActions.undo(HEAD_LASER));
-            }
-        },
-        {
-            title: i18n._('Redo'),
-            disabled: !canRedo,
-            type: 'button',
-            name: 'MainToolbarRedo',
-            action: () => {
-                dispatch(editorActions.redo(HEAD_LASER));
-            }
-        },
-        {
-            title: i18n._('Job Setup'),
-            type: 'button',
-            name: 'MainToolbarJobSetup',
-            action: () => {
-                setShowJobType(true);
-            }
-        },
-        {
-            type: 'separator'
-        },
-        {
-            title: i18n._('Top'),
-            type: 'button',
-            name: 'MainToolbarTop',
-            action: () => {
-                dispatch(editorActions.bringSelectedModelToFront(HEAD_LASER));
-            }
-        },
-        {
-            title: i18n._('Bottom'),
-            type: 'button',
-            name: 'MainToolbarBottom',
-            action: () => {
-                dispatch(editorActions.sendSelectedModelToBack(HEAD_LASER));
-            }
-        }
-    ];
-    if (!isRotate) {
-        leftItems.push(
-            {
-                type: 'separator'
-            },
-            {
-                // MainToolbarCameraCapture
-                type: 'render',
-                customRender: function () {
-                    return (
-                        <Dropdown
-                            className="display-inline align-c padding-horizontal-2 height-50"
-                            overlay={menu}
-                        >
-                            <div
-                                className="display-inline font-size-0 v-align-t hover-normal-grey-2 border-radius-4 padding-top-4"
-                            >
-                                <SvgIcon
-                                    name="MainToolbarCameraCapture"
-                                    type={['static']}
-                                >
-                                    <div className="font-size-base color-black-3 height-16 margin-top-4">
-                                        {i18n._('Camera Capture')}
-                                        <SvgIcon
-                                            type={['static']}
-                                            name="DropdownOpen"
-                                            size={20}
-                                            // className="margin-top-4"
-                                        />
-                                    </div>
-                                </SvgIcon>
-                            </div>
-                        </Dropdown>
-                    );
-                }
-            }
-        );
-    }
-
-    const setBackgroundModal = showCameraCapture && renderModal({
-        renderBody() {
-            return (
-                <div>
-                    {isOriginalSeries && (
-                        <LaserSetBackground
-                            hideModal={() => {
-                                setShowCameraCapture(false);
-                            }}
-                        />
-                    )}
-                    {!isOriginalSeries && (
-                        <LaserCameraAidBackground
-                            hideModal={() => {
-                                setShowCameraCapture(false);
-                            }}
-                        />
-                    )}
-                </div>
-            );
-        },
-        actions: [],
-        onClose: () => { setShowCameraCapture(false); }
-    });
-
-    return {
-        setBackgroundModal,
-        renderMainToolBar: () => {
-            return (
-                <MainToolBar
-                    leftItems={leftItems}
-                />
-            );
-        }
-    };
-}
-
-function useRenderRemoveModelsWarning() {
-    const removingModelsWarning = useSelector(state => state?.laser?.removingModelsWarning);
-    const removingModelsWarningCallback = useSelector(state => state?.laser?.removingModelsWarningCallback, shallowEqual);
-    const emptyToolPaths = useSelector(state => state?.laser?.emptyToolPaths);
-    const dispatch = useDispatch();
-    const onClose = () => dispatch(editorActions.updateState(HEAD_LASER, {
-        removingModelsWarning: false
-    }));
-    const returnModal = renderModal({
-        onClose,
-        renderBody: () => (
-            <div>
-                <div>{i18n._('Delete the object? The toolpath created will be deleted together.')}</div>
-                {emptyToolPaths.map((item) => {
-                    return (<div key={item.name}>{item.name}</div>);
-                })}
-            </div>
-        ),
-        actions: [
-            {
-                name: i18n._('Cancel'),
-                onClick: () => { onClose(); }
-            },
-            {
-                name: i18n._('Delete'),
-                isPrimary: true,
-                onClick: () => {
-                    removingModelsWarningCallback();
-                    dispatch(editorActions.removeEmptyToolPaths(HEAD_LASER));
-                    onClose();
-                }
-            }
-        ]
-    });
-    if (removingModelsWarning) {
-        return returnModal;
-    } else {
-        return null;
-    }
-}
 function Laser({ location }) {
     const widgets = useSelector(state => state?.widget[pageHeadType]?.default?.widgets, shallowEqual);
     const [isDraggingWidget, setIsDraggingWidget] = useState(false);
@@ -392,7 +146,7 @@ function Laser({ location }) {
     }, [enabledIntro]);
 
     const { setBackgroundModal,
-        renderMainToolBar } = useRenderMainToolBar(setShowHomePage, setShowJobType, setShowWorkspace, isRotate);
+        renderMainToolBar } = useRenderMainToolBar(HEAD_LASER, setShowHomePage, setShowJobType, setShowWorkspace);
     const renderHomepage = () => {
         const onClose = () => {
             setShowHomePage(false);
@@ -406,52 +160,8 @@ function Laser({ location }) {
             component: HomePage
         });
     };
-    const jobTypeModal = showJobType && renderModal({
-        title: i18n._('Job Setup'),
-        renderBody() {
-            return (
-                <JobType
-                    isWidget={false}
-                    headType={HEAD_LASER}
-                    jobTypeState={jobTypeState}
-                    setJobTypeState={setJobTypeState}
-                />
-            );
-        },
-        actions: [
-            {
-                name: i18n._('Cancel'),
-                onClick: () => {
-                    setJobTypeState({
-                        coordinateMode,
-                        coordinateSize,
-                        materials
-                    });
-                    setShowJobType(false);
-                }
-            },
-            {
-                name: i18n._('Confirm'),
-                isPrimary: true,
-                onClick: () => {
-                    dispatch(editorActions.changeCoordinateMode(HEAD_LASER,
-                        jobTypeState.coordinateMode, jobTypeState.coordinateSize));
-                    dispatch(editorActions.updateMaterials(HEAD_LASER, jobTypeState.materials));
-                    dispatch(editorActions.scaleCanvasToFit(HEAD_LASER));
-                    setShowJobType(false);
-                }
-            }
-        ],
-        onClose: () => {
-            setJobTypeState({
-                coordinateMode,
-                coordinateSize,
-                materials
-            });
-            setShowJobType(false);
-        }
-    });
-    const warningRemovingModels = useRenderRemoveModelsWarning();
+    const jobTypeModal = renderJobTypeModal(HEAD_LASER, dispatch, showJobType, setShowJobType, jobTypeState, setJobTypeState, coordinateMode, coordinateSize, materials);
+    const warningRemovingModels = useRenderRemoveModelsWarning(HEAD_LASER);
     const listActions = {
         onDragStart: () => {
             setIsDraggingWidget(true);

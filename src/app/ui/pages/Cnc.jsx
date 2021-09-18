@@ -7,8 +7,6 @@ import path from 'path';
 import { Trans } from 'react-i18next';
 import 'intro.js/introjs.css';
 import Steps from '../components/Steps';
-import Dropdown from '../components/Dropdown';
-import Menu from '../components/Menu';
 import i18n from '../../lib/i18n';
 import modal from '../../lib/modal';
 import Dropzone from '../components/Dropzone';
@@ -18,11 +16,9 @@ import { renderModal, renderPopup, renderWidgetList, logPageView, useUnsavedTitl
 import Tabs from '../components/Tabs';
 import Checkbox from '../components/Checkbox';
 import { Button } from '../components/Buttons';
-import Cnc3DVisualizer from '../views/Cnc3DVisualizer';
 
 import CNCVisualizer from '../widgets/CNCVisualizer';
 import ProjectLayout from '../layouts/ProjectLayout';
-import MainToolBar from '../layouts/MainToolBar';
 
 import { actions as projectActions } from '../../flux/project';
 import { actions as cncActions } from '../../flux/cnc';
@@ -38,6 +34,10 @@ import {
     PAGE_PROCESS,
     HEAD_CNC
 } from '../../constants';
+
+import useRenderMainToolBar from './Shared/MainToolBar';
+import useRenderRemoveModelsWarning from './Shared/RemoveAllModelsWarning';
+import renderJobTypeModal from './Shared/JobTypeModal';
 
 import ControlWidget from '../widgets/Control';
 import ConnectionWidget from '../widgets/Connection';
@@ -59,11 +59,9 @@ import PrintingConfigurationsWidget from '../widgets/PrintingConfigurations';
 import PrintingOutputWidget from '../widgets/PrintingOutput';
 import WifiTransport from '../widgets/WifiTransport';
 import EnclosureWidget from '../widgets/Enclosure';
-import JobType from '../widgets/JobType';
 import ToolPathListBox from '../widgets/CncLaserList/ToolPathList';
 import PrintingVisualizer from '../widgets/PrintingVisualizer';
 import HomePage from './HomePage';
-// import Anchor from '../components/Anchor';
 import Workspace from './Workspace';
 import { machineStore } from '../../store/local-storage';
 import Thumbnail from '../widgets/CncLaserShared/Thumbnail';
@@ -163,223 +161,7 @@ function useRenderWarning() {
         )
     });
 }
-function useRenderMainToolBar(setShowHomePage, setShowJobType, setShowWorkspace) {
-    const unSaved = useSelector(state => state?.project[HEAD_CNC]?.unSaved, shallowEqual);
-    const canRedo = useSelector(state => state[HEAD_CNC]?.history?.canRedo, shallowEqual);
-    const canUndo = useSelector(state => state[HEAD_CNC]?.history?.canUndo, shallowEqual);
-    const isRotate = useSelector(state => state[HEAD_CNC]?.materials?.isRotate, shallowEqual);
-    const [showStlModal, setShowStlModal] = useState(true);
-    const dispatch = useDispatch();
-    function handleHideStlModal() {
-        setShowStlModal(false);
-    }
-    function handleShowStlModal() {
-        setShowStlModal(true);
-    }
-    const menu = (
-        <Menu style={{ marginTop: '8px' }}>
-            <Menu.Item
-                onClick={handleShowStlModal}
-                disabled={showStlModal}
-            >
-                <div className="align-l width-168">
-                    <SvgIcon
-                        type="static"
-                        disabled={showStlModal}
-                        name="MainToolbarAddBackground"
-                    />
-                    <span
-                        className="margin-left-4 height-24 display-inline"
-                    >
-                        {i18n._('Enable STL 3D View')}
-                    </span>
 
-                </div>
-            </Menu.Item>
-            <Menu.Item
-                onClick={handleHideStlModal}
-                disabled={!showStlModal}
-            >
-                <div className="align-l width-168">
-                    <SvgIcon
-                        type="static"
-                        disabled={!showStlModal}
-                        name="MainToolbarRemoverBackground"
-                    />
-                    <span
-                        className="margin-left-4 height-24 display-inline"
-                    >
-                        {i18n._('Disable STL 3D View')}
-                    </span>
-                </div>
-            </Menu.Item>
-        </Menu>
-    );
-    const leftItems = [
-        {
-            title: i18n._('Home'),
-            type: 'button',
-            name: 'MainToolbarHome',
-            action: () => {
-                setShowHomePage(true);
-                window.scrollTo(0, 0);
-            }
-        },
-        {
-            title: i18n._('Workspace'),
-            type: 'button',
-            name: 'MainToolbarWorkspace',
-            action: () => {
-                setShowWorkspace(true);
-            }
-        },
-        {
-            type: 'separator'
-        },
-        {
-            title: i18n._('Save'),
-            disabled: !unSaved,
-            type: 'button',
-            name: 'MainToolbarSave',
-            iconClassName: 'cnc-save-icon',
-            action: () => {
-                dispatch(projectActions.save(HEAD_CNC));
-            }
-        },
-        {
-            title: i18n._('Undo'),
-            disabled: !canUndo,
-            type: 'button',
-            name: 'MainToolbarUndo',
-            action: () => {
-                dispatch(editorActions.undo(HEAD_CNC));
-            }
-        },
-        {
-            title: i18n._('Redo'),
-            disabled: !canRedo,
-            type: 'button',
-            name: 'MainToolbarRedo',
-            action: () => {
-                dispatch(editorActions.redo(HEAD_CNC));
-            }
-        },
-        {
-            title: i18n._('Job Setup'),
-            type: 'button',
-            name: 'MainToolbarJobSetup',
-            action: () => {
-                setShowJobType(true);
-            }
-        },
-        {
-            type: 'separator'
-        },
-        {
-            title: i18n._('Top'),
-            type: 'button',
-            name: 'MainToolbarTop',
-            action: () => {
-                dispatch(editorActions.bringSelectedModelToFront(HEAD_CNC));
-            }
-        },
-        {
-            title: i18n._('Bottom'),
-            type: 'button',
-            name: 'MainToolbarBottom',
-            action: () => {
-                dispatch(editorActions.sendSelectedModelToBack(HEAD_CNC));
-            }
-        }
-
-    ];
-    if (isRotate) {
-        leftItems.push(
-            {
-                type: 'separator'
-            },
-            {
-                type: 'render',
-                customRender: function () {
-                    return (
-                        <Dropdown
-                            className="display-inline align-c padding-horizontal-2 height-50"
-                            overlay={menu}
-                        >
-                            <div
-                                className="display-inline font-size-0 v-align-t hover-normal-grey-2 border-radius-4 padding-top-4"
-                            >
-                                <SvgIcon
-                                    name="MainToolbarStl3dView"
-                                    type={['static']}
-                                >
-                                    <div className="font-size-base color-black-3 height-16 margin-top-4">
-                                        {i18n._('STL 3D View')}
-                                        <SvgIcon
-                                            type={['static']}
-                                            name="DropdownOpen"
-                                            size={20}
-                                        />
-                                    </div>
-                                </SvgIcon>
-                            </div>
-                        </Dropdown>
-                    );
-                }
-            }
-        );
-    }
-    return {
-        renderStlModal: () => {
-            return (
-                <Cnc3DVisualizer show={showStlModal} />
-            );
-        },
-        renderMainToolBar: () => {
-            return (
-                <MainToolBar
-                    leftItems={leftItems}
-                />
-            );
-        }
-    };
-}
-
-function useRenderRemoveModelsWarning() {
-    const removingModelsWarning = useSelector(state => state?.cnc?.removingModelsWarning);
-    const removingModelsWarningCallback = useSelector(state => state?.cnc?.removingModelsWarningCallback, shallowEqual);
-    const emptyToolPaths = useSelector(state => state?.cnc?.emptyToolPaths);
-    const dispatch = useDispatch();
-    const onClose = () => dispatch(editorActions.updateState(HEAD_CNC, {
-        removingModelsWarning: false
-    }));
-    return removingModelsWarning && renderModal({
-        onClose,
-        renderBody: () => (
-            <div>
-                <div>{i18n._('Delete the object? The toolpath created will be deleted together.')}</div>
-                {emptyToolPaths.map((item) => {
-                    return (<div key={item.name}>{item.name}</div>);
-                })}
-            </div>
-        ),
-        actions: [
-            {
-                name: i18n._('Cancel'),
-                onClick: () => { onClose(); }
-            },
-            {
-                name: i18n._('Delete'),
-                isPrimary: true,
-                onClick: () => {
-                    removingModelsWarningCallback();
-                    dispatch(editorActions.removeEmptyToolPaths(HEAD_CNC));
-                    onClose();
-                }
-            }
-        ]
-    });
-}
 function Cnc({ location }) {
     const widgets = useSelector(state => state?.widget[pageHeadType]?.default?.widgets, shallowEqual);
     const [isDraggingWidget, setIsDraggingWidget] = useState(false);
@@ -446,6 +228,7 @@ function Cnc({ location }) {
     }, [enabledIntro]);
 
     const { renderStlModal, renderMainToolBar } = useRenderMainToolBar(
+        HEAD_CNC,
         setShowHomePage,
         setShowJobType,
         setShowWorkspace
@@ -464,53 +247,9 @@ function Cnc({ location }) {
             component: HomePage
         });
     };
-    const jobTypeModal = (showJobType) && renderModal({
-        title: i18n._('Job Setup'),
-        renderBody() {
-            return (
-                <JobType
-                    isWidget={false}
-                    headType={HEAD_CNC}
-                    jobTypeState={jobTypeState}
-                    setJobTypeState={setJobTypeState}
-                />
-            );
-        },
-        actions: [
-            {
-                name: i18n._('Cancel'),
-                onClick: () => {
-                    setJobTypeState({
-                        coordinateMode,
-                        coordinateSize,
-                        materials
-                    });
-                    setShowJobType(false);
-                }
-            },
-            {
-                name: i18n._('Confirm'),
-                isPrimary: true,
-                onClick: () => {
-                    dispatch(editorActions.changeCoordinateMode(HEAD_CNC,
-                        jobTypeState.coordinateMode, jobTypeState.coordinateSize));
-                    dispatch(editorActions.updateMaterials(HEAD_CNC, jobTypeState.materials));
-                    dispatch(editorActions.scaleCanvasToFit(HEAD_CNC));
-                    setShowJobType(false);
-                }
-            }
-        ],
-        onClose: () => {
-            setJobTypeState({
-                coordinateMode,
-                coordinateSize,
-                materials
-            });
-            setShowJobType(false);
-        }
-    });
+    const jobTypeModal = renderJobTypeModal(HEAD_CNC, dispatch, showJobType, setShowJobType, jobTypeState, setJobTypeState, coordinateMode, coordinateSize, materials);
     const warningModal = useRenderWarning();
-    const removeModelsWarningModal = useRenderRemoveModelsWarning();
+    const removeModelsWarningModal = useRenderRemoveModelsWarning(HEAD_CNC);
     const listActions = {
         onDragStart: () => {
             setIsDraggingWidget(true);
