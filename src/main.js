@@ -10,12 +10,20 @@ import MenuBuilder, { addRecentFile, cleanAllRecentFiles } from './electron-app/
 import launchServer from './server-cli';
 import DataStorage from './DataStorage';
 import pkg from './package.json';
+// const { crashReporter } = require('electron');
 
 
 const config = new Store();
 
 let serverData = null;
 let mainWindow = null;
+
+// crashReporter.start({
+//     productName: 'Snapmaker',
+//     companyName: 'Snapmaker',
+//     submitURL: 'https://api.snapmaker.com',
+//     uploadToServer: true
+// });
 
 function getBrowserWindowOptions() {
     const defaultOptions = {
