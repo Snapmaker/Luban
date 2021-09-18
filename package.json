@@ -1,6 +1,6 @@
 {
   "name": "snapmaker-luban",
-  "version": "4.0.2",
+  "version": "4.0.3",
   "description": "A web-based interface for Snapmaker 3-in-1 3D Printer",
   "homepage": "https://github.com/Snapmaker/Luban",
   "author": "Snapmaker Dev Team <whimsycwd@snapmaker.com>",
@@ -263,7 +263,7 @@
     "regenerator-runtime": "~0.13.5",
     "regression": "^2.0.1",
     "semver": "~5.6.0",
-    "serialport": "~9.0.4",
+    "serialport": "=8.0.8",
     "serve-favicon": "~2.5.0",
     "session-file-store": "~1.1.2",
     "sha1": "~1.1.1",
