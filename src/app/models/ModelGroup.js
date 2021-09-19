@@ -165,11 +165,22 @@ class ModelGroup extends EventEmitter {
         if (selectedGroup.children.length > 0 && selectedGroup.shouldUpdateBoundingbox) {
             const whd = new Vector3(0, 0, 0);
             ThreeUtils.computeBoundingBox(this.selectedGroup).getSize(whd);
-            // width-depth-height
             return `${whd.x.toFixed(1)} × ${whd.y.toFixed(1)} × ${whd.z.toFixed(1)} mm`;
+            // width-depth-height
         } else {
             return '';
         }
+    }
+
+    // get selected Model bounding box width & height & depth
+    getSelectedModelBBoxWHD() {
+        const whd = new Vector3(0, 0, 0);
+        ThreeUtils.computeBoundingBox(this.selectedGroup).getSize(whd);
+        return {
+            x: whd.x,
+            y: whd.y,
+            z: whd.z
+        };
     }
 
     changeShowOrigin() {
@@ -475,29 +486,12 @@ class ModelGroup extends EventEmitter {
 
 
     calculateSelectedGroupPosition() {
-        const maxObjectPosition = new Vector3(-Number.MAX_VALUE, -Number.MAX_VALUE, -Number.MAX_VALUE);
-        const minObjectPosition = new Vector3(Number.MAX_VALUE, Number.MAX_VALUE, Number.MAX_VALUE);
-        this.selectedGroup.children.forEach((meshObject) => {
-            const position = new Vector3();
-            meshObject.getWorldPosition(position);
-            maxObjectPosition.x = Math.max(position.x, maxObjectPosition.x);
-            maxObjectPosition.y = Math.max(position.y, maxObjectPosition.y);
-            maxObjectPosition.z = Math.max(position.z, maxObjectPosition.z);
-
-            minObjectPosition.x = Math.min(position.x, minObjectPosition.x);
-            minObjectPosition.y = Math.min(position.y, minObjectPosition.y);
-        });
-        if (this.selectedGroup.children.length > 1) {
+        const boundingBoxTemp = ThreeUtils.computeBoundingBox(this.selectedGroup);
+        if (this.selectedGroup.children.length >= 1) {
             return new Vector3(
-                (maxObjectPosition.x + minObjectPosition.x) / 2,
-                (maxObjectPosition.y + minObjectPosition.y) / 2,
-                maxObjectPosition.z
-            );
-        } else if (this.selectedGroup.children.length === 1) {
-            return new Vector3(
-                maxObjectPosition.x,
-                maxObjectPosition.y,
-                maxObjectPosition.z
+                (boundingBoxTemp.max.x + boundingBoxTemp.min.x) / 2,
+                (boundingBoxTemp.max.y + boundingBoxTemp.min.y) / 2,
+                boundingBoxTemp.max.z / 2
             );
         } else {
             return new Vector3(
@@ -641,7 +635,7 @@ class ModelGroup extends EventEmitter {
             ThreeUtils.applyObjectMatrix(this.selectedGroup, new Matrix4().getInverse(this.selectedGroup.matrix));
             ThreeUtils.liftObjectOnlyChildMatrix(this.selectedGroup);
             this.selectedGroup.uniformScalingState = this.selectedGroup.children[0].uniformScalingState;
-        } else {
+        } else if (this.selectedModelArray.length > 1) {
             // this.selectedGroup.uniformScalingState = true;
             const p = this.calculateSelectedGroupPosition(this.selectedGroup);
             // set selected group position need to remove children temporarily
@@ -873,7 +867,6 @@ class ModelGroup extends EventEmitter {
         if (selected.length === 0) {
             return null;
         }
-
         selected.forEach((item) => {
             item.scaleToFit(size);
             item.computeBoundingBox();
@@ -1209,6 +1202,11 @@ class ModelGroup extends EventEmitter {
 
     hasModel() {
         return this.getModels().filter(v => v.visible).length > 0;
+    }
+
+    // include visible and hidden model
+    hasModelWhole() {
+        return this.getModels();
     }
 
     // not include p1, p2
@@ -1568,6 +1566,9 @@ class ModelGroup extends EventEmitter {
             const model = this.selectedModelArray[0];
             for (let i = model.meshObject.children.length - 1; i >= 0; i--) {
                 model.meshObject.remove(model.meshObject.children[i]);
+            }
+            for (let i = this.selectedModelConvexMeshGroup.children.length - 1; i >= 0; i--) {
+                this.selectedModelConvexMeshGroup.remove(this.selectedModelConvexMeshGroup.children[i]);
             }
             this.selectedModelConvexMeshGroup = new Group();
             return this.selectedModelConvexMeshGroup;

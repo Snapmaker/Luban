@@ -14,7 +14,7 @@ let modelName = '';
 const objectList3d = 'ObjectList3d';
 const objectListShape = 'ObjectListShape';
 const objectListPicture = 'ObjectListPicture';
-function ModelItem({ model, visible, isSelected, styles, onSelect, onToggleVisible, inProgress, placment, disabled }) {
+function ModelItem({ model, visible, isSelected, styles, onSelect, onToggleVisible, inProgress, placment, disabled = false }) {
     if (!model) {
         return null;
     }
@@ -97,7 +97,7 @@ ModelItem.propTypes = {
     onSelect: PropTypes.func.isRequired,
     onToggleVisible: PropTypes.func.isRequired,
     inProgress: PropTypes.bool.isRequired,
-    disabled: PropTypes.bool.isRequired,
+    disabled: PropTypes.bool,
     placment: PropTypes.string
 };
 

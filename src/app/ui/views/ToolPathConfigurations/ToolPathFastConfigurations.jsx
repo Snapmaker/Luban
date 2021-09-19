@@ -22,7 +22,7 @@ import {
 import PresentSelector from './laser/PresentSelector';
 
 function ifDefinitionModified(activeToolListDefinition, currentToolDefinition) {
-    return activeToolListDefinition.settings && !Object.entries(activeToolListDefinition.settings).every(([key, setting]) => {
+    return activeToolListDefinition?.settings && !Object.entries(activeToolListDefinition.settings).every(([key, setting]) => {
         return currentToolDefinition && currentToolDefinition.settings[key].default_value === setting.default_value;
     });
 }

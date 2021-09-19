@@ -263,7 +263,7 @@ export const actions = {
     save: (headType, dialogOptions = false) => async (dispatch, getState) => {
         // save should return when no model in editor
         const modelGroup = getState()[headType].modelGroup;
-        if (!modelGroup || !modelGroup.hasModel()) {
+        if (!modelGroup || !modelGroup.hasModelWhole()) {
             return;
         }
 

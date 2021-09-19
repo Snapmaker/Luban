@@ -15,7 +15,7 @@ import { Button } from '../../components/Buttons';
 import Checkbox from '../../components/Checkbox';
 import RotationAnalysisOverlay from './Overlay/RotationAnalysisOverlay';
 
-function VisualizerLeftBar({ defaultSupportSize, setTransformMode, isSupporting, supportActions, updateBoundingBox, scaleToFitSelectedModel, autoRotateSelectedModel }) {
+function VisualizerLeftBar({ defaultSupportSize, setTransformMode, isSupporting, supportActions, updateBoundingBox, autoRotateSelectedModel }) {
     const size = useSelector(state => state?.machine?.size, shallowEqual);
     const selectedModelArray = useSelector(state => state?.printing?.modelGroup?.selectedModelArray);
     const isSupportSelected = useSelector(state => state?.printing?.modelGroup?.isSupportSelected());
@@ -23,7 +23,7 @@ function VisualizerLeftBar({ defaultSupportSize, setTransformMode, isSupporting,
     const transformation = useSelector(state => state?.printing?.modelGroup?.getSelectedModelTransformationForPrinting(), shallowEqual);
     const enableShortcut = useSelector(state => state?.printing?.enableShortcut, shallowEqual);
     const [showRotationAnalyzeModal, setShowRotationAnalyzeModal] = useState(false);
-
+    const selectedModelBBoxDes = useSelector(state => state?.printing?.modelGroup?.getSelectedModelBBoxWHD(), shallowEqual);
     let modelSize = {};
     if (isSupportSelected) {
         const model = selectedModelArray[0];
@@ -174,6 +174,18 @@ function VisualizerLeftBar({ defaultSupportSize, setTransformMode, isSupporting,
             } else {
                 actions.onClickToUpload();
             }
+        },
+        scaleToFitSelectedModel: () => {
+            const scalar = ['x', 'y', 'z'].reduce((prev, key) => Math.min((size[key] - 5) / selectedModelBBoxDes[key], prev), Number.POSITIVE_INFINITY);
+            const newTransformation = {
+                scaleX: scalar * transformation.scaleX,
+                scaleY: scalar * transformation.scaleY,
+                scaleZ: scalar * transformation.scaleZ,
+                positionX: 0,
+                positionY: 0
+            };
+            dispatch(printingActions.updateSelectedModelTransformation(newTransformation));
+            actions.onModelAfterTransform();
         }
     };
     let moveX = 0;
@@ -478,7 +490,7 @@ function VisualizerLeftBar({ defaultSupportSize, setTransformMode, isSupporting,
                                     type="primary"
                                     priority="level-three"
                                     width="100%"
-                                    onClick={scaleToFitSelectedModel}
+                                    onClick={actions.scaleToFitSelectedModel}
                                 >
                                     <span>{i18n._('Scale to Fit')}</span>
                                 </Button>
@@ -811,7 +823,7 @@ VisualizerLeftBar.propTypes = {
         y: PropTypes.number
     }),
     supportActions: PropTypes.object,
-    scaleToFitSelectedModel: PropTypes.func.isRequired,
+    // scaleToFitSelectedModel: PropTypes.func.isRequired,
     autoRotateSelectedModel: PropTypes.func.isRequired,
     setTransformMode: PropTypes.func.isRequired,
     updateBoundingBox: PropTypes.func.isRequired,

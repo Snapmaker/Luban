@@ -504,6 +504,10 @@ class TransformControls extends Object3D {
             const unitZ = new Vector3(0, 0, 1);
 
             if (this.object.shouldUpdateBoundingbox) {
+                const selectedPeripheralsVisible = (this.objectConvexMeshGroup.children.length === 0);
+                this.allSelectedPeripherals.forEach((peripheral) => {
+                    peripheral.visible = selectedPeripheralsVisible;
+                });
                 const boundingBox = ThreeUtils.computeBoundingBox(this.object);
                 const maxObjectBoundingBox = boundingBox.max;
                 const minObjectBoundingBox = boundingBox.min;

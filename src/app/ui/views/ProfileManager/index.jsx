@@ -223,6 +223,9 @@ function ProfileManager({ optionConfigGroup, disableCategory = true, managerTitl
                             if (shouldSelectDefinition) {
                                 actions.onSelectDefinition(newDefinition);
                             }
+                            if (definition?.definitionId === activeDefinition?.definitionId) {
+                                outsideActions.onUpdateDefaultDefinition(newDefinition);
+                            }
                             popupActions.close();
                         }}
                     >

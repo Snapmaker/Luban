@@ -1,7 +1,7 @@
 import fs from 'fs';
 import { AABB3D } from './AABB3D';
 import { Vector3 } from '../../../shared/lib/math/Vector3';
-import { STLParse } from '../../../shared/lib/STLParse/STLParse';
+import { STLParse } from '../../../shared/lib/STL/STLParse';
 import { isEqual, round } from '../../../shared/lib/utils';
 import Coordinate from './Coordinate';
 import { Vector2 } from '../../../shared/lib/math/Vector2';

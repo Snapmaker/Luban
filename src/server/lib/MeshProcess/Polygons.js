@@ -154,7 +154,7 @@ export class Polygon {
         }
     }
 
-    area(points) {
+    area(points = this.path) {
         let area = 0;
         for (let i = 0; i < points.length; i++) {
             const p1 = points[i];
@@ -416,13 +416,9 @@ export class Polygons {
 
     union(polygons) {
         const polyPaths = [];
-        for (const polygon of this.data) {
-            polyPaths.push([polygon.path]);
-        }
+        polyPaths.push(this.data.map(polygon => polygon.path));
         if (polygons && polygons.size() > 0) {
-            for (const polygon of polygons.data) {
-                polyPaths.push([polygon.path]);
-            }
+            polyPaths.push(polygons.data.map(polygon => polygon.path));
         }
 
         const result = recursivePolyUnion(polyPaths);
@@ -482,5 +478,57 @@ export class Polygons {
         const polygons = new Polygons();
         polygons.data = this.data.map(v => v.clone());
         return polygons;
+    }
+
+    /**
+     * Separate into multiple disjoint polygons with holes or not
+     *
+     * If polygons intersect, it will cause an exception !!!
+     * Ignore polygon orientation
+     *
+     * @returns {*[Polygons, ...]}
+     */
+    getPolygonssByPolyTree() {
+        const polygonss = [];
+        // Only large area polygons can contain small ones
+        const polygonAreasIndex = this.data
+            .map((polygon, index) => { return { area: polygon.area(), index: index }; })
+            .sort((o1, o2) => (Math.abs(o1.area) > Math.abs(o2.area) ? -1 : 1));
+
+        while (polygonAreasIndex.length > 0) {
+            const polygons = new Polygons();
+            const outerPolygonAreaIndex = polygonAreasIndex.splice(0, 1)[0];
+            const outerPolygon = this.data[outerPolygonAreaIndex.index];
+            polygons.add(outerPolygon);
+            let i = 0;
+            while (i < polygonAreasIndex.length) {
+                const innerPolygonAreaIndex = polygonAreasIndex[i];
+                const innerPolygon = this.data[innerPolygonAreaIndex.index];
+                const innerPoint0 = innerPolygon.path[0];
+                const innerPoint1 = innerPolygon.path[parseInt(innerPolygon.size() / 2, 10)];
+                if (outerPolygon.isPointInPolygon(innerPoint0)
+                    && outerPolygon.isPointInPolygon(innerPoint1)) {
+                    let inInnerPolygon = false;
+                    if (polygons.size() >= 2) {
+                        for (let j = 1; j < polygons.size(); j++) {
+                            if (polygons.get(j).isPointInPolygon(innerPoint0) && polygons.get(j).isPointInPolygon(innerPoint1)) {
+                                inInnerPolygon = true;
+                            }
+                        }
+                    }
+                    if (!inInnerPolygon) {
+                        polygonAreasIndex.splice(i, 1);
+                        polygons.add(innerPolygon);
+                    } else {
+                        i++;
+                    }
+                } else {
+                    i++;
+                }
+            }
+            polygonss.push(polygons);
+        }
+
+        return polygonss;
     }
 }

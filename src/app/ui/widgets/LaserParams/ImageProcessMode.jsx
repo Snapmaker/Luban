@@ -35,6 +35,7 @@ const ImageProcessMode = ({ disabled }) => {
             setExpanded(!expanded);
         },
         changeSelectedModelMode: (newMode) => {
+            showOrigin && dispatch(editorActions.changeSelectedModelShowOrigin(HEAD_LASER, false));
             dispatch(editorActions.changeSelectedModelMode(HEAD_LASER, sourceType, newMode));
         }
     };

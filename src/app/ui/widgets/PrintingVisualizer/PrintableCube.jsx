@@ -1,7 +1,7 @@
 import {
     Object3D, DoubleSide,
     PlaneGeometry, MeshBasicMaterial, Mesh,
-    TextureLoader
+    TextureLoader, LinearFilter
 } from 'three';
 import Rectangle from '../../../three-extensions/objects/Rectangle';
 import Grid from '../../../three-extensions/objects/Grid';
@@ -56,6 +56,7 @@ class PrintableCube extends Object3D {
         const minSideLength = Math.min(this.size.x, this.size.y);
         const geometry = new PlaneGeometry(minSideLength / 2, minSideLength / 8);
         const texture = new TextureLoader().load('./resources/images/snapmaker-logo-1024x256.png', this.update);
+        texture.minFilter = LinearFilter;
         const material = new MeshBasicMaterial({
             map: texture,
             side: DoubleSide,
@@ -63,7 +64,7 @@ class PrintableCube extends Object3D {
             transparent: true
         });
         const mesh = new Mesh(geometry, material);
-        mesh.position.set(0, -this.size.y / 4, 0);
+        mesh.position.set(0, -this.size.y / 4, 1);
         this.add(mesh);
     }
 }
