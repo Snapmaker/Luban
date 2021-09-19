@@ -2,7 +2,7 @@ import { Vector3, Matrix4, MeshPhongMaterial, TextureLoader
     // DoubleSide, CylinderGeometry,Mesh
 } from 'three';
 
-import React, { PureComponent } from 'react';
+import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
 import classNames from 'classnames';
@@ -23,6 +23,7 @@ import {
 } from '../../../constants';
 
 import i18n from '../../../lib/i18n';
+import { actions as editorActions } from '../../../flux/editor';
 // import styles from './styles.styl';
 
 const texture = new TextureLoader().load('../resources/images/wood.png');
@@ -145,7 +146,7 @@ const set4AxisMeshState = async (mesh, transformation, materials, coordinateSize
     }
 };
 
-class Cnc3DVisualizer extends PureComponent {
+class Cnc3DVisualizer extends Component {
     static propTypes = {
         hasModel: PropTypes.bool,
         show: PropTypes.bool.isRequired,
@@ -157,13 +158,18 @@ class Cnc3DVisualizer extends PureComponent {
         direction: PropTypes.string,
         placement: PropTypes.string,
         updateStlVisualizer: PropTypes.func,
+        selectTargetModel: PropTypes.func,
         coordinateMode: PropTypes.object,
-        coordinateSize: PropTypes.object
+        coordinateSize: PropTypes.object,
+        visible: PropTypes.bool,
+        selectedModel: PropTypes.object,
+        progress: PropTypes.number
     };
 
-    environment = null;
-
-    cameraInitialPosition = null;
+    state = {
+        environment: null,
+        cameraInitialPosition: null
+    }
 
     actions = {
         hideCnc3DVisualizer: () => {
@@ -171,46 +177,94 @@ class Cnc3DVisualizer extends PureComponent {
         }
     };
 
-    componentWillReceiveProps(nextProps) {
-        if (nextProps.hasModel) {
-            const { mesh, materials, sourceScale, transformation, direction, placement, machineSize, coordinateSize, coordinateMode } = nextProps;
-            if (mesh !== this.props.mesh || materials.isRotate !== this.props.materials.isRotate
-                || materials.diameter !== this.props.materials.diameter
-                || materials.length !== this.props.materials.length
-                || transformation !== this.props.transformation || direction !== this.props.direction
-                || this.props.coordinateSize !== coordinateSize
-                || this.props.coordinateMode !== coordinateMode
-                || this.props.placement !== nextProps.placement
+    // componentWillReceiveProps(nextProps) {
+    //     if (nextProps.hasModel) {
+    //         console.log(nextProps.placement, this.props.placement);
+    //         const { mesh, materials, sourceScale, transformation, direction, placement, machineSize, coordinateSize, coordinateMode } = nextProps;
+    //         if (mesh !== this.props.mesh || materials.isRotate !== this.props.materials.isRotate
+    //             || materials.diameter !== this.props.materials.diameter
+    //             || materials.length !== this.props.materials.length
+    //             || transformation !== this.props.transformation || direction !== this.props.direction
+    //             || this.props.coordinateSize !== coordinateSize
+    //             || this.props.coordinateMode !== coordinateMode
+    //             || this.props.placement !== nextProps.placement
+    //         ) {
+    //             const t = getModelTransformation(transformation, machineSize, coordinateMode, coordinateSize);
+    //             mesh.remove(...mesh.children);
+    //             mesh.material = new MeshPhongMaterial({ color: 0xa0a0a0, specular: 0xb0b0b0, shininess: 0 });
+
+    //             setMeshTransform(mesh, sourceScale, t, materials.isRotate, direction, placement);
+    //             if (!this.cameraInitialPosition || machineSize.z !== this.props.machineSize.z) {
+    //                 this.cameraInitialPosition = new Vector3(0, -machineSize.z * 1.3, 0);
+    //             }
+
+    //             if (materials.isRotate) {
+    //                 set4AxisMeshState(mesh, t, materials, coordinateSize);
+
+    //                 this.environment = new Env4Axis(mesh, materials);
+    //                 this.worldTransform = new Matrix4().makeRotationY(Math.PI);
+    //             } else {
+    //                 const meshSize = getMeshSize(mesh);
+    //                 const platSize = { x: coordinateSize?.x ?? machineSize.x, y: meshSize.y, z: coordinateSize?.y ?? machineSize.z };
+
+    //                 set3AxisMeshState(mesh, t, platSize);
+
+    //                 this.environment = new Env3Axis(platSize);
+    //                 this.worldTransform = new Matrix4();
+    //             }
+    //         }
+    //     }
+    // }
+
+    componentDidUpdate() {
+    }
+
+    getSnapshotBeforeUpdate(prevProps) {
+        if (this.props.hasModel) {
+            const { selectedModel, mesh, materials, sourceScale, transformation, direction, placement, machineSize, coordinateSize, coordinateMode } = this.props;
+            if (mesh !== prevProps.mesh || materials.isRotate !== prevProps.materials.isRotate
+                || materials.diameter !== prevProps.materials.diameter
+                || materials.length !== prevProps.materials.length
+                || transformation !== prevProps.transformation || direction !== prevProps.direction
+                || prevProps.coordinateSize !== coordinateSize
+                || prevProps.coordinateMode !== coordinateMode
+                || prevProps.placement !== placement
             ) {
                 const t = getModelTransformation(transformation, machineSize, coordinateMode, coordinateSize);
                 mesh.remove(...mesh.children);
                 mesh.material = new MeshPhongMaterial({ color: 0xa0a0a0, specular: 0xb0b0b0, shininess: 0 });
-
                 setMeshTransform(mesh, sourceScale, t, materials.isRotate, direction, placement);
-                if (!this.cameraInitialPosition || machineSize.z !== this.props.machineSize.z) {
-                    this.cameraInitialPosition = new Vector3(0, -machineSize.z * 1.3, 0);
+                if (!this.cameraInitialPosition || machineSize.z !== prevProps.machineSize.z) {
+                    this.setState({
+                        cameraInitialPosition: new Vector3(0, -machineSize.z * 1.3, 0)
+                    });
                 }
-
                 if (materials.isRotate) {
                     set4AxisMeshState(mesh, t, materials, coordinateSize);
-
-                    this.environment = new Env4Axis(mesh, materials);
+                    this.setState({
+                        environment: new Env4Axis(mesh, materials)
+                    });
                     this.worldTransform = new Matrix4().makeRotationY(Math.PI);
                 } else {
                     const meshSize = getMeshSize(mesh);
                     const platSize = { x: coordinateSize?.x ?? machineSize.x, y: meshSize.y, z: coordinateSize?.y ?? machineSize.z };
 
                     set3AxisMeshState(mesh, t, platSize);
-
-                    this.environment = new Env3Axis(platSize);
+                    this.setState({
+                        environment: new Env3Axis(platSize)
+                    });
                     this.worldTransform = new Matrix4();
                 }
             }
+            if (this.props.progress !== prevProps.progress && this.props.progress === 1) {
+                this.props.selectTargetModel(selectedModel, 'cnc');
+            }
         }
+        return prevProps;
     }
 
     render() {
-        const { mesh, hasModel, show } = this.props;
+        const { mesh, hasModel, show, visible } = this.props;
         return (
             <React.Fragment>
                 {hasModel && (
@@ -232,9 +286,10 @@ class Cnc3DVisualizer extends PureComponent {
                                 <div className="padding-vertical-4 padding-horizontal-4 'background-color-white">
                                     <Canvas
                                         mesh={mesh}
-                                        environment={this.environment}
-                                        cameraInitialPosition={this.cameraInitialPosition}
+                                        environment={this.state.environment}
+                                        cameraInitialPosition={this.state.cameraInitialPosition}
                                         worldTransform={this.worldTransform}
+                                        visible={visible}
                                     />
                                 </div>
                             </div>
@@ -250,13 +305,15 @@ class Cnc3DVisualizer extends PureComponent {
 }
 
 const mapStateToProps = (state) => {
-    const { modelGroup, materials, SVGActions, coordinateMode, coordinateSize } = state.cnc;
+    const { modelGroup, materials, SVGActions, coordinateMode, coordinateSize, progress } = state.cnc;
     const { size } = state.machine;
-    let hasModel = false, mesh = null, transformation = null, direction = null, placement = null, sourceScale = null;
+    const selectedModel = modelGroup.getSelectedModel();
+    let hasModel = false, mesh = null, transformation = null, direction = null, placement = null, sourceScale = null, visible = true;
     if (modelGroup.selectedModelArray.length === 1 && modelGroup.selectedModelArray[0].image3dObj) {
         const model = modelGroup.selectedModelArray[0];
         hasModel = true;
         mesh = model.image3dObj;
+        visible = model.visible;
         transformation = SVGActions.getSelectedElementsTransformation();
         direction = model.config.direction;
         placement = model.config.placement;
@@ -273,13 +330,17 @@ const mapStateToProps = (state) => {
         placement,
         machineSize: size,
         coordinateMode,
-        coordinateSize
+        coordinateSize,
+        visible,
+        selectedModel,
+        progress
     };
 };
 
 const mapDispatchToProps = (dispatch) => {
     return {
-        updateStlVisualizer: (val) => dispatch(cncActions.updateStlVisualizer(val))
+        updateStlVisualizer: (val) => dispatch(cncActions.updateStlVisualizer(val)),
+        selectTargetModel: (model, headType) => dispatch(editorActions.selectTargetModel(model, headType))
     };
 };
 

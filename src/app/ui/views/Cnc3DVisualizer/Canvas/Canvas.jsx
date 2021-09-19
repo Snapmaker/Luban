@@ -19,7 +19,8 @@ class Canvas extends Component {
         mesh: PropTypes.object.isRequired,
         environment: PropTypes.object,
         worldTransform: PropTypes.object,
-        cameraInitialPosition: PropTypes.object
+        cameraInitialPosition: PropTypes.object,
+        visible: PropTypes.bool
 
     };
 
@@ -50,7 +51,7 @@ class Canvas extends Component {
 
     componentDidMount() {
         this.setupScene();
-        this.group.add(this.props.mesh);
+        this.group.add(this.props.visible ? this.props.mesh : null);
         if (this.props.environment) {
             this.group.add(this.props.environment);
         }
@@ -64,28 +65,31 @@ class Canvas extends Component {
         // window.addEventListener('resize', this.resizeWindow, false);
     }
 
-    componentWillReceiveProps(nextProps) {
-        if (nextProps.mesh !== this.props.mesh) {
-            this.group.add(nextProps.mesh);
-            this.renderScene();
-        }
-        if (nextProps.environment !== this.props.environment) {
-            this.group.remove(this.props.environment);
-            this.group.add(nextProps.environment);
-            this.renderScene();
-        }
-        if (nextProps.cameraInitialPosition !== this.props.cameraInitialPosition) {
-            this.setCamera(nextProps.cameraInitialPosition, this.initialTarget);
-            this.renderScene();
-        }
-        if (nextProps.worldTransform !== this.props.worldTransform) {
-            this.group.applyMatrix(new Matrix4().getInverse(this.group.matrix));
-            if (nextProps.worldTransform) {
-                this.group.applyMatrix(nextProps.worldTransform);
-            }
+    // componentWillReceiveProps(nextProps) {
+    //     if (nextProps.mesh !== this.props.mesh) {
+    //         this.group.add(nextProps.mesh);
+    //         this.renderScene();
+    //     }
+    //     if (nextProps.environment !== this.props.environment) {
+    //         this.group.remove(this.props.environment);
+    //         this.group.add(nextProps.environment);
+    //         this.renderScene();
+    //     }
+    //     if (nextProps.cameraInitialPosition !== this.props.cameraInitialPosition) {
+    //         this.setCamera(nextProps.cameraInitialPosition, this.initialTarget);
+    //         this.renderScene();
+    //     }
+    //     if (nextProps.worldTransform !== this.props.worldTransform) {
+    //         this.group.applyMatrix(new Matrix4().getInverse(this.group.matrix));
+    //         if (nextProps.worldTransform) {
+    //             this.group.applyMatrix(nextProps.worldTransform);
+    //         }
 
-            this.renderScene();
-        }
+    //         this.renderScene();
+    //     }
+    // }
+    componentDidUpdate() {
+
     }
 
     componentWillUnmount() {
@@ -101,6 +105,34 @@ class Canvas extends Component {
         }
     }
 
+    getSnapshotBeforeUpdate(prevProps) {
+        if (prevProps.mesh !== this.props.mesh || prevProps.visible !== this.props.visible) {
+            if (this.props.visible) {
+                this.group.add(this.props.mesh);
+            } else {
+                this.group.remove(prevProps.mesh);
+            }
+            this.renderScene();
+        }
+        if (prevProps.environment !== this.props.environment) {
+            this.group.remove(prevProps.environment);
+            this.group.add(this.props.environment);
+            this.renderScene();
+        }
+        if (prevProps.cameraInitialPosition !== this.props.cameraInitialPosition) {
+            this.setCamera(this.props.cameraInitialPosition, this.initialTarget);
+            this.renderScene();
+        }
+        if (prevProps.worldTransform !== this.props.worldTransform) {
+            this.group.applyMatrix(new Matrix4().getInverse(this.group.matrix));
+            if (this.props.worldTransform) {
+                this.group.applyMatrix(this.props.worldTransform);
+            }
+
+            this.renderScene();
+        }
+        return prevProps;
+    }
 
     getVisibleWidth() {
         return this.node.current.parentElement.clientWidth;
@@ -113,7 +145,6 @@ class Canvas extends Component {
     setupScene() {
         const width = 400;
         const height = 260;
-
         this.setCamera(this.props.cameraInitialPosition || new Vector3(0, 0, 0), this.initialTarget);
         this.camera.aspect = width / height;
         this.camera.updateProjectionMatrix();
