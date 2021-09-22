@@ -3,26 +3,22 @@ const i18n = {
     _: () => {}
 };
 
-// quality name
-i18n._('key_constants/copy_Fast Print');
-i18n._('key_constants/copy_Normal Quality');
-i18n._('key_constants/copy_High Quality');
 // machine size name
-i18n._('key_constants/copy_Snapmaker Original');
-i18n._('key_constants/copy_Snapmaker Original');
-i18n._('key_constants/copy_Snapmaker Original with Z-axis Extension Module');
-i18n._('key_constants/copy_Snapmaker 2.0 A150');
-i18n._('key_constants/copy_Snapmaker 2.0 A250');
-i18n._('key_constants/copy_Snapmaker 2.0 A350');
-i18n._('key_constants/copy_Custom');
+// TODO, no used
+i18n._('key_machine_series_Snapmaker Original');
+i18n._('key_machine_series_Snapmaker Original with Z-axis Extension Module');
+i18n._('key_machine_series_Snapmaker 2.0 A150');
+i18n._('key_machine_series_Snapmaker 2.0 A250');
+i18n._('key_machine_series_Snapmaker 2.0 A350');
+i18n._('key_machine_series_Custom');
 
 // coordinate size name
-i18n._('key_constants/copy_Center');
-i18n._('key_constants/copy_Bottom Left');
-i18n._('key_constants/copy_Top Right');
-i18n._('key_constants/copy_Bottom Right');
-i18n._('key_constants/copy_Top Left');
-i18n._('key_constants/copy_Top');
+i18n._('key_job_setup_option_Center');
+i18n._('key_job_setup_option_Bottom Left');
+i18n._('key_job_setup_option_Top Right');
+i18n._('key_job_setup_option_Bottom Right');
+i18n._('key_job_setup_option_Top Left');
+i18n._('key_job_setup_option_Top');
 
 // main menu
 i18n._('key_menu_File');
