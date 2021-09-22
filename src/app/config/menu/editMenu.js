@@ -3,12 +3,12 @@ import UniApi from '../../lib/uni-api';
 
 export default {
     id: 'edit',
-    label: 'Edit',
+    label: 'key_menu_Edit',
     // active: true,
     submenu: [
         {
             id: 'undo',
-            label: 'Undo',
+            label: 'key_menu_Undo',
             accelerator: 'CommandOrControl+Z',
             enabled: true,
             click(menuItem, browserWindow) {
@@ -21,7 +21,7 @@ export default {
         },
         {
             id: 'redo',
-            label: 'Redo',
+            label: 'key_menu_Redo',
             accelerator: 'CommandOrControl+Shift+Z',
             enabled: true,
             click(menuItem, browserWindow) {
@@ -35,7 +35,7 @@ export default {
         { id: 'line-1', type: 'separator' },
         {
             id: 'cut',
-            label: 'Cut',
+            label: 'key_menu_Cut',
             enabled: true,
             click(menuItem, browserWindow) {
                 if (isElectron()) {
@@ -47,7 +47,7 @@ export default {
         },
         {
             id: 'copy',
-            label: 'Copy',
+            label: 'key_menu_Copy',
             enabled: true,
             click(menuItem, browserWindow) {
                 if (isElectron()) {
@@ -59,7 +59,7 @@ export default {
         },
         {
             id: 'duplicate',
-            label: 'Duplicate',
+            label: 'key_menu_Duplicate',
             accelerator: 'CommandOrControl+D',
             enabled: true,
             click(menuItem, browserWindow) {
@@ -72,7 +72,7 @@ export default {
         },
         {
             id: 'paste',
-            label: 'Paste',
+            label: 'key_menu_Paste',
             enabled: true,
             click(menuItem, browserWindow) {
                 if (isElectron()) {
@@ -85,7 +85,7 @@ export default {
         { id: 'line-2', type: 'separator' },
         {
             id: 'select-all',
-            label: 'Select All',
+            label: 'key_menu_Select All',
             accelerator: 'CommandOrControl+A',
             enabled: true,
             click(menuItem, browserWindow) {
@@ -98,7 +98,7 @@ export default {
         },
         {
             id: 'unselect',
-            label: 'Unselect',
+            label: 'key_menu_Unselect',
             // accelerator: 'CommandOrControl',
             enabled: true,
             click(menuItem, browserWindow) {
@@ -112,7 +112,7 @@ export default {
         { id: 'line-3', type: 'separator' },
         {
             id: 'delete',
-            label: 'Delete',
+            label: 'key_menu_Delete',
             accelerator: 'Delete',
             enabled: true,
             click(menuItem, browserWindow) {
@@ -126,24 +126,24 @@ export default {
         { id: 'line-4', type: 'separator' },
         {
             id: 'text-editor',
-            label: 'Text-editor',
+            label: 'key_menu_Text-editor',
             submenu: [
                 {
                     id: 'cut-original',
                     role: 'cut',
-                    label: 'Cut Original',
+                    label: 'key_menu_Cut Original',
                     accelerator: 'CommandOrControl+X'
                 },
                 {
                     id: 'copy-original',
                     role: 'copy',
-                    label: 'Copy Original',
+                    label: 'key_menu_Copy Original',
                     accelerator: 'CommandOrControl+C'
                 },
                 {
                     id: 'paste-original',
                     role: 'paste',
-                    label: 'Paste Original',
+                    label: 'key_menu_Paste Original',
                     accelerator: 'CommandOrControl+V'
                 }
             ]

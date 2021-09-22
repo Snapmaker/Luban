@@ -3,11 +3,11 @@ import UniApi from '../../lib/uni-api';
 
 export default {
     id: 'settings',
-    label: 'Settings',
+    label: 'key_menu_Settings',
     submenu: [
         {
             id: 'machine-settings',
-            label: 'Machine Settings',
+            label: 'key_menu_Machine Settings',
             enabled: true,
             click: (menuItem, browserWindow) => {
                 if (isElectron()) {
@@ -23,7 +23,7 @@ export default {
         },
         {
             id: 'language',
-            label: 'Language',
+            label: 'key_menu_Language',
             enabled: true,
             click: (menuItem, browserWindow) => {
                 if (isElectron()) {
@@ -40,7 +40,7 @@ export default {
         { id: 'line-1', type: 'separator' },
         {
             id: 'preferences',
-            label: 'Preferences',
+            label: 'key_menu_Preferences',
             enabled: true,
             click: (menuItem, browserWindow) => {
                 if (isElectron()) {

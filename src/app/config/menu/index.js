@@ -24,26 +24,26 @@ function getMenuItems() {
         menuItems.unshift({
             label: window.require('electron').remote.app.getName(), // 'Snapmaker Luban'
             submenu: [
-                { role: 'about', label: 'About' },
+                { role: 'about', label: 'key_menu_About' },
                 { type: 'separator' },
                 {
-                    label: 'Preferences',
+                    label: 'key_menu_Preferences',
                     accelerator: 'CommandOrControl+,',
                     click: onClickPreferences
                 },
                 { type: 'separator' },
-                { role: 'services', label: 'Services', submenu: [] },
+                { role: 'services', label: 'key_menu_Services', submenu: [] },
                 { type: 'separator' },
                 {
                     role: 'hide',
-                    label: 'Hide'
+                    label: 'key_menu_Hide'
                 },
-                { role: 'hideothers', label: 'Hide Others' },
-                { role: 'unhide', label: 'Unhide' },
+                { role: 'hideothers', label: 'key_menu_Hide Others' },
+                { role: 'unhide', label: 'key_menu_Unhide' },
                 { type: 'separator' },
                 {
                     role: 'quit',
-                    label: 'Quit'
+                    label: 'key_menu_Quit'
                 }
             ]
         });

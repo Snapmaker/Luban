@@ -3,11 +3,11 @@ import UniApi from '../../lib/uni-api';
 
 export default {
     id: 'help',
-    label: 'Help',
+    label: 'key_menu_Help',
     submenu: [
         {
             id: 'guided-tour',
-            label: 'Beginner\'s Guide',
+            label: 'key_menu_Beginner\'s Guide',
             enabled: true,
             click: (menuItem, browserWindow) => {
                 if (isElectron()) {
@@ -18,7 +18,7 @@ export default {
             }
         },
         {
-            label: 'Software Manual',
+            label: 'key_menu_Software Manual',
             id: 'software-manual',
             enabled: true,
             click: (menuItem, browserWindow) => {
@@ -30,7 +30,7 @@ export default {
             }
         },
         {
-            label: 'Video Tutorial',
+            label: 'key_menu_Video Tutorial',
             id: 'video-tutorials',
             enabled: true,
             click: (menuItem, browserWindow) => {
@@ -42,7 +42,7 @@ export default {
             }
         },
         {
-            label: 'Snapmaker.com',
+            label: 'key_menu_Snapmaker.com',
             id: 'official-website',
             enabled: true,
             click: (menuItem, browserWindow) => {
@@ -54,7 +54,7 @@ export default {
             }
         },
         {
-            label: 'MyMiniFactory',
+            label: 'key_menu_MyMiniFactory',
             id: 'my-minifactory',
             enabled: true,
             click: (menuItem, browserWindow) => {
@@ -66,7 +66,7 @@ export default {
             }
         },
         {
-            label: 'Software Support',
+            label: 'key_menu_Software Support',
             id: 'supports',
             enabled: true,
             click: (menuItem, browserWindow) => {
@@ -78,7 +78,7 @@ export default {
             }
         },
         {
-            label: 'Forum',
+            label: 'key_menu_Forum',
             id: 'forum',
             enabled: true,
             click: (menuItem, browserWindow) => {
@@ -90,7 +90,7 @@ export default {
             }
         },
         {
-            label: 'Shopify',
+            label: 'key_menu_Shopify',
             id: 'shopify',
             enabled: true,
             click: (menuItem, browserWindow) => {
@@ -102,7 +102,7 @@ export default {
             }
         },
         {
-            label: 'Software Update',
+            label: 'key_menu_Software Update',
             id: 'software-update',
             enabled: true,
             click: (menuItem, browserWindow) => {
@@ -114,7 +114,7 @@ export default {
             }
         },
         {
-            label: 'Firmware Tool',
+            label: 'key_menu_Firmware Tool',
             id: 'firmware-tool',
             enabled: true,
             click: (menuItem, browserWindow) => {
