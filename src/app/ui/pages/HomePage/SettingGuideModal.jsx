@@ -7,7 +7,18 @@ import { includes } from 'lodash';
 import Uri from 'jsuri';
 import i18n from '../../../lib/i18n';
 import styles from './styles.styl';
-import { MACHINE_SERIES, MACHINE_TOOL_HEAD } from '../../../constants';
+import { MACHINE_SERIES,
+    MACHINE_TOOL_HEADS,
+    SINGLE_EXTRUDER_TOOLHEAD_FOR_ORIGINAL,
+    SINGLE_EXTRUDER_TOOLHEAD_FOR_SM2,
+    DUAL_EXTRUDER_TOOLHEAD_FOR_SM2,
+    LEVEL_ONE_POWER_LASER_FOR_ORIGINAL,
+    LEVEL_TWO_POWER_LASER_FOR_ORIGINAL,
+    LEVEL_ONE_POWER_LASER_FOR_SM2,
+    LEVEL_TWO_POWER_LASER_FOR_SM2,
+    STANDARD_CNC_TOOLHEAD_FOR_ORIGINAL,
+    STANDARD_CNC_TOOLHEAD_FOR_SM2
+} from '../../../constants';
 import { actions as machineActions } from '../../../flux/machine';
 import { machineStore } from '../../../store/local-storage';
 
@@ -82,47 +93,47 @@ const languageOptions = [
 ];
 const printingToolHeadOption = [
     {
-        value: MACHINE_TOOL_HEAD.singleExtruderToolheadForSM2.value,
-        label: MACHINE_TOOL_HEAD.singleExtruderToolheadForSM2.label
+        value: MACHINE_TOOL_HEADS[SINGLE_EXTRUDER_TOOLHEAD_FOR_SM2].value,
+        label: MACHINE_TOOL_HEADS[SINGLE_EXTRUDER_TOOLHEAD_FOR_SM2].label
     }, {
-        value: MACHINE_TOOL_HEAD.dualExtruderToolheadForSM2.value,
-        label: MACHINE_TOOL_HEAD.dualExtruderToolheadForSM2.label
+        value: MACHINE_TOOL_HEADS[DUAL_EXTRUDER_TOOLHEAD_FOR_SM2].value,
+        label: MACHINE_TOOL_HEADS[DUAL_EXTRUDER_TOOLHEAD_FOR_SM2].label
     }
 ];
 const printingToolHeadOptionForOriginal = [
     {
-        value: MACHINE_TOOL_HEAD.singleExtruderToolheadForOriginal.value,
-        label: MACHINE_TOOL_HEAD.singleExtruderToolheadForOriginal.label
+        value: MACHINE_TOOL_HEADS[SINGLE_EXTRUDER_TOOLHEAD_FOR_ORIGINAL].value,
+        label: MACHINE_TOOL_HEADS[SINGLE_EXTRUDER_TOOLHEAD_FOR_ORIGINAL].label
     }
 ];
 const laserToolHeadOption = [
     {
-        value: MACHINE_TOOL_HEAD.levelOneLaserToolheadForSM2.value,
-        label: MACHINE_TOOL_HEAD.levelOneLaserToolheadForSM2.label
+        value: MACHINE_TOOL_HEADS[LEVEL_ONE_POWER_LASER_FOR_SM2].value,
+        label: MACHINE_TOOL_HEADS[LEVEL_ONE_POWER_LASER_FOR_SM2].label
     }, {
-        value: MACHINE_TOOL_HEAD.levelTwoLaserToolheadForSM2.value,
-        label: MACHINE_TOOL_HEAD.levelTwoLaserToolheadForSM2.label
+        value: MACHINE_TOOL_HEADS[LEVEL_TWO_POWER_LASER_FOR_SM2].value,
+        label: MACHINE_TOOL_HEADS[LEVEL_TWO_POWER_LASER_FOR_SM2].label
     }
 ];
 const laserToolHeadOptionForOriginal = [
     {
-        value: MACHINE_TOOL_HEAD.levelOneLaserToolheadForOriginal.value,
-        label: MACHINE_TOOL_HEAD.levelOneLaserToolheadForOriginal.label
+        value: MACHINE_TOOL_HEADS[LEVEL_ONE_POWER_LASER_FOR_ORIGINAL].value,
+        label: MACHINE_TOOL_HEADS[LEVEL_ONE_POWER_LASER_FOR_ORIGINAL].label
     }, {
-        value: MACHINE_TOOL_HEAD.levelTwoLaserToolheadForOriginal.value,
-        label: MACHINE_TOOL_HEAD.levelTwoLaserToolheadForOriginal.label
+        value: MACHINE_TOOL_HEADS[LEVEL_TWO_POWER_LASER_FOR_ORIGINAL].value,
+        label: MACHINE_TOOL_HEADS[LEVEL_TWO_POWER_LASER_FOR_ORIGINAL].label
     }
 ];
 const cncToolHeadOptionForOriginal = [
     {
-        value: MACHINE_TOOL_HEAD.standardCNCToolheadForOriginal.value,
-        label: MACHINE_TOOL_HEAD.standardCNCToolheadForOriginal.label
+        value: MACHINE_TOOL_HEADS[STANDARD_CNC_TOOLHEAD_FOR_ORIGINAL].value,
+        label: MACHINE_TOOL_HEADS[STANDARD_CNC_TOOLHEAD_FOR_ORIGINAL].label
     }
 ];
 const cncToolHeadOption = [
     {
-        value: MACHINE_TOOL_HEAD.standardCNCToolheadForSM2.value,
-        label: MACHINE_TOOL_HEAD.standardCNCToolheadForSM2.label
+        value: MACHINE_TOOL_HEADS[STANDARD_CNC_TOOLHEAD_FOR_SM2].value,
+        label: MACHINE_TOOL_HEADS[STANDARD_CNC_TOOLHEAD_FOR_SM2].label
     }
 ];
 const SettingGuideModal = (props) => {
@@ -134,18 +145,18 @@ const SettingGuideModal = (props) => {
     const [settingStep, setSettingStep] = useState('lang');
     const [machineSeries, setMachineSeries] = useState(3);
     const [zAxis, setZAxis] = useState(false);
-    const [printingToolheadSelected, setPrintingToolheadSelected] = useState(MACHINE_TOOL_HEAD.singleExtruderToolheadForSM2.value);
-    const [laserToolheadSelected, setLaserToolheadSelected] = useState(MACHINE_TOOL_HEAD.levelOneLaserToolheadForSM2.value);
-    const [cncToolheadSelected, setCncToolheadSelected] = useState(MACHINE_TOOL_HEAD.standardCNCToolheadForSM2.value);
+    const [printingToolheadSelected, setPrintingToolheadSelected] = useState(MACHINE_TOOL_HEADS[SINGLE_EXTRUDER_TOOLHEAD_FOR_SM2].value);
+    const [laserToolheadSelected, setLaserToolheadSelected] = useState(MACHINE_TOOL_HEADS[LEVEL_ONE_POWER_LASER_FOR_SM2].value);
+    const [cncToolheadSelected, setCncToolheadSelected] = useState(MACHINE_TOOL_HEADS[STANDARD_CNC_TOOLHEAD_FOR_SM2].value);
     useEffect(() => {
         if (!machineSeries) {
-            setPrintingToolheadSelected(MACHINE_TOOL_HEAD.singleExtruderToolheadForOriginal.value);
-            setLaserToolheadSelected(MACHINE_TOOL_HEAD.levelOneLaserToolheadForOriginal.value);
-            setCncToolheadSelected(MACHINE_TOOL_HEAD.standardCNCToolheadForOriginal.value);
+            setPrintingToolheadSelected(MACHINE_TOOL_HEADS[SINGLE_EXTRUDER_TOOLHEAD_FOR_ORIGINAL].value);
+            setLaserToolheadSelected(MACHINE_TOOL_HEADS[LEVEL_ONE_POWER_LASER_FOR_ORIGINAL].value);
+            setCncToolheadSelected(MACHINE_TOOL_HEADS[STANDARD_CNC_TOOLHEAD_FOR_ORIGINAL].value);
         } else {
-            setPrintingToolheadSelected(MACHINE_TOOL_HEAD.singleExtruderToolheadForSM2.value);
-            setLaserToolheadSelected(MACHINE_TOOL_HEAD.levelOneLaserToolheadForSM2.value);
-            setCncToolheadSelected(MACHINE_TOOL_HEAD.standardCNCToolheadForSM2.value);
+            setPrintingToolheadSelected(MACHINE_TOOL_HEADS[SINGLE_EXTRUDER_TOOLHEAD_FOR_SM2].value);
+            setLaserToolheadSelected(MACHINE_TOOL_HEADS[LEVEL_ONE_POWER_LASER_FOR_SM2].value);
+            setCncToolheadSelected(MACHINE_TOOL_HEADS[STANDARD_CNC_TOOLHEAD_FOR_SM2].value);
         }
     }, [machineSeries]);
 
@@ -186,9 +197,9 @@ const SettingGuideModal = (props) => {
     };
     const handleCancel = () => {
         const toolHead = {
-            printingToolhead: MACHINE_TOOL_HEAD.singleExtruderToolheadForSM2.value,
-            laserToolhead: MACHINE_TOOL_HEAD.levelOneLaserToolheadForSM2.value,
-            cncToolhead: MACHINE_TOOL_HEAD.standardCNCToolheadForSM2.value
+            printingToolhead: MACHINE_TOOL_HEADS[SINGLE_EXTRUDER_TOOLHEAD_FOR_SM2].value,
+            laserToolhead: MACHINE_TOOL_HEADS[LEVEL_ONE_POWER_LASER_FOR_SM2].value,
+            cncToolhead: MACHINE_TOOL_HEADS[STANDARD_CNC_TOOLHEAD_FOR_SM2].value
         };
         dispatch(machineActions.updateMachineSeries('A350'));
         dispatch(machineActions.updateMachineToolHead(toolHead, 'A350'));

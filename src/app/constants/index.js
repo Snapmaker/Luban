@@ -750,18 +750,24 @@ export const MACHINE_SERIES = {
     }
 };
 
-const SINGLE_EXTRUDER_TOOLHEAD = 'Single Extruder Toolhead';
-const DUAL_EXTRUDER_TOOLHEAD = 'Dual Extruder Toolhead';
-const LOWEST_POWER_LASER_TOOLHEAD = '200mW';
-const LOW_POWER_LASER_TOOLHEAD = '1600mW';
-const HIGH_POWER_LASER_TOOLHEAD = '10W';
-const STANDARD_CNC_TOOLHEAD = 'Standard';
-export const MACHINE_TOOL_HEAD = {
-    singleExtruderToolheadForOriginal: {
+export const SINGLE_EXTRUDER_TOOLHEAD_FOR_ORIGINAL = 'singleExtruderToolheadForOriginal';
+export const SINGLE_EXTRUDER_TOOLHEAD_FOR_SM2 = 'singleExtruderToolheadForSM2';
+export const DUAL_EXTRUDER_TOOLHEAD_FOR_SM2 = 'dualExtruderToolheadForSM2';
+export const LEVEL_ONE_POWER_LASER_FOR_ORIGINAL = 'levelOneLaserToolheadForOriginal';
+export const LEVEL_TWO_POWER_LASER_FOR_ORIGINAL = 'levelTwoLaserToolheadForOriginal';
+export const LEVEL_ONE_POWER_LASER_FOR_SM2 = 'levelOneLaserToolheadForSM2';
+export const LEVEL_TWO_POWER_LASER_FOR_SM2 = 'levelTwoLaserToolheadForSM2';
+export const STANDARD_CNC_TOOLHEAD_FOR_ORIGINAL = 'standardCNCToolheadForOriginal';
+export const STANDARD_CNC_TOOLHEAD_FOR_SM2 = 'standardCNCToolheadForSM2';
+
+export const MACHINE_TOOL_HEADS = {
+    [SINGLE_EXTRUDER_TOOLHEAD_FOR_ORIGINAL]: {
         platform: [MACHINE_SERIES.ORIGINAL.value, MACHINE_SERIES.ORIGINAL_LZ.value],
-        value: 'single-extruder-original',
+        value: SINGLE_EXTRUDER_TOOLHEAD_FOR_ORIGINAL,
         key: 'singleExtruderToolheadForOriginal',
-        label: SINGLE_EXTRUDER_TOOLHEAD,
+        pathname: 'single',
+        // label: SINGLE_EXTRUDER_TOOLHEAD,
+        label: 'Single Extruder Toolhead',
         // mock offset data
         offset: {
             x: 0,
@@ -769,10 +775,11 @@ export const MACHINE_TOOL_HEAD = {
             z: 0
         }
     },
-    levelOneLaserToolheadForOriginal: {
+    [LEVEL_ONE_POWER_LASER_FOR_ORIGINAL]: {
         platform: [MACHINE_SERIES.ORIGINAL.value, MACHINE_SERIES.ORIGINAL_LZ.value],
-        value: '200mw-laser-original',
-        label: LOWEST_POWER_LASER_TOOLHEAD,
+        value: LEVEL_ONE_POWER_LASER_FOR_ORIGINAL,
+        label: '200mW',
+        pathname: '200mw',
         key: 'levelOneLaserToolheadForOriginal',
         // mock offset data
         offset: {
@@ -781,10 +788,11 @@ export const MACHINE_TOOL_HEAD = {
             z: 0
         }
     },
-    levelTwoLaserToolheadForOriginal: {
+    [LEVEL_TWO_POWER_LASER_FOR_ORIGINAL]: {
         platform: [MACHINE_SERIES.ORIGINAL.value, MACHINE_SERIES.ORIGINAL_LZ.value],
-        value: '1600mw-laser-original',
-        label: LOW_POWER_LASER_TOOLHEAD,
+        value: LEVEL_TWO_POWER_LASER_FOR_ORIGINAL,
+        label: '1600mW',
+        pathname: '1600mw',
         key: 'levelTwoLaserToolheadForOriginal',
         // mock offset data
         offset: {
@@ -793,11 +801,12 @@ export const MACHINE_TOOL_HEAD = {
             z: 0
         }
     },
-    standardCNCToolheadForOriginal: {
+    [STANDARD_CNC_TOOLHEAD_FOR_ORIGINAL]: {
         platform: [MACHINE_SERIES.ORIGINAL.value, MACHINE_SERIES.ORIGINAL_LZ.value],
-        value: 'standard-cnc-original',
+        value: STANDARD_CNC_TOOLHEAD_FOR_ORIGINAL,
         key: 'standardCNCToolheadForOriginal',
-        label: STANDARD_CNC_TOOLHEAD,
+        label: 'Standard',
+        pathname: 'standard',
         // mock offset data
         offset: {
             x: 0,
@@ -805,11 +814,13 @@ export const MACHINE_TOOL_HEAD = {
             z: 0
         }
     },
-    singleExtruderToolheadForSM2: {
+    [SINGLE_EXTRUDER_TOOLHEAD_FOR_SM2]: {
         platform: [MACHINE_SERIES.A150.value, MACHINE_SERIES.A250.value, MACHINE_SERIES.A350.value],
-        value: 'single-extruder-sm-2',
+        value: SINGLE_EXTRUDER_TOOLHEAD_FOR_SM2,
         key: 'singleExtruderToolheadForSM2',
-        label: SINGLE_EXTRUDER_TOOLHEAD,
+        pathname: 'single',
+        // label: SINGLE_EXTRUDER_TOOLHEAD,
+        label: 'Single Extruder Toolhead',
         // mock offset data
         offset: {
             x: 0,
@@ -817,11 +828,12 @@ export const MACHINE_TOOL_HEAD = {
             z: 0
         }
     },
-    dualExtruderToolheadForSM2: {
+    [DUAL_EXTRUDER_TOOLHEAD_FOR_SM2]: {
         platform: [MACHINE_SERIES.A150.value, MACHINE_SERIES.A250.value, MACHINE_SERIES.A350.value],
-        value: 'dual-extruder-sm-2',
+        value: DUAL_EXTRUDER_TOOLHEAD_FOR_SM2,
+        pathname: 'dual',
         key: 'dualExtruderToolheadForSM2',
-        label: DUAL_EXTRUDER_TOOLHEAD,
+        label: 'Dual Extruder Toolhead',
         // mock offset data
         offset: {
             x: 0,
@@ -829,11 +841,12 @@ export const MACHINE_TOOL_HEAD = {
             z: 0
         }
     },
-    levelOneLaserToolheadForSM2: {
+    [LEVEL_ONE_POWER_LASER_FOR_SM2]: {
         platform: [MACHINE_SERIES.A150.value, MACHINE_SERIES.A250.value, MACHINE_SERIES.A350.value],
-        value: '1600mw-laser-sm-2',
+        value: LEVEL_ONE_POWER_LASER_FOR_SM2,
+        pathname: '1600mw',
         key: 'levelOneLaserToolheadForSM2',
-        label: LOW_POWER_LASER_TOOLHEAD,
+        label: '1600mW',
         // mock offset data
         offset: {
             x: 0,
@@ -841,10 +854,11 @@ export const MACHINE_TOOL_HEAD = {
             z: 0
         }
     },
-    levelTwoLaserToolheadForSM2: {
+    [LEVEL_TWO_POWER_LASER_FOR_SM2]: {
         platform: [MACHINE_SERIES.A150.value, MACHINE_SERIES.A250.value, MACHINE_SERIES.A350.value],
-        value: '10w-laser-sm-2',
-        label: HIGH_POWER_LASER_TOOLHEAD,
+        value: LEVEL_TWO_POWER_LASER_FOR_SM2,
+        pathname: '10w',
+        label: '10W',
         key: 'levelTwoLaserToolheadForSM2',
         // mock offset data
         offset: {
@@ -853,11 +867,12 @@ export const MACHINE_TOOL_HEAD = {
             z: 0
         }
     },
-    standardCNCToolheadForSM2: {
+    [STANDARD_CNC_TOOLHEAD_FOR_SM2]: {
         platform: [MACHINE_SERIES.A150.value, MACHINE_SERIES.A250.value, MACHINE_SERIES.A350.value],
-        value: 'standard-cnc-sm-2',
+        value: STANDARD_CNC_TOOLHEAD_FOR_SM2,
         key: 'standardCNCToolheadForSM2',
-        label: STANDARD_CNC_TOOLHEAD,
+        pathname: 'standard',
+        label: 'Standard',
         // mock offset data
         offset: {
             x: 0,
@@ -1015,35 +1030,22 @@ export function getCurrentHeadType(pathname) {
     return headType;
 }
 
-export function getMachineSeriesWithToolhead(platform, toolhead) {
+export function getMachineSeriesWithToolhead(platform, toolhead, headType) {
+    headType = headType || getCurrentHeadType(window.location.href) || HEAD_PRINTING;
     const seriesInfo = valueOf(MACHINE_SERIES, 'value', platform) || MACHINE_SERIES.ORIGINAL;
-    const isOriginal = (platform !== 'A150' && platform !== 'A250' && platform !== 'A350');
     const size = seriesInfo ? seriesInfo.setting?.size : MACHINE_SERIES.ORIGINAL.setting.size;
-    const headTypes = {
-        printing: valueOf(MACHINE_TOOL_HEAD, 'value', toolhead.printingToolhead) || (isOriginal ? MACHINE_TOOL_HEAD.singleExtruderToolheadForOriginal : MACHINE_TOOL_HEAD.singleExtruderToolheadForSM2),
-        laser: valueOf(MACHINE_TOOL_HEAD, 'value', toolhead.laserToolhead) || (isOriginal ? MACHINE_TOOL_HEAD.levelOneLaserToolheadForOriginal : MACHINE_TOOL_HEAD.levelOneLaserToolheadForSM2),
-        cnc: valueOf(MACHINE_TOOL_HEAD, 'value', toolhead.cncToolhead) || ((isOriginal ? MACHINE_TOOL_HEAD.standardCNCToolheadForOriginal : MACHINE_TOOL_HEAD.standardCNCToolheadForSM2))
-    };
+    const headToolInfo = MACHINE_TOOL_HEADS[toolhead[`${headType}Toolhead`]] || MACHINE_TOOL_HEADS[SINGLE_EXTRUDER_TOOLHEAD_FOR_SM2];
+    const seriesWithToolhead = `${headToolInfo?.pathname}${platform === 'Original Long Z-axis' ? 'Original' : platform}`;
     const workSize = {
-        printing: {
-            x: size.x - headTypes.printing.offset.x,
-            y: size.y - headTypes.printing.offset.y,
-            z: size.z - headTypes.printing.offset.z
-        },
-        laser: {
-            x: size.x - headTypes.laser.offset.x,
-            y: size.y - headTypes.laser.offset.y,
-            z: size.z - headTypes.laser.offset.z
-        },
-        cnc: {
-            x: size.x - headTypes.cnc.offset.x,
-            y: size.y - headTypes.cnc.offset.y,
-            z: size.z - headTypes.cnc.offset.z
+        [headType]: {
+            x: size.x - headToolInfo.offset.x,
+            y: size.y - headToolInfo.offset.y,
+            z: size.z - headToolInfo.offset.z
         }
     };
     return {
-        platform: seriesInfo,
-        headTypes: headTypes,
+        series: platform,
+        seriesWithToolhead,
         workSize: workSize
     };
 }

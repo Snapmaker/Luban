@@ -17,7 +17,10 @@ import {
     WORKFLOW_STATUS_PAUSED,
     WORKFLOW_STATUS_RUNNING,
     WORKFLOW_STATUS_UNKNOWN,
-    MACHINE_TOOL_HEAD,
+    MACHINE_TOOL_HEADS,
+    SINGLE_EXTRUDER_TOOLHEAD_FOR_ORIGINAL,
+    LEVEL_ONE_POWER_LASER_FOR_ORIGINAL,
+    STANDARD_CNC_TOOLHEAD_FOR_ORIGINAL,
     getMachineSeriesWithToolhead
 } from '../../constants';
 
@@ -39,9 +42,9 @@ import discoverActions from './action-discover';
 import connectActions from './action-connect';
 
 const INITIAL_MACHINE_SERIES_WITH_HEADTOOL = getMachineSeriesWithToolhead(MACHINE_SERIES.ORIGINAL.value, {
-    printingToolhead: MACHINE_TOOL_HEAD.singleExtruderToolheadForOriginal.value,
-    laserToolhead: MACHINE_TOOL_HEAD.levelOneLaserToolheadForOriginal.value,
-    cncToolhead: MACHINE_TOOL_HEAD.standardCNCToolheadForOriginal.value
+    printingToolhead: MACHINE_TOOL_HEADS[SINGLE_EXTRUDER_TOOLHEAD_FOR_ORIGINAL].value,
+    laserToolhead: MACHINE_TOOL_HEADS[LEVEL_ONE_POWER_LASER_FOR_ORIGINAL].value,
+    cncToolhead: MACHINE_TOOL_HEADS[STANDARD_CNC_TOOLHEAD_FOR_ORIGINAL].value
 });
 const INITIAL_STATE = {
     // region server discover
@@ -81,9 +84,9 @@ const INITIAL_STATE = {
     // Machine Info
     series: MACHINE_SERIES.ORIGINAL.value,
     toolHead: {
-        printingToolhead: MACHINE_TOOL_HEAD.singleExtruderToolheadForOriginal.value,
-        laserToolhead: MACHINE_TOOL_HEAD.levelOneLaserToolheadForOriginal.value,
-        cncToolhead: MACHINE_TOOL_HEAD.standardCNCToolheadForOriginal.value
+        printingToolhead: MACHINE_TOOL_HEADS[SINGLE_EXTRUDER_TOOLHEAD_FOR_ORIGINAL].value,
+        laserToolhead: MACHINE_TOOL_HEADS[LEVEL_ONE_POWER_LASER_FOR_ORIGINAL].value,
+        cncToolhead: MACHINE_TOOL_HEADS[STANDARD_CNC_TOOLHEAD_FOR_ORIGINAL].value
     },
     headType: null,
     canReselectMachine: false,
@@ -472,12 +475,12 @@ export const actions = {
         }
     },
 
-    updateMachineToolHead: (toolHead, series) => (dispatch, getState) => {
+    updateMachineToolHead: (toolHead, series, headType = null) => (dispatch, getState) => {
         machineStore.set('machine.toolHead', toolHead);
         const oldToolHead = getState().machine.toolHead;
         const oldSeries = getState().machine.series;
-        if (!_.isEqual(oldToolHead, toolHead) || oldSeries !== series) {
-            const seriesWithToolhead = getMachineSeriesWithToolhead(series, toolHead);
+        if (!_.isEqual(oldToolHead, toolHead) || oldSeries !== series || headType) {
+            const seriesWithToolhead = getMachineSeriesWithToolhead(series, toolHead, headType);
             dispatch(baseActions.updateState({ seriesWithToolhead }));
             if (!_.isEqual(oldToolHead, toolHead)) {
                 dispatch(baseActions.updateState({ toolHead }));
