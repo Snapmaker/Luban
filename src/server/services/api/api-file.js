@@ -51,6 +51,8 @@ export const set = async (req, res) => {
         if (!uploadName) {
             uploadName = generateRandomPathName(originalName);
         }
+        uploadName = uploadName.toLowerCase();
+
         const uploadPath = `${DataStorage.tmpDir}/${uploadName}`;
 
         mv(file.path, uploadPath, (err) => {
@@ -139,6 +141,7 @@ export const uploadGcodeFile = async (req, res) => {
         originalPath = file.path;
         originalName = removeSpecialChars(path.basename(file.name));
         uploadName = pathWithRandomSuffix(originalName);
+        uploadName = uploadName.toLowerCase();
         uploadPath = `${DataStorage.tmpDir}/${uploadName}`;
         mv(originalPath, uploadPath, (err) => {
             if (err) {

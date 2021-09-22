@@ -29,6 +29,7 @@
     "consolidate": "~0.15.1",
     "cookie-parser": "~1.4.3",
     "debug": "~3.1.0",
+    "earcut": "^2.2.3",
     "electron-store": "~5.1.1",
     "electron-updater": "~4.3.5",
     "ensure-array": "~1.0.0",
