@@ -29,7 +29,7 @@ const required = (value, props, components) => {
         }
 
         return (
-            <Error>{i18n._('This field is required.')}</Error>
+            <Error>{i18n._('key_lib/validations_This field is required.')}</Error>
         );
     }
 
@@ -39,14 +39,14 @@ const required = (value, props, components) => {
         }
 
         return (
-            <Error>{i18n._('This field is required.')}</Error>
+            <Error>{i18n._('key_lib/validations_This field is required.')}</Error>
         );
     }
 
     value = String(value).trim();
     if (!value) {
         return (
-            <Error>{i18n._('This field is required.')}</Error>
+            <Error>{i18n._('key_lib/validations_This field is required.')}</Error>
         );
     }
 
@@ -59,7 +59,7 @@ const password = (value, props, components) => {
 
     if (bothBlurred && bothChanged && components.password[0].value !== components.confirm[0].value) {
         return (
-            <Error>{i18n._('Passwords should be equal.')}</Error>
+            <Error>{i18n._('key_lib/validations_Passwords should be equal.')}</Error>
         );
     }
 

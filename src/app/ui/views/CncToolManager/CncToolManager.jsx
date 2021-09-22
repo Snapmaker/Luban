@@ -60,7 +60,7 @@ function CncToolManager({ closeToolManager, shouldSaveToolpath = false, saveTool
                 await dispatch(cncActions.updateToolDefinitionName(false, definition.definitionId, definition.name, selectedName));
                 return null;
             } catch (e) {
-                return Promise.reject(i18n._('Failed to rename. Name already exists.'));
+                return Promise.reject(i18n._('key_ui/views/CncToolManager/CncToolManager_Failed to rename. Name already exists.'));
             }
         },
         updateCategoryName: async (definition, selectedName) => {
@@ -76,7 +76,7 @@ function CncToolManager({ closeToolManager, shouldSaveToolpath = false, saveTool
                 }
                 return null;
             } catch (e) {
-                return Promise.reject(i18n._('Failed to rename. Name already exists.'));
+                return Promise.reject(i18n._('key_ui/views/CncToolManager/CncToolManager_Failed to rename. Name already exists.'));
             }
         },
         onCreateManagerDefinition: async (definition, name, isCategorySelected, isCreate) => {

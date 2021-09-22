@@ -33,25 +33,25 @@ class Settings extends PureComponent {
         {
             id: 'general',
             path: 'general',
-            title: i18n._('General'),
+            title: i18n._('key_ui/pages/Settings/Settings_General'),
             component: (props) => <General {...props} />
         },
         {
             id: 'machine',
             path: 'machine',
-            title: i18n._('Machine Settings'),
+            title: i18n._('key_ui/pages/Settings/Settings_Machine Settings'),
             component: (props) => <MachineSettings {...props} />
         }
         // {
         //     id: 'config',
         //     path: 'config',
-        //     title: i18n._('Config'),
+        //     title: i18n._('key_ui/pages/Settings/Settings_Config'),
         //     component: (props) => <Workspace {...props} />
         // },
         // {
         //     id: 'firmware',
         //     path: 'firmware',
-        //     title: i18n._('Firmware Tool'),
+        //     title: i18n._('key_ui/pages/Settings/Settings_Firmware Tool'),
         //     component: (props) => <FirmwareTool {...props} />
         // }
     ];
@@ -120,8 +120,8 @@ class Settings extends PureComponent {
         config: {
             restoreDefaults: async () => {
                 const confirmed = await confirm({
-                    title: i18n._('Reset All User Settings'),
-                    body: i18n._('Are you sure you want to restore the default settings?')
+                    title: i18n._('key_ui/pages/Settings/Settings_Reset All User Settings'),
+                    body: i18n._('key_ui/pages/Settings/Settings_Are you sure you want to restore the default settings?')
                 });
                 if (!confirmed) {
                     return;

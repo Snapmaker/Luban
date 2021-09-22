@@ -34,7 +34,7 @@ const ImageProcessMode = ({ changeSelectedModelMode, changeSelectedModelShowOrig
         <React.Fragment>
             <div className={classNames(styles['cnc-mode'], 'border-top-normal', 'margin-top-16')}>
                 <Anchor className="sm-flex height-32 margin-vertical-8" onClick={actions.onToggleExpand}>
-                    <span className="sm-flex-width heading-3">{i18n._('Processing Mode')}</span>
+                    <span className="sm-flex-width heading-3">{i18n._('key_ui/widgets/CNCPath/ImageProcessMode_Processing Mode')}</span>
                     <SvgIcon
                         name="DropdownLine"
                         size={24}
@@ -55,7 +55,7 @@ const ImageProcessMode = ({ changeSelectedModelMode, changeSelectedModelShowOrig
                                     >
                                         <i className={styles['cnc-mode__icon-greyscale']} />
                                     </Anchor>
-                                    <span>{i18n._('RELIEF')}</span>
+                                    <span>{i18n._('key_ui/widgets/CNCPath/ImageProcessMode_RELIEF')}</span>
                                 </div>
                             )}
                             {isSvg && (
@@ -66,16 +66,16 @@ const ImageProcessMode = ({ changeSelectedModelMode, changeSelectedModelShowOrig
                                     >
                                         <i className={styles['cnc-mode__icon-vector']} />
                                     </Anchor>
-                                    <span>{i18n._('VECTOR')}</span>
+                                    <span>{i18n._('key_ui/widgets/CNCPath/ImageProcessMode_VECTOR')}</span>
                                 </div>
                             )}
                         </div>
                         <TipTrigger
-                            title={i18n._('Show Original Image')}
-                            content={i18n._('Shows the original image.')}
+                            title={i18n._('key_ui/widgets/CNCPath/ImageProcessMode_Show Original Image')}
+                            content={i18n._('key_ui/widgets/CNCPath/ImageProcessMode_Shows the original image.')}
                         >
                             <div className="sm-flex height-32 margin-vertical-8">
-                                <span className="sm-flex-width">{i18n._('Show Original Image')}</span>
+                                <span className="sm-flex-width">{i18n._('key_ui/widgets/CNCPath/ImageProcessMode_Show Original Image')}</span>
                                 <Checkbox
                                     disabled={disabled}
                                     className="sm-flex-auto"

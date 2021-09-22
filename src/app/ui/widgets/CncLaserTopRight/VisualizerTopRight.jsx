@@ -66,12 +66,12 @@ const VisualizerTopRight = ({ headType }) => {
                         )}
                     >
                         <div className="border-bottom-normal padding-vertical-10 padding-horizontal-16 height-40">
-                            {i18n._('Preview Type')}
+                            {i18n._('key_ui/widgets/CncLaserTopRight/VisualizerTopRight_Preview Type')}
                         </div>
                         <div className="padding-vertical-16 padding-horizontal-16">
                             <div className="sm-flex justify-space-between height-24">
                                 <span>
-                                    {i18n._('Toolpath')}
+                                    {i18n._('key_ui/widgets/CncLaserTopRight/VisualizerTopRight_Toolpath')}
                                 </span>
                                 <Checkbox
                                     onChange={actions.switchShowToolPath}
@@ -80,7 +80,7 @@ const VisualizerTopRight = ({ headType }) => {
                             </div>
                             <div className="sm-flex justify-space-between height-24 margin-top-16">
                                 <span>
-                                    {i18n._('Simulation')}
+                                    {i18n._('key_ui/widgets/CncLaserTopRight/VisualizerTopRight_Simulation')}
                                 </span>
                                 <Checkbox
                                     onChange={actions.switchShowSimulation}

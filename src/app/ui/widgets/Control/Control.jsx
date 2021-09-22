@@ -320,7 +320,7 @@ function Control({ widgetId, widgetActions: _widgetActions }) {
     }
 
     useEffect(() => {
-        _widgetActions.setTitle(i18n._('Control'));
+        _widgetActions.setTitle(i18n._('key_ui/widgets/Control/Control_Control'));
         addControllerEvents();
         return () => {
             removeControllerEvents();
@@ -438,7 +438,7 @@ function Control({ widgetId, widgetActions: _widgetActions }) {
                     show={_canClick && state.keypadJogging}
                 >
                     <div className="sm-flex justify-space-between margin-vertical-8">
-                        <span>{i18n._('Keyboard Shortcuts')}</span>
+                        <span>{i18n._('key_ui/widgets/Control/Control_Keyboard Shortcuts')}</span>
                         <Switch
                             onClick={actions.toggleKeypadJogging}
                             disabled={!_canClick}
@@ -456,10 +456,10 @@ function Control({ widgetId, widgetActions: _widgetActions }) {
                     disabled={!_canClick}
                     onClick={() => dispatch(machineActions.executeGcodeAutoHome())}
                 >
-                    {i18n._('Home')}
+                    {i18n._('key_ui/widgets/Control/Control_Home')}
                 </Button>
                 <div>
-                    <span className="">{i18n._('Jog Speed')}</span>
+                    <span className="">{i18n._('key_ui/widgets/Control/Control_Jog Speed')}</span>
                     <Select
                         backspaceRemoves={false}
                         className="margin-left-8"

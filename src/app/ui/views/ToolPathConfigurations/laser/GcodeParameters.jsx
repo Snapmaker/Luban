@@ -136,7 +136,7 @@ class GcodeParameters extends PureComponent {
                                 size={24}
                                 type={['static']}
                             />
-                            <span>{i18n._('Fill')}</span>
+                            <span>{i18n._('key_ui/views/ToolPathConfigurations/laser/GcodeParameters_Fill')}</span>
                         </div>
                         <ToolParameters
                             settings={laserDefinitionFill}
@@ -154,7 +154,7 @@ class GcodeParameters extends PureComponent {
                             size={24}
                             type={['static']}
                         />
-                        <span>{i18n._('Speed')}</span>
+                        <span>{i18n._('key_ui/views/ToolPathConfigurations/laser/GcodeParameters_Speed')}</span>
                     </div>
                     <ToolParameters
                         settings={laserDefinitionSpeed}
@@ -172,7 +172,7 @@ class GcodeParameters extends PureComponent {
                                 type={['static']}
                                 size={24}
                             />
-                            <span>{i18n._('Pass')}</span>
+                            <span>{i18n._('key_ui/views/ToolPathConfigurations/laser/GcodeParameters_Pass')}</span>
                         </div>
                         <ToolParameters
                             settings={laserDefinitionRepetition}
@@ -191,7 +191,7 @@ class GcodeParameters extends PureComponent {
                                 type={['static']}
                                 size={24}
                             />
-                            <span>{i18n._('Power')}</span>
+                            <span>{i18n._('key_ui/views/ToolPathConfigurations/laser/GcodeParameters_Power')}</span>
                         </div>
                         <ToolParameters
                             settings={laserDefinitionPower}

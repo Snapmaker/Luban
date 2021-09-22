@@ -278,7 +278,7 @@ function RotationAnalysisOverlay({ onClose }) {
                     width="96px"
                     className="margin-left-8"
                 >
-                    {i18n._('Done')}
+                    {i18n._('key_ui/widgets/PrintingVisualizer/Overlay/RotationAnalysisOverlay_Done')}
                 </Button>
             </footer>
         </div>

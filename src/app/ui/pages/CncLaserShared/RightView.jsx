@@ -58,11 +58,11 @@ function renderRightView({ headType, dispatch, page, widgets, listActions }) {
             <Tabs
                 options={[
                     {
-                        tab: i18n._('Edit'),
+                        tab: i18n._('key_ui/pages/CncLaserShared/RightView_Edit'),
                         key: PAGE_EDITOR
                     },
                     {
-                        tab: i18n._('Process'),
+                        tab: i18n._('key_ui/pages/CncLaserShared/RightView_Process'),
                         key: PAGE_PROCESS
                     }
                 ]}

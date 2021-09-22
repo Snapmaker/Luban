@@ -90,7 +90,7 @@ class Settings extends PureComponent {
         }));
         videoDeviceOptions.unshift({
             value: '',
-            label: i18n._('Auto Detection')
+            label: i18n._('key_ui/widgets/Webcam/Settings_Auto Detection')
         });
 
         return (
@@ -101,12 +101,12 @@ class Settings extends PureComponent {
             >
                 <Modal.Header>
                     {/* <Modal.Title> */}
-                    {i18n._('Webcam Settings')}
+                    {i18n._('key_ui/widgets/Webcam/Settings_Webcam Settings')}
                     {/* </Modal.Title> */}
                 </Modal.Header>
                 <Modal.Body>
                     <div className="form-group">
-                        <strong>{i18n._('Media Source')}</strong>
+                        <strong>{i18n._('key_ui/widgets/Webcam/Settings_Media Source')}</strong>
                         <div className="radio" style={{ marginTop: 0 }}>
                             <span>
                                 <input
@@ -118,7 +118,7 @@ class Settings extends PureComponent {
                                         this.setState({ mediaSource: MEDIA_SOURCE_LOCAL });
                                     }}
                                 />
-                                {i18n._('Use a built-in camera or a webcam')}
+                                {i18n._('key_ui/widgets/Webcam/Settings_Use a built-in camera or a webcam')}
                             </span>
                         </div>
                         <div style={{ marginLeft: 20 }}>
@@ -127,11 +127,11 @@ class Settings extends PureComponent {
                                 clearable={false}
                                 disabled={mediaSource !== MEDIA_SOURCE_LOCAL}
                                 name="videoDevice"
-                                noResultsText={i18n._('No video devices available.')}
+                                noResultsText={i18n._('key_ui/widgets/Webcam/Settings_No video devices available.')}
                                 onChange={this.handleChangeVideoDevice}
                                 optionRenderer={(device) => device.label || device.deviceId}
                                 options={videoDeviceOptions}
-                                placeholder={i18n._('Choose a video device')}
+                                placeholder={i18n._('key_ui/widgets/Webcam/Settings_Choose a video device')}
                                 searchable={false}
                                 value={deviceId}
                             />
@@ -147,7 +147,7 @@ class Settings extends PureComponent {
                                         this.setState({ mediaSource: MEDIA_SOURCE_MJPEG });
                                     }}
                                 />
-                                {i18n._('Use a M-JPEG stream over HTTP')}
+                                {i18n._('key_ui/widgets/Webcam/Settings_Use a M-JPEG stream over HTTP')}
                             </span>
                         </div>
                         <div style={{ marginLeft: 20 }}>
@@ -168,14 +168,14 @@ class Settings extends PureComponent {
                         className="btn btn-outline-secondary"
                         onClick={this.handleCancel}
                     >
-                        {i18n._('Cancel')}
+                        {i18n._('key_ui/widgets/Webcam/Settings_Cancel')}
                     </button>
                     <button
                         type="button"
                         className="btn btn-primary"
                         onClick={this.handleSave}
                     >
-                        {i18n._('Save Changes')}
+                        {i18n._('key_ui/widgets/Webcam/Settings_Save Changes')}
                     </button>
                 </Modal.Footer>
             </Modal>

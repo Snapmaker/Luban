@@ -129,7 +129,7 @@ class PrintSquareTrace extends PureComponent {
             <Modal style={{ width: '480px', height: '720px' }} size="lg" onClose={this.props.hideModal}>
                 <div className="clearfix" />
                 <Modal.Header>
-                    {i18n._('Engrave Square')}
+                    {i18n._('key_ui/widgets/LaserSetBackground/PrintSquareTrace/index_Engrave Square')}
                 </Modal.Header>
 
                 <Modal.Body>
@@ -146,7 +146,7 @@ class PrintSquareTrace extends PureComponent {
                             <tbody>
                                 <tr>
                                     <td>
-                                        {i18n._('Side Length')}
+                                        {i18n._('key_ui/widgets/LaserSetBackground/PrintSquareTrace/index_Side Length')}
                                     </td>
                                     <td>
                                         <Slider
@@ -169,7 +169,7 @@ class PrintSquareTrace extends PureComponent {
                                 </tr>
                                 <tr>
                                     <td>
-                                        {i18n._('Power')}
+                                        {i18n._('key_ui/widgets/LaserSetBackground/PrintSquareTrace/index_Power')}
                                     </td>
                                     <td>
                                         <Slider
@@ -200,7 +200,7 @@ class PrintSquareTrace extends PureComponent {
                         className="float-l margin-top-16 margin-left-16"
                         onClick={actions.printSquareTrace}
                     >
-                        {i18n._('Print Square Trace')}
+                        {i18n._('key_ui/widgets/LaserSetBackground/PrintSquareTrace/index_Print Square Trace')}
                     </Button>
                 </Modal.Body>
                 <Modal.Footer>
@@ -209,7 +209,7 @@ class PrintSquareTrace extends PureComponent {
                         priority="level-two"
                         onClick={actions.displayExtractTrace}
                     >
-                        {i18n._('Next')}
+                        {i18n._('key_ui/widgets/LaserSetBackground/PrintSquareTrace/index_Next')}
                     </Button>
                 </Modal.Footer>
             </Modal>

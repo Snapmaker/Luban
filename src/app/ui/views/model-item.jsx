@@ -41,7 +41,7 @@ function ModelItem({ model, visible, isSelected, styles, onSelect, onToggleVisib
     return (
         <TipTrigger
             key={model.modelName}
-            title={i18n._('Object')}
+            title={i18n._('key_ui/views/model-item_Object')}
             content={model.modelName}
             placement={placment || undefined}
         >
@@ -78,7 +78,7 @@ function ModelItem({ model, visible, isSelected, styles, onSelect, onToggleVisib
                 </Anchor>
                 <SvgIcon
                     name={visible ? 'ShowNormal' : 'HideNormal'}
-                    title={visible ? i18n._('Hide') : i18n._('Show')}
+                    title={visible ? i18n._('key_ui/views/model-item_Hide') : i18n._('key_ui/views/model-item_Show')}
                     color={visible ? '#545659' : '#B9BCBF'}
                     onClick={() => onToggleVisible(model)}
                     disabled={inProgress || disabled}

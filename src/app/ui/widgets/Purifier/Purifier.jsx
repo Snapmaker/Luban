@@ -58,7 +58,7 @@ function Purifier({ widgetActions }) {
     };
 
     useEffect(() => {
-        widgetActions.setTitle(i18n._('Air Purifier'));
+        widgetActions.setTitle(i18n._('key_ui/widgets/Purifier/Purifier_Air Purifier'));
         if (!isConnected) {
             widgetActions.setDisplay(false);
         }
@@ -93,14 +93,14 @@ function Purifier({ widgetActions }) {
     return (
         <div className="">
             <div className="sm-flex justify-space-between margin-vertical-8">
-                <span>{i18n._('Switch')}</span>
+                <span>{i18n._('key_ui/widgets/Purifier/Purifier_Switch')}</span>
                 <Switch
                     onClick={actions.onHandleFilterEnabled}
                     checked={isFilterEnable}
                 />
             </div>
             <div className="sm-flex justify-space-between margin-vertical-8">
-                <span>{i18n._('Fan Speed')}</span>
+                <span>{i18n._('key_ui/widgets/Purifier/Purifier_Fan Speed')}</span>
                 <span
                     className={classNames(
                         'border-radius-8',
@@ -114,7 +114,7 @@ function Purifier({ widgetActions }) {
                         )}
                         onClick={() => actions.onChangeFilterSpeed(SPEED_LOW)}
                     >
-                        {i18n._('Low')}
+                        {i18n._('key_ui/widgets/Purifier/Purifier_Low')}
                     </button>
                     <button
                         type="button"
@@ -123,7 +123,7 @@ function Purifier({ widgetActions }) {
                         )}
                         onClick={() => actions.onChangeFilterSpeed(SPEED_MEDIUM)}
                     >
-                        {i18n._('Medium')}
+                        {i18n._('key_ui/widgets/Purifier/Purifier_Medium')}
                     </button>
                     <button
                         type="button"
@@ -132,12 +132,12 @@ function Purifier({ widgetActions }) {
                         )}
                         onClick={() => actions.onChangeFilterSpeed(SPEED_HIGH)}
                     >
-                        {i18n._('High')}
+                        {i18n._('key_ui/widgets/Purifier/Purifier_High')}
                     </button>
                 </span>
             </div>
             <div className="sm-flex justify-space-between margin-vertical-8">
-                <span>{i18n._('Filter Life')}</span>
+                <span>{i18n._('key_ui/widgets/Purifier/Purifier_Filter Life')}</span>
                 <span
                     className={classNames(
                         'border-radius-8',
@@ -166,7 +166,7 @@ function Purifier({ widgetActions }) {
             </div>
             {(filterLife === 0) && (
                 <div className={classNames(styles.notice)}>
-                    {i18n._('You should replace the filter cartridge.')}
+                    {i18n._('key_ui/widgets/Purifier/Purifier_You should replace the filter cartridge.')}
                 </div>
             )}
         </div>

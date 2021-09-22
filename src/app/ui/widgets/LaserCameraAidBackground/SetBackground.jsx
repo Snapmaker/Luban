@@ -51,9 +51,9 @@ const SetBackground = ({ hideModal }) => {
         hideModal: () => {
             if (!canTakePhoto && panel === PANEL_EXTRACT_TRACE) {
                 WarningModal({
-                    body: i18n._('This action cannot be undone. Are you sure you want to stop the job?'),
+                    body: i18n._('key_ui/widgets/LaserCameraAidBackground/SetBackground_This action cannot be undone. Are you sure you want to stop the job?'),
                     iconSrc,
-                    bodyTitle: i18n._('Warning'),
+                    bodyTitle: i18n._('key_ui/widgets/LaserCameraAidBackground/SetBackground_Warning'),
                     insideHideModal: hideModal
                 });
             } else {
@@ -85,11 +85,11 @@ const SetBackground = ({ hideModal }) => {
                 {panel === PANEL_NOT_CALIBRATION && (
                     <Modal style={{ paddingBottom: '10px' }} size="lg" onClose={actions.hideModal}>
                         <Modal.Header>
-                            {i18n._('Warning')}
+                            {i18n._('key_ui/widgets/LaserCameraAidBackground/SetBackground_Warning')}
                         </Modal.Header>
                         <Modal.Body style={{ margin: '0', paddingBottom: '15px', height: '100%' }}>
                             <div>
-                                {i18n._('Information')}
+                                {i18n._('key_ui/widgets/LaserCameraAidBackground/SetBackground_Information')}
                                 <br />
                                 <Space width={4} />
                                 {i18n._('The camera hasn\'t been calibrated yet. Please go through the Camera Calibration procedures on touchscreen first.')}

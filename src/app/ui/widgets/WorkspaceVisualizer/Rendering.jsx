@@ -8,7 +8,7 @@ export default () => (
             <i className="fa fa-cube fa-spin" />
         </div>
         <div className={styles.loaderText}>
-            {i18n._('3D rendering...')}
+            {i18n._('key_ui/widgets/WorkspaceVisualizer/Rendering_3D rendering...')}
         </div>
     </div>
 );

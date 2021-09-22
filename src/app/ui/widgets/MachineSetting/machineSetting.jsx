@@ -34,33 +34,33 @@ const MachineSetting = (props) => {
     const doorDetectionOptions = [
         {
             value: true,
-            label: i18n._('On')
+            label: i18n._('key_ui/widgets/MachineSetting/machineSetting_On')
         },
         {
             value: false,
-            label: i18n._('Off')
+            label: i18n._('key_ui/widgets/MachineSetting/machineSetting_Off')
         }
     ];
     const zAxisModuleOptions = [
         {
             value: 0,
-            label: i18n._('Standard Module')
+            label: i18n._('key_ui/widgets/MachineSetting/machineSetting_Standard Module')
         },
         {
             value: 1,
-            label: i18n._('Extension Module')
+            label: i18n._('key_ui/widgets/MachineSetting/machineSetting_Extension Module')
         }
     ];
     return (
         <div className={styles.machineSettingContainer}>
             <div className={styles.doorDetection}>
                 <div className={styles.selectLabel}>
-                    {i18n._('Door Detection')}
+                    {i18n._('key_ui/widgets/MachineSetting/machineSetting_Door Detection')}
                 </div>
                 <Select
                     clearable={false}
                     searchable={false}
-                    name={i18n._('Door Detection')}
+                    name={i18n._('key_ui/widgets/MachineSetting/machineSetting_Door Detection')}
                     options={doorDetectionOptions}
                     value={enclosureDoorDetection}
                     onChange={e => setEnclosureDoorDetection(e.value)}
@@ -68,12 +68,12 @@ const MachineSetting = (props) => {
             </div>
             <div className={styles.zAxis}>
                 <div className={styles.selectLabel}>
-                    {i18n._('Z-Axis Extension Module')}
+                    {i18n._('key_ui/widgets/MachineSetting/machineSetting_Z-Axis Extension Module')}
                 </div>
                 <Select
                     clearable={false}
                     searchable={false}
-                    name={i18n._('Z-Axis Extension Module')}
+                    name={i18n._('key_ui/widgets/MachineSetting/machineSetting_Z-Axis Extension Module')}
                     options={zAxisModuleOptions}
                     value={zAxisModule}
                     onChange={e => setZAxisModule(e.value)}
@@ -84,7 +84,7 @@ const MachineSetting = (props) => {
                 onClick={onSave}
                 className={styles.confirmBtn}
             >
-                {i18n._('Confirm')}
+                {i18n._('key_ui/widgets/MachineSetting/machineSetting_Confirm')}
             </Button>
         </div>
     );

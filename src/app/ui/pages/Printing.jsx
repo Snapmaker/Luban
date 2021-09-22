@@ -115,7 +115,7 @@ function useRenderMainToolBar() {
         // const fileInput = React.createRef();
         const leftItems = [
             {
-                title: i18n._('Home'),
+                title: i18n._('key_ui/pages/Printing_Home'),
                 disabled: inProgress,
                 type: 'button',
                 name: 'MainToolbarHome',
@@ -124,7 +124,7 @@ function useRenderMainToolBar() {
                 }
             },
             {
-                title: i18n._('Workspace'),
+                title: i18n._('key_ui/pages/Printing_Workspace'),
                 type: 'button',
                 name: 'MainToolbarWorkspace',
                 action: () => {
@@ -135,7 +135,7 @@ function useRenderMainToolBar() {
                 type: 'separator'
             },
             {
-                title: i18n._('Save'),
+                title: i18n._('key_ui/pages/Printing_Save'),
                 disabled: !unSaved || !hasModel || !enableShortcut,
                 type: 'button',
                 name: 'MainToolbarSave',
@@ -145,7 +145,7 @@ function useRenderMainToolBar() {
                 }
             },
             {
-                title: i18n._('Undo'),
+                title: i18n._('key_ui/pages/Printing_Undo'),
                 disabled: !canUndo || !enableShortcut,
                 type: 'button',
                 name: 'MainToolbarUndo',
@@ -154,7 +154,7 @@ function useRenderMainToolBar() {
                 }
             },
             {
-                title: i18n._('Redo'),
+                title: i18n._('key_ui/pages/Printing_Redo'),
                 disabled: !canRedo || !enableShortcut,
                 type: 'button',
                 name: 'MainToolbarRedo',
@@ -212,14 +212,14 @@ function Printing({ location }) {
             await dispatch(printingActions.uploadModel(file));
         } catch (e) {
             modal({
-                title: i18n._('Failed to open model.'),
+                title: i18n._('key_ui/pages/Printing_Failed to open model.'),
                 body: e.message
             });
         }
     }
     function onDropRejected() {
-        const title = i18n._('Warning');
-        const body = i18n._('Only STL/OBJ files are supported.');
+        const title = i18n._('key_ui/pages/Printing_Warning');
+        const body = i18n._('key_ui/pages/Printing_Only STL/OBJ files are supported.');
         modal({
             title: title,
             cancelTitle: 'Close',
@@ -280,7 +280,7 @@ function Printing({ location }) {
             <Dropzone
                 disabled={isDraggingWidget}
                 accept=".stl, .obj"
-                dragEnterMsg={i18n._('Drop an STL/OBJ file here.')}
+                dragEnterMsg={i18n._('key_ui/pages/Printing_Drop an STL/OBJ file here.')}
                 onDropAccepted={onDropAccepted}
                 onDropRejected={onDropRejected}
             >
@@ -300,52 +300,52 @@ function Printing({ location }) {
                     }}
                     steps={[{
                         element: '.print-tool-bar-open',
-                        intro: printIntroStepOne(i18n._('Import an object, or drag an object to Luban.')),
+                        intro: printIntroStepOne(i18n._('key_ui/pages/Printing_Import an object, or drag an object to Luban.')),
                         position: 'right',
-                        title: `${i18n._('Import Object')} (1/6)`,
+                        title: `${i18n._('key_ui/pages/Printing_Import Object')} (1/6)`,
                         disableInteraction: true,
                         tooltipClass: 'printing-import-intro'
                     }, {
                         element: '.print-intro-three',
-                        intro: printIntroStepTwo(i18n._('Place or transform the object using icons, including Move, Scale, Rotate, Mirror, and Manual Support.')),
+                        intro: printIntroStepTwo(i18n._('key_ui/pages/Printing_Place or transform the object using icons, including Move, Scale, Rotate, Mirror, and Manual Support.')),
                         position: 'right',
-                        title: `${i18n._('Placement')} (2/6)`,
+                        title: `${i18n._('key_ui/pages/Printing_Placement')} (2/6)`,
                         disableInteraction: true,
                         tooltipClass: 'printing-placement-intro'
                     }, {
                         element: '.threedp-widget-list-intro',
                         intro: printIntroStepThree(
-                            i18n._('Select the material settings and printing settings.'),
-                            i18n._('Click'),
-                            i18n._('to set and manage detailed parameters.')
+                            i18n._('key_ui/pages/Printing_Select the material settings and printing settings.'),
+                            i18n._('key_ui/pages/Printing_Click'),
+                            i18n._('key_ui/pages/Printing_to set and manage detailed parameters.')
                         ),
                         position: 'left',
-                        title: `${i18n._('Configure Parameters')} (3/6)`,
+                        title: `${i18n._('key_ui/pages/Printing_Configure Parameters')} (3/6)`,
                         disableInteraction: true,
                         tooltipClass: 'printing-slice-intro'
                     }, {
                         element: '.print-output-intro',
                         intro: printIntroStepFour(
-                            i18n._('Slice and preview the object.'),
-                            i18n._('In Preview, you can see printing paths using features, including Line Type and Layer View.')
+                            i18n._('key_ui/pages/Printing_Slice and preview the object.'),
+                            i18n._('key_ui/pages/Printing_In Preview, you can see printing paths using features, including Line Type and Layer View.')
                         ),
                         position: 'top',
-                        title: `${i18n._('Generate G-code and Preview')} (4/6)`,
+                        title: `${i18n._('key_ui/pages/Printing_Generate G-code and Preview')} (4/6)`,
                         disableInteraction: true,
                         tooltipClass: 'printing-preview-intro'
                     }, {
                         element: '.print-output-intro',
-                        intro: printIntroStepFive(i18n._('Export the G-code file to a local device or load it to Workspace. Use Touchscreen or Luban to start printing.')),
+                        intro: printIntroStepFive(i18n._('key_ui/pages/Printing_Export the G-code file to a local device or load it to Workspace. Use Touchscreen or Luban to start printing.')),
                         position: 'top',
-                        title: `${i18n._('Export and Print')} (5/6)`,
+                        title: `${i18n._('key_ui/pages/Printing_Export and Print')} (5/6)`,
                         disableInteraction: true,
                         highlightClass: 'printing-export-highlight-part',
                         tooltipClass: 'printing-export-intro'
                     }, {
                         element: '.printing-save-icon',
-                        intro: printIntroStepSix(i18n._('Save the project to a local device for reuse.')),
+                        intro: printIntroStepSix(i18n._('key_ui/pages/Printing_Save the project to a local device for reuse.')),
                         position: 'bottom',
-                        title: `${i18n._('Save Project')} (6/6)`,
+                        title: `${i18n._('key_ui/pages/Printing_Save Project')} (6/6)`,
                         disableInteraction: true,
                         tooltipClass: 'printing-save-intro'
                     }]}

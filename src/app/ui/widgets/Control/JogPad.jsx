@@ -27,7 +27,7 @@ const JogPad = React.memo((props) => {
                                     actions.jog({ X: -distance, Y: distance });
                                 }}
                                 disabled={!canClick}
-                                title={i18n._('Move X- Y+')}
+                                title={i18n._('key_ui/widgets/Control/JogPad_Move X- Y+')}
                             >
                                 <i className={classNames('fa', 'fa-arrow-circle-up', styles['rotate--45deg'])} style={{ fontSize: 16 }} />
                             </button>
@@ -49,7 +49,7 @@ const JogPad = React.memo((props) => {
                                     actions.jog({ Y: distance });
                                 }}
                                 disabled={!canClick}
-                                title={i18n._('Move Y+')}
+                                title={i18n._('key_ui/widgets/Control/JogPad_Move Y+')}
                             >
                                 <span className={styles['jog-text']}>Y+</span>
                             </button>
@@ -69,7 +69,7 @@ const JogPad = React.memo((props) => {
                                     actions.jog({ X: distance, Y: distance });
                                 }}
                                 disabled={!canClick}
-                                title={i18n._('Move X+ Y+')}
+                                title={i18n._('key_ui/widgets/Control/JogPad_Move X+ Y+')}
                             >
                                 <i className={classNames('fa', 'fa-arrow-circle-up', styles['rotate-45deg'])} style={{ fontSize: 16 }} />
                             </button>
@@ -91,7 +91,7 @@ const JogPad = React.memo((props) => {
                                     actions.jog({ Z: distance });
                                 }}
                                 disabled={!canClick}
-                                title={i18n._('Move Z+')}
+                                title={i18n._('key_ui/widgets/Control/JogPad_Move Z+')}
                             >
                                 <span className={styles['jog-text']}>Z+</span>
                             </button>
@@ -114,7 +114,7 @@ const JogPad = React.memo((props) => {
                                         actions.jog({ B: angle });
                                     }}
                                     disabled={!canClick}
-                                    title={i18n._('Move B+')}
+                                    title={i18n._('key_ui/widgets/Control/JogPad_Move B+')}
                                 >
                                     <span className={styles['jog-text']}>B+</span>
                                 </button>
@@ -142,7 +142,7 @@ const JogPad = React.memo((props) => {
                                     actions.jog({ X: -distance });
                                 }}
                                 disabled={!canClick}
-                                title={i18n._('Move X-')}
+                                title={i18n._('key_ui/widgets/Control/JogPad_Move X-')}
                             >
                                 <span className={styles['jog-text']}>X-</span>
                             </button>
@@ -159,7 +159,7 @@ const JogPad = React.memo((props) => {
                                 className="btn btn-sm btn-outline-secondary jog-xy-zero"
                                 onClick={() => actions.move({ X: 0, Y: 0 })}
                                 disabled={!canClick}
-                                title={i18n._('Move To XY Zero (G0 X0 Y0)')}
+                                title={i18n._('key_ui/widgets/Control/JogPad_Move To XY Zero (G0 X0 Y0)')}
                             >
                                 <span className={styles['jog-text']}>X/Y</span>
                             </button>
@@ -181,7 +181,7 @@ const JogPad = React.memo((props) => {
                                     actions.jog({ X: distance });
                                 }}
                                 disabled={!canClick}
-                                title={i18n._('Move X+')}
+                                title={i18n._('key_ui/widgets/Control/JogPad_Move X+')}
                             >
                                 <span className={styles['jog-text']}>X+</span>
                             </button>
@@ -198,7 +198,7 @@ const JogPad = React.memo((props) => {
                                 className="btn btn-sm btn-outline-secondary jog-z-zero"
                                 onClick={() => actions.move({ Z: 0 })}
                                 disabled={!canClick}
-                                title={i18n._('Move To Z Zero (G0 Z0)')}
+                                title={i18n._('key_ui/widgets/Control/JogPad_Move To Z Zero (G0 Z0)')}
                             >
                                 <span className={styles['jog-text']}>Z</span>
                             </button>
@@ -216,7 +216,7 @@ const JogPad = React.memo((props) => {
                                     className="btn btn-sm btn-outline-secondary jog-z-zero"
                                     onClick={() => actions.move({ B: 0 })}
                                     disabled={!canClick}
-                                    title={i18n._('Move To B Zero (G0 B0)')}
+                                    title={i18n._('key_ui/widgets/Control/JogPad_Move To B Zero (G0 B0)')}
                                 >
                                     <span className={styles['jog-text']}>B</span>
                                 </button>
@@ -241,7 +241,7 @@ const JogPad = React.memo((props) => {
                                     actions.jog({ X: -distance, Y: -distance });
                                 }}
                                 disabled={!canClick}
-                                title={i18n._('Move X- Y-')}
+                                title={i18n._('key_ui/widgets/Control/JogPad_Move X- Y-')}
                             >
                                 <i className={classNames('fa', 'fa-arrow-circle-down', styles['rotate-45deg'])} style={{ fontSize: 16 }} />
                             </button>
@@ -264,7 +264,7 @@ const JogPad = React.memo((props) => {
                                     actions.jog({ Y: -distance });
                                 }}
                                 disabled={!canClick}
-                                title={i18n._('Move Y-')}
+                                title={i18n._('key_ui/widgets/Control/JogPad_Move Y-')}
                             >
                                 <span className={styles['jog-text']}>Y-</span>
                             </button>
@@ -284,7 +284,7 @@ const JogPad = React.memo((props) => {
                                     actions.jog({ X: distance, Y: -distance });
                                 }}
                                 disabled={!canClick}
-                                title={i18n._('Move X+ Y-')}
+                                title={i18n._('key_ui/widgets/Control/JogPad_Move X+ Y-')}
                             >
                                 <i className={classNames('fa', 'fa-arrow-circle-down', styles['rotate--45deg'])} style={{ fontSize: 16 }} />
                             </button>
@@ -306,7 +306,7 @@ const JogPad = React.memo((props) => {
                                     actions.jog({ Z: -distance });
                                 }}
                                 disabled={!canClick}
-                                title={i18n._('Move Z-')}
+                                title={i18n._('key_ui/widgets/Control/JogPad_Move Z-')}
                             >
                                 <span className={styles['jog-text']}>Z-</span>
                             </button>
@@ -329,7 +329,7 @@ const JogPad = React.memo((props) => {
                                         actions.jog({ B: -angle });
                                     }}
                                     disabled={!canClick}
-                                    title={i18n._('Move B-')}
+                                    title={i18n._('key_ui/widgets/Control/JogPad_Move B-')}
                                 >
                                     <span className={styles['jog-text']}>B-</span>
                                 </button>

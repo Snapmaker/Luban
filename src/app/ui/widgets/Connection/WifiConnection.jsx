@@ -99,8 +99,8 @@ function WifiConnection() {
         },
         showWifiConnecting: () => {
             setConnectionMessage({
-                text: i18n._('Confirm the Wi-Fi connection request on the Touchscreen.'),
-                title: i18n._('Screen Authorization Needed'),
+                text: i18n._('key_ui/widgets/Connection/WifiConnection_Confirm the Wi-Fi connection request on the Touchscreen.'),
+                title: i18n._('key_ui/widgets/Connection/WifiConnection_Screen Authorization Needed'),
                 img: IMAGE_WIFI_CONNECTING,
                 showCloseButton: true,
                 onCancel: null,
@@ -111,7 +111,7 @@ function WifiConnection() {
         showWifiConnected: () => {
             setConnectionMessage({
                 text: '',
-                title: i18n._('Connected'),
+                title: i18n._('key_ui/widgets/Connection/WifiConnection_Connected'),
                 img: 'WarningTipsSuccess',
                 showCloseButton: false,
                 iconColor: '#4CB518',
@@ -126,7 +126,7 @@ function WifiConnection() {
         showWifiDisconnected: () => {
             setConnectionMessage({
                 text: i18n._(''),
-                title: i18n._('Disconnected'),
+                title: i18n._('key_ui/widgets/Connection/WifiConnection_Disconnected'),
                 img: 'WarningTipsError',
                 iconColor: '#FF4D4F',
                 showCloseButton: false,
@@ -141,7 +141,7 @@ function WifiConnection() {
         showWifiError: (err, data) => {
             setConnectionMessage({
                 text: i18n._(data || err.message),
-                title: err.status ? i18n._(`Error ${err.status}`) : i18n._('Error'),
+                title: err.status ? i18n._(`Error ${err.status}`) : i18n._('key_ui/widgets/Connection/WifiConnection_Error'),
                 img: 'WarningTipsError',
                 iconColor: '#FF4D4F',
                 showCloseButton: true,
@@ -161,8 +161,8 @@ function WifiConnection() {
         showManualWiFiModal: () => {
             setManualWiFi({
                 text: null,
-                title: i18n._('Manual Connection'),
-                label: i18n._('IP Address') ? `${i18n._('IP Address')}:` : '',
+                title: i18n._('key_ui/widgets/Connection/WifiConnection_Manual Connection'),
+                label: i18n._('key_ui/widgets/Connection/WifiConnection_IP Address') ? `${i18n._('key_ui/widgets/Connection/WifiConnection_IP Address')}:` : '',
                 // img: IMAGE_WIFI_WAITING,
                 showCloseButton: true,
                 inputtext: manualIp,
@@ -258,7 +258,7 @@ function WifiConnection() {
                     clearable={false}
                     size="256px"
                     name="port"
-                    noResultsText={i18n._('No machines detected.')}
+                    noResultsText={i18n._('key_ui/widgets/Connection/WifiConnection_No machines detected.')}
                     onChange={actions.onChangeServerOption}
                     disabled={isOpen}
                     options={map(servers, (s) => ({
@@ -266,14 +266,14 @@ function WifiConnection() {
                         address: s.address,
                         label: `${s.name} (${s.address})`
                     }))}
-                    placeholder={i18n._('Choose a machine')}
+                    placeholder={i18n._('key_ui/widgets/Connection/WifiConnection_Choose a machine')}
                     value={serverState ? serverState?.name : ''}
                 />
                 <div className="sm-flex-auto ">
                     <SvgIcon
                         className="border-default-black-5 margin-left-8 border-radius-left-8"
                         name={serverDiscovering ? 'Refresh' : 'Reset'}
-                        title={i18n._('Refresh')}
+                        title={i18n._('key_ui/widgets/Connection/WifiConnection_Refresh')}
                         onClick={actions.onRefreshServers}
                         disabled={isOpen}
                         size={24}
@@ -282,7 +282,7 @@ function WifiConnection() {
                     <SvgIcon
                         className="border-default-black-5 border-radius-right-8"
                         name="Add"
-                        title={i18n._('Add')}
+                        title={i18n._('key_ui/widgets/Connection/WifiConnection_Add')}
                         disabled={isOpen}
                         size={24}
                         borderRadius={8}
@@ -328,7 +328,7 @@ function WifiConnection() {
                         onClick={actions.openServer}
                         disabled={isOpen}
                     >
-                        {i18n._('Connect')}
+                        {i18n._('key_ui/widgets/Connection/WifiConnection_Connect')}
                     </Button>
                 )}
                 {isConnected && (
@@ -338,7 +338,7 @@ function WifiConnection() {
                         priority="level-two"
                         onClick={actions.closeServer}
                     >
-                        {i18n._('Disconnect')}
+                        {i18n._('key_ui/widgets/Connection/WifiConnection_Disconnect')}
                     </Button>
                 )}
             </div>

@@ -133,14 +133,14 @@ function VisualizerPreviewControl() {
                                 )}
                             >
                                 <div className="border-bottom-normal padding-vertical-10 padding-horizontal-16 height-40 heading-3">
-                                    {i18n._('Line Type')}
+                                    {i18n._('key_ui/widgets/PrintingVisualizer/VisualizerPreviewControl_Line Type')}
                                 </div>
                                 <div className="padding-vertical-16 padding-horizontal-16">
                                     <div className="sm-flex justify-space-between height-24 margin-bottom-8">
                                         <div>
                                             <span className="display-inline width-16 height-16 v-align-m border-radius-4" style={{ backgroundColor: '#00ff00' }} />
                                             <span className="v-align-m margin-left-8">
-                                                {i18n._('Inner Wall')}
+                                                {i18n._('key_ui/widgets/PrintingVisualizer/VisualizerPreviewControl_Inner Wall')}
                                             </span>
                                         </div>
                                         <Checkbox
@@ -152,7 +152,7 @@ function VisualizerPreviewControl() {
                                         <div>
                                             <span className="display-inline width-16 height-16 v-align-m border-radius-4" style={{ backgroundColor: '#ff2121' }} />
                                             <span className="v-align-m margin-left-8">
-                                                {i18n._('Outer Wall')}
+                                                {i18n._('key_ui/widgets/PrintingVisualizer/VisualizerPreviewControl_Outer Wall')}
                                             </span>
                                         </div>
                                         <Checkbox
@@ -164,7 +164,7 @@ function VisualizerPreviewControl() {
                                         <div>
                                             <span className="display-inline width-16 height-16 v-align-m border-radius-4" style={{ backgroundColor: '#ffff00' }} />
                                             <span className="v-align-m margin-left-8">
-                                                {i18n._('Skin')}
+                                                {i18n._('key_ui/widgets/PrintingVisualizer/VisualizerPreviewControl_Skin')}
                                             </span>
                                         </div>
                                         <Checkbox
@@ -176,7 +176,7 @@ function VisualizerPreviewControl() {
                                         <div>
                                             <span className="display-inline width-16 height-16 v-align-m border-radius-4" style={{ backgroundColor: '#4b0082' }} />
                                             <span className="v-align-m margin-left-8">
-                                                {i18n._('Helper')}
+                                                {i18n._('key_ui/widgets/PrintingVisualizer/VisualizerPreviewControl_Helper')}
                                             </span>
                                         </div>
                                         <Checkbox
@@ -188,7 +188,7 @@ function VisualizerPreviewControl() {
                                         <div>
                                             <span className="display-inline width-16 height-16 v-align-m border-radius-4" style={{ backgroundColor: '#8d4bbb' }} />
                                             <span className="v-align-m margin-left-8">
-                                                {i18n._('Fill')}
+                                                {i18n._('key_ui/widgets/PrintingVisualizer/VisualizerPreviewControl_Fill')}
                                             </span>
                                         </div>
                                         <Checkbox
@@ -200,7 +200,7 @@ function VisualizerPreviewControl() {
                                         <div>
                                             <span className="display-inline width-16 height-16 v-align-m border-radius-4" style={{ backgroundColor: '#44cef6' }} />
                                             <span className="v-align-m margin-left-8">
-                                                {i18n._('Travel')}
+                                                {i18n._('key_ui/widgets/PrintingVisualizer/VisualizerPreviewControl_Travel')}
                                             </span>
                                         </div>
                                         <Checkbox
@@ -212,7 +212,7 @@ function VisualizerPreviewControl() {
                                         <div>
                                             <span className="display-inline width-16 height-16 v-align-m border-radius-4" style={{ backgroundColor: '#4b0082' }} />
                                             <span className="v-align-m margin-left-8">
-                                                {i18n._('Unknown')}
+                                                {i18n._('key_ui/widgets/PrintingVisualizer/VisualizerPreviewControl_Unknown')}
                                             </span>
                                         </div>
                                         <Checkbox

@@ -90,7 +90,7 @@ class AppLayout extends PureComponent {
                 });
             };
             return renderModal({
-                title: i18n._('Preferences'),
+                title: i18n._('key_ui/layouts/AppLayout_Preferences'),
                 renderBody: () => {
                     return (
                         <Settings
@@ -102,14 +102,14 @@ class AppLayout extends PureComponent {
                 onClose,
                 actions: [
                     {
-                        name: i18n._('Cancel'),
+                        name: i18n._('key_ui/layouts/AppLayout_Cancel'),
                         onClick: () => {
                             UniApi.Event.emit('appbar-menu:settings.cancel');
                             onClose();
                         }
                     },
                     {
-                        name: i18n._('Save'),
+                        name: i18n._('key_ui/layouts/AppLayout_Save'),
                         isPrimary: true,
                         onClick: () => {
                             UniApi.Event.emit('appbar-menu:settings.save');
@@ -132,20 +132,20 @@ class AppLayout extends PureComponent {
                 });
             };
             return renderModal({
-                title: i18n._('Firmware Tool'),
+                title: i18n._('key_ui/layouts/AppLayout_Firmware Tool'),
                 renderBody: () => {
                     return (<FirmwareTool />);
                 },
                 onClose,
                 actions: [
                     {
-                        name: i18n._('Cancel'),
+                        name: i18n._('key_ui/layouts/AppLayout_Cancel'),
                         onClick: () => {
                             onClose();
                         }
                     },
                     {
-                        name: i18n._('Compile and Export'),
+                        name: i18n._('key_ui/layouts/AppLayout_Compile and Export'),
                         isPrimary: true,
                         isAutoWidth: true,
                         onClick: () => {
@@ -168,7 +168,7 @@ class AppLayout extends PureComponent {
                 });
             };
             return renderModal({
-                title: i18n._('Software Update'),
+                title: i18n._('key_ui/layouts/AppLayout_Software Update'),
                 renderBody: () => {
                     return (<SoftwareUpdate />);
                 },
@@ -498,7 +498,7 @@ class AppLayout extends PureComponent {
                 const pathname = this.props.currentModalPath || this.props.history.location.pathname;
                 if (pathname === '/printing' && this.props.modelGroup.hasModel()) {
                     const promise = UniApi.Dialog.showSaveDialog({
-                        title: i18n._('Export Model'),
+                        title: i18n._('key_ui/layouts/AppLayout_Export Model'),
                         filters: [
                             { name: 'STL Binary', extensions: ['stl'] },
                             { name: 'OBJ', extensions: ['obj'] }

@@ -636,7 +636,7 @@ export const actions = {
 
     updateDefinitionNameByType: (type, definition, name) => async (dispatch, getState) => {
         if (!name || name.trim().length === 0) {
-            return Promise.reject(i18n._('Failed to rename. Please enter a new name.'));
+            return Promise.reject(i18n._('key_flux/printing/index_Failed to rename. Please enter a new name.'));
         }
         const definitionsKey = defaultDefinitionKeys[type]?.definitions;
 

@@ -73,13 +73,13 @@ const Update = {
 
             const dialogOpts = {
                 type: 'info',
-                buttons: [i18n._('Later'), i18n._('Update Now')],
+                buttons: [i18n._('key_lib/uni-api_Later'), i18n._('key_lib/uni-api_Update Now')],
                 defaultId: 1,
-                checkboxLabel: i18n._('Automatically check for updates'),
+                checkboxLabel: i18n._('key_lib/uni-api_Automatically check for updates'),
                 checkboxChecked: shouldCheckForUpdate,
-                title: i18n._('Update Snapmaker Luban'),
-                message: `Snapmaker Luban ${releaseName} ${i18n._('Update')}`,
-                detail: `${i18n._('Current version')} : ${oldVersion}`
+                title: i18n._('key_lib/uni-api_Update Snapmaker Luban'),
+                message: `Snapmaker Luban ${releaseName} ${i18n._('key_lib/uni-api_Update')}`,
+                detail: `${i18n._('key_lib/uni-api_Current version')} : ${oldVersion}`
                 // detail: 'A new version has been detected. Should i download it now?'
             };
             dialog.showMessageBox(remote.getCurrentWindow(), dialogOpts).then((returnValue) => {
@@ -97,9 +97,9 @@ const Update = {
 
             const dialogOpts = {
                 type: 'info',
-                title: i18n._('Update Snapmaker Luban'),
-                buttons: [i18n._('OK')],
-                detail: i18n._('The latest version is currently being downloaded.')
+                title: i18n._('key_lib/uni-api_Update Snapmaker Luban'),
+                buttons: [i18n._('key_lib/uni-api_OK')],
+                detail: i18n._('key_lib/uni-api_The latest version is currently being downloaded.')
             };
             dialog.showMessageBox(remote.getCurrentWindow(), dialogOpts);
         }
@@ -112,10 +112,10 @@ const Update = {
 
             const dialogOpts = {
                 type: 'info',
-                buttons: [i18n._('Later'), i18n._('Install Now')],
+                buttons: [i18n._('key_lib/uni-api_Later'), i18n._('key_lib/uni-api_Install Now')],
                 defaultId: 1,
                 title: i18n._(`Luban ${releaseName} has been downloaded.`),
-                detail: i18n._('A new version has been downloaded. Install now?')
+                detail: i18n._('key_lib/uni-api_A new version has been downloaded. Install now?')
             };
 
             dialog.showMessageBox(remote.getCurrentWindow(), dialogOpts).then((returnValue) => {

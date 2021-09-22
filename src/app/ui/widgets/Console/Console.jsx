@@ -161,7 +161,7 @@ function Console({ widgetId, widgetActions, minimized, isDefault, clearRenderSta
 
                 if (terminal) {
                     terminal.writeln(`${name} ${version}`);
-                    terminal.writeln(i18n._('Connected via Wi-Fi'));
+                    terminal.writeln(i18n._('key_ui/widgets/Console/Console_Connected via Wi-Fi'));
                 }
             }
         },
@@ -221,7 +221,7 @@ function Console({ widgetId, widgetActions, minimized, isDefault, clearRenderSta
     }
 
     useEffect(() => {
-        widgetActions.setTitle(i18n._('Console'));
+        widgetActions.setTitle(i18n._('key_ui/widgets/Console/Console_Console'));
         widgetActions.setControlButtons([
             {
                 title: 'Eliminate',
@@ -274,7 +274,7 @@ function Console({ widgetId, widgetActions, minimized, isDefault, clearRenderSta
                         terminal.writeln(i18n._('Connected to {{-port}}', { port: port }));
                     } else {
                         terminal.writeln(`${name} ${version}`);
-                        terminal.writeln(i18n._('Connected via Wi-Fi'));
+                        terminal.writeln(i18n._('key_ui/widgets/Console/Console_Connected via Wi-Fi'));
                     }
                 }
             }

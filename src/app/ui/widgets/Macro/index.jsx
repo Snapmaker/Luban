@@ -75,7 +75,7 @@ function MacroWidget({ widgetId, widgetActions }) {
     };
 
     useEffect(() => {
-        widgetActions.setTitle(i18n._('Macro'));
+        widgetActions.setTitle(i18n._('key_ui/widgets/Macro/index_Macro'));
         widgetActions.setControlButtons(
             [
                 {

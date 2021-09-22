@@ -20,11 +20,11 @@ class PrintingState extends PureComponent {
             <div className="container-fluid px-0">
                 <div className="row">
                     <div className="col-6">
-                        <div className={styles['color-grey-color']}>{i18n._('Nozzle Temp.')}</div>
+                        <div className={styles['color-grey-color']}>{i18n._('key_ui/widgets/Connection/PrintingState_Nozzle Temp.')}</div>
                         <div>{nozzleTemperature}°C / {nozzleTargetTemperature}°C</div>
                     </div>
                     <div className="col-6">
-                        <div className={styles['color-grey-color']}>{i18n._('Heated Bed Temp.')}</div>
+                        <div className={styles['color-grey-color']}>{i18n._('key_ui/widgets/Connection/PrintingState_Heated Bed Temp.')}</div>
                         <div>{heatedBedTemperature}°C / {heatedBedTargetTemperature}°C</div>
                     </div>
                 </div>

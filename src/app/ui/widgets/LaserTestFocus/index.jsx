@@ -34,7 +34,7 @@ class LaserTestFocusWidget extends PureComponent {
         super(props);
         WidgetState.bind(this);
         // Todo, add to widget state?
-        props.widgetActions.setTitle(i18n._('Fine-tune Work Origin'));
+        props.widgetActions.setTitle(i18n._('key_ui/widgets/LaserTestFocus/index_Fine-tune Work Origin'));
     }
 
     componentDidMount() {

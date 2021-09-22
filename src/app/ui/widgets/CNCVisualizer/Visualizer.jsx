@@ -167,8 +167,8 @@ class Visualizer extends Component {
 
             this.props.uploadImage(file, uploadMode, () => {
                 modal({
-                    cancelTitle: i18n._('Close'),
-                    title: i18n._('Import Error'),
+                    cancelTitle: i18n._('key_ui/widgets/CNCVisualizer/Visualizer_Close'),
+                    title: i18n._('key_ui/widgets/CNCVisualizer/Visualizer_Import Error'),
                     body: i18n._('Failed to import this object. \nPlease select a supported file format.')
                 });
             });
@@ -515,25 +515,25 @@ class Visualizer extends Component {
                         [
                             {
                                 type: 'item',
-                                label: i18n._('Cut'),
+                                label: i18n._('key_ui/widgets/CNCVisualizer/Visualizer_Cut'),
                                 disabled: contextMenuDisabled,
                                 onClick: this.actions.cut
                             },
                             {
                                 type: 'item',
-                                label: i18n._('Copy'),
+                                label: i18n._('key_ui/widgets/CNCVisualizer/Visualizer_Copy'),
                                 disabled: contextMenuDisabled,
                                 onClick: this.actions.copy
                             },
                             {
                                 type: 'item',
-                                label: i18n._('Paste'),
+                                label: i18n._('key_ui/widgets/CNCVisualizer/Visualizer_Paste'),
                                 disabled: pasteDisabled,
                                 onClick: this.actions.paste
                             },
                             {
                                 type: 'item',
-                                label: i18n._('Duplicate'),
+                                label: i18n._('key_ui/widgets/CNCVisualizer/Visualizer_Duplicate'),
                                 disabled: contextMenuDisabled,
                                 onClick: this.actions.duplicateSelectedModel
                             },
@@ -542,49 +542,49 @@ class Visualizer extends Component {
                             },
                             {
                                 type: 'subMenu',
-                                label: i18n._('Arrange'),
+                                label: i18n._('key_ui/widgets/CNCVisualizer/Visualizer_Arrange'),
                                 disabled: contextMenuDisabled,
                                 items: [
                                     {
                                         type: 'item',
-                                        label: i18n._('Bring to Front'),
+                                        label: i18n._('key_ui/widgets/CNCVisualizer/Visualizer_Bring to Front'),
                                         onClick: () => this.actions.bringToFront()
                                     },
                                     {
                                         type: 'item',
-                                        label: i18n._('Send to Back'),
+                                        label: i18n._('key_ui/widgets/CNCVisualizer/Visualizer_Send to Back'),
                                         onClick: () => this.actions.sendToBack()
                                     }
                                 ]
                             },
                             {
                                 type: 'subMenu',
-                                label: i18n._('Transform'),
+                                label: i18n._('key_ui/widgets/CNCVisualizer/Visualizer_Transform'),
                                 disabled: contextMenuDisabled,
                                 items: [
                                     {
                                         type: 'item',
-                                        label: i18n._('Rotate 180°'),
+                                        label: i18n._('key_ui/widgets/CNCVisualizer/Visualizer_Rotate 180°'),
                                         onClick: () => this.actions.rotateModel(180)
                                     },
                                     {
                                         type: 'item',
-                                        label: i18n._('Rotate 90° Clockwise'),
+                                        label: i18n._('key_ui/widgets/CNCVisualizer/Visualizer_Rotate 90° Clockwise'),
                                         onClick: () => this.actions.rotateModel(90)
                                     },
                                     {
                                         type: 'item',
-                                        label: i18n._('Rotate 90° Counter Clockwise'),
+                                        label: i18n._('key_ui/widgets/CNCVisualizer/Visualizer_Rotate 90° Counter Clockwise'),
                                         onClick: () => this.actions.rotateModel(-90)
                                     },
                                     {
                                         type: 'item',
-                                        label: i18n._('Flip Horizontal'),
+                                        label: i18n._('key_ui/widgets/CNCVisualizer/Visualizer_Flip Horizontal'),
                                         onClick: () => this.props.onFlipSelectedModel('Horizontal')
                                     },
                                     {
                                         type: 'item',
-                                        label: i18n._('Flip Vertical'),
+                                        label: i18n._('key_ui/widgets/CNCVisualizer/Visualizer_Flip Vertical'),
                                         onClick: () => this.props.onFlipSelectedModel('Vertical')
                                     }
                                 ]

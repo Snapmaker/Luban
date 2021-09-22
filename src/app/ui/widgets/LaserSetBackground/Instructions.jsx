@@ -11,7 +11,7 @@ const Instructions = ({ onClose }) => {
         <Modal style={{ width: '1080px' }} size="lg" onClose={onClose}>
             <Modal.Header>
                 {/* <Modal.Title> */}
-                {i18n._('How to Configure Camera Captrue')}
+                {i18n._('key_ui/widgets/LaserSetBackground/Instructions_How to Configure Camera Captrue')}
                 {/* </Modal.Title> */}
             </Modal.Header>
             <Modal.Body>

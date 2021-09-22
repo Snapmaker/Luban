@@ -60,7 +60,7 @@ function LaserPresentManager({ closeToolManager, shouldSaveToolpath = false, sav
                 await dispatch(laserActions.updateToolDefinitionName(false, definition.definitionId, definition.name, selectedName));
                 return null;
             } catch (e) {
-                return Promise.reject(i18n._('Failed to rename. Name already exists.'));
+                return Promise.reject(i18n._('key_ui/views/LaserPresentManager/LaserPresentManager_Failed to rename. Name already exists.'));
             }
         },
         updateCategoryName: async (definition, selectedName) => {
@@ -76,7 +76,7 @@ function LaserPresentManager({ closeToolManager, shouldSaveToolpath = false, sav
                 }
                 return null;
             } catch (e) {
-                return Promise.reject(i18n._('Failed to rename. Name already exists.'));
+                return Promise.reject(i18n._('key_ui/views/LaserPresentManager/LaserPresentManager_Failed to rename. Name already exists.'));
             }
         },
         onCreateManagerDefinition: async (definition, name, isCategorySelected, isCreate) => {

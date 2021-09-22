@@ -15,7 +15,7 @@ class EnclosureState extends PureComponent {
                 <div className="row">
                     <div className="col-sm-6">
                         <span className={styles['connection-item-state__name']}>
-                            {i18n._('Enclosure')}
+                            {i18n._('key_ui/widgets/Connection/EnclosureState_Enclosure')}
                         </span>
                         <span className={classNames('float-right', styles['connection-item-state__icon'])}>
                             <i

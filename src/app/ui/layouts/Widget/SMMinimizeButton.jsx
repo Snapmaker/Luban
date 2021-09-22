@@ -13,7 +13,7 @@ const SMMinimizeButton = React.memo(({ state, actions, className }) => {
     return (
         <SvgIcon
             disabled={fullscreen}
-            title={minimized ? i18n._('Expand') : i18n._('Collapse')}
+            title={minimized ? i18n._('key_ui/layouts/Widget/SMMinimizeButton_Expand') : i18n._('key_ui/layouts/Widget/SMMinimizeButton_Collapse')}
             onClick={onToggleMinimized}
             name="DropdownLine"
             size={24}

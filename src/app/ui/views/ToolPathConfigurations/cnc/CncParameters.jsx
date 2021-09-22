@@ -141,11 +141,11 @@ class CncParameters extends PureComponent {
                 <div className="border-default-grey-1 border-radius-8 padding-vertical-8 padding-horizontal-16">
                     <div className="sm-parameter-container">
                         <TipTrigger
-                            title={i18n._('Name')}
-                            content={i18n._('Enter the toolpath name.')}
+                            title={i18n._('key_ui/views/ToolPathConfigurations/cnc/CncParameters_Name')}
+                            content={i18n._('key_ui/views/ToolPathConfigurations/cnc/CncParameters_Enter the toolpath name.')}
                         >
                             <div className="sm-parameter-row">
-                                <span className="sm-parameter-row__label">{i18n._('Name')}</span>
+                                <span className="sm-parameter-row__label">{i18n._('key_ui/views/ToolPathConfigurations/cnc/CncParameters_Name')}</span>
                                 <TextInput
                                     className="sm-parameter-row__input"
                                     size="large"
@@ -156,7 +156,7 @@ class CncParameters extends PureComponent {
                         </TipTrigger>
                         {multipleEngine && (
                             <div className="sm-parameter-row">
-                                <span className="sm-parameter-row__label">{i18n._('Use legacy engine')}</span>
+                                <span className="sm-parameter-row__label">{i18n._('key_ui/views/ToolPathConfigurations/cnc/CncParameters_Use legacy engine')}</span>
                                 <input
                                     type="checkbox"
                                     className="sm-parameter-row__checkbox"
@@ -168,14 +168,14 @@ class CncParameters extends PureComponent {
                         {isSVG && (
                             <div>
                                 <TipTrigger
-                                    title={i18n._('method')}
+                                    title={i18n._('key_ui/views/ToolPathConfigurations/cnc/CncParameters_method')}
                                     content={(
                                         <div>
-                                            <p>{i18n._('Set the processing method of the object.')}</p>
+                                            <p>{i18n._('key_ui/views/ToolPathConfigurations/cnc/CncParameters_Set the processing method of the object.')}</p>
                                             <ul>
-                                                <li><b>{i18n._('On the Path')}</b>: {i18n._('Carves along the shape of the object.')}</li>
-                                                <li><b>{i18n._('Outline')}</b>: {i18n._('Carves along the outline of the object.')}</li>
-                                                <li><b>{i18n._('Fill')}</b>: {i18n._('Carves away the inner area of the object.')}</li>
+                                                <li><b>{i18n._('key_ui/views/ToolPathConfigurations/cnc/CncParameters_On the Path')}</b>: {i18n._('key_ui/views/ToolPathConfigurations/cnc/CncParameters_Carves along the shape of the object.')}</li>
+                                                <li><b>{i18n._('key_ui/views/ToolPathConfigurations/cnc/CncParameters_Outline')}</b>: {i18n._('key_ui/views/ToolPathConfigurations/cnc/CncParameters_Carves along the outline of the object.')}</li>
+                                                <li><b>{i18n._('key_ui/views/ToolPathConfigurations/cnc/CncParameters_Fill')}</b>: {i18n._('key_ui/views/ToolPathConfigurations/cnc/CncParameters_Carves away the inner area of the object.')}</li>
                                             </ul>
                                         </div>
                                     )}
@@ -184,7 +184,7 @@ class CncParameters extends PureComponent {
                                         <span
                                             style={{ height: '30px', lineHeight: '30px' }}
                                         >
-                                            {i18n._('Method')}
+                                            {i18n._('key_ui/views/ToolPathConfigurations/cnc/CncParameters_Method')}
                                         </span>
                                         <Select
                                             disabled={false}
@@ -198,19 +198,19 @@ class CncParameters extends PureComponent {
                                             name="carvePath"
                                             options={[
                                                 {
-                                                    label: i18n._('On the Path'),
+                                                    label: i18n._('key_ui/views/ToolPathConfigurations/cnc/CncParameters_On the Path'),
                                                     value: 'path'
                                                 },
                                                 {
-                                                    label: i18n._('Outline'),
+                                                    label: i18n._('key_ui/views/ToolPathConfigurations/cnc/CncParameters_Outline'),
                                                     value: 'outline'
                                                 },
                                                 {
-                                                    label: i18n._('Fill'),
+                                                    label: i18n._('key_ui/views/ToolPathConfigurations/cnc/CncParameters_Fill'),
                                                     value: 'pocket'
                                                 }
                                             ]}
-                                            placeholder={i18n._('Choose carving path')}
+                                            placeholder={i18n._('key_ui/views/ToolPathConfigurations/cnc/CncParameters_Choose carving path')}
                                             value={pathType}
                                             onChange={(option) => { this.props.updateGcodeConfig({ pathType: option.value }); }}
                                         />
@@ -220,11 +220,11 @@ class CncParameters extends PureComponent {
                         )}
                         {isImage && (
                             <TipTrigger
-                                title={i18n._('Method')}
-                                content={i18n._('Set the processing method of the 2D object or 3D model.')}
+                                title={i18n._('key_ui/views/ToolPathConfigurations/cnc/CncParameters_Method')}
+                                content={i18n._('key_ui/views/ToolPathConfigurations/cnc/CncParameters_Set the processing method of the 2D object or 3D model.')}
                             >
                                 <div className="sm-parameter-row">
-                                    <span className="sm-parameter-row__label">{i18n._('Method')}</span>
+                                    <span className="sm-parameter-row__label">{i18n._('key_ui/views/ToolPathConfigurations/cnc/CncParameters_Method')}</span>
                                     <TextInput
                                         disabled
                                         size="large"
@@ -238,11 +238,11 @@ class CncParameters extends PureComponent {
                             <div>
                                 {!isRotate && (
                                     <TipTrigger
-                                        title={i18n._('Method')}
-                                        content={i18n._('Set the processing method of the 2D object or 3D model.')}
+                                        title={i18n._('key_ui/views/ToolPathConfigurations/cnc/CncParameters_Method')}
+                                        content={i18n._('key_ui/views/ToolPathConfigurations/cnc/CncParameters_Set the processing method of the 2D object or 3D model.')}
                                     >
                                         <div className="sm-parameter-row">
-                                            <span className="sm-parameter-row__label">{i18n._('Method')}</span>
+                                            <span className="sm-parameter-row__label">{i18n._('key_ui/views/ToolPathConfigurations/cnc/CncParameters_Method')}</span>
                                             <TextInput
                                                 disabled
                                                 className="sm-parameter-row__input"
@@ -255,19 +255,19 @@ class CncParameters extends PureComponent {
                                 {isRotate && (
                                     <React.Fragment>
                                         <TipTrigger
-                                            title={i18n._('Slicing Mode')}
+                                            title={i18n._('key_ui/views/ToolPathConfigurations/cnc/CncParameters_Slicing Mode')}
                                             content={(
                                                 <div>
-                                                    <p>{i18n._('Set the processing method of the 3D model.')}</p>
+                                                    <p>{i18n._('key_ui/views/ToolPathConfigurations/cnc/CncParameters_Set the processing method of the 3D model.')}</p>
                                                     <ul>
-                                                        <li><b>{i18n._('Rotation')}</b>: {i18n._('The X axis is fixed during machining.')}</li>
-                                                        <li><b>{i18n._('Linkage')}</b>: {i18n._('The X, Y, Z, and B axes will move during machining. Suitable for machining complicated models.')}</li>
+                                                        <li><b>{i18n._('key_ui/views/ToolPathConfigurations/cnc/CncParameters_Rotation')}</b>: {i18n._('key_ui/views/ToolPathConfigurations/cnc/CncParameters_The X axis is fixed during machining.')}</li>
+                                                        <li><b>{i18n._('key_ui/views/ToolPathConfigurations/cnc/CncParameters_Linkage')}</b>: {i18n._('key_ui/views/ToolPathConfigurations/cnc/CncParameters_The X, Y, Z, and B axes will move during machining. Suitable for machining complicated models.')}</li>
                                                     </ul>
                                                 </div>
                                             )}
                                         >
                                             <div className="sm-parameter-row">
-                                                <span className="sm-parameter-row__label">{i18n._('Method')}</span>
+                                                <span className="sm-parameter-row__label">{i18n._('key_ui/views/ToolPathConfigurations/cnc/CncParameters_Method')}</span>
                                                 <Select
                                                     disabled={false}
                                                     size="large"
@@ -285,7 +285,7 @@ class CncParameters extends PureComponent {
                                 )}
                                 {/* {isRotate && sliceMode === CNC_MESH_SLICE_MODE_LINKAGE && (*/}
                                 {/*    <div className="position-re sm-flex justify-space-between height-32 margin-vertical-8">*/}
-                                {/*        <span>{i18n._('Y Smoothing')}</span>*/}
+                                {/*        <span>{i18n._('key_ui/views/ToolPathConfigurations/cnc/CncParameters_Y Smoothing')}</span>*/}
                                 {/*        <input*/}
                                 {/*            disabled={false}*/}
                                 {/*            type="checkbox"*/}
@@ -311,7 +311,7 @@ class CncParameters extends PureComponent {
                                 type={['static']}
                                 size={24}
                             />
-                            <span>{i18n._('Tool')}</span>
+                            <span>{i18n._('key_ui/views/ToolPathConfigurations/cnc/CncParameters_Tool')}</span>
                         </div>
                         <ToolSelector
                             toolDefinition={this.props.activeToolDefinition}
@@ -334,7 +334,7 @@ class CncParameters extends PureComponent {
                                 size={24}
                                 type={['static']}
                             />
-                            <span>{i18n._('Jog')}</span>
+                            <span>{i18n._('key_ui/views/ToolPathConfigurations/cnc/CncParameters_Jog')}</span>
                         </div>
                         <ToolParameters
                             settings={toolDefinitionJog}
@@ -351,7 +351,7 @@ class CncParameters extends PureComponent {
                                     type={['static']}
                                     size={24}
                                 />
-                                <span>{i18n._('Tab')}</span>
+                                <span>{i18n._('key_ui/views/ToolPathConfigurations/cnc/CncParameters_Tab')}</span>
                             </div>
                             <div>
                                 <ToolParameters

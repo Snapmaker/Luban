@@ -114,11 +114,11 @@ class MachineSelectModal extends PureComponent {
             <Modal disableOverlay showCloseButton={false} size="md" onClose={this.handleClose}>
                 <Modal.Header>
                     {/* <Modal.Title> */}
-                    {i18n._('Device Not Recognized')}
+                    {i18n._('key_ui/modals/modal-machine-select_Device Not Recognized')}
                     {/* </Modal.Title> */}
                 </Modal.Header>
                 <Modal.Body>
-                    <div className={styles['which-model']}>{i18n._('Select the machine model that is connected to Luban')}
+                    <div className={styles['which-model']}>{i18n._('key_ui/modals/modal-machine-select_Select the machine model that is connected to Luban')}
                     </div>
                     <div className={styles['select-tools']}>
                         { machineSeriesOptions.map(v => {
@@ -142,7 +142,7 @@ class MachineSelectModal extends PureComponent {
                     {this.props.hasHead !== false && (
                         <div>
                             <div className={classNames(styles.separator, styles['separator-underline'])} />
-                            <div className={styles['which-toolhead']}>{i18n._('Which toolhead is attached to your Snapmaker Luban?')}</div>
+                            <div className={styles['which-toolhead']}>{i18n._('key_ui/modals/modal-machine-select_Which toolhead is attached to your Snapmaker Luban?')}</div>
                             <div className={styles['select-tools']}>
                                 { machineHeadTypeOptions.map(v => {
                                     return (
@@ -171,7 +171,7 @@ class MachineSelectModal extends PureComponent {
                         width="96px"
                         onClick={this.handleConfirm}
                     >
-                        {i18n._('Select')}
+                        {i18n._('key_ui/modals/modal-machine-select_Select')}
                     </Button>
                 </Modal.Footer>
             </Modal>

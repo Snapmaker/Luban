@@ -13,7 +13,7 @@ const SMDropdownButton = React.memo(({ state, actions }) => {
 
     return (
         <Widget.DropdownButton
-            title={i18n._('fullscreen')}
+            title={i18n._('key_ui/components/SMWidget/SMDropdownButton_fullscreen')}
             toggle={<i className="fa fa-ellipsis-v" />}
             onSelect={(eventKey) => {
                 if (eventKey === 'fullscreen') {
@@ -31,7 +31,7 @@ const SMDropdownButton = React.memo(({ state, actions }) => {
                     )}
                 />
                 <span className="space space-sm" />
-                {!fullscreen ? i18n._('Enter Full Screen') : i18n._('Exit Full Screen')}
+                {!fullscreen ? i18n._('key_ui/components/SMWidget/SMDropdownButton_Enter Full Screen') : i18n._('key_ui/components/SMWidget/SMDropdownButton_Exit Full Screen')}
             </Widget.DropdownMenuItem>
         </Widget.DropdownButton>
     );

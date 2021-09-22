@@ -53,7 +53,7 @@ const ToolpathItem = ({
     return (
         <TipTrigger
             key={toolPath.id}
-            title={i18n._('Object')}
+            title={i18n._('key_ui/widgets/CncLaserList/ToolPathList/ToolPathListBox_Object')}
             content={toolPath.name}
         >
             <div
@@ -105,7 +105,7 @@ const ToolpathItem = ({
                             color="#BFBFBF"
                             name="HideNormal"
                             type={['static']}
-                            title={i18n._('Hide')}
+                            title={i18n._('key_ui/widgets/CncLaserList/ToolPathList/ToolPathListBox_Hide')}
                             onClick={() => onClickVisible(toolPath.id, toolPath.visible, toolPath.check)}
                             disabled={disabled}
                         />
@@ -115,7 +115,7 @@ const ToolpathItem = ({
                             type={['static']}
                             size={24}
                             name="ShowNormal"
-                            title={i18n._('Show')}
+                            title={i18n._('key_ui/widgets/CncLaserList/ToolPathList/ToolPathListBox_Show')}
                             onClick={() => onClickVisible(toolPath.id, toolPath.visible, toolPath.check)}
                             disabled={disabled}
                         />
@@ -230,7 +230,7 @@ const ToolPathListBox = (props) => {
         }
     };
     useEffect(() => {
-        props.widgetActions.setTitle(i18n._('Toolpath List'));
+        props.widgetActions.setTitle(i18n._('key_ui/widgets/CncLaserList/ToolPathList/ToolPathListBox_Toolpath List'));
     }, []);
     useEffect(() => {
         if (page === PAGE_EDITOR) {
@@ -275,7 +275,7 @@ const ToolPathListBox = (props) => {
                                 type={['static']}
                                 color="#1890ff"
                             />
-                            <span className={classNames('display-inline', 'height-40')}>{i18n._('Select object to create toolpath')}</span>
+                            <span className={classNames('display-inline', 'height-40')}>{i18n._('key_ui/widgets/CncLaserList/ToolPathList/ToolPathListBox_Select object to create toolpath')}</span>
                         </div>
                     )}
 
@@ -318,7 +318,7 @@ const ToolPathListBox = (props) => {
                             name="Delete"
                             disabled={selectedToolPathIDArray.length < 1}
                             size={24}
-                            title={i18n._('Delete')}
+                            title={i18n._('key_ui/widgets/CncLaserList/ToolPathList/ToolPathListBox_Delete')}
                             onClick={() => actions.deleteToolPath(selectedToolPathId)}
                         />
                     </div>
@@ -332,14 +332,14 @@ const ToolPathListBox = (props) => {
                                 'margin-horizontal-8',
                             )}
                             disabled={selectedToolPathIDArray.length !== 1}
-                            title={i18n._('Prioritize')}
+                            title={i18n._('key_ui/widgets/CncLaserList/ToolPathList/ToolPathListBox_Prioritize')}
                             onClick={() => actions.toolPathToUp(selectedToolPathIDArray)}
                             name="Prioritize"
                             size={24}
                         />
                         <SvgIcon
                             disabled={selectedToolPathIDArray.length !== 1}
-                            title={i18n._('Deprioritize')}
+                            title={i18n._('key_ui/widgets/CncLaserList/ToolPathList/ToolPathListBox_Deprioritize')}
                             onClick={() => actions.toolPathToDown(selectedToolPathIDArray)}
                             name="Deprioritize"
                             size={24}
@@ -352,7 +352,7 @@ const ToolPathListBox = (props) => {
                         onClick={actions.createToolPath}
                         disabled={inProgress || (!selectedModelArray || selectedModelArray.length === 0)}
                     >
-                        {i18n._('Create Toolpath')}
+                        {i18n._('key_ui/widgets/CncLaserList/ToolPathList/ToolPathListBox_Create Toolpath')}
                     </Button>
                 </div>
             </div>
@@ -363,7 +363,7 @@ const ToolPathListBox = (props) => {
                     [
                         {
                             type: 'item',
-                            label: i18n._('Edit'),
+                            label: i18n._('key_ui/widgets/CncLaserList/ToolPathList/ToolPathListBox_Edit'),
                             disabled: contextMenuDisabled,
                             onClick: () => {
                                 setEditingToolpath(firstSelectedToolpath);
@@ -371,36 +371,36 @@ const ToolPathListBox = (props) => {
                         },
                         {
                             type: 'item',
-                            label: i18n._('Delete'),
+                            label: i18n._('key_ui/widgets/CncLaserList/ToolPathList/ToolPathListBox_Delete'),
                             disabled: contextMenuDisabled,
                             onClick: () => actions.deleteToolPath(selectedToolPathId)
                         },
                         {
                             type: 'subMenu',
-                            label: i18n._('Sort'),
+                            label: i18n._('key_ui/widgets/CncLaserList/ToolPathList/ToolPathListBox_Sort'),
                             disabled: contextMenuDisabled || contextMenuArrangementDisabled,
                             items: [
                                 {
                                     type: 'item',
-                                    label: i18n._('Prioritize'),
+                                    label: i18n._('key_ui/widgets/CncLaserList/ToolPathList/ToolPathListBox_Prioritize'),
                                     disabled: contextMenuDisabled,
                                     onClick: () => actions.toolPathToUp(selectedToolPathIDArray)
                                 },
                                 {
                                     type: 'item',
-                                    label: i18n._('Deprioritize'),
+                                    label: i18n._('key_ui/widgets/CncLaserList/ToolPathList/ToolPathListBox_Deprioritize'),
                                     disabled: contextMenuDisabled,
                                     onClick: () => actions.toolPathToDown(selectedToolPathIDArray)
                                 },
                                 {
                                     type: 'item',
-                                    label: i18n._('Top'),
+                                    label: i18n._('key_ui/widgets/CncLaserList/ToolPathList/ToolPathListBox_Top'),
                                     disabled: contextMenuDisabled,
                                     onClick: () => actions.toolPathToTop(selectedToolPathIDArray)
                                 },
                                 {
                                     type: 'item',
-                                    label: i18n._('Bottom'),
+                                    label: i18n._('key_ui/widgets/CncLaserList/ToolPathList/ToolPathListBox_Bottom'),
                                     disabled: contextMenuDisabled,
                                     onClick: () => actions.toolPathToBottom(selectedToolPathIDArray)
                                 }

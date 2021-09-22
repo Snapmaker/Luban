@@ -87,7 +87,7 @@ function Workspace({ isPopup, onClose, style, className }) {
     const [connected, setConnected] = useState(controller.connected);
     const [leftItems, setLeftItems] = useState([
         {
-            title: i18n._('Back'),
+            title: i18n._('key_ui/pages/Workspace_Back'),
             type: 'button',
             name: 'MainToolbarBack',
             action: () => {
@@ -136,8 +136,8 @@ function Workspace({ isPopup, onClose, style, className }) {
             dispatch(workspaceActions.uploadGcodeFile(file));
         },
         onDropRejected: () => {
-            const title = i18n._('Warning');
-            const body = i18n._('Only G-code files are supported.');
+            const title = i18n._('key_ui/pages/Workspace_Warning');
+            const body = i18n._('key_ui/pages/Workspace_Only G-code files are supported.');
             modal({
                 title: title,
                 body: body
@@ -203,8 +203,8 @@ function Workspace({ isPopup, onClose, style, className }) {
                         <div className="sm-flex">
                             <i className="fa fa-exclamation-circle fa-4x text-danger" />
                             <div className="margin-left-24">
-                                <h5>{i18n._('Server has stopped working.')}</h5>
-                                <p>{i18n._('A problem caused the server to stop working correctly. Check the server status and try again.')}</p>
+                                <h5>{i18n._('key_ui/pages/Workspace_Server has stopped working.')}</h5>
+                                <p>{i18n._('key_ui/pages/Workspace_A problem caused the server to stop working correctly. Check the server status and try again.')}</p>
                             </div>
                         </div>
                     </Modal.Body>
@@ -213,7 +213,7 @@ function Workspace({ isPopup, onClose, style, className }) {
                             btnStyle="primary"
                             onClick={reloadPage}
                         >
-                            {i18n._('Reload')}
+                            {i18n._('key_ui/pages/Workspace_Reload')}
                         </Button>
                     </Modal.Footer>
                 </Modal>
@@ -242,7 +242,7 @@ function Workspace({ isPopup, onClose, style, className }) {
                 <Dropzone
                     disabled={isDraggingWidget || controller.workflowState !== WORKFLOW_STATE_IDLE}
                     accept={ACCEPT}
-                    dragEnterMsg={i18n._('Drop a G-code file here.')}
+                    dragEnterMsg={i18n._('key_ui/pages/Workspace_Drop a G-code file here.')}
                     onDropAccepted={actions.onDropAccepted}
                     onDropRejected={actions.onDropRejected}
                 >

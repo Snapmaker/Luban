@@ -195,10 +195,10 @@ function ToolPathConfigurations({ toolpath, onClose, headType }) {
             }
 
             const popupActions = modal({
-                title: i18n._('Create Profile'),
+                title: i18n._('key_ui/views/ToolPathConfigurations/ToolPathConfigurations_Create Profile'),
                 body: (
                     <React.Fragment>
-                        <p>{i18n._('Enter Tool Name')}</p>
+                        <p>{i18n._('key_ui/views/ToolPathConfigurations/ToolPathConfigurations_Enter Tool Name')}</p>
                     </React.Fragment>
 
                 ),
@@ -213,7 +213,7 @@ function ToolPathConfigurations({ toolpath, onClose, headType }) {
                             popupActions.close();
                         }}
                     >
-                        {i18n._('OK')}
+                        {i18n._('key_ui/views/ToolPathConfigurations/ToolPathConfigurations_OK')}
                     </Button>
                 )
             });
@@ -244,7 +244,7 @@ function ToolPathConfigurations({ toolpath, onClose, headType }) {
             >
                 <Modal.Header>
                     {/* <Modal.Title> */}
-                    {i18n._('Toolpath Settings')}
+                    {i18n._('key_ui/views/ToolPathConfigurations/ToolPathConfigurations_Toolpath Settings')}
                     {/* </Modal.Title> */}
                 </Modal.Header>
                 <Modal.Body>
@@ -283,7 +283,7 @@ function ToolPathConfigurations({ toolpath, onClose, headType }) {
                         type="default"
                         onClick={actions.cancelUpdateToolPath}
                     >
-                        {i18n._('Cancel')}
+                        {i18n._('key_ui/views/ToolPathConfigurations/ToolPathConfigurations_Cancel')}
                     </Button>
                     <Button
                         priority="level-two"
@@ -291,7 +291,7 @@ function ToolPathConfigurations({ toolpath, onClose, headType }) {
                         width="96px"
                         onClick={actions.saveToolPath}
                     >
-                        {i18n._('Save')}
+                        {i18n._('key_ui/views/ToolPathConfigurations/ToolPathConfigurations_Save')}
                     </Button>
                 </Modal.Footer>
             </Modal>

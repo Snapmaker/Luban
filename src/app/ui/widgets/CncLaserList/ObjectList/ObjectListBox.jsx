@@ -43,8 +43,8 @@ function ObjectListBox({ headType }) {
     useEffect(() => {
         if (previewFailed) {
             modal({
-                title: i18n._('Failed to preview'),
-                body: i18n._('Failed to preview, please modify parameters and try again.')
+                title: i18n._('key_ui/widgets/CncLaserList/ObjectList/ObjectListBox_Failed to preview'),
+                body: i18n._('key_ui/widgets/CncLaserList/ObjectList/ObjectListBox_Failed to preview, please modify parameters and try again.')
             });
         }
     }, [previewFailed]);

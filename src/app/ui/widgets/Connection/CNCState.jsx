@@ -20,7 +20,7 @@ class CNCState extends PureComponent {
                 <div className="row">
                     <div className="col-sm-6">
                         <span className={styles['connection-item-state__name']}>
-                            {i18n._('CNC')}
+                            {i18n._('key_ui/widgets/Connection/CNCState_CNC')}
                         </span>
                         <span className={classNames('float-right', styles['connection-item-state__icon'])}>
                             <i

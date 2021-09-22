@@ -273,7 +273,7 @@ function MachineSettings() {
                     name="TitleSetting"
                     type={['static']}
                 />
-                <span className="margin-left-4">{i18n._('Machine')}</span>
+                <span className="margin-left-4">{i18n._('key_ui/pages/Settings/MachineSettings/MachineSettings_Machine')}</span>
             </div>
             <Select
                 className="margin-vertical-16"

@@ -12,7 +12,7 @@ function EnclosureDisplay({ widgetActions }) {
     const { server, isConnected, connectionType, enclosureOnline } = useSelector(state => state.machine);
 
     useEffect(() => {
-        widgetActions.setTitle(i18n._('Enclosure'));
+        widgetActions.setTitle(i18n._('key_ui/widgets/Enclosure/EnclosureDisplay_Enclosure'));
         widgetActions.setDisplay(false);
         if (!isConnected) {
             widgetActions.setDisplay(false);

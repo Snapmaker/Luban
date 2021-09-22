@@ -101,7 +101,7 @@ class WorkflowControl extends PureComponent {
                     name="WorkspacePlay"
                     className="border-default-black-5 border-radius-left-8"
                     size={22}
-                    title={i18n._('Run')}
+                    title={i18n._('key_ui/widgets/WorkspaceVisualizer/WorkflowControl_Run')}
                     onClick={this.actions.handleRun}
                     disabled={isServerWaiting || !canPlay}
                 />
@@ -109,7 +109,7 @@ class WorkflowControl extends PureComponent {
                     name="WorkspaceSuspend"
                     className="border-default-black-5"
                     size={22}
-                    title={i18n._('Pause')}
+                    title={i18n._('key_ui/widgets/WorkspaceVisualizer/WorkflowControl_Pause')}
                     onClick={this.actions.handlePause}
                     disabled={isServerWaiting || !canPause}
                 />
@@ -117,7 +117,7 @@ class WorkflowControl extends PureComponent {
                     name="WorkspaceStop"
                     className="border-default-black-5"
                     size={22}
-                    title={i18n._('Stop')}
+                    title={i18n._('key_ui/widgets/WorkspaceVisualizer/WorkflowControl_Stop')}
                     onClick={this.actions.handleStop}
                     disabled={isServerWaiting || !canStop}
                 />
@@ -125,7 +125,7 @@ class WorkflowControl extends PureComponent {
                     name="WorkspaceCancel"
                     className="border-default-black-5 border-radius-right-8"
                     size={22}
-                    title={i18n._('Close')}
+                    title={i18n._('key_ui/widgets/WorkspaceVisualizer/WorkflowControl_Close')}
                     onClick={this.actions.handleClose}
                     disabled={isServerWaiting || !canClose}
                 />

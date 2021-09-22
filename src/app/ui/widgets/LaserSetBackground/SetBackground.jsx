@@ -57,8 +57,8 @@ class SetBackground extends PureComponent {
 
             if (!filename) {
                 modal({
-                    title: i18n._('Information'),
-                    body: i18n._('Please extract background image from photo.')
+                    title: i18n._('key_ui/widgets/LaserSetBackground/SetBackground_Information'),
+                    body: i18n._('key_ui/widgets/LaserSetBackground/SetBackground_Please extract background image from photo.')
                 });
                 return;
             }
@@ -80,7 +80,7 @@ class SetBackground extends PureComponent {
             }
 
             modal({
-                title: i18n._('Device Not Connected'),
+                title: i18n._('key_ui/widgets/LaserSetBackground/SetBackground_Device Not Connected'),
                 body: (
                     <Trans i18nKey="key_laser_module_not_connect_notice">
                         Laser module is not connected. Please make sure it is installed properly, and then connect to your Snapmaker via <b>Connection</b>.

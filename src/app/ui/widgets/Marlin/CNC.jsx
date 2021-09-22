@@ -43,7 +43,7 @@ class Printing extends PureComponent {
             <div>
                 <WorkSpeed />
                 <div className="sm-flex justify-space-between margin-vertical-8">
-                    <span>{i18n._('Toolhead')}</span>
+                    <span>{i18n._('key_ui/widgets/Marlin/CNC_Toolhead')}</span>
                     <Switch
                         className="sm-flex-auto"
                         onClick={this.actions.onClickToolHead}

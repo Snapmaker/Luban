@@ -42,11 +42,11 @@ const ConfigRasterBW = ({ disabled }) => {
             {expanded && (
                 <React.Fragment>
                     <TipTrigger
-                        title={i18n._('Invert')}
-                        content={i18n._('Inverts the color of images, white becomes black, and black becomes white.')}
+                        title={i18n._('key_ui/widgets/LaserParams/config/ConfigRasterBW_Invert')}
+                        content={i18n._('key_ui/widgets/LaserParams/config/ConfigRasterBW_Inverts the color of images, white becomes black, and black becomes white.')}
                     >
                         <div className="sm-flex height-32 margin-vertical-8">
-                            <span className="sm-flex-width">{i18n._('Invert')}</span>
+                            <span className="sm-flex-width">{i18n._('key_ui/widgets/LaserParams/config/ConfigRasterBW_Invert')}</span>
                             <Checkbox
                                 disabled={disabled}
                                 className="sm-flex-auto"
@@ -59,11 +59,11 @@ const ConfigRasterBW = ({ disabled }) => {
                         </div>
                     </TipTrigger>
                     <TipTrigger
-                        title={i18n._('Threshold')}
-                        content={i18n._('Set a value above which colors will be rendered in white.')}
+                        title={i18n._('key_ui/widgets/LaserParams/config/ConfigRasterBW_Threshold')}
+                        content={i18n._('key_ui/widgets/LaserParams/config/ConfigRasterBW_Set a value above which colors will be rendered in white.')}
                     >
                         <div className="sm-flex height-32 margin-vertical-8">
-                            <span className="sm-flex-width">{i18n._('Threshold')}</span>
+                            <span className="sm-flex-width">{i18n._('key_ui/widgets/LaserParams/config/ConfigRasterBW_Threshold')}</span>
                             <Slider
                                 disabled={disabled}
                                 size="middle"

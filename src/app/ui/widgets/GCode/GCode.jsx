@@ -121,7 +121,7 @@ function GCode({ widgetActions }) {
     }
 
     useEffect(() => {
-        widgetActions.setTitle(i18n._('Inspect G-code'));
+        widgetActions.setTitle(i18n._('key_ui/widgets/GCode/GCode_Inspect G-code'));
         addControllerEvents();
         return () => {
             removeControllerEvents();
@@ -192,7 +192,7 @@ function GCode({ widgetActions }) {
         return position;
     });
     const { units } = state;
-    const displayUnits = (units === METRIC_UNITS) ? i18n._('mm') : i18n._('in');
+    const displayUnits = (units === METRIC_UNITS) ? i18n._('key_ui/widgets/GCode/GCode_mm') : i18n._('key_ui/widgets/GCode/GCode_in');
     const startTime = formatISODateTime(gcodePrintingInfo.startTime);
     const finishTime = formatISODateTime(gcodePrintingInfo.finishTime);
     const elapsedTime = formatDuration(gcodePrintingInfo.elapsedTime);
@@ -212,10 +212,10 @@ function GCode({ widgetActions }) {
                         >
                             <thead>
                                 <tr>
-                                    <th className={styles.axis}>{i18n._('Axis')}</th>
-                                    <th>{i18n._('Min')}</th>
-                                    <th>{i18n._('Max')}</th>
-                                    <th>{i18n._('Dimension')}</th>
+                                    <th className={styles.axis}>{i18n._('key_ui/widgets/GCode/GCode_Axis')}</th>
+                                    <th>{i18n._('key_ui/widgets/GCode/GCode_Min')}</th>
+                                    <th>{i18n._('key_ui/widgets/GCode/GCode_Max')}</th>
+                                    <th>{i18n._('key_ui/widgets/GCode/GCode_Dimension')}</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -249,31 +249,31 @@ function GCode({ widgetActions }) {
                 </div>
                 <div className="row no-gutters margin-bottom-16">
                     <div className="col-6">
-                        <div>{i18n._('Sent')}</div>
+                        <div>{i18n._('key_ui/widgets/GCode/GCode_Sent')}</div>
                         <div>{total > 0 ? `${sent} / ${total}` : '–'}</div>
                     </div>
                     <div className="col-6">
-                        <div>{i18n._('Received')}</div>
+                        <div>{i18n._('key_ui/widgets/GCode/GCode_Received')}</div>
                         <div>{total > 0 ? `${received} / ${total}` : '–'}</div>
                     </div>
                 </div>
                 <div className="row no-gutters margin-bottom-16">
                     <div className="col-6">
-                        <div>{i18n._('Start Time')}</div>
+                        <div>{i18n._('key_ui/widgets/GCode/GCode_Start Time')}</div>
                         <div>{startTime}</div>
                     </div>
                     <div className="col-6">
-                        <div>{i18n._('Elapsed Time')}</div>
+                        <div>{i18n._('key_ui/widgets/GCode/GCode_Elapsed Time')}</div>
                         <div>{elapsedTime}</div>
                     </div>
                 </div>
                 <div className="row no-gutters">
                     <div className="col-6">
-                        <div>{i18n._('Finish Time')}</div>
+                        <div>{i18n._('key_ui/widgets/GCode/GCode_Finish Time')}</div>
                         <div>{finishTime}</div>
                     </div>
                     <div className="col-6">
-                        <div>{i18n._('Remaining Time')}</div>
+                        <div>{i18n._('key_ui/widgets/GCode/GCode_Remaining Time')}</div>
                         <div>{remainingTime}</div>
                     </div>
                 </div>

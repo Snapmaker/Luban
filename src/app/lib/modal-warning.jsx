@@ -84,10 +84,10 @@ class WarningModalHOC extends PureComponent {
                 <Modal.Footer>
                     {footer}
                     <button type="button" className="btn btn-default" onClick={this.handleClose}>
-                        {i18n._('Cancel')}
+                        {i18n._('key_lib/modal-warning_Cancel')}
                     </button>
                     <button type="button" className="btn btn-default" onClick={this.handleConfirm}>
-                        {i18n._('Yes')}
+                        {i18n._('key_lib/modal-warning_Yes')}
                     </button>
                 </Modal.Footer>
             </Modal>

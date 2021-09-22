@@ -91,7 +91,7 @@ function PrintingManager() {
                 await dispatch(printingActions.updateDefinitionNameByType(managerDisplayType, definition, selectedName));
                 return null;
             } catch (e) {
-                return Promise.reject(i18n._('Failed to rename. Name already exists.'));
+                return Promise.reject(i18n._('key_ui/views/PrintingManager/PrintingManager_Failed to rename. Name already exists.'));
             }
         },
 

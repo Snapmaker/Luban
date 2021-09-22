@@ -92,7 +92,7 @@ class ModalSmallInput extends PureComponent {
                             type="default"
                             onClick={onCancel}
                         >
-                            {i18n._('Cancel')}
+                            {i18n._('key_ui/components/Modal/ModalSmallInput_Cancel')}
                         </Button>
                         <Button
                             priority="level-two"
@@ -100,7 +100,7 @@ class ModalSmallInput extends PureComponent {
                             width="96px"
                             onClick={() => { onConfirm(inputtext); }}
                         >
-                            {i18n._('Confirm')}
+                            {i18n._('key_ui/components/Modal/ModalSmallInput_Confirm')}
                         </Button>
                     </Modal.Footer>
                 )}

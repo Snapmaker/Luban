@@ -111,8 +111,8 @@ const Output = ({ headType }) => {
     useEffect(() => {
         if (previewFailed) {
             modal({
-                title: i18n._('Failed to preview'),
-                body: i18n._('Failed to preview, please modify parameters and try again.')
+                title: i18n._('key_ui/widgets/CncLaserOutput/Output_Failed to preview'),
+                body: i18n._('key_ui/widgets/CncLaserOutput/Output_Failed to preview, please modify parameters and try again.')
             });
         }
     }, [previewFailed]);
@@ -155,7 +155,7 @@ const Output = ({ headType }) => {
                 disabled={disableExport || !hasModel || workflowState === 'running' || isGcodeGenerating || gcodeFile === null}
             >
                 <div className={classNames('align-c', 'padding-vertical-4')}>
-                    {i18n._('Load G-code to Workspace')}
+                    {i18n._('key_ui/widgets/CncLaserOutput/Output_Load G-code to Workspace')}
                 </div>
             </Menu.Item>
             <Menu.Item
@@ -163,7 +163,7 @@ const Output = ({ headType }) => {
                 onClick={actions.onExport}
             >
                 <div className={classNames('align-c', 'padding-vertical-4')}>
-                    {i18n._('Export G-code to File')}
+                    {i18n._('key_ui/widgets/CncLaserOutput/Output_Export G-code to File')}
                 </div>
             </Menu.Item>
         </Menu>
@@ -179,7 +179,7 @@ const Output = ({ headType }) => {
                         onClick={actions.switchToProcess}
                         disabled={!hasModel ?? false}
                     >
-                        {i18n._('Next')}
+                        {i18n._('key_ui/widgets/CncLaserOutput/Output_Next')}
                     </Button>
                 )}
                 {(!isEditor && needToPreview) && (
@@ -189,7 +189,7 @@ const Output = ({ headType }) => {
                         onClick={actions.preview}
                         disabled={(!hasToolPathModel ?? false) || disablePreview}
                     >
-                        {i18n._('Generate G-code and Preview')}
+                        {i18n._('key_ui/widgets/CncLaserOutput/Output_Generate G-code and Preview')}
                     </Button>
                 )}
                 {!isEditor && !needToPreview && displayedType === DISPLAYED_TYPE_TOOLPATH && !showExportOptions && (
@@ -202,7 +202,7 @@ const Output = ({ headType }) => {
                         }}
                         className={classNames('position-re', 'bottom-0', 'left-0')}
                     >
-                        {i18n._('Close Preview')}
+                        {i18n._('key_ui/widgets/CncLaserOutput/Output_Close Preview')}
                     </Button>
                 )}
                 {!isEditor && !needToPreview && displayedType !== DISPLAYED_TYPE_TOOLPATH && !showExportOptions && (
@@ -214,7 +214,7 @@ const Output = ({ headType }) => {
                         }}
                         className={classNames('position-re', 'bottom-0', 'left-0')}
                     >
-                        {i18n._('Preview')}
+                        {i18n._('key_ui/widgets/CncLaserOutput/Output_Preview')}
                     </Button>
                 )}
                 {!isEditor && !needToPreview && (
@@ -240,7 +240,7 @@ const Output = ({ headType }) => {
                                 )}
                                 suffixIcon={<SvgIcon name="DropdownOpen" type={['static']} color="#d5d6d9" />}
                             >
-                                {i18n._('Export')}
+                                {i18n._('key_ui/widgets/CncLaserOutput/Output_Export')}
                             </Button>
                         </Dropdown>
                     </div>

@@ -33,7 +33,7 @@ class DisplayPanel extends PureComponent {
         const { state, workPosition, originOffset, headType } = this.props;
         const { x, y, z } = originOffset;
         const { units, canClick, axes } = state;
-        const lengthUnits = (units === METRIC_UNITS) ? i18n._('mm') : i18n._('in');
+        const lengthUnits = (units === METRIC_UNITS) ? i18n._('key_ui/widgets/Control/DisplayPanel_mm') : i18n._('key_ui/widgets/Control/DisplayPanel_in');
         let machinePositionX = (Math.round((parseFloat(workPosition.x) - x) * 1000) / 1000).toFixed(3);
         let machinePositionY = (Math.round((parseFloat(workPosition.y) - y) * 1000) / 1000).toFixed(3);
         let machinePositionZ = (Math.round((parseFloat(workPosition.z) - z) * 1000) / 1000).toFixed(3);
@@ -50,10 +50,10 @@ class DisplayPanel extends PureComponent {
                 borderSpacing: 0}}>
                     <thead>
                         <tr>
-                            <th>{i18n._('Axis')}</th>
-                            <th>{i18n._('Machine Coordinates')}</th>
-                            <th>{i18n._('Work Coordinates')}</th>
-                            <th>{i18n._('Action')}</th>
+                            <th>{i18n._('key_ui/widgets/Control/DisplayPanel_Axis')}</th>
+                            <th>{i18n._('key_ui/widgets/Control/DisplayPanel_Machine Coordinates')}</th>
+                            <th>{i18n._('key_ui/widgets/Control/DisplayPanel_Work Coordinates')}</th>
+                            <th>{i18n._('key_ui/widgets/Control/DisplayPanel_Action')}</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -87,14 +87,14 @@ class DisplayPanel extends PureComponent {
                                             onSelect={this.actions.onSelect}
                                             disabled={!canClick}
                                         >
-                                            {i18n._('Go To Work Zero On X Axis (G0 X0)')}
+                                            {i18n._('key_ui/widgets/Control/DisplayPanel_Go To Work Zero On X Axis (G0 X0)')}
                                         </Dropdown.Item>
                                         <Dropdown.Item
                                             eventKey="G92 X0"
                                             onSelect={this.actions.onSelect}
                                             disabled={!canClick}
                                         >
-                                            {i18n._('Zero Out Temporary X Axis (G92 X0)')}
+                                            {i18n._('key_ui/widgets/Control/DisplayPanel_Zero Out Temporary X Axis (G92 X0)')}
                                         </Dropdown.Item>
                                     </DropdownButton>
                                 </td>
@@ -130,14 +130,14 @@ class DisplayPanel extends PureComponent {
                                             onSelect={this.actions.onSelect}
                                             disabled={!canClick}
                                         >
-                                            {i18n._('Go To Work Zero On Y Axis (G0 Y0)')}
+                                            {i18n._('key_ui/widgets/Control/DisplayPanel_Go To Work Zero On Y Axis (G0 Y0)')}
                                         </Dropdown.Item>
                                         <Dropdown.Item
                                             eventKey="G92 Y0"
                                             onSelect={this.actions.onSelect}
                                             disabled={!canClick}
                                         >
-                                            {i18n._('Zero Out Temporary Y Axis (G92 Y0)')}
+                                            {i18n._('key_ui/widgets/Control/DisplayPanel_Zero Out Temporary Y Axis (G92 Y0)')}
                                         </Dropdown.Item>
                                     </DropdownButton>
                                 </td>
@@ -173,14 +173,14 @@ class DisplayPanel extends PureComponent {
                                             onSelect={this.actions.onSelect}
                                             disabled={!canClick}
                                         >
-                                            {i18n._('Go To Work Zero On Z Axis (G0 Z0)')}
+                                            {i18n._('key_ui/widgets/Control/DisplayPanel_Go To Work Zero On Z Axis (G0 Z0)')}
                                         </Dropdown.Item>
                                         <Dropdown.Item
                                             eventKey="G92 Z0"
                                             onSelect={this.actions.onSelect}
                                             disabled={!canClick}
                                         >
-                                            {i18n._('Zero Out Temporary Z Axis (G92 Z0)')}
+                                            {i18n._('key_ui/widgets/Control/DisplayPanel_Zero Out Temporary Z Axis (G92 Z0)')}
                                         </Dropdown.Item>
                                     </DropdownButton>
                                 </td>
@@ -216,14 +216,14 @@ class DisplayPanel extends PureComponent {
                                             onSelect={this.actions.onSelect}
                                             disabled={!canClick}
                                         >
-                                            {i18n._('Go To Work Zero On B Axis (G0 B0)')}
+                                            {i18n._('key_ui/widgets/Control/DisplayPanel_Go To Work Zero On B Axis (G0 B0)')}
                                         </Dropdown.Item>
                                         <Dropdown.Item
                                             eventKey="G92 B0"
                                             onSelect={this.actions.onSelect}
                                             disabled={!canClick}
                                         >
-                                            {i18n._('Zero Out Temporary B Axis (G92 B0)')}
+                                            {i18n._('key_ui/widgets/Control/DisplayPanel_Zero Out Temporary B Axis (G92 B0)')}
                                         </Dropdown.Item>
                                     </DropdownButton>
                                 </td>

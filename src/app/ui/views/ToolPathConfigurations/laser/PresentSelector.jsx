@@ -126,7 +126,7 @@ function PresentSelector({ toolDefinitions, setCurrentToolDefinition, setCurrent
                             size="super-large"
                             valueObj={valueObj}
                             options={toolDefinitionOptions}
-                            placeholder={i18n._('Choose profile')}
+                            placeholder={i18n._('key_ui/views/ToolPathConfigurations/laser/PresentSelector_Choose profile')}
                             onChange={onChangeActiveToolListValue}
                         />
                         <SvgIcon
@@ -139,7 +139,7 @@ function PresentSelector({ toolDefinitions, setCurrentToolDefinition, setCurrent
                         />
                         <div className={`position-ab bottom-0 height-16 ${isModifiedDefinition ? 'left-16' : ''}`}>
                             <p className="additional-message">
-                                {foundDefinition && `${i18n._('Material')}: ${foundDefinition.label}`}
+                                {foundDefinition && `${i18n._('key_ui/views/ToolPathConfigurations/laser/PresentSelector_Material')}: ${foundDefinition.label}`}
                             </p>
                         </div>
                     </div>

@@ -110,7 +110,7 @@ function Output() {
                 disabled={workflowState === 'running' || !gcodeLine}
             >
                 <div className={classNames('align-c', 'padding-vertical-4')}>
-                    {i18n._('Load G-code to Workspace')}
+                    {i18n._('key_ui/widgets/PrintingOutput/Output_Load G-code to Workspace')}
                 </div>
             </Menu.Item>
             <Menu.Item
@@ -119,7 +119,7 @@ function Output() {
                 onClick={actions.onClickExportGcode}
             >
                 <div className={classNames('align-c', 'padding-vertical-4')}>
-                    {i18n._('Export G-code to File')}
+                    {i18n._('key_ui/widgets/PrintingOutput/Output_Export G-code to File')}
                 </div>
             </Menu.Item>
         </Menu>
@@ -135,7 +135,7 @@ function Output() {
                         onClick={actions.onClickGenerateGcode}
                         disabled={!hasModel || !hasAnyModelVisible || isSlicing || isAnyModelOverstepped || leftBarOverlayVisible}
                     >
-                        {i18n._('Generate G-code')}
+                        {i18n._('key_ui/widgets/PrintingOutput/Output_Generate G-code')}
                     </Button>
                 )}
                 {gcodeLine && (
@@ -145,7 +145,7 @@ function Output() {
                         onClick={actions.onToggleDisplayGcode}
                         className={classNames('position-re', 'bottom-0', 'left-0')}
                     >
-                        {displayedType === 'gcode' ? i18n._('Close Preview') : i18n._('Preview')}
+                        {displayedType === 'gcode' ? i18n._('key_ui/widgets/PrintingOutput/Output_Close Preview') : i18n._('key_ui/widgets/PrintingOutput/Output_Preview')}
                     </Button>
                 )}
                 {gcodeLine && (
@@ -168,7 +168,7 @@ function Output() {
                                 )}
                                 suffixIcon={<SvgIcon name="DropdownOpen" type={['static']} color="#D5D6D9" />}
                             >
-                                {i18n._('Export')}
+                                {i18n._('key_ui/widgets/PrintingOutput/Output_Export')}
                             </Button>
                         </Dropdown>
                     </div>

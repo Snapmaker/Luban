@@ -266,7 +266,7 @@ function SerialConnection() {
                     searchable={false}
                     disabled={!canChangePort}
                     name="port"
-                    noResultsText={i18n._('No ports available.')}
+                    noResultsText={i18n._('key_ui/widgets/Connection/SerialConnection_No ports available.')}
                     onChange={actions.onChangePortOption}
                     optionRenderer={renderPortOption}
                     options={map(ports, (o) => ({
@@ -274,7 +274,7 @@ function SerialConnection() {
                         label: o.port,
                         manufacturer: o.manufacturer
                     }))}
-                    placeholder={i18n._('Choose a port')}
+                    placeholder={i18n._('key_ui/widgets/Connection/SerialConnection_Choose a port')}
                     value={portState}
                     valueRenderer={renderPortValue}
                 />
@@ -283,7 +283,7 @@ function SerialConnection() {
                     size={24}
                     borderRadius={8}
                     name={loadingPorts ? 'Refresh' : 'Reset'}
-                    title={i18n._('Refresh')}
+                    title={i18n._('key_ui/widgets/Connection/SerialConnection_Refresh')}
                     onClick={actions.onRefreshPorts}
                     disabled={!canRefresh}
                 />
@@ -311,7 +311,7 @@ function SerialConnection() {
                         disabled={!canOpenPort}
                         onClick={actions.onOpenPort}
                     >
-                        {i18n._('Connect')}
+                        {i18n._('key_ui/widgets/Connection/SerialConnection_Connect')}
                     </Button>
                 )}
                 {isConnected && (
@@ -321,7 +321,7 @@ function SerialConnection() {
                         priority="level-two"
                         onClick={actions.onClosePort}
                     >
-                        {i18n._('Disconnect')}
+                        {i18n._('key_ui/widgets/Connection/SerialConnection_Disconnect')}
                     </Button>
                 )}
                 {err && (

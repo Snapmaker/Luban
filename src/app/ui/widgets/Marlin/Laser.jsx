@@ -104,7 +104,7 @@ class Laser extends PureComponent {
                 {connectionType === CONNECTION_TYPE_WIFI && (
                     <div>
                         <div className="sm-flex height-32 justify-space-between margin-vertical-8">
-                            <span>{i18n._('Auto Mode')}</span>
+                            <span>{i18n._('key_ui/widgets/Marlin/Laser_Auto Mode')}</span>
                             <Checkbox
                                 className="sm-flex-auto"
                                 checked={isLaserPrintAutoMode}
@@ -113,7 +113,7 @@ class Laser extends PureComponent {
                         </div>
                         {isLaserPrintAutoMode && !workPosition.isFourAxis && (
                             <div className="sm-flex height-32 justify-space-between margin-vertical-8">
-                                <span className="">{i18n._('Material Thickness')}</span>
+                                <span className="">{i18n._('key_ui/widgets/Marlin/Laser_Material Thickness')}</span>
                                 <Input
                                     suffix="mm"
                                     className="sm-flex-auto"
@@ -127,7 +127,7 @@ class Laser extends PureComponent {
                         )}
                         {isLaserPrintAutoMode && workPosition.isFourAxis && (
                             <div className="sm-flex height-32 justify-space-between margin-vertical-8">
-                                <span className="">{i18n._('Material Diameter')}</span>
+                                <span className="">{i18n._('key_ui/widgets/Marlin/Laser_Material Diameter')}</span>
                                 <Input
                                     suffix="mm"
                                     className="sm-flex-auto"
@@ -142,7 +142,7 @@ class Laser extends PureComponent {
                         {isLaserPrintAutoMode && laserFocalLength && (
                             <div>
                                 <div className="sm-flex height-32 justify-space-between margin-vertical-8">
-                                    <span>{i18n._('Laser Height')}</span>
+                                    <span>{i18n._('key_ui/widgets/Marlin/Laser_Laser Height')}</span>
                                     <Input
                                         suffix="mm"
                                         className="sm-flex-auto"
@@ -152,7 +152,7 @@ class Laser extends PureComponent {
                                     />
                                 </div>
                                 <div className="sm-flex height-32 justify-space-between margin-vertical-8">
-                                    <span>{i18n._('Z Offset')}</span>
+                                    <span>{i18n._('key_ui/widgets/Marlin/Laser_Z Offset')}</span>
                                     <Input
                                         suffix="mm"
                                         className="sm-flex-auto"
@@ -167,7 +167,7 @@ class Laser extends PureComponent {
                 )}
                 <WorkSpeed />
                 <div className="sm-flex justify-space-between margin-vertical-8">
-                    <span>{i18n._('Laser Power')}</span>
+                    <span>{i18n._('key_ui/widgets/Marlin/Laser_Laser Power')}</span>
                     <Switch
                         className="sm-flex-auto"
                         onClick={this.actions.onClickLaserPower}

@@ -444,7 +444,7 @@ class ExtractSquareTrace extends PureComponent {
                 <div style={{ display: this.state.panel === PANEL_EXTRACT_TRACE ? 'block' : 'none' }}>
                     <Modal onClose={this.props.hideModal}>
                         <Modal.Header>
-                            {i18n._('Camera Capture')}
+                            {i18n._('key_ui/widgets/LaserCameraAidBackground/ExtractSquareTrace/index_Camera Capture')}
                         </Modal.Header>
                         <Modal.Body
                             className={classNames(
@@ -452,7 +452,7 @@ class ExtractSquareTrace extends PureComponent {
                             )}
                         >
                             <div style={{ margin: '0 auto 16px', width: '509px' }}>
-                                {i18n._('The camera on the Laser Module captures nine images of the Laser Engraving and Cutting Platform, and stitches them as a background.')}
+                                {i18n._('key_ui/widgets/LaserCameraAidBackground/ExtractSquareTrace/index_The camera on the Laser Module captures nine images of the Laser Engraving and Cutting Platform, and stitches them as a background.')}
                             </div>
                             <div
                                 className={classNames(styles['photo-display'], 'border-radius-8')}
@@ -479,7 +479,7 @@ class ExtractSquareTrace extends PureComponent {
                                         width="160px"
                                         onClick={this.actions.startCameraAid}
                                     >
-                                        {i18n._('Start')}
+                                        {i18n._('key_ui/widgets/LaserCameraAidBackground/ExtractSquareTrace/index_Start')}
                                     </Button>
                                 </div>
                             </div>
@@ -496,7 +496,7 @@ class ExtractSquareTrace extends PureComponent {
                                     onClick={this.actions.displayManualCalibration}
                                     disabled={!this.props.canTakePhoto}
                                 >
-                                    {i18n._('Calibrate')}
+                                    {i18n._('key_ui/widgets/LaserCameraAidBackground/ExtractSquareTrace/index_Calibrate')}
                                 </Button>
                             </div>
                         </Modal.Body>
@@ -510,7 +510,7 @@ class ExtractSquareTrace extends PureComponent {
                                 onClick={this.actions.setBackgroundImage}
                                 disabled={!this.state.isStitched}
                             >
-                                {i18n._('Confirm')}
+                                {i18n._('key_ui/widgets/LaserCameraAidBackground/ExtractSquareTrace/index_Confirm')}
                             </Button>
                         </Modal.Footer>
                     </Modal>

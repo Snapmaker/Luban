@@ -116,11 +116,11 @@ const TransformationSection = ({ headType, updateSelectedModelUniformScalingStat
         <div className="margin-vertical-8">
             <React.Fragment>
                 <TipTrigger
-                    title={i18n._('Move')}
-                    content={i18n._('Set the coordinate of the selected object. You can also drag the object directly. The object should not be moved beyond work area.')}
+                    title={i18n._('key_ui/widgets/CncLaserShared/TransformationSection_Move')}
+                    content={i18n._('key_ui/widgets/CncLaserShared/TransformationSection_Set the coordinate of the selected object. You can also drag the object directly. The object should not be moved beyond work area.')}
                 >
                     <div className="sm-flex height-32 margin-vertical-8 ">
-                        <span className="sm-flex-auto sm-flex-order-negative width-64">{i18n._('Move')}</span>
+                        <span className="sm-flex-auto sm-flex-order-negative width-64">{i18n._('key_ui/widgets/CncLaserShared/TransformationSection_Move')}</span>
                         <span className="sm-flex-width sm-flex justify-space-between">
                             <div className="position-re sm-flex align-flex-start">
                                 <span className="width-16 height-32 display-inline unit-text align-c">
@@ -164,11 +164,11 @@ const TransformationSection = ({ headType, updateSelectedModelUniformScalingStat
                     </div>
                 </TipTrigger>
                 <TipTrigger
-                    title={i18n._('Size')}
-                    content={i18n._('Set the size of the selected object. You can also resize the object directly. The object should not exceed the work size.')}
+                    title={i18n._('key_ui/widgets/CncLaserShared/TransformationSection_Size')}
+                    content={i18n._('key_ui/widgets/CncLaserShared/TransformationSection_Set the size of the selected object. You can also resize the object directly. The object should not exceed the work size.')}
                 >
                     <div className="sm-flex height-32 margin-vertical-8">
-                        <span className="sm-flex-auto sm-flex-order-negative width-64">{i18n._('Size')}</span>
+                        <span className="sm-flex-auto sm-flex-order-negative width-64">{i18n._('key_ui/widgets/CncLaserShared/TransformationSection_Size')}</span>
                         <div className="sm-flex-width sm-flex justify-space-between">
                             <div className="position-re sm-flex align-flex-start">
                                 <span className="width-16 height-32 display-inline unit-text align-c">
@@ -226,11 +226,11 @@ const TransformationSection = ({ headType, updateSelectedModelUniformScalingStat
                     </div>
                 </TipTrigger>
                 <TipTrigger
-                    title={i18n._('Rotate')}
-                    content={i18n._('Rotate the selected object to the angle you need.')}
+                    title={i18n._('key_ui/widgets/CncLaserShared/TransformationSection_Rotate')}
+                    content={i18n._('key_ui/widgets/CncLaserShared/TransformationSection_Rotate the selected object to the angle you need.')}
                 >
                     <div className="sm-flex height-32 margin-vertical-8">
-                        <span className="sm-flex-auto sm-flex-order-negative width-56">{i18n._('Rotate')}</span>
+                        <span className="sm-flex-auto sm-flex-order-negative width-56">{i18n._('key_ui/widgets/CncLaserShared/TransformationSection_Rotate')}</span>
                         <div className="sm-flex-width sm-flex justify-space-between">
                             <div className="display-inline">
                                 <SvgIcon

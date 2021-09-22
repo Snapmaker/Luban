@@ -106,7 +106,7 @@ function ToolSelector({ toolDefinitions, setCurrentToolDefinition, setCurrentVal
             <React.Fragment>
                 <div className="position-re sm-flex justify-space-between margin-vertical-8">
                     <span className="sm-flex-auto sm-flex-order-negative height-32">
-                        {i18n._('Tool')}
+                        {i18n._('key_ui/views/ToolPathConfigurations/cnc/ToolSelector_Tool')}
                     </span>
                     <div className="sm-flex position-re padding-bottom-24">
                         {(isModifiedDefinition
@@ -126,7 +126,7 @@ function ToolSelector({ toolDefinitions, setCurrentToolDefinition, setCurrentVal
                             size="super-large"
                             valueObj={valueObj}
                             options={toolDefinitionOptions}
-                            placeholder={i18n._('Choose profile')}
+                            placeholder={i18n._('key_ui/views/ToolPathConfigurations/cnc/ToolSelector_Choose profile')}
                             onChange={onChangeActiveToolListValue}
                         />
                         <SvgIcon
@@ -139,7 +139,7 @@ function ToolSelector({ toolDefinitions, setCurrentToolDefinition, setCurrentVal
                         />
                         <div className={`position-ab bottom-0 height-16 ${isModifiedDefinition ? 'left-16' : ''}`}>
                             <p className="additional-message">
-                                {foundDefinition && `${i18n._('Material')}: ${foundDefinition.label}`}
+                                {foundDefinition && `${i18n._('key_ui/views/ToolPathConfigurations/cnc/ToolSelector_Material')}: ${foundDefinition.label}`}
                             </p>
                         </div>
                     </div>

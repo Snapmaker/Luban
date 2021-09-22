@@ -87,7 +87,7 @@ class ManualCalibration extends PureComponent {
                 <div className="clearfix" />
                 <Modal.Header>
                     <div className={styles['laser-set-background-calibration-title']}>
-                        {i18n._('Calibrate')}
+                        {i18n._('key_ui/widgets/LaserCameraAidBackground/ManualCalibration/index_Calibrate')}
                     </div>
                 </Modal.Header>
                 <Modal.Body>
@@ -95,7 +95,7 @@ class ManualCalibration extends PureComponent {
                         <div className={styles['calibrate-background']}>
                             <div className={styles['calibrate-advise']}>
                                 <p style={{ marginBottom: '1rem', textAlign: 'left', width: '522px' }}>
-                                    {i18n._('Align the four corners of the blue quadrilateral with the printed square.') }
+                                    {i18n._('key_ui/widgets/LaserCameraAidBackground/ManualCalibration/index_Align the four corners of the blue quadrilateral with the printed square.') }
                                 </p>
                             </div>
 
@@ -120,7 +120,7 @@ class ManualCalibration extends PureComponent {
                                 type="default"
                                 onClick={this.actions.onClickToUpload}
                             >
-                                {i18n._('Reset')}
+                                {i18n._('key_ui/widgets/LaserCameraAidBackground/ManualCalibration/index_Reset')}
                             </Button>
                             <Button
                                 width="160px"
@@ -128,7 +128,7 @@ class ManualCalibration extends PureComponent {
                                 type="default"
                                 onClick={this.actions.onClickToConfirm}
                             >
-                                {i18n._('Confirm')}
+                                {i18n._('key_ui/widgets/LaserCameraAidBackground/ManualCalibration/index_Confirm')}
                             </Button>
                         </div>
                     </div>
@@ -146,7 +146,7 @@ class ManualCalibration extends PureComponent {
                                 )}
                                 onClick={this.actions.previousPanel}
                             >
-                                {i18n._('Back')}
+                                {i18n._('key_ui/widgets/LaserCameraAidBackground/ManualCalibration/index_Back')}
                             </Button>
                         )}
                         {!EXPERIMENTAL_LASER_CAMERA && (
@@ -159,7 +159,7 @@ class ManualCalibration extends PureComponent {
                                 disabled={!this.state.isComfirmPoints}
                                 onClick={this.actions.setCameraCalibrationMatrix}
                             >
-                                {i18n._('Apply')}
+                                {i18n._('key_ui/widgets/LaserCameraAidBackground/ManualCalibration/index_Apply')}
                             </Button>
                         )}
                     </div>

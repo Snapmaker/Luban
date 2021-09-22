@@ -68,7 +68,7 @@ const QuickStart = (props) => {
     return (
         <div className={styles['quick-start-container']}>
             <div className={classNames(styles['title-label'], 'highlight-heading', 'margin-bottom-16')}>
-                {i18n._('Case Library')}
+                {i18n._('key_ui/pages/HomePage/QuickStart_Case Library')}
             </div>
             <div className={
                 classNames(
@@ -118,7 +118,7 @@ const QuickStart = (props) => {
                                     {i18n._(caseFourAxisItem.title)}
                                 </div>
                                 <div className={classNames('disabled-text')}>
-                                    <span style={{ paddingRight: 2 }}>{i18n._('4-axis')}</span>
+                                    <span style={{ paddingRight: 2 }}>{i18n._('key_ui/pages/HomePage/QuickStart_4-axis')}</span>
                                     <span>{i18n._(caseFourAxisItem.tag_i18n)}</span>
                                 </div>
                             </div>

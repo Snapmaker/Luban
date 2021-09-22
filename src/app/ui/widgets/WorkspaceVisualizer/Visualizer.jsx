@@ -300,21 +300,21 @@ class Visualizer extends Component {
                         if (err) {
                             if (err.status === 202) {
                                 modalSmallHOC({
-                                    title: i18n._('Filament Runout Recovery'),
-                                    text: i18n._('Filament has run out. Please load new filament to continue printing.'),
+                                    title: i18n._('key_ui/widgets/WorkspaceVisualizer/Visualizer_Filament Runout Recovery'),
+                                    text: i18n._('key_ui/widgets/WorkspaceVisualizer/Visualizer_Filament has run out. Please load new filament to continue printing.'),
                                     img: IMAGE_WIFI_ERROR
                                 });
                             } else if (err.status === 203) {
                                 modalSmallHOC({
-                                    title: i18n._('Enclosure Door Open'),
-                                    text: i18n._('One or both of the enclosure panels is/are opened. Please close the panel(s) to continue printing.'),
-                                    subtext: i18n._('Please wait one second after you close the panel(s) to continue printing.'),
+                                    title: i18n._('key_ui/widgets/WorkspaceVisualizer/Visualizer_Enclosure Door Open'),
+                                    text: i18n._('key_ui/widgets/WorkspaceVisualizer/Visualizer_One or both of the enclosure panels is/are opened. Please close the panel(s) to continue printing.'),
+                                    subtext: i18n._('key_ui/widgets/WorkspaceVisualizer/Visualizer_Please wait one second after you close the panel(s) to continue printing.'),
                                     img: IMAGE_WIFI_WARNING
                                 });
                             } else {
                                 modalSmallHOC({
                                     title: i18n._(`Error ${err.status}`),
-                                    text: i18n._('Unable to start the job.'),
+                                    text: i18n._('key_ui/widgets/WorkspaceVisualizer/Visualizer_Unable to start the job.'),
                                     img: IMAGE_WIFI_ERROR
                                 });
                             }
@@ -326,21 +326,21 @@ class Visualizer extends Component {
                         if (err) {
                             if (err.status === 202) {
                                 modalSmallHOC({
-                                    title: i18n._('Filament Runout Recovery'),
-                                    text: i18n._('Filament has run out. Please load new filament to continue printing.'),
+                                    title: i18n._('key_ui/widgets/WorkspaceVisualizer/Visualizer_Filament Runout Recovery'),
+                                    text: i18n._('key_ui/widgets/WorkspaceVisualizer/Visualizer_Filament has run out. Please load new filament to continue printing.'),
                                     img: IMAGE_WIFI_ERROR
                                 });
                             } else if (err.status === 203) {
                                 modalSmallHOC({
-                                    title: i18n._('Enclosure Door Open'),
-                                    text: i18n._('One or both of the enclosure panels is/are opened. Please close the panel(s) to continue printing.'),
-                                    subtext: i18n._('Please wait one second after you close the panel(s) to continue printing.'),
+                                    title: i18n._('key_ui/widgets/WorkspaceVisualizer/Visualizer_Enclosure Door Open'),
+                                    text: i18n._('key_ui/widgets/WorkspaceVisualizer/Visualizer_One or both of the enclosure panels is/are opened. Please close the panel(s) to continue printing.'),
+                                    subtext: i18n._('key_ui/widgets/WorkspaceVisualizer/Visualizer_Please wait one second after you close the panel(s) to continue printing.'),
                                     img: IMAGE_WIFI_WARNING
                                 });
                             } else {
                                 modalSmallHOC({
                                     title: i18n._(`Error ${err.status}`),
-                                    text: i18n._('Unable to resume the job.'),
+                                    text: i18n._('key_ui/widgets/WorkspaceVisualizer/Visualizer_Unable to resume the job.'),
                                     img: IMAGE_WIFI_ERROR
                                 });
                             }
@@ -664,9 +664,9 @@ class Visualizer extends Component {
             case WORKSPACE_STAGE.LOADING_GCODE:
                 return i18n._('Loading G-code...{{progress}}%', { progress: (100.0 * progress).toFixed(1) });
             case WORKSPACE_STAGE.LOAD_GCODE_SUCCEED:
-                return i18n._('Loaded G-code successfully.');
+                return i18n._('key_ui/widgets/WorkspaceVisualizer/Visualizer_Loaded G-code successfully.');
             case WORKSPACE_STAGE.LOAD_GCODE_FAILED:
-                return i18n._('Failed to load G-code.');
+                return i18n._('key_ui/widgets/WorkspaceVisualizer/Visualizer_Failed to load G-code.');
             default:
                 return '';
         }
@@ -723,8 +723,8 @@ class Visualizer extends Component {
 
                 {(state.isEmergencyStopped) && (
                     <ModalSmall
-                        title={i18n._('Emergency Stop')}
-                        text={i18n._('You have pressed the Emergency Stop Button. Solve the emergency and reconnect Luban.')}
+                        title={i18n._('key_ui/widgets/WorkspaceVisualizer/Visualizer_Emergency Stop')}
+                        text={i18n._('key_ui/widgets/WorkspaceVisualizer/Visualizer_You have pressed the Emergency Stop Button. Solve the emergency and reconnect Luban.')}
                         img="WarningTipsEmergencyStop"
                         iconColor="#FF4D4F"
                         onClose={this.actions.closeModal}
@@ -732,10 +732,10 @@ class Visualizer extends Component {
                 )}
                 {(state.showEnclosureDoorWarn) && (
                     <ModalSmall
-                        title={i18n._('Enclosure Door Open')}
+                        title={i18n._('key_ui/widgets/WorkspaceVisualizer/Visualizer_Enclosure Door Open')}
                         onClose={this.actions.closeModal}
-                        text={i18n._('One or both of the enclosure panels is/are opened. Please close the panel(s) to continue printing.')}
-                        subtext={i18n._('Please wait one second after you close the panel(s) to continue printing.')}
+                        text={i18n._('key_ui/widgets/WorkspaceVisualizer/Visualizer_One or both of the enclosure panels is/are opened. Please close the panel(s) to continue printing.')}
+                        subtext={i18n._('key_ui/widgets/WorkspaceVisualizer/Visualizer_Please wait one second after you close the panel(s) to continue printing.')}
                         img="WarningTipsWarning"
                         iconColor="#FF4D4F"
                     />

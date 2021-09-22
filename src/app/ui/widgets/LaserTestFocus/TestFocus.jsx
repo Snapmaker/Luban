@@ -80,7 +80,7 @@ class TestFocus extends PureComponent {
                     <Modal style={{ width: '1080px' }} size="lg" onClose={this.props.actions.hideInstructions}>
                         <Modal.Header>
                             {/* <Modal.Title> */}
-                            {i18n._('Fine-tune Work Origin')}
+                            {i18n._('key_ui/widgets/LaserTestFocus/TestFocus_Fine-tune Work Origin')}
                             {/* </Modal.Title> */}
                         </Modal.Header>
                         <Modal.Body className={classNames(styles['test-laser-instruction-content'], 'clearfix')}>
@@ -152,18 +152,18 @@ class TestFocus extends PureComponent {
                                 width="96px"
                                 onClick={this.props.actions.hideInstructions}
                             >
-                                {i18n._('Close')}
+                                {i18n._('key_ui/widgets/LaserTestFocus/TestFocus_Close')}
                             </Button>
                         </Modal.Footer>
                     </Modal>
                 )}
                 <div className="sm-flex height-32 justify-space-between margin-vertical-8">
-                    <span>{i18n._('Work Speed')}</span>
+                    <span>{i18n._('key_ui/widgets/LaserTestFocus/TestFocus_Work Speed')}</span>
                     <TipTrigger
                         placement="right"
                         className="sm-flex-auto"
-                        title={i18n._('Work Speed')}
-                        content={i18n._('Determines how fast the machine moves when it’s working.')}
+                        title={i18n._('key_ui/widgets/LaserTestFocus/TestFocus_Work Speed')}
+                        content={i18n._('key_ui/widgets/LaserTestFocus/TestFocus_Determines how fast the machine moves when it’s working.')}
                     >
                         <Input
                             suffix="mm/min"
@@ -175,7 +175,7 @@ class TestFocus extends PureComponent {
                     </TipTrigger>
                 </div>
                 <div className="sm-flex height-32 justify-space-between margin-vertical-8">
-                    <span>{i18n._('Laser Power')}</span>
+                    <span>{i18n._('key_ui/widgets/LaserTestFocus/TestFocus_Laser Power')}</span>
                     <Slider
                         value={this.state.power}
                         min={0}
@@ -186,8 +186,8 @@ class TestFocus extends PureComponent {
                     <TipTrigger
                         placement="right"
                         className="sm-flex-auto"
-                        title={i18n._('Laser Power')}
-                        content={i18n._('Set the laser power.')}
+                        title={i18n._('key_ui/widgets/LaserTestFocus/TestFocus_Laser Power')}
+                        content={i18n._('key_ui/widgets/LaserTestFocus/TestFocus_Set the laser power.')}
                     >
                         <Input
                             suffix="%"
@@ -203,7 +203,7 @@ class TestFocus extends PureComponent {
                     className="margin-bottom-16"
                     onClick={actions.generateAndLoadGcode}
                 >
-                    {i18n._('Generate and Load G-code')}
+                    {i18n._('key_ui/widgets/LaserTestFocus/TestFocus_Generate and Load G-code')}
                 </Button>
                 <table style={{ borderCollapse: 'separate', borderSpacing: '5px', width: '100%' }}>
                     <tbody>
@@ -274,7 +274,7 @@ class TestFocus extends PureComponent {
                     className="margin-top-16"
                     disabled={!isIdle || !isConnected}
                 >
-                    {i18n._('Set Work Origin')}
+                    {i18n._('key_ui/widgets/LaserTestFocus/TestFocus_Set Work Origin')}
                 </Button>
             </React.Fragment>
         );

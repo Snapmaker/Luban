@@ -67,8 +67,8 @@ export default class Steps extends Component {
         // We need to manually keep track of the visibility state to avoid a callback hell.
         this.isVisible = false;
         this.options = {
-            nextLabel: i18n._('Next'),
-            doneLabel: i18n._('Complete')
+            nextLabel: i18n._('key_ui/components/Steps/index_Next'),
+            doneLabel: i18n._('key_ui/components/Steps/index_Complete')
         };
         this.installIntroJs();
     }

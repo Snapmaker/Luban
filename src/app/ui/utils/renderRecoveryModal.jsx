@@ -31,20 +31,20 @@ export default function (headType, onClose) {
     }
 
     return renderModal({
-        title: i18n._('Resume Job'),
+        title: i18n._('key_ui/utils/renderRecoveryModal_Resume Job'),
         renderBody() {
-            return (<p>{i18n._('Snapmaker Luban quit unexpectedly. Resume the previous job?')}</p>);
+            return (<p>{i18n._('key_ui/utils/renderRecoveryModal_Snapmaker Luban quit unexpectedly. Resume the previous job?')}</p>);
         },
         actions: [
             {
-                name: i18n._('Cancel'),
+                name: i18n._('key_ui/utils/renderRecoveryModal_Cancel'),
                 onClick: () => {
                     dispatch(projectActions.clearSavedEnvironment(headType));
                     onClose();
                 }
             },
             {
-                name: i18n._('Resume'),
+                name: i18n._('key_ui/utils/renderRecoveryModal_Resume'),
                 isPrimary: true,
                 onClick: () => {
                     routeToHeadType(history, headType);

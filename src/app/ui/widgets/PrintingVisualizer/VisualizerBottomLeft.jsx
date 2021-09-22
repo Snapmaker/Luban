@@ -11,7 +11,7 @@ function VisualizerBottomLeft({ actions }) {
         <React.Fragment>
             <Card
                 className={classNames('margin-horizontal-8')}
-                title={i18n._('Object List')}
+                title={i18n._('key_ui/widgets/PrintingVisualizer/VisualizerBottomLeft_Object List')}
             >
                 <PrintingObjectListBox />
             </Card>

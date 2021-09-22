@@ -45,7 +45,7 @@ const keypadTooltip = () => {
                             <i className="fa fa-angle-right" style={styles.icon} />
                         </kbd>
                         <span className="space" />
-                        {i18n._('Right')}
+                        {i18n._('key_ui/widgets/Control/KeypadOverlay_Right')}
                     </div>
                     <div className="col-12">
                         <span style={styles.axisDirection}>X-</span>
@@ -53,7 +53,7 @@ const keypadTooltip = () => {
                             <i className="fa fa-angle-left" style={styles.icon} />
                         </kbd>
                         <span className="space" />
-                        {i18n._('Left')}
+                        {i18n._('key_ui/widgets/Control/KeypadOverlay_Left')}
                     </div>
                     <div className="col-12">
                         <span style={styles.axisDirection}>Y+</span>
@@ -61,7 +61,7 @@ const keypadTooltip = () => {
                             <i className="fa fa-angle-up" style={styles.icon} />
                         </kbd>
                         <span className="space" />
-                        {i18n._('Up')}
+                        {i18n._('key_ui/widgets/Control/KeypadOverlay_Up')}
                     </div>
                     <div className="col-12">
                         <span style={styles.axisDirection}>Y-</span>
@@ -69,7 +69,7 @@ const keypadTooltip = () => {
                             <i className="fa fa-angle-down" style={styles.icon} />
                         </kbd>
                         <span className="space" />
-                        {i18n._('Down')}
+                        {i18n._('key_ui/widgets/Control/KeypadOverlay_Down')}
                     </div>
                     <div className="col-12">
                         <span style={styles.axisDirection}>Z+</span>
@@ -77,7 +77,7 @@ const keypadTooltip = () => {
                             <i className="fa fa-long-arrow-up" style={styles.icon} />
                         </kbd>
                         <span className="space" />
-                        {i18n._('Page Up')}
+                        {i18n._('key_ui/widgets/Control/KeypadOverlay_Page Up')}
                     </div>
                     <div className="col-12">
                         <span style={styles.axisDirection}>Z-</span>
@@ -85,7 +85,7 @@ const keypadTooltip = () => {
                             <i className="fa fa-long-arrow-down" style={styles.icon} />
                         </kbd>
                         <span className="space" />
-                        {i18n._('Page Down')}
+                        {i18n._('key_ui/widgets/Control/KeypadOverlay_Page Down')}
                     </div>
                 </div>
                 <div className="row no-gutters">
@@ -95,15 +95,15 @@ const keypadTooltip = () => {
                     <div className="col-12">
                         <div className="table-form">
                             <div className="table-form-row table-form-row-dense">
-                                <div className="table-form-col table-form-col-label">{i18n._('0.1x Move')}</div>
+                                <div className="table-form-col table-form-col-label">{i18n._('key_ui/widgets/Control/KeypadOverlay_0.1x Move')}</div>
                                 <div className="table-form-col">
-                                    <kbd style={styles.kbd}>{i18n._('Alt')}</kbd>
+                                    <kbd style={styles.kbd}>{i18n._('key_ui/widgets/Control/KeypadOverlay_Alt')}</kbd>
                                 </div>
                             </div>
                             <div className="table-form-row table-form-row-dense">
-                                <div className="table-form-col table-form-col-label">{i18n._('10x Move')}</div>
+                                <div className="table-form-col table-form-col-label">{i18n._('key_ui/widgets/Control/KeypadOverlay_10x Move')}</div>
                                 <div className="table-form-col">
-                                    <kbd style={styles.kbd}>{i18n._('⇧ Shift')}</kbd>
+                                    <kbd style={styles.kbd}>{i18n._('key_ui/widgets/Control/KeypadOverlay_⇧ Shift')}</kbd>
                                 </div>
                             </div>
                         </div>

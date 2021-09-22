@@ -235,8 +235,8 @@ function WifiTransport({ widgetActions }) {
         // Wi-Fi transfer file to Snapmaker
         sendFile: () => {
             const isSendingFile = modalSmallHOC({
-                title: i18n._('Sending File'),
-                text: i18n._('Sending file. Please wait…'),
+                title: i18n._('key_ui/widgets/WifiTransport/WifiTransport_Sending File'),
+                text: i18n._('key_ui/widgets/WifiTransport/WifiTransport_Sending file. Please wait…'),
                 iconColor: '#4CB518',
                 img: 'WarningTipsProgress'
             }).ref;
@@ -253,15 +253,15 @@ function WifiTransport({ widgetActions }) {
                     isSendingFile.current.removeContainer();
                     if (err) {
                         modalSmallHOC({
-                            title: i18n._('Failed to send file.'),
+                            title: i18n._('key_ui/widgets/WifiTransport/WifiTransport_Failed to send file.'),
                             text: text,
                             iconColor: '#FF4D4F',
                             img: 'WarningTipsError'
                         });
                     } else {
                         (modalSmallHOC({
-                            title: i18n._('File sent successfully.'),
-                            text: i18n._('Your file was successfully sent. Receive it on the Touchscreen.'),
+                            title: i18n._('key_ui/widgets/WifiTransport/WifiTransport_File sent successfully.'),
+                            text: i18n._('key_ui/widgets/WifiTransport/WifiTransport_Your file was successfully sent. Receive it on the Touchscreen.'),
                             iconColor: '#4CB518',
                             img: 'WarningTipsSuccess'
                         }));
@@ -283,7 +283,7 @@ function WifiTransport({ widgetActions }) {
     };
 
     useEffect(() => {
-        widgetActions.setTitle(i18n._('G-code Files'));
+        widgetActions.setTitle(i18n._('key_ui/widgets/WifiTransport/WifiTransport_G-code Files'));
 
         for (let i = 0; i < 5; i++) {
             changeNameInput[i] = React.createRef();
@@ -333,7 +333,7 @@ function WifiTransport({ widgetActions }) {
                 priority="level-three"
                 onClick={actions.onClickToUpload}
             >
-                {i18n._('Open G-code')}
+                {i18n._('key_ui/widgets/WifiTransport/WifiTransport_Open G-code')}
             </Button>
             <Button
                 width="160px"
@@ -342,14 +342,14 @@ function WifiTransport({ widgetActions }) {
                 priority="level-three"
                 onClick={actions.onExport}
             >
-                {i18n._('Export G-code')}
+                {i18n._('key_ui/widgets/WifiTransport/WifiTransport_Export G-code')}
             </Button>
             <div className="margin-bottom-8">
                 <Checkbox
                     checked={loadToWorkspaceOnLoad}
                     onChange={actions.onChangeShouldPreview}
                 />
-                <span className="margin-left-8">{i18n._('Preview in workspace')}</span>
+                <span className="margin-left-8">{i18n._('key_ui/widgets/WifiTransport/WifiTransport_Preview in workspace')}</span>
             </div>
             {
                 _.map(gcodeFiles, (gcodeFile, index) => {
@@ -372,7 +372,7 @@ function WifiTransport({ widgetActions }) {
                 disabled={!hasFile}
                 onClick={actions.loadGcodeToWorkspace}
             >
-                {i18n._('Load G-code to Workspace')}
+                {i18n._('key_ui/widgets/WifiTransport/WifiTransport_Load G-code to Workspace')}
             </Button>
             <Button
                 type="primary"
@@ -381,7 +381,7 @@ function WifiTransport({ widgetActions }) {
                 disabled={!(hasFile && isConnected && isHeadType && connectionType === CONNECTION_TYPE_WIFI)}
                 onClick={actions.sendFile}
             >
-                {i18n._('Send to Device via Wi-Fi')}
+                {i18n._('key_ui/widgets/WifiTransport/WifiTransport_Send to Device via Wi-Fi')}
             </Button>
         </div>
     );

@@ -8,7 +8,7 @@ export default () => (
             <i className="fa fa-spinner fa-spin" />
         </div>
         <div className={styles.loaderText}>
-            {i18n._('Loading...')}
+            {i18n._('key_ui/widgets/WorkspaceVisualizer/Loading_Loading...')}
         </div>
     </div>
 );

@@ -45,7 +45,7 @@ class MachineModal extends PureComponent {
             <React.Fragment>
                 <Anchor className="sm-parameter-header" onClick={toggleMachineModalSection}>
                     <span className="fa fa-gear sm-parameter-header__indicator" />
-                    <span className="sm-parameter-header__title">{i18n._('Machine Model')}</span>
+                    <span className="sm-parameter-header__title">{i18n._('key_ui/widgets/Marlin/MachineModal_Machine Model')}</span>
                     <span className={classNames(
                         'fa',
                         expanded ? 'fa-angle-double-up' : 'fa-angle-double-down',
@@ -57,30 +57,30 @@ class MachineModal extends PureComponent {
                 {expanded && (
                     <React.Fragment>
                         <div className="sm-parameter-row">
-                            <span className="sm-parameter-row__label">{i18n._('Motion')}</span>
+                            <span className="sm-parameter-row__label">{i18n._('key_ui/widgets/Marlin/MachineModal_Motion')}</span>
                             <TextInput className="sm-parameter-row__input-lg" disabled value={modal.motion || none} />
                         </div>
                         <div className="sm-parameter-row">
-                            <span className="sm-parameter-row__label">{i18n._('Distance')}</span>
+                            <span className="sm-parameter-row__label">{i18n._('key_ui/widgets/Marlin/MachineModal_Distance')}</span>
                             <TextInput className="sm-parameter-row__input-lg" disabled value={modal.distance || none} />
                         </div>
                         <div className="sm-parameter-row">
-                            <span className="sm-parameter-row__label">{i18n._('Feed Rate')}</span>
+                            <span className="sm-parameter-row__label">{i18n._('key_ui/widgets/Marlin/MachineModal_Feed Rate')}</span>
                             <TextInput className="sm-parameter-row__input-lg" disabled value={modal.feedrate || none} />
                         </div>
                         <div className="sm-parameter-row">
-                            <span className="sm-parameter-row__label">{i18n._('Unit')}</span>
+                            <span className="sm-parameter-row__label">{i18n._('key_ui/widgets/Marlin/MachineModal_Unit')}</span>
                             <TextInput className="sm-parameter-row__input-lg" disabled value={modal.units || none} />
                         </div>
                         {isLaser && (
                             <div className="sm-parameter-row">
-                                <span className="sm-parameter-row__label">{i18n._('Laser')}</span>
+                                <span className="sm-parameter-row__label">{i18n._('key_ui/widgets/Marlin/MachineModal_Laser')}</span>
                                 <TextInput className="sm-parameter-row__input-lg" disabled value={modal.spindle || none} />
                             </div>
                         )}
                         {isCNC && (
                             <div className="sm-parameter-row">
-                                <span className="sm-parameter-row__label">{i18n._('Spindle')}</span>
+                                <span className="sm-parameter-row__label">{i18n._('key_ui/widgets/Marlin/MachineModal_Spindle')}</span>
                                 <TextInput className="sm-parameter-row__input-lg" disabled value={modal.spindle || none} />
                             </div>
                         )}

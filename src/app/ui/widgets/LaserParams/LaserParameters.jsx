@@ -30,7 +30,7 @@ const LaserParameters = ({ widgetActions }) => {
     const showImageProcessMode = (sourceType === SOURCE_TYPE_RASTER || sourceType === SOURCE_TYPE_SVG) && config.svgNodeName === SVG_NODE_NAME_IMAGE;
 
     useEffect(() => {
-        widgetActions.setTitle(i18n._('Transformation'));
+        widgetActions.setTitle(i18n._('key_ui/widgets/LaserParams/LaserParameters_Transformation'));
     }, []);
 
     useEffect(() => {

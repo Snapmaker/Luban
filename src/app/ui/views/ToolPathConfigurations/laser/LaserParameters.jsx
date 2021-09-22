@@ -120,11 +120,11 @@ class LaserParameters extends PureComponent {
                 <div className="border-default-grey-1 border-radius-8 padding-vertical-8 padding-horizontal-16">
                     <div className="sm-parameter-container">
                         <TipTrigger
-                            title={i18n._('Name')}
-                            content={i18n._('Enter the toolpath name.')}
+                            title={i18n._('key_ui/views/ToolPathConfigurations/laser/LaserParameters_Name')}
+                            content={i18n._('key_ui/views/ToolPathConfigurations/laser/LaserParameters_Enter the toolpath name.')}
                         >
                             <div className="position-re sm-flex justify-space-between height-32 margin-vertical-8">
-                                <span>{i18n._('Name')}</span>
+                                <span>{i18n._('key_ui/views/ToolPathConfigurations/laser/LaserParameters_Name')}</span>
                                 <TextInput
                                     size="large"
                                     value={name}
@@ -151,7 +151,7 @@ class LaserParameters extends PureComponent {
                         </div>
                         {multipleEngine && (
                             <div className="position-re sm-flex justify-space-between height-32 margin-vertical-8">
-                                <span>{i18n._('Use legacy engine')}</span>
+                                <span>{i18n._('key_ui/views/ToolPathConfigurations/laser/LaserParameters_Use legacy engine')}</span>
                                 <input
                                     type="checkbox"
                                     className="sm-parameter-row__checkbox"
@@ -163,19 +163,19 @@ class LaserParameters extends PureComponent {
                         <div>
                             {isSVG && (
                                 <TipTrigger
-                                    title={i18n._('Method')}
+                                    title={i18n._('key_ui/views/ToolPathConfigurations/laser/LaserParameters_Method')}
                                     content={(
                                         <div>
-                                            <p>{i18n._('Set the processing method of the object.')}</p>
+                                            <p>{i18n._('key_ui/views/ToolPathConfigurations/laser/LaserParameters_Set the processing method of the object.')}</p>
                                             <ul>
-                                                <li><b>{i18n._('Fill')}</b>: {i18n._('Fills the object with lines or dots.')}</li>
-                                                <li><b>{i18n._('On the Path')}</b>: {i18n._('Engraves along the shape of the object.')}</li>
+                                                <li><b>{i18n._('key_ui/views/ToolPathConfigurations/laser/LaserParameters_Fill')}</b>: {i18n._('key_ui/views/ToolPathConfigurations/laser/LaserParameters_Fills the object with lines or dots.')}</li>
+                                                <li><b>{i18n._('key_ui/views/ToolPathConfigurations/laser/LaserParameters_On the Path')}</b>: {i18n._('key_ui/views/ToolPathConfigurations/laser/LaserParameters_Engraves along the shape of the object.')}</li>
                                             </ul>
                                         </div>
                                     )}
                                 >
                                     <div className="position-re sm-flex justify-space-between height-32 margin-vertical-8">
-                                        <span>{i18n._('Method')}</span>
+                                        <span>{i18n._('key_ui/views/ToolPathConfigurations/laser/LaserParameters_Method')}</span>
                                         <Select
                                             size="large"
                                             backspaceRemoves={false}
@@ -185,10 +185,10 @@ class LaserParameters extends PureComponent {
                                             name="method"
                                             options={[{
                                                 value: 'fill',
-                                                label: i18n._('Fill')
+                                                label: i18n._('key_ui/views/ToolPathConfigurations/laser/LaserParameters_Fill')
                                             }, {
                                                 value: 'path',
-                                                label: i18n._('On the Path')
+                                                label: i18n._('key_ui/views/ToolPathConfigurations/laser/LaserParameters_On the Path')
                                             }]}
                                             value={fillMethod}
                                             onChange={(option) => { this.actions.updateGcodeConfig({ fillEnabled: option.value === 'fill' }); }}
@@ -198,11 +198,11 @@ class LaserParameters extends PureComponent {
                             )}
                             {isImage && (
                                 <TipTrigger
-                                    title={i18n._('Method')}
+                                    title={i18n._('key_ui/views/ToolPathConfigurations/laser/LaserParameters_Method')}
                                     content={i18n._('Set the processing method of the object. \n - Fill: Fills the object with lines or dots.')}
                                 >
                                     <div className="position-re sm-flex justify-space-between height-32 margin-vertical-8">
-                                        <span>{i18n._('Method')}</span>
+                                        <span>{i18n._('key_ui/views/ToolPathConfigurations/laser/LaserParameters_Method')}</span>
                                         <Select
                                             size="large"
                                             backspaceRemoves={false}
@@ -212,7 +212,7 @@ class LaserParameters extends PureComponent {
                                             name="method"
                                             options={[{
                                                 value: true,
-                                                label: i18n._('Fill')
+                                                label: i18n._('key_ui/views/ToolPathConfigurations/laser/LaserParameters_Fill')
                                             }]}
                                             placeholder=""
                                             searchable={false}

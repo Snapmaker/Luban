@@ -51,14 +51,14 @@ function SoftwareUpdate() {
                             {`Snapmaker Luban ${settings.version}`}
                         </div>
                         <div className={classNames(styles['about-product-description'], 'color-black-4')}>
-                            {i18n._('An open-source slicing software which can 3D print, laser engrave, and CNC carve.')}
+                            {i18n._('key_ui/pages/Settings/SoftwareUpdate/SoftwareUpdate_An open-source slicing software which can 3D print, laser engrave, and CNC carve.')}
                             <Space width={8} />
                             <Anchor
                                 className="link-text"
                                 href="https://snapmaker.com/support"
                                 target="_blank"
                             >
-                                {i18n._('Learn more >')}
+                                {i18n._('key_ui/pages/Settings/SoftwareUpdate/SoftwareUpdate_Learn more >')}
                             </Anchor>
                         </div>
                     </div>
@@ -69,7 +69,7 @@ function SoftwareUpdate() {
                             onChange={(event) => { updateShouldCheckForUpdate(event.target.checked); }}
                         />
                         <span className={classNames(styles['autoupdate-text'], 'margin-left-8')}>
-                            {i18n._('Automatically check for updates')}
+                            {i18n._('key_ui/pages/Settings/SoftwareUpdate/SoftwareUpdate_Automatically check for updates')}
                         </span>
                     </div>
                 </div>
@@ -78,7 +78,7 @@ function SoftwareUpdate() {
                 <Button
                     onClick={actions.handleCheckForUpdate}
                 >
-                    {i18n._('Check for updates')}
+                    {i18n._('key_ui/pages/Settings/SoftwareUpdate/SoftwareUpdate_Check for updates')}
                 </Button>
                 <div className={styles['autoupdate-message']}>
                     {autoupdateMessage}

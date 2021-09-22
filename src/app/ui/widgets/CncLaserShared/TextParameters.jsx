@@ -54,7 +54,7 @@ const TextParameters = ({ headType, modifyText, disabled }) => {
     return (
         <div className="margin-top-16 margin-bottom-8 border-top-normal">
             <Anchor className="sm-flex height-32 margin-vertical-8" onClick={actions.onToggleExpand}>
-                <span className="sm-flex-width heading-3">{i18n._('Text')}</span>
+                <span className="sm-flex-width heading-3">{i18n._('key_ui/widgets/CncLaserShared/TextParameters_Text')}</span>
                 <SvgIcon
                     name="DropdownLine"
                     size={24}
@@ -67,8 +67,8 @@ const TextParameters = ({ headType, modifyText, disabled }) => {
             {expanded && (
                 <React.Fragment>
                     <TipTrigger
-                        title={i18n._('Text')}
-                        content={i18n._('Enter the text you want to laser engrave or CNC carve.')}
+                        title={i18n._('key_ui/widgets/CncLaserShared/TextParameters_Text')}
+                        content={i18n._('key_ui/widgets/CncLaserShared/TextParameters_Enter the text you want to laser engrave or CNC carve.')}
                     >
                         <div className="sm-flex height-80 margin-vertical-8">
                             <TextAreaInput
@@ -89,29 +89,29 @@ const TextParameters = ({ headType, modifyText, disabled }) => {
                         </div>
                     </TipTrigger>
                     <TipTrigger
-                        title={i18n._('Font')}
-                        content={i18n._('Select the font of the text.')}
+                        title={i18n._('key_ui/widgets/CncLaserShared/TextParameters_Font')}
+                        content={i18n._('key_ui/widgets/CncLaserShared/TextParameters_Select the font of the text.')}
                     >
                         <div className="sm-flex height-32 margin-vertical-8">
-                            <span className="sm-flex-auto sm-flex-order-negative width-56">{i18n._('Font')}</span>
+                            <span className="sm-flex-auto sm-flex-order-negative width-56">{i18n._('key_ui/widgets/CncLaserShared/TextParameters_Font')}</span>
                             <Select
                                 disabled={disabled}
                                 className="sm-flex-width align-r"
                                 clearable={false}
                                 size="super-large"
                                 options={fontOptions}
-                                placeholder={i18n._('Choose font')}
+                                placeholder={i18n._('key_ui/widgets/CncLaserShared/TextParameters_Choose font')}
                                 value={fontFamily}
                                 onChange={actions.onChangeFont}
                             />
                         </div>
                     </TipTrigger>
                     <TipTrigger
-                        title={i18n._('Font Size')}
-                        content={i18n._('Select the font size of the text.')}
+                        title={i18n._('key_ui/widgets/CncLaserShared/TextParameters_Font Size')}
+                        content={i18n._('key_ui/widgets/CncLaserShared/TextParameters_Select the font size of the text.')}
                     >
                         <div className="sm-flex height-32 margin-vertical-8">
-                            <span className="sm-flex-auto sm-flex-order-negative width-64">{i18n._('Font Size')}</span>
+                            <span className="sm-flex-auto sm-flex-order-negative width-64">{i18n._('key_ui/widgets/CncLaserShared/TextParameters_Font Size')}</span>
                             <Input
                                 suffix="pt"
                                 disabled={disabled}

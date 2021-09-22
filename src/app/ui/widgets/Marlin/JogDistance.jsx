@@ -106,7 +106,7 @@ class JogDistance extends PureComponent {
                                 className={classNames('btn', 'btn-default', {
                                     'btn-select': isCustom
                                 })}
-                                title={i18n._('User Defined')}
+                                title={i18n._('key_ui/widgets/Marlin/JogDistance_User Defined')}
                                 onClick={() => actions.selectCustom()}
                             >
                                 <i className="fa fa-adjust" />
@@ -125,7 +125,7 @@ class JogDistance extends PureComponent {
                             onChange={(event) => {
                                 actions.onChangeCustomValue(event.target.value);
                             }}
-                            title={i18n._('Custom distance for every move')}
+                            title={i18n._('key_ui/widgets/Marlin/JogDistance_Custom distance for every move')}
                         />
                     )}
                     {needCustom && (
@@ -133,14 +133,14 @@ class JogDistance extends PureComponent {
                             <RepeatButton
                                 className="btn btn-outline-secondary"
                                 onClick={actions.increaseCustomDistance}
-                                title={i18n._('Increase custom distance by one unit')}
+                                title={i18n._('key_ui/widgets/Marlin/JogDistance_Increase custom distance by one unit')}
                             >
                                 <i className="fa fa-plus" />
                             </RepeatButton>
                             <RepeatButton
                                 className="btn btn-outline-secondary"
                                 onClick={actions.decreaseCustomDistance}
-                                title={i18n._('Decrease custom distance by one unit')}
+                                title={i18n._('key_ui/widgets/Marlin/JogDistance_Decrease custom distance by one unit')}
                             >
                                 <i className="fa fa-minus" />
                             </RepeatButton>

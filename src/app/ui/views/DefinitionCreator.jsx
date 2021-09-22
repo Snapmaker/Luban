@@ -46,7 +46,7 @@ class DefinitionCreator extends PureComponent {
     renderMaterialCreate() {
         return (
             <div>
-                <span className="font-size-base display-block margin-vertical-8">{i18n._('Enter material name')}</span>
+                <span className="font-size-base display-block margin-vertical-8">{i18n._('key_ui/views/DefinitionCreator_Enter material name')}</span>
                 <Input
                     size="432px"
                     onChange={(event) => {
@@ -64,7 +64,7 @@ class DefinitionCreator extends PureComponent {
             <div>
                 {this.props.disableCategory && (
                     <div>
-                        <span className="font-size-base display-block margin-bottom-8">{i18n._('Enter Profile Name')}</span>
+                        <span className="font-size-base display-block margin-bottom-8">{i18n._('key_ui/views/DefinitionCreator_Enter Profile Name')}</span>
                         <Input
                             size="432px"
                             onChange={(event) => {
@@ -77,7 +77,7 @@ class DefinitionCreator extends PureComponent {
                 )}
                 {!this.props.disableCategory && (
                     <div>
-                        <span className="font-size-base display-block margin-bottom-8">{i18n._('Enter tool name')}</span>
+                        <span className="font-size-base display-block margin-bottom-8">{i18n._('key_ui/views/DefinitionCreator_Enter tool name')}</span>
                         <Input
                             size="432px"
                             onChange={(event) => {
@@ -87,14 +87,14 @@ class DefinitionCreator extends PureComponent {
                             value={this.state.toolName}
                         />
                         <p className="margin-top-16 font-size-base margin-bottom-8">
-                            {i18n._('Select material type')}
+                            {i18n._('key_ui/views/DefinitionCreator_Select material type')}
                         </p>
                         <Select
                             size="432px"
                             backspaceRemoves={false}
                             clearable={false}
                             options={this.props.materialOptions}
-                            placeholder={i18n._('Choose font')}
+                            placeholder={i18n._('key_ui/views/DefinitionCreator_Choose font')}
                             value={this.state.materialName}
                             onChange={(option) => {
                                 const materialName = option.label;
@@ -121,12 +121,12 @@ class DefinitionCreator extends PureComponent {
                     }}
                 >
                     <div>
-                        <Radio value="Material" className="height-24">{i18n._('Create Material')}</Radio>
+                        <Radio value="Material" className="height-24">{i18n._('key_ui/views/DefinitionCreator_Create Material')}</Radio>
                         {this.state.createType === 'Material' && this.renderMaterialCreate()}
                     </div>
 
                     <div className="margin-top-16">
-                        <Radio value="Tool" className="height-24">{i18n._('Create Carving Tool')}</Radio>
+                        <Radio value="Tool" className="height-24">{i18n._('key_ui/views/DefinitionCreator_Create Carving Tool')}</Radio>
                         {this.state.createType === 'Tool' && this.renderToolCreate()}
                     </div>
 

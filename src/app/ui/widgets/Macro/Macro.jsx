@@ -97,7 +97,7 @@ function Macro({ widgetId, updateModal, openModal, macros }) {
         >
             {macrosState.length === 0 && (
                 <div className={styles.emptyResult}>
-                    {i18n._('No macros.')}
+                    {i18n._('key_ui/widgets/Macro/Macro_No macros.')}
                 </div>
             )}
             {ensureArray(macrosState).map((macro) => (
@@ -112,13 +112,13 @@ function Macro({ widgetId, updateModal, openModal, macros }) {
                 >
                     <TipTrigger
                         key={macro.id}
-                        title={i18n._('Macro')}
+                        title={i18n._('key_ui/widgets/Macro/Macro_Macro')}
                         content={macro.name}
                     >
                         <SvgIcon
                             name="StartPlay"
                             className="margin-right-4"
-                            title={i18n._('Run Macro')}
+                            title={i18n._('key_ui/widgets/Macro/Macro_Run Macro')}
                             disabled={!canClick}
                             onClick={() => {
                                 actions.runMacro(macro);

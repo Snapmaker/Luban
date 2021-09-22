@@ -42,7 +42,7 @@ class AddMacro extends PureComponent {
             <Modal disableOverlay size="md" onClose={this.props.closeModal}>
                 <Modal.Header>
                     {/* <Modal.Title> */}
-                    {i18n._('New Macro')}
+                    {i18n._('key_ui/widgets/Macro/AddMacro_New Macro')}
                     {/* </Modal.Title> */}
                 </Modal.Header>
                 <Modal.Body>
@@ -55,7 +55,7 @@ class AddMacro extends PureComponent {
                         }}
                     >
                         <div className="form-group">
-                            <span className="">{i18n._('Macro Name')}</span>
+                            <span className="">{i18n._('key_ui/widgets/Macro/AddMacro_Macro Name')}</span>
                             <Input
                                 ref={c => {
                                     this.fields.name = c;
@@ -70,7 +70,7 @@ class AddMacro extends PureComponent {
                         </div>
                         <div className="form-group">
                             <div>
-                                <span className="">{i18n._('Macro Commands')}</span>
+                                <span className="">{i18n._('key_ui/widgets/Macro/AddMacro_Macro Commands')}</span>
                             </div>
                             <Textarea
                                 style={{ borderRadius: '8px' }}
@@ -85,7 +85,7 @@ class AddMacro extends PureComponent {
                             />
                         </div>
                         <div className="form-group">
-                            <span className="">{i18n._('Repeat')}</span>
+                            <span className="">{i18n._('key_ui/widgets/Macro/AddMacro_Repeat')}</span>
                             <NumberInput
                                 ref={c => {
                                     this.fields.repeat = c;
@@ -106,7 +106,7 @@ class AddMacro extends PureComponent {
                         priority="level-two"
                         width="96px"
                     >
-                        {i18n._('Cancel')}
+                        {i18n._('key_ui/widgets/Macro/AddMacro_Cancel')}
                     </Button>
                     <Button
                         priority="level-two"
@@ -122,7 +122,7 @@ class AddMacro extends PureComponent {
                             });
                         }}
                     >
-                        {i18n._('Save')}
+                        {i18n._('key_ui/widgets/Macro/AddMacro_Save')}
                     </Button>
                 </Modal.Footer>
             </Modal>

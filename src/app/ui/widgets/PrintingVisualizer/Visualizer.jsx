@@ -371,7 +371,7 @@ class Visualizer extends PureComponent {
         if (stage !== this.props.stage && stage === STEP_STAGE.PRINTING_LOAD_MODEL_FAILED) {
             modal({
                 cancelTitle: i18n._(''),
-                title: i18n._('Import Error'),
+                title: i18n._('key_ui/widgets/PrintingVisualizer/Visualizer_Import Error'),
                 body: i18n._('Failed to import this object. \nPlease select a supported file format.')
             });
         }
@@ -382,11 +382,11 @@ class Visualizer extends PureComponent {
 
             if (isLarge) {
                 const popupActions = modal({
-                    title: i18n._('Scale to fit'),
+                    title: i18n._('key_ui/widgets/PrintingVisualizer/Visualizer_Scale to fit'),
                     body: (
                         <React.Fragment>
-                            <p>{i18n._('Model size has exceeded the printable area.')}</p>
-                            <p>{i18n._('Scale it to the maximum printable size?')}</p>
+                            <p>{i18n._('key_ui/widgets/PrintingVisualizer/Visualizer_Model size has exceeded the printable area.')}</p>
+                            <p>{i18n._('key_ui/widgets/PrintingVisualizer/Visualizer_Scale it to the maximum printable size?')}</p>
                         </React.Fragment>
 
                     ),
@@ -402,7 +402,7 @@ class Visualizer extends PureComponent {
                                 popupActions.close();
                             }}
                         >
-                            {i18n._('Scale')}
+                            {i18n._('key_ui/widgets/PrintingVisualizer/Visualizer_Scale')}
                         </Button>
                     )
                 });
@@ -487,25 +487,25 @@ class Visualizer extends PureComponent {
                         [
                             {
                                 type: 'item',
-                                label: i18n._('Cut'),
+                                label: i18n._('key_ui/widgets/PrintingVisualizer/Visualizer_Cut'),
                                 disabled: inProgress || !isModelSelected || isSupportSelected,
                                 onClick: this.props.cut
                             },
                             {
                                 type: 'item',
-                                label: i18n._('Copy'),
+                                label: i18n._('key_ui/widgets/PrintingVisualizer/Visualizer_Copy'),
                                 disabled: inProgress || !isModelSelected || isSupportSelected,
                                 onClick: this.props.copy
                             },
                             {
                                 type: 'item',
-                                label: i18n._('Paste'),
+                                label: i18n._('key_ui/widgets/PrintingVisualizer/Visualizer_Paste'),
                                 disabled: inProgress || isSupportSelected || pasteDisabled,
                                 onClick: this.props.paste
                             },
                             {
                                 type: 'item',
-                                label: i18n._('Duplicate'),
+                                label: i18n._('key_ui/widgets/PrintingVisualizer/Visualizer_Duplicate'),
                                 disabled: inProgress || !isModelSelected || isSupportSelected,
                                 onClick: this.actions.duplicateSelectedModel
                             },
@@ -514,7 +514,7 @@ class Visualizer extends PureComponent {
                             },
                             {
                                 type: 'item',
-                                label: i18n._('Hide'),
+                                label: i18n._('key_ui/widgets/PrintingVisualizer/Visualizer_Hide'),
                                 disabled: inProgress || !isModelSelected || isSupportSelected,
                                 onClick: this.props.hideSelectedModel
                             },
@@ -523,25 +523,25 @@ class Visualizer extends PureComponent {
                             },
                             {
                                 type: 'item',
-                                label: i18n._('Reset Model Transformation'),
+                                label: i18n._('key_ui/widgets/PrintingVisualizer/Visualizer_Reset Model Transformation'),
                                 disabled: inProgress || !isModelSelected || isSupportSelected,
                                 onClick: this.actions.resetSelectedModelTransformation
                             },
                             {
                                 type: 'item',
-                                label: i18n._('Center Models'),
+                                label: i18n._('key_ui/widgets/PrintingVisualizer/Visualizer_Center Models'),
                                 disabled: inProgress || !isModelSelected || isSupportSelected,
                                 onClick: this.actions.centerSelectedModel
                             },
                             {
                                 type: 'item',
-                                label: i18n._('Auto Rotate'),
+                                label: i18n._('key_ui/widgets/PrintingVisualizer/Visualizer_Auto Rotate'),
                                 disabled: inProgress || !isModelSelected || isSupportSelected,
                                 onClick: this.actions.autoRotateSelectedModel
                             },
                             {
                                 type: 'item',
-                                label: i18n._('Auto Arrange'),
+                                label: i18n._('key_ui/widgets/PrintingVisualizer/Visualizer_Auto Arrange'),
                                 disabled: inProgress || !hasModel || isSupportSelected,
                                 onClick: this.actions.arrangeAllModels
                             }

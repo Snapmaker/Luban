@@ -121,7 +121,7 @@ function Enclosure() {
         <div>
             <div className="margin-bottom-8">
                 <div className="sm-flex justify-space-between margin-vertical-8">
-                    <span>{i18n._('LED Strips')}</span>
+                    <span>{i18n._('key_ui/widgets/Enclosure/Enclosure_LED Strips')}</span>
                     <Switch
                         onClick={actions.onHandleLed}
                         checked={Boolean(led)}
@@ -129,7 +129,7 @@ function Enclosure() {
                     />
                 </div>
                 <div className="sm-flex justify-space-between margin-vertical-8 ">
-                    <span>{i18n._('Exhaust Fan')}</span>
+                    <span>{i18n._('key_ui/widgets/Enclosure/Enclosure_Exhaust Fan')}</span>
                     <Switch
                         onClick={actions.onHandleCoolingFans}
                         checked={Boolean(fan)}
@@ -138,15 +138,15 @@ function Enclosure() {
                 </div>
                 { (isConnected && connectionType === 'wifi' && headType !== '3dp') && (
                     <TipTrigger
-                        title={i18n._('Door Detection')}
+                        title={i18n._('key_ui/widgets/Enclosure/Enclosure_Door Detection')}
                         content={(
                             <div>
-                                <p>{i18n._('If you disable the Door Detection feature, your job will not pause when one of both of the enclosure panels is/are opened.')}</p>
+                                <p>{i18n._('key_ui/widgets/Enclosure/Enclosure_If you disable the Door Detection feature, your job will not pause when one of both of the enclosure panels is/are opened.')}</p>
                             </div>
                         )}
                     >
                         <div className="sm-flex justify-space-between margin-vertical-8 ">
-                            <span>{i18n._('Door Detection')}</span>
+                            <span>{i18n._('key_ui/widgets/Enclosure/Enclosure_Door Detection')}</span>
                             <Switch
                                 onClick={actions.onHandleDoorEnabled}
                                 checked={isDoorEnabled}

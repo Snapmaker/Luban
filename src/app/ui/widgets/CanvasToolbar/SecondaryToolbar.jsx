@@ -19,19 +19,19 @@ class SecondaryToolbar extends Component {
             <div>
                 <SvgIcon
                     name="ViewFix"
-                    title={i18n._('Reset Position')}
+                    title={i18n._('key_ui/widgets/CanvasToolbar/SecondaryToolbar_Reset Position')}
                     onClick={toFront}
                 />
                 <SvgIcon
                     className="margin-horizontal-8"
                     name="ViewReduce"
-                    title={i18n._('Zoom Out')}
+                    title={i18n._('key_ui/widgets/CanvasToolbar/SecondaryToolbar_Zoom Out')}
                     onClick={zoomOut}
                 />
                 <SvgIcon
                     name="ViewEnlarge"
                     onClick={zoomIn}
-                    title={i18n._('Zoom In')}
+                    title={i18n._('key_ui/widgets/CanvasToolbar/SecondaryToolbar_Zoom In')}
                 />
             </div>
         );

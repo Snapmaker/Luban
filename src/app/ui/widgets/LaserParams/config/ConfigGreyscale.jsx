@@ -73,11 +73,11 @@ const ConfigGreyscale = ({ disabled }) => {
                 <React.Fragment>
                     <div>
                         <TipTrigger
-                            title={i18n._('Invert')}
-                            content={i18n._('Inverts the color of images, white becomes black, and black becomes white.')}
+                            title={i18n._('key_ui/widgets/LaserParams/config/ConfigGreyscale_Invert')}
+                            content={i18n._('key_ui/widgets/LaserParams/config/ConfigGreyscale_Inverts the color of images, white becomes black, and black becomes white.')}
                         >
                             <div className="sm-flex height-32 margin-vertical-8">
-                                <span className="sm-flex-width">{i18n._('Invert')}</span>
+                                <span className="sm-flex-width">{i18n._('key_ui/widgets/LaserParams/config/ConfigGreyscale_Invert')}</span>
                                 <Checkbox
                                     disabled={disabled}
                                     className="sm-flex-auto"
@@ -90,11 +90,11 @@ const ConfigGreyscale = ({ disabled }) => {
                             </div>
                         </TipTrigger>
                         <TipTrigger
-                            title={i18n._('Contrast')}
-                            content={i18n._('Set the disparity between darkness and brightness.')}
+                            title={i18n._('key_ui/widgets/LaserParams/config/ConfigGreyscale_Contrast')}
+                            content={i18n._('key_ui/widgets/LaserParams/config/ConfigGreyscale_Set the disparity between darkness and brightness.')}
                         >
                             <div className="sm-flex height-32 margin-vertical-8">
-                                <span className="sm-flex-width">{i18n._('Contrast')}</span>
+                                <span className="sm-flex-width">{i18n._('key_ui/widgets/LaserParams/config/ConfigGreyscale_Contrast')}</span>
                                 <Slider
                                     disabled={disabled}
                                     size="middle"
@@ -119,11 +119,11 @@ const ConfigGreyscale = ({ disabled }) => {
                         </TipTrigger>
 
                         <TipTrigger
-                            title={i18n._('Brightness')}
-                            content={i18n._('Set the brightness of the image. The bigger the value is, the brighter the image will be.')}
+                            title={i18n._('key_ui/widgets/LaserParams/config/ConfigGreyscale_Brightness')}
+                            content={i18n._('key_ui/widgets/LaserParams/config/ConfigGreyscale_Set the brightness of the image. The bigger the value is, the brighter the image will be.')}
                         >
                             <div className="sm-flex height-32 margin-vertical-8">
-                                <span className="sm-flex-width">{i18n._('Brightness')}</span>
+                                <span className="sm-flex-width">{i18n._('key_ui/widgets/LaserParams/config/ConfigGreyscale_Brightness')}</span>
                                 <Slider
                                     size="middle"
                                     disabled={disabled}
@@ -147,12 +147,12 @@ const ConfigGreyscale = ({ disabled }) => {
                             </div>
                         </TipTrigger>
                         <TipTrigger
-                            title={i18n._('White Clip')}
-                            content={i18n._('Set the threshold to turn the color that is not pure white into pure white. Zero is taken to be black, and 255 is taken to be white. Colors above this value will be rendered into pure white.')}
+                            title={i18n._('key_ui/widgets/LaserParams/config/ConfigGreyscale_White Clip')}
+                            content={i18n._('key_ui/widgets/LaserParams/config/ConfigGreyscale_Set the threshold to turn the color that is not pure white into pure white. Zero is taken to be black, and 255 is taken to be white. Colors above this value will be rendered into pure white.')}
                         >
 
                             <div className="sm-flex height-32 margin-vertical-8">
-                                <span className="sm-flex-width">{i18n._('White Clip')}</span>
+                                <span className="sm-flex-width">{i18n._('key_ui/widgets/LaserParams/config/ConfigGreyscale_White Clip')}</span>
                                 <Slider
                                     disabled={disabled}
                                     size="middle"
@@ -176,12 +176,12 @@ const ConfigGreyscale = ({ disabled }) => {
                             </div>
                         </TipTrigger>
                         <TipTrigger
-                            title={i18n._('Algorithm')}
-                            content={i18n._('Select an algorithm for image processing.')}
+                            title={i18n._('key_ui/widgets/LaserParams/config/ConfigGreyscale_Algorithm')}
+                            content={i18n._('key_ui/widgets/LaserParams/config/ConfigGreyscale_Select an algorithm for image processing.')}
                         >
 
                             <div className="sm-flex height-32 margin-vertical-8">
-                                <span className="sm-flex-width">{i18n._('Algorithm')}</span>
+                                <span className="sm-flex-width">{i18n._('key_ui/widgets/LaserParams/config/ConfigGreyscale_Algorithm')}</span>
                                 <Select
                                     disabled={disabled}
                                     backspaceRemoves={false}

@@ -40,11 +40,11 @@ class GcodeParameters extends PureComponent {
                 <div className="sm-parameter-container">
                     {!(isSculpt && isRotate) && (
                         <TipTrigger
-                            title={i18n._('Target Depth')}
-                            content={i18n._('Set the depth of the object to be carved. The depth should be smaller than the flute length.')}
+                            title={i18n._('key_ui/views/ToolPathConfigurations/cnc/GcodeParameters_Target Depth')}
+                            content={i18n._('key_ui/views/ToolPathConfigurations/cnc/GcodeParameters_Set the depth of the object to be carved. The depth should be smaller than the flute length.')}
                         >
                             <div className="sm-parameter-row">
-                                <span className="sm-parameter-row__label">{i18n._('Target Depth')}</span>
+                                <span className="sm-parameter-row__label">{i18n._('key_ui/views/ToolPathConfigurations/cnc/GcodeParameters_Target Depth')}</span>
                                 <Input
                                     disabled={false}
                                     className="sm-parameter-row__input"
@@ -60,11 +60,11 @@ class GcodeParameters extends PureComponent {
                         </TipTrigger>
                     )}
                     <TipTrigger
-                        title={i18n._('Jog Height')}
-                        content={i18n._('Set the distance between the tool and the material when the tool is not carving.')}
+                        title={i18n._('key_ui/views/ToolPathConfigurations/cnc/GcodeParameters_Jog Height')}
+                        content={i18n._('key_ui/views/ToolPathConfigurations/cnc/GcodeParameters_Set the distance between the tool and the material when the tool is not carving.')}
                     >
                         <div className="sm-parameter-row">
-                            <span className="sm-parameter-row__label">{i18n._('Jog Height')}</span>
+                            <span className="sm-parameter-row__label">{i18n._('key_ui/views/ToolPathConfigurations/cnc/GcodeParameters_Jog Height')}</span>
                             <Input
                                 disabled={false}
                                 className="sm-parameter-row__input"
@@ -79,11 +79,11 @@ class GcodeParameters extends PureComponent {
                         </div>
                     </TipTrigger>
                     <TipTrigger
-                        title={i18n._('Stop Height')}
-                        content={i18n._('The distance between the bit and the material when the machine stops.')}
+                        title={i18n._('key_ui/views/ToolPathConfigurations/cnc/GcodeParameters_Stop Height')}
+                        content={i18n._('key_ui/views/ToolPathConfigurations/cnc/GcodeParameters_The distance between the bit and the material when the machine stops.')}
                     >
                         <div className="sm-parameter-row">
-                            <span className="sm-parameter-row__label">{i18n._('Stop Height')}</span>
+                            <span className="sm-parameter-row__label">{i18n._('key_ui/views/ToolPathConfigurations/cnc/GcodeParameters_Stop Height')}</span>
                             <Input
                                 disabled={false}
                                 className="sm-parameter-row__input"
@@ -102,16 +102,16 @@ class GcodeParameters extends PureComponent {
                             {(pathType === 'path' || pathType === 'outline') && (
                                 <OptionalDropdown
                                     style={{ marginBottom: '10px' }}
-                                    title={i18n._('Tabs')}
+                                    title={i18n._('key_ui/views/ToolPathConfigurations/cnc/GcodeParameters_Tabs')}
                                     onClick={() => { this.props.updateGcodeConfig({ enableTab: !enableTab }); }}
                                     hidden={!enableTab}
                                 >
                                     <TipTrigger
-                                        title={i18n._('Tab Height')}
-                                        content={i18n._('Enter the height of the tabs.')}
+                                        title={i18n._('key_ui/views/ToolPathConfigurations/cnc/GcodeParameters_Tab Height')}
+                                        content={i18n._('key_ui/views/ToolPathConfigurations/cnc/GcodeParameters_Enter the height of the tabs.')}
                                     >
                                         <div className="sm-parameter-row">
-                                            <span className="sm-parameter-row__label">{i18n._('Tab Height')}</span>
+                                            <span className="sm-parameter-row__label">{i18n._('key_ui/views/ToolPathConfigurations/cnc/GcodeParameters_Tab Height')}</span>
                                             <Input
                                                 className="sm-parameter-row__input"
                                                 value={tabHeight}
@@ -125,11 +125,11 @@ class GcodeParameters extends PureComponent {
                                         </div>
                                     </TipTrigger>
                                     <TipTrigger
-                                        title={i18n._('Tab Space')}
-                                        content={i18n._('Enter the space between any two tabs.')}
+                                        title={i18n._('key_ui/views/ToolPathConfigurations/cnc/GcodeParameters_Tab Space')}
+                                        content={i18n._('key_ui/views/ToolPathConfigurations/cnc/GcodeParameters_Enter the space between any two tabs.')}
                                     >
                                         <div className="sm-parameter-row">
-                                            <span className="sm-parameter-row__label">{i18n._('Tab Space')}</span>
+                                            <span className="sm-parameter-row__label">{i18n._('key_ui/views/ToolPathConfigurations/cnc/GcodeParameters_Tab Space')}</span>
                                             <Input
                                                 className="sm-parameter-row__input"
                                                 value={tabSpace}
@@ -142,11 +142,11 @@ class GcodeParameters extends PureComponent {
                                         </div>
                                     </TipTrigger>
                                     <TipTrigger
-                                        title={i18n._('Tab Width')}
-                                        content={i18n._('Enter the width of the tabs.')}
+                                        title={i18n._('key_ui/views/ToolPathConfigurations/cnc/GcodeParameters_Tab Width')}
+                                        content={i18n._('key_ui/views/ToolPathConfigurations/cnc/GcodeParameters_Enter the width of the tabs.')}
                                     >
                                         <div className="sm-parameter-row">
-                                            <span className="sm-parameter-row__label">{i18n._('Tab Width')}</span>
+                                            <span className="sm-parameter-row__label">{i18n._('key_ui/views/ToolPathConfigurations/cnc/GcodeParameters_Tab Width')}</span>
                                             <Input
                                                 className="sm-parameter-row__input"
                                                 style={{ width: '160px' }}

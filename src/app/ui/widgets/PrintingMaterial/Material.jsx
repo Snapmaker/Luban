@@ -66,7 +66,7 @@ function Material({ widgetActions }) {
     }
 
     useEffect(() => {
-        widgetActions.setTitle(i18n._('Material Settings'));
+        widgetActions.setTitle(i18n._('key_ui/widgets/PrintingMaterial/Material_Material Settings'));
     }, [widgetActions]);
     useEffect(() => {
         const newMaterialDefinitionOptions = materialDefinitions.map(d => ({

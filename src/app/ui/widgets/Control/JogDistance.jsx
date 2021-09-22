@@ -109,7 +109,7 @@ const JogDistance = (props) => {
     return (
         <div className="margin-bottom-16">
             <div className={styles['jog-distance-control']}>
-                <p className="margin-vertical-8">{i18n._('XYZ Axis Travel Distance')}</p>
+                <p className="margin-vertical-8">{i18n._('key_ui/widgets/Control/JogDistance_XYZ Axis Travel Distance')}</p>
                 <div className="row no-gutters">
                     <div className="col-12">
                         <div className="input-group no-gutters">
@@ -174,7 +174,7 @@ const JogDistance = (props) => {
                             <button
                                 type="button"
                                 className={distanceClasses.custom}
-                                title={i18n._('User Defined')}
+                                title={i18n._('key_ui/widgets/Control/JogDistance_User Defined')}
                                 onClick={() => actions.selectDistance()}
                                 disabled={!canClick}
                             >
@@ -184,7 +184,7 @@ const JogDistance = (props) => {
                                 type="number"
                                 className="form-control"
                                 style={{ borderColor: '#6c757d' }}
-                                title={i18n._('Custom distance for every move')}
+                                title={i18n._('key_ui/widgets/Control/JogDistance_Custom distance for every move')}
                                 min={DISTANCE_MIN}
                                 max={DISTANCE_MAX}
                                 step={DISTANCE_STEP}
@@ -197,7 +197,7 @@ const JogDistance = (props) => {
                             />
                             <RepeatButton
                                 className="btn btn-outline-secondary"
-                                title={i18n._('Increase custom distance by one unit')}
+                                title={i18n._('key_ui/widgets/Control/JogDistance_Increase custom distance by one unit')}
                                 onClick={actions.increaseCustomDistance}
                                 disabled={!canClick}
                             >
@@ -205,7 +205,7 @@ const JogDistance = (props) => {
                             </RepeatButton>
                             <RepeatButton
                                 className="btn btn-outline-secondary"
-                                title={i18n._('Decrease custom distance by one unit')}
+                                title={i18n._('key_ui/widgets/Control/JogDistance_Decrease custom distance by one unit')}
                                 onClick={actions.decreaseCustomDistance}
                                 disabled={!canClick}
                             >
@@ -217,7 +217,7 @@ const JogDistance = (props) => {
             </div>
             {workPosition.isFourAxis && (
                 <div className={styles['jog-distance-control']}>
-                    <p className="margin-vertical-8">{i18n._('B Axis Rotation Angle')}</p>
+                    <p className="margin-vertical-8">{i18n._('key_ui/widgets/Control/JogDistance_B Axis Rotation Angle')}</p>
                     <div className="row no-gutters">
                         <div className="col-12">
                             <div className="input-group no-gutters">
@@ -256,7 +256,7 @@ const JogDistance = (props) => {
                                 <button
                                     type="button"
                                     className={angleClasses.custom}
-                                    title={i18n._('User Defined')}
+                                    title={i18n._('key_ui/widgets/Control/JogDistance_User Defined')}
                                     onClick={() => actions.selectAngle()}
                                     disabled={!canClick}
                                 >
@@ -266,7 +266,7 @@ const JogDistance = (props) => {
                                     type="number"
                                     style={{ borderColor: '#6c757d' }}
                                     className="form-control"
-                                    title={i18n._('Custom angle for every move operation')}
+                                    title={i18n._('key_ui/widgets/Control/JogDistance_Custom angle for every move operation')}
                                     min={DISTANCE_MIN}
                                     max={DISTANCE_MAX}
                                     step={DISTANCE_STEP}
@@ -279,7 +279,7 @@ const JogDistance = (props) => {
                                 />
                                 <RepeatButton
                                     className="btn btn-outline-secondary"
-                                    title={i18n._('Increase custom angle by one unit')}
+                                    title={i18n._('key_ui/widgets/Control/JogDistance_Increase custom angle by one unit')}
                                     onClick={actions.increaseCustomAngle}
                                     disabled={!canClick}
                                 >
@@ -287,7 +287,7 @@ const JogDistance = (props) => {
                                 </RepeatButton>
                                 <RepeatButton
                                     className="btn btn-outline-secondary"
-                                    title={i18n._('Decrease custom distance by one unit')}
+                                    title={i18n._('key_ui/widgets/Control/JogDistance_Decrease custom distance by one unit')}
                                     onClick={actions.decreaseCustomAngle}
                                     disabled={!canClick}
                                 >

@@ -46,7 +46,7 @@ class EditMacro extends PureComponent {
             <Modal disableOverlay size="md" onClose={this.props.closeModal}>
                 <Modal.Header>
                     {/* <Modal.Title> */}
-                    {i18n._('Edit Macro')}
+                    {i18n._('key_ui/widgets/Macro/EditMacro_Edit Macro')}
                     {/* </Modal.Title> */}
                 </Modal.Header>
                 <Modal.Body>
@@ -59,7 +59,7 @@ class EditMacro extends PureComponent {
                         }}
                     >
                         <div className="form-group">
-                            <span className="">{i18n._('Macro Name')}</span>
+                            <span className="">{i18n._('key_ui/widgets/Macro/EditMacro_Macro Name')}</span>
                             <Input
                                 ref={c => {
                                     this.fields.name = c;
@@ -74,7 +74,7 @@ class EditMacro extends PureComponent {
                         </div>
                         <div className="form-group">
                             <div>
-                                <span className="">{i18n._('Macro Commands')}</span>
+                                <span className="">{i18n._('key_ui/widgets/Macro/EditMacro_Macro Commands')}</span>
                             </div>
                             <Textarea
                                 ref={c => {
@@ -89,7 +89,7 @@ class EditMacro extends PureComponent {
                             />
                         </div>
                         <div className="form-group">
-                            <span className="">{i18n._('Repeat')}</span>
+                            <span className="">{i18n._('key_ui/widgets/Macro/EditMacro_Repeat')}</span>
                             <NumberInput
                                 ref={c => {
                                     this.fields.repeat = c;
@@ -117,11 +117,11 @@ class EditMacro extends PureComponent {
                                 <Modal disableOverlay={false} size="xs" onClose={onClose}>
                                     <Modal.Header>
                                         {/* <Modal.Title> */}
-                                        {i18n._('Delete Macro')}
+                                        {i18n._('key_ui/widgets/Macro/EditMacro_Delete Macro')}
                                         {/* </Modal.Title> */}
                                     </Modal.Header>
                                     <Modal.Body>
-                                        {i18n._('Delete this macro?')}
+                                        {i18n._('key_ui/widgets/Macro/EditMacro_Delete this macro?')}
                                         <p><strong>{name_}</strong></p>
                                     </Modal.Body>
                                     <Modal.Footer>
@@ -131,7 +131,7 @@ class EditMacro extends PureComponent {
                                             type="default"
                                             onClick={onClose}
                                         >
-                                            {i18n._('Cancel')}
+                                            {i18n._('key_ui/widgets/Macro/EditMacro_Cancel')}
                                         </Button>
                                         <Button
                                             className="margin-left-8"
@@ -145,14 +145,14 @@ class EditMacro extends PureComponent {
                                                 onClose
                                             )}
                                         >
-                                            {i18n._('Delete')}
+                                            {i18n._('key_ui/widgets/Macro/EditMacro_Delete')}
                                         </Button>
                                     </Modal.Footer>
                                 </Modal>
                             ));
                         }}
                     >
-                        {i18n._('Delete')}
+                        {i18n._('key_ui/widgets/Macro/EditMacro_Delete')}
                     </Button>
                     <Button
                         type="default"
@@ -163,7 +163,7 @@ class EditMacro extends PureComponent {
                             this.props.closeModal();
                         }}
                     >
-                        {i18n._('Cancel')}
+                        {i18n._('key_ui/widgets/Macro/EditMacro_Cancel')}
                     </Button>
                     <Button
                         className="margin-left-8"
@@ -179,7 +179,7 @@ class EditMacro extends PureComponent {
                             });
                         }}
                     >
-                        {i18n._('Save')}
+                        {i18n._('key_ui/widgets/Macro/EditMacro_Save')}
                     </Button>
                 </Modal.Footer>
             </Modal>

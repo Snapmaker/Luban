@@ -78,7 +78,7 @@ class FirmwareTool extends PureComponent {
         return (
             <div>
                 <div className="sm-flex height-28 margin-bottom-8">
-                    <span className="width-136">{i18n._('Controller Firmware')}</span>
+                    <span className="width-136">{i18n._('key_ui/pages/Settings/FirmwareTool/FirmwareTool_Controller Firmware')}</span>
                     <input
                         ref={this.mainInput}
                         className="margin-left-32 "
@@ -89,7 +89,7 @@ class FirmwareTool extends PureComponent {
                     />
                 </div>
                 <div className="sm-flex height-28">
-                    <span className="width-136">{i18n._('Module Firmware')}</span>
+                    <span className="width-136">{i18n._('key_ui/pages/Settings/FirmwareTool/FirmwareTool_Module Firmware')}</span>
                     <input
                         ref={this.moduleInput}
                         className="margin-left-32 "
@@ -101,7 +101,7 @@ class FirmwareTool extends PureComponent {
                 </div>
                 {shouldShowWarning && (
                     <span className="margin-top-10 display-inline color-red-1">
-                        {i18n._('Please select one or more firmware binaries')}
+                        {i18n._('key_ui/pages/Settings/FirmwareTool/FirmwareTool_Please select one or more firmware binaries')}
                     </span>
                 )}
             </div>

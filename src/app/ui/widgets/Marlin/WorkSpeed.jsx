@@ -53,7 +53,7 @@ class WorkSpeed extends PureComponent {
         const actions = this.actions;
         return (
             <div className="sm-flex justify-space-between margin-vertical-8">
-                <span className="height-32">{i18n._('Work Speed')}</span>
+                <span className="height-32">{i18n._('key_ui/widgets/Marlin/WorkSpeed_Work Speed')}</span>
                 <div className="sm-flex-auto">
                     <span className="height-32">{workSpeed}/</span>
                     <Input
