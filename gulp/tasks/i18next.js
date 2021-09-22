@@ -37,7 +37,7 @@ const appConfig = {
     src: [
         'src/app/**/*.js',
         'src/app/**/*.jsx',
-        'resources/CuraEngine/Config/*.json',
+        'resources/CuraEngine/Config/*/*.json',
         // Use ! to filter out files or directories
         '!src/app/{vendor,i18n}/**',
         '!test/**',
@@ -171,7 +171,7 @@ function customTransform(file, enc, done) {
     const basename = path.basename(file.path);
 
     // Extract descriptions from Cura config file
-    if (basename === 'snapmaker.def.json') {
+    if (basename.indexOf('.def.json') > -1) {
         const curaConfig = JSON.parse(content);
 
         const walk = (name, node) => {

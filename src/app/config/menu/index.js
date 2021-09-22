@@ -22,7 +22,7 @@ function getMenuItems() {
     if (isElectron() && window.require('electron').remote.process.platform === 'darwin') {
         // About
         menuItems.unshift({
-            label: window.require('electron').remote.app.getName(),
+            label: window.require('electron').remote.app.getName(), // 'Snapmaker Luban'
             submenu: [
                 { role: 'about', label: 'About' },
                 { type: 'separator' },
