@@ -7,7 +7,7 @@ export default {
     submenu: [
         {
             id: 'guided-tour',
-            label: 'key_menu_Beginner\'s Guide',
+            label: 'key_menu_Beginners Guide',
             enabled: true,
             click: (menuItem, browserWindow) => {
                 if (isElectron()) {
