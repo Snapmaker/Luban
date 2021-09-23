@@ -116,7 +116,7 @@ function CncToolManager({ closeToolManager, shouldSaveToolpath = false, saveTool
             optionConfigGroup={optionConfigGroup}
             allDefinitions={allDefinitions}
             disableCategory={false}
-            managerTitle="Tool Settings"
+            managerTitle="key_cnc_tool_settings_Tool Settings"
             selectedId={selectedId}
             headType={HEAD_CNC}
         />

@@ -134,12 +134,6 @@ i18n._('Stepdown');
 i18n._('Set the distance along the Z axis per step that the tool is plunged into the material.');
 
 // CNC tool setting
-i18n._('key_constants/copy_Tool Settings');
-i18n._('key_constants/copy_Cutting Diameter');
-i18n._('key_constants/copy_Set the diameter of the carving tool.');
-i18n._('key_constants/copy_Point Angle');
-i18n._('key_constants/copy_Set the point angle of the carving tool.');
-i18n._('key_constants/copy_Shank Diameter');
-i18n._('key_constants/copy_Set the shank diameter of the carving tool.');
-i18n._('key_constants/copy_Carving Tool');
-i18n._('key_constants/copy_Parameters');
+i18n._('key_cnc_tool_settings_Tool Settings');
+i18n._('Carving Tool');
+i18n._('Parameters');
