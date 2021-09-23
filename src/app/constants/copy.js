@@ -96,12 +96,12 @@ i18n._('key_constants/copy_ABS');
 i18n._('key_constants/copy_PETG');
 
 // CNC stl Orientation
-i18n._('key_constants/copy_Front');
-i18n._('key_constants/copy_Back');
-i18n._('key_constants/copy_Left');
-i18n._('key_constants/copy_Right');
-i18n._('key_constants/copy_Top');
-i18n._('key_constants/copy_Bottom');
+i18n._('key_cnc_stl_orientation_Front');
+i18n._('key_cnc_stl_orientation_Back');
+i18n._('key_cnc_stl_orientation_Left');
+i18n._('key_cnc_stl_orientation_Right');
+i18n._('key_cnc_stl_orientation_Top');
+i18n._('key_cnc_stl_orientation_Bottom');
 
 // CNC ToolPath
 i18n._('Allowance');
