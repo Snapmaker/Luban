@@ -146,7 +146,7 @@ function Laser({ location }) {
             modal({
                 title: i18n._('key_ui/pages/Laser_Warning'),
                 cancelTitle: 'Close',
-                body: i18n._('Only {{accept}} files are supported.', { accept: ACCEPT })
+                body: i18n._('key_ui/pages/Laser_Only {{accept}} files are supported.', { accept: ACCEPT })
             });
         }
     };

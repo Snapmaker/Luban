@@ -9,18 +9,18 @@ export const TablePagination = (props) => {
             {...props}
             pageRecordsRenderer={({ totalRecords, from, to }) => {
                 if (totalRecords > 0) {
-                    return i18n._('Records: {{from}} - {{to}} / {{total}}', {
+                    return i18n._('key_ui/components/Paginations_Records: {{from}} - {{to}} / {{total}}', {
                         from,
                         to,
                         total: totalRecords
                     });
                 }
 
-                return i18n._('Records: {{total}}', { total: totalRecords });
+                return i18n._('key_ui/components/Paginations_Records: {{total}}', { total: totalRecords });
             }}
             pageLengthRenderer={({ pageLength }) => (
                 <span>
-                    {i18n._('{{pageLength}} per page', { pageLength })}
+                    {i18n._('key_ui/components/Paginations_{{pageLength}} per page', { pageLength })}
                     <i className="caret" />
                 </span>
             )}

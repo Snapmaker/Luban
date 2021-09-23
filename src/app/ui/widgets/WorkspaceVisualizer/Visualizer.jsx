@@ -662,7 +662,7 @@ class Visualizer extends Component {
             case WORKSPACE_STAGE.EMPTY:
                 return '';
             case WORKSPACE_STAGE.LOADING_GCODE:
-                return i18n._('Loading G-code...{{progress}}%', { progress: (100.0 * progress).toFixed(1) });
+                return i18n._('key_ui/widgets/WorkspaceVisualizer/Visualizer_Loading G-code...{{progress}}%', { progress: (100.0 * progress).toFixed(1) });
             case WORKSPACE_STAGE.LOAD_GCODE_SUCCEED:
                 return i18n._('key_ui/widgets/WorkspaceVisualizer/Visualizer_Loaded G-code successfully.');
             case WORKSPACE_STAGE.LOAD_GCODE_FAILED:

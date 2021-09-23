@@ -152,7 +152,7 @@ function Console({ widgetId, widgetActions, minimized, isDefault, clearRenderSta
 
                 if (terminal) {
                     terminal.writeln(`${name} ${version}`);
-                    terminal.writeln(i18n._('Connected to {{-port}}', { port: port }));
+                    terminal.writeln(i18n._('key_ui/widgets/Console/Console_Connected to {{-port}}', { port: port }));
                 }
             }
 
@@ -271,7 +271,7 @@ function Console({ widgetId, widgetActions, minimized, isDefault, clearRenderSta
                 if (terminal) {
                     if (connectionType === CONNECTION_TYPE_SERIAL) {
                         terminal.writeln(`${name} ${version}`);
-                        terminal.writeln(i18n._('Connected to {{-port}}', { port: port }));
+                        terminal.writeln(i18n._('key_ui/widgets/Console/Console_Connected to {{-port}}', { port: port }));
                     } else {
                         terminal.writeln(`${name} ${version}`);
                         terminal.writeln(i18n._('key_ui/widgets/Console/Console_Connected via Wi-Fi'));

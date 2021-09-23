@@ -174,7 +174,7 @@ function SerialConnection() {
                     {label}
                 </div>
                 {manufacturer && (
-                    <i>{i18n._('Manufacturer: {{manufacturer}}', { manufacturer })}</i>
+                    <i>{i18n._('key_ui/widgets/Connection/SerialConnection_Manufacturer: {{manufacturer}}', { manufacturer })}</i>
                 )}
             </div>
         );

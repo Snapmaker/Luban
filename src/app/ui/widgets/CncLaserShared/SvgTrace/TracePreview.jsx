@@ -394,7 +394,7 @@ class TracePreview extends Component {
                     <tbody>
                         <tr>
                             <td style={{ width: '400px' }}>
-                                <p className={styles['trace-status']}>{i18n._('Status: {{status}}', { status: status })}</p>
+                                <p className={styles['trace-status']}>{i18n._('key_ui/widgets/CncLaserShared/SvgTrace/TracePreview_Status: {{status}}', { status: status })}</p>
                             </td>
                             <td style={{ width: '80px' }}>
                                 <p className={styles['trace-status']}>{i18n._('key_ui/widgets/CncLaserShared/SvgTrace/TracePreview_Upload As')}: </p>

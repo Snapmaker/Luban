@@ -134,7 +134,7 @@ const Table = React.memo(({ tableColumns, onRowSelect, selectedRow, data, setDat
                 </thead>
             </table>
             <div className={classNames(styles.scroll)} ref={refScroll}>
-                { data.length === 0 ? <div className="text-center padding-vertical-56">{i18n._('Analyzing...')}</div> : null }
+                { data.length === 0 ? <div className="text-center padding-vertical-56">{i18n._('key_ui/widgets/PrintingVisualizer/Overlay/RotationAnalysisOverlay_Analyzing...')}</div> : null }
                 <table>
                     <tbody ref={refTbody}>
                         {
