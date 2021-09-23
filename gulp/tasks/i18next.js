@@ -106,6 +106,7 @@ const appConfig = {
 
 // configuration fields that are displayed in config panel
 const curaFields = [
+    // Printing
     'material_diameter',
     'material_flow',
     'material_print_temperature',
@@ -151,7 +152,27 @@ const curaFields = [
     'support_pattern',
     'support_angle',
     'support_infill_rate',
-    'support_z_distance'
+    'support_z_distance',
+    // Laser
+    'fill_enabled',
+    'movement_mode',
+    'direction',
+    'fill_interval',
+    'jog_speed',
+    'work_speed',
+    'dwell_time',
+    'multi_passes',
+    'multi_pass_depth',
+    'fixed_power',
+    // CNC
+    'diameter',
+    'angle',
+    'shaft_diameter',
+    'jog_speed',
+    'work_speed',
+    'plunge_speed',
+    'step_down',
+    'step_over'
 ];
 
 const CURA_CATEGORIES = [

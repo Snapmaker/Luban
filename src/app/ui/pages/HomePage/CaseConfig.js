@@ -4,7 +4,7 @@ export const CaseConfigOriginal = [
         tag: 'printing', // printing、laser、cnc
         tag_i18n: '3DP',
         // title: '3D Printed Fabric',
-        title: 'Fabric',
+        title: 'key_case_library_Fabric',
         imgSrc: '../../resources/images/user-case/Origin/library_fabric_97x97.png',
         pathConfig: {
             isDatastoragePath: true,
@@ -16,7 +16,7 @@ export const CaseConfigOriginal = [
         tag: 'laser',
         tag_i18n: 'Laser',
         // title: 'Laser Engraved Feather',
-        title: 'Feather',
+        title: 'key_case_library_Feather',
         mode: 'greyscale', // mode: 'vector','greyscale','bw','text','trace'
         imgSrc: '../../resources/images/user-case/Origin/library_feather_97x97.png',
         pathConfig: {
@@ -29,7 +29,7 @@ export const CaseConfigOriginal = [
         tag: 'cnc',
         tag_i18n: 'CNC',
         // title: 'CNC Cut Sign',
-        title: 'Sign',
+        title: 'key_case_library_Sign',
         mode: 'vector', // mode: 'vector','greyscale','bw','text','trace'
         imgSrc: '../../resources/images/user-case/Origin/library_sign_97x97.png',
         pathConfig: {
@@ -45,7 +45,7 @@ export const CaseConfig150 = [
         tag: 'printing', // printing、laser、cnc
         tag_i18n: '3DP',
         // title: '3D Printed Spiral Vase',
-        title: 'Spiral Vase',
+        title: 'key_case_library_Spiral Vase',
         imgSrc: '../../resources/images/user-case/A150/library_spiral_vase_97x97.png',
         pathConfig: {
             isDatastoragePath: true,
@@ -57,7 +57,7 @@ export const CaseConfig150 = [
         tag: 'laser',
         tag_i18n: 'Laser',
         // title: 'Laser Cut Gift Box',
-        title: 'Gift Box',
+        title: 'key_case_library_Gift Box',
         mode: 'vector', // mode: 'vector','greyscale','bw','text','trace'
         imgSrc: '../../resources/images/user-case/A150/library_gift_box_97x97.png',
         pathConfig: {
@@ -70,7 +70,7 @@ export const CaseConfig150 = [
         tag: 'cnc',
         tag_i18n: 'CNC',
         // title: 'CNC Cut Keychain',
-        title: 'Keychain',
+        title: 'key_case_library_Keychain',
         mode: 'vector', // mode: 'vector','greyscale','bw','text','trace'
         imgSrc: '../../resources/images/user-case/A150/library_phone_holder_97x97.png',
         pathConfig: {
@@ -86,7 +86,7 @@ export const CaseConfig250 = [
         tag: 'printing', // printing、laser、cnc
         tag_i18n: '3DP',
         // title: '3D Printed Spiral Vase',
-        title: 'Spiral Vase',
+        title: 'key_case_library_Spiral Vase',
         imgSrc: '../../resources/images/user-case/A250/library_spiral_vase_97x97.png',
         pathConfig: {
             isDatastoragePath: true,
@@ -99,7 +99,7 @@ export const CaseConfig250 = [
         tag: 'laser',
         tag_i18n: 'Laser',
         // title: 'Laser Cut Gift Box',
-        title: 'Gift Box',
+        title: 'key_case_library_Gift Box',
         // sourceType: 'svg', // raster/svg/text
         mode: 'vector', // mode: 'vector','greyscale','bw','text','trace'
         imgSrc: '../../resources/images/user-case/A250/library_gift_box_97x97.png',
@@ -114,7 +114,7 @@ export const CaseConfig250 = [
         tag: 'cnc',
         tag_i18n: 'CNC',
         // title: 'CNC Cut Smartphone Holder',
-        title: 'Phone Holder',
+        title: 'key_case_library_Phone Holder',
         mode: 'vector', // mode: 'vector','greyscale','bw','text','trace'
         imgSrc: '../../resources/images/user-case/A250/library_phone_holder_97x97.png',
         pathConfig: {
@@ -131,7 +131,7 @@ export const CaseConfig350 = [
         tag: 'printing', // printing、laser、cnc
         tag_i18n: '3DP',
         // title: '3D Printed Spiral Vase',
-        title: 'Spiral Vase',
+        title: 'key_case_library_Spiral Vase',
         imgSrc: '../../resources/images/user-case/A250/library_spiral_vase_97x97.png',
         pathConfig: {
             isDatastoragePath: true,
@@ -143,7 +143,7 @@ export const CaseConfig350 = [
         tag: 'laser',
         tag_i18n: 'Laser',
         // title: 'Laser Cut Gift Box',
-        title: 'Gift Box',
+        title: 'key_case_library_Gift Box',
         // sourceType: 'svg', // raster/svg/text
         mode: 'vector', // mode: 'vector','greyscale','bw','text','trace'
         imgSrc: '../../resources/images/user-case/A250/library_gift_box_97x97.png',
@@ -158,7 +158,7 @@ export const CaseConfig350 = [
         tag: 'cnc',
         tag_i18n: 'CNC',
         // title: 'CNC Cut Smartphone Holder',
-        title: 'Phone Holder',
+        title: 'key_case_library_Phone Holder',
         mode: 'vector', // mode: 'vector','greyscale','bw','text','trace'
         imgSrc: '../../resources/images/user-case/A250/library_phone_holder_97x97.png',
         pathConfig: {
@@ -174,7 +174,7 @@ const DEFAULT_CASE = [
         tag: 'cnc',
         tag_i18n: 'CNC',
         // title: 'Rotary CNC Carved Chess Piece',
-        title: 'Knight Chess Piece',
+        title: 'key_case_library_Knight Chess Piece',
         mode: 'greyscale', // mode:     path: /UserCase/A250/',
         imgSrc: '../../resources/images/user-case/FourAxis/library_chess_piece_97x97.png',
         pathConfig: {
@@ -186,7 +186,7 @@ const DEFAULT_CASE = [
     {
         tag: 'cnc',
         tag_i18n: 'CNC',
-        title: 'Lion Chess Piece',
+        title: 'key_case_library_Lion Chess Piece',
         // title: '4-axis Linkage CNC Carved Lion',
         mode: 'greyscale', // mode: 'vec    path: /UserCase/A250/',
         imgSrc: '../../resources/images/user-case/FourAxis/library_cnc_lion_97x97.png',
@@ -204,7 +204,7 @@ export const CaseConfigA250FourAxis = [
         tag: 'laser',
         tag_i18n: 'Laser',
         // title: 'Rotary Laser Engraved Lion',
-        title: 'Lion Box',
+        title: 'key_case_library_Lion Box',
         // sourceType: 'svg', // raster/svg/text
         mode: 'greyscale', // mode: 'v
         imgSrc: '../../resources/images/user-case/FourAxis/library_laser_lion_97x97.png',
@@ -222,7 +222,7 @@ export const CaseConfigA350FourAxis = [
         tag: 'laser',
         tag_i18n: 'Laser',
         // title: 'Rotary Laser Engraved Lion',
-        title: 'Lion Box',
+        title: 'key_case_library_Lion Box',
         // sourceType: 'svg', // raster/svg/text
         mode: 'greyscale', // mode: 'v
         imgSrc: '../../resources/images/user-case/FourAxis/library_laser_lion_97x97.png',
