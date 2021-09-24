@@ -1,6 +1,7 @@
 import React, { useRef, useEffect, useState } from 'react';
 import { useDispatch, useSelector, shallowEqual } from 'react-redux';
 import PropTypes from 'prop-types';
+import { GithubPicker } from 'react-color';
 import classNames from 'classnames';
 import * as THREE from 'three';
 import { cloneDeep, filter, find } from 'lodash';
@@ -67,6 +68,7 @@ export const renderExtruderIcon = (leftExtruderColor, rightExtruderColor) => (
     </div>
 );
 function VisualizerLeftBar({ defaultSupportSize, setTransformMode, isSupporting, supportActions, updateBoundingBox, autoRotateSelectedModel }) {
+    const [color, setColor] = useState('#FFFFFF');
     const size = useSelector(state => state?.machine?.size, shallowEqual);
     const selectedGroup = useSelector(state => state?.printing?.modelGroup?.selectedGroup, shallowEqual);
     const selectedModelArray = useSelector(state => state?.printing?.modelGroup?.selectedModelArray);
@@ -670,9 +672,51 @@ function VisualizerLeftBar({ defaultSupportSize, setTransformMode, isSupporting,
                                     </li>
                                 )}
                             </ul>
+                            <ul className={classNames(styles.nav)}>
+                                <li
+                                    className="margin-vertical-4"
+                                >
+                                    <SvgIcon
+                                        color="#545659"
+                                        className={classNames(
+                                            { [styles.selected]: (!transformDisabled && transformMode === 'test') },
+                                            'padding-horizontal-4'
+                                        )}
+                                        type={[`${!transformDisabled && transformMode === 'test' ? 'hoverNoBackground' : 'hoverSpecial'}`, 'pressSpecial']}
+                                        name="ToolbarSupport"
+                                        size={48}
+                                        onClick={() => {
+                                            setTransformMode('test');
+                                        }}
+                                        disabled={supportDisabled}
+                                    />
+                                </li>
+                            </ul>
                         </span>
                     </nav>
                 </div>
+                {transformMode === 'test' && (
+                    <div
+                        className="position-ab width-280 margin-left-72 border-default-grey-1 border-radius-8 background-color-white"
+                        style={{
+                            marginTop: '60px'
+                        }}
+                    >
+                        <GithubPicker
+                            color={color}
+                            onChangeComplete={(event) => {
+                                setColor(event.hex);
+                            }}
+                        />
+                        <div
+                            style={{
+                                background: color,
+                                width: '20px',
+                                height: '30px'
+                            }}
+                        />
+                    </div>
+                )}
                 {!transformDisabled && transformMode === 'translate' && (
                     <div
                         className="position-ab width-280 margin-left-72 border-default-grey-1 border-radius-8 background-color-white"
