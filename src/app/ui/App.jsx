@@ -140,7 +140,6 @@ class App extends PureComponent {
 }
 
 const mapStateToProps = (state) => {
-    console.log({ state });
     const machineInfo = state.machine;
     const enableShortcutIn3dp = !state.printing.leftBarOverlayVisible;
     const { shouldCheckForUpdate } = machineInfo;
