@@ -75,16 +75,15 @@ const convertRasterToSvg = (options) => {
 };
 
 const convertTextToSvg = async (options) => {
-    const { text, font, name, size, lineHeight, alignment } = options;
-
+    const { text, 'font-size': fontSize, 'line-height': lineHeight, 'font-family': fontFamily, name, alignment } = options;
     const uploadName = pathWithRandomSuffix(name);
 
-    const fontObj = await fontManager.getFont(font);
+    const fontObj = await fontManager.getFont(fontFamily);
     const unitsPerEm = fontObj.unitsPerEm;
     const descender = fontObj.tables.os2.sTypoDescender;
 
     // Big enough to being rendered clearly on canvas (still has space for improvements)
-    const estimatedFontSize = Math.round(size / 72 * 25.4 * 10);
+    const estimatedFontSize = Math.round(fontSize / 72 * 25.4 * 10);
 
     const lines = text.split('\n');
     const numberOfLines = lines.length;
@@ -152,6 +151,7 @@ const convertTextToSvg = async (options) => {
 
 // just process one line text, multi-line text can be transfered to text elements in front end
 const convertOneLineTextToSvg = async (options) => {
+    // const { text, font, name, size, lineHeight, alignment } = options;
     const { text, font, name, size, x, y, bbox } = options;
     const uploadName = pathWithRandomSuffix(name);
     const fontObj = await fontManager.getFont(font);

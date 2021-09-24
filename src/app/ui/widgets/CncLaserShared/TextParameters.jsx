@@ -2,6 +2,7 @@ import React, { useState, useRef } from 'react';
 import { useSelector } from 'react-redux';
 import PropTypes from 'prop-types';
 import classNames from 'classnames';
+import styles from './styles.styl';
 import Select from '../../components/Select';
 import i18n from '../../../lib/i18n';
 import { NumberInput as Input, TextAreaInput } from '../../components/Input';
@@ -16,8 +17,7 @@ const TextParameters = ({ headType, modifyText, disabled }) => {
         label: font.displayName,
         value: font.fontFamily
     }));
-    const { text, 'font-size': fontSize, 'font-family': fontFamily } = config;
-
+    const { text, 'font-size': fontSize, 'font-family': fontFamily, alignment } = config;
     const [expanded, setExpanded] = useState(true);
 
     const fileInput = useRef();
@@ -48,6 +48,9 @@ const TextParameters = ({ headType, modifyText, disabled }) => {
         },
         onChangeSize: (newSize) => {
             modifyText(null, { fontSize: `${newSize}` });
+        },
+        onChangeAlignment: (newAlignment) => {
+            modifyText(null, { alignment: newAlignment });
         }
     };
 
@@ -79,11 +82,6 @@ const TextParameters = ({ headType, modifyText, disabled }) => {
                                 className="sm-flex-width"
                                 rows="3"
                                 value={text}
-                                onKeyPress={(e) => {
-                                    if (e.key === 'Enter') {
-                                        e.preventDefault();
-                                    }
-                                }}
                                 onChange={actions.onChangeText}
                             />
                         </div>
@@ -121,6 +119,51 @@ const TextParameters = ({ headType, modifyText, disabled }) => {
                             />
                         </div>
                     </TipTrigger>
+                    <TipTrigger
+                        title={i18n._('Alignment')}
+                        content={i18n._('Align the text in different lines to either the left or right or in the center horizontally.')}
+                    >
+                        <div className="sm-parameter-row">
+                            <span className="sm-parameter-row__label">{i18n._('Alignment')}</span>
+                            <span className={styles.textAlignWrap}>
+                                <button
+                                    className={classNames(
+                                        styles.textAlignButton,
+                                        { [styles.active]: alignment === 'left' }
+                                    )}
+                                    type="button"
+                                    disabled={disabled}
+                                    onClick={() => { actions.onChangeAlignment('left'); }}
+                                >
+                                    <SvgIcon name="IconAlignLeft" size={16} color="#666666" />
+                                </button>
+                                <button
+                                    type="button"
+                                    className={classNames(
+                                        styles.textAlignButton,
+                                        { [styles.active]: alignment === 'middle' },
+                                    )}
+                                    disabled={disabled}
+                                    onClick={() => { actions.onChangeAlignment('middle'); }}
+                                >
+                                    <SvgIcon name="IconAlignCenter" size={16} color="#666666" />
+                                </button>
+                                <button
+                                    className={classNames(
+                                        styles.textAlignButton,
+                                        { [styles.active]: alignment === 'right' },
+                                    )}
+                                    type="button"
+                                    disabled={disabled}
+                                    onClick={() => { actions.onChangeAlignment('right'); }}
+                                >
+                                    <SvgIcon name="IconAlignRight" size={16} color="#666666" />
+                                </button>
+                            </span>
+                        </div>
+                    </TipTrigger>
+
+
                 </React.Fragment>
             )}
         </div>

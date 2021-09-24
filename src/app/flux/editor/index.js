@@ -531,6 +531,7 @@ export const actions = {
             isRotate: materials.isRotate,
             elem: contentGroup.addSVGElement({
                 element: config.svgNodeName || 'image',
+                // element: 'image',
                 attr: { id: modelID }
             }),
             size: size

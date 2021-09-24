@@ -25,7 +25,7 @@ const XLINK_HREF = 'xlink:href';
 const SVG_HREF = 'href';
 const SVG_ATTR_TRANSFORM = 'transform';
 const SVG_TAG_USE = 'use';
-const SVG_TAG_DEFS = 'defs';
+// const SVG_TAG_DEFS = 'defs';
 
 
 let parentTextAttributes = '';
@@ -210,7 +210,7 @@ class SVGParser {
     parseUseStructure(tag, node, parent, attributes) {
         if (node) {
             if (tag === SVG_TAG_USE) {
-                let url, shadow_node, x, y;
+                let url, shadowNode, x, y;
                 if (XLINK_HREF in attributes) url = attributes[XLINK_HREF];
                 if (SVG_HREF in attributes) url = attributes[SVG_HREF];
                 if (!isNil(url)) {
@@ -230,20 +230,22 @@ class SVGParser {
                         y = '0';
                     }
                     if (this.defs[url]) {
-                        shadow_node = this.defs[url];
+                        const shadowTag = this.defs[url].shadowTag;
+                        shadowNode = this.defs[url].shadowNode;
                         if (transform) {
-                            if (shadow_node.$[SVG_ATTR_TRANSFORM]) {
-                                shadow_node.$[
+                            if (shadowNode.$[SVG_ATTR_TRANSFORM]) {
+                                shadowNode.$[
                                     SVG_ATTR_TRANSFORM
                                 ] += ` translate(${x}, ${y})`;
                             } else {
-                                shadow_node.$[SVG_ATTR_TRANSFORM] = `translate(${x}, ${y})`;
+                                shadowNode.$[SVG_ATTR_TRANSFORM] = `translate(${x}, ${y})`;
                             }
                         }
-                        if (parent.g && Array.isArray(parent.g)) {
-                            parent.g.push(shadow_node);
+
+                        if (parent[shadowTag] && Array.isArray(parent[shadowTag])) {
+                            parent[shadowTag].push(shadowNode);
                         } else {
-                            parent.g = [shadow_node];
+                            parent[shadowTag] = [shadowNode];
                         }
                     } else {
                         console.log(`def which id is ${url} doesn't exist`);
@@ -252,7 +254,10 @@ class SVGParser {
             }
             // If we have an ID, we save the node.
             if (SVG_ATTR_ID in attributes) {
-                this.defs[attributes[SVG_ATTR_ID]] = node;
+                this.defs[attributes[SVG_ATTR_ID]] = {
+                    shadowTag: tag,
+                    shadowNode: node
+                };
             }
         }
     }

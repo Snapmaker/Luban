@@ -20,7 +20,7 @@ const EVENTS = {
 };
 
 const svg = document.createElementNS(NS.SVG, 'svg');
-let updateTimer;
+// let updateTimer;
 
 // function transformPoint(point, m) {
 //     const { x, y } = point;
@@ -329,6 +329,7 @@ class SvgModel extends BaseModel {
         const content = `<svg x="0" y="0" width="${vwidth}mm" height="${vheight}mm" `
             + `viewBox="${vx} ${vy} ${vwidth} ${vheight}" `
             + `xmlns="http://www.w3.org/2000/svg">${new XMLSerializer().serializeToString(clone)}</svg>`;
+
         const model = {
             modelID: elem.getAttribute('id'),
             content: content,
@@ -410,22 +411,23 @@ class SvgModel extends BaseModel {
         let blob, file, res;
         if (this.type === 'text') {
             // eslint-disable-next-line prefer-const
-            let { text, 'font-family': font, 'font-size': size } = this.config;
-            // enlarge font-size to make process image clear enough
-            size *= 16;
-            const cloneElement = this.elem.cloneNode(true);
-            cloneElement.setAttribute('font-size', size);
-            this.elem.parentNode.append(cloneElement);
-            // eslint-disable-next-line prefer-const
-            let { x, y, width, height } = cloneElement.getBBox();
-            const bbox = { x, y, width, height };
-            x = parseFloat(cloneElement.getAttribute('x'));
-            y = parseFloat(cloneElement.getAttribute('y'));
-            cloneElement.remove();
-
-            const name = this.originalName;
-            const alignment = 'middle';
-            res = await api.convertOneLineTextToSvg({ text, font, name, size, x, y, bbox, alignment });
+            // let { text, 'font-family': font, 'font-size': size } = this.config;
+            // // enlarge font-size to make process image clear enough
+            // size *= 16;
+            // const cloneElement = this.elem.cloneNode(true);
+            // cloneElement.setAttribute('font-size', size);
+            // this.elem.parentNode.append(cloneElement);
+            // // eslint-disable-next-line prefer-const
+            // let { x, y, width, height } = cloneElement.getBBox();
+            // const bbox = { x, y, width, height };
+            // x = parseFloat(cloneElement.getAttribute('x'));
+            // y = parseFloat(cloneElement.getAttribute('y'));
+            // cloneElement.remove();
+            //
+            // const name = this.originalName;
+            // const alignment = 'middle';
+            // res = await api.convertOneLineTextToSvg({ text, font, name, size, x, y, bbox, alignment });
+            return this.uploadName;
         } else {
             blob = new Blob([content], { type: 'image/svg+xml' });
             file = new File([blob], 'gen.svg');
@@ -1113,12 +1115,12 @@ class SvgModel extends BaseModel {
 
         this.refresh();
         this.modelGroup.modelChanged();
-        if (this.config.svgNodeName === 'text') {
-            updateTimer && clearTimeout(updateTimer);
-            updateTimer = setTimeout(() => {
-                this.updateSource();
-            }, 300); // to prevent continuous input cause frequently update
-        }
+        // if (this.config.svgNodeName === 'text') {
+        //     updateTimer && clearTimeout(updateTimer);
+        //     updateTimer = setTimeout(() => {
+        //         this.updateSource();
+        //     }, 300); // to prevent continuous input cause frequently update
+        // }
     }
 
     /**

@@ -27,13 +27,9 @@ const generateLaserToolPath = async (modelInfo, onProgress) => {
     const outputFilePath = `${DataStorage.tmpDir}/${outputFilename}`;
     let modelPath = null;
     // no need to process model
-    console.log('sourceType', sourceType, mode);
     if (((sourceType === SOURCE_TYPE_SVG)
         && (mode === PROCESS_MODE_VECTOR))) {
-        const newUploadName = /parsed\.svg$/i.test(uploadName) ? uploadName
-            : uploadName.replace(/\.svg$/i, 'parsed.svg');
-        console.log('toolPathFiles[j]', uploadName, newUploadName);
-        modelPath = `${DataStorage.tmpDir}/${newUploadName}`;
+        modelPath = `${DataStorage.tmpDir}/${uploadName}`;
     } else {
         if (uploadName.indexOf('svg') > 0) {
             log.error('process image need an image uploadName');
@@ -62,7 +58,6 @@ const generateLaserToolPath = async (modelInfo, onProgress) => {
 
             return outputFilename;
         } catch (e) {
-            console.log(e);
             return null;
         }
     }
