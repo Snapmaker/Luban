@@ -43,8 +43,8 @@ class DefinitionManager {
         // active definition
         res = await this.getDefinition('active', false);
         this.activeDefinition = res;
-        // res = await api.profileDefinitions.getDefaultDefinitions(this.headType, this.seriesWithToolhead);
-        res = await api.profileDefinitions.getConfigDefinitions(this.headType, this.configPathname);
+        res = await api.profileDefinitions.getDefaultDefinitions(this.headType, this.configPathname);
+        // res = await api.profileDefinitions.getConfigDefinitions(this.headType, this.configPathname);
         this.defaultDefinitions = res.body.definitions;
     }
 
