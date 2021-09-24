@@ -6,6 +6,9 @@
     "i18nName": "key-default_name-PETG_White",
     "i18nCategory": "key-default_category-PETG",
     "overrides": {
+        "color": {
+            "default_value": "#ff0008"
+        },
         "material_flow": {
             "default_value": 100
         },

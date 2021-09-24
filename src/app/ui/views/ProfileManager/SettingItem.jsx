@@ -1,14 +1,18 @@
-import React from 'react';
+import React, { useState } from 'react';
 import PropTypes from 'prop-types';
+import { GithubPicker } from 'react-color';
 import i18n from '../../../lib/i18n';
 import Select from '../../components/Select';
 import { NumberInput as Input } from '../../components/Input';
 import Checkbox from '../../components/Checkbox';
+import { PRINTING_MATERIAL_CONFIG_COLORS } from '../../../constants';
 
 import TipTrigger from '../../components/TipTrigger';
 import SvgIcon from '../../components/SvgIcon';
 
 function SettingItem({ definitionKey, settings, isDefaultDefinition = () => true, onChangeDefinition, defaultValue, styleSize = 'large' }) {
+    const [showColor, setShowColor] = useState(false);
+
     const setting = settings[definitionKey];
 
     const isProfile = !isDefaultDefinition();
@@ -108,6 +112,9 @@ function SettingItem({ definitionKey, settings, isDefaultDefinition = () => true
             });
         });
     }
+    if (label === 'Color') {
+        console.log('type', type);
+    }
     return (
         <TipTrigger title={i18n._(label)} content={i18n._(description)} key={definitionKey}>
             <div className="position-re sm-flex justify-space-between height-32 margin-vertical-8">
@@ -191,8 +198,33 @@ function SettingItem({ definitionKey, settings, isDefaultDefinition = () => true
                     {type === undefined && (
                         <span className="sm-parameter-row__input-unit">{unit}</span>
                     )}
+                    {type === 'color' && (
+                        <div
+                            className="sm-flex-width align-r height-percent-100 width-96 display-inline"
+                            role="button"
+                            tabIndex="0"
+                            onKeyPress={() => {}}
+                            style={{
+                                background: settingDefaultValue
+                            }}
+                            onClick={() => setShowColor(!showColor)}
+                        />
+                    )}
                 </div>
             </div>
+            {showColor && (
+                <div className="sm-flex-width align-r">
+                    <GithubPicker
+                        width={220}
+                        triangle="top-right"
+                        colors={PRINTING_MATERIAL_CONFIG_COLORS}
+                        color={settingDefaultValue}
+                        onChangeComplete={(event) => {
+                            onChangeDefinition(definitionKey, event.hex);
+                        }}
+                    />
+                </div>
+            )}
         </TipTrigger>
     );
 }
