@@ -124,8 +124,8 @@ export const actions = {
         dispatch(editorActions._init(HEAD_CNC));
         const { toolHead, series } = getState().machine;
         await dispatch(machineActions.updateMachineToolHead(toolHead, series, HEAD_CNC));
-        const { seriesWithToolhead } = getState().machine;
-        await definitionManager.init(HEAD_CNC, seriesWithToolhead.seriesWithToolhead);
+        const { currentMachine } = getState().machine;
+        await definitionManager.init(HEAD_CNC, currentMachine.configPathname);
         dispatch(editorActions.updateState(HEAD_CNC, {
             toolDefinitions: await definitionManager.getConfigDefinitions(),
             activeToolListDefinition: definitionManager?.activeDefinition,

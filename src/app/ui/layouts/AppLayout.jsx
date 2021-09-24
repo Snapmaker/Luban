@@ -69,7 +69,6 @@ class AppLayout extends PureComponent {
         updateShouldCheckForUpdate: PropTypes.func.isRequired,
         children: PropTypes.array.isRequired,
         restartGuideTours: PropTypes.func.isRequired,
-        updateMachineState: PropTypes.func.isRequired,
         machineInfo: PropTypes.object.isRequired,
         updateMachineToolHead: PropTypes.func.isRequired
     };
@@ -447,7 +446,6 @@ class AppLayout extends PureComponent {
                 const history = this.props.history;
                 const { toolHead, series } = this.props.machineInfo;
                 await this.props.startProject(oldPathname, `/${headType}`, history);
-                await this.props.updateMachineState({ headType });
                 await this.props.updateMachineToolHead(toolHead, series, headType);
                 if (headType === HEAD_CNC || headType === HEAD_LASER) {
                     if (!isRotate) {
@@ -641,7 +639,6 @@ const mapDispatchToProps = (dispatch) => {
         updateAutoupdateMessage: (message) => dispatch(machineActions.updateAutoupdateMessage(message)),
         updateIsDownloading: (isDownloading) => dispatch(machineActions.updateIsDownloading(isDownloading)),
         restartGuideTours: (pathname, history) => dispatch(projectActions.startProject(pathname, pathname, history, true)),
-        updateMachineState: (state) => dispatch(machineActions.updateMachineState(state)),
         updateMachineToolHead: (toolHead, series, headType) => dispatch(machineActions.updateMachineToolHead(toolHead, series, headType))
     };
 };

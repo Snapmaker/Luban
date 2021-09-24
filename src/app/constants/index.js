@@ -1035,7 +1035,7 @@ export function getMachineSeriesWithToolhead(platform, toolhead, headType) {
     const seriesInfo = valueOf(MACHINE_SERIES, 'value', platform) || MACHINE_SERIES.ORIGINAL;
     const size = seriesInfo ? seriesInfo.setting?.size : MACHINE_SERIES.ORIGINAL.setting.size;
     const headToolInfo = MACHINE_TOOL_HEADS[toolhead[`${headType}Toolhead`]] || MACHINE_TOOL_HEADS[SINGLE_EXTRUDER_TOOLHEAD_FOR_SM2];
-    const seriesWithToolhead = `${headToolInfo?.pathname}${platform === 'Original Long Z-axis' ? 'Original' : platform}`;
+    const configPathname = `${platform === 'Original Long Z-axis' ? 'original' : platform.toLowerCase()}_${headToolInfo?.pathname}`;
     const workSize = {
         [headType]: {
             x: size.x - headToolInfo.offset.x,
@@ -1045,7 +1045,7 @@ export function getMachineSeriesWithToolhead(platform, toolhead, headType) {
     };
     return {
         series: platform,
-        seriesWithToolhead,
+        configPathname,
         workSize: workSize
     };
 }

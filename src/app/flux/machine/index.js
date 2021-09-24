@@ -90,7 +90,7 @@ const INITIAL_STATE = {
     },
     headType: null,
     canReselectMachine: false,
-    seriesWithToolhead: INITIAL_MACHINE_SERIES_WITH_HEADTOOL,
+    currentMachine: INITIAL_MACHINE_SERIES_WITH_HEADTOOL,
     size: MACHINE_SERIES.ORIGINAL.setting.size,
     laserSize: MACHINE_SERIES.ORIGINAL.setting.laserSize,
     // endregion
@@ -243,7 +243,7 @@ export const actions = {
         const { series = INITIAL_STATE.series, size = INITIAL_STATE.size, laserSize = INITIAL_STATE.laserSize, toolHead = INITIAL_STATE.toolHead } = machineStore.get('machine') || {};
 
         const seriesInfo = valueOf(MACHINE_SERIES, 'value', series);
-        const seriesWithToolhead = getMachineSeriesWithToolhead(series, toolHead);
+        const currentMachine = getMachineSeriesWithToolhead(series, toolHead);
         if (seriesInfo === MACHINE_SERIES.CUSTOM) {
             seriesInfo.setting.size = size;
             seriesInfo.setting.laserSize = seriesInfo.setting.size;
@@ -254,7 +254,7 @@ export const actions = {
             size: seriesInfo ? seriesInfo.setting.size : size,
             laserSize: seriesInfo ? seriesInfo.setting.laserSize : laserSize,
             toolHead: toolHead,
-            seriesWithToolhead: seriesWithToolhead
+            currentMachine
         }));
 
         dispatch(editorActions.onSizeUpdated('laser', seriesInfo ? seriesInfo.setting.size : size));
@@ -480,8 +480,8 @@ export const actions = {
         const oldToolHead = getState().machine.toolHead;
         const oldSeries = getState().machine.series;
         if (!_.isEqual(oldToolHead, toolHead) || oldSeries !== series || headType) {
-            const seriesWithToolhead = getMachineSeriesWithToolhead(series, toolHead, headType);
-            dispatch(baseActions.updateState({ seriesWithToolhead }));
+            const currentMachine = getMachineSeriesWithToolhead(series, toolHead, headType);
+            dispatch(baseActions.updateState({ currentMachine }));
             if (!_.isEqual(oldToolHead, toolHead)) {
                 dispatch(baseActions.updateState({ toolHead }));
             }

@@ -129,8 +129,8 @@ export const actions = {
         dispatch(editorActions._init(HEAD_LASER));
         const { toolHead, series } = getState().machine;
         await dispatch(machineActions.updateMachineToolHead(toolHead, series, HEAD_LASER));
-        const { seriesWithToolhead } = getState().machine;
-        await definitionManager.init(HEAD_LASER, seriesWithToolhead.seriesWithToolhead);
+        const { currentMachine } = getState().machine;
+        await definitionManager.init(HEAD_LASER, currentMachine.configPathname);
         dispatch(editorActions.updateState(HEAD_LASER, {
             toolDefinitions: await definitionManager.getConfigDefinitions(),
             activeToolListDefinition: definitionManager?.activeDefinition,
