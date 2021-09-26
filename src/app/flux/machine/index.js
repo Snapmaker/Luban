@@ -12,6 +12,7 @@ import {
     MACHINE_SERIES,
     HEAD_CNC,
     HEAD_LASER,
+    HEAD_PRINTING,
     WORKFLOW_STATE_IDLE,
     WORKFLOW_STATUS_IDLE,
     WORKFLOW_STATUS_PAUSED,
@@ -21,7 +22,8 @@ import {
     SINGLE_EXTRUDER_TOOLHEAD_FOR_ORIGINAL,
     LEVEL_ONE_POWER_LASER_FOR_ORIGINAL,
     STANDARD_CNC_TOOLHEAD_FOR_ORIGINAL,
-    getMachineSeriesWithToolhead
+    getMachineSeriesWithToolhead,
+    getCurrentHeadType
 } from '../../constants';
 
 import { valueOf } from '../../lib/contants-utils';
@@ -460,8 +462,12 @@ export const actions = {
         machineStore.set('machine.series', series);
 
         const oldSeries = getState().machine.series;
+        const toolHead = getState().machine.toolHead;
+        const headType = getCurrentHeadType(window.location.href) || HEAD_PRINTING;
         if (oldSeries !== series) {
             dispatch(baseActions.updateState({ series }));
+            const currentMachine = getMachineSeriesWithToolhead(series, toolHead, headType);
+            dispatch(baseActions.updateState({ currentMachine }));
             const seriesInfo = valueOf(MACHINE_SERIES, 'value', series);
             if (seriesInfo === MACHINE_SERIES.CUSTOM) {
                 seriesInfo.setting.size = machineStore.get('machine.size') || seriesInfo.setting.size;
