@@ -1703,7 +1703,7 @@ export const actions = {
 
         const { size } = getState().machine;
         const uploadPath = `${DATA_PREFIX}/${uploadName}`;
-        const { modelGroup } = getState().printing;
+        const { modelGroup, activeDefinition } = getState().printing;
 
         if (isGroup) {
             const modelState = await modelGroup.generateModel({
@@ -1772,6 +1772,7 @@ export const actions = {
                             originalPosition,
                             modelID,
                             extruderConfig,
+                            color: activeDefinition.settings.color.default_value,
                             parentModelID
                         });
                         dispatch(actions.updateState(modelState));
@@ -2001,7 +2002,8 @@ export const actions = {
     ungroup: () => (dispatch, getState) => {
         const { modelGroup } = getState().printing;
 
-        const groups = modelGroup.getSelectedModelArray().filter(model => model instanceof ThreeGroup);
+        const groups = modelGroup.getSelectedModelArray()
+            .filter(model => model instanceof ThreeGroup);
         const groupChildrenMap = new Map();
         groups.forEach(group => {
             groupChildrenMap.set(group, group.children.slice(0));
@@ -2029,6 +2031,14 @@ export const actions = {
         dispatch(actions.updateState(modelState));
         dispatch(actions.destroyGcodeLine());
         dispatch(actions.displayModel());
+    },
+
+    setModelsColor: (color) => (dispatch, getState) => {
+        const { modelGroup } = getState().printing;
+        const models = modelGroup.getModels();
+        models.forEach((model) => {
+            model.updateMaterialColor(color);
+        });
     }
 };
 
