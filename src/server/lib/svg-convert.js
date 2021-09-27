@@ -14,7 +14,7 @@ const log = logger('svg-convert');
 
 const TEMPLATE = `<?xml version="1.0" encoding="utf-8"?>
 <svg
-    version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0" y="0" width="<%= width %>" height="<%= height %>"
+    version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0" y="0" preserveAspectRatio="none"
     viewBox="<%= x0 %> <%= y0 %> <%= width %> <%= height %>"
 >
   <%= path %>

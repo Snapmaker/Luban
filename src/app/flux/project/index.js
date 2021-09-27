@@ -126,7 +126,7 @@ export const actions = {
             const envObj = JSON.parse(content);
             if (!envObj.models.length) return;
         } catch (e) {
-            console.error('Error content JSON');
+            console.info('Error content JSON');
         }
 
         content && dispatch(actions.updateState(headType, { findLastEnvironment: true, content }));

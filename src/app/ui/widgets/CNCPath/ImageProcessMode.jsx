@@ -7,12 +7,11 @@ import Anchor from '../../components/Anchor';
 import styles from '../CncLaserShared/styles.styl';
 import ReliefParameters from './config/ReliefParameters';
 import SvgIcon from '../../components/SvgIcon';
-import Checkbox from '../../components/Checkbox';
-import TipTrigger from '../../components/TipTrigger';
+// import Checkbox from '../../components/Checkbox';
+// import TipTrigger from '../../components/TipTrigger';
 import { PROCESS_MODE_GREYSCALE, SOURCE_TYPE_SVG } from '../../../constants';
 
-const ImageProcessMode = ({ changeSelectedModelMode, changeSelectedModelShowOrigin, disabled }) => {
-    const showOrigin = useSelector(state => state?.cnc?.modelGroup?.getSelectedModel()?.showOrigin);
+const ImageProcessMode = ({ changeSelectedModelMode, disabled }) => {
     const mode = useSelector(state => state?.cnc?.modelGroup?.getSelectedModel()?.mode);
     const sourceType = useSelector(state => state?.cnc?.modelGroup?.getSelectedModel()?.sourceType);
     const originalName = useSelector(state => state?.cnc?.modelGroup?.getSelectedModel()?.originalName);
@@ -70,20 +69,6 @@ const ImageProcessMode = ({ changeSelectedModelMode, changeSelectedModelShowOrig
                                 </div>
                             )}
                         </div>
-                        <TipTrigger
-                            title={i18n._('key-Cnc/Edit/ImageProcessMode-Show Original Image')}
-                            content={i18n._('key-Cnc/Edit/ImageProcessMode-Shows the original image.')}
-                        >
-                            <div className="sm-flex height-32 margin-vertical-8">
-                                <span className="sm-flex-width">{i18n._('key-Cnc/Edit/ImageProcessMode-Show Original Image')}</span>
-                                <Checkbox
-                                    disabled={disabled}
-                                    className="sm-flex-auto"
-                                    checked={showOrigin}
-                                    onChange={changeSelectedModelShowOrigin}
-                                />
-                            </div>
-                        </TipTrigger>
                         {isGreyscale && (
                             <ReliefParameters disabled={disabled} />
                         )}
@@ -96,9 +81,7 @@ const ImageProcessMode = ({ changeSelectedModelMode, changeSelectedModelShowOrig
 
 ImageProcessMode.propTypes = {
     disabled: PropTypes.bool,
-
-    changeSelectedModelMode: PropTypes.func.isRequired,
-    changeSelectedModelShowOrigin: PropTypes.func.isRequired
+    changeSelectedModelMode: PropTypes.func.isRequired
 };
 
 export default ImageProcessMode;

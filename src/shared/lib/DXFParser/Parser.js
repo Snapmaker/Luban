@@ -491,6 +491,7 @@ export const parseDxf = async (originalPath) => {
 export const generateSvgFromDxf = (dxf, tempPath, tempName) => {
     return new Promise((resolve, reject) => {
         const svg = dxfToSvg(dxf, 0.1);
+        console.log(svg);
         const uploadPath = tempPath.replace(/\.dxf$/, 'parsed.svg');
         const uploadName = tempName.replace(/\.dxf$/, 'parsed.svg');
         updateDxfBoundingBox(svg);

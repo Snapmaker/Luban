@@ -334,6 +334,9 @@ class SVGParser {
                 // container elements
                 case 'svg': {
                     const tagParser = new SVGTagParser(this);
+                    node.$.width = null;
+                    node.$.height = null;
+                    node.$.preserveAspectRatio = 'none'; // prevent uniform scale when scale svg image
                     tagParser.parse(node, attributes);
                     break;
                 }

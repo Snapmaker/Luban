@@ -12,6 +12,7 @@ import { NumberInput as Input } from '../../components/Input';
 import { actions as editorActions } from '../../../flux/editor';
 
 import styles from './styles.styl';
+import { HEAD_CNC } from '../../../constants';
 
 function convertSVGPointToLogicalPoint(p, size) {
     return {
@@ -33,11 +34,13 @@ const TransformationSection = ({ headType, updateSelectedModelUniformScalingStat
     if (uniformScalingState === undefined) {
         uniformScalingState = true;
     }
+    const isRotate = useSelector(state => state[headType]?.materials?.isRotate);
     const selectedElements = SVGActions.getSelectedElements();
     const selectedElementsTransformation = useSelector(state => state[headType]?.SVGActions?.getSelectedElementsTransformation());
     const selectedModelArray = modelGroup.getSelectedModelArray();
     const sourceType = (selectedModelArray.length === 1) ? selectedModelArray[0].sourceType : null;
     const { x, y, width, height, scaleX, scaleY, angle } = selectedElementsTransformation;
+    const isCNC4AxisImage3d = (sourceType === 'image3d' && headType === HEAD_CNC && isRotate);
 
     // calculate logical transformation
     // TODO: convert positions in flux
@@ -191,7 +194,7 @@ const TransformationSection = ({ headType, updateSelectedModelUniformScalingStat
                             </div>
                             <button
                                 type="button"
-                                disabled={disabled || !selectedNotHide || sourceType === 'raster'}
+                                disabled={disabled || !selectedNotHide || isCNC4AxisImage3d}
                                 className={classNames(
                                     uniformScalingState ? styles.icon_size_lock : styles.icon_size_unlock,
                                     'display-inline',
