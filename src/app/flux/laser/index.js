@@ -8,6 +8,7 @@ import {
     DATA_PREFIX,
     DISPLAYED_TYPE_MODEL,
     HEAD_LASER,
+    // MACHINE_TOOL_HEADS,
     PAGE_EDITOR
 } from '../../constants';
 import ModelGroup from '../../models/ModelGroup';
@@ -20,11 +21,13 @@ import {
     ACTION_UPDATE_TRANSFORMATION
 } from '../actionType';
 import { actions as editorActions } from '../editor';
+import { actions as machineActions } from '../machine';
 import ToolPathGroup from '../../toolpaths/ToolPathGroup';
 import definitionManager from '../manager/DefinitionManager';
 import i18n from '../../lib/i18n';
 import { timestamp } from '../../../shared/lib/random-utils';
 import ProgressStatesManager, { STEP_STAGE } from '../../lib/manager/ProgressManager';
+// import { valueOf } from '../../lib/contants-utils';
 
 const initModelGroup = new ModelGroup('laser');
 const operationHistory = new OperationHistory();
@@ -124,9 +127,10 @@ export const actions = {
     // TODO: init should be  re-called
     init: () => async (dispatch, getState) => {
         dispatch(editorActions._init(HEAD_LASER));
-        const { series } = getState().machine;
-
-        await definitionManager.init(HEAD_LASER, series);
+        const { toolHead, series } = getState().machine;
+        await dispatch(machineActions.updateMachineToolHead(toolHead, series, HEAD_LASER));
+        const { currentMachine } = getState().machine;
+        await definitionManager.init(HEAD_LASER, currentMachine.configPathname);
         dispatch(editorActions.updateState(HEAD_LASER, {
             toolDefinitions: await definitionManager.getConfigDefinitions(),
             activeToolListDefinition: definitionManager?.activeDefinition,

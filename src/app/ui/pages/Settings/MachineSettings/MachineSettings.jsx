@@ -6,11 +6,23 @@ import { useDispatch, useSelector } from 'react-redux';
 // import isEqual from 'lodash/isEqual';
 import Select from '../../../components/Select';
 import SvgIcon from '../../../components/SvgIcon';
-import { NumberInput } from '../../../components/Input';
+// import { NumberInput } from '../../../components/Input';
 import i18n from '../../../../lib/i18n';
 import { actions as machineActions } from '../../../../flux/machine';
 import styles from '../form.styl';
-import { MACHINE_SERIES } from '../../../../constants';
+import {
+    MACHINE_SERIES,
+    MACHINE_TOOL_HEADS,
+    SINGLE_EXTRUDER_TOOLHEAD_FOR_ORIGINAL,
+    SINGLE_EXTRUDER_TOOLHEAD_FOR_SM2,
+    LEVEL_ONE_POWER_LASER_FOR_ORIGINAL,
+    LEVEL_TWO_POWER_LASER_FOR_ORIGINAL,
+    LEVEL_ONE_POWER_LASER_FOR_SM2,
+    LEVEL_TWO_POWER_LASER_FOR_SM2,
+    STANDARD_CNC_TOOLHEAD_FOR_ORIGINAL,
+    STANDARD_CNC_TOOLHEAD_FOR_SM2,
+    DUAL_EXTRUDER_TOOLHEAD_FOR_SM2
+} from '../../../../constants';
 import UniApi from '../../../../lib/uni-api';
 
 
@@ -25,6 +37,51 @@ const customOption = {
         }
     }
 };
+const printingToolHeadOption = [
+    {
+        value: MACHINE_TOOL_HEADS[SINGLE_EXTRUDER_TOOLHEAD_FOR_SM2].value,
+        label: MACHINE_TOOL_HEADS[SINGLE_EXTRUDER_TOOLHEAD_FOR_SM2].label
+    }, {
+        value: MACHINE_TOOL_HEADS[DUAL_EXTRUDER_TOOLHEAD_FOR_SM2].value,
+        label: MACHINE_TOOL_HEADS[DUAL_EXTRUDER_TOOLHEAD_FOR_SM2].label
+    }
+];
+const printingToolHeadOptionForOriginal = [
+    {
+        value: MACHINE_TOOL_HEADS[SINGLE_EXTRUDER_TOOLHEAD_FOR_ORIGINAL].value,
+        label: MACHINE_TOOL_HEADS[SINGLE_EXTRUDER_TOOLHEAD_FOR_ORIGINAL].label
+    }
+];
+const laserToolHeadOption = [
+    {
+        value: MACHINE_TOOL_HEADS[LEVEL_ONE_POWER_LASER_FOR_SM2].value,
+        label: MACHINE_TOOL_HEADS[LEVEL_ONE_POWER_LASER_FOR_SM2].label
+    }, {
+        value: MACHINE_TOOL_HEADS[LEVEL_TWO_POWER_LASER_FOR_SM2].value,
+        label: MACHINE_TOOL_HEADS[LEVEL_TWO_POWER_LASER_FOR_SM2].label
+    }
+];
+const laserToolHeadOptionForOriginal = [
+    {
+        value: MACHINE_TOOL_HEADS[LEVEL_ONE_POWER_LASER_FOR_ORIGINAL].value,
+        label: MACHINE_TOOL_HEADS[LEVEL_ONE_POWER_LASER_FOR_ORIGINAL].label
+    }, {
+        value: MACHINE_TOOL_HEADS[LEVEL_TWO_POWER_LASER_FOR_ORIGINAL].value,
+        label: MACHINE_TOOL_HEADS[LEVEL_TWO_POWER_LASER_FOR_ORIGINAL].label
+    }
+];
+const cncToolHeadOptionForOriginal = [
+    {
+        value: MACHINE_TOOL_HEADS[STANDARD_CNC_TOOLHEAD_FOR_ORIGINAL].value,
+        label: MACHINE_TOOL_HEADS[STANDARD_CNC_TOOLHEAD_FOR_ORIGINAL].label
+    }
+];
+const cncToolHeadOption = [
+    {
+        value: MACHINE_TOOL_HEADS[STANDARD_CNC_TOOLHEAD_FOR_SM2].value,
+        label: MACHINE_TOOL_HEADS[STANDARD_CNC_TOOLHEAD_FOR_SM2].label
+    }
+];
 const machineSeriesOptions = [
     {
         ...MACHINE_SERIES.ORIGINAL
@@ -46,12 +103,16 @@ const machineSeriesOptions = [
 function MachineSettings() {
     const dispatch = useDispatch();
     const series = useSelector(state => state?.machine?.series);
+    const toolHead = useSelector(state => state?.machine?.toolHead);
     const size = useSelector(state => state?.machine?.size);
     const enclosureDoorDetection = useSelector(state => state?.machine?.enclosureDoorDetection);
     const zAxisModule = useSelector(state => state?.machine?.zAxisModule);
     const isConnected = useSelector(state => state?.machine?.isConnected);
     const connectionTimeout = useSelector(state => state?.machine?.connectionTimeout);
 
+    const [printingToolheadSelected, setPrintingToolheadSelected] = useState(toolHead.printingToolhead);
+    const [laserToolheadSelected, setLaserToolheadSelected] = useState(toolHead.laserToolhead);
+    const [cncToolheadSelected, setCncToolheadSelected] = useState(toolHead.cncToolhead);
     const [state, setState] = useState({
         series: '',
         size: {
@@ -68,6 +129,15 @@ function MachineSettings() {
     const actions = {
         // Machine Model
         onChangeMachineSeries: (option) => {
+            if (option.value === 'A150' || option.value === 'A250' || option.value === 'A350') {
+                setPrintingToolheadSelected(MACHINE_TOOL_HEADS[SINGLE_EXTRUDER_TOOLHEAD_FOR_SM2].value);
+                setLaserToolheadSelected(MACHINE_TOOL_HEADS[LEVEL_ONE_POWER_LASER_FOR_SM2].value);
+                setCncToolheadSelected(MACHINE_TOOL_HEADS[STANDARD_CNC_TOOLHEAD_FOR_SM2].value);
+            } else {
+                setPrintingToolheadSelected(MACHINE_TOOL_HEADS[SINGLE_EXTRUDER_TOOLHEAD_FOR_ORIGINAL].value);
+                setLaserToolheadSelected(MACHINE_TOOL_HEADS[LEVEL_ONE_POWER_LASER_FOR_ORIGINAL].value);
+                setCncToolheadSelected(MACHINE_TOOL_HEADS[STANDARD_CNC_TOOLHEAD_FOR_ORIGINAL].value);
+            }
             setState({
                 ...state,
                 series: option.value,
@@ -141,7 +211,25 @@ function MachineSettings() {
             dispatch(machineActions.updateMachineSize(state.size));
             dispatch(machineActions.setEnclosureState(state.enclosureDoorDetection));
             dispatch(machineActions.setZAxisModuleState(state.zAxisModule));
+            dispatch(machineActions.updateMachineToolHead({
+                printingToolhead: printingToolheadSelected,
+                laserToolhead: laserToolheadSelected,
+                cncToolhead: cncToolheadSelected
+            }, state.series));
             window.location.href = '/';
+        },
+        handleToolheadChange: (e, type) => {
+            const nextValue = e.value;
+            switch (type) {
+                case 'printing':
+                    setPrintingToolheadSelected(nextValue);
+                    break;
+                case 'laser':
+                    setLaserToolheadSelected(nextValue);
+                    break;
+                default:
+                    break;
+            }
         }
     };
 
@@ -178,7 +266,6 @@ function MachineSettings() {
         });
     }, [series, size, enclosureDoorDetection, zAxisModule, connectionTimeout]);
 
-    const editable = (state.series === 'Custom');
     return (
         <div className={styles['form-container']}>
             <div className="border-bottom-normal padding-bottom-4">
@@ -189,7 +276,7 @@ function MachineSettings() {
                 <span className="margin-left-4">{i18n._('Machine')}</span>
             </div>
             <Select
-                className="margin-top-16"
+                className="margin-vertical-16"
                 searchable={false}
                 size="200px"
                 disabled={isConnected}
@@ -198,35 +285,60 @@ function MachineSettings() {
                 value={state.series}
                 onChange={actions.onChangeMachineSeries}
             />
-            <div className="margin-top-16">{i18n._('X (Width)')}</div>
-            <div className="position-re sm-flex height-32">
-                <NumberInput
-                    suffix="mm"
-                    size="large"
-                    value={state.size.x}
-                    disabled={!editable}
-                    onChange={actions.onChangeSizeX}
-                />
+            <div>
+                <span className="unit-text margin-right-12">{i18n._('Dimensions')}:</span>
+                <span className="main-text-normal">{`${state.size.x} x ${state.size.y} x ${state.size.z} mm`}</span>
             </div>
-            <div className="margin-top-16">{i18n._('Y (Depth)')}</div>
-            <div className="position-re sm-flex height-32">
-                <NumberInput
-                    suffix="mm"
-                    size="large"
-                    value={state.size.y}
-                    disabled={!editable}
-                    onChange={actions.onChangeSizeY}
+            <div className="border-bottom-normal padding-bottom-4 margin-top-32">
+                <SvgIcon
+                    name="TitleSetting"
+                    type={['static']}
                 />
+                <span className="margin-left-4">{i18n._('Head')}</span>
             </div>
-            <div className="margin-top-16">{i18n._('Z (Height)')}</div>
-            <div className="position-re sm-flex height-32">
-                <NumberInput
-                    suffix="mm"
-                    size="large"
-                    value={state.size.z}
-                    disabled={!editable}
-                    onChange={actions.onChangeSizeZ}
-                />
+            <div className={styles.headDetail}>
+                <div className="margin-bottom-16">
+                    <div className="main-text-normal margin-bottom-8 margin-top-16">{i18n._('3D Print Toolhead')}</div>
+                    <Select
+                        value={printingToolheadSelected}
+                        options={(state.series === 'Original' || state.series === 'Original Long Z-axis' ? printingToolHeadOptionForOriginal : printingToolHeadOption).map(item => {
+                            return {
+                                value: item.value,
+                                label: i18n._(item.label)
+                            };
+                        })}
+                        onChange={e => actions.handleToolheadChange(e, 'printing')}
+                        size="large"
+                        disabled
+                    />
+                </div>
+                <div className="margin-bottom-16">
+                    <div className="main-text-normal margin-bottom-8">{i18n._('Laser Toolhead')}</div>
+                    <Select
+                        value={laserToolheadSelected}
+                        options={(state.series === 'Original' || state.series === 'Original Long Z-axis' ? laserToolHeadOptionForOriginal : laserToolHeadOption).map(item => {
+                            return {
+                                value: item.value,
+                                label: i18n._(item.label)
+                            };
+                        })}
+                        onChange={e => actions.handleToolheadChange(e, 'laser')}
+                        size="large"
+                    />
+                </div>
+                <div className="margin-bottom-16">
+                    <div className="main-text-normal margin-bottom-8">{i18n._('CNC Toolhead')}</div>
+                    <Select
+                        value={cncToolheadSelected}
+                        options={(state.series === 'Original' || state.series === 'Original Long Z-axis' ? cncToolHeadOptionForOriginal : cncToolHeadOption).map(item => ({
+                            value: item.value,
+                            label: i18n._(item.label)
+                        }))}
+                        onChange={e => actions.handleToolheadChange(e, 'cnc')}
+                        size="large"
+                        disabled
+                    />
+                </div>
             </div>
         </div>
     );

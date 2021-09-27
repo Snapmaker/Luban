@@ -5,7 +5,7 @@ import { cloneDeep, isNil } from 'lodash';
 import LoadModelWorker from '../../workers/LoadModel.worker';
 import GcodeToBufferGeometryWorker from '../../workers/GcodeToBufferGeometry.worker';
 import { ABSENT_OBJECT, EPSILON, DATA_PREFIX, PRINTING_MANAGER_TYPE_MATERIAL,
-    PRINTING_MANAGER_TYPE_QUALITY, MACHINE_SERIES, HEAD_PRINTING } from '../../constants';
+    PRINTING_MANAGER_TYPE_QUALITY, MACHINE_SERIES, HEAD_PRINTING, getMachineSeriesWithToolhead } from '../../constants';
 import { timestamp } from '../../../shared/lib/random-utils';
 import { machineStore } from '../../store/local-storage';
 import ProgressStatesManager, { PROCESS_STAGE, STEP_STAGE } from '../../lib/manager/ProgressManager';
@@ -26,6 +26,7 @@ import DeleteOperation3D from '../operation-history/DeleteOperation3D';
 import AddOperation3D from '../operation-history/AddOperation3D';
 import VisibleOperation3D from '../operation-history/VisibleOperation3D';
 import OperationHistory from '../operation-history/OperationHistory';
+import baseActions from '../machine/action-base';
 
 const operationHistory = new OperationHistory();
 
@@ -236,8 +237,14 @@ export const actions = {
         // state
         const printingState = getState().printing;
         const { modelGroup, gcodeLineGroup } = printingState;
-        const { series, size } = getState().machine;
-        await definitionManager.init(CONFIG_HEADTYPE, series);
+        // const { seriesWithToolhead, size } = getState().machine;
+        // await definitionManager.init(CONFIG_HEADTYPE, seriesWithToolhead.seriesWithToolhead);
+
+        const { toolHead, series, size } = getState().machine;
+        // await dispatch(machineActions.updateMachineToolHead(toolHead, series, CONFIG_HEADTYPE));
+        const currentMachine = getMachineSeriesWithToolhead(series, toolHead, CONFIG_HEADTYPE);
+        dispatch(baseActions.updateState({ currentMachine }));
+        await definitionManager.init(CONFIG_HEADTYPE, currentMachine.configPathname);
 
         dispatch(actions.updateState({
             activeDefinition: definitionManager.activeDefinition,
@@ -265,7 +272,11 @@ export const actions = {
 
         let { series } = getState().machine;
         series = getRealSeries(series);
-        await definitionManager.init(CONFIG_HEADTYPE, series);
+        const { toolHead } = getState().machine;
+        // await dispatch(machineActions.updateMachineToolHead(toolHead, series, CONFIG_HEADTYPE));
+        const currentMachine = getMachineSeriesWithToolhead(series, toolHead, CONFIG_HEADTYPE);
+        dispatch(baseActions.updateState({ currentMachine }));
+        await definitionManager.init(CONFIG_HEADTYPE, currentMachine.configPathname);
 
         const defaultConfigId = machineStore.get('defaultConfigId');
         if (defaultConfigId && Object.prototype.toString.call(defaultConfigId) === '[object String]') {

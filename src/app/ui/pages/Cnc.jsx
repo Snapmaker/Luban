@@ -441,7 +441,7 @@ function Cnc({ location }) {
 
     useEffect(() => {
         if (typeof (enabledIntro) === 'boolean' && !enabledIntro) {
-            machineStore.set(isRotate ? 'guideTours.guideTourscnc4Axis' : 'guideTours.guideTourscnc', true); // mock   ---> true
+            machineStore.set(isRotate ? 'guideTours.guideTourscnc4Axis' : 'guideTours.guideTourscnc', true);
         }
     }, [enabledIntro]);
 

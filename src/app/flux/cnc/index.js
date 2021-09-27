@@ -9,6 +9,7 @@ import {
 } from '../actionType';
 import { timestamp } from '../../../shared/lib/random-utils';
 import { actions as editorActions } from '../editor';
+import { actions as machineActions } from '../machine';
 import {
     PAGE_EDITOR,
     HEAD_CNC,
@@ -121,9 +122,10 @@ export const actions = {
     // TODO: init should be  re-called
     init: () => async (dispatch, getState) => {
         dispatch(editorActions._init(HEAD_CNC));
-        const { series } = getState().machine;
-
-        await definitionManager.init(HEAD_CNC, series);
+        const { toolHead, series } = getState().machine;
+        await dispatch(machineActions.updateMachineToolHead(toolHead, series, HEAD_CNC));
+        const { currentMachine } = getState().machine;
+        await definitionManager.init(HEAD_CNC, currentMachine.configPathname);
         dispatch(editorActions.updateState(HEAD_CNC, {
             toolDefinitions: await definitionManager.getConfigDefinitions(),
             activeToolListDefinition: definitionManager?.activeDefinition,

@@ -1,5 +1,5 @@
 import api from '../../api';
-import { MACHINE_SERIES, HEAD_CNC } from '../../constants';
+import { HEAD_CNC } from '../../constants';
 
 class DefinitionManager {
     headType = HEAD_CNC;
@@ -8,17 +8,20 @@ class DefinitionManager {
 
     defaultDefinitions = [];
 
-    series = '';
+    configPathname = '';
 
-    async init(headType, series) {
-        if (
-            series === MACHINE_SERIES.ORIGINAL_LZ.value
-           || series === MACHINE_SERIES.CUSTOM.value
-        ) {
-            this.series = MACHINE_SERIES.ORIGINAL.value;
-        } else {
-            this.series = series;
-        }
+    // series = '';
+
+    async init(headType, configPathname) {
+        // if (
+        //     seriesWithToolhead.series === MACHINE_SERIES.ORIGINAL_LZ.value
+        // //    || series === MACHINE_SERIES.CUSTOM.value
+        // ) {
+        //     this.seriesWithToolhead = seriesWithToolhead.seriesWithToolhead;
+        // } else {
+        //     this.seriesWithToolhead = series;
+        // }
+        this.configPathname = configPathname;
         this.headType = headType;
         let res;
         // TODO useless
@@ -40,8 +43,8 @@ class DefinitionManager {
         // active definition
         res = await this.getDefinition('active', false);
         this.activeDefinition = res;
-
-        res = await api.profileDefinitions.getDefaultDefinitions(this.headType, this.series);
+        res = await api.profileDefinitions.getDefaultDefinitions(this.headType, this.configPathname);
+        // res = await api.profileDefinitions.getConfigDefinitions(this.headType, this.configPathname);
         this.defaultDefinitions = res.body.definitions;
     }
 
@@ -49,14 +52,14 @@ class DefinitionManager {
      * Get raw definition file (for download).
      */
     async getRawDefinition(definitionId) {
-        const res = await api.profileDefinitions.getRawDefinition(this.headType, definitionId, this.series);
+        const res = await api.profileDefinitions.getRawDefinition(this.headType, definitionId, this.configPathname);
         return res.body;
     }
 
     async getDefinition(definitionId, isInsideCategory = true) {
         let res = {};
         if (isInsideCategory) {
-            res = await api.profileDefinitions.getDefinition(this.headType, definitionId, this.series);
+            res = await api.profileDefinitions.getDefinition(this.headType, definitionId, this.configPathname);
         } else {
             res = await api.profileDefinitions.getDefinition(this.headType, definitionId);
         }
@@ -64,27 +67,27 @@ class DefinitionManager {
     }
 
     async getConfigDefinitions() {
-        const res = await api.profileDefinitions.getConfigDefinitions(this.headType, this.series);
+        const res = await api.profileDefinitions.getConfigDefinitions(this.headType, this.configPathname);
         return res.body.definitions;
     }
 
     async getDefinitionsByPrefixName(prefix) {
-        const res = await api.profileDefinitions.getDefinitionsByPrefixName(this.headType, prefix, this.series);
+        const res = await api.profileDefinitions.getDefinitionsByPrefixName(this.headType, prefix, this.configPathname);
         return res.body.definitions;
     }
 
 
     async createDefinition(definition) {
-        const res = await api.profileDefinitions.createDefinition(this.headType, definition, this.series);
+        const res = await api.profileDefinitions.createDefinition(this.headType, definition, this.configPathname);
         return res.body.definition;
     }
 
     async removeDefinition(definition) {
-        await api.profileDefinitions.removeDefinition(this.headType, definition.definitionId, this.series);
+        await api.profileDefinitions.removeDefinition(this.headType, definition.definitionId, this.configPathname);
     }
 
     async uploadDefinition(definitionId, uploadName) {
-        const res = await api.profileDefinitions.uploadDefinition(this.headType, definitionId, uploadName, this.series);
+        const res = await api.profileDefinitions.uploadDefinition(this.headType, definitionId, uploadName, this.configPathname);
         const { err, definition } = res.body;
         if (err) {
             console.error(err);
@@ -97,7 +100,7 @@ class DefinitionManager {
     // Update definition
     // Only name & settings are configurable
     async updateDefinition(definition) {
-        await api.profileDefinitions.updateDefinition(this.headType, definition.definitionId, definition, this.series);
+        await api.profileDefinitions.updateDefinition(this.headType, definition.definitionId, definition, this.configPathname);
     }
 
     // Start Notice: only used for printing config

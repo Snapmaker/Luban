@@ -128,6 +128,7 @@ class DataStorage {
      upgradeConfigFile(srcDir) {
          const printingConfigNames = [];
          const cncConfigPaths = [];
+         const officialMachine = ['A150', 'A250', 'A350', 'Original'];
          if (fs.existsSync(srcDir)) {
              const files = fs.readdirSync(srcDir);
              const materialRegex = /^material\.([0-9]{7})\.def\.json$/;
@@ -164,7 +165,11 @@ class DataStorage {
              const seriesFiles = fs.readdirSync(printingDir);
              for (const oldFileName of printingConfigNames) {
                  for (const file of seriesFiles) {
-                     const src = path.join(printingDir, file);
+                     let currentFile = file;
+                     if (includes(officialMachine, file)) {
+                         currentFile = `${file.toLocaleLowerCase()}_single`;
+                     }
+                     const src = path.join(printingDir, currentFile);
                      if (!fs.statSync(src).isFile()) {
                          const oldFilePath = `${srcDir}/${oldFileName}`;
                          const newFilePath = `${src}/${oldFileName}`;
@@ -178,7 +183,11 @@ class DataStorage {
              const seriesFiles = fs.readdirSync(cncDir);
              for (const oldFilePath of cncConfigPaths) {
                  for (const file of seriesFiles) {
-                     const src = path.join(cncDir, file);
+                     let currentFile = file;
+                     if (includes(officialMachine, file)) {
+                         currentFile = `${file.toLocaleLowerCase()}_standard`;
+                     }
+                     const src = path.join(cncDir, currentFile);
                      if (!fs.statSync(src).isFile()) {
                          let newFileName = `tool.${path.basename(oldFilePath)}`;
                          if (/([A-Za-z0-9_]+)\.defv2\.json$/.test(newFileName)) {
