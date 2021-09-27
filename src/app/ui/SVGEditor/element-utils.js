@@ -78,11 +78,12 @@ function createSVGElement(data) {
     setAttributes(element, {
         fill: DEFAULT_FILL_COLOR,
         // If you want to set fill-opacity, before createSVGElement pls.
-        'fill-opacity': (data.element === 'text' ? 1 : 0),
+        // since text is a svg image
+        'fill-opacity': 0,
         stroke: '#000000'
     });
     cleanupAttributes(element);
-    if (data.element === 'text' && data.attr.textContent) {
+    if (data.isText && data.attr.textContent) {
         element.textContent = data.attr.textContent;
     }
     setAttributes(element, data.attr);

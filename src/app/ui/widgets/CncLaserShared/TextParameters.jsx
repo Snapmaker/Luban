@@ -21,7 +21,6 @@ const TextParameters = ({ headType, modifyText, disabled }) => {
     const [expanded, setExpanded] = useState(true);
 
     const fileInput = useRef();
-    const textArea = useRef();
 
     const actions = {
         onToggleExpand: () => {
@@ -31,9 +30,7 @@ const TextParameters = ({ headType, modifyText, disabled }) => {
             fileInput.current.value = null;
             fileInput.current.click();
         },
-        onSelectAllText: () => {},
-        onChangeText: (event) => {
-            const newText = event.target.value;
+        onChangeText: (newText) => {
             modifyText(null, { text: newText });
         },
         onChangeFont: (option) => {
@@ -73,12 +70,9 @@ const TextParameters = ({ headType, modifyText, disabled }) => {
                         title={i18n._('Text')}
                         content={i18n._('Enter the text you want to laser engrave or CNC carve.')}
                     >
-                        <div className="sm-flex height-80 margin-vertical-8">
+                        <div className="sm-flex margin-vertical-8">
                             <TextAreaInput
-                                ref={textArea}
                                 disabled={disabled}
-                                onFocus={actions.onSelectAllText}
-                                style={{ resize: 'none' }}
                                 className="sm-flex-width"
                                 rows="3"
                                 value={text}

@@ -79,8 +79,8 @@ function genModelConfig(elem, size) {
             positionY: positionY
         },
         config: {
-            svgNodeName: 'text',
-            text: 'Snapmaker',
+            svgNodeName: elem.getAttribute('isText') ? 'text' : elem.nodeName,
+            text: elem.getAttribute('textContent'),
             alignment: 'left',
             'font-size': elem.getAttribute('font-size'),
             'font-family': elem.getAttribute('font-family')
@@ -650,29 +650,35 @@ class SVGActionsFactory {
         const isRotate = this.modelGroup.materials && this.modelGroup.materials.isRotate;
 
         const data = genModelConfig(element, this.size);
-
-
-        const { modelID, transformation, config: elemConfig } = data;
-
+        const { modelID, content, width: dataWidth, height: dataHeight, transformation, config: elemConfig } = data;
+        let res, textSize;
         try {
-            // const res = await api.uploadImage(formData);
-            const newConfig = {
-                ...DEFAULT_TEXT_CONFIG,
-                ...elemConfig
-            };
-            const res = await api.convertTextToSvg(newConfig);
-            const { originalName, uploadName, width, height } = res.body;
+            const isText = element.getAttribute('isText');
+            if (isText) {
+                const newConfig = {
+                    ...DEFAULT_TEXT_CONFIG,
+                    ...elemConfig
+                };
+                res = await api.convertTextToSvg(newConfig);
+                textSize = computeTransformationSizeForTextVector(newConfig.text, newConfig['font-size'], newConfig['line-height'], {
+                    width: res.body?.width,
+                    height: res.body?.height
+                });
+            } else {
+                const blob = new Blob([content], { type: 'image/svg+xml' });
+                const file = new File([blob], `${modelID}.svg`);
 
+                const formData = new FormData();
+                formData.append('image', file);
+                res = await api.uploadImage(formData);
+            }
+            const { originalName, uploadName, width, height } = res.body;
             const sourceType = 'svg';
             const mode = 'vector';
-
             let { config, gcodeConfig } = generateModelDefaultConfigs(headType, sourceType, mode, isRotate);
             config = { ...config, ...elemConfig };
             gcodeConfig = { ...gcodeConfig };
-            const textSize = computeTransformationSizeForTextVector(newConfig.text, newConfig['font-size'], newConfig['line-height'], {
-                width,
-                height
-            });
+
 
             const options = {
                 modelID,
@@ -682,10 +688,10 @@ class SVGActionsFactory {
                 mode,
                 originalName,
                 uploadName,
-                sourceWidth: res.body.width,
-                sourceHeight: res.body.height,
-                width: textSize.width,
-                height: textSize.height,
+                sourceWidth: width,
+                sourceHeight: height,
+                width: isText ? textSize.width : dataWidth,
+                height: isText ? textSize.height : dataHeight,
                 transformation,
                 config,
                 gcodeConfig,
@@ -694,7 +700,6 @@ class SVGActionsFactory {
             };
 
             const svgModel = this.modelGroup.addModel(options);
-            // svgModel
             svgModel.setParent(this.svgContentGroup.group);
             return svgModel;
         } catch (e) {
@@ -1489,12 +1494,14 @@ class SVGActionsFactory {
                 x: this.size.x + position.x,
                 y: this.size.y + position.y,
                 fill: '#000000',
-                'fill-opacity': 1,
+                // 'fill-opacity': 1,
                 'font-size': 24,
                 'font-family': 'Arial',
                 'stroke-width': 0.25,
-                opacity: 1,
-                textContent: content
+                alignment: 'left',
+                isText: true,
+                textContent: 'Snapmaker',
+                opacity: 1
             }
         });
     }
