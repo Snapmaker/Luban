@@ -359,12 +359,15 @@ class SvgModel extends BaseModel {
         }
         const content = await fetch(`${DATA_PREFIX}/${uploadName}`, { method: 'GET' })
             .then(res => res.text());
+
         const canvas = document.createElement('canvas');
         // set canvas size to get image of exactly same size
         canvas.width = this.width;
         canvas.height = this.height;
         document.body.appendChild(canvas);
         const ctx = canvas.getContext('2d');
+        // Todo: does't work
+        // ctx.font = '16px serif';
         const v = await Canvg.fromString(ctx, content);
         await v.render();
         const blob = await new Promise(resolve => canvas.toBlob(resolve));

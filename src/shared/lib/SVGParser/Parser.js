@@ -162,7 +162,7 @@ class SVGParser {
             fill: '#000000',
             stroke: null,
             strokeWidth: 1,
-            fontSize: 16,
+            fontSize: 10,
             // fontFamily: 'auto',
             actualX: 0,
             actualY: 0,
@@ -215,19 +215,13 @@ class SVGParser {
                 if (SVG_HREF in attributes) url = attributes[SVG_HREF];
                 if (!isNil(url)) {
                     let transform = false;
-                    try {
+                    if (!isNil(attributes.x)) {
                         x = attributes.x;
-                        delete attributes.x;
                         transform = true;
-                    } catch (e) {
-                        x = '0';
                     }
-                    try {
+                    if (!isNil(attributes.y)) {
                         y = attributes.y;
-                        delete attributes.y;
                         transform = true;
-                    } catch (e) {
-                        y = '0';
                     }
                     if (this.defs[url]) {
                         const shadowTag = this.defs[url].shadowTag;

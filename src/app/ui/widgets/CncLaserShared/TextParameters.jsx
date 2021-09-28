@@ -129,7 +129,7 @@ const TextParameters = ({ headType, modifyText, disabled }) => {
                                     disabled={disabled}
                                     onClick={() => { actions.onChangeAlignment('left'); }}
                                 >
-                                    <SvgIcon name="IconAlignLeft" size={16} color="#666666" />
+                                    <SvgIcon name="AlignmentLeft" />
                                 </button>
                                 <button
                                     type="button"
@@ -140,7 +140,7 @@ const TextParameters = ({ headType, modifyText, disabled }) => {
                                     disabled={disabled}
                                     onClick={() => { actions.onChangeAlignment('middle'); }}
                                 >
-                                    <SvgIcon name="IconAlignCenter" size={16} color="#666666" />
+                                    <SvgIcon name="AlignmentCenter" />
                                 </button>
                                 <button
                                     className={classNames(
@@ -151,7 +151,7 @@ const TextParameters = ({ headType, modifyText, disabled }) => {
                                     disabled={disabled}
                                     onClick={() => { actions.onChangeAlignment('right'); }}
                                 >
-                                    <SvgIcon name="IconAlignRight" size={16} color="#666666" />
+                                    <SvgIcon name="AlignmentRight" />
                                 </button>
                             </span>
                         </div>
