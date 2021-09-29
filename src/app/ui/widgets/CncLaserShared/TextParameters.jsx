@@ -31,7 +31,7 @@ const TextParameters = ({ headType, modifyText, disabled }) => {
             fileInput.current.click();
         },
         onChangeText: (newText) => {
-            modifyText(null, { text: newText });
+            modifyText(null, { text: newText.trim() });
         },
         onChangeFont: (option) => {
             // Upload font (TODO: not used?)
@@ -120,39 +120,45 @@ const TextParameters = ({ headType, modifyText, disabled }) => {
                         <div className="sm-parameter-row">
                             <span className="sm-parameter-row__label">{i18n._('Alignment')}</span>
                             <span className={styles.textAlignWrap}>
-                                <button
+                                <SvgIcon
                                     className={classNames(
                                         styles.textAlignButton,
+                                        'padding-horizontal-10',
+                                        'border-default-grey-1',
                                         { [styles.active]: alignment === 'left' }
                                     )}
-                                    type="button"
+                                    name="AlignmentLeft"
                                     disabled={disabled}
+                                    size={26}
+                                    borderRadius={8}
                                     onClick={() => { actions.onChangeAlignment('left'); }}
-                                >
-                                    <SvgIcon name="AlignmentLeft" />
-                                </button>
-                                <button
-                                    type="button"
+                                />
+                                <SvgIcon
                                     className={classNames(
                                         styles.textAlignButton,
-                                        { [styles.active]: alignment === 'middle' },
+                                        'padding-horizontal-10',
+                                        'border-default-grey-1',
+                                        { [styles.active]: alignment === 'middle' }
                                     )}
+                                    name="AlignmentCenter"
                                     disabled={disabled}
+                                    size={26}
+                                    borderRadius={8}
                                     onClick={() => { actions.onChangeAlignment('middle'); }}
-                                >
-                                    <SvgIcon name="AlignmentCenter" />
-                                </button>
-                                <button
+                                />
+                                <SvgIcon
                                     className={classNames(
                                         styles.textAlignButton,
-                                        { [styles.active]: alignment === 'right' },
+                                        'padding-horizontal-10',
+                                        'border-default-grey-1',
+                                        { [styles.active]: alignment === 'right' }
                                     )}
-                                    type="button"
+                                    name="AlignmentRight"
                                     disabled={disabled}
+                                    size={26}
+                                    borderRadius={8}
                                     onClick={() => { actions.onChangeAlignment('right'); }}
-                                >
-                                    <SvgIcon name="AlignmentRight" />
-                                </button>
+                                />
                             </span>
                         </div>
                     </TipTrigger>

@@ -364,10 +364,10 @@ class SvgModel extends BaseModel {
         // set canvas size to get image of exactly same size
         canvas.width = this.width;
         canvas.height = this.height;
+        canvas.style.font = '16px Arial';
         document.body.appendChild(canvas);
         const ctx = canvas.getContext('2d');
-        // Todo: does't work
-        // ctx.font = '16px serif';
+        ctx.font = canvas.style.font;
         const v = await Canvg.fromString(ctx, content);
         await v.render();
         const blob = await new Promise(resolve => canvas.toBlob(resolve));

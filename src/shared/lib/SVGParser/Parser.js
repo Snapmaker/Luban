@@ -13,20 +13,13 @@ import PolygonTagParser from './PolygonTagParser';
 import PolylineTagParser from './PolylineTagParser';
 import RectTagParser from './RectTagParser';
 import TextParser from './TextParser';
-
+import { SVG_ATTR_ID, XLINK_HREF, SVG_HREF, SVG_ATTR_TRANSFORM, SVG_TAG_USE } from './constants';
 // const DEFAULT_DPI = 72;
 const DEFAULT_MILLIMETER_PER_PIXEL = 25.4 / 72;
 // TODO: General tolerance does not work well if original drawing is small,
 //  the tolerance should be calculated base on scale of image.
 // change the default PIXEL to make sure TOLERANCE close to 0.1mm
 const TOLERANCE = 0.3 * DEFAULT_MILLIMETER_PER_PIXEL;
-const SVG_ATTR_ID = 'id';
-const XLINK_HREF = 'xlink:href';
-const SVG_HREF = 'href';
-const SVG_ATTR_TRANSFORM = 'transform';
-const SVG_TAG_USE = 'use';
-// const SVG_TAG_DEFS = 'defs';
-
 
 let parentTextAttributes = '';
 
@@ -162,7 +155,7 @@ class SVGParser {
             fill: '#000000',
             stroke: null,
             strokeWidth: 1,
-            fontSize: 10,
+            fontSize: 16,
             // fontFamily: 'auto',
             actualX: 0,
             actualY: 0,
