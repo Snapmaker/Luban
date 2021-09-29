@@ -247,6 +247,7 @@ class ThreeModel extends BaseModel {
 
         this.computeBoundingBox();
         this.meshObject.position.z = this.meshObject.position.z - this.boundingBox.min.z;
+        this.computeBoundingBox(); // update boundingbox after position changed
         this.onTransform();
         revert();
     }
