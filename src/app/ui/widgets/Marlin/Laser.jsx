@@ -6,34 +6,32 @@ import Slider from '../../components/Slider';
 import Switch from '../../components/Switch';
 import i18n from '../../../lib/i18n';
 import { NumberInput as Input } from '../../components/Input';
-import Checkbox from '../../components/Checkbox';
 import SvgIcon from '../../components/SvgIcon';
 import { actions as machineActions } from '../../../flux/machine';
 import WorkSpeed from './WorkSpeed';
-import { CONNECTION_TYPE_WIFI, WORKFLOW_STATUS_PAUSED, WORKFLOW_STATUS_RUNNING } from '../../../constants';
+import {
+    CONNECTION_TYPE_WIFI,
+    LEVEL_TWO_POWER_LASER_FOR_SM2,
+    WORKFLOW_STATUS_PAUSED,
+    WORKFLOW_STATUS_RUNNING
+} from '../../../constants';
 
 class Laser extends PureComponent {
     static propTypes = {
         headStatus: PropTypes.bool,
         laserPower: PropTypes.number,
-        workPosition: PropTypes.object.isRequired,
-        isLaserPrintAutoMode: PropTypes.bool,
-        materialThickness: PropTypes.number,
-        laserFocalLength: PropTypes.number,
         workflowStatus: PropTypes.string,
         connectionType: PropTypes.string,
         server: PropTypes.object,
-        size: PropTypes.object,
+        isConnected: PropTypes.bool,
+        toolHead: PropTypes.object,
 
-        executeGcode: PropTypes.func.isRequired,
-        updateIsLaserPrintAutoMode: PropTypes.func.isRequired,
-        updateMaterialThickness: PropTypes.func.isRequired
+        executeGcode: PropTypes.func.isRequired
     };
-
 
     state = {
         laserPowerOpen: this.props.headStatus,
-        laserPower: this.props.laserPower || 5,
+        laserPower: this.props.laserPower || 1,
         laserPowerMarks: {
             0: 0,
             5: 5,
@@ -64,6 +62,10 @@ class Laser extends PureComponent {
                 this.props.executeGcode('M5');
             } else {
                 this.props.executeGcode(`M3 P${this.state.laserPower} S${this.state.laserPower * 255 / 100}`);
+                if (this.state.laserPower > 1) {
+                    this.props.executeGcode('G4 P500');
+                    this.props.executeGcode('M3 P1 S2.55');
+                }
             }
             this.setState({
                 laserPowerOpen: !this.state.laserPowerOpen
@@ -75,97 +77,41 @@ class Laser extends PureComponent {
             } else {
                 if (this.state.laserPowerOpen) {
                     this.props.executeGcode(`M3 P${this.state.laserPower} S${this.state.laserPower * 255 / 100}`);
+                    if (this.state.laserPower > 1) {
+                        this.props.executeGcode('G4 P500');
+                        this.props.executeGcode('M3 P1 S2.55');
+                    }
                 } else {
                     this.props.executeGcode(`M3 P${this.state.laserPower} S${this.state.laserPower * 255 / 100}`);
                     this.props.executeGcode('M5');
                 }
                 this.props.executeGcode('M500');
             }
-        },
-        onChangeLaserPrintMode: () => {
-            this.props.updateIsLaserPrintAutoMode(!this.props.isLaserPrintAutoMode);
-        },
-        onChangeMaterialThickness: (value) => {
-            this.props.updateMaterialThickness(value);
-        },
-        onChangeFourAxisMaterialThickness: (value) => {
-            this.props.updateMaterialThickness(value / 2);
         }
     };
 
+    getSnapshotBeforeUpdate(prevProps) {
+        if (prevProps.isConnected !== this.props.isConnected && this.props.isConnected) {
+            if (this.props.toolHead.laserToolhead === LEVEL_TWO_POWER_LASER_FOR_SM2) {
+                this.setState({
+                    laserPower: 1
+                });
+            }
+        }
+    }
+
+
     render() {
-        const { size, isLaserPrintAutoMode, materialThickness, laserFocalLength, workPosition, connectionType } = this.props;
+        const { workflowStatus } = this.props;
         const { laserPowerOpen, laserPowerMarks, laserPower } = this.state;
         const actions = this.actions;
         const isWifiPrinting = this.actions.isWifiPrinting();
 
         return (
             <div>
-                {connectionType === CONNECTION_TYPE_WIFI && (
-                    <div>
-                        <div className="sm-flex height-32 justify-space-between margin-vertical-8">
-                            <span>{i18n._('key-unused-Auto Mode')}</span>
-                            <Checkbox
-                                className="sm-flex-auto"
-                                checked={isLaserPrintAutoMode}
-                                onChange={actions.onChangeLaserPrintMode}
-                            />
-                        </div>
-                        {isLaserPrintAutoMode && !workPosition.isFourAxis && (
-                            <div className="sm-flex height-32 justify-space-between margin-vertical-8">
-                                <span className="">{i18n._('key-unused-Material Thickness')}</span>
-                                <Input
-                                    suffix="mm"
-                                    className="sm-flex-auto"
-                                    size="small"
-                                    value={materialThickness}
-                                    max={size.z - 40}
-                                    min={0}
-                                    onChange={actions.onChangeMaterialThickness}
-                                />
-                            </div>
-                        )}
-                        {isLaserPrintAutoMode && workPosition.isFourAxis && (
-                            <div className="sm-flex height-32 justify-space-between margin-vertical-8">
-                                <span className="">{i18n._('key-unused-Material Diameter')}</span>
-                                <Input
-                                    suffix="mm"
-                                    className="sm-flex-auto"
-                                    size="small"
-                                    value={materialThickness * 2}
-                                    max={size.z - 40}
-                                    min={0}
-                                    onChange={actions.onChangeFourAxisMaterialThickness}
-                                />
-                            </div>
-                        )}
-                        {isLaserPrintAutoMode && laserFocalLength && (
-                            <div>
-                                <div className="sm-flex height-32 justify-space-between margin-vertical-8">
-                                    <span>{i18n._('key-unused-Laser Height')}</span>
-                                    <Input
-                                        suffix="mm"
-                                        className="sm-flex-auto"
-                                        size="small"
-                                        disabled
-                                        value={laserFocalLength.toFixed(2)}
-                                    />
-                                </div>
-                                <div className="sm-flex height-32 justify-space-between margin-vertical-8">
-                                    <span>{i18n._('key-unused-Z Offset')}</span>
-                                    <Input
-                                        suffix="mm"
-                                        className="sm-flex-auto"
-                                        size="small"
-                                        disabled
-                                        value={(laserFocalLength + materialThickness).toFixed(2)}
-                                    />
-                                </div>
-                            </div>
-                        )}
-                    </div>
+                {(workflowStatus === WORKFLOW_STATUS_RUNNING || workflowStatus === WORKFLOW_STATUS_PAUSED) && (
+                    <WorkSpeed />
                 )}
-                <WorkSpeed />
                 <div className="sm-flex justify-space-between margin-vertical-8">
                     <span>{i18n._('key-unused-Laser Power')}</span>
                     <Switch
@@ -204,6 +150,17 @@ class Laser extends PureComponent {
                         />
                     </div>
                 </div>
+                {laserPower > 1 && (
+                    <div className="sm-flex">
+                        <SvgIcon
+                            name="WarningTipsWarning"
+                            size={24}
+                            color="#FFA940"
+                            onClick={actions.onSaveLaserPower}
+                        />
+                        <span>The laser power will be reset to 1% after 0.5 s.</span>
+                    </div>
+                )}
             </div>
         );
     }
@@ -211,27 +168,22 @@ class Laser extends PureComponent {
 
 const mapStateToProps = (state) => {
     const machine = state.machine;
-    const { size, workflowStatus, connectionType, server, laserPower, headStatus, isLaserPrintAutoMode, materialThickness, workPosition, laserFocalLength } = machine;
+    const { workflowStatus, connectionType, server, laserPower, headStatus, isConnected, toolHead } = machine;
 
     return {
-        size,
         workflowStatus,
         connectionType,
         server,
-        workPosition,
         laserPower,
         headStatus,
-        isLaserPrintAutoMode,
-        materialThickness,
-        laserFocalLength
+        isConnected,
+        toolHead
     };
 };
 
 const mapDispatchToProps = (dispatch) => {
     return {
-        executeGcode: (gcode, context) => dispatch(machineActions.executeGcode(gcode, context)),
-        updateIsLaserPrintAutoMode: (isLaserPrintAutoMode) => dispatch(machineActions.updateIsLaserPrintAutoMode(isLaserPrintAutoMode)),
-        updateMaterialThickness: (materialThickness) => dispatch(machineActions.updateMaterialThickness(materialThickness))
+        executeGcode: (gcode, context) => dispatch(machineActions.executeGcode(gcode, context))
     };
 };
 

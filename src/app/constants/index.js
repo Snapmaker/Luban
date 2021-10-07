@@ -900,7 +900,7 @@ export const MACHINE_HEAD_TYPE = {
     '10W LASER': {
         value: '10w-laser',
         label: '10W Laser',
-        alias: ['10W LASER']
+        alias: ['10W LASER', '4']
     },
     CNC: {
         value: 'cnc',

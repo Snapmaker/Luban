@@ -383,6 +383,10 @@ export const processActions = {
         dispatch(baseActions.updateState(headType, {
             isChangedAfterGcodeGenerating: false,
             gcodeFile: {
+                maxX: gcodeFile.maxX,
+                maxY: gcodeFile.maxY,
+                minX: gcodeFile.minX,
+                minY: gcodeFile.minY,
                 name: gcodeFile.name,
                 uploadName: gcodeFile.name,
                 estimatedTime: gcodeFile.estimatedTime,
