@@ -578,7 +578,8 @@ class ModelGroup extends EventEmitter {
                 model = this.models.find(d => d.meshObject === intersect.object);
                 if (model) {
                     // cannot select model and support
-                    if (this.selectedModelArray.length && this.selectedModelArray[0].supportTag !== model.supportTag) {
+                    // cannot select multi support
+                    if (this.selectedModelArray.length && (this.selectedModelArray[0].supportTag !== model.supportTag || model.supportTag)) {
                         break;
                     }
                     this.addModelToSelectedGroup(model);

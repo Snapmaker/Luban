@@ -560,8 +560,8 @@ function WifiTransport({ widgetActions, controlActions }) {
                 </Modal.Body>
                 <Modal.Footer>
                     <Button priority="level-three" width="88px" onClick={() => setPreviewModalShow(false)} className="margin-right-16">{i18n._('Close')}</Button>
-                    {currentWorkflowStatus === 'idle' && <Button priority="level-two" type="primary" width="200px">{i18n._('Send To Machine')}</Button>}
-                    {currentWorkflowStatus !== 'idle' && (
+                    {currentWorkflowStatus !== 'idle' && <Button priority="level-two" type="primary" width="200px">{i18n._('Send To Machine')}</Button>}
+                    {currentWorkflowStatus === 'idle' && (
                         <Dropdown
                             className="display-inline"
                             overlay={() => (

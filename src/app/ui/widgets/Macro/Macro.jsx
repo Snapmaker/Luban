@@ -89,13 +89,6 @@ function Macro({ widgetId, updateModal, openModal, macros }) {
         }
     }, [connectionType, macros]);
 
-    // useEffect(() => {
-    //     if (workflowState !== 'running' && isConnected) {
-    //         widgetActions.setDisplay(true);
-    //     } else {
-    //         widgetActions.setDisplay(false);
-    //     }
-    // }, [workflowState, isConnected]);
     const canClick = actions.canClick();
     return (
         <div className="padding-horizontal-16 height-176 padding-vertical-4

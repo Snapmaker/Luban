@@ -105,7 +105,7 @@ function Connection({ widgetId, widgetActions }) {
                 <WifiConnection />
             )}
             {isConnected && showHomeReminder && !isOriginal && isHomed !== null && !isHomed && (
-                <Modal disableOverlay size="sm" closable={false}>
+                <Modal disableOverlay size="sm" onClose={() => setShowHomeReminder(false)}>
                     <Modal.Header>
                         {i18n._('key-Workspace/Connection-Go Home')}
                     </Modal.Header>
