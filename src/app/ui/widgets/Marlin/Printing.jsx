@@ -112,7 +112,7 @@ class Printing extends PureComponent {
         const actions = this.actions;
         return (
             <div>
-                <WorkSpeed />
+                {workflowStatus === 'running' && <WorkSpeed />}
                 <div className="sm-flex justify-space-between margin-vertical-8">
                     <span className="height-32">{i18n._('key-unused-Nozzle Temp.')}</span>
                     <div className="sm-flex-auto">
@@ -157,27 +157,29 @@ class Printing extends PureComponent {
                     </div>
                 </div>
 
-                <div className="sm-flex justify-space-between margin-vertical-8">
-                    <span className="height-32">{i18n._('key-unused-Filament')}</span>
-                    <div>
-                        <Button
-                            priority="level-three"
-                            width="96px"
-                            className="display-inline"
-                            onClick={actions.onClickUnload}
-                        >
-                            {i18n._('key-unused-Unload')}
-                        </Button>
-                        <Button
-                            className="margin-left-4 display-inline"
-                            priority="level-three"
-                            width="96px"
-                            onClick={actions.onClickLoad}
-                        >
-                            {i18n._('key-unused-Load')}
-                        </Button>
+                {workflowStatus !== 'running' && (
+                    <div className="sm-flex justify-space-between margin-vertical-8">
+                        <span className="height-32">{i18n._('key-unused-Filament')}</span>
+                        <div>
+                            <Button
+                                priority="level-three"
+                                width="96px"
+                                className="display-inline"
+                                onClick={actions.onClickUnload}
+                            >
+                                {i18n._('key-unused-Unload')}
+                            </Button>
+                            <Button
+                                className="margin-left-4 display-inline"
+                                priority="level-three"
+                                width="96px"
+                                onClick={actions.onClickLoad}
+                            >
+                                {i18n._('key-unused-Load')}
+                            </Button>
+                        </div>
                     </div>
-                </div>
+                )}
 
                 {isConnected && _.includes([WORKFLOW_STATUS_RUNNING, WORKFLOW_STATUS_PAUSED], workflowStatus) && (
                     <div className="sm-parameter-row">

@@ -11,12 +11,12 @@ import usePrevious from '../../../lib/hooks/previous';
 import { actions as machineActions } from '../../../flux/machine';
 import { controller } from '../../../lib/controller';
 import Terminal from './Terminal';
-import { ABSENT_OBJECT, CONNECTION_TYPE_SERIAL } from '../../../constants';
+import { ABSENT_OBJECT, CONNECTION_TYPE_SERIAL, CONNECTION_TYPE_WIFI } from '../../../constants';
 
 let pubsubTokens = [];
 let unlisten = null;
 function Console({ widgetId, widgetActions, minimized, isDefault, clearRenderStamp }) {
-    const { port, server, isConnected, connectionType, terminalHistory, consoleHistory, consoleLogs } = useSelector(state => state.machine, shallowEqual);
+    const { port, server, isConnected, connectionType, terminalHistory, consoleHistory, consoleLogs, workflowStatus } = useSelector(state => state.machine, shallowEqual);
     const [shouldRenderFitaddon, setShouldRenderFitaddon] = useState(false);
     const history = useHistory();
     const dispatch = useDispatch();
@@ -280,6 +280,18 @@ function Console({ widgetId, widgetActions, minimized, isDefault, clearRenderSta
             }
         }
     }, [isConnected, port, server]);
+
+    useEffect(() => {
+        if (connectionType === CONNECTION_TYPE_SERIAL) {
+            widgetActions.setDisplay(true);
+        } else if (connectionType === CONNECTION_TYPE_WIFI) {
+            if (workflowStatus === 'running') {
+                widgetActions.setDisplay(false);
+            } else {
+                widgetActions.setDisplay(true);
+            }
+        }
+    }, [workflowStatus, connectionType]);
 
     useEffect(() => {
         if (prevProps && prevProps.clearRenderStamp !== clearRenderStamp) {

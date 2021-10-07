@@ -85,7 +85,9 @@ export class Server extends events.EventEmitter {
             airPurifier: false,
             airPurifierSwitch: false,
             airPurifierFanSpeed: 1,
-            airPurifierFilterHealth: 0
+            airPurifierFilterHealth: 0,
+            currentHeadType: '',
+            moduleStatusList: {}
         };
     }
 
@@ -244,7 +246,14 @@ export class Server extends events.EventEmitter {
                 isNotNull(data.airPurifierSwitch) && (this.state.airPurifierSwitch = data.airPurifierSwitch);
                 isNotNull(data.airPurifierFanSpeed) && (this.state.airPurifierFanSpeed = data.airPurifierFanSpeed);
                 isNotNull(data.airPurifierFilterHealth) && (this.state.airPurifierFilterHealth = data.airPurifierFilterHealth);
-
+                isNotNull(data.toolHead) && (this.state.currentHeadType = data.toolHead);
+                // if (isNotNull(data.moduleList)) {
+                //     this.state.emergencyStopButtonStatus = data.moduleList.emergencyStopButton || false;
+                //     this.state.enclosureStatus = data.moduleList.enclosure || false;
+                //     this.state.rotaryModuleStatus = data.moduleList.rotaryModule || false;
+                //     this.state.airPurifierStatus = data.moduleList.airPurifier || false;
+                // }
+                isNotNull(data.moduleList) && (this.state.moduleStatusList = data.moduleList);
                 this._updateGcodePrintingInfo(data);
 
                 if (this.waitConfirm) {
@@ -497,7 +506,13 @@ export class Server extends events.EventEmitter {
             airPurifier: this.state.airPurifier,
             airPurifierSwitch: this.state.airPurifierSwitch,
             airPurifierFanSpeed: this.state.airPurifierFanSpeed,
-            airPurifierFilterHealth: this.state.airPurifierFilterHealth
+            airPurifierFilterHealth: this.state.airPurifierFilterHealth,
+            currentHeadType: this.state.currentHeadType,
+            // enclosureStatus: this.state.enclosureStatus,
+            // rotaryModuleStatus: this.state.rotaryModuleStatus,
+            // emergencyStopButtonStatus: this.state.emergencyStopButtonStatus,
+            // airPurifierStatus: this.state.airPurifierStatus
+            moduleStatusList: this.state.moduleStatusList
         };
     };
 
@@ -721,7 +736,7 @@ export class Server extends events.EventEmitter {
         if (!data) {
             return;
         }
-        const { currentLine, estimatedTime, totalLines } = data;
+        const { currentLine, estimatedTime, totalLines, fileName = '', progress } = data;
         if (!currentLine || !estimatedTime || !totalLines) {
             return;
         }
@@ -732,8 +747,8 @@ export class Server extends events.EventEmitter {
         let remainingTime = 0;
         if (this.state.gcodePrintingInfo.startTime) {
             elapsedTime = new Date().getTime() - this.state.gcodePrintingInfo.startTime;
-            remainingTime = estimatedTime * 1000 - elapsedTime; // TODO
         }
+        remainingTime = estimatedTime * 1000 - elapsedTime; // TODO
         let finishTime = 0;
         if (received > 0 && received >= totalLines) {
             finishTime = new Date().getTime();
@@ -745,7 +760,9 @@ export class Server extends events.EventEmitter {
             total,
             finishTime,
             elapsedTime,
-            remainingTime
+            remainingTime,
+            fileName,
+            progress
         };
     }
 }

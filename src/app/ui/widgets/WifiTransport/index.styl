@@ -15,21 +15,32 @@
 .gcode-file {
     display: block
     position: relative
-    border: 1px solid
-    border-color: $grey-color2
-    border-radius: $border-radius
+    // border: 1px solid
+    // border-color: $grey-color2
+    // border-radius: $border-radius
     height: 64px
     padding: 8px
-    margin-top: 8px
+    margin-top: 4px
 
     &:focus {
         outline: 0
     }
 
     &.selected {
-        border-color: $blue-color
+        // border-color: $blue-color
+        background #F5F5F7
     }
 
+    // .gcode-file-img {
+    //     // height: 48px;
+    //     // width: 48px;
+    //     border: 1px solid #B9BCBF;
+    //     border-radius 4px
+    //     > img {
+    //         height: 48px;
+    //         width: 48px;
+    //     }
+    // }
     .gcode-file-selected-icon {
         width: 24px
         height: 24px
@@ -56,13 +67,15 @@
     &-img {
         display: inline-block
         height: 100%
-        width: 54px
+        width: 48px
         vertical-align: top
         margin-right: 6px
+        border 1px solid #B9BCBF
+        border-radius 4px
 
         img {
             height: 100%
-            width: 54px
+            width: 45px
         }
     }
 
@@ -90,7 +103,7 @@
             .prefix-name {
                 display: inline-block
                 vertical-align: middle
-                max-width: 100%
+                max-width: 60%
                 overflow: hidden
                 white-space: nowrap
                 text-overflow: ellipsis
@@ -135,4 +148,10 @@
 
 .gcode-file:hover .gcode-file-rename {
     opacity: 1
+}
+.import-btn-dashed {
+    position absolute
+    top 50%
+    left 50%
+    transform translate(-50%, -50%)
 }

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import classNames from 'classnames';
 // import { InputGroup } from 'react-bootstrap';
@@ -6,25 +6,35 @@ import { includes, map } from 'lodash';
 import Select from '../../components/Select';
 import SvgIcon from '../../components/SvgIcon';
 import { Button } from '../../components/Buttons';
+import { ModuleStatus } from './WifiConnection';
 
 import log from '../../../lib/log';
 import i18n from '../../../lib/i18n';
 import { controller } from '../../../lib/controller';
 import {
     MACHINE_SERIES,
-    MACHINE_HEAD_TYPE, HEAD_PRINTING, HEAD_LASER, HEAD_CNC
+    MACHINE_HEAD_TYPE,
+    WORKFLOW_STATE_IDLE,
+    WORKFLOW_STATE_PAUSED,
+    WORKFLOW_STATE_RUNNING
+    // , HEAD_PRINTING, HEAD_LASER, HEAD_CNC
 } from '../../../constants';
 import { valueOf } from '../../../lib/contants-utils';
 import { actions as machineActions } from '../../../flux/machine';
-import PrintingState from './PrintingState';
-import LaserState from './LaserState';
-import CNCState from './CNCState';
-import EnclosureState from './EnclosureState';
+// import PrintingState from './PrintingState';
+// import LaserState from './LaserState';
+// import CNCState from './CNCState';
+// import EnclosureState from './EnclosureState';
 import MachineSelectModal from '../../modals/modal-machine-select';
+import styles from './index.styl';
 
 let loadingTimer = null;
 function SerialConnection() {
-    const { port, isOpen, enclosureOnline, isConnected, headType, connectionTimeout } = useSelector(state => state.machine);
+    const {
+        port, isOpen, enclosureOnline, isConnected,
+        headType, connectionTimeout, airPurifier, airPurifierHasPower,
+        heatedBedTemperature, laserCamera, workflowState, series: seriesInfo
+    } = useSelector(state => state.machine);
     // Available serial ports
     const [ports, setPorts] = useState([]);
     // Selected port
@@ -33,6 +43,7 @@ function SerialConnection() {
     const [err, setErr] = useState(null);
     // UI state
     const [loadingPorts, setLoadingPorts] = useState(false);
+    const [moduleStatusList, setModuleStatusList] = useState(null);
     const dispatch = useDispatch();
 
     function onListPorts(options) {
@@ -252,53 +263,104 @@ function SerialConnection() {
         };
     }, []);
 
+    useMemo(() => {
+        const newModuleStatusList = [];
+        if (headType) {
+            newModuleStatusList.push({
+                key: 'headtype',
+                moduleName: i18n._(headType),
+                status: true
+            });
+            headType === '3dp' && newModuleStatusList.push({
+                key: 'heatedBed',
+                moduleName: i18n._('Heated Bed'),
+                status: heatedBedTemperature > 0
+            });
+            headType === 'laser' && newModuleStatusList.push({
+                key: 'laserCamera',
+                moduleName: i18n._('Laser Camera'),
+                status: laserCamera
+            });
+        }
+        airPurifier && newModuleStatusList.push({
+            key: 'airPurifier',
+            moduleName: i18n._('Air Purifier'),
+            status: airPurifierHasPower
+        });
+        enclosureOnline && newModuleStatusList.push({
+            key: 'enclosure',
+            moduleName: i18n._('Enclosure'),
+            status: enclosureOnline
+        });
+        setModuleStatusList(newModuleStatusList);
+    }, [
+        headType, airPurifier, airPurifierHasPower,
+        enclosureOnline, heatedBedTemperature > 0, laserCamera
+    ]);
+
     const canRefresh = !loadingPorts && !isOpen;
     const canChangePort = canRefresh;
     const canOpenPort = portState && !isOpen;
 
     return (
         <div>
-            <div className="sm-flex justify-space-between margin-bottom-16">
-                <Select
-                    backspaceRemoves={false}
-                    className={classNames('sm-flex-width', 'sm-flex-order-negative')}
-                    clearable={false}
-                    searchable={false}
-                    disabled={!canChangePort}
-                    name="port"
-                    noResultsText={i18n._('key-Workspace/Connection-No ports available.')}
-                    onChange={actions.onChangePortOption}
-                    optionRenderer={renderPortOption}
-                    options={map(ports, (o) => ({
-                        value: o.port,
-                        label: o.port,
-                        manufacturer: o.manufacturer
-                    }))}
-                    placeholder={i18n._('key-Workspace/Connection-Choose a port')}
-                    value={portState}
-                    valueRenderer={renderPortValue}
-                />
-                <SvgIcon
-                    className="border-default-black-5 margin-left-8 border-radius-8"
-                    size={24}
-                    borderRadius={8}
-                    name={loadingPorts ? 'Refresh' : 'Reset'}
-                    title={i18n._('key-Workspace/Connection-Refresh')}
-                    onClick={actions.onRefreshPorts}
-                    disabled={!canRefresh}
-                />
-            </div>
-
-            {isConnected && (
-                <div className="margin-bottom-16">
-                    {headType === HEAD_PRINTING && <PrintingState headType={headType} />}
-                    {headType === HEAD_LASER && <LaserState headType={headType} />}
-                    {headType === HEAD_CNC && <CNCState headType={headType} />}
+            {!isConnected && (
+                <div className="sm-flex justify-space-between margin-bottom-16">
+                    <Select
+                        backspaceRemoves={false}
+                        className={classNames('sm-flex-width', 'sm-flex-order-negative')}
+                        clearable={false}
+                        searchable={false}
+                        disabled={!canChangePort}
+                        name="port"
+                        noResultsText={i18n._('key-Workspace/Connection-No ports available.')}
+                        onChange={actions.onChangePortOption}
+                        optionRenderer={renderPortOption}
+                        options={map(ports, (o) => ({
+                            value: o.port,
+                            label: o.port,
+                            manufacturer: o.manufacturer
+                        }))}
+                        placeholder={i18n._('key-Workspace/Connection-Choose a port')}
+                        value={portState}
+                        valueRenderer={renderPortValue}
+                    />
+                    <SvgIcon
+                        className="border-default-black-5 margin-left-8 border-radius-8"
+                        size={24}
+                        borderRadius={8}
+                        name={loadingPorts ? 'Refresh' : 'Reset'}
+                        title={i18n._('key-Workspace/Connection-Refresh')}
+                        onClick={actions.onRefreshPorts}
+                        disabled={!canRefresh}
+                    />
                 </div>
             )}
-            {isConnected && enclosureOnline && (
-                <div className="margin-bottom-16">
-                    <EnclosureState />
+            {isConnected && (
+                <div className="margin-bottom-16 margin-top-12">
+                    <div
+                        className={classNames(styles['connection-state'], 'padding-bottom-8', 'border-bottom-dashed-default')}
+                    >
+                        <span className={styles['connection-state-name']}>
+                            {seriesInfo}
+                        </span>
+                        <span className={styles['connection-state-icon']}>
+                            {workflowState === WORKFLOW_STATE_IDLE
+                            && <i className="sm-icon-14 sm-icon-idle" />}
+                            {workflowState === WORKFLOW_STATE_PAUSED
+                            && <i className="sm-icon-14 sm-icon-paused" />}
+                            {workflowState === WORKFLOW_STATE_RUNNING
+                            && <i className="sm-icon-14 sm-icon-running" />}
+                        </span>
+                    </div>
+                    {moduleStatusList && moduleStatusList.length && (
+                        <div className={classNames('sm-flex', 'flex-wrap')}>
+                            {/* <ModuleStatus moduleName={currentHeadType} status /> */}
+                            {moduleStatusList.map(item => (
+                                <ModuleStatus moduleName={item.moduleName} status={item.status} />
+                            ))}
+                        </div>
+                    )}
                 </div>
             )}
 

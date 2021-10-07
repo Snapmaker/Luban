@@ -75,7 +75,7 @@ function Connection({ widgetId, widgetActions }) {
                 </Notifications>
             )}
 
-            {EXPERIMENTAL_WIFI_CONTROL && (
+            {EXPERIMENTAL_WIFI_CONTROL && !isConnected && (
                 <div className={classNames('sm-tabs', 'margin-vertical-16')}>
                     <button
                         type="button"
@@ -105,7 +105,7 @@ function Connection({ widgetId, widgetActions }) {
                 <WifiConnection />
             )}
             {isConnected && showHomeReminder && !isOriginal && isHomed !== null && !isHomed && (
-                <Modal disableOverlay size="sm" showCloseButton={false}>
+                <Modal disableOverlay size="sm" closable={false}>
                     <Modal.Header>
                         {i18n._('key-Workspace/Connection-Go Home')}
                     </Modal.Header>

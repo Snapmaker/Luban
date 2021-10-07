@@ -1,10 +1,11 @@
-import React, { useEffect, useState } from 'react';
-// import PropTypes from 'prop-types';
+import React, { useEffect, useMemo, useState } from 'react';
+import PropTypes from 'prop-types';
 import classNames from 'classnames';
 import { useDispatch, useSelector } from 'react-redux';
 import { map } from 'lodash';
 // import { InputGroup } from 'react-bootstrap';
 import { Button } from '../../components/Buttons';
+import Checkbox from '../../components/Checkbox';
 import Select from '../../components/Select';
 import SvgIcon from '../../components/SvgIcon';
 import i18n from '../../../lib/i18n';
@@ -15,7 +16,8 @@ import {
     CONNECTION_STATUS_CONNECTED,
     CONNECTION_STATUS_CONNECTING,
     CONNECTION_STATUS_IDLE,
-    CONNECTION_TYPE_WIFI, HEAD_LASER, HEAD_PRINTING,
+    CONNECTION_TYPE_WIFI,
+    // HEAD_LASER, HEAD_PRINTING,
     IMAGE_WIFI_CONNECTED,
     IMAGE_WIFI_CONNECTING,
     // IMAGE_WIFI_ERROR,
@@ -25,14 +27,24 @@ import {
     WORKFLOW_STATUS_RUNNING,
     WORKFLOW_STATUS_UNKNOWN
 } from '../../../constants';
-import widgetStyles from '../styles.styl';
+// import widgetStyles from '../styles.styl';
 import styles from './index.styl';
-import PrintingState from './PrintingState';
-import LaserState from './LaserState';
+// import PrintingState from './PrintingState';
+// import LaserState from './LaserState';
 import ModalSmall from '../../components/Modal/ModalSmall';
 import ModalSmallInput from '../../components/Modal/ModalSmallInput';
 import { Server } from '../../../flux/machine/Server';
+// import { machineStore } from '../../../store/local-storage';
 
+export const ModuleStatus = ({ moduleName, status }) => {
+    return (
+        <div className="sm-flex align-center padding-horizontal-8 background-grey-3 border-radius-12 margin-top-8 margin-right-8">
+            <span className="margin-right-8">{moduleName}</span>
+            <span style={{ display: 'inline-block', backgroundColor: status ? '#4CB518' : '#FFA940', height: 6, width: 6, borderRadius: 3 }} />
+        </div>
+    );
+};
+let timer = null;
 function WifiConnection() {
     const {
         servers,
@@ -40,12 +52,22 @@ function WifiConnection() {
 
         connectionType,
         connectionStatus,
+        connectionAuto,
         server,
         savedServerAddress,
         manualIp,
-        // machine status
-        headType, workflowStatus, isOpen, isConnected
+        // machine status headType,
+        workflowStatus, isOpen, isConnected,
+        currentHeadType,
+        headType,
+        moduleStatusList,
+        airPurifier,
+        // airPurifierStatus,
+        heatedBedTemperature,
+        laserCamera
     } = useSelector(state => state.machine);
+    const [savedServerAddressState, setSavedServerAddressState] = useState(savedServerAddress);
+    const { emergencyStopButton: emergencyStopButtonStatus, airPurifier: airPurifierStatus, rotaryModule: rotaryModuleStatus, enclosure: enclosureStatus } = moduleStatusList;
     const [showConnectionMessage, setShowConnectionMessage] = useState(false);
     const [connectionMessage, setConnectionMessage] = useState({
         text: '',
@@ -67,6 +89,7 @@ function WifiConnection() {
     });
     const [serverState, setServerState] = useState(null);
     const [serverOpenState, setserverOpenState] = useState(null);
+    const [currentModuleStatusList, setCurrentModuleStatusList] = useState(null);
     const dispatch = useDispatch();
     const prevProps = usePrevious({
         connectionStatus
@@ -93,6 +116,7 @@ function WifiConnection() {
         },
         closeServer: () => {
             dispatch(machineActions.closeServer());
+            setSavedServerAddressState('');
         },
         hideWifiConnectionMessage: () => {
             setShowConnectionMessage(false);
@@ -188,6 +212,9 @@ function WifiConnection() {
          */
         onCloseManualWiFi: () => {
             setShowManualWiFiModal(false);
+        },
+        handleAutoConnection: (value) => {
+            dispatch(machineActions.connect.setConnectionAuto(value));
         }
     };
 
@@ -223,6 +250,27 @@ function WifiConnection() {
     }, []);
 
     useEffect(() => {
+        if (isConnected) {
+            if (timer) {
+                clearInterval(timer);
+                timer = null;
+            }
+        } else {
+            if (connectionAuto) {
+                if (!timer) {
+                    timer = setInterval(() => actions.onRefreshServers(), 5000);
+                }
+            } else {
+                autoSetServer(servers, server);
+                if (timer) {
+                    clearInterval(timer);
+                    timer = null;
+                }
+            }
+        }
+    }, [connectionAuto, isConnected]);
+
+    useEffect(() => {
         if (serverOpenState) {
             actions.openServer();
         }
@@ -231,6 +279,16 @@ function WifiConnection() {
     useEffect(() => {
         autoSetServer(servers, server);
     }, [servers, server]);
+
+    useEffect(() => {
+        if (serverState?.address === savedServerAddressState && connectionAuto) {
+            if (timer) {
+                clearInterval(timer);
+                timer = null;
+            }
+            actions.openServer();
+        }
+    }, [serverState, savedServerAddressState]);
 
     useEffect(() => {
         if (connectionType === CONNECTION_TYPE_WIFI) {
@@ -248,52 +306,109 @@ function WifiConnection() {
         }
     }, [connectionType, connectionStatus]);
 
+    const updateModuleStatusList = useMemo(() => {
+        const newModuleStatusList = [];
+        if (currentHeadType) {
+            newModuleStatusList.push({
+                key: currentHeadType,
+                moduleName: currentHeadType,
+                status: true
+            });
+            if (headType === 'printing') {
+                newModuleStatusList.push({
+                    key: 'heatedBed',
+                    moduleName: i18n._('Heated Bed'),
+                    status: heatedBedTemperature > 0
+                });
+            } else if (headType === 'laser') {
+                newModuleStatusList.push({
+                    key: 'laserCamera',
+                    moduleName: i18n._('laserCamera'),
+                    status: laserCamera || false
+                });
+            }
+        }
+        Object.keys(moduleStatusList).forEach((key) => {
+            if (moduleStatusList[key]) {
+                newModuleStatusList.push({
+                    key,
+                    moduleName: i18n._(key),
+                    status: moduleStatusList[key]
+                });
+            } else {
+                if (key === 'airPurifier' && airPurifier) {
+                    newModuleStatusList.push({
+                        key,
+                        moduleName: i18n._(key),
+                        status: moduleStatusList[key]
+                    });
+                }
+            }
+        });
+        return newModuleStatusList;
+    }, [
+        airPurifier, heatedBedTemperature, headType, currentHeadType,
+        emergencyStopButtonStatus, airPurifierStatus, rotaryModuleStatus,
+        enclosureStatus, laserCamera
+    ]);
+
+    useEffect(() => {
+        if (!isConnected) {
+            setCurrentModuleStatusList(null);
+        } else {
+            setCurrentModuleStatusList(updateModuleStatusList);
+        }
+    }, [isConnected, updateModuleStatusList]);
+
+
     return (
         <div>
-            <div className="sm-flex justify-space-between margin-bottom-16">
-                {/** https://react-select.com/upgrade-guide#new-components-api **/}
-                <Select
-                    backspaceRemoves={false}
-                    className={classNames('sm-flex-width sm-flex-order-negative')}
-                    clearable={false}
-                    size="256px"
-                    name="port"
-                    noResultsText={i18n._('key-Workspace/Connection-No machines detected.')}
-                    onChange={actions.onChangeServerOption}
-                    disabled={isOpen}
-                    options={map(servers, (s) => ({
-                        value: s.name,
-                        address: s.address,
-                        label: `${s.name} (${s.address})`
-                    }))}
-                    placeholder={i18n._('key-Workspace/Connection-Choose a machine')}
-                    value={serverState ? serverState?.name : ''}
-                />
-                <div className="sm-flex-auto ">
-                    <SvgIcon
-                        className="border-default-black-5 margin-left-8 border-radius-left-8"
-                        name={serverDiscovering ? 'Refresh' : 'Reset'}
-                        title={i18n._('key-Workspace/Connection-Refresh')}
-                        onClick={actions.onRefreshServers}
+            {!isConnected && (
+                <div className="sm-flex justify-space-between margin-bottom-16">
+                    {/** https://react-select.com/upgrade-guide#new-components-api **/}
+                    <Select
+                        backspaceRemoves={false}
+                        className={classNames('sm-flex-width sm-flex-order-negative')}
+                        clearable={false}
+                        size="256px"
+                        name="port"
+                        noResultsText={i18n._('key-Workspace/Connection-No machines detected.')}
+                        onChange={actions.onChangeServerOption}
                         disabled={isOpen}
-                        size={24}
-                        borderRadius={8}
+                        options={map(servers, (s) => ({
+                            value: s.name,
+                            address: s.address,
+                            label: `${s.name} (${s.address})`
+                        }))}
+                        placeholder={i18n._('key-Workspace/Connection-Choose a machine')}
+                        value={serverState ? serverState?.name : ''}
                     />
-                    <SvgIcon
-                        className="border-default-black-5 border-radius-right-8"
-                        name="Add"
-                        title={i18n._('key-Workspace/Connection-Add')}
-                        disabled={isOpen}
-                        size={24}
-                        borderRadius={8}
-                        onClick={actions.showManualWiFiModal}
-                    />
+                    <div className="sm-flex-auto ">
+                        <SvgIcon
+                            className="border-default-black-5 margin-left-8 border-radius-left-8"
+                            name={serverDiscovering ? 'Refresh' : 'Reset'}
+                            title={i18n._('key-Workspace/Connection-Refresh')}
+                            onClick={actions.onRefreshServers}
+                            disabled={isOpen}
+                            size={24}
+                            borderRadius={8}
+                        />
+                        <SvgIcon
+                            className="border-default-black-5 border-radius-right-8"
+                            name="Add"
+                            title={i18n._('key-Workspace/Connection-Add')}
+                            disabled={isOpen}
+                            size={24}
+                            borderRadius={8}
+                            onClick={actions.showManualWiFiModal}
+                        />
+                    </div>
                 </div>
-            </div>
+            )}
             {isConnected && (
-                <div className="margin-bottom-16">
+                <div className="margin-bottom-16 margin-top-12">
                     <div
-                        className={styles['connection-state']}
+                        className={classNames(styles['connection-state'], 'padding-bottom-8', 'border-bottom-dashed-default')}
                     >
                         <span className={styles['connection-state-name']}>
                             {serverState?.name}
@@ -309,19 +424,28 @@ function WifiConnection() {
                             && <i className="sm-icon-14 sm-icon-running" />}
                         </span>
                     </div>
-                    <div
+                    {/* <div
                         className={classNames(widgetStyles.separator, widgetStyles['separator-underline'])}
                         style={{
-                            marginTop: '10px'
+                            marginTop: '8px'
                         }}
-                    />
-                    {headType === HEAD_PRINTING && <PrintingState headType={headType} />}
-                    {headType === HEAD_LASER && <LaserState headType={headType} />}
+                    /> */}
+                    {/* {headType === HEAD_PRINTING && <PrintingState headType={headType} />}
+                    {headType === HEAD_LASER && <LaserState headType={headType} />} */}
+                    {!!currentModuleStatusList && !!currentModuleStatusList.length && (
+                        <div className={classNames('sm-flex', 'flex-wrap')}>
+                            {/* <ModuleStatus moduleName={currentHeadType} status /> */}
+                            {currentModuleStatusList.map(item => (
+                                <ModuleStatus moduleName={item.moduleName} status={item.status} />
+                            ))}
+                        </div>
+                    )}
                 </div>
             )}
             <div>
                 {!isConnected && (
                     <Button
+                        className="margin-right-8"
                         width="120px"
                         type="primary"
                         priority="level-two"
@@ -330,6 +454,14 @@ function WifiConnection() {
                     >
                         {i18n._('key-Workspace/Connection-Connect')}
                     </Button>
+                )}
+                {!isConnected && (
+                    <Checkbox
+                        checked={connectionAuto}
+                        onChange={e => actions.handleAutoConnection(e?.target?.checked || false)}
+                    >
+                        {i18n._('Auto Connect')}
+                    </Checkbox>
                 )}
                 {isConnected && (
                     <Button
@@ -370,6 +502,11 @@ function WifiConnection() {
     );
 }
 WifiConnection.propTypes = {
+};
+
+ModuleStatus.propTypes = {
+    moduleName: PropTypes.string,
+    status: PropTypes.bool
 };
 
 export default WifiConnection;

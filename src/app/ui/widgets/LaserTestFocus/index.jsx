@@ -47,9 +47,9 @@ class LaserTestFocusWidget extends PureComponent {
     }
 
     componentDidUpdate(prevProps) {
-        const { isConnected, headType } = this.props;
-        if (isConnected !== prevProps.isConnected || headType !== prevProps.headType) {
-            if (headType === HEAD_LASER && isConnected) {
+        const { isConnected, headType, workflowState } = this.props;
+        if (isConnected !== prevProps.isConnected || headType !== prevProps.headType || workflowState !== prevProps.workflowState) {
+            if (headType === HEAD_LASER && isConnected && workflowState !== 'running') {
                 this.props.widgetActions.setDisplay(true);
             } else {
                 this.props.widgetActions.setDisplay(false);

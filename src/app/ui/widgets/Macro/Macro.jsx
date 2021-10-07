@@ -89,6 +89,13 @@ function Macro({ widgetId, updateModal, openModal, macros }) {
         }
     }, [connectionType, macros]);
 
+    // useEffect(() => {
+    //     if (workflowState !== 'running' && isConnected) {
+    //         widgetActions.setDisplay(true);
+    //     } else {
+    //         widgetActions.setDisplay(false);
+    //     }
+    // }, [workflowState, isConnected]);
     const canClick = actions.canClick();
     return (
         <div className="padding-horizontal-16 height-176 padding-vertical-4
@@ -142,6 +149,7 @@ Macro.propTypes = {
     updateModal: PropTypes.func.isRequired,
     openModal: PropTypes.func.isRequired,
     widgetId: PropTypes.string.isRequired
+    // widgetActions: PropTypes.object.isRequired
 };
 
 export default Macro;

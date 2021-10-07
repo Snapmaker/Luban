@@ -38,7 +38,7 @@ import { loadTexture } from './helpers';
 import Loading from './Loading';
 import Rendering from './Rendering';
 import ToolHead from './ToolHead';
-import WorkflowControl from './WorkflowControl';
+// import WorkflowControl from './WorkflowControl';
 import SecondaryToolbar from '../CanvasToolbar/SecondaryToolbar';
 import ModalSmall from '../../components/Modal/ModalSmall';
 
@@ -61,7 +61,7 @@ class Visualizer extends Component {
         headType: PropTypes.string,
         gcodeFile: PropTypes.object,
         boundingBox: PropTypes.object,
-        isConnected: PropTypes.bool.isRequired,
+        // isConnected: PropTypes.bool.isRequired,
         connectionType: PropTypes.string.isRequired,
         workflowStatus: PropTypes.string.isRequired,
         renderState: PropTypes.string.isRequired,
@@ -82,14 +82,20 @@ class Visualizer extends Component {
         }),
         workPosition: PropTypes.object,
 
-        modelGroup: PropTypes.object
+        modelGroup: PropTypes.object,
+        onRef: PropTypes.object,
+        preview: PropTypes.bool
     };
 
     printableArea = null;
 
+    previewPrintableArea = null;
+
     visualizerGroup = { object: new THREE.Group() };
 
     canvas = React.createRef();
+
+    previewCanvas = React.createRef();
 
     targetPoint = null;
 
@@ -476,9 +482,14 @@ class Visualizer extends Component {
             x: size.x * 2,
             y: size.y * 2
         });
+        this.previewPrintableArea = new PrintablePlate({
+            x: size.x * 2,
+            y: size.y * 2
+        });
     }
 
     componentDidMount() {
+        this.props.onRef && this.props.onRef(this);
         this.setupToolhead();
         this.subscribe();
         this.addControllerEvents();
@@ -494,12 +505,26 @@ class Visualizer extends Component {
      *  - Upload G-code to controller
      */
     componentWillReceiveProps(nextProps) {
-        if (!isEqual(nextProps.size, this.props.size)) {
+        if (!isEqual(nextProps.size, this.props.size) || !isEqual(nextProps.preview, this.props.preview)) {
             const size = nextProps.size;
-            this.printableArea.updateSize({
-                x: size.x * 2,
-                y: size.y * 2
-            });
+            // nextProps.preview ? this.previewPrintableArea.updateSize({
+            //     x: size.x * 2,
+            //     y: size.y * 2
+            // }) : this.printableArea.updateSize({
+            //     x: size.x * 2,
+            //     y: size.y * 2
+            // });
+            if (nextProps.preview) {
+                this.previewPrintableArea.updateSize({
+                    x: size.x * 2,
+                    y: size.y * 2
+                });
+            } else {
+                this.printableArea.updateSize({
+                    x: size.x * 2,
+                    y: size.y * 2
+                });
+            }
             this.canvas.current.setCamera(new THREE.Vector3(0, 0, Math.min(size.z * 2, 300)), new THREE.Vector3());
         }
 
@@ -557,6 +582,12 @@ class Visualizer extends Component {
             this.setState({
                 isEmergencyStopped: true
             });
+        }
+    }
+
+    componentDidUpdate(prevProps) {
+        if (this.props.onRef !== prevProps && this.props.onRef) {
+            this.props.onRef(this);
         }
     }
 
@@ -694,7 +725,7 @@ class Visualizer extends Component {
                 <div className={styles['canvas-wrapper']}>
                     {this.props.uploadState === 'uploading' && <Loading />}
                     {this.props.renderState === 'rendering' && <Rendering />}
-                    <div className="position-ab top-left-16">
+                    {/* <div className="position-ab top-left-16">
                         <WorkflowControl
                             workflowStatus={this.props.workflowStatus}
                             isConnected={this.props.isConnected}
@@ -703,7 +734,7 @@ class Visualizer extends Component {
                             actions={this.actions}
                             uploadState={this.props.uploadState}
                         />
-                    </div>
+                    </div> */}
                     <Canvas
                         ref={this.canvas}
                         size={this.props.size}
