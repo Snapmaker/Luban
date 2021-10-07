@@ -18,6 +18,7 @@ const SetBackground = ({ hideModal }) => {
     const dispatch = useDispatch();
     const address = useSelector(state => state?.machine?.server?.address);
     const size = useSelector(state => state?.machine?.size);
+    const toolHead = useSelector(state => state.machine.toolHead);
 
     const [canTakePhoto, setCanTakePhoto] = useState(true);
     const [xSize, setXSize] = useState([]);
@@ -27,7 +28,7 @@ const SetBackground = ({ hideModal }) => {
 
     const actions = {
         showModal: async () => {
-            const resPro = await api.getCameraCalibration({ 'address': address });
+            const resPro = await api.getCameraCalibration({ 'address': address, 'toolHead': toolHead.laserToolhead });
             if (!('res' in resPro.body) || !('points' in JSON.parse(resPro.body.res.text))) {
                 setPanel(PANEL_NOT_CALIBRATION);
             } else {
@@ -71,6 +72,7 @@ const SetBackground = ({ hideModal }) => {
         <React.Fragment>
             <div>
                 <ExtractSquareTrace
+                    toolHead={toolHead}
                     canTakePhoto={canTakePhoto}
                     changeCanTakePhoto={actions.changeCanTakePhoto}
                     ySize={ySize}

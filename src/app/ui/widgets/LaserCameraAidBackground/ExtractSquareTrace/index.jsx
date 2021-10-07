@@ -8,7 +8,7 @@ import api from '../../../../api';
 import styles from '../styles.styl';
 import ExtractPreview from './ExtractPreview';
 import ManualCalibration from '../ManualCalibration';
-import { MACHINE_SERIES } from '../../../../constants';
+import { LEVEL_ONE_POWER_LASER_FOR_SM2, LEVEL_TWO_POWER_LASER_FOR_SM2, MACHINE_SERIES } from '../../../../constants';
 import { actions } from '../../../../flux/machine';
 import { Button } from '../../../components/Buttons';
 import Modal from '../../../components/Modal';
@@ -23,6 +23,7 @@ class ExtractSquareTrace extends PureComponent {
         size: PropTypes.object.isRequired,
         server: PropTypes.object.isRequired,
         series: PropTypes.string.isRequired,
+        toolHead: PropTypes.object.isRequired,
         headType: PropTypes.string,
         canTakePhoto: PropTypes.bool.isRequired,
         lastFileNames: PropTypes.array,
@@ -55,7 +56,7 @@ class ExtractSquareTrace extends PureComponent {
         canStart: true,
         outputFilename: '',
         options: {
-            picAmount: this.props.series === MACHINE_SERIES.A150.value ? 4 : 9,
+            picAmount: 1,
             currentIndex: 0,
             size: this.props.size,
             series: this.props.series,
@@ -100,7 +101,7 @@ class ExtractSquareTrace extends PureComponent {
             });
             this.props.changeCanTakePhoto(false);
             const { address } = this.props.server;
-            const resPro = await api.getCameraCalibration({ 'address': address });
+            const resPro = await api.getCameraCalibration({ 'address': address, 'toolHead': this.props.toolHead.laserToolhead });
             const resData = JSON.parse(resPro.body.res.text);
 
             this.setState({
@@ -112,48 +113,62 @@ class ExtractSquareTrace extends PureComponent {
             });
             const position = [];
             let centerDis;
-            const cameraOffsetX = 20;
-            const cameraOffsetY = -8.5;
+            let cameraOffsetX = 20;
+            let cameraOffsetY = -8.5;
             let length;
-            if (this.props.series === MACHINE_SERIES.A150.value) {
-                centerDis = 80;
-                [1, 2, 4, 3].forEach((item) => {
-                    position.push({
-                        'x': this.props.laserSize.x / 2 + cameraOffsetX + centerDis / 2 * (item % 2 === 1 ? -1 : 1),
-                        'y': this.props.laserSize.y / 2 + cameraOffsetY + centerDis / 2 * (Math.ceil(item / 2) === 1 ? 1 : -1),
-                        'index': item - 1
+            if (this.props.toolHead.laserToolhead === LEVEL_ONE_POWER_LASER_FOR_SM2) {
+                cameraOffsetX = 20;
+                cameraOffsetY = -8.5;
+                if (this.props.series === MACHINE_SERIES.A150.value) {
+                    centerDis = 80;
+                    [1, 2, 4, 3].forEach((item) => {
+                        position.push({
+                            'x': this.props.laserSize.x / 2 + cameraOffsetX + centerDis / 2 * (item % 2 === 1 ? -1 : 1),
+                            'y': this.props.laserSize.y / 2 + cameraOffsetY + centerDis / 2 * (Math.ceil(item / 2) === 1 ? 1 : -1),
+                            'index': item - 1
+                        });
                     });
-                });
-                length = 4;
-            } else {
-                if (this.props.series === MACHINE_SERIES.A250.value) {
-                    centerDis = 90;
+                    length = 4;
                 } else {
-                    centerDis = 106;
-                }
-                for (let j = 1; j >= -1; j--) {
-                    if (j === 1 || j === -1) {
-                        for (let i = -1; i <= 1; i++) {
-                            const x = this.props.laserSize.x / 2 + cameraOffsetX + centerDis * i;
-                            const y = this.props.laserSize.y / 2 + cameraOffsetY + centerDis * j;
-                            position.push({ 'x': x, 'y': y, 'index': position.length });
-                        }
-                    } else if (j === 0) {
-                        for (let i = 1; i >= -1; i--) {
-                            const x = this.props.laserSize.x / 2 + cameraOffsetX + centerDis * i;
-                            const y = this.props.laserSize.y / 2 + cameraOffsetY + centerDis * j;
-                            if (position.length === 3) {
-                                position.push({ 'x': x, 'y': y, 'index': 5 });
-                            } else if (position.length === 5) {
-                                position.push({ 'x': x, 'y': y, 'index': 3 });
-                            } else {
+                    if (this.props.series === MACHINE_SERIES.A250.value) {
+                        centerDis = 90;
+                    } else {
+                        centerDis = 106;
+                    }
+                    for (let j = 1; j >= -1; j--) {
+                        if (j === 1 || j === -1) {
+                            for (let i = -1; i <= 1; i++) {
+                                const x = this.props.laserSize.x / 2 + cameraOffsetX + centerDis * i;
+                                const y = this.props.laserSize.y / 2 + cameraOffsetY + centerDis * j;
                                 position.push({ 'x': x, 'y': y, 'index': position.length });
+                            }
+                        } else if (j === 0) {
+                            for (let i = 1; i >= -1; i--) {
+                                const x = this.props.laserSize.x / 2 + cameraOffsetX + centerDis * i;
+                                const y = this.props.laserSize.y / 2 + cameraOffsetY + centerDis * j;
+                                if (position.length === 3) {
+                                    position.push({ 'x': x, 'y': y, 'index': 5 });
+                                } else if (position.length === 5) {
+                                    position.push({ 'x': x, 'y': y, 'index': 3 });
+                                } else {
+                                    position.push({ 'x': x, 'y': y, 'index': position.length });
+                                }
                             }
                         }
                     }
+                    length = 9;
                 }
-                length = 9;
+            } else if (this.props.toolHead.laserToolhead === LEVEL_TWO_POWER_LASER_FOR_SM2) {
+                cameraOffsetX = 60;
+                cameraOffsetY = 0;
+                position.push({
+                    'index': 0,
+                    'x': this.props.laserSize.x / 2 + cameraOffsetX,
+                    'y': this.props.laserSize.y / 2 + cameraOffsetY
+                });
+                length = 1;
             }
+
             this.setState({
                 options: {
                     ...this.state.options,
@@ -165,10 +180,12 @@ class ExtractSquareTrace extends PureComponent {
             const takePhotos = this.actions.takePhotos(address, position);
             const getPhototTasks = this.actions.startGetPhotoTasks(length);
             Promise.all([takePhotos, getPhototTasks]).then(() => {
-                if (this.props.series !== MACHINE_SERIES.A150.value) {
-                    this.swapItem(this.state.imageNames, 3, 5);
-                } else {
-                    this.swapItem(this.state.imageNames, 2, 3);
+                if (this.props.toolHead.laserToolhead === LEVEL_ONE_POWER_LASER_FOR_SM2) {
+                    if (this.props.series !== MACHINE_SERIES.A150.value) {
+                        this.swapItem(this.state.imageNames, 3, 5);
+                    } else {
+                        this.swapItem(this.state.imageNames, 2, 3);
+                    }
                 }
                 this.setState({
                     options: {
@@ -187,9 +204,29 @@ class ExtractSquareTrace extends PureComponent {
 
         takePhotos: (address, position) => {
             const getPhotoTasks = this.state.getPhotoTasks;
-            let z = 170;
-            if (this.state.options.picAmount === 4) {
-                z = 140;
+            let z;
+            if (this.props.toolHead.laserToolhead === LEVEL_ONE_POWER_LASER_FOR_SM2) {
+                z = 170;
+                if (this.state.options.picAmount === 4) {
+                    z = 140;
+                }
+            }
+            if (this.props.toolHead.laserToolhead === LEVEL_TWO_POWER_LASER_FOR_SM2) {
+                if (this.props.series === MACHINE_SERIES.A350.value) {
+                    z = 290;
+                    position[0].x = 232;
+                    position[0].y = 178;
+                }
+                if (this.props.series === MACHINE_SERIES.A150.value) {
+                    z = 150;
+                    position[0].x = 155;
+                    position[0].y = 82;
+                }
+                if (this.props.series === MACHINE_SERIES.A250.value) {
+                    z = 230;
+                    position[0].x = 186;
+                    position[0].y = 130;
+                }
             }
             return new Promise(async (resolve, reject) => {
                 for (let i = 0; i < position.length; i++) {
@@ -248,54 +285,93 @@ class ExtractSquareTrace extends PureComponent {
                         .processGetPhoto({ 'index': task.index, 'address': task.address })
                         .then((res) => {
                             if (JSON.parse(res.text).fileName || JSON.parse(res.text).status !== 404) {
-                                if (this.state.options.picAmount === 4) {
-                                    this.state.xSize[task.index] = this.props.laserSize.x / 2;
-                                    this.state.ySize[task.index] = this.props.laserSize.y / 2;
-                                } else {
-                                    if (parseInt(task.index / 3, 10) === 1) {
-                                        this.state.ySize[task.index] = this.state.options.centerDis;
+                                if (this.props.toolHead.laserToolhead === LEVEL_ONE_POWER_LASER_FOR_SM2) {
+                                    if (this.props.series === MACHINE_SERIES.A150.value) {
+                                        this.state.xSize[task.index] = this.props.laserSize.x / 2;
+                                        this.state.ySize[task.index] = this.props.laserSize.y / 2;
                                     } else {
-                                        this.state.ySize[task.index] = ((this.props.laserSize.y - this.state.options.centerDis) / 2);
+                                        if (parseInt(task.index / 3, 10) === 1) {
+                                            this.state.ySize[task.index] = this.state.options.centerDis;
+                                        } else {
+                                            this.state.ySize[task.index] = ((this.props.laserSize.y - this.state.options.centerDis) / 2);
+                                        }
+                                        if (task.index % 3 === 1) {
+                                            this.state.xSize[task.index] = this.state.options.centerDis;
+                                        } else {
+                                            this.state.xSize[task.index] = ((this.props.laserSize.x - this.state.options.centerDis) / 2);
+                                        }
                                     }
-                                    if (task.index % 3 === 1) {
-                                        this.state.xSize[task.index] = this.state.options.centerDis;
-                                    } else {
-                                        this.state.xSize[task.index] = ((this.props.laserSize.x - this.state.options.centerDis) / 2);
-                                    }
+                                } else if (this.props.toolHead.laserToolhead === LEVEL_TWO_POWER_LASER_FOR_SM2) {
+                                    this.state.xSize[task.index] = this.props.laserSize.x;
+                                    this.state.ySize[task.index] = this.props.laserSize.y;
                                 }
                                 this.props.updateEachPicSize('xSize', this.state.xSize);
                                 this.props.updateEachPicSize('ySize', this.state.ySize);
 
-                                this.extractingPreview[task.index].current.onChangeImage(
-                                    DefaultBgiName,
-                                    this.state.xSize[task.index] * this.multiple,
-                                    this.state.ySize[task.index] * this.multiple,
-                                    task.index,
-                                    this.multiple
-                                );
+                                if (this.props.toolHead.laserToolhead === LEVEL_ONE_POWER_LASER_FOR_SM2) {
+                                    this.extractingPreview[task.index].current.onChangeImage(
+                                        DefaultBgiName,
+                                        this.state.xSize[task.index] * this.multiple,
+                                        this.state.ySize[task.index] * this.multiple,
+                                        task.index,
+                                        this.multiple
+                                    );
 
-                                const { fileName } = JSON.parse(res.text);
-                                this.setState({
-                                    options: {
-                                        ...this.state.options,
-                                        currentIndex: task.index,
-                                        stitchFileName: fileName
-                                    }
-                                });
-                                this.state.imageNames.push(fileName);
-                                api.processStitchEach(this.state.options).then((stitchImg) => {
-                                    const { filename } = JSON.parse(stitchImg.text);
-                                    if (this.extractingPreview[task.index].current) {
-                                        this.extractingPreview[task.index].current.onChangeImage(
-                                            filename,
-                                            this.state.xSize[task.index] * this.multiple,
-                                            this.state.ySize[task.index] * this.multiple,
-                                            task.index,
-                                            this.multiple
-                                        );
-                                    }
-                                    task.status = 2;
-                                });
+                                    const { fileName } = JSON.parse(res.text);
+                                    this.setState({
+                                        options: {
+                                            ...this.state.options,
+                                            currentIndex: task.index,
+                                            stitchFileName: fileName
+                                        }
+                                    });
+                                    this.state.imageNames.push(fileName);
+                                    api.processStitchEach(this.state.options).then((stitchImg) => {
+                                        const { filename } = JSON.parse(stitchImg.text);
+                                        if (this.extractingPreview[task.index].current) {
+                                            this.extractingPreview[task.index].current.onChangeImage(
+                                                filename,
+                                                this.state.xSize[task.index] * this.multiple,
+                                                this.state.ySize[task.index] * this.multiple,
+                                                task.index,
+                                                this.multiple
+                                            );
+                                        }
+                                        task.status = 2;
+                                    });
+                                } else if (this.props.toolHead.laserToolhead === LEVEL_TWO_POWER_LASER_FOR_SM2) {
+                                    const { fileName } = JSON.parse(res.text);
+                                    this.setState({
+                                        options: {
+                                            ...this.state.options,
+                                            currentIndex: task.index,
+                                            stitchFileName: fileName
+                                        }
+                                    });
+                                    this.extractingPreview[task.index].current.onChangeImage(
+                                        fileName,
+                                        this.state.xSize[task.index] * this.multiple,
+                                        this.state.ySize[task.index] * this.multiple,
+                                        task.index,
+                                        this.multiple
+                                    );
+                                    api.processStitchEach(this.state.options).then((stitchImg) => {
+                                        const { filename } = JSON.parse(stitchImg.text);
+                                        if (this.extractingPreview[task.index].current) {
+                                            this.extractingPreview[task.index].current.onChangeImage(
+                                                filename,
+                                                this.state.xSize[task.index] * this.multiple,
+                                                this.state.ySize[task.index] * this.multiple,
+                                                task.index,
+                                                this.multiple
+                                            );
+                                        }
+                                        this.setState({
+                                            outputFilename: filename
+                                        });
+                                        task.status = 2;
+                                    });
+                                }
                             } else {
                                 task.status = 0;
                             }
@@ -325,7 +401,7 @@ class ExtractSquareTrace extends PureComponent {
                     }
                 });
             } else {
-                const resPro = await api.getCameraCalibration({ 'address': this.props.server.address });
+                const resPro = await api.getCameraCalibration({ 'address': this.props.server.address, 'toolHead': this.props.toolHead.laserToolhead });
                 const resData = JSON.parse(resPro.body.res.text);
                 this.setState({
                     options: {
@@ -390,8 +466,9 @@ class ExtractSquareTrace extends PureComponent {
             this.props.setBackgroundImage(this.state.outputFilename);
         },
         displayManualCalibration: async () => {
-            const resPro = await api.getCameraCalibration({ 'address': this.props.server.address });
+            const resPro = await api.getCameraCalibration({ 'address': this.props.server.address, 'toolHead': this.props.toolHead.laserToolhead });
             const res = JSON.parse(resPro.body.res.text);
+            console.log('res points', res);
             this.setState({
                 manualPoints: res.points,
                 matrix: res
@@ -406,7 +483,39 @@ class ExtractSquareTrace extends PureComponent {
     timer = null;
 
     componentDidMount() {
-        for (let i = 0; i < this.state.options.picAmount; i++) {
+        let picAmount = 1;
+        if (this.props.toolHead.laserToolhead === LEVEL_TWO_POWER_LASER_FOR_SM2) {
+            picAmount = 1;
+        } else if (this.props.toolHead.laserToolhead === LEVEL_ONE_POWER_LASER_FOR_SM2) {
+            picAmount = this.props.series === MACHINE_SERIES.A150.value ? 4 : 9;
+        }
+        this.setState({
+            panel: PANEL_EXTRACT_TRACE,
+            getPhotoTasks: [],
+            imageNames: [],
+            manualPoints: [],
+            matrix: '',
+            xSize: this.props.xSize,
+            ySize: this.props.ySize,
+            shouldCalibrate: false,
+            isStitched: false,
+            canStart: true,
+            outputFilename: '',
+            options: {
+                picAmount: picAmount,
+                currentIndex: 0,
+                size: this.props.size,
+                series: this.props.series,
+                centerDis: 100,
+                currentArrIndex: 0,
+                getPoints: [],
+                corners: [],
+                fileNames: [],
+                stitchFileName: ''
+            }
+        });
+
+        for (let i = 0; i < picAmount; i++) {
             this.extractingPreview[i] = React.createRef();
         }
 
@@ -464,6 +573,7 @@ class ExtractSquareTrace extends PureComponent {
                                         <ExtractPreview
                                             size={this.props.laserSize}
                                             series={this.props.series}
+                                            toolHead={this.props.toolHead}
                                             ref={previewId}
                                             key={key}
                                         />
@@ -517,6 +627,7 @@ class ExtractSquareTrace extends PureComponent {
                 </div>
                 {this.state.panel === PANEL_MANUAL_CALIBRATION && (
                     <ManualCalibration
+                        toolHead={this.props.toolHead}
                         backtoCalibrationModal={this.actions.backtoCalibrationModal}
                         getPoints={this.state.manualPoints}
                         matrix={this.state.matrix}

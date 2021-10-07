@@ -1,13 +1,14 @@
 import React, { Component } from 'react';
 // import PropTypes from 'prop-types';
 import PropTypes from 'prop-types';
-import { DATA_PREFIX, MACHINE_SERIES } from '../../../../constants';
+import { DATA_PREFIX, LEVEL_TWO_POWER_LASER_FOR_SM2, LEVEL_ONE_POWER_LASER_FOR_SM2, MACHINE_SERIES } from '../../../../constants';
 import styles from '../styles.styl';
 
 class ExtractPreview extends Component {
     static propTypes = {
         size: PropTypes.object.isRequired,
-        series: PropTypes.string.isRequired
+        series: PropTypes.string.isRequired,
+        toolHead: PropTypes.object.isRequired
     };
 
     state = {
@@ -24,10 +25,15 @@ class ExtractPreview extends Component {
     isAbsolute;
 
     onChangeImage(filename, width = 100, height = 100, index, multiple) {
-        if (this.props.series === MACHINE_SERIES.A150.value) {
-            this.calcuStyle(index, width, height, 2, multiple);
-        } else {
-            this.calcuStyle(index, width, height, 3, multiple);
+        if (this.props.toolHead.laserToolhead === LEVEL_TWO_POWER_LASER_FOR_SM2) {
+            this.calcuStyle(index, width, height, 1, multiple);
+        }
+        if (this.props.toolHead.laserToolhead === LEVEL_ONE_POWER_LASER_FOR_SM2) {
+            if (this.props.series === MACHINE_SERIES.A150.value) {
+                this.calcuStyle(index, width, height, 2, multiple);
+            } else {
+                this.calcuStyle(index, width, height, 3, multiple);
+            }
         }
 
         this.setState({
@@ -39,6 +45,12 @@ class ExtractPreview extends Component {
     }
 
     calcuStyle(index, width, height, divideNumber, multiple) {
+        if (divideNumber === 1) {
+            this.isAbsolute = true;
+            this.top = 0;
+            this.left = 0;
+            return;
+        }
         if (parseInt(index / divideNumber, 10) === 1) {
             this.isAbsolute = true;
             if (index % divideNumber === 0) {
