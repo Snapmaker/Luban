@@ -26,7 +26,6 @@ import DeleteOperation3D from '../operation-history/DeleteOperation3D';
 import AddOperation3D from '../operation-history/AddOperation3D';
 import VisibleOperation3D from '../operation-history/VisibleOperation3D';
 import OperationHistory from '../operation-history/OperationHistory';
-import baseActions from '../machine/action-base';
 
 const operationHistory = new OperationHistory();
 
@@ -243,7 +242,6 @@ export const actions = {
         const { toolHead, series, size } = getState().machine;
         // await dispatch(machineActions.updateMachineToolHead(toolHead, series, CONFIG_HEADTYPE));
         const currentMachine = getMachineSeriesWithToolhead(series, toolHead, CONFIG_HEADTYPE);
-        dispatch(baseActions.updateState({ currentMachine }));
         await definitionManager.init(CONFIG_HEADTYPE, currentMachine.configPathname);
 
         dispatch(actions.updateState({
@@ -275,7 +273,6 @@ export const actions = {
         const { toolHead } = getState().machine;
         // await dispatch(machineActions.updateMachineToolHead(toolHead, series, CONFIG_HEADTYPE));
         const currentMachine = getMachineSeriesWithToolhead(series, toolHead, CONFIG_HEADTYPE);
-        dispatch(baseActions.updateState({ currentMachine }));
         await definitionManager.init(CONFIG_HEADTYPE, currentMachine.configPathname);
 
         const defaultConfigId = machineStore.get('defaultConfigId');
