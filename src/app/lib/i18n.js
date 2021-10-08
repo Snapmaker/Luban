@@ -43,7 +43,6 @@ const _ = (...args) => {
     if (typeof text !== 'string' || text.length === 0) {
         text = i18next.t(key, { ...options, lng: 'en' });
     }
-    console.log('lng', i18next.language);
 
     return text;
 };

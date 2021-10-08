@@ -22,7 +22,7 @@ const translateMap = {};
 // });
 
 // Setup new change file
-const workbook = XLSX.readFile('09231430(1).xlsx');
+const workbook = XLSX.readFile('test_swap2.xlsx');
 const sheets = workbook.Sheets[workbook.SheetNames[0]];
 const changes = [];
 for (let i = 2; i < 1200; i++) {
