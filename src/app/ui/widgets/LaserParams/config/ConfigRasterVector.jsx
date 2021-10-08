@@ -46,11 +46,11 @@ const ConfigRasterVector = ({ disabled }) => {
             {expanded && (
                 <React.Fragment>
                     <TipTrigger
-                        title={i18n._('key_ui/widgets/LaserParams/config/ConfigRasterVector_Invert')}
-                        content={i18n._('key_ui/widgets/LaserParams/config/ConfigRasterVector_Inverts the color of images, white becomes black, and black becomes white.')}
+                        title={i18n._('key-Laser/ProcessingModeSection/ConfigRasterVector-Invert')}
+                        content={i18n._('key-Laser/ProcessingModeSection/ConfigRasterVector-Inverts the color of images, white becomes black, and black becomes white.')}
                     >
                         <div className="sm-flex height-32 margin-vertical-8">
-                            <span className="sm-flex-width">{i18n._('key_ui/widgets/LaserParams/config/ConfigRasterVector_Invert')}</span>
+                            <span className="sm-flex-width">{i18n._('key-Laser/ProcessingModeSection/ConfigRasterVector-Invert')}</span>
                             <Checkbox
                                 disabled={disabled}
                                 className="sm-flex-auto"
@@ -63,11 +63,11 @@ const ConfigRasterVector = ({ disabled }) => {
                         </div>
                     </TipTrigger>
                     <TipTrigger
-                        title={i18n._('key_ui/widgets/LaserParams/config/ConfigRasterVector_Threshold')}
-                        content={i18n._('key_ui/widgets/LaserParams/config/ConfigRasterVector_Set a value above which colors will be rendered in white.')}
+                        title={i18n._('key-Laser/ProcessingModeSection/ConfigRasterVector-Threshold')}
+                        content={i18n._('key-Laser/ProcessingModeSection/ConfigRasterVector-Set a value above which colors will be rendered in white.')}
                     >
                         <div className="sm-flex height-32 margin-vertical-8">
-                            <span className="sm-flex-width">{i18n._('key_ui/widgets/LaserParams/config/ConfigRasterVector_Threshold')}</span>
+                            <span className="sm-flex-width">{i18n._('key-Laser/ProcessingModeSection/ConfigRasterVector-Threshold')}</span>
 
                             <Slider
                                 disabled={disabled}
@@ -93,11 +93,11 @@ const ConfigRasterVector = ({ disabled }) => {
                         </div>
                     </TipTrigger>
                     <TipTrigger
-                        title={i18n._('key_ui/widgets/LaserParams/config/ConfigRasterVector_Impurity Size')}
-                        content={i18n._('key_ui/widgets/LaserParams/config/ConfigRasterVector_Set the minimum size of impurities allowed to be shown.')}
+                        title={i18n._('key-Laser/ProcessingModeSection/ConfigRasterVector-Impurity Size')}
+                        content={i18n._('key-Laser/ProcessingModeSection/ConfigRasterVector-Set the minimum size of impurities allowed to be shown.')}
                     >
                         <div className="sm-flex height-32 margin-vertical-8">
-                            <span className="sm-flex-width">{i18n._('key_ui/widgets/LaserParams/config/ConfigRasterVector_Impurity Size')}</span>
+                            <span className="sm-flex-width">{i18n._('key-Laser/ProcessingModeSection/ConfigRasterVector-Impurity Size')}</span>
                             <Input
                                 disabled={disabled}
                                 value={turdSize}

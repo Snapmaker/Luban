@@ -247,14 +247,14 @@ const SettingGuideModal = (props) => {
         <div>
             <Modal disableOverlay size="sm" onClose={handleCancel} className={styles.settingModal}>
                 <Modal.Header>
-                    {i18n._('key_ui/pages/HomePage/SettingGuideModal_Configuration Wizard')}
+                    {i18n._('key-HomePage/Begin-Configuration Wizard')}
                 </Modal.Header>
                 <Modal.Body>
                     {
                         settingStep === 'lang' && (
                             <div className={styles.langSelect} style={{ width: '552px', height: '256px', marginTop: '16px' }}>
                                 <div className={classNames(styles.titleLabel, 'heading-2')}>
-                                    {`${i18n._('key_ui/pages/HomePage/SettingGuideModal_Select Language')}`}
+                                    {`${i18n._('key-HomePage/Begin-Select Language')}`}
                                 </div>
                                 <Select
                                     className={classNames(styles.langSelectInput, 'margin-auto')}
@@ -271,7 +271,7 @@ const SettingGuideModal = (props) => {
                     {
                         settingStep === 'machine' && (
                             <div className={styles.machineSelect}>
-                                <div className={classNames(styles.titleLabel, 'heading-2')}>{i18n._('key_ui/pages/HomePage/SettingGuideModal_Select machine')}</div>
+                                <div className={classNames(styles.titleLabel, 'heading-2')}>{i18n._('key-HomePage/Begin-Select machine')}</div>
                                 <div className={styles.machineContent}>
                                     <div className={styles.machineImg}>
                                         <SvgIcon
@@ -382,7 +382,7 @@ const SettingGuideModal = (props) => {
                         priority="level-two"
                         className="display-inline"
                     >
-                        {i18n._('key_ui/pages/HomePage/SettingGuideModal_Cancel')}
+                        {i18n._('key-HomePage/Begin-Cancel')}
                     </Button>
                     {
                         settingStep === 'lang' && (
@@ -393,7 +393,7 @@ const SettingGuideModal = (props) => {
                                 priority="level-two"
                                 className="display-inline margin-horizontal-8"
                             >
-                                {i18n._('key_ui/pages/HomePage/SettingGuideModal_Next')}
+                                {i18n._('key-HomePage/Begin-Next')}
                             </Button>
                         )
                     }
@@ -406,7 +406,7 @@ const SettingGuideModal = (props) => {
                                 priority="level-two"
                                 className="display-inline margin-horizontal-8"
                             >
-                                {i18n._('key_ui/pages/HomePage/SettingGuideModal_Complete')}
+                                {i18n._('key-HomePage/Begin-Complete')}
                             </Button>
                         )
                     }

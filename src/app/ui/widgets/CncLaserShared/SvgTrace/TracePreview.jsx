@@ -243,10 +243,10 @@ class TracePreview extends Component {
                             <tr>
                                 <td className={styles['trace-td-title']}>
                                     <TipTrigger
-                                        title={i18n._('key_ui/widgets/CncLaserShared/SvgTrace/TracePreview_Black')}
-                                        content={i18n._('key_ui/widgets/CncLaserShared/SvgTrace/TracePreview_Adjusts the black trace.')}
+                                        title={i18n._('key-unused-Black')}
+                                        content={i18n._('key-unused-Adjusts the black trace.')}
                                     >
-                                        <p className={styles['trace-td-title-p']}>{i18n._('key_ui/widgets/CncLaserShared/SvgTrace/TracePreview_Black')}</p>
+                                        <p className={styles['trace-td-title-p']}>{i18n._('key-unused-Black')}</p>
                                     </TipTrigger>
                                 </td>
                                 <td className={styles['trace-td-slider']}>
@@ -270,10 +270,10 @@ class TracePreview extends Component {
                             <tr>
                                 <td className={styles['trace-td-title']}>
                                     <TipTrigger
-                                        title={i18n._('key_ui/widgets/CncLaserShared/SvgTrace/TracePreview_Foreground')}
-                                        content={i18n._('key_ui/widgets/CncLaserShared/SvgTrace/TracePreview_Adjusts the foreground.')}
+                                        title={i18n._('key-unused-Foreground')}
+                                        content={i18n._('key-unused-Adjusts the foreground.')}
                                     >
-                                        <p className={styles['trace-td-title-p']}>{i18n._('key_ui/widgets/CncLaserShared/SvgTrace/TracePreview_Foreground')}</p>
+                                        <p className={styles['trace-td-title-p']}>{i18n._('key-unused-Foreground')}</p>
                                     </TipTrigger>
                                 </td>
                                 <td className={styles['trace-td-slider']}>
@@ -297,10 +297,10 @@ class TracePreview extends Component {
                             <tr>
                                 <td className={styles['trace-td-title']}>
                                     <TipTrigger
-                                        title={i18n._('key_ui/widgets/CncLaserShared/SvgTrace/TracePreview_Dilation')}
-                                        content={i18n._('key_ui/widgets/CncLaserShared/SvgTrace/TracePreview_Dilate the foreground mask gradually. Bigger values cost more time.')}
+                                        title={i18n._('key-unused-Dilation')}
+                                        content={i18n._('key-unused-Dilate the foreground mask gradually. Bigger values cost more time.')}
                                     >
-                                        <p className={styles['trace-td-title-p']}>{i18n._('key_ui/widgets/CncLaserShared/SvgTrace/TracePreview_Dilation')}</p>
+                                        <p className={styles['trace-td-title-p']}>{i18n._('key-unused-Dilation')}</p>
                                     </TipTrigger>
                                 </td>
                                 <td className={styles['trace-td-slider']}>
@@ -324,10 +324,10 @@ class TracePreview extends Component {
                             <tr>
                                 <td className={styles['trace-td-title']}>
                                     <TipTrigger
-                                        title={i18n._('key_ui/widgets/CncLaserShared/SvgTrace/TracePreview_Color Range')}
-                                        content={i18n._('key_ui/widgets/CncLaserShared/SvgTrace/TracePreview_Adjusts the color range of each trace.')}
+                                        title={i18n._('key-unused-Color Range')}
+                                        content={i18n._('key-unused-Adjusts the color range of each trace.')}
                                     >
-                                        <p className={styles['trace-td-title-p']}>{i18n._('key_ui/widgets/CncLaserShared/SvgTrace/TracePreview_Color Range')}</p>
+                                        <p className={styles['trace-td-title-p']}>{i18n._('key-unused-Color Range')}</p>
                                     </TipTrigger>
                                 </td>
                                 <td className={styles['trace-td-slider']}>
@@ -351,10 +351,10 @@ class TracePreview extends Component {
                             <tr>
                                 <td className={styles['trace-td-title']}>
                                     <TipTrigger
-                                        title={i18n._('key_ui/widgets/CncLaserShared/SvgTrace/TracePreview_Objects')}
-                                        content={i18n._('key_ui/widgets/CncLaserShared/SvgTrace/TracePreview_The number of the output objects.')}
+                                        title={i18n._('key-unused-Objects')}
+                                        content={i18n._('key-unused-The number of the output objects.')}
                                     >
-                                        <p className={styles['trace-td-title-p']}>{i18n._('key_ui/widgets/CncLaserShared/SvgTrace/TracePreview_Objects')}</p>
+                                        <p className={styles['trace-td-title-p']}>{i18n._('key-unused-Objects')}</p>
                                     </TipTrigger>
                                 </td>
                                 <td className={styles['trace-td-slider']}>
@@ -394,10 +394,10 @@ class TracePreview extends Component {
                     <tbody>
                         <tr>
                             <td style={{ width: '400px' }}>
-                                <p className={styles['trace-status']}>{i18n._('key_ui/widgets/CncLaserShared/SvgTrace/TracePreview_Status: {{status}}', { status: status })}</p>
+                                <p className={styles['trace-status']}>{i18n._('key-unused-Status: {{status}}', { status: status })}</p>
                             </td>
                             <td style={{ width: '80px' }}>
-                                <p className={styles['trace-status']}>{i18n._('key_ui/widgets/CncLaserShared/SvgTrace/TracePreview_Upload As')}: </p>
+                                <p className={styles['trace-status']}>{i18n._('key-unused-Upload As')}: </p>
                             </td>
                             <td>
                                 {!isUploadSVG && (
@@ -406,13 +406,13 @@ class TracePreview extends Component {
                                         clearable={false}
                                         options={[{
                                             value: 'bw',
-                                            label: i18n._('key_ui/widgets/CncLaserShared/SvgTrace/TracePreview_Threshold')
+                                            label: i18n._('key-unused-Threshold')
                                         }, {
                                             value: 'greyscale',
-                                            label: i18n._('key_ui/widgets/CncLaserShared/SvgTrace/TracePreview_GREYSCALE')
+                                            label: i18n._('key-unused-GREYSCALE')
                                         }, {
                                             value: 'vector',
-                                            label: i18n._('key_ui/widgets/CncLaserShared/SvgTrace/TracePreview_VECTOR')
+                                            label: i18n._('key-unused-VECTOR')
                                         }]}
                                         value={mode}
                                         searchable={false}
@@ -425,7 +425,7 @@ class TracePreview extends Component {
                                         clearable={false}
                                         options={[{
                                             value: 'vector',
-                                            label: i18n._('key_ui/widgets/CncLaserShared/SvgTrace/TracePreview_VECTOR')
+                                            label: i18n._('key-unused-VECTOR')
                                         }]}
                                         value={mode}
                                         searchable={false}
@@ -435,7 +435,7 @@ class TracePreview extends Component {
                             </td>
                             <td>
                                 <TipTrigger
-                                    content={i18n._('key_ui/widgets/CncLaserShared/SvgTrace/TracePreview_Upload the selected images.')}
+                                    content={i18n._('key-unused-Upload the selected images.')}
                                 >
                                     <div className={styles['trace-btn-div']}>
                                         <button
@@ -446,7 +446,7 @@ class TracePreview extends Component {
                                             }}
                                             style={{ width: '80px' }}
                                         >
-                                            {i18n._('key_ui/widgets/CncLaserShared/SvgTrace/TracePreview_UPLOAD')}
+                                            {i18n._('key-unused-UPLOAD')}
                                         </button>
                                     </div>
                                 </TipTrigger>

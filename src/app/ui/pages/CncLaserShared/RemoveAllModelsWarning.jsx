@@ -17,7 +17,7 @@ function useRenderRemoveModelsWarning({ headType }) {
         onClose,
         renderBody: () => (
             <div>
-                <div>{i18n._('key_ui/pages/CncLaserShared/RemoveAllModelsWarning_Delete the object? The toolpath created will be deleted together.')}</div>
+                <div>{i18n._('key-CncLaser/RemoveAllModelsWarning-Delete the object? The toolpath created will be deleted together.')}</div>
                 {emptyToolPaths.map((item) => {
                     return (<div key={item.name}>{item.name}</div>);
                 })}
@@ -25,11 +25,11 @@ function useRenderRemoveModelsWarning({ headType }) {
         ),
         actions: [
             {
-                name: i18n._('key_ui/pages/CncLaserShared/RemoveAllModelsWarning_Cancel'),
+                name: i18n._('key-CncLaser/RemoveAllModelsWarning-Cancel'),
                 onClick: () => { onClose(); }
             },
             {
-                name: i18n._('key_ui/pages/CncLaserShared/RemoveAllModelsWarning_Delete'),
+                name: i18n._('key-CncLaser/RemoveAllModelsWarning-Delete'),
                 isPrimary: true,
                 onClick: () => {
                     removingModelsWarningCallback();

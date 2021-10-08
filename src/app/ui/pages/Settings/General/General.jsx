@@ -29,14 +29,14 @@ import { actions as machineActions } from '../../../../flux/machine';
 //                     {`Snapmaker Luban ${settings.version}`}
 //                 </div>
 //                 <div className={styles['about-product-description']}>
-//                     {i18n._('key_ui/pages/Settings/General/General_A web-based interface for Snapmaker which is able to do 3D Printing, laser engraving and CNC carving.')}
+//                     {i18n._('key-App/Settings/General-A web-based interface which is able to do 3D printing, laser engraving and CNC carving.')}
 //                     <Space width={8} />
 //                     <Anchor
 //                         className={styles['learn-more']}
 //                         href="https://snapmaker.com/support"
 //                         target="_blank"
 //                     >
-//                         {i18n._('key_ui/pages/Settings/General/General_Learn more')}
+//                         {i18n._('key-App/Settings/General-Learn more')}
 //                         <i className="fa fa-arrow-circle-right" style={{ marginLeft: 5 }} />
 //                     </Anchor>
 //                 </div>
@@ -142,7 +142,7 @@ function General({ state: generalState, actions }) {
                             name="TitleSetting"
                             type={['static']}
                         />
-                        <span className="margin-left-4">{i18n._('key_ui/pages/Settings/General/General_Language')}</span>
+                        <span className="margin-left-4">{i18n._('key-App/Settings/General-Language')}</span>
                     </div>
                     <Select
                         className={classNames(
@@ -159,7 +159,7 @@ function General({ state: generalState, actions }) {
                                 name="TitleSetting"
                                 type={['static']}
                             />
-                            <span className="margin-left-4">{i18n._('key_ui/pages/Settings/General/General_Software Update')}</span>
+                            <span className="margin-left-4">{i18n._('key-App/Settings/General-Software Update')}</span>
                         </div>
                         <Button
                             className={classNames(
@@ -168,7 +168,7 @@ function General({ state: generalState, actions }) {
                             width="auto"
                             onClick={handleCheckForUpdate}
                         >
-                            {i18n._('key_ui/pages/Settings/General/General_Check for updates')}
+                            {i18n._('key-App/Settings/General-Check for updates')}
                         </Button>
                         <div className="display-block margin-left-8 height-32">
                             <Checkbox
@@ -176,7 +176,7 @@ function General({ state: generalState, actions }) {
                                 onChange={(event) => { updateShouldCheckForUpdate(event.target.checked); }}
                             />
                             <span className="margin-left-4">
-                                {i18n._('key_ui/pages/Settings/General/General_Automatically check for updates')}
+                                {i18n._('key-App/Settings/General-Automatically check for updates')}
                             </span>
                         </div>
                         <div className="margin-vertical-4">

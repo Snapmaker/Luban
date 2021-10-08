@@ -168,7 +168,7 @@ export const actions = {
         const { toolDefinitions } = getState().cnc;
         const activeDefinition = toolDefinitions.find(d => d.definitionId === definitionId);
         if (!newName || newName.trim().length === 0) {
-            return Promise.reject(i18n._('key_flux/cnc/index_Failed to rename. Please enter a new name.'));
+            return Promise.reject(i18n._('key-Cnc/common-Failed to rename. Please enter a new name.'));
         }
         if (isCategorySelected) {
             const duplicated = toolDefinitions.find(d => d.category === newName);

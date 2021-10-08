@@ -114,7 +114,7 @@ function JobType({ headType, jobTypeState, setJobTypeState }) {
             {!isRotate && (
                 <div className="margin-left-50">
                     <div className="margin-bottom-16 font-weight-bold">
-                        {i18n._('key_ui/widgets/JobType/JobType_Work Size')}
+                        {i18n._('key-CncLaser/JobSetup-Work Size')}
                     </div>
                     <div className="sm-flex">
                         <img
@@ -129,7 +129,7 @@ function JobType({ headType, jobTypeState, setJobTypeState }) {
                         />
                         <div className="margin-left-16 sm-flex-width">
                             <div className="sm-flex height-32 position-re">
-                                <span className="width-88 margin-right-8">{i18n._('key_ui/widgets/JobType/JobType_Width (X)')}</span>
+                                <span className="width-88 margin-right-8">{i18n._('key-CncLaser/JobSetup-Width (X)')}</span>
                                 <Input
                                     suffix="mm"
                                     disabled={inProgress || settingSizeDisabled}
@@ -147,7 +147,7 @@ function JobType({ headType, jobTypeState, setJobTypeState }) {
                                 />
                             </div>
                             <div className="sm-flex height-32 position-re margin-top-16">
-                                <span className="width-88 margin-right-8">{i18n._('key_ui/widgets/JobType/JobType_Height (Y)')}</span>
+                                <span className="width-88 margin-right-8">{i18n._('key-CncLaser/JobSetup-Height (Y)')}</span>
                                 <Input
                                     suffix="mm"
                                     disabled={inProgress || settingSizeDisabled}
@@ -167,7 +167,7 @@ function JobType({ headType, jobTypeState, setJobTypeState }) {
                         </div>
                     </div>
                     <div className="margin-top-24 margin-bottom-16 font-weight-bold">
-                        {i18n._('key_ui/widgets/JobType/JobType_Work Origin')}
+                        {i18n._('key-CncLaser/JobSetup-Work Origin')}
                     </div>
                     <div className="sm-flex">
                         <img
@@ -181,14 +181,14 @@ function JobType({ headType, jobTypeState, setJobTypeState }) {
                             alt="3 Axis"
                         />
                         <div className="margin-left-16 sm-flex-width sm-flex height-32">
-                            <span className="width-88 margin-right-8">{i18n._('key_ui/widgets/JobType/JobType_Origin Position')}</span>
+                            <span className="width-88 margin-right-8">{i18n._('key-CncLaser/JobSetup-Origin Position')}</span>
                             <Select
                                 backspaceRemoves={false}
                                 size="120px"
                                 clearable={false}
                                 options={coordinateModeList}
                                 isGroup={false}
-                                placeholder={i18n._('key_ui/widgets/JobType/JobType_Choose font')}
+                                placeholder={i18n._('key-CncLaser/JobSetup-Choose font')}
                                 value={i18n._(coordinateMode.label ?? COORDINATE_MODE_CENTER.label)}
                                 onChange={actions.changeCoordinateMode}
                                 disabled={inProgress || settingSizeDisabled}
@@ -200,7 +200,7 @@ function JobType({ headType, jobTypeState, setJobTypeState }) {
             {isRotate && (
                 <div className="margin-left-50">
                     <div className="margin-bottom-16 font-weight-bold">
-                        {i18n._('key_ui/widgets/JobType/JobType_Work Size')}
+                        {i18n._('key-CncLaser/JobSetup-Work Size')}
                     </div>
                     <div className="sm-flex">
                         <img
@@ -216,7 +216,7 @@ function JobType({ headType, jobTypeState, setJobTypeState }) {
                     </div>
                     <div className="margin-top-16">
                         <div className="sm-flex height-32 position-re">
-                            <span className="width-88 margin-right-8">{i18n._('key_ui/widgets/JobType/JobType_Length (L)')}</span>
+                            <span className="width-88 margin-right-8">{i18n._('key-CncLaser/JobSetup-Length (L)')}</span>
                             <Input
                                 suffix="mm"
                                 disabled={inProgress || settingSizeDisabled}
@@ -235,7 +235,7 @@ function JobType({ headType, jobTypeState, setJobTypeState }) {
                             />
                         </div>
                         <div className="sm-flex height-32 position-re margin-top-8">
-                            <span className="width-88 margin-right-8">{i18n._('key_ui/widgets/JobType/JobType_Diameter (D)')}</span>
+                            <span className="width-88 margin-right-8">{i18n._('key-CncLaser/JobSetup-Diameter (D)')}</span>
                             <Input
                                 suffix="mm"
                                 disabled={inProgress || settingSizeDisabled}
@@ -255,7 +255,7 @@ function JobType({ headType, jobTypeState, setJobTypeState }) {
                         </div>
                     </div>
                     <div className="margin-top-24 margin-bottom-16 font-weight-bold">
-                        {i18n._('key_ui/widgets/JobType/JobType_Work Origin')}
+                        {i18n._('key-CncLaser/JobSetup-Work Origin')}
                     </div>
                     <div className="sm-flex">
                         <img
@@ -270,7 +270,7 @@ function JobType({ headType, jobTypeState, setJobTypeState }) {
                             alt="3 Axis"
                         />
                         <div className="margin-left-16 sm-flex-width sm-flex height-32">
-                            <span className="width-88 margin-right-8">{i18n._('key_ui/widgets/JobType/JobType_Origin Position')}</span>
+                            <span className="width-88 margin-right-8">{i18n._('key-CncLaser/JobSetup-Origin Position')}</span>
                             {headType === HEAD_LASER && (
                                 <Select
                                     backspaceRemoves={false}

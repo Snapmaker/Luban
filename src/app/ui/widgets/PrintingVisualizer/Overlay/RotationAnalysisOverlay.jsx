@@ -134,7 +134,7 @@ const Table = React.memo(({ tableColumns, onRowSelect, selectedRow, data, setDat
                 </thead>
             </table>
             <div className={classNames(styles.scroll)} ref={refScroll}>
-                { data.length === 0 ? <div className="text-center padding-vertical-56">{i18n._('key_ui/widgets/PrintingVisualizer/Overlay/RotationAnalysisOverlay_Analyzing...')}</div> : null }
+                { data.length === 0 ? <div className="text-center padding-vertical-56">{i18n._('key-Printing/RotationAnalysis_Analyzing...-Analyzing...')}</div> : null }
                 <table>
                     <tbody ref={refTbody}>
                         {
@@ -278,7 +278,7 @@ function RotationAnalysisOverlay({ onClose }) {
                     width="96px"
                     className="margin-left-8"
                 >
-                    {i18n._('key_ui/widgets/PrintingVisualizer/Overlay/RotationAnalysisOverlay_Done')}
+                    {i18n._('key-Printing/RotationAnalysis_Done-Done')}
                 </Button>
             </footer>
         </div>

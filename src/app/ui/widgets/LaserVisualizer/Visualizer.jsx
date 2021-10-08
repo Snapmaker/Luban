@@ -165,8 +165,8 @@ class Visualizer extends Component {
 
             this.props.uploadImage(file, uploadMode, () => {
                 modal({
-                    cancelTitle: i18n._('key_ui/widgets/LaserVisualizer/Visualizer_Close'),
-                    title: i18n._('key_ui/widgets/LaserVisualizer/Visualizer_Import Error'),
+                    cancelTitle: i18n._('key-Laser/Edit/ContextMenu-Close'),
+                    title: i18n._('key-Laser/Edit/ContextMenu-Import Error'),
                     body: i18n._('Failed to import this object. \nPlease select a supported file format.')
                 });
             });
@@ -473,25 +473,25 @@ class Visualizer extends Component {
                         [
                             {
                                 type: 'item',
-                                label: i18n._('key_ui/widgets/LaserVisualizer/Visualizer_Cut'),
+                                label: i18n._('key-Laser/Edit/ContextMenu-Cut'),
                                 disabled: contextMenuDisabled,
                                 onClick: this.actions.cut
                             },
                             {
                                 type: 'item',
-                                label: i18n._('key_ui/widgets/LaserVisualizer/Visualizer_Copy'),
+                                label: i18n._('key-Laser/Edit/ContextMenu-Copy'),
                                 disabled: contextMenuDisabled,
                                 onClick: this.actions.copy
                             },
                             {
                                 type: 'item',
-                                label: i18n._('key_ui/widgets/LaserVisualizer/Visualizer_Paste'),
+                                label: i18n._('key-Laser/Edit/ContextMenu-Paste'),
                                 disabled: pasteDisabled,
                                 onClick: this.actions.paste
                             },
                             {
                                 type: 'item',
-                                label: i18n._('key_ui/widgets/LaserVisualizer/Visualizer_Duplicate'),
+                                label: i18n._('key-Laser/Edit/ContextMenu-Duplicate'),
                                 disabled: contextMenuDisabled,
                                 onClick: this.actions.duplicateSelectedModel
                             },
@@ -500,49 +500,49 @@ class Visualizer extends Component {
                             },
                             {
                                 type: 'subMenu',
-                                label: i18n._('key_ui/widgets/LaserVisualizer/Visualizer_Arrange'),
+                                label: i18n._('key-Laser/Edit/ContextMenu-Arrange'),
                                 disabled: contextMenuDisabled,
                                 items: [
                                     {
                                         type: 'item',
-                                        label: i18n._('key_ui/widgets/LaserVisualizer/Visualizer_Bring to Front'),
+                                        label: i18n._('key-Laser/Edit/ContextMenu-Bring to Front'),
                                         onClick: () => this.actions.bringToFront()
                                     },
                                     {
                                         type: 'item',
-                                        label: i18n._('key_ui/widgets/LaserVisualizer/Visualizer_Send to Back'),
+                                        label: i18n._('key-Laser/Edit/ContextMenu-Send to Back'),
                                         onClick: () => this.actions.sendToBack()
                                     }
                                 ]
                             },
                             {
                                 type: 'subMenu',
-                                label: i18n._('key_ui/widgets/LaserVisualizer/Visualizer_Transform'),
+                                label: i18n._('key-Laser/Edit/ContextMenu-Transform'),
                                 disabled: contextMenuDisabled,
                                 items: [
                                     {
                                         type: 'item',
-                                        label: i18n._('key_ui/widgets/LaserVisualizer/Visualizer_Rotate 180°'),
+                                        label: i18n._('key-Laser/Edit/ContextMenu-Rotate 180°'),
                                         onClick: () => this.actions.rotateModel(180)
                                     },
                                     {
                                         type: 'item',
-                                        label: i18n._('key_ui/widgets/LaserVisualizer/Visualizer_Rotate 90° Clockwise'),
+                                        label: i18n._('key-Laser/Edit/ContextMenu-Rotate 90° Clockwise'),
                                         onClick: () => this.actions.rotateModel(90)
                                     },
                                     {
                                         type: 'item',
-                                        label: i18n._('key_ui/widgets/LaserVisualizer/Visualizer_Rotate 90° Counter Clockwise'),
+                                        label: i18n._('key-Laser/Edit/ContextMenu-Rotate 90° Counter Clockwise'),
                                         onClick: () => this.actions.rotateModel(-90)
                                     },
                                     {
                                         type: 'item',
-                                        label: i18n._('key_ui/widgets/LaserVisualizer/Visualizer_Flip Horizontal'),
+                                        label: i18n._('key-Laser/Edit/ContextMenu-Flip Horizontal'),
                                         onClick: () => this.props.onFlipSelectedModel('Horizontal')
                                     },
                                     {
                                         type: 'item',
-                                        label: i18n._('key_ui/widgets/LaserVisualizer/Visualizer_Flip Vertical'),
+                                        label: i18n._('key-Laser/Edit/ContextMenu-Flip Vertical'),
                                         onClick: () => this.props.onFlipSelectedModel('Vertical')
                                     }
                                 ]

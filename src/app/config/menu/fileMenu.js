@@ -4,16 +4,16 @@ import { HEAD_CNC, HEAD_LASER, HEAD_PRINTING } from '../../constants';
 
 export default {
     id: 'file',
-    label: 'key_menu_File',
+    label: 'key-App/Menu-File',
     submenu: [
         {
             id: 'new',
-            label: 'key_menu_New Project',
+            label: 'key-App/Menu-New Project',
             enabled: true,
             submenu: [
                 {
                     id: '3dp',
-                    label: 'key_menu_3D Printing',
+                    label: 'key-App/Menu-3D Printing',
                     enabled: true,
                     click(menuItem, browserWindow) {
                         if (isElectron()) {
@@ -25,13 +25,13 @@ export default {
                 },
                 {
                     id: 'laser',
-                    label: 'key_menu_Laser',
+                    label: 'key-App/Menu-Laser',
                     enabled: true,
                     click: () => {},
                     submenu: [
                         {
                             id: 'laser-axis3',
-                            label: 'key_menu_3-axis',
+                            label: 'key-App/Menu-3-axis',
                             enabled: true,
                             click(menuItem, browserWindow) {
                                 if (isElectron()) {
@@ -43,7 +43,7 @@ export default {
                         },
                         {
                             id: 'laser-axis4',
-                            label: 'key_menu_4-axis',
+                            label: 'key-App/Menu-4-axis',
                             enabled: true,
                             click(menuItem, browserWindow) {
                                 if (isElectron()) {
@@ -57,13 +57,13 @@ export default {
                 },
                 {
                     id: 'cnc',
-                    label: 'key_menu_CNC',
+                    label: 'key-App/Menu-CNC',
                     enabled: true,
                     click: () => {},
                     submenu: [
                         {
                             id: 'cnc-axis3',
-                            label: 'key_menu_3-axis',
+                            label: 'key-App/Menu-3-axis',
                             enabled: true,
                             click(menuItem, browserWindow) {
                                 if (isElectron()) {
@@ -75,7 +75,7 @@ export default {
                         },
                         {
                             id: 'cnc-axis4',
-                            label: 'key_menu_4-axis',
+                            label: 'key-App/Menu-4-axis',
                             enabled: true,
                             click(menuItem, browserWindow) {
                                 if (isElectron()) {
@@ -91,7 +91,7 @@ export default {
         },
         {
             id: 'open-file',
-            label: 'key_menu_Open Project',
+            label: 'key-App/Menu-Open Project',
             enabled: true,
             accelerator: 'CmdOrCtrl+O',
             click: async (menuItem, browserWindow) => {
@@ -104,13 +104,13 @@ export default {
         },
         {
             id: 'recent-files',
-            label: 'key_menu_Recent Project',
+            label: 'key-App/Menu-Recent Project',
             enabled: true,
             submenu: [
                 { id: 'line-0', type: 'separator' },
                 {
                     id: 'remove-recent',
-                    label: 'key_menu_Clear All Recent Projects',
+                    label: 'key-App/Menu-Clear All Recent Projects',
                     enabled: true,
                     click: (menuItem, browserWindow) => {
                         if (isElectron()) {
@@ -124,7 +124,7 @@ export default {
         },
         {
             id: 'get-started',
-            label: 'key_menu_Case Library',
+            label: 'key-App/Menu-Case Library',
             enabled: true,
             click: () => {},
             submenu: []
@@ -132,7 +132,7 @@ export default {
         { id: 'line-1', type: 'separator' },
         {
             id: 'save',
-            label: 'key_menu_Save Project',
+            label: 'key-App/Menu-Save Project',
             enabled: true,
             accelerator: 'CommandOrControl+S',
             click(menuItem, browserWindow) {
@@ -145,7 +145,7 @@ export default {
         },
         {
             id: 'save-as',
-            label: 'key_menu_Save As',
+            label: 'key-App/Menu-Save As',
             enabled: true,
             accelerator: 'CommandOrControl+Shift+S',
             click(menuItem, browserWindow) {
@@ -159,7 +159,7 @@ export default {
         { id: 'line-2', type: 'separator' },
         {
             id: 'import',
-            label: 'key_menu_Import Object',
+            label: 'key-App/Menu-Import Object',
             enabled: true,
             accelerator: 'CmdOrCtrl+I',
             click(menuItem, browserWindow) {
@@ -172,7 +172,7 @@ export default {
         },
         {
             id: 'export-models',
-            label: 'key_menu_Export Object',
+            label: 'key-App/Menu-Export Object',
             enabled: true,
             accelerator: 'CmdOrCtrl+E',
             click(menuItem, browserWindow) {
@@ -185,7 +185,7 @@ export default {
         },
         {
             id: 'export-gcode',
-            label: 'key_menu_Export G-code',
+            label: 'key-App/Menu-Export G-code',
             enabled: true,
             accelerator: 'CmdOrCtrl+P',
             click(menuItem, browserWindow) {
@@ -199,7 +199,7 @@ export default {
         { id: 'line-3', type: 'separator' },
         {
             id: 'exit',
-            label: 'key_menu_Exit',
+            label: 'key-App/Menu-Exit',
             enabled: true,
             click(menuItem, browserWindow) {
                 if (isElectron()) {

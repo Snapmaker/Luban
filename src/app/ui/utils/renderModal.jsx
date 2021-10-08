@@ -14,7 +14,7 @@ export default function renderModal(options) {
     }
 
     size || (size = 'small');
-    title || (title = i18n._('key_ui/utils/renderModal_Warning'));
+    title || (title = i18n._('key-unused-Warning'));
 
     if (!renderFooter) {
         renderFooter = () => (

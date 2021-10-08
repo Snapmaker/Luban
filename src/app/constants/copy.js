@@ -5,103 +5,103 @@ const i18n = {
 
 // machine size name
 // TODO, no used
-i18n._('key_machine_series_Snapmaker Original');
-i18n._('key_machine_series_Snapmaker Original with Z-axis Extension Module');
-i18n._('key_machine_series_Snapmaker 2.0 A150');
-i18n._('key_machine_series_Snapmaker 2.0 A250');
-i18n._('key_machine_series_Snapmaker 2.0 A350');
-i18n._('key_machine_series_Custom');
+i18n._('key-Luban/Machine/MachineSeries-Snapmaker Original');
+i18n._('key-Luban/Machine/MachineSeries-Snapmaker Original with Z-axis Extension Module');
+i18n._('key-Luban/Machine/MachineSeries-Snapmaker 2.0 A150');
+i18n._('key-Luban/Machine/MachineSeries-Snapmaker 2.0 A250');
+i18n._('key-Luban/Machine/MachineSeries-Snapmaker 2.0 A350');
+i18n._('key-Luban/Machine/MachineSeries-Custom');
 
 // coordinate size name
-i18n._('key_job_setup_option_Center');
-i18n._('key_job_setup_option_Bottom Left');
-i18n._('key_job_setup_option_Top Right');
-i18n._('key_job_setup_option_Bottom Right');
-i18n._('key_job_setup_option_Top Left');
-i18n._('key_job_setup_option_Top');
+i18n._('key-CncLaser/JobSetup-Center');
+i18n._('key-CncLaser/JobSetup-Bottom Left');
+i18n._('key-CncLaser/JobSetup-Top Right');
+i18n._('key-CncLaser/JobSetup-Bottom Right');
+i18n._('key-CncLaser/JobSetup-Top Left');
+i18n._('key-CncLaser/JobSetup-Top');
 
 // main menu
-i18n._('key_menu_File');
-i18n._('key_menu_New Project');
-i18n._('key_menu_3D Printing');
-i18n._('key_menu_Laser');
-i18n._('key_menu_3-axis');
-i18n._('key_menu_4-axis');
-i18n._('key_menu_CNC');
-i18n._('key_menu_3-axis');
-i18n._('key_menu_4-axis');
-i18n._('key_menu_Open Project');
-i18n._('key_menu_Recent Project');
-i18n._('key_menu_Clear All Recent Projects');
-i18n._('key_menu_Case Library');
-i18n._('key_menu_Save Project');
-i18n._('key_menu_Save As');
-i18n._('key_menu_Import Object');
-i18n._('key_menu_Export Object');
-i18n._('key_menu_Export G-code');
-i18n._('key_menu_Exit');
-i18n._('key_menu_Window');
-i18n._('key_menu_Reload');
-i18n._('key_menu_Force Reload');
-i18n._('key_menu_View In Browser');
-i18n._('key_menu_Toggle Developer Tools');
-i18n._('key_menu_Toggle Fullscreen');
-i18n._('key_menu_Settings');
-i18n._('key_menu_Machine Settings');
-i18n._('key_menu_Language');
-i18n._('key_menu_Preferences');
+i18n._('key-App/Menu-File');
+i18n._('key-App/Menu-New Project');
+i18n._('key-App/Menu-3D Printing');
+i18n._('key-App/Menu-Laser');
+i18n._('key-App/Menu-3-axis');
+i18n._('key-App/Menu-4-axis');
+i18n._('key-App/Menu-CNC');
+i18n._('key-App/Menu-3-axis');
+i18n._('key-App/Menu-4-axis');
+i18n._('key-App/Menu-Open Project');
+i18n._('key-App/Menu-Recent Project');
+i18n._('key-App/Menu-Clear All Recent Projects');
+i18n._('key-App/Menu-Case Library');
+i18n._('key-App/Menu-Save Project');
+i18n._('key-App/Menu-Save As');
+i18n._('key-App/Menu-Import Object');
+i18n._('key-App/Menu-Export Object');
+i18n._('key-App/Menu-Export G-code');
+i18n._('key-App/Menu-Exit');
+i18n._('key-App/Menu-Window');
+i18n._('key-App/Menu-Reload');
+i18n._('key-App/Menu-Force Reload');
+i18n._('key-App/Menu-View In Browser');
+i18n._('key-App/Menu-Toggle Developer Tools');
+i18n._('key-App/Menu-Toggle Fullscreen');
+i18n._('key-App/Menu-Settings');
+i18n._('key-App/Menu-Machine Settings');
+i18n._('key-App/Menu-Language');
+i18n._('key-App/Menu-Preferences');
 
-i18n._('key_menu_Edit');
-i18n._('key_menu_Undo');
-i18n._('key_menu_Redo');
-i18n._('key_menu_Cut');
-i18n._('key_menu_Copy');
-i18n._('key_menu_Duplicate');
-i18n._('key_menu_Paste');
-i18n._('key_menu_Select All');
-i18n._('key_menu_Unselect');
-i18n._('key_menu_Delete');
-i18n._('key_menu_Text-editor');
-i18n._('key_menu_Cut Original');
-i18n._('key_menu_Copy Original');
-i18n._('key_menu_Paste Original');
+i18n._('key-App/Menu-Edit');
+i18n._('key-App/Menu-Undo');
+i18n._('key-App/Menu-Redo');
+i18n._('key-App/Menu-Cut');
+i18n._('key-App/Menu-Copy');
+i18n._('key-App/Menu-Duplicate');
+i18n._('key-App/Menu-Paste');
+i18n._('key-App/Menu-Select All');
+i18n._('key-App/Menu-Unselect');
+i18n._('key-App/Menu-Delete');
+i18n._('key-App/Menu-Text-editor');
+i18n._('key-App/Menu-Cut Original');
+i18n._('key-App/Menu-Copy Original');
+i18n._('key-App/Menu-Paste Original');
 
-i18n._('key_menu_Help');
-i18n._('key_menu_Software Manual');
-i18n._('key_menu_Video Tutorial');
-i18n._('key_menu_Snapmaker.com');
-i18n._('key_menu_MyMiniFactory');
-i18n._('key_menu_Software Support');
-i18n._('key_menu_Forum');
-i18n._('key_menu_Shopify');
-i18n._('key_menu_Software Update');
-i18n._('key_menu_Firmware Tool');
-i18n._('key_menu_Beginners Guide');
+i18n._('key-App/Menu-Help');
+i18n._('key-App/Menu-Software Manual');
+i18n._('key-App/Menu-Video Tutorial');
+i18n._('key-App/Menu-Snapmaker.com');
+i18n._('key-App/Menu-MyMiniFactory');
+i18n._('key-App/Menu-Support');
+i18n._('key-App/Menu-Forum');
+i18n._('key-App/Menu-Store');
+i18n._('key-App/Menu-Software Update');
+i18n._('key-App/Menu-Firmware Tool');
+i18n._('key-App/Menu-Beginners Guide');
 
 // case lib
-i18n._('key_case_library_Fabric');
-i18n._('key_case_library_Feather');
-i18n._('key_case_library_Sign');
-i18n._('key_case_library_Spiral Vase');
-i18n._('key_case_library_Gift Box');
-i18n._('key_case_library_Keychain');
-i18n._('key_case_library_Phone Holder');
-i18n._('key_case_library_Knight Chess Piece');
-i18n._('key_case_library_Lion Chess Piece');
-i18n._('key_case_library_Lion Box');
+i18n._('key-HomePage/CaseLibrary-Fabric');
+i18n._('key-HomePage/CaseLibrary-Feather');
+i18n._('key-HomePage/CaseLibrary-Sign');
+i18n._('key-HomePage/CaseLibrary-Spiral Vase');
+i18n._('key-HomePage/CaseLibrary-Gift Box');
+i18n._('key-HomePage/CaseLibrary-Keychain');
+i18n._('key-HomePage/CaseLibrary-Phone Holder');
+i18n._('key-HomePage/CaseLibrary-Knight Chess Piece');
+i18n._('key-HomePage/CaseLibrary-Lion Chess Piece');
+i18n._('key-HomePage/CaseLibrary-Lion Box');
 
 // 3dp material default name
-i18n._('key_constants/copy_PLA');
-i18n._('key_constants/copy_ABS');
-i18n._('key_constants/copy_PETG');
+i18n._('key-unused-PLA');
+i18n._('key-unused-ABS');
+i18n._('key-unused-PETG');
 
 // CNC stl Orientation
-i18n._('key_cnc_stl_orientation_Front');
-i18n._('key_cnc_stl_orientation_Back');
-i18n._('key_cnc_stl_orientation_Left');
-i18n._('key_cnc_stl_orientation_Right');
-i18n._('key_cnc_stl_orientation_Top');
-i18n._('key_cnc_stl_orientation_Bottom');
+i18n._('key-Cnc/StlSection/orientation_Front-Front');
+i18n._('key-Cnc/StlSection/orientation_Back-Back');
+i18n._('key-Cnc/StlSection/orientation_Left-Left');
+i18n._('key-Cnc/StlSection/orientation_Right-Right');
+i18n._('key-Cnc/StlSection/orientation_Top-Top');
+i18n._('key-Cnc/StlSection/orientation_Bottom-Bottom');
 
 // CNC ToolPath
 i18n._('Allowance');
@@ -134,6 +134,6 @@ i18n._('Stepdown');
 i18n._('Set the distance along the Z axis per step that the tool is plunged into the material.');
 
 // CNC tool setting
-i18n._('key_cnc_tool_settings_Tool Settings');
+i18n._('key-Cnc/ToolManger-Tool Settings');
 i18n._('Carving Tool');
 i18n._('Parameters');

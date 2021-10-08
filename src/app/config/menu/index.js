@@ -27,7 +27,7 @@ function getMenuItems() {
                 { role: 'about', label: 'key_menu_About' },
                 { type: 'separator' },
                 {
-                    label: 'key_menu_Preferences',
+                    label: 'key-App/Menu-Preferences',
                     accelerator: 'CommandOrControl+,',
                     click: onClickPreferences
                 },

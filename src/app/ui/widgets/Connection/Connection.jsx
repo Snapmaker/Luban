@@ -51,7 +51,7 @@ function Connection({ widgetId, widgetActions }) {
     };
 
     useEffect(() => {
-        widgetActions.setTitle(i18n._('key_ui/widgets/Connection/Connection_Connection'));
+        widgetActions.setTitle(i18n._('key-Workspace/Connection-Connection'));
     }, []);
 
     useEffect(() => {
@@ -83,7 +83,7 @@ function Connection({ widgetId, widgetActions }) {
                         onClick={actions.onSelectTabSerial}
                         disabled={isConnected}
                     >
-                        {i18n._('key_ui/widgets/Connection/Connection_Serial Port')}
+                        {i18n._('key-Workspace/Connection-Serial Port')}
                     </button>
                     <button
                         type="button"
@@ -91,12 +91,12 @@ function Connection({ widgetId, widgetActions }) {
                         onClick={actions.onSelectTabWifi}
                         disabled={isConnected}
                     >
-                        {i18n._('key_ui/widgets/Connection/Connection_Wi-Fi')}
+                        {i18n._('key-Workspace/Connection-Wi-Fi')}
                     </button>
                 </div>
             )}
             {!EXPERIMENTAL_WIFI_CONTROL && (
-                <p>{i18n._('key_ui/widgets/Connection/Connection_Serial Port')}</p>
+                <p>{i18n._('key-Workspace/Connection-Serial Port')}</p>
             )}
             {connectionType === CONNECTION_TYPE_SERIAL && (
                 <SerialConnection dataSource={dataSource} />
@@ -107,11 +107,11 @@ function Connection({ widgetId, widgetActions }) {
             {isConnected && showHomeReminder && !isOriginal && isHomed !== null && !isHomed && (
                 <Modal disableOverlay size="sm" showCloseButton={false}>
                     <Modal.Header>
-                        {i18n._('key_ui/widgets/Connection/Connection_Go Home')}
+                        {i18n._('key-Workspace/Connection-Go Home')}
                     </Modal.Header>
                     <Modal.Body>
                         <div>
-                            {i18n._('key_ui/widgets/Connection/Connection_To continue, the machine needs to return to the start position of the X, Y, and Z axes.')}
+                            {i18n._('key-Workspace/Connection-To continue, the machine needs to return to the start position of the X, Y, and Z axes.')}
                         </div>
                     </Modal.Body>
                     <Modal.Footer>
@@ -121,7 +121,7 @@ function Connection({ widgetId, widgetActions }) {
                             width="96px"
                             onClick={actions.clickHomeModalOk}
                         >
-                            {i18n._('key_ui/widgets/Connection/Connection_OK')}
+                            {i18n._('key-Workspace/Connection-OK')}
                         </Button>
                     </Modal.Footer>
                 </Modal>

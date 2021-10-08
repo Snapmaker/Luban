@@ -114,7 +114,7 @@ class Printing extends PureComponent {
             <div>
                 <WorkSpeed />
                 <div className="sm-flex justify-space-between margin-vertical-8">
-                    <span className="height-32">{i18n._('key_ui/widgets/Marlin/Printing_Nozzle Temp.')}</span>
+                    <span className="height-32">{i18n._('key-unused-Nozzle Temp.')}</span>
                     <div className="sm-flex-auto">
                         <span className="height-32">{nozzleTargetTemperature} / </span>
                         <Input
@@ -136,7 +136,7 @@ class Printing extends PureComponent {
                 </div>
 
                 <div className="sm-flex justify-space-between margin-vertical-8">
-                    <span className="height-32">{i18n._('key_ui/widgets/Marlin/Printing_Heated Bed Temp.')}</span>
+                    <span className="height-32">{i18n._('key-unused-Heated Bed Temp.')}</span>
                     <div className="sm-flex-auto">
                         <span className="height-32">{heatedBedTargetTemperature} / </span>
                         <Input
@@ -158,7 +158,7 @@ class Printing extends PureComponent {
                 </div>
 
                 <div className="sm-flex justify-space-between margin-vertical-8">
-                    <span className="height-32">{i18n._('key_ui/widgets/Marlin/Printing_Filament')}</span>
+                    <span className="height-32">{i18n._('key-unused-Filament')}</span>
                     <div>
                         <Button
                             priority="level-three"
@@ -166,7 +166,7 @@ class Printing extends PureComponent {
                             className="display-inline"
                             onClick={actions.onClickUnload}
                         >
-                            {i18n._('key_ui/widgets/Marlin/Printing_Unload')}
+                            {i18n._('key-unused-Unload')}
                         </Button>
                         <Button
                             className="margin-left-4 display-inline"
@@ -174,14 +174,14 @@ class Printing extends PureComponent {
                             width="96px"
                             onClick={actions.onClickLoad}
                         >
-                            {i18n._('key_ui/widgets/Marlin/Printing_Load')}
+                            {i18n._('key-unused-Load')}
                         </Button>
                     </div>
                 </div>
 
                 {isConnected && _.includes([WORKFLOW_STATUS_RUNNING, WORKFLOW_STATUS_PAUSED], workflowStatus) && (
                     <div className="sm-parameter-row">
-                        <span className="sm-parameter-row__label">{i18n._('key_ui/widgets/Marlin/Printing_Z Offset')}</span>
+                        <span className="sm-parameter-row__label">{i18n._('key-unused-Z Offset')}</span>
                         <Anchor
                             className="sm-parameter-row__input2"
                             style={{

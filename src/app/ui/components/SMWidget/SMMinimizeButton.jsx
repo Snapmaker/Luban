@@ -13,7 +13,7 @@ const SMMinimizeButton = React.memo(({ state, actions }) => {
     return (
         <Widget.Button
             disabled={fullscreen}
-            title={minimized ? i18n._('key_ui/components/SMWidget/SMMinimizeButton_Expand') : i18n._('key_ui/components/SMWidget/SMMinimizeButton_Collapse')}
+            title={minimized ? i18n._('key-Widget/CommonDropdownButton-Expand') : i18n._('key-Widget/CommonDropdownButton-Collapse')}
             onClick={onToggleMinimized}
         >
             <i

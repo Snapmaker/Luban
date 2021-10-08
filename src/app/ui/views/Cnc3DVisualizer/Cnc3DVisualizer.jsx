@@ -281,7 +281,7 @@ class Cnc3DVisualizer extends Component {
                             )}
                             >
                                 <div className="sm-flex height-40 border-bottom-normal padding-horizontal-16">
-                                    <span className="sm-flex-width heading-3">{i18n._('key_ui/views/Cnc3DVisualizer/Cnc3DVisualizer_STL 3D View')}</span>
+                                    <span className="sm-flex-width heading-3">{i18n._('key-Cnc/Stl3dview-STL 3D View')}</span>
                                 </div>
                                 <div className="padding-vertical-4 padding-horizontal-4 'background-color-white">
                                     <Canvas

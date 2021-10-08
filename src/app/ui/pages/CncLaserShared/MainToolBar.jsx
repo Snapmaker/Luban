@@ -52,7 +52,7 @@ function useRenderMainToolBar({ headType, setShowHomePage, setShowJobType, setSh
                         <span
                             className="margin-left-4 height-24 display-inline"
                         >
-                            {i18n._('key_ui/pages/CncLaserShared/MainToolBar_Enable STL 3D View')}
+                            {i18n._('key-CncLaser/MainToolBar-Enable STL 3D View')}
                         </span>
 
                     </div>
@@ -70,7 +70,7 @@ function useRenderMainToolBar({ headType, setShowHomePage, setShowJobType, setSh
                         <span
                             className="margin-left-4 height-24 display-inline"
                         >
-                            {i18n._('key_ui/pages/CncLaserShared/MainToolBar_Disable STL 3D View')}
+                            {i18n._('key-CncLaser/MainToolBar-Disable STL 3D View')}
                         </span>
                     </div>
                 </Menu.Item>
@@ -92,7 +92,7 @@ function useRenderMainToolBar({ headType, setShowHomePage, setShowJobType, setSh
                         <span
                             className="margin-left-4 height-24 display-inline"
                         >
-                            {i18n._('key_ui/pages/CncLaserShared/MainToolBar_Add Background')}
+                            {i18n._('key-CncLaser/MainToolBar-Add Background')}
                         </span>
                     </div>
                 </Menu.Item>
@@ -107,7 +107,7 @@ function useRenderMainToolBar({ headType, setShowHomePage, setShowJobType, setSh
                         <span
                             className="margin-left-4 height-24 display-inline"
                         >
-                            {i18n._('key_ui/pages/CncLaserShared/MainToolBar_Remove Background')}
+                            {i18n._('key-CncLaser/MainToolBar-Remove Background')}
                         </span>
                     </div>
                 </Menu.Item>
@@ -116,7 +116,7 @@ function useRenderMainToolBar({ headType, setShowHomePage, setShowJobType, setSh
     }
     const leftItems = [
         {
-            title: i18n._('key_ui/pages/CncLaserShared/MainToolBar_Home'),
+            title: i18n._('key-CncLaser/MainToolBar-Home'),
             type: 'button',
             name: 'MainToolbarHome',
             action: () => {
@@ -124,7 +124,7 @@ function useRenderMainToolBar({ headType, setShowHomePage, setShowJobType, setSh
             }
         },
         {
-            title: i18n._('key_ui/pages/CncLaserShared/MainToolBar_Workspace'),
+            title: i18n._('key-CncLaser/MainToolBar-Workspace'),
             type: 'button',
             name: 'MainToolbarWorkspace',
             action: () => {
@@ -135,7 +135,7 @@ function useRenderMainToolBar({ headType, setShowHomePage, setShowJobType, setSh
             type: 'separator'
         },
         {
-            title: i18n._('key_ui/pages/CncLaserShared/MainToolBar_Save'),
+            title: i18n._('key-CncLaser/MainToolBar-Save'),
             disabled: !unSaved,
             type: 'button',
             name: 'MainToolbarSave',
@@ -145,7 +145,7 @@ function useRenderMainToolBar({ headType, setShowHomePage, setShowJobType, setSh
             }
         },
         {
-            title: i18n._('key_ui/pages/CncLaserShared/MainToolBar_Undo'),
+            title: i18n._('key-CncLaser/MainToolBar-Undo'),
             disabled: !canUndo,
             type: 'button',
             name: 'MainToolbarUndo',
@@ -154,7 +154,7 @@ function useRenderMainToolBar({ headType, setShowHomePage, setShowJobType, setSh
             }
         },
         {
-            title: i18n._('key_ui/pages/CncLaserShared/MainToolBar_Redo'),
+            title: i18n._('key-CncLaser/MainToolBar-Redo'),
             disabled: !canRedo,
             type: 'button',
             name: 'MainToolbarRedo',
@@ -163,7 +163,7 @@ function useRenderMainToolBar({ headType, setShowHomePage, setShowJobType, setSh
             }
         },
         {
-            title: i18n._('key_ui/pages/CncLaserShared/MainToolBar_Job Setup'),
+            title: i18n._('key-CncLaser/MainToolBar-Job Setup'),
             type: 'button',
             name: 'MainToolbarJobSetup',
             action: () => {
@@ -174,7 +174,7 @@ function useRenderMainToolBar({ headType, setShowHomePage, setShowJobType, setSh
             type: 'separator'
         },
         {
-            title: i18n._('key_ui/pages/CncLaserShared/MainToolBar_Top'),
+            title: i18n._('key-CncLaser/MainToolBar-Top'),
             type: 'button',
             name: 'MainToolbarTop',
             action: () => {
@@ -182,7 +182,7 @@ function useRenderMainToolBar({ headType, setShowHomePage, setShowJobType, setSh
             }
         },
         {
-            title: i18n._('key_ui/pages/CncLaserShared/MainToolBar_Bottom'),
+            title: i18n._('key-CncLaser/MainToolBar-Bottom'),
             type: 'button',
             name: 'MainToolbarBottom',
             action: () => {
@@ -211,7 +211,7 @@ function useRenderMainToolBar({ headType, setShowHomePage, setShowJobType, setSh
                                     type={['static']}
                                 >
                                     <div className="font-size-base color-black-3 height-16 margin-top-4">
-                                        {i18n._('key_ui/pages/CncLaserShared/MainToolBar_STL 3D View')}
+                                        {i18n._('key-CncLaser/MainToolBar-STL 3D View')}
                                         <SvgIcon
                                             type={['static']}
                                             name="DropdownOpen"
@@ -248,7 +248,7 @@ function useRenderMainToolBar({ headType, setShowHomePage, setShowJobType, setSh
                                     type={['static']}
                                 >
                                     <div className="font-size-base color-black-3 height-16 margin-top-4">
-                                        {i18n._('key_ui/pages/CncLaserShared/MainToolBar_Camera Capture')}
+                                        {i18n._('key-CncLaser/MainToolBar-Camera Capture')}
                                         <SvgIcon
                                             type={['static']}
                                             name="DropdownOpen"

@@ -16,13 +16,13 @@ const MotionButtonGroup = (props) => {
     return (
         <div>
             <TipTrigger
-                title={i18n._('key_ui/widgets/Control/MotionButtonGroup_Run Boundary')}
+                title={i18n._('key-Workspace/Control/MotionButton-Run Boundary')}
                 content={(
                     <div>
-                        <p>{i18n._('key_ui/widgets/Control/MotionButtonGroup_Click to check the boundary of the image to be engraved.')}</p>
+                        <p>{i18n._('key-Workspace/Control/MotionButton-Click to check the boundary of the image to be engraved.')}</p>
                         <br />
                         <p>
-                            <Trans i18nKey="key_Workspace_CNC_carving_notice">
+                            <Trans i18nKey="key-unused-Note: If you are using the CNC Carving Module, make sure the carving bit will not run into the fixtures before you use this feature.">
                                 Note: If you are using the CNC Carving Module, make sure the carving bit will not run into the fixtures before you use this feature.
                             </Trans>
                         </p>
@@ -37,12 +37,12 @@ const MotionButtonGroup = (props) => {
                     onClick={actions.runBoundary}
                     disabled={!canClick}
                 >
-                    {i18n._('key_ui/widgets/Control/MotionButtonGroup_Run Boundary')}
+                    {i18n._('key-Workspace/Control/MotionButton-Run Boundary')}
                 </Button>
             </TipTrigger>
             <TipTrigger
-                title={i18n._('key_ui/widgets/Control/MotionButtonGroup_Go To Work Origin')}
-                content={i18n._('key_ui/widgets/Control/MotionButtonGroup_Move the head to the last saved work origin.')}
+                title={i18n._('key-Workspace/Control/MotionButton-Go To Work Origin')}
+                content={i18n._('key-Workspace/Control/MotionButton-Move the head to the last saved work origin.')}
             >
                 <Button
                     width="144px"
@@ -60,12 +60,12 @@ const MotionButtonGroup = (props) => {
                     }}
                     disabled={!canClick}
                 >
-                    {i18n._('key_ui/widgets/Control/MotionButtonGroup_Go To Work Origin')}
+                    {i18n._('key-Workspace/Control/MotionButton-Go To Work Origin')}
                 </Button>
             </TipTrigger>
             <TipTrigger
-                title={i18n._('key_ui/widgets/Control/MotionButtonGroup_Set Work Origin')}
-                content={i18n._('key_ui/widgets/Control/MotionButtonGroup_Set the current position of the head as the work origin.')}
+                title={i18n._('key-Workspace/Control/MotionButton-Set Work Origin')}
+                content={i18n._('key-Workspace/Control/MotionButton-Set the current position of the toolhead as the work origin.')}
             >
                 <Button
                     width="144px"
@@ -77,7 +77,7 @@ const MotionButtonGroup = (props) => {
                     }}
                     disabled={!canClick}
                 >
-                    {i18n._('key_ui/widgets/Control/MotionButtonGroup_Set Work Origin')}
+                    {i18n._('key-Workspace/Control/MotionButton-Set Work Origin')}
                 </Button>
             </TipTrigger>
         </div>

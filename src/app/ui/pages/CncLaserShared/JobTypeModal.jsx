@@ -7,7 +7,7 @@ import { actions as editorActions } from '../../../flux/editor';
 
 function renderJobTypeModal(headType, dispatch, showJobType, setShowJobType, jobTypeState, setJobTypeState, coordinateMode, coordinateSize, materials) {
     return showJobType && renderModal({
-        title: i18n._('key_ui/pages/CncLaserShared/JobTypeModal_Job Setup'),
+        title: i18n._('key-CncLaser/JobSetup-Job Setup'),
         renderBody() {
             return (
                 <JobType
@@ -20,7 +20,7 @@ function renderJobTypeModal(headType, dispatch, showJobType, setShowJobType, job
         },
         actions: [
             {
-                name: i18n._('key_ui/pages/CncLaserShared/JobTypeModal_Cancel'),
+                name: i18n._('key-CncLaser/JobSetup-Cancel'),
                 onClick: () => {
                     setJobTypeState({
                         coordinateMode,
@@ -31,7 +31,7 @@ function renderJobTypeModal(headType, dispatch, showJobType, setShowJobType, job
                 }
             },
             {
-                name: i18n._('key_ui/pages/CncLaserShared/JobTypeModal_Confirm'),
+                name: i18n._('key-CncLaser/JobSetup-Confirm'),
                 isPrimary: true,
                 onClick: () => {
                     dispatch(editorActions.changeCoordinateMode(headType,

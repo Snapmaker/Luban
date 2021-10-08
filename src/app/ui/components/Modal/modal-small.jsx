@@ -111,7 +111,7 @@ class ModalSmallHOC extends PureComponent {
                             type="default"
                             onClick={this.handleClose}
                         >
-                            {i18n._('key_ui/components/Modal/modal-small_Cancel')}
+                            {i18n._('key-Modal/Common-Cancel')}
                         </Button>
                         <Button
                             priority="level-two"
@@ -119,7 +119,7 @@ class ModalSmallHOC extends PureComponent {
                             width="96px"
                             onClick={this.handleConfirm}
                         >
-                            {i18n._('key_ui/components/Modal/modal-small_Confirm')}
+                            {i18n._('key-Modal/Common-Confirm')}
                         </Button>
                     </Modal.Footer>
                 )}
