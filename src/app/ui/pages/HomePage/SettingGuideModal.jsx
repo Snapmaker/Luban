@@ -288,7 +288,7 @@ const SettingGuideModal = (props) => {
                                             />
                                             <div className="align-c heading-3 margin-bottom-8">{machineSeriesOptions[machineSeries].label}</div>
                                             <div className={styles.machineSize}>
-                                                <span className="main-text-normal margin-right-12">{i18n._('key_ui/pages/HomePage/SettingGuideModal_Work Area')}:</span>
+                                                <span className="main-text-normal margin-right-12">{i18n._('key-HomePage/Begin-Work Area')}:</span>
                                                 {
                                                     !zAxis && (
                                                         <span className="main-text-normal">
@@ -320,13 +320,13 @@ const SettingGuideModal = (props) => {
                                                         onChange={e => setZAxis(e.target.checked)}
                                                         checked={zAxis}
                                                     />
-                                                    <div className="margin-left-8">{i18n._('key_ui/pages/HomePage/SettingGuideModal_Z-Axis Extension Module')}</div>
+                                                    <div className="margin-left-8">{i18n._('key-HomePage/Begin-Z-Axis Extension Module')}</div>
                                                 </div>
                                             )
                                         }
                                         <div className={styles.headDetail}>
                                             <div className={classNames(styles.printingSelect, 'margin-bottom-16')}>
-                                                <span className="main-text-normal margin-right-16">{i18n._('3D Print Toolhead')}</span>
+                                                <span className="main-text-normal margin-right-16">{i18n._('key-App/Settings/MachineSettings-3D Print Toolhead')}</span>
                                                 <Select
                                                     value={printingToolheadSelected}
                                                     options={(machineSeries === 0 ? printingToolHeadOptionForOriginal : printingToolHeadOption).map(item => {
@@ -341,7 +341,7 @@ const SettingGuideModal = (props) => {
                                                 />
                                             </div>
                                             <div className={classNames(styles.laserSelect, 'margin-bottom-16')}>
-                                                <span className="main-text-normal margin-right-16">{i18n._('Laser Toolhead')}</span>
+                                                <span className="main-text-normal margin-right-16">{i18n._('key-App/Settings/MachineSettings-Laser Toolhead')}</span>
                                                 <Select
                                                     value={laserToolheadSelected}
                                                     options={(machineSeries === 0 ? laserToolHeadOptionForOriginal : laserToolHeadOption).map(item => {
@@ -355,7 +355,7 @@ const SettingGuideModal = (props) => {
                                                 />
                                             </div>
                                             <div className={classNames(styles.laserSelect, 'margin-bottom-16')}>
-                                                <span className="main-text-normal margin-right-16">{i18n._('CNC Toolhead')}</span>
+                                                <span className="main-text-normal margin-right-16">{i18n._('key-App/Settings/MachineSettings-CNC Toolhead')}</span>
                                                 <Select
                                                     value={cncToolheadSelected}
                                                     options={(machineSeries === 0 ? cncToolHeadOptionForOriginal : cncToolHeadOption).map(item => ({
