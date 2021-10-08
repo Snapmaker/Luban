@@ -38,12 +38,12 @@ class ConfirmHOC extends PureComponent {
             <Confirm
                 {...this.props}
                 btnConfirm={{
-                    text: i18n._('OK'),
+                    text: i18n._('key-Modal/Common-OK'),
                     ...this.props.btnConfirm,
                     onClick: ::this.handleConfirm
                 }}
                 btnCancel={{
-                    text: i18n._('Cancel'),
+                    text: i18n._('key-Modal/Common-Cancel'),
                     ...this.props.btnCancel,
                     onClick: ::this.handleCancel
                 }}

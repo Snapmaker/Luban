@@ -273,7 +273,7 @@ function MachineSettings() {
                     name="TitleSetting"
                     type={['static']}
                 />
-                <span className="margin-left-4">{i18n._('Machine')}</span>
+                <span className="margin-left-4">{i18n._('key-App/Settings/MachineSettings-Machine')}</span>
             </div>
             <Select
                 className="margin-vertical-16"
@@ -286,7 +286,7 @@ function MachineSettings() {
                 onChange={actions.onChangeMachineSeries}
             />
             <div>
-                <span className="unit-text margin-right-12">{i18n._('Dimensions')}:</span>
+                <span className="unit-text margin-right-12">{i18n._('key-App/Settings/MachineSettings-Dimensions')}:</span>
                 <span className="main-text-normal">{`${state.size.x} x ${state.size.y} x ${state.size.z} mm`}</span>
             </div>
             <div className="border-bottom-normal padding-bottom-4 margin-top-32">
@@ -294,11 +294,11 @@ function MachineSettings() {
                     name="TitleSetting"
                     type={['static']}
                 />
-                <span className="margin-left-4">{i18n._('Head')}</span>
+                <span className="margin-left-4">{i18n._('key-App/Settings/MachineSettings-Head')}</span>
             </div>
             <div className={styles.headDetail}>
                 <div className="margin-bottom-16">
-                    <div className="main-text-normal margin-bottom-8 margin-top-16">{i18n._('3D Print Toolhead')}</div>
+                    <div className="main-text-normal margin-bottom-8 margin-top-16">{i18n._('key-App/Settings/MachineSettings-3D Print Toolhead')}</div>
                     <Select
                         value={printingToolheadSelected}
                         options={(state.series === 'Original' || state.series === 'Original Long Z-axis' ? printingToolHeadOptionForOriginal : printingToolHeadOption).map(item => {
@@ -313,7 +313,7 @@ function MachineSettings() {
                     />
                 </div>
                 <div className="margin-bottom-16">
-                    <div className="main-text-normal margin-bottom-8">{i18n._('Laser Toolhead')}</div>
+                    <div className="main-text-normal margin-bottom-8">{i18n._('key-App/Settings/MachineSettings-Laser Toolhead')}</div>
                     <Select
                         value={laserToolheadSelected}
                         options={(state.series === 'Original' || state.series === 'Original Long Z-axis' ? laserToolHeadOptionForOriginal : laserToolHeadOption).map(item => {
@@ -327,7 +327,7 @@ function MachineSettings() {
                     />
                 </div>
                 <div className="margin-bottom-16">
-                    <div className="main-text-normal margin-bottom-8">{i18n._('CNC Toolhead')}</div>
+                    <div className="main-text-normal margin-bottom-8">{i18n._('key-App/Settings/MachineSettings-CNC Toolhead')}</div>
                     <Select
                         value={cncToolheadSelected}
                         options={(state.series === 'Original' || state.series === 'Original Long Z-axis' ? cncToolHeadOptionForOriginal : cncToolHeadOption).map(item => ({

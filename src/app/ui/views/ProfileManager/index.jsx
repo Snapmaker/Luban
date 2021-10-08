@@ -201,7 +201,7 @@ function ProfileManager({ optionConfigGroup, disableCategory = true, managerTitl
             }
             const deleteName = isCategorySelected ? definition.category : definition.name;
             const popupActions = modal({
-                title: i18n._('Delete Profile'),
+                title: i18n._('key-Printing/ProfileManager-Delete Profile'),
                 body: (
                     <React.Fragment>
                         <p>{`Are you sure to delete profile "${deleteName}"?`}</p>
@@ -229,7 +229,7 @@ function ProfileManager({ optionConfigGroup, disableCategory = true, managerTitl
                             popupActions.close();
                         }}
                     >
-                        {i18n._('Delete')}
+                        {i18n._('key-Printing/ProfileManager-Delete')}
                     </Button>
                 )
             });
@@ -247,11 +247,11 @@ function ProfileManager({ optionConfigGroup, disableCategory = true, managerTitl
         showInputModal: ({ isCreate }) => {
             const definitionForManager = definitionState?.definitionForManager;
             const isCategorySelected = definitionState?.isCategorySelected;
-            let title = i18n._('Create Profile');
+            let title = i18n._('key-Printing/ProfileManager-Create Profile');
             let copyType = '', copyCategoryName = '', copyToolName = '';
 
             if (!isCreate) {
-                title = i18n._('Copy Profile');
+                title = i18n._('key-Printing/ProfileManager-Copy Profile');
                 copyType = isCategorySelected ? 'Material' : 'Tool';
                 copyCategoryName = definitionForManager.category;
                 if (!isCategorySelected) {
@@ -261,7 +261,7 @@ function ProfileManager({ optionConfigGroup, disableCategory = true, managerTitl
                 copyCategoryName = definitionForManager.category;
             }
             if (isCreate && disableCategory) {
-                title = i18n._('Create Profile');
+                title = i18n._('key-Printing/ProfileManager-Create Profile');
                 copyType = 'Tool';
                 copyToolName = 'New Profile';
             }
@@ -332,7 +332,7 @@ function ProfileManager({ optionConfigGroup, disableCategory = true, managerTitl
                             }
                         }}
                     >
-                        {i18n._('Save')}
+                        {i18n._('key-Printing/ProfileManager-Save')}
                     </Button>
                 )
             });
@@ -554,7 +554,7 @@ function ProfileManager({ optionConfigGroup, disableCategory = true, managerTitl
                                             disabled={isOfficialDefinition(definitionState.definitionForManager)}
                                             size={24}
                                             className="padding-vertical-2 padding-horizontal-2"
-                                            title={i18n._('Edit')}
+                                            title={i18n._('key-Printing/ProfileManager-Edit')}
                                             onClick={() => actions.setRenamingStatus(true)}
                                         />
                                         <input
@@ -569,7 +569,7 @@ function ProfileManager({ optionConfigGroup, disableCategory = true, managerTitl
                                             name="Import"
                                             size={24}
                                             className="padding-vertical-2 padding-horizontal-2"
-                                            title={i18n._('Import')}
+                                            title={i18n._('key-Printing/ProfileManager-Import')}
                                             onClick={() => actions.importFile(refs.fileInput)}
                                         />
                                         <SvgIcon
@@ -577,14 +577,14 @@ function ProfileManager({ optionConfigGroup, disableCategory = true, managerTitl
                                             size={24}
                                             className="padding-vertical-2 padding-horizontal-2"
                                             disabled={definitionState.isCategorySelected}
-                                            title={i18n._('Export')}
+                                            title={i18n._('key-Printing/ProfileManager-Export')}
                                             onClick={() => outsideActions.exportConfigFile(definitionState.definitionForManager)}
                                         />
                                         <SvgIcon
                                             name="Delete"
                                             size={24}
                                             className="padding-vertical-2 padding-horizontal-2"
-                                            title={i18n._('Delete')}
+                                            title={i18n._('key-Printing/ProfileManager-Delete')}
                                             onClick={() => actions.onRemoveManagerDefinition(definitionState.definitionForManager, definitionState.isCategorySelected)}
                                             disabled={isOfficialDefinition(definitionState.definitionForManager)}
                                         />
@@ -598,7 +598,7 @@ function ProfileManager({ optionConfigGroup, disableCategory = true, managerTitl
                                             type={['static']}
                                             className={classNames(styles['manager-file'], 'sm-tab', 'align-c')}
                                             onClick={() => { actions.showNewModal(); }}
-                                            spanText={i18n._('Create')}
+                                            spanText={i18n._('key-Printing/ProfileManager-Create')}
                                             spanClassName={classNames(styles['action-title'])}
                                         />
                                         <SvgIcon
@@ -607,7 +607,7 @@ function ProfileManager({ optionConfigGroup, disableCategory = true, managerTitl
                                             type={['static']}
                                             className={classNames(styles['manager-file'], 'sm-tab', 'align-c')}
                                             onClick={() => { actions.showDuplicateModal(); }}
-                                            spanText={i18n._('Copy')}
+                                            spanText={i18n._('key-Printing/ProfileManager-Copy')}
                                             spanClassName={classNames(styles['action-title'])}
                                         />
                                     </div>
@@ -633,7 +633,7 @@ function ProfileManager({ optionConfigGroup, disableCategory = true, managerTitl
                             priority="level-two"
                             width="96px"
                         >
-                            {i18n._('Close')}
+                            {i18n._('key-Printing/ProfileManager-Close')}
                         </Button>
 
                         {!definitionState?.isCategorySelected && (
@@ -646,7 +646,7 @@ function ProfileManager({ optionConfigGroup, disableCategory = true, managerTitl
                                 width="96px"
                                 className="margin-left-8"
                             >
-                                {i18n._('Select')}
+                                {i18n._('key-Printing/ProfileManager-Select')}
                             </Button>
                         )}
                     </Modal.Footer>

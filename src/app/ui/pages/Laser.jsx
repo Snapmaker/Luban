@@ -3,328 +3,35 @@ import { shallowEqual, useSelector, useDispatch } from 'react-redux';
 import path from 'path';
 import PropTypes from 'prop-types';
 import { useHistory, withRouter } from 'react-router-dom';
-// import classNames from 'classnames';
 import 'intro.js/introjs.css';
-// import { Steps } from 'intro.js-react';
 import i18n from '../../lib/i18n';
 import useSetState from '../../lib/hooks/set-state';
-// import Anchor from '../components/Anchor';
-import Dropdown from '../components/Dropdown';
-import Menu from '../components/Menu';
-import SvgIcon from '../components/SvgIcon';
 import modal from '../../lib/modal';
 import LaserVisualizer from '../widgets/LaserVisualizer';
-import Tabs from '../components/Tabs';
 
-import { renderPopup, renderWidgetList, renderModal, logPageView, useUnsavedTitle } from '../utils';
+import { renderPopup, logPageView, useUnsavedTitle } from '../utils';
 import Dropzone from '../components/Dropzone';
 import { actions as editorActions } from '../../flux/editor';
 import { actions as laserActions } from '../../flux/laser';
 import { actions as projectActions } from '../../flux/project';
 import ProjectLayout from '../layouts/ProjectLayout';
-import MainToolBar from '../layouts/MainToolBar';
 import { machineStore } from '../../store/local-storage';
-// import WidgetContainer from '../Layouts/Widget';
+import useRenderMainToolBar from './CncLaserShared/MainToolBar';
+import useRenderRemoveModelsWarning from './CncLaserShared/RemoveAllModelsWarning';
+import renderJobTypeModal from './CncLaserShared/JobTypeModal';
+import renderRightView from './CncLaserShared/RightView';
 
-import { HEAD_LASER, PAGE_EDITOR, PAGE_PROCESS, MACHINE_SERIES, PROCESS_MODE_GREYSCALE, PROCESS_MODE_VECTOR } from '../../constants';
+import { HEAD_LASER, PAGE_PROCESS, PROCESS_MODE_GREYSCALE, PROCESS_MODE_VECTOR } from '../../constants';
 
-
-import ControlWidget from '../widgets/Control';
-import ConnectionWidget from '../widgets/Connection';
-import ConsoleWidget from '../widgets/Console';
-import GCodeWidget from '../widgets/GCode';
-import MacroWidget from '../widgets/Macro';
-import PurifierWidget from '../widgets/Purifier';
-import MarlinWidget from '../widgets/Marlin';
-import VisualizerWidget from '../widgets/WorkspaceVisualizer';
-import WebcamWidget from '../widgets/Webcam';
-import LaserParamsWidget from '../widgets/LaserParams';
-import LaserSetBackground from '../widgets/LaserSetBackground';
-import LaserCameraAidBackground from '../widgets/LaserCameraAidBackground';
-import LaserTestFocusWidget from '../widgets/LaserTestFocus';
-import CNCPathWidget from '../widgets/CNCPath';
-import CncLaserOutputWidget from '../widgets/CncLaserOutput';
-
-import PrintingMaterialWidget from '../widgets/PrintingMaterial';
-import PrintingConfigurationsWidget from '../widgets/PrintingConfigurations';
-import PrintingOutputWidget from '../widgets/PrintingOutput';
-import WifiTransport from '../widgets/WifiTransport';
-import EnclosureWidget from '../widgets/Enclosure';
-import JobType from '../widgets/JobType';
-import PrintingVisualizer from '../widgets/PrintingVisualizer';
 import HomePage from './HomePage';
-import ToolPathListBox from '../widgets/CncLaserList/ToolPathList';
 import Workspace from './Workspace';
 import Thumbnail from '../widgets/CncLaserShared/Thumbnail';
 import { laserCncIntroStepOne, laserCncIntroStepTwo, laserCncIntroStepFive, laserCncIntroStepSix, laser4AxisStepOne } from './introContent';
 import Steps from '../components/Steps';
 
-const allWidgets = {
-    'control': ControlWidget,
-    'connection': ConnectionWidget,
-    'console': ConsoleWidget,
-    'gcode': GCodeWidget,
-    'macro': MacroWidget,
-    'macroPanel': MacroWidget,
-    'purifier': PurifierWidget,
-    'marlin': MarlinWidget,
-    'visualizer': VisualizerWidget,
-    'webcam': WebcamWidget,
-    'printing-visualizer': PrintingVisualizer,
-    'wifi-transport': WifiTransport,
-    'enclosure': EnclosureWidget,
-    '3dp-material': PrintingMaterialWidget,
-    '3dp-configurations': PrintingConfigurationsWidget,
-    '3dp-output': PrintingOutputWidget,
-    'laser-params': LaserParamsWidget,
-    // 'laser-output': CncLaserOutputWidget,
-    'laser-test-focus': LaserTestFocusWidget,
-    'cnc-path': CNCPathWidget,
-    'cnc-output': CncLaserOutputWidget,
-    'toolpath-list': ToolPathListBox
-};
-
 const ACCEPT = '.svg, .png, .jpg, .jpeg, .bmp, .dxf';
 const pageHeadType = HEAD_LASER;
 
-function useRenderMainToolBar(setShowHomePage, setShowJobType, setShowWorkspace, isRotate) {
-    // (!workPosition.isFourAxis && (connectionType === CONNECTION_TYPE_WIFI && isConnected && !hasBackground))
-    const unSaved = useSelector(state => state?.project[pageHeadType]?.unSaved, shallowEqual);
-    const isConnected = useSelector(state => state?.machine?.isConnected, shallowEqual);
-    const series = useSelector(state => state?.machine?.series, shallowEqual);
-    const canRedo = useSelector(state => state[HEAD_LASER]?.history?.canRedo, shallowEqual);
-    const canUndo = useSelector(state => state[HEAD_LASER]?.history?.canUndo, shallowEqual);
-    const [showCameraCapture, setShowCameraCapture] = useState(false);
-    const dispatch = useDispatch();
-    const isOriginalSeries = (series === MACHINE_SERIES.ORIGINAL?.value || series === MACHINE_SERIES.ORIGINAL_LZ?.value);
-    const menu = (
-        <Menu style={{ marginTop: '8px' }}>
-            <Menu.Item
-                onClick={() => setShowCameraCapture(true)}
-                disabled={isOriginalSeries ? false : !isConnected}
-            >
-                <div className="align-l width-168">
-                    <SvgIcon
-                        type={['static']}
-                        disabled={isOriginalSeries ? false : !isConnected}
-                        name="MainToolbarAddBackground"
-                    />
-                    <span
-                        className="margin-left-4 height-24 display-inline"
-                    >
-                        {i18n._('Add Background')}
-                    </span>
-                </div>
-            </Menu.Item>
-            <Menu.Item
-                onClick={() => dispatch(laserActions.removeBackgroundImage())}
-            >
-                <div className="align-l width-168">
-                    <SvgIcon
-                        type={['static']}
-                        name="MainToolbarRemoverBackground"
-                    />
-                    <span
-                        className="margin-left-4 height-24 display-inline"
-                    >
-                        {i18n._('Remove Background')}
-                    </span>
-                </div>
-            </Menu.Item>
-        </Menu>
-    );
-    const leftItems = [
-        {
-            title: i18n._('Home'),
-            type: 'button',
-            name: 'MainToolbarHome',
-            action: () => {
-                setShowHomePage(true);
-            }
-        },
-        {
-            title: i18n._('Workspace'),
-            type: 'button',
-            name: 'MainToolbarWorkspace',
-            action: () => {
-                setShowWorkspace(true);
-            }
-        },
-        {
-            type: 'separator'
-        },
-        {
-            title: i18n._('Save'),
-            type: 'button',
-            disabled: !unSaved,
-            name: 'MainToolbarSave',
-            iconClassName: 'laser-save-icon',
-            action: () => {
-                dispatch(projectActions.save(HEAD_LASER));
-            }
-        },
-        {
-            title: i18n._('Undo'),
-            disabled: !canUndo,
-            type: 'button',
-            name: 'MainToolbarUndo',
-            action: () => {
-                dispatch(editorActions.undo(HEAD_LASER));
-            }
-        },
-        {
-            title: i18n._('Redo'),
-            disabled: !canRedo,
-            type: 'button',
-            name: 'MainToolbarRedo',
-            action: () => {
-                dispatch(editorActions.redo(HEAD_LASER));
-            }
-        },
-        {
-            title: i18n._('Job Setup'),
-            type: 'button',
-            name: 'MainToolbarJobSetup',
-            action: () => {
-                setShowJobType(true);
-            }
-        },
-        {
-            type: 'separator'
-        },
-        {
-            title: i18n._('Top'),
-            type: 'button',
-            name: 'MainToolbarTop',
-            action: () => {
-                dispatch(editorActions.bringSelectedModelToFront(HEAD_LASER));
-            }
-        },
-        {
-            title: i18n._('Bottom'),
-            type: 'button',
-            name: 'MainToolbarBottom',
-            action: () => {
-                dispatch(editorActions.sendSelectedModelToBack(HEAD_LASER));
-            }
-        }
-    ];
-    if (!isRotate) {
-        leftItems.push(
-            {
-                type: 'separator'
-            },
-            {
-                // MainToolbarCameraCapture
-                type: 'render',
-                customRender: function () {
-                    return (
-                        <Dropdown
-                            className="display-inline align-c padding-horizontal-2 height-50"
-                            overlay={menu}
-                        >
-                            <div
-                                className="display-inline font-size-0 v-align-t hover-normal-grey-2 border-radius-4 padding-top-4"
-                            >
-                                <SvgIcon
-                                    name="MainToolbarCameraCapture"
-                                    type={['static']}
-                                >
-                                    <div className="font-size-base color-black-3 height-16 margin-top-4">
-                                        {i18n._('Camera Capture')}
-                                        <SvgIcon
-                                            type={['static']}
-                                            name="DropdownOpen"
-                                            size={20}
-                                            // className="margin-top-4"
-                                        />
-                                    </div>
-                                </SvgIcon>
-                            </div>
-                        </Dropdown>
-                    );
-                }
-            }
-        );
-    }
-
-    const setBackgroundModal = showCameraCapture && renderModal({
-        renderBody() {
-            return (
-                <div>
-                    {isOriginalSeries && (
-                        <LaserSetBackground
-                            hideModal={() => {
-                                setShowCameraCapture(false);
-                            }}
-                        />
-                    )}
-                    {!isOriginalSeries && (
-                        <LaserCameraAidBackground
-                            hideModal={() => {
-                                setShowCameraCapture(false);
-                            }}
-                        />
-                    )}
-                </div>
-            );
-        },
-        actions: [],
-        onClose: () => { setShowCameraCapture(false); }
-    });
-
-    return {
-        setBackgroundModal,
-        renderMainToolBar: () => {
-            return (
-                <MainToolBar
-                    leftItems={leftItems}
-                />
-            );
-        }
-    };
-}
-
-function useRenderRemoveModelsWarning() {
-    const removingModelsWarning = useSelector(state => state?.laser?.removingModelsWarning);
-    const removingModelsWarningCallback = useSelector(state => state?.laser?.removingModelsWarningCallback, shallowEqual);
-    const emptyToolPaths = useSelector(state => state?.laser?.emptyToolPaths);
-    const dispatch = useDispatch();
-    const onClose = () => dispatch(editorActions.updateState(HEAD_LASER, {
-        removingModelsWarning: false
-    }));
-    const returnModal = renderModal({
-        onClose,
-        renderBody: () => (
-            <div>
-                <div>{i18n._('Delete the object? The toolpath created will be deleted together.')}</div>
-                {emptyToolPaths.map((item) => {
-                    return (<div key={item.name}>{item.name}</div>);
-                })}
-            </div>
-        ),
-        actions: [
-            {
-                name: i18n._('Cancel'),
-                onClick: () => { onClose(); }
-            },
-            {
-                name: i18n._('Delete'),
-                isPrimary: true,
-                onClick: () => {
-                    removingModelsWarningCallback();
-                    dispatch(editorActions.removeEmptyToolPaths(HEAD_LASER));
-                    onClose();
-                }
-            }
-        ]
-    });
-    if (removingModelsWarning) {
-        return returnModal;
-    } else {
-        return null;
-    }
-}
 function Laser({ location }) {
     const widgets = useSelector(state => state?.widget[pageHeadType]?.default?.widgets, shallowEqual);
     const [isDraggingWidget, setIsDraggingWidget] = useState(false);
@@ -338,6 +45,7 @@ function Laser({ location }) {
     const toolPaths = useSelector(state => state[HEAD_LASER]?.toolPathGroup?.getToolPaths(), shallowEqual);
     const materials = useSelector(state => state[HEAD_LASER]?.materials, shallowEqual);
     const series = useSelector(state => state.machine.series, shallowEqual);
+    const page = useSelector(state => state[HEAD_LASER]?.page, shallowEqual);
     const { isRotate } = materials;
     const [jobTypeState, setJobTypeState] = useSetState({
         coordinateMode,
@@ -345,7 +53,6 @@ function Laser({ location }) {
         materials
     });
     const dispatch = useDispatch();
-    const page = useSelector(state => state?.laser?.page);
     const history = useHistory();
     const thumbnail = useRef();
     const toolPathGroup = useSelector(state => state[HEAD_LASER]?.toolPathGroup, shallowEqual);
@@ -392,7 +99,12 @@ function Laser({ location }) {
     }, [enabledIntro]);
 
     const { setBackgroundModal,
-        renderMainToolBar } = useRenderMainToolBar(setShowHomePage, setShowJobType, setShowWorkspace, isRotate);
+        renderMainToolBar } = useRenderMainToolBar({
+        headType: HEAD_LASER,
+        setShowHomePage,
+        setShowJobType,
+        setShowWorkspace
+    });
     const renderHomepage = () => {
         const onClose = () => {
             setShowHomePage(false);
@@ -406,52 +118,8 @@ function Laser({ location }) {
             component: HomePage
         });
     };
-    const jobTypeModal = showJobType && renderModal({
-        title: i18n._('Job Setup'),
-        renderBody() {
-            return (
-                <JobType
-                    isWidget={false}
-                    headType={HEAD_LASER}
-                    jobTypeState={jobTypeState}
-                    setJobTypeState={setJobTypeState}
-                />
-            );
-        },
-        actions: [
-            {
-                name: i18n._('Cancel'),
-                onClick: () => {
-                    setJobTypeState({
-                        coordinateMode,
-                        coordinateSize,
-                        materials
-                    });
-                    setShowJobType(false);
-                }
-            },
-            {
-                name: i18n._('Confirm'),
-                isPrimary: true,
-                onClick: () => {
-                    dispatch(editorActions.changeCoordinateMode(HEAD_LASER,
-                        jobTypeState.coordinateMode, jobTypeState.coordinateSize));
-                    dispatch(editorActions.updateMaterials(HEAD_LASER, jobTypeState.materials));
-                    dispatch(editorActions.scaleCanvasToFit(HEAD_LASER));
-                    setShowJobType(false);
-                }
-            }
-        ],
-        onClose: () => {
-            setJobTypeState({
-                coordinateMode,
-                coordinateSize,
-                materials
-            });
-            setShowJobType(false);
-        }
-    });
-    const warningRemovingModels = useRenderRemoveModelsWarning();
+    const jobTypeModal = renderJobTypeModal(HEAD_LASER, dispatch, showJobType, setShowJobType, jobTypeState, setJobTypeState, coordinateMode, coordinateSize, materials);
+    const warningRemovingModels = useRenderRemoveModelsWarning({ headType: HEAD_LASER });
     const listActions = {
         onDragStart: () => {
             setIsDraggingWidget(true);
@@ -468,53 +136,21 @@ function Laser({ location }) {
             }
             dispatch(editorActions.uploadImage('laser', file, mode, () => {
                 modal({
-                    cancelTitle: i18n._('Close'),
-                    title: i18n._('Import Error'),
+                    cancelTitle: i18n._('key-Laser/Page-Close'),
+                    title: i18n._('key-Laser/Page-Import Error'),
                     body: i18n._('Failed to import this object. \nPlease select a supported file format.')
                 });
             }));
         },
         onDropRejected: () => {
             modal({
-                title: i18n._('Warning'),
+                title: i18n._('key-Laser/Page-Warning'),
                 cancelTitle: 'Close',
-                body: i18n._('Only {{accept}} files are supported.', { accept: ACCEPT })
+                body: i18n._('key-Laser/Page-Only {{accept}} files are supported.', { accept: ACCEPT })
             });
         }
     };
 
-
-    function renderRightView() {
-        const widgetProps = { headType: 'laser' };
-        return (
-            <div className="laser-intro-edit-panel">
-                <Tabs
-                    options={[
-                        {
-                            tab: i18n._('Edit'),
-                            key: PAGE_EDITOR
-                        },
-                        {
-                            tab: i18n._('Process'),
-                            key: PAGE_PROCESS
-                        }
-                    ]}
-                    activeKey={page}
-                    onChange={(key) => {
-                        dispatch(editorActions.switchToPage(HEAD_LASER, key));
-                        if (key === PAGE_EDITOR) {
-                            dispatch(editorActions.showModelGroupObject(HEAD_LASER));
-                        }
-                    }}
-                />
-                {renderWidgetList('laser', 'default', widgets, allWidgets, listActions, widgetProps)}
-                <CncLaserOutputWidget
-                    headType={HEAD_LASER}
-                />
-            </div>
-
-        );
-    }
     function renderWorkspace() {
         const onClose = () => {
             setShowWorkspace(false);
@@ -592,7 +228,7 @@ function Laser({ location }) {
     }
     async function handleBeforeChange(nextIndex) {
         if (nextIndex === 4) {
-            dispatch(editorActions.switchToPage(HEAD_LASER, 'process'));
+            dispatch(editorActions.switchToPage(HEAD_LASER, PAGE_PROCESS));
             dispatch(editorActions.selectToolPathId(HEAD_LASER, toolPaths[0].id));
         } else if (nextIndex === 6) {
             const thumbnailRef = thumbnail.current.getThumbnail();
@@ -605,12 +241,14 @@ function Laser({ location }) {
         <div>
             <ProjectLayout
                 renderMainToolBar={renderMainToolBar}
-                renderRightView={renderRightView}
+                renderRightView={
+                    () => renderRightView({ headType: HEAD_LASER, dispatch, page, widgets, listActions })
+                }
             >
                 <Dropzone
                     disabled={isDraggingWidget}
                     accept={ACCEPT}
-                    dragEnterMsg={i18n._('Drop an image file here.')}
+                    dragEnterMsg={i18n._('key-Laser/Page-Drop an image file here.')}
                     onDropAccepted={actions.onDropAccepted}
                     onDropRejected={actions.onDropRejected}
                 >
@@ -624,63 +262,61 @@ function Laser({ location }) {
                         onBeforeChange={handleBeforeChange}
                         options={{
                             showBullets: false,
-                            nextLabel: i18n._('Next'),
-                            doneLabel: i18n._('Complete'),
                             hidePrev: false,
                             exitOnEsc: false,
                             exitOnOverlayClick: false
                         }}
                         steps={[{
                             intro: isRotate ? laser4AxisStepOne(
-                                i18n._('Set the work size and where the work origin will be.'),
-                                i18n._('D is the diameter of the material,  and L is the length of the material.'),
-                                i18n._('Origin is fixed at the edge of the cross-section of the cylinder, far way from the chuck.')
+                                i18n._('key-Laser/Page-Set the work size and where the work origin will be.'),
+                                i18n._('key-Laser/Page-D is the diameter of the material,  and L is the length of the material.'),
+                                i18n._('key-Laser/Page-Origin is fixed at the edge of the cross-section of the cylinder, far way from the chuck.')
                             ) : laserCncIntroStepOne(
-                                i18n._('Set the work size and where the work origin will be.'),
-                                i18n._('X is the width of the material,  and Y is the height of the material.'),
-                                i18n._('Origin can be set at any corner or the middle of the job. This point (X0, Y0) is the origin of the design coordinate system. It also represents the origin of the workpiece coordinate system that you should set on the material using the machine tool.')
+                                i18n._('key-Laser/Page-Set the work size and where the work origin will be.'),
+                                i18n._('key-Laser/Page-X is the width of the material,  and Y is the height of the material.'),
+                                i18n._('key-Laser/Page-Origin can be set at any corner or the middle of the job. This point (X0, Y0) is the origin of the design coordinate system. It also represents the origin of the workpiece coordinate system that you should set on the material using the machine tool.')
                             ),
-                            title: `${i18n._('Job Setup')} (1/8)`
+                            title: `${i18n._('key-Laser/Page-Job Setup')} (1/8)`
                         }, {
                             element: '.laser-tool-bar-open-icon',
-                            title: `${i18n._('Import Object')} (2/8)`,
-                            intro: laserCncIntroStepTwo(i18n._('Import an object, or drag an object to Luban.')),
+                            title: `${i18n._('key-Laser/Page-Import Object')} (2/8)`,
+                            intro: laserCncIntroStepTwo(i18n._('key-Laser/Page-Import an object, or drag an object to Luban.')),
                             disableInteraction: true,
                             tooltipClass: 'laser-import-intro',
                             position: 'right'
                         }, {
                             element: '.laser-draw-intro-part',
-                            title: `${i18n._('Draw Object')} (3/8)`,
-                            intro: laserCncIntroStepTwo(i18n._('Alternatively, you can draw simple objects or add text for laser engrave or CNC carve.')),
+                            title: `${i18n._('key-Laser/Page-Draw Object')} (3/8)`,
+                            intro: laserCncIntroStepTwo(i18n._('key-Laser/Page-Alternatively, you can draw simple objects or add text for laser engrave or CNC carve.')),
                             disableInteraction: true,
                             tooltipClass: 'laser-draw-intro',
                             position: 'right'
                         }, {
                             // element: '.laser-intro-edit-panel',
                             element: '.widget-list-intro',
-                            title: `${i18n._('Edit Panel')} (4/8)`,
-                            intro: laserCncIntroStepTwo(i18n._('The Edit panel shows the property related to object. When an object is selected, Luban displays this panel where you can transform the object, switch the Processing Mode, or enter the Process Panel.')),
+                            title: `${i18n._('key-Laser/Page-Edit Panel')} (4/8)`,
+                            intro: laserCncIntroStepTwo(i18n._('key-Laser/Page-The Edit panel shows the property related to object. When an object is selected, Luban displays this panel where you can transform the object, switch the Processing Mode, or enter the Process Panel.')),
                             disableInteraction: true,
                             tooltipClass: 'laser-edit-panel-intro',
                             position: 'left'
                         }, {
                             element: '.laser-widget-list-intro',
-                            title: `${i18n._('Process Panel')} (5/8)`,
+                            title: `${i18n._('key-Laser/Page-Process Panel')} (5/8)`,
                             intro: laserCncIntroStepFive(
-                                i18n._('The Process panel shows the Toolpath List and the relevant property of the toolpath.'),
-                                i18n._('After the selected object is edited, click Create Toolpath to create a toolpath of the object. Below the Toolpath List are the parameters you often use.'),
-                                i18n._('Create Toolpath')
+                                i18n._('key-Laser/Page-The Process panel shows the Toolpath List and the relevant property of the toolpath.'),
+                                i18n._('key-Laser/Page-After the selected object is edited, click Create Toolpath to create a toolpath of the object. Below the Toolpath List are the parameters you often use.'),
+                                i18n._('key-Laser/Page-Create Toolpath')
                             ),
                             disableInteraction: true,
                             position: 'left'
                         }, {
                             element: '.laser-preview-export-intro-part',
-                            title: `${i18n._('Generate G-code and Preview')} (6/8)`,
+                            title: `${i18n._('key-Laser/Page-Generate G-code and Preview')} (6/8)`,
                             position: 'top',
                             disableInteraction: true,
                             intro: laserCncIntroStepSix(
-                                i18n._('Click to generate and preview the G-code file.'),
-                                i18n._('For laser engraving, you can preview the toolpath. For CNC carving, you can preview the toolpath and simulate the operation result.'),
+                                i18n._('key-Laser/Page-Click to generate and preview the G-code file.'),
+                                i18n._('key-Laser/Page-For laser engraving, you can preview the toolpath. For CNC carving, you can preview the toolpath and simulate the operation result.'),
                                 // isRotate ? '/resources/images/guide-tours/laser_4_axis_priview.png' : '/resources/images/guide-tours/laser_3_axis_priview.png'
                                 isRotate,
                                 series,
@@ -688,18 +324,18 @@ function Laser({ location }) {
                             )
                         }, {
                             element: '.laser-preview-export-intro-part',
-                            title: `${i18n._('Export')} (7/8)`,
+                            title: `${i18n._('key-Laser/Page-Export')} (7/8)`,
                             position: 'top',
                             disableInteraction: true,
                             intro: laserCncIntroStepTwo(
-                                i18n._('Export the G-code file to a local device or load it to Workspace. Use Touchscreen or Luban to start laser engraving or CNC carving.')
+                                i18n._('key-Laser/Page-Export the G-code file to a local device or load it to Workspace. Use Touchscreen or Luban to start laser engraving or CNC carving.')
                             )
                         }, {
                             element: '.laser-save-icon',
-                            title: `${i18n._('Save Project')} (8/8)`,
+                            title: `${i18n._('key-Laser/Page-Save Project')} (8/8)`,
                             position: 'bottom',
                             disableInteraction: true,
-                            intro: laserCncIntroStepTwo(i18n._('Save the project to a local device for reuse.'))
+                            intro: laserCncIntroStepTwo(i18n._('key-Laser/Page-Save the project to a local device for reuse.'))
                         }]}
                         onExit={handleExit}
                     />

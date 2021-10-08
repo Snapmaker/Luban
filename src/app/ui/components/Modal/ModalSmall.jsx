@@ -90,7 +90,7 @@ class ModalSmall extends PureComponent {
                             type="default"
                             onClick={onCancel}
                         >
-                            {i18n._('Cancel')}
+                            {i18n._('key-Modal/Common-Cancel')}
                         </Button>
                         <Button
                             priority="level-two"
@@ -98,7 +98,7 @@ class ModalSmall extends PureComponent {
                             width="96px"
                             onClick={onConfirm}
                         >
-                            {i18n._('Confirm')}
+                            {i18n._('key-Modal/Common-Confirm')}
                         </Button>
                     </Modal.Footer>
                 )}

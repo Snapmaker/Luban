@@ -241,7 +241,7 @@ export const actions = {
         const { toolDefinitions } = getState().laser;
         const activeDefinition = toolDefinitions.find(d => d.definitionId === definitionId);
         if (!newName || newName.trim().length === 0) {
-            return Promise.reject(i18n._('Failed to rename. Please enter a new name.'));
+            return Promise.reject(i18n._('key-Laser/common-Failed to rename. Please enter a new name.'));
         }
         if (isCategorySelected) {
             const duplicated = toolDefinitions.find(d => d.category === newName);

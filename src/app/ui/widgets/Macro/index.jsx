@@ -75,7 +75,7 @@ function MacroWidget({ widgetId, widgetActions }) {
     };
 
     useEffect(() => {
-        widgetActions.setTitle(i18n._('Macro'));
+        widgetActions.setTitle(i18n._('key-Workspace/Macro-Macro'));
         widgetActions.setControlButtons(
             [
                 {

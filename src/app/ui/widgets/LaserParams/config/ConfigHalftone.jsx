@@ -69,23 +69,23 @@ const ConfigHalftone = ({ disabled }) => {
             {expanded && (
                 <React.Fragment>
                     <TipTrigger
-                        title={i18n._('Type')}
+                        title={i18n._('key-Laser/ProcessingModeSection/ConfigHalftone-Type')}
                         content={i18n._('Select the way that the dots are arranged.\n- Line: Dots are arranged into lines.\n- Round: Dots are arranged into rounds.\n- Diamond: Dots are arranged into diamonds.')}
                     >
                         <div className="sm-flex height-32 margin-vertical-8">
-                            <span className="sm-flex-width">{i18n._('Type')}</span>
+                            <span className="sm-flex-width">{i18n._('key-Laser/ProcessingModeSection/ConfigHalftone-Type')}</span>
                             <Select
                                 size="middle"
                                 clearable={false}
                                 options={[{
                                     value: 'line',
-                                    label: i18n._('Line')
+                                    label: i18n._('key-Laser/ProcessingModeSection/ConfigHalftone-Line')
                                 }, {
                                     value: 'round',
-                                    label: i18n._('Round')
+                                    label: i18n._('key-Laser/ProcessingModeSection/ConfigHalftone-Round')
                                 }, {
                                     value: 'diamond',
-                                    label: i18n._('Diamond')
+                                    label: i18n._('key-Laser/ProcessingModeSection/ConfigHalftone-Diamond')
                                 }]}
                                 value={npType}
                                 searchable={false}
@@ -97,11 +97,11 @@ const ConfigHalftone = ({ disabled }) => {
                         </div>
                     </TipTrigger>
                     <TipTrigger
-                        title={i18n._('Size')}
-                        content={i18n._('Set the size of dots.')}
+                        title={i18n._('key-Laser/ProcessingModeSection/ConfigHalftone-Size')}
+                        content={i18n._('key-Laser/ProcessingModeSection/ConfigHalftone-Set the size of dots.')}
                     >
                         <div className="sm-flex height-32 margin-vertical-8">
-                            <span className="sm-flex-width">{i18n._('Size')}</span>
+                            <span className="sm-flex-width">{i18n._('key-Laser/ProcessingModeSection/ConfigHalftone-Size')}</span>
                             <Slider
                                 disabled={disabled}
                                 size="middle"
@@ -125,11 +125,11 @@ const ConfigHalftone = ({ disabled }) => {
                         </div>
                     </TipTrigger>
                     <TipTrigger
-                        title={i18n._('Angle')}
-                        content={i18n._('Set the rotation angle of the halftone image through the arrange of dots.')}
+                        title={i18n._('key-Laser/ProcessingModeSection/ConfigHalftone-Angle')}
+                        content={i18n._('key-Laser/ProcessingModeSection/ConfigHalftone-Set the rotation angle of the halftone image through the arrange of dots.')}
                     >
                         <div className="sm-flex height-32 margin-vertical-8">
-                            <span className="sm-flex-width">{i18n._('Angle')}</span>
+                            <span className="sm-flex-width">{i18n._('key-Laser/ProcessingModeSection/ConfigHalftone-Angle')}</span>
                             <Slider
                                 disabled={disabled}
                                 size="middle"
@@ -153,11 +153,11 @@ const ConfigHalftone = ({ disabled }) => {
                         </div>
                     </TipTrigger>
                     <TipTrigger
-                        title={i18n._('Threshold')}
-                        content={i18n._('Colors above this value will be rendered in white.')}
+                        title={i18n._('key-Laser/ProcessingModeSection/ConfigHalftone-Threshold')}
+                        content={i18n._('key-Laser/ProcessingModeSection/ConfigHalftone-Colors above this value will be rendered in white.')}
                     >
                         <div className="sm-flex height-32 margin-vertical-8">
-                            <span className="sm-flex-width">{i18n._('Threshold')}</span>
+                            <span className="sm-flex-width">{i18n._('key-Laser/ProcessingModeSection/ConfigHalftone-Threshold')}</span>
                             <Slider
                                 disabled={disabled}
                                 size="middle"

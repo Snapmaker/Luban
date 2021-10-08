@@ -11,7 +11,7 @@ const Instructions = ({ onClose }) => {
         <Modal style={{ width: '1080px' }} size="lg" onClose={onClose}>
             <Modal.Header>
                 {/* <Modal.Title> */}
-                {i18n._('How to Configure Camera Captrue')}
+                {i18n._('key-Laser/CamaeraCaptureOriginal-How to Configure Camera Captrue')}
                 {/* </Modal.Title> */}
             </Modal.Header>
             <Modal.Body>
@@ -24,7 +24,7 @@ const Instructions = ({ onClose }) => {
                     }}
                 >
                     <p>
-                        <Trans i18nKey="key_laser_setting_background_main_description">
+                        <Trans i18nKey="key-Laser/CamaeraCaptureDescription_main">
                             Camera Capture allows you to place the material and the image together
                             and adjust their position in the software by using a phone with a camera.
                             It helps engrave the image on your material much more accurately.
@@ -33,23 +33,23 @@ const Instructions = ({ onClose }) => {
 
                     <ol>
                         <li>
-                            <Trans i18nKey="key_laser_setting_background_description_1">
+                            <Trans i18nKey="key-Laser/CamaeraCaptureDescription_1-1. Place a piece of paper or wood sheet on the platform.">
                                 1. Place a piece of paper or wood sheet on the platform.
                             </Trans>
                         </li>
                         <li>
-                            <Trans i18nKey="key_laser_setting_background_description_2">
+                            <Trans i18nKey="key-Laser/CamaeraCaptureDescription_2">
                                 2. Set the work origin again.
                             </Trans>
                         </li>
                         <li>
-                            <Trans i18nKey="key_laser_setting_background_description_3">
+                            <Trans i18nKey="key-Laser/CamaeraCaptureDescription_3">
                                 3. Go to <b>Laser G-code Generator</b> &gt; <b>Set Background</b>.
                                 Click <b>Add Background</b>.
                             </Trans>
                         </li>
                         <li>
-                            <Trans i18nKey="key_laser_setting_background_description_4">
+                            <Trans i18nKey="key-Laser/CamaeraCaptureDescription_4">
                                 4. Print a square to locate your material.
                             </Trans>
                         </li>
@@ -58,26 +58,26 @@ const Instructions = ({ onClose }) => {
                     <div className={styles['laser-set-background-instruction-step-detail']} style={{ marginLeft: '25px' }}>
                         <ol>
                             <li>
-                                <Trans i18nKey="key_laser_setting_background_description_4_1">
+                                <Trans i18nKey="key-Laser/CamaeraCaptureDescription_4_1">
                                     Set the <b>Side Length</b> and <b>Power</b> of the square.
                                     The square should be larger than the material that will be engraved.
                                     Click <b>Engrave Square</b>.
                                 </Trans>
                             </li>
                             <li>
-                                <Trans i18nKey="key_laser_setting_background_description_4_2">
+                                <Trans i18nKey="key-Laser/CamaeraCaptureDescription_4_2">
                                     After the square is engraved, place the material inside the square and take a photo.
                                     The four corners of the square must be in the photo. Also, to achieve the best
                                     result, try to keep the lens and the heated bed parallel.
                                 </Trans>
                             </li>
                             <li>
-                                <Trans i18nKey="key_laser_setting_background_description_4_3">
+                                <Trans i18nKey="key-Laser/CamaeraCaptureDescription_4_3">
                                     Send the photo to your computer.
                                 </Trans>
                             </li>
                             <li>
-                                <Trans i18nKey="key_laser_setting_background_description_4_4">
+                                <Trans i18nKey="key-Laser/CamaeraCaptureDescription_4_4">
                                     Click <b>Next</b>. Click <b>Upload</b> to upload the photo.
                                     Move the four corners of the dashed box to overlap the four corners of the engraved
                                     square.
@@ -95,7 +95,7 @@ const Instructions = ({ onClose }) => {
                                 alt="x"
                             />
                             <li>
-                                <Trans i18nKey="key_laser_setting_background_description_4_5">
+                                <Trans i18nKey="key-Laser/CamaeraCaptureDescription_4_5">
                                     Click <b>Extract</b> and then <b>Complete</b>.
                                     Now the printer knows where your material is on the platform.
                                 </Trans>
@@ -113,7 +113,7 @@ const Instructions = ({ onClose }) => {
                 >
                     <ol>
                         <li>
-                            <Trans i18nKey="key_laser_setting_background_description_5">
+                            <Trans i18nKey="key-Laser/CamaeraCaptureDescription_5">
                                 5. Add the image or text you need to engrave on the background and adjust the settings.
                             </Trans>
                         </li>
@@ -124,12 +124,12 @@ const Instructions = ({ onClose }) => {
                             alt="x"
                         />
                         <li>
-                            <Trans i18nKey="key_laser_setting_background_description_6">
+                            <Trans i18nKey="key-Laser/CamaeraCaptureDescription_6">
                                 6. Click <b>Generate G-code</b> and then <b>Load G-code to Workspace</b>.
                             </Trans>
                         </li>
                         <li>
-                            <Trans i18nKey="key_laser_setting_background_description_7">
+                            <Trans i18nKey="key-Laser/CamaeraCaptureDescription_7">
                                 7. Set the work origin only on the Z direction again so that the printer can engrave on
                                 the surface of the material.
                                 Click <b>Z</b> &gt; <b>Zero Out Temporary Z Axis</b> to save the new origin.
@@ -142,12 +142,12 @@ const Instructions = ({ onClose }) => {
                             alt="x"
                         />
                         <p>
-                            <Trans i18nKey="key_laser_setting_background_description_7_1">
+                            <Trans i18nKey="key-Laser/CamaeraCaptureDescription_7_1">
                                 Note: If you use the USB disk to engrave, please make sure you set the work origin in the software instead of on the touchscreen.
                             </Trans>
                         </p>
                         <li>
-                            <Trans i18nKey="key_laser_setting_background_description_8">
+                            <Trans i18nKey="key-Laser/CamaeraCaptureDescription_8">
                                 8. Set <b>Work Power</b> and start the engraving.
                             </Trans>
                         </li>

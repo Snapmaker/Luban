@@ -124,7 +124,7 @@ function Configurations({ widgetActions }) {
     }, []);
 
     useEffect(() => {
-        widgetActions.setTitle(i18n._('Printing Settings'));
+        widgetActions.setTitle(i18n._('key-Printing/PrintingConfigurations-Printing Settings'));
     }, [widgetActions]);
 
     useEffect(() => {
@@ -184,7 +184,7 @@ function Configurations({ widgetActions }) {
             )}
             >
                 <div className="sm-flex height-40 border-bottom-normal padding-horizontal-16">
-                    <span className="sm-flex-width main-text-normal">{i18n._('General Parameters')}</span>
+                    <span className="sm-flex-width main-text-normal">{i18n._('key-Printing/PrintingConfigurations-General Parameters')}</span>
                     <SvgIcon
                         name="Manage"
                         size={24}
@@ -219,7 +219,7 @@ function Configurations({ widgetActions }) {
                     onClose={actions.closePannel}
                 >
                     <Modal.Header>
-                        {i18n._('Custom Parameter Visibility')}
+                        {i18n._('key-Printing/PrintingConfigurations-Custom Parameter Visibility')}
                     </Modal.Header>
                     <Modal.Body>
                         <div
@@ -245,7 +245,7 @@ function Configurations({ widgetActions }) {
                             width="96px"
                             priority="level-two"
                         >
-                            {i18n._('Close')}
+                            {i18n._('key-Printing/PrintingConfigurations-Close')}
                         </Button>
                     </Modal.Footer>
                 </Modal>

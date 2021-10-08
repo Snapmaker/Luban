@@ -37,7 +37,7 @@ const CNCPath = ({ widgetActions }) => {
 
     const dispatch = useDispatch();
     useEffect(() => {
-        widgetActions.setTitle(i18n._('Transformation'));
+        widgetActions.setTitle(i18n._('key_ui/widgets/CNCPath/CNCPath_Transformation'));
     }, []);
     useEffect(() => {
         if (page === PAGE_EDITOR) {

@@ -225,11 +225,11 @@ class WebcamWidget extends PureComponent {
                             <i className="fa fa-bars" />
                             <Space width="8" />
                         </Widget.Sortable>
-                        {i18n._('Webcam')}
+                        {i18n._('key-unused-Webcam')}
                     </Widget.Title>
                     <Widget.Controls className={this.props.sortable.filterClassName}>
                         <Widget.Button
-                            title={disabled ? i18n._('Enable') : i18n._('Disable')}
+                            title={disabled ? i18n._('key-unused-Enable') : i18n._('key-unused-Disable')}
                             type="default"
                             onClick={() => this.setState({ disabled: !disabled })}
                         >
@@ -241,7 +241,7 @@ class WebcamWidget extends PureComponent {
                             />
                         </Widget.Button>
                         <Widget.Button
-                            title={i18n._('Edit')}
+                            title={i18n._('key-unused-Edit')}
                             onClick={() => {
                                 const { mediaSource, deviceId, url } = this.state;
 
@@ -265,7 +265,7 @@ class WebcamWidget extends PureComponent {
                         </Widget.Button>
                         <Widget.Button
                             disabled={isFullscreen}
-                            title={minimized ? i18n._('Expand') : i18n._('Collapse')}
+                            title={minimized ? i18n._('key-unused-Expand') : i18n._('key-unused-Collapse')}
                             onClick={actions.toggleMinimized}
                         >
                             <i
@@ -276,7 +276,7 @@ class WebcamWidget extends PureComponent {
                             />
                         </Widget.Button>
                         <Widget.DropdownButton
-                            title={i18n._('More')}
+                            title={i18n._('key-unused-More')}
                             toggle={<i className="fa fa-ellipsis-v" />}
                             onSelect={(eventKey) => {
                                 if (eventKey === 'fullscreen') {
@@ -294,7 +294,7 @@ class WebcamWidget extends PureComponent {
                                     })}
                                 />
                                 <Space width="4" />
-                                {!isFullscreen ? i18n._('Enter Full Screen') : i18n._('Exit Full Screen')}
+                                {!isFullscreen ? i18n._('key-unused-Enter Full Screen') : i18n._('key-unused-Exit Full Screen')}
                             </Widget.DropdownMenuItem>
                         </Widget.DropdownButton>
                     </Widget.Controls>

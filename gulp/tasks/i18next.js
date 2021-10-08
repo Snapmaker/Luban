@@ -37,7 +37,7 @@ const appConfig = {
     src: [
         'src/app/**/*.js',
         'src/app/**/*.jsx',
-        'resources/CuraEngine/Config/*.json',
+        'resources/CuraEngine/Config/*/*.json',
         // Use ! to filter out files or directories
         '!src/app/{vendor,i18n}/**',
         '!test/**',
@@ -106,6 +106,7 @@ const appConfig = {
 
 // configuration fields that are displayed in config panel
 const curaFields = [
+    // Printing
     'material_diameter',
     'material_flow',
     'material_print_temperature',
@@ -151,7 +152,27 @@ const curaFields = [
     'support_pattern',
     'support_angle',
     'support_infill_rate',
-    'support_z_distance'
+    'support_z_distance',
+    // Laser
+    'fill_enabled',
+    'movement_mode',
+    'direction',
+    'fill_interval',
+    'jog_speed',
+    'work_speed',
+    'dwell_time',
+    'multi_passes',
+    'multi_pass_depth',
+    'fixed_power',
+    // CNC
+    'diameter',
+    'angle',
+    'shaft_diameter',
+    'jog_speed',
+    'work_speed',
+    'plunge_speed',
+    'step_down',
+    'step_over'
 ];
 
 const CURA_CATEGORIES = [
@@ -171,7 +192,7 @@ function customTransform(file, enc, done) {
     const basename = path.basename(file.path);
 
     // Extract descriptions from Cura config file
-    if (basename === 'snapmaker.def.json') {
+    if (basename.indexOf('.def.json') > -1) {
         const curaConfig = JSON.parse(content);
 
         const walk = (name, node) => {

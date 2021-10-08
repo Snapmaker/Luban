@@ -56,7 +56,7 @@ class ModalHOC extends PureComponent {
         const { title, body, footer, size, type, cancelTitle } = this.props;
         const { show, inputValue } = this.state;
         const props = pick(this.props, Object.keys(Modal.propTypes));
-        const newTitle = i18n._(cancelTitle) || i18n._('Cancel');
+        const newTitle = i18n._(cancelTitle) || i18n._('key-Modal/Common-Cancel');
         return (
             <Modal
                 {...props}

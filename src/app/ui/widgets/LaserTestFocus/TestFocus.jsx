@@ -80,12 +80,12 @@ class TestFocus extends PureComponent {
                     <Modal style={{ width: '1080px' }} size="lg" onClose={this.props.actions.hideInstructions}>
                         <Modal.Header>
                             {/* <Modal.Title> */}
-                            {i18n._('Fine-tune Work Origin')}
+                            {i18n._('key-Workspace/Fine-tuneWorkOrigin-Fine-tune Work Origin')}
                             {/* </Modal.Title> */}
                         </Modal.Header>
                         <Modal.Body className={classNames(styles['test-laser-instruction-content'], 'clearfix')}>
                             <p>
-                                <Trans i18nKey="key_laser_test_focus_description_1">
+                                <Trans i18nKey="key-Workspace/Fine-tuneWorkOriginWidget/Description-<0>Setting Work Origin</0> is essentially finding the best place for the engraved image in the X and Y directions and determining the distance (Z Offset) between the platform and the laser module to acquire the smallest laser dot on the material for the most efficient use of the laser power and the best result. For the 200mW laser module, the Z Offset can be set by judging the size of the laser dot by eyes with low power. However, for the 1600mW laser module, this method is less accurate as the laser dot is too strong and less interpretable. To set the Z Offset more accurately, we can move the module to the position that is close to the optimal Z Offset (Offset A). The software will test the results from a few positions next to Offset A on the same material. The best result determines the best Z Offset.">
                                     <b>Setting work origin</b> is essentially finding the best place for the engraved image
                                     in the X and Y directions and determining the distance (Z Offset) between the
                                     Engraving & Carving Platform and the Laser Module to acquire the smallest laser dot
@@ -106,7 +106,7 @@ class TestFocus extends PureComponent {
                                     alt="x"
                                 />
                                 <p>
-                                    <Trans i18nKey="key_laser_test_focus_description_2">
+                                    <Trans i18nKey="key-Workspace/Fine-tuneWorkOriginWidget/Description-Click <1>Focus</1> and use <3>Jog Pad</3> in the Axes section to move the Laser Cutting Module to the position that is close to the optimal Z Offset (just like how you do with the 200mW Laser Engraving Module).">
                                         Click <b>Focus</b> and use <b>Jog Pad</b> in the Axes section to move the Laser
                                         Cutting Module to the position that is close to the optimal Z Offset
                                         (just like how you do with the 200mW Laser Engraving Module).
@@ -120,7 +120,7 @@ class TestFocus extends PureComponent {
                                     alt="x"
                                 />
                                 <p>
-                                    <Trans i18nKey="key_laser_test_focus_description_3">
+                                    <Trans i18nKey="key-Workspace/Fine-tuneWorkOriginWidget/Description-Set <1>Work Speed</1> and <3>Power</3> based on the material you are using. If you are using a piece of 1.5 mm wood sheet, it’s recommended to set <5>Work Speed</5> to a value between 80 mm/s and 120 mm/s and <7>Power</7> to 100%. Click <9>Generate and Load G-code</9> and the G-code is automatically generated and loaded.">
                                         Set <b>Work Speed</b> and <b>Power</b> based on the material you are using. If you are using a
                                         piece of 1.5 mm wood sheet, it’s recommended to set the <b>Work Speed</b> to a value
                                         between 80 mm/s and 120 mm/s and set the <b>Power</b> to 100%.
@@ -136,7 +136,7 @@ class TestFocus extends PureComponent {
                                     alt="x"
                                 />
                                 <p>
-                                    <Trans i18nKey="key_laser_test_focus_description_4">
+                                    <Trans i18nKey="key-Workspace/Fine-tuneWorkOriginWidget/Description-Click <1></1>to start laser cutting. Choose the position that can cut the material most smoothly or engrave the thinnest line and the software will set the position as Z Offset. In this example, -2.0 should be the Z Offset.">
                                         Click <span className="fa fa-play" /> to start laser cutting.
                                         Choose the position that can cut the material the most smoothly or engrave the
                                         thinnest line and the software will set it as Z Offset.
@@ -152,18 +152,18 @@ class TestFocus extends PureComponent {
                                 width="96px"
                                 onClick={this.props.actions.hideInstructions}
                             >
-                                {i18n._('Close')}
+                                {i18n._('key-Workspace/Fine-tuneWorkOrigin-Close')}
                             </Button>
                         </Modal.Footer>
                     </Modal>
                 )}
                 <div className="sm-flex height-32 justify-space-between margin-vertical-8">
-                    <span>{i18n._('Work Speed')}</span>
+                    <span>{i18n._('key-Workspace/Fine-tuneWorkOrigin-Work Speed')}</span>
                     <TipTrigger
                         placement="right"
                         className="sm-flex-auto"
-                        title={i18n._('Work Speed')}
-                        content={i18n._('Determines how fast the machine moves when it’s working.')}
+                        title={i18n._('key-Workspace/Fine-tuneWorkOrigin-Work Speed')}
+                        content={i18n._('key-Workspace/Fine-tuneWorkOrigin-Determines how fast the machine moves when it’s working.')}
                     >
                         <Input
                             suffix="mm/min"
@@ -175,7 +175,7 @@ class TestFocus extends PureComponent {
                     </TipTrigger>
                 </div>
                 <div className="sm-flex height-32 justify-space-between margin-vertical-8">
-                    <span>{i18n._('Laser Power')}</span>
+                    <span>{i18n._('key-Workspace/Fine-tuneWorkOrigin-Laser Power')}</span>
                     <Slider
                         value={this.state.power}
                         min={0}
@@ -186,8 +186,8 @@ class TestFocus extends PureComponent {
                     <TipTrigger
                         placement="right"
                         className="sm-flex-auto"
-                        title={i18n._('Laser Power')}
-                        content={i18n._('Set the laser power.')}
+                        title={i18n._('key-Workspace/Fine-tuneWorkOrigin-Laser Power')}
+                        content={i18n._('key-Workspace/Fine-tuneWorkOrigin-Set the laser power.')}
                     >
                         <Input
                             suffix="%"
@@ -203,7 +203,7 @@ class TestFocus extends PureComponent {
                     className="margin-bottom-16"
                     onClick={actions.generateAndLoadGcode}
                 >
-                    {i18n._('Generate and Load G-code')}
+                    {i18n._('key-Workspace/Fine-tuneWorkOrigin-Generate and Load G-code')}
                 </Button>
                 <table style={{ borderCollapse: 'separate', borderSpacing: '5px', width: '100%' }}>
                     <tbody>
@@ -274,7 +274,7 @@ class TestFocus extends PureComponent {
                     className="margin-top-16"
                     disabled={!isIdle || !isConnected}
                 >
-                    {i18n._('Set Work Origin')}
+                    {i18n._('key-Workspace/Fine-tuneWorkOrigin-Set Work Origin')}
                 </Button>
             </React.Fragment>
         );

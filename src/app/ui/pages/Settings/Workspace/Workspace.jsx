@@ -24,7 +24,7 @@ const Workspace = (props) => {
                                 className="btn btn-danger"
                                 onClick={actions.restoreDefaults}
                             >
-                                {i18n._('Reset All User Settings')}
+                                {i18n._('key-Workspace/Page-Reset All User Settings')}
                             </button>
                         </div>
                     </div>

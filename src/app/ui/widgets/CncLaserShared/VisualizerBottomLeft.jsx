@@ -14,7 +14,7 @@ const VisualizerBottomLeft = ({ headType, toFront, zoomOut, zoomIn, scale, minSc
         <React.Fragment>
             <Card
                 className={classNames('margin-horizontal-8')}
-                title={i18n._('Object List')}
+                title={i18n._('key-CncLaser/ObjectList_Title-Object List')}
             >
                 <CncLaserObjectList
                     headType={headType}

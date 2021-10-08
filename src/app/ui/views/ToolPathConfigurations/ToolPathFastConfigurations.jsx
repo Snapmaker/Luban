@@ -204,10 +204,10 @@ function ToolPathFastConfigurations({ setEditingToolpath, headType, toolpath }) 
             }
 
             const popupActions = modal({
-                title: i18n._('Create Profile'),
+                title: i18n._('key-unused-Create Profile'),
                 body: (
                     <React.Fragment>
-                        <p>{i18n._('Enter Tool Name')}</p>
+                        <p>{i18n._('key-unused-Enter Tool Name')}</p>
                     </React.Fragment>
 
                 ),
@@ -222,7 +222,7 @@ function ToolPathFastConfigurations({ setEditingToolpath, headType, toolpath }) 
                             popupActions.close();
                         }}
                     >
-                        {i18n._('OK')}
+                        {i18n._('key-unused-OK')}
                     </Button>
                 )
             });
@@ -356,7 +356,7 @@ function ToolPathFastConfigurations({ setEditingToolpath, headType, toolpath }) 
             )}
             >
                 <div className="sm-flex height-40 border-bottom-normal padding-horizontal-16">
-                    <span className="sm-flex-width main-text-normal">{i18n._('General Parameters')}</span>
+                    <span className="sm-flex-width main-text-normal">{i18n._('key-unused-General Parameters')}</span>
                 </div>
                 <div className="padding-horizontal-16 padding-vertical-16">
                     {toolPath.headType === HEAD_CNC && currentToolDefinition && (
@@ -396,7 +396,7 @@ function ToolPathFastConfigurations({ setEditingToolpath, headType, toolpath }) 
                         )}
                         onClick={handleSetEditingToolpath}
                     >
-                        {`${i18n._('More')} >`}
+                        {`${i18n._('key-unused-More')} >`}
                     </Anchor>
                 </div>
             </div>

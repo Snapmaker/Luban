@@ -44,7 +44,7 @@ const ImageProcessMode = ({ disabled }) => {
         <React.Fragment>
             <div className={classNames(styles['laser-mode'], 'border-top-normal', 'margin-top-16', 'margin-bottom-8')}>
                 <Anchor className="sm-flex height-32 margin-vertical-8" onClick={actions.onToggleExpand}>
-                    <span className="sm-flex-width heading-3">{i18n._('Processing Mode')}</span>
+                    <span className="sm-flex-width heading-3">{i18n._('key-Laser/ProcessingModeSection/ImageProcessMode-Processing Mode')}</span>
                     <SvgIcon
                         name="DropdownLine"
                         size={24}
@@ -65,7 +65,7 @@ const ImageProcessMode = ({ disabled }) => {
                                     >
                                         <i className={styles['laser-mode__icon-bw']} />
                                     </Anchor>
-                                    <span>{i18n._('B&W')}</span>
+                                    <span>{i18n._('key-Laser/ProcessingModeSection/ImageProcessMode-B&W')}</span>
                                 </div>
                             )}
                             { !isDXF && (
@@ -76,7 +76,7 @@ const ImageProcessMode = ({ disabled }) => {
                                     >
                                         <i className={styles['laser-mode__icon-greyscale']} />
                                     </Anchor>
-                                    <span>{i18n._('GREYSCALE')}</span>
+                                    <span>{i18n._('key-Laser/ProcessingModeSection/ImageProcessMode-GREYSCALE')}</span>
                                 </div>
                             )}
                             <div className={classNames(mode === 'vector' ? styles.selected : styles.unselected)}>
@@ -86,7 +86,7 @@ const ImageProcessMode = ({ disabled }) => {
                                 >
                                     <i className={styles['laser-mode__icon-vector']} />
                                 </Anchor>
-                                <span>{i18n._('VECTOR')}</span>
+                                <span>{i18n._('key-Laser/ProcessingModeSection/ImageProcessMode-VECTOR')}</span>
                             </div>
                             { !isDXF && (
                                 <div className={classNames(mode === 'halftone' ? styles.selected : styles.unselected)}>
@@ -96,16 +96,16 @@ const ImageProcessMode = ({ disabled }) => {
                                     >
                                         <i className={styles['laser-mode__icon-halftone']} />
                                     </Anchor>
-                                    <span>{i18n._('HALFTONE')}</span>
+                                    <span>{i18n._('key-Laser/ProcessingModeSection/ImageProcessMode-HALFTONE')}</span>
                                 </div>
                             )}
                         </div>
                         <TipTrigger
-                            title={i18n._('Show Original Image')}
-                            content={i18n._('Shows the original image.')}
+                            title={i18n._('key-Laser/ProcessingModeSection/ImageProcessMode-Show Original Image')}
+                            content={i18n._('key-Laser/ProcessingModeSection/ImageProcessMode-Shows the original image.')}
                         >
                             <div className="sm-flex height-32 margin-vertical-8">
-                                <span className="sm-flex-width">{i18n._('Show Original Image')}</span>
+                                <span className="sm-flex-width">{i18n._('key-Laser/ProcessingModeSection/ImageProcessMode-Show Original Image')}</span>
                                 <Checkbox
                                     disabled={disabled}
                                     className="sm-flex-auto"

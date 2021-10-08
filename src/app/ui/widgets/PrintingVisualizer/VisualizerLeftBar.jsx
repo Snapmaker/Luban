@@ -53,7 +53,7 @@ function VisualizerLeftBar({ defaultSupportSize, setTransformMode, isSupporting,
                 await dispatch(printingActions.uploadModel(file));
             } catch (e) {
                 modal({
-                    title: i18n._('Failed to upload model.'),
+                    title: i18n._('key-Printing/LeftBar-Failed to upload model.'),
                     body: e.message
                 });
             }
@@ -363,7 +363,7 @@ function VisualizerLeftBar({ defaultSupportSize, setTransformMode, isSupporting,
                         }}
                     >
                         <div className="border-bottom-normal padding-vertical-10 padding-horizontal-16 height-40">
-                            {i18n._('Move')}
+                            {i18n._('key-Printing/LeftBar-Move')}
                         </div>
                         <div className="padding-vertical-16 padding-horizontal-16">
                             <div className="sm-flex height-32 margin-bottom-8">
@@ -407,7 +407,7 @@ function VisualizerLeftBar({ defaultSupportSize, setTransformMode, isSupporting,
                                         width="100%"
                                         onClick={actions.resetPosition}
                                     >
-                                        <span>{i18n._('Reset')}</span>
+                                        <span>{i18n._('key-Printing/LeftBar-Reset')}</span>
                                     </Button>
                                 </div>
                             )}
@@ -422,7 +422,7 @@ function VisualizerLeftBar({ defaultSupportSize, setTransformMode, isSupporting,
                         }}
                     >
                         <div className="border-bottom-normal padding-vertical-10 padding-horizontal-16 height-40">
-                            {i18n._('Scale')}
+                            {i18n._('key-Printing/LeftBar-Scale')}
                         </div>
                         <div className="padding-vertical-16 padding-horizontal-16">
                             <div className="sm-flex height-32 margin-bottom-8">
@@ -481,7 +481,7 @@ function VisualizerLeftBar({ defaultSupportSize, setTransformMode, isSupporting,
                                 <span
                                     className="height-20 margin-horizontal-8"
                                 >
-                                    {i18n._('Uniform Scaling')}
+                                    {i18n._('key-Printing/LeftBar-Uniform Scaling')}
                                 </span>
                             </div>
                             <div className="sm-flex">
@@ -492,7 +492,7 @@ function VisualizerLeftBar({ defaultSupportSize, setTransformMode, isSupporting,
                                     width="100%"
                                     onClick={actions.scaleToFitSelectedModel}
                                 >
-                                    <span>{i18n._('Scale to Fit')}</span>
+                                    <span>{i18n._('key-Printing/LeftBar-Scale to Fit')}</span>
                                 </Button>
                                 <Button
                                     className="margin-top-32 margin-left-8"
@@ -501,7 +501,7 @@ function VisualizerLeftBar({ defaultSupportSize, setTransformMode, isSupporting,
                                     width="100%"
                                     onClick={actions.resetScale}
                                 >
-                                    <span>{i18n._('Reset')}</span>
+                                    <span>{i18n._('key-Printing/LeftBar-Reset')}</span>
                                 </Button>
                             </div>
                         </div>
@@ -516,7 +516,7 @@ function VisualizerLeftBar({ defaultSupportSize, setTransformMode, isSupporting,
                         }}
                     >
                         <div className="border-bottom-normal padding-vertical-10 padding-horizontal-16 height-40">
-                            {i18n._('Scale')}
+                            {i18n._('key-Printing/LeftBar-Scale')}
                         </div>
                         <div className="padding-vertical-16 padding-horizontal-16">
                             <div className="sm-flex height-32 margin-bottom-8">
@@ -574,7 +574,7 @@ function VisualizerLeftBar({ defaultSupportSize, setTransformMode, isSupporting,
                                     width="100%"
                                     onClick={autoRotateSelectedModel}
                                 >
-                                    <span>{i18n._('Auto Rotate')}</span>
+                                    <span>{i18n._('key-Printing/LeftBar-Auto Rotate')}</span>
                                 </Button>
                                 <Button
                                     className="margin-top-32 margin-left-8"
@@ -583,7 +583,7 @@ function VisualizerLeftBar({ defaultSupportSize, setTransformMode, isSupporting,
                                     width="100%"
                                     onClick={actions.resetRotation}
                                 >
-                                    <span>{i18n._('Reset')}</span>
+                                    <span>{i18n._('key-Printing/LeftBar-Reset')}</span>
                                 </Button>
                             </div>
                         )}
@@ -598,7 +598,7 @@ function VisualizerLeftBar({ defaultSupportSize, setTransformMode, isSupporting,
                         }}
                     >
                         <div className="border-bottom-normal padding-vertical-10 padding-horizontal-16 height-40">
-                            {i18n._('Rotate')}
+                            {i18n._('key-Printing/LeftBar-Rotate')}
                         </div>
                         <div className="padding-vertical-16 padding-horizontal-16">
                             <div className="sm-flex height-32 margin-bottom-8">
@@ -657,7 +657,7 @@ function VisualizerLeftBar({ defaultSupportSize, setTransformMode, isSupporting,
                                     width="100%"
                                     onClick={autoRotateSelectedModel}
                                 >
-                                    <span>{i18n._('Auto Rotate')}</span>
+                                    <span>{i18n._('key-Printing/LeftBar-Auto Rotate')}</span>
                                 </Button>
                                 <Button
                                     className="margin-top-32 margin-left-8"
@@ -666,7 +666,7 @@ function VisualizerLeftBar({ defaultSupportSize, setTransformMode, isSupporting,
                                     width="100%"
                                     onClick={actions.resetRotation}
                                 >
-                                    <span>{i18n._('Reset')}</span>
+                                    <span>{i18n._('key-Printing/LeftBar-Reset')}</span>
                                 </Button>
                             </div>
                             <div className="sm-flex">
@@ -698,7 +698,7 @@ function VisualizerLeftBar({ defaultSupportSize, setTransformMode, isSupporting,
                         }}
                     >
                         <div className="border-bottom-normal padding-vertical-10 padding-horizontal-16 height-40">
-                            {i18n._('Mirror')}
+                            {i18n._('key-Printing/LeftBar-Mirror')}
                         </div>
                         <div className="padding-vertical-16 padding-horizontal-16">
                             <div className="sm-flex">
@@ -709,8 +709,8 @@ function VisualizerLeftBar({ defaultSupportSize, setTransformMode, isSupporting,
                                     width="100%"
                                     onClick={() => actions.mirrorSelectedModel('X')}
                                 >
-                                    <span className="color-red-1">{i18n._('X ')}</span>
-                                    <span>{i18n._('axis')}</span>
+                                    <span className="color-red-1">{i18n._('key-Printing/LeftBar-X ')}</span>
+                                    <span>{i18n._('key-Printing/LeftBar-axis')}</span>
                                 </Button>
                                 <Button
                                     className="margin-horizontal-8"
@@ -719,8 +719,8 @@ function VisualizerLeftBar({ defaultSupportSize, setTransformMode, isSupporting,
                                     width="100%"
                                     onClick={() => actions.mirrorSelectedModel('Y')}
                                 >
-                                    <span className="color-green-1">{i18n._('Y ')}</span>
-                                    <span>{i18n._('axis')}</span>
+                                    <span className="color-green-1">{i18n._('key-Printing/LeftBar-Y ')}</span>
+                                    <span>{i18n._('key-Printing/LeftBar-axis')}</span>
                                 </Button>
                                 <Button
                                     className="margin-left-8"
@@ -729,8 +729,8 @@ function VisualizerLeftBar({ defaultSupportSize, setTransformMode, isSupporting,
                                     width="100%"
                                     onClick={() => actions.mirrorSelectedModel('Z')}
                                 >
-                                    <span className="color-blue-2">{i18n._('Z ')}</span>
-                                    <span>{i18n._('axis')}</span>
+                                    <span className="color-blue-2">{i18n._('key-Printing/LeftBar-Z ')}</span>
+                                    <span>{i18n._('key-Printing/LeftBar-axis')}</span>
                                 </Button>
                             </div>
                         </div>
@@ -745,10 +745,10 @@ function VisualizerLeftBar({ defaultSupportSize, setTransformMode, isSupporting,
                         }}
                     >
                         <div className="border-bottom-normal padding-vertical-10 padding-horizontal-16 height-40">
-                            {i18n._('Manual Support')}
+                            {i18n._('key-Printing/LeftBar-Manual Support')}
                         </div>
                         <div className="padding-vertical-16 padding-horizontal-16">
-                            <div className="sm-flex">{i18n._('Support Size')}</div>
+                            <div className="sm-flex">{i18n._('key-Printing/LeftBar-Support Size')}</div>
                             <div className="sm-flex height-32 margin-bottom-8 margin-top-16">
                                 <span className="sm-flex-auto width-16 color-red-1">X</span>
                                 <div className="position-ab sm-flex-auto margin-horizontal-24">
@@ -789,7 +789,7 @@ function VisualizerLeftBar({ defaultSupportSize, setTransformMode, isSupporting,
                                     disabled={isSupporting}
                                     onClick={supportActions.startSupportMode}
                                 >
-                                    <span>{i18n._('Add Support')}</span>
+                                    <span>{i18n._('key-Printing/LeftBar-Add Support')}</span>
                                 </Button>
                                 <Button
                                     className="margin-left-8"
@@ -798,7 +798,7 @@ function VisualizerLeftBar({ defaultSupportSize, setTransformMode, isSupporting,
                                     width="100%"
                                     onClick={supportActions.stopSupportMode}
                                 >
-                                    <span>{i18n._('Done')}</span>
+                                    <span>{i18n._('key-Printing/LeftBar-Done')}</span>
                                 </Button>
                             </div>
                             <Button
@@ -808,7 +808,7 @@ function VisualizerLeftBar({ defaultSupportSize, setTransformMode, isSupporting,
                                 width="100%"
                                 onClick={supportActions.clearAllManualSupport}
                             >
-                                <span>{i18n._('Clear All Support')}</span>
+                                <span>{i18n._('key-Printing/LeftBar-Clear All Support')}</span>
                             </Button>
                         </div>
                     </div>
