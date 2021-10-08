@@ -10,7 +10,7 @@ import { renderModal } from '../utils';
 import AppBar from '../views/AppBar';
 import i18n from '../../lib/i18n';
 import UniApi from '../../lib/uni-api';
-import { checkIsSnapmakerProjectFile, checkIsGCodeFile } from '../../lib/units';
+import { checkIsSnapmakerProjectFile, checkIsGCodeFile } from '../../lib/check-name';
 import Settings from '../pages/Settings/Settings';
 import FirmwareTool from '../pages/Settings/FirmwareTool';
 import SoftwareUpdate from '../pages/Settings/SoftwareUpdate';

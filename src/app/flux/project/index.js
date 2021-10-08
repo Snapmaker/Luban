@@ -19,7 +19,7 @@ import { actions as editorActions } from '../editor';
 import { actions as workspaceActions } from '../workspace';
 import { bubbleSortByAttribute } from '../../lib/numeric-utils';
 import { UniformToolpathConfig } from '../../lib/uniform-toolpath-config';
-import { checkIsSnapmakerProjectFile, checkIsGCodeFile } from '../../lib/units';
+import { checkIsSnapmakerProjectFile, checkIsGCodeFile } from '../../lib/check-name';
 
 import { actions as operationHistoryActions } from '../operation-history';
 import { machineStore } from '../../store/local-storage';
