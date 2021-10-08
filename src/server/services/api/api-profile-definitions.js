@@ -140,7 +140,7 @@ export const uploadDefinition = (req, res) => {
         obj = {};
     }
 
-    if (!obj.inherits || !fs.existsSync(`${DataStorage.configDir}/${obj.inherits}.json`)) {
+    if (!obj.inherits || !fs.existsSync(`${DataStorage.configDir}/${headType}/${obj.inherits}.json`)) {
         obj.inherits = 'snapmaker2';
     }
     if (!obj.category) {
