@@ -19,6 +19,7 @@ import { actions as editorActions } from '../editor';
 import { actions as workspaceActions } from '../workspace';
 import { bubbleSortByAttribute } from '../../lib/numeric-utils';
 import { UniformToolpathConfig } from '../../lib/uniform-toolpath-config';
+import { checkIsSnapmakerProjectFile, checkIsGCodeFile } from '../../lib/check-name';
 
 import { actions as operationHistoryActions } from '../operation-history';
 import { machineStore } from '../../store/local-storage';
@@ -316,11 +317,7 @@ export const actions = {
     },
 
     openProject: (file, history, unReload = false) => async (dispatch) => {
-        // file: { path, name }
-        const [, tail] = file.name.split('.');
-        if (!tail) return;
-
-        if (tail.substring(0, 4) === 'snap') {
+        if (checkIsSnapmakerProjectFile(file.name)) {
             const formData = new FormData();
             let shouldSetFileName = true;
             if (!(file instanceof File)) {
@@ -384,7 +381,7 @@ export const actions = {
                 await dispatch(actions.updateState(headType, { unSaved: false, openedFile: null }));
                 // await dispatch(actions.setOpenedFileWithUnSaved(headType, true));
             }
-        } else if (tail === 'gcode') {
+        } else if (checkIsGCodeFile(file.name)) {
             dispatch(workspaceActions.uploadGcodeFile(file));
             history.push('/workspace');
         }

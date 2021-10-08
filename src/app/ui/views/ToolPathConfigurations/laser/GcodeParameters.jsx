@@ -43,7 +43,11 @@ class GcodeParameters extends PureComponent {
             // isGcodeConfig is true means to use updateGcodeConfig, false means to use updateToolConfig
             allDefinition[key].isGcodeConfig = false;
         });
+
         Object.entries(cloneDeep(activeToolDefinition?.settings)).forEach(([key, value]) => {
+            if (!allDefinition[toHump(key)]) {
+                allDefinition[toHump(key)] = {};
+            }
             allDefinition[toHump(key)].default_value = value.default_value;
         });
         // Todo

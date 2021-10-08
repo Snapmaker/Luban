@@ -10,6 +10,7 @@ import { renderModal } from '../utils';
 import AppBar from '../views/AppBar';
 import i18n from '../../lib/i18n';
 import UniApi from '../../lib/uni-api';
+import { checkIsSnapmakerProjectFile, checkIsGCodeFile } from '../../lib/check-name';
 import Settings from '../pages/Settings/Settings';
 import FirmwareTool from '../pages/Settings/FirmwareTool';
 import SoftwareUpdate from '../pages/Settings/SoftwareUpdate';
@@ -191,9 +192,7 @@ class AppLayout extends PureComponent {
                 try {
                     await this.props.openProject(file, this.props.history);
                     if (isElectron()) {
-                        const [, tail] = file.name.split('.');
-                        if (!tail) return;
-                        if (tail.substring(0, 4) === 'snap' || tail === 'gcode' || tail === 'cnc' || tail === 'nc') {
+                        if (checkIsSnapmakerProjectFile(file.name) || checkIsGCodeFile(file.name)) {
                             UniApi.File.addRecentFiles({ name: file.name, path: file.path });
                         }
                     }

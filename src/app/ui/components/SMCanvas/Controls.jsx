@@ -106,7 +106,7 @@ class Controls extends EventEmitter {
 
     clickEnabled = true;
 
-    constructor(sourceType, camera, group, domElement, onScale, onPan, supportActions, minScale = 0.5, maxScale = 5, scaleSize = 300) {
+    constructor(sourceType, camera, group, domElement, onScale, onPan, supportActions, minScale = undefined, maxScale = undefined, scaleSize = undefined) {
         super();
 
         this.sourceType = sourceType;
@@ -629,10 +629,10 @@ class Controls extends EventEmitter {
             const prevRadius = this.spherical.radius;
             this.spherical.radius *= this.scale;
             this.spherical.radius = Math.max(this.spherical.radius, 0.05);
-            if (this.spherical.radius < this.scaleSize / this.maxScale) {
+            if (this.maxScale > 0 && this.spherical.radius < this.scaleSize / this.maxScale) {
                 this.spherical.radius = this.scaleSize / this.maxScale;
             }
-            if (this.spherical.radius > this.scaleSize / this.minScale) {
+            if (this.minScale > 0 && this.spherical.radius > this.scaleSize / this.minScale) {
                 this.spherical.radius = this.scaleSize / this.minScale;
             }
             // suport zoomToCursor (mouse only)

@@ -28,6 +28,7 @@ export const set = (req, res) => {
         const file = files.image;
         originalName = path.basename(file.name);
         tempName = generateRandomPathName(originalName, true);
+        tempName = tempName.toLowerCase();
         tempPath = `${DataStorage.tmpDir}/${tempName}`;
         originalPath = file.path;
     } else {
@@ -35,6 +36,7 @@ export const set = (req, res) => {
         originalName = name;
         originalPath = `${DataStorage.userCaseDir}/${casePath}/${name}`;
         tempName = generateRandomPathName(originalName, true);
+        tempName = tempName.toLowerCase();
         tempPath = `${DataStorage.tmpDir}/${tempName}`;
     }
     const extname = path.extname(tempName).toLowerCase();
