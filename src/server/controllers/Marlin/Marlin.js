@@ -293,52 +293,30 @@ class MarlinReplyParserPurifierNotEnabled {
         const r1 = line.match(/^Purifier is not exist\.$/);
         const r2 = line.match(/^Purifier err code:0X2$/);
         const r3 = line.match(/^Purifier extand power err$/);
-        if (!r0 && !r1 && !r2 && !r3) {
+        // if (!r0 && !r1 && !r2 && !r3) {
+        //     return null;
+        // }
+        // return {
+        //     type: MarlinReplyParserPurifierNotEnabled
+        // };
+        if (r2 || r3) {
+            return {
+                type: MarlinReplyParserPurifierNotEnabled,
+                payload: {
+                    airPurifierHasPower: false
+                }
+            };
+        } else if (r0 || r1) {
+            return {
+                type: MarlinReplyParserPurifierNotEnabled,
+                payload: {
+                    airPurifier: false
+                }
+            };
+        } else {
             return null;
         }
-        return {
-            type: MarlinReplyParserPurifierNotEnabled
-        };
     }
-    // if (!r0) {
-    //     console.log('lineState', r0, r1, r2, line, settings);
-    //     if (!r0 && !r1 && !r2) {
-    //         // return null;
-    //         const { airPurifier, airPurifierHasPower } = settings;
-    //         if (!r3) {
-    //             if (airPurifier && airPurifierHasPower) {
-    //                 return null;
-    //             } else {
-    //                 return {
-    //                     type: MarlinReplyParserPurifierNotEnabled,
-    //                     payload: {
-    //                         airPurifierHasPower: true,
-    //                         airPurifier: true
-    //                     }
-    //                 };
-    //             }
-    //         } else {
-    //             if (airPurifier && !airPurifierHasPower) {
-    //                 return null;
-    //             } else {
-    //                 return {
-    //                     type: MarlinReplyParserPurifierNotEnabled,
-    //                     payload: {
-    //                         airPurifierHasPower: false,
-    //                         airPurifier: true
-    //                     }
-    //                 };
-    //             }
-    //         }
-    //     }
-    //     return {
-    //         type: MarlinReplyParserPurifierNotEnabled,
-    //         payload: {
-    //             airPurifierHasPower: false,
-    //             airPurifier: false
-    //         }
-    //     };
-    // }
 }
 
 class MarlinReplyParserPurifierFanWork {
@@ -410,6 +388,21 @@ class MarlinReplyParserPurifierLifetime {
     }
 }
 
+class MarlinReplyParserEmergencyStopIsOnline {
+    static parse(line) {
+        const r = line.match(/^Emergency stop: (On|Off)$/);
+        if (!r) {
+            return null;
+        }
+
+        return {
+            type: MarlinReplyParserEmergencyStopIsOnline,
+            payload: {
+                emergencyStopOnline: r[1] === 'On'
+            }
+        };
+    }
+}
 class MarlinReplyParserGetPurifierOthers {
     static parse(line) {
         const r = line.match(/^Purifier Fan (.*)$/);
@@ -683,6 +676,7 @@ class MarlinLineParser {
 
             // emergency stop button
             MarlinReplyParserEmergencyStopButton,
+            MarlinReplyParserEmergencyStopIsOnline,
 
             // New Parsers (follow headType `MarlinReplyParserXXX`)
             // M1005
@@ -742,6 +736,7 @@ class MarlinLineParser {
             MarlinReplyParserHeadPower,
 
             MarlinReplyParserHeadStatus
+
         ];
 
         for (const parser of parsers) {
@@ -833,11 +828,13 @@ class Marlin extends events.EventEmitter {
         enclosureLight: 0,
         enclosureFan: 0,
 
-        airPurifier: false,
+        airPurifier: true,
         airPurifierSwitch: false,
         airPurifierFanSpeed: 3,
         airPurifierFilterHealth: 2,
-        airPurifierHasPower: true
+        airPurifierHasPower: true,
+
+        emergencyStopOnline: false
     };
 
     parser = new MarlinLineParser();
@@ -934,15 +931,22 @@ class Marlin extends events.EventEmitter {
             }
             this.emit('enclosure', payload);
         } else if (type === MarlinReplyParserPurifierNotEnabled) {
-            this.set({ airPurifier: false });
+            // this.set({ airPurifier: false });
+            if (payload.airPurifierHasPower === undefined) {
+                this.set({ airPurifier: payload.airPurifier, airPurifierHasPower: true });
+            } else {
+                this.set({ airPurifierHasPower: payload.airPurifierHasPower });
+            }
         } else if (type === MarlinReplyParserPurifierFanWork) {
+            if (this.settings.airPurifierHasPower === false) {
+                this.set({ airPurifierHasPower: true });
+            }
             if (this.settings.airPurifier !== (payload.airPurifierSwitch !== undefined)) {
                 this.set({ airPurifier: (payload.airPurifierSwitch !== undefined) });
             }
             if (this.settings.airPurifierSwitch !== payload.airPurifierSwitch) {
                 this.set({ airPurifierSwitch: payload.airPurifierSwitch });
             }
-            this.set({ airPurifierHasPower: payload.airPurifierHasPower });
             this.emit('purifier', payload);
         } else if (type === MarlinReplyParserPurifierFanSpeed) {
             if (this.settings.airPurifierFanSpeed !== payload.airPurifierFanSpeed) {
@@ -962,6 +966,8 @@ class Marlin extends events.EventEmitter {
             this.emit('cnc:stop', payload);
         } else if (type === MarlinReplyParserEmergencyStopButton) {
             this.emit('emergencyStop', payload);
+        } else if (type === MarlinReplyParserEmergencyStopIsOnline) {
+            this.set({ emergencyStopOnline: payload.emergencyStopOnline });
         } else if (type === MarlinParserOriginOffset) {
             this.setState({
                 originOffset: {

@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { Progress } from 'antd';
 import PropTypes from 'prop-types';
@@ -9,9 +9,9 @@ import SvgIcon from '../../components/SvgIcon';
 
 const Text = ({ name, value }) => {
     return (
-        <div className="margin-top-8">
+        <div className="margin-top-8 sm-flex align-c">
             <span className="unit-text margin-right-8">{name}</span>
-            <span className="main-text-normal">{value}</span>
+            <span className="main-text-normal text-overflow-ellipsis display-inline width-102">{value}</span>
         </div>
     );
 };
@@ -21,17 +21,29 @@ Text.propTypes = {
 };
 
 const WorkingProgress = ({ widgetActions, controlActions }) => {
-    const { isConnected, workflowStatus, gcodePrintingInfo: { progress, fileName, elapsedTime, remainingTime, total, sent } } = useSelector(state => state.machine);
+    const {
+        isConnected, workflowStatus,
+        gcodePrintingInfo: { progress, fileName, elapsedTime, remainingTime, total, sent },
+        connectionType, workflowState
+    } = useSelector(state => state.machine);
+    const [currentWorkflowStatus, setCurrentWorkflowStatus] = useState(null);
     useEffect(() => {
         widgetActions.setTitle(i18n._('Working'));
     }, []);
     useEffect(() => {
-        if (isConnected && (workflowStatus === 'running' || workflowStatus === 'paused')) {
+        const newCurrent = connectionType === 'wifi' ? workflowStatus : workflowState;
+        setCurrentWorkflowStatus(newCurrent);
+    }, [workflowState, workflowStatus, connectionType]);
+    useEffect(() => {
+        if (
+            isConnected
+            && (currentWorkflowStatus === 'running' || currentWorkflowStatus === 'paused' || (total !== 0 && sent >= total))
+        ) {
             widgetActions.setDisplay(true);
         } else {
             widgetActions.setDisplay(false);
         }
-    }, [isConnected, workflowStatus]);
+    }, [isConnected, currentWorkflowStatus, sent, total]);
     const handleMachine = (type) => {
         switch (type) {
             case 'run':
@@ -57,26 +69,28 @@ const WorkingProgress = ({ widgetActions, controlActions }) => {
                     <Text name={i18n._('Remaining Time')} value={formatDuration(remainingTime, false)} />
                     <Text name={i18n._('GCode Line')} value={`${sent} / ${total}`} />
                 </div>
-                <Progress percent={Math.floor(progress * 100)} type="circle" width={88} />
+                <Progress percent={Math.floor(progress ? progress * 100 : (sent / total) * 100)} type="circle" width={88} />
             </div>
-            <div className="sm-flex justify-space-between align-center">
-                <Button width="160px" type="default" onClick={() => handleMachine(workflowStatus === 'running' ? 'pause' : 'run')}>
-                    <SvgIcon
-                        name={workflowStatus === 'running' ? 'WorkspaceSuspend' : 'WorkspacePlay'}
-                        type={['static']}
-                        color={workflowStatus === 'running' ? '#FFA940' : '#4CB518'}
-                    />
-                    <span className="height-24">{workflowStatus === 'running' ? i18n._('Pause') : i18n._('Resume')}</span>
-                </Button>
-                <Button width="160px" type="default" onClick={() => handleMachine('stop')}>
-                    <SvgIcon
-                        name="WorkspaceStop"
-                        type={['static']}
-                        color="#FF4D4F"
-                    />
-                    <span className="height-24">{i18n._('Stop')}</span>
-                </Button>
-            </div>
+            {!(sent >= total && total !== 0) && (
+                <div className="sm-flex justify-space-between align-center">
+                    <Button width="160px" type="default" onClick={() => handleMachine(currentWorkflowStatus === 'running' ? 'pause' : 'run')}>
+                        <SvgIcon
+                            name={currentWorkflowStatus === 'running' ? 'WorkspaceSuspend' : 'WorkspacePlay'}
+                            type={['static']}
+                            color={currentWorkflowStatus === 'running' ? '#FFA940' : '#4CB518'}
+                        />
+                        <span className="height-24">{currentWorkflowStatus === 'running' ? i18n._('Pause') : i18n._('Resume')}</span>
+                    </Button>
+                    <Button width="160px" type="default" onClick={() => handleMachine('stop')}>
+                        <SvgIcon
+                            name="WorkspaceStop"
+                            type={['static']}
+                            color="#FF4D4F"
+                        />
+                        <span className="height-24">{i18n._('Stop')}</span>
+                    </Button>
+                </div>
+            )}
         </div>
     );
 };

@@ -736,19 +736,19 @@ export class Server extends events.EventEmitter {
         if (!data) {
             return;
         }
-        const { currentLine, estimatedTime, totalLines, fileName = '', progress } = data;
+        const { currentLine, estimatedTime, totalLines, fileName = '', progress, elapsedTime, remainingTime } = data;
         if (!currentLine || !estimatedTime || !totalLines) {
             return;
         }
         const sent = currentLine || 0;
         const received = currentLine || 0;
         const total = totalLines || 0;
-        let elapsedTime = 0;
-        let remainingTime = 0;
-        if (this.state.gcodePrintingInfo.startTime) {
-            elapsedTime = new Date().getTime() - this.state.gcodePrintingInfo.startTime;
-        }
-        remainingTime = estimatedTime * 1000 - elapsedTime; // TODO
+        // let elapsedTime = 0;
+        // let remainingTime = 0;
+        // if (this.state.gcodePrintingInfo.startTime) {
+        //     elapsedTime = new Date().getTime() - this.state.gcodePrintingInfo.startTime;
+        // }
+        // remainingTime = estimatedTime * 1000 - elapsedTime; // TODO
         let finishTime = 0;
         if (received > 0 && received >= totalLines) {
             finishTime = new Date().getTime();
@@ -759,8 +759,9 @@ export class Server extends events.EventEmitter {
             received,
             total,
             finishTime,
-            elapsedTime,
-            remainingTime,
+            estimatedTime: estimatedTime * 1000,
+            elapsedTime: elapsedTime * 1000,
+            remainingTime: remainingTime * 1000,
             fileName,
             progress
         };

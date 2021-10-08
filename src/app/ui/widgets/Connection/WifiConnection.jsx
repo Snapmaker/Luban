@@ -64,7 +64,8 @@ function WifiConnection() {
         airPurifier,
         // airPurifierStatus,
         heatedBedTemperature,
-        laserCamera
+        laserCamera,
+        series
     } = useSelector(state => state.machine);
     const [savedServerAddressState, setSavedServerAddressState] = useState(savedServerAddress);
     const { emergencyStopButton: emergencyStopButtonStatus, airPurifier: airPurifierStatus, rotaryModule: rotaryModuleStatus, enclosure: enclosureStatus } = moduleStatusList;
@@ -411,7 +412,7 @@ function WifiConnection() {
                         className={classNames(styles['connection-state'], 'padding-bottom-8', 'border-bottom-dashed-default')}
                     >
                         <span className={styles['connection-state-name']}>
-                            {serverState?.name}
+                            {`${serverState?.name} (${series.toUpperCase()})`}
                         </span>
                         <span className={styles['connection-state-icon']}>
                             {workflowStatus === WORKFLOW_STATUS_UNKNOWN

@@ -418,10 +418,11 @@ class Visualizer extends Component {
         handleStop: () => {
             const { connectionType } = this.props;
             if (connectionType === CONNECTION_TYPE_SERIAL) {
-                const { workflowState } = this.state;
-                if ([WORKFLOW_STATE_PAUSED].includes(workflowState)) {
-                    controller.command('gcode:stop');
-                }
+                // why cannot stop direct ????
+                // const { workflowState } = this.state;
+                // if ([WORKFLOW_STATE_PAUSED].includes(workflowState)) {
+                controller.command('gcode:stop');
+                // }
             } else {
                 const { workflowStatus } = this.props;
                 if (workflowStatus !== WORKFLOW_STATUS_IDLE) {

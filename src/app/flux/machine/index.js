@@ -110,6 +110,7 @@ const INITIAL_STATE = {
     airPurifierFanSpeed: 3,
     airPurifierFilterHealth: 2,
     airPurifierHasPower: false,
+    emergencyStopOnline: false,
 
     zAxisModule: null,
 
@@ -337,7 +338,7 @@ export const actions = {
             },
             'Marlin:settings': (options) => {
                 const { enclosureDoorDetection, enclosureOnline, enclosureFan = 0, enclosureLight = 0,
-                    airPurifierHasPower, airPurifier, airPurifierSwitch, airPurifierFanSpeed, airPurifierFilterHealth } = options.settings;
+                    airPurifierHasPower, airPurifier, airPurifierSwitch, airPurifierFanSpeed, airPurifierFilterHealth, emergencyStopOnline } = options.settings;
                 dispatch(baseActions.updateState({
                     enclosureDoorDetection,
                     enclosureOnline,
@@ -347,7 +348,8 @@ export const actions = {
                     airPurifierSwitch,
                     airPurifierFanSpeed,
                     airPurifierFilterHealth,
-                    airPurifierHasPower
+                    airPurifierHasPower,
+                    emergencyStopOnline
                 }));
             },
             'serialport:open': (options) => {

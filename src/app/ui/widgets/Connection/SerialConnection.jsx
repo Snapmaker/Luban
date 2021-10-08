@@ -33,7 +33,7 @@ function SerialConnection() {
     const {
         port, isOpen, enclosureOnline, isConnected,
         headType, connectionTimeout, airPurifier, airPurifierHasPower,
-        heatedBedTemperature, laserCamera, workflowState, series: seriesInfo
+        heatedBedTemperature, laserCamera, workflowState, series: seriesInfo, emergencyStopOnline
     } = useSelector(state => state.machine);
     // Available serial ports
     const [ports, setPorts] = useState([]);
@@ -271,7 +271,7 @@ function SerialConnection() {
                 moduleName: i18n._(headType),
                 status: true
             });
-            headType === '3dp' && newModuleStatusList.push({
+            headType === 'printing' && newModuleStatusList.push({
                 key: 'heatedBed',
                 moduleName: i18n._('Heated Bed'),
                 status: heatedBedTemperature > 0
@@ -292,10 +292,15 @@ function SerialConnection() {
             moduleName: i18n._('Enclosure'),
             status: enclosureOnline
         });
+        emergencyStopOnline && newModuleStatusList.push({
+            key: 'emergencyStop',
+            moduleName: i18n._('Emergency Stop'),
+            status: emergencyStopOnline
+        });
         setModuleStatusList(newModuleStatusList);
     }, [
         headType, airPurifier, airPurifierHasPower,
-        enclosureOnline, heatedBedTemperature > 0, laserCamera
+        enclosureOnline, heatedBedTemperature > 0, laserCamera, emergencyStopOnline
     ]);
 
     const canRefresh = !loadingPorts && !isOpen;
