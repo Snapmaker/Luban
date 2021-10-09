@@ -355,6 +355,10 @@
         "wall_thickness": {
             "label": "Wall Thickness",
             "description": "The thickness of the walls in the horizontal direction. This value divided by the wall line width defines the number of walls."
+        },
+        "skin_edge_support_layers": {
+            "label": "Skin Edge Support Layers",
+            "default_value": 0
         }
     }
 }
