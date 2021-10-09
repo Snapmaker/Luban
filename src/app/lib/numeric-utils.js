@@ -56,19 +56,26 @@ const toFixed = (value, fractionDigits) => {
         const d = stringValue.length - pos - 1;
         if (d > fractionDigits) {
             // actual fraction digits > maximum fraction digits
-            let num = Number(value.toFixed(fractionDigits));
-            if (num < -180) {
-                num = (num + 360) % 360;
-            }
+            const num = Number(value.toFixed(fractionDigits));
             return num;
         }
     }
     return value; // no fix needed
 };
 
+const toFixedNumber = (value, fractionDigits) => {
+    // actual fraction digits > maximum fraction digits
+    let num = Number(value.toFixed(fractionDigits));
+    if (num < -180) {
+        num = (num + 360) % 360;
+    }
+    return num;
+};
+
 export {
     EPS,
     ensureRange,
     bubbleSortByAttribute,
-    toFixed
+    toFixed,
+    toFixedNumber
 };

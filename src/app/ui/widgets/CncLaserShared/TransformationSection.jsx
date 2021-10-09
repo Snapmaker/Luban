@@ -4,7 +4,7 @@ import PropTypes from 'prop-types';
 import classNames from 'classnames';
 
 import i18n from '../../../lib/i18n';
-import { toFixed } from '../../../lib/numeric-utils';
+import { toFixed, toFixedNumber } from '../../../lib/numeric-utils';
 import TipTrigger from '../../components/TipTrigger';
 import SvgIcon from '../../components/SvgIcon';
 import { NumberInput as Input } from '../../components/Input';
@@ -240,7 +240,7 @@ const TransformationSection = ({ headType, updateSelectedModelUniformScalingStat
                                 <Input
                                     suffix="°"
                                     disabled={disabled || !selectedNotHide || !canRotate}
-                                    value={toFixed(logicalAngle, 1)}
+                                    value={toFixedNumber(logicalAngle, 1)}
                                     className="margin-horizontal-2"
                                     size="small"
                                     onChange={actions.onChangeLogicalAngle}
