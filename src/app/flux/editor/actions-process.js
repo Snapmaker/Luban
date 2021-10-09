@@ -48,7 +48,9 @@ export const processActions = {
                 visibleToolPathsLength += 1;
             }
         });
-        progressStatesManager.startProgress(PROCESS_STAGE.CNC_LASER_GENERATE_TOOLPATH_AND_PREVIEW, [visibleToolPathsLength, visibleToolPathsLength, visibleToolPathsLength]);
+        if (visibleToolPathsLength > 0) {
+            progressStatesManager.startProgress(PROCESS_STAGE.CNC_LASER_GENERATE_TOOLPATH_AND_PREVIEW, [visibleToolPathsLength, visibleToolPathsLength, visibleToolPathsLength]);
+        }
         toolPathGroup.toolPaths.forEach((toolPath) => {
             toolPath.setWarningStatus();
             toolPath.clearModelObjects();

@@ -2,6 +2,7 @@ import React, { useState, useRef } from 'react';
 import { useSelector } from 'react-redux';
 import PropTypes from 'prop-types';
 import classNames from 'classnames';
+import styles from './styles.styl';
 import Select from '../../components/Select';
 import i18n from '../../../lib/i18n';
 import { NumberInput as Input, TextAreaInput } from '../../components/Input';
@@ -16,12 +17,10 @@ const TextParameters = ({ headType, modifyText, disabled }) => {
         label: font.displayName,
         value: font.fontFamily
     }));
-    const { text, 'font-size': fontSize, 'font-family': fontFamily } = config;
-
+    const { text, 'font-size': fontSize, 'font-family': fontFamily, alignment } = config;
     const [expanded, setExpanded] = useState(true);
 
     const fileInput = useRef();
-    const textArea = useRef();
 
     const actions = {
         onToggleExpand: () => {
@@ -31,10 +30,8 @@ const TextParameters = ({ headType, modifyText, disabled }) => {
             fileInput.current.value = null;
             fileInput.current.click();
         },
-        onSelectAllText: () => {},
-        onChangeText: (event) => {
-            const newText = event.target.value;
-            modifyText(null, { text: newText });
+        onChangeText: (newText) => {
+            modifyText(null, { text: newText.trim() });
         },
         onChangeFont: (option) => {
             // Upload font (TODO: not used?)
@@ -48,6 +45,9 @@ const TextParameters = ({ headType, modifyText, disabled }) => {
         },
         onChangeSize: (newSize) => {
             modifyText(null, { fontSize: `${newSize}` });
+        },
+        onChangeAlignment: (newAlignment) => {
+            modifyText(null, { alignment: newAlignment });
         }
     };
 
@@ -70,20 +70,12 @@ const TextParameters = ({ headType, modifyText, disabled }) => {
                         title={i18n._('key-CncLaser/TextSection-Text')}
                         content={i18n._('key-CncLaser/TextSection-Enter the text you want to laser engrave or CNC carve.')}
                     >
-                        <div className="sm-flex height-80 margin-vertical-8">
+                        <div className="sm-flex margin-vertical-8">
                             <TextAreaInput
-                                ref={textArea}
                                 disabled={disabled}
-                                onFocus={actions.onSelectAllText}
-                                style={{ resize: 'none' }}
                                 className="sm-flex-width"
                                 rows="3"
                                 value={text}
-                                onKeyPress={(e) => {
-                                    if (e.key === 'Enter') {
-                                        e.preventDefault();
-                                    }
-                                }}
                                 onChange={actions.onChangeText}
                             />
                         </div>
@@ -121,6 +113,57 @@ const TextParameters = ({ headType, modifyText, disabled }) => {
                             />
                         </div>
                     </TipTrigger>
+                    <TipTrigger
+                        title={i18n._('Alignment')}
+                        content={i18n._('Align the text in different lines to either the left or right or in the center horizontally.')}
+                    >
+                        <div className="sm-parameter-row">
+                            <span className="sm-parameter-row__label">{i18n._('Alignment')}</span>
+                            <span className={styles.textAlignWrap}>
+                                <SvgIcon
+                                    className={classNames(
+                                        styles.textAlignButton,
+                                        'padding-horizontal-10',
+                                        'border-default-grey-1',
+                                        { [styles.active]: alignment === 'left' }
+                                    )}
+                                    name="AlignmentLeft"
+                                    disabled={disabled}
+                                    size={26}
+                                    borderRadius={8}
+                                    onClick={() => { actions.onChangeAlignment('left'); }}
+                                />
+                                <SvgIcon
+                                    className={classNames(
+                                        styles.textAlignButton,
+                                        'padding-horizontal-10',
+                                        'border-default-grey-1',
+                                        { [styles.active]: alignment === 'middle' }
+                                    )}
+                                    name="AlignmentCenter"
+                                    disabled={disabled}
+                                    size={26}
+                                    borderRadius={8}
+                                    onClick={() => { actions.onChangeAlignment('middle'); }}
+                                />
+                                <SvgIcon
+                                    className={classNames(
+                                        styles.textAlignButton,
+                                        'padding-horizontal-10',
+                                        'border-default-grey-1',
+                                        { [styles.active]: alignment === 'right' }
+                                    )}
+                                    name="AlignmentRight"
+                                    disabled={disabled}
+                                    size={26}
+                                    borderRadius={8}
+                                    onClick={() => { actions.onChangeAlignment('right'); }}
+                                />
+                            </span>
+                        </div>
+                    </TipTrigger>
+
+
                 </React.Fragment>
             )}
         </div>

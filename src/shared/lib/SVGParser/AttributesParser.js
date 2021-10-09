@@ -1,10 +1,9 @@
 import logger from 'universal-logger';
 import { isUndefined } from 'lodash';
 import { parseFloats, cssColor2Hex, xformMultiply } from './Utils';
+import { SVG_ATTR_ID, XLINK_HREF, SVG_ATTR_HREF, OVERRIDE_STYLE } from './constants';
 
-const OVERRIDE_STYLE = 'fill: none; stroke: #000; stroke-width: 0.4px; vector-effect: non-scaling-stroke;';
 const log = logger();
-
 
 function parseDAttribute(value) {
     const items = [];
@@ -365,6 +364,15 @@ class AttributesParser {
                 break;
             }
             case 'fill-rule': {
+                attributes[key] = value;
+                break;
+            }
+            case SVG_ATTR_ID: {
+                attributes[key] = `#${value}`;
+                break;
+            }
+            case XLINK_HREF:
+            case SVG_ATTR_HREF: {
                 attributes[key] = value;
                 break;
             }

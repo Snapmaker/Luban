@@ -20,7 +20,7 @@ const EVENTS = {
 };
 
 const svg = document.createElementNS(NS.SVG, 'svg');
-let updateTimer;
+// let updateTimer;
 
 // function transformPoint(point, m) {
 //     const { x, y } = point;
@@ -340,7 +340,7 @@ class SvgModel extends BaseModel {
             },
             config: {
                 svgNodeName: elem.nodeName,
-                text: elem.textContent,
+                text: elem.getAttribute('textContent'),
                 'font-size': elem.getAttribute('font-size'),
                 'font-family': elem.getAttribute('font-family')
             }
@@ -358,12 +358,15 @@ class SvgModel extends BaseModel {
         }
         const content = await fetch(`${DATA_PREFIX}/${uploadName}`, { method: 'GET' })
             .then(res => res.text());
+
         const canvas = document.createElement('canvas');
         // set canvas size to get image of exactly same size
         canvas.width = this.width;
         canvas.height = this.height;
+        canvas.style.font = '16px Arial';
         document.body.appendChild(canvas);
         const ctx = canvas.getContext('2d');
+        ctx.font = canvas.style.font;
         const v = await Canvg.fromString(ctx, content);
         await v.render();
         const blob = await new Promise(resolve => canvas.toBlob(resolve));
@@ -410,22 +413,23 @@ class SvgModel extends BaseModel {
         let blob, file, res;
         if (this.type === 'text') {
             // eslint-disable-next-line prefer-const
-            let { text, 'font-family': font, 'font-size': size } = this.config;
-            // enlarge font-size to make process image clear enough
-            size *= 16;
-            const cloneElement = this.elem.cloneNode(true);
-            cloneElement.setAttribute('font-size', size);
-            this.elem.parentNode.append(cloneElement);
-            // eslint-disable-next-line prefer-const
-            let { x, y, width, height } = cloneElement.getBBox();
-            const bbox = { x, y, width, height };
-            x = parseFloat(cloneElement.getAttribute('x'));
-            y = parseFloat(cloneElement.getAttribute('y'));
-            cloneElement.remove();
-
-            const name = this.originalName;
-            const alignment = 'middle';
-            res = await api.convertOneLineTextToSvg({ text, font, name, size, x, y, bbox, alignment });
+            // let { text, 'font-family': font, 'font-size': size } = this.config;
+            // // enlarge font-size to make process image clear enough
+            // size *= 16;
+            // const cloneElement = this.elem.cloneNode(true);
+            // cloneElement.setAttribute('font-size', size);
+            // this.elem.parentNode.append(cloneElement);
+            // // eslint-disable-next-line prefer-const
+            // let { x, y, width, height } = cloneElement.getBBox();
+            // const bbox = { x, y, width, height };
+            // x = parseFloat(cloneElement.getAttribute('x'));
+            // y = parseFloat(cloneElement.getAttribute('y'));
+            // cloneElement.remove();
+            //
+            // const name = this.originalName;
+            // const alignment = 'middle';
+            // res = await api.convertOneLineTextToSvg({ text, font, name, size, x, y, bbox, alignment });
+            return this.uploadName;
         } else {
             blob = new Blob([content], { type: 'image/svg+xml' });
             file = new File([blob], 'gen.svg');
@@ -459,11 +463,7 @@ class SvgModel extends BaseModel {
         const { positionX, positionY } = transformation;
 
         for (const key of Object.keys(config)) {
-            if (key === 'text') {
-                elem.textContent = config[key];
-            } else {
-                elem.setAttribute(key, config[key]);
-            }
+            elem.setAttribute(key, config[key]);
         }
 
         const { x, y } = this.pointModelToSvg({ x: positionX, y: positionY });
@@ -497,10 +497,23 @@ class SvgModel extends BaseModel {
                 break;
             }
             case 'text': {
-                const diffY = elem.getAttribute('y') - elem.getBBox().y;
-                elem.setAttribute('x', x - width / 2);
-                elem.setAttribute('y', y - height / 2 + diffY);
-                elem.setAttribute('fill', '#000');
+                const imageElement = document.createElementNS(NS.SVG, 'image');
+                const attributes = {
+                    'href': href || elem.getAttribute('href'),
+                    'id': elem.getAttribute('id'),
+                    'x': elem.getAttribute('x') - width / 2,
+                    'y': elem.getAttribute('y') - height / 2,
+                    width,
+                    height
+                };
+                // // set attribute
+                for (const [key, value] of Object.entries(attributes)) {
+                    imageElement.setAttribute(key, value);
+                }
+                this.elem.parentNode.append(imageElement);
+                this.elem.remove();
+                this.elem = imageElement;
+
                 break;
             }
             default:
@@ -1113,12 +1126,6 @@ class SvgModel extends BaseModel {
 
         this.refresh();
         this.modelGroup.modelChanged();
-        if (this.config.svgNodeName === 'text') {
-            updateTimer && clearTimeout(updateTimer);
-            updateTimer = setTimeout(() => {
-                this.updateSource();
-            }, 300); // to prevent continuous input cause frequently update
-        }
     }
 
     /**

@@ -446,7 +446,6 @@ export const actions = {
     generateModel: (headType, originalName, uploadName, sourceWidth, sourceHeight, mode, sourceType, config, gcodeConfig, transformation, modelID, zIndex) => (dispatch, getState) => {
         const { size } = getState().machine;
         const { materials, modelGroup, SVGActions, contentGroup, toolPathGroup, coordinateMode, coordinateSize } = getState()[headType];
-
         sourceType = sourceType || getSourceType(originalName);
 
         if (!checkParams(headType, sourceType, mode)) {
@@ -461,12 +460,18 @@ export const actions = {
         const defaultGcodeConfig = modelDefaultConfigs.gcodeConfig;
 
         // Limit image size by machine size
-        const newModelSize = sourceType !== SOURCE_TYPE_IMAGE3D
-            ? limitModelSizeByMachineSize(coordinateSize, sourceWidth, sourceHeight)
-            : sizeModel(size, materials, sourceWidth, sourceHeight);
-
-        let { width, height } = newModelSize;
-        const { scale } = newModelSize;
+        let width, height, scale;
+        if (transformation?.width && transformation?.height) {
+            width = transformation?.width / Math.abs(transformation?.scaleX);
+            height = transformation?.height / Math.abs(transformation?.scaleY);
+        } else {
+            const newModelSize = sourceType !== SOURCE_TYPE_IMAGE3D
+                ? limitModelSizeByMachineSize(coordinateSize, sourceWidth, sourceHeight, config?.svgNodeName)
+                : sizeModel(size, materials, sourceWidth, sourceHeight);
+            width = newModelSize?.width;
+            height = newModelSize?.height;
+            scale = newModelSize?.scale;
+        }
 
         if (`${headType}-${sourceType}-${mode}` === 'cnc-raster-greyscale') {
             width = 40;
@@ -530,7 +535,7 @@ export const actions = {
             zIndex,
             isRotate: materials.isRotate,
             elem: contentGroup.addSVGElement({
-                element: config.svgNodeName || 'image',
+                element: config.svgNodeName === 'text' ? 'image' : config.svgNodeName || 'image',
                 attr: { id: modelID }
             }),
             size: size

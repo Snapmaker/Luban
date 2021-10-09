@@ -4,7 +4,8 @@ import { coordGmSvgToModel, getBBox } from '../ui/SVGEditor/element-utils';
 // import { remapElement } from '../../widgets/SVGEditor/element-recalculate';
 import { NS } from '../ui/SVGEditor/lib/namespaces';
 import { isZero } from '../../shared/lib/utils';
-import { generateModelDefaultConfigs } from './ModelInfoUtils';
+import { generateModelDefaultConfigs, DEFAULT_TEXT_CONFIG } from './ModelInfoUtils';
+import { computeTransformationSizeForTextVector } from '../flux/editor/actions-base';
 import SvgModel from './SvgModel';
 import api from '../api';
 // import { DEFAULT_SCALE } from '../ui/SVGEditor/constants';
@@ -40,6 +41,10 @@ function getTransformList(elem) {
 
 function genModelConfig(elem, size) {
     const coord = coordGmSvgToModel(size, elem);
+    if (elem.nodeName === 'text') {
+        coord.positionX = 0;
+        coord.positionY = 0;
+    }
 
     // eslint-disable-next-line prefer-const
     let { x, y, width, height, positionX, positionY, scaleX, scaleY } = coord;
@@ -79,7 +84,8 @@ function genModelConfig(elem, size) {
         },
         config: {
             svgNodeName: elem.nodeName,
-            text: elem.textContent,
+            text: elem.getAttribute('textContent'),
+            alignment: 'left',
             'font-size': elem.getAttribute('font-size'),
             'font-family': elem.getAttribute('font-family')
         }
@@ -648,26 +654,36 @@ class SVGActionsFactory {
         const isRotate = this.modelGroup.materials && this.modelGroup.materials.isRotate;
 
         const data = genModelConfig(element, this.size);
-
-
-        const { modelID, content, width, height, transformation, config: elemConfig } = data;
-        const blob = new Blob([content], { type: 'image/svg+xml' });
-        const file = new File([blob], `${modelID}.svg`);
-
-        const formData = new FormData();
-        formData.append('image', file);
-
+        const { modelID, content, width: dataWidth, height: dataHeight, transformation, config: elemConfig } = data;
+        let res, textSize;
         try {
-            const res = await api.uploadImage(formData);
+            const isText = element.nodeName === 'text';
+            if (isText) {
+                const newConfig = {
+                    ...DEFAULT_TEXT_CONFIG,
+                    ...elemConfig
+                };
+                res = await api.convertTextToSvg(newConfig);
+                textSize = computeTransformationSizeForTextVector(newConfig.text, newConfig['font-size'], newConfig['line-height'], {
+                    width: res.body?.width,
+                    height: res.body?.height
+                });
+            } else {
+                const blob = new Blob([content], { type: 'image/svg+xml' });
+                const file = new File([blob], `${modelID}.svg`);
 
-            const { originalName, uploadName } = res.body;
+                const formData = new FormData();
+                formData.append('image', file);
+                res = await api.uploadImage(formData);
+            }
+            const { originalName, uploadName, width, height } = res.body;
             const sourceType = 'svg';
             const mode = 'vector';
-
             let { config, gcodeConfig } = generateModelDefaultConfigs(headType, sourceType, mode, isRotate);
-
             config = { ...config, ...elemConfig };
             gcodeConfig = { ...gcodeConfig };
+
+
             const options = {
                 modelID,
                 limitSize: this.size,
@@ -676,10 +692,10 @@ class SVGActionsFactory {
                 mode,
                 originalName,
                 uploadName,
-                sourceWidth: res.body.width,
-                sourceHeight: res.body.height,
-                width,
-                height,
+                sourceWidth: width,
+                sourceHeight: height,
+                width: isText ? textSize.width : dataWidth,
+                height: isText ? textSize.height : dataHeight,
                 transformation,
                 config,
                 gcodeConfig,
@@ -1479,14 +1495,11 @@ class SVGActionsFactory {
         return this.svgContentGroup.addSVGElement({
             element: 'text',
             attr: {
-                x: this.size.x - 30 + position.x,
+                x: this.size.x + position.x,
                 y: this.size.y + position.y,
-                fill: '#000000',
-                'fill-opacity': 1,
-                'font-size': 12,
+                'font-size': 24,
                 'font-family': 'Arial',
-                'stroke-width': 0.25,
-                opacity: 1,
+                alignment: 'left',
                 textContent: content
             }
         });
@@ -1506,49 +1519,66 @@ class SVGActionsFactory {
     modifyText(element, options) {
         // only support single selected text element
         if (!element && this.selectedSvgModels.length > 1) return;
-
         const model = element ? this.getSVGModelByElement(element) : this.selectedSvgModels[0];
 
-        const config = {};
+        // Update model
+        const { logicalX, logicalY, scaleX, scaleY, angle } = model;
+        const newConfig = {
+            ...DEFAULT_TEXT_CONFIG,
+            ...model.config
+        };
 
         if (options.text !== undefined) {
-            model.elem.textContent = options.text;
-
-            config.text = options.text;
+            newConfig.text = options.text;
+        }
+        if (options.alignment !== undefined) {
+            newConfig.alignment = options.alignment;
         }
 
         if (options.fontFamily !== undefined) {
-            model.elem.setAttribute('font-family', options.fontFamily);
-
-            config['font-family'] = options.fontFamily;
+            newConfig['font-family'] = options.fontFamily;
         }
 
         if (options.fontSize !== undefined) {
-            model.elem.setAttribute('font-size', options.fontSize);
-
-            config['font-size'] = options.fontSize;
+            newConfig['font-size'] = options.fontSize;
         }
 
-        // Update model
-        const { width, height } = model.elem.getBBox();
-        const { logicalX, logicalY, scaleX, scaleY, angle } = model;
-        const baseUpdateData = {
-            sourceWidth: width,
-            sourceHeight: height,
-            width,
-            height,
-            transformation: {
-                positionX: logicalX,
-                positionY: logicalY,
-                width: width * Math.abs(scaleX),
-                height: height * Math.abs(scaleY),
-                scaleX,
-                scaleY,
-                rotationZ: -angle * Math.PI / 180
-            }
-        };
-        model.updateAndRefresh({ ...baseUpdateData, config });
-        this.resetSelection();
+        api.convertTextToSvg(newConfig)
+            .then(async (res) => {
+                const { originalName, uploadName, width, height } = res.body;
+
+                const textSize = computeTransformationSizeForTextVector(newConfig.text, newConfig['font-size'], newConfig['line-height'], {
+                    width,
+                    height
+                });
+
+                const baseUpdateData = {
+                    sourceWidth: width,
+                    sourceHeight: height,
+                    width: textSize.width,
+                    height: textSize.height,
+                    originalName,
+                    uploadName,
+                    transformation: {
+                        positionX: logicalX,
+                        positionY: logicalY,
+                        width: model.transformation.width / model.width * textSize.width,
+                        height: model.transformation.height / model.height * textSize.height,
+                        scaleX,
+                        scaleY,
+                        rotationZ: -angle * Math.PI / 180
+                    }
+                };
+                this.updateElementImage(uploadName);
+                model.updateAndRefresh({
+                    ...baseUpdateData,
+                    config: newConfig
+                });
+                const t = SVGActionsFactory.calculateElementsTransformation(this.getSelectedElements());
+                this._setSelectedElementsTransformation(t);
+
+                this.resetSelection();
+            });
     }
 }
 

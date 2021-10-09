@@ -1,7 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 import xml2js from 'xml2js';
-import { cloneDeep } from 'lodash';
+import { cloneDeep, isNil } from 'lodash';
 import AttributesParser from './AttributesParser';
 import SVGTagParser from './SVGTagParser';
 // import DefsTagParser from './DefsTagParser';
@@ -13,13 +13,14 @@ import PolygonTagParser from './PolygonTagParser';
 import PolylineTagParser from './PolylineTagParser';
 import RectTagParser from './RectTagParser';
 import TextParser from './TextParser';
-
+import { SVG_ATTR_ID, XLINK_HREF, SVG_ATTR_HREF, SVG_ATTR_TRANSFORM, SVG_TAG_USE } from './constants';
 // const DEFAULT_DPI = 72;
 const DEFAULT_MILLIMETER_PER_PIXEL = 25.4 / 72;
 // TODO: General tolerance does not work well if original drawing is small,
 //  the tolerance should be calculated base on scale of image.
 // change the default PIXEL to make sure TOLERANCE close to 0.1mm
 const TOLERANCE = 0.3 * DEFAULT_MILLIMETER_PER_PIXEL;
+
 let parentTextAttributes = '';
 
 class SVGParser {
@@ -38,9 +39,8 @@ class SVGParser {
             actualX: 0,
             actualY: 0
         };
-        // this.image = {
-        //     shapes: []
-        // };
+        this.defs = {
+        };
     }
 
     readFile(filePath) {
@@ -139,7 +139,8 @@ class SVGParser {
                 }
             });
             delete parent.text;
-        } else if (gElement) {
+        }
+        if (gElement) {
             gElement.forEach((item) => {
                 const childPaths = this.dragTextPathToParent(item);
                 gArray = gArray.concat(childPaths);
@@ -198,11 +199,63 @@ class SVGParser {
         };
     }
 
+    // tag, currentNode ,parentNode, attributes
+    parseUseStructure(tag, node, parent, attributes) {
+        if (node) {
+            if (tag === SVG_TAG_USE) {
+                let url, shadowNode, x, y;
+                if (XLINK_HREF in attributes) url = attributes[XLINK_HREF];
+                if (SVG_ATTR_HREF in attributes) url = attributes[SVG_ATTR_HREF];
+                if (!isNil(url)) {
+                    let transform = false;
+                    if (!isNil(attributes.x)) {
+                        x = attributes.x;
+                        transform = true;
+                    }
+                    if (!isNil(attributes.y)) {
+                        y = attributes.y;
+                        transform = true;
+                    }
+                    if (this.defs[url]) {
+                        const shadowTag = this.defs[url].shadowTag;
+                        shadowNode = this.defs[url].shadowNode;
+                        if (transform) {
+                            if (shadowNode.$[SVG_ATTR_TRANSFORM]) {
+                                shadowNode.$[
+                                    SVG_ATTR_TRANSFORM
+                                ] += ` translate(${x}, ${y})`;
+                            } else {
+                                shadowNode.$[SVG_ATTR_TRANSFORM] = `translate(${x}, ${y})`;
+                            }
+                        }
+
+                        if (parent[shadowTag] && Array.isArray(parent[shadowTag])) {
+                            parent[shadowTag].push(shadowNode);
+                        } else {
+                            parent[shadowTag] = [shadowNode];
+                        }
+                    } else {
+                        console.log(`def which id is ${url} doesn't exist`);
+                    }
+                }
+            }
+            // If we have an ID, we save the node.
+            if (SVG_ATTR_ID in attributes) {
+                this.defs[attributes[SVG_ATTR_ID]] = {
+                    shadowTag: tag,
+                    shadowNode: node
+                };
+            }
+        }
+    }
+
     async parseNode(tag, node, parent, parentAttributes) {
         // const tag = node['#name'];
         let shapes = [];
+
         if (node) {
             const attributes = this.attributeParser.parse(node, parentAttributes, tag);
+            this.parseUseStructure(tag, node, parent, attributes);
 
             let shouldParseChildren = true;
             switch (tag) {
@@ -291,11 +344,9 @@ class SVGParser {
                 case '$': {
                     break;
                 }
-                // case 'defs': {
-                //     const tagParser = new DefsTagParser(this);
-                //     tagParser.parse(node, attributes);
-                //     break;
-                // }
+                case 'defs': {
+                    break;
+                }
                 default:
                     shouldParseChildren = false;
                     break;

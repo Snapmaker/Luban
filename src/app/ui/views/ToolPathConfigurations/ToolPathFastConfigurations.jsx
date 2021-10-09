@@ -148,7 +148,7 @@ function ToolPathFastConfigurations({ setEditingToolpath, headType, toolpath }) 
     function handleSetEditingToolpath() {
         setEditingToolpath(toolPath);
     }
-    const updateActiveToolDefinition = async (currentToolPath) => {
+    const updateActiveToolDefinition = (currentToolPath) => {
         const { toolParams, gcodeConfig } = currentToolPath;
         const activeToolDefinition = _.cloneDeep(activeToolListDefinition);
 
@@ -182,7 +182,7 @@ function ToolPathFastConfigurations({ setEditingToolpath, headType, toolpath }) 
             }
         }
         if (currentToolDefinition?.definitionId !== activeToolDefinition?.definitionId) {
-            await dispatch(editorActions.changeActiveToolListDefinition(headType, activeToolDefinition?.definitionId, activeToolDefinition?.name));
+            dispatch(editorActions.changeActiveToolListDefinition(headType, activeToolDefinition?.definitionId, activeToolDefinition?.name));
         }
         setCurrentToolDefinition(activeToolDefinition);
     };

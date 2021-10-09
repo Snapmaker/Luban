@@ -58,7 +58,6 @@ const generateLaserToolPath = async (modelInfo, onProgress) => {
 
             return outputFilename;
         } catch (e) {
-            console.log(e);
             return null;
         }
     }
@@ -112,6 +111,13 @@ const generateLaserToolPathFromEngine = async (modelInfos, onProgress) => {
         if ([TOOLPATH_TYPE_VECTOR + SOURCE_TYPE_RASTER].includes(type + sourceType)) {
             const result = await editorProcess(modelInfo);
             modelInfo.uploadName = result.filename;
+        }
+        if (!(/parsed\.svg$/i.test(modelInfo.uploadName))) {
+            const newUploadName = modelInfo.uploadName.replace(/\.svg$/i, 'parsed.svg');
+            const uploadPath = `${DataStorage.tmpDir}/${newUploadName}`;
+            if (fs.existsSync(uploadPath)) {
+                modelInfo.uploadName = newUploadName;
+            }
         }
         if (headType === 'laser') {
             modelInfo.gcodeConfig.fillDensity = 1 / modelInfo.gcodeConfig.fillInterval;
