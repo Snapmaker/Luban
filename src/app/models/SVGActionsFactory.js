@@ -41,6 +41,10 @@ function getTransformList(elem) {
 
 function genModelConfig(elem, size) {
     const coord = coordGmSvgToModel(size, elem);
+    if (elem.nodeName === 'text') {
+        coord.positionX = 0;
+        coord.positionY = 0;
+    }
 
     // eslint-disable-next-line prefer-const
     let { x, y, width, height, positionX, positionY, scaleX, scaleY } = coord;
@@ -1286,7 +1290,6 @@ class SVGActionsFactory {
             const scaleTransform = transformList.getItem(2);
             const scaleX = scaleTransform.matrix.a;
             const scaleY = scaleTransform.matrix.d;
-            console.log('scaleX', scaleX, scaleY);
 
             scaleTransform.setScale(scaleX, -scaleY);
             this.getSVGModelByElement(element).onTransform();
@@ -1492,8 +1495,8 @@ class SVGActionsFactory {
         return this.svgContentGroup.addSVGElement({
             element: 'text',
             attr: {
-                x: this.size.x - 21.5 + position.x,
-                y: this.size.y - 4.25 + position.y,
+                x: this.size.x + position.x,
+                y: this.size.y + position.y,
                 'font-size': 24,
                 'font-family': 'Arial',
                 alignment: 'left',

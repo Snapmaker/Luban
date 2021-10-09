@@ -504,8 +504,8 @@ class SvgModel extends BaseModel {
                     'font-family': elem.getAttribute('font-family'),
                     'font-size': elem.getAttribute('font-size'),
                     'id': elem.getAttribute('id'),
-                    'x': elem.getAttribute('x'),
-                    'y': elem.getAttribute('y'),
+                    'x': elem.getAttribute('x') - width / 2,
+                    'y': elem.getAttribute('y') - height / 2,
                     width,
                     height
                 };

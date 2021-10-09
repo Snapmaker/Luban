@@ -462,8 +462,8 @@ export const actions = {
         // Limit image size by machine size
         let width, height, scale;
         if (transformation?.width && transformation?.height) {
-            width = transformation?.width;
-            height = transformation?.height;
+            width = transformation?.width / Math.abs(transformation?.scaleX);
+            height = transformation?.height / Math.abs(transformation?.scaleY);
         } else {
             const newModelSize = sourceType !== SOURCE_TYPE_IMAGE3D
                 ? limitModelSizeByMachineSize(coordinateSize, sourceWidth, sourceHeight, config?.svgNodeName)
