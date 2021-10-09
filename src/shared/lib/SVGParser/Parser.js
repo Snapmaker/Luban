@@ -13,7 +13,7 @@ import PolygonTagParser from './PolygonTagParser';
 import PolylineTagParser from './PolylineTagParser';
 import RectTagParser from './RectTagParser';
 import TextParser from './TextParser';
-import { SVG_ATTR_ID, XLINK_HREF, SVG_HREF, SVG_ATTR_TRANSFORM, SVG_TAG_USE } from './constants';
+import { SVG_ATTR_ID, XLINK_HREF, SVG_ATTR_HREF, SVG_ATTR_TRANSFORM, SVG_TAG_USE } from './constants';
 // const DEFAULT_DPI = 72;
 const DEFAULT_MILLIMETER_PER_PIXEL = 25.4 / 72;
 // TODO: General tolerance does not work well if original drawing is small,
@@ -205,7 +205,7 @@ class SVGParser {
             if (tag === SVG_TAG_USE) {
                 let url, shadowNode, x, y;
                 if (XLINK_HREF in attributes) url = attributes[XLINK_HREF];
-                if (SVG_HREF in attributes) url = attributes[SVG_HREF];
+                if (SVG_ATTR_HREF in attributes) url = attributes[SVG_ATTR_HREF];
                 if (!isNil(url)) {
                     let transform = false;
                     if (!isNil(attributes.x)) {

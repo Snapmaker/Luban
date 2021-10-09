@@ -500,9 +500,6 @@ class SvgModel extends BaseModel {
                 const imageElement = document.createElementNS(NS.SVG, 'image');
                 const attributes = {
                     'href': href || elem.getAttribute('href'),
-                    'alignment': elem.getAttribute('alignment'),
-                    'font-family': elem.getAttribute('font-family'),
-                    'font-size': elem.getAttribute('font-size'),
                     'id': elem.getAttribute('id'),
                     'x': elem.getAttribute('x') - width / 2,
                     'y': elem.getAttribute('y') - height / 2,

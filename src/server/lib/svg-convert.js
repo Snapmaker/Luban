@@ -151,7 +151,6 @@ const convertTextToSvg = async (options) => {
 
 // just process one line text, multi-line text can be transfered to text elements in front end
 const convertOneLineTextToSvg = async (options) => {
-    // const { text, font, name, size, lineHeight, alignment } = options;
     const { text, font, name, size, x, y, bbox } = options;
     const uploadName = pathWithRandomSuffix(name);
     const fontObj = await fontManager.getFont(font);

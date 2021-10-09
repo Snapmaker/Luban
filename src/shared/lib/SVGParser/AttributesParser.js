@@ -1,7 +1,7 @@
 import logger from 'universal-logger';
 import { isUndefined } from 'lodash';
 import { parseFloats, cssColor2Hex, xformMultiply } from './Utils';
-import { SVG_ATTR_ID, XLINK_HREF, SVG_HREF, OVERRIDE_STYLE } from './constants';
+import { SVG_ATTR_ID, XLINK_HREF, SVG_ATTR_HREF, OVERRIDE_STYLE } from './constants';
 
 const log = logger();
 
@@ -372,7 +372,7 @@ class AttributesParser {
                 break;
             }
             case XLINK_HREF:
-            case SVG_HREF: {
+            case SVG_ATTR_HREF: {
                 attributes[key] = value;
                 break;
             }
