@@ -268,33 +268,33 @@ function SerialConnection() {
         if (headType) {
             newModuleStatusList.push({
                 key: 'headtype',
-                moduleName: i18n._(headType),
+                moduleName: i18n._(`key-Workspace/Connection-${headType}`),
                 status: true
             });
             headType === 'printing' && newModuleStatusList.push({
                 key: 'heatedBed',
-                moduleName: i18n._('Heated Bed'),
+                moduleName: i18n._('key-Workspace/Connection-Heated Bed'),
                 status: heatedBedTemperature > 0
             });
             headType === 'laser' && newModuleStatusList.push({
                 key: 'laserCamera',
-                moduleName: i18n._('Laser Camera'),
+                moduleName: i18n._('key-Workspace/Connection-Laser Camera'),
                 status: laserCamera
             });
         }
         airPurifier && newModuleStatusList.push({
             key: 'airPurifier',
-            moduleName: i18n._('Air Purifier'),
+            moduleName: i18n._('key-Workspace/Purifier-Air Purifier'),
             status: airPurifierHasPower
         });
         enclosureOnline && newModuleStatusList.push({
             key: 'enclosure',
-            moduleName: i18n._('Enclosure'),
+            moduleName: i18n._('key-Workspace/Connection-Enclosure'),
             status: enclosureOnline
         });
         emergencyStopOnline && newModuleStatusList.push({
             key: 'emergencyStop',
-            moduleName: i18n._('Emergency Stop'),
+            moduleName: i18n._('key-Workspace/Page-Emergency Stop'),
             status: emergencyStopOnline
         });
         setModuleStatusList(newModuleStatusList);

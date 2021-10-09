@@ -312,19 +312,19 @@ function WifiConnection() {
         if (currentHeadType) {
             newModuleStatusList.push({
                 key: currentHeadType,
-                moduleName: currentHeadType,
+                moduleName: i18n._(`key-Workspace/Connection-${currentHeadType}`),
                 status: true
             });
             if (headType === 'printing') {
                 newModuleStatusList.push({
                     key: 'heatedBed',
-                    moduleName: i18n._('Heated Bed'),
+                    moduleName: i18n._('key-Workspace/Connection-Heated bed'),
                     status: heatedBedTemperature > 0
                 });
             } else if (headType === 'laser') {
                 newModuleStatusList.push({
                     key: 'laserCamera',
-                    moduleName: i18n._('laserCamera'),
+                    moduleName: i18n._('key-Workspace/Connection-Laser camera'),
                     status: laserCamera || false
                 });
             }
@@ -333,14 +333,14 @@ function WifiConnection() {
             if (moduleStatusList[key]) {
                 newModuleStatusList.push({
                     key,
-                    moduleName: i18n._(key),
+                    moduleName: i18n._(`key-Workspace/Connection-${key}`),
                     status: moduleStatusList[key]
                 });
             } else {
                 if (key === 'airPurifier' && airPurifier) {
                     newModuleStatusList.push({
                         key,
-                        moduleName: i18n._(key),
+                        moduleName: i18n._(`key-Workspace/Connection-${key}`),
                         status: moduleStatusList[key]
                     });
                 }
@@ -461,7 +461,7 @@ function WifiConnection() {
                         checked={connectionAuto}
                         onChange={e => actions.handleAutoConnection(e?.target?.checked || false)}
                     >
-                        {i18n._('Auto Connect')}
+                        <span className="display-inherit width-120 text-overflow-ellipsis">{i18n._('key-Workspace/Connection-Auto Connect')}</span>
                     </Checkbox>
                 )}
                 {isConnected && (

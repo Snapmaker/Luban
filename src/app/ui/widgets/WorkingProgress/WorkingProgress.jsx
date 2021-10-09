@@ -28,7 +28,7 @@ const WorkingProgress = ({ widgetActions, controlActions }) => {
     } = useSelector(state => state.machine);
     const [currentWorkflowStatus, setCurrentWorkflowStatus] = useState(null);
     useEffect(() => {
-        widgetActions.setTitle(i18n._('Working'));
+        widgetActions.setTitle(i18n._('key-Workspace/Workprogress-Working'));
     }, []);
     useEffect(() => {
         const newCurrent = connectionType === 'wifi' ? workflowStatus : workflowState;
@@ -64,10 +64,10 @@ const WorkingProgress = ({ widgetActions, controlActions }) => {
         <div>
             <div className="sm-flex justify-space-between align-center margin-top-16 margin-bottom-16">
                 <div>
-                    <Text name={i18n._('File')} value={fileName || i18n._('Unknow')} />
-                    <Text name={i18n._('Elapsed Time')} value={formatDuration(elapsedTime, false)} />
-                    <Text name={i18n._('Remaining Time')} value={formatDuration(remainingTime, false)} />
-                    <Text name={i18n._('GCode Line')} value={`${sent} / ${total}`} />
+                    <Text name={i18n._('key-Workspace/Workprogress-File')} value={fileName || i18n._('key-Workspace/Workprogress-Unknow')} />
+                    <Text name={i18n._('key-Workspace/Workprogress-Elapsed Time')} value={formatDuration(elapsedTime, false)} />
+                    <Text name={i18n._('key-Workspace/Workprogress-Remaining Time')} value={formatDuration(remainingTime, false)} />
+                    <Text name={i18n._('key-Workspace/Workprogress-GCode Line')} value={`${sent} / ${total}`} />
                 </div>
                 <Progress percent={Math.floor(progress ? progress * 100 : (sent / total) * 100)} type="circle" width={88} />
             </div>
@@ -79,7 +79,7 @@ const WorkingProgress = ({ widgetActions, controlActions }) => {
                             type={['static']}
                             color={currentWorkflowStatus === 'running' ? '#FFA940' : '#4CB518'}
                         />
-                        <span className="height-24">{currentWorkflowStatus === 'running' ? i18n._('Pause') : i18n._('Resume')}</span>
+                        <span className="height-24">{currentWorkflowStatus === 'running' ? i18n._('key-Workspace/WorkflowControl-Pause') : i18n._('key-Workspace/WorkflowControl-Run')}</span>
                     </Button>
                     <Button width="160px" type="default" onClick={() => handleMachine('stop')}>
                         <SvgIcon
@@ -87,7 +87,7 @@ const WorkingProgress = ({ widgetActions, controlActions }) => {
                             type={['static']}
                             color="#FF4D4F"
                         />
-                        <span className="height-24">{i18n._('Stop')}</span>
+                        <span className="height-24">{i18n._('key-Workspace/WorkflowControl-Stop')}</span>
                     </Button>
                 </div>
             )}

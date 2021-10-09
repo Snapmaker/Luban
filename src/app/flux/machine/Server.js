@@ -247,12 +247,6 @@ export class Server extends events.EventEmitter {
                 isNotNull(data.airPurifierFanSpeed) && (this.state.airPurifierFanSpeed = data.airPurifierFanSpeed);
                 isNotNull(data.airPurifierFilterHealth) && (this.state.airPurifierFilterHealth = data.airPurifierFilterHealth);
                 isNotNull(data.toolHead) && (this.state.currentHeadType = data.toolHead);
-                // if (isNotNull(data.moduleList)) {
-                //     this.state.emergencyStopButtonStatus = data.moduleList.emergencyStopButton || false;
-                //     this.state.enclosureStatus = data.moduleList.enclosure || false;
-                //     this.state.rotaryModuleStatus = data.moduleList.rotaryModule || false;
-                //     this.state.airPurifierStatus = data.moduleList.airPurifier || false;
-                // }
                 isNotNull(data.moduleList) && (this.state.moduleStatusList = data.moduleList);
                 this._updateGcodePrintingInfo(data);
 

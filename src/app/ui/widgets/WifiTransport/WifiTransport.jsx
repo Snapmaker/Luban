@@ -454,7 +454,7 @@ function WifiTransport({ widgetActions, controlActions }) {
                                 size={22}
                                 type={['static']}
                             />
-                            <span>{i18n._('Import G-code')}</span>
+                            <span>{i18n._('key-Workspace/WifiTransport-G-code Files')}</span>
                         </Button>
                     </div>
                 )}
@@ -482,27 +482,27 @@ function WifiTransport({ widgetActions, controlActions }) {
                     <SvgIcon
                         name="Edit"
                         size={24}
-                        title={i18n._('Edit')}
+                        title={i18n._('key-Workspace/Transport-Edit')}
                         disabled={!selectedFile}
                         onClick={(e) => gcodeItemRef.current.remaneStart(selectedFile.uploadName, selectFileIndex, e)}
                     />
                     <SvgIcon
                         name="Import"
                         size={24}
-                        title={i18n._('Import')}
+                        title={i18n._('key-Workspace/Transport-Import')}
                         onClick={actions.onClickToUpload}
                     />
                     <SvgIcon
                         name="Export"
                         size={24}
-                        title={i18n._('Export')}
+                        title={i18n._('key-Workspace/Transport-Export')}
                         onClick={actions.onExport}
                         disabled={!selectedFile}
                     />
                     <SvgIcon
                         name="Delete"
                         size={24}
-                        title={i18n._('Delete')}
+                        title={i18n._('key-Workspace/Transport-Delete')}
                         disabled={!selectedFile}
                         onClick={() => gcodeItemRef.current.removeFile(selectedFile)}
                     />
@@ -515,16 +515,16 @@ function WifiTransport({ widgetActions, controlActions }) {
                         disabled={!(hasFile && isConnected && isHeadType && connectionType === CONNECTION_TYPE_WIFI)}
                         onClick={actions.sendFile}
                     >
-                        {i18n._('Send To Machine')}
+                        {i18n._('key-Workspace/WifiTransport-Sending File')}
                     </Button>
                     <Button
                         type="primary"
                         priority="level-two"
                         width="144px"
-                        disabled={!hasFile}
+                        disabled={!hasFile || !isConnected || currentWorkflowStatus !== 'idle'}
                         onClick={actions.loadGcodeToWorkspace}
                     >
-                        {i18n._('Start Print')}
+                        {i18n._('key-Workspace/Transport-Start Print')}
                     </Button>
                 </div>
             </div>
@@ -536,7 +536,7 @@ function WifiTransport({ widgetActions, controlActions }) {
                 }}
             >
                 <Modal.Header>
-                    {i18n._('Preview')}
+                    {i18n._('key-Workspace/Transport-Preview')}
                 </Modal.Header>
                 <Modal.Body>
                     <div style={{ width: 944, height: 522 }} className="position-re">
@@ -559,9 +559,9 @@ function WifiTransport({ widgetActions, controlActions }) {
                     </div>
                 </Modal.Body>
                 <Modal.Footer>
-                    <Button priority="level-three" width="88px" onClick={() => setPreviewModalShow(false)} className="margin-right-16">{i18n._('Close')}</Button>
-                    {currentWorkflowStatus !== 'idle' && <Button priority="level-two" type="primary" width="200px">{i18n._('Send To Machine')}</Button>}
-                    {currentWorkflowStatus === 'idle' && (
+                    <Button priority="level-three" width="88px" onClick={() => setPreviewModalShow(false)} className="margin-right-16">{i18n._('key-unused-Cancel')}</Button>
+                    {(currentWorkflowStatus !== 'idle' || connectionType === 'serial') && <Button priority="level-two" type="primary" width="200px">{i18n._('key-Workspace/WifiTransport-Sending File')}</Button>}
+                    {(currentWorkflowStatus === 'idle' && connectionType === 'wifi') && (
                         <Dropdown
                             className="display-inline"
                             overlay={() => (
@@ -571,7 +571,7 @@ function WifiTransport({ widgetActions, controlActions }) {
                                         setPreviewModalShow(false);
                                     }}
                                     >
-                                        <div className="align-c">{i18n._('Send To Machine')}</div>
+                                        <div className="align-c">{i18n._('key-Workspace/WifiTransport-Sending File')}</div>
                                     </Menu.Item>
                                 </Menu>
                             )}
@@ -587,7 +587,7 @@ function WifiTransport({ widgetActions, controlActions }) {
                                     setPreviewModalShow(false);
                                 }}
                             >
-                                {i18n._('Start Print')}
+                                {i18n._('key-Workspace/Transport-Start Print')}
                             </Button>
                         </Dropdown>
                     )}
