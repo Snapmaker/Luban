@@ -79,7 +79,7 @@ function genModelConfig(elem, size) {
             positionY: positionY
         },
         config: {
-            svgNodeName: elem.getAttribute('isText') ? 'text' : elem.nodeName,
+            svgNodeName: elem.nodeName,
             text: elem.getAttribute('textContent'),
             alignment: 'left',
             'font-size': elem.getAttribute('font-size'),
@@ -653,7 +653,7 @@ class SVGActionsFactory {
         const { modelID, content, width: dataWidth, height: dataHeight, transformation, config: elemConfig } = data;
         let res, textSize;
         try {
-            const isText = element.getAttribute('isText');
+            const isText = element.nodeName === 'text';
             if (isText) {
                 const newConfig = {
                     ...DEFAULT_TEXT_CONFIG,
@@ -1286,6 +1286,7 @@ class SVGActionsFactory {
             const scaleTransform = transformList.getItem(2);
             const scaleX = scaleTransform.matrix.a;
             const scaleY = scaleTransform.matrix.d;
+            console.log('scaleX', scaleX, scaleY);
 
             scaleTransform.setScale(scaleX, -scaleY);
             this.getSVGModelByElement(element).onTransform();
@@ -1489,19 +1490,14 @@ class SVGActionsFactory {
      */
     createText(content, position) {
         return this.svgContentGroup.addSVGElement({
-            element: 'image',
+            element: 'text',
             attr: {
-                x: this.size.x + position.x,
-                y: this.size.y + position.y,
-                fill: '#000000',
-                // 'fill-opacity': 1,
+                x: this.size.x - 21.5 + position.x,
+                y: this.size.y - 4.25 + position.y,
                 'font-size': 24,
                 'font-family': 'Arial',
-                'stroke-width': 0.25,
                 alignment: 'left',
-                isText: true,
-                textContent: 'Snapmaker',
-                opacity: 1
+                textContent: content
             }
         });
     }
@@ -1520,7 +1516,6 @@ class SVGActionsFactory {
     modifyText(element, options) {
         // only support single selected text element
         if (!element && this.selectedSvgModels.length > 1) return;
-
         const model = element ? this.getSVGModelByElement(element) : this.selectedSvgModels[0];
 
         // Update model

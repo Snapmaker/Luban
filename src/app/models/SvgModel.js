@@ -329,7 +329,6 @@ class SvgModel extends BaseModel {
         const content = `<svg x="0" y="0" width="${vwidth}mm" height="${vheight}mm" `
             + `viewBox="${vx} ${vy} ${vwidth} ${vheight}" `
             + `xmlns="http://www.w3.org/2000/svg">${new XMLSerializer().serializeToString(clone)}</svg>`;
-
         const model = {
             modelID: elem.getAttribute('id'),
             content: content,
@@ -341,7 +340,7 @@ class SvgModel extends BaseModel {
             },
             config: {
                 svgNodeName: elem.nodeName,
-                text: elem.textContent,
+                text: elem.getAttribute('textContent'),
                 'font-size': elem.getAttribute('font-size'),
                 'font-family': elem.getAttribute('font-family')
             }
@@ -464,11 +463,7 @@ class SvgModel extends BaseModel {
         const { positionX, positionY } = transformation;
 
         for (const key of Object.keys(config)) {
-            if (key === 'text') {
-                elem.textContent = config[key];
-            } else {
-                elem.setAttribute(key, config[key]);
-            }
+            elem.setAttribute(key, config[key]);
         }
 
         const { x, y } = this.pointModelToSvg({ x: positionX, y: positionY });
@@ -502,10 +497,26 @@ class SvgModel extends BaseModel {
                 break;
             }
             case 'text': {
-                const diffY = elem.getAttribute('y') - elem.getBBox().y;
-                elem.setAttribute('x', x - width / 2);
-                elem.setAttribute('y', y - height / 2 + diffY);
-                elem.setAttribute('fill', '#000');
+                const imageElement = document.createElementNS(NS.SVG, 'image');
+                const attributes = {
+                    'href': href || elem.getAttribute('href'),
+                    'alignment': elem.getAttribute('alignment'),
+                    'font-family': elem.getAttribute('font-family'),
+                    'font-size': elem.getAttribute('font-size'),
+                    'id': elem.getAttribute('id'),
+                    'x': elem.getAttribute('x'),
+                    'y': elem.getAttribute('y'),
+                    width,
+                    height
+                };
+                // // set attribute
+                for (const [key, value] of Object.entries(attributes)) {
+                    imageElement.setAttribute(key, value);
+                }
+                this.elem.parentNode.append(imageElement);
+                this.elem.remove();
+                this.elem = imageElement;
+
                 break;
             }
             default:
@@ -1118,12 +1129,6 @@ class SvgModel extends BaseModel {
 
         this.refresh();
         this.modelGroup.modelChanged();
-        // if (this.config.svgNodeName === 'text') {
-        //     updateTimer && clearTimeout(updateTimer);
-        //     updateTimer = setTimeout(() => {
-        //         this.updateSource();
-        //     }, 300); // to prevent continuous input cause frequently update
-        // }
     }
 
     /**

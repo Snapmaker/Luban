@@ -83,9 +83,9 @@ function createSVGElement(data) {
         stroke: '#000000'
     });
     cleanupAttributes(element);
-    if (data.isText && data.attr.textContent) {
-        element.textContent = data.attr.textContent;
-    }
+    // if (data.element === 'text' && data.attr.textContent) {
+    //     element.textContent = data.attr.textContent;
+    // }
     setAttributes(element, data.attr);
     // add children?
     return element;

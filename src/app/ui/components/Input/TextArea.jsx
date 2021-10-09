@@ -25,7 +25,7 @@ const TextAreaInput = React.memo(({
     );
 
     useEffect(() => {
-        if (displayValue !== value) {
+        if (displayValue.trim() !== value.trim()) {
             onChange && debouncedChangeHandler(displayValue);
         }
     }, [displayValue, onChange]);
