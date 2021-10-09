@@ -116,9 +116,6 @@ const convertTextToSvg = async (options) => {
         fullPath.extend(p);
     }
     fullPath.stroke = 'black';
-    // if (!fillEnabled || fillDensity === 0) {
-    //     fullPath.fill = 'none';
-    // }
 
     // Calculate size and render SVG template
     const boundingBox = fullPath.getBoundingBox();

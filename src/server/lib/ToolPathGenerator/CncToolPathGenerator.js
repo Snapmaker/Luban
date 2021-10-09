@@ -180,7 +180,7 @@ export default class CNCToolPathGenerator extends EventEmitter {
     _processSVG(svg, modelInfo) {
         const { transformation, sourceType, gcodeConfig, toolParams } = modelInfo;
 
-        const { pathType = 'path', targetDepth, fillEnabled, stepOver } = gcodeConfig;
+        const { pathType = 'path', targetDepth, stepOver } = gcodeConfig;
         const fillDensity = 1 / stepOver;
         const { toolDiameter, toolAngle, toolShaftDiameter } = toolParams;
 
@@ -211,7 +211,7 @@ export default class CNCToolPathGenerator extends EventEmitter {
         this._processPathType(svg, pathType, {
             width: svg.viewBox[2],
             height: svg.viewBox[3],
-            fillEnabled: fillEnabled || true,
+            pathType: pathType || 'fill',
             fillDensity: fillDensity || 5,
             targetDepth,
             toolAngle,

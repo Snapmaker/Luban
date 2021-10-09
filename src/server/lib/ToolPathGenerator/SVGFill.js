@@ -151,7 +151,7 @@ function canvasToSegments(canvas, width, height, density) {
 }
 
 function svgToSegments(svg, options = {}) {
-    if (!options.fillEnabled) {
+    if (options.pathType === 'path') {
         const segments = [];
         for (const shape of svg.shapes) {
             if (!shape.visibility) {

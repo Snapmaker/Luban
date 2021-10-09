@@ -51,7 +51,7 @@ function ToolPathConfigurations({ toolpath, onClose, headType }) {
                 activeToolDefinition.settings.step_over.default_value = gcodeConfig?.stepOver;
             }
             if (headType === HEAD_LASER) {
-                activeToolDefinition.settings.fill_enabled.default_value = gcodeConfig?.fillEnabled;
+                activeToolDefinition.settings.path_type.default_value = gcodeConfig?.pathType;
                 activeToolDefinition.settings.movement_mode.default_value = gcodeConfig?.movementMode;
                 activeToolDefinition.settings.direction.default_value = gcodeConfig?.direction;
                 activeToolDefinition.settings.fill_interval.default_value = gcodeConfig?.fillInterval;
@@ -97,19 +97,20 @@ function ToolPathConfigurations({ toolpath, onClose, headType }) {
                 }
 
                 // Fill Enabled
-                // if (option.fillEnabled === true) {
-                //     option.fillInterval = 0.25;
-                //     option.jogSpeed = 3000;
-                //     option.workSpeed = 500;
-                //     option.fixedPower = 100;
-                // }
-                // if (option.fillEnabled === false) {
-                //     option.jogSpeed = 3000;
-                //     option.workSpeed = 140;
-                //     option.multiPasses = 2;
-                //     option.multiPassDepth = 0.6;
-                //     option.fixedPower = 100;
-                // }
+                if (key === 'path_type' && value === 'fill') {
+                    newDefinition.settings.fill_interval.default_value = 0.25;
+                    newDefinition.settings.jog_speed.default_value = 3000;
+                    newDefinition.settings.work_speed.default_value = 500;
+                    newDefinition.settings.fixed_power.default_value = 100;
+                    newDefinition.settings.multi_passes.default_value = 1;
+                }
+                if (key === 'path_type' && value === 'path') {
+                    newDefinition.settings.jog_speed.default_value = 3000;
+                    newDefinition.settings.work_speed.default_value = 140;
+                    newDefinition.settings.multi_passes.default_value = 2;
+                    newDefinition.settings.multi_pass_depth.default_value = 0.6;
+                    newDefinition.settings.fixed_power.default_value = 100;
+                }
 
                 // Fiexd Power Enabled
                 if (key === 'fixed_power') {
@@ -227,7 +228,6 @@ function ToolPathConfigurations({ toolpath, onClose, headType }) {
                 }
             };
             setToolPath(nToolPath);
-            dispatch(editorActions.refreshToolPathPreview(headType));
         }
     };
     if (!toolPath) {

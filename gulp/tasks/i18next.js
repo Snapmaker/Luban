@@ -154,7 +154,7 @@ const curaFields = [
     'support_infill_rate',
     'support_z_distance',
     // Laser
-    'fill_enabled',
+    'path_type',
     'movement_mode',
     'direction',
     'fill_interval',

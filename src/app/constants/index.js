@@ -247,7 +247,7 @@ export const LASER_PRESENT_CONFIG_GROUP = [
     {
         name: 'Method',
         fields: [
-            'fill_enabled'
+            'path_type'
         ]
     },
     {
@@ -457,14 +457,14 @@ export const CNC_DEFAULT_GCODE_PARAMETERS_DEFINITION = {
 };
 
 export const LASER_DEFAULT_GCODE_PARAMETERS_DEFINITION = {
-    'fillEnabled': {
+    'pathType': {
+        default_value: 'path',
         description: 'Set the processing method of the object. \n - Fill: Fills the object with lines or dots.\n - On the Path: Engraves along the shape of the object.',
-        label: 'Method', // 'Fill'
+        label: 'Method',
         type: 'enum',
-        default_value: 'false',
         options: {
-            false: 'On the Path',
-            true: 'Fill'
+            'path': 'On the Path',
+            'fill': 'Fill'
         }
     },
     'workSpeed': {

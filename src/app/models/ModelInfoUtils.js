@@ -10,7 +10,6 @@ import {
 } from '../constants';
 import { round } from '../../shared/lib/utils';
 
-const DEFAULT_FILL_ENABLED = false;
 // const DEFAULT_FILL_DENSITY = 4;
 const DEFAULT_FILL_INTERVAL = 0.25;
 
@@ -148,6 +147,7 @@ const defaultGcodeConfigs = {
         direction: 'Horizontal',
         movementMode: 'greyscale-dot', // greyscale-line, greyscale-dot
         fillInterval: 0.14, // density: 7,
+        pathType: 'fill',
         jogSpeed: 2500,
         workSpeed: 2500,
         plungeSpeed: 800,
@@ -162,6 +162,7 @@ const defaultGcodeConfigs = {
         direction: 'Vertical',
         movementMode: 'greyscale-line', // greyscale-line, greyscale-dot
         fillInterval: DEFAULT_FILL_INTERVAL, // density: DEFAULT_FILL_DENSITY,
+        pathType: 'fill',
         jogSpeed: 2500,
         workSpeed: 2500,
         plungeSpeed: 800,
@@ -176,6 +177,7 @@ const defaultGcodeConfigs = {
         direction: 'Horizontal',
         movementMode: 'greyscale-line', // greyscale-line, greyscale-dot
         fillInterval: DEFAULT_FILL_INTERVAL, // density: DEFAULT_FILL_DENSITY,
+        pathType: 'fill',
         jogSpeed: 2500,
         workSpeed: 2500,
         plungeSpeed: 800,
@@ -190,6 +192,7 @@ const defaultGcodeConfigs = {
         direction: 'Vertical',
         movementMode: 'greyscale-line', // greyscale-line, greyscale-dot
         fillInterval: DEFAULT_FILL_INTERVAL, // density: DEFAULT_FILL_DENSITY,
+        pathType: 'fill',
         jogSpeed: 2500,
         workSpeed: 2500,
         plungeSpeed: 800,
@@ -204,6 +207,7 @@ const defaultGcodeConfigs = {
         direction: 'Horizontal',
         movementMode: 'greyscale-line', // greyscale-line, greyscale-dot
         fillInterval: DEFAULT_FILL_INTERVAL, // density: DEFAULT_FILL_DENSITY,
+        pathType: 'fill',
         jogSpeed: 2500,
         workSpeed: 2500,
         plungeSpeed: 800,
@@ -217,7 +221,7 @@ const defaultGcodeConfigs = {
     [toKey(HEAD_LASER, PROCESS_MODE_VECTOR)]: {
         optimizePath: false,
         movementMode: 'greyscale-line', // greyscale-line, greyscale-dot
-        fillEnabled: DEFAULT_FILL_ENABLED,
+        pathType: 'path',
         fillInterval: DEFAULT_FILL_INTERVAL, // fillDensity: DEFAULT_FILL_DENSITY,
         jogSpeed: 3000,
         workSpeed: 140,
@@ -232,7 +236,7 @@ const defaultGcodeConfigs = {
     [toKey(HEAD_LASER, PROCESS_MODE_VECTOR, true)]: {
         optimizePath: false,
         movementMode: 'greyscale-line', // greyscale-line, greyscale-dot
-        fillEnabled: DEFAULT_FILL_ENABLED,
+        pathType: 'path',
         fillInterval: DEFAULT_FILL_INTERVAL, // fillDensity: DEFAULT_FILL_DENSITY,
         jogSpeed: 3000,
         workSpeed: 800,
@@ -247,7 +251,7 @@ const defaultGcodeConfigs = {
     [toKey(HEAD_LASER, PROCESS_MODE_VECTOR, SOURCE_TYPE_RASTER)]: {
         optimizePath: true,
         movementMode: 'greyscale-line', // greyscale-line, greyscale-dot
-        fillEnabled: DEFAULT_FILL_ENABLED,
+        pathType: 'path',
         fillInterval: DEFAULT_FILL_INTERVAL, // fillDensity: DEFAULT_FILL_DENSITY,
         jogSpeed: 3000,
         workSpeed: 140,
@@ -262,7 +266,7 @@ const defaultGcodeConfigs = {
     [toKey(HEAD_LASER, PROCESS_MODE_VECTOR, SOURCE_TYPE_RASTER, true)]: {
         optimizePath: true,
         movementMode: 'greyscale-line', // greyscale-line, greyscale-dot
-        fillEnabled: DEFAULT_FILL_ENABLED,
+        pathType: 'path',
         fillInterval: DEFAULT_FILL_INTERVAL, // fillDensity: DEFAULT_FILL_DENSITY,
         jogSpeed: 3000,
         workSpeed: 800,
@@ -323,9 +327,8 @@ const defaultGcodeConfigs = {
     },
     [toKey(HEAD_CNC)]: {
         optimizePath: false,
-        fillEnabled: DEFAULT_FILL_ENABLED,
-        stepOver: 0.25, // fillDensity: DEFAULT_FILL_DENSITY,
         pathType: 'path',
+        stepOver: 0.25, // fillDensity: DEFAULT_FILL_DENSITY,
         targetDepth: 2.0,
         stepDown: 0.5,
         safetyHeight: 1,
