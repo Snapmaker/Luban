@@ -136,6 +136,10 @@
                 "min_skin_width_for_expansion": {
                     "label": "Minimum Skin Width for Expansion",
                     "default_value": 0
+                },
+                "skin_edge_support_layers": {
+                    "label": "Skin Edge Support Layers",
+                    "default_value": 0
                 }
             }
         },
