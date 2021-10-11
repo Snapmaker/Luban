@@ -1,23 +1,24 @@
 import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
 import { cloneDeep } from 'lodash';
-// import Slider from '../../../components/Slider';
-import {
-    TOOLPATH_TYPE_IMAGE,
-    TOOLPATH_TYPE_VECTOR,
-    LASER_DEFAULT_GCODE_PARAMETERS_DEFINITION
-} from '../../../../constants';
+import { TOOLPATH_TYPE_IMAGE, TOOLPATH_TYPE_VECTOR, LASER_DEFAULT_GCODE_PARAMETERS_DEFINITION } from '../../../../constants';
 import i18n from '../../../../lib/i18n';
 import SvgIcon from '../../../components/SvgIcon';
 import ToolParameters from '../cnc/ToolParameters';
 import { toHump } from '../../../../../shared/lib/utils';
+import PresentSelector from './PresentSelector';
 
 class GcodeParameters extends PureComponent {
     static propTypes = {
         toolPath: PropTypes.object.isRequired,
         activeToolDefinition: PropTypes.object.isRequired,
         updateGcodeConfig: PropTypes.func.isRequired,
-        updateToolConfig: PropTypes.func.isRequired
+        updateToolConfig: PropTypes.func.isRequired,
+
+        toolDefinitions: PropTypes.array.isRequired,
+        setCurrentToolDefinition: PropTypes.func.isRequired,
+        isModifiedDefinition: PropTypes.bool.isRequired,
+        setCurrentValueAsProfile: PropTypes.func.isRequired
     };
 
     state = {
@@ -34,9 +35,6 @@ class GcodeParameters extends PureComponent {
         const isSVG = type === TOOLPATH_TYPE_VECTOR;
         const isImage = type === TOOLPATH_TYPE_IMAGE;
 
-        const { fillEnabled, movementMode,
-            multiPasses, fixedPowerEnabled } = gcodeConfig;
-
         const allDefinition = LASER_DEFAULT_GCODE_PARAMETERS_DEFINITION;
         Object.keys(allDefinition).forEach((key) => {
             allDefinition[key].default_value = gcodeConfig[key];
@@ -50,14 +48,21 @@ class GcodeParameters extends PureComponent {
             }
             allDefinition[toHump(key)].default_value = value.default_value;
         });
-        // Todo
-        const isMethodFill = (fillEnabled === 'true' || fillEnabled === true);
 
+        const pathType = allDefinition.pathType.default_value;
+        const movementMode = allDefinition.movementMode.default_value;
+        const multiPasses = allDefinition.multiPasses.default_value;
+        const fixedPowerEnabled = allDefinition.fixedPowerEnabled.default_value;
+
+        // Session Method
+        const laserDefinitionMethod = {
+            'pathType': allDefinition.pathType
+        };
 
         // Session Fill
         const laserDefinitionFillKeys = [];
         const laserDefinitionFill = {};
-        if (!isSVG || isMethodFill) {
+        if (!isSVG || pathType === 'fill') {
             laserDefinitionFillKeys.push('movementMode');
             if (isImage) {
                 if (movementMode === 'greyscale-line') {
@@ -89,7 +94,7 @@ class GcodeParameters extends PureComponent {
 
         // Session Speed
         const laserDefinitionSpeedKeys = ['jogSpeed'];
-        if (isMethodFill || movementMode === 'greyscale-line') {
+        if (pathType === 'fill' || movementMode === 'greyscale-line') {
             laserDefinitionSpeedKeys.push('workSpeed');
         }
         if (movementMode === 'greyscale-dot') {
@@ -105,7 +110,7 @@ class GcodeParameters extends PureComponent {
         // Session Repetition
         const laserDefinitionRepetitionKeys = [];
         const laserDefinitionRepetition = {};
-        if (isSVG && !isMethodFill) {
+        if (isSVG && pathType === 'path') {
             laserDefinitionRepetitionKeys.push('multiPasses');
             if (multiPasses > 1) {
                 laserDefinitionRepetitionKeys.push('multiPassDepth');
@@ -128,7 +133,31 @@ class GcodeParameters extends PureComponent {
 
         return (
             <React.Fragment>
-                {(!isSVG || isMethodFill) && (
+                <div>
+                    <div className="border-bottom-normal padding-bottom-4 margin-vertical-16">
+                        <SvgIcon
+                            name="TitleSetting"
+                            type={['static']}
+                            size={24}
+                        />
+                        <span>{i18n._('Present')}</span>
+                    </div>
+                    <PresentSelector
+                        toolDefinition={this.props.activeToolDefinition}
+                        toolDefinitions={this.props.toolDefinitions}
+                        setCurrentToolDefinition={this.props.setCurrentToolDefinition}
+                        isModifiedDefinition={this.props.isModifiedDefinition}
+                        setCurrentValueAsProfile={this.props.setCurrentValueAsProfile}
+                    />
+                    <ToolParameters
+                        settings={laserDefinitionMethod}
+                        updateToolConfig={this.props.updateToolConfig}
+                        updateGcodeConfig={this.props.updateGcodeConfig}
+                        toolPath={this.props.toolPath}
+                        styleSize="large"
+                    />
+                </div>
+                {(!isSVG || pathType === 'fill') && (
                     <div>
                         <div className="border-bottom-normal padding-bottom-4 margin-vertical-16">
                             <SvgIcon
@@ -164,7 +193,7 @@ class GcodeParameters extends PureComponent {
                         styleSize="large"
                     />
                 </div>
-                {isSVG && !isMethodFill && (
+                {isSVG && pathType === 'path' && (
                     <div>
                         <div className="border-bottom-normal padding-bottom-4 margin-vertical-16">
                             <SvgIcon

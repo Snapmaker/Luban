@@ -8,7 +8,7 @@ export const convertRasterToSvg = async (req, res) => {
 };
 
 export const convertTextToSvg = async (req, res) => {
-    // options: { text, font, size, lineHeight, alignment, fillEnabled, fillDensity }
+    // options: { text, font, size, lineHeight, alignment, pathType, fillDensity }
     const options = req.body;
     const result = await convertText(options);
     res.send(result);

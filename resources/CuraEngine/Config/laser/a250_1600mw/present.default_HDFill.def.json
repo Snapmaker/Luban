@@ -5,8 +5,8 @@
     "version": "1.0.0",
     "name": "HD Fill",
     "overrides": {
-        "fill_enabled": {
-            "default_value": "true"
+        "path_type": {
+            "default_value": "fill"
         },
         "work_speed": {
             "default_value": 2500

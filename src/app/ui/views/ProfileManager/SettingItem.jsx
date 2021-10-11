@@ -21,11 +21,19 @@ function SettingItem({ definitionKey, settings, isDefaultDefinition = () => true
             for (const condition of andConditions) {
             // parse resolveOrValue('adhesion_type') == 'skirt'
                 const enabledKey = condition.match("resolveOrValue\\('(.[^)|']*)'") ? condition.match("resolveOrValue\\('(.[^)|']*)'")[1] : null;
-                const enabledValue = condition.match("== ?'(.[^)|']*)'") ? condition.match("== ?'(.[^)|']*)'")[1] : null;
+                const enabledEqualValue = condition.match("== ?'(.[^)|']*)'") ? condition.match("== ?'(.[^)|']*)'")[1] : null;
+                const enabledGreaterValue = condition.match('> ?([0-9]+)') ? condition.match('> ?([0-9]+)')[1] : null;
+                const enabledLessValue = condition.match('< ?([0-9]+)') ? condition.match('< ?([0-9]+)')[1] : null;
                 if (enabledKey) {
                     if (settings[enabledKey]) {
                         const value = settings[enabledKey].default_value;
-                        if (value !== enabledValue) {
+                        if (enabledEqualValue && value !== enabledEqualValue) {
+                            return null;
+                        }
+                        if (enabledGreaterValue && value <= enabledGreaterValue) {
+                            return null;
+                        }
+                        if (enabledLessValue && value >= enabledLessValue) {
                             return null;
                         }
                     }

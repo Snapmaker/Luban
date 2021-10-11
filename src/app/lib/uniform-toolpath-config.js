@@ -16,6 +16,10 @@ export const UniformToolpathConfig = (config) => {
             if (!toolPath.toolParams.definitionName) {
                 toolPath.toolParams.definitionName = 'CUT';
             }
+
+            if (!toolPath.gcodeConfig.pathType) {
+                toolPath.gcodeConfig.pathType = toolPath.gcodeConfig.fillEnabled ? 'fill' : 'path';
+            }
             return toolPath;
         });
     }

@@ -59,20 +59,18 @@ function getFastEditSettingsKeys(toolPath) {
     if (headType === HEAD_LASER) {
         if (toolPathType === 'vector') {
             const multiPasses = gcodeConfig?.multiPasses;
-            const fillEnabled = gcodeConfig?.fillEnabled;
-            // Todo
-            const isMethodFill = (fillEnabled === 'true' || fillEnabled === true);
+            const pathType = gcodeConfig?.pathType;
 
-            if (isMethodFill) {
-                return ['fillEnabled', 'fillInterval', 'workSpeed', 'fixedPower'];
+            if (pathType === 'fill') {
+                return ['pathType', 'fillInterval', 'workSpeed', 'fixedPower'];
             }
             if (multiPasses === 1) {
                 return [
-                    'fillEnabled', 'workSpeed', 'multiPasses', 'fixedPower'
+                    'pathType', 'workSpeed', 'multiPasses', 'fixedPower'
                 ];
             } else {
                 return [
-                    'fillEnabled', 'workSpeed', 'multiPasses', 'multiPassDepth', 'fixedPower'
+                    'pathType', 'workSpeed', 'multiPasses', 'multiPassDepth', 'fixedPower'
                 ];
             }
         }
@@ -169,7 +167,7 @@ function ToolPathFastConfigurations({ setEditingToolpath, headType, toolpath }) 
                 activeToolDefinition.settings.step_over.default_value = gcodeConfig?.stepOver;
             }
             if (headType === HEAD_LASER) {
-                activeToolDefinition.settings.fill_enabled.default_value = gcodeConfig?.fillEnabled;
+                activeToolDefinition.settings.path_type.default_value = gcodeConfig?.pathType;
                 activeToolDefinition.settings.movement_mode.default_value = gcodeConfig?.movementMode;
                 activeToolDefinition.settings.direction.default_value = gcodeConfig?.direction;
                 activeToolDefinition.settings.fill_interval.default_value = gcodeConfig?.fillInterval;
@@ -273,20 +271,20 @@ function ToolPathFastConfigurations({ setEditingToolpath, headType, toolpath }) 
                 }
 
                 // Fill Enabled
-                // if (option.fillEnabled === true) {
-                //     option.fillInterval = 0.25;
-                //     option.jogSpeed = 3000;
-                //     option.workSpeed = 500;
-                //     option.fixedPower = 100;
-                //     option.multiPasses = 1;
-                // }
-                // if (option.fillEnabled === false) {
-                //     option.jogSpeed = 3000;
-                //     option.workSpeed = 140;
-                //     option.multiPasses = 2;
-                //     option.multiPassDepth = 0.6;
-                //     option.fixedPower = 100;
-                // }
+                if (option.pathType === 'fill') {
+                    option.fillInterval = 0.25;
+                    option.jogSpeed = 3000;
+                    option.workSpeed = 500;
+                    option.fixedPower = 100;
+                    option.multiPasses = 1;
+                }
+                if (option.pathType === 'path') {
+                    option.jogSpeed = 3000;
+                    option.workSpeed = 140;
+                    option.multiPasses = 2;
+                    option.multiPassDepth = 0.6;
+                    option.fixedPower = 100;
+                }
 
                 // Fiexd Power Enabled
                 if (option.fixedPower) {

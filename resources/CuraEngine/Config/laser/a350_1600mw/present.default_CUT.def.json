@@ -5,8 +5,8 @@
     "version": "1.0.0",
     "name": "CUT",
     "overrides": {
-        "fill_enabled": {
-            "default_value": "false"
+        "path_type": {
+            "default_value": "path"
         },
         "work_speed": {
             "default_value": 2500
