@@ -312,8 +312,8 @@ function WifiConnection() {
         if (currentHeadType) {
             newModuleStatusList.push({
                 key: currentHeadType,
-                moduleName: i18n._(`key-Workspace/Connection-${currentHeadType}`),
-                status: true
+                status: true,
+                moduleName: i18n._(`key-Workspace/Connection-${currentHeadType}`)
             });
             if (headType === 'printing') {
                 newModuleStatusList.push({
@@ -340,7 +340,7 @@ function WifiConnection() {
                 if (key === 'airPurifier' && airPurifier) {
                     newModuleStatusList.push({
                         key,
-                        moduleName: i18n._(`key-Workspace/Connection-${key}`),
+                        moduleName: i18n._('key-Workspace/Connection-airPurifier'),
                         status: moduleStatusList[key]
                     });
                 }

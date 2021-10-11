@@ -18,7 +18,7 @@ import {
     CONNECTION_TYPE_WIFI,
     DATA_PREFIX, HEAD_CNC, HEAD_LASER, HEAD_PRINTING
 } from '../../../constants';
-import { actions as workspaceActions } from '../../../flux/workspace';
+import { actions as workspaceActions, WORKSPACE_STAGE } from '../../../flux/workspace';
 import { actions as projectActions } from '../../../flux/project';
 
 import modalSmallHOC from '../../components/Modal/modal-small';
@@ -29,6 +29,7 @@ import Dropdown from '../../components/Dropdown';
 import Modal from '../../components/Modal';
 import Canvas from '../../components/SMCanvas';
 import PrintablePlate from '../WorkspaceVisualizer/PrintablePlate';
+import usePrevious from '../../../lib/hooks/previous';
 // import Checkbox from '../../components/Checkbox';
 
 
@@ -208,7 +209,7 @@ const visualizerGroup = {
 };
 let printableArea = null;
 function WifiTransport({ widgetActions, controlActions }) {
-    const { gcodeFiles, previewModelGroup, previewRenderState } = useSelector(state => state.workspace);
+    const { previewBoundingBox, gcodeFiles, previewModelGroup, previewRenderState, previewStage } = useSelector(state => state.workspace);
     const { server, isConnected, headType, connectionType, size, workflowStatus, workflowState } = useSelector(state => state.machine);
     const [loadToWorkspaceOnLoad, setLoadToWorkspaceOnLoad] = useState(true);
     const [selectFileName, setSelectFileName] = useState('');
@@ -220,6 +221,9 @@ function WifiTransport({ widgetActions, controlActions }) {
     const fileInput = useRef();
     const gcodeItemRef = useRef();
     const canvas = useRef();
+    const prevProps = usePrevious({
+        previewStage
+    });
     printableArea = new PrintablePlate({
         x: size.x * 2,
         y: size.y * 2
@@ -371,9 +375,21 @@ function WifiTransport({ widgetActions, controlActions }) {
         setCurrentWorkflowStatus(newCurrent);
     }, [workflowState, workflowStatus, connectionType]);
 
-    // useEffect(() => {
-    //     visualizerGroup.object.add(previewModalShow);
-    // }, [previewModelGroup]);
+    useEffect(() => {
+        if (prevProps) {
+            if (prevProps.previewStage !== previewStage && previewStage === WORKSPACE_STAGE.LOAD_GCODE_SUCCEED) {
+                if (previewBoundingBox !== null) {
+                    const { min, max } = previewBoundingBox;
+                    const target = new THREE.Vector3();
+
+                    target.copy(min).add(max).divideScalar(2);
+                    const width = new THREE.Vector3().add(min).distanceTo(new THREE.Vector3().add(max));
+                    const position = new THREE.Vector3(target.x, target.y, width * 2);
+                    canvas.current.setCamera(position, target);
+                }
+            }
+        }
+    }, [previewStage]);
 
     const isHeadType = selectFileType === headType;
     const hasFile = gcodeFiles.length > 0;
@@ -528,71 +544,73 @@ function WifiTransport({ widgetActions, controlActions }) {
                     </Button>
                 </div>
             </div>
-            <Modal
-                centered
-                visible={previewModalShow}
-                onClose={() => {
-                    setPreviewModalShow(false);
-                }}
-            >
-                <Modal.Header>
-                    {i18n._('key-Workspace/Transport-Preview')}
-                </Modal.Header>
-                <Modal.Body>
-                    <div style={{ width: 944, height: 522 }} className="position-re">
-                        {previewRenderState === 'rendered' && (
-                            <Canvas
-                                ref={canvas}
-                                size={size}
-                                modelGroup={visualizerGroup}
-                                printableArea={printableArea}
-                                cameraInitialPosition={new THREE.Vector3(0, 0, Math.min(size.z * 2, 300))}
-                                cameraInitialTarget={new THREE.Vector3(0, 0, 0)}
-                            />
-                            // <Spin />
-                        )}
-                        {previewRenderState !== 'rendered' && (
-                            <div className="position-ab position-ab-center">
-                                <Spin />
-                            </div>
-                        )}
-                    </div>
-                </Modal.Body>
-                <Modal.Footer>
-                    <Button priority="level-three" width="88px" onClick={() => setPreviewModalShow(false)} className="margin-right-16">{i18n._('key-unused-Cancel')}</Button>
-                    {(currentWorkflowStatus !== 'idle' || connectionType === 'serial') && <Button priority="level-two" type="primary" width="200px">{i18n._('key-Workspace/WifiTransport-Sending File')}</Button>}
-                    {(currentWorkflowStatus === 'idle' && connectionType === 'wifi') && (
-                        <Dropdown
-                            className="display-inline"
-                            overlay={() => (
-                                <Menu>
-                                    <Menu.Item onClick={() => {
-                                        actions.sendFile();
+            {previewModalShow && (
+                <Modal
+                    centered
+                    visible={previewModalShow}
+                    onClose={() => {
+                        setPreviewModalShow(false);
+                    }}
+                >
+                    <Modal.Header>
+                        {i18n._('key-Workspace/Transport-Preview')}
+                    </Modal.Header>
+                    <Modal.Body>
+                        <div style={{ width: 944, height: 522 }} className="position-re">
+                            {previewRenderState === 'rendered' && (
+                                <Canvas
+                                    ref={canvas}
+                                    size={size}
+                                    modelGroup={visualizerGroup}
+                                    printableArea={printableArea}
+                                    cameraInitialPosition={new THREE.Vector3(0, 0, Math.min(size.z * 2, 300))}
+                                    cameraInitialTarget={new THREE.Vector3(0, 0, 0)}
+                                />
+                                // <Spin />
+                            )}
+                            {previewRenderState !== 'rendered' && (
+                                <div className="position-ab position-ab-center">
+                                    <Spin />
+                                </div>
+                            )}
+                        </div>
+                    </Modal.Body>
+                    <Modal.Footer>
+                        <Button priority="level-three" width="88px" onClick={() => setPreviewModalShow(false)} className="margin-right-16">{i18n._('key-unused-Cancel')}</Button>
+                        {isConnected && (currentWorkflowStatus !== 'idle' || connectionType === 'serial') && <Button priority="level-two" type="primary" width="200px">{i18n._('key-Workspace/WifiTransport-Sending File')}</Button>}
+                        {isConnected && (currentWorkflowStatus === 'idle' && connectionType === 'wifi') && (
+                            <Dropdown
+                                className="display-inline"
+                                overlay={() => (
+                                    <Menu>
+                                        <Menu.Item onClick={() => {
+                                            actions.sendFile();
+                                            setPreviewModalShow(false);
+                                        }}
+                                        >
+                                            <div className="align-c">{i18n._('key-Workspace/WifiTransport-Sending File')}</div>
+                                        </Menu.Item>
+                                    </Menu>
+                                )}
+                                trigger="hover"
+                            >
+                                <Button
+                                    suffixIcon={<SvgIcon name="DropdownOpen" type={['static']} color="#d5d6d9" />}
+                                    priority="level-two"
+                                    type="primary"
+                                    width="200px"
+                                    onClick={() => {
+                                        actions.loadGcodeToWorkspace();
                                         setPreviewModalShow(false);
                                     }}
-                                    >
-                                        <div className="align-c">{i18n._('key-Workspace/WifiTransport-Sending File')}</div>
-                                    </Menu.Item>
-                                </Menu>
-                            )}
-                            trigger="hover"
-                        >
-                            <Button
-                                suffixIcon={<SvgIcon name="DropdownOpen" type={['static']} color="#d5d6d9" />}
-                                priority="level-two"
-                                type="primary"
-                                width="200px"
-                                onClick={() => {
-                                    actions.loadGcodeToWorkspace();
-                                    setPreviewModalShow(false);
-                                }}
-                            >
-                                {i18n._('key-Workspace/Transport-Start Print')}
-                            </Button>
-                        </Dropdown>
-                    )}
-                </Modal.Footer>
-            </Modal>
+                                >
+                                    {i18n._('key-Workspace/Transport-Start Print')}
+                                </Button>
+                            </Dropdown>
+                        )}
+                    </Modal.Footer>
+                </Modal>
+            )}
         </div>
     );
 }

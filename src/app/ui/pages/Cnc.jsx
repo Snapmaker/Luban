@@ -193,7 +193,8 @@ function Cnc({ location }) {
         };
         return showHomePage && renderPopup({
             onClose,
-            component: HomePage
+            component: HomePage,
+            key: 'homepage'
         });
     };
     const jobTypeModal = renderJobTypeModal(HEAD_CNC, dispatch, showJobType, setShowJobType, jobTypeState, setJobTypeState, coordinateMode, coordinateSize, materials);
@@ -248,7 +249,8 @@ function Cnc({ location }) {
         };
         return showWorkspace && renderPopup({
             onClose,
-            component: Workspace
+            component: Workspace,
+            key: 'workspace'
         });
     }
 

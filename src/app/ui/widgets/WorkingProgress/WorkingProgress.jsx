@@ -10,8 +10,8 @@ import SvgIcon from '../../components/SvgIcon';
 const Text = ({ name, value }) => {
     return (
         <div className="margin-top-8 sm-flex align-c">
-            <span className="unit-text margin-right-8">{name}</span>
-            <span className="main-text-normal text-overflow-ellipsis display-inline width-102">{value}</span>
+            <span className="unit-text margin-right-8 text-overflow-ellipsis display-inline width-80">{name}</span>
+            <span className="main-text-normal text-overflow-ellipsis display-inline width-102 align-l">{value}</span>
         </div>
     );
 };

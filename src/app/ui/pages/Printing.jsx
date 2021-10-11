@@ -96,7 +96,8 @@ function useRenderMainToolBar() {
         };
         return showHomePage && renderPopup({
             onClose,
-            component: HomePage
+            component: HomePage,
+            key: 'homepage'
         });
     }
     function renderWorkspace() {
@@ -108,7 +109,8 @@ function useRenderMainToolBar() {
         };
         return showWorkspace && renderPopup({
             onClose,
-            component: Workspace
+            component: Workspace,
+            key: 'workspace'
         });
     }
     function renderMainToolBar() {
