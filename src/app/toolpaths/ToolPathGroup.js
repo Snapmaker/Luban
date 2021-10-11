@@ -534,6 +534,19 @@ class ToolPathGroup {
             toolPath.checkoutToolPathStatus();
         }
     }
+
+    checkHasVisibleToolPaths() {
+        const toolPaths = this.getToolPaths();
+        let res = false;
+        toolPaths.forEach(
+            (toolPath) => {
+                if (toolPath.visible) {
+                    res = true;
+                }
+            }
+        );
+        return res;
+    }
 }
 
 export default ToolPathGroup;

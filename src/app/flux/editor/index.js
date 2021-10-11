@@ -29,7 +29,6 @@ import { processActions } from './actions-process';
 
 import LoadModelWorker from '../../workers/LoadModel.worker';
 import { controller } from '../../lib/controller';
-import { mmToPixel } from '../../lib/numeral';
 import { isEqual, round } from '../../../shared/lib/utils';
 
 import { PROCESS_STAGE, STEP_STAGE } from '../../lib/manager/ProgressManager';
@@ -739,8 +738,8 @@ export const actions = {
 
         const options = selectedModel.getTaskInfo();
         options.transformation = {
-            width: mmToPixel(options.transformation.width),
-            height: mmToPixel(options.transformation.height)
+            width: options.transformation.width,
+            height: options.transformation.height
         };
 
         options.materials = materials;
@@ -2031,7 +2030,7 @@ export const actions = {
                             stage: STEP_STAGE.PRINTING_LOAD_MODEL_FAILED,
                             progress: 1
                         }));
-                        progressStatesManager.finishProgress(true);
+                        progressStatesManager.finishProgress(false);
                     }
                 );
             })

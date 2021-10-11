@@ -157,6 +157,14 @@ class Visualizer extends Component {
         onChangeFile: (event) => {
             const file = event.target.files[0];
             const extname = path.extname(file.name).toLowerCase();
+            if (extname === '.stl' && this.props.materials.isRotate) {
+                modal({
+                    cancelTitle: i18n._('key-Laser/Edit/ContextMenu-Close'),
+                    title: i18n._('key-Laser/Edit/ContextMenu-Import Error'),
+                    body: i18n._('Failed to import this object. \nPlease select a supported file format.')
+                });
+                return;
+            }
             let uploadMode;
             if (extname === '.svg') {
                 uploadMode = PROCESS_MODE_VECTOR;
@@ -168,7 +176,7 @@ class Visualizer extends Component {
 
             // Switch to PAGE_EDITOR page if new image being uploaded
             this.props.switchToPage(PAGE_EDITOR);
-            if (extname === '.stl') {
+            if (extname === '.stl' && !this.props.materials.isRotate) {
                 this.props.cutModel(file, () => {
                     modal({
                         cancelTitle: i18n._('key-Laser/Edit/ContextMenu-Close'),

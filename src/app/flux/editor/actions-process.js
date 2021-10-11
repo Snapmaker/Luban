@@ -275,7 +275,7 @@ export const processActions = {
     },
 
     deleteToolPath: (headType, selectedToolPathIDArray) => (dispatch, getState) => {
-        const { toolPathGroup } = getState()[headType];
+        const { toolPathGroup, displayedType } = getState()[headType];
 
         const operations = new Operations();
         selectedToolPathIDArray.forEach((id) => {
@@ -289,9 +289,16 @@ export const processActions = {
 
         dispatch(operationHistoryActions.setOperations(headType, operations));
         dispatch(processActions.showSimulationInPreview(headType, false));
+
+        let newDisplayedType = displayedType;
+        let newNeedToPreview = false;
+        if (!toolPathGroup.checkHasVisibleToolPaths()) {
+            newDisplayedType = DISPLAYED_TYPE_MODEL;
+            newNeedToPreview = true;
+        }
         dispatch(baseActions.updateState(headType, {
-            // displayedType: DISPLAYED_TYPE_MODEL,
-            needToPreview: false,
+            displayedType: newDisplayedType,
+            needToPreview: newNeedToPreview,
             isChangedAfterGcodeGenerating: true
         }));
     },
