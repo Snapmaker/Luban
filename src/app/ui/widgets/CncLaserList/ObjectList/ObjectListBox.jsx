@@ -31,12 +31,12 @@ function ObjectListBox({ headType }) {
         },
         onClickModelHideBox(model) {
             const visible = model.visible;
+            dispatch(editorActions.selectTargetModel(model, headType));
             if (visible) {
                 dispatch(editorActions.hideSelectedModel(headType, model));
             } else {
                 dispatch(editorActions.showSelectedModel(headType, model));
             }
-            dispatch(editorActions.selectTargetModel(model, headType));
         }
     };
 

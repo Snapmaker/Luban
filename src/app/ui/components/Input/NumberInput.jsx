@@ -52,7 +52,9 @@ const NumberInput = React.memo(({
         // multiple .setState on edge values won't change props from outside, we
         // need to change display manually
         useEdgeValue && setDisplayValue(numericValue);
-
+        if (value !== numericValue) {
+            setDisplayValue(value);
+        }
         // call onAfterChange to change value
         onChange && onChange(numericValue);
         ref.current.blur();
