@@ -128,11 +128,11 @@ export const actions = {
     // TODO: init should be  re-called
     init: () => async (dispatch, getState) => {
         dispatch(editorActions._init(HEAD_LASER));
-        const { toolHead, series, headType } = getState().machine;
+        const { toolHead, series } = getState().machine;
         await dispatch(machineActions.updateMachineToolHead(toolHead, series, HEAD_LASER));
         // const { currentMachine } = getState().machine;
-        const currentMachine = getMachineSeriesWithToolhead(series, toolHead, headType);
-        await definitionManager.init(HEAD_LASER, currentMachine.configPathname);
+        const currentMachine = getMachineSeriesWithToolhead(series, toolHead);
+        await definitionManager.init(HEAD_LASER, currentMachine.configPathname[HEAD_LASER]);
         dispatch(editorActions.updateState(HEAD_LASER, {
             toolDefinitions: await definitionManager.getConfigDefinitions(),
             activeToolListDefinition: definitionManager?.activeDefinition,

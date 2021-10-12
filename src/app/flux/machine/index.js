@@ -40,11 +40,6 @@ import baseActions, { ACTION_UPDATE_STATE } from './action-base';
 import discoverActions from './action-discover';
 import connectActions from './action-connect';
 
-// const INITIAL_MACHINE_SERIES_WITH_HEADTOOL = getMachineSeriesWithToolhead(MACHINE_SERIES.ORIGINAL.value, {
-//     printingToolhead: MACHINE_TOOL_HEADS[SINGLE_EXTRUDER_TOOLHEAD_FOR_ORIGINAL].value,
-//     laserToolhead: MACHINE_TOOL_HEADS[LEVEL_ONE_POWER_LASER_FOR_ORIGINAL].value,
-//     cncToolhead: MACHINE_TOOL_HEADS[STANDARD_CNC_TOOLHEAD_FOR_ORIGINAL].value
-// });
 const INITIAL_STATE = {
     // region server discover
     // HTTP connection

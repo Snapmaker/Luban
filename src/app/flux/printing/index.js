@@ -241,8 +241,8 @@ export const actions = {
 
         const { toolHead, series, size } = getState().machine;
         // await dispatch(machineActions.updateMachineToolHead(toolHead, series, CONFIG_HEADTYPE));
-        const currentMachine = getMachineSeriesWithToolhead(series, toolHead, CONFIG_HEADTYPE);
-        await definitionManager.init(CONFIG_HEADTYPE, currentMachine.configPathname);
+        const currentMachine = getMachineSeriesWithToolhead(series, toolHead);
+        await definitionManager.init(CONFIG_HEADTYPE, currentMachine.configPathname[CONFIG_HEADTYPE]);
 
         dispatch(actions.updateState({
             activeDefinition: definitionManager.activeDefinition,
@@ -272,8 +272,8 @@ export const actions = {
         series = getRealSeries(series);
         const { toolHead } = getState().machine;
         // await dispatch(machineActions.updateMachineToolHead(toolHead, series, CONFIG_HEADTYPE));
-        const currentMachine = getMachineSeriesWithToolhead(series, toolHead, CONFIG_HEADTYPE);
-        await definitionManager.init(CONFIG_HEADTYPE, currentMachine.configPathname);
+        const currentMachine = getMachineSeriesWithToolhead(series, toolHead);
+        await definitionManager.init(CONFIG_HEADTYPE, currentMachine.configPathname[CONFIG_HEADTYPE]);
 
         const defaultConfigId = machineStore.get('defaultConfigId');
         if (defaultConfigId && Object.prototype.toString.call(defaultConfigId) === '[object String]') {

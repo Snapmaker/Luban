@@ -1030,19 +1030,21 @@ export function getCurrentHeadType(pathname) {
     return headType;
 }
 
-export function getMachineSeriesWithToolhead(platform, toolhead, headType) {
-    headType = headType || getCurrentHeadType(window.location.href) || HEAD_PRINTING;
+export function getMachineSeriesWithToolhead(platform, toolhead) {
     const seriesInfo = valueOf(MACHINE_SERIES, 'value', platform) || MACHINE_SERIES.ORIGINAL;
     const size = seriesInfo ? seriesInfo.setting?.size : MACHINE_SERIES.ORIGINAL.setting.size;
-    const headToolInfo = MACHINE_TOOL_HEADS[toolhead[`${headType}Toolhead`]] || MACHINE_TOOL_HEADS[SINGLE_EXTRUDER_TOOLHEAD_FOR_SM2];
-    const configPathname = `${platform === 'Original Long Z-axis' ? 'original' : platform.toLowerCase()}_${headToolInfo?.pathname}`;
-    const workSize = {
-        [headType]: {
+    const workSize = {};
+    const configPathname = {};
+    Object.keys(toolhead).forEach(key => {
+        const type = key.split('Toolhead')[0];
+        const headToolInfo = MACHINE_TOOL_HEADS[toolhead[key]];
+        workSize[type] = {
             x: size.x - headToolInfo.offset.x,
             y: size.y - headToolInfo.offset.y,
             z: size.z - headToolInfo.offset.z
-        }
-    };
+        };
+        configPathname[type] = `${platform === 'Original Long Z-axis' ? 'original' : platform.toLowerCase()}_${headToolInfo?.pathname}`;
+    });
     return {
         series: platform,
         configPathname,

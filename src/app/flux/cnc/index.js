@@ -123,11 +123,11 @@ export const actions = {
     // TODO: init should be  re-called
     init: () => async (dispatch, getState) => {
         dispatch(editorActions._init(HEAD_CNC));
-        const { toolHead, series, headType } = getState().machine;
+        const { toolHead, series } = getState().machine;
         await dispatch(machineActions.updateMachineToolHead(toolHead, series, HEAD_CNC));
         // const { currentMachine } = getState().machine;
-        const currentMachine = getMachineSeriesWithToolhead(series, toolHead, headType);
-        await definitionManager.init(HEAD_CNC, currentMachine.configPathname);
+        const currentMachine = getMachineSeriesWithToolhead(series, toolHead);
+        await definitionManager.init(HEAD_CNC, currentMachine.configPathname[HEAD_CNC]);
         dispatch(editorActions.updateState(HEAD_CNC, {
             toolDefinitions: await definitionManager.getConfigDefinitions(),
             activeToolListDefinition: definitionManager?.activeDefinition,
