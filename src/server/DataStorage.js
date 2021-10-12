@@ -104,7 +104,7 @@ class DataStorage {
          //  await this.versionAdaptation();
      }
 
-     async copyDirForInitSlicer(srcDir, dstDir, overwriteTag = false) {
+     async copyDirForInitSlicer(srcDir, dstDir, overwriteTag = false, inherit = false) {
          mkdirp.sync(dstDir);
          if (fs.existsSync(srcDir)) {
              const files = fs.readdirSync(srcDir);
@@ -118,7 +118,7 @@ class DataStorage {
                      fs.copyFileSync(src, dst, () => {
                      });
                  } else {
-                     await this.copyDirForInitSlicer(src, dst, overwriteTag);
+                     await this.copyDirForInitSlicer(src, dst, inherit ? overwriteTag : false, inherit);
                  }
              }
          }
@@ -210,9 +210,9 @@ class DataStorage {
          mkdirp.sync(`${this.configDir}/${PRINTING_CONFIG_SUBCATEGORY}`);
 
          const CURA_ENGINE_CONFIG_LOCAL = '../resources/CuraEngine/Config';
-         await this.copyDirForInitSlicer(CURA_ENGINE_CONFIG_LOCAL, this.configDir);
+         await this.copyDirForInitSlicer(CURA_ENGINE_CONFIG_LOCAL, this.configDir, true);
          this.upgradeConfigFile(this.configDir);
-         await this.copyDirForInitSlicer(CURA_ENGINE_CONFIG_LOCAL, this.defaultConfigDir, true);
+         await this.copyDirForInitSlicer(CURA_ENGINE_CONFIG_LOCAL, this.defaultConfigDir, true, true);
      }
 
 

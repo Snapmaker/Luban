@@ -76,7 +76,7 @@ class ToolPath {
         });
         if (modelsInModelIDs) {
             modelIDs = [...modelsInModelIDs.map(model => model.modelID)];
-            toolPathFiles = [...modelIDs.map(v => this.modelMap.get(v).toolPathFile)];
+            toolPathFiles = [...modelIDs.map(v => this.modelMap.get(v)?.toolPathFile)];
         }
         return {
             id: this.id,
@@ -88,6 +88,9 @@ class ToolPath {
             status: this.status,
             check: this.check,
             visible: this.visible,
+            deleteModel: this.deleteModel,
+            modelMap: this.modelMap,
+            object: this.object,
             modelIDs,
             toolPathFiles,
             gcodeConfig: {
@@ -186,7 +189,7 @@ class ToolPath {
 
         for (let i = 0; i < taskInfos.length; i++) {
             const taskInfo = taskInfos[i];
-            if (taskInfo.visible) {
+            if (taskInfo.visible && this.modelMap.get(taskInfo.modelID)) {
                 data.push(taskInfo);
                 this.modelMap.get(taskInfo.modelID).status = RUNNING;
             }

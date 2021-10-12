@@ -1,8 +1,8 @@
 import * as THREE from 'three';
 import path from 'path';
 import uuid from 'uuid';
-import includes from 'lodash/includes';
-import _ from 'lodash';
+import _, { includes } from 'lodash';
+
 import ToolpathRendererWorker from '../../workers/ToolpathRenderer.worker';
 
 import api from '../../api';
@@ -14,6 +14,8 @@ import {
 } from '../../models/ModelInfoUtils';
 
 import {
+    PROCESS_MODES_EXCEPT_VECTOR,
+    PROCESS_MODE_VECTOR,
     PAGE_EDITOR,
     PAGE_PROCESS,
     SOURCE_TYPE_IMAGE3D,
@@ -623,7 +625,7 @@ export const actions = {
     },
 
     changeSelectedModelMode: (headType, sourceType, mode) => async (dispatch, getState) => {
-        const { modelGroup, materials } = getState()[headType];
+        const { modelGroup, materials, toolPathGroup } = getState()[headType];
 
         const selectedModels = modelGroup.getSelectedModelArray();
         if (selectedModels.length !== 1) {
@@ -640,8 +642,21 @@ export const actions = {
             ...modelDefaultConfigs.config,
             ...selectedModel.getModeConfig(mode)
         };
+        if (selectedModel.mode === PROCESS_MODE_VECTOR && PROCESS_MODES_EXCEPT_VECTOR.includes(mode)) {
+            const toolPaths = toolPathGroup.getToolPaths();
+            toolPaths.forEach((item) => {
+                const idx = item.modelIDs.findIndex((id) => id === selectedModel.modelID);
+                if (idx > -1) {
+                    if (idx === 0 && item.modelIDs?.length === 1) {
+                        dispatch(actions.deleteToolPath(headType, [item.id]));
+                    } else {
+                        item.deleteModel(selectedModel.modelID);
+                        dispatch(actions.saveToolPath(headType, item));
+                    }
+                }
+            });
+        }
         modelGroup.updateSelectedMode(mode, config);
-
         dispatch(actions.processSelectedModel(headType));
     },
 

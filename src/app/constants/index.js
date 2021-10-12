@@ -63,7 +63,7 @@ export const PRINTING_MATERIAL_CONFIG_KEYS = [
     'machine_heated_bed',
     'material_bed_temperature',
     'material_bed_temperature_layer_0',
-    //Extrude
+    // Extrude
     'material_flow',
     'material_flow_layer_0',
     // retraction
@@ -934,6 +934,11 @@ export const PROCESS_MODE_HALFTONE = 'halftone';
 export const PROCESS_MODE_VECTOR = 'vector';
 export const PROCESS_MODE_GREYSCALE = 'greyscale';
 export const PROCESS_MODE_MESH = 'mesh';
+export const PROCESS_MODES_EXCEPT_VECTOR = [
+    PROCESS_MODE_BW,
+    PROCESS_MODE_HALFTONE,
+    PROCESS_MODE_GREYSCALE
+];
 
 export const PROCESS_MODE_ROTATION = 'rotation';
 export const PROCESS_MODE_PLANE = 'plane';
