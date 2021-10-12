@@ -21,9 +21,10 @@ class Printing extends PureComponent {
         nozzleTargetTemperature: PropTypes.number.isRequired,
         heatedBedTargetTemperature: PropTypes.number.isRequired,
         workflowStatus: PropTypes.string.isRequired,
-
+        nozzleTemperature: PropTypes.number.isRequired,
         executeGcode: PropTypes.func.isRequired,
-        addConsoleLogs: PropTypes.func.isRequired
+        addConsoleLogs: PropTypes.func.isRequired,
+        heatedBedTemperature: PropTypes.number.isRequired
     };
 
     state = {
@@ -107,8 +108,8 @@ class Printing extends PureComponent {
     };
 
     render() {
-        const { isConnected, nozzleTargetTemperature, heatedBedTargetTemperature, workflowStatus } = this.props;
-        const { nozzleTemperatureValue, heatedBedTemperatureValue, zOffsetMarks, zOffsetValue } = this.state;
+        const { heatedBedTemperature, isConnected, nozzleTargetTemperature, workflowStatus, nozzleTemperature } = this.props;
+        const { heatedBedTemperatureValue, zOffsetMarks, zOffsetValue } = this.state;
         const actions = this.actions;
         return (
             <div>
@@ -116,11 +117,11 @@ class Printing extends PureComponent {
                 <div className="sm-flex justify-space-between margin-vertical-8">
                     <span className="height-32">{i18n._('key-unused-Nozzle Temp.')}</span>
                     <div className="sm-flex-auto">
-                        <span className="height-32">{nozzleTargetTemperature} / </span>
+                        <span className="height-32">{nozzleTemperature} / </span>
                         <Input
                             suffix="°C"
                             size="small"
-                            value={nozzleTemperatureValue}
+                            value={nozzleTargetTemperature}
                             max={250}
                             min={0}
                             onChange={actions.onChangeNozzleTemperatureValue}
@@ -138,7 +139,7 @@ class Printing extends PureComponent {
                 <div className="sm-flex justify-space-between margin-vertical-8">
                     <span className="height-32">{i18n._('key-unused-Heated Bed Temp.')}</span>
                     <div className="sm-flex-auto">
-                        <span className="height-32">{heatedBedTargetTemperature} / </span>
+                        <span className="height-32">{heatedBedTemperature} / </span>
                         <Input
                             suffix="°C"
                             size="small"

@@ -55,6 +55,7 @@ export class Server extends events.EventEmitter {
             enclosure: false,
             laserFocalLength: null,
             laserPower: null,
+            laserCamera: null,
             workSpeed: null,
             nozzleTemperature: 0,
             nozzleTargetTemperature: 0,
@@ -233,6 +234,7 @@ export class Server extends events.EventEmitter {
                 isNotNull(data.homed) && (this.state.isHomed = data.homed);
                 isNotNull(data.laserFocalLength) && (this.state.laserFocalLength = data.laserFocalLength);
                 isNotNull(data.laserPower) && (this.state.laserPower = data.laserPower);
+                isNotNull(data.laserCamera) && (this.state.laserCamera = data.laserCamera);
                 isNotNull(data.workSpeed) && (this.state.workSpeed = data.workSpeed);
                 isNotNull(data.nozzleTemperature) && (this.state.nozzleTemperature = data.nozzleTemperature);
                 isNotNull(data.nozzleTargetTemperature) && (this.state.nozzleTargetTemperature = data.nozzleTargetTemperature);
@@ -488,6 +490,7 @@ export class Server extends events.EventEmitter {
             enclosure: this.state.enclosure,
             laserFocalLength: this.state.laserFocalLength,
             laserPower: this.state.laserPower,
+            laserCamera: this.state.laserCamera,
             workSpeed: this.state.workSpeed,
             isEnclosureDoorOpen: this.state.isEnclosureDoorOpen,
             doorSwitchCount: this.state.doorSwitchCount,

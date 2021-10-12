@@ -282,25 +282,27 @@ function SerialConnection() {
                 status: laserCamera
             });
         }
-        airPurifier && newModuleStatusList.push({
-            key: 'airPurifier',
-            moduleName: i18n._('key-Workspace/Purifier-Air Purifier'),
-            status: airPurifierHasPower
-        });
-        enclosureOnline && newModuleStatusList.push({
-            key: 'enclosure',
-            moduleName: i18n._('key-Workspace/Connection-Enclosure'),
-            status: enclosureOnline
-        });
-        emergencyStopOnline && newModuleStatusList.push({
-            key: 'emergencyStop',
-            moduleName: i18n._('key-Workspace/Page-Emergency Stop'),
-            status: emergencyStopOnline
-        });
+        if (seriesInfo !== 'Original' && seriesInfo !== 'Original Long Z-axis') {
+            airPurifier && newModuleStatusList.push({
+                key: 'airPurifier',
+                moduleName: i18n._('key-Workspace/Purifier-Air Purifier'),
+                status: airPurifierHasPower
+            });
+            enclosureOnline && newModuleStatusList.push({
+                key: 'enclosure',
+                moduleName: i18n._('key-Workspace/Connection-Enclosure'),
+                status: enclosureOnline
+            });
+            emergencyStopOnline && newModuleStatusList.push({
+                key: 'emergencyStop',
+                moduleName: i18n._('key-Workspace/Page-Emergency Stop'),
+                status: emergencyStopOnline
+            });
+        }
         setModuleStatusList(newModuleStatusList);
     }, [
         headType, airPurifier, airPurifierHasPower,
-        enclosureOnline, heatedBedTemperature > 0, laserCamera, emergencyStopOnline
+        enclosureOnline, heatedBedTemperature > 0, laserCamera, emergencyStopOnline, seriesInfo
     ]);
 
     const canRefresh = !loadingPorts && !isOpen;
