@@ -18,4 +18,4 @@ export const cutModel = (modelInfo, onProgress) => {
     } catch (e) {
         return Promise.reject(new Error(`Unknown error: ${e}`));
     }
-}
+};

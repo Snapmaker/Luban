@@ -168,8 +168,6 @@ class Visualizer extends Component {
 
             // Switch to PAGE_EDITOR page if new image being uploaded
             this.props.switchToPage(PAGE_EDITOR);
-
-            
             if (extname === '.stl') {
                 this.props.cutModel(file, () => {
                     modal({
