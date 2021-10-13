@@ -22,8 +22,7 @@ import {
     DATA_PREFIX,
     COORDINATE_MODE_CENTER,
     COORDINATE_MODE_BOTTOM_CENTER, DISPLAYED_TYPE_MODEL,
-    MIN_LASER_CNC_CANVAS_SCALE, MAX_LASER_CNC_CANVAS_SCALE,
-    PROCESS_MODE_VECTOR
+    MIN_LASER_CNC_CANVAS_SCALE, MAX_LASER_CNC_CANVAS_SCALE
 } from '../../constants';
 import { baseActions } from './actions-base';
 import { processActions } from './actions-process';
@@ -642,12 +641,15 @@ export const actions = {
             ...modelDefaultConfigs.config,
             ...selectedModel.getModeConfig(mode)
         };
-        if (selectedModel.mode === PROCESS_MODE_VECTOR && PROCESS_MODES_EXCEPT_VECTOR.includes(mode)) {
+        // switch mode will drop the model inside toolpath
+        if ((selectedModel.mode === PROCESS_MODE_VECTOR && PROCESS_MODES_EXCEPT_VECTOR.includes(mode))
+            || (PROCESS_MODES_EXCEPT_VECTOR.includes(selectedModel.mode) && mode === PROCESS_MODE_VECTOR)
+        ) {
             const toolPaths = toolPathGroup.getToolPaths();
             toolPaths.forEach((item) => {
                 const idx = item.modelIDs.findIndex((id) => id === selectedModel.modelID);
                 if (idx > -1) {
-                    if (idx === 0 && item.modelIDs?.length === 1) {
+                    if (item.modelIDs?.length === 1) {
                         dispatch(actions.deleteToolPath(headType, [item.id]));
                     } else {
                         item.deleteModel(selectedModel.modelID);
