@@ -9,7 +9,8 @@ import {
     DISPLAYED_TYPE_MODEL,
     HEAD_LASER,
     // MACHINE_TOOL_HEADS,
-    PAGE_EDITOR
+    PAGE_EDITOR,
+    getMachineSeriesWithToolhead
 } from '../../constants';
 import ModelGroup from '../../models/ModelGroup';
 import OperationHistory from '../operation-history/OperationHistory';
@@ -129,8 +130,9 @@ export const actions = {
         dispatch(editorActions._init(HEAD_LASER));
         const { toolHead, series } = getState().machine;
         await dispatch(machineActions.updateMachineToolHead(toolHead, series, HEAD_LASER));
-        const { currentMachine } = getState().machine;
-        await definitionManager.init(HEAD_LASER, currentMachine.configPathname);
+        // const { currentMachine } = getState().machine;
+        const currentMachine = getMachineSeriesWithToolhead(series, toolHead);
+        await definitionManager.init(HEAD_LASER, currentMachine.configPathname[HEAD_LASER]);
         dispatch(editorActions.updateState(HEAD_LASER, {
             toolDefinitions: await definitionManager.getConfigDefinitions(),
             activeToolListDefinition: definitionManager?.activeDefinition,

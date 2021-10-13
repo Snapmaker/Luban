@@ -15,7 +15,8 @@ import {
     HEAD_CNC,
     DISPLAYED_TYPE_MODEL,
     COORDINATE_MODE_CENTER,
-    COORDINATE_MODE_BOTTOM_CENTER
+    COORDINATE_MODE_BOTTOM_CENTER,
+    getMachineSeriesWithToolhead
 } from '../../constants';
 import definitionManager from '../manager/DefinitionManager';
 import ToolPathGroup from '../../toolpaths/ToolPathGroup';
@@ -124,8 +125,9 @@ export const actions = {
         dispatch(editorActions._init(HEAD_CNC));
         const { toolHead, series } = getState().machine;
         await dispatch(machineActions.updateMachineToolHead(toolHead, series, HEAD_CNC));
-        const { currentMachine } = getState().machine;
-        await definitionManager.init(HEAD_CNC, currentMachine.configPathname);
+        // const { currentMachine } = getState().machine;
+        const currentMachine = getMachineSeriesWithToolhead(series, toolHead);
+        await definitionManager.init(HEAD_CNC, currentMachine.configPathname[HEAD_CNC]);
         dispatch(editorActions.updateState(HEAD_CNC, {
             toolDefinitions: await definitionManager.getConfigDefinitions(),
             activeToolListDefinition: definitionManager?.activeDefinition,
