@@ -130,8 +130,8 @@ class ToolpathToBufferGeometry {
         // const bufferGeometry = new THREE.BufferGeometry();
         const positionsAttribute = new THREE.Float32BufferAttribute(positions, 3);
         const gCodesAttribute = new THREE.Float32BufferAttribute(gCodes, 1);
-        // bufferGeometry.addAttribute('position', positionAttribute);
-        // bufferGeometry.addAttribute('a_g_code', gCodeAttribute);
+        // bufferGeometry.setAttribute('position', positionAttribute);
+        // bufferGeometry.setAttribute('a_g_code', gCodeAttribute);
 
         return {
             positionsAttribute,
@@ -183,8 +183,8 @@ class ToolpathToBufferGeometry {
         // const bufferGeometry = new THREE.BufferGeometry();
         const positionsAttribute = new THREE.Float32BufferAttribute(positions, 3);
         const gCodesAttribute = new THREE.Float32BufferAttribute(gCodes, 1);
-        // bufferGeometry.addAttribute('position', positionAttribute);
-        // bufferGeometry.addAttribute('a_g_code', gCodeAttribute);
+        // bufferGeometry.setAttribute('position', positionAttribute);
+        // bufferGeometry.setAttribute('a_g_code', gCodeAttribute);
 
         return {
             positionsAttribute,

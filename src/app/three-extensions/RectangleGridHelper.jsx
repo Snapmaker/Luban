@@ -32,8 +32,8 @@ function RectangleGridHelper(width, height, step, color) {
     }
 
     const geometry = new THREE.BufferGeometry();
-    geometry.addAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
-    geometry.addAttribute('color', new THREE.Float32BufferAttribute(colors, 3));
+    geometry.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
+    geometry.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3));
 
     const material = new THREE.LineBasicMaterial({ vertexColors: THREE.VertexColors });
 

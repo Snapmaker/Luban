@@ -1530,7 +1530,7 @@ class ModelGroup extends EventEmitter {
                 ThreeUtils.setObjectParent(group, model.meshObject);
                 tableResult.forEach((rowInfo) => {
                     const geometry = new BufferGeometry();
-                    geometry.addAttribute('position', new Float32BufferAttribute(rowInfo.planesPosition, 3));
+                    geometry.setAttribute('position', new Float32BufferAttribute(rowInfo.planesPosition, 3));
                     // Fix Z-fighting
                     // https://sites.google.com/site/threejstuts/home/polygon_offset
                     // https://stackoverflow.com/questions/40328722/how-can-i-solve-z-fighting-using-three-js

@@ -116,7 +116,9 @@ const INITIAL_STATE = {
     shouldGenerateGcodeCounter: 0,
 
     // ProgressStatesManager
-    progressStatesManager: new ProgressStatesManager()
+    progressStatesManager: new ProgressStatesManager(),
+
+    enableShortcut: true
 };
 
 export const actions = {

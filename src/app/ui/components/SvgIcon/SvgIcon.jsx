@@ -21,7 +21,7 @@ class SvgIcon extends PureComponent {
         spanClassName: PropTypes.string,
         size: PropTypes.number,
         inputInfo: PropTypes.object,
-        hoverSize: PropTypes.number, // hover background size
+        hoversize: PropTypes.number, // hover background size
         borderRadius: PropTypes.number,
         /** type value:
          * 1. hoverNormal: isHovered background: #EEEFF0, color: the same as this.props.color;
@@ -85,11 +85,11 @@ class SvgIcon extends PureComponent {
             ...props
         } = this.props;
         let {
-            hoverSize = 30,
+            hoversize = 30,
             color = '#85888C'
         } = this.props;
         let iconBackground = 'transparent';
-        let iconLineHeight = '30px';
+        let iconLineHeight = `${hoversize}px`;
         const Component = Icons[name];
         // if (!Component) {
         //     console.log(`Can't find the icon named '${name}', please check your icon name`);
@@ -112,7 +112,7 @@ class SvgIcon extends PureComponent {
             color = color || '#85888C';
         }
         if (this.props.size > 24 || isStaticIcon) {
-            hoverSize = 'auto';
+            hoversize = 'auto';
             iconLineHeight = 'normal';
         }
         return (
@@ -156,7 +156,7 @@ class SvgIcon extends PureComponent {
                     onMouseUp={this.actions.handleMouseUp}
                 >
                     {Component && (
-                        <div className={classNames('display-inline')} style={{ height: hoverSize, width: hoverSize, textAlign: 'center', lineHeight: iconLineHeight, background: iconBackground, borderRadius: borderRadius }}>
+                        <div className={classNames('display-inline')} style={{ height: hoversize, width: hoversize, textAlign: 'center', lineHeight: iconLineHeight, background: iconBackground, borderRadius: borderRadius }}>
                             <Component
                                 {...props}
                                 disabled={disabled}

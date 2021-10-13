@@ -57,6 +57,7 @@ class Visualizer extends Component {
         displayedType: PropTypes.string.isRequired,
 
         renderingTimestamp: PropTypes.number.isRequired,
+        enableShortcut: PropTypes.bool.isRequired,
 
         // func
         selectAllElements: PropTypes.func.isRequired,
@@ -422,7 +423,7 @@ class Visualizer extends Component {
                 }}
                 >
                     <SVGEditor
-                        isActive={!this.props.currentModalPath && this.props.pathname.indexOf('cnc') > 0}
+                        isActive={!this.props.currentModalPath && this.props.pathname.indexOf('cnc') > 0 && this.props.enableShortcut}
                         ref={this.svgCanvas}
                         editable={editable}
                         size={this.props.size}
@@ -602,12 +603,13 @@ const mapStateToProps = (state, ownProps) => {
     const { size } = state.machine;
     const { currentModalPath } = state.appbarMenu;
     const { page, materials, modelGroup, toolPathGroup, displayedType, hasModel, isChangedAfterGcodeGenerating,
-        renderingTimestamp, stage, progress, SVGActions, scale, target, coordinateMode, coordinateSize, showSimulation, progressStatesManager } = state.cnc;
+        renderingTimestamp, stage, progress, SVGActions, scale, target, coordinateMode, coordinateSize, showSimulation, progressStatesManager, enableShortcut } = state.cnc;
     const selectedModelArray = modelGroup.getSelectedModelArray();
     const selectedModelID = modelGroup.getSelectedModel().modelID;
     const selectedToolPathModels = modelGroup.getSelectedToolPathModels();
 
     return {
+        enableShortcut,
         progressStatesManager,
         currentModalPath,
         showSimulation,

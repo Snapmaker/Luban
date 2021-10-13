@@ -20,7 +20,8 @@ import {
     DATA_PREFIX,
     COORDINATE_MODE_CENTER,
     COORDINATE_MODE_BOTTOM_CENTER, DISPLAYED_TYPE_MODEL,
-    MIN_LASER_CNC_CANVAS_SCALE, MAX_LASER_CNC_CANVAS_SCALE
+    MIN_LASER_CNC_CANVAS_SCALE, MAX_LASER_CNC_CANVAS_SCALE,
+    PROCESS_MODE_VECTOR
 } from '../../constants';
 import { baseActions } from './actions-base';
 import { processActions } from './actions-process';
@@ -39,6 +40,7 @@ import Operations from '../operation-history/Operations';
 import MoveOperation2D from '../operation-history/MoveOperation2D';
 import ScaleOperation2D from '../operation-history/ScaleOperation2D';
 import RotateOperation2D from '../operation-history/RotateOperation2D';
+import ModelLoader from '../../ui/widgets/PrintingVisualizer/ModelLoader';
 
 const getSourceType = (fileName) => {
     let sourceType;
@@ -166,6 +168,8 @@ export const actions = {
                 }));
             });
 
+            controller.on('taskProgress:cutModel', () => {});
+
             // task completed
             controller.on('taskCompleted:processImage', (taskResult) => {
                 if (headType !== taskResult.headType) {
@@ -213,6 +217,21 @@ export const actions = {
                     progress: progressStatesManager.updateProgress(STEP_STAGE.CNC_LASER_RENDER_VIEWPATH, 0)
                 }));
                 dispatch(processActions.onGenerateViewPath(headType, taskResult));
+            });
+
+            controller.on('taskCompleted:cutModel', (taskResult) => {
+                if (headType !== taskResult.headType) {
+                    return;
+                }
+                const { cutModelInfo } = getState()[headType];
+                dispatch(actions.updateState(headType, {
+                    cutModelInfo: {
+                        ...cutModelInfo,
+                        isProcessing: false,
+                        svgInfo: taskResult.svgInfo,
+                        stlInfo: taskResult.stlInfo
+                    }
+                }));
             });
         };
     },
@@ -394,7 +413,7 @@ export const actions = {
                         shininess: 0
                     });
 
-                    bufferGeometry.addAttribute('position', modelPositionAttribute);
+                    bufferGeometry.setAttribute('position', modelPositionAttribute);
                     bufferGeometry.computeVertexNormals();
                     const mesh = new THREE.Mesh(bufferGeometry, material);
                     model.image3dObj = mesh;
@@ -406,7 +425,7 @@ export const actions = {
 
                     const convexGeometry = new THREE.BufferGeometry();
                     const positionAttribute = new THREE.BufferAttribute(positions, 3);
-                    convexGeometry.addAttribute('position', positionAttribute);
+                    convexGeometry.setAttribute('position', positionAttribute);
                     model.convexGeometry = convexGeometry;
 
                     break;
@@ -1859,6 +1878,160 @@ export const actions = {
                 scale: newScale
             }));
         }
+    },
+
+    importStackedModelSVG: (headType) => (dispatch, getState) => {
+        const {
+            cutModelInfo: {
+                svgInfo
+            }
+        } = getState()[headType];
+        const mode = PROCESS_MODE_VECTOR;
+        svgInfo.forEach((svgFileInfo, index) => {
+            const width = svgFileInfo.width, height = svgFileInfo.height;
+            const uploadName = svgFileInfo.filename, originalName = `${index}.svg`;
+            dispatch(actions.generateModel(headType, originalName, uploadName, width, height, mode, undefined, { svgNodeName: 'image' }));
+        });
+    },
+
+    generateModelStack: (headType, modelWidth, modelHeight, thickness, scale = 1) => (dispatch, getState) => {
+        const {
+            materials,
+            cutModelInfo,
+            coordinateSize
+        } = getState()[headType];
+        const options = {
+            // modelID: 'id56746944-1822-4d80-a566-64614921906a',
+            // modelName: cutModelInfo.originalName,
+            // headType: headType,
+            // sourceType: SOURCE_TYPE_IMAGE3D,
+            // mode: PROCESS_MODE_VECTOR,
+            // visible: true,
+            // isToolPathSelect: false,
+            // sourceHeight: modelHeight,
+            // sourceWidth: modelWidth,
+            scale: scale,
+            originalName: cutModelInfo.originalName,
+            uploadName: cutModelInfo.uploadName,
+            transformation: {
+                width: modelWidth,
+                height: modelHeight
+            },
+            // config: { svgNodeName: 'image' },
+            materials: {
+                ...materials,
+                width: coordinateSize.x,
+                height: coordinateSize.y,
+                thickness: thickness
+            },
+            // toolParams: {},
+            modelCuttingSettings: {
+                materialThickness: thickness,
+                width: coordinateSize.x,
+                height: coordinateSize.y
+            }
+        };
+        dispatch(actions.updateState(headType, {
+            cutModelInfo: {
+                ...cutModelInfo,
+                isProcessing: true
+            }
+        }));
+        controller.commitCutModelTask({
+            taskId: uuid.v4(),
+            headType: headType,
+            data: options
+        });
+    },
+
+    cutModel: (headType, file, onError) => (dispatch, getState) => {
+        const { progressStatesManager, coordinateSize } = getState()[headType];
+        progressStatesManager.startProgress(PROCESS_STAGE.PRINTING_LOAD_MODEL);
+        dispatch(actions.updateState(headType, {
+            stage: STEP_STAGE.PRINTING_LOADING_MODEL,
+            progress: progressStatesManager.updateProgress(STEP_STAGE.PRINTING_LOADING_MODEL, 0.25)
+        }));
+        const formData = new FormData();
+        formData.append('file', file);
+
+        api.uploadFile(formData)
+            .then((res) => {
+                const { originalName, uploadName } = res.body;
+                new ModelLoader().load(
+                    `${DATA_PREFIX}/${uploadName}`,
+                    (geometry) => {
+                        let modelInitSize;
+                        function findSuitableScale(curScale, limit) {
+                            const scaleX = limit.x / modelInitSize.x;
+                            const scaleY = limit.y / modelInitSize.y;
+                            const scaleZ = limit.z / modelInitSize.z;
+                            const maxScale = Math.min(scaleX, scaleY, scaleZ);
+                            return Math.min(maxScale, curScale);
+                        }
+
+                        if (geometry.getAttribute('position').array.length > 0) {
+                            geometry.computeBoundingBox();
+                            let box3 = geometry.boundingBox;
+                            modelInitSize = {
+                                x: box3.max.x - box3.min.x,
+                                y: box3.max.y - box3.min.y,
+                                z: box3.max.z - box3.min.z
+                            };
+
+                            const MAX_Z = 500;
+                            const canvasRange = { x: coordinateSize.x, y: coordinateSize.y, z: MAX_Z };
+                            if (box3.max.x - box3.min.x > canvasRange.x || box3.max.y - box3.min.y > canvasRange.y) {
+                                const _scale = findSuitableScale(Infinity, canvasRange);
+                                const scale = 0.9 * _scale;
+                                geometry.scale(scale, scale, scale);
+                                geometry.computeBoundingBox();
+                                box3 = geometry.boundingBox;
+                                modelInitSize = {
+                                    x: box3.max.x - box3.min.x,
+                                    y: box3.max.y - box3.min.y,
+                                    z: box3.max.z - box3.min.z
+                                };
+                            }
+                            dispatch(actions.updateState(headType, {
+                                showImportStackedModelModal: true,
+                                cutModelInfo: {
+                                    originalName, uploadName, modelInitSize
+                                }
+                            }));
+                            dispatch(actions.updateState(headType, {
+                                stage: STEP_STAGE.PRINTING_LOAD_MODEL_SUCCEED,
+                                progress: progressStatesManager.updateProgress(STEP_STAGE.PRINTING_LOADING_MODEL, 1)
+                            }));
+                            progressStatesManager.finishProgress(true);
+                        } else {
+                            throw new Error('geometry invalid');
+                        }
+                    },
+                    () => {}, // onprogress
+                    (err) => {
+                        onError && onError(err);
+                        dispatch(actions.updateState(headType, {
+                            stage: STEP_STAGE.PRINTING_LOAD_MODEL_FAILED,
+                            progress: 1
+                        }));
+                        progressStatesManager.finishProgress(true);
+                    }
+                );
+            })
+            .catch((err) => {
+                onError && onError(err);
+                dispatch(actions.updateState(headType, {
+                    stage: STEP_STAGE.PRINTING_LOAD_MODEL_FAILED,
+                    progress: 1
+                }));
+                progressStatesManager.finishProgress(true);
+            });
+    },
+
+    setShortcutStatus: (headType, enabled) => (dispatch) => {
+        dispatch(actions.updateState(headType, {
+            enableShortcut: enabled
+        }));
     }
 };
 

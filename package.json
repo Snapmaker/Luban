@@ -157,6 +157,8 @@
   ],
   "dependencies": {
     "@babel/runtime": "~7.12.0",
+    "@react-three/drei": "^7.8.2",
+    "@react-three/fiber": "^7.0.7",
     "@trendmicro/react-breadcrumbs": "~0.5.4",
     "@trendmicro/react-buttons": "~1.3.0",
     "@trendmicro/react-checkbox": "^3.4.1",
@@ -191,6 +193,7 @@
     "core-js": "~3.6.5",
     "debug": "~3.1.0",
     "detect-browser": "~3.0.0",
+    "earcut": "^2.2.3",
     "electron-store": "~5.1.1",
     "electron-updater": "~4.3.5",
     "ensure-array": "~1.0.0",
@@ -279,7 +282,7 @@
     "superagent": "~3.8.3",
     "superagent-use": "~0.1.0",
     "tar": "^6.0.2",
-    "three": "~0.94.0",
+    "three": "^0.124.0",
     "universal-logger": "~1.0.1",
     "universal-logger-browser": "~1.0.1",
     "uuid": "~3.3.2",
@@ -289,8 +292,7 @@
     "xml2js": "~0.4.19",
     "xmldom": "^0.3.0",
     "xterm": "^4.8.1",
-    "xterm-addon-fit": "^0.3.0",
-    "earcut": "^2.2.3"
+    "xterm-addon-fit": "^0.3.0"
   },
   "devDependencies": {
     "@babel/cli": "~7.8.4",

@@ -575,7 +575,7 @@ class ThreeModel extends BaseModel {
                 start = i;
                 setTimeout(worker, 1);
             } else {
-                bufferGeometry.addAttribute('color', new THREE.Float32BufferAttribute(colors, 3));
+                bufferGeometry.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3));
                 this.setSelected(true);
                 this.modelGroup.modelChanged();
             }

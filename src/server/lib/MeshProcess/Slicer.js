@@ -69,7 +69,7 @@ class SlicerLayer {
             }
             return this.tryFaceNextSegmentIdx(slicerSegment, faceToTry, startSegmentIdx);
         } else {
-            for (const connectedFace of segmentEndedAtEdge.connectedFaces) {
+            for (const connectedFace of segmentEndedAtEdge.c) {
                 const resultSegmentIdx = this.tryFaceNextSegmentIdx(slicerSegment, connectedFace, startSegmentIdx);
                 if (resultSegmentIdx === startSegmentIdx) {
                     return startSegmentIdx;
@@ -138,9 +138,9 @@ export class Slicer {
     buildZHeightsForFaces(mesh) {
         const zHeights = [];
         for (const face of mesh.faces) {
-            const v0 = mesh.vertices[face.vertexIndex[0]];
-            const v1 = mesh.vertices[face.vertexIndex[1]];
-            const v2 = mesh.vertices[face.vertexIndex[2]];
+            const v0 = mesh.vertices[face.vi[0]];
+            const v1 = mesh.vertices[face.vi[1]];
+            const v2 = mesh.vertices[face.vi[2]];
 
             const minZ = Math.min(v0.p.z, v1.p.z, v2.p.z);
             const maxZ = Math.max(v0.p.z, v1.p.z, v2.p.z);
@@ -159,9 +159,9 @@ export class Slicer {
                     continue;
                 }
                 const face = mesh.faces[faceIdx];
-                const v0 = mesh.vertices[face.vertexIndex[0]];
-                const v1 = mesh.vertices[face.vertexIndex[1]];
-                const v2 = mesh.vertices[face.vertexIndex[2]];
+                const v0 = mesh.vertices[face.vi[0]];
+                const v1 = mesh.vertices[face.vi[1]];
+                const v2 = mesh.vertices[face.vi[2]];
                 const p0 = v0.p;
                 const p1 = v1.p;
                 const p2 = v2.p;
@@ -203,7 +203,7 @@ export class Slicer {
                 }
                 this.slicerLayers[layerNr].faceIdxToSegmentIdx.set(faceIdx, this.slicerLayers[layerNr].slicerSegments.length);
                 seg.faceIndex = faceIdx;
-                seg.endOtherFaceIdx = face.connectedFaceIndex[endEdgeIdx];
+                seg.endOtherFaceIdx = face.cf[endEdgeIdx];
                 seg.addedToPolygon = false;
                 this.slicerLayers[layerNr].slicerSegments.push(seg);
             }

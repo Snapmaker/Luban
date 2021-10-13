@@ -2,19 +2,20 @@ function getPath(shape) {
     if (!shape.visibility) {
         return '';
     }
-    let pathExpression = '';
+
+    const paths = [];
 
     for (const aPath of shape.paths) {
-        pathExpression += 'M';
+        let pathExpression = 'M';
         for (const point of aPath.points) {
             pathExpression += `${point[0]} ${point[1]} `;
         }
+        paths.push(`<path d="${pathExpression}" stroke="${shape.stroke ? shape.stroke : 'none'}"
+                fill="${shape.fill ? shape.fill : 'none'}"
+                stroke-width="${1}"/>`);
     }
 
-    return `<path d="${pathExpression}" stroke="${shape.stroke ? shape.stroke : 'none'}"
-                fill="${shape.fill ? shape.fill : 'none'}"
-                fill-rule="${shape['fill-rule'] ? shape['fill-rule'] : 'nonzero'}"
-                stroke-width="${shape.strokeWidth}"/>`;
+    return paths.join('\n');
 }
 
 export const svgInverse = (svg, flip = 1) => {
@@ -32,6 +33,9 @@ export const svgInverse = (svg, flip = 1) => {
 
 export const svgToString = (svg) => {
     return `<svg xmlns="http://www.w3.org/2000/svg"
+        fill="none"
+        stroke="#000000"
+        stroke-width="1"
         width="${svg.width}"
         height="${svg.height}"
         viewBox="${svg.viewBox}"

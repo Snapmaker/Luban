@@ -54,10 +54,10 @@ export const actions = {
                     colorAttribute.normalized = true;
                     indexColorAttribute.normalized = true;
 
-                    bufferGeometry.addAttribute('position', positionAttribute);
-                    bufferGeometry.addAttribute('a_color', colorAttribute);
-                    bufferGeometry.addAttribute('a_index', indexAttribute);
-                    bufferGeometry.addAttribute('a_index_color', indexColorAttribute);
+                    bufferGeometry.setAttribute('position', positionAttribute);
+                    bufferGeometry.setAttribute('a_color', colorAttribute);
+                    bufferGeometry.setAttribute('a_index', indexAttribute);
+                    bufferGeometry.setAttribute('a_index_color', indexColorAttribute);
 
                     const object3D = gcodeBufferGeometryToObj3d('WORKSPACE', bufferGeometry, renderMethod);
                     // object3D.material.uniforms.u_visible_index_count.value = 20000;
