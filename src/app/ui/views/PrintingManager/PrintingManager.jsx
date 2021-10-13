@@ -5,6 +5,7 @@ import { actions as printingActions } from '../../../flux/printing';
 import { actions as projectActions } from '../../../flux/project';
 import { PRINTING_MANAGER_TYPE_MATERIAL, PRINTING_MANAGER_TYPE_QUALITY,
     PRINTING_MATERIAL_CONFIG_KEYS, PRINTING_QUALITY_CONFIG_KEYS,
+    getMachineSeriesWithToolhead, HEAD_PRINTING,
     PRINTING_MATERIAL_CONFIG_GROUP, PRINTING_QUALITY_CONFIG_GROUP } from '../../../constants';
 import ProfileManager from '../ProfileManager';
 import i18n from '../../../lib/i18n';
@@ -24,11 +25,11 @@ function PrintingManager() {
     const showPrintingManager = useSelector(state => state?.printing?.showPrintingManager, shallowEqual);
     const defaultMaterialId = useSelector(state => state?.printing?.defaultMaterialId, shallowEqual);
     const defaultQualityId = useSelector(state => state?.printing?.defaultQualityId, shallowEqual);
-    // const series = useSelector(state => state?.machine?.series, shallowEqual);
     const managerDisplayType = useSelector(state => state?.printing?.managerDisplayType, shallowEqual);
     const materialDefinitions = useSelector(state => state?.printing?.materialDefinitions);
     const qualityDefinitions = useSelector(state => state?.printing?.qualityDefinitions);
     const series = useSelector(state => state?.machine?.series);
+    const toolHead = useSelector(state => state?.machine?.toolHead);
     const dispatch = useDispatch();
     if (!showPrintingManager) {
         return null;
@@ -50,7 +51,8 @@ function PrintingManager() {
         exportConfigFile: (definitionForManager) => {
             const definitionId = definitionForManager.definitionId;
             const targetFile = `${definitionId}.def.json`;
-            dispatch(projectActions.exportConfigFile(targetFile, `printing/${series}`));
+            const currentMachine = getMachineSeriesWithToolhead(series, toolHead);
+            dispatch(projectActions.exportConfigFile(targetFile, `${HEAD_PRINTING}/${currentMachine.configPathname[HEAD_PRINTING]}`));
         },
         onUpdateDefaultDefinition: (definitionForManager) => {
             const definitionId = definitionForManager.definitionId;

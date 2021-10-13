@@ -9,7 +9,7 @@ import useSetState from '../../lib/hooks/set-state';
 import modal from '../../lib/modal';
 import LaserVisualizer from '../widgets/LaserVisualizer';
 
-import { renderPopup, logPageView, useUnsavedTitle } from '../utils';
+import { renderPopup, logPageView, useUnsavedTitle, renderModal } from '../utils';
 import Dropzone from '../components/Dropzone';
 import { actions as editorActions } from '../../flux/editor';
 import { actions as laserActions } from '../../flux/laser';

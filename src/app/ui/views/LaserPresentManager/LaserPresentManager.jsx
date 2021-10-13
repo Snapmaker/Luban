@@ -7,7 +7,8 @@ import { actions as laserActions } from '../../../flux/laser';
 import { actions as projectActions } from '../../../flux/project';
 import { actions as editorActions } from '../../../flux/editor';
 
-import { LASER_PRESENT_CONFIG_GROUP, HEAD_LASER, DEFAULT_LASER_CONFIG_IDS } from '../../../constants';
+import { getMachineSeriesWithToolhead, LASER_PRESENT_CONFIG_GROUP,
+    HEAD_LASER, DEFAULT_LASER_CONFIG_IDS } from '../../../constants';
 import ProfileManager from '../ProfileManager';
 import i18n from '../../../lib/i18n';
 
@@ -26,6 +27,7 @@ function LaserPresentManager({ closeToolManager, shouldSaveToolpath = false, sav
     const toolDefinitions = useSelector(state => state?.laser?.toolDefinitions);
     const activeToolListDefinition = useSelector(state => state?.laser?.activeToolListDefinition, shallowEqual);
     const series = useSelector(state => state?.machine?.series);
+    const toolHead = useSelector(state => state?.machine?.toolHead);
     const dispatch = useDispatch();
 
     const actions = {
@@ -39,7 +41,8 @@ function LaserPresentManager({ closeToolManager, shouldSaveToolpath = false, sav
         exportConfigFile: (definitionForManager) => {
             const definitionId = definitionForManager.definitionId;
             const targetFile = `${definitionId}.def.json`;
-            dispatch(projectActions.exportConfigFile(targetFile, `${HEAD_LASER}/${series}`));
+            const currentMachine = getMachineSeriesWithToolhead(series, toolHead);
+            dispatch(projectActions.exportConfigFile(targetFile, `${HEAD_LASER}/${currentMachine.configPathname[HEAD_LASER]}`));
         },
         onUpdateDefaultDefinition: (definitionForManager) => {
             const { definitionId, name } = definitionForManager;

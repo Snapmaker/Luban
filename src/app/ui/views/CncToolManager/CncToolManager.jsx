@@ -7,7 +7,8 @@ import { actions as cncActions } from '../../../flux/cnc';
 import { actions as projectActions } from '../../../flux/project';
 import { actions as editorActions } from '../../../flux/editor';
 
-import { CNC_TOOL_CONFIG_GROUP, HEAD_CNC, DEFAULT_CNC_CONFIG_IDS } from '../../../constants';
+import { getMachineSeriesWithToolhead,
+    CNC_TOOL_CONFIG_GROUP, HEAD_CNC, DEFAULT_CNC_CONFIG_IDS } from '../../../constants';
 import ProfileManager from '../ProfileManager';
 import i18n from '../../../lib/i18n';
 
@@ -26,6 +27,7 @@ function CncToolManager({ closeToolManager, shouldSaveToolpath = false, saveTool
     const toolDefinitions = useSelector(state => state?.cnc?.toolDefinitions);
     const activeToolListDefinition = useSelector(state => state?.cnc?.activeToolListDefinition, shallowEqual);
     const series = useSelector(state => state?.machine?.series);
+    const toolHead = useSelector(state => state?.machine?.toolHead);
     const dispatch = useDispatch();
 
     const actions = {
@@ -39,7 +41,8 @@ function CncToolManager({ closeToolManager, shouldSaveToolpath = false, saveTool
         exportConfigFile: (definitionForManager) => {
             const definitionId = definitionForManager.definitionId;
             const targetFile = `${definitionId}.def.json`;
-            dispatch(projectActions.exportConfigFile(targetFile, `${HEAD_CNC}/${series}`));
+            const currentMachine = getMachineSeriesWithToolhead(series, toolHead);
+            dispatch(projectActions.exportConfigFile(targetFile, `${HEAD_CNC}/${currentMachine.configPathname[HEAD_CNC]}`));
         },
         onUpdateDefaultDefinition: (definitionForManager) => {
             const { definitionId, name } = definitionForManager;
