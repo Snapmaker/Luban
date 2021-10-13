@@ -70,6 +70,8 @@ const ModelViewer = React.memo(({ geometry, coordinateSize }) => {
                     <directionalLight ref={lightRef} color={0x666666} intensity={0.4} />
                 </group>
             );
+            // three/fiber <Canvas> along with <Modal> shown doesn't have correct width and height, so use the render method instead of <Canvas>
+            // notice: onCreated only execute once, next render method call will not trigger it, so manually call actions.toTopFrontRight() is necessary
             render(node, canvasRef.current, { frameloop: 'demand', camera: { fov: 45, far: 10000, near: 0.1, aspect: 1 }, onCreated: actions.onCreated });
             actions.toTopFrontRight();
         }
