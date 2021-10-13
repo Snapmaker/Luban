@@ -84,7 +84,7 @@ class JogDistance extends PureComponent {
         return (
             <div className={styles['jog-distance-control']}>
                 <div className="input-group input-group-sm">
-                    <div className="input-group-btn">
+                    <div className="input-group-btn" style={{ display: 'flex' }}>
                         {marks.map(v => {
                             return (
                                 <button
