@@ -273,29 +273,29 @@ function SerialConnection() {
             });
             headType === 'printing' && newModuleStatusList.push({
                 key: 'heatedBed',
-                moduleName: i18n._('key-Workspace/Connection-Heated Bed'),
+                moduleName: i18n._('key-Workspace/Connection-Heated bed'),
                 status: heatedBedTemperature > 0
             });
             headType === 'laser' && newModuleStatusList.push({
                 key: 'laserCamera',
-                moduleName: i18n._('key-Workspace/Connection-Laser Camera'),
+                moduleName: i18n._('key-Workspace/Connection-Laser camera'),
                 status: laserCamera
             });
         }
         if (seriesInfo !== 'Original' && seriesInfo !== 'Original Long Z-axis') {
             airPurifier && newModuleStatusList.push({
                 key: 'airPurifier',
-                moduleName: i18n._('key-Workspace/Purifier-Air Purifier'),
+                moduleName: i18n._('key-Workspace/Connection-airPurifier'),
                 status: airPurifierHasPower
             });
             enclosureOnline && newModuleStatusList.push({
                 key: 'enclosure',
-                moduleName: i18n._('key-Workspace/Connection-Enclosure'),
+                moduleName: i18n._('key-Workspace/Connection-enclosure'),
                 status: enclosureOnline
             });
             emergencyStopOnline && newModuleStatusList.push({
                 key: 'emergencyStop',
-                moduleName: i18n._('key-Workspace/Page-Emergency Stop'),
+                moduleName: i18n._('key-Workspace/Connection-emergencyStopButton'),
                 status: emergencyStopOnline
             });
         }

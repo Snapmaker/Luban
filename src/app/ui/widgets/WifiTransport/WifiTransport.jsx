@@ -459,7 +459,6 @@ function WifiTransport({ widgetActions, controlActions }) {
                 disabled={!(hasFile && isConnected && isHeadType && connectionType === CONNECTION_TYPE_WIFI)}
                 onClick={actions.sendFile}
             >
-                {i18n._('Send to Device via Wi-Fi')}
             </Button> */}
             <div className={classNames('height-176-default', 'position-re', 'overflow-y-auto')}>
                 {!hasFile && (

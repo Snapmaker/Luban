@@ -137,3 +137,14 @@ i18n._('Set the distance along the Z axis per step that the tool is plunged into
 i18n._('key-Cnc/ToolManger-Tool Settings');
 i18n._('Carving Tool');
 i18n._('Parameters');
+
+// connection message
+i18n._('key-Workspace/Connection-enclosure');
+i18n._('key-Workspace/Connection-rotaryModule');
+i18n._('key-Workspace/Connection-emergencyStopButton');
+// TOOL HEAD
+i18n._('key-Workspace/Connection-TOOLHEAD_3DPPRINTING_1');
+i18n._('key-Workspace/Connection-TOOLHEAD_LASER_1');
+i18n._('key-Workspace/Connection-TOOLHEAD_LASER_2');
+i18n._('key-Workspace/Connection-TOOLHEAD_CNC_1');
+i18n._('key-Workspace/Connection-10W Laser');
