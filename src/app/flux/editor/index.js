@@ -257,7 +257,6 @@ export const actions = {
                     break;
                 }
                 case 'data': {
-                    // eslint-disable-next-line no-unused-vars
                     const { taskResult, index, renderResult } = value;
 
                     const { toolPathGroup } = getState()[headType];
@@ -1962,10 +1961,10 @@ export const actions = {
 
     cutModel: (headType, file, onError) => (dispatch, getState) => {
         const { progressStatesManager, coordinateSize } = getState()[headType];
-        progressStatesManager.startProgress(PROCESS_STAGE.PRINTING_LOAD_MODEL);
+        progressStatesManager.startProgress(PROCESS_STAGE.LASER_CUT_STL);
         dispatch(actions.updateState(headType, {
-            stage: STEP_STAGE.PRINTING_LOADING_MODEL,
-            progress: progressStatesManager.updateProgress(STEP_STAGE.PRINTING_LOADING_MODEL, 0.25)
+            stage: STEP_STAGE.LASER_CUTTING_STL,
+            progress: progressStatesManager.updateProgress(STEP_STAGE.LASER_CUTTING_STL, 0.25)
         }));
         const formData = new FormData();
         formData.append('file', file);
@@ -2015,8 +2014,8 @@ export const actions = {
                                 }
                             }));
                             dispatch(actions.updateState(headType, {
-                                stage: STEP_STAGE.PRINTING_LOAD_MODEL_SUCCEED,
-                                progress: progressStatesManager.updateProgress(STEP_STAGE.PRINTING_LOADING_MODEL, 1)
+                                stage: STEP_STAGE.LASER_CUTTING_STL,
+                                progress: progressStatesManager.updateProgress(STEP_STAGE.LASER_CUTTING_STL, 1)
                             }));
                             progressStatesManager.finishProgress(true);
                         } else {
@@ -2027,7 +2026,7 @@ export const actions = {
                     (err) => {
                         onError && onError(err);
                         dispatch(actions.updateState(headType, {
-                            stage: STEP_STAGE.PRINTING_LOAD_MODEL_FAILED,
+                            stage: STEP_STAGE.LASER_CUT_STL_SUCCEED,
                             progress: 1
                         }));
                         progressStatesManager.finishProgress(false);
@@ -2037,7 +2036,7 @@ export const actions = {
             .catch((err) => {
                 onError && onError(err);
                 dispatch(actions.updateState(headType, {
-                    stage: STEP_STAGE.PRINTING_LOAD_MODEL_FAILED,
+                    stage: STEP_STAGE.LASER_CUT_STL_FAILED,
                     progress: 1
                 }));
                 progressStatesManager.finishProgress(true);
