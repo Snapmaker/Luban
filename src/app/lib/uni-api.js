@@ -379,6 +379,7 @@ const Window = {
             this.initWindow();
         }
         let title = this.initTitle;
+        console.log('filename', filename, title);
         if (filename) {
             title = `${this.initTitle} / ${filename}`;
         }
