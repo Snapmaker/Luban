@@ -309,7 +309,7 @@ function WifiConnection() {
 
     const updateModuleStatusList = useMemo(() => {
         const newModuleStatusList = [];
-        if (currentHeadType) {
+        if (currentHeadType && currentHeadType !== 'unplugged ') {
             newModuleStatusList.push({
                 key: currentHeadType,
                 status: true,

@@ -143,8 +143,10 @@ i18n._('key-Workspace/Connection-enclosure');
 i18n._('key-Workspace/Connection-rotaryModule');
 i18n._('key-Workspace/Connection-emergencyStopButton');
 // TOOL HEAD
-i18n._('key-Workspace/Connection-TOOLHEAD_3DPPRINTING_1');
+i18n._('key-Workspace/Connection-TOOLHEAD_3DPRINTING_1');
 i18n._('key-Workspace/Connection-TOOLHEAD_LASER_1');
 i18n._('key-Workspace/Connection-TOOLHEAD_LASER_2');
 i18n._('key-Workspace/Connection-TOOLHEAD_CNC_1');
 i18n._('key-Workspace/Connection-10W Laser');
+i18n._('key-Workspace/Connection-3dp');
+i18n._('key-Workspace/Connection-laser');
