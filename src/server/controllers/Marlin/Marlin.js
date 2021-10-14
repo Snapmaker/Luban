@@ -48,10 +48,13 @@ class MarlinReplyParserFirmwareVersion {
 
 /**
  * Marlin SM2-1.2.1.0
+ * Marlin SM2-1.2.1.0-alpha1
+ * Marlin SM2-1.2.1.0-bate2
  */
 class MarlinReplyParserSeries {
     static parse(line) {
-        const r = line.match(/^Marlin (.*)-([0-9.]+)$/);
+        const r = line.match(/^Marlin (.*)-([0-9.]+(-(alpha|beta|Alpha|Beta)[1-9]?)?)$/);
+        console.log('seriesParse', r);
         if (!r) {
             return null;
         }
