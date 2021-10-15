@@ -25,7 +25,6 @@ export default {
     target: 'web',
     devtool: 'source-map',
     cache: true,
-    devtool: 'source-map',
     context: path.resolve(__dirname, 'src/app'),
     resolve: {
         modules: [
