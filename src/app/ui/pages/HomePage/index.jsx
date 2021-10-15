@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import isElectron from 'is-electron';
 import i18next from 'i18next';
 import { gte } from 'lodash';
+import PropTypes from 'prop-types';
 import { withRouter } from 'react-router-dom';
 import styles from './styles.styl';
 import { machineStore } from '../../../store/local-storage';
@@ -60,8 +61,8 @@ const HomePage = (props) => { // Todo, what's the props ?
                 <QuickStart {...props} />
                 <MoreInfo />
             </div>
-            {modalShow
-                && (
+            {
+                modalShow && (
                     <SettingGuideModal
                         handleModalShow={setModalShow}
                         initLanguage={i18next.language}
@@ -71,6 +72,12 @@ const HomePage = (props) => { // Todo, what's the props ?
             {props?.isPopup || printingModal || laserModal || cncModal}
         </div>
     );
+};
+
+HomePage.propTypes = {
+    location: PropTypes.object,
+    isPopup: PropTypes.bool,
+    onClose: PropTypes.func
 };
 
 export default withRouter(HomePage);

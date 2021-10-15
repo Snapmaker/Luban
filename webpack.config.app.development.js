@@ -25,6 +25,7 @@ module.exports = {
     target: 'web',
     devtool: 'source-map',
     cache: true,
+    devtool: 'source-map',
     context: path.resolve(__dirname, 'src/app'),
     resolve: {
         modules: [
@@ -32,7 +33,7 @@ module.exports = {
             path.resolve(__dirname, 'src/app'),
             'node_modules'
         ],
-        extensions: ['.js', '.json', '.jsx', '.styl']
+        extensions: ['.js', '.json', '.jsx', '.styl', '.ts', '.tsx']
     },
     entry: {
         polyfill: [
@@ -93,7 +94,11 @@ module.exports = {
     module: {
         rules: [
             {
-                test: /\.jsx?$/,
+                test: /\.tsx?$/,
+                loader: 'ts-loader'
+            },
+            {
+                test: /\.jsx?$|\.tsx?$/,
                 loader: 'eslint-loader',
                 enforce: 'pre',
                 exclude: /node_modules/,

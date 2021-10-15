@@ -28,8 +28,8 @@ const CardWrapper = React.memo(({ className = '', children, hasToggleBotton = tr
                 {...rest}
                 extra={extra}
             >
-                {showList
-                    && (
+                {
+                    showList && (
                         <div>
                             { children }
                         </div>

@@ -73,7 +73,8 @@ class SVGLeftBar extends PureComponent {
                                     className={
                                         classNames('border-radius-top-8', 'background-transparent',
                                             'padding-horizontal-4', 'position-re', `${this.props.headType}-tool-bar-open-icon`,
-                                            { [styles.selected]: (mode === 'add') })}
+                                            { [styles.selected]: (mode === 'add') })
+                                    }
                                     onClick={() => this.props.onClickToUpload()}
                                 />
                             </div>
@@ -89,7 +90,8 @@ class SVGLeftBar extends PureComponent {
                                     className={
                                         classNames('background-transparent',
                                             'padding-horizontal-4', 'position-re',
-                                            { [styles.selected]: (mode === 'select') })}
+                                            { [styles.selected]: (mode === 'select') })
+                                    }
                                     onClick={() => this.props.setMode('select')}
                                 />
                             </div>
@@ -103,7 +105,8 @@ class SVGLeftBar extends PureComponent {
                                     className={
                                         classNames('background-transparent',
                                             'padding-horizontal-4', 'position-re',
-                                            { [styles.selected]: (mode === 'rect') })}
+                                            { [styles.selected]: (mode === 'rect') })
+                                    }
                                     onClick={() => this.props.setMode('rect')}
                                 />
                             </div>
@@ -117,7 +120,8 @@ class SVGLeftBar extends PureComponent {
                                     className={
                                         classNames('background-transparent',
                                             'padding-horizontal-4', 'position-re',
-                                            { [styles.selected]: (mode === 'ellipse') })}
+                                            { [styles.selected]: (mode === 'ellipse') })
+                                    }
                                     onClick={() => this.props.setMode('ellipse')}
                                 />
                             </div>
@@ -130,7 +134,8 @@ class SVGLeftBar extends PureComponent {
                                     disabled={!editable}
                                     className={
                                         classNames('background-transparent',
-                                            'padding-horizontal-4', 'position-re',)}
+                                            'padding-horizontal-4', 'position-re',)
+                                    }
                                     onClick={this.actions.onClickInsertText}
                                 />
                             </div>
