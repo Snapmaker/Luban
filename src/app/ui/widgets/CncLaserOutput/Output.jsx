@@ -66,7 +66,7 @@ const Output = ({ headType }) => {
             if (gcodeFile === null) {
                 return;
             }
-            dispatch(projectActions.exportFile(gcodeFile.uploadName));
+            dispatch(projectActions.exportFile(gcodeFile.uploadName, gcodeFile.renderGcodeFileName));
         },
         onProcess: () => {
             dispatch(editorActions.createToolPath(headType));

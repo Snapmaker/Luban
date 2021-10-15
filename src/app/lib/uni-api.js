@@ -227,7 +227,10 @@ const File = {
     },
 
     // export file for 3dp/laser/cnc
-    async exportAs(targetFile, tmpFile) {
+    async exportAs(targetFile, tmpFile, renderGcodeFileName) {
+        if (renderGcodeFileName === '') {
+            renderGcodeFileName = targetFile;
+        }
         if (isElectron()) {
             const fs = window.require('fs');
             const { app } = window.require('electron').remote;
@@ -241,7 +244,8 @@ const File = {
             targetFile = saveDialogReturnValue.filePath;
             if (!targetFile) throw new Error('export file canceled');
 
-            const file = { path: targetFile, name: window.require('path').basename(targetFile) };
+            // const file = { path: targetFile, name: window.require('path').basename(targetFile) };
+            const file = { path: targetFile, name: renderGcodeFileName };
 
             fs.copyFileSync(tmpFile, targetFile);
 
@@ -251,7 +255,8 @@ const File = {
                 .get(`/data${tmpFile}`)
                 .responseType('blob')
                 .end((err, res) => {
-                    FileSaver.saveAs(res.body, targetFile, true);
+                    // FileSaver.saveAs(res.body, targetFile, true);
+                    FileSaver.saveAs(res.body, renderGcodeFileName, true);
                 });
             return null;
         }

@@ -352,7 +352,7 @@ export const actions = {
                 }));
             });
             controller.on('slice:completed', (args) => {
-                const { gcodeFilename, gcodeFileLength, printTime, filamentLength, filamentWeight } = args;
+                const { gcodeFilename, gcodeFileLength, printTime, filamentLength, filamentWeight, renderGcodeFileName } = args;
                 const { progressStatesManager } = getState().printing;
                 dispatch(actions.updateState({
                     gcodeFile: {
@@ -360,7 +360,8 @@ export const actions = {
                         uploadName: gcodeFilename,
                         size: gcodeFileLength,
                         lastModified: +new Date(),
-                        thumbnail: ''
+                        thumbnail: '',
+                        renderGcodeFileName
                     },
                     printTime,
                     filamentLength,
@@ -863,7 +864,7 @@ export const actions = {
 
         // Prepare model file
         const { model, support, originalName } = await dispatch(actions.prepareModel());
-
+        const renderGcodeFileName = `${models[0]?.modelName?.split('.').slice(0, -1).join('.')}_${new Date().getTime()}`;
 
         // Prepare definition file
         const { size } = getState().machine;
@@ -886,7 +887,8 @@ export const actions = {
             support,
             originalName,
             boundingBox,
-            thumbnail: thumbnail
+            thumbnail: thumbnail,
+            renderGcodeFileName
         };
         controller.slice(params);
     },
