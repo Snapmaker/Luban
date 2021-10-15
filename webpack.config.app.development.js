@@ -20,7 +20,7 @@ const languages = require('./webpack.config.app-i18n').languages;
 
 const timestamp = new Date().getTime();
 
-module.exports = {
+export default {
     mode: 'development',
     target: 'web',
     devtool: 'source-map',
