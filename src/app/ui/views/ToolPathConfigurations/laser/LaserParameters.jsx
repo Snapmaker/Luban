@@ -135,7 +135,6 @@ class LaserParameters extends PureComponent {
                         activeToolDefinition={this.props.activeToolDefinition}
                         updateGcodeConfig={this.actions.updateGcodeConfig}
                         updateToolConfig={this.actions.updateToolConfig}
-
                         toolDefinitions={this.props.toolDefinitions}
                         isModifiedDefinition={this.props.isModifiedDefinition}
                         setCurrentToolDefinition={this.props.setCurrentToolDefinition}
