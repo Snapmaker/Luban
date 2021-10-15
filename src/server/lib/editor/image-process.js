@@ -68,6 +68,7 @@ export async function processLaserGreyscale(modelInfo, onProgress) {
     const { width, height, scaleX = 1, scaleY = 1 } = modelInfo.transformation;
 
     const { invert, contrast, brightness, whiteClip, algorithm } = modelInfo.config;
+    const { density = 4 } = modelInfo.gcodeConfig || {};
     const outputFilename = pathWithRandomSuffix(uploadName);
 
     const matrix = algorithms[algorithm];
@@ -89,10 +90,6 @@ export async function processLaserGreyscale(modelInfo, onProgress) {
         img.invert();
     }
 
-    let { density = 4 } = modelInfo.gcodeConfig || {};
-    if (Math.abs(Math.ceil(width * density) / density - width) > 0.1 || Math.abs(Math.ceil(height * density) / density - height) > 0.1) {
-        density = 10;
-    }
     img
         .background(0xffffffff)
         .brightness((brightness - 50.0) / 50)
@@ -148,6 +145,7 @@ export async function processCNCGreyscale(modelInfo, onProgress) {
     const { width, height, rotationZ = 0, scaleX = 1, scaleY = 1 } = modelInfo.transformation;
 
     const { invert } = modelInfo.config;
+    const { density = 4 } = modelInfo.gcodeConfig || {};
 
     const outputFilename = pathWithRandomSuffix(uploadName);
 
@@ -157,10 +155,6 @@ export async function processCNCGreyscale(modelInfo, onProgress) {
         img.invert();
     }
     onProgress && onProgress(0.6);
-    let { density = 4 } = modelInfo.gcodeConfig || {};
-    if (Math.abs(Math.ceil(width * density) / density - width) > 0.1 || Math.abs(Math.ceil(height * density) / density - height) > 0.1) {
-        density = 10;
-    }
     img
         .greyscale()
         .flip(scaleX < 0, scaleY < 0)
@@ -184,15 +178,12 @@ export async function processBW(modelInfo, onProgress) {
     const { width, height, rotationZ = 0, scaleX = 1, scaleY = 1 } = modelInfo.transformation;
 
     const { invert, bwThreshold } = modelInfo.config;
+    const { density = 4 } = modelInfo.gcodeConfig || {};
 
     const outputFilename = pathWithRandomSuffix(uploadName);
     const img = await Jimp.read(`${DataStorage.tmpDir}/${uploadName}`);
 
     onProgress && onProgress(0.5);
-    let { density = 4 } = modelInfo.gcodeConfig || {};
-    if (Math.abs(Math.ceil(width * density) / density - width) > 0.1 || Math.abs(Math.ceil(height * density) / density - height) > 0.1) {
-        density = 10;
-    }
     img
         .greyscale()
         .flip(scaleX < 0, scaleY < 0)
@@ -225,13 +216,10 @@ export async function processHalftone(modelInfo, onProgress) {
     const { width, height, rotationZ = 0, scaleX = 1, scaleY = 1 } = modelInfo.transformation;
 
     const { npType, npSize, npAngle, threshold } = modelInfo.config;
+    const { density = 4 } = modelInfo.gcodeConfig || {};
     const outputFilename = pathWithRandomSuffix(uploadName);
     const img = await Jimp.read(`${DataStorage.tmpDir}/${uploadName}`);
     onProgress && onProgress(0.6);
-    let { density = 4 } = modelInfo.gcodeConfig || {};
-    if (Math.abs(Math.ceil(width * density) / density - width) > 0.1 || Math.abs(Math.ceil(height * density) / density - height) > 0.1) {
-        density = 10;
-    }
     img
         .greyscale()
         .flip(scaleX < 0, scaleY < 0)
