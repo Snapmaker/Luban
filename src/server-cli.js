@@ -13,7 +13,7 @@ const increaseVerbosityLevel = (val, total) => {
 };
 
 const defaultHost = isElectron() ? '127.0.0.1' : '0.0.0.0';
-const defaultPort = isElectron() ? 0 : 8000;
+const defaultPort = isElectron() ? 0 : 8001;
 
 program
     .version(pkg.version)

@@ -57,7 +57,7 @@ export function serverStartDevelopment(cb) {
         env: {
             'NODE_ENV': 'development'
         },
-        ext: 'js json',
+        ext: 'js json ts',
         tasks: ['serverBuildDevelopment'],
         done: cb
     });

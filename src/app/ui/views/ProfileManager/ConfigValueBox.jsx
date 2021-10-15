@@ -52,7 +52,6 @@ function ConfigValueBox({ optionConfigGroup, calculateTextIndex, isCategorySelec
                                     {group.name && (
                                         <Anchor
                                             className={classNames(styles.item, { [styles.selected]: idx === activeCateId })}
-
                                             onClick={() => {
                                                 setActiveCate(idx);
                                             }}

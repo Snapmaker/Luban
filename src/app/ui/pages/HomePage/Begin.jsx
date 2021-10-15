@@ -143,7 +143,8 @@ const Begin = () => {
                                     })}
                                 </div>
                             </div>
-                        )}
+                        )
+                    }
                 </div>
             </div>
             {renderWorkspace()}
