@@ -27,6 +27,11 @@ export const STEP_STAGE = {
     CNC_LASER_GENERATE_TOOLPATH_AND_PREVIEW: 21,
     CNC_LASER_RENDER_VIEWPATH: 22,
 
+    // laser
+    LASER_CUTTING_STL: 34,
+    LASER_CUT_STL_SUCCEED: 35,
+    LASER_CUT_STL_FAILED: 36,
+
     // printing
     PRINTING_LOADING_MODEL: 23,
     PRINTING_LOAD_MODEL_SUCCEED: 24,
@@ -49,6 +54,9 @@ export const PROCESS_STAGE = {
     CNC_LASER_UPLOAD_IMAGE: 2, // upload and process
     CNC_LASER_PROCESS_IMAGE: 3,
     CNC_LASER_VIEW_PATH: 4, // simulation
+
+    // laser
+    LASER_CUT_STL: 8, // cut stl
 
     // printing
     PRINTING_LOAD_MODEL: 5,
@@ -161,6 +169,19 @@ class ProgressStatesManager {
             'Generating simulation {{progress}}%',
             'Generated simulation successfully.',
             'Failed to generate simulation.');
+
+        // Laser
+        this.push(PROCESS_STAGE.LASER_CUT_STL,
+            [
+                {
+                    stageID: STEP_STAGE.LASER_CUTTING_STL,
+                    percent: 1
+                }
+            ],
+            'Loading model...',
+            'Loaded model successfully.',
+            'Failed to load model.');
+
         // Printing
         this.push(PROCESS_STAGE.PRINTING_LOAD_MODEL,
             [
