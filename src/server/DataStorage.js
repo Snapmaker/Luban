@@ -148,6 +148,7 @@ class DataStorage {
                                  'DefaultMBEM.def.json',
                                  'DefaultFEM.def.json',
                                  'DefaultSGVbit.def.json',
+                                 'active.defv2.json',
                                  'RAcrylicFEM.defv2.json'], cncFile)) {
                                  const cncConfigPath = path.join(src, cncFile);
                                  cncConfigPaths.push(cncConfigPath);
@@ -189,7 +190,15 @@ class DataStorage {
                      }
                      const src = path.join(cncDir, currentFile);
                      if (!fs.statSync(src).isFile()) {
-                         let newFileName = `tool.${path.basename(oldFilePath)}`;
+                         // fix profile name changing in v4.1.0
+                         let newFileName = path.basename(oldFilePath);
+                         if (/^Default/.test(newFileName)) {
+                             newFileName = `tool.default_${newFileName.slice(7)}`;
+                         } else if (newFileName === 'REpoxySGVbit.defv2.json') {
+                             newFileName = 'tool.rEpoxy_SGVbit.def2.json';
+                         } else {
+                             newFileName = `tool.${newFileName}`;
+                         }
                          if (/([A-Za-z0-9_]+)\.defv2\.json$/.test(newFileName)) {
                              newFileName = newFileName.replace(/\.defv2\.json$/, '.def.json');
                          }
@@ -198,6 +207,9 @@ class DataStorage {
                      }
                  }
              }
+         }
+         if (fs.existsSync(`${srcDir}/CncConfig`)) {
+             rmDir(`${srcDir}/CncConfig`);
          }
      }
 

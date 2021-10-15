@@ -156,27 +156,28 @@ function ToolPathFastConfigurations({ setEditingToolpath, headType, toolpath }) 
         if (oldTooldefinition) {
             activeToolDefinition.definitionId = oldTooldefinition.definitionId;
             activeToolDefinition.name = oldTooldefinition.name;
+            const newSettings = activeToolDefinition?.settings;
             if (headType === HEAD_CNC) {
-                activeToolDefinition.settings.angle.default_value = toolParams?.toolAngle;
-                activeToolDefinition.settings.diameter.default_value = toolParams?.toolDiameter;
-                activeToolDefinition.settings.shaft_diameter.default_value = toolParams?.toolShaftDiameter;
-                activeToolDefinition.settings.jog_speed.default_value = gcodeConfig?.jogSpeed;
-                activeToolDefinition.settings.plunge_speed.default_value = gcodeConfig?.plungeSpeed;
-                activeToolDefinition.settings.work_speed.default_value = gcodeConfig?.workSpeed;
-                activeToolDefinition.settings.step_down.default_value = gcodeConfig?.stepDown;
-                activeToolDefinition.settings.step_over.default_value = gcodeConfig?.stepOver;
+                if (newSettings.angle) newSettings.angle.default_value = toolParams?.toolAngle;
+                if (newSettings.diameter) newSettings.diameter.default_value = toolParams?.toolDiameter;
+                if (newSettings.shaft_diameter) newSettings.shaft_diameter.default_value = toolParams?.toolShaftDiameter;
+                if (newSettings.jog_speed) newSettings.jog_speed.default_value = gcodeConfig?.jogSpeed;
+                if (newSettings.plunge_speed) newSettings.plunge_speed.default_value = gcodeConfig?.plungeSpeed;
+                if (newSettings.work_speed) newSettings.work_speed.default_value = gcodeConfig?.workSpeed;
+                if (newSettings.step_down) newSettings.step_down.default_value = gcodeConfig?.stepDown;
+                if (newSettings.step_over) newSettings.step_over.default_value = gcodeConfig?.stepOver;
             }
             if (headType === HEAD_LASER) {
-                activeToolDefinition.settings.path_type.default_value = gcodeConfig?.pathType;
-                activeToolDefinition.settings.movement_mode.default_value = gcodeConfig?.movementMode;
-                activeToolDefinition.settings.direction.default_value = gcodeConfig?.direction;
-                activeToolDefinition.settings.fill_interval.default_value = gcodeConfig?.fillInterval;
-                activeToolDefinition.settings.jog_speed.default_value = gcodeConfig?.jogSpeed;
-                activeToolDefinition.settings.work_speed.default_value = gcodeConfig?.workSpeed;
-                activeToolDefinition.settings.dwell_time.default_value = gcodeConfig?.dwellTime;
-                activeToolDefinition.settings.multi_passes.default_value = gcodeConfig?.multiPasses;
-                activeToolDefinition.settings.multi_pass_depth.default_value = gcodeConfig?.multiPassDepth;
-                activeToolDefinition.settings.fixed_power.default_value = gcodeConfig?.fixedPower;
+                if (newSettings.path_type) newSettings.path_type.default_value = gcodeConfig?.pathType;
+                if (newSettings.movement_mode) newSettings.movement_mode.default_value = gcodeConfig?.movementMode;
+                if (newSettings.direction) newSettings.direction.default_value = gcodeConfig?.direction;
+                if (newSettings.fill_interval) newSettings.fill_interval.default_value = gcodeConfig?.fillInterval;
+                if (newSettings.jog_speed) newSettings.jog_speed.default_value = gcodeConfig?.jogSpeed;
+                if (newSettings.work_speed) newSettings.work_speed.default_value = gcodeConfig?.workSpeed;
+                if (newSettings.dwell_time) newSettings.dwell_time.default_value = gcodeConfig?.dwellTime;
+                if (newSettings.multi_passes) newSettings.multi_passes.default_value = gcodeConfig?.multiPasses;
+                if (newSettings.multi_pass_depth) newSettings.multi_pass_depth.default_value = gcodeConfig?.multiPassDepth;
+                if (newSettings.fixed_power) newSettings.fixed_power.default_value = gcodeConfig?.fixedPower;
             }
         }
         if (currentToolDefinition?.definitionId !== activeToolDefinition?.definitionId) {
