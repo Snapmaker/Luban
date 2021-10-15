@@ -1,2 +1,7 @@
-export MarlinController from './Marlin/MarlinController';
-export ScreenController from './Marlin/ScreenController';
+import MarlinController from './Marlin/MarlinController';
+import ScreenController from './Marlin/ScreenController';
+
+export {
+    MarlinController,
+    ScreenController
+};
