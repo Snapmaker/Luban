@@ -537,15 +537,17 @@ class ToolPathGroup {
 
     checkHasVisibleToolPaths() {
         const toolPaths = this.getToolPaths();
-        let res = false;
-        toolPaths.forEach(
+        if (toolPaths.length === 0) {
+            return false;
+        }
+        return toolPaths.every(
             (toolPath) => {
                 if (toolPath.visible) {
-                    res = true;
+                    return true;
                 }
+                return false;
             }
         );
-        return res;
     }
 }
 
