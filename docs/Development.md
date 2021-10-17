@@ -91,10 +91,10 @@ If you want to contribute to Luban, you can follow the instructions below to set
     > cd Luban
     ```
 
-- Use `npm` to install package dependencies:
+- Use `npm` to install package dependencies (with peer dependencies):
 
     ```Bash
-    > npm install
+    > npm install --legacy-peer-deps
     ```
 
 - Start dev server locally:
