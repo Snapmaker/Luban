@@ -4,7 +4,6 @@ import Canvg from 'canvg';
 import { coordGmSvgToModel } from '../ui/SVGEditor/element-utils';
 
 import { NS } from '../ui/SVGEditor/lib/namespaces';
-import { DATA_PREFIX } from '../constants';
 
 
 // import ThreeDxfLoader from '../lib/threejs/ThreeDxfLoader';
@@ -180,13 +179,25 @@ class SvgModel extends BaseModel {
 
     modeConfigs = {};
 
-    resources = new Resource();
+    resource = new Resource();
 
     constructor(modelInfo, modelGroup) {
         super(modelInfo, modelGroup);
         const { elem, size } = modelInfo;
         this.elem = elem;
         this.size = size;
+
+        this.resource.setOriginalFile(
+            // modelInfo.originalName,
+            modelInfo.uploadName,
+            modelInfo.sourceWidth,
+            modelInfo.sourceHeight
+        );
+        this.resource.setProcessedFile(
+            modelInfo.processImageName,
+            modelInfo.transformation.width,
+            modelInfo.transformation.height
+        );
 
         this.isToolPathSelect = false;
 
@@ -354,12 +365,10 @@ class SvgModel extends BaseModel {
 
     // just for svg file
     async uploadSourceImage() {
-        const { uploadName } = this;
-
-        if (!uploadName || uploadName.indexOf('.svg') === -1) {
+        if (this.resource.originalFile.name.indexOf('.svg') === -1) {
             return;
         }
-        const content = await fetch(`${DATA_PREFIX}/${uploadName}`, { method: 'GET' })
+        const content = await fetch(this.resource.originalFile.path, { method: 'GET' })
             .then(res => res.text());
 
         const canvas = document.createElement('canvas');
@@ -400,8 +409,9 @@ class SvgModel extends BaseModel {
         this.sourceWidth = sourceWidth || this.sourceWidth;
         this.width = width || this.width;
         this.height = height || this.height;
-        this.uploadName = uploadName || this.uploadName;
-        this.processImageName = processImageName || this.processImageName;
+        // this.uploadName = uploadName || this.uploadName;
+        this.resource.originalFile.update(uploadName);
+        this.resource.processedFile.update(processImageName);
 
 
         // this.displayModelObject3D(uploadName, sourceWidth, sourceHeight);
@@ -441,8 +451,8 @@ class SvgModel extends BaseModel {
 
     refreshElemAttrs() {
         const elem = this.elem;
-        const { config, transformation, uploadName, width, height } = this;
-        const href = `${DATA_PREFIX}/${uploadName}`;
+        const { config, transformation, width, height } = this;
+        const href = this.resource.originalFile.path;
         const { positionX, positionY } = transformation;
 
         for (const key of Object.keys(config)) {
@@ -920,7 +930,7 @@ class SvgModel extends BaseModel {
 
     generateModelObject3D() {
         if (this.sourceType !== '3d' && this.sourceType !== 'image3d') {
-            const uploadPath = `${DATA_PREFIX}/${this.uploadName}`;
+            const uploadPath = this.resource.originalFile.path;
             const texture = new THREE.TextureLoader().load(uploadPath, () => {
                 this.meshObject.dispatchEvent(EVENTS.UPDATE);
             });
@@ -945,10 +955,10 @@ class SvgModel extends BaseModel {
     }
 
     generateProcessObject3D() {
-        if (!this.processImageName) {
+        if (!this.resource.processedFile.name) {
             return;
         }
-        const uploadPath = `${DATA_PREFIX}/${this.processImageName}`;
+        const uploadPath = this.resource.processedFile.path;
         // const texture = new THREE.TextureLoader().load(uploadPath);
         const texture = new THREE.TextureLoader().load(uploadPath, () => {
             this.meshObject.dispatchEvent(EVENTS.UPDATE);
@@ -1008,9 +1018,8 @@ class SvgModel extends BaseModel {
             }
 
             this.mode = mode;
-            this.processImageName = null;
+            this.resource.processedFile.update(null);
         }
-
         this.generateProcessObject3D();
 
         // const res = await api.processImage({
@@ -1058,8 +1067,8 @@ class SvgModel extends BaseModel {
             sourceWidth: this.sourceWidth,
             scale: this.scale,
             originalName: this.originalName,
-            uploadName: this.uploadName,
-            processImageName: this.processImageName,
+            uploadName: this.resource.originalFile.name,
+            processImageName: this.resource.processedFile.name,
 
             transformation: {
                 ...this.transformation
@@ -1151,7 +1160,7 @@ class SvgModel extends BaseModel {
 
     updateProcessImageName(processImageName) {
         // this.processMode(this.mode, this.config, processImageName);
-        this.processImageName = processImageName;
+        this.resource.processedFile.update(processImageName);
 
         this.generateProcessObject3D();
     }
@@ -1160,7 +1169,7 @@ class SvgModel extends BaseModel {
     getSerializableConfig() {
         const {
             modelID, limitSize, headType, sourceType, originalName, config, mode,
-            transformation, visible, uploadName, processImageName
+            transformation, visible
         } = this;
         return {
             modelID,
@@ -1170,12 +1179,12 @@ class SvgModel extends BaseModel {
             sourceHeight: transformation.height,
             sourceWidth: transformation.width,
             originalName,
-            uploadName,
+            uploadName: this.resource.originalFile.name,
             config,
             visible,
             mode,
             transformation,
-            processImageName
+            processImageName: this.resource.processedFile.name
         };
     }
 }
