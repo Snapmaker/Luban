@@ -5,6 +5,7 @@ import { generateModelDefaultConfigs } from '../models/ModelInfoUtils';
 import { DATA_PREFIX, HEAD_LASER } from '../constants';
 import { ViewPathRenderer } from '../lib/renderer/ViewPathRenderer';
 import { MATERIAL_UNSELECTED, MATERIAL_SELECTED } from '../workers/ShaderMaterial/ToolpathRendererMeterial';
+import ThreeModel from '../models/ThreeModel';
 
 class ToolPathGroup {
     toolPaths = [];
@@ -184,7 +185,7 @@ class ToolPathGroup {
         this._updated();
         const toolPathInfo = new ToolPath({
             name: createToolPathNameByType(this.count, type, this.headType),
-            baseName: models[0].uploadName,
+            baseName: models[0] instanceof ThreeModel ? models[0].uploadName : models[0].resource.originalFile.name,
             headType: this.headType,
             type,
             modelIDs: this.modelGroup.selectedModelIDArray,
@@ -208,7 +209,7 @@ class ToolPathGroup {
             this._updated();
             const toolPathInfo = new ToolPath({
                 name: createToolPathNameByType(this.count, type, this.headType),
-                baseName: modelsWithSameType[0].uploadName,
+                baseName: modelsWithSameType[0] instanceof ThreeModel ? modelsWithSameType[0].uploadName : modelsWithSameType[0].resource.originalFile.name,
                 headType: this.headType,
                 type,
                 modelIDs: toolPathModelIDs,
