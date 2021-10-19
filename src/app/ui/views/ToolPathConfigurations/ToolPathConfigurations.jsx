@@ -33,7 +33,7 @@ function ToolPathConfigurations({ toolpath, onClose, headType }) {
         const { toolParams, gcodeConfig } = toolPath;
         const activeToolDefinition = _.cloneDeep(currentToolDefinition);
 
-        const oldTooldefinition = toolDefinitions.find((d) => {
+        const oldTooldefinition = toolDefinitions?.find((d) => {
             return d.name === toolParams.definitionName;
             // return d.definitionId === toolParams.definitionId;
         });

@@ -2,6 +2,7 @@ import path from 'path';
 import mv from 'mv';
 import fs from 'fs';
 import uuid from 'uuid';
+import { gte } from 'lodash';
 import { pathWithRandomSuffix } from '../../lib/random-utils';
 import logger from '../../lib/logger';
 import DataStorage, { rmDir } from '../../DataStorage';
@@ -13,8 +14,10 @@ import { packFirmware } from '../../lib/firmware-build';
 import {
     ERR_INTERNAL_SERVER_ERROR, HEAD_PRINTING
 } from '../../constants';
+import { getMachineSeriesWithToolhead, INITIAL_TOOL_HEAD_FOR_ORIGINAL, INITIAL_TOOL_HEAD_FOR_SM2 } from '../../../app/constants';
 import { removeSpecialChars } from '../../../shared/lib/utils';
 import { generateRandomPathName } from '../../../shared/lib/random-utils';
+import pkg from '../../../package.json';
 
 const log = logger('api:file');
 
@@ -374,6 +377,7 @@ export const uploadFileToTmp = (req, res) => {
 
 export const recoverProjectFile = async (req, res) => {
     const file = req.files.file || JSON.parse(req.body.file);
+    // const toolHead = JSON.parse(req.body.toolHead);
     file.path = DataStorage.resolveRelativePath(file.path);
     const { uploadName } = await cpFileToTmp(file);
     let content;
@@ -385,24 +389,34 @@ export const recoverProjectFile = async (req, res) => {
     }
 
     content = content.toString();
-
     const config = JSON.parse(content);
+    // const currentMachine = getMachineSeriesWithToolhead(config?.machineInfo?.series, toolHead);
     let headType = config?.machineInfo?.headType;
     // TODO: for project file of "< version 4.1"
     if (headType === '3dp') {
         headType = HEAD_PRINTING;
     }
     const series = config?.machineInfo?.series;
+    const toolHead = config?.machineInfo?.toolHead || (series === 'Original' ? INITIAL_TOOL_HEAD_FOR_ORIGINAL : INITIAL_TOOL_HEAD_FOR_SM2);
+    const currentMachine = getMachineSeriesWithToolhead(config?.machineInfo?.series, toolHead);
+    let currentSeriesPath = '';
+    const version = pkg.version;
+    console.log('version', version);
+    if (gte(version, '4.1.0')) {
+        currentSeriesPath = currentMachine?.configPathname[headType];
+    } else {
+        currentSeriesPath = series;
+    }
     if (config.defaultMaterialId && /^material.([0-9_]+)$/.test(config.defaultMaterialId)) {
         const fname = `${DataStorage.tmpDir}/${config.defaultMaterialId}.def.json`;
         if (fs.existsSync(fname)) {
-            fs.copyFileSync(fname, `${DataStorage.configDir}/${headType}/${series}/${config.defaultMaterialId}.def.json`);
+            fs.copyFileSync(fname, `${DataStorage.configDir}/${headType}/${currentSeriesPath}/${config.defaultMaterialId}.def.json`);
         }
     }
     if (config.defaultQualityId && /^quality.([0-9_]+)$/.test(config.defaultQualityId)) {
         const fname = `${DataStorage.tmpDir}/${config.defaultQualityId}.def.json`;
         if (fs.existsSync(fname)) {
-            fs.copyFileSync(fname, `${DataStorage.configDir}/${headType}/${series}/${config.defaultQualityId}.def.json`);
+            fs.copyFileSync(fname, `${DataStorage.configDir}/${headType}/${currentSeriesPath}/${config.defaultQualityId}.def.json`);
         }
     }
 

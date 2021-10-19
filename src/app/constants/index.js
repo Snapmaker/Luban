@@ -1075,3 +1075,16 @@ export const MYMINIFACTORY_URL = 'https://www.myminifactory.com/';
 // Project and Menu
 // once you change this number, make sure the number in `electron-app/Menu.js` also changed
 export const MAX_RECENT_FILES_LENGTH = 12;
+
+// Default toolHead for original
+export const INITIAL_TOOL_HEAD_FOR_ORIGINAL = {
+    printingToolhead: MACHINE_TOOL_HEADS[SINGLE_EXTRUDER_TOOLHEAD_FOR_ORIGINAL].value,
+    laserToolhead: MACHINE_TOOL_HEADS[LEVEL_ONE_POWER_LASER_FOR_ORIGINAL].value,
+    cncToolhead: MACHINE_TOOL_HEADS[STANDARD_CNC_TOOLHEAD_FOR_ORIGINAL].value
+};
+
+export const INITIAL_TOOL_HEAD_FOR_SM2 = {
+    printingToolhead: MACHINE_TOOL_HEADS[SINGLE_EXTRUDER_TOOLHEAD_FOR_SM2].value,
+    laserToolhead: MACHINE_TOOL_HEADS[LEVEL_ONE_POWER_LASER_FOR_SM2].value,
+    cncToolhead: MACHINE_TOOL_HEADS[STANDARD_CNC_TOOLHEAD_FOR_SM2].value
+};

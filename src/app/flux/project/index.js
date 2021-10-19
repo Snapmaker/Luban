@@ -87,15 +87,14 @@ export const actions = {
         const { initState, content: lastString } = getState().project[headType];
         const models = editorState.modelGroup.getModels();
         if (!models.length && initState) return;
-
         const machineState = getState().machine;
-        const { size, series } = machineState;
+        const { size, series, toolHead } = machineState;
         const { defaultMaterialId, defaultQualityId, isRecommended } = editorState;
         const machineInfo = {};
         machineInfo.headType = headType;
         machineInfo.size = size;
         machineInfo.series = series;
-
+        machineInfo.toolHead = toolHead;
         const envObj = { machineInfo, defaultMaterialId, defaultQualityId, isRecommended, models: [], toolpaths: [] };
         envObj.version = pkg?.version;
         if (headType === HEAD_CNC || headType === HEAD_LASER) {
