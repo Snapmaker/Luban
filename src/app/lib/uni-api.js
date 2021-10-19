@@ -237,8 +237,10 @@ const File = {
             tmpFile = app.getPath('userData') + tmpFile;
             // eslint-disable-next-line no-use-before-define
             const saveDialogReturnValue = await Dialog.showSaveDialog({
-                title: targetFile,
-                defaultPath: targetFile,
+                // title: targetFile,
+                // defaultPath: targetFile,
+                title: renderGcodeFileName,
+                defaultPath: renderGcodeFileName,
                 filters: [{ name: 'files', extensions: [targetFile.split('.').pop()] }]
             });
             targetFile = saveDialogReturnValue.filePath;
@@ -246,7 +248,6 @@ const File = {
 
             // const file = { path: targetFile, name: window.require('path').basename(targetFile) };
             const file = { path: targetFile, name: renderGcodeFileName };
-
             fs.copyFileSync(tmpFile, targetFile);
 
             return file;

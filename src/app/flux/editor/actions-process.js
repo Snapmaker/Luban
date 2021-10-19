@@ -360,7 +360,9 @@ export const processActions = {
         let toolPathsModelId = [];
         const models = modelGroup.getModels();
         toolPaths.forEach((item) => {
-            toolPathsModelId = toolPathsModelId.concat(item.modelIDs);
+            if (item.visible) {
+                toolPathsModelId = toolPathsModelId.concat(item.modelIDs);
+            }
         });
         const renderGcodeFileName = `${_.replace(_.find(models, (item) => {
             return _.includes(toolPathsModelId, item.modelID);

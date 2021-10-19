@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import path from 'path';
-import { cloneDeep, isNil } from 'lodash';
+import { cloneDeep, isNil, filter } from 'lodash';
 // import FileSaver from 'file-saver';
 import LoadModelWorker from '../../workers/LoadModel.worker';
 import GcodeToBufferGeometryWorker from '../../workers/GcodeToBufferGeometry.worker';
@@ -843,7 +843,7 @@ export const actions = {
             return;
         }
 
-        const models = modelGroup.getModels();
+        const models = filter(modelGroup.getModels(), { 'visible': true });
 
         if (!models || models.length === 0) {
             return;
