@@ -1202,7 +1202,7 @@ class SVGActionsFactory {
      * @param newWidth
      * @param newHeight
      */
-    resizeElementsImmediately(elements, { newWidth, newHeight }) {
+    resizeElementsImmediately(elements, { newWidth, newHeight, imageWidth, imageHeight }) {
         if (!elements || elements.length === 0) {
             return;
         }
@@ -1226,8 +1226,8 @@ class SVGActionsFactory {
             SvgModel.recalculateElementAttributes(element, {
                 x: x + width / 2,
                 y: y + height / 2,
-                width,
-                height,
+                width: imageWidth || width,
+                height: imageHeight || height,
                 scaleX: newWidth / width * signScaleX,
                 scaleY: newHeight / height * signScaleY,
                 angle

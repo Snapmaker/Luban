@@ -485,12 +485,18 @@ class SvgModel extends BaseModel {
             // case 'path':
             //     changes.d = elem.getAttribute('d');
             //     break;
-            case 'rect':
-            case 'image': {
+            case 'rect': {
                 elem.setAttribute('x', x - width / 2);
                 elem.setAttribute('y', y - height / 2);
                 elem.setAttribute('width', width);
                 elem.setAttribute('height', height);
+                break;
+            }
+            case 'image': {
+                elem.setAttribute('x', x - transformation.width / 2);
+                elem.setAttribute('y', y - transformation.height / 2);
+                elem.setAttribute('width', transformation.width);
+                elem.setAttribute('height', transformation.height);
                 if (!elem.getAttribute('href')) {
                     elem.setAttribute('href', checkIsImageSuffix(href) ? href : './resources/images/loading.gif');
                 }
@@ -691,6 +697,7 @@ class SvgModel extends BaseModel {
     static recalculateElementAttributes(element, t) {
         const { x, y, width = 0, height = 0, angle } = t;
         let { scaleX, scaleY } = t;
+        let { imageWidth = 0, imageHeight = 0 } = t;
         const absScaleX = Math.abs(scaleX);
         const absScaleY = Math.abs(scaleY);
 
@@ -705,10 +712,14 @@ class SvgModel extends BaseModel {
                 break;
             }
             case 'image': {
-                element.setAttribute('x', x - width / 2);
-                element.setAttribute('y', y - height / 2);
-                element.setAttribute('width', width);
-                element.setAttribute('height', height);
+                if (imageWidth === 0 && imageHeight === 0) {
+                    imageWidth = width;
+                    imageHeight = height;
+                }
+                element.setAttribute('x', x - imageWidth / 2);
+                element.setAttribute('y', y - imageHeight / 2);
+                element.setAttribute('width', imageWidth);
+                element.setAttribute('height', imageHeight);
                 break;
             }
             case 'rect': {
@@ -927,7 +938,6 @@ class SvgModel extends BaseModel {
             this.modelObject3D = new THREE.Mesh(this.meshObject.geometry, material);
 
             this.meshObject.add(this.modelObject3D);
-            this.modelObject3D.visible = this.showOrigin;
         }
         this.updateTransformation(this.transformation);
     }
@@ -957,26 +967,7 @@ class SvgModel extends BaseModel {
 
         this.meshObject.add(this.processObject3D);
 
-
-        this.processObject3D.visible = !this.showOrigin;
-
         this.updateTransformation(this.transformation);
-    }
-
-    changeShowOrigin(show = undefined) {
-        if (show === undefined) {
-            this.showOrigin = !this.showOrigin;
-        } else {
-            this.showOrigin = show;
-        }
-        this.modelObject3D.visible = this.showOrigin;
-        if (this.processObject3D) {
-            this.processObject3D.visible = !this.showOrigin;
-        }
-        return {
-            showOrigin: this.showOrigin,
-            showImageName: this.showOrigin ? this.uploadName : this.processImageName
-        };
     }
 
     // updateVisible(param) {
@@ -1166,7 +1157,7 @@ class SvgModel extends BaseModel {
 
     getSerializableConfig() {
         const {
-            modelID, limitSize, headType, sourceType, sourceHeight, sourceWidth, originalName, uploadName, config, mode,
+            modelID, limitSize, headType, sourceType, originalName, uploadName, config, mode,
             transformation, processImageName
         } = this;
         return {
@@ -1174,8 +1165,8 @@ class SvgModel extends BaseModel {
             limitSize,
             headType,
             sourceType,
-            sourceHeight,
-            sourceWidth,
+            sourceHeight: transformation.height,
+            sourceWidth: transformation.width,
             originalName,
             uploadName,
             config,

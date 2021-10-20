@@ -33,12 +33,9 @@ export const svgInverse = (svg, flip = 1) => {
 
 export const svgToString = (svg) => {
     return `<svg xmlns="http://www.w3.org/2000/svg"
-        fill="none"
-        stroke="#000000"
-        stroke-width="1"
-        width="${svg.width}"
-        height="${svg.height}"
         viewBox="${svg.viewBox}"
+        preserveAspectRatio="none"
+        style="fill: none; stroke: #000; stroke-width: 0.4px; vector-effect: non-scaling-stroke;"
         version="1.1">
         ${svg.shapes.map(shape => `${getPath(shape)}\n`)}
       </svg>`;

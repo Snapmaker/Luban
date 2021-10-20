@@ -58,7 +58,6 @@ class ThreeModel extends BaseModel {
         this.boundingBox = null;
         this.overstepped = false;
         this.convexGeometry = null;
-        this.showOrigin = (this.sourceType !== 'raster' && this.sourceType !== 'image3d');
         this.modelGroup = modelGroup;
 
         this.lastToolPathStr = null;
@@ -86,7 +85,6 @@ class ThreeModel extends BaseModel {
 
     set visible(value) {
         this.meshObject.visible = value;
-        this.showOrigin = this.sourceType !== 'raster' && this.sourceType !== 'image3d';
     }
 
     updateModelName(newName) {
