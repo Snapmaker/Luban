@@ -358,7 +358,7 @@ export const processActions = {
         const { toolPaths } = toolPathGroup;
         const suffix = headType === 'laser' ? '.nc' : '.cnc';
         let toolPathsModelId = [];
-        const models = modelGroup.getModels();
+        const models = _.filter(modelGroup.getModels(), { 'visible': true });
         toolPaths.forEach((item) => {
             if (item.visible) {
                 toolPathsModelId = toolPathsModelId.concat(item.modelIDs);
