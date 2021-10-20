@@ -116,7 +116,6 @@ export const actions = {
             envObj.toolpaths = toolPaths;
         }
         const content = JSON.stringify(envObj);
-
         if (force || !(checkObjectIsEqual(JSON.parse(lastString), envObj))) {
             dispatch(actions.updateState(headType, { content, unSaved: true, initState: false }));
             await api.saveEnv({ content });
@@ -227,14 +226,12 @@ export const actions = {
         } else {
             dispatch(modActions.updateState(envHeadType, restState));
         }
-        console.log('before covery', envHeadType);
         // // TODO: set current content to avoid <unSaved> flag mis-set
         // await dispatch(actions.clearSavedEnvironment(envHeadType));
         for (const type of [HEAD_PRINTING, HEAD_CNC, HEAD_LASER]) {
             await dispatch(actions.clearSavedEnvironment(type));
         }
         await dispatch(actions.updateState(envHeadType, { unSaved: true }));
-        console.log('after covery');
     },
 
     exportFile: (targetFile) => async () => {
@@ -327,7 +324,6 @@ export const actions = {
             const formData = new FormData();
             let shouldSetFileName = true;
             if (!(file instanceof File)) {
-                console.log('file?.path', file?.path);
                 if (new RegExp(/^\.\//).test(file?.path)) {
                     shouldSetFileName = false;
                 }
@@ -374,7 +370,6 @@ export const actions = {
 
             await dispatch(actions.onRecovery(headType, envObj, false));
             if (shouldSetFileName) {
-                console.log('shouldSetFileName', 1, file instanceof File);
                 if (file instanceof File) {
                     const newOpenedFile = {
                         name: file.name,
@@ -386,9 +381,7 @@ export const actions = {
                 }
                 await dispatch(actions.updateState(headType, { unSaved: false, content }));
             } else {
-                console.log('not 2',);
                 await dispatch(actions.updateState(headType, { unSaved: true, openedFile: null }));
-                // await dispatch(actions.autoSaveEnvironment(headType, true));
             }
         } else if (checkIsGCodeFile(file.name)) {
             dispatch(workspaceActions.uploadGcodeFile(file));
@@ -441,7 +434,8 @@ export const actions = {
                 shouldShowGuideTours = currentGuideTours ? !!currentGuideTours.guideTours3dp : undefined;
             }
         }
-        dispatch(actions.updateState(newHeadType, { unSaved: false, openedFile: null }));
+        await dispatch(actions.setOpenedFileWithType(newHeadType, null));
+        // dispatch(actions.updateState(newHeadType, { unSaved: false, openedFile: null }));
         if (restartGuide && to === '/printing') {
             machineStore.set('guideTours.guideTours3dp', false);
         }

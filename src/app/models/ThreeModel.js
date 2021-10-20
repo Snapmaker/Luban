@@ -594,7 +594,7 @@ class ThreeModel extends BaseModel {
     getSerializableConfig() {
         const {
             modelID, limitSize, headType, sourceType, sourceHeight, sourceWidth, originalName, uploadName, config, mode,
-            transformation, processImageName, supportTag
+            transformation, processImageName, supportTag, visible
         } = this;
 
         return {
@@ -608,6 +608,7 @@ class ThreeModel extends BaseModel {
             uploadName,
             config,
             mode,
+            visible,
             transformation,
             processImageName,
             supportTag

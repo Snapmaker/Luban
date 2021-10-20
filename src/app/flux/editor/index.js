@@ -480,8 +480,17 @@ export const actions = {
         // Limit image size by machine size
         let width, height, scale;
         if (transformation?.width && transformation?.height) {
-            width = transformation?.width / Math.abs(transformation?.scaleX);
-            height = transformation?.height / Math.abs(transformation?.scaleY);
+            if (transformation?.scaleX && transformation?.scaleY) {
+                width = transformation?.width / Math.abs(transformation?.scaleX);
+                height = transformation?.height / Math.abs(transformation?.scaleY);
+            } else {
+                width = transformation?.width;
+                height = transformation?.height;
+            }
+            if (sourceType === SOURCE_TYPE_IMAGE3D) {
+                const newModelSize = sizeModel(size, materials, sourceWidth, sourceHeight);
+                scale = newModelSize?.scale;
+            }
         } else {
             const newModelSize = sourceType !== SOURCE_TYPE_IMAGE3D
                 ? limitModelSizeByMachineSize(coordinateSize, sourceWidth, sourceHeight, config?.svgNodeName)
@@ -525,7 +534,6 @@ export const actions = {
             ...defaultTransformation,
             ...transformation
         };
-
         if (!transformation.scaleX) {
             transformation.scaleX = transformation.width / width;
         }

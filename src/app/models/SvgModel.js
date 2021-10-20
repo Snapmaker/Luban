@@ -353,7 +353,7 @@ class SvgModel extends BaseModel {
     async uploadSourceImage() {
         const { uploadName } = this;
 
-        if (uploadName.indexOf('.svg') === -1) {
+        if (!uploadName || uploadName.indexOf('.svg') === -1) {
             return;
         }
         const content = await fetch(`${DATA_PREFIX}/${uploadName}`, { method: 'GET' })
@@ -1166,8 +1166,8 @@ class SvgModel extends BaseModel {
 
     getSerializableConfig() {
         const {
-            modelID, limitSize, headType, sourceType, sourceHeight, sourceWidth, originalName, uploadName, config, mode,
-            transformation
+            modelID, limitSize, headType, sourceType, sourceHeight, sourceWidth, originalName, config, mode,
+            transformation, visible, uploadName, processImageName
         } = this;
         return {
             modelID,
@@ -1179,9 +1179,10 @@ class SvgModel extends BaseModel {
             originalName,
             uploadName,
             config,
+            visible,
             mode,
-            transformation
-            // processImageName
+            transformation,
+            processImageName
         };
     }
 }
