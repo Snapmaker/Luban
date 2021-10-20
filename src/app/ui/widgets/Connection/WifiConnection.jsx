@@ -346,7 +346,6 @@ function WifiConnection() {
                 }
             }
         });
-        console.log({ newModuleStatusList });
         return newModuleStatusList;
     }, [
         airPurifier, heatedBedTemperature, headType, currentHeadType,

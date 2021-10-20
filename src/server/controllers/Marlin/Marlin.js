@@ -54,7 +54,6 @@ class MarlinReplyParserFirmwareVersion {
 class MarlinReplyParserSeries {
     static parse(line) {
         const r = line.match(/^Marlin (.*)-([0-9.]+(-(alpha|beta|Alpha|Beta)[1-9]?)?)$/);
-        console.log('seriesParse', r);
         if (!r) {
             return null;
         }
