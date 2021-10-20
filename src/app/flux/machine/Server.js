@@ -505,10 +505,6 @@ export class Server extends events.EventEmitter {
             airPurifierFanSpeed: this.state.airPurifierFanSpeed,
             airPurifierFilterHealth: this.state.airPurifierFilterHealth,
             currentHeadType: this.state.currentHeadType,
-            // enclosureStatus: this.state.enclosureStatus,
-            // rotaryModuleStatus: this.state.rotaryModuleStatus,
-            // emergencyStopButtonStatus: this.state.emergencyStopButtonStatus,
-            // airPurifierStatus: this.state.airPurifierStatus
             moduleStatusList: this.state.moduleStatusList
         };
     };
@@ -740,12 +736,6 @@ export class Server extends events.EventEmitter {
         const sent = currentLine || 0;
         const received = currentLine || 0;
         const total = totalLines || 0;
-        // let elapsedTime = 0;
-        // let remainingTime = 0;
-        // if (this.state.gcodePrintingInfo.startTime) {
-        //     elapsedTime = new Date().getTime() - this.state.gcodePrintingInfo.startTime;
-        // }
-        // remainingTime = estimatedTime * 1000 - elapsedTime; // TODO
         let finishTime = 0;
         if (received > 0 && received >= totalLines) {
             finishTime = new Date().getTime();

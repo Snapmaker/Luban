@@ -295,9 +295,6 @@ export const actions = {
                         break;
                 }
             });
-            editMenu.submenu.forEach(item => {
-                item.enabled = false;
-            });
         }
 
         dispatch({

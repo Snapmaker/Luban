@@ -508,13 +508,6 @@ class Visualizer extends Component {
     componentWillReceiveProps(nextProps) {
         if (!isEqual(nextProps.size, this.props.size) || !isEqual(nextProps.preview, this.props.preview)) {
             const size = nextProps.size;
-            // nextProps.preview ? this.previewPrintableArea.updateSize({
-            //     x: size.x * 2,
-            //     y: size.y * 2
-            // }) : this.printableArea.updateSize({
-            //     x: size.x * 2,
-            //     y: size.y * 2
-            // });
             if (nextProps.preview) {
                 this.previewPrintableArea.updateSize({
                     x: size.x * 2,

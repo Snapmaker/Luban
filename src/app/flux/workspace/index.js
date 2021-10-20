@@ -67,7 +67,6 @@ export const actions = {
                     // object3D.material.uniforms.u_visible_index_count.value = 20000;
                     object3D.name = gcodeFile ? `${gcodeFile.name}-${uuid.v4()}` : `${gcodeFiles[gcodeFileIndex].name}-${uuid.v4()}`;
 
-                    // !isPreview ? modelGroup.add(object3D) : previewModelGroup.add(object3D);
                     if (isPreview) {
                         previewModelGroup.add(object3D);
                     } else {

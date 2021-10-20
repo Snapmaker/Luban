@@ -181,10 +181,6 @@ const INITIAL_STATE = {
 
     // connect info
     currentHeadType: '',
-    // emergencyStopButtonStatus: false,
-    // enclosureStatus: false,
-    // rotaryModuleStatus: false,
-    // airPurifierStatus: false
     moduleStatusList: {}
 };
 

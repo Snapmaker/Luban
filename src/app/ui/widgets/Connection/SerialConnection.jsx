@@ -17,14 +17,9 @@ import {
     WORKFLOW_STATE_IDLE,
     WORKFLOW_STATE_PAUSED,
     WORKFLOW_STATE_RUNNING
-    // , HEAD_PRINTING, HEAD_LASER, HEAD_CNC
 } from '../../../constants';
 import { valueOf } from '../../../lib/contants-utils';
 import { actions as machineActions } from '../../../flux/machine';
-// import PrintingState from './PrintingState';
-// import LaserState from './LaserState';
-// import CNCState from './CNCState';
-// import EnclosureState from './EnclosureState';
 import MachineSelectModal from '../../modals/modal-machine-select';
 import styles from './index.styl';
 

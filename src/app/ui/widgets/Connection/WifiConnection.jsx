@@ -426,14 +426,6 @@ function WifiConnection() {
                             && <i className="sm-icon-14 sm-icon-running" />}
                         </span>
                     </div>
-                    {/* <div
-                        className={classNames(widgetStyles.separator, widgetStyles['separator-underline'])}
-                        style={{
-                            marginTop: '8px'
-                        }}
-                    /> */}
-                    {/* {headType === HEAD_PRINTING && <PrintingState headType={headType} />}
-                    {headType === HEAD_LASER && <LaserState headType={headType} />} */}
                     {!!currentModuleStatusList && !!currentModuleStatusList.length && (
                         <div className={classNames('sm-flex', 'flex-wrap')}>
                             {/* <ModuleStatus moduleName={currentHeadType} status /> */}
