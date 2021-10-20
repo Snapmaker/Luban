@@ -1169,7 +1169,7 @@ class SvgModel extends BaseModel {
 
     getSerializableConfig() {
         const {
-            modelID, limitSize, headType, sourceType, originalName, uploadName, config, mode,
+            modelID, limitSize, headType, sourceType, originalName, config, mode,
             transformation
         } = this;
         return {
