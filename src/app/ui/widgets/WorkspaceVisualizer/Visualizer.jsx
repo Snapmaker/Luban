@@ -706,7 +706,6 @@ class Visualizer extends Component {
         const state = this.state;
         const notice = this.notice();
         const { gcodeFile } = this.props;
-        console.log({ gcodeFile });
         return (
             <div style={{ top: 0, bottom: 0, left: 0, right: 0 }}>
                 <div className={styles['visualizer-progress']}>
