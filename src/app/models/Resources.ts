@@ -11,7 +11,7 @@ class Size {
     }
 }
 
-export class File {
+class File {
     name: string;
 
     path: string;
