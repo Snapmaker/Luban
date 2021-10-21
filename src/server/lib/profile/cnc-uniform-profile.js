@@ -1,7 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 import { isNil, includes } from 'lodash';
-import { CncSuffix, ConfigV1Regex, ConfigV2Regex } from '../../constants';
+import { ConfigV1Suffix, ConfigV1Regex } from '../../constants';
 
 
 const defaultToolListNames = [
@@ -96,13 +96,10 @@ export const addNewParameter = (settings) => {
 };
 
 export const cncUniformProfile = (filename, configDir) => {
-    // return new Promise(async (resolve) => {
-    let json;
     if (ConfigV1Regex.test(filename) && filename.substr(0, filename.length - 9) !== 'active') {
         const filePath = path.join(configDir, filename);
         const data = fs.readFileSync(filePath, 'utf8');
-        json = JSON.parse(data);
-        const definitions = [];
+        const json = JSON.parse(data);
         if (json.toolList && isNil(json.settings)) {
             const toolLists = json.toolList;
             const shouldCheckName = json?.definitionId === 'Default';
@@ -119,27 +116,12 @@ export const cncUniformProfile = (filename, configDir) => {
                     newDefinition.version = json.version;
                     newDefinition.name = item.name;
                     newDefinition.settings = item.config;
-                    const newName = `Old${json.definitionId}${item.name}`;
-                    newDefinition.definitionId = newName;
+                    const newName = `${json.definitionId}${item.name}`;
                     newDefinition.settings = addNewParameter(newDefinition?.settings);
-                    fs.writeFileSync(path.join(configDir, `${newName}${CncSuffix}`), JSON.stringify(newDefinition));
-                    // JSON.stringify
-                    definitions.push(newDefinition);
+                    fs.writeFileSync(path.join(configDir, `${newName}${ConfigV1Suffix}`), JSON.stringify(newDefinition));
                 }
             });
             fs.unlinkSync(filePath);
         }
-        return definitions;
     }
-
-    if (ConfigV2Regex.test(filename) && filename.substr(0, filename.length - CncSuffix.length) !== 'active') {
-        const filePath = path.join(configDir, filename);
-        const data = fs.readFileSync(filePath, 'utf8');
-        json = JSON.parse(data);
-        json.settings = addNewParameter(json?.settings);
-        fs.writeFileSync(filePath, JSON.stringify(json));
-        return [json];
-    }
-    return [];
-    // });
 };

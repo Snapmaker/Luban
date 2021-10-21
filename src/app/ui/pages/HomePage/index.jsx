@@ -60,6 +60,7 @@ const HomePage = (props) => { // Todo, what's the props ?
                 <QuickStart {...props} />
                 <MoreInfo />
             </div>
+            {!modalShow && (props?.isPopup || printingModal || laserModal || cncModal)}
             {modalShow
                 && (
                     <SettingGuideModal
@@ -68,7 +69,6 @@ const HomePage = (props) => { // Todo, what's the props ?
                     />
                 )
             }
-            {props?.isPopup || printingModal || laserModal || cncModal}
         </div>
     );
 };

@@ -6,6 +6,7 @@ import { app } from 'electron';
 import isElectron from 'is-electron';
 // import semver from 'semver';
 import { CNC_CONFIG_SUBCATEGORY, LASER_CONFIG_SUBCATEGORY, PRINTING_CONFIG_SUBCATEGORY } from './constants';
+import { cncUniformProfile } from './lib/profile/cnc-uniform-profile';
 import logger from './lib/logger';
 import { initFonts } from '../shared/lib/FontManager';
 // import settings from './config/settings';
@@ -98,6 +99,7 @@ class DataStorage {
          rmDir(this.sessionDir, false);
 
          await this.initSlicer();
+         await this.initEnv();
 
          await this.initFonts();
          await this.initUserCase();
@@ -131,23 +133,28 @@ class DataStorage {
          const officialMachine = ['A150', 'A250', 'A350', 'Original'];
          if (fs.existsSync(srcDir)) {
              const files = fs.readdirSync(srcDir);
-             const materialRegex = /^material\.([0-9]{7})\.def\.json$/;
-             const qualityRegex = /^quality\.([0-9]{7})\.def\.json$/;
+             const materialRegex = /^material\.([0-9]{8})\.def\.json$/;
+             const qualityRegex = /^quality\.([0-9]{8})\.def\.json$/;
              for (const file of files) {
                  const src = path.join(srcDir, file);
-                 // const dst = path.join(dstDir, file);
                  if (fs.statSync(src).isFile()) {
                      if (materialRegex.test(file) || qualityRegex.test(file)) {
                          printingConfigNames.push(file);
                      }
                  } else {
                      if (file === 'CncConfig') {
-                         const cncConfigFiles = fs.readdirSync(src);
+                         let cncConfigFiles = fs.readdirSync(src);
+                         for (const cncFile of cncConfigFiles) {
+                             cncUniformProfile(cncFile, src);
+                         }
+                         cncConfigFiles = fs.readdirSync(src);
                          for (const cncFile of cncConfigFiles) {
                              if (!includes(['DefaultCVbit.def.json',
                                  'DefaultMBEM.def.json',
                                  'DefaultFEM.def.json',
                                  'DefaultSGVbit.def.json',
+                                 'active.def.json',
+                                 'Default.def.json',
                                  'active.defv2.json',
                                  'RAcrylicFEM.defv2.json'], cncFile)) {
                                  const cncConfigPath = path.join(src, cncFile);
@@ -160,7 +167,6 @@ class DataStorage {
                  }
              }
          }
-
          if (printingConfigNames.length) {
              const printingDir = `${srcDir}/${PRINTING_CONFIG_SUBCATEGORY}`;
              const seriesFiles = fs.readdirSync(printingDir);
@@ -213,6 +219,26 @@ class DataStorage {
          }
      }
 
+     async initEnv() {
+         const srcDir = this.envDir;
+         if (fs.existsSync(srcDir)) {
+             const files = fs.readdirSync(srcDir);
+             for (const file of files) {
+                 const src = path.join(srcDir, file);
+                 if (fs.statSync(src).isDirectory() && file === '3dp') {
+                     const newSrc = path.join(srcDir, '3dp');
+                     const envFiles = fs.readdirSync(newSrc);
+                     for (const envFile of envFiles) {
+                         const envSrc = path.join(newSrc, envFile);
+                         const envDst = path.join(path.join(srcDir, 'printing'), envFile);
+                         fs.copyFileSync(envSrc, envDst, () => {
+                         });
+                     }
+                     rmDir(newSrc);
+                 }
+             }
+         }
+     }
 
      async initSlicer() {
          mkdirp.sync(this.configDir);
