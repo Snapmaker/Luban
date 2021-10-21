@@ -81,6 +81,26 @@ button.button-lb {
     }
 }
 
+.button-lb:global(.ant-btn-dashed) {
+    border-color: $black-5;
+    color: $black-3;
+    &:hover {
+        border-color: $grey-1;
+        color: $black-4;
+    }
+    &:focus {
+        border-color: $black-5;
+        color: $black-3;
+    }
+    &:active {
+        border-color: $black-4;
+        color: $black-2;
+    }
+    &[disabled] {
+        background: transparent;
+    }
+}
+
 .button-lb:global(.ant-btn-link) {
     &:hover {
         color: $blue-3;

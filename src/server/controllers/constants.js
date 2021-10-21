@@ -6,6 +6,7 @@ export const QUERY_TYPE_ORIGIN_OFFSET = 'originOffset';
 export const QUERY_TYPE_TEMPERATURE = 'temperature';
 export const QUERY_TYPE_ENCLOSURE = 'enclosure';
 export const QUERY_TYPE_PURIFIER = 'purifier';
+export const QUERY_TYPE_EMERGEMCY_STOP = 'emergemcy_stop';
 
 export const WRITE_SOURCE_CLIENT = 'client';
 export const WRITE_SOURCE_FEEDER = 'feeder';

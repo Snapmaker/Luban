@@ -32,7 +32,7 @@ import {
     WRITE_SOURCE_SENDER,
     WRITE_SOURCE_QUERY,
     WRITE_SOURCE_UNKNOWN,
-    HEAD_TYPE_3DP, QUERY_TYPE_ENCLOSURE, QUERY_TYPE_PURIFIER
+    HEAD_TYPE_3DP, QUERY_TYPE_ENCLOSURE, QUERY_TYPE_PURIFIER, QUERY_TYPE_EMERGEMCY_STOP
 } from '../constants';
 
 // % commands
@@ -140,6 +140,8 @@ class MarlinController {
                 this.writeln('M1011');
             } else if (this.query.type === QUERY_TYPE_ORIGIN_OFFSET) {
                 this.writeln('M1007');
+            } else if (this.query.type === QUERY_TYPE_EMERGEMCY_STOP) {
+                this.writeln('M1012');
             } else {
                 log.error('Unsupported query type: ', this.query.type);
             }
@@ -150,8 +152,8 @@ class MarlinController {
 
     queryState = (() => {
         let index = 0;
-        const typeOf3dp = [QUERY_TYPE_POSITION, QUERY_TYPE_TEMPERATURE, QUERY_TYPE_ENCLOSURE, QUERY_TYPE_PURIFIER];
-        const type = [QUERY_TYPE_POSITION, QUERY_TYPE_ORIGIN_OFFSET, QUERY_TYPE_ENCLOSURE, QUERY_TYPE_PURIFIER];
+        const typeOf3dp = [QUERY_TYPE_POSITION, QUERY_TYPE_TEMPERATURE, QUERY_TYPE_ENCLOSURE, QUERY_TYPE_PURIFIER, QUERY_TYPE_EMERGEMCY_STOP];
+        const type = [QUERY_TYPE_POSITION, QUERY_TYPE_ORIGIN_OFFSET, QUERY_TYPE_ENCLOSURE, QUERY_TYPE_EMERGEMCY_STOP];
 
         return () => {
             if (!this.ready) {

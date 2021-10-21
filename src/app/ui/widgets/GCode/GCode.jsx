@@ -31,12 +31,12 @@ const formatISODateTime = (time) => {
     return time > 0 ? moment.unix(time / 1000).format('YYYY-MM-DD HH:mm:ss') : '–';
 };
 
-const formatDuration = (value) => {
+export const formatDuration = (value, withSecond = true) => {
     if (!value || value < 0) {
         return '–';
     }
     const d = moment.duration(value, 'ms');
-    const str = moment(d._data).format('HH[h] mm[m] ss[s]');
+    const str = moment(d._data).format(`${withSecond ? 'HH[h] mm[m] ss[s]' : 'HH[h] mm[m]'}`);
     if (d.days()) {
         return `${d.days()}d ${str}`;
     } else {
@@ -83,7 +83,7 @@ function getInitialState() {
 
 function GCode({ widgetActions }) {
     const { boundingBox } = useSelector(state => state.workspace);
-    const { gcodePrintingInfo } = useSelector(state => state.machine);
+    const { gcodePrintingInfo, isConnected, workflowStatus } = useSelector(state => state.machine);
     const [state, setState] = useState(() => getInitialState());
 
     const controllerEvents = {
@@ -127,6 +127,14 @@ function GCode({ widgetActions }) {
             removeControllerEvents();
         };
     }, []);
+
+    useEffect(() => {
+        if (workflowStatus === 'running') {
+            widgetActions.setDisplay(false);
+        } else {
+            widgetActions.setDisplay(true);
+        }
+    }, [workflowStatus, isConnected]);
 
     useEffect(() => {
         if (boundingBox === null) {

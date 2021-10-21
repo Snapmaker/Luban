@@ -1,6 +1,7 @@
 import PropTypes from 'prop-types';
 import React, { useEffect, useState } from 'react';
 // import classNames from 'classnames';
+import { useSelector } from 'react-redux';
 import api from '../../../api';
 import i18n from '../../../lib/i18n';
 import Macro from './Macro';
@@ -17,7 +18,7 @@ function MacroWidget({ widgetId, widgetActions }) {
     const [modalName, setModalName] = useState(MODAL_NONE);
     const [modalParams, setModalParams] = useState({});
     const [macros, setMacros] = useState([]);
-
+    const { workflowStatus } = useSelector(state => state.machine);
     const actions = {
         openModal: (name = MODAL_NONE, params = {}) => {
             setModalName(name);
@@ -90,6 +91,14 @@ function MacroWidget({ widgetId, widgetActions }) {
         );
         fetchMacros();
     }, []);
+
+    useEffect(() => {
+        if (workflowStatus === 'running') {
+            widgetActions.setDisplay(false);
+        } else {
+            widgetActions.setDisplay(true);
+        }
+    }, [workflowStatus]);
 
     return (
         <div>

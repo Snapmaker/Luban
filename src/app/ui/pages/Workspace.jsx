@@ -42,6 +42,7 @@ import LaserTestFocusWidget from '../widgets/LaserTestFocus';
 import CNCPathWidget from '../widgets/CNCPath';
 import WifiTransport from '../widgets/WifiTransport';
 import EnclosureWidget from '../widgets/Enclosure';
+import WorkingProgress from '../widgets/WorkingProgress';
 
 import JobType from '../widgets/JobType';
 import PrintingVisualizer from '../widgets/PrintingVisualizer';
@@ -66,7 +67,8 @@ const allWidgets = {
     'laser-test-focus': LaserTestFocusWidget,
     'cnc-path': CNCPathWidget,
     'job-type': JobType,
-    'machine-setting': MachineSettingWidget
+    'machine-setting': MachineSettingWidget,
+    'working-progress': WorkingProgress
 };
 
 
@@ -77,12 +79,14 @@ const reloadPage = (forcedReload = true) => {
     window.location.reload(forcedReload);
 };
 
+let workspaceVisualizerRef = null;
 function Workspace({ isPopup, onClose, style, className }) {
     const history = useHistory();
     const dispatch = useDispatch();
     const primaryWidgets = useSelector(state => state.widget.workspace.left.widgets);
     const secondaryWidgets = useSelector(state => state.widget.workspace.right.widgets);
     const defaultWidgets = useSelector(state => state.widget.workspace.default.widgets);
+    const [previewModalShow, setPreviewModalShow] = useState(false);
     const [isDraggingWidget, setIsDraggingWidget] = useState(false);
     const [connected, setConnected] = useState(controller.connected);
     const [leftItems, setLeftItems] = useState([
@@ -97,6 +101,9 @@ function Workspace({ isPopup, onClose, style, className }) {
     ]);
 
     const defaultContainer = useRef();
+    const childRef = (ref) => {
+        workspaceVisualizerRef = ref;
+    };
 
     const controllerEvents = {
         'connect': () => {
@@ -157,6 +164,24 @@ function Workspace({ isPopup, onClose, style, className }) {
             if (!includes(widgets, widgetId)) {
                 widgets.push(widgetId);
                 actions.updateTabContainer('default', { widgets: widgets });
+            }
+        }
+    };
+
+    // control machine work/stop and preview modal show, for wifiTransport widget
+    const controlActions = {
+        onCallBackRun: () => {
+            workspaceVisualizerRef.actions.handleRun();
+        },
+        onCallBackPause: () => {
+            workspaceVisualizerRef.actions.handlePause();
+        },
+        onCallBackStop: () => {
+            workspaceVisualizerRef.actions.handleStop();
+        },
+        onPreviewModalShow: (value) => {
+            if (value !== previewModalShow) {
+                setPreviewModalShow(value);
             }
         }
     };
@@ -236,7 +261,7 @@ function Workspace({ isPopup, onClose, style, className }) {
             <WorkspaceLayout
                 renderMainToolBar={renderMainToolBar}
                 renderLeftView={() => renderWidgetList('workspace', 'left', primaryWidgets, allWidgets, listActions, widgetProps)}
-                renderRightView={() => renderWidgetList('workspace', 'right', secondaryWidgets, allWidgets, listActions, widgetProps)}
+                renderRightView={() => renderWidgetList('workspace', 'right', secondaryWidgets, allWidgets, listActions, widgetProps, controlActions)}
                 updateTabContainer={actions.updateTabContainer}
             >
                 <Dropzone
@@ -252,8 +277,7 @@ function Workspace({ isPopup, onClose, style, className }) {
                             styles.defaultContainer,
                         )}
                     >
-                        <VisualizerWidget />
-
+                        <VisualizerWidget onRef={ref => childRef(ref)} />
                     </div>
                 </Dropzone>
                 {renderModalView(connected)}
