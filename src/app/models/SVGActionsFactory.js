@@ -45,6 +45,10 @@ function genModelConfig(elem, size) {
         coord.positionX = 0;
         coord.positionY = 0;
     }
+    if (elem.nodeName === 'path') {
+        coord.positionX = +elem.getAttribute('x') + coord.width / 2 * coord.scaleX - size.x;
+        coord.positionY = size.y - (+elem.getAttribute('y')) - coord.height / 2 * coord.scaleY;
+    }
 
     // eslint-disable-next-line prefer-const
     let { x, y, width, height, positionX, positionY, scaleX, scaleY } = coord;

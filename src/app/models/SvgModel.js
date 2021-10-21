@@ -482,9 +482,26 @@ class SvgModel extends BaseModel {
             // case 'line':
             //     numberAttrs.push('x1', 'y1', 'x2', 'y2');
             //     break;
-            // case 'path':
-            //     changes.d = elem.getAttribute('d');
-            //     break;
+            case 'path': {
+                const imageElement = document.createElementNS(NS.SVG, 'image');
+                const absWidth = Math.abs(width), absHeight = Math.abs(height);
+                const attributes = {
+                    'href': href || elem.getAttribute('href'),
+                    'id': elem.getAttribute('id'),
+                    'x': x - absWidth / 2,
+                    'y': y - absHeight / 2,
+                    width: absWidth,
+                    height: absHeight
+                };
+                // // set attribute
+                for (const [key, value] of Object.entries(attributes)) {
+                    imageElement.setAttribute(key, value);
+                }
+                this.elem.parentNode.append(imageElement);
+                this.elem.remove();
+                this.elem = imageElement;
+                break;
+            }
             case 'rect': {
                 elem.setAttribute('x', x - width / 2);
                 elem.setAttribute('y', y - height / 2);

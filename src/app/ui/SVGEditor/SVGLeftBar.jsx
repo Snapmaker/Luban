@@ -6,6 +6,7 @@ import Anchor from '../components/Anchor';
 import SvgIcon from '../components/SvgIcon';
 import styles from './index.styl';
 import { library } from './lib/ext-shapes';
+import i18n from '../../lib/i18n';
 
 class SVGLeftBar extends PureComponent {
     static propTypes = {
@@ -136,33 +137,47 @@ class SVGLeftBar extends PureComponent {
                             </div>
                         </div>
                         {/* todo: refactor style*/}
-                        { showExtShape && (
-                            <Anchor
-                                componentClass="button"
-                                className={classNames(styles['btn-center'],
-                                    { [styles.selected]: mode === 'ext' })}
-                                onClick={() => this.actions.showExt()}
-                                disabled={!editable}
-                            >
-                                <i className={styles[mode === 'ext' && extShape ? `btn-${extShape}` : 'btn-ext']} />
-                            </Anchor>
-                        )}
+                        {/* { showExtShape && ( */}
+                        <Anchor
+                            componentClass="button"
+                            className={classNames(styles['btn-center'],
+                                { [styles.selected]: mode === 'ext' })}
+                            onClick={() => this.actions.showExt()}
+                            disabled={!editable}
+                        >
+                            <i className={styles[mode === 'ext' && extShape ? `btn-${extShape}` : 'btn-ext']} />
+                        </Anchor>
+                        {/* )} */}
                     </div>
                     {showExtShape && (
-                        <div className={classNames(styles['center-ext'])}>
-                            {_.map(library.use, (key) => {
-                                return (
-                                    <Anchor
-                                        key={key}
-                                        componentClass="button"
-                                        className={styles['btn-center-ext']}
-                                        onClick={() => this.actions.setMode('ext', key)}
-                                        disabled={!editable}
-                                    >
-                                        <i className={styles[`btn-ext-${key}`]} />
-                                    </Anchor>
-                                );
-                            })}
+                        <div
+                            className="position-ab width-280 margin-left-72 border-default-grey-1 border-radius-8 background-color-white"
+                            style={{
+                                marginTop: '216px'
+                            }}
+                        >
+                            <div className="border-bottom-normal padding-vertical-10 padding-horizontal-16 height-40">
+                                {i18n._('key-Laser/LeftBar-Insert Draw')}
+                            </div>
+                            <div className="padding-vertical-16 padding-horizontal-16">
+                                <div className="sm-flex">
+                                    <div className={classNames(styles['center-ext'])}>
+                                        {_.map(library.use, (key) => {
+                                            return (
+                                                <Anchor
+                                                    key={key}
+                                                    componentClass="button"
+                                                    className={styles['btn-center-ext']}
+                                                    onClick={() => this.actions.setMode('ext', key)}
+                                                    disabled={!editable}
+                                                >
+                                                    <i className={styles[`btn-ext-${key}`]} />
+                                                </Anchor>
+                                            );
+                                        })}
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     )}
                 </div>

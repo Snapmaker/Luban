@@ -635,10 +635,12 @@ class SVGCanvas extends PureComponent {
                     element: 'path',
                     curStyles: true,
                     attr: {
+                        x,
+                        y,
                         d: d,
                         opacity: opacity / 2,
                         stroke,
-                        'stroke-width': strokeWidth
+                        'stroke-width': 1
                     }
                 });
                 draw.bbox = getBBox(elem);
