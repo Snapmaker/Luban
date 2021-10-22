@@ -364,9 +364,10 @@ export const processActions = {
                 toolPathsModelId = toolPathsModelId.concat(item.modelIDs);
             }
         });
-        const renderGcodeFileName = `${_.replace(_.find(models, (item) => {
+        const currentModelName = _.find(models, (item) => {
             return _.includes(toolPathsModelId, item.modelID);
-        })?.modelName.substr(0, 128), /(\.svg|\.dxf|\.png|\.jpg|\.jpeg|\.bmp)$/, '')}_${new Date().getTime()}${suffix}`;
+        })?.modelName.substr(0, 128);
+        const renderGcodeFileName = `${_.replace(currentModelName, /(\.svg|\.dxf|\.png|\.jpg|\.jpeg|\.bmp)$/, '')}_${new Date().getTime()}${suffix}`;
         if (taskResult.taskStatus === 'failed') {
             modelGroup.estimatedTime = 0;
             await dispatch(baseActions.updateState(headType, {

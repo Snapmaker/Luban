@@ -864,8 +864,8 @@ export const actions = {
 
         // Prepare model file
         const { model, support, originalName } = await dispatch(actions.prepareModel());
-        const renderGcodeFileName = `${models[0]?.modelName?.split('.').slice(0, -1).join('.').substr(0, 114)}_${new Date().getTime()}`;
-
+        const currentModelName = path.basename(models[0]?.modelName, path.extname(models[0]?.modelName));
+        const renderGcodeFileName = `${currentModelName}_${new Date().getTime()}`;
         // Prepare definition file
         const { size } = getState().machine;
         await dispatch(actions.updateActiveDefinitionMachineSize(size));

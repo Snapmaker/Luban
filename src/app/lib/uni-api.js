@@ -246,7 +246,6 @@ const File = {
             targetFile = saveDialogReturnValue.filePath;
             if (!targetFile) throw new Error('export file canceled');
 
-            // const file = { path: targetFile, name: window.require('path').basename(targetFile) };
             const file = { path: targetFile, name: renderGcodeFileName };
             fs.copyFileSync(tmpFile, targetFile);
 
