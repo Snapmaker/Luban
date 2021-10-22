@@ -52,17 +52,18 @@ function genModelConfig(elem, size) {
 
     // eslint-disable-next-line prefer-const
     let { x, y, width, height, positionX, positionY, scaleX, scaleY } = coord;
+    // leave a little space for line width
+    let vx = (x - 0.5) * scaleX;
+    let vy = (y - 0.5) * scaleY;
+    let vwidth = (width + 1) * scaleX;
+    let vheight = (height + 1) * scaleY;
+
     width *= scaleX;
     height *= scaleY;
 
     const clone = elem.cloneNode(true);
     clone.setAttribute('transform', `scale(${scaleX} ${scaleY})`);
     clone.setAttribute('font-size', clone.getAttribute('font-size'));
-
-    let vx = x * scaleX;
-    let vy = y * scaleY;
-    let vwidth = width;
-    let vheight = height;
 
     if (scaleX < 0) {
         vx += vwidth;

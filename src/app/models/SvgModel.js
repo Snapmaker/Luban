@@ -486,7 +486,8 @@ class SvgModel extends BaseModel {
                 const imageElement = document.createElementNS(NS.SVG, 'image');
                 const absWidth = Math.abs(width), absHeight = Math.abs(height);
                 const attributes = {
-                    'href': href || elem.getAttribute('href'),
+                    from: 'inner-svg',
+                    'href': href.replace(/\.svg$/, 'parsed.svg'),
                     'id': elem.getAttribute('id'),
                     'x': x - absWidth / 2,
                     'y': y - absHeight / 2,
@@ -522,6 +523,7 @@ class SvgModel extends BaseModel {
             case 'text': {
                 const imageElement = document.createElementNS(NS.SVG, 'image');
                 const attributes = {
+                    from: 'inner-svg',
                     'href': href || elem.getAttribute('href'),
                     'id': elem.getAttribute('id'),
                     'x': elem.getAttribute('x') - width / 2,

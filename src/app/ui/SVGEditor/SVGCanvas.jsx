@@ -919,13 +919,15 @@ class SVGCanvas extends PureComponent {
                 }
 
                 const bbox = draw.bbox;
+                const scaleX = (x - draw.startX) / bbox.width;
+                const scaleY = (y - draw.startY) / bbox.height;
                 if (event.shiftKey) {
-                    const maxScale = Math.max((x - draw.startX) / bbox.width, (y - draw.startY) / bbox.height);
+                    const maxScale = Math.max(scaleX, scaleY);
                     draw.scaleX = maxScale;
                     draw.scaleY = maxScale;
                 } else {
-                    draw.scaleX = (x - draw.startX) / bbox.width;
-                    draw.scaleY = (y - draw.startY) / bbox.height;
+                    draw.scaleX = scaleX;
+                    draw.scaleY = scaleY;
                 }
 
                 const scale = this.svgContainer.createSVGTransform();
