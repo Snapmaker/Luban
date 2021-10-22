@@ -159,7 +159,6 @@ export const actions = {
                     model.headType = HEAD_PRINTING;
                 }
             });
-            console.log('backendRecover', envObj);
             content = JSON.stringify(envObj);
             await api.recoverEnv({ content });
         }

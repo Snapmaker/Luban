@@ -51,25 +51,7 @@ const checkObjectIsEqual = (objOld, objNew) => {
                 } else {
                     return JSON.stringify(objNew[key]) === JSON.stringify(value);
                 }
-                // else if (key === 'toolpaths') {
-                //     if (value?.length !== objNew[key]?.length) {
-                //         return false;
-                //     }
-                //     return value.every((oldToolpath, index) => {
-                //         const newModel = objNew[key][index];
-                //         return Object.entries(oldToolpath).every(([modelKey, modelValue]) => {
-                //             if (modelKey === 'object') {
-                //                 return Object.entries(modelValue).every(([modelKey, modelValue]) => {
-                //
-                //                 };
-                //             } else {
-                //                 return JSON.stringify(newModel[modelKey]) === JSON.stringify(modelValue);
-                //             }
-                //         });
-                //     });
-                // }
             } else {
-                // console.log('models else 1', key);
                 return false;
             }
         });
