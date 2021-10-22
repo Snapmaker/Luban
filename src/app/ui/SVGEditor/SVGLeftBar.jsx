@@ -2,7 +2,6 @@ import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
 import classNames from 'classnames';
 import _ from 'lodash';
-import Anchor from '../components/Anchor';
 import SvgIcon from '../components/SvgIcon';
 import styles from './index.styl';
 import { library } from './lib/ext-shapes';
@@ -22,8 +21,8 @@ class SVGLeftBar extends PureComponent {
     };
 
     state = {
-        showExtShape: false
-        // extShape: null
+        showExtShape: false,
+        extShape: null
     };
 
     actions = {
@@ -33,15 +32,24 @@ class SVGLeftBar extends PureComponent {
 
         setMode: (mode, ext) => {
             this.setState({
-                showExtShape: false
-                // extShape: ext
+                showExtShape: false,
+                extShape: ext ?? this.state.extShape
             });
             this.props.setMode(mode, ext);
         },
 
         showExt: () => {
+            const selectedShape = this.state.extShape ?? library.use[0];
             this.setState({
-                showExtShape: !this.state.showExtShape
+                showExtShape: true,
+                extShape: selectedShape
+            });
+            this.props.setMode('ext', selectedShape);
+        },
+
+        hideLeftBarOverlay: () => {
+            this.setState({
+                showExtShape: false
             });
         }
     };
@@ -91,7 +99,7 @@ class SVGLeftBar extends PureComponent {
                                         classNames('background-transparent',
                                             'padding-horizontal-4', 'position-re',
                                             { [styles.selected]: (mode === 'select') })}
-                                    onClick={() => this.props.setMode('select')}
+                                    onClick={() => this.actions.setMode('select')}
                                 />
                             </div>
                             <div className="margin-vertical-4">
@@ -105,7 +113,7 @@ class SVGLeftBar extends PureComponent {
                                         classNames('background-transparent',
                                             'padding-horizontal-4', 'position-re',
                                             { [styles.selected]: (mode === 'rect') })}
-                                    onClick={() => this.props.setMode('rect')}
+                                    onClick={() => this.actions.setMode('rect')}
                                 />
                             </div>
                             <div className="margin-vertical-4">
@@ -119,7 +127,7 @@ class SVGLeftBar extends PureComponent {
                                         classNames('background-transparent',
                                             'padding-horizontal-4', 'position-re',
                                             { [styles.selected]: (mode === 'ellipse') })}
-                                    onClick={() => this.props.setMode('ellipse')}
+                                    onClick={() => this.actions.setMode('ellipse')}
                                 />
                             </div>
                             <div className="margin-vertical-4">
@@ -136,43 +144,51 @@ class SVGLeftBar extends PureComponent {
                                 />
                             </div>
                         </div>
-                        {/* todo: refactor style*/}
-                        {/* { showExtShape && ( */}
-                        <Anchor
-                            componentClass="button"
-                            className={classNames(styles['btn-center'],
-                                { [styles.selected]: mode === 'ext' })}
-                            onClick={() => this.actions.showExt()}
-                            disabled={!editable}
-                        >
-                            <i className={styles[mode === 'ext' && extShape ? `btn-${extShape}` : 'btn-ext']} />
-                        </Anchor>
-                        {/* )} */}
+                        <div className="margin-vertical-4">
+                            <SvgIcon
+                                type={[`${mode === 'ext' ? 'hoverNoBackground' : 'hoverNormal'}`, 'pressSpecial']}
+                                color="#545659"
+                                size={48}
+                                name="ToolbarOtherGraphics"
+                                disabled={!editable}
+                                className={
+                                    classNames('background-transparent',
+                                        'padding-horizontal-4', 'position-re',
+                                        { [styles.selected]: mode === 'ext' })
+                                }
+                                onClick={this.actions.showExt}
+                            />
+                        </div>
                     </div>
-                    {showExtShape && (
+                    {showExtShape && mode === 'ext' && (
                         <div
-                            className="position-ab width-280 margin-left-72 border-default-grey-1 border-radius-8 background-color-white"
-                            style={{
-                                marginTop: '216px'
-                            }}
+                            className="position-ab width-272 margin-left-72 margin-top-268 border-default-grey-1 border-radius-8 background-color-white"
                         >
                             <div className="border-bottom-normal padding-vertical-10 padding-horizontal-16 height-40">
                                 {i18n._('key-Laser/LeftBar-Insert Draw')}
                             </div>
-                            <div className="padding-vertical-16 padding-horizontal-16">
+                            <div>
                                 <div className="sm-flex">
-                                    <div className={classNames(styles['center-ext'])}>
+                                    <div
+                                        className={classNames(styles['center-ext'])}
+                                    >
                                         {_.map(library.use, (key) => {
                                             return (
-                                                <Anchor
+                                                <SvgIcon
                                                     key={key}
-                                                    componentClass="button"
-                                                    className={styles['btn-center-ext']}
-                                                    onClick={() => this.actions.setMode('ext', key)}
+                                                    type={['hoverNormal', 'pressSpecial']}
+                                                    color="#545659"
+                                                    size={48}
+                                                    name={`Toolbar${key.split('-').map(word => word[0].toUpperCase() + word.slice(1)).join('')}`}
                                                     disabled={!editable}
-                                                >
-                                                    <i className={styles[`btn-ext-${key}`]} />
-                                                </Anchor>
+                                                    className={
+                                                        classNames('background-transparent',
+                                                            'padding-horizontal-4', 'position-re',
+                                                            styles['btn-center-ext'],
+                                                            { [styles.selected]: extShape === key })
+                                                    }
+                                                    onClick={() => this.actions.setMode('ext', key)}
+                                                />
                                             );
                                         })}
                                     </div>
