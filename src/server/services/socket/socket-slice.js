@@ -8,14 +8,15 @@ const handleSlice = (socket, params) => {
             socket.emit('slice:progress', progress);
         },
         (sliceResult) => {
-            const { gcodeFilename, gcodeFileLength, printTime, filamentLength, filamentWeight, gcodeFilePath } = { ...sliceResult };
+            const { gcodeFilename, gcodeFileLength, printTime, filamentLength, filamentWeight, gcodeFilePath, renderGcodeFileName } = { ...sliceResult };
             socket.emit('slice:completed', {
                 gcodeFilename,
                 gcodeFileLength,
                 printTime,
                 filamentLength,
                 filamentWeight,
-                gcodeFilePath
+                gcodeFilePath,
+                renderGcodeFileName
             });
         },
         (err) => {

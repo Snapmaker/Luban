@@ -713,7 +713,7 @@ class Visualizer extends Component {
                 </div>
                 {gcodeFile !== null && (
                     <div className={styles['visualizer-info']}>
-                        <p>{i18n._(gcodeFile.name)}</p>
+                        <p>{i18n._(gcodeFile.renderGcodeFileName)}</p>
                     </div>
                 )}
                 <div className={styles['canvas-wrapper']}>

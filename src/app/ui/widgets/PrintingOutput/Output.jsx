@@ -90,7 +90,7 @@ function Output() {
                 return;
             }
             const filename = path.basename(gcodeFile?.name);
-            dispatch(projectActions.exportFile(filename));
+            dispatch(projectActions.exportFile(filename, gcodeFile.renderGcodeFileName));
         }
     };
     useEffect(() => {

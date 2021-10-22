@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import path from 'path';
-import { cloneDeep, isNil } from 'lodash';
+import { cloneDeep, isNil, filter } from 'lodash';
 // import FileSaver from 'file-saver';
 import LoadModelWorker from '../../workers/LoadModel.worker';
 import GcodeToBufferGeometryWorker from '../../workers/GcodeToBufferGeometry.worker';
@@ -352,7 +352,7 @@ export const actions = {
                 }));
             });
             controller.on('slice:completed', (args) => {
-                const { gcodeFilename, gcodeFileLength, printTime, filamentLength, filamentWeight } = args;
+                const { gcodeFilename, gcodeFileLength, printTime, filamentLength, filamentWeight, renderGcodeFileName } = args;
                 const { progressStatesManager } = getState().printing;
                 dispatch(actions.updateState({
                     gcodeFile: {
@@ -360,7 +360,8 @@ export const actions = {
                         uploadName: gcodeFilename,
                         size: gcodeFileLength,
                         lastModified: +new Date(),
-                        thumbnail: ''
+                        thumbnail: '',
+                        renderGcodeFileName
                     },
                     printTime,
                     filamentLength,
@@ -842,7 +843,7 @@ export const actions = {
             return;
         }
 
-        const models = modelGroup.getModels();
+        const models = filter(modelGroup.getModels(), { 'visible': true });
 
         if (!models || models.length === 0) {
             return;
@@ -863,8 +864,8 @@ export const actions = {
 
         // Prepare model file
         const { model, support, originalName } = await dispatch(actions.prepareModel());
-
-
+        const currentModelName = path.basename(models[0]?.modelName, path.extname(models[0]?.modelName));
+        const renderGcodeFileName = `${currentModelName}_${new Date().getTime()}`;
         // Prepare definition file
         const { size } = getState().machine;
         await dispatch(actions.updateActiveDefinitionMachineSize(size));
@@ -886,7 +887,8 @@ export const actions = {
             support,
             originalName,
             boundingBox,
-            thumbnail: thumbnail
+            thumbnail: thumbnail,
+            renderGcodeFileName
         };
         controller.slice(params);
     },

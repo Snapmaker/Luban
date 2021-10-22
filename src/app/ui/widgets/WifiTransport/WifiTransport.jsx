@@ -41,7 +41,7 @@ const GcodePreviewItem = React.memo(({ gcodeFile, index, selected, onSelectFile,
     //     ? `${gcodeFile.name.substring(0, 15)}...${gcodeFile.name.substring(gcodeFile.name.length - 10, gcodeFile.name.length)}`
     //     : gcodeFile.name;
     const suffixLength = 7;
-    const { prefixName, suffixName } = normalizeNameDisplay(gcodeFile.name, suffixLength);
+    const { prefixName, suffixName } = normalizeNameDisplay(gcodeFile.renderGcodeFileName || gcodeFile.name, suffixLength);
     let size = '';
     const { isRenaming, uploadName } = gcodeFile;
     if (!gcodeFile.size) {
@@ -74,17 +74,18 @@ const GcodePreviewItem = React.memo(({ gcodeFile, index, selected, onSelectFile,
 
     const onRenameEnd = (_uploadName, _index) => {
         let newName = changeNameInput[_index].current.value;
-        const m = _uploadName.match(/(.gcode|.cnc|.nc)$/);
+        const m = _uploadName.match(/(\.gcode|\.cnc|\.nc)$/);
         if (m) {
             newName += m[0];
         }
         dispatch(workspaceActions.renameGcodeFile(_uploadName, newName, false));
     };
 
-    const onRenameStart = (_uploadName, _index, event) => {
+    const onRenameStart = (_uploadName, _index, _renderGcodeFileName = '', event) => {
         dispatch(workspaceActions.renameGcodeFile(_uploadName, null, true));
         event.stopPropagation();
         setTimeout(() => {
+            changeNameInput[_index].current.value = _.replace(_renderGcodeFileName, /(\.gcode|\.cnc|\.nc)$/, '') || _uploadName;
             changeNameInput[_index].current.focus();
         }, 0);
     };
@@ -165,7 +166,7 @@ const GcodePreviewItem = React.memo(({ gcodeFile, index, selected, onSelectFile,
                 )}
                 >
                     <input
-                        defaultValue={gcodeFile.name.replace(/(.gcode|.cnc|.nc)$/, '')}
+                        defaultValue={gcodeFile.name.replace(/(\.gcode|\.cnc|\.nc)$/, '')}
                         className={classNames('input-select')}
                         onBlur={() => onRenameEnd(uploadName, index)}
                         onKeyDown={(event) => onKeyDown(event)}
@@ -272,7 +273,8 @@ function WifiTransport({ widgetActions, controlActions }) {
             if (!selectFileName) {
                 return;
             }
-            dispatch(projectActions.exportFile(selectFileName));
+            const selectGcodeFile = _.find(gcodeFiles, { uploadName: selectFileName });
+            dispatch(projectActions.exportFile(selectFileName, selectGcodeFile.renderGcodeFileName));
         },
         onChangeShouldPreview: () => {
             setLoadToWorkspaceOnLoad(!loadToWorkspaceOnLoad);

@@ -231,9 +231,9 @@ export const actions = {
         }
     },
 
-    exportFile: (targetFile) => async () => {
+    exportFile: (targetFile, renderGcodeFileName = '') => async () => {
         const tmpFile = `/Tmp/${targetFile}`;
-        await UniApi.File.exportAs(targetFile, tmpFile);
+        await UniApi.File.exportAs(targetFile, tmpFile, renderGcodeFileName);
     },
 
     exportConfigFile: (targetFile, subCategory) => async () => {

@@ -1,4 +1,5 @@
 import uuid from 'uuid';
+import _ from 'lodash';
 import { baseActions } from './actions-base';
 import { controller } from '../../lib/controller';
 import { STEP_STAGE, PROCESS_STAGE } from '../../lib/manager/ProgressManager';
@@ -354,6 +355,19 @@ export const processActions = {
 
     onGenerateGcode: (headType, taskResult) => async (dispatch, getState) => {
         const { modelGroup, toolPathGroup, progressStatesManager } = getState()[headType];
+        const { toolPaths } = toolPathGroup;
+        const suffix = headType === 'laser' ? '.nc' : '.cnc';
+        let toolPathsModelId = [];
+        const models = _.filter(modelGroup.getModels(), { 'visible': true });
+        toolPaths.forEach((item) => {
+            if (item.visible) {
+                toolPathsModelId = toolPathsModelId.concat(item.modelIDs);
+            }
+        });
+        const currentModelName = _.find(models, (item) => {
+            return _.includes(toolPathsModelId, item.modelID);
+        })?.modelName.substr(0, 128);
+        const renderGcodeFileName = `${_.replace(currentModelName, /(\.svg|\.dxf|\.png|\.jpg|\.jpeg|\.bmp)$/, '')}_${new Date().getTime()}${suffix}`;
         if (taskResult.taskStatus === 'failed') {
             modelGroup.estimatedTime = 0;
             await dispatch(baseActions.updateState(headType, {
@@ -374,7 +388,8 @@ export const processActions = {
                 estimatedTime: gcodeFile.estimatedTime,
                 size: gcodeFile.size,
                 lastModified: gcodeFile.lastModified,
-                thumbnail: gcodeFile.thumbnail
+                thumbnail: gcodeFile.thumbnail,
+                renderGcodeFileName: renderGcodeFileName
             },
             stage: STEP_STAGE.CNC_LASER_GENERATING_GCODE,
             isGcodeGenerating: false,
