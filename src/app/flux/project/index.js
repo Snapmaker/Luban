@@ -128,7 +128,7 @@ export const actions = {
             const envObj = JSON.parse(content);
             if (!envObj.models.length) return;
         } catch (e) {
-            console.error('Error content JSON');
+            console.info('Error content JSON');
         }
 
         content && dispatch(actions.updateState(headType, { findLastEnvironment: true, content }));
@@ -242,9 +242,9 @@ export const actions = {
         await dispatch(actions.updateState(envHeadType, { unSaved: true }));
     },
 
-    exportFile: (targetFile) => async () => {
+    exportFile: (targetFile, renderGcodeFileName = '') => async () => {
         const tmpFile = `/Tmp/${targetFile}`;
-        await UniApi.File.exportAs(targetFile, tmpFile);
+        await UniApi.File.exportAs(targetFile, tmpFile, renderGcodeFileName);
     },
 
     exportConfigFile: (targetFile, subCategory) => async () => {

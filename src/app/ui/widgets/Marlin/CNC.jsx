@@ -38,19 +38,22 @@ class Printing extends PureComponent {
 
     render() {
         const { headStatus } = this.state;
+        const { workflowStatus } = this.props;
         const isWorking = this.actions.isWorking();
         return (
             <div>
-                <WorkSpeed />
-                <div className="sm-flex justify-space-between margin-vertical-8">
-                    <span>{i18n._('key-unused-Toolhead')}</span>
-                    <Switch
-                        className="sm-flex-auto"
-                        onClick={this.actions.onClickToolHead}
-                        checked={headStatus}
-                        disabled={isWorking}
-                    />
-                </div>
+                {workflowStatus === 'running' && <WorkSpeed />}
+                {workflowStatus !== 'running' && (
+                    <div className="sm-flex justify-space-between margin-vertical-8">
+                        <span>{i18n._('key-unused-Toolhead')}</span>
+                        <Switch
+                            className="sm-flex-auto"
+                            onClick={this.actions.onClickToolHead}
+                            checked={headStatus}
+                            disabled={isWorking}
+                        />
+                    </div>
+                )}
             </div>
         );
     }

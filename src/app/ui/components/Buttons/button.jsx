@@ -30,7 +30,7 @@ const Button = React.memo((props) => {
                 <div className={classNames('position-re', styles['inside-button'])}>
                     {props.children}
                     {
-                        !!suffixIcon && priority === 'level-one' && (
+                        !!suffixIcon && (priority === 'level-one' || priority === 'level-two') && (
                             <div className={classNames(styles['suffix-container'], 'position-ab')}>
                                 <div className={classNames(styles.content, 'display-inline')}>{suffixIcon}</div>
                             </div>

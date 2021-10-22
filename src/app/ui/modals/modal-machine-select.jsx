@@ -111,7 +111,7 @@ class MachineSelectModal extends PureComponent {
             }
         ];
         return (
-            <Modal disableOverlay showCloseButton={false} size="md" onClose={this.handleClose}>
+            <Modal disableOverlay closable={false} size="md" onClose={this.handleClose}>
                 <Modal.Header>
                     {/* <Modal.Title> */}
                     {i18n._('key-Workspace/MachineSelectModal-Device Not Recognized')}

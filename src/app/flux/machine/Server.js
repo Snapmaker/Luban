@@ -55,6 +55,7 @@ export class Server extends events.EventEmitter {
             enclosure: false,
             laserFocalLength: null,
             laserPower: null,
+            laserCamera: null,
             workSpeed: null,
             nozzleTemperature: 0,
             nozzleTargetTemperature: 0,
@@ -85,7 +86,9 @@ export class Server extends events.EventEmitter {
             airPurifier: false,
             airPurifierSwitch: false,
             airPurifierFanSpeed: 1,
-            airPurifierFilterHealth: 0
+            airPurifierFilterHealth: 0,
+            currentHeadType: '',
+            moduleStatusList: {}
         };
     }
 
@@ -231,6 +234,7 @@ export class Server extends events.EventEmitter {
                 isNotNull(data.homed) && (this.state.isHomed = data.homed);
                 isNotNull(data.laserFocalLength) && (this.state.laserFocalLength = data.laserFocalLength);
                 isNotNull(data.laserPower) && (this.state.laserPower = data.laserPower);
+                isNotNull(data.laserCamera) && (this.state.laserCamera = data.laserCamera);
                 isNotNull(data.workSpeed) && (this.state.workSpeed = data.workSpeed);
                 isNotNull(data.nozzleTemperature) && (this.state.nozzleTemperature = data.nozzleTemperature);
                 isNotNull(data.nozzleTargetTemperature) && (this.state.nozzleTargetTemperature = data.nozzleTargetTemperature);
@@ -244,7 +248,8 @@ export class Server extends events.EventEmitter {
                 isNotNull(data.airPurifierSwitch) && (this.state.airPurifierSwitch = data.airPurifierSwitch);
                 isNotNull(data.airPurifierFanSpeed) && (this.state.airPurifierFanSpeed = data.airPurifierFanSpeed);
                 isNotNull(data.airPurifierFilterHealth) && (this.state.airPurifierFilterHealth = data.airPurifierFilterHealth);
-
+                isNotNull(data.toolHead) && (this.state.currentHeadType = data.toolHead);
+                isNotNull(data.moduleList) && (this.state.moduleStatusList = data.moduleList);
                 this._updateGcodePrintingInfo(data);
 
                 if (this.waitConfirm) {
@@ -485,6 +490,7 @@ export class Server extends events.EventEmitter {
             enclosure: this.state.enclosure,
             laserFocalLength: this.state.laserFocalLength,
             laserPower: this.state.laserPower,
+            laserCamera: this.state.laserCamera,
             workSpeed: this.state.workSpeed,
             isEnclosureDoorOpen: this.state.isEnclosureDoorOpen,
             doorSwitchCount: this.state.doorSwitchCount,
@@ -497,7 +503,9 @@ export class Server extends events.EventEmitter {
             airPurifier: this.state.airPurifier,
             airPurifierSwitch: this.state.airPurifierSwitch,
             airPurifierFanSpeed: this.state.airPurifierFanSpeed,
-            airPurifierFilterHealth: this.state.airPurifierFilterHealth
+            airPurifierFilterHealth: this.state.airPurifierFilterHealth,
+            currentHeadType: this.state.currentHeadType,
+            moduleStatusList: this.state.moduleStatusList
         };
     };
 
@@ -721,19 +729,13 @@ export class Server extends events.EventEmitter {
         if (!data) {
             return;
         }
-        const { currentLine, estimatedTime, totalLines } = data;
+        const { currentLine, estimatedTime, totalLines, fileName = '', progress, elapsedTime, remainingTime } = data;
         if (!currentLine || !estimatedTime || !totalLines) {
             return;
         }
         const sent = currentLine || 0;
         const received = currentLine || 0;
         const total = totalLines || 0;
-        let elapsedTime = 0;
-        let remainingTime = 0;
-        if (this.state.gcodePrintingInfo.startTime) {
-            elapsedTime = new Date().getTime() - this.state.gcodePrintingInfo.startTime;
-            remainingTime = estimatedTime * 1000 - elapsedTime; // TODO
-        }
         let finishTime = 0;
         if (received > 0 && received >= totalLines) {
             finishTime = new Date().getTime();
@@ -744,8 +746,11 @@ export class Server extends events.EventEmitter {
             received,
             total,
             finishTime,
-            elapsedTime,
-            remainingTime
+            estimatedTime: estimatedTime * 1000,
+            elapsedTime: elapsedTime * 1000,
+            remainingTime: remainingTime * 1000,
+            fileName,
+            progress
         };
     }
 }

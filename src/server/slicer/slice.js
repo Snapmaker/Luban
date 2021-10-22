@@ -98,7 +98,7 @@ function slice(params, onProgress, onSucceed, onError) {
         return;
     }
 
-    const { originalName, model, support, boundingBox, thumbnail } = params;
+    const { originalName, model, support, boundingBox, thumbnail, renderGcodeFileName: renderName } = params;
     const modelConfig = {
         configFilePath: `${DataStorage.configDir}/${PRINTING_CONFIG_SUBCATEGORY}/active_final.def.json`,
         path: []
@@ -133,6 +133,7 @@ function slice(params, onProgress, onSucceed, onError) {
     const gcodeFilename = generateRandomPathName(`${path.parse(originalName).name}.gcode`);
     const gcodeFilePath = `${DataStorage.tmpDir}/${gcodeFilename}`;
     const process = callCuraEngine(modelConfig, supportConfig, gcodeFilePath);
+    const renderGcodeFileName = `${renderName}.gcode`;
 
     process.stderr.on('data', (data) => {
         const array = data.toString().split('\n');
@@ -169,7 +170,8 @@ function slice(params, onProgress, onSucceed, onError) {
                 printTime: printTime,
                 filamentLength: filamentLength,
                 filamentWeight: filamentWeight,
-                gcodeFilePath: gcodeFilePath
+                gcodeFilePath: gcodeFilePath,
+                renderGcodeFileName
             });
         }
         log.info(`slice progress closed with code ${code}`);

@@ -39,8 +39,8 @@ import { actions as editorActions } from '../../flux/editor';
 import { actions as projectActions } from '../../flux/project';
 import { actions as operationHistoryActions } from '../../flux/operation-history';
 import styles from './styles/appbar.styl';
-import HomePage from '../pages/HomePage';
-import Workspace from '../pages/Workspace';
+// import HomePage from '../pages/HomePage';
+// import Workspace from '../pages/Workspace';
 import ModelExporter from '../widgets/PrintingVisualizer/ModelExporter';
 
 class AppLayout extends PureComponent {
@@ -539,9 +539,9 @@ class AppLayout extends PureComponent {
                 this.props.updateMenu();
             });
             UniApi.Event.on('tile-modal:show', ({ component }) => {
-                if (component.type === HomePage) {
+                if (component.key === 'homepage') {
                     this.props.updateCurrentModalPath('#/');
-                } else if (component.type === Workspace) {
+                } else if (component.key === 'workspace') {
                     this.props.updateCurrentModalPath('#/workspace');
                 }
                 this.props.enableMenu();

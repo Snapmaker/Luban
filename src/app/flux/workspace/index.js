@@ -24,12 +24,16 @@ export const WORKSPACE_STAGE = {
 const INITIAL_STATE = {
     uploadState: 'idle', // uploading, uploaded
     renderState: 'idle',
+    previewRenderState: 'idle',
     gcodeFile: null,
     boundingBox: null,
+    previewBoundingBox: null,
     gcodeFiles: [],
     modelGroup: new THREE.Group(),
+    previewModelGroup: new THREE.Group(),
     renderingTimestamp: 0,
     stage: WORKSPACE_STAGE.EMPTY,
+    previewStage: WORKSPACE_STAGE.EMPTY,
     progress: 0
 };
 
@@ -39,10 +43,10 @@ export const actions = {
     init: () => (dispatch, getState) => {
         gcodeRenderingWorker.onmessage = (e) => {
             const data = e.data;
-            const { status, value, renderMethod, isDone, boundingBox } = data;
+            const { status, value, renderMethod, isDone, boundingBox, isPreview = false, gcodeFileIndex = -1 } = data;
             switch (status) {
                 case 'succeed': {
-                    const { modelGroup, gcodeFile } = getState().workspace;
+                    const { modelGroup, gcodeFile, previewModelGroup, gcodeFiles } = getState().workspace;
                     const { positions, colors, index, indexColors } = value;
 
                     const bufferGeometry = new THREE.BufferGeometry();
@@ -61,17 +65,29 @@ export const actions = {
 
                     const object3D = gcodeBufferGeometryToObj3d('WORKSPACE', bufferGeometry, renderMethod);
                     // object3D.material.uniforms.u_visible_index_count.value = 20000;
-                    object3D.name = `${gcodeFile.name}-${uuid.v4()}`;
+                    object3D.name = gcodeFile ? `${gcodeFile.name}-${uuid.v4()}` : `${gcodeFiles[gcodeFileIndex].name}-${uuid.v4()}`;
 
-                    modelGroup.add(object3D);
+                    if (isPreview) {
+                        previewModelGroup.add(object3D);
+                    } else {
+                        modelGroup.add(object3D);
+                    }
                     object3D.position.copy(new THREE.Vector3());
 
                     if (isDone) {
-                        dispatch(actions.updateState({
-                            renderState: 'rendered',
-                            boundingBox: boundingBox,
-                            stage: WORKSPACE_STAGE.LOAD_GCODE_SUCCEED
-                        }));
+                        if (isPreview) {
+                            dispatch(actions.updateState({
+                                previewRenderState: 'rendered',
+                                previewBoundingBox: boundingBox,
+                                previewStage: WORKSPACE_STAGE.LOAD_GCODE_SUCCEED
+                            }));
+                        } else {
+                            dispatch(actions.updateState({
+                                renderState: 'rendered',
+                                boundingBox: boundingBox,
+                                stage: WORKSPACE_STAGE.LOAD_GCODE_SUCCEED
+                            }));
+                        }
                     }
 
                     dispatch(actions.render());
@@ -80,7 +96,7 @@ export const actions = {
                 case 'progress': {
                     const state = getState().printing;
                     if (value - state.progress > 0.01 || value > 1 - EPSILON) {
-                        dispatch(actions.updateState({ progress: value }));
+                        !isPreview && dispatch(actions.updateState({ progress: value }));
                     }
                     break;
                 }
@@ -140,7 +156,8 @@ export const actions = {
                     uploadName: response.uploadName,
                     size: file.size,
                     lastModified: file.lastModified,
-                    thumbnail: header[';thumbnail'] || ''
+                    thumbnail: header[';thumbnail'] || '',
+                    renderGcodeFileName: file.renderGcodeFileName || file.name
                 };
                 dispatch(actions.addGcodeFiles(gcodeFile));
             })
@@ -172,7 +189,8 @@ export const actions = {
                     uploadName: response.uploadName,
                     size: file.size,
                     lastModified: +file.lastModified,
-                    thumbnail: header[';thumbnail'] || ''
+                    thumbnail: header[';thumbnail'] || '',
+                    renderGcodeFileName: file.renderGcodeFileName || file.name
                 };
                 dispatch(actions.renderGcodeFile(gcodeFile));
             })
@@ -181,9 +199,13 @@ export const actions = {
             });
     },
 
-    clearGcode: () => (dispatch, getState) => {
-        const { modelGroup } = getState().workspace;
-        modelGroup.remove(...modelGroup.children);
+    clearGcode: (isPreview = false) => (dispatch, getState) => {
+        const { modelGroup, previewModelGroup } = getState().workspace;
+        if (isPreview) {
+            previewModelGroup.remove(...previewModelGroup.children);
+        } else {
+            modelGroup.remove(...modelGroup.children);
+        }
         dispatch(actions.updateState({
             renderState: 'idle',
             gcodeFile: null,
@@ -233,7 +255,7 @@ export const actions = {
         });
     },
 
-    renderGcodeFile: (gcodeFile, needToList = true) => (dispatch, getState) => {
+    renderGcodeFile: (gcodeFile, needToList = true) => async (dispatch, getState) => {
         const oldGcodeFile = getState().workspace.gcodeFile;
 
         if (needToList) {
@@ -242,15 +264,25 @@ export const actions = {
         if (oldGcodeFile !== null && oldGcodeFile.uploadName === gcodeFile.uploadName) {
             return;
         }
-        dispatch(actions.clearGcode());
-        dispatch(actions.updateState({
+        await dispatch(actions.clearGcode());
+        await dispatch(actions.updateState({
             gcodeFile,
             stage: WORKSPACE_STAGE.LOADING_GCODE,
             renderState: 'rendering',
             progress: 0
         }));
-        dispatch(actions.loadGcode(gcodeFile));
+        await dispatch(actions.loadGcode(gcodeFile));
         gcodeRenderingWorker.postMessage({ func: 'WORKSPACE', gcodeFilename: gcodeFile.uploadName });
+    },
+
+    renderPreviewGcodeFile: (gcodeFile, index) => async (dispatch) => {
+        await dispatch(actions.clearGcode(true));
+        dispatch(actions.updateState({
+            previewStage: WORKSPACE_STAGE.LOADING_GCODE,
+            previewRenderState: 'rendering',
+            progress: 0
+        }));
+        gcodeRenderingWorker.postMessage({ func: 'WORKSPACE', gcodeFilename: gcodeFile.uploadName, isPreview: true, gcodeFileIndex: index });
     },
 
     addGcodeFiles: (fileInfo) => (dispatch, getState) => {
@@ -283,6 +315,7 @@ export const actions = {
         if (newName !== null) {
             find.newName = newName;
             find.name = newName;
+            find.renderGcodeFileName = newName;
         }
         if (isRenaming !== null) {
             find.isRenaming = isRenaming;

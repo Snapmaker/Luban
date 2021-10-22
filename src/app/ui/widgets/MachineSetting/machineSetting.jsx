@@ -12,21 +12,21 @@ import Select from '../../components/Select';
 const MachineSetting = (props) => {
     const dispatch = useDispatch();
     const machine = useSelector(state => state?.machine);
-    const { isConnected, connectionType, headType } = machine;
+    const { isConnected, connectionType, headType, series } = machine;
     const [enclosureDoorDetection, setEnclosureDoorDetection] = useState(machine?.enclosureDoorDetection);
     const [zAxisModule, setZAxisModule] = useState(machine?.zAxisModule);
     useEffect(() => {
-        props.widgetActions.setTitle('Machine Setting');
+        props.widgetActions.setTitle('key-Workspace/MachineSetting-Machine Setting');
         dispatch(machineActions.getEnclosureState());
         dispatch(machineActions.getZAxisModuleState());
     }, []);
     useEffect(() => {
-        if (isConnected && connectionType === 'serial' && !!headType) {
+        if (isConnected && connectionType === 'serial' && !!headType && (series === 'Original' || series === 'Original Long Z-axis')) {
             props.widgetActions.setDisplay(true);
         } else {
             props.widgetActions.setDisplay(false);
         }
-    }, [isConnected, connectionType, headType]);
+    }, [isConnected, connectionType, headType, series]);
     const onSave = () => {
         dispatch(machineActions.setZAxisModuleState(zAxisModule));
         dispatch(machineActions.setEnclosureState(enclosureDoorDetection));

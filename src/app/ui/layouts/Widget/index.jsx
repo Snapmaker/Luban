@@ -26,6 +26,7 @@ class WidgetContainer extends PureComponent {
         onRemove: PropTypes.func,
         onToggle: PropTypes.func,
         // widgetActions: PropTypes.object,
+        controlActions: PropTypes.object,
 
         minimized: PropTypes.bool.isRequired,
         fullscreen: PropTypes.bool.isRequired,
@@ -72,7 +73,7 @@ class WidgetContainer extends PureComponent {
 
     render() {
         // const { component: Component, minimized, fullscreen } = this.props;
-        const { widgetId, component: Component, minimized, fullscreen, widgetProps } = this.props;
+        const { widgetId, component: Component, minimized, fullscreen, widgetProps, controlActions } = this.props;
         const state = {
             title: this.state.title,
             minimized: minimized,
@@ -122,6 +123,7 @@ class WidgetContainer extends PureComponent {
                     <Component
                         isWidget
                         widgetActions={this.actions}
+                        controlActions={controlActions}
                         {...widgetProps}
                         widgetId={widgetId}
                         // minimized={minimized}

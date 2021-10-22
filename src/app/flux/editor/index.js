@@ -41,6 +41,9 @@ import MoveOperation2D from '../operation-history/MoveOperation2D';
 import ScaleOperation2D from '../operation-history/ScaleOperation2D';
 import RotateOperation2D from '../operation-history/RotateOperation2D';
 import ModelLoader from '../../ui/widgets/PrintingVisualizer/ModelLoader';
+import SvgModel from '../../models/SvgModel';
+import SVGActionsFactory from '../../models/SVGActionsFactory';
+import { NS } from '../../ui/SVGEditor/lib/namespaces';
 
 const getSourceType = (fileName) => {
     let sourceType;
@@ -97,6 +100,105 @@ const sizeModel = (size, materials, sourceWidth, sourceHeight) => {
         scale
     };
 };
+
+// a wrapper function for recording scaled models states
+function recordScaleActionsToHistory(scaleActionsFn, elements, SVGActions, headType, machine, dispatch) {
+    if (typeof scaleActionsFn === 'function') {
+        const tmpTransformationState = {};
+        const operations = new Operations();
+        for (const element of elements) {
+            const svgModel = SVGActions.getSVGModelByElement(element);
+            tmpTransformationState[element.id] = { ...svgModel.transformation, refImage: element.href?.baseVal };
+        }
+
+        scaleActionsFn();
+
+        const promises = elements.map(element => {
+            const svgModel = SVGActions.getSVGModelByElement(element);
+            // record image element final state after image has been processed asynchrously,
+            // other elements state can be recorded immediately
+            if (element.tagName.toLowerCase() === 'image' && svgModel.sourceType !== 'image3d') {
+                return new Promise((resolve, reject) => {
+                    element.onerror = reject;
+                    element.onload = () => {
+                        // resize action
+                        // [T][R][S][T]
+                        const transformList = SvgModel.getTransformList(element);
+                        const { x, y, width, height } = element.getBBox();
+
+                        const angle = transformList.getItem(1).angle;
+                        const scaleX = transformList.getItem(2).matrix.a;
+                        const scaleY = transformList.getItem(2).matrix.d;
+
+                        const transform = transformList.consolidate();
+                        const matrix = transform.matrix;
+                        const svg = document.createElementNS(NS.SVG, 'svg');
+                        const center = svg.createSVGPoint();
+                        center.x = x + width / 2;
+                        center.y = y + height / 2;
+
+                        const newCenter = center.matrixTransform(matrix);
+
+                        const t = {
+                            x: newCenter.x,
+                            y: newCenter.y,
+                            width: Math.abs(width * scaleX),
+                            height: Math.abs(height * scaleY),
+                            scaleX: scaleX / Math.abs(scaleX), // normalize scale: -2.2 => -1, 1.8 => 1
+                            scaleY: scaleY / Math.abs(scaleY),
+                            angle
+                        };
+                        element.setAttribute('x', t.x - t.width / 2);
+                        element.setAttribute('y', t.y - t.height / 2);
+                        element.setAttribute('width', t.width);
+                        element.setAttribute('height', t.height);
+                        SvgModel.recalculateElementTransformList(element, { x: t.x, y: t.y, scaleX: t.scaleX, scaleY: t.scaleY, angle: t.angle });
+
+                        SVGActions.getSVGModelByElement(element).onTransform();
+                        // update selector
+                        SVGActions.svgContentGroup.resizeSelectorFinish(elements);
+                        // update t
+                        const _t = SVGActionsFactory.calculateElementsTransformation(elements);
+                        SVGActions._setSelectedElementsTransformation(_t);
+
+                        element.onload = null;
+                        if (!_.isEqual(tmpTransformationState[element.id], svgModel.transformation)) {
+                            const operation = new ScaleOperation2D({
+                                target: svgModel,
+                                svgActions: SVGActions,
+                                machine,
+                                from: tmpTransformationState[element.id],
+                                to: { ...svgModel.transformation, refImage: element.href.baseVal }
+                            });
+                            operations.push(operation);
+                        }
+                        resolve();
+                    };
+                });
+            } else {
+                return new Promise((resolve) => {
+                    if (!_.isEqual(tmpTransformationState[element.id], svgModel.transformation)) {
+                        const operation = new ScaleOperation2D({
+                            target: svgModel,
+                            svgActions: SVGActions,
+                            machine,
+                            from: tmpTransformationState[element.id],
+                            to: { ...svgModel.transformation, refImage: element.href?.baseVal }
+                        });
+                        operations.push(operation);
+                    }
+                    resolve();
+                });
+            }
+        });
+        // all the SVGModel changed, record operations to history
+        Promise.all(promises).then(() => {
+            dispatch(operationHistoryActions.setOperations(headType, operations));
+        }).catch(() => {
+            dispatch(operationHistoryActions.setOperations(headType, operations));
+        });
+    }
+}
 
 const toolpathRendererWorker = new ToolpathRendererWorker();
 
@@ -668,17 +770,6 @@ export const actions = {
         dispatch(actions.processSelectedModel(headType));
     },
 
-    changeSelectedModelShowOrigin: (headType, show = undefined) => (dispatch, getState) => {
-        const { SVGActions, modelGroup } = getState()[headType];
-        const res = modelGroup.changeShowOrigin(show);
-        SVGActions.updateElementImage(res.showImageName);
-
-        dispatch(baseActions.updateState(headType, {
-            showOrigin: res.showOrigin,
-            renderingTimestamp: +new Date()
-        }));
-    },
-
     /**
      *
      * @param headType
@@ -752,15 +843,17 @@ export const actions = {
         options.materials = materials;
         options.toolParams = toolParams;
 
-        if (!progressStatesManager.inProgress()) {
-            progressStatesManager.startProgress(PROCESS_STAGE.CNC_LASER_PROCESS_IMAGE, [1]);
-        } else {
-            progressStatesManager.startNextStep();
+        if (selectedModel.elem.getAttribute('from') !== 'inner-svg') {
+            if (!progressStatesManager.inProgress()) {
+                progressStatesManager.startProgress(PROCESS_STAGE.CNC_LASER_PROCESS_IMAGE, [1]);
+            } else {
+                progressStatesManager.startNextStep();
+            }
+            dispatch(baseActions.updateState(headType, {
+                stage: STEP_STAGE.CNC_LASER_PROCESSING_IMAGE,
+                progress: progressStatesManager.updateProgress(STEP_STAGE.CNC_LASER_PROCESSING_IMAGE, 0)
+            }));
         }
-        dispatch(baseActions.updateState(headType, {
-            stage: STEP_STAGE.CNC_LASER_PROCESSING_IMAGE,
-            progress: progressStatesManager.updateProgress(STEP_STAGE.CNC_LASER_PROCESSING_IMAGE, 0)
-        }));
 
         dispatch(actions.resetProcessState(headType));
 
@@ -1093,11 +1186,14 @@ export const actions = {
 
         dispatch(baseActions.resetCalculatedState(headType));
         dispatch(baseActions.render(headType));
-        dispatch(baseActions.updateState(headType, {
-            stage: STEP_STAGE.CNC_LASER_PROCESSING_IMAGE,
-            progress: progressStatesManager.updateProgress(STEP_STAGE.CNC_LASER_PROCESSING_IMAGE, 1)
-        }));
-        progressStatesManager.finishProgress(true);
+
+        if (model.elem.getAttribute('from') !== 'inner-svg') {
+            dispatch(baseActions.updateState(headType, {
+                stage: STEP_STAGE.CNC_LASER_PROCESSING_IMAGE,
+                progress: progressStatesManager.updateProgress(STEP_STAGE.CNC_LASER_PROCESSING_IMAGE, 1)
+            }));
+            progressStatesManager.finishProgress(true);
+        }
     },
 
     getEstimatedTime: (headType, type) => (dispatch, getState) => {
@@ -1442,40 +1538,21 @@ export const actions = {
     /**
      * Resize elements finish.
      */
-    resizeElementsFinish: (headType, elements, options) => (dispatch, getState) => {
+    resizeElementsFinish: (headType, elements, options) => async (dispatch, getState) => {
         const { SVGActions, modelGroup } = getState()[headType];
         const { machine } = getState();
 
-        const tmpTransformationState = {};
-        for (const element of elements) {
-            const svgModel = SVGActions.getSVGModelByElement(element);
-            tmpTransformationState[element.id] = { ...svgModel.transformation };
-        }
+        recordScaleActionsToHistory(() => {
+            SVGActions.resizeElementsFinish(elements, options);
+        }, elements, SVGActions, headType, machine, dispatch);
 
-        SVGActions.resizeElementsFinish(elements, options);
-
-        const operations = new Operations();
-        for (const element of elements) {
-            const svgModel = SVGActions.getSVGModelByElement(element);
-            if (!_.isEqual(tmpTransformationState[element.id], svgModel.transformation)) {
-                const operation = new ScaleOperation2D({
-                    target: svgModel,
-                    svgActions: SVGActions,
-                    machine,
-                    from: tmpTransformationState[element.id],
-                    to: { ...svgModel.transformation }
-                });
-                operations.push(operation);
-            }
-        }
-        dispatch(operationHistoryActions.setOperations(headType, operations));
         dispatch(actions.resetProcessState(headType));
         const selectedModels = modelGroup.getSelectedModelArray();
         if (selectedModels.length !== 1) {
             return;
         }
         const selectedModel = selectedModels[0];
-        if (selectedModel.sourceType !== 'image3d' && selectedModel.config.svgNodeName === 'image') {
+        if (selectedModel.sourceType !== 'image3d' && selectedModel.elem.tagName.toLowerCase() === 'image') {
             dispatch(actions.processSelectedModel(headType));
         }
 
@@ -1487,32 +1564,22 @@ export const actions = {
      * Resize elements immediately.
      */
     resizeElementsImmediately: (headType, elements, options) => (dispatch, getState) => {
-        const { SVGActions } = getState()[headType];
+        const { SVGActions, modelGroup } = getState()[headType];
         const { machine } = getState();
 
-        const tmpTransformationState = {};
-        for (const element of elements) {
-            const svgModel = SVGActions.getSVGModelByElement(element);
-            tmpTransformationState[element.id] = { ...svgModel.transformation };
-        }
-        SVGActions.resizeElementsImmediately(elements, options);
+        recordScaleActionsToHistory(() => {
+            SVGActions.resizeElementsImmediately(elements, options);
+        }, elements, SVGActions, headType, machine, dispatch);
 
-        const operations = new Operations();
-        for (const element of elements) {
-            const svgModel = SVGActions.getSVGModelByElement(element);
-            if (!_.isEqual(tmpTransformationState[element.id], svgModel.transformation)) {
-                const operation = new ScaleOperation2D({
-                    target: svgModel,
-                    svgActions: SVGActions,
-                    machine,
-                    from: tmpTransformationState[element.id],
-                    to: { ...svgModel.transformation }
-                });
-                operations.push(operation);
-            }
-        }
-        dispatch(operationHistoryActions.setOperations(headType, operations));
         dispatch(actions.resetProcessState(headType));
+        const selectedModels = modelGroup.getSelectedModelArray();
+        if (selectedModels.length !== 1) {
+            return;
+        }
+        const selectedModel = selectedModels[0];
+        if (selectedModel.sourceType !== 'image3d' && selectedModel.elem.tagName.toLowerCase() === 'image') {
+            dispatch(actions.processSelectedModel(headType));
+        }
 
         dispatch(baseActions.render(headType));
         dispatch(actions._checkModelsInChunkArea(headType));
@@ -1524,34 +1591,22 @@ export const actions = {
      * Note that only support flip one element.
      */
     flipElementsHorizontally: (headType, elements) => (dispatch, getState) => {
-        const { SVGActions } = getState()[headType];
+        const { SVGActions, modelGroup } = getState()[headType];
         const { machine } = getState();
 
-        const tmpTransformationState = {};
-        for (const element of elements) {
-            const svgModel = SVGActions.getSVGModelByElement(element);
-            tmpTransformationState[element.id] = { ...svgModel.transformation };
-        }
+        recordScaleActionsToHistory(() => {
+            SVGActions.flipElementsHorizontally(elements);
+        }, elements, SVGActions, headType, machine, dispatch);
 
-        SVGActions.flipElementsHorizontally(elements);
-
-        const operations = new Operations();
-        for (const element of elements) {
-            const svgModel = SVGActions.getSVGModelByElement(element);
-            if (!_.isEqual(tmpTransformationState[element.id], svgModel.transformation)) {
-                const operation = new ScaleOperation2D({
-                    target: svgModel,
-                    svgActions: SVGActions,
-                    machine,
-                    from: tmpTransformationState[element.id],
-                    to: { ...svgModel.transformation }
-                });
-                operations.push(operation);
-            }
-        }
-        dispatch(operationHistoryActions.setOperations(headType, operations));
-        dispatch(actions.processSelectedModel(headType));
         dispatch(actions.resetProcessState(headType));
+        const selectedModels = modelGroup.getSelectedModelArray();
+        if (selectedModels.length !== 1) {
+            return;
+        }
+        const selectedModel = selectedModels[0];
+        if (selectedModel.sourceType !== 'image3d' && selectedModel.elem.tagName.toLowerCase() === 'image') {
+            dispatch(actions.processSelectedModel(headType));
+        }
 
         dispatch(baseActions.render(headType));
     },
@@ -1562,34 +1617,22 @@ export const actions = {
      * Note that only support flip one element.
      */
     flipElementsVertically: (headType, elements) => (dispatch, getState) => {
-        const { SVGActions } = getState()[headType];
+        const { SVGActions, modelGroup } = getState()[headType];
         const { machine } = getState();
 
-        const tmpTransformationState = {};
-        for (const element of elements) {
-            const svgModel = SVGActions.getSVGModelByElement(element);
-            tmpTransformationState[element.id] = { ...svgModel.transformation };
-        }
+        recordScaleActionsToHistory(() => {
+            SVGActions.flipElementsVertically(elements);
+        }, elements, SVGActions, headType, machine, dispatch);
 
-        SVGActions.flipElementsVertically(elements);
-
-        const operations = new Operations();
-        for (const element of elements) {
-            const svgModel = SVGActions.getSVGModelByElement(element);
-            if (!_.isEqual(tmpTransformationState[element.id], svgModel.transformation)) {
-                const operation = new ScaleOperation2D({
-                    target: svgModel,
-                    svgActions: SVGActions,
-                    machine,
-                    from: tmpTransformationState[element.id],
-                    to: { ...svgModel.transformation }
-                });
-                operations.push(operation);
-            }
-        }
-        dispatch(operationHistoryActions.setOperations(headType, operations));
-        dispatch(actions.processSelectedModel(headType));
         dispatch(actions.resetProcessState(headType));
+        const selectedModels = modelGroup.getSelectedModelArray();
+        if (selectedModels.length !== 1) {
+            return;
+        }
+        const selectedModel = selectedModels[0];
+        if (selectedModel.sourceType !== 'image3d' && selectedModel.elem.tagName.toLowerCase() === 'image') {
+            dispatch(actions.processSelectedModel(headType));
+        }
 
         dispatch(baseActions.render(headType));
     },
@@ -1600,34 +1643,23 @@ export const actions = {
      * Note that only support flip one element.
      */
     resetFlipElements: (headType, elements) => (dispatch, getState) => {
-        const { SVGActions } = getState()[headType];
+        const { SVGActions, modelGroup } = getState()[headType];
         const { machine } = getState();
 
-        const tmpTransformationState = {};
-        for (const element of elements) {
-            const svgModel = SVGActions.getSVGModelByElement(element);
-            tmpTransformationState[element.id] = { ...svgModel.transformation };
-        }
+        recordScaleActionsToHistory(() => {
+            SVGActions.resetFlipElements(elements);
+        }, elements, SVGActions, headType, machine, dispatch);
 
-        SVGActions.resetFlipElements(elements);
-
-        const operations = new Operations();
-        for (const element of elements) {
-            const svgModel = SVGActions.getSVGModelByElement(element);
-            if (!_.isEqual(tmpTransformationState[element.id], svgModel.transformation)) {
-                const operation = new ScaleOperation2D({
-                    target: svgModel,
-                    svgActions: SVGActions,
-                    machine,
-                    from: tmpTransformationState[element.id],
-                    to: { ...svgModel.transformation }
-                });
-                operations.push(operation);
-            }
-        }
-        dispatch(operationHistoryActions.setOperations(headType, operations));
-        dispatch(actions.processSelectedModel(headType));
         dispatch(actions.resetProcessState(headType));
+        const selectedModels = modelGroup.getSelectedModelArray();
+        if (selectedModels.length !== 1) {
+            return;
+        }
+        const selectedModel = selectedModels[0];
+        if (selectedModel.sourceType !== 'image3d' && selectedModel.elem.tagName.toLowerCase() === 'image') {
+            dispatch(actions.processSelectedModel(headType));
+        }
+
         dispatch(baseActions.render(headType));
     },
 

@@ -66,6 +66,8 @@ class SVGEditor extends PureComponent {
 
     canvas = React.createRef();
 
+    leftBarRef = React.createRef();
+
     state = {
         mode: 'select'
     };
@@ -168,6 +170,10 @@ class SVGEditor extends PureComponent {
         this.setMode('select');
     };
 
+    hideLeftBarOverlay = () => {
+        this.leftBarRef.current.actions.hideLeftBarOverlay();
+    }
+
     zoomIn() {
         this.canvas.current.zoomIn();
     }
@@ -208,9 +214,11 @@ class SVGEditor extends PureComponent {
                                 updateTextTransformationAfterEdit={this.props.updateTextTransformationAfterEdit}
                                 getSelectedElementsUniformScalingState={this.props.getSelectedElementsUniformScalingState}
                                 elementActions={this.props.elementActions}
+                                hideLeftBarOverlay={this.hideLeftBarOverlay}
                             />
                         </div>
                         <SVGLeftBar
+                            ref={this.leftBarRef}
                             mode={this.state.mode}
                             insertDefaultTextVector={this.insertDefaultTextVector}
                             setMode={this.setMode}

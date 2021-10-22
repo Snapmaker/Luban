@@ -1,5 +1,6 @@
 import includes from 'lodash/includes';
 import isInteger from 'lodash/isInteger';
+import { isEqual } from 'lodash';
 // import { Server } from './Server';
 import { CONNECTION_TYPE_SERIAL, CONNECTION_TYPE_WIFI } from '../../constants';
 import { machineStore } from '../../store/local-storage';
@@ -10,10 +11,12 @@ const init = () => (dispatch) => {
     // const connectionType = machineStore.get('connection.type') || CONNECTION_TYPE_SERIAL;
     const connectionType = machineStore.get('connection.type') || CONNECTION_TYPE_WIFI;
     const connectionTimeout = machineStore.get('connection.timeout') || 3000;
+    const connectionAuto = !(machineStore.get('connection.isAuto') === false);
 
     dispatch(baseActions.updateState({
         connectionType,
-        connectionTimeout
+        connectionTimeout,
+        connectionAuto
     }));
 };
 
@@ -33,6 +36,11 @@ const setConnectionTimeout = (connectionTimeout) => (dispatch) => {
     machineStore.set('connection.timeout', connectionTimeout);
 };
 
+const setConnectionAuto = (isAuto) => (dispatch) => {
+    dispatch(baseActions.updateState({ connectionAuto: isAuto }));
+    machineStore.set('connection.isAuto', isAuto);
+};
+
 /**
  * Set selected server.
  *
@@ -41,11 +49,11 @@ const setConnectionTimeout = (connectionTimeout) => (dispatch) => {
  */
 const setSelectedServer = (server) => (dispatch, getState) => {
     const { servers } = getState().machine;
-
+    const oldServer = getState().machine.server;
     // We can assume that server must be found on server list
     const find = servers.find(s => s.address === server.address);
-    if (find) {
-        // Update server selected
+    if (find && !isEqual(server, oldServer)) {
+    //     // Update server selected
         dispatch(baseActions.updateState({ server: find }));
     }
 };
@@ -105,6 +113,7 @@ export default {
 
     setConnectionType,
     setConnectionTimeout,
+    setConnectionAuto,
 
     addServer,
     setSelectedServer,

@@ -183,11 +183,6 @@ class ModelGroup extends EventEmitter {
         };
     }
 
-    changeShowOrigin() {
-        // todo
-        return this.selectedModelArray.length === 1 && this.selectedModelArray[0].changeShowOrigin();
-    }
-
     hasAnyModelVisible() {
         return this.models.filter(m => !m.supportTag).some((model) => model.visible);
     }
@@ -578,7 +573,8 @@ class ModelGroup extends EventEmitter {
                 model = this.models.find(d => d.meshObject === intersect.object);
                 if (model) {
                     // cannot select model and support
-                    if (this.selectedModelArray.length && this.selectedModelArray[0].supportTag !== model.supportTag) {
+                    // cannot select multi support
+                    if (this.selectedModelArray.length && (this.selectedModelArray[0].supportTag !== model.supportTag || model.supportTag)) {
                         break;
                     }
                     this.addModelToSelectedGroup(model);

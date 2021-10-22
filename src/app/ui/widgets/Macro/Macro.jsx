@@ -142,6 +142,7 @@ Macro.propTypes = {
     updateModal: PropTypes.func.isRequired,
     openModal: PropTypes.func.isRequired,
     widgetId: PropTypes.string.isRequired
+    // widgetActions: PropTypes.object.isRequired
 };
 
 export default Macro;

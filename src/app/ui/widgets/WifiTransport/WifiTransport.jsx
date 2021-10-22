@@ -1,6 +1,8 @@
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState, useImperativeHandle } from 'react';
 import PropTypes from 'prop-types';
 import noop from 'lodash/noop';
+import * as THREE from 'three';
+import { Spin } from 'antd';
 
 import classNames from 'classnames';
 import { useDispatch, useSelector } from 'react-redux';
@@ -16,23 +18,30 @@ import {
     CONNECTION_TYPE_WIFI,
     DATA_PREFIX, HEAD_CNC, HEAD_LASER, HEAD_PRINTING
 } from '../../../constants';
-import { actions as workspaceActions } from '../../../flux/workspace';
+import { actions as workspaceActions, WORKSPACE_STAGE } from '../../../flux/workspace';
 import { actions as projectActions } from '../../../flux/project';
 
 import modalSmallHOC from '../../components/Modal/modal-small';
+import SvgIcon from '../../components/SvgIcon';
 import { Button } from '../../components/Buttons';
-import Checkbox from '../../components/Checkbox';
+import Menu from '../../components/Menu';
+import Dropdown from '../../components/Dropdown';
+import Modal from '../../components/Modal';
+import Canvas from '../../components/SMCanvas';
+import PrintablePlate from '../WorkspaceVisualizer/PrintablePlate';
+import usePrevious from '../../../lib/hooks/previous';
+// import Checkbox from '../../components/Checkbox';
 
 
 const changeNameInput = [];
 
-const GcodePreviewItem = React.memo(({ gcodeFile, index, selected, onSelectFile }) => {
+const GcodePreviewItem = React.memo(({ gcodeFile, index, selected, onSelectFile, gRef, setSelectFileIndex, handlePreviewModalShow }) => {
     const dispatch = useDispatch();
     // const name = gcodeFile.name.length > 25
     //     ? `${gcodeFile.name.substring(0, 15)}...${gcodeFile.name.substring(gcodeFile.name.length - 10, gcodeFile.name.length)}`
     //     : gcodeFile.name;
     const suffixLength = 7;
-    const { prefixName, suffixName } = normalizeNameDisplay(gcodeFile.name, suffixLength);
+    const { prefixName, suffixName } = normalizeNameDisplay(gcodeFile.renderGcodeFileName || gcodeFile.name, suffixLength);
     let size = '';
     const { isRenaming, uploadName } = gcodeFile;
     if (!gcodeFile.size) {
@@ -65,17 +74,18 @@ const GcodePreviewItem = React.memo(({ gcodeFile, index, selected, onSelectFile 
 
     const onRenameEnd = (_uploadName, _index) => {
         let newName = changeNameInput[_index].current.value;
-        const m = _uploadName.match(/(.gcode|.cnc|.nc)$/);
+        const m = _uploadName.match(/(\.gcode|\.cnc|\.nc)$/);
         if (m) {
             newName += m[0];
         }
         dispatch(workspaceActions.renameGcodeFile(_uploadName, newName, false));
     };
 
-    const onRenameStart = (_uploadName, _index, event) => {
+    const onRenameStart = (_uploadName, _index, _renderGcodeFileName = '', event) => {
         dispatch(workspaceActions.renameGcodeFile(_uploadName, null, true));
         event.stopPropagation();
         setTimeout(() => {
+            changeNameInput[_index].current.value = _.replace(_renderGcodeFileName, /(\.gcode|\.cnc|\.nc)$/, '') || _uploadName;
             changeNameInput[_index].current.focus();
         }, 0);
     };
@@ -83,6 +93,17 @@ const GcodePreviewItem = React.memo(({ gcodeFile, index, selected, onSelectFile 
     const onRemoveFile = (_gcodeFile) => {
         dispatch(workspaceActions.removeGcodeFile(_gcodeFile));
     };
+
+    useImperativeHandle(gRef, () => ({
+        remaneStart: (_uploadName, _index, e) => onRenameStart(_uploadName, _index, e),
+        removeFile: (_gcodeFile) => onRemoveFile(_gcodeFile)
+    }));
+
+    useEffect(() => {
+        if (selected) {
+            setSelectFileIndex(index);
+        }
+    }, [selected]);
 
     return (
         <div
@@ -98,14 +119,15 @@ const GcodePreviewItem = React.memo(({ gcodeFile, index, selected, onSelectFile 
             role="button"
             tabIndex={0}
         >
-            <button
+            {/* <button
                 type="button"
                 className={styles['gcode-file-remove']}
                 onClick={() => {
                     onRemoveFile(gcodeFile);
                 }}
-            />
-            {selected && <div className={styles['gcode-file-selected-icon']} />}
+            /> */}
+            {/* {selected && <div className={styles['gcode-file-selected-icon']} />} */}
+
             <div className={styles['gcode-file-img']}>
                 <img
                     src={gcodeFile.thumbnail}
@@ -123,7 +145,7 @@ const GcodePreviewItem = React.memo(({ gcodeFile, index, selected, onSelectFile 
                     onKeyDown={() => {
                     }}
                     tabIndex={0}
-                    onClick={(event) => onRenameStart(uploadName, index, event)}
+                    // onClick={(event) => onRenameStart(uploadName, index, event)}
                 >
                     <div
                         className={styles['gcode-file-text-rename']}
@@ -144,7 +166,7 @@ const GcodePreviewItem = React.memo(({ gcodeFile, index, selected, onSelectFile 
                 )}
                 >
                     <input
-                        defaultValue={gcodeFile.name.replace(/(.gcode|.cnc|.nc)$/, '')}
+                        defaultValue={gcodeFile.name.replace(/(\.gcode|\.cnc|\.nc)$/, '')}
                         className={classNames('input-select')}
                         onBlur={() => onRenameEnd(uploadName, index)}
                         onKeyDown={(event) => onKeyDown(event)}
@@ -156,6 +178,20 @@ const GcodePreviewItem = React.memo(({ gcodeFile, index, selected, onSelectFile 
                     <span>{date}</span>
                 </div>
             </div>
+            <SvgIcon
+                name="PreviewGcode"
+                // name="MainToolbarHome"
+                type={['static']}
+                className="height-48 position-ab right-16"
+                size={24}
+                onClick={e => {
+                    e.stopPropagation();
+                    onSelectFile(gcodeFile.uploadName, null, null, false);
+                    handlePreviewModalShow(true);
+                    // dispatch.renderPreviewGcodeFile()
+                    dispatch(workspaceActions.renderPreviewGcodeFile(gcodeFile, index));
+                }}
+            />
         </div>
     );
 });
@@ -163,19 +199,37 @@ GcodePreviewItem.propTypes = {
     gcodeFile: PropTypes.object.isRequired,
     index: PropTypes.number.isRequired,
     selected: PropTypes.bool.isRequired,
-    onSelectFile: PropTypes.func.isRequired
+    onSelectFile: PropTypes.func.isRequired,
+    gRef: PropTypes.object.isRequired,
+    setSelectFileIndex: PropTypes.func.isRequired,
+    handlePreviewModalShow: PropTypes.func
 };
 
-function WifiTransport({ widgetActions }) {
-    const { gcodeFiles } = useSelector(state => state.workspace);
-    const { server, isConnected, headType, connectionType } = useSelector(state => state.machine);
+const visualizerGroup = {
+    object: new THREE.Group()
+};
+let printableArea = null;
+function WifiTransport({ widgetActions, controlActions }) {
+    const { previewBoundingBox, gcodeFiles, previewModelGroup, previewRenderState, previewStage } = useSelector(state => state.workspace);
+    const { server, isConnected, headType, connectionType, size, workflowStatus, workflowState } = useSelector(state => state.machine);
     const [loadToWorkspaceOnLoad, setLoadToWorkspaceOnLoad] = useState(true);
     const [selectFileName, setSelectFileName] = useState('');
     const [selectFileType, setSelectFileType] = useState('');
+    const [selectFileIndex, setSelectFileIndex] = useState(-1);
+    const [previewModalShow, setPreviewModalShow] = useState(false);
+    const [currentWorkflowStatus, setCurrentWorkflowStatus] = useState('');
     const dispatch = useDispatch();
     const fileInput = useRef();
-
-    const onSelectFile = useCallback((_selectFileName, name, event) => {
+    const gcodeItemRef = useRef();
+    const canvas = useRef();
+    const prevProps = usePrevious({
+        previewStage
+    });
+    printableArea = new PrintablePlate({
+        x: size.x * 2,
+        y: size.y * 2
+    });
+    const onSelectFile = useCallback((_selectFileName, name, event, needToUnselect = true) => {
         if (event && (event.target.className.indexOf('input-select') > -1 || event.target.className.indexOf('fa-check') > -1)) {
             return;
         }
@@ -192,7 +246,7 @@ function WifiTransport({ widgetActions }) {
             type = HEAD_CNC;
         }
         // select and unselect
-        if (selectFileName === _selectFileName) {
+        if (selectFileName === _selectFileName && needToUnselect) {
             setSelectFileName('');
         } else {
             setSelectFileName(_selectFileName);
@@ -204,11 +258,12 @@ function WifiTransport({ widgetActions }) {
         onChangeFile: async (event) => {
             const file = event.target.files[0];
 
-            if (loadToWorkspaceOnLoad) {
-                dispatch(workspaceActions.uploadGcodeFile(file));
-            } else {
-                dispatch(workspaceActions.uploadGcodeFileToList(file));
-            }
+            // if (loadToWorkspaceOnLoad) {
+            //     dispatch(workspaceActions.uploadGcodeFile(file));
+            // } else {
+            //     dispatch(workspaceActions.uploadGcodeFileToList(file));
+            // }
+            dispatch(workspaceActions.uploadGcodeFileToList(file));
         },
         onClickToUpload: () => {
             fileInput.current.value = null;
@@ -218,18 +273,20 @@ function WifiTransport({ widgetActions }) {
             if (!selectFileName) {
                 return;
             }
-            dispatch(projectActions.exportFile(selectFileName));
+            const selectGcodeFile = _.find(gcodeFiles, { uploadName: selectFileName });
+            dispatch(projectActions.exportFile(selectFileName, selectGcodeFile.renderGcodeFileName));
         },
         onChangeShouldPreview: () => {
             setLoadToWorkspaceOnLoad(!loadToWorkspaceOnLoad);
         },
 
-        loadGcodeToWorkspace: () => {
+        loadGcodeToWorkspace: async () => {
             const find = gcodeFiles.find(v => v.uploadName === selectFileName);
             if (!find) {
                 return;
             }
-            dispatch(workspaceActions.renderGcodeFile(find, false));
+            await dispatch(workspaceActions.renderGcodeFile(find, false));
+            controlActions.onCallBackRun();
         },
 
         // Wi-Fi transfer file to Snapmaker
@@ -291,6 +348,7 @@ function WifiTransport({ widgetActions }) {
         if (gcodeFiles.length > 0) {
             onSelectFile(gcodeFiles[0].uploadName);
         }
+        visualizerGroup.object.add(previewModelGroup);
         UniApi.Event.on('appbar-menu:workspace.import', actions.importFile);
         return () => {
             for (let i = 0; i < 5; i++) {
@@ -302,7 +360,8 @@ function WifiTransport({ widgetActions }) {
 
     useEffect(() => {
         if (gcodeFiles.length > 0) {
-            onSelectFile(gcodeFiles[0].uploadName);
+            const newUploadName = gcodeFiles[selectFileIndex > -1 ? selectFileIndex : 0] ? gcodeFiles[selectFileIndex > -1 ? selectFileIndex : 0].uploadName : gcodeFiles[0].uploadName;
+            onSelectFile(newUploadName);
         }
     }, [gcodeFiles]);
 
@@ -313,11 +372,32 @@ function WifiTransport({ widgetActions }) {
         };
     }, [selectFileName]);
 
+    useEffect(() => {
+        const newCurrent = connectionType === 'wifi' ? workflowStatus : workflowState;
+        setCurrentWorkflowStatus(newCurrent);
+    }, [workflowState, workflowStatus, connectionType]);
+
+    useEffect(() => {
+        if (prevProps) {
+            if (prevProps.previewStage !== previewStage && previewStage === WORKSPACE_STAGE.LOAD_GCODE_SUCCEED) {
+                if (previewBoundingBox !== null) {
+                    const { min, max } = previewBoundingBox;
+                    const target = new THREE.Vector3();
+
+                    target.copy(min).add(max).divideScalar(2);
+                    const width = new THREE.Vector3().add(min).distanceTo(new THREE.Vector3().add(max));
+                    const position = new THREE.Vector3(target.x, target.y, width * 2);
+                    canvas.current.setCamera(position, target);
+                }
+            }
+        }
+    }, [previewStage]);
+
     const isHeadType = selectFileType === headType;
     const hasFile = gcodeFiles.length > 0;
-
+    const selectedFile = _.find(gcodeFiles, { uploadName: selectFileName });
     return (
-        <div>
+        <div className="border-default-grey-1 border-radius-8">
             <input
                 ref={fileInput}
                 type="file"
@@ -326,7 +406,7 @@ function WifiTransport({ widgetActions }) {
                 multiple={false}
                 onChange={actions.onChangeFile}
             />
-            <Button
+            {/* <Button
                 width="160px"
                 type="primary"
                 className="margin-bottom-8 display-inline"
@@ -381,13 +461,163 @@ function WifiTransport({ widgetActions }) {
                 disabled={!(hasFile && isConnected && isHeadType && connectionType === CONNECTION_TYPE_WIFI)}
                 onClick={actions.sendFile}
             >
-                {i18n._('key-Workspace/WifiTransport-Send to Device via Wi-Fi')}
-            </Button>
+            </Button> */}
+            <div className={classNames('height-176-default', 'position-re', 'overflow-y-auto')}>
+                {!hasFile && (
+                    <div className={styles['import-btn-dashed']}>
+                        <Button type="dashed" width="210px" priority="level-two" onClick={actions.onClickToUpload}>
+                            <SvgIcon
+                                name="Increase"
+                                size={22}
+                                type={['static']}
+                            />
+                            <span>{i18n._('key-Workspace/WifiTransport-G-code Files')}</span>
+                        </Button>
+                    </div>
+                )}
+                {hasFile && (
+                    _.map(gcodeFiles, (gcodeFile, index) => {
+                        return (
+                            <React.Fragment key={index}>
+                                <GcodePreviewItem
+                                    gcodeFile={gcodeFile}
+                                    index={index}
+                                    selected={selectFileName === gcodeFile.uploadName}
+                                    onSelectFile={onSelectFile}
+                                    gRef={gcodeItemRef}
+                                    setSelectFileIndex={setSelectFileIndex}
+                                    // handlePreviewModalShow={controlActions.onPreviewModalShow}
+                                    handlePreviewModalShow={setPreviewModalShow}
+                                />
+                            </React.Fragment>
+                        );
+                    })
+                )}
+            </div>
+            <div className={classNames('height-88', 'box-shadow-default', 'padding-top-8', 'padding-horizontal-16', 'padding-bottom-16')}>
+                <div className={classNames('sm-flex', 'justify-space-between', 'align-center')}>
+                    <SvgIcon
+                        name="Edit"
+                        size={24}
+                        title={i18n._('key-Workspace/Transport-Edit')}
+                        disabled={!selectedFile}
+                        onClick={(e) => gcodeItemRef.current.remaneStart(selectedFile.uploadName, selectFileIndex, e)}
+                    />
+                    <SvgIcon
+                        name="Import"
+                        size={24}
+                        title={i18n._('key-Workspace/Transport-Import')}
+                        onClick={actions.onClickToUpload}
+                    />
+                    <SvgIcon
+                        name="Export"
+                        size={24}
+                        title={i18n._('key-Workspace/Transport-Export')}
+                        onClick={actions.onExport}
+                        disabled={!selectedFile}
+                    />
+                    <SvgIcon
+                        name="Delete"
+                        size={24}
+                        title={i18n._('key-Workspace/Transport-Delete')}
+                        disabled={!selectedFile}
+                        onClick={() => gcodeItemRef.current.removeFile(selectedFile)}
+                    />
+                </div>
+                <div className={classNames('sm-flex', 'justify-space-between', 'align-center', 'margin-top-8')}>
+                    <Button
+                        type="primary"
+                        priority="level-three"
+                        width="144px"
+                        disabled={!(hasFile && isConnected && isHeadType && connectionType === CONNECTION_TYPE_WIFI)}
+                        onClick={actions.sendFile}
+                    >
+                        {i18n._('key-Workspace/WifiTransport-Sending File')}
+                    </Button>
+                    <Button
+                        type="primary"
+                        priority="level-two"
+                        width="144px"
+                        disabled={!hasFile || !isConnected || currentWorkflowStatus !== 'idle'}
+                        onClick={actions.loadGcodeToWorkspace}
+                    >
+                        {i18n._('key-Workspace/Transport-Start Print')}
+                    </Button>
+                </div>
+            </div>
+            {previewModalShow && (
+                <Modal
+                    centered
+                    visible={previewModalShow}
+                    onClose={() => {
+                        setPreviewModalShow(false);
+                    }}
+                >
+                    <Modal.Header>
+                        {i18n._('key-Workspace/Transport-Preview')}
+                    </Modal.Header>
+                    <Modal.Body>
+                        <div style={{ width: 944, height: 522 }} className="position-re">
+                            {previewRenderState === 'rendered' && (
+                                <Canvas
+                                    ref={canvas}
+                                    size={size}
+                                    modelGroup={visualizerGroup}
+                                    printableArea={printableArea}
+                                    cameraInitialPosition={new THREE.Vector3(0, 0, Math.min(size.z * 2, 300))}
+                                    cameraInitialTarget={new THREE.Vector3(0, 0, 0)}
+                                />
+                                // <Spin />
+                            )}
+                            {previewRenderState !== 'rendered' && (
+                                <div className="position-ab position-ab-center">
+                                    <Spin />
+                                </div>
+                            )}
+                        </div>
+                    </Modal.Body>
+                    <Modal.Footer>
+                        <Button priority="level-three" width="88px" onClick={() => setPreviewModalShow(false)} className="margin-right-16">{i18n._('key-unused-Cancel')}</Button>
+                        {isConnected && (currentWorkflowStatus !== 'idle' || connectionType === 'serial') && <Button priority="level-two" type="primary" width="200px">{i18n._('key-Workspace/WifiTransport-Sending File')}</Button>}
+                        {isConnected && (currentWorkflowStatus === 'idle' && connectionType === 'wifi') && (
+                            <Dropdown
+                                className="display-inline"
+                                overlay={() => (
+                                    <Menu>
+                                        <Menu.Item onClick={() => {
+                                            actions.sendFile();
+                                            setPreviewModalShow(false);
+                                        }}
+                                        >
+                                            <div className="align-c">{i18n._('key-Workspace/WifiTransport-Sending File')}</div>
+                                        </Menu.Item>
+                                    </Menu>
+                                )}
+                                trigger="hover"
+                            >
+                                <Button
+                                    suffixIcon={<SvgIcon name="DropdownOpen" type={['static']} color="#d5d6d9" />}
+                                    priority="level-two"
+                                    type="primary"
+                                    width="200px"
+                                    onClick={() => {
+                                        actions.loadGcodeToWorkspace();
+                                        setPreviewModalShow(false);
+                                    }}
+                                >
+                                    {i18n._('key-Workspace/Transport-Start Print')}
+                                </Button>
+                            </Dropdown>
+                        )}
+                    </Modal.Footer>
+                </Modal>
+            )}
         </div>
     );
 }
 WifiTransport.propTypes = {
-    widgetActions: PropTypes.object.isRequired
+    widgetActions: PropTypes.object.isRequired,
+    controlActions: PropTypes.object
 };
 
 export default WifiTransport;
