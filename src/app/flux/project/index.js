@@ -146,13 +146,22 @@ export const actions = {
 
     onRecovery: (envHeadType, envObj, backendRecover = true) => async (dispatch, getState) => {
         UniApi.Window.setOpenedFile();
-        const { content } = getState().project[envHeadType];
-        // backup project if needed
-        if (backendRecover) {
-            await api.recoverEnv({ content });
-        }
+        let { content } = getState().project[envHeadType];
         if (!envObj) {
             envObj = JSON.parse(content);
+        }
+        // backup project if needed
+        if (backendRecover) {
+            if (envObj?.machineInfo?.headType === '3dp') envObj.machineInfo.headType = HEAD_PRINTING;
+            const allModels = envObj?.models;
+            allModels.forEach((model) => {
+                if (model.headType === '3dp') {
+                    model.headType = HEAD_PRINTING;
+                }
+            });
+            console.log('backendRecover', envObj);
+            content = JSON.stringify(envObj);
+            await api.recoverEnv({ content });
         }
         let modActions = null;
         const modState = getState()[envHeadType];
