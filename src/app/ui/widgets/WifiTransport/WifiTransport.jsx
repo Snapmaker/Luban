@@ -74,7 +74,7 @@ const GcodePreviewItem = React.memo(({ gcodeFile, index, selected, onSelectFile,
 
     const onRenameEnd = (_uploadName, _index) => {
         let newName = changeNameInput[_index].current.value;
-        const m = _uploadName.match(/(.gcode|.cnc|.nc)$/);
+        const m = _uploadName.match(/(\.gcode|\.cnc|\.nc)$/);
         if (m) {
             newName += m[0];
         }
@@ -85,7 +85,7 @@ const GcodePreviewItem = React.memo(({ gcodeFile, index, selected, onSelectFile,
         dispatch(workspaceActions.renameGcodeFile(_uploadName, null, true));
         event.stopPropagation();
         setTimeout(() => {
-            changeNameInput[_index].current.value = _.replace(_renderGcodeFileName, /(.gcode|.cnc|.nc)$/, '') || _uploadName;
+            changeNameInput[_index].current.value = _.replace(_renderGcodeFileName, /(\.gcode|\.cnc|\.nc)$/, '') || _uploadName;
             changeNameInput[_index].current.focus();
         }, 0);
     };
@@ -166,7 +166,7 @@ const GcodePreviewItem = React.memo(({ gcodeFile, index, selected, onSelectFile,
                 )}
                 >
                     <input
-                        defaultValue={gcodeFile.name.replace(/(.gcode|.cnc|.nc)$/, '')}
+                        defaultValue={gcodeFile.name.replace(/(\.gcode|\.cnc|\.nc)$/, '')}
                         className={classNames('input-select')}
                         onBlur={() => onRenameEnd(uploadName, index)}
                         onKeyDown={(event) => onKeyDown(event)}
