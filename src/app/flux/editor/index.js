@@ -835,15 +835,17 @@ export const actions = {
         options.materials = materials;
         options.toolParams = toolParams;
 
-        if (!progressStatesManager.inProgress()) {
-            progressStatesManager.startProgress(PROCESS_STAGE.CNC_LASER_PROCESS_IMAGE, [1]);
-        } else {
-            progressStatesManager.startNextStep();
+        if (selectedModel.elem.getAttribute('from') !== 'inner-svg') {
+            if (!progressStatesManager.inProgress()) {
+                progressStatesManager.startProgress(PROCESS_STAGE.CNC_LASER_PROCESS_IMAGE, [1]);
+            } else {
+                progressStatesManager.startNextStep();
+            }
+            dispatch(baseActions.updateState(headType, {
+                stage: STEP_STAGE.CNC_LASER_PROCESSING_IMAGE,
+                progress: progressStatesManager.updateProgress(STEP_STAGE.CNC_LASER_PROCESSING_IMAGE, 0)
+            }));
         }
-        dispatch(baseActions.updateState(headType, {
-            stage: STEP_STAGE.CNC_LASER_PROCESSING_IMAGE,
-            progress: progressStatesManager.updateProgress(STEP_STAGE.CNC_LASER_PROCESSING_IMAGE, 0)
-        }));
 
         dispatch(actions.resetProcessState(headType));
 
@@ -1176,11 +1178,14 @@ export const actions = {
 
         dispatch(baseActions.resetCalculatedState(headType));
         dispatch(baseActions.render(headType));
-        dispatch(baseActions.updateState(headType, {
-            stage: STEP_STAGE.CNC_LASER_PROCESSING_IMAGE,
-            progress: progressStatesManager.updateProgress(STEP_STAGE.CNC_LASER_PROCESSING_IMAGE, 1)
-        }));
-        progressStatesManager.finishProgress(true);
+
+        if (model.elem.getAttribute('from') !== 'inner-svg') {
+            dispatch(baseActions.updateState(headType, {
+                stage: STEP_STAGE.CNC_LASER_PROCESSING_IMAGE,
+                progress: progressStatesManager.updateProgress(STEP_STAGE.CNC_LASER_PROCESSING_IMAGE, 1)
+            }));
+            progressStatesManager.finishProgress(true);
+        }
     },
 
     getEstimatedTime: (headType, type) => (dispatch, getState) => {

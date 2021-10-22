@@ -110,7 +110,8 @@ class SVGCanvas extends PureComponent {
         updateScale: PropTypes.func.isRequired,
         updateTarget: PropTypes.func.isRequired,
         materials: PropTypes.object,
-        editable: PropTypes.bool.isRequired
+        editable: PropTypes.bool.isRequired,
+        hideLeftBarOverlay: PropTypes.func.isRequired
     };
 
     updateTime = 0;
@@ -420,6 +421,8 @@ class SVGCanvas extends PureComponent {
         if (this.mode === 'select' && this.svgContentGroup.selectedElements.includes(mouseTarget)) {
             this.mode = 'move';
         }
+        // hide left bar overlay
+        this.props.hideLeftBarOverlay();
 
         switch (this.mode) {
             case 'select': {
@@ -635,10 +638,13 @@ class SVGCanvas extends PureComponent {
                     element: 'path',
                     curStyles: true,
                     attr: {
+                        from: 'inner-svg',
+                        x,
+                        y,
                         d: d,
                         opacity: opacity / 2,
                         stroke,
-                        'stroke-width': strokeWidth
+                        'stroke-width': 1
                     }
                 });
                 draw.bbox = getBBox(elem);
@@ -913,9 +919,16 @@ class SVGCanvas extends PureComponent {
                 }
 
                 const bbox = draw.bbox;
-
-                draw.scaleX = (x - draw.startX) / bbox.width;
-                draw.scaleY = (y - draw.startY) / bbox.height;
+                const scaleX = (x - draw.startX) / bbox.width;
+                const scaleY = (y - draw.startY) / bbox.height;
+                if (event.shiftKey) {
+                    const maxScale = Math.max(scaleX, scaleY);
+                    draw.scaleX = maxScale;
+                    draw.scaleY = maxScale;
+                } else {
+                    draw.scaleX = scaleX;
+                    draw.scaleY = scaleY;
+                }
 
                 const scale = this.svgContainer.createSVGTransform();
                 scale.setScale(draw.scaleX, draw.scaleY);

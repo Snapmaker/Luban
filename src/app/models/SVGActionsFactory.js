@@ -41,24 +41,34 @@ function getTransformList(elem) {
 
 function genModelConfig(elem, size) {
     const coord = coordGmSvgToModel(size, elem);
+    let deltaLeftX = 0, deltaRightX = 0, deltaTopY = 0, deltaBottomY = 0;
     if (elem.nodeName === 'text') {
         coord.positionX = 0;
         coord.positionY = 0;
     }
+    if (elem.nodeName === 'path') {
+        coord.positionX = +elem.getAttribute('x') + coord.width / 2 * coord.scaleX - size.x;
+        coord.positionY = size.y - (+elem.getAttribute('y')) - coord.height / 2 * coord.scaleY;
+        deltaLeftX = 0.5;
+        deltaRightX = 1;
+        deltaTopY = 0.5;
+        deltaBottomY = 1;
+    }
 
     // eslint-disable-next-line prefer-const
     let { x, y, width, height, positionX, positionY, scaleX, scaleY } = coord;
+    // leave a little space for line width
+    let vx = (x - deltaLeftX) * scaleX;
+    let vy = (y - deltaTopY) * scaleY;
+    let vwidth = (width + deltaRightX) * scaleX;
+    let vheight = (height + deltaBottomY) * scaleY;
+
     width *= scaleX;
     height *= scaleY;
 
     const clone = elem.cloneNode(true);
     clone.setAttribute('transform', `scale(${scaleX} ${scaleY})`);
     clone.setAttribute('font-size', clone.getAttribute('font-size'));
-
-    let vx = x * scaleX;
-    let vy = y * scaleY;
-    let vwidth = width;
-    let vheight = height;
 
     if (scaleX < 0) {
         vx += vwidth;
