@@ -41,6 +41,7 @@ function getTransformList(elem) {
 
 function genModelConfig(elem, size) {
     const coord = coordGmSvgToModel(size, elem);
+    let deltaLeftX = 0, deltaRightX = 0, deltaTopY = 0, deltaBottomY = 0;
     if (elem.nodeName === 'text') {
         coord.positionX = 0;
         coord.positionY = 0;
@@ -48,15 +49,19 @@ function genModelConfig(elem, size) {
     if (elem.nodeName === 'path') {
         coord.positionX = +elem.getAttribute('x') + coord.width / 2 * coord.scaleX - size.x;
         coord.positionY = size.y - (+elem.getAttribute('y')) - coord.height / 2 * coord.scaleY;
+        deltaLeftX = 0.5;
+        deltaRightX = 1;
+        deltaTopY = 0.5;
+        deltaBottomY = 1;
     }
 
     // eslint-disable-next-line prefer-const
     let { x, y, width, height, positionX, positionY, scaleX, scaleY } = coord;
     // leave a little space for line width
-    let vx = (x - 0.5) * scaleX;
-    let vy = (y - 0.5) * scaleY;
-    let vwidth = (width + 1) * scaleX;
-    let vheight = (height + 1) * scaleY;
+    let vx = (x - deltaLeftX) * scaleX;
+    let vy = (y - deltaTopY) * scaleY;
+    let vwidth = (width + deltaRightX) * scaleX;
+    let vheight = (height + deltaBottomY) * scaleY;
 
     width *= scaleX;
     height *= scaleY;
