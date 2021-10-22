@@ -19,7 +19,7 @@ import { actions as editorActions } from '../editor';
 import { actions as workspaceActions } from '../workspace';
 import { bubbleSortByAttribute } from '../../lib/numeric-utils';
 import { UniformToolpathConfig } from '../../lib/uniform-toolpath-config';
-import { checkIsSnapmakerProjectFile, checkIsGCodeFile } from '../../lib/check-name';
+import { checkIsSnapmakerProjectFile, checkIsGCodeFile, checkObjectIsEqual } from '../../lib/check-name';
 
 import { actions as operationHistoryActions } from '../operation-history';
 import { machineStore } from '../../store/local-storage';
@@ -87,22 +87,25 @@ export const actions = {
         const { initState, content: lastString } = getState().project[headType];
         const models = editorState.modelGroup.getModels();
         if (!models.length && initState) return;
-
         const machineState = getState().machine;
-        const { size, series } = machineState;
-        const { defaultMaterialId, defaultQualityId, isRecommended } = editorState;
+        const { size, series, toolHead } = machineState;
         const machineInfo = {};
         machineInfo.headType = headType;
         machineInfo.size = size;
         machineInfo.series = series;
+        machineInfo.toolHead = toolHead;
 
-        const envObj = { machineInfo, defaultMaterialId, defaultQualityId, isRecommended, models: [], toolpaths: [] };
+        const envObj = { machineInfo, models: [], toolpaths: [] };
         envObj.version = pkg?.version;
         if (headType === HEAD_CNC || headType === HEAD_LASER) {
-            const { materials, coordinateMode, coordinateSize } = getState()[headType];
+            const { materials, coordinateMode, coordinateSize } = editorState;
             envObj.materials = materials;
             envObj.coordinateMode = coordinateMode;
             envObj.coordinateSize = coordinateSize;
+        } else if (headType === HEAD_PRINTING) {
+            const { defaultMaterialId, defaultQualityId } = editorState;
+            envObj.defaultMaterialId = defaultMaterialId;
+            envObj.defaultQualityId = defaultQualityId;
         }
         for (let key = 0; key < models.length; key++) {
             const model = models[key];
@@ -113,8 +116,7 @@ export const actions = {
             envObj.toolpaths = toolPaths;
         }
         const content = JSON.stringify(envObj);
-
-        if (force || (content !== lastString)) {
+        if (force || !(checkObjectIsEqual(JSON.parse(lastString), envObj))) {
             dispatch(actions.updateState(headType, { content, unSaved: true, initState: false }));
             await api.saveEnv({ content });
         }
@@ -144,13 +146,21 @@ export const actions = {
 
     onRecovery: (envHeadType, envObj, backendRecover = true) => async (dispatch, getState) => {
         UniApi.Window.setOpenedFile();
-        const { content } = getState().project[envHeadType];
-        // backup project if needed
-        if (backendRecover) {
-            await api.recoverEnv({ content });
-        }
+        let { content } = getState().project[envHeadType];
         if (!envObj) {
             envObj = JSON.parse(content);
+        }
+        // backup project if needed
+        if (backendRecover) {
+            if (envObj?.machineInfo?.headType === '3dp') envObj.machineInfo.headType = HEAD_PRINTING;
+            const allModels = envObj?.models;
+            allModels.forEach((model) => {
+                if (model.headType === '3dp') {
+                    model.headType = HEAD_PRINTING;
+                }
+            });
+            content = JSON.stringify(envObj);
+            await api.recoverEnv({ content });
         }
         let modActions = null;
         const modState = getState()[envHeadType];
@@ -229,6 +239,7 @@ export const actions = {
         for (const type of [HEAD_PRINTING, HEAD_CNC, HEAD_LASER]) {
             await dispatch(actions.clearSavedEnvironment(type));
         }
+        await dispatch(actions.updateState(envHeadType, { unSaved: true }));
     },
 
     exportFile: (targetFile, renderGcodeFileName = '') => async () => {
@@ -378,8 +389,7 @@ export const actions = {
                 }
                 await dispatch(actions.updateState(headType, { unSaved: false, content }));
             } else {
-                await dispatch(actions.updateState(headType, { unSaved: false, openedFile: null }));
-                // await dispatch(actions.setOpenedFileWithUnSaved(headType, true));
+                await dispatch(actions.updateState(headType, { unSaved: true, openedFile: null }));
             }
         } else if (checkIsGCodeFile(file.name)) {
             dispatch(workspaceActions.uploadGcodeFile(file));
@@ -432,7 +442,8 @@ export const actions = {
                 shouldShowGuideTours = currentGuideTours ? !!currentGuideTours.guideTours3dp : undefined;
             }
         }
-        dispatch(actions.updateState(newHeadType, { unSaved: false, openedFile: null }));
+        await dispatch(actions.setOpenedFileWithType(newHeadType, null));
+        // dispatch(actions.updateState(newHeadType, { unSaved: false, openedFile: null }));
         if (restartGuide && to === '/printing') {
             machineStore.set('guideTours.guideTours3dp', false);
         }

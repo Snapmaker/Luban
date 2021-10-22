@@ -168,11 +168,11 @@ class FontManager {
             return Promise.resolve(localFont);
         }
 
-        let fontConfig = this.systemFonts.find(f => f.family === family);
+        const fontConfig = this.systemFonts.find(f => f.family === family);
 
         if (!fontConfig || !fontConfig.path) {
-            fontConfig = this.systemFonts.find(f => f.family === 'Arial');
-            // throw new Error('No Font Found!');
+            // fontConfig = this.systemFonts.find(f => f.family === 'Arial');
+            throw new Error('No Font Found!');
         }
         return this.loadLocalFont(fontConfig.path, family) // subfamily is not supported (for now)
             .then((font) => {

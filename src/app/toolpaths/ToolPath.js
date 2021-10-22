@@ -90,7 +90,7 @@ class ToolPath {
             visible: this.visible,
             deleteModel: this.deleteModel,
             modelMap: this.modelMap,
-            object: this.object,
+            // object: this.object,
             modelIDs,
             toolPathFiles,
             gcodeConfig: {
