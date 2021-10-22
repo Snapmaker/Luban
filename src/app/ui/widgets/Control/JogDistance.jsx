@@ -107,7 +107,7 @@ const JogDistance = (props) => {
         )
     };
     return (
-        <div className="margin-bottom-16">
+        <div>
             <div className={styles['jog-distance-control']}>
                 <p className="margin-vertical-8">{i18n._('key-Workspace/Control/JogDistance-XYZ Axis Travel Distance')}</p>
                 <div className="row no-gutters">
