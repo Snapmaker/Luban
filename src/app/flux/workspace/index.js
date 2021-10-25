@@ -265,14 +265,6 @@ export const actions = {
             return;
         }
         await dispatch(actions.clearGcode());
-        await dispatch(actions.updateState({
-            gcodeFile,
-            stage: WORKSPACE_STAGE.LOADING_GCODE,
-            renderState: 'rendering',
-            progress: 0
-        }));
-        await dispatch(actions.loadGcode(gcodeFile));
-        gcodeRenderingWorker.postMessage({ func: 'WORKSPACE', gcodeFilename: gcodeFile.uploadName });
     },
 
     renderPreviewGcodeFile: (gcodeFile, index) => async (dispatch) => {

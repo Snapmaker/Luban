@@ -3,7 +3,6 @@ import React, { PureComponent } from 'react';
 import { Button } from '../../components/Buttons';
 import Modal from '../../components/Modal';
 import { Form, Input, Textarea } from '../../components/Validation';
-import { NumberInput } from '../../components/Input';
 import i18n from '../../../lib/i18n';
 import * as validations from '../../../lib/validations';
 
@@ -86,13 +85,15 @@ class AddMacro extends PureComponent {
                         </div>
                         <div className="form-group">
                             <span className="">{i18n._('key-Workspace/Macro-Repeat')}</span>
-                            <NumberInput
+                            <Input
                                 ref={c => {
                                     this.fields.repeat = c;
                                 }}
-                                className="display-block"
-                                value={repeat}
+                                style={{ borderRadius: '8px', width: 120 }}
+                                type="number"
+                                className="form-control"
                                 name="repeat"
+                                value={repeat}
                                 min={1}
                                 validations={[validations.required]}
                             />
