@@ -26,7 +26,7 @@ jobs:
             node-version: '10.x'
 
       - run: npm install -g npm@latest
-      - run: npm install --legacy-peer-deps
+      - run: npm install 
 
       - run: npm run build
 
@@ -142,7 +142,7 @@ jobs:
           node-version: '10.x'
 
       - run: npm install -g npm@latest
-      - run: npm install --legacy-peer-deps
+      - run: npm install 
 
       - run: npm run build
 
@@ -228,7 +228,7 @@ jobs:
           node-version: '10.x'
 
       - run: npm install -g npm@latest
-      - run: npm install --legacy-peer-deps
+      - run: npm install 
 
       - run: npm run build
 
