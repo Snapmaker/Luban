@@ -425,6 +425,7 @@ class ModelGroup extends EventEmitter {
                 model.setConvexGeometry(convexGeometry);
             }
         }
+        this.emit('set-convex');
     }
 
     updateBoundingBox(bbox) {
@@ -1499,6 +1500,23 @@ class ModelGroup extends EventEmitter {
         model.stickToPlate();
         const overstepped = this._checkOverstepped(model);
         model.setOversteppedAndSelected(overstepped, model.isSelected);
+    }
+
+    analyzeSelectedModelRotationAsync() {
+        return new Promise((resolve) => {
+            if (this.selectedModelArray.length === 1) {
+                const model = this.selectedModelArray[0];
+                if (!model.convexGeometry) {
+                    this.once('set-convex', () => {
+                        const result = this.analyzeSelectedModelRotation();
+                        resolve(result);
+                    });
+                } else {
+                    const result = this.analyzeSelectedModelRotation();
+                    resolve(result);
+                }
+            }
+        });
     }
 
     analyzeSelectedModelRotation() {

@@ -1665,9 +1665,8 @@ export const actions = {
         const { modelGroup, progressStatesManager } = getState().printing;
         // clear supports in selected model
         dispatch(actions.clearAllManualSupport());
-        // calculate model rotation info, use settimeout to let progress bar shown
-        setTimeout(() => {
-            const tableResult = modelGroup.analyzeSelectedModelRotation();
+        // calculate model rotation info, convex calculation may take more time, use async way
+        modelGroup.analyzeSelectedModelRotationAsync().then(tableResult => {
             if (tableResult) {
                 dispatch(actions.updateState({
                     rotationAnalysisTable: tableResult
@@ -1680,7 +1679,7 @@ export const actions = {
             }));
             dispatch(actions.destroyGcodeLine());
             dispatch(actions.displayModel());
-        }, 0);
+        });
     },
 
     clearRotationAnalysisTableData: () => (dispatch, getState) => {
