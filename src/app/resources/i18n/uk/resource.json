@@ -841,7 +841,6 @@
     "key-Workspace/Connection-enclosure": "Enclosure",
     "key-Workspace/Connection-laser": "1.6W Laser",
     "key-Workspace/Connection-rotaryModule": "Rotary Module",
-    "key-Workspace/Connection-unplugged": "",
     "key-Workspace/Console-Connected to {{-port}}": "Підключено до {{-port}}",
     "key-Workspace/Console-Connected via Wi-Fi": "Підключено через Wi-Fi",
     "key-Workspace/Console-Console": "Консоль",

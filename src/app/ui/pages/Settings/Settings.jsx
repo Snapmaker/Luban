@@ -229,4 +229,4 @@ class Settings extends PureComponent {
     }
 }
 
-export default withRouter(Settings);
+export default Settings;
