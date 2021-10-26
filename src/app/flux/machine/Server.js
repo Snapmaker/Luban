@@ -7,7 +7,9 @@ import {
     MACHINE_HEAD_TYPE,
     MACHINE_SERIES,
     WORKFLOW_STATUS_IDLE,
-    WORKFLOW_STATUS_UNKNOWN
+    WORKFLOW_STATUS_UNKNOWN,
+    LEVEL_TWO_POWER_LASER_FOR_SM2,
+    LEVEL_ONE_POWER_LASER_FOR_SM2
 } from '../../constants';
 import { valueOf } from '../../lib/contants-utils';
 
@@ -83,6 +85,7 @@ export class Server extends events.EventEmitter {
                 remainingTime: 0
             },
             isEmergencyStopped: false,
+            laser10WErrorState: 0,
             airPurifier: false,
             airPurifierSwitch: false,
             airPurifierFanSpeed: 1,
@@ -136,6 +139,12 @@ export class Server extends events.EventEmitter {
                     data.headType = headTypeValue ? headTypeValue.value : null;
                     if (data.headType === '3dp') {
                         data.headType = HEAD_PRINTING;
+                    }
+                    if (data.headType === HEAD_LASER) {
+                        data.toolHead = LEVEL_ONE_POWER_LASER_FOR_SM2;
+                    } else if (data.headType === '10w-laser') {
+                        data.headType = HEAD_LASER;
+                        data.toolHead = LEVEL_TWO_POWER_LASER_FOR_SM2;
                     }
                     this.state.series = data.series;
                     this.state.headType = data.headType;
@@ -243,6 +252,7 @@ export class Server extends events.EventEmitter {
                 isNotNull(data.isEnclosureDoorOpen) && (this.state.isEnclosureDoorOpen = data.isEnclosureDoorOpen);
                 isNotNull(data.doorSwitchCount) && (this.state.doorSwitchCount = data.doorSwitchCount);
                 isNotNull(data.isEmergencyStopped) && (this.state.isEmergencyStopped = data.isEmergencyStopped);
+                isNotNull(data.laser10WErrorState) && (this.state.laser10WErrorState = data.laser10WErrorState);
                 // this state controls filter widget disable
                 this.state.airPurifier = isNotNull(data.airPurifierSwitch);
                 isNotNull(data.airPurifierSwitch) && (this.state.airPurifierSwitch = data.airPurifierSwitch);
@@ -290,6 +300,28 @@ export class Server extends events.EventEmitter {
             });
     };
 
+    getLaserMaterialThickness = (options, callback) => {
+        if (!this.token) {
+            callback && callback({
+                msg: 'this token is null'
+            });
+            return;
+        }
+        const { x, y, feedRate } = options;
+        const api = `${this.host}/api/request_Laser_Material_Thickness?token=${this.token}&x=${x}&y=${y}&feedRate=${feedRate}`;
+        request
+            .get(api)
+            .end((err, res) => {
+                const { data } = this._getResult(err, res);
+                const { status, thickness } = data;
+                if (callback) {
+                    callback({
+                        status,
+                        thickness
+                    });
+                }
+            });
+    }
 
     getGcodeFile = (callback) => {
         if (!this.token) {
@@ -500,6 +532,7 @@ export class Server extends events.EventEmitter {
             heatedBedTargetTemperature: this.state.heatedBedTargetTemperature,
             gcodePrintingInfo: this.state.gcodePrintingInfo,
             isEmergencyStopped: this.state.isEmergencyStopped,
+            laser10WErrorState: this.state.laser10WErrorState,
             airPurifier: this.state.airPurifier,
             airPurifierSwitch: this.state.airPurifierSwitch,
             airPurifierFanSpeed: this.state.airPurifierFanSpeed,

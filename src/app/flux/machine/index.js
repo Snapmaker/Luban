@@ -128,6 +128,11 @@ const INITIAL_STATE = {
     laserCamera: false,
     isFilamentOut: false,
 
+    // 0 byte: state
+    // 1 byte: temperature error
+    // 2 byte: angel error
+    laser10WErrorState: 0,
+
     workPosition: { // work position
         x: '0.000',
         y: '0.000',
@@ -269,7 +274,7 @@ export const actions = {
             'Marlin:state': (options) => {
                 // TODO: serialPort
                 const { state } = options;
-                const { pos, headType, originOffset, headStatus, headPower, temperature, zFocus, isHomed, zAxisModule } = state;
+                const { pos, headType, originOffset, headStatus, headPower, temperature, zFocus, isHomed, zAxisModule, laser10WErrorState } = state;
 
                 const machineState = getState().machine;
 
@@ -321,6 +326,7 @@ export const actions = {
                 }
 
                 dispatch(baseActions.updateState({
+                    laser10WErrorState,
                     headStatus: headStatus,
                     laserPower: headPower,
                     laserFocalLength: zFocus + LASER_MOCK_PLATE_HEIGHT,
@@ -650,6 +656,7 @@ export const actions = {
                     airPurifierFanSpeed,
                     airPurifierFilterHealth,
                     isEmergencyStopped,
+                    laser10WErrorState,
                     currentHeadType,
                     moduleStatusList,
                     laserCamera
@@ -675,6 +682,7 @@ export const actions = {
                     doorSwitchCount: doorSwitchCount,
                     heatedBedTargetTemperature: heatedBedTargetTemperature,
                     isEmergencyStopped: isEmergencyStopped,
+                    laser10WErrorState: laser10WErrorState,
                     airPurifier: airPurifier,
                     airPurifierSwitch: airPurifierSwitch,
                     airPurifierFanSpeed: airPurifierFanSpeed,

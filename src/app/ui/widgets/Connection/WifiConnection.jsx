@@ -25,7 +25,8 @@ import {
     WORKFLOW_STATUS_IDLE,
     WORKFLOW_STATUS_PAUSED,
     WORKFLOW_STATUS_RUNNING,
-    WORKFLOW_STATUS_UNKNOWN
+    WORKFLOW_STATUS_UNKNOWN,
+    LEVEL_TWO_POWER_LASER_FOR_SM2
 } from '../../../constants';
 // import widgetStyles from '../styles.styl';
 import styles from './index.styl';
@@ -112,6 +113,10 @@ function WifiConnection() {
             dispatch(machineActions.openServer((err, data, text) => {
                 if (err) {
                     actions.showWifiError(err, text);
+                }
+                if (data.toolHead && data.toolHead === LEVEL_TWO_POWER_LASER_FOR_SM2) {
+                    // TODO: can set toolhead hear
+                    console.log('tool head data', data);
                 }
             }));
         },

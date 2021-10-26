@@ -57,6 +57,8 @@ class Visualizer extends Component {
         doorSwitchCount: PropTypes.number,
         isEmergencyStopped: PropTypes.bool,
 
+        laser10WErrorState: PropTypes.number,
+
         uploadState: PropTypes.string.isRequired,
         headType: PropTypes.string,
         gcodeFile: PropTypes.object,
@@ -141,7 +143,10 @@ class Visualizer extends Component {
             received: 0
         },
         showEnclosureDoorWarn: false,
-        isEmergencyStopped: false
+        isEmergencyStopped: false,
+
+        isLaser10WCheck1: false,
+        isLaser10WCheck2: false
     };
 
     controllerEvents = {
@@ -470,7 +475,10 @@ class Visualizer extends Component {
                 // enclosure door warning
                 showEnclosureDoorWarn: false,
                 // emergency stop
-                isEmergencyStopped: false
+                isEmergencyStopped: false,
+                // laser 10w warning
+                isLaser10WCheck1: false,
+                isLaser10WCheck2: false
             });
         }
     };
@@ -576,6 +584,24 @@ class Visualizer extends Component {
             this.setState({
                 isEmergencyStopped: true
             });
+        }
+        if (nextProps.laser10WErrorState !== this.props.laser10WErrorState) {
+            if (nextProps.laser10WErrorState & (1 << 2)) {
+                this.setState({
+                    isLaser10WCheck2: true,
+                    isLaser10WCheck1: false
+                });
+            } else if (nextProps.laser10WErrorState & (1 << 1)) {
+                this.setState({
+                    isLaser10WCheck2: false,
+                    isLaser10WCheck1: true
+                });
+            } else {
+                this.setState({
+                    isLaser10WCheck2: false,
+                    isLaser10WCheck1: false
+                });
+            }
         }
     }
 
@@ -765,6 +791,24 @@ class Visualizer extends Component {
                         iconColor="#FF4D4F"
                     />
                 )}
+                {(state.isLaser10WCheck1) && (
+                    <ModalSmall
+                        title={i18n._('10W Laser Stop')}
+                        text={i18n._('Temperature too high')}
+                        img="WarningTipsEmergencyStop"
+                        iconColor="#FF4D4F"
+                        onClose={this.actions.closeModal}
+                    />
+                )}
+                {(state.isLaser10WCheck2) && (
+                    <ModalSmall
+                        title={i18n._('10W Laser Stop')}
+                        text={i18n._('Angel error')}
+                        img="WarningTipsEmergencyStop"
+                        iconColor="#FF4D4F"
+                        onClose={this.actions.closeModal}
+                    />
+                )}
             </div>
         );
     }
@@ -778,6 +822,7 @@ const mapStateToProps = (state) => {
         doorSwitchCount: machine.doorSwitchCount,
         isEmergencyStopped: machine.isEmergencyStopped,
         isEnclosureDoorOpen: machine.isEnclosureDoorOpen,
+        laser10WErrorState: machine.laser10WErrorState,
         headType: machine.headType,
         workflowStatus: machine.workflowStatus,
         isConnected: machine.isConnected,

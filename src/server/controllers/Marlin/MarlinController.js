@@ -454,6 +454,15 @@ class MarlinController {
                 this.writeln('M1010 S2');
             }, 1000);
         });
+        this.controller.on('laser10w:state', (res) => {
+            if (res.laser10WErrorState !== undefined) {
+                this.emitAll('marlin:state', {
+                    state: {
+                        laser10WErrorState: res.laser10WErrorState
+                    }
+                });
+            }
+        });
         this.controller.on('emergencyStop', () => {
             this.emergencyStop();
         });
