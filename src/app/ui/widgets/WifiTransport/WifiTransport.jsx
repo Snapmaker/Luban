@@ -487,7 +487,7 @@ function WifiTransport({ widgetActions, controlActions }) {
                     })
                 )}
             </div>
-            <div className={classNames('height-88', 'box-shadow-default', 'padding-top-8', 'padding-horizontal-16', 'padding-bottom-16')}>
+            <div className={classNames('height-only-96', 'box-shadow-default', 'padding-top-8', 'padding-horizontal-16', 'padding-bottom-16')}>
                 <div className={classNames('sm-flex', 'justify-space-between', 'align-center')}>
                     <SvgIcon
                         name="Edit"
@@ -665,7 +665,7 @@ function WifiTransport({ widgetActions, controlActions }) {
                         </div>
                     </Modal.Body>
                     <Modal.Footer>
-                        <Button priority="level-three" width="88px" onClick={() => setShowPreviewModal(false)} className="margin-right-16">{i18n._('key-unused-Cancel')}</Button>
+                        <Button priority="level-two" type="default" width="88px" onClick={() => setPreviewModalShow(false)} className="margin-right-8">{i18n._('key-unused-Cancel')}</Button>
                         {isConnected && (currentWorkflowStatus !== 'idle' || connectionType === 'serial') && <Button priority="level-two" type="primary" width="200px">{i18n._('key-Workspace/WifiTransport-Sending File')}</Button>}
                         {isConnected && (currentWorkflowStatus === 'idle' && connectionType === 'wifi') && (
                             <Dropdown
@@ -679,19 +679,22 @@ function WifiTransport({ widgetActions, controlActions }) {
                                         >
                                             <div className="align-c">{i18n._('key-Workspace/WifiTransport-Sending File')}</div>
                                         </Menu.Item>
+                                        <Menu.Item onClick={() => {
+                                            actions.loadGcodeToWorkspace();
+                                            setPreviewModalShow(false);
+                                        }}
+                                        >
+                                            {i18n._('key-Workspace/Transport-Luban control print')}
+                                        </Menu.Item>
                                     </Menu>
                                 )}
-                                trigger="hover"
+                                trigger="click"
                             >
                                 <Button
                                     suffixIcon={<SvgIcon name="DropdownOpen" type={['static']} color="#d5d6d9" />}
                                     priority="level-two"
                                     type="primary"
                                     width="200px"
-                                    onClick={() => {
-                                        actions.startPrint();
-                                        setShowPreviewModal(false);
-                                    }}
                                 >
                                     {i18n._('key-Workspace/Transport-Start Print')}
                                 </Button>

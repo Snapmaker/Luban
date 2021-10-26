@@ -41,6 +41,7 @@ class Canvas extends Component {
         maxScale: PropTypes.number,
         scaleSize: PropTypes.number,
         target: PropTypes.object,
+        displayedType: PropTypes.string,
 
         supportActions: PropTypes.object,
 
@@ -154,6 +155,15 @@ class Canvas extends Component {
             this.group.remove(this.props.printableArea);
             this.group.add(nextProps.printableArea);
         }
+
+        if (nextProps.displayedType !== this.props.displayedType) {
+            if (nextProps.displayedType === 'gcode') {
+                this.controls.removeTransformControls();
+            } else {
+                this.controls.recoverTransformControls();
+            }
+            this.renderScene();
+        }
     }
 
     componentWillUnmount() {
@@ -229,7 +239,6 @@ class Canvas extends Component {
         this.group = new Group();
         this.group.position.copy(DEFAULT_MODEL_POSITION);
         this.scene.add(this.group);
-
         if (this.transformSourceType === '3D') {
             const lightTop = new HemisphereLight(0xdddddd, 0x666666);
             lightTop.position.copy(new Vector3(0, 0, 1000));
@@ -246,8 +255,7 @@ class Canvas extends Component {
         this.initialTarget = this.props.cameraInitialTarget;
 
         const sourceType = this.props.transformSourceType === '2D' ? '2D' : '3D';
-
-        this.controls = new Controls(sourceType, this.camera, this.group, this.renderer.domElement, this.onScale, this.onChangeTarget,
+        this.controls = new Controls(sourceType, this.props.displayedType, this.camera, this.group, this.renderer.domElement, this.onScale, this.onChangeTarget,
             this.props.supportActions, this.props.minScale, this.props.maxScale, this.props.scaleSize);
         this.controls.canOperateModel = this.props.canOperateModel;
         this.setCamera(this.cameraInitialPosition, this.initialTarget);

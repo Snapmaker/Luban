@@ -106,10 +106,11 @@ class Controls extends EventEmitter {
 
     clickEnabled = true;
 
-    constructor(sourceType, camera, group, domElement, onScale, onPan, supportActions, minScale = undefined, maxScale = undefined, scaleSize = undefined) {
+    constructor(sourceType, displayedType, camera, group, domElement, onScale, onPan, supportActions, minScale = undefined, maxScale = undefined, scaleSize = undefined) {
         super();
 
         this.sourceType = sourceType;
+        this.displayedType = displayedType;
         this.camera = camera;
         this.group = group;
         this.domElement = (domElement !== undefined) ? domElement : document;
@@ -138,7 +139,14 @@ class Controls extends EventEmitter {
             this.emit(EVENTS.UPDATE);
         });
         this.transformControl.mode = 'translate';
+        this.props?.displayedType !== 'gcode' && this.group.add(this.transformControl);
+    }
 
+    removeTransformControls() {
+        this.group.remove(this.transformControl);
+    }
+
+    recoverTransformControls() {
         this.group.add(this.transformControl);
     }
 

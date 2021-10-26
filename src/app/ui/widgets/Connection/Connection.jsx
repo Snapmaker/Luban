@@ -68,7 +68,7 @@ function Connection({ widgetId, widgetActions }) {
 
     const isOriginal = series === MACHINE_SERIES.ORIGINAL.value;
     return (
-        <div className="padding-bottom-16">
+        <div>
             {alertMessage && (
                 <Notifications bsStyle="danger" onDismiss={actions.clearAlert}>
                     {alertMessage}

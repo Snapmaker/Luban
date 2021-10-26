@@ -69,7 +69,7 @@ function renderRightView({ headType, dispatch, page, widgets, listActions }) {
                 activeKey={page}
                 onChange={(key) => {
                     dispatch(editorActions.switchToPage(headType, key));
-                    if (key === headType) {
+                    if (key === 'editor') {
                         dispatch(editorActions.showModelGroupObject(headType));
                     }
                 }}

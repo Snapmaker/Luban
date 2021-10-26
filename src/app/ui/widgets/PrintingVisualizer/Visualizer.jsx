@@ -38,6 +38,7 @@ class Visualizer extends PureComponent {
         inProgress: PropTypes.bool.isRequired,
         hasModel: PropTypes.bool.isRequired,
         leftBarOverlayVisible: PropTypes.bool.isRequired,
+        displayedType: PropTypes.string,
 
         hideSelectedModel: PropTypes.func.isRequired,
         recordAddOperation: PropTypes.func.isRequired,
@@ -109,6 +110,7 @@ class Visualizer extends PureComponent {
             this.canvas.current.toTopFrontRight();
         },
         onSelectModels: (intersect, selectEvent) => {
+            console.log('selectModel');
             this.props.selectMultiModel(intersect, selectEvent);
         },
         onModelBeforeTransform: () => {
@@ -425,7 +427,7 @@ class Visualizer extends PureComponent {
     };
 
     render() {
-        const { size, selectedModelArray, modelGroup, gcodeLineGroup, inProgress, hasModel } = this.props;
+        const { size, selectedModelArray, modelGroup, gcodeLineGroup, inProgress, hasModel, displayedType } = this.props;
 
         const isModelSelected = (selectedModelArray.length > 0);
         const isSupportSelected = modelGroup.selectedModelArray.length > 0 && modelGroup.selectedModelArray[0].supportTag === true;
@@ -466,6 +468,7 @@ class Visualizer extends PureComponent {
                         inProgress={inProgress}
                         size={size}
                         modelGroup={modelGroup}
+                        displayedType={displayedType}
                         printableArea={this.printableArea}
                         cameraInitialPosition={new Vector3(0, -Math.max(size.x, size.y, size.z) * 2, size.z / 2)}
                         cameraInitialTarget={new Vector3(0, 0, size.z / 2)}

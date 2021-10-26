@@ -92,8 +92,7 @@ function Macro({ widgetId, updateModal, openModal, macros }) {
     const canClick = actions.canClick();
     return (
         <div className="padding-horizontal-16 height-176 padding-vertical-4
-            overflow-y-auto border-default-grey-1 border-radius-8
-            margin-bottom-16"
+            overflow-y-auto border-default-grey-1 border-radius-8"
         >
             {macrosState.length === 0 && (
                 <div className={styles.emptyResult}>

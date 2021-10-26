@@ -331,7 +331,7 @@ function Console({ widgetId, widgetActions, minimized, isDefault, clearRenderSta
 
     const inputValue = terminalHistory.get(0) || '';
     return (
-        <div className="padding-bottom-16">
+        <div>
             <Terminal
                 ref={terminalRef}
                 onData={actions.onTerminalData}

@@ -40,7 +40,7 @@ import { Server } from '../../../flux/machine/Server';
 export const ModuleStatus = ({ moduleName, status }) => {
     return (
         <div className="sm-flex align-center padding-horizontal-8 background-grey-3 border-radius-12 margin-top-8 margin-right-8">
-            <span className="margin-right-8">{moduleName}</span>
+            <span className="margin-right-8 tooltip-message">{moduleName}</span>
             <span style={{ display: 'inline-block', backgroundColor: status ? '#4CB518' : '#FFA940', height: 6, width: 6, borderRadius: 3 }} />
         </div>
     );
@@ -416,7 +416,7 @@ function WifiConnection() {
                     <div
                         className={classNames(styles['connection-state'], 'padding-bottom-8', 'border-bottom-dashed-default')}
                     >
-                        <span className={styles['connection-state-name']}>
+                        <span className="main-text-normal">
                             {`${serverState?.name} (${series.toUpperCase()})`}
                         </span>
                         <span className={styles['connection-state-icon']}>
@@ -440,7 +440,7 @@ function WifiConnection() {
                     )}
                 </div>
             )}
-            <div>
+            <div className="sm-flex align-flex-end">
                 {!isConnected && (
                     <Button
                         className="margin-right-8"

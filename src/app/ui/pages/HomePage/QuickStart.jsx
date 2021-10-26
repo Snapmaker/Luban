@@ -3,12 +3,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import PropTypes from 'prop-types';
 import classNames from 'classnames';
 import i18n from '../../../lib/i18n';
-import { MACHINE_SERIES } from '../../../constants';
-import {
-    CaseConfigOriginal, CaseConfig150,
-    CaseConfig250, CaseConfig350,
-    CaseConfigA350FourAxis, CaseConfigA250FourAxis
-} from './CaseConfig';
+import { getCaseList } from '../../../lib/caseLibrary';
 import { timestamp } from '../../../../shared/lib/random-utils';
 import { actions as projectActions } from '../../../flux/project';
 import styles from './styles.styl';
@@ -21,49 +16,27 @@ const QuickStart = (props) => {
 
     // redux correlation
     const series = useSelector(state => state?.machine?.series);
+    const toolHead = useSelector(state => state?.machine?.toolHead);
     const use4Axis = useSelector(state => state?.machine?.use4Axis);
     const dispatch = useDispatch();
 
     //  method
-    const getCaseList = () => {
-        switch (series) {
-            case MACHINE_SERIES.ORIGINAL.value:
-            case MACHINE_SERIES.CUSTOM.value:
-            case MACHINE_SERIES.ORIGINAL_LZ.value:
-                setCaseConfig(CaseConfigOriginal);
-                setCaseConfigFourAxis([]);
-                break;
-            case MACHINE_SERIES.A150.value:
-                setCaseConfig(CaseConfig150);
-                setCaseConfigFourAxis([]);
-                break;
-            case MACHINE_SERIES.A250.value:
-                setCaseConfig(CaseConfig250);
-                setCaseConfigFourAxis(CaseConfigA250FourAxis);
-                break;
-            case MACHINE_SERIES.A350.value:
-                setCaseConfig(CaseConfig350);
-                setCaseConfigFourAxis(CaseConfigA350FourAxis);
-                break;
-            default:
-                setCaseConfig(CaseConfig150);
-                setCaseConfigFourAxis([]);
-                break;
-        }
-    };
-
     const loadCase = (caseItem) => {
         dispatch(projectActions.openProject(caseItem.pathConfig, history));
     };
 
     //  useEffect
     useEffect(() => {
-        getCaseList();
+        const { caseList, caseListFourAxis } = getCaseList(series, toolHead);
+        setCaseConfig(caseList);
+        setCaseConfigFourAxis(caseListFourAxis);
     }, []);
 
     useEffect(() => {
-        getCaseList();
-    }, [series]);
+        const { caseList, caseListFourAxis } = getCaseList(series, toolHead);
+        setCaseConfig(caseList);
+        setCaseConfigFourAxis(caseListFourAxis);
+    }, [series, toolHead]);
 
     return (
         <div className={styles['quick-start-container']}>

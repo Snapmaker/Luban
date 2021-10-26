@@ -259,34 +259,34 @@ function Cnc({ location }) {
             let pathConfig = {};
             if (isRotate) {
                 pathConfig = {
-                    path: './UserCase/A250/4th_CNC.snapcnc',
-                    name: '4th_CNC.snapcnc'
+                    path: './UserCase/cnc/a250_standard/cnc_4th_a250a350_standard.snapcnc',
+                    name: 'cnc_4th_a250a350_standard.snapcnc'
                 };
             } else {
                 switch (series) {
                     case 'Original Long Z-axis':
                     case 'Original':
                         pathConfig = {
-                            path: './UserCase/Origin/Original_CNC.snapcnc',
-                            name: 'Original_CNC.snapcnc'
+                            path: './UserCase/cnc/original_standard/cnc_original_standard.snapcnc',
+                            name: 'cnc_original_standard.snapcnc'
                         };
                         break;
                     case 'A150':
                         pathConfig = {
-                            path: './UserCase/A150/A150_CNC.snapcnc',
-                            name: 'A150_CNC.snapcnc'
+                            path: './UserCase/cnc/a150_standard/cnc_a150_standard.snapcnc',
+                            name: 'cnc_a150_standard.snapcnc'
                         };
                         break;
                     case 'A250':
                         pathConfig = {
-                            path: './UserCase/A250/A250_CNC.snapcnc',
-                            name: 'A250_CNC.snapcnc'
+                            path: './UserCase/cnc/a250_standard/cnc_a250_standard.snapcnc',
+                            name: 'cnc_a250_standard.snapcnc'
                         };
                         break;
                     case 'A350':
                         pathConfig = {
-                            path: './UserCase/A350/A350_CNC.snapcnc',
-                            name: 'A350_CNC.snapcnc'
+                            path: './UserCase/cnc/a350_standard/cnc_a350_standard.snapcnc',
+                            name: 'cnc_a350_standard.snapcnc'
                         };
                         break;
                     default:
