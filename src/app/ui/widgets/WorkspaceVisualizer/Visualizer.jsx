@@ -793,8 +793,8 @@ class Visualizer extends Component {
                 )}
                 {(state.isLaser10WCheck1) && (
                     <ModalSmall
-                        title={i18n._('key-Workspace/Page-Emergency Stop')}
-                        text={i18n._('过热')}
+                        title={i18n._('10W Laser Stop')}
+                        text={i18n._('Temperature too high')}
                         img="WarningTipsEmergencyStop"
                         iconColor="#FF4D4F"
                         onClose={this.actions.closeModal}
@@ -802,8 +802,8 @@ class Visualizer extends Component {
                 )}
                 {(state.isLaser10WCheck2) && (
                     <ModalSmall
-                        title={i18n._('key-Workspace/Page-Emergency Stop')}
-                        text={i18n._('姿态检测错误')}
+                        title={i18n._('10W Laser Stop')}
+                        text={i18n._('Angel error')}
                         img="WarningTipsEmergencyStop"
                         iconColor="#FF4D4F"
                         onClose={this.actions.closeModal}

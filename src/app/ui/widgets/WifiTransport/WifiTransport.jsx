@@ -628,7 +628,7 @@ function WifiTransport({ widgetActions, controlActions }) {
                                 setShowStartModal(false);
                             }}
                         >
-                            {i18n._('开始')}
+                            {i18n._('key start')}
                         </Button>
                     </Modal.Footer>
                 </Modal>
