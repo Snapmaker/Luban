@@ -121,19 +121,19 @@ export const stitchEach = async (options) => {
             }
         }
         stitched = new Jimp(newSize.maxX - newSize.minX, newSize.maxY - newSize.minY);
-        for (let y = startySize; y < endySize; y++) {
-            for (let x = startxSize; x < endxSize; x++) {
+        for (let y = newSize.minY; y < newSize.maxY; y++) {
+            for (let x = newSize.minX; x < newSize.maxX; x++) {
                 // const index = ((y)* xSize * density + x ) << 2;
 
-                const source = perspT.transformInverse(x, y);
+                const source = perspT.transformInverse(x - newSize.minX, y - newSize.minY);
                 const x0 = Math.round(source[0]);
                 const y0 = Math.round(source[1]);
                 // if (x0 < 0 || x0 >= width || y0 < 0 || y0 >= height) {
                 //     continue;
                 // }
 
-                const index = ((y * (newSize.maxX - newSize.minX) + x) << 2);
-                const index0 = ((y0 * endxSize + x0) << 2);
+                const index = (((y - newSize.minY) * (newSize.maxX - newSize.minX) + x - newSize.minX) << 2);
+                const index0 = ((y0 * width + x0) << 2);
                 stitched.bitmap.data[index] = image.bitmap.data[index0];
                 stitched.bitmap.data[index + 1] = image.bitmap.data[index0 + 1];
                 stitched.bitmap.data[index + 2] = image.bitmap.data[index0 + 2];
