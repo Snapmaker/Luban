@@ -16,7 +16,8 @@ import { normalizeNameDisplay } from '../../../lib/normalize-range';
 import styles from './index.styl';
 import {
     CONNECTION_TYPE_WIFI,
-    DATA_PREFIX, HEAD_CNC, HEAD_LASER, HEAD_PRINTING
+    DATA_PREFIX, HEAD_CNC, HEAD_LASER, HEAD_PRINTING,
+    LEVEL_TWO_POWER_LASER_FOR_SM2, LEVEL_ONE_POWER_LASER_FOR_SM2
 } from '../../../constants';
 import { actions as workspaceActions, WORKSPACE_STAGE } from '../../../flux/workspace';
 import { actions as projectActions } from '../../../flux/project';
@@ -30,12 +31,13 @@ import Modal from '../../components/Modal';
 import Canvas from '../../components/SMCanvas';
 import PrintablePlate from '../WorkspaceVisualizer/PrintablePlate';
 import usePrevious from '../../../lib/hooks/previous';
-// import Checkbox from '../../components/Checkbox';
-
+import { actions as machineActions } from '../../../flux/machine';
+import Checkbox from '../../components/Checkbox';
+import { NumberInput as Input } from '../../components/Input';
 
 const changeNameInput = [];
 
-const GcodePreviewItem = React.memo(({ gcodeFile, index, selected, onSelectFile, gRef, setSelectFileIndex, handlePreviewModalShow }) => {
+const GcodePreviewItem = React.memo(({ gcodeFile, index, selected, onSelectFile, gRef, setSelectFileIndex, handleShowPreviewModal }) => {
     const dispatch = useDispatch();
     // const name = gcodeFile.name.length > 25
     //     ? `${gcodeFile.name.substring(0, 15)}...${gcodeFile.name.substring(gcodeFile.name.length - 10, gcodeFile.name.length)}`
@@ -187,7 +189,7 @@ const GcodePreviewItem = React.memo(({ gcodeFile, index, selected, onSelectFile,
                 onClick={e => {
                     e.stopPropagation();
                     onSelectFile(gcodeFile.uploadName, null, null, false);
-                    handlePreviewModalShow(true);
+                    handleShowPreviewModal(true);
                     // dispatch.renderPreviewGcodeFile()
                     dispatch(workspaceActions.renderPreviewGcodeFile(gcodeFile, index));
                 }}
@@ -202,7 +204,7 @@ GcodePreviewItem.propTypes = {
     onSelectFile: PropTypes.func.isRequired,
     gRef: PropTypes.object.isRequired,
     setSelectFileIndex: PropTypes.func.isRequired,
-    handlePreviewModalShow: PropTypes.func
+    handleShowPreviewModal: PropTypes.func
 };
 
 const visualizerGroup = {
@@ -210,13 +212,19 @@ const visualizerGroup = {
 };
 let printableArea = null;
 function WifiTransport({ widgetActions, controlActions }) {
+    const isLaserPrintAutoMode = useSelector(state => state?.machine?.isLaserPrintAutoMode);
+    const materialThickness = useSelector(state => state?.machine?.materialThickness);
+    const isFourAxis = useSelector(state => state?.machine?.workPosition?.isFourAxis);
+    const originOffset = useSelector(state => state?.machine?.originOffset);
+    const toolHeadName = useSelector(state => state?.machine?.toolHead.laserToolhead);
     const { previewBoundingBox, gcodeFiles, previewModelGroup, previewRenderState, previewStage } = useSelector(state => state.workspace);
     const { server, isConnected, headType, connectionType, size, workflowStatus, workflowState } = useSelector(state => state.machine);
     const [loadToWorkspaceOnLoad, setLoadToWorkspaceOnLoad] = useState(true);
     const [selectFileName, setSelectFileName] = useState('');
     const [selectFileType, setSelectFileType] = useState('');
     const [selectFileIndex, setSelectFileIndex] = useState(-1);
-    const [previewModalShow, setPreviewModalShow] = useState(false);
+    const [showPreviewModal, setShowPreviewModal] = useState(false);
+    const [showStartModal, setShowStartModal] = useState(false);
     const [currentWorkflowStatus, setCurrentWorkflowStatus] = useState('');
     const dispatch = useDispatch();
     const fileInput = useRef();
@@ -261,8 +269,9 @@ function WifiTransport({ widgetActions, controlActions }) {
             // if (loadToWorkspaceOnLoad) {
             //     dispatch(workspaceActions.uploadGcodeFile(file));
             // } else {
-            //     dispatch(workspaceActions.uploadGcodeFileToList(file));
+            //     dispatch( workspaceActions.uploadGcodeFileToList(file));
             // }
+            setShowStartModal(false);
             dispatch(workspaceActions.uploadGcodeFileToList(file));
         },
         onClickToUpload: () => {
@@ -280,12 +289,42 @@ function WifiTransport({ widgetActions, controlActions }) {
             setLoadToWorkspaceOnLoad(!loadToWorkspaceOnLoad);
         },
 
+        startPrint: async () => {
+            if (headType === HEAD_LASER) {
+                setShowStartModal(true);
+            } else {
+                actions.loadGcodeToWorkspace();
+            }
+        },
+
         loadGcodeToWorkspace: async () => {
             const find = gcodeFiles.find(v => v.uploadName === selectFileName);
             if (!find) {
                 return;
             }
             await dispatch(workspaceActions.renderGcodeFile(find, false));
+
+            if (toolHeadName === LEVEL_TWO_POWER_LASER_FOR_SM2 && isLaserPrintAutoMode && !isFourAxis) {
+                const { maxX, minX, maxY, minY } = find;
+                const deltaY = 10;
+                const deltaX = 19;
+                const z0 = 166;
+                const deltaRedLine = 30;
+                const x = (maxX + minX) / 2 - originOffset.x + z0 / Math.sqrt(3) - deltaRedLine + deltaX / 2;
+                const y = (maxY + minY) / 2 - originOffset.y + deltaY / 2;
+                const options = {
+                    x: x,
+                    y: y,
+                    feedRate: 1500
+                };
+                server.getLaserMaterialThickness(options, async ({ status, thickness }) => {
+                    if (status) {
+                        await actions.onChangeMaterialThickness(thickness);
+                    }
+                    controlActions.onCallBackRun();
+                });
+                return;
+            }
             controlActions.onCallBackRun();
         },
 
@@ -336,6 +375,17 @@ function WifiTransport({ widgetActions, controlActions }) {
             } else {
                 actions.onClickToUpload();
             }
+        },
+        onChangeLaserPrintMode: () => {
+            dispatch(machineActions.updateIsLaserPrintAutoMode(!isLaserPrintAutoMode));
+        },
+
+        onChangeMaterialThickness: async (value) => {
+            dispatch(machineActions.updateMaterialThickness(value));
+        },
+
+        onChangeFourAxisMaterialThickness: async (value) => {
+            dispatch(machineActions.updateMaterialThickness(value / 2));
         }
     };
 
@@ -406,62 +456,6 @@ function WifiTransport({ widgetActions, controlActions }) {
                 multiple={false}
                 onChange={actions.onChangeFile}
             />
-            {/* <Button
-                width="160px"
-                type="primary"
-                className="margin-bottom-8 display-inline"
-                priority="level-three"
-                onClick={actions.onClickToUpload}
-            >
-                {i18n._('key-Workspace/WifiTransport-Open G-code')}
-            </Button>
-            <Button
-                width="160px"
-                type="primary"
-                className="margin-bottom-8 display-inline margin-left-8"
-                priority="level-three"
-                onClick={actions.onExport}
-            >
-                {i18n._('key-Workspace/WifiTransport-Export G-code')}
-            </Button>
-            <div className="margin-bottom-8">
-                <Checkbox
-                    checked={loadToWorkspaceOnLoad}
-                    onChange={actions.onChangeShouldPreview}
-                />
-                <span className="margin-left-8">{i18n._('key-Workspace/WifiTransport-Preview in Workspace')}</span>
-            </div>
-            {
-                _.map(gcodeFiles, (gcodeFile, index) => {
-                    return (
-                        <React.Fragment key={index}>
-                            <GcodePreviewItem
-                                gcodeFile={gcodeFile}
-                                index={index}
-                                selected={selectFileName === gcodeFile.uploadName}
-                                onSelectFile={onSelectFile}
-                            />
-                        </React.Fragment>
-                    );
-                })
-            }
-            <Button
-                type="primary"
-                className="margin-vertical-8"
-                priority="level-two"
-                disabled={!hasFile}
-                onClick={actions.loadGcodeToWorkspace}
-            >
-                {i18n._('key-Workspace/WifiTransport-Load G-code to Workspace')}
-            </Button>
-            <Button
-                type="primary"
-                className="margin-bottom-16"
-                priority="level-two"
-                disabled={!(hasFile && isConnected && isHeadType && connectionType === CONNECTION_TYPE_WIFI)}
-                onClick={actions.sendFile}
-            >
-            </Button> */}
             <div className={classNames('height-176-default', 'position-re', 'overflow-y-auto')}>
                 {!hasFile && (
                     <div className={styles['import-btn-dashed']}>
@@ -486,8 +480,7 @@ function WifiTransport({ widgetActions, controlActions }) {
                                     onSelectFile={onSelectFile}
                                     gRef={gcodeItemRef}
                                     setSelectFileIndex={setSelectFileIndex}
-                                    // handlePreviewModalShow={controlActions.onPreviewModalShow}
-                                    handlePreviewModalShow={setPreviewModalShow}
+                                    handleShowPreviewModal={setShowPreviewModal}
                                 />
                             </React.Fragment>
                         );
@@ -539,18 +532,113 @@ function WifiTransport({ widgetActions, controlActions }) {
                         priority="level-two"
                         width="144px"
                         disabled={!hasFile || !isConnected || currentWorkflowStatus !== 'idle'}
-                        onClick={actions.loadGcodeToWorkspace}
+                        onClick={actions.startPrint}
                     >
                         {i18n._('key-Workspace/Transport-Start Print')}
                     </Button>
                 </div>
             </div>
-            {previewModalShow && (
+            {showStartModal && (
                 <Modal
                     centered
-                    visible={previewModalShow}
+                    visible={showStartModal}
                     onClose={() => {
-                        setPreviewModalShow(false);
+                        setShowStartModal(false);
+                    }}
+                >
+                    <Modal.Header>
+                        Start Job
+                        {/*{i18n._('key-Workspace/LaserStartJob-start_job')}*/}
+                    </Modal.Header>
+                    <Modal.Body>
+                        { toolHeadName === LEVEL_ONE_POWER_LASER_FOR_SM2 && (
+                            <div className="sm-flex height-32 justify-space-between margin-vertical-8">
+                                <span>{i18n._('key-unused-Auto Mode')}</span>
+                                <Checkbox
+                                    className="sm-flex-auto"
+                                    disabled={isFourAxis}
+                                    checked={isLaserPrintAutoMode}
+                                    onChange={actions.onChangeLaserPrintMode}
+                                />
+                            </div>
+                        )}
+                        { toolHeadName === LEVEL_ONE_POWER_LASER_FOR_SM2 && isLaserPrintAutoMode && !isFourAxis && (
+                            <div className="sm-flex height-32 justify-space-between margin-vertical-8">
+                                <span className="">{i18n._('key-unused-Material Thickness')}</span>
+                                <Input
+                                    suffix="mm"
+                                    className="sm-flex-auto"
+                                    size="small"
+                                    value={materialThickness}
+                                    max={size.z - 40}
+                                    min={0}
+                                    onChange={actions.onChangeMaterialThickness}
+                                />
+                            </div>
+                        )}
+                        { toolHeadName === LEVEL_ONE_POWER_LASER_FOR_SM2 && isLaserPrintAutoMode && isFourAxis && (
+                            <div className="sm-flex height-32 justify-space-between margin-vertical-8">
+                                <span className="">{i18n._('key-unused-Material Thickness')}</span>
+                                <Input
+                                    suffix="mm"
+                                    className="sm-flex-auto"
+                                    size="small"
+                                    value={materialThickness * 2}
+                                    max={size.z - 40}
+                                    min={0}
+                                    onChange={actions.onChangeFourAxisMaterialThickness}
+                                />
+                            </div>
+                        )}
+
+                        { toolHeadName === LEVEL_TWO_POWER_LASER_FOR_SM2 && (
+                            <div className="sm-flex height-32 justify-space-between margin-vertical-8">
+                                <span>{i18n._('auto setting thickness')}</span>
+                                <Checkbox
+                                    className="sm-flex-auto"
+                                    disabled={isFourAxis}
+                                    checked={isLaserPrintAutoMode}
+                                    onChange={actions.onChangeLaserPrintMode}
+                                />
+                            </div>
+                        )}
+                        { toolHeadName === LEVEL_TWO_POWER_LASER_FOR_SM2 && !isLaserPrintAutoMode && !isFourAxis && (
+                            <div className="sm-flex height-32 justify-space-between margin-vertical-8">
+                                <span className="">{i18n._('key-unused-Material Thickness')}</span>
+                                <Input
+                                    suffix="mm"
+                                    className="sm-flex-auto"
+                                    size="small"
+                                    value={materialThickness}
+                                    max={size.z - 40}
+                                    min={0}
+                                    onChange={actions.onChangeMaterialThickness}
+                                />
+                            </div>
+                        )}
+                    </Modal.Body>
+                    <Modal.Footer>
+                        <Button priority="level-three" width="88px" onClick={() => setShowStartModal(false)} className="margin-right-16">{i18n._('key-unused-Cancel')}</Button>
+                        <Button
+                            priority="level-two"
+                            type="primary"
+                            width="88px"
+                            onClick={() => {
+                                actions.loadGcodeToWorkspace();
+                                setShowStartModal(false);
+                            }}
+                        >
+                            {i18n._('key start')}
+                        </Button>
+                    </Modal.Footer>
+                </Modal>
+            )}
+            {showPreviewModal && (
+                <Modal
+                    centered
+                    visible={showPreviewModal}
+                    onClose={() => {
+                        setShowPreviewModal(false);
                     }}
                 >
                     <Modal.Header>
@@ -586,7 +674,7 @@ function WifiTransport({ widgetActions, controlActions }) {
                                     <Menu>
                                         <Menu.Item onClick={() => {
                                             actions.sendFile();
-                                            setPreviewModalShow(false);
+                                            setShowPreviewModal(false);
                                         }}
                                         >
                                             <div className="align-c">{i18n._('key-Workspace/WifiTransport-Sending File')}</div>
