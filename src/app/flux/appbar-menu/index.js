@@ -1,13 +1,8 @@
 import isElectron from 'is-electron';
 import { cloneDeep, reverse, includes } from 'lodash';
 import { getMenuItems } from '../../config/menu';
-import { MACHINE_SERIES } from '../../constants';
-import {
-    CaseConfigOriginal, CaseConfig150,
-    CaseConfig250, CaseConfig350,
-    CaseConfigA350FourAxis, CaseConfigA250FourAxis
-} from '../../ui/pages/HomePage/CaseConfig';
 import UniApi from '../../lib/uni-api';
+import { getCaseList } from '../../lib/caseLibrary';
 import i18n from '../../lib/i18n';
 
 export const ACTION_UPDATE_STATE = 'appbar-menu/ACTION_UPDATE_STATE';
@@ -35,7 +30,7 @@ const hashStateMap = {
 
 function caseConfigToMenuItems(caseConfig) {
     return caseConfig.map(item => {
-        item.label = item.title;
+        item.label = i18n._(item.title);
         item.enabled = true;
         item.click = function () {
             UniApi.Event.emit('appbar-menu:get-started', item);
@@ -122,6 +117,7 @@ export const actions = {
 
         const menu = getState().appbarMenu.menu;
         const series = getState()?.machine?.series;
+        const toolHead = getState()?.machine?.toolHead;
         const recentFiles = getState().project.general.recentFiles;
         const currentPath = getState().appbarMenu.currentModalPath || window.location.hash;
 
@@ -160,30 +156,11 @@ export const actions = {
         }
 
         if (getStartedSubmenu) {
-            switch (series) {
-                case MACHINE_SERIES.ORIGINAL.value:
-                case MACHINE_SERIES.CUSTOM.value:
-                    getStartedSubmenu.submenu = caseConfigToMenuItems(CaseConfigOriginal);
-                    break;
-                case MACHINE_SERIES.A150.value:
-                    getStartedSubmenu.submenu = caseConfigToMenuItems(CaseConfig150);
-                    break;
-                case MACHINE_SERIES.A250.value:
-                    getStartedSubmenu.submenu = [
-                        ...caseConfigToMenuItems(CaseConfig250),
-                        ...caseConfigToMenuItems(CaseConfigA250FourAxis)
-                    ];
-                    break;
-                case MACHINE_SERIES.A350.value:
-                    getStartedSubmenu.submenu = [
-                        ...caseConfigToMenuItems(CaseConfig350),
-                        ...caseConfigToMenuItems(CaseConfigA350FourAxis)
-                    ];
-                    break;
-                default:
-                    getStartedSubmenu.submenu = caseConfigToMenuItems(CaseConfig150);
-                    break;
-            }
+            const { caseList, caseListFourAxis } = getCaseList(series, toolHead);
+            getStartedSubmenu.submenu = [
+                ...caseConfigToMenuItems(caseList),
+                ...caseConfigToMenuItems(caseListFourAxis)
+            ];
         }
 
         const stateName = hashStateMap[currentPath]; // acquire corresponding state according to location hash
