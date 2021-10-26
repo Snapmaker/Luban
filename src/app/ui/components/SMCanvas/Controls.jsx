@@ -166,7 +166,7 @@ class Controls extends EventEmitter {
         this.domElement.addEventListener('wheel', this.onMouseWheel, false);
         this.domElement.addEventListener('click', this.onClick, false);
 
-        document.addEventListener('contextmenu', this.onDocumentContextMenu, false);
+        document.addEventListener('contextmenu', this.onDocumentContextMenu, { capture: true });
     }
 
     rotateLeft(angle) {
@@ -288,8 +288,8 @@ class Controls extends EventEmitter {
         }
         if (this.state !== STATE.NONE) {
             // Track events even when the mouse move outside of window
-            document.addEventListener('mousemove', this.onDocumentMouseMove, false);
-            document.addEventListener('mouseup', this.onDocumentMouseUp, false);
+            document.addEventListener('mousemove', this.onDocumentMouseMove, { capture: true });
+            document.addEventListener('mouseup', this.onDocumentMouseUp, { capture: true });
         }
     };
 
