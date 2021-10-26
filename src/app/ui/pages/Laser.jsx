@@ -218,14 +218,14 @@ function Laser({ location }) {
                 switch (series) {
                     case 'A250':
                         pathConfig = {
-                            path: './UserCase/A250/A250_4th_Laser.snaplzr',
-                            name: 'A250_4th_Laser.snaplzr'
+                            path: './UserCase/laser/a250_1600mw/laser_4th_a250a350_1600mW.snaplzr',
+                            name: 'laser_4th_a250a350_1600mW.snaplzr'
                         };
                         break;
                     default:
                         pathConfig = {
-                            path: './UserCase/A350/A350_4th_Laser.snaplzr',
-                            name: 'A350_4th_Laser.snaplzr'
+                            path: './UserCase/laser/a350_1600mw/laser_4th_a250a350_1600mW.snaplzr',
+                            name: 'laser_4th_a250a350_1600mW.snaplzr'
                         };
                         break;
                 }
@@ -234,32 +234,32 @@ function Laser({ location }) {
                     case 'Original Long Z-axis':
                     case 'Original':
                         pathConfig = {
-                            path: './UserCase/Origin/Original_Laser.snaplzr',
-                            name: 'Original_Laser.snaplzr'
+                            path: './UserCase/laser/original_200mw/Laser_original_200mW.snaplzr',
+                            name: 'Laser_original_200mW.snaplzr'
                         };
                         break;
                     case 'A150':
                         pathConfig = {
-                            path: './UserCase/A150/A150_Laser.snaplzr',
-                            name: 'A150_Laser.snaplzr'
+                            path: './UserCase/laser/a150_1600mw/Laser_a150_1600mW.snaplzr',
+                            name: 'Laser_a150_1600mW.snaplzr'
                         };
                         break;
                     case 'A250':
                         pathConfig = {
-                            path: './UserCase/A250/A250_Laser.snaplzr',
-                            name: 'A250_Laser.snaplzr'
+                            path: './UserCase/laser/a250_1600mw/Laser_a250_1600mW.snaplzr',
+                            name: 'Laser_a250_1600mW.snaplzr'
                         };
                         break;
                     case 'A350':
                         pathConfig = {
-                            path: './UserCase/A350/A350_Laser.snaplzr',
-                            name: 'A350_Laser.snaplzr'
+                            path: './UserCase/laser/a350_1600mw/Laser_a350_1600mW.snaplzr',
+                            name: 'Laser_a350_1600mW.snaplzr'
                         };
                         break;
                     default:
                         pathConfig = {
-                            path: './UserCase/Origin/Original_Laser.snaplzr',
-                            name: 'Original_Laser.snaplzr'
+                            path: './UserCase/laser/original_200mw/Laser_original_200mW.snaplzr',
+                            name: 'Laser_original_200mW.snaplzr'
                         };
                         break;
                 }

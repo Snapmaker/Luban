@@ -313,8 +313,8 @@ export const CaseConfigA250LaserFourAxis = [
         imgSrc: '../../resources/images/user-case/FourAxis/library_laser_lion_97x97.png',
         pathConfig: {
             isDatastoragePath: true,
-            path: './UserCase/./UserCase/laser/a250_1600mw/laser_4th_a250a350_1600mW.snaplzr',
-            name: 'A250_4th_Laser.snaplzr'
+            path: './UserCase/laser/a250_1600mw/laser_4th_a250a350_1600mW.snaplzr',
+            name: 'laser_4th_a250a350_1600mW.snaplzr'
         }
     }
 ];
@@ -358,7 +358,7 @@ export const CaseConfigA350LaserFourAxis = [
         pathConfig: {
             isDatastoragePath: true,
             path: './UserCase/laser/a350_1600mw/laser_4th_a250a350_1600mW.snaplzr',
-            name: 'A250_4th_Laser.snaplzr'
+            name: 'laser_4th_a250a350_1600mW.snaplzr'
         }
     }
 ];

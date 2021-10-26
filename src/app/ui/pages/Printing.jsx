@@ -258,8 +258,8 @@ function Printing({ location }) {
         if (nextIndex === 1) {
             setInitIndex(1);
             const pathConfig = {
-                path: './UserCase/A150/A150_3DP.snap3dp',
-                name: 'A150_3DP.snap3dp'
+                path: './UserCase/printing/a150_single/3dp_a150_single.snap3dp',
+                name: '3dp_a150_single.snap3dp'
             };
             dispatch(projectActions.openProject(pathConfig, history, true));
         } else if (nextIndex === 4) {
