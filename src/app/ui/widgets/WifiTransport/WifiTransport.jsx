@@ -548,7 +548,7 @@ function WifiTransport({ widgetActions, controlActions }) {
                 >
                     <Modal.Header>
                         Start Job
-                        {/*{i18n._('key-Workspace/LaserStartJob-start_job')}*/}
+                        {/* {i18n._('key-Workspace/LaserStartJob-start_job')}*/}
                     </Modal.Header>
                     <Modal.Body>
                         { toolHeadName === LEVEL_ONE_POWER_LASER_FOR_SM2 && (
@@ -665,7 +665,7 @@ function WifiTransport({ widgetActions, controlActions }) {
                         </div>
                     </Modal.Body>
                     <Modal.Footer>
-                        <Button priority="level-two" type="default" width="88px" onClick={() => setPreviewModalShow(false)} className="margin-right-8">{i18n._('key-unused-Cancel')}</Button>
+                        <Button priority="level-two" type="default" width="88px" onClick={() => setShowPreviewModal(false)} className="margin-right-8">{i18n._('key-unused-Cancel')}</Button>
                         {isConnected && (currentWorkflowStatus !== 'idle' || connectionType === 'serial') && <Button priority="level-two" type="primary" width="200px">{i18n._('key-Workspace/WifiTransport-Sending File')}</Button>}
                         {isConnected && (currentWorkflowStatus === 'idle' && connectionType === 'wifi') && (
                             <Dropdown
@@ -681,7 +681,7 @@ function WifiTransport({ widgetActions, controlActions }) {
                                         </Menu.Item>
                                         <Menu.Item onClick={() => {
                                             actions.loadGcodeToWorkspace();
-                                            setPreviewModalShow(false);
+                                            setShowPreviewModal(false);
                                         }}
                                         >
                                             {i18n._('key-Workspace/Transport-Luban control print')}
