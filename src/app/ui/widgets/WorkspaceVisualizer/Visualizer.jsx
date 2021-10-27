@@ -1,5 +1,5 @@
 import isEqual from 'lodash/isEqual';
-import React, { Component } from 'react';
+import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
 import * as THREE from 'three';
@@ -49,7 +49,7 @@ import ProgressBar from '../../components/ProgressBar';
 // import modal from '../../lib/modal';
 
 
-class Visualizer extends Component {
+class Visualizer extends PureComponent {
     static propTypes = {
         // redux
         size: PropTypes.object.isRequired,
@@ -85,7 +85,7 @@ class Visualizer extends Component {
         workPosition: PropTypes.object,
 
         modelGroup: PropTypes.object,
-        onRef: PropTypes.object,
+        onRef: PropTypes.func,
         preview: PropTypes.bool
     };
 
@@ -485,19 +485,15 @@ class Visualizer extends Component {
 
     constructor(props) {
         super(props);
+        this.printableArea = new THREE.Object3D();
+    }
 
-        const size = props.size;
+    componentDidMount() {
+        const size = this.props.size;
         this.printableArea = new PrintablePlate({
             x: size.x * 2,
             y: size.y * 2
         });
-        this.previewPrintableArea = new PrintablePlate({
-            x: size.x * 2,
-            y: size.y * 2
-        });
-    }
-
-    componentDidMount() {
         this.props.onRef && this.props.onRef(this);
         this.setupToolhead();
         this.subscribe();

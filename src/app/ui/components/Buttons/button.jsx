@@ -51,7 +51,8 @@ Button.propTypes = {
     children: PropTypes.oneOfType([
         PropTypes.number,
         PropTypes.element,
-        PropTypes.string
+        PropTypes.string,
+        PropTypes.node
     ])
 };
 export default Button;
