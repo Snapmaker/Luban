@@ -6,7 +6,7 @@
  */
 
 import noop from 'lodash/noop';
-import React, { Component } from 'react';
+import React, { PureComponent } from 'react';
 import { isNil } from 'lodash';
 import { Vector3, PerspectiveCamera, Scene, Group, HemisphereLight, DirectionalLight } from 'three';
 import PropTypes from 'prop-types';
@@ -23,7 +23,7 @@ const DEFAULT_MODEL_POSITION = new Vector3(0, 0, 0);
 const EPS = 0.000001;
 
 
-class Canvas extends Component {
+class Canvas extends PureComponent {
     node = React.createRef();
 
     static propTypes = {
