@@ -47,10 +47,7 @@ function JobType({ headType, jobTypeState, setJobTypeState }) {
     const actions = {
         changeCoordinateMode: (option) => {
             const newCoordinateMode = coordinateModeList.find(d => d.value === option.value);
-            const coordinateSize = {
-                x: size.x,
-                y: size.y
-            };
+            const coordinateSize = jobTypeState.coordinateSize;
             actions.setCoordinateModeAndCoordinateSize(newCoordinateMode.mode, coordinateSize);
         },
         setMaterials: (materials) => {
