@@ -54,30 +54,31 @@ export const stitchEach = async (options) => {
     } else {
         xSize = Math.floor((size.x - d) / 2);
     }
+    let stitched;
 
     if (picAmount === 1) {
-        xSize = size.x;
-        ySize = size.y;
-        startySize = 0;
-        endySize = ySize;
-        startxSize = 0;
-        endxSize = xSize;
+        stitched = new Jimp(size.x * density, size.y * density);
+        for (let y = 0; y < size.y * density; y++) {
+            for (let x = 0; x < size.x * density; x++) {
+                // const index = ((y)* xSize * density + x ) << 2;
+
+                const source = perspT.transformInverse(x, y);
+                const x0 = Math.round(source[0]);
+                const y0 = Math.round(source[1]);
+                // if (x0 < 0 || x0 >= width || y0 < 0 || y0 >= height) {
+                //     continue;
+                // }
+
+                const index = ((y * size.x * density + x) << 2);
+                const index0 = ((y0 * width + x0) << 2);
+                stitched.bitmap.data[index] = image.bitmap.data[index0];
+                stitched.bitmap.data[index + 1] = image.bitmap.data[index0 + 1];
+                stitched.bitmap.data[index + 2] = image.bitmap.data[index0 + 2];
+                stitched.bitmap.data[index + 3] = image.bitmap.data[index0 + 3];
+            }
+        }
     }
 
-    if (picAmount === 4) {
-        xSize = size.x / 2;
-        ySize = size.y / 2;
-        if (parseInt((currentIndex) / 2, 10) === 0) {
-            startySize = size.y - ySize;
-        } else if (parseInt((currentIndex) / 2, 10) === 1) {
-            endySize = size.y - ySize;
-        }
-        if (currentIndex % 2 === 0) {
-            endxSize = size.x - xSize;
-        } else if (currentIndex % 2 === 1) {
-            startxSize = size.x - xSize;
-        }
-    }
     if (picAmount === 9) {
         if (parseInt((currentIndex) / 3, 10) === 0) {
             startySize = size.y - ySize;
@@ -95,54 +96,9 @@ export const stitchEach = async (options) => {
         } else if (currentIndex % 3 === 2) {
             startxSize = size.x - xSize;
         }
-    }
 
-    let stitched = new Jimp(xSize * density, ySize * density);
+        stitched = new Jimp(xSize * density, ySize * density);
 
-    if (picAmount === 1) {
-        const newSize = {};
-        for (let y = startySize; y < endySize; y++) {
-            for (let x = startxSize; x < endxSize; x++) {
-                const source = perspT.transformInverse(x, y);
-                const x0 = Math.round(source[0]);
-                const y0 = Math.round(source[1]);
-                if (!newSize.minX || newSize.minX > x0) {
-                    newSize.minX = x0;
-                }
-                if (!newSize.maxX || newSize.maxX < x0) {
-                    newSize.maxX = x0;
-                }
-                if (!newSize.minY || newSize.minY > x0) {
-                    newSize.minY = y0;
-                }
-                if (!newSize.maxY || newSize.maxY < y0) {
-                    newSize.maxY = y0;
-                }
-            }
-        }
-        stitched = new Jimp(newSize.maxX - newSize.minX, newSize.maxY - newSize.minY);
-        for (let y = newSize.minY; y < newSize.maxY; y++) {
-            for (let x = newSize.minX; x < newSize.maxX; x++) {
-                // const index = ((y)* xSize * density + x ) << 2;
-
-                const source = perspT.transformInverse(x - newSize.minX, y - newSize.minY);
-                const x0 = Math.round(source[0]);
-                const y0 = Math.round(source[1]);
-                // if (x0 < 0 || x0 >= width || y0 < 0 || y0 >= height) {
-                //     continue;
-                // }
-
-                const index = (((y - newSize.minY) * (newSize.maxX - newSize.minX) + x - newSize.minX) << 2);
-                const index0 = ((y0 * width + x0) << 2);
-                stitched.bitmap.data[index] = image.bitmap.data[index0];
-                stitched.bitmap.data[index + 1] = image.bitmap.data[index0 + 1];
-                stitched.bitmap.data[index + 2] = image.bitmap.data[index0 + 2];
-                stitched.bitmap.data[index + 3] = image.bitmap.data[index0 + 3];
-            }
-        }
-    }
-
-    if (picAmount === 9) {
         for (let y = startySize * density; y < endySize * density; y++) {
             for (let x = startxSize * density; x < endxSize * density; x++) {
                 let dy = -1;
@@ -179,6 +135,21 @@ export const stitchEach = async (options) => {
         }
     }
     if (picAmount === 4) {
+        xSize = size.x / 2;
+        ySize = size.y / 2;
+        if (parseInt((currentIndex) / 2, 10) === 0) {
+            startySize = size.y - ySize;
+        } else if (parseInt((currentIndex) / 2, 10) === 1) {
+            endySize = size.y - ySize;
+        }
+        if (currentIndex % 2 === 0) {
+            endxSize = size.x - xSize;
+        } else if (currentIndex % 2 === 1) {
+            startxSize = size.x - xSize;
+        }
+
+        stitched = new Jimp(xSize * density, ySize * density);
+
         for (let y = startySize * density; y < endySize * density; y++) {
             for (let x = startxSize * density; x < endxSize * density; x++) {
                 let dy = -1;

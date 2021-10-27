@@ -197,7 +197,13 @@ class ExtractSquareTrace extends PureComponent {
                 this.props.updateEachPicSize('xSize', this.state.xSize);
                 this.props.updateEachPicSize('ySize', this.state.ySize);
 
-                this.actions.processStitch(this.state.options);
+                if (this.props.toolHead.laserToolhead === LEVEL_ONE_POWER_LASER_FOR_SM2) {
+                    this.actions.processStitch(this.state.options);
+                } else if (this.props.toolHead.laserToolhead === LEVEL_TWO_POWER_LASER_FOR_SM2) {
+                    this.setState({
+                        isStitched: true
+                    });
+                }
                 this.props.changeCanTakePhoto(true);
             });
         },
@@ -441,15 +447,35 @@ class ExtractSquareTrace extends PureComponent {
                     );
                 }
             }
-            api.processStitch({
-                ...this.state.options,
-                fileNames: this.props.lastFileNames
-            }).then((res) => {
-                this.setState({
-                    outputFilename: res.body.filename,
-                    isStitched: true
+
+            if (this.props.toolHead.laserToolhead === LEVEL_ONE_POWER_LASER_FOR_SM2) {
+                api.processStitch({
+                    ...this.state.options,
+                    fileNames: this.props.lastFileNames
+                }).then((res) => {
+                    this.setState({
+                        outputFilename: res.body.filename,
+                        isStitched: true
+                    });
                 });
-            });
+            } else if (this.props.toolHead.laserToolhead === LEVEL_TWO_POWER_LASER_FOR_SM2) {
+                api.processStitchEach(this.state.options).then((stitchImg) => {
+                    const { filename } = JSON.parse(stitchImg.text);
+                    if (this.extractingPreview[0].current) {
+                        this.extractingPreview[0].current.onChangeImage(
+                            filename,
+                            this.state.xSize[0] * this.multiple,
+                            this.state.ySize[0] * this.multiple,
+                            0,
+                            this.multiple
+                        );
+                    }
+                    this.setState({
+                        outputFilename: filename,
+                        isStitched: true
+                    });
+                });
+            }
             this.props.changeCanTakePhoto(true);
         },
 
@@ -468,7 +494,6 @@ class ExtractSquareTrace extends PureComponent {
         displayManualCalibration: async () => {
             const resPro = await api.getCameraCalibration({ 'address': this.props.server.address, 'toolHead': this.props.toolHead.laserToolhead });
             const res = JSON.parse(resPro.body.res.text);
-            console.log('res points', res);
             this.setState({
                 manualPoints: res.points,
                 matrix: res
