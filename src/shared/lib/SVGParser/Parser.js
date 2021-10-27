@@ -344,6 +344,7 @@ class SVGParser {
                 case 'g':
                 case 'd':
                 case 'title':
+                case 'switch':
                 case '$': {
                     break;
                 }
