@@ -51,6 +51,23 @@
                 }
             }
         },
+        "material": {
+            "type": "category",
+            "children": {
+                "retraction_enable": {
+                    "default_value": true
+                },
+                "retraction_speed": {
+                    "default_value": 25
+                },
+                "retraction_amount": {
+                    "default_value": 6.5
+                },
+                "retract_at_layer_change": {
+                    "default_value": false
+                }
+            }
+        },
         "speed": {
             "type": "category",
             "children": {
@@ -83,6 +100,17 @@
                 }
             }
         },
+        "travel": {
+            "type": "category",
+            "children": {
+                "retraction_hop": {
+                    "default_value": 1
+                },
+                "retraction_hop_enabled": {
+                    "default_value": false
+                }
+            }
+        },
         "blackmagic": {
             "type": "category",
             "children": {
@@ -104,7 +132,7 @@
                     "default_value": 1
                 },
                 "brim_width": {
-                    "default_value": 8.0,
+                    "default_value": 8,
                     "children": {
                         "brim_line_count": {
                             "default_value": 20
