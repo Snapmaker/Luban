@@ -259,7 +259,7 @@ export const actions = {
         });
     },
 
-    renderGcodeFile: (gcodeFile, needToList = true) => async (dispatch, getState) => {
+    renderGcodeFile: (gcodeFile, needToList = true, startPrint = false) => async (dispatch, getState) => {
         const oldGcodeFile = getState().workspace.gcodeFile;
 
         if (needToList) {
@@ -269,6 +269,16 @@ export const actions = {
             return;
         }
         await dispatch(actions.clearGcode());
+        if (startPrint) {
+            await dispatch(actions.updateState({
+                gcodeFile,
+                stage: WORKSPACE_STAGE.LOADING_GCODE,
+                renderState: 'rendering',
+                progress: 0
+            }));
+            await dispatch(actions.loadGcode(gcodeFile));
+            gcodeRenderingWorker.postMessage({ func: 'WORKSPACE', gcodeFilename: gcodeFile.uploadName });
+        }
     },
 
     renderPreviewGcodeFile: (gcodeFile, index) => async (dispatch) => {

@@ -212,6 +212,7 @@ const visualizerGroup = {
 };
 let printableArea = null;
 function WifiTransport({ widgetActions, controlActions }) {
+    const [isLaserAutoFocus, setIsLaserAutoFocus] = useState(true);
     const isLaserPrintAutoMode = useSelector(state => state?.machine?.isLaserPrintAutoMode);
     const materialThickness = useSelector(state => state?.machine?.materialThickness);
     const isFourAxis = useSelector(state => state?.machine?.workPosition?.isFourAxis);
@@ -302,9 +303,9 @@ function WifiTransport({ widgetActions, controlActions }) {
             if (!find) {
                 return;
             }
-            await dispatch(workspaceActions.renderGcodeFile(find, false));
+            await dispatch(workspaceActions.renderGcodeFile(find, false, true));
 
-            if (toolHeadName === LEVEL_TWO_POWER_LASER_FOR_SM2 && isLaserPrintAutoMode && !isFourAxis) {
+            if (toolHeadName === LEVEL_TWO_POWER_LASER_FOR_SM2 && isLaserAutoFocus && !isFourAxis) {
                 const { maxX, minX, maxY, minY } = find;
                 const deltaY = 10;
                 const deltaX = 19;
@@ -597,12 +598,12 @@ function WifiTransport({ widgetActions, controlActions }) {
                                 <Checkbox
                                     className="sm-flex-auto"
                                     disabled={isFourAxis}
-                                    checked={isLaserPrintAutoMode}
-                                    onChange={actions.onChangeLaserPrintMode}
+                                    checked={isLaserAutoFocus}
+                                    onChange={() => setIsLaserAutoFocus(!isLaserAutoFocus)}
                                 />
                             </div>
                         )}
-                        { toolHeadName === LEVEL_TWO_POWER_LASER_FOR_SM2 && !isLaserPrintAutoMode && !isFourAxis && (
+                        { toolHeadName === LEVEL_TWO_POWER_LASER_FOR_SM2 && !isLaserAutoFocus && !isFourAxis && (
                             <div className="sm-flex height-32 justify-space-between margin-vertical-8">
                                 <span className="">{i18n._('key-unused-Material Thickness')}</span>
                                 <Input
@@ -680,7 +681,7 @@ function WifiTransport({ widgetActions, controlActions }) {
                                             <div className="align-c">{i18n._('key-Workspace/WifiTransport-Sending File')}</div>
                                         </Menu.Item>
                                         <Menu.Item onClick={() => {
-                                            actions.loadGcodeToWorkspace();
+                                            actions.startPrint();
                                             setShowPreviewModal(false);
                                         }}
                                         >
