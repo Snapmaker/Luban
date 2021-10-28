@@ -258,7 +258,7 @@ const ThreeUtils = {
             return lastBbox;
         };
     }()),
-    computeGeometryPlanes(geometry, matrix, allPlanes = [], center) {
+    computeGeometryPlanes(geometry, matrix, allPlanes = [], center, inverseNormal) {
         if (!geometry.isBufferGeometry) {
             geometry = new THREE.BufferGeometry().fromGeometry(geometry);
         } else {
@@ -304,6 +304,9 @@ const ThreeUtils = {
             if (area < 0.1) continue;
 
             if (baseMode) {
+                if (inverseNormal) {
+                    plane.normal.negate();
+                }
                 const idx = planes.findIndex(p => isSimilarPlanes(p, plane));
                 if (idx !== -1) {
                     areas[idx] += area;

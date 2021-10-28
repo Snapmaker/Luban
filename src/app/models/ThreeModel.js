@@ -337,8 +337,10 @@ class ThreeModel extends BaseModel {
         const center = new THREE.Vector3(x, y, z);
         center.applyMatrix4(this.meshObject.matrixWorld);
 
+        // mirror operation on model may cause convex plane normal vector inverse, if it does, inverse it back
+        const inverseNormal = (this.transformation.scaleX / Math.abs(this.transformation.scaleX) < 0);
         // TODO: how about do not use matrix to speed up
-        const { planes, areas } = ThreeUtils.computeGeometryPlanes(this.convexGeometry, this.meshObject.matrixWorld, undefined, center);
+        const { planes, areas } = ThreeUtils.computeGeometryPlanes(this.convexGeometry, this.meshObject.matrixWorld, [], center, inverseNormal);
         const maxArea = Math.max.apply(null, areas);
         const bigPlanes = { planes: null, areas: [] };
         bigPlanes.planes = planes.filter((p, idx) => {
@@ -351,7 +353,7 @@ class ThreeModel extends BaseModel {
         if (!bigPlanes.planes.length) return;
 
         const xyPlaneNormal = new THREE.Vector3(0, 0, -1);
-        const objPlanes = ThreeUtils.computeGeometryPlanes(this.meshObject.geometry, this.meshObject.matrixWorld, bigPlanes.planes, center);
+        const objPlanes = ThreeUtils.computeGeometryPlanes(this.meshObject.geometry, this.meshObject.matrixWorld, bigPlanes.planes, center, false);
 
         let targetPlane;
         const minSupportVolume = Math.min.apply(null, objPlanes.supportVolumes);
@@ -379,7 +381,7 @@ class ThreeModel extends BaseModel {
             const idx = rates.findIndex(r => r === maxRate);
             targetPlane = bigPlanes.planes[idx];
         }
-
+        console.log(this.transformation);
         // WARNING: applyQuternion DONT update Matrix...
         this.meshObject.applyQuaternion(new THREE.Quaternion().setFromUnitVectors(targetPlane.normal, xyPlaneNormal));
         this.meshObject.updateMatrix();
@@ -416,8 +418,11 @@ class ThreeModel extends BaseModel {
 
         const revertParent = ThreeUtils.removeObjectParent(this.meshObject);
         this.meshObject.updateMatrixWorld();
+
+        // mirror operation on model may cause convex plane normal vector inverse, if it does, inverse it back
+        const inverseNormal = (this.transformation.scaleX / Math.abs(this.transformation.scaleX) < 0);
         // TODO: how about do not use matrix to speed up
-        const { planes, areas, planesPosition } = ThreeUtils.computeGeometryPlanes(this.convexGeometry, this.meshObject.matrixWorld, undefined, center);
+        const { planes, areas, planesPosition } = ThreeUtils.computeGeometryPlanes(this.convexGeometry, this.meshObject.matrixWorld, [], center, inverseNormal);
         const maxArea = Math.max.apply(null, areas);
         const bigPlanes = { planes: null, areas: [], planesPosition: [] };
         bigPlanes.planes = planes.filter((p, idx) => {
@@ -431,7 +436,7 @@ class ThreeModel extends BaseModel {
         });
 
         if (!bigPlanes.planes.length) return null;
-        const objPlanes = ThreeUtils.computeGeometryPlanes(this.meshObject.geometry, this.meshObject.matrixWorld, bigPlanes.planes, center);
+        const objPlanes = ThreeUtils.computeGeometryPlanes(this.meshObject.geometry, this.meshObject.matrixWorld, bigPlanes.planes, center, false);
         revertParent();
 
         const minSupportVolume = Math.min.apply(null, objPlanes.supportVolumes);
