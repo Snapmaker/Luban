@@ -253,8 +253,8 @@ class ThreeModel extends BaseModel {
     // 3D
     setMatrix(matrix) {
         this.meshObject.updateMatrix();
-        this.meshObject.applyMatrix(new THREE.Matrix4().getInverse(this.meshObject.matrix));
-        this.meshObject.applyMatrix(matrix);
+        this.meshObject.applyMatrix4(new THREE.Matrix4().getInverse(this.meshObject.matrix));
+        this.meshObject.applyMatrix4(matrix);
         // attention: do not use Object3D.applyMatrix(matrix : Matrix4)
         // because applyMatrix is accumulated
         // anther way: decompose Matrix and reset position/rotation/scale
@@ -328,9 +328,17 @@ class ThreeModel extends BaseModel {
 
         const revertParent = ThreeUtils.removeObjectParent(this.meshObject);
         this.meshObject.updateMatrixWorld();
+        const geometry = this.meshObject.geometry;
+        geometry.computeBoundingBox();
+        const box3 = geometry.boundingBox;
+        const x = (box3.max.x + box3.min.x) / 2;
+        const y = (box3.max.y + box3.min.y) / 2;
+        const z = (box3.max.z + box3.min.z) / 2;
+        const center = new THREE.Vector3(x, y, z);
+        center.applyMatrix4(this.meshObject.matrixWorld);
 
         // TODO: how about do not use matrix to speed up
-        const { planes, areas } = ThreeUtils.computeGeometryPlanes(this.convexGeometry, this.meshObject.matrixWorld);
+        const { planes, areas } = ThreeUtils.computeGeometryPlanes(this.convexGeometry, this.meshObject.matrixWorld, undefined, center);
         const maxArea = Math.max.apply(null, areas);
         const bigPlanes = { planes: null, areas: [] };
         bigPlanes.planes = planes.filter((p, idx) => {
@@ -343,7 +351,7 @@ class ThreeModel extends BaseModel {
         if (!bigPlanes.planes.length) return;
 
         const xyPlaneNormal = new THREE.Vector3(0, 0, -1);
-        const objPlanes = ThreeUtils.computeGeometryPlanes(this.meshObject.geometry, this.meshObject.matrixWorld, bigPlanes.planes);
+        const objPlanes = ThreeUtils.computeGeometryPlanes(this.meshObject.geometry, this.meshObject.matrixWorld, bigPlanes.planes, center);
 
         let targetPlane;
         const minSupportVolume = Math.min.apply(null, objPlanes.supportVolumes);
@@ -397,11 +405,19 @@ class ThreeModel extends BaseModel {
         if (this.sourceType !== '3d' || !this.convexGeometry) {
             return null;
         }
+        const geometry = this.meshObject.geometry;
+        geometry.computeBoundingBox();
+        const box3 = geometry.boundingBox;
+        const x = (box3.max.x + box3.min.x) / 2;
+        const y = (box3.max.y + box3.min.y) / 2;
+        const z = (box3.max.z + box3.min.z) / 2;
+        const center = new THREE.Vector3(x, y, z);
+        center.applyMatrix4(this.meshObject.matrixWorld);
 
         const revertParent = ThreeUtils.removeObjectParent(this.meshObject);
         this.meshObject.updateMatrixWorld();
         // TODO: how about do not use matrix to speed up
-        const { planes, areas, planesPosition } = ThreeUtils.computeGeometryPlanes(this.convexGeometry, this.meshObject.matrixWorld);
+        const { planes, areas, planesPosition } = ThreeUtils.computeGeometryPlanes(this.convexGeometry, this.meshObject.matrixWorld, undefined, center);
         const maxArea = Math.max.apply(null, areas);
         const bigPlanes = { planes: null, areas: [], planesPosition: [] };
         bigPlanes.planes = planes.filter((p, idx) => {
@@ -415,7 +431,7 @@ class ThreeModel extends BaseModel {
         });
 
         if (!bigPlanes.planes.length) return null;
-        const objPlanes = ThreeUtils.computeGeometryPlanes(this.meshObject.geometry, this.meshObject.matrixWorld, bigPlanes.planes);
+        const objPlanes = ThreeUtils.computeGeometryPlanes(this.meshObject.geometry, this.meshObject.matrixWorld, bigPlanes.planes, center);
         revertParent();
 
         const minSupportVolume = Math.min.apply(null, objPlanes.supportVolumes);
@@ -476,7 +492,7 @@ class ThreeModel extends BaseModel {
         convexGeometryClone.computeVertexNormals();
         // this.updateMatrix();
         this.meshObject.updateMatrix();
-        convexGeometryClone.applyMatrix(this.meshObject.matrix);
+        convexGeometryClone.applyMatrix4(this.meshObject.matrix);
         const faces = convexGeometryClone.faces;
         let minAngleFace = null;
         let minAngle = Math.PI;
@@ -544,7 +560,7 @@ class ThreeModel extends BaseModel {
         this.meshObject.updateMatrixWorld();
         const bufferGeometry = this.meshObject.geometry;
         const clone = bufferGeometry.clone();
-        clone.applyMatrix(this.meshObject.matrixWorld.clone());
+        clone.applyMatrix4(this.meshObject.matrixWorld.clone());
 
         const positions = clone.getAttribute('position').array;
 

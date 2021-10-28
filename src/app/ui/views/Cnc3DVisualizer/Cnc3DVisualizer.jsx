@@ -72,7 +72,7 @@ const placementMatrixes = {
 
 const getMeshBbox = (mesh) => {
     const geometry = mesh.geometry.clone();
-    geometry.applyMatrix(mesh.matrix);
+    geometry.applyMatrix4(mesh.matrix);
     geometry.computeBoundingBox();
     const bbox = geometry.boundingBox;
     return bbox;
@@ -90,17 +90,17 @@ const getMeshSize = (mesh) => {
 
 
 const setMeshTransform = (mesh, sourceScale, transformation, isRotate, direction = FRONT, placement = BOTTOM) => {
-    mesh.applyMatrix(new Matrix4().getInverse(mesh.matrix));
-    mesh.applyMatrix(isRotate ? placementMatrixes[placement] : directionMatrixes[direction]);
+    mesh.applyMatrix4(new Matrix4().getInverse(mesh.matrix));
+    mesh.applyMatrix4(isRotate ? placementMatrixes[placement] : directionMatrixes[direction]);
 
-    mesh.applyMatrix(new Matrix4().makeScale(transformation.scaleX * sourceScale, Math.abs(transformation.scaleY * sourceScale), transformation.scaleY * sourceScale));
+    mesh.applyMatrix4(new Matrix4().makeScale(transformation.scaleX * sourceScale, Math.abs(transformation.scaleY * sourceScale), transformation.scaleY * sourceScale));
 };
 
 
 const set3AxisMeshState = (mesh, transformation, platSize) => {
     const { positionX: x, positionY: z, rotationZ, width, height } = transformation;
     mesh.position.set(x, 0, z);
-    mesh.applyMatrix(new Matrix4().makeRotationY(-rotationZ));
+    mesh.applyMatrix4(new Matrix4().makeRotationY(-rotationZ));
     // mesh.rotation.set(0, -rotationZ, 0);
     if (Math.abs(x) + width / 2 > platSize.x / 2 || Math.abs(z) + height / 2 > platSize.z / 2) {
         const material = new MeshPhongMaterial({ color: 0xff0000, specular: 0xb0b0b0, shininess: 0 });
@@ -133,11 +133,11 @@ const set4AxisMeshState = async (mesh, transformation, materials, coordinateSize
     // mesh.add(
     //     meshCylinder
     // );
-    mesh.applyMatrix(new Matrix4().makeRotationY(-transformation.rotationZ));
+    mesh.applyMatrix4(new Matrix4().makeRotationY(-transformation.rotationZ));
     mesh.position.set(0, 0, materials.length / 2 - transformation.positionY - coordinateSize.y / 2);
     mesh.updateMatrix();
     if (radius) {
-        mesh.applyMatrix(new Matrix4().makeRotationZ(-transformation.positionX / radius));
+        mesh.applyMatrix4(new Matrix4().makeRotationZ(-transformation.positionX / radius));
     }
 
     if (radius > materials.diameter / 2) {

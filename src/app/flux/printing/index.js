@@ -908,7 +908,7 @@ export const actions = {
                 for (const item of models) {
                     const mesh = item.meshObject.clone();
                     mesh.children = []; // remove support children
-                    mesh.applyMatrix(item.meshObject.parent.matrix);
+                    mesh.applyMatrix4(item.meshObject.parent.matrix);
                     const stl = new ModelExporter().parse(mesh, 'stl', true);
                     const blob = new Blob([stl], { type: 'text/plain' });
 
