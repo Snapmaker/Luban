@@ -64,6 +64,7 @@ const INITIAL_STATE = {
     manualIp: '',
     isOpen: false,
     isConnected: false,
+    isSendedOnWifi: true,
     // for wifi connection ?
     workflowStatus: WORKFLOW_STATUS_UNKNOWN,
 
@@ -886,6 +887,9 @@ export const actions = {
         if (workflowStatus !== WORKFLOW_STATUS_IDLE || gcodeFile === null) {
             return;
         }
+        dispatch(baseActions.updateState({
+            isSendedOnWifi: false
+        }));
 
         const gcodeFilePath = `${DATA_PREFIX}/${gcodeFile.uploadName}`;
 
@@ -934,6 +938,9 @@ export const actions = {
                                 return;
                             }
                             server.startGcode((err2) => {
+                                dispatch(baseActions.updateState({
+                                    isSendedOnWifi: true
+                                }));
                                 if (err2) {
                                     callback && callback(err2);
                                     return;

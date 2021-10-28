@@ -9,8 +9,10 @@ import SvgIcon from '../../../components/SvgIcon';
 // import { NumberInput } from '../../../components/Input';
 import i18n from '../../../../lib/i18n';
 import { actions as machineActions } from '../../../../flux/machine';
+import { actions as projectActions } from '../../../../flux/project';
 import styles from '../form.styl';
 import {
+    getCurrentHeadType,
     MACHINE_SERIES,
     MACHINE_TOOL_HEADS,
     SINGLE_EXTRUDER_TOOLHEAD_FOR_ORIGINAL,
@@ -216,6 +218,10 @@ function MachineSettings() {
                 laserToolhead: laserToolheadSelected,
                 cncToolhead: cncToolheadSelected
             }, state.series));
+            const headType = getCurrentHeadType(window.location.href);
+            if (headType) {
+                dispatch(projectActions.clearSavedEnvironment(headType));
+            }
             window.location.href = '/';
         },
         handleToolheadChange: (e, type) => {
