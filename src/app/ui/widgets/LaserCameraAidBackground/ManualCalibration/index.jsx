@@ -15,6 +15,7 @@ import { EXPERIMENTAL_LASER_CAMERA } from '../../../../constants';
 
 class ManualCalibration extends PureComponent {
     static propTypes = {
+        toolHead: PropTypes.object.isRequired,
         size: PropTypes.object.isRequired,
         server: PropTypes.object.isRequired,
         getPoints: PropTypes.array.isRequired,
@@ -36,7 +37,7 @@ class ManualCalibration extends PureComponent {
 
     actions = {
         onClickToUpload: () => {
-            api.cameraCalibrationPhoto({ 'address': this.props.server.address }).then((res) => {
+            api.cameraCalibrationPhoto({ 'address': this.props.server.address, 'toolHead': this.props.toolHead.laserToolhead }).then((res) => {
                 const { fileName, width, height } = JSON.parse(res.text);
                 this.setState({
                     width,
@@ -70,7 +71,7 @@ class ManualCalibration extends PureComponent {
                     matrix.points[i].x = Math.floor(this.props.getPoints[i].x);
                     matrix.points[i].y = Math.floor(this.props.getPoints[i].y);
                 }
-                await api.setCameraCalibrationMatrix({ 'address': address, 'matrix': JSON.stringify(matrix) });
+                await api.setCameraCalibrationMatrix({ 'address': address, 'toolHead': this.props.toolHead.laserToolhead, 'matrix': JSON.stringify(matrix) });
             }
             this.props.backtoCalibrationModal();
             this.props.updateStitchEach();

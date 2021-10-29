@@ -2,6 +2,7 @@ import request from 'superagent';
 import Jimp from 'jimp';
 import { pathWithRandomSuffix } from './random-utils';
 import DataStorage from '../DataStorage';
+import { LEVEL_TWO_POWER_LASER_FOR_SM2 } from '../../app/constants';
 
 const fs = require('fs');
 
@@ -22,8 +23,13 @@ export const takePhoto = (options) => {
 };
 
 export const getCameraCalibration = (options) => {
-    const { address } = options;
-    const api = `http://${address}:8080/api/request_camera_calibration`;
+    const { address, toolHead } = options;
+    let api;
+    if (toolHead === LEVEL_TWO_POWER_LASER_FOR_SM2) {
+        api = `http://${address}:8080/api/request_10w_laser_camera_calibration`;
+    } else {
+        api = `http://${address}:8080/api/request_camera_calibration`;
+    }
 
     return new Promise((resolve) => {
         request.get(api).end((err, res) => {
@@ -58,8 +64,13 @@ export const getPhoto = (options) => {
 };
 
 export const calibrationPhoto = (options) => {
-    const { address } = options;
-    const api = `http://${address}:8080/api/v1/camera_calibration_photo`;
+    const { address, toolHead } = options;
+    let api;
+    if (toolHead === LEVEL_TWO_POWER_LASER_FOR_SM2) {
+        api = `http://${address}:8080/api/v1/10w_laser_camera_calibration_photo`;
+    } else {
+        api = `http://${address}:8080/api/v1/camera_calibration_photo`;
+    }
     return new Promise((resolve) => {
         request.get(api).end((err, res) => {
             let fileName = 'calibration.jpg';
@@ -79,8 +90,13 @@ export const calibrationPhoto = (options) => {
 };
 
 export const setMatrix = (options) => {
-    const { matrix, address } = options;
-    let api = `http://${address}:8080/api/set_camera_calibration_matrix`;
+    const { matrix, address, toolHead } = options;
+    let api;
+    if (toolHead === LEVEL_TWO_POWER_LASER_FOR_SM2) {
+        api = `http://${address}:8080/api/set_10w_laser_camera_calibration_matrix`;
+    } else {
+        api = `http://${address}:8080/api/set_camera_calibration_matrix`;
+    }
     api += `?matrix=${matrix}`;
     return new Promise((resolve) => {
         request.post(api).end((err, res) => {

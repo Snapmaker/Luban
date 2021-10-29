@@ -696,6 +696,10 @@ function WifiTransport({ widgetActions, controlActions }) {
                                     priority="level-two"
                                     type="primary"
                                     width="200px"
+                                    onClick={() => {
+                                        actions.startPrint();
+                                        setShowPreviewModal(false);
+                                    }}
                                 >
                                     {i18n._('key-Workspace/Transport-Start Print')}
                                 </Button>

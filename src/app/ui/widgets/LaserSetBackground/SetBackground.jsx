@@ -26,6 +26,7 @@ class SetBackground extends PureComponent {
         hideModal: PropTypes.func.isRequired,
 
         // redux
+        toolHead: PropTypes.object.isRequired,
         size: PropTypes.object.isRequired,
         setBackgroundImage: PropTypes.func.isRequired
     };
@@ -134,6 +135,7 @@ class SetBackground extends PureComponent {
                     )}
                     {state.panel === PANEL_EXTRACT_TRACE && (
                         <ExtractSquareTrace
+                            toolHead={this.props.toolHead}
                             sideLength={this.state.sideLength}
                             displayPrintTrace={this.actions.displayPrintTrace}
                             setBackgroundImage={this.actions.setBackgroundImage}
@@ -149,7 +151,8 @@ class SetBackground extends PureComponent {
 const mapStateToProps = (state) => {
     const machine = state.machine;
     return {
-        size: machine.size
+        size: machine.size,
+        toolHead: machine.toolHead
     };
 };
 

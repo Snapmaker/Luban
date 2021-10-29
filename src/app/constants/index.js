@@ -1111,3 +1111,22 @@ export const INITIAL_TOOL_HEAD_FOR_SM2 = {
     laserToolhead: MACHINE_TOOL_HEADS[LEVEL_ONE_POWER_LASER_FOR_SM2].value,
     cncToolhead: MACHINE_TOOL_HEADS[STANDARD_CNC_TOOLHEAD_FOR_SM2].value
 };
+
+
+export const LASER_10W_TAKE_PHOTO_POSITION = {
+    A350: {
+        x: 232,
+        y: 178,
+        z: 290
+    },
+    A250: {
+        x: 186,
+        y: 130,
+        z: 230
+    },
+    A150: {
+        x: 155,
+        y: 82,
+        z: 150
+    }
+};
