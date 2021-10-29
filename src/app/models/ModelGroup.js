@@ -1109,7 +1109,7 @@ class ModelGroup extends EventEmitter {
         const modelBox3 = model.boundingBox;
         const box3Arr = [];
         for (const m of arrangedModels) {
-            m.computeBoundingBox();
+            m.stickToPlate();
             box3Arr.push(m.boundingBox);
         }
 
@@ -1160,6 +1160,7 @@ class ModelGroup extends EventEmitter {
                     continue;
                 }
                 if (!this._isBox3IntersectOthers(modelBox3Clone, box3Arr)) {
+                    console.log(1, position.x, position.y);
                     return { x: position.x, y: position.y };
                 }
             }
@@ -1170,6 +1171,7 @@ class ModelGroup extends EventEmitter {
             const modelBox3Clone = modelBox3.clone();
             modelBox3Clone.translate(new Vector3(stepCount, 0, 0));
             if (!this._isBox3IntersectOthers(modelBox3Clone, box3Arr)) {
+                console.log(2, stepCount);
                 return { x: stepCount, y: 0 };
             }
         }
