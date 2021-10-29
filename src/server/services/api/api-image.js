@@ -237,7 +237,6 @@ export const processStitchEach = (req, res) => {
 
     stitchEach(imageOptions)
         .then((result) => {
-            console.log('result', result);
             res.send(result);
         })
         .catch((err) => {

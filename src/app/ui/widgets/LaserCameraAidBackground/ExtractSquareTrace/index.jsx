@@ -8,7 +8,8 @@ import api from '../../../../api';
 import styles from '../styles.styl';
 import ExtractPreview from './ExtractPreview';
 import ManualCalibration from '../ManualCalibration';
-import { LEVEL_ONE_POWER_LASER_FOR_SM2, LEVEL_TWO_POWER_LASER_FOR_SM2, MACHINE_SERIES } from '../../../../constants';
+import { LEVEL_ONE_POWER_LASER_FOR_SM2, LEVEL_TWO_POWER_LASER_FOR_SM2,
+    MACHINE_SERIES, LASER_10W_TAKE_PHOTO_POSITION } from '../../../../constants';
 import { actions } from '../../../../flux/machine';
 import { Button } from '../../../components/Buttons';
 import Modal from '../../../components/Modal';
@@ -218,21 +219,10 @@ class ExtractSquareTrace extends PureComponent {
                 }
             }
             if (this.props.toolHead.laserToolhead === LEVEL_TWO_POWER_LASER_FOR_SM2) {
-                if (this.props.series === MACHINE_SERIES.A350.value) {
-                    z = 290;
-                    position[0].x = 232;
-                    position[0].y = 178;
-                }
-                if (this.props.series === MACHINE_SERIES.A150.value) {
-                    z = 150;
-                    position[0].x = 155;
-                    position[0].y = 82;
-                }
-                if (this.props.series === MACHINE_SERIES.A250.value) {
-                    z = 230;
-                    position[0].x = 186;
-                    position[0].y = 130;
-                }
+                const defaultPos = LASER_10W_TAKE_PHOTO_POSITION[MACHINE_SERIES.A350.value];
+                z = defaultPos.z;
+                position[0].x = defaultPos.x;
+                position[0].y = defaultPos.y;
             }
             return new Promise(async (resolve, reject) => {
                 for (let i = 0; i < position.length; i++) {
@@ -343,6 +333,7 @@ class ExtractSquareTrace extends PureComponent {
                                                 this.multiple
                                             );
                                         }
+                                        this.props.executeGcodeG54(this.props.series, this.props.headType);
                                         task.status = 2;
                                     });
                                 } else if (this.props.toolHead.laserToolhead === LEVEL_TWO_POWER_LASER_FOR_SM2) {
