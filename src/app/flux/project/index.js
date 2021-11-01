@@ -159,6 +159,13 @@ export const actions = {
                     model.headType = HEAD_PRINTING;
                 }
             });
+
+            if (envObj?.machineInfo?.headType === 'laser' && envObj.toolpaths) {
+                envObj.toolpaths.forEach((toolpath) => {
+                    toolpath.pathType = toolpath.pathType ?? (toolpath.fillEnabled ? 'fill' : 'path');
+                });
+            }
+
             content = JSON.stringify(envObj);
             await api.recoverEnv({ content });
         }
