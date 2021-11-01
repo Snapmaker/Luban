@@ -1908,6 +1908,7 @@ export const actions = {
             SVGActions.moveElementsStart(elements);
             SVGActions.moveElements(elements, coorDelta);
             SVGActions.moveElementsFinish(elements, coorDelta);
+            SVGActions.clearSelection();
             dispatch(baseActions.render(headType));
         }
 
