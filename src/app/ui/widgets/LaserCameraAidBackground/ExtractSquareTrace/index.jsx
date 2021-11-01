@@ -219,7 +219,7 @@ class ExtractSquareTrace extends PureComponent {
                 }
             }
             if (this.props.toolHead.laserToolhead === LEVEL_TWO_POWER_LASER_FOR_SM2) {
-                const defaultPos = LASER_10W_TAKE_PHOTO_POSITION[MACHINE_SERIES.A350.value];
+                const defaultPos = LASER_10W_TAKE_PHOTO_POSITION[this.props.series];
                 z = defaultPos.z;
                 position[0].x = defaultPos.x;
                 position[0].y = defaultPos.y;
