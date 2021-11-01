@@ -45,7 +45,7 @@ export const processActions = {
         const { SVGActions, toolPathGroup, progressStatesManager } = getState()[headType];
         let visibleToolPathsLength = 0;
         toolPathGroup.toolPaths.forEach((toolPath) => {
-            if (toolPath.visible) {
+            if (toolPath.visible && toolPath.hasVisibleModels()) {
                 visibleToolPathsLength += 1;
             }
         });
