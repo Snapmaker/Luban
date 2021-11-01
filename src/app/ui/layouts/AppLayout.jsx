@@ -94,7 +94,7 @@ class AppLayout extends PureComponent {
                 renderBody: () => {
                     return (
                         <Settings
-                            location={{ pathname: `/settings/${this.activeTab}` }}
+                            pathname={`/settings/${this.activeTab}`}
                         />
                     );
                 },

@@ -563,7 +563,7 @@ class Visualizer extends PureComponent {
                 target.copy(min).add(max).divideScalar(2);
                 const width = new THREE.Vector3().add(min).distanceTo(new THREE.Vector3().add(max));
                 const position = new THREE.Vector3(target.x, target.y, width * 2);
-                this.canvas.current.setCamera(position, target);
+                this.canvas.current && this.canvas.current.setCamera(position, target);
             }
         }
         // open the enclosureDoorOpened modal
@@ -728,7 +728,7 @@ class Visualizer extends PureComponent {
     }
 
     renderScene() {
-        this.canvas.current.renderScene();
+        this.canvas.current && this.canvas.current.renderScene();
     }
 
 

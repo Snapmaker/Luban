@@ -381,7 +381,6 @@ class ThreeModel extends BaseModel {
             const idx = rates.findIndex(r => r === maxRate);
             targetPlane = bigPlanes.planes[idx];
         }
-        console.log(this.transformation);
         // WARNING: applyQuternion DONT update Matrix...
         this.meshObject.applyQuaternion(new THREE.Quaternion().setFromUnitVectors(targetPlane.normal, xyPlaneNormal));
         this.meshObject.updateMatrix();

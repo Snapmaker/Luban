@@ -26,7 +26,7 @@ class Settings extends PureComponent {
     static propTypes = {
         ...withRouter,
         // resetAllUserSettings: PropTypes.func.isRequired,
-        location: PropTypes.object.isRequired
+        pathname: PropTypes.string.isRequired
     };
 
     sections = [
@@ -179,7 +179,7 @@ class Settings extends PureComponent {
         const actions = {
             ...this.actions
         };
-        const pathname = state.activePathname || this.props.location.pathname;
+        const pathname = state.activePathname || this.props.pathname;
         const initialSectionPath = this.sections[0].path;
         const sectionPath = pathname.replace(/^\/settings(\/)?/, ''); // TODO
         const id = mapSectionPathToId(sectionPath || initialSectionPath);
@@ -229,4 +229,4 @@ class Settings extends PureComponent {
     }
 }
 
-export default Settings;
+export default withRouter(Settings);
