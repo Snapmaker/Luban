@@ -135,7 +135,7 @@ const StackedModel = ({ setStackedModelModalDsiabled }) => {
     }, []);
     return (
         <div className={classNames(styles['model-cut-modal'])}>
-            <div className="display-inline">
+            <div className={classNames(styles['model-cut-modal-left'], 'display-inline')}>
                 <Spin spinning={disabled} className={classNames(styles.spin)} tip={i18n._('key-StackedModel/Import-Loading')}>
                     <div className={classNames(styles['model-viewer-container'])}>
                         <ModelViewer geometry={modelGeometry} coordinateSize={canvasRange} />
@@ -152,7 +152,7 @@ const StackedModel = ({ setStackedModelModalDsiabled }) => {
             <div className={classNames(styles['model-size-container'])}>
                 <div>
                     <div className={classNames(styles.title)}>{i18n._('key-StackedModel/Import-Model Size')}</div>
-                    <div className="sm-flex height-32 margin-vertical-8">
+                    <div className="sm-flex height-32 margin-vertical-16">
                         <span className="sm-flex-width sm-flex justify-space-between">
                             <div className="position-re sm-flex align-flex-start">
                                 <span className="width-16 height-32 display-inline unit-text align-c margin-left-4 margin-right-4">
@@ -164,7 +164,7 @@ const StackedModel = ({ setStackedModelModalDsiabled }) => {
                                         className="margin-horizontal-2"
                                         disabled={disabled}
                                         value={toFixed(size.x, 1)}
-                                        size="small"
+                                        size="large"
                                         min={MIN_SIZE}
                                         max={coordinateSize.x}
                                         onChange={(value) => {
@@ -173,28 +173,9 @@ const StackedModel = ({ setStackedModelModalDsiabled }) => {
                                     />
                                 </span>
                             </div>
-                            <div className="position-re sm-flex align-flex-start">
-                                <span className="width-16 height-32 display-inline unit-text align-c margin-right-4">
-                                    Z
-                                </span>
-                                <span>
-                                    <Input
-                                        suffix="mm"
-                                        disabled={disabled}
-                                        className="margin-horizontal-2"
-                                        value={toFixed(size.z, 1)}
-                                        size="small"
-                                        min={MIN_SIZE}
-                                        max={MAX_Z}
-                                        onChange={(value) => {
-                                            actions.onChangeLogicalZ(value);
-                                        }}
-                                    />
-                                </span>
-                            </div>
                         </span>
                     </div>
-                    <div className="sm-flex height-32 margin-vertical-8">
+                    <div className="sm-flex height-32 margin-vertical-16">
                         <span className="sm-flex-width sm-flex justify-space-between">
                             <div className="position-re sm-flex align-flex-start">
                                 <span className="width-16 height-32 display-inline unit-text align-c margin-left-4 margin-right-4">
@@ -206,7 +187,7 @@ const StackedModel = ({ setStackedModelModalDsiabled }) => {
                                         disabled={disabled}
                                         className="margin-horizontal-2"
                                         value={toFixed(size.y, 1)}
-                                        size="small"
+                                        size="large"
                                         min={MIN_SIZE}
                                         max={coordinateSize.y}
                                         onChange={(value) => {
@@ -217,10 +198,33 @@ const StackedModel = ({ setStackedModelModalDsiabled }) => {
                             </div>
                         </span>
                     </div>
+                    <div className="sm-flex height-32 margin-vertical-16">
+                        <span className="sm-flex-width sm-flex justify-space-between">
+                            <div className="position-re sm-flex align-flex-start">
+                                <span className="width-16 height-32 display-inline unit-text align-c margin-left-4 margin-right-4">
+                                    Z
+                                </span>
+                                <span>
+                                    <Input
+                                        suffix="mm"
+                                        disabled={disabled}
+                                        className="margin-horizontal-2"
+                                        value={toFixed(size.z, 1)}
+                                        size="large"
+                                        min={MIN_SIZE}
+                                        max={MAX_Z}
+                                        onChange={(value) => {
+                                            actions.onChangeLogicalZ(value);
+                                        }}
+                                    />
+                                </span>
+                            </div>
+                        </span>
+                    </div>
                 </div>
                 <div>
                     <div className={classNames(styles.title, styles.thickness)}>{i18n._('key-StackedModel/Import-Material Thickness')}</div>
-                    <div className="sm-flex height-32 margin-vertical-8">
+                    <div className="sm-flex height-32 margin-vertical-16">
                         <span className="sm-flex-width sm-flex justify-space-between">
                             <div className="position-re sm-flex align-flex-start">
                                 <span className="width-16 height-32 display-inline unit-text align-c margin-left-4 margin-right-4">
@@ -232,7 +236,7 @@ const StackedModel = ({ setStackedModelModalDsiabled }) => {
                                         disabled={disabled}
                                         className="margin-horizontal-2"
                                         value={toFixed(thickness, 1)}
-                                        size="small"
+                                        size="large"
                                         min={MIN_SIZE}
                                         max={MAX_THICKNESS}
                                         onChange={(value) => {

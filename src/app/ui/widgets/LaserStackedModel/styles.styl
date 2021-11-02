@@ -1,21 +1,29 @@
 @import "../../../styles/global-var.styl"
 
 .model-cut-modal {
-    margin-bottom: -10px;
-    .model-viewer-container {
-        width: 196px;
-        height: 196px;
-        display: inline-block;
-        background-color: #F5F5F7;
-        border-radius: 8px;
-        overflow: hidden;
-    }
-    .description {
-        color: #86868B;
-        font-size: 12px;
-        .desc-split {
+    margin-bottom: -22px;
+    display: flex;
+    padding: 5px;
+    .model-cut-modal-left {
+        position: relative;
+        .model-viewer-container {
+            width: 696px;
+            height: 509px;
             display: inline-block;
-            padding: 0 1em;
+            background-color: #F5F5F7;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        .description {
+            position: absolute;
+            right: 16px;
+            bottom: 16px;
+            color: #86868B;
+            font-size: 12px;
+            .desc-split {
+                display: inline-block;
+                padding: 0 1em;
+            }
         }
     }
     .model-size-container {
@@ -28,15 +36,16 @@
             color: #545659;
             margin-bottom: 16px;
             &.thickness {
-                margin-top: 14px;
+                margin-top: 25px;
             }
         }
     }
 }
 .spin {
+    max-height: 509px !important;
     background: $grey-3;
     border-radius: 8px;
-    height: 196px !important;
+    height: 509px !important;
 }
 :global(.ant-spin-text) {
     color: #85888C;
