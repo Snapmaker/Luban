@@ -81,7 +81,7 @@ const ModelViewer = React.memo(({ geometry, coordinateSize }) => {
                 <SvgIcon
                     name="ViewIsometric"
                     hoversize={14}
-                    size={18}
+                    size={20}
                     onClick={toTopFrontRight}
                 />
             </div>
