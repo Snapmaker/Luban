@@ -557,18 +557,18 @@ function WifiTransport({ widgetActions, controlActions }) {
                     <Modal.Body>
                         { toolHeadName !== LEVEL_TWO_POWER_LASER_FOR_SM2 && (
                             <div className="sm-flex height-32 justify-space-between margin-vertical-8">
-                                <span>{i18n._('key-unused-Auto Mode')}</span>
+                                <span>{i18n._('key-Workspace/LaserStartJob-3axis_start_job_auto_mode')}</span>
                                 <Checkbox
                                     className="sm-flex-auto"
                                     disabled={isFourAxis}
-                                    checked={isLaserPrintAutoMoqgide}
+                                    checked={isLaserPrintAutoMode}
                                     onChange={actions.onChangeLaserPrintMode}
                                 />
                             </div>
                         )}
                         { toolHeadName !== LEVEL_TWO_POWER_LASER_FOR_SM2 && isLaserPrintAutoMode && !isFourAxis && (
                             <div className="sm-flex height-32 justify-space-between margin-vertical-8">
-                                <span className="">{i18n._('key-unused-Material Thickness')}</span>
+                                <span className="">{i18n._('key-Workspace/LaserStartJob-3axis_start_job_material_thickness')}</span>
                                 <Input
                                     suffix="mm"
                                     className="sm-flex-auto"
@@ -582,7 +582,7 @@ function WifiTransport({ widgetActions, controlActions }) {
                         )}
                         { toolHeadName !== LEVEL_TWO_POWER_LASER_FOR_SM2 && isLaserPrintAutoMode && isFourAxis && (
                             <div className="sm-flex height-32 justify-space-between margin-vertical-8">
-                                <span className="">{i18n._('key-unused-Material Thickness')}</span>
+                                <span className="">{i18n._('key-Workspace/LaserStartJob-3axis_start_job_material_thickness')}</span>
                                 <Input
                                     suffix="mm"
                                     className="sm-flex-auto"
@@ -597,7 +597,7 @@ function WifiTransport({ widgetActions, controlActions }) {
 
                         { toolHeadName === LEVEL_TWO_POWER_LASER_FOR_SM2 && (
                             <div className="sm-flex height-32 justify-space-between margin-vertical-8">
-                                <span>{i18n._('auto setting thickness')}</span>
+                                <span>{i18n._('key-Workspace/LaserStartJob-10w_3axis_start_job_auto_mode')}</span>
                                 <Checkbox
                                     className="sm-flex-auto"
                                     disabled={isFourAxis}
@@ -608,7 +608,7 @@ function WifiTransport({ widgetActions, controlActions }) {
                         )}
                         { toolHeadName === LEVEL_TWO_POWER_LASER_FOR_SM2 && !isLaserAutoFocus && !isFourAxis && (
                             <div className="sm-flex height-32 justify-space-between margin-vertical-8">
-                                <span className="">{i18n._('key-unused-Material Thickness')}</span>
+                                <span className="">{i18n._('key-Workspace/LaserStartJob-3axis_start_job_material_thickness')}</span>
                                 <Input
                                     suffix="mm"
                                     className="sm-flex-auto"
