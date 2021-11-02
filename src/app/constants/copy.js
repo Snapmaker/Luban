@@ -150,3 +150,32 @@ i18n._('key-Workspace/Connection-TOOLHEAD_CNC_1');
 i18n._('key-Workspace/Connection-10W Laser');
 i18n._('key-Workspace/Connection-3dp');
 i18n._('key-Workspace/Connection-laser');
+
+// Progress Manager
+i18n._('key-Progress/LaserCNC-Generate toolpath and preview: {{progress}}%');
+i18n._('key-Progress/LaserCNC-Generated toolpath and previewed successfully.');
+i18n._('key-Progress/LaserCNC-Failed to generate toolpath and preview.');
+i18n._('key-Progress/LaserCNC-Loading object {{progress}}%');
+i18n._('key-Progress/LaserCNC-Loaded object successfully.');
+i18n._('key-Progress/LaserCNC-Failed to load object.');
+i18n._('key-Progress/LaserCNC-Processing object {{progress}}%');
+i18n._('key-Progress/LaserCNC-Processed object successfully.');
+i18n._('key-Progress/LaserCNC-Failed to process object.');
+i18n._('key-Progress/LaserCNC-Generating simulation {{progress}}%');
+i18n._('key-Progress/LaserCNC-Generated simulation successfully.');
+i18n._('key-Progress/LaserCNC-Failed to generate simulation.');
+
+i18n._('key-Progress/Laser-Loading model...');
+i18n._('key-Progress/Laser-Loaded model successfully.');
+i18n._('key-Progress/Laser-Failed to load model.');
+
+i18n._('key-Progress/3DP-Loading model...');
+i18n._('key-Progress/3DP-Loaded model successfully.');
+i18n._('key-Progress/3DP-Failed to load model.');
+i18n._('key-Progress/3DP-Previewing G-code...{{progress}}%');
+i18n._('key-Progress/3DP-Previewed G-code successfully.');
+i18n._('key-Progress/3DP-Failed to preview G-code.');
+i18n._('key-Progress/3DP-Calculating Rotation');
+i18n._('key-Progress/3DP-Calculated Rotation successfully.');
+i18n._('key-Progress/3DP-Failed to calculate Rotation.');
+

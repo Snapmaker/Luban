@@ -3,11 +3,13 @@ import PropTypes from 'prop-types';
 import { Radio } from '../components/Radio';
 import Select from '../components/Select';
 import { TextInput as Input } from '../components/Input';
+import { HEAD_LASER, HEAD_CNC } from '../../constants';
 
 import i18n from '../../lib/i18n';
 
 class DefinitionCreator extends PureComponent {
     static propTypes = {
+        headType: PropTypes.string.isRequired,
         isCreate: PropTypes.bool,
         disableCategory: PropTypes.bool,
         copyType: PropTypes.string,
@@ -77,7 +79,12 @@ class DefinitionCreator extends PureComponent {
                 )}
                 {!this.props.disableCategory && (
                     <div>
-                        <span className="font-size-base display-block margin-bottom-8">{i18n._('key-Cnc/ToolManger/ProfileCreator-Enter tool name')}</span>
+                        {this.props.headType === HEAD_CNC && (
+                            <span className="font-size-base display-block margin-bottom-8">{i18n._('key-Cnc/ToolManger/ProfileCreator-Enter tool name')}</span>
+                        )}
+                        {this.props.headType === HEAD_LASER && (
+                            <span className="font-size-base display-block margin-bottom-8">{i18n._('key-Laser/PresetManager/ProfileCreator-Enter Preset name')}</span>
+                        )}
                         <Input
                             size="432px"
                             onChange={(event) => {
@@ -86,9 +93,16 @@ class DefinitionCreator extends PureComponent {
                             }}
                             value={this.state.toolName}
                         />
-                        <p className="margin-top-16 font-size-base margin-bottom-8">
-                            {i18n._('key-Cnc/ToolManger/ProfileCreator-Select material type')}
-                        </p>
+                        {this.props.headType === HEAD_CNC && (
+                            <p className="margin-top-16 font-size-base margin-bottom-8">
+                                {i18n._('key-Cnc/ToolManger/ProfileCreator-Select material type')}
+                            </p>
+                        )}
+                        {this.props.headType === HEAD_LASER && (
+                            <p className="margin-top-16 font-size-base margin-bottom-8">
+                                {i18n._('key-Laser/ToolManger/ProfileCreator-Select material type')}
+                            </p>
+                        )}
                         <Select
                             size="432px"
                             backspaceRemoves={false}
@@ -126,7 +140,12 @@ class DefinitionCreator extends PureComponent {
                     </div>
 
                     <div className="margin-top-16">
-                        <Radio value="Tool" className="height-24">{i18n._('key-Cnc/ToolManger/ProfileCreator-Create Carving Tool')}</Radio>
+                        {this.props.headType === HEAD_CNC && (
+                            <Radio value="Tool" className="height-24">{i18n._('key-Cnc/ToolManger/ProfileCreator-Create Carving Tool')}</Radio>
+                        )}
+                        {this.props.headType === HEAD_LASER && (
+                            <Radio value="Tool" className="height-24">{i18n._('key-Laser/PresetManager/ProfileCreator-Create Preset')}</Radio>
+                        )}
                         {this.state.createType === 'Tool' && this.renderToolCreate()}
                     </div>
 

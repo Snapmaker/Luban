@@ -22,20 +22,20 @@ function normalizeNum(num) {
 function initColumns() {
     return [
         {
-            title: 'NO.',
-            description: 'NO.',
+            title: i18n._('key-Printing/RotationAnalyze-No'),
+            description: i18n._('key-Printing/RotationAnalyze-No'),
             dataIndex: 'key',
             order: 'asc'
         },
         {
-            title: 'Areas',
-            description: 'Areas',
+            title: i18n._('key-Printing/RotationAnalyze-Areas'),
+            description: i18n._('key-Printing/RotationAnalyze-Areas'),
             dataIndex: 'area',
             order: ''
         },
         {
-            title: 'Support Volume',
-            description: 'Support Volume',
+            title: i18n._('key-Printing/RoationAnalyze-Support Volume'),
+            description: i18n._('key-Printing/RoationAnalyze-Support Volume'),
             dataIndex: 'supportVolume',
             order: ''
         }
@@ -134,7 +134,7 @@ const Table = React.memo(({ tableColumns, onRowSelect, selectedRow, data, setDat
                 </thead>
             </table>
             <div className={classNames(styles.scroll)} ref={refScroll}>
-                { data.length === 0 ? <div className="text-center padding-vertical-56">{i18n._('key-Printing/RotationAnalysis_Analyzing...-Analyzing...')}</div> : null }
+                { data.length === 0 ? <div className="text-center padding-vertical-56">{i18n._('key-Printing/RotationAnalyze-Loading')}</div> : null }
                 <table>
                     <tbody ref={refTbody}>
                         {
@@ -265,7 +265,7 @@ function RotationAnalysisOverlay({ onClose }) {
                     margin: 0
                 }}
                 >
-                    Rotation Analyze
+                    {i18n._('key-Printing/LeftBar-Select Placement Face')}
                 </span>
             </header>
             <section>
@@ -278,7 +278,7 @@ function RotationAnalysisOverlay({ onClose }) {
                     width="96px"
                     className="margin-left-8"
                 >
-                    {i18n._('key-Printing/RotationAnalysis_Done-Done')}
+                    {i18n._('key-Printing/RoationAnalyze-Complete')}
                 </Button>
             </footer>
         </div>
