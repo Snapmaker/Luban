@@ -1663,23 +1663,25 @@ export const actions = {
 
     analyzeSelectedModelRotation: () => (dispatch, getState) => {
         const { modelGroup, progressStatesManager } = getState().printing;
-        // clear supports in selected model
-        dispatch(actions.clearAllManualSupport());
-        // calculate model rotation info, convex calculation may take more time, use async way
-        modelGroup.analyzeSelectedModelRotationAsync().then(tableResult => {
-            if (tableResult) {
+        if (modelGroup.getSelectedModelArray()?.length === 1) {
+            // clear supports in selected model
+            dispatch(actions.clearAllManualSupport());
+            // calculate model rotation info, convex calculation may take more time, use async way
+            modelGroup.analyzeSelectedModelRotationAsync().then(tableResult => {
+                if (tableResult) {
+                    dispatch(actions.updateState({
+                        rotationAnalysisTable: tableResult
+                    }));
+                }
+                dispatch(actions.setTransformMode('rotate-placement'));
                 dispatch(actions.updateState({
-                    rotationAnalysisTable: tableResult
+                    stage: STEP_STAGE.PRINTING_ROTATE_ANALYZE,
+                    progress: progressStatesManager.updateProgress(STEP_STAGE.PRINTING_ROTATE_ANALYZE, 1)
                 }));
-            }
-            dispatch(actions.setTransformMode('rotate-placement'));
-            dispatch(actions.updateState({
-                stage: STEP_STAGE.PRINTING_ROTATE_ANALYZE,
-                progress: progressStatesManager.updateProgress(STEP_STAGE.PRINTING_ROTATE_ANALYZE, 1)
-            }));
-            dispatch(actions.destroyGcodeLine());
-            dispatch(actions.displayModel());
-        });
+                dispatch(actions.destroyGcodeLine());
+                dispatch(actions.displayModel());
+            }).catch(() => {});
+        }
     },
 
     clearRotationAnalysisTableData: () => (dispatch, getState) => {

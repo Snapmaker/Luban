@@ -1503,7 +1503,7 @@ class ModelGroup extends EventEmitter {
     }
 
     analyzeSelectedModelRotationAsync() {
-        return new Promise((resolve) => {
+        return new Promise((resolve, reject) => {
             if (this.selectedModelArray.length === 1) {
                 const model = this.selectedModelArray[0];
                 if (!model.convexGeometry) {
@@ -1515,6 +1515,8 @@ class ModelGroup extends EventEmitter {
                     const result = this.analyzeSelectedModelRotation();
                     resolve(result);
                 }
+            } else {
+                reject();
             }
         });
     }
