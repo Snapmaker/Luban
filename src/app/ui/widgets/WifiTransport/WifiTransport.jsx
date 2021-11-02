@@ -17,7 +17,7 @@ import styles from './index.styl';
 import {
     CONNECTION_TYPE_WIFI,
     DATA_PREFIX, HEAD_CNC, HEAD_LASER, HEAD_PRINTING,
-    LEVEL_TWO_POWER_LASER_FOR_SM2, LEVEL_ONE_POWER_LASER_FOR_SM2
+    LEVEL_TWO_POWER_LASER_FOR_SM2
 } from '../../../constants';
 import { actions as workspaceActions, WORKSPACE_STAGE } from '../../../flux/workspace';
 import { actions as projectActions } from '../../../flux/project';
@@ -552,7 +552,7 @@ function WifiTransport({ widgetActions, controlActions }) {
                         {/* {i18n._('key-Workspace/LaserStartJob-start_job')}*/}
                     </Modal.Header>
                     <Modal.Body>
-                        { toolHeadName === LEVEL_ONE_POWER_LASER_FOR_SM2 && (
+                        { toolHeadName !== LEVEL_TWO_POWER_LASER_FOR_SM2 && (
                             <div className="sm-flex height-32 justify-space-between margin-vertical-8">
                                 <span>{i18n._('key-unused-Auto Mode')}</span>
                                 <Checkbox
@@ -563,7 +563,7 @@ function WifiTransport({ widgetActions, controlActions }) {
                                 />
                             </div>
                         )}
-                        { toolHeadName === LEVEL_ONE_POWER_LASER_FOR_SM2 && isLaserPrintAutoMode && !isFourAxis && (
+                        { toolHeadName !== LEVEL_TWO_POWER_LASER_FOR_SM2 && isLaserPrintAutoMode && !isFourAxis && (
                             <div className="sm-flex height-32 justify-space-between margin-vertical-8">
                                 <span className="">{i18n._('key-unused-Material Thickness')}</span>
                                 <Input
@@ -577,7 +577,7 @@ function WifiTransport({ widgetActions, controlActions }) {
                                 />
                             </div>
                         )}
-                        { toolHeadName === LEVEL_ONE_POWER_LASER_FOR_SM2 && isLaserPrintAutoMode && isFourAxis && (
+                        { toolHeadName !== LEVEL_TWO_POWER_LASER_FOR_SM2 && isLaserPrintAutoMode && isFourAxis && (
                             <div className="sm-flex height-32 justify-space-between margin-vertical-8">
                                 <span className="">{i18n._('key-unused-Material Thickness')}</span>
                                 <Input

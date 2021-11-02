@@ -77,7 +77,7 @@ class PrintSquareTrace extends PureComponent {
     static propTypes = {
         size: PropTypes.object.isRequired,
         hideModal: PropTypes.func.isRequired,
-        renderGcode: PropTypes.func.isRequired,
+        renderGcodeFile: PropTypes.func.isRequired,
         clearGcode: PropTypes.func.isRequired,
         state: PropTypes.shape({
             sideLength: PropTypes.number.isRequired
@@ -109,7 +109,7 @@ class PrintSquareTrace extends PureComponent {
 
             const gcodeStr = generateSquareGcode(size, sideLength, power);
             this.props.clearGcode();
-            this.props.renderGcode('Laser_Coordinating.nc', gcodeStr);
+            this.props.renderGcodeFile(gcodeStr);
 
             setTimeout(() => {
                 controller.command('gcode:start');
@@ -225,7 +225,7 @@ const mapStateToProps = (state) => {
 };
 
 const mapDispatchToProps = (dispatch) => ({
-    renderGcode: (name, gcode) => dispatch(workspaceActions.renderGcode(name, gcode)),
+    renderGcodeFile: (gcode) => dispatch(workspaceActions.renderGcodeFile(gcode, false)),
     clearGcode: () => dispatch(workspaceActions.clearGcode())
 });
 
