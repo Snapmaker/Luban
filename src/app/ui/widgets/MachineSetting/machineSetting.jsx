@@ -12,21 +12,27 @@ import Select from '../../components/Select';
 const MachineSetting = (props) => {
     const dispatch = useDispatch();
     const machine = useSelector(state => state?.machine);
-    const { isConnected, connectionType, headType, series } = machine;
+    const { isConnected, connectionType, headType, series, workflowState } = machine;
     const [enclosureDoorDetection, setEnclosureDoorDetection] = useState(machine?.enclosureDoorDetection);
     const [zAxisModule, setZAxisModule] = useState(machine?.zAxisModule);
     useEffect(() => {
-        props.widgetActions.setTitle('key-Workspace/MachineSetting-Machine Setting');
+        props.widgetActions.setTitle(i18n._('key-Workspace/MachineSetting-Machine Setting'));
         dispatch(machineActions.getEnclosureState());
         dispatch(machineActions.getZAxisModuleState());
     }, []);
     useEffect(() => {
-        if (isConnected && connectionType === 'serial' && !!headType && (series === 'Original' || series === 'Original Long Z-axis')) {
+        if (
+            isConnected
+            && connectionType === 'serial'
+            && !!headType
+            && (series === 'Original' || series === 'Original Long Z-axis')
+            && workflowState !== 'running'
+        ) {
             props.widgetActions.setDisplay(true);
         } else {
             props.widgetActions.setDisplay(false);
         }
-    }, [isConnected, connectionType, headType, series]);
+    }, [isConnected, connectionType, headType, series, workflowState]);
     const onSave = () => {
         dispatch(machineActions.setZAxisModuleState(zAxisModule));
         dispatch(machineActions.setEnclosureState(enclosureDoorDetection));
