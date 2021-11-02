@@ -1,3 +1,5 @@
+import { OVERRIDE_STYLE } from "./constants";
+
 function getPath(shape) {
     if (!shape.visibility) {
         return '';
@@ -12,6 +14,7 @@ function getPath(shape) {
         }
         paths.push(`<path d="${pathExpression}" stroke="${shape.stroke ? shape.stroke : 'none'}"
                 fill="${shape.fill ? shape.fill : 'none'}"
+                style="${OVERRIDE_STYLE}"
                 stroke-width="${1}"/>`);
     }
 

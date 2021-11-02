@@ -2,6 +2,7 @@ import path from 'path';
 import fs from 'fs';
 import mv from 'mv';
 import jimp from 'jimp';
+import jpegAutoRotate from 'jpeg-autorotate';
 import async from 'async';
 import logger from '../../lib/logger';
 import SVGParser from '../../../shared/lib/SVGParser';
@@ -42,11 +43,29 @@ export const set = (req, res) => {
     const extname = path.extname(tempName).toLowerCase();
 
     async.series([
-        (next) => {
+        async (next) => {
             if (files) {
-                mv(originalPath, tempPath, () => {
-                    next();
-                });
+                // jpg image may have EXIF data, parse it
+                // https://blog.csdn.net/weixin_40243894/article/details/107049225
+                // TODO: png image also can contain EXIF data, but we does not have a test file
+                // https://stackoverflow.com/questions/9542359/does-png-contain-exif-data-like-jpg
+                if (/jpe?g$/.test(extname)) {
+                    // according to EXIF data, rotate image to a correct orientation
+                    try {
+                        const { buffer: imageBuffer } = await jpegAutoRotate.rotate(originalPath);
+                        fs.writeFile(tempPath, imageBuffer, () => {
+                            next();
+                        });
+                    } catch (e) {
+                        mv(originalPath, tempPath, () => {
+                            next();
+                        });
+                    }
+                } else {
+                    mv(originalPath, tempPath, () => {
+                        next();
+                    });
+                }
             } else {
                 fs.copyFile(originalPath, tempPath, () => {
                     next();

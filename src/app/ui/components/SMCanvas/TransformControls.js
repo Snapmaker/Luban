@@ -126,7 +126,7 @@ class TransformControls extends Object3D {
 
             // place the geometry natural at origin
             object.updateMatrix();
-            object.geometry.applyMatrix(object.matrix);
+            object.geometry.applyMatrix4(object.matrix);
 
             object.position.set(0, 0, 0);
             object.rotation.set(0, 0, 0);

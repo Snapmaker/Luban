@@ -56,7 +56,7 @@ class Canvas extends Component {
             this.group.add(this.props.environment);
         }
         if (this.props.worldTransform) {
-            this.group.applyMatrix(this.props.worldTransform);
+            this.group.applyMatrix4(this.props.worldTransform);
         }
 
         this.setupControls();
@@ -124,9 +124,9 @@ class Canvas extends Component {
             this.renderScene();
         }
         if (prevProps.worldTransform !== this.props.worldTransform) {
-            this.group.applyMatrix(new Matrix4().getInverse(this.group.matrix));
+            this.group.applyMatrix4(new Matrix4().getInverse(this.group.matrix));
             if (this.props.worldTransform) {
-                this.group.applyMatrix(this.props.worldTransform);
+                this.group.applyMatrix4(this.props.worldTransform);
             }
 
             this.renderScene();

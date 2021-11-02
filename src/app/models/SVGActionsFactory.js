@@ -407,6 +407,9 @@ class SVGActionsFactory {
         selectedElement.visible = true;
         selectedElement.setAttribute('display', 'inherit');
         this.svgContentGroup.showSelectorGrips(true);
+
+        const t = SVGActionsFactory.calculateElementsTransformation(this.getSelectedElements());
+        this._setSelectedElementsTransformation(t);
     }
 
     // createFromModel(relatedModel) {

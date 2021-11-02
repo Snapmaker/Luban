@@ -234,10 +234,7 @@ function WifiTransport({ widgetActions, controlActions }) {
     const prevProps = usePrevious({
         previewStage
     });
-    printableArea = new PrintablePlate({
-        x: size.x * 2,
-        y: size.y * 2
-    });
+
     const onSelectFile = useCallback((_selectFileName, name, event, needToUnselect = true) => {
         if (event && (event.target.className.indexOf('input-select') > -1 || event.target.className.indexOf('fa-check') > -1)) {
             return;
@@ -389,6 +386,13 @@ function WifiTransport({ widgetActions, controlActions }) {
             dispatch(machineActions.updateMaterialThickness(value / 2));
         }
     };
+
+    useEffect(() => {
+        printableArea = new PrintablePlate({
+            x: size.x * 2,
+            y: size.y * 2
+        });
+    }, [size]);
 
     useEffect(() => {
         widgetActions.setTitle(i18n._('key-Workspace/WifiTransport-G-code Files'));

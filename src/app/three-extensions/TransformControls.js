@@ -304,7 +304,7 @@ const TransformControls = function (camera, domElement, boundingBox) {
                 // set limit: the object size must be larger than (10, 10, 10);
                 this.object.updateMatrix();
                 const bufferGemotry = this.object.geometry.clone();
-                bufferGemotry.applyMatrix(this.object.matrix);
+                bufferGemotry.applyMatrix4(this.object.matrix);
                 bufferGemotry.computeBoundingBox();
                 const box = bufferGemotry.boundingBox;
                 objectSizeStart = new THREE.Vector3(
@@ -1019,7 +1019,7 @@ const TransformControlsGizmo = function () {
                 object.updateMatrix();
 
                 var tempGeometry = object.geometry.clone();
-                tempGeometry.applyMatrix(object.matrix);
+                tempGeometry.applyMatrix4(object.matrix);
                 object.geometry = tempGeometry;
 
                 object.position.set(0, 0, 0);

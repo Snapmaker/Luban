@@ -163,7 +163,7 @@ const ThreeUtils = {
 
         parent.updateMatrixWorld();
         parent.remove(obj);
-        obj.applyMatrix(parent.matrixWorld);
+        obj.applyMatrix4(parent.matrixWorld);
         return () => this.setObjectParent(obj, parent);
     },
 
@@ -172,23 +172,23 @@ const ThreeUtils = {
 
         this.removeObjectParent(obj);
         parent.updateMatrixWorld();
-        obj.applyMatrix(new THREE.Matrix4().getInverse(parent.matrixWorld));
+        obj.applyMatrix4(new THREE.Matrix4().getInverse(parent.matrixWorld));
         parent.add(obj);
     },
     applyObjectMatrix(obj, matrix) {
         const inverse = new THREE.Matrix4().getInverse(matrix);
         obj.children.forEach(child => {
-            child.applyMatrix(inverse);
+            child.applyMatrix4(inverse);
         });
-        obj.applyMatrix(matrix);
+        obj.applyMatrix4(matrix);
     },
     liftObjectOnlyChildMatrix(obj) {
         if (obj.children.length !== 1) return;
 
         const child = obj.children[0];
         const m = child.matrix;
-        obj.applyMatrix(m);
-        child.applyMatrix(new THREE.Matrix4().getInverse(m));
+        obj.applyMatrix4(m);
+        child.applyMatrix4(new THREE.Matrix4().getInverse(m));
     },
     // eslint-disable-next-line func-names
     computeBoundingBox: (function () {
@@ -258,13 +258,13 @@ const ThreeUtils = {
             return lastBbox;
         };
     }()),
-    computeGeometryPlanes(geometry, matrix, allPlanes = []) {
+    computeGeometryPlanes(geometry, matrix, allPlanes = [], center, inverseNormal) {
         if (!geometry.isBufferGeometry) {
             geometry = new THREE.BufferGeometry().fromGeometry(geometry);
         } else {
             geometry = geometry.clone();
         }
-        geometry.applyMatrix(matrix);
+        geometry.applyMatrix4(matrix);
 
         let baseMode = true;
         let planes = [];
@@ -281,7 +281,7 @@ const ThreeUtils = {
         }
 
         function isSimilarPlanes(p1, p2) {
-            return Math.abs(p1.constant - p2.constant) < 0.05
+            return Math.abs(p1.distanceToPoint(center) - p2.distanceToPoint(center)) < 0.05
             && p1.normal.angleTo(p2.normal) * 180 / Math.PI < 1;
         }
 
@@ -304,6 +304,9 @@ const ThreeUtils = {
             if (area < 0.1) continue;
 
             if (baseMode) {
+                if (inverseNormal) {
+                    plane.normal.negate();
+                }
                 const idx = planes.findIndex(p => isSimilarPlanes(p, plane));
                 if (idx !== -1) {
                     areas[idx] += area;
@@ -318,7 +321,7 @@ const ThreeUtils = {
                 for (let idx = 0, len = planes.length; idx < len; idx++) {
                     const targetPlane = planes[idx];
                     const angle = plane.normal.angleTo(targetPlane.normal) * 180 / Math.PI;
-                    if (angle < 1 && Math.abs(plane.constant - targetPlane.constant) < 0.05) {
+                    if (isSimilarPlanes(plane, targetPlane)) {
                         areas[idx] += area;
                     } else if (angle < 80) {
                         tmpVector.addVectors(a, b).multiplyScalar(0.5).add(c).multiplyScalar(0.5);

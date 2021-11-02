@@ -1,5 +1,5 @@
 import isEqual from 'lodash/isEqual';
-import React, { Component } from 'react';
+import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
 import * as THREE from 'three';
@@ -49,7 +49,7 @@ import ProgressBar from '../../components/ProgressBar';
 // import modal from '../../lib/modal';
 
 
-class Visualizer extends Component {
+class Visualizer extends PureComponent {
     static propTypes = {
         // redux
         size: PropTypes.object.isRequired,
@@ -85,11 +85,9 @@ class Visualizer extends Component {
         workPosition: PropTypes.object,
 
         modelGroup: PropTypes.object,
-        onRef: PropTypes.object,
+        onRef: PropTypes.func,
         preview: PropTypes.bool
     };
-
-    printableArea = null;
 
     previewPrintableArea = null;
 
@@ -118,6 +116,7 @@ class Visualizer extends Component {
     };
 
     state = {
+        printableArea: null,
         coordinateVisible: true,
         toolheadVisible: true,
         controller: {
@@ -449,7 +448,7 @@ class Visualizer extends Component {
             this.setState(
                 { coordinateVisible: visible },
                 () => {
-                    this.printableArea.changeCoordinateVisibility(visible);
+                    this.state.printableArea.changeCoordinateVisibility(visible);
                     this.renderScene();
                 }
             );
@@ -483,27 +482,25 @@ class Visualizer extends Component {
         }
     };
 
-    constructor(props) {
-        super(props);
-
-        const size = props.size;
-        this.printableArea = new PrintablePlate({
-            x: size.x * 2,
-            y: size.y * 2
-        });
-        this.previewPrintableArea = new PrintablePlate({
-            x: size.x * 2,
-            y: size.y * 2
-        });
-    }
-
     componentDidMount() {
         this.props.onRef && this.props.onRef(this);
-        this.setupToolhead();
-        this.subscribe();
-        this.addControllerEvents();
-        this.setupTargetPoint();
-        this.visualizerGroup.object.add(this.props.modelGroup);
+        this.setupToolhead().then(() => {
+            const size = this.props.size;
+            this.subscribe();
+            this.addControllerEvents();
+            this.setupTargetPoint();
+            this.visualizerGroup.object.add(this.props.modelGroup);
+            this.previewPrintableArea = new PrintablePlate({
+                x: size.x * 2,
+                y: size.y * 2
+            });
+            this.setState({
+                printableArea: new PrintablePlate({
+                    x: size.x * 2,
+                    y: size.y * 2
+                })
+            });
+        });
     }
 
     /**
@@ -522,7 +519,7 @@ class Visualizer extends Component {
                     y: size.y * 2
                 });
             } else {
-                this.printableArea.updateSize({
+                this.state.printableArea.updateSize({
                     x: size.x * 2,
                     y: size.y * 2
                 });
@@ -566,7 +563,7 @@ class Visualizer extends Component {
                 target.copy(min).add(max).divideScalar(2);
                 const width = new THREE.Vector3().add(min).distanceTo(new THREE.Vector3().add(max));
                 const position = new THREE.Vector3(target.x, target.y, width * 2);
-                this.canvas.current.setCamera(position, target);
+                this.canvas.current && this.canvas.current.setCamera(position, target);
             }
         }
         // open the enclosureDoorOpened modal
@@ -627,12 +624,19 @@ class Visualizer extends Component {
     setupToolhead() {
         const color = colornames('silver');
         const url = 'resources/textures/brushed-steel-texture.jpg';
-        loadTexture(url, (err, texture) => {
-            this.toolhead = new ToolHead(color, texture);
-            this.visualizerGroup.object.add(this.toolhead);
+        return new Promise((resolve, reject) => {
+            loadTexture(url, (err, texture) => {
+                if (err) {
+                    reject(err);
+                } else {
+                    this.toolhead = new ToolHead(color, texture);
+                    this.visualizerGroup.object.add(this.toolhead);
 
-            this.toolheadRotationAnimation = new TWEEN.Tween(this.toolhead.rotation)
-                .to({ x: 0, y: 0, z: Number.MAX_VALUE }, Number.MAX_VALUE);
+                    this.toolheadRotationAnimation = new TWEEN.Tween(this.toolhead.rotation)
+                        .to({ x: 0, y: 0, z: Number.MAX_VALUE }, Number.MAX_VALUE);
+                    resolve();
+                }
+            });
         });
     }
 
@@ -724,7 +728,7 @@ class Visualizer extends Component {
     }
 
     renderScene() {
-        this.canvas.current.renderScene();
+        this.canvas.current && this.canvas.current.renderScene();
     }
 
 
@@ -755,14 +759,16 @@ class Visualizer extends Component {
                             uploadState={this.props.uploadState}
                         />
                     </div> */}
-                    <Canvas
-                        ref={this.canvas}
-                        size={this.props.size}
-                        modelGroup={this.visualizerGroup}
-                        printableArea={this.printableArea}
-                        cameraInitialPosition={new THREE.Vector3(0, 0, Math.min(this.props.size.z * 2, 300))}
-                        cameraInitialTarget={new THREE.Vector3(0, 0, 0)}
-                    />
+                    {state.printableArea && (
+                        <Canvas
+                            ref={this.canvas}
+                            size={this.props.size}
+                            modelGroup={this.visualizerGroup}
+                            printableArea={this.state.printableArea}
+                            cameraInitialPosition={new THREE.Vector3(0, 0, Math.min(this.props.size.z * 2, 300))}
+                            cameraInitialTarget={new THREE.Vector3(0, 0, 0)}
+                        />
+                    )}
                 </div>
                 <div className="position-ab left-16 bottom-16">
                     <SecondaryToolbar
