@@ -162,13 +162,20 @@ class FontManager {
             });
     }
 
-    getFont(family, subfamily = null) {
-        const localFont = this.searchLocalFont(family, subfamily);
+    getFont(family, subfamily = null, style) {
+        const localFont = this.searchLocalFont(family);
         if (localFont) {
             return Promise.resolve(localFont);
         }
+        console.log('subfamily', subfamily);
 
-        const fontConfig = this.systemFonts.find(f => f.family === family);
+        const fontConfig = this.systemFonts.find(f => {
+            if (style) {
+                return f.family === family && f.style === style;
+            } else {
+                return f.family === family;
+            }
+        });
 
         if (!fontConfig || !fontConfig.path) {
             // fontConfig = this.systemFonts.find(f => f.family === 'Arial');

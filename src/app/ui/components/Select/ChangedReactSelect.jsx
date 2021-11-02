@@ -123,6 +123,8 @@ class ChangedReactSelect extends PureComponent {
                     <Select
                         className={styles[size]}
                         value={defaultValue?.value}
+                        showSearch
+                        optionFilterProp="children"
                         style={{ width: size }}
                         disabled={disabled}
                         onChange={this.actions.handleChange}
