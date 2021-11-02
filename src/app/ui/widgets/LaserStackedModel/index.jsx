@@ -108,6 +108,17 @@ const StackedModel = ({ setStackedModelModalDsiabled }) => {
         }
     };
     useEffect(() => {
+        dispatch(editorActions.setShortcutStatus(HEAD_LASER, false));
+        dispatch(menuActions.disableMenu());
+        canvasRange = { x: coordinateSize.x, y: coordinateSize.y, z: MAX_Z };
+        scale = 1;
+
+        return () => {
+            dispatch(editorActions.setShortcutStatus(HEAD_LASER, true));
+            dispatch(menuActions.enableMenu());
+        };
+    }, []);
+    useEffect(() => {
         setDisabled(isProcessing);
         setStackedModelModalDsiabled(isProcessing);
     }, [isProcessing]);
@@ -121,18 +132,6 @@ const StackedModel = ({ setStackedModelModalDsiabled }) => {
             actions.loadModel();
         }
     }, [stlInfo]);
-    useEffect(() => {
-        canvasRange = {};
-        scale = 1;
-        dispatch(editorActions.setShortcutStatus(HEAD_LASER, false));
-        dispatch(menuActions.disableMenu());
-        canvasRange = { x: coordinateSize.x, y: coordinateSize.y, z: MAX_Z };
-
-        return () => {
-            dispatch(editorActions.setShortcutStatus(HEAD_LASER, true));
-            dispatch(menuActions.enableMenu());
-        };
-    }, []);
     return (
         <div className={classNames(styles['model-cut-modal'])}>
             <div className={classNames(styles['model-cut-modal-left'], 'display-inline')}>
