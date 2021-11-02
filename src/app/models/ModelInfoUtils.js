@@ -19,6 +19,7 @@ const DEFAULT_TEXT_CONFIG = {
     'font-size': 24,
     'font-family': 'Arial',
     'line-height': 1.5,
+    style: 'Bold',
     alignment: 'left' // left, middle, right
 };
 

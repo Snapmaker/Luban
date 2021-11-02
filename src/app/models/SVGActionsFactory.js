@@ -693,7 +693,6 @@ class SVGActionsFactory {
             config = { ...config, ...elemConfig };
             gcodeConfig = { ...gcodeConfig };
 
-
             const options = {
                 modelID,
                 limitSize: this.size,
@@ -1509,6 +1508,7 @@ class SVGActionsFactory {
                 y: this.size.y + position.y,
                 'font-size': 24,
                 'font-family': 'Arial',
+                style: 'Bold',
                 alignment: 'left',
                 textContent: content
             }

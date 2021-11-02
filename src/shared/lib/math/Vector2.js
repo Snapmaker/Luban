@@ -118,6 +118,16 @@ export class Vector2 {
         return area;
     }
 
+    static areaForArray(points) {
+        let area = 0;
+        for (let i = 0; i < points.length; i++) {
+            const p1 = points[i];
+            const p2 = points[(i + 1) % points.length];
+            area += p1[0] * p2[1] - p1[1] * p2[0];
+        }
+        return area;
+    }
+
     static pointInCommonLine(p1, p2, p3) {
         return isEqual((p2.y - p1.y) * (p3.x - p2.x), (p3.y - p2.y) * (p2.x - p1.x));
     }

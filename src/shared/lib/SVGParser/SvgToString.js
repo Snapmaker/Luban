@@ -2,6 +2,25 @@ function getPath(shape) {
     if (!shape.visibility) {
         return '';
     }
+    let pathExpression = '';
+
+    for (const aPath of shape.paths) {
+        pathExpression += 'M';
+        for (const point of aPath.points) {
+            pathExpression += `${point[0]} ${point[1]} `;
+        }
+    }
+
+    return `<path d="${pathExpression}" stroke="${shape.stroke ? shape.stroke : 'none'}"
+                fill="${shape.fill ? shape.fill : 'none'}"
+                fill-rule="${shape['fill-rule'] ? shape['fill-rule'] : 'nonzero'}"
+                stroke-width="${shape.strokeWidth}"/>`;
+}
+
+function getPathIndividual(shape) {
+    if (!shape.visibility) {
+        return '';
+    }
 
     const paths = [];
 
@@ -31,6 +50,15 @@ export const svgInverse = (svg, flip = 1) => {
     }
 };
 
+export const svgToStringForCut = (svg) => {
+    return `<svg xmlns="http://www.w3.org/2000/svg"
+        viewBox="${svg.viewBox}"
+        preserveAspectRatio="none"
+        style="fill: none; stroke: #000; stroke-width: 0.4px; vector-effect: non-scaling-stroke;"
+        version="1.1">
+        ${svg.shapes.map(shape => `${getPathIndividual(shape)}\n`)}
+      </svg>`;
+};
 export const svgToString = (svg) => {
     return `<svg xmlns="http://www.w3.org/2000/svg"
         viewBox="${svg.viewBox}"

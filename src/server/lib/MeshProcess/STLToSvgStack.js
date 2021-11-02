@@ -7,7 +7,7 @@ import * as THREE from 'three';
 import { MeshProcess } from './MeshProcess';
 import { pathWithRandomSuffix } from '../../../shared/lib/random-utils';
 import DataStorage from '../../DataStorage';
-import { svgToString } from '../../../shared/lib/SVGParser/SvgToString';
+import { svgToStringForCut } from '../../../shared/lib/SVGParser/SvgToString';
 import STLExporter from '../../../shared/lib/STL/STLExporter';
 
 // eslint-disable-next-line no-unused-vars
@@ -132,7 +132,7 @@ class STLToSvgStack {
             }
 
             if (isWrite) {
-                const svgStr = svgToString(svgFileState.svg);
+                const svgStr = svgToStringForCut(svgFileState.svg);
                 fs.writeFileSync(`${DataStorage.tmpDir}/${this.outputFilename}_${svgFileState.index}.svg`, svgStr, 'utf8');
 
                 result.push({
