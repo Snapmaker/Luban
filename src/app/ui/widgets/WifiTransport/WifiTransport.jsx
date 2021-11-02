@@ -552,8 +552,7 @@ function WifiTransport({ widgetActions, controlActions }) {
                     }}
                 >
                     <Modal.Header>
-                        Start Job
-                        {/* {i18n._('key-Workspace/LaserStartJob-start_job')}*/}
+                        {i18n._('key-Workspace/LaserStartJob-start_job')}
                     </Modal.Header>
                     <Modal.Body>
                         { toolHeadName !== LEVEL_TWO_POWER_LASER_FOR_SM2 && (
@@ -562,7 +561,7 @@ function WifiTransport({ widgetActions, controlActions }) {
                                 <Checkbox
                                     className="sm-flex-auto"
                                     disabled={isFourAxis}
-                                    checked={isLaserPrintAutoMode}
+                                    checked={isLaserPrintAutoMoqgide}
                                     onChange={actions.onChangeLaserPrintMode}
                                 />
                             </div>
