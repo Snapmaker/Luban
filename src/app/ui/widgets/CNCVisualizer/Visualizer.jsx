@@ -46,6 +46,7 @@ class Visualizer extends Component {
         size: PropTypes.object.isRequired,
         scale: PropTypes.number,
         target: PropTypes.object,
+        menuDisabledCount: PropTypes.number,
         // model: PropTypes.object,
         // selectedModelID: PropTypes.string,
         isChangedAfterGcodeGenerating: PropTypes.bool.isRequired,
@@ -427,6 +428,7 @@ class Visualizer extends Component {
                         ref={this.svgCanvas}
                         editable={editable}
                         size={this.props.size}
+                        menuDisabledCount={this.props.menuDisabledCount}
                         initContentGroup={this.props.initContentGroup}
                         scale={this.props.scale}
                         minScale={MIN_LASER_CNC_CANVAS_SCALE}
@@ -601,7 +603,7 @@ class Visualizer extends Component {
 const mapStateToProps = (state, ownProps) => {
     // call canvas.updateTransformControl2D() when transformation changed or model selected changed
     const { size } = state.machine;
-    const { currentModalPath } = state.appbarMenu;
+    const { currentModalPath, menuDisabledCount } = state.appbarMenu;
     const { page, materials, modelGroup, toolPathGroup, displayedType, hasModel, isChangedAfterGcodeGenerating,
         renderingTimestamp, stage, progress, SVGActions, scale, target, coordinateMode, coordinateSize, showSimulation, progressStatesManager, enableShortcut } = state.cnc;
     const selectedModelArray = modelGroup.getSelectedModelArray();
@@ -613,6 +615,7 @@ const mapStateToProps = (state, ownProps) => {
         progressStatesManager,
         currentModalPath,
         showSimulation,
+        menuDisabledCount,
         // switch pages trigger pathname change
         pathname: ownProps.location.pathname,
         page,

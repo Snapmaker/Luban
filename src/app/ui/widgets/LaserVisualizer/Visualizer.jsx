@@ -48,6 +48,7 @@ class Visualizer extends Component {
         size: PropTypes.object.isRequired,
         scale: PropTypes.number.isRequired,
         target: PropTypes.object,
+        menuDisabledCount: PropTypes.number,
         // model: PropTypes.object,
         // selectedModelID: PropTypes.string,
         selectedModelArray: PropTypes.array,
@@ -406,6 +407,7 @@ class Visualizer extends Component {
                         editable={editable}
                         isActive={!this.props.currentModalPath && this.props.pathname.indexOf('laser') > 0 && this.props.enableShortcut}
                         ref={this.svgCanvas}
+                        menuDisabledCount={this.props.menuDisabledCount}
                         size={this.props.size}
                         initContentGroup={this.props.initContentGroup}
                         scale={this.props.scale}
@@ -582,7 +584,7 @@ class Visualizer extends Component {
 
 const mapStateToProps = (state, ownProps) => {
     const { size } = state.machine;
-    const { currentModalPath } = state.appbarMenu;
+    const { currentModalPath, menuDisabledCount } = state.appbarMenu;
     const { background, progressStatesManager } = state.laser;
 
     const { SVGActions, scale, target, materials, page, selectedModelID, modelGroup, svgModelGroup, toolPathGroup, displayedType,
@@ -594,6 +596,7 @@ const mapStateToProps = (state, ownProps) => {
         enableShortcut,
         currentModalPath,
         progressStatesManager,
+        menuDisabledCount,
         // switch pages trigger pathname change
         pathname: ownProps.location.pathname,
         page,

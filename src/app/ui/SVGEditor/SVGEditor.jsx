@@ -22,6 +22,7 @@ class SVGEditor extends PureComponent {
         coordinateMode: PropTypes.object.isRequired,
         coordinateSize: PropTypes.object.isRequired,
         editable: PropTypes.bool,
+        menuDisabledCount: PropTypes.number,
 
         updateScale: PropTypes.func.isRequired,
         updateTarget: PropTypes.func.isRequired,
@@ -78,15 +79,51 @@ class SVGEditor extends PureComponent {
         isActive: () => this.props.isActive,
         priority: priorities.VIEW,
         shortcuts: {
-            [shortcutActions.UNDO]: () => { this.props.editorActions.undo(); },
-            [shortcutActions.REDO]: () => { this.props.editorActions.redo(); },
-            [shortcutActions.SELECTALL]: () => { this.props.editorActions.selectAll(); },
-            [shortcutActions.UNSELECT]: () => { this.props.editorActions.unselectAll(); },
-            [shortcutActions.DELETE]: () => { this.props.editorActions.deleteSelectedModel(); },
-            [shortcutActions.COPY]: () => { this.props.editorActions.copy(); },
-            [shortcutActions.PASTE]: () => { this.props.editorActions.paste(); },
-            [shortcutActions.DUPLICATE]: () => { this.props.editorActions.duplicateSelectedModel(); },
-            [shortcutActions.CUT]: () => { this.props.editorActions.cut(); },
+            [shortcutActions.UNDO]: () => {
+                if (!(this.props.menuDisabledCount > 0)) {
+                    this.props.editorActions.undo();
+                }
+            },
+            [shortcutActions.REDO]: () => {
+                if (!(this.props.menuDisabledCount > 0)) {
+                    this.props.editorActions.redo();
+                }
+            },
+            [shortcutActions.SELECTALL]: () => {
+                if (!(this.props.menuDisabledCount > 0)) {
+                    this.props.editorActions.selectAll();
+                }
+            },
+            [shortcutActions.UNSELECT]: () => {
+                if (!(this.props.menuDisabledCount > 0)) {
+                    this.props.editorActions.unselectAll();
+                }
+            },
+            [shortcutActions.DELETE]: () => {
+                if (!(this.props.menuDisabledCount > 0)) {
+                    this.props.editorActions.deleteSelectedModel();
+                }
+            },
+            [shortcutActions.COPY]: () => {
+                if (!(this.props.menuDisabledCount > 0)) {
+                    this.props.editorActions.copy();
+                }
+            },
+            [shortcutActions.PASTE]: () => {
+                if (!(this.props.menuDisabledCount > 0)) {
+                    this.props.editorActions.paste();
+                }
+            },
+            [shortcutActions.DUPLICATE]: () => {
+                if (!(this.props.menuDisabledCount > 0)) {
+                    this.props.editorActions.duplicateSelectedModel();
+                }
+            },
+            [shortcutActions.CUT]: () => {
+                if (!(this.props.menuDisabledCount > 0)) {
+                    this.props.editorActions.cut();
+                }
+            },
             // optimize: accelerate when continuous click
             'MOVE-UP': {
                 keys: ['up'],

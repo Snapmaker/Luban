@@ -85,7 +85,7 @@ class Visualizer extends Component {
         workPosition: PropTypes.object,
 
         modelGroup: PropTypes.object,
-        onRef: PropTypes.object,
+        onRef: PropTypes.func,
         preview: PropTypes.bool
     };
 

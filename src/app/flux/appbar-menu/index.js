@@ -7,12 +7,14 @@ import i18n from '../../lib/i18n';
 
 export const ACTION_UPDATE_STATE = 'appbar-menu/ACTION_UPDATE_STATE';
 const DEFAULT_IDS = [
-    'copy original',
-    'cut original',
-    'paste original',
+    'edit',
     'copy',
     'cut',
-    'paste'
+    'paste',
+    'text-editor',
+    'copy-original',
+    'cut-original',
+    'paste-original'
 ];
 const INITIAL_STATE = {
     menuDisabledCount: 0,
