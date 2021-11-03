@@ -178,4 +178,3 @@ i18n._('key-Progress/3DP-Failed to preview G-code.');
 i18n._('key-Progress/3DP-Calculating Rotation');
 i18n._('key-Progress/3DP-Calculated Rotation successfully.');
 i18n._('key-Progress/3DP-Failed to calculate Rotation.');
-

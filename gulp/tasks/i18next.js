@@ -182,7 +182,7 @@ const CURA_CATEGORIES = [
     'Speed',
     'Retract & Z Hop',
     'Surface',
-    'Heated Bed Adhesion Type',
+    'Build Plate Adhesion Type',
     'Support'
 ];
 
