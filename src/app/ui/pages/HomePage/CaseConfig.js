@@ -101,19 +101,19 @@ export const CaseConfigA150LaserPowerTwo = [
             path: './UserCase/laser/a150_10w/Laser_a150_10W.snaplzr',
             name: 'Laser_a150_10W.snaplzr'
         }
-    },
-    {
-        tag: 'laser',
-        tag_i18n: 'Laser',
-        title: 'key-HomePage/CaseLibrary-Gift Box',
-        mode: 'greyscale', // mode: 'vector','greyscale','bw','text','trace'
-        imgSrc: '../../resources/images/user-case/A150/library_gift_box_97x97.png',
-        pathConfig: {
-            isDatastoragePath: true,
-            path: './UserCase/laser/a150_10w/Laser_a150_10W_2.snaplzr',
-            name: 'Laser_a150_10W_2.snaplzr'
-        }
     }
+    // {
+    //     tag: 'laser',
+    //     tag_i18n: 'Laser',
+    //     title: 'key-HomePage/CaseLibrary-Gift Box',
+    //     mode: 'greyscale', // mode: 'vector','greyscale','bw','text','trace'
+    //     imgSrc: '../../resources/images/user-case/A150/library_gift_box_97x97.png',
+    //     pathConfig: {
+    //         isDatastoragePath: true,
+    //         path: './UserCase/laser/a150_10w/Laser_a150_10W_2.snaplzr',
+    //         name: 'Laser_a150_10W_2.snaplzr'
+    //     }
+    // }
 ];
 
 export const CaseConfigA150CncStandard = [
@@ -173,19 +173,19 @@ export const CaseConfigA250LaserPowerTwo = [
             path: './UserCase/laser/a250_10w/laser_a250a350_10W_1.snaplzr',
             name: 'laser_a250a350_10W_1.snaplzr'
         }
-    },
-    {
-        tag: 'laser',
-        tag_i18n: 'Laser',
-        title: 'key-HomePage/CaseLibrary-Gift Box',
-        mode: 'greyscale', // mode: 'vector','greyscale','bw','text','trace'
-        imgSrc: '../../resources/images/user-case/A250/library_gift_box_97x97.png',
-        pathConfig: {
-            isDatastoragePath: true,
-            path: './UserCase/laser/a250_10w/Laser_a250a350_10W_2.snaplzr',
-            name: 'Laser_a250a350_10W_2.snaplzr'
-        }
     }
+    // {
+    //     tag: 'laser',
+    //     tag_i18n: 'Laser',
+    //     title: 'key-HomePage/CaseLibrary-Gift Box',
+    //     mode: 'greyscale', // mode: 'vector','greyscale','bw','text','trace'
+    //     imgSrc: '../../resources/images/user-case/A250/library_gift_box_97x97.png',
+    //     pathConfig: {
+    //         isDatastoragePath: true,
+    //         path: './UserCase/laser/a250_10w/Laser_a250a350_10W_2.snaplzr',
+    //         name: 'Laser_a250a350_10W_2.snaplzr'
+    //     }
+    // }
 ];
 
 export const CaseConfigA250CncStandard = [
@@ -245,19 +245,19 @@ export const CaseConfigA350LaserPowerTwo = [
             path: './UserCase/laser/a250_10w/laser_a250a350_10W_1.snaplzr',
             name: 'laser_a250a350_10W_1.snaplzr'
         }
-    },
-    {
-        tag: 'laser',
-        tag_i18n: 'Laser',
-        title: 'key-HomePage/CaseLibrary-Gift Box',
-        mode: 'greyscale', // mode: 'vector','greyscale','bw','text','trace'
-        imgSrc: '../../resources/images/user-case/A250/library_gift_box_97x97.png',
-        pathConfig: {
-            isDatastoragePath: true,
-            path: './UserCase/laser/a250_10w/laser_a250a350_10W_2.snaplzr',
-            name: 'Laser_a250a350_10W_2.snaplzr'
-        }
     }
+    // {
+    //     tag: 'laser',
+    //     tag_i18n: 'Laser',
+    //     title: 'key-HomePage/CaseLibrary-Gift Box',
+    //     mode: 'greyscale', // mode: 'vector','greyscale','bw','text','trace'
+    //     imgSrc: '../../resources/images/user-case/A250/library_gift_box_97x97.png',
+    //     pathConfig: {
+    //         isDatastoragePath: true,
+    //         path: './UserCase/laser/a250_10w/laser_a250a350_10W_2.snaplzr',
+    //         name: 'Laser_a250a350_10W_2.snaplzr'
+    //     }
+    // }
 ];
 
 export const CaseConfigA350CncStandard = [
