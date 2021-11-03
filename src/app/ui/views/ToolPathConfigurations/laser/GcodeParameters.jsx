@@ -201,7 +201,7 @@ class GcodeParameters extends PureComponent {
                                 type={['static']}
                                 size={24}
                             />
-                            <span>{i18n._('key-Laser/ToolpathParameters-Pass')}</span>
+                            <span>{i18n._('key-Laser/ToolpathParameters-Repetition')}</span>
                         </div>
                         <ToolParameters
                             settings={laserDefinitionRepetition}

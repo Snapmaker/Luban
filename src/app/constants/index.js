@@ -263,13 +263,13 @@ export const DEFAULT_LASER_CONFIG_IDS = [
 
 export const LASER_PRESENT_CONFIG_GROUP = [
     {
-        name: 'Method',
+        name: 'key-Laser/ToolpathParameters-Method',
         fields: [
             'path_type'
         ]
     },
     {
-        name: 'Fill',
+        name: 'key-Laser/ToolpathParameters-Fill',
         fields: [
             'movement_mode',
             'direction',
@@ -277,7 +277,7 @@ export const LASER_PRESENT_CONFIG_GROUP = [
         ]
     },
     {
-        name: 'Speed',
+        name: 'key-Laser/ToolpathParameters-Speed',
         fields: [
             'jog_speed',
             'work_speed',
@@ -285,14 +285,14 @@ export const LASER_PRESENT_CONFIG_GROUP = [
         ]
     },
     {
-        name: 'Repetition',
+        name: 'key-Laser/ToolpathParameters-Repetition',
         fields: [
             'multi_passes',
             'multi_pass_depth'
         ]
     },
     {
-        name: 'Power',
+        name: 'key-Laser/ToolpathParameters-Power',
         fields: [
             'fixed_power'
         ]
