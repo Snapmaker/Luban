@@ -20,7 +20,7 @@ class BaseModel {
 
     constructor(modelInfo, modelGroup) {
         this.modelGroup = modelGroup;
-
+        console.log('modelInfo', modelInfo);
         // eslint-disable-next-line no-return-assign
         Object.keys(modelInfo).map(key => this[key] = modelInfo[key]);
 

@@ -2,6 +2,7 @@ import isElectron from 'is-electron';
 import request from 'superagent';
 import FileSaver from 'file-saver';
 import events from 'events';
+import path from 'path';
 import i18n from './i18n';
 
 class AppbarMenuEvent extends events.EventEmitter {}
@@ -158,15 +159,15 @@ const Menu = {
  * File control in electron
  */
 const File = {
-    writeBlobToFile(blob, path) {
+    writeBlobToFile(blob, newPath) {
         if (isElectron()) {
             const fileReader = new FileReader();
             fileReader.onload = () => {
-                window.require('fs').writeFileSync(path, Buffer.from(new Uint8Array(fileReader.result)));
+                window.require('fs').writeFileSync(newPath, Buffer.from(new Uint8Array(fileReader.result)));
             };
             fileReader.readAsArrayBuffer(blob);
         } else {
-            FileSaver.saveAs(blob, path, true);
+            FileSaver.saveAs(blob, newPath, true);
         }
     },
     save(targetFile, tmpFile) {
@@ -197,10 +198,13 @@ const File = {
         if (isElectron()) {
             const fs = window.require('fs');
             const { app } = window.require('electron').remote;
+            const defaultPath = path.resolve(app.getPath('downloads'), path.basename(tmpFile));
             tmpFile = app.getPath('userData') + tmpFile;
+            console.log('ddd', app.getPath('downloads'), defaultPath);
             // eslint-disable-next-line no-use-before-define
             const saveDialogReturnValue = await Dialog.showSaveDialog({
                 title: targetFile,
+                defaultPath,
                 filters: [{ name: 'files', extensions: [targetFile.split('.')[1]] }]
             });
             targetFile = saveDialogReturnValue.filePath;
@@ -234,13 +238,13 @@ const File = {
         if (isElectron()) {
             const fs = window.require('fs');
             const { app } = window.require('electron').remote;
+            const defaultPath = path.resolve(app.getPath('downloads'), path.basename(tmpFile));
             tmpFile = app.getPath('userData') + tmpFile;
             // eslint-disable-next-line no-use-before-define
             const saveDialogReturnValue = await Dialog.showSaveDialog({
                 // title: targetFile,
-                // defaultPath: targetFile,
                 title: renderGcodeFileName,
-                defaultPath: renderGcodeFileName,
+                defaultPath,
                 filters: [{ name: 'files', extensions: [targetFile.split('.').pop()] }]
             });
             targetFile = saveDialogReturnValue.filePath;

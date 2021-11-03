@@ -677,6 +677,9 @@ class SVGActionsFactory {
                     ...elemConfig
                 };
                 res = await api.convertTextToSvg(newConfig);
+                if (res.body.family !== elemConfig['font-family']) {
+                    elemConfig['font-family'] = res.body.family;
+                }
                 textSize = computeTransformationSizeForTextVector(newConfig.text, newConfig['font-size'], newConfig['line-height'], {
                     width: res.body?.width,
                     height: res.body?.height
@@ -1555,11 +1558,16 @@ class SVGActionsFactory {
         if (options.fontSize !== undefined) {
             newConfig['font-size'] = options.fontSize;
         }
+        if (options.style !== undefined) {
+            newConfig.style = options.style;
+        }
 
         api.convertTextToSvg(newConfig)
             .then(async (res) => {
-                const { originalName, uploadName, width, height } = res.body;
-
+                const { originalName, uploadName, width, height, family } = res.body;
+                if (family !== newConfig['font-family']) {
+                    newConfig['font-family'] = res.body.family;
+                }
                 const textSize = computeTransformationSizeForTextVector(newConfig.text, newConfig['font-size'], newConfig['line-height'], {
                     width,
                     height

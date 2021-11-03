@@ -48,7 +48,13 @@ class FontManager {
         this.fontDir = './userData/fonts';
         this.fonts = [];
         // preload fonts config
-        this.systemFonts = libFontManager.getAvailableFontsSync();
+        this.systemFonts = [];
+        libFontManager.getAvailableFontsSync().forEach((font) => {
+            if (path.extname(font.path).toLocaleLowerCase() !== '.ttc'
+                && this.systemFonts.findIndex(i => i.family === font.family) < 0) {
+                this.systemFonts.push(font);
+            }
+        });
     }
 
     setFontDir(fontDir) {
@@ -163,13 +169,12 @@ class FontManager {
     }
 
     getFont(family, subfamily = null, style) {
-        const localFont = this.searchLocalFont(family);
+        const localFont = this.searchLocalFont(family, subfamily);
         if (localFont) {
             return Promise.resolve(localFont);
         }
-        console.log('subfamily', subfamily);
 
-        const fontConfig = this.systemFonts.find(f => {
+        let fontConfig = this.systemFonts.find(f => {
             if (style) {
                 return f.family === family && f.style === style;
             } else {
@@ -179,8 +184,14 @@ class FontManager {
 
         if (!fontConfig || !fontConfig.path) {
             // fontConfig = this.systemFonts.find(f => f.family === 'Arial');
-            throw new Error('No Font Found!');
+            fontConfig = this.systemFonts[0];
+            family = fontConfig?.family;
+            if (!fontConfig || !fontConfig.path) {
+                throw new Error('No Font Found!');
+            }
         }
+        console.log('fontConfig', fontConfig);
+
         return this.loadLocalFont(fontConfig.path, family) // subfamily is not supported (for now)
             .then((font) => {
                 log.debug(`Font <${family}> loadded`);

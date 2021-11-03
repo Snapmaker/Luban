@@ -118,7 +118,7 @@ class SVGParser {
             let newArr = [];
             shape.paths.forEach((data) => {
                 if (Array.isArray(data.points)) {
-                    if (Vector2.areaForArray(data.points) < 0) {
+                    if (Vector2.areaForArray(data.points) < 0 && newArr[newArr.length - 1]) {
                         newArr[newArr.length - 1].push([...data.points]);
                     } else {
                         const arr = [];

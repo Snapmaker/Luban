@@ -162,7 +162,7 @@ class SVGEditor extends PureComponent {
     }
 
     insertDefaultTextVector = async () => {
-        const element = await this.props.createText('S');
+        const element = await this.props.createText('Snapmaker');
         this.props.onCreateElement(element);
 
         // todo, select text after create

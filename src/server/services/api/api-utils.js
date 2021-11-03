@@ -18,26 +18,20 @@ export const getPlatform = (req, res) => {
 };
 
 export const getFonts = (req, res) => {
-    let fonts = [];
+    let fonts = fontManager.systemFonts;
 
-    fontManager.systemFonts.forEach((font) => {
-        if (font.path.toLocaleLowerCase().indexOf('.ttc') < 0
-            && fonts.findIndex(i => i === font.family) < 0) {
-            fonts.push(font.family);
-        }
-    });
-
-    fonts = fonts.filter(font => !!font)
+    fonts = fonts.filter(font => !!font.family)
         .map((font) => {
-            if (font[0] === '"') {
-                font = font.substr(1, font.length - 2);
+            if (font.family[0] === '"') {
+                font.family = font.family.substr(1, font.length - 2);
             }
 
             return {
-                fontFamily: font,
+                ...font,
+                fontFamily: font.family,
                 fontSubfamily: '',
-                fullName: font,
-                displayName: font
+                fullName: font.family,
+                displayName: font.family
             };
         })
         .sort((a, b) => (a.fontFamily < b.fontFamily ? -1 : 1));
