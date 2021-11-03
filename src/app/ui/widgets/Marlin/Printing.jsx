@@ -137,7 +137,7 @@ class Printing extends PureComponent {
                 </div>
 
                 <div className="sm-flex justify-space-between margin-vertical-8">
-                    <span className="height-32">{i18n._('key-unused-Heated Bed Temp.')}</span>
+                    <span className="height-32">{i18n._('key-Workspace/Connection-Build Plate Temp.')}</span>
                     <div className="sm-flex-auto">
                         <span className="height-32">{heatedBedTemperature} / </span>
                         <Input

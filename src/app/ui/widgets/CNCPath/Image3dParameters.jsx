@@ -78,8 +78,8 @@ const Image3dParameters = ({ config, disabled, updateSelectedModelConfig }) => {
                     <React.Fragment>
                         {!materials.isRotate && (
                             <TipTrigger
-                                title={i18n._('key-Cnc/Edit/stlParameters-Projection Orientation')}
-                                content={i18n._('key-Cnc/Edit/stlParameters-Set the projection orientation of the 3D model.')}
+                                title={i18n._('key-Cnc/Edit/stlParameters-Projection Orientation 3axis')}
+                                content={i18n._('key-Cnc/Edit/stlParameters-Set the projection orientation of the 3D model.3axis')}
                             >
                                 <div className="sm-flex height-32 margin-vertical-8">
                                     <span className="sm-flex-auto sm-flex-order-negative width-56">{i18n._('key-Cnc/Edit/stlParameters-Orientation')}</span>
@@ -101,8 +101,8 @@ const Image3dParameters = ({ config, disabled, updateSelectedModelConfig }) => {
                         )}
                         {materials.isRotate && (
                             <TipTrigger
-                                title={i18n._('key-Cnc/Edit/stlParameters-Placement Face')}
-                                content={i18n._('key-Cnc/Edit/stlParameters-Set the placement orientation of the 3D model.')}
+                                title={i18n._('key-Cnc/Edit/stlParameters-Placement Face 4aixs')}
+                                content={i18n._('key-Cnc/Edit/stlParameters-Set the placement orientation of the 3D model.4axis')}
                             >
                                 <div className="sm-flex height-32 margin-vertical-8">
                                     <span className="sm-flex-auto sm-flex-order-negative width-56">{i18n._('key-Cnc/Edit/stlParameters-Orientation')}</span>

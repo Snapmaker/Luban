@@ -11,7 +11,7 @@ const Instructions = ({ onClose }) => {
         <Modal style={{ width: '1080px' }} size="lg" onClose={onClose}>
             <Modal.Header>
                 {/* <Modal.Title> */}
-                {i18n._('key-Laser/CamaeraCaptureOriginal-How to Configure Camera Captrue')}
+                {i18n._('key-Laser/CameraCaptureOriginal-How to Configure Camera Captrue')}
                 {/* </Modal.Title> */}
             </Modal.Header>
             <Modal.Body>

@@ -140,7 +140,7 @@ class GcodeParameters extends PureComponent {
                             type={['static']}
                             size={24}
                         />
-                        <span>{i18n._('Present')}</span>
+                        <span>{i18n._('Preset')}</span>
                     </div>
                     <PresentSelector
                         toolDefinition={this.props.activeToolDefinition}

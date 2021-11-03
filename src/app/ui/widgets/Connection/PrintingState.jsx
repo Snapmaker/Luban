@@ -24,7 +24,7 @@ class PrintingState extends PureComponent {
                         <div>{nozzleTemperature}°C / {nozzleTargetTemperature}°C</div>
                     </div>
                     <div className="col-6">
-                        <div className={styles['color-grey-color']}>{i18n._('key-Workspace/Connection-Heated Bed Temp.')}</div>
+                        <div className={styles['color-grey-color']}>{i18n._('key-Workspace/Connection-Build Plate Temp.')}</div>
                         <div>{heatedBedTemperature}°C / {heatedBedTargetTemperature}°C</div>
                     </div>
                 </div>

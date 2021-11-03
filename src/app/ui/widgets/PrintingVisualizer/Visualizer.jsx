@@ -384,7 +384,7 @@ class Visualizer extends PureComponent {
 
             if (isLarge) {
                 const popupActions = modal({
-                    title: i18n._('key-Printing/ContextMenu-Scale to fit'),
+                    title: i18n._('key-Printing/ContextMenu-Scale to Fit'),
                     body: (
                         <React.Fragment>
                             <p>{i18n._('key-Printing/ContextMenu-Model size has exceeded the printable area.')}</p>
