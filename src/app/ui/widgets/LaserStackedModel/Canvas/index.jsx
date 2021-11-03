@@ -2,10 +2,11 @@ import React, {
     useRef,
     useEffect,
     forwardRef,
-    useImperativeHandle
+    useImperativeHandle,
+    useState
 } from 'react';
-import { useThree, Canvas, extend, useFrame } from '@react-three/fiber';
-import { Vector3, DoubleSide } from 'three';
+import { useThree, Canvas, extend } from '@react-three/fiber';
+import { Vector3, DoubleSide, NoToneMapping, LinearEncoding } from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
 import PropType from 'prop-types';
 import classNames from 'classnames';
@@ -17,6 +18,7 @@ extend({ OrbitControls });
 const Controls = forwardRef((props, ref) => {
     const { camera, gl, setSize, invalidate } = useThree();
     const controls = useRef();
+    const [directionalLightPosition, setDirectionalLightPosition] = useState([0, 0, 0]);
     useImperativeHandle(ref, () => ({
         toTopFrontRight: (longestEdge) => {
             if (camera && controls.current) {
@@ -29,8 +31,18 @@ const Controls = forwardRef((props, ref) => {
             }
         }
     }));
-    useFrame(() => controls.current.update());
-    useEffect(() => controls.current.addEventListener('change', invalidate), []);
+    // useFrame(() => controls.current.update());
+    useEffect(() => {
+        const handler = () => {
+            const position = camera.position.clone().multiplyScalar(-1);
+            setDirectionalLightPosition([position.x, position.y, position.z]);
+            invalidate();
+        };
+        controls.current && controls.current.addEventListener('change', handler);
+        return () => {
+            controls.current && controls.current.removeEventListener('change', handler);
+        };
+    }, []);
 
     useEffect(() => {
         const containerWidth = 696;
@@ -39,14 +51,21 @@ const Controls = forwardRef((props, ref) => {
         camera.fov = 45;
         camera.near = 0.1;
         camera.far = 10000;
+        gl.toneMapping = NoToneMapping;
+        gl.outputEncoding = LinearEncoding;
         setSize(containerWidth, containerHeight);
     }, [setSize]);
-    return <orbitControls args={[camera, gl.domElement]} ref={controls} />;
+    return (
+        <>
+            <orbitControls args={[camera, gl.domElement]} ref={controls} />
+            <hemisphereLight args={[0xdddddd, 0x666666, 1]} position={[0, -1000, 0]} />
+            <directionalLight args={[0x666666, 0.4]} position={directionalLightPosition} />
+        </>
+    );
 });
 
-const ModelViewer = React.memo(({ geometry, coordinateSize }) => {
+const ModelViewer = React.memo(({ geometry }) => {
     const controlsRef = useRef();
-    const lightRef = useRef();
     function toTopFrontRight() {
         if (controlsRef.current && geometry) {
             geometry.computeBoundingBox();
@@ -54,7 +73,6 @@ const ModelViewer = React.memo(({ geometry, coordinateSize }) => {
             const boxMin = geometry.boundingBox.min;
             const longestEdge = Math.max(boxMax.x - boxMin.x, boxMax.y - boxMin.y, boxMax.z - boxMin.z);
             controlsRef.current.toTopFrontRight(longestEdge);
-            lightRef.current.position.copy(new Vector3(0, -coordinateSize.z / 2, Math.max(coordinateSize.x, coordinateSize.y, coordinateSize.z) * 2));
         }
     }
     useEffect(() => {
@@ -63,18 +81,14 @@ const ModelViewer = React.memo(({ geometry, coordinateSize }) => {
     return (
         <div>
             {geometry && (
-                <Canvas frameloop="demand" onCreated={() => toTopFrontRight()}>
+                <Canvas frameloop="demand" onCreated={() => toTopFrontRight()} flat linear>
                     <Controls ref={controlsRef} />
                     <group rotation={[-Math.PI / 2, 0, 0]}>
-                        {/* <gridHelper args={[100, 100]} /> */}
-                        {/* <axesHelper args={[200]} /> */}
                         <mesh position={[0, 0, 0]}>
                             {geometry ? <primitive object={geometry} attach="geometry" /> : null}
                             <meshPhongMaterial color={0xffffff} shininess={10} side={DoubleSide} />
                         </mesh>
                     </group>
-                    <hemisphereLight color={0xdddddd} groundColor={0x666666} position={[0, -1000, 0]} />
-                    <directionalLight ref={lightRef} color={0x666666} intensity={0.4} />
                 </Canvas>
             )}
             <div className={classNames(styles['view-controls'])}>
@@ -89,8 +103,7 @@ const ModelViewer = React.memo(({ geometry, coordinateSize }) => {
     );
 });
 ModelViewer.propTypes = {
-    geometry: PropType.object,
-    coordinateSize: PropType.object
+    geometry: PropType.object
 };
 
 export default ModelViewer;
