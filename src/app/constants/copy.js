@@ -178,3 +178,11 @@ i18n._('key-Progress/3DP-Failed to preview G-code.');
 i18n._('key-Progress/3DP-Calculating Rotation');
 i18n._('key-Progress/3DP-Calculated Rotation successfully.');
 i18n._('key-Progress/3DP-Failed to calculate Rotation.');
+
+// Machine Settings
+i18n._('key-App/Settings/MachineSettings-Single Extruder Toolhead');
+i18n._('key-App/Settings/MachineSettings-200mW Laser');
+i18n._('key-App/Settings/MachineSettings-1600mW Laser');
+i18n._('key-App/Settings/MachineSettings-Standard CNC');
+i18n._('key-App/Settings/MachineSettings-Dual Extruder Toolhead');
+i18n._('key-App/Settings/MachineSettings-10W Laser');
