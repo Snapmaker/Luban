@@ -185,16 +185,16 @@ function Laser({ location }) {
             }));
         };
         return showImportStackedModelModal && renderModal({
-            title: i18n._('Import Stacked Model'),
+            title: i18n._('key-StackedModel/Import-Preview Stacked Model'),
             onClose,
             renderBody: () => (<StackedModel setStackedModelModalDsiabled={setStackedModelModalDsiabled} />),
             actions: [
                 {
-                    name: i18n._('Cancel'),
+                    name: i18n._('key-StackedModel/Import-Cancel'),
                     onClick: () => { onClose(); }
                 },
                 {
-                    name: i18n._('Import'),
+                    name: i18n._('key-StackedModel/Import-Import'),
                     isPrimary: true,
                     disabled: stackedModelModalDsiabled,
                     onClick: () => {

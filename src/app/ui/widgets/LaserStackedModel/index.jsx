@@ -136,22 +136,22 @@ const StackedModel = ({ setStackedModelModalDsiabled }) => {
     return (
         <div className={classNames(styles['model-cut-modal'])}>
             <div className="display-inline">
-                <Spin spinning={disabled} className={classNames(styles.spin)} tip={i18n._('Loading...')}>
+                <Spin spinning={disabled} className={classNames(styles.spin)} tip={i18n._('key-StackedModel/Import-Loading')}>
                     <div className={classNames(styles['model-viewer-container'])}>
                         <ModelViewer geometry={modelGeometry} coordinateSize={canvasRange} />
                     </div>
                 </Spin>
                 <div className={classNames('margin-top-8', 'text-center', styles.description)} style={{ visibility: disabled ? 'hidden' : 'visible' }}>
-                    <span>{i18n._('Layers')} </span>
+                    <span>{i18n._('key-StackedModel/Import-Layers')} </span>
                     <span>{stlInfo?.layers}</span>
                     <span className={classNames(styles['desc-split'])}>|</span>
-                    <span>{i18n._('Sheets')} </span>
+                    <span>{i18n._('key-StackedModel/Import-Sheets')} </span>
                     <span>{svgInfo?.length}</span>
                 </div>
             </div>
             <div className={classNames(styles['model-size-container'])}>
                 <div>
-                    <div className={classNames(styles.title)}>{i18n._('Model Size')}</div>
+                    <div className={classNames(styles.title)}>{i18n._('key-StackedModel/Import-Model Size')}</div>
                     <div className="sm-flex height-32 margin-vertical-8">
                         <span className="sm-flex-width sm-flex justify-space-between">
                             <div className="position-re sm-flex align-flex-start">
@@ -219,7 +219,7 @@ const StackedModel = ({ setStackedModelModalDsiabled }) => {
                     </div>
                 </div>
                 <div>
-                    <div className={classNames(styles.title, styles.thickness)}>{i18n._('Material Thickness')}</div>
+                    <div className={classNames(styles.title, styles.thickness)}>{i18n._('key-StackedModel/Import-Material Thickness')}</div>
                     <div className="sm-flex height-32 margin-vertical-8">
                         <span className="sm-flex-width sm-flex justify-space-between">
                             <div className="position-re sm-flex align-flex-start">

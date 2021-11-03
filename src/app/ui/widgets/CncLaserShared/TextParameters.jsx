@@ -114,11 +114,11 @@ const TextParameters = ({ headType, modifyText, disabled }) => {
                         </div>
                     </TipTrigger>
                     <TipTrigger
-                        title={i18n._('Alignment')}
-                        content={i18n._('Align the text in different lines to either the left or right or in the center horizontally.')}
+                        title={i18n._('key-CncLaser/TextSection-Alignment')}
+                        content={i18n._('key-CncLaser/TextSection-Align the text in different lines to either the left or right or in the center horizontally.')}
                     >
                         <div className="sm-parameter-row">
-                            <span className="sm-parameter-row__label">{i18n._('Alignment')}</span>
+                            <span className="sm-parameter-row__label">{i18n._('key-CncLaser/TextSection-Alignment')}</span>
                             <span className={styles.textAlignWrap}>
                                 <SvgIcon
                                     className={classNames(

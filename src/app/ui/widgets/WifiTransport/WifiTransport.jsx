@@ -632,7 +632,7 @@ function WifiTransport({ widgetActions, controlActions }) {
                                 setShowStartModal(false);
                             }}
                         >
-                            {i18n._('key start')}
+                            {i18n._('key-Workspace/LaserStartJob-button_start')}
                         </Button>
                     </Modal.Footer>
                 </Modal>
