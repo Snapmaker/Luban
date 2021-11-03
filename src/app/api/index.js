@@ -50,6 +50,9 @@ const signin = defaultAPIFactory((options) => {
         .post('/api/signin')
         .send({ token, name, password });
 });
+const resetUserConfig = defaultAPIFactory(() => {
+    return request.delete('/api/user/resetConfig');
+});
 
 //
 // Image
@@ -346,6 +349,7 @@ export default {
     fetchGCode,
 
     signin,
+    resetUserConfig,
     controllers, // Controllers
     // users, // Users
     macros,

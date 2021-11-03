@@ -13,6 +13,7 @@ import { actions as cncActions } from '../flux/cnc';
 import { actions as printingActions } from '../flux/printing';
 import { actions as workspaceActions } from '../flux/workspace';
 import { actions as textActions } from '../flux/text';
+import { actions as settingActions } from '../flux/setting';
 import HomePage from './pages/HomePage';
 import Workspace from './pages/Workspace';
 import Printing from './pages/Printing';
@@ -24,6 +25,7 @@ import AppLayout from './layouts/AppLayout';
 
 class App extends PureComponent {
     static propTypes = {
+        resetUserConfig: PropTypes.func.isRequired,
         machineInit: PropTypes.func.isRequired,
         developToolsInit: PropTypes.func.isRequired,
         functionsInit: PropTypes.func.isRequired,
@@ -60,6 +62,12 @@ class App extends PureComponent {
             },
             [shortcutActions.EXPORT_GCODE]: () => {
                 UniApi.Event.emit('appbar-menu:export-gcode');
+            },
+            'RESETUSERCONFIG': { // reset user config, which equivalent to fully reinstallation
+                keys: ['alt+shift+r'],
+                callback: () => {
+                    this.props.resetUserConfig();
+                }
             },
             'LISTALLSHORTCUTS': {
                 keys: ['mod+alt+k l'],
@@ -151,6 +159,7 @@ const mapStateToProps = (state) => {
 };
 const mapDispatchToProps = (dispatch) => {
     return {
+        resetUserConfig: () => dispatch(settingActions.resetUserConfig()),
         machineInit: () => dispatch(machineActions.init()),
         developToolsInit: () => dispatch(developToolsActions.init()),
         workspaceInit: () => dispatch(workspaceActions.init()),

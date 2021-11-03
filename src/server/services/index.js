@@ -54,7 +54,7 @@ function startServices(server) {
 
 function registerApis(app) {
     app.post(urljoin(settings.route, 'api/signin'), api.users.signin);
-
+    app.delete(urljoin(settings.route, 'api/user/resetConfig'), api.users.resetConfig);
 
     // Register API routes with authorized access
     // Version
