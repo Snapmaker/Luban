@@ -733,14 +733,16 @@ class SVGActionsFactory {
     selectAllElements() {
         this.clearSelection();
         const childNodes = this.svgContentGroup.group.children;
+        const nodes = [];
         for (const node of childNodes) {
             const svgModel = this.getSVGModelByElement(node);
-            if (svgModel !== null) {
-                if (svgModel.visible) {
-                    this.selectElements([node]);
-                }
+            if (svgModel !== null && svgModel?.visible) {
+                // this.selectElements([node]);
+                nodes.push(node);
             }
         }
+        // this.svgContentGroup.addToSelection(nodes);
+        this.selectElements(nodes);
     }
 
     /**
@@ -750,17 +752,17 @@ class SVGActionsFactory {
      */
     selectElements(elements) {
         this.svgContentGroup.addToSelection(elements);
-
+        const svgModels = [];
         for (const svgModel of this.modelGroup.models) {
             if (elements.includes(svgModel.elem)) {
                 this.selectedSvgModels.push(svgModel);
                 // todo, not modelGroup here, use flux/editor
-                const modelGroup = this.modelGroup;
-                if (modelGroup) {
-                    modelGroup.addSelectedModels([svgModel]);
+                if (this.modelGroup) {
+                    svgModels.push(svgModel);
                 }
             }
         }
+        this.modelGroup.addSelectedModels(svgModels);
 
         const selectedElements = this.svgContentGroup.selectedElements;
         this.modelGroup.selectedModelArray = [...this.modelGroup.selectedModelArray];

@@ -32,6 +32,8 @@ import SVGEditor from '../../SVGEditor';
 import { actions as operationHistoryActions } from '../../../flux/operation-history';
 import modal from '../../../lib/modal';
 import UniApi from '../../../lib/uni-api';
+import Modal from '../../components/Modal';
+import { Button } from '../../components/Buttons';
 
 
 class Visualizer extends Component {
@@ -61,6 +63,7 @@ class Visualizer extends Component {
         renderingTimestamp: PropTypes.number.isRequired,
         isChangedAfterGcodeGenerating: PropTypes.bool.isRequired,
         enableShortcut: PropTypes.bool.isRequired,
+        isOverSize: PropTypes.bool,
 
         // func
         selectAllElements: PropTypes.func.isRequired,
@@ -98,6 +101,7 @@ class Visualizer extends Component {
         updateTextTransformationAfterEdit: PropTypes.func.isRequired,
         getSelectedElementsUniformScalingState: PropTypes.func.isRequired,
         uploadImage: PropTypes.func.isRequired,
+        checkIsOversizeImage: PropTypes.func.isRequired,
         cutModel: PropTypes.func.isRequired,
         switchToPage: PropTypes.func.isRequired,
 
@@ -157,6 +161,7 @@ class Visualizer extends Component {
         },
         onChangeFile: (event) => {
             const file = event.target.files[0];
+            console.log(file, this.state.canclePictureLimit);
             const extname = path.extname(file.name).toLowerCase();
             if (extname === '.stl' && this.props.materials.isRotate) {
                 modal({
@@ -174,7 +179,11 @@ class Visualizer extends Component {
             } else {
                 uploadMode = PROCESS_MODE_GREYSCALE;
             }
-
+            this.setState({
+                file,
+                uploadMode
+            });
+            console.log(uploadMode, this.props.uploadImage);
             // Switch to PAGE_EDITOR page if new image being uploaded
             this.props.switchToPage(PAGE_EDITOR);
             if (extname === '.stl' && !this.props.materials.isRotate) {
@@ -186,7 +195,14 @@ class Visualizer extends Component {
                     });
                 });
             } else {
-                this.props.uploadImage(file, uploadMode, () => {
+                // this.props.uploadImage(file, uploadMode, () => {
+                //     modal({
+                //         cancelTitle: i18n._('key-Laser/Edit/ContextMenu-Close'),
+                //         title: i18n._('key-Laser/Edit/ContextMenu-Import Error'),
+                //         body: i18n._('Failed to import this object. \nPlease select a supported file format.')
+                //     });
+                // });
+                this.props.checkIsOversizeImage(file, () => {
                     modal({
                         cancelTitle: i18n._('key-Laser/Edit/ContextMenu-Close'),
                         title: i18n._('key-Laser/Edit/ContextMenu-Import Error'),
@@ -194,6 +210,15 @@ class Visualizer extends Component {
                     });
                 });
             }
+        },
+        onClickLimitImage: (isLimit) => {
+            this.props.uploadImage(isLimit, this.state.file, this.state.uploadMode, () => {
+                modal({
+                    cancelTitle: i18n._('key-Laser/Edit/ContextMenu-Close'),
+                    title: i18n._('key-Laser/Edit/ContextMenu-Import Error'),
+                    body: i18n._('Failed to import this object. \nPlease select a supported file format.')
+                });
+            });
         },
         onClickToUpload: () => {
             this.fileInput.current.value = null;
@@ -295,6 +320,11 @@ class Visualizer extends Component {
 
         const { size, materials, coordinateMode } = props;
         this.printableArea = new PrintablePlate(size, materials, coordinateMode);
+        this.state = {
+            limitPicModalShow: false,
+            file: null,
+            uploadMode: ''
+        };
     }
 
     // hideContextMenu = () => {
@@ -309,7 +339,7 @@ class Visualizer extends Component {
     }
 
     componentWillReceiveProps(nextProps) {
-        const { renderingTimestamp } = nextProps;
+        const { renderingTimestamp, isOverSize } = nextProps;
 
         if (!isEqual(nextProps.size, this.props.size) || !isEqual(nextProps.materials, this.props.materials)) {
             const { size, materials } = nextProps;
@@ -348,6 +378,15 @@ class Visualizer extends Component {
         if (nextProps.coordinateSize !== this.props.coordinateSize) {
             this.printableArea = new PrintablePlate(nextProps.coordinateSize, nextProps.materials, nextProps.coordinateMode);
             this.actions.autoFocus();
+        }
+
+        if (isOverSize !== this.props.isOverSize) {
+            this.setState({
+                limitPicModalShow: isOverSize
+            });
+            if (isOverSize === false) {
+                this.actions.onClickLimitImage(false);
+            }
         }
 
         this.allowedFiles = (nextProps.materials.isRotate ? this.uploadExts : `${this.uploadExts}, .stl`);
@@ -577,6 +616,49 @@ class Visualizer extends Component {
                         ]
                     }
                 />
+                {this.state.limitPicModalShow && (
+                    <Modal
+                        visible={this.state.limitPicModalShow}
+                        onClose={() => {
+                            this.setState({ limitPicModalShow: false });
+                            this.actions.onClickLimitImage(false);
+                        }}
+                    >
+                        <Modal.Header>
+                            {i18n._('Key-Laser/ImportScale-Scale To Fit')}
+                        </Modal.Header>
+                        <Modal.Body>
+                            <div className={styles['width-480']}>
+                                {i18n._('Key-Laser/ImportScale-Object size has exceeded the work size. Scale it to the maximum work size?')}
+                            </div>
+                        </Modal.Body>
+                        <Modal.Footer>
+                            <Button
+                                priority="level-two"
+                                type="default"
+                                className="align-r margin-right-8"
+                                width="96px"
+                                onClick={() => {
+                                    this.setState({ limitPicModalShow: false });
+                                    this.actions.onClickLimitImage(false);
+                                }}
+                            >
+                                {i18n._('key-Printing/ImportScale--Cancel')}
+                            </Button>
+                            <Button
+                                priority="level-two"
+                                className="align-r"
+                                width="96px"
+                                onClick={() => {
+                                    this.setState({ limitPicModalShow: false });
+                                    this.actions.onClickLimitImage(true);
+                                }}
+                            >
+                                {i18n._('key-Printing/ImportScale--Scale')}
+                            </Button>
+                        </Modal.Footer>
+                    </Modal>
+                )}
             </div>
         );
     }
@@ -586,9 +668,8 @@ const mapStateToProps = (state, ownProps) => {
     const { size } = state.machine;
     const { currentModalPath, menuDisabledCount } = state.appbarMenu;
     const { background, progressStatesManager } = state.laser;
-
     const { SVGActions, scale, target, materials, page, selectedModelID, modelGroup, svgModelGroup, toolPathGroup, displayedType,
-        isChangedAfterGcodeGenerating, renderingTimestamp, stage, progress, coordinateMode, coordinateSize, enableShortcut } = state.laser;
+        isChangedAfterGcodeGenerating, renderingTimestamp, stage, progress, coordinateMode, coordinateSize, enableShortcut, isOverSize } = state.laser;
     const selectedModelArray = modelGroup.getSelectedModelArray();
     const selectedToolPathModelArray = modelGroup.getSelectedToolPathModels();
 
@@ -620,7 +701,8 @@ const mapStateToProps = (state, ownProps) => {
         backgroundGroup: background.group,
         renderingTimestamp,
         stage,
-        progress
+        progress,
+        isOverSize
     };
 };
 
@@ -658,7 +740,8 @@ const mapDispatchToProps = (dispatch) => {
         createText: (text) => dispatch(editorActions.createText('laser', text)),
         updateTextTransformationAfterEdit: (element, transformation) => dispatch(editorActions.updateModelTransformationByElement('laser', element, transformation)),
 
-        uploadImage: (file, mode, onFailure) => dispatch(editorActions.uploadImage('laser', file, mode, onFailure)),
+        uploadImage: (isLimit, file, mode, onFailure) => dispatch(editorActions.uploadImage('laser', file, mode, onFailure, isLimit)),
+        checkIsOversizeImage: (file, onFailure) => dispatch(editorActions.checkIsOversizeImage('laser', file, onFailure)),
         cutModel: (file, onFailure) => dispatch(editorActions.cutModel('laser', file, onFailure)),
         switchToPage: (page) => dispatch(editorActions.switchToPage('laser', page)),
 

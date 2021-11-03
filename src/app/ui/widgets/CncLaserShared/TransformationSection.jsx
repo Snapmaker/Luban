@@ -184,7 +184,7 @@ const TransformationSection = ({ headType, updateSelectedModelUniformScalingStat
                                         className="margin-horizontal-2"
                                         disabled={disabled || !selectedNotHide || canResize === false}
                                         value={toFixed(logicalWidth, 1)}
-                                        min={1}
+                                        min={0.1}
                                         size="small"
                                         max={size.x}
                                         onChange={(value) => {
