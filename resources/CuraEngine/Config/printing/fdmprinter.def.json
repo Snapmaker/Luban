@@ -202,7 +202,7 @@
                 "machine_heated_bed":
                 {
                     "label": "Enable Heated Build Plate",
-                    "description": "Whether the machine has a heated build plate present.",
+                    "description": "Whether the machine enables the heated build plate to provide heat to avoid warp.",
                     "default_value": false,
                     "type": "bool",
                     "settable_per_mesh": false,
@@ -1726,7 +1726,7 @@
                     {
                         "grid": "Grid",
                         "lines": "Lines",
-                        "triangles": "Triangles",
+                        "triangles": "Triangle",
                         "trihexagon": "Tri-Hexagon",
                         "cubic": "Cubic",
                         "cubicsubdiv": "Cubic Subdivision",
@@ -2261,7 +2261,7 @@
                 "material_bed_temperature":
                 {
                     "label": "Build Plate Temperature",
-                    "description": "The temperature used for the heated build plate. If this is 0, the build plate is left unheated.",
+                    "description": "The temperature used for the heated build plate. If this is 0, the build plate is left unheated during the first layer.",
                     "unit": "°C",
                     "type": "float",
                     "default_value": 60,
@@ -2740,7 +2740,7 @@
             {
                 "speed_print":
                 {
-                    "label": "Print Speed",
+                    "label": "Printing Speed",
                     "description": "The speed at which printing happens.",
                     "unit": "mm/s",
                     "type": "float",
@@ -2973,7 +2973,7 @@
                     {
                         "speed_print_layer_0":
                         {
-                            "label": "Initial Layer Print Speed",
+                            "label": "Initial Layer Printing Speed",
                             "description": "The speed of printing for the initial layer. A lower value is advised to improve adhesion to the build plate.",
                             "unit": "mm/s",
                             "type": "float",
@@ -3886,7 +3886,7 @@
                 },
                 "retraction_hop_enabled": {
                     "label": "Z Hop When Retracted",
-                    "description": "Whenever a retraction is done, the build plate is lowered to create clearance between the nozzle and the print. It prevents the nozzle from hitting the print during travel moves, reducing the chance to knock the print from the build plate.",
+                    "description": "Whenever a retraction is done, the nozzle is raised to create clearance between the nozzle and the print. It prevents the nozzle from hitting the print during travel moves, reducing the chance to knock the print from the build plate.",
                     "type": "bool",
                     "default_value": false,
                     "enabled": "retraction_enable",
@@ -4270,7 +4270,7 @@
                     "type": "enum",
                     "options":
                     {
-                        "buildplate": "Touching Buildplate",
+                        "buildplate": "Touching Build Plate",
                         "everywhere": "Everywhere"
                     },
                     "default_value": "everywhere",
@@ -4302,7 +4302,7 @@
                     {
                         "lines": "Lines",
                         "grid": "Grid",
-                        "triangles": "Triangles",
+                        "triangles": "Triangle",
                         "concentric": "Concentric",
                         "zigzag": "Zig Zag",
                         "cross": "Cross",
@@ -4851,7 +4851,7 @@
                     {
                         "lines": "Lines",
                         "grid": "Grid",
-                        "triangles": "Triangles",
+                        "triangles": "Triangle",
                         "concentric": "Concentric",
                         "zigzag": "Zig Zag"
                     },
@@ -4871,7 +4871,7 @@
                             {
                                 "lines": "Lines",
                                 "grid": "Grid",
-                                "triangles": "Triangles",
+                                "triangles": "Triangle",
                                 "concentric": "Concentric",
                                 "zigzag": "Zig Zag"
                             },
@@ -4891,7 +4891,7 @@
                             {
                                 "lines": "Lines",
                                 "grid": "Grid",
-                                "triangles": "Triangles",
+                                "triangles": "Triangle",
                                 "concentric": "Concentric",
                                 "zigzag": "Zig Zag"
                             },

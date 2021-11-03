@@ -83,7 +83,7 @@ class SetBackground extends PureComponent {
             modal({
                 title: i18n._('key-Laser/CameraCaptureOriginal-Device Not Connected'),
                 body: (
-                    <Trans i18nKey="key-Laser/CamaeraCaptureOriginal_laser_module_not_connect_notice">
+                    <Trans i18nKey="key-Laser/CameraCaptureOriginal_laser_module_not_connect_notice">
                         Laser module is not connected. Please make sure it is installed properly, and then connect to your Snapmaker via <b>Connection</b>.
                     </Trans>
                 )

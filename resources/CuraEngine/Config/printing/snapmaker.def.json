@@ -65,7 +65,7 @@
             {
                 "grid": "Grid",
                 "lines": "Lines",
-                "triangles": "Triangles",
+                "triangles": "Triangle",
                 "trihexagon": "Tri-Hexagon",
                 "cubic": "Cubic",
                 "cubicsubdiv": "Cubic Subdivision",
@@ -114,7 +114,7 @@
         },
         "machine_heated_bed": {
             "label": "Enable Heated Build Plate",
-            "description": "Whether the machine has a heated bed.",
+            "description": "Whether the machine enables the heated build plate to provide heat to avoid warp.",
             "default_value": true
         },
         "machine_height": {
@@ -151,12 +151,12 @@
             "description": "Spiralize smooths out the Z move of the outer edge. This will create a steady Z increase over the whole print. This feature turns a solid model into a single walled print with a solid bottom. This feature should only be enabled when each layer only contains a single part."
         },
         "material_bed_temperature": {
-            "label": "Heated Bed Temperature",
-            "description": "The temperature used for the heated bed. If this is 0, the bed temperature will not be adjusted."
+            "label": "Build Plate Temperature",
+            "description": "The temperature used for the build plate. If this is 0, the bed temperature will not be adjusted."
         },
         "material_bed_temperature_layer_0": {
-            "label": "Initial Heated Bed Temperature",
-            "description": "The temperature used for the heated bed at the first layer."
+            "label": "Initial Build Plate Temperature",
+            "description": "The temperature used for the build plate at the first layer."
         },
         "material_flow_layer_0": {
             "label": "Initial Layer Flow",
@@ -247,12 +247,12 @@
             "description": "Retract the filament when the nozzle is moving over a non-printed area."
         },
         "retraction_hop": {
-            "label": "Z-hop Height",
+            "label": "Z Hop Height",
             "description": "The height difference when performing a Z Hop."
         },
         "retraction_hop_enabled": {
-            "label": "Z-hop When Retracted",
-            "description": "Whenever a retraction is done, the heated bed is lowered to create clearance between the nozzle and the print. It prevents the nozzle from hitting the print during travel moves, reducing the chance to knock the print from the heated bed."
+            "label": "Z Hop When Retracted",
+            "description": "Whenever a retraction is done, the nozzle is raised to create clearance between the nozzle and the print. It prevents the nozzle from hitting the print during travel moves, reducing the chance to knock the print from the build plate."
         },
         "retraction_speed": {
             "label": "Retraction Speed",
@@ -279,12 +279,12 @@
             "description": "The speed for the initial layer. A lower value is advised to improve adhesion to the heated bed."
         },
         "speed_print": {
-            "label": "Print Speed",
+            "label": "Printing Speed",
             "description": "The speed at which printing happens."
         },
         "speed_print_layer_0": {
             "label": "Initial Layer Printing Speed",
-            "description": "The speed of printing for the initial layer. A lower value is advised to improve adhesion to the heated bed."
+            "description": "The speed of printing for the initial layer. A lower value is advised to improve adhesion to the build plate."
         },
         "support": {
             "children": {
