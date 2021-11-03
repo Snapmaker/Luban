@@ -52,6 +52,9 @@ class Controls extends EventEmitter {
     // "target" is where the camera orbits around
     target = new THREE.Vector3();
 
+    // rotate camera by this point
+    rotationTarget = new THREE.Vector3();
+
     lastPosition = new THREE.Vector3();
 
     lastQuaternion = new THREE.Quaternion();
@@ -106,7 +109,7 @@ class Controls extends EventEmitter {
 
     clickEnabled = true;
 
-    constructor(sourceType, displayedType, camera, group, domElement, onScale, onPan, supportActions, minScale = undefined, maxScale = undefined, scaleSize = undefined) {
+    constructor(sourceType, displayedType, camera, group, domElement, onScale, onPan, supportActions, minScale = undefined, maxScale = undefined, scaleSize = undefined, cameraInitialPosition = undefined) {
         super();
 
         this.sourceType = sourceType;
@@ -124,6 +127,7 @@ class Controls extends EventEmitter {
         this.minScale = minScale;
         this.maxScale = maxScale;
         this.scaleSize = scaleSize;
+        this.rotationTarget = new THREE.Vector3(0, 0, (cameraInitialPosition ? cameraInitialPosition.z : 0));
 
         this.bindEventListeners();
     }
@@ -185,11 +189,35 @@ class Controls extends EventEmitter {
         this.sphericalDelta.phi -= angle;
     }
 
-    rotate(deltaX, deltaY) {
-        const elem = this.domElement === document ? document.body : this.domElement;
+    _getCameraPositionByRotation(positionStart, target, angleEW, angleNS) {
+        const positionRotateNS = {
+            x: positionStart.x,
+            y: target.y + (positionStart.y - target.y) * Math.cos(angleNS) - (positionStart.z - target.z) * Math.sin(angleNS),
+            z: target.z + (positionStart.y - target.y) * Math.sin(angleNS) + (positionStart.z - target.z) * Math.cos(angleNS)
+        };
 
-        this.rotateLeft(2 * Math.PI * deltaX / elem.clientHeight); // yes, height
-        this.rotateUp(2 * Math.PI * deltaY / elem.clientHeight);
+        const positionRotateEW = {
+            x: target.x + (positionRotateNS.x - target.x) * Math.cos(angleEW) - (positionRotateNS.y - target.y) * Math.sin(angleEW),
+            y: target.y + (positionRotateNS.x - target.x) * Math.sin(angleEW) + (positionRotateNS.y - target.y) * Math.cos(angleEW),
+            z: positionRotateNS.z
+        };
+
+        return positionRotateEW;
+    }
+
+    rotate(deltaX, deltaY) {
+        const positionStart = this.camera.position;
+        const target = this.rotationTarget;
+        const position = this._getCameraPositionByRotation(positionStart, target, -deltaX * Math.PI / 180, -deltaY * Math.PI / 180);
+        this.camera.position.x = position.x;
+        this.camera.position.y = position.y;
+        this.camera.position.z = position.z;
+        // this.setTarget(this.rotationTarget);
+
+        // const elem = this.domElement === document ? document.body : this.domElement;
+        //
+        // this.rotateLeft(2 * Math.PI * deltaX / elem.clientHeight); // yes, height
+        // this.rotateUp(2 * Math.PI * deltaY / elem.clientHeight);
     }
 
     panLeft(distance, matrix) {
