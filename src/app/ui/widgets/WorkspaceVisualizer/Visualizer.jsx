@@ -799,8 +799,8 @@ class Visualizer extends PureComponent {
                 )}
                 {(state.isLaser10WCheck1) && (
                     <ModalSmall
-                        title={i18n._('10W Laser Stop')}
-                        text={i18n._('Temperature too high')}
+                        title={i18n._('key-Workspace/Window-10W Laser Overheating protection')}
+                        text={i18n._('key-Workspace/Window-10W Laser Overheating protection Info')}
                         img="WarningTipsEmergencyStop"
                         iconColor="#FF4D4F"
                         onClose={this.actions.closeModal}
@@ -808,8 +808,8 @@ class Visualizer extends PureComponent {
                 )}
                 {(state.isLaser10WCheck2) && (
                     <ModalSmall
-                        title={i18n._('10W Laser Stop')}
-                        text={i18n._('Angel error')}
+                        title={i18n._('key-Workspace/Window-10W Laser Attitude detection')}
+                        text={i18n._('key-Workspace/Window-10W Laser Attitude detection Info')}
                         img="WarningTipsEmergencyStop"
                         iconColor="#FF4D4F"
                         onClose={this.actions.closeModal}
