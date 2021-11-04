@@ -667,6 +667,7 @@
     "key-Laser/ToolpathParameters-Repetition": "通过",
     "key-Laser/ToolpathParameters-Speed": "速度",
     "key-Laser/ToolpathParameters-Use legacy engine": "Use legacy engine",
+    "key-Laser/ToolpathParameters-Method": "加工方法",
     "key-Laser/TransformationSection-Transformation": "变换",
     "key-Laser/common-Failed to rename. Please enter a new name.": "重命名失败，请输入新名字。",
     "key-Luban/Machine/MachineSeries-Custom": "自定义",

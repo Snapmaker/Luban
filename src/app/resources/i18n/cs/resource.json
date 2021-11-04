@@ -667,6 +667,7 @@
     "key-Laser/ToolpathParameters-Repetition": "",
     "key-Laser/ToolpathParameters-Speed": "",
     "key-Laser/ToolpathParameters-Use legacy engine": "",
+    "key-Laser/ToolpathParameters-Method": "",
     "key-Laser/TransformationSection-Transformation": "",
     "key-Laser/common-Failed to rename. Please enter a new name.": "",
     "key-Luban/Machine/MachineSeries-Custom": "",
