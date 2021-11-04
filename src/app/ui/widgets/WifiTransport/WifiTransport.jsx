@@ -1,9 +1,9 @@
 import React, { useCallback, useEffect, useRef, useState, useImperativeHandle } from 'react';
 import PropTypes from 'prop-types';
+import { Trans } from 'react-i18next';
 import noop from 'lodash/noop';
 import * as THREE from 'three';
 import { Spin } from 'antd';
-import { Trans } from 'react-i18next';
 
 import classNames from 'classnames';
 import { useDispatch, useSelector } from 'react-redux';
