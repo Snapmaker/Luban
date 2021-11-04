@@ -207,7 +207,7 @@ function MachineSettings() {
                 connectionTimeout: connectionTimeout
             });
         },
-        onSave: () => {
+        onSave: async () => {
             dispatch(machineActions.connect.setConnectionType(state.connectionTimeout));
             dispatch(machineActions.updateMachineSeries(state.series));
             dispatch(machineActions.updateMachineSize(state.size));
@@ -220,7 +220,7 @@ function MachineSettings() {
             }, state.series));
             const headType = getCurrentHeadType(window.location.href);
             if (headType) {
-                dispatch(projectActions.clearSavedEnvironment(headType));
+                await dispatch(projectActions.clearSavedEnvironment(headType));
             }
             window.location.href = '/';
         },

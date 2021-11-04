@@ -527,7 +527,7 @@ function WifiTransport({ widgetActions, controlActions }) {
                         type="primary"
                         priority="level-three"
                         width="144px"
-                        disabled={!(hasFile && isConnected && isHeadType && connectionType === CONNECTION_TYPE_WIFI)}
+                        disabled={!(hasFile && isConnected && isHeadType && isWifi && isSendedOnWifi)}
                         onClick={actions.sendFile}
                     >
                         {i18n._('key-Workspace/WifiTransport-Sending File')}
