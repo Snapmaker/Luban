@@ -261,6 +261,11 @@ export const DEFAULT_LASER_CONFIG_IDS = [
     'present.default_PathEngrave'
 ];
 
+// default basswood 1.5mm cutting
+export const DEFAULT_10W_LASER_CONFIG_IDS = [
+    'basswood.cutting_1.5mm'
+];
+
 export const LASER_PRESENT_CONFIG_GROUP = [
     {
         name: 'key-Laser/ToolpathParameters-Method',

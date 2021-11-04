@@ -8,11 +8,14 @@ import { actions as projectActions } from '../../../flux/project';
 import { actions as editorActions } from '../../../flux/editor';
 
 import { getMachineSeriesWithToolhead, LASER_PRESENT_CONFIG_GROUP,
-    HEAD_LASER, DEFAULT_LASER_CONFIG_IDS } from '../../../constants';
+    HEAD_LASER, DEFAULT_LASER_CONFIG_IDS, DEFAULT_10W_LASER_CONFIG_IDS,
+    LEVEL_TWO_POWER_LASER_FOR_SM2
+} from '../../../constants';
 import ProfileManager from '../ProfileManager';
 import i18n from '../../../lib/i18n';
 
 const selectedId = DEFAULT_LASER_CONFIG_IDS[0];
+const selectedIdFor10w = DEFAULT_10W_LASER_CONFIG_IDS[0];
 
 function isOfficialDefinition(activeToolList) {
     return includes(DEFAULT_LASER_CONFIG_IDS,
@@ -29,7 +32,6 @@ function LaserPresentManager({ closeToolManager, shouldSaveToolpath = false, sav
     const series = useSelector(state => state?.machine?.series);
     const toolHead = useSelector(state => state?.machine?.toolHead);
     const dispatch = useDispatch();
-
     const actions = {
         closeManager: () => {
             closeToolManager && closeToolManager();
@@ -120,7 +122,7 @@ function LaserPresentManager({ closeToolManager, shouldSaveToolpath = false, sav
             allDefinitions={allDefinitions}
             disableCategory={false}
             managerTitle="Present Settings"
-            selectedId={selectedId}
+            selectedId={toolHead?.laserToolhead === LEVEL_TWO_POWER_LASER_FOR_SM2 ? selectedIdFor10w : selectedId}
             headType={HEAD_LASER}
         />
     );
