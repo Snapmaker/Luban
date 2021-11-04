@@ -556,20 +556,26 @@ function WifiTransport({ widgetActions, controlActions }) {
                         {i18n._('key-Workspace/LaserStartJob-start_job')}
                     </Modal.Header>
                     <Modal.Body>
-                        <Trans i18nKey="key-Workspace/LaserStartJob-3axis_start_job_prompt">
-                            Under the Auto Mode, the machine will run auto focus according to the material thickness you input, and start the job.<br />
-                            Under the Manual Mode, the machine will use the current work origin to start the job. Make sure you’ve set the work origin before starting.<br />
-                            Safety Info: Before use, make sure the machine has been equipped with an enclosure, and both the operator and bystanders have worn Laser Safety Goggles.
-                        </Trans>
-                        <Trans i18nKey="key-Workspace/LaserStartJob-10w_3axis_start_job_prompt">
-                            Under the Auto Mode, the machine will run auto focus according to the material thickness you input, and start the job.<br />
-                            Under the Manual Mode, the machine will use the current work origin to start the job. Make sure you’ve set the work origin before starting.<br />
-                            Safety Info: Before use, make sure the machine has been equipped with an enclosure, and both the operator and bystanders have worn Laser Safety Goggles.
-                        </Trans>
-                        <Trans i18nKey="key-Workspace/LaserStartJob-4axis_start_job_prompt">
-                            The machine will use the current work origin to start the job. Make sure you’ve set the work origin before starting.<br />
-                            Safety Info: Before use, make sure the machine has been equipped with an enclosure, and both the operator and bystanders have worn Laser Safety Goggles.
-                        </Trans>
+                        {!isFourAxis && toolHeadName !== LEVEL_TWO_POWER_LASER_FOR_SM2 && (
+                            <Trans i18nKey="key-Workspace/LaserStartJob-3axis_start_job_prompt">
+                                Under the Auto Mode, the machine will run auto focus according to the material thickness you input, and start the job.<br />
+                                Under the Manual Mode, the machine will use the current work origin to start the job. Make sure you’ve set the work origin before starting.<br />
+                                Safety Info: Before use, make sure the machine has been equipped with an enclosure, and both the operator and bystanders have worn Laser Safety Goggles.
+                            </Trans>
+                        )}
+                        {!isFourAxis && toolHeadName === LEVEL_TWO_POWER_LASER_FOR_SM2 && (
+                            <Trans i18nKey="key-Workspace/LaserStartJob-10w_3axis_start_job_prompt">
+                                Under the Auto Mode, the machine will run auto focus according to the material thickness you input, and start the job.<br />
+                                Under the Manual Mode, the machine will use the current work origin to start the job. Make sure you’ve set the work origin before starting.<br />
+                                Safety Info: Before use, make sure the machine has been equipped with an enclosure, and both the operator and bystanders have worn Laser Safety Goggles.
+                            </Trans>
+                        )}
+                        {isFourAxis && (
+                            <Trans i18nKey="key-Workspace/LaserStartJob-4axis_start_job_prompt">
+                                The machine will use the current work origin to start the job. Make sure you’ve set the work origin before starting.<br />
+                                Safety Info: Before use, make sure the machine has been equipped with an enclosure, and both the operator and bystanders have worn Laser Safety Goggles.
+                            </Trans>
+                        )}
                         { toolHeadName !== LEVEL_TWO_POWER_LASER_FOR_SM2 && (
                             <div className="sm-flex height-32 justify-space-between margin-vertical-8">
                                 <span>{i18n._('key-Workspace/LaserStartJob-3axis_start_job_auto_mode')}</span>
