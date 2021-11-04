@@ -271,7 +271,7 @@ const SettingGuideModal = (props) => {
                     {
                         settingStep === 'machine' && (
                             <div className={styles.machineSelect}>
-                                <div className={classNames(styles.titleLabel, 'heading-2')}>{i18n._('key-HomePage/Begin-Select machine')}</div>
+                                <div className={classNames(styles.titleLabel, 'heading-2')}>{i18n._('key-HomePage/Begin-Select Machine')}</div>
                                 <div className={styles.machineContent}>
                                     <div className={styles.machineImg}>
                                         <SvgIcon

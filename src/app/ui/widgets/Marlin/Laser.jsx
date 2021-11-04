@@ -158,7 +158,7 @@ class Laser extends PureComponent {
                             color="#FFA940"
                             onClick={actions.onSaveLaserPower}
                         />
-                        <span>The laser power will be reset to 1% after 0.5 s.</span>
+                        <span>{i18n._('key-Workspace/Laser-high_power_tips')}</span>
                     </div>
                 )}
             </div>

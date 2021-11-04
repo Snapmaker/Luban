@@ -204,7 +204,7 @@ export const PRINTING_QUALITY_CONFIG_GROUP = [
         ]
     },
     {
-        name: 'Heated Bed Adhesion Type',
+        name: 'Build Plate Adhesion Type',
         fields: [
             'adhesion_type',
             'skirt_line_count',
@@ -263,13 +263,13 @@ export const DEFAULT_LASER_CONFIG_IDS = [
 
 export const LASER_PRESENT_CONFIG_GROUP = [
     {
-        name: 'Method',
+        name: 'key-Laser/ToolpathParameters-Method',
         fields: [
             'path_type'
         ]
     },
     {
-        name: 'Fill',
+        name: 'key-Laser/ToolpathParameters-Fill',
         fields: [
             'movement_mode',
             'direction',
@@ -277,7 +277,7 @@ export const LASER_PRESENT_CONFIG_GROUP = [
         ]
     },
     {
-        name: 'Speed',
+        name: 'key-Laser/ToolpathParameters-Speed',
         fields: [
             'jog_speed',
             'work_speed',
@@ -285,14 +285,14 @@ export const LASER_PRESENT_CONFIG_GROUP = [
         ]
     },
     {
-        name: 'Repetition',
+        name: 'key-Laser/ToolpathParameters-Repetition',
         fields: [
             'multi_passes',
             'multi_pass_depth'
         ]
     },
     {
-        name: 'Power',
+        name: 'key-Laser/ToolpathParameters-Power',
         fields: [
             'fixed_power'
         ]
@@ -785,7 +785,7 @@ export const MACHINE_TOOL_HEADS = {
         key: 'singleExtruderToolheadForOriginal',
         pathname: 'single',
         // label: SINGLE_EXTRUDER_TOOLHEAD,
-        label: 'Single Extruder Toolhead',
+        label: 'key-App/Settings/MachineSettings-Single Extruder Toolhead',
         // mock offset data
         offset: {
             x: 0,
@@ -796,7 +796,7 @@ export const MACHINE_TOOL_HEADS = {
     [LEVEL_ONE_POWER_LASER_FOR_ORIGINAL]: {
         platform: [MACHINE_SERIES.ORIGINAL.value, MACHINE_SERIES.ORIGINAL_LZ.value],
         value: LEVEL_ONE_POWER_LASER_FOR_ORIGINAL,
-        label: '200mW',
+        label: 'key-App/Settings/MachineSettings-200mW Laser',
         pathname: '200mw',
         key: 'levelOneLaserToolheadForOriginal',
         // mock offset data
@@ -809,7 +809,7 @@ export const MACHINE_TOOL_HEADS = {
     [LEVEL_TWO_POWER_LASER_FOR_ORIGINAL]: {
         platform: [MACHINE_SERIES.ORIGINAL.value, MACHINE_SERIES.ORIGINAL_LZ.value],
         value: LEVEL_TWO_POWER_LASER_FOR_ORIGINAL,
-        label: '1600mW',
+        label: 'key-App/Settings/MachineSettings-1600mW Laser',
         pathname: '1600mw',
         key: 'levelTwoLaserToolheadForOriginal',
         // mock offset data
@@ -823,7 +823,7 @@ export const MACHINE_TOOL_HEADS = {
         platform: [MACHINE_SERIES.ORIGINAL.value, MACHINE_SERIES.ORIGINAL_LZ.value],
         value: STANDARD_CNC_TOOLHEAD_FOR_ORIGINAL,
         key: 'standardCNCToolheadForOriginal',
-        label: 'Standard',
+        label: 'key-App/Settings/MachineSettings-Standard CNC',
         pathname: 'standard',
         // mock offset data
         offset: {
@@ -838,7 +838,7 @@ export const MACHINE_TOOL_HEADS = {
         key: 'singleExtruderToolheadForSM2',
         pathname: 'single',
         // label: SINGLE_EXTRUDER_TOOLHEAD,
-        label: 'Single Extruder Toolhead',
+        label: 'key-App/Settings/MachineSettings-Single Extruder Toolhead',
         // mock offset data
         offset: {
             x: 0,
@@ -851,7 +851,7 @@ export const MACHINE_TOOL_HEADS = {
         value: DUAL_EXTRUDER_TOOLHEAD_FOR_SM2,
         pathname: 'dual',
         key: 'dualExtruderToolheadForSM2',
-        label: 'Dual Extruder Toolhead',
+        label: 'key-App/Settings/MachineSettings-Dual Extruder Toolhead',
         // mock offset data
         offset: {
             x: 0,
@@ -864,7 +864,7 @@ export const MACHINE_TOOL_HEADS = {
         value: LEVEL_ONE_POWER_LASER_FOR_SM2,
         pathname: '1600mw',
         key: 'levelOneLaserToolheadForSM2',
-        label: '1600mW',
+        label: 'key-App/Settings/MachineSettings-1600mW Laser',
         // mock offset data
         offset: {
             x: 0,
@@ -876,7 +876,7 @@ export const MACHINE_TOOL_HEADS = {
         platform: [MACHINE_SERIES.A150.value, MACHINE_SERIES.A250.value, MACHINE_SERIES.A350.value],
         value: LEVEL_TWO_POWER_LASER_FOR_SM2,
         pathname: '10w',
-        label: '10W',
+        label: 'key-App/Settings/MachineSettings-10W Laser',
         key: 'levelTwoLaserToolheadForSM2',
         // mock offset data
         offset: {
@@ -890,7 +890,7 @@ export const MACHINE_TOOL_HEADS = {
         value: STANDARD_CNC_TOOLHEAD_FOR_SM2,
         key: 'standardCNCToolheadForSM2',
         pathname: 'standard',
-        label: 'Standard',
+        label: 'key-App/Settings/MachineSettings-Standard CNC',
         // mock offset data
         offset: {
             x: 0,

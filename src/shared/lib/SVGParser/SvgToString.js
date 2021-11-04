@@ -1,4 +1,4 @@
-import { OVERRIDE_STYLE } from "./constants";
+import { OVERRIDE_STYLE } from './constants';
 
 function getPath(shape) {
     if (!shape.visibility) {

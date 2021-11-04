@@ -145,7 +145,7 @@ class AppLayout extends PureComponent {
                         }
                     },
                     {
-                        name: i18n._('key-App/Settings/FirmwareTool-Compile and Export'),
+                        name: i18n._('key-App/Settings/FirmwareTool-Pack and Export'),
                         isPrimary: true,
                         isAutoWidth: true,
                         onClick: () => {

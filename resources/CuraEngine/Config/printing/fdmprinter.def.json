@@ -201,8 +201,8 @@
                 },
                 "machine_heated_bed":
                 {
-                    "label": "Has Heated Build Plate",
-                    "description": "Whether the machine has a heated build plate present.",
+                    "label": "Enable Heated Build Plate",
+                    "description": "Whether the machine enables the heated build plate to provide heat to avoid warp.",
                     "default_value": false,
                     "type": "bool",
                     "settable_per_mesh": false,
@@ -1726,7 +1726,7 @@
                     {
                         "grid": "Grid",
                         "lines": "Lines",
-                        "triangles": "Triangles",
+                        "triangles": "Triangle",
                         "trihexagon": "Tri-Hexagon",
                         "cubic": "Cubic",
                         "cubicsubdiv": "Cubic Subdivision",
@@ -2261,7 +2261,7 @@
                 "material_bed_temperature":
                 {
                     "label": "Build Plate Temperature",
-                    "description": "The temperature used for the heated build plate. If this is 0, the build plate is left unheated.",
+                    "description": "The temperature used for the heated build plate. If this is 0, the build plate is left unheated during the first layer.",
                     "unit": "°C",
                     "type": "float",
                     "default_value": 60,
@@ -2278,7 +2278,7 @@
                 },
                 "material_bed_temperature_layer_0":
                 {
-                    "label": "Build Plate Temperature Initial Layer",
+                    "label": "Initial Layer Build Plate Temperature",
                     "description": "The temperature used for the heated build plate at the first layer. If this is 0, the build plate is left unheated during the first layer.",
                     "unit": "°C",
                     "type": "float",
@@ -2740,7 +2740,7 @@
             {
                 "speed_print":
                 {
-                    "label": "Print Speed",
+                    "label": "Printing Speed",
                     "description": "The speed at which printing happens.",
                     "unit": "mm/s",
                     "type": "float",
@@ -2973,7 +2973,7 @@
                     {
                         "speed_print_layer_0":
                         {
-                            "label": "Initial Layer Print Speed",
+                            "label": "Initial Layer Printing Speed",
                             "description": "The speed of printing for the initial layer. A lower value is advised to improve adhesion to the build plate.",
                             "unit": "mm/s",
                             "type": "float",
@@ -3886,7 +3886,7 @@
                 },
                 "retraction_hop_enabled": {
                     "label": "Z Hop When Retracted",
-                    "description": "Whenever a retraction is done, the build plate is lowered to create clearance between the nozzle and the print. It prevents the nozzle from hitting the print during travel moves, reducing the chance to knock the print from the build plate.",
+                    "description": "Whenever a retraction is done, the nozzle is raised to create clearance between the nozzle and the print. It prevents the nozzle from hitting the print during travel moves, reducing the chance to knock the print from the build plate.",
                     "type": "bool",
                     "default_value": false,
                     "enabled": "retraction_enable",
@@ -3923,7 +3923,7 @@
                     "settable_per_mesh": false,
                     "settable_per_extruder": true
                 },
-                "retraction_hop_after_extruder_switch_height": 
+                "retraction_hop_after_extruder_switch_height":
                 {
                     "label": "Z Hop After Extruder Switch Height",
                     "description": "The height difference when performing a Z Hop after extruder switch.",
@@ -4266,11 +4266,11 @@
                 "support_type":
                 {
                     "label": "Support Placement",
-                    "description": "Adjusts the placement of the support structures. The placement can be set to touching build plate or everywhere. When set to everywhere the support structures will also be printed on the model.",
+                    "description": "Adjusts the placement of the support structures. The placement can be set to Touching Build Plate or Everywhere. When set to Everywhere, the support structures will also be printed on the model.",
                     "type": "enum",
                     "options":
                     {
-                        "buildplate": "Touching Buildplate",
+                        "buildplate": "Touching Build Plate",
                         "everywhere": "Everywhere"
                     },
                     "default_value": "everywhere",
@@ -4302,7 +4302,7 @@
                     {
                         "lines": "Lines",
                         "grid": "Grid",
-                        "triangles": "Triangles",
+                        "triangles": "Triangle",
                         "concentric": "Concentric",
                         "zigzag": "Zig Zag",
                         "cross": "Cross",
@@ -4652,7 +4652,7 @@
                     "settable_per_mesh": false,
                     "settable_per_extruder": true
                 },
-                "minimum_support_area": 
+                "minimum_support_area":
                 {
                     "label": "Minimum Support Area",
                     "description": "Minimum area size for support polygons. Polygons which have an area smaller than this value will not be generated.",
@@ -4851,7 +4851,7 @@
                     {
                         "lines": "Lines",
                         "grid": "Grid",
-                        "triangles": "Triangles",
+                        "triangles": "Triangle",
                         "concentric": "Concentric",
                         "zigzag": "Zig Zag"
                     },
@@ -4871,7 +4871,7 @@
                             {
                                 "lines": "Lines",
                                 "grid": "Grid",
-                                "triangles": "Triangles",
+                                "triangles": "Triangle",
                                 "concentric": "Concentric",
                                 "zigzag": "Zig Zag"
                             },
@@ -4891,7 +4891,7 @@
                             {
                                 "lines": "Lines",
                                 "grid": "Grid",
-                                "triangles": "Triangles",
+                                "triangles": "Triangle",
                                 "concentric": "Concentric",
                                 "zigzag": "Zig Zag"
                             },
@@ -4904,7 +4904,7 @@
                         }
                     }
                 },
-                "minimum_interface_area": 
+                "minimum_interface_area":
                 {
                     "label": "Minimum Support Interface Area",
                     "description": "Minimum area size for support interface polygons. Polygons which have an area smaller than this value will be printed as normal support.",
@@ -4918,7 +4918,7 @@
                     "settable_per_mesh": true,
                     "children":
                     {
-                        "minimum_roof_area": 
+                        "minimum_roof_area":
                         {
                             "label": "Minimum Support Roof Area",
                             "description": "Minimum area size for the roofs of the support. Polygons which have an area smaller than this value will be printed as normal support.",
@@ -4932,7 +4932,7 @@
                             "enabled": "support_roof_enable and (support_enable or support_meshes_present)",
                             "settable_per_mesh": true
                         },
-                        "minimum_bottom_area": 
+                        "minimum_bottom_area":
                         {
                             "label": "Minimum Support Floor Area",
                             "description": "Minimum area size for the floors of the support. Polygons which have an area smaller than this value will be printed as normal support.",
@@ -4948,7 +4948,7 @@
                         }
                     }
                 },
-                "support_interface_offset": 
+                "support_interface_offset":
                 {
                     "label": "Support Interface Horizontal Expansion",
                     "description": "Amount of offset applied to the support interface polygons.",
@@ -4962,7 +4962,7 @@
                     "settable_per_extruder": true,
                     "children":
                     {
-                        "support_roof_offset": 
+                        "support_roof_offset":
                         {
                             "label": "Support Roof Horizontal Expansion",
                             "description": "Amount of offset applied to the roofs of the support.",
@@ -4976,7 +4976,7 @@
                             "settable_per_mesh": false,
                             "settable_per_extruder": true
                         },
-                        "support_bottom_offset": 
+                        "support_bottom_offset":
                         {
                             "label": "Support Floor Horizontal Expansion",
                             "description": "Amount of offset applied to the floors of the support.",
@@ -5176,7 +5176,7 @@
                 "adhesion_type":
                 {
                     "label": "Build Plate Adhesion Type",
-                    "description": "Different options that help to improve both priming your extrusion and adhesion to the build plate. Brim adds a single layer flat area around the base of your model to prevent warping. Raft adds a thick grid with a roof below the model. Skirt is a line printed around the model, but not connected to the model.",
+                    "description": "Different options that help improve priming your extrusion and adhesion to the build plate. Skirt is a line printed around the model, but not connected to the model. Brim adds a single layer flat area around the base of your model to prevent warping. Raft adds a thick grid with a roof below the model.",
                     "type": "enum",
                     "options":
                     {

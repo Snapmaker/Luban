@@ -282,6 +282,7 @@ function ProfileManager({ optionConfigGroup, disableCategory = true, managerTitl
                 body: (
                     <React.Fragment>
                         <DefinitionCreator
+                            headType={headType}
                             isCreate={isCreate}
                             disableCategory={disableCategory}
                             ref={refs.refCreateModal}

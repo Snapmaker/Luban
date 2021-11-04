@@ -683,7 +683,7 @@ function VisualizerLeftBar({ defaultSupportSize, setTransformMode, isSupporting,
                                         }, 100);
                                     }}
                                 >
-                                    <span>{i18n._('Rotation Analyze')}</span>
+                                    <span>{i18n._('key-Printing/LeftBar-Rotate on Face')}</span>
                                 </Button>
                             </div>
                         </div>

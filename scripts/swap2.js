@@ -22,31 +22,41 @@ const translateMap = {};
 // });
 
 // Setup new change file
-const workbook = XLSX.readFile('test_swap2.xlsx');
+const workbook = XLSX.readFile('luban_key_10081030_20211028_translated_input.xlsx');
 const sheets = workbook.Sheets[workbook.SheetNames[0]];
 const changes = [];
-for (let i = 2; i < 1200; i++) {
-    if (!sheets[`E${i}`]) {
-        break;
-    }
-    if (!sheets[`A${i}`]) {
-        // 替换前缀
-        if (sheets[`B${i}`]) {
-            changes.push({
-                oldKey: sheets[`C${i}`].v,
-                newKey: `key-${sheets[`B${i}`].v}-${sheets[`E${i}`].v}`
-            });
+
+function setChanges() {
+    for (let i = 2; i < 1200; i++) {
+        if (!sheets[`A${i}`]) {
+            break;
         }
-    } else if (sheets[`A${i}`].v === '未使用') {
+        if (!sheets[`B${i}`]) {
+            continue;
+        }
         changes.push({
-            oldKey: sheets[`C${i}`].v,
-            newKey: `key-unused-${sheets[`E${i}`].v}`
+            oldKey: sheets[`A${i}`].v,
+            newKey: sheets[`B${i}`].v
         });
-    } else if (sheets[`A${i}`].v === '直接替换') {
-        changes.push({
-            oldKey: sheets[`C${i}`].v,
-            newKey: `key-${sheets[`B${i}`].v}`
-        });
+        // if (!sheets[`A${i}`]) {
+        //     // 替换前缀
+        //     if (sheets[`B${i}`]) {
+        //         changes.push({
+        //             oldKey: sheets[`C${i}`].v,
+        //             newKey: `key-${sheets[`B${i}`].v}-${sheets[`E${i}`].v}`
+        //         });
+        //     }
+        // } else if (sheets[`A${i}`].v === '未使用') {
+        //     changes.push({
+        //         oldKey: sheets[`C${i}`].v,
+        //         newKey: `key-unused-${sheets[`E${i}`].v}`
+        //     });
+        // } else if (sheets[`A${i}`].v === '直接替换') {
+        //     changes.push({
+        //         oldKey: sheets[`C${i}`].v,
+        //         newKey: `key-${sheets[`B${i}`].v}`
+        //     });
+        // }
     }
 }
 
@@ -54,9 +64,9 @@ for (let i = 2; i < 1200; i++) {
 function swapKeys(str, keys) {
     let newStr = str;
     keys.forEach((key) => {
-        while (newStr.indexOf(key.oldKey) > -1) {
-            console.log('key.oldKey', key.oldKey, ' | ', key.newKey);
-            newStr = newStr.replace(key.oldKey, key.newKey);
+        while (newStr.indexOf(`i18n._('${key.oldKey}'`) > -1) {
+            console.log('kv', `i18n._('${key.oldKey}'`, `i18n._('${key.newKey}'`, newStr.indexOf(key.oldKey));
+            newStr = newStr.replace(`i18n._('${key.oldKey}'`, `i18n._('${key.newKey}'`);
         }
     });
     return newStr;
@@ -86,27 +96,34 @@ function dfsChangeFiles(path, fullPath) {
     }
 }
 
-dfsChangeFiles('../src', '');
+function changeResourcesKeys() {
+    LANGUAGES.forEach((language) => {
+        const langDir = `${I18N_DIR}/${language}/resource.json`;
 
-// change resources keys
-LANGUAGES.forEach((language) => {
-    const langDir = `${I18N_DIR}/${language}/resource.json`;
+        const file = fs.readFileSync(langDir, 'utf-8');
+        const fileJson = JSON.parse(file);
 
-    const file = fs.readFileSync(langDir, 'utf-8');
-    const fileJson = JSON.parse(file);
+        changes.forEach((key) => {
+            const {oldKey, newKey} = key;
+            const newValue = fileJson[oldKey];
+            console.log('key', oldKey, newKey);
+            delete fileJson[oldKey];
+            if (newValue) {
+                fileJson[newKey] = newValue;
+            }
+        })
 
-    changes.forEach((key) => {
-        const { oldKey, newKey } = key;
-        const newValue = fileJson[oldKey];
-        console.log('key', oldKey, newKey);
-        delete fileJson[oldKey];
-        if (newValue) {
-            fileJson[newKey] = newValue;
-        }
-    })
+        // const newFile = fileJson.toString();
+        fs.writeFile(langDir, JSON.stringify(fileJson, null, 4), () => {
+        });
+    });
+}
 
-    // const newFile = fileJson.toString();
-    fs.writeFile(langDir, JSON.stringify(fileJson, null, 4), () => {});
-});
+function main() {
+    setChanges();
+    dfsChangeFiles('../src', '');
+    changeResourcesKeys();
+}
 
+main();
 console.log('done');

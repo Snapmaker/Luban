@@ -96,7 +96,7 @@ class ExtractSquareTrace extends PureComponent {
                     <div className="clearfix" />
                     <Modal.Header>
                         <div className={styles['laser-set-background-modal-title']}>
-                            {i18n._('key-Laser/CamaeraCaptureOriginal-Extract Square')}
+                            {i18n._('key-Laser/CameraCaptureOriginal-Extract Square')}
                         </div>
                     </Modal.Header>
 
@@ -122,7 +122,7 @@ class ExtractSquareTrace extends PureComponent {
                                         name="CameraCaptureImport"
                                     />
                                 </Anchor>
-                                <span className={styles['extract-actions__text']}>{i18n._('key-Laser/CamaeraCaptureOriginal-Upload')}</span>
+                                <span className={styles['extract-actions__text']}>{i18n._('key-Laser/CameraCaptureOriginal-Upload')}</span>
                             </div>
                             <div className={classNames(styles['extract-actions'])}>
                                 <Anchor
@@ -136,7 +136,7 @@ class ExtractSquareTrace extends PureComponent {
                                         name="CameraCaptureReset"
                                     />
                                 </Anchor>
-                                <span className={styles['extract-actions__text']}>{i18n._('key-Laser/CamaeraCaptureOriginal-Reset')}</span>
+                                <span className={styles['extract-actions__text']}>{i18n._('key-Laser/CameraCaptureOriginal-Reset')}</span>
                             </div>
                             <div className={classNames(styles['extract-actions'])}>
                                 <Anchor
@@ -150,7 +150,7 @@ class ExtractSquareTrace extends PureComponent {
                                     />
                                     {/* <i className={styles['extract-actions__icon-conform']} /> */}
                                 </Anchor>
-                                <span className={styles['extract-actions__text']}>{i18n._('key-Laser/CamaeraCaptureOriginal-Extract')}</span>
+                                <span className={styles['extract-actions__text']}>{i18n._('key-Laser/CameraCaptureOriginal-Extract')}</span>
                             </div>
                         </div>
                     </Modal.Body>
@@ -163,7 +163,7 @@ class ExtractSquareTrace extends PureComponent {
                                 className="float-l"
                                 onClick={this.actions.previousPanel}
                             >
-                                {i18n._('key-Laser/CamaeraCaptureOriginal-Back')}
+                                {i18n._('key-Laser/CameraCaptureOriginal-Back')}
                             </Button>
                         )}
                         <Button
@@ -171,7 +171,7 @@ class ExtractSquareTrace extends PureComponent {
                             width="96px"
                             onClick={this.actions.setBackgroundImage}
                         >
-                            {i18n._('key-Laser/CamaeraCaptureOriginal-Complete')}
+                            {i18n._('key-Laser/CameraCaptureOriginal-Complete')}
                         </Button>
                     </Modal.Footer>
                 </Modal>

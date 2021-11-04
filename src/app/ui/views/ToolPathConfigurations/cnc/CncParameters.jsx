@@ -173,9 +173,9 @@ class CncParameters extends PureComponent {
                                         <div>
                                             <p>{i18n._('key-Cnc/ToolpathParameters-Set the processing method of the object.')}</p>
                                             <ul>
-                                                <li><b>{i18n._('key-Cnc/ToolpathParameters-On the Path')}</b>: {i18n._('key-Cnc/ToolpathParameters-Carves along the shape of the object.')}</li>
-                                                <li><b>{i18n._('key-Cnc/ToolpathParameters-Outline')}</b>: {i18n._('key-Cnc/ToolpathParameters-Carves along the outline of the object.')}</li>
-                                                <li><b>{i18n._('key-Cnc/ToolpathParameters-Fill')}</b>: {i18n._('key-Cnc/ToolpathParameters-Carves away the inner area of the object.')}</li>
+                                                <li><b>{i18n._('key-Cnc/ToolpathParameters-On the Path')}</b>: {i18n._('key-Cnc/ToolpathParameters-Onthepath_Carves along the shape of the object.')}</li>
+                                                <li><b>{i18n._('key-Cnc/ToolpathParameters-Outline')}</b>: {i18n._('key-Cnc/ToolpathParameters-Outline_Carves along the outline of the object.')}</li>
+                                                <li><b>{i18n._('key-Cnc/ToolpathParameters-Fill')}</b>: {i18n._('key-Cnc/ToolpathParameters-Fill_Carves away the inner area of the object.')}</li>
                                             </ul>
                                         </div>
                                     )}
@@ -210,7 +210,7 @@ class CncParameters extends PureComponent {
                                                     value: 'pocket'
                                                 }
                                             ]}
-                                            placeholder={i18n._('key-Cnc/ToolpathParameters-Choose carving path')}
+                                            placeholder={i18n._('key-Cnc/ToolpathParameters-Methodtips_Choose carving path')}
                                             value={pathType}
                                             onChange={(option) => { this.props.updateGcodeConfig({ pathType: option.value }); }}
                                         />

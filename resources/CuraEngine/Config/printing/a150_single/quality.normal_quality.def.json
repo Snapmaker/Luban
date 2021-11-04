@@ -157,7 +157,7 @@
                     "label": "Skirt/Brim Speed"
                 },
                 "speed_print": {
-                    "label": "Print Speed",
+                    "label": "Printing Speed",
                     "default_value": 50
                 }
             }

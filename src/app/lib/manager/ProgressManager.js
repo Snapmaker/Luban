@@ -128,9 +128,9 @@ class ProgressStatesManager {
                     percent: 1
                 }
             ],
-            'Generate toolpath and preview: {{progress}}%',
-            'Generated toolpath and previewed successfully.',
-            'Failed to generate toolpath and preview.');
+            'key-Progress/LaserCNC-Generate toolpath and preview: {{progress}}%',
+            'key-Progress/LaserCNC-Generated toolpath and previewed successfully.',
+            'key-Progress/LaserCNC-Failed to generate toolpath and preview.');
         this.push(PROCESS_STAGE.CNC_LASER_UPLOAD_IMAGE,
             [
                 {
@@ -142,9 +142,9 @@ class ProgressStatesManager {
                     percent: 1
                 }
             ],
-            'Loading object {{progress}}%',
-            'Loaded object successfully.',
-            'Failed to load object.');
+            'key-Progress/LaserCNC-Loading object {{progress}}%',
+            'key-Progress/LaserCNC-Loaded object successfully.',
+            'key-Progress/LaserCNC-Failed to load object.');
         this.push(PROCESS_STAGE.CNC_LASER_PROCESS_IMAGE,
             [
                 {
@@ -152,9 +152,9 @@ class ProgressStatesManager {
                     percent: 1
                 }
             ],
-            'Processing object {{progress}}%',
-            'Processed object successfully.',
-            'Failed to process object.');
+            'key-Progress/LaserCNC-Processing object {{progress}}%',
+            'key-Progress/LaserCNC-Processed object successfully.',
+            'key-Progress/LaserCNC-Failed to process object.');
         this.push(PROCESS_STAGE.CNC_LASER_VIEW_PATH,
             [
                 {
@@ -166,9 +166,9 @@ class ProgressStatesManager {
                     percent: 1
                 }
             ],
-            'Generating simulation {{progress}}%',
-            'Generated simulation successfully.',
-            'Failed to generate simulation.');
+            'key-Progress/LaserCNC-Generating simulation {{progress}}%',
+            'key-Progress/LaserCNC-Generated simulation successfully.',
+            'key-Progress/LaserCNC-Failed to generate simulation.');
 
         // Laser
         this.push(PROCESS_STAGE.LASER_CUT_STL,
@@ -178,9 +178,9 @@ class ProgressStatesManager {
                     percent: 1
                 }
             ],
-            'Loading model...',
-            'Loaded model successfully.',
-            'Failed to load model.');
+            'key-Progress/Laser-Loading model...',
+            'key-Progress/Laser-Loaded model successfully.',
+            'key-Progress/Laser-Failed to load model.');
 
         // Printing
         this.push(PROCESS_STAGE.PRINTING_LOAD_MODEL,
@@ -190,9 +190,9 @@ class ProgressStatesManager {
                     percent: 1
                 }
             ],
-            'Loading model...',
-            'Loaded model successfully.',
-            'Failed to load model.');
+            'key-Progress/3DP-Loading model...',
+            'key-Progress/3DP-Loaded model successfully.',
+            'key-Progress/3DP-Failed to load model.');
         this.push(PROCESS_STAGE.PRINTING_SLICE_AND_PREVIEW,
             [
                 {
@@ -204,9 +204,9 @@ class ProgressStatesManager {
                     percent: 1
                 }
             ],
-            'Previewing G-code...{{progress}}%',
-            'Previewed G-code successfully.',
-            'Failed to preview G-code.');
+            'key-Progress/3DP-Previewing G-code...{{progress}}%',
+            'key-Progress/3DP-Previewed G-code successfully.',
+            'key-Progress/3DP-Failed to preview G-code.');
         this.push(PROCESS_STAGE.PRINTING_ROTATE_ANALYZE,
             [
                 {
@@ -214,9 +214,9 @@ class ProgressStatesManager {
                     percent: 1
                 }
             ],
-            'Analyzing model rotation...{{progress}}%',
-            'Analyzed model rotation successfully.',
-            'Failed to analyze model rotation.');
+            'key-Progress/3DP-Calculating Rotation',
+            'key-Progress/3DP-Calculated Rotation successfully.',
+            'key-Progress/3DP-Failed to calculate Rotation.');
     }
 
     push(processStageID, stages, notice, successNotice, failedNotice) {
