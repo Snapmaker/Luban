@@ -210,17 +210,20 @@ class Controls extends EventEmitter {
         const targetStart = this.target;
         const center = this.rotationCenter;
 
-        const newCameraPosition = this._getCameraPositionByRotation(positionStart, center, -deltaX * Math.PI / 180, -deltaY * Math.PI / 180);
-        const newTarget = this._getCameraPositionByRotation(targetStart, center, -deltaX * Math.PI / 180, -deltaY * Math.PI / 180);
+        const newCameraPosition = this._getCameraPositionByRotation(positionStart, center, -deltaX * Math.PI / 180, 0);
+        const newTarget = this._getCameraPositionByRotation(targetStart, center, -deltaX * Math.PI / 180, 0);
 
         this.target.set(newTarget.x, newTarget.y, newTarget.z);
         this.camera.position.x = newCameraPosition.x;
         this.camera.position.y = newCameraPosition.y;
         this.camera.position.z = newCameraPosition.z;
-        // const elem = this.domElement === document ? document.body : this.domElement;
-        //
+
+
+        const elem = this.domElement === document ? document.body : this.domElement;
+
         // this.rotateLeft(2 * Math.PI * deltaX / elem.clientHeight); // yes, height
-        // this.rotateUp(2 * Math.PI * deltaY / elem.clientHeight);
+        this.rotateUp(2 * Math.PI * deltaY / elem.clientHeight);
+        this.updateCamera();
     }
 
     panLeft(distance, matrix) {
