@@ -53,7 +53,7 @@ class Controls extends EventEmitter {
     target = new THREE.Vector3();
 
     // rotate camera by this point
-    rotationTarget = new THREE.Vector3();
+    rotationCenter = new THREE.Vector3();
 
     lastPosition = new THREE.Vector3();
 
@@ -127,7 +127,7 @@ class Controls extends EventEmitter {
         this.minScale = minScale;
         this.maxScale = maxScale;
         this.scaleSize = scaleSize;
-        this.rotationTarget = new THREE.Vector3(0, 0, (cameraInitialPosition ? cameraInitialPosition.z : 0));
+        this.rotationCenter = new THREE.Vector3(0, 0, (cameraInitialPosition ? cameraInitialPosition.z : 0));
 
         this.bindEventListeners();
     }
@@ -207,13 +207,16 @@ class Controls extends EventEmitter {
 
     rotate(deltaX, deltaY) {
         const positionStart = this.camera.position;
-        const target = this.rotationTarget;
-        const position = this._getCameraPositionByRotation(positionStart, target, -deltaX * Math.PI / 180, -deltaY * Math.PI / 180);
-        this.camera.position.x = position.x;
-        this.camera.position.y = position.y;
-        this.camera.position.z = position.z;
-        // this.setTarget(this.rotationTarget);
+        const targetStart = this.target;
+        const center = this.rotationCenter;
 
+        const newCameraPosition = this._getCameraPositionByRotation(positionStart, center, -deltaX * Math.PI / 180, -deltaY * Math.PI / 180);
+        const newTarget = this._getCameraPositionByRotation(targetStart, center, -deltaX * Math.PI / 180, -deltaY * Math.PI / 180);
+
+        this.target.set(newTarget.x, newTarget.y, newTarget.z);
+        this.camera.position.x = newCameraPosition.x;
+        this.camera.position.y = newCameraPosition.y;
+        this.camera.position.z = newCameraPosition.z;
         // const elem = this.domElement === document ? document.body : this.domElement;
         //
         // this.rotateLeft(2 * Math.PI * deltaX / elem.clientHeight); // yes, height
