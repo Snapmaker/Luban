@@ -44,6 +44,7 @@ export const actions = {
     resetUserConfig: () => {
         api.resetUserConfig().then(() => {
             storeManager.clear();
+            UniApi.Menu.cleanAllRecentFiles();
             UniApi.Window.forceReload();
         }).catch(() => {
             // reset failed
