@@ -464,7 +464,7 @@ class Visualizer extends PureComponent {
 
                 <div className={styles['canvas-wrapper']}>
                     <Canvas
-                        headType={HEAD_PRINTING}
+                        isRotatingByCenter="true"
                         ref={this.canvas}
                         inProgress={inProgress}
                         size={size}

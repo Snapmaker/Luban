@@ -10,7 +10,7 @@ import { isUndefined } from 'lodash';
 import TransformControls from './TransformControls';
 import TransformControls2D from './TransformControls2D';
 // const EPSILON = 0.000001;
-import { SELECTEVENT, HEAD_PRINTING } from '../../../constants';
+import { SELECTEVENT } from '../../../constants';
 
 const EPS = 0.000001;
 
@@ -37,8 +37,6 @@ export const EVENTS = {
 };
 
 class Controls extends EventEmitter {
-    headType = '';
-
     camera = null;
 
     group = null;
@@ -54,7 +52,10 @@ class Controls extends EventEmitter {
     // "target" is where the camera orbits around
     target = new THREE.Vector3();
 
-    // rotate camera by this point
+    // rotation type flag
+    isRotatingByCenter = false;
+
+    // rotate camera and target by this point
     rotationCenter = new THREE.Vector3();
 
     lastPosition = new THREE.Vector3();
@@ -111,10 +112,10 @@ class Controls extends EventEmitter {
 
     clickEnabled = true;
 
-    constructor(sourceType, displayedType, camera, group, domElement, onScale, onPan, supportActions, minScale = undefined, maxScale = undefined, scaleSize = undefined, cameraInitialPosition = undefined, headType = undefined) {
+    constructor(sourceType, displayedType, camera, group, domElement, onScale, onPan, supportActions, minScale = undefined, maxScale = undefined, scaleSize = undefined, cameraInitialPosition = undefined, isRotatingByCenter = false) {
         super();
 
-        this.headType = headType;
+        this.isRotatingByCenter = isRotatingByCenter;
         this.sourceType = sourceType;
         this.displayedType = displayedType;
         this.camera = camera;
@@ -192,16 +193,18 @@ class Controls extends EventEmitter {
         this.sphericalDelta.phi -= angle;
     }
 
-    _getCameraPositionByRotation(positionStart, target, angleEW, angleNS) {
+    _rotatePointWith2AngelsByCenter(positionStart, center, angleEW, angleNS) {
+        // rotate on NS direction
         const positionRotateNS = {
             x: positionStart.x,
-            y: target.y + (positionStart.y - target.y) * Math.cos(angleNS) - (positionStart.z - target.z) * Math.sin(angleNS),
-            z: target.z + (positionStart.y - target.y) * Math.sin(angleNS) + (positionStart.z - target.z) * Math.cos(angleNS)
+            y: center.y + (positionStart.y - center.y) * Math.cos(angleNS) - (positionStart.z - center.z) * Math.sin(angleNS),
+            z: center.z + (positionStart.y - center.y) * Math.sin(angleNS) + (positionStart.z - center.z) * Math.cos(angleNS)
         };
 
+        // rotate on EW direction
         const positionRotateEW = {
-            x: target.x + (positionRotateNS.x - target.x) * Math.cos(angleEW) - (positionRotateNS.y - target.y) * Math.sin(angleEW),
-            y: target.y + (positionRotateNS.x - target.x) * Math.sin(angleEW) + (positionRotateNS.y - target.y) * Math.cos(angleEW),
+            x: center.x + (positionRotateNS.x - center.x) * Math.cos(angleEW) - (positionRotateNS.y - center.y) * Math.sin(angleEW),
+            y: center.y + (positionRotateNS.x - center.x) * Math.sin(angleEW) + (positionRotateNS.y - center.y) * Math.cos(angleEW),
             z: positionRotateNS.z
         };
 
@@ -211,13 +214,13 @@ class Controls extends EventEmitter {
     rotate(deltaX, deltaY) {
         const elem = this.domElement === document ? document.body : this.domElement;
 
-        if (this.headType === HEAD_PRINTING) {
+        if (this.isRotatingByCenter) {
             const positionStart = this.camera.position;
             const targetStart = this.target;
             const center = this.rotationCenter;
 
-            const newCameraPosition = this._getCameraPositionByRotation(positionStart, center, -deltaX * Math.PI / 180, 0);
-            const newTarget = this._getCameraPositionByRotation(targetStart, center, -deltaX * Math.PI / 180, 0);
+            const newCameraPosition = this._rotatePointWith2AngelsByCenter(positionStart, center, -deltaX * Math.PI / 180, 0);
+            const newTarget = this._rotatePointWith2AngelsByCenter(targetStart, center, -deltaX * Math.PI / 180, 0);
 
             this.target.set(newTarget.x, newTarget.y, newTarget.z);
             this.camera.position.x = newCameraPosition.x;
@@ -227,7 +230,6 @@ class Controls extends EventEmitter {
             this.rotateLeft(2 * Math.PI * deltaX / elem.clientHeight); // yes, height
         }
         this.rotateUp(2 * Math.PI * deltaY / elem.clientHeight);
-        this.updateCamera();
     }
 
     panLeft(distance, matrix) {
