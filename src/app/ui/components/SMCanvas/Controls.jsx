@@ -10,7 +10,7 @@ import { isUndefined } from 'lodash';
 import TransformControls from './TransformControls';
 import TransformControls2D from './TransformControls2D';
 // const EPSILON = 0.000001;
-import { SELECTEVENT } from '../../../constants';
+import { SELECTEVENT, HEAD_PRINTING } from '../../../constants';
 
 const EPS = 0.000001;
 
@@ -37,6 +37,8 @@ export const EVENTS = {
 };
 
 class Controls extends EventEmitter {
+    headType = '';
+
     camera = null;
 
     group = null;
@@ -109,9 +111,10 @@ class Controls extends EventEmitter {
 
     clickEnabled = true;
 
-    constructor(sourceType, displayedType, camera, group, domElement, onScale, onPan, supportActions, minScale = undefined, maxScale = undefined, scaleSize = undefined, cameraInitialPosition = undefined) {
+    constructor(sourceType, displayedType, camera, group, domElement, onScale, onPan, supportActions, minScale = undefined, maxScale = undefined, scaleSize = undefined, cameraInitialPosition = undefined, headType = undefined) {
         super();
 
+        this.headType = headType;
         this.sourceType = sourceType;
         this.displayedType = displayedType;
         this.camera = camera;
@@ -206,22 +209,23 @@ class Controls extends EventEmitter {
     }
 
     rotate(deltaX, deltaY) {
-        const positionStart = this.camera.position;
-        const targetStart = this.target;
-        const center = this.rotationCenter;
-
-        const newCameraPosition = this._getCameraPositionByRotation(positionStart, center, -deltaX * Math.PI / 180, 0);
-        const newTarget = this._getCameraPositionByRotation(targetStart, center, -deltaX * Math.PI / 180, 0);
-
-        this.target.set(newTarget.x, newTarget.y, newTarget.z);
-        this.camera.position.x = newCameraPosition.x;
-        this.camera.position.y = newCameraPosition.y;
-        this.camera.position.z = newCameraPosition.z;
-
-
         const elem = this.domElement === document ? document.body : this.domElement;
 
-        // this.rotateLeft(2 * Math.PI * deltaX / elem.clientHeight); // yes, height
+        if (this.headType === HEAD_PRINTING) {
+            const positionStart = this.camera.position;
+            const targetStart = this.target;
+            const center = this.rotationCenter;
+
+            const newCameraPosition = this._getCameraPositionByRotation(positionStart, center, -deltaX * Math.PI / 180, 0);
+            const newTarget = this._getCameraPositionByRotation(targetStart, center, -deltaX * Math.PI / 180, 0);
+
+            this.target.set(newTarget.x, newTarget.y, newTarget.z);
+            this.camera.position.x = newCameraPosition.x;
+            this.camera.position.y = newCameraPosition.y;
+            this.camera.position.z = newCameraPosition.z;
+        } else {
+            this.rotateLeft(2 * Math.PI * deltaX / elem.clientHeight); // yes, height
+        }
         this.rotateUp(2 * Math.PI * deltaY / elem.clientHeight);
         this.updateCamera();
     }

@@ -60,7 +60,8 @@ class Canvas extends PureComponent {
         showContextMenu: PropTypes.func,
 
         // inProgress
-        inProgress: PropTypes.bool
+        inProgress: PropTypes.bool,
+        headType: PropTypes.string
     };
 
     static defaultProps = {
@@ -256,7 +257,7 @@ class Canvas extends PureComponent {
 
         const sourceType = this.props.transformSourceType === '2D' ? '2D' : '3D';
         this.controls = new Controls(sourceType, this.props.displayedType, this.camera, this.group, this.renderer.domElement, this.onScale, this.onChangeTarget,
-            this.props.supportActions, this.props.minScale, this.props.maxScale, this.props.scaleSize, this.props.cameraInitialPosition);
+            this.props.supportActions, this.props.minScale, this.props.maxScale, this.props.scaleSize, this.props.cameraInitialPosition, this.props.headType);
         this.controls.canOperateModel = this.props.canOperateModel;
         this.setCamera(this.cameraInitialPosition, this.initialTarget);
 
