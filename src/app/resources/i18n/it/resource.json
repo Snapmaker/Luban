@@ -814,7 +814,7 @@
     "key-Project/Save-Save the changes you made in the {{headType}} G-code Generator? Your changes will be lost if you don’t save them.": "Save the changes you made in the {{headType}} G-code Generator? Your changes will be lost if you don’t save them.",
     "key-StackedModel/Import-Cancel": "Cancel",
     "key-StackedModel/Import-Import": "Import",
-    "key-StackedModel/Import-Layers": "Layers",
+    "key-StackedModel/Import-Layers": "Number of Layers",
     "key-StackedModel/Import-Loading": "Loading...",
     "key-StackedModel/Import-Material Thickness": "Material Thickness",
     "key-StackedModel/Import-Model Size": "Model Size",
