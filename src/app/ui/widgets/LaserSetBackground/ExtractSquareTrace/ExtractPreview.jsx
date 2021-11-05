@@ -59,7 +59,6 @@ class ExtractPreview extends Component {
 
     onChangeImage(filename, width, height) {
         const { size } = this.props;
-
         this.extractControls.resetCornerPositions();
         this.extractControls.visible = true;
         this.plateGroup.visible = true;

@@ -307,8 +307,8 @@ class ExtractSquareTrace extends PureComponent {
                                 if (this.props.toolHead.laserToolhead === LEVEL_ONE_POWER_LASER_FOR_SM2) {
                                     this.extractingPreview[task.index].current.onChangeImage(
                                         DefaultBgiName,
-                                        this.state.xSize[task.index] * this.multiple,
-                                        this.state.ySize[task.index] * this.multiple,
+                                        this.state.xSize[task.index] * this.multiple * 0.8,
+                                        this.state.ySize[task.index] * this.multiple * 0.8,
                                         task.index,
                                         this.multiple
                                     );
@@ -327,8 +327,8 @@ class ExtractSquareTrace extends PureComponent {
                                         if (this.extractingPreview[task.index].current) {
                                             this.extractingPreview[task.index].current.onChangeImage(
                                                 filename,
-                                                this.state.xSize[task.index] * this.multiple,
-                                                this.state.ySize[task.index] * this.multiple,
+                                                this.state.xSize[task.index] * this.multiple * 0.8,
+                                                this.state.ySize[task.index] * this.multiple * 0.8,
                                                 task.index,
                                                 this.multiple
                                             );
@@ -347,8 +347,8 @@ class ExtractSquareTrace extends PureComponent {
                                     });
                                     this.extractingPreview[task.index].current.onChangeImage(
                                         fileName,
-                                        this.state.xSize[task.index] * this.multiple,
-                                        this.state.ySize[task.index] * this.multiple,
+                                        this.state.xSize[task.index] * this.multiple * 0.8,
+                                        this.state.ySize[task.index] * this.multiple * 0.8,
                                         task.index,
                                         this.multiple
                                     );
@@ -357,8 +357,8 @@ class ExtractSquareTrace extends PureComponent {
                                         if (this.extractingPreview[task.index].current) {
                                             this.extractingPreview[task.index].current.onChangeImage(
                                                 filename,
-                                                this.state.xSize[task.index] * this.multiple,
-                                                this.state.ySize[task.index] * this.multiple,
+                                                this.state.xSize[task.index] * this.multiple * 0.8,
+                                                this.state.ySize[task.index] * this.multiple * 0.8,
                                                 task.index,
                                                 this.multiple
                                             );
@@ -412,11 +412,11 @@ class ExtractSquareTrace extends PureComponent {
             for (let i = 0; i < this.props.lastFileNames.length; i++) {
                 if (this.state.xSize.length > 0 && this.state.ySize.length > 0) {
                     this.extractingPreview[i].current.onChangeImage(
-                        DefaultBgiName, this.state.xSize[i] * this.multiple, this.state.ySize[i] * this.multiple, i, this.multiple
+                        DefaultBgiName, this.state.xSize[i] * this.multiple * 0.8, this.state.ySize[i] * this.multiple * 0.8, i, this.multiple
                     );
                 } else {
                     this.extractingPreview[i].current.onChangeImage(
-                        DefaultBgiName, this.props.xSize[i] * this.multiple, this.props.ySize[i] * this.multiple, i, this.multiple
+                        DefaultBgiName, this.props.xSize[i] * this.multiple * 0.8, this.props.ySize[i] * this.multiple * 0.8, i, this.multiple
                     );
                 }
                 const stitchImg = await api.processStitchEach(
@@ -430,11 +430,11 @@ class ExtractSquareTrace extends PureComponent {
 
                 if (this.state.xSize.length > 0 && this.state.ySize.length > 0) {
                     this.extractingPreview[i].current.onChangeImage(
-                        filename, this.state.xSize[i] * this.multiple, this.state.ySize[i] * this.multiple, i, this.multiple
+                        filename, this.state.xSize[i] * this.multiple * 0.8, this.state.ySize[i] * this.multiple * 0.8, i, this.multiple
                     );
                 } else {
                     this.extractingPreview[i].current.onChangeImage(
-                        filename, this.props.xSize[i] * this.multiple, this.props.ySize[i] * this.multiple, i, this.multiple
+                        filename, this.props.xSize[i] * this.multiple * 0.8, this.props.ySize[i] * this.multiple * 0.8, i, this.multiple
                     );
                 }
             }
@@ -455,8 +455,8 @@ class ExtractSquareTrace extends PureComponent {
                     if (this.extractingPreview[0].current) {
                         this.extractingPreview[0].current.onChangeImage(
                             filename,
-                            this.state.xSize[0] * this.multiple,
-                            this.state.ySize[0] * this.multiple,
+                            this.state.xSize[0] * this.multiple * 0.8,
+                            this.state.ySize[0] * this.multiple * 0.8,
                             0,
                             this.multiple
                         );
@@ -576,12 +576,12 @@ class ExtractSquareTrace extends PureComponent {
                                 styles['modal-body']
                             )}
                         >
-                            <div style={{ margin: '0 auto 16px', width: '509px' }}>
+                            <div style={{ margin: '0 0 16px', width: '432px' }}>
                                 {i18n._('key-Laser/CameraCapture-The camera on the Laser Module captures nine images of the Laser Engraving and Cutting Platform, and stitches them as a background.')}
                             </div>
                             <div
                                 className={classNames(styles['photo-display'], 'border-radius-8')}
-                                style={{ height: this.props.laserSize.y * this.multiple + 2, width: this.props.laserSize.x * this.multiple + 2 }}
+                                style={{ height: this.props.laserSize.y * 0.8 * this.multiple + 2, width: this.props.laserSize.x * 0.8 * this.multiple + 2 }}
                             >
                                 {this.extractingPreview.map((previewId, index) => {
                                     const key = previewId + index;
@@ -609,7 +609,7 @@ class ExtractSquareTrace extends PureComponent {
                                     </Button>
                                 </div>
                             </div>
-                            <div style={{ minHeight: 30, width: this.props.laserSize.x * this.multiple + 2, margin: '0 auto' }}>
+                            <div style={{ minHeight: 30, width: this.props.laserSize.x * 0.8 * this.multiple + 2 }}>
                                 <div className="clearfix" />
                                 <Button
                                     priority="level-two"
