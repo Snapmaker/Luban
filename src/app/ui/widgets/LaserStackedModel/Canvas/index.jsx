@@ -31,7 +31,6 @@ const Controls = forwardRef((props, ref) => {
             }
         }
     }));
-    // useFrame(() => controls.current.update());
     useEffect(() => {
         const handler = () => {
             const position = camera.position.clone().multiplyScalar(-1);
