@@ -182,8 +182,9 @@ function recordScaleActionsToHistory(scaleActionsFn, elements, SVGActions, headT
                         resolve();
                     };
                     if (isImageElementReferSVG(element)) {
+                        // after SVG file scaled, reload href and skip browser cache
                         // convert `/data/Tmp/18382283_21075036parsed.svg?_=1636096912083` to `/data/Tmp/18382283_21075036parsed.svg`
-                        const originalHref = element.href.baseVal.replace(/\?_=\d*/ig, '');
+                        const originalHref = element.href.baseVal.replace(/\?_=\d*$/ig, '');
                         element.setAttribute('href', `${originalHref}?_=${Date.now()}`);
                     }
                 });
