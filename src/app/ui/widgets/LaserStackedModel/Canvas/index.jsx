@@ -20,12 +20,12 @@ const Controls = forwardRef((props, ref) => {
     const controls = useRef();
     const [directionalLightPosition, setDirectionalLightPosition] = useState([0, 0, 0]);
     useImperativeHandle(ref, () => ({
-        toTopFrontRight: (longestEdge) => {
+        toTopFrontRight: (radius) => {
             if (camera && controls.current) {
-                // adjust camera position based on a 200x200x200 BoxGeometry
-                camera.position.x = 150 * longestEdge / 200;
-                camera.position.y = 150 * longestEdge / 200;
-                camera.position.z = 380 * longestEdge / 200;
+                // adjust camera position based on the boundingSphere of geometry
+                camera.position.z = radius / Math.sin(camera.fov / 2 / 180 * Math.PI);
+                camera.position.x = camera.position.z * Math.sin(Math.PI / 9); // rotate 20 degree
+                camera.position.y = camera.position.z * Math.sin(Math.PI / 9);
                 controls.current.target.copy(new Vector3(0, 0, 0));
                 controls.current.update();
             }
@@ -68,11 +68,9 @@ const ModelViewer = React.memo(({ geometry }) => {
     const controlsRef = useRef();
     function toTopFrontRight() {
         if (controlsRef.current && geometry) {
-            geometry.computeBoundingBox();
-            const boxMax = geometry.boundingBox.max;
-            const boxMin = geometry.boundingBox.min;
-            const longestEdge = Math.max(boxMax.x - boxMin.x, boxMax.y - boxMin.y, boxMax.z - boxMin.z);
-            controlsRef.current.toTopFrontRight(longestEdge);
+            geometry.computeBoundingSphere();
+            const radius = geometry.boundingSphere.radius;
+            controlsRef.current.toTopFrontRight(radius);
         }
     }
     useEffect(() => {
