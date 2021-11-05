@@ -17,9 +17,9 @@ const DEFAULT_TEXT_CONFIG = {
     text: 'Snapmaker',
     name: 'text.svg',
     'font-size': 24,
-    'font-family': 'Arial',
+    'font-family': 'Arial Black',
     'line-height': 1.5,
-    style: 'Bold',
+    style: 'Regular',
     alignment: 'left' // left, middle, right
 };
 

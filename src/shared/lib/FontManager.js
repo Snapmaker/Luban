@@ -98,9 +98,11 @@ class FontManager {
 
     searchLocalFont(family, subfamily) {
         for (const font of this.fonts) {
-            const fontFamilies = [font.names.fontFamily.en, font.names.displayName.en];
-            if (includes(fontFamilies, family) && (!subfamily || font.names.fontSubfamily.en === subfamily)) {
-                return font;
+            if (font?.names) {
+                const fontFamilies = [font.names.fontFamily.en, font.names.displayName.en];
+                if (includes(fontFamilies, family) && (!subfamily || font.names.fontSubfamily.en === subfamily)) {
+                    return font;
+                }
             }
         }
         return null;
@@ -190,7 +192,7 @@ class FontManager {
                 throw new Error('No Font Found!');
             }
         }
-        console.log('fontConfig', fontConfig);
+        console.log('fontConfig', fontConfig, subfamily);
 
         return this.loadLocalFont(fontConfig.path, family) // subfamily is not supported (for now)
             .then((font) => {

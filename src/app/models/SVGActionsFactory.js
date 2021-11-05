@@ -39,12 +39,16 @@ function getTransformList(elem) {
     return elem.transform.baseVal;
 }
 
-function genModelConfig(elem, size) {
+function genModelConfig(elem, size, materials = {}) {
     const coord = coordGmSvgToModel(size, elem);
     let deltaLeftX = 0, deltaRightX = 0, deltaTopY = 0, deltaBottomY = 0;
     if (elem.nodeName === 'text') {
+        if (materials?.isRotate) {
+            coord.positionY = materials.length / 2;
+        } else {
+            coord.positionY = 0;
+        }
         coord.positionX = 0;
-        coord.positionY = 0;
     }
     if (elem.nodeName === 'path') {
         coord.positionX = +elem.getAttribute('x') + coord.width / 2 * coord.scaleX - size.x;
@@ -78,7 +82,6 @@ function genModelConfig(elem, size) {
         vy += vheight;
         vheight = -vheight;
     }
-
     // Todo: need to optimize
     const content = `<svg x="0" y="0" width="${vwidth}mm" height="${vheight}mm" `
         + `viewBox="${vx} ${vy} ${vwidth} ${vheight}" `
@@ -666,7 +669,7 @@ class SVGActionsFactory {
         const headType = this.modelGroup.headType;
         const isRotate = this.modelGroup.materials && this.modelGroup.materials.isRotate;
 
-        const data = genModelConfig(element, this.size);
+        const data = genModelConfig(element, this.size, this.modelGroup.materials);
         const { modelID, content, width: dataWidth, height: dataHeight, transformation, config: elemConfig } = data;
         let res, textSize;
         try {
@@ -1513,8 +1516,8 @@ class SVGActionsFactory {
                 x: this.size.x + position.x,
                 y: this.size.y + position.y,
                 'font-size': 24,
-                'font-family': 'Arial',
-                style: 'Bold',
+                'font-family': 'Arial Black',
+                style: 'Regular',
                 alignment: 'left',
                 textContent: content
             }
@@ -1595,8 +1598,6 @@ class SVGActionsFactory {
                     ...baseUpdateData,
                     config: newConfig
                 });
-                const t = SVGActionsFactory.calculateElementsTransformation(this.getSelectedElements());
-                this._setSelectedElementsTransformation(t);
 
                 this.resetSelection();
             });

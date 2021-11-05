@@ -14,8 +14,6 @@ import PolylineTagParser from './PolylineTagParser';
 import RectTagParser from './RectTagParser';
 import TextParser from './TextParser';
 import { SVG_ATTR_ID, XLINK_HREF, SVG_ATTR_HREF, SVG_ATTR_TRANSFORM, SVG_TAG_USE } from './constants';
-import { recursivePolyUnion, simplifyPolygons } from '../../../server/lib/clipper/cLipper-adapter';
-import { Vector2 } from '../math/Vector2';
 // const DEFAULT_DPI = 72;
 const DEFAULT_MILLIMETER_PER_PIXEL = 25.4 / 72;
 // TODO: General tolerance does not work well if original drawing is small,
@@ -111,35 +109,6 @@ class SVGParser {
     async parse(s, element = 'svg') {
         const node = await this.readString(s);
         return this.parseObject(node, element);
-    }
-
-    unionShapes(shapes) {
-        shapes.forEach((shape) => {
-            let newArr = [];
-            shape.paths.forEach((data) => {
-                if (Array.isArray(data.points)) {
-                    if (Vector2.areaForArray(data.points) < 0 && newArr[newArr.length - 1]) {
-                        newArr[newArr.length - 1].push([...data.points]);
-                    } else {
-                        const arr = [];
-                        arr.push([...data.points]);
-                        newArr.push(arr);
-                    }
-                }
-            });
-            newArr = newArr.map((eachPaths) => {
-                return simplifyPolygons(eachPaths);
-            });
-            const newSvg = recursivePolyUnion(newArr);
-            const newPaths = [];
-            shape.paths.forEach((shapePath, index) => {
-                if (newSvg[index]) {
-                    shapePath.points = newSvg[index];
-                    newPaths.push(shapePath);
-                }
-            });
-            shape.paths = newPaths;
-        });
     }
 
     async parseFile(filePath) {
