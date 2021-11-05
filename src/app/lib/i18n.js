@@ -47,7 +47,16 @@ const _ = (...args) => {
     return text;
 };
 
+const clearCookies = () => {
+    window.document.cookie
+        .split(';')
+        .forEach((cookie) => {
+            document.cookie = `${cookie.replace(/(.+=)([\s\S]*)/ig, '$1').trim()};expires=Thu, 01 Jan 1970 00:00:00 GMT`;
+        });
+};
+
 export default {
     t,
-    _
+    _,
+    clearCookies
 };

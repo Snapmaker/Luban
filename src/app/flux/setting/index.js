@@ -3,6 +3,8 @@ import { HEAD_PRINTING, HEAD_CNC, HEAD_LASER } from '../../constants';
 import storeManager from '../../store/local-storage';
 import { actions as printingActions } from '../printing';
 import { actions as projectActions } from '../project';
+import UniApi from '../../lib/uni-api';
+import i18n from '../../lib/i18n';
 
 export const actions = {
     resetAllUserSettings: () => async (dispatch) => {
@@ -39,6 +41,15 @@ export const actions = {
         });
         // reset basic store
         storeManager.clear();
+    },
+    resetUserConfig: () => (dispatch) => {
+        api.resetUserConfig().then(() => {
+            storeManager.clear();
+            window.localStorage.clear();
+            i18n.clearCookies();
+            dispatch(projectActions.cleanAllRecentFiles());
+            UniApi.Window.forceReload();
+        }).catch(() => { console.info('reset failed'); });
     }
 };
 

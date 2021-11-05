@@ -95,6 +95,7 @@ class DataStorage {
 
          mkdirp.sync(this.tmpDir);
          mkdirp.sync(this.sessionDir);
+         mkdirp.sync(this.userCaseDir);
          rmDir(this.tmpDir, false);
          rmDir(this.sessionDir, false);
 
@@ -318,6 +319,16 @@ class DataStorage {
              return;
          }
          fs.copyFileSync(src, dst);
+     }
+
+     clearAll() {
+        rmDir(this.sessionDir, true);
+        rmDir(this.userCaseDir, true);
+        rmDir(this.tmpDir, true);
+        rmDir(this.configDir, true);
+        rmDir(this.defaultConfigDir, true);
+        rmDir(this.fontDir, true);
+        rmDir(this.envDir, true);
      }
 }
 

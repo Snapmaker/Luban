@@ -17,6 +17,7 @@ import {
     ERR_PRECONDITION_FAILED,
     ERR_INTERNAL_SERVER_ERROR
 } from '../../constants';
+import DataStorage from '../../DataStorage';
 
 const log = logger('api:users');
 const CONFIG_KEY = 'users';
@@ -315,3 +316,17 @@ export const __delete = (req, res) => {
     }
 };
 */
+
+export const resetConfig = async (req, res) => {
+    try {
+        DataStorage.clearAll();
+        await DataStorage.init();
+        res.status(200).send({
+            msg: 'Reset user config successfully'
+        });
+    } catch (e) {
+        res.status(500).send({
+            msg: 'Failed to reset user config'
+        });
+    }
+};
