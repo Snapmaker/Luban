@@ -6,6 +6,7 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import * as introJsPropTypes from './proptypes';
 import * as introJsDefaultProps from './defaultProps';
 import i18n from '../../../lib/i18n';
+import UniApi from '../../../lib/uni-api';
 
 /**
  * Intro.js Steps Component.
@@ -79,6 +80,7 @@ export default class Steps extends Component {
      */
     componentDidMount() {
         if (this.props.enabled) {
+            UniApi.Event.emit('appbar-menu:disable');
             this.configureIntroJs();
             this.renderSteps();
         }
@@ -115,6 +117,7 @@ export default class Steps extends Component {
      */
     componentWillUnmount() {
         this.introJs.exit();
+        UniApi.Event.emit('appbar-menu:enable');
     }
 
     /**

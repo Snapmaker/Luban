@@ -18,6 +18,7 @@ import SvgIcon from '../../components/SvgIcon';
 class WorkflowControl extends PureComponent {
     static propTypes = {
         uploadState: PropTypes.string.isRequired,
+        isSendedOnWifi: PropTypes.bool.isRequired,
         workflowStatus: PropTypes.string,
         isConnected: PropTypes.bool,
         connectionType: PropTypes.string,
@@ -89,7 +90,7 @@ class WorkflowControl extends PureComponent {
         const isWifi = connectionType && connectionType === CONNECTION_TYPE_WIFI;
         const status = isWifi ? workflowStatus : workflowState;
         const isRendered = this.props.renderState === 'rendered';
-        const isUploaded = isWifi ? true : this.props.uploadState === 'uploaded';
+        const isUploaded = isWifi ? this.props.isSendedOnWifi : this.props.uploadState === 'uploaded';
         const canClose = isRendered && _.includes([WORKFLOW_STATE_IDLE, WORKFLOW_STATUS_IDLE, WORKFLOW_STATUS_UNKNOWN], status);
         const canPlay = isConnected && isRendered && isUploaded && !_.includes([WORKFLOW_STATE_RUNNING, WORKFLOW_STATUS_RUNNING], status);
         const canPause = _.includes([WORKFLOW_STATE_RUNNING, WORKFLOW_STATUS_RUNNING], status);

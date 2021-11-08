@@ -33,7 +33,8 @@ class App extends PureComponent {
         textInit: PropTypes.func.isRequired,
         shouldCheckForUpdate: PropTypes.bool.isRequired,
         enableShortcut: PropTypes.bool.isRequired,
-        updateMultipleEngine: PropTypes.func.isRequired
+        updateMultipleEngine: PropTypes.func.isRequired,
+        menuDisabledCount: PropTypes.number
     };
 
     router = React.createRef();
@@ -46,22 +47,34 @@ class App extends PureComponent {
         shortcuts: {
             // TODO: implement file menu actions
             [shortcutActions.OPEN]: () => {
-                UniApi.Event.emit('appbar-menu:open-file');
+                if (this.props.menuDisabledCount <= 0) {
+                    UniApi.Event.emit('appbar-menu:open-file');
+                }
             },
             [shortcutActions.SAVE]: () => {
-                UniApi.Event.emit('appbar-menu:save');
+                if (this.props.menuDisabledCount <= 0) {
+                    UniApi.Event.emit('appbar-menu:save');
+                }
             },
             [shortcutActions.SAVE_AS]: () => {
-                UniApi.Event.emit('appbar-menu:save-as-file');
+                if (this.props.menuDisabledCount <= 0) {
+                    UniApi.Event.emit('appbar-menu:save-as-file');
+                }
             },
             [shortcutActions.IMPORT]: () => {
-                UniApi.Event.emit('appbar-menu:import');
+                if (this.props.menuDisabledCount <= 0) {
+                    UniApi.Event.emit('appbar-menu:import');
+                }
             },
             [shortcutActions.EXPORT_MODELS]: () => {
-                UniApi.Event.emit('appbar-menu:export-model');
+                if (this.props.menuDisabledCount <= 0) {
+                    UniApi.Event.emit('appbar-menu:export-model');
+                }
             },
             [shortcutActions.EXPORT_GCODE]: () => {
-                UniApi.Event.emit('appbar-menu:export-gcode');
+                if (this.props.menuDisabledCount <= 0) {
+                    UniApi.Event.emit('appbar-menu:export-gcode');
+                }
             },
             'RESETUSERCONFIG': { // reset user config, which equivalent to fully reinstallation
                 keys: ['alt+shift+r'],
@@ -149,11 +162,13 @@ class App extends PureComponent {
 
 const mapStateToProps = (state) => {
     const machineInfo = state.machine;
+    const { menuDisabledCount } = state.appbarMenu;
     let enableShortcut = state[window.location.hash.slice(2)]?.enableShortcut;
     enableShortcut = (typeof enableShortcut === 'undefined' ? true : enableShortcut);
     const { shouldCheckForUpdate } = machineInfo;
     return {
-        enableShortcut: enableShortcut,
+        enableShortcut,
+        menuDisabledCount,
         shouldCheckForUpdate
     };
 };

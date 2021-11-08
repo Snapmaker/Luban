@@ -16,7 +16,7 @@ import UniApi from '../../../lib/uni-api';
 import { normalizeNameDisplay } from '../../../lib/normalize-range';
 import styles from './index.styl';
 import {
-    CONNECTION_TYPE_WIFI,
+    CONNECTION_TYPE_WIFI, WORKFLOW_STATE_IDLE, WORKFLOW_STATUS_IDLE,
     DATA_PREFIX, HEAD_CNC, HEAD_LASER, HEAD_PRINTING,
     LEVEL_TWO_POWER_LASER_FOR_SM2
 } from '../../../constants';
@@ -220,7 +220,7 @@ function WifiTransport({ widgetActions, controlActions }) {
     const originOffset = useSelector(state => state?.machine?.originOffset);
     const toolHeadName = useSelector(state => state?.machine?.toolHead.laserToolhead);
     const { previewBoundingBox, gcodeFiles, previewModelGroup, previewRenderState, previewStage } = useSelector(state => state.workspace);
-    const { server, isConnected, headType, connectionType, size, workflowStatus, workflowState } = useSelector(state => state.machine);
+    const { server, isConnected, headType, connectionType, size, workflowStatus, workflowState, isSendedOnWifi } = useSelector(state => state.machine);
     const [loadToWorkspaceOnLoad, setLoadToWorkspaceOnLoad] = useState(true);
     const [selectFileName, setSelectFileName] = useState('');
     const [selectFileType, setSelectFileType] = useState('');
@@ -452,6 +452,10 @@ function WifiTransport({ widgetActions, controlActions }) {
     const isHeadType = selectFileType === headType;
     const hasFile = gcodeFiles.length > 0;
     const selectedFile = _.find(gcodeFiles, { uploadName: selectFileName });
+
+    const isWifi = connectionType && connectionType === CONNECTION_TYPE_WIFI;
+    const isSended = isWifi ? isSendedOnWifi : true;
+    const canPlay = hasFile && isConnected && isSended && _.includes([WORKFLOW_STATE_IDLE, WORKFLOW_STATUS_IDLE], currentWorkflowStatus);
     return (
         <div className="border-default-grey-1 border-radius-8">
             <input
@@ -528,7 +532,7 @@ function WifiTransport({ widgetActions, controlActions }) {
                         type="primary"
                         priority="level-three"
                         width="144px"
-                        disabled={!(hasFile && isConnected && isHeadType && connectionType === CONNECTION_TYPE_WIFI)}
+                        disabled={!(hasFile && isConnected && isHeadType && isWifi && isSendedOnWifi)}
                         onClick={actions.sendFile}
                     >
                         {i18n._('key-Workspace/WifiTransport-Sending File')}
@@ -537,7 +541,7 @@ function WifiTransport({ widgetActions, controlActions }) {
                         type="primary"
                         priority="level-two"
                         width="144px"
-                        disabled={!hasFile || !isConnected || currentWorkflowStatus !== 'idle'}
+                        disabled={!canPlay}
                         onClick={actions.startPrint}
                     >
                         {i18n._('key-Workspace/Transport-Start Print')}

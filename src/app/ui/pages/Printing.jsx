@@ -289,70 +289,71 @@ function Printing({ location }) {
                 <PrintingVisualizer widgetId="printingVisualizer" />
                 {renderHomepage()}
                 {renderWorkspace()}
-                <Steps
-                    enabled={enabledIntro}
-                    initialStep={initIndex}
-                    onChange={handleChange}
-                    ref={stepRef}
-                    // onBeforeChange={handleBeforeChange}
-                    options={{
-                        showBullets: false,
-                        keyboardNavigation: false,
-                        exitOnOverlayClick: false
-                    }}
-                    steps={[{
-                        element: '.print-tool-bar-open',
-                        intro: printIntroStepOne(i18n._('key-Printing/Page-Import an object, or drag an object to Luban.')),
-                        position: 'right',
-                        title: `${i18n._('key-Printing/Page-Import Object')} (1/6)`,
-                        disableInteraction: true,
-                        tooltipClass: 'printing-import-intro'
-                    }, {
-                        element: '.print-intro-three',
-                        intro: printIntroStepTwo(i18n._('key-Printing/Page-Place or transform the object using icons, including Move, Scale, Rotate, Mirror, and Manual Support.')),
-                        position: 'right',
-                        title: `${i18n._('key-Printing/Page-Placement')} (2/6)`,
-                        disableInteraction: true,
-                        tooltipClass: 'printing-placement-intro'
-                    }, {
-                        element: '.threedp-widget-list-intro',
-                        intro: printIntroStepThree(
-                            i18n._('key-Printing/Page-Select the material settings and printing settings.'),
-                            i18n._('key-Printing/Page-Click'),
-                            i18n._('key-Printing/Page-to set and manage detailed parameters.')
-                        ),
-                        position: 'left',
-                        title: `${i18n._('key-Printing/Page-Configure Parameters')} (3/6)`,
-                        disableInteraction: true,
-                        tooltipClass: 'printing-slice-intro'
-                    }, {
-                        element: '.print-output-intro',
-                        intro: printIntroStepFour(
-                            i18n._('key-Printing/Page-Slice and preview the object.'),
-                            i18n._('key-Printing/Page-In Preview, you can see printing paths using features, including Line Type and Layer View.')
-                        ),
-                        position: 'top',
-                        title: `${i18n._('key-Printing/Page-Generate G-code and Preview')} (4/6)`,
-                        disableInteraction: true,
-                        tooltipClass: 'printing-preview-intro'
-                    }, {
-                        element: '.print-output-intro',
-                        intro: printIntroStepFive(i18n._('key-Printing/Page-Export the G-code file to a local device or load it to Workspace. Use Touchscreen or Luban to start printing.')),
-                        position: 'top',
-                        title: `${i18n._('key-Printing/Page-Export and Print')} (5/6)`,
-                        disableInteraction: true,
-                        highlightClass: 'printing-export-highlight-part',
-                        tooltipClass: 'printing-export-intro'
-                    }, {
-                        element: '.printing-save-icon',
-                        intro: printIntroStepSix(i18n._('key-Printing/Page-Save the project to a local device for reuse.')),
-                        position: 'bottom',
-                        title: `${i18n._('key-Printing/Page-Save Project')} (6/6)`,
-                        disableInteraction: true,
-                        tooltipClass: 'printing-save-intro'
-                    }]}
-                    onExit={handleExit}
-                />
+                {enabledIntro && (
+                    <Steps
+                        enabled={enabledIntro}
+                        initialStep={initIndex}
+                        onChange={handleChange}
+                        ref={stepRef}
+                        options={{
+                            showBullets: false,
+                            keyboardNavigation: false,
+                            exitOnOverlayClick: false
+                        }}
+                        steps={[{
+                            element: '.print-tool-bar-open',
+                            intro: printIntroStepOne(i18n._('key-Printing/Page-Import an object, or drag an object to Luban.')),
+                            position: 'right',
+                            title: `${i18n._('key-Printing/Page-Import Object')} (1/6)`,
+                            disableInteraction: true,
+                            tooltipClass: 'printing-import-intro'
+                        }, {
+                            element: '.print-intro-three',
+                            intro: printIntroStepTwo(i18n._('key-Printing/Page-Place or transform the object using icons, including Move, Scale, Rotate, Mirror, and Manual Support.')),
+                            position: 'right',
+                            title: `${i18n._('key-Printing/Page-Placement')} (2/6)`,
+                            disableInteraction: true,
+                            tooltipClass: 'printing-placement-intro'
+                        }, {
+                            element: '.threedp-widget-list-intro',
+                            intro: printIntroStepThree(
+                                i18n._('key-Printing/Page-Select the material settings and printing settings.'),
+                                i18n._('key-Printing/Page-Click'),
+                                i18n._('key-Printing/Page-to set and manage detailed parameters.')
+                            ),
+                            position: 'left',
+                            title: `${i18n._('key-Printing/Page-Configure Parameters')} (3/6)`,
+                            disableInteraction: true,
+                            tooltipClass: 'printing-slice-intro'
+                        }, {
+                            element: '.print-output-intro',
+                            intro: printIntroStepFour(
+                                i18n._('key-Printing/Page-Slice and preview the object.'),
+                                i18n._('key-Printing/Page-In Preview, you can see printing paths using features, including Line Type and Layer View.')
+                            ),
+                            position: 'top',
+                            title: `${i18n._('key-Printing/Page-Generate G-code and Preview')} (4/6)`,
+                            disableInteraction: true,
+                            tooltipClass: 'printing-preview-intro'
+                        }, {
+                            element: '.print-output-intro',
+                            intro: printIntroStepFive(i18n._('key-Printing/Page-Export the G-code file to a local device or load it to Workspace. Use Touchscreen or Luban to start printing.')),
+                            position: 'top',
+                            title: `${i18n._('key-Printing/Page-Export and Print')} (5/6)`,
+                            disableInteraction: true,
+                            highlightClass: 'printing-export-highlight-part',
+                            tooltipClass: 'printing-export-intro'
+                        }, {
+                            element: '.printing-save-icon',
+                            intro: printIntroStepSix(i18n._('key-Printing/Page-Save the project to a local device for reuse.')),
+                            position: 'bottom',
+                            title: `${i18n._('key-Printing/Page-Save Project')} (6/6)`,
+                            disableInteraction: true,
+                            tooltipClass: 'printing-save-intro'
+                        }]}
+                        onExit={handleExit}
+                    />
+                )}
             </Dropzone>
             <Thumbnail
                 ref={thumbnail}

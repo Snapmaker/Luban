@@ -159,6 +159,7 @@ export const actions = {
                     model.headType = HEAD_PRINTING;
                 }
             });
+            UniformToolpathConfig(envObj);
             content = JSON.stringify(envObj);
             await api.recoverEnv({ content });
         }

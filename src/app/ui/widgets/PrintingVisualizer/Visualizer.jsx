@@ -39,6 +39,7 @@ class Visualizer extends PureComponent {
         hasModel: PropTypes.bool.isRequired,
         leftBarOverlayVisible: PropTypes.bool.isRequired,
         displayedType: PropTypes.string,
+        menuDisabledCount: PropTypes.number,
 
         hideSelectedModel: PropTypes.func.isRequired,
         recordAddOperation: PropTypes.func.isRequired,
@@ -249,37 +250,37 @@ class Visualizer extends PureComponent {
             [shortcutActions.SELECTALL]: this.props.selectAllModels,
             [shortcutActions.UNSELECT]: this.props.unselectAllModels,
             [shortcutActions.DELETE]: () => {
-                if (!this.props.inProgress) {
+                if (!this.props.inProgress && !(this.props.menuDisabledCount > 0)) {
                     this.actions.deleteSelectedModel();
                 }
             },
             [shortcutActions.COPY]: () => {
-                if (!this.props.inProgress) {
+                if (!this.props.inProgress && !(this.props.menuDisabledCount > 0)) {
                     this.props.copy();
                 }
             },
             [shortcutActions.PASTE]: () => {
-                if (!this.props.inProgress) {
+                if (!this.props.inProgress && !(this.props.menuDisabledCount > 0)) {
                     this.props.paste();
                 }
             },
             [shortcutActions.DUPLICATE]: () => {
-                if (!this.props.inProgress) {
+                if (!this.props.inProgress && !(this.props.menuDisabledCount > 0)) {
                     this.actions.duplicateSelectedModel();
                 }
             },
             [shortcutActions.UNDO]: () => {
-                if (!this.props.inProgress) {
+                if (!this.props.inProgress && !(this.props.menuDisabledCount > 0)) {
                     this.props.undo();
                 }
             },
             [shortcutActions.REDO]: () => {
-                if (!this.props.inProgress) {
+                if (!this.props.inProgress && !(this.props.menuDisabledCount > 0)) {
                     this.props.redo();
                 }
             },
             [shortcutActions.CUT]: () => {
-                if (!this.props.inProgress) {
+                if (!this.props.inProgress && !(this.props.menuDisabledCount > 0)) {
                     this.props.cut();
                 }
             },
@@ -561,6 +562,7 @@ const mapStateToProps = (state, ownProps) => {
     const { currentModalPath } = state.appbarMenu;
     const printing = state.printing;
     const { size } = machine;
+    const { menuDisabledCount } = state.appbarMenu;
     // TODO: be to organized
     const {
         progressStatesManager,
@@ -596,6 +598,7 @@ const mapStateToProps = (state, ownProps) => {
         transformation: modelGroup.getSelectedModelTransformationForPrinting(),
         modelGroup,
         hasModel,
+        menuDisabledCount,
         gcodeLineGroup,
         transformMode,
         progress,
