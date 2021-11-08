@@ -34,6 +34,26 @@ const DEFAULT_PREDEFINED = {
         'present.default_HDFill.def.json',
         'present.default_SDFill.def.json',
         'present.default_PathEngrave.def.json'
+    ],
+    '10w-laser': [
+        'basswood.cutting_1.5mm.def.json',
+        'basswood.cutting_3mm.def.json',
+        'basswood.cutting_5mm.def.json',
+        'basswood.cutting_8mm.def.json',
+        'black_anodized_aluminum.line_filled_engraving.def.json',
+        'black_anodized_aluminum.vector_engraving.def.json',
+        'cardstock.cutting_200g.def.json',
+        'cardstock.cutting_300g.def.json',
+        'cardstock.cutting_350g.def.json',
+        'coated_paper.cutting_200g.def.json',
+        'coated_paper.cutting_300g.def.json',
+        'coated_paper.cutting_350g.def.json',
+        'crazy_horse_leather.cutting_2mm.def.json',
+        'mdf.cutting_2mm.def.json',
+        'mdf.cutting_3mm.def.json',
+        'pinewood.cutting_4mm.def.json',
+        'pinewood.cutting_8mm.def.json',
+        'vegetable_tanned_leather.cutting_1.5mm.def.json'
     ]
 };
 
@@ -330,13 +350,14 @@ export function loadDefinitionsByPrefixName(headType, prefix, configPath) {
 }
 
 export function loadAllSeriesDefinitions(isDefault = false, headType, series = 'A150') {
-    const predefined = DEFAULT_PREDEFINED[headType];
+    const _headType = (headType === 'laser' && includes(series, '10w')) ? '10w-laser' : headType;
+    const predefined = DEFAULT_PREDEFINED[_headType];
     const definitions = [];
 
     const configDir = isDefault ? `${DataStorage.defaultConfigDir}/${headType}`
         : `${DataStorage.configDir}/${headType}`;
     const defaultFilenames = fs.readdirSync(`${configDir}/${series}`);
-
+    console.log('defaultFileName', configDir, series, _headType, headType);
     if (isDefault) {
         for (const filename of predefined) {
             if (includes(defaultFilenames, filename)) {

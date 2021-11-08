@@ -16,6 +16,7 @@ import ConfigValueBox from './ConfigValueBox';
 import useSetState from '../../../lib/hooks/set-state';
 import { limitStringLength } from '../../../lib/normalize-range';
 import styles from './styles.styl';
+import { machineStore } from '../../../store/local-storage';
 
 function creatCateArray(optionList) {
     const cates = [];
@@ -89,7 +90,7 @@ function useGetDefinitions(allDefinitions, definitionState, setDefinitionState, 
     return definitionsRef;
 }
 
-function ProfileManager({ optionConfigGroup, disableCategory = true, managerTitle, selectedId, allDefinitions, outsideActions, isDefinitionEditable, isOfficialDefinition, activeDefinition, headType }) {
+function ProfileManager({ optionConfigGroup, disableCategory = true, managerTitle, selectedId, allDefinitions, outsideActions, isOfficialDefinition, activeDefinition, headType }) {
     const [definitionState, setDefinitionState] = useSetState({
         definitionForManager: activeDefinition,
         definitionOptions: [],
@@ -97,6 +98,8 @@ function ProfileManager({ optionConfigGroup, disableCategory = true, managerTitl
         isCategorySelected: false,
         renamingStatus: false
     });
+    const toolHead = machineStore.get('machine.toolHead')[`${headType}Toolhead`];
+    console.log({ toolHead, headType });
     const [configExpanded, setConfigExpanded] = useState({});
     const [notificationMessage, setNotificationMessage] = useState('');
     const refs = {
@@ -112,7 +115,7 @@ function ProfileManager({ optionConfigGroup, disableCategory = true, managerTitl
         },
         setRenamingStatus: (status) => {
             const currentDefinition = definitionState?.definitionForManager;
-            if (isOfficialDefinition(currentDefinition)) {
+            if (isOfficialDefinition(currentDefinition, toolHead)) {
                 return;
             } else if (!status) {
                 setDefinitionState({
@@ -190,7 +193,7 @@ function ProfileManager({ optionConfigGroup, disableCategory = true, managerTitl
             });
         },
         onRemoveManagerDefinition: async (definition, isCategorySelected) => {
-            if (isOfficialDefinition(definitionState.definitionForManager)) {
+            if (isOfficialDefinition(definitionState.definitionForManager, toolHead)) {
                 return;
             }
             let newDefinition = {};
@@ -407,6 +410,7 @@ function ProfileManager({ optionConfigGroup, disableCategory = true, managerTitl
 
     return (
         <React.Fragment>
+            {console.log(definitionState)}
             {definitionState?.definitionForManager && (
                 <Modal
                     size="lg"
@@ -431,6 +435,7 @@ function ProfileManager({ optionConfigGroup, disableCategory = true, managerTitl
                                 )}
                                 <ul className={classNames(styles['manager-name-wrapper'])}>
                                     {(cates.map((cate) => {
+                                        console.log({ cate });
                                         const displayCategory = limitStringLength(cate.category ?? '', 28);
                                         const { category } = cate;
                                         const isDefault = category.indexOf('Default') !== -1;
@@ -491,7 +496,7 @@ function ProfileManager({ optionConfigGroup, disableCategory = true, managerTitl
                                                                     return null;
                                                                 });
                                                             }
-
+                                                            console.log({ isAllValueDefault, category });
                                                             if (isUndefined(currentOption.label) || currentOption.isHidden) {
                                                                 return null;
                                                             } else {
@@ -552,7 +557,7 @@ function ProfileManager({ optionConfigGroup, disableCategory = true, managerTitl
                                     <div className="sm-flex justify-space-between padding-vertical-8 padding-horizontal-16">
                                         <SvgIcon
                                             name="Edit"
-                                            disabled={isOfficialDefinition(definitionState.definitionForManager)}
+                                            disabled={isOfficialDefinition(definitionState.definitionForManager, toolHead)}
                                             size={24}
                                             className="padding-vertical-2 padding-horizontal-2"
                                             title={i18n._('key-Printing/ProfileManager-Edit')}
@@ -587,7 +592,7 @@ function ProfileManager({ optionConfigGroup, disableCategory = true, managerTitl
                                             className="padding-vertical-2 padding-horizontal-2"
                                             title={i18n._('key-Printing/ProfileManager-Delete')}
                                             onClick={() => actions.onRemoveManagerDefinition(definitionState.definitionForManager, definitionState.isCategorySelected)}
-                                            disabled={isOfficialDefinition(definitionState.definitionForManager)}
+                                            disabled={isOfficialDefinition(definitionState.definitionForManager, toolHead)}
                                         />
                                     </div>
 
@@ -618,7 +623,7 @@ function ProfileManager({ optionConfigGroup, disableCategory = true, managerTitl
                                 definitionForManager={definitionState.definitionForManager}
                                 isCategorySelected={definitionState.isCategorySelected}
                                 optionConfigGroup={optionConfigGroup}
-                                isDefinitionEditable={isDefinitionEditable}
+                                isDefinitionEditable={isOfficialDefinition}
                                 onChangeDefinition={actions.onChangeDefinition}
                                 selectedSettingDefaultValue={definitionState?.selectedSettingDefaultValue}
                                 headType={headType}
@@ -664,7 +669,6 @@ ProfileManager.propTypes = {
     disableCategory: PropTypes.bool,
     optionConfigGroup: PropTypes.array.isRequired,
     allDefinitions: PropTypes.array.isRequired,
-    isDefinitionEditable: PropTypes.func.isRequired,
     isOfficialDefinition: PropTypes.func.isRequired,
     headType: PropTypes.string
 };
