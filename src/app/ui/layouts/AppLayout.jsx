@@ -9,7 +9,6 @@ import classNames from 'classnames';
 import { renderModal } from '../utils';
 import AppBar from '../views/AppBar';
 import i18n from '../../lib/i18n';
-// import path from 'path';
 import UniApi from '../../lib/uni-api';
 import { checkIsSnapmakerProjectFile, checkIsGCodeFile } from '../../lib/check-name';
 import Settings from '../pages/Settings/Settings';
@@ -512,10 +511,8 @@ class AppLayout extends PureComponent {
                     if (promise) {
                         // called from Electron
                         promise.then((result) => {
-                            const path = window.require('path');
-                            const app = window.require('electron').remote.app;
-                            const defaultPath = path.resolve(app.getPath('downloads'), path.basename(result.filePath));
-                            if (result.filePath) {
+                            const defaultPath = UniApi.File.resolveDownloadsPath(result.filePath);
+                            if (defaultPath) {
                                 this.actions.exportModel(defaultPath);
                             }
                         });

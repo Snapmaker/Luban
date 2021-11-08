@@ -200,7 +200,6 @@ const File = {
             const { app } = window.require('electron').remote;
             const defaultPath = path.resolve(app.getPath('downloads'), path.basename(tmpFile));
             tmpFile = app.getPath('userData') + tmpFile;
-            console.log('ddd', app.getPath('downloads'), defaultPath);
             // eslint-disable-next-line no-use-before-define
             const saveDialogReturnValue = await Dialog.showSaveDialog({
                 title: targetFile,
@@ -278,6 +277,15 @@ const File = {
         if (isElectron()) {
             const ipc = window.require('electron').ipcRenderer;
             ipc.send('add-recent-file', recentFile);
+        }
+    },
+    resolveDownloadsPath(tmpFile) {
+        if (isElectron()) {
+            const { app } = window.require('electron').remote;
+            const defaultPath = path.resolve(app.getPath('downloads'), path.basename(tmpFile));
+            return defaultPath;
+        } else {
+            return tmpFile;
         }
     }
 };
