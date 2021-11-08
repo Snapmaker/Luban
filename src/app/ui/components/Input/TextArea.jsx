@@ -20,7 +20,7 @@ const TextAreaInput = React.memo(({
         onChange(newValue);
     };
     const debouncedChangeHandler = useCallback(
-        debounce(changeHandler, 300),
+        debounce(changeHandler, 400),
         []
     );
 

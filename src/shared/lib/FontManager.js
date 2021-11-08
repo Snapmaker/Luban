@@ -192,7 +192,6 @@ class FontManager {
                 throw new Error('No Font Found!');
             }
         }
-        console.log('fontConfig', fontConfig, subfamily);
 
         return this.loadLocalFont(fontConfig.path, family) // subfamily is not supported (for now)
             .then((font) => {

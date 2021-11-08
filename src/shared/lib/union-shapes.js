@@ -1,5 +1,5 @@
 import { Vector2 } from './math/Vector2';
-import { recursivePolyUnion, simplifyPolygons } from '../../server/lib/clipper/cLipper-adapter';
+import { recursivePolyUnion } from '../../server/lib/clipper/cLipper-adapter';
 
 function isPointInPolygon(point, polygon) {
     let inside = false;
@@ -34,13 +34,11 @@ function unionShapes(shapes) {
     }
 
     shapes.forEach((shape) => {
-        let newArr = [];
-        // const newArr = [];
+        const newArr = [];
         const allBelowPointsArrays = [];
         shape.paths.forEach((data) => {
             if (Array.isArray(data.points)) {
                 const area = Vector2.areaForArray(data.points);
-                console.log('area', area);
                 if (area > 0) {
                     const arr = [];
                     arr.push([...data.points]);
@@ -53,17 +51,15 @@ function unionShapes(shapes) {
 
         allBelowPointsArrays.forEach((pointsArray) => {
             for (const newArrElement of newArr) {
-                console.log('ddd', isPointInPolygon(pointsArray[0], newArrElement[0]));
                 if (isPointInPolygon(pointsArray[0], newArrElement[0])) {
                     newArrElement.push([...pointsArray]);
                     break;
                 }
             }
         });
-
-        newArr = newArr.map((eachPaths) => {
-            return simplifyPolygons(eachPaths);
-        });
+        // newArr = newArr.map((eachPaths) => {
+        //     return simplifyPolygons(eachPaths);
+        // });
         const newSvg = recursivePolyUnion(newArr);
         const newPaths = [];
         shape.paths.forEach((shapePath, index) => {

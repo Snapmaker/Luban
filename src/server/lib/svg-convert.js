@@ -94,7 +94,7 @@ const convertTextToSvg = async (options) => {
 
     const fontObj = await fontManager.getFont(fontFamily, null, style);
     const unitsPerEm = fontObj.unitsPerEm;
-    const descender = _.isNil(fontObj?.tables?.os2?.sTypoDescender) ? fontObj?.descender : fontObj?.tables?.os2?.sTypoDescender;
+    const descender = _.isNil(fontObj?.tables?.os2?.sTypoDescender) ? fontObj?.descender : (fontObj?.tables?.os2?.sTypoDescender || 0);
 
     // Big enough to being rendered clearly on canvas (still has space for improvements)
     const estimatedFontSize = Math.round(fontSize / 72 * 25.4 * 10);
@@ -143,7 +143,9 @@ const convertTextToSvg = async (options) => {
         height: height
     });
     const svgParser = new SVGParser();
-
+    // Don't delete, for debugging
+    // const targetPath1 = `${DataStorage.tmpDir}/${uploadName}_new.svg`;
+    // fs.writeFileSync(targetPath1, svgString);
     const result = await svgParser.parse(svgString);
     unionShapes(result.shapes);
 
@@ -157,7 +159,7 @@ const convertTextToSvg = async (options) => {
                 resolve({
                     originalName: name,
                     uploadName: uploadName,
-                    family: fontObj?.names?.fontFamily?.en,
+                    family: fontObj?.names?.displayName?.en,
                     width,
                     height
                 });
