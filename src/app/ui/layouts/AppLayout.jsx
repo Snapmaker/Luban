@@ -261,6 +261,7 @@ class AppLayout extends PureComponent {
             } else {
                 format = path.split('.').pop();
             }
+
             const output = new ModelExporter().parse(this.props.modelGroup.object, format, isBinary);
             if (!output) {
                 // export error
@@ -500,9 +501,12 @@ class AppLayout extends PureComponent {
             });
             UniApi.Event.on('appbar-menu:export-model', () => {
                 const pathname = this.props.currentModalPath || this.props.history.location.pathname;
+                console.log('pathname', pathname, this.props.modelGroup.hasModel());
                 if (pathname === '/printing' && this.props.modelGroup.hasModel()) {
+                    const defaultPath = UniApi.File.resolveDownloadsPath('_binary.stl');
                     const promise = UniApi.Dialog.showSaveDialog({
                         title: i18n._('key-App/Settings/FirmwareTool-Export Model'),
+                        defaultPath: defaultPath,
                         filters: [
                             { name: 'STL Binary', extensions: ['stl'] },
                             { name: 'OBJ', extensions: ['obj'] }
@@ -511,10 +515,8 @@ class AppLayout extends PureComponent {
                     if (promise) {
                         // called from Electron
                         promise.then((result) => {
-                            const defaultPath = UniApi.File.resolveDownloadsPath(result.filePath);
-                            if (defaultPath) {
-                                this.actions.exportModel(defaultPath);
-                            }
+                            console.log('result', result);
+                            this.actions.exportModel(result?.filePath || defaultPath);
                         });
                     } else {
                         // called in browser

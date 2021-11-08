@@ -282,6 +282,7 @@ const File = {
     resolveDownloadsPath(tmpFile) {
         if (isElectron()) {
             const { app } = window.require('electron').remote;
+            console.log('path.basename(tmpFile)', path.basename(tmpFile));
             const defaultPath = path.resolve(app.getPath('downloads'), path.basename(tmpFile));
             return defaultPath;
         } else {
