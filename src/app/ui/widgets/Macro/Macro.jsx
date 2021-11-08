@@ -9,7 +9,7 @@ import {
     CONNECTION_TYPE_WIFI,
     MODAL_RUN_MACRO,
     MODAL_EDIT_MACRO,
-    WORKFLOW_STATE_IDLE, PROTOCOL_SCREEN
+    WORKFLOW_STATE_IDLE, PROTOCOL_SCREEN, CONNECTION_TYPE_SERIAL
 } from '../../../constants';
 import api from '../../../api';
 // import { Button } from '../../components/Buttons';
@@ -74,14 +74,14 @@ function Macro({ widgetId, updateModal, openModal, macros }) {
     };
 
     useEffect(() => {
-        if (macros && Array.isArray(macros)) {
+        if (macros && Array.isArray(macros) && isConnected) {
             setMacrosState(macros);
         }
-    }, [macros]);
+    }, [macros, isConnected]);
 
     useEffect(() => {
         // When connecting to wifi, some gcode is not implemented. Temporarily hide the default macro
-        if (connectionType === CONNECTION_TYPE_WIFI) {
+        if (connectionType === CONNECTION_TYPE_WIFI && connectionType === CONNECTION_TYPE_SERIAL) {
             const _macros = macros.filter((item) => {
                 return item.isDefault !== true;
             });

@@ -514,17 +514,17 @@ class Visualizer extends PureComponent {
         if (!isEqual(nextProps.size, this.props.size) || !isEqual(nextProps.preview, this.props.preview)) {
             const size = nextProps.size;
             if (nextProps.preview) {
-                this.previewPrintableArea.updateSize({
+                this.previewPrintableArea && this.previewPrintableArea.updateSize({
                     x: size.x * 2,
                     y: size.y * 2
                 });
             } else {
-                this.state.printableArea.updateSize({
+                this.state.printableArea && this.state.printableArea.updateSize({
                     x: size.x * 2,
                     y: size.y * 2
                 });
             }
-            this.canvas.current.setCamera(new THREE.Vector3(0, 0, Math.min(size.z * 2, 300)), new THREE.Vector3());
+            this.canvas.current && this.canvas.current.setCamera(new THREE.Vector3(0, 0, Math.min(size.z * 2, 300)), new THREE.Vector3());
         }
 
         if (this.props.workflowStatus !== WORKFLOW_STATUS_IDLE && nextProps.workflowStatus === WORKFLOW_STATUS_IDLE) {
