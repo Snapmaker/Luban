@@ -11,7 +11,7 @@ import SvgIcon from '../../components/SvgIcon';
 import { HEAD_CNC, HEAD_LASER } from '../../../constants';
 import { machineStore } from '../../../store/local-storage';
 
-function ConfigValueBox({ optionConfigGroup, calculateTextIndex, isCategorySelected, type = 'input', isDefinitionEditable = () => true, onChangeDefinition, selectedSettingDefaultValue, definitionForManager, customConfigs, headType }) {
+function ConfigValueBox({ optionConfigGroup, calculateTextIndex, isCategorySelected, type = 'input', isOfficialDefinition = () => true, onChangeDefinition, selectedSettingDefaultValue, definitionForManager, customConfigs, headType }) {
     const [activeCateId, setActiveCateId] = useState(2);
     const scrollDom = useRef(null);
     const toolHead = machineStore.get('machine.toolHead')[`${headType}Toolhead`];
@@ -31,9 +31,8 @@ function ConfigValueBox({ optionConfigGroup, calculateTextIndex, isCategorySelec
     }
     // Make as a demo
     const isEditable = useCallback(() => {
-        console.log('isEdabled', isDefinitionEditable(definitionForManager, toolHead));
-        return isDefinitionEditable(definitionForManager, toolHead);
-    }, [isDefinitionEditable, definitionForManager, toolHead]);
+        return !isOfficialDefinition(definitionForManager, toolHead);
+    }, [isOfficialDefinition, definitionForManager, toolHead]);
 
     return (
         <div className="sm-flex">
@@ -109,7 +108,7 @@ function ConfigValueBox({ optionConfigGroup, calculateTextIndex, isCategorySelec
                                                 defaultValue={includes(customConfigs, key)}
                                                 definitionKey={key}
                                                 key={key}
-                                                isDefinitionEditable={isDefinitionEditable}
+                                                isOfficialDefinition={isOfficialDefinition}
                                                 onChangeDefinition={onChangeDefinition}
                                                 toolHead={toolHead}
                                             />
@@ -133,7 +132,7 @@ ConfigValueBox.propTypes = {
     customConfigs: PropTypes.array,
     type: PropTypes.string,
     calculateTextIndex: PropTypes.func,
-    isDefinitionEditable: PropTypes.func,
+    isOfficialDefinition: PropTypes.func,
     onChangeDefinition: PropTypes.func.isRequired,
     selectedSettingDefaultValue: PropTypes.object,
     headType: PropTypes.string

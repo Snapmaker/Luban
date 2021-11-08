@@ -243,6 +243,7 @@ export const actions = {
         const isReplacedDefinition = (d) => d.definitionId === activeToolList.definitionId;
         const defintionIndex = toolDefinitions.findIndex(isReplacedDefinition);
         toolDefinitions.splice(defintionIndex, 1, activeToolList);
+        console.log('toolDefinitions', toolDefinitions);
         dispatch(editorActions.updateState('laser', {
             toolDefinitions: [...toolDefinitions]
         }));
