@@ -21,10 +21,10 @@ function isOfficialDefinition(activeToolList, toolHead) {
     return includes(toolHead === LEVEL_TWO_POWER_LASER_FOR_SM2 ? DEFAULT_10W_LASER_CONFIG_IDS : DEFAULT_LASER_CONFIG_IDS,
         activeToolList.definitionId);
 }
-// function isDefinitionEditable(activeToolList) {
-//     return !(includes(DEFAULT_LASER_CONFIG_IDS,
-//         activeToolList.definitionId));
-// }
+function isDefinitionEditable(activeToolList, toolHead) {
+    return !(includes(toolHead === LEVEL_TWO_POWER_LASER_FOR_SM2 ? DEFAULT_10W_LASER_CONFIG_IDS : DEFAULT_LASER_CONFIG_IDS,
+        activeToolList.definitionId));
+}
 
 function LaserPresentManager({ closeToolManager, shouldSaveToolpath = false, saveToolPath, setCurrentToolDefinition }) {
     const toolDefinitions = useSelector(state => state?.laser?.toolDefinitions);
@@ -116,7 +116,7 @@ function LaserPresentManager({ closeToolManager, shouldSaveToolpath = false, sav
         <ProfileManager
             outsideActions={actions}
             activeDefinition={activeToolListDefinition}
-            // isDefinitionEditable={isDefinitionEditable}
+            isDefinitionEditable={isDefinitionEditable}
             isOfficialDefinition={isOfficialDefinition}
             optionConfigGroup={optionConfigGroup}
             allDefinitions={allDefinitions}
