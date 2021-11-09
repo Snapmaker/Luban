@@ -3,6 +3,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import PropTypes from 'prop-types';
 import classNames from 'classnames';
 import path from 'path';
+import { includes } from 'lodash';
 
 import i18n from '../../../lib/i18n';
 import { toFixed, toFixedNumber } from '../../../lib/numeric-utils';
@@ -26,6 +27,7 @@ function convertSVGPointToLogicalPoint(p, size) {
  *
  * This component is used for display properties of selected SVG elements.
  */
+const extnameArray = ['.svg', '.dxf'];
 const TransformationSection = ({ headType, updateSelectedModelUniformScalingState, disabled }) => {
     const size = useSelector(state => state?.machine?.size);
     const modelGroup = useSelector(state => state[headType]?.modelGroup);
@@ -59,7 +61,7 @@ const TransformationSection = ({ headType, updateSelectedModelUniformScalingStat
     useEffect(() => {
         selectedModelArray.length && selectedModelArray.forEach((item) => {
             const extname = path.extname(item.uploadName);
-            if (extname !== '.svg' && extname !== '.dxf') {
+            if (!includes(extnameArray, extname)) {
                 minSize < 1 && setMinSize(1);
             } else {
                 minSize > 0.1 && setMinSize(0.1);

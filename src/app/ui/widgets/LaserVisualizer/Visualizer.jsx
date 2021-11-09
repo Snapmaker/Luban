@@ -201,23 +201,23 @@ class Visualizer extends Component {
                     });
                 });
             } else {
-                this.props.uploadImage(true, file, uploadMode, () => {
+                this.props.uploadImage(file, uploadMode, () => {
                     modal({
                         cancelTitle: i18n._('key-Laser/Edit/ContextMenu-Close'),
                         title: i18n._('key-Laser/Edit/ContextMenu-Import Error'),
                         body: i18n._('Failed to import this object. \nPlease select a supported file format.')
                     });
-                });
+                }, true);
             }
         },
         onClickLimitImage: (isLimit) => {
-            this.props.uploadImage(isLimit, this.state.file, this.state.uploadMode, () => {
+            this.props.uploadImage(this.state.file, this.state.uploadMode, () => {
                 modal({
                     cancelTitle: i18n._('key-Laser/Edit/ContextMenu-Close'),
                     title: i18n._('key-Laser/Edit/ContextMenu-Import Error'),
                     body: i18n._('Failed to import this object. \nPlease select a supported file format.')
                 });
-            });
+            }, isLimit);
         },
         onClickToUpload: () => {
             this.fileInput.current.value = null;
@@ -739,7 +739,7 @@ const mapDispatchToProps = (dispatch) => {
         createText: (text) => dispatch(editorActions.createText('laser', text)),
         updateTextTransformationAfterEdit: (element, transformation) => dispatch(editorActions.updateModelTransformationByElement('laser', element, transformation)),
 
-        uploadImage: (isLimit, file, mode, onFailure) => dispatch(editorActions.uploadImage('laser', file, mode, onFailure, isLimit)),
+        uploadImage: (file, mode, onFailure, isLimit) => dispatch(editorActions.uploadImage('laser', file, mode, onFailure, isLimit)),
         checkIsOversizeImage: (file, onFailure) => dispatch(editorActions.checkIsOversizeImage('laser', file, onFailure)),
         cutModel: (file, onFailure) => dispatch(editorActions.cutModel('laser', file, onFailure)),
         switchToPage: (page) => dispatch(editorActions.switchToPage('laser', page)),
