@@ -501,7 +501,6 @@ class AppLayout extends PureComponent {
             });
             UniApi.Event.on('appbar-menu:export-model', () => {
                 const pathname = this.props.currentModalPath || this.props.history.location.pathname;
-                console.log('pathname', pathname, this.props.modelGroup.hasModel());
                 if (pathname === '/printing' && this.props.modelGroup.hasModel()) {
                     const defaultPath = UniApi.File.resolveDownloadsPath('_binary.stl');
                     const promise = UniApi.Dialog.showSaveDialog({
@@ -515,7 +514,6 @@ class AppLayout extends PureComponent {
                     if (promise) {
                         // called from Electron
                         promise.then((result) => {
-                            console.log('result', result);
                             this.actions.exportModel(result?.filePath || defaultPath);
                         });
                     } else {
