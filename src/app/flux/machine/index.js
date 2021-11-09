@@ -20,7 +20,8 @@ import {
     MACHINE_TOOL_HEADS,
     SINGLE_EXTRUDER_TOOLHEAD_FOR_ORIGINAL,
     LEVEL_ONE_POWER_LASER_FOR_ORIGINAL,
-    STANDARD_CNC_TOOLHEAD_FOR_ORIGINAL
+    STANDARD_CNC_TOOLHEAD_FOR_ORIGINAL,
+    LEVEL_TWO_POWER_LASER_FOR_SM2
 } from '../../constants';
 
 import { valueOf } from '../../lib/contants-utils';
@@ -275,8 +276,13 @@ export const actions = {
             'Marlin:state': (options) => {
                 // TODO: serialPort
                 const { state } = options;
-                const { pos, headType, originOffset, headStatus, headPower, temperature, zFocus, isHomed, zAxisModule, laser10WErrorState } = state;
+                const { pos, originOffset, headStatus, headPower, temperature, zFocus, isHomed, zAxisModule, laser10WErrorState } = state;
+                let { headType, toolHead } = state;
 
+                if (headType === '10W LASER') {
+                    headType = HEAD_LASER;
+                    toolHead = LEVEL_TWO_POWER_LASER_FOR_SM2;
+                }
                 const machineState = getState().machine;
 
                 if (pos.isFourAxis) {
@@ -327,6 +333,8 @@ export const actions = {
                 }
 
                 dispatch(baseActions.updateState({
+                    headType: headType,
+                    toolHead: toolHead,
                     laser10WErrorState,
                     headStatus: headStatus,
                     laserPower: headPower,
