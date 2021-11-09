@@ -20,6 +20,11 @@ function useRenderMainToolBar({ headType, setShowHomePage, setShowJobType, setSh
     const canRedo = useSelector(state => state[headType]?.history?.canRedo, shallowEqual);
     const canUndo = useSelector(state => state[headType]?.history?.canUndo, shallowEqual);
     const isRotate = useSelector(state => state[headType]?.materials?.isRotate, shallowEqual);
+    const machineSeries = useSelector(state => state?.machine?.series);
+    const machineToolHead = useSelector(state => state?.machine?.toolHead);
+    const workspaceSeries = useSelector(state => state?.workspace?.series);
+    const workspaceHeadType = useSelector(state => state?.workspace?.headType);
+    const workspaceToolHead = useSelector(state => state?.workspace?.toolHead);
 
     // Laser
     const isConnected = useSelector(state => state?.machine?.isConnected, shallowEqual);
@@ -267,6 +272,14 @@ function useRenderMainToolBar({ headType, setShowHomePage, setShowJobType, setSh
 
     const setBackgroundModal = showCameraCapture && renderModal({
         renderBody() {
+            if (workspaceSeries !== machineSeries || workspaceHeadType !== HEAD_LASER
+                || machineToolHead.laserToolhead !== workspaceToolHead) {
+                console.log('machineToolHead', machineToolHead.laserToolhead, workspaceToolHead, workspaceSeries, machineSeries, workspaceHeadType);
+                // todo
+                return (
+                    <modal> error </modal>
+                );
+            }
             return (
                 <div>
                     {isOriginalSeries && (

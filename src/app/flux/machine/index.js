@@ -85,7 +85,6 @@ const INITIAL_STATE = {
         laserToolhead: MACHINE_TOOL_HEADS[LEVEL_ONE_POWER_LASER_FOR_ORIGINAL].value,
         cncToolhead: MACHINE_TOOL_HEADS[STANDARD_CNC_TOOLHEAD_FOR_ORIGINAL].value
     },
-    headType: null,
     canReselectMachine: false,
     // currentMachine: INITIAL_MACHINE_SERIES_WITH_HEADTOOL,
     size: MACHINE_SERIES.ORIGINAL.setting.size,
@@ -187,7 +186,6 @@ const INITIAL_STATE = {
     multipleEngine: false,
 
     // connect info
-    currentHeadType: '',
     moduleStatusList: {}
 };
 
@@ -283,6 +281,10 @@ export const actions = {
                     headType = HEAD_LASER;
                     toolHead = LEVEL_TWO_POWER_LASER_FOR_SM2;
                 }
+                dispatch(workspaceActions.updateMachineState({
+                    headType,
+                    toolHead
+                }));
                 const machineState = getState().machine;
 
                 if (pos.isFourAxis) {
@@ -331,10 +333,9 @@ export const actions = {
                         }
                     }));
                 }
-
                 dispatch(baseActions.updateState({
-                    headType: headType,
-                    toolHead: toolHead,
+                    // headType: headType,
+                    // toolHead: toolHead,
                     laser10WErrorState,
                     headStatus: headStatus,
                     laserPower: headPower,
@@ -479,12 +480,9 @@ export const actions = {
         machineStore.set('machine.series', series);
 
         const oldSeries = getState().machine.series;
-        // const toolHead = getState().machine.toolHead;
-        // const headType = getCurrentHeadType(window.location.href) || HEAD_PRINTING;
         if (oldSeries !== series) {
-            dispatch(baseActions.updateState({ series }));
-            // const currentMachine = getMachineSeriesWithToolhead(series, toolHead, headType);
-            // dispatch(baseActions.updateState({ currentMachine }));
+            dispatch(workspaceActions.updateMachineState({ series }));
+            // dispatch(baseActions.updateState({ series }));
             const seriesInfo = valueOf(MACHINE_SERIES, 'value', series);
             if (seriesInfo === MACHINE_SERIES.CUSTOM) {
                 seriesInfo.setting.size = machineStore.get('machine.size') || seriesInfo.setting.size;
@@ -608,10 +606,14 @@ export const actions = {
 
                 // get series & headType
                 if (series && headType) {
-                    dispatch(actions.updateMachineState({
-                        series: series,
-                        headType: headType,
-                        canReselectMachine: false
+                    // dispatch(actions.updateMachineState({
+                    //     series: series,
+                    //     headType: headType,
+                    //     canReselectMachine: false
+                    // }));
+                    dispatch(workspaceActions.updateMachineState({
+                        series,
+                        headType
                     }));
                     dispatch(actions.executeGcodeG54(series, headType));
                     if (_.includes([WORKFLOW_STATUS_PAUSED, WORKFLOW_STATUS_RUNNING], status)) {
@@ -636,10 +638,11 @@ export const actions = {
                         series: series,
                         headType: headType,
 
-                        onConfirm: (seriesT, headTypeT) => {
-                            dispatch(actions.updateMachineState({
+                        onConfirm: (seriesT, headTypeT, toolHeadT) => {
+                            dispatch(workspaceActions.updateMachineState({
                                 series: seriesT,
                                 headType: headTypeT,
+                                toolHead: toolHeadT,
                                 canReselectMachine: true
                             }));
                             dispatch(actions.executeGcodeG54(seriesT, headTypeT));
@@ -660,6 +663,7 @@ export const actions = {
                     doorSwitchCount,
                     isEnclosureDoorOpen,
                     headType,
+                    toolHead,
                     heatedBedTargetTemperature,
                     airPurifier,
                     airPurifierSwitch,
@@ -667,7 +671,6 @@ export const actions = {
                     airPurifierFilterHealth,
                     isEmergencyStopped,
                     laser10WErrorState,
-                    currentHeadType,
                     moduleStatusList,
                     laserCamera
                 } = result.data;
@@ -680,6 +683,10 @@ export const actions = {
                     });
                     return;
                 }
+                dispatch(workspaceActions.updateState({
+                    toolHead,
+                    headType
+                }));
                 dispatch(baseActions.updateState({
                     workflowStatus: status,
                     laserFocalLength: laserFocalLength,
@@ -697,7 +704,8 @@ export const actions = {
                     airPurifierSwitch: airPurifierSwitch,
                     airPurifierFanSpeed: airPurifierFanSpeed,
                     airPurifierFilterHealth: airPurifierFilterHealth,
-                    currentHeadType,
+                    // headType: headType,
+                    // toolHead: toolHead,
                     moduleStatusList,
                     laserCamera
                 }));
@@ -809,6 +817,10 @@ export const actions = {
                 connectionStatus: CONNECTION_STATUS_IDLE
             }));
         }
+        dispatch(workspaceActions.updateMachineState({
+            headType: '',
+            toolHead: ''
+        }));
         dispatch(baseActions.updateState({
             workPosition: {
                 x: '0.000',

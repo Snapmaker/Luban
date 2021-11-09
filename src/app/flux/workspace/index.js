@@ -7,7 +7,7 @@ import { generateRandomPathName } from '../../../shared/lib/random-utils';
 import GcodeToArraybufferGeometry from '../../workers/GcodeToArraybufferGeometry.worker';
 
 import gcodeBufferGeometryToObj3d from '../../workers/GcodeToBufferGeometry/gcodeBufferGeometryToObj3d';
-import { CONNECTION_STATUS_CONNECTED, EPSILON, PROTOCOL_TEXT } from '../../constants';
+import { CONNECTION_STATUS_CONNECTED, EPSILON, MACHINE_SERIES, PROTOCOL_TEXT } from '../../constants';
 import { controller } from '../../lib/controller';
 
 // Actions
@@ -21,6 +21,10 @@ export const WORKSPACE_STAGE = {
 };
 
 const INITIAL_STATE = {
+    headType: '',
+    toolHead: '',
+    series: MACHINE_SERIES.ORIGINAL.value,
+    size: MACHINE_SERIES.ORIGINAL.setting.size,
     uploadState: 'idle', // uploading, uploaded
     renderState: 'idle',
     previewRenderState: 'idle',
@@ -385,6 +389,11 @@ export const actions = {
     unloadGcode: () => (dispatch) => {
         controller.command('gcode:unload');
         dispatch(actions.updateState({ uploadState: 'idle' }));
+    },
+
+    updateMachineState: (options) => (dispatch) => {
+        // { headType, toolHead, series, size }
+        dispatch(actions.updateState(options));
     }
 };
 

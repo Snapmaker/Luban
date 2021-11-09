@@ -90,7 +90,8 @@ export class Server extends events.EventEmitter {
             airPurifierSwitch: false,
             airPurifierFanSpeed: 1,
             airPurifierFilterHealth: 0,
-            currentHeadType: '',
+            headType: '',
+            toolHead: '',
             moduleStatusList: {}
         };
     }
@@ -141,6 +142,7 @@ export class Server extends events.EventEmitter {
                         data.headType = HEAD_PRINTING;
                     }
                     if (data.headType === HEAD_LASER) {
+                        // TODO: original?
                         data.toolHead = LEVEL_ONE_POWER_LASER_FOR_SM2;
                     } else if (data.headType === '10w-laser') {
                         data.headType = HEAD_LASER;
@@ -148,6 +150,7 @@ export class Server extends events.EventEmitter {
                     }
                     this.state.series = data.series;
                     this.state.headType = data.headType;
+                    this.state.toolHead = data.toolHead;
                 }
 
                 this.token = data.token;
@@ -258,7 +261,7 @@ export class Server extends events.EventEmitter {
                 isNotNull(data.airPurifierSwitch) && (this.state.airPurifierSwitch = data.airPurifierSwitch);
                 isNotNull(data.airPurifierFanSpeed) && (this.state.airPurifierFanSpeed = data.airPurifierFanSpeed);
                 isNotNull(data.airPurifierFilterHealth) && (this.state.airPurifierFilterHealth = data.airPurifierFilterHealth);
-                isNotNull(data.toolHead) && (this.state.currentHeadType = data.toolHead);
+                isNotNull(data.toolHead) && (this.state.toolHead = data.toolHead);
                 isNotNull(data.moduleList) && (this.state.moduleStatusList = data.moduleList);
                 this._updateGcodePrintingInfo(data);
 
@@ -537,7 +540,7 @@ export class Server extends events.EventEmitter {
             airPurifierSwitch: this.state.airPurifierSwitch,
             airPurifierFanSpeed: this.state.airPurifierFanSpeed,
             airPurifierFilterHealth: this.state.airPurifierFilterHealth,
-            currentHeadType: this.state.currentHeadType,
+            toolHead: this.state.toolHead,
             moduleStatusList: this.state.moduleStatusList
         };
     };
