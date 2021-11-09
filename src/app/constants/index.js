@@ -267,6 +267,7 @@ export const DEFAULT_10W_LASER_CONFIG_IDS = [
     'basswood.cutting_3mm',
     'basswood.cutting_5mm',
     'basswood.cutting_8mm',
+    'basswood.vector_engraving',
     'black_anodized_aluminum.line_filled_engraving',
     'black_anodized_aluminum.vector_engraving',
     'cardstock.cutting_200g',

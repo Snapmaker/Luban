@@ -40,6 +40,7 @@ const DEFAULT_PREDEFINED = {
         'basswood.cutting_3mm.def.json',
         'basswood.cutting_5mm.def.json',
         'basswood.cutting_8mm.def.json',
+        'basswood.vector_engraving.def.json',
         'black_anodized_aluminum.line_filled_engraving.def.json',
         'black_anodized_aluminum.vector_engraving.def.json',
         'cardstock.cutting_200g.def.json',
