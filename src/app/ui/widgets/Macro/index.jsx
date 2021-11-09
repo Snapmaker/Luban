@@ -41,7 +41,7 @@ function MacroWidget({ widgetId, widgetActions }) {
                 // Ignore error
             }
         }, []),
-        deleteMacro: async (id) => {
+        deleteMacro: useCallback(async (id) => {
             try {
                 let res;
                 res = await api.macros.delete(id);
@@ -50,8 +50,8 @@ function MacroWidget({ widgetId, widgetActions }) {
             } catch (err) {
                 // Ignore error
             }
-        },
-        updateMacro: async (id, { name, content, repeat }) => {
+        }, []),
+        updateMacro: useCallback(async (id, { name, content, repeat }) => {
             try {
                 let res;
                 res = await api.macros.update(id, { name, content, repeat });
@@ -60,7 +60,7 @@ function MacroWidget({ widgetId, widgetActions }) {
             } catch (err) {
                 // Ignore error
             }
-        },
+        }, []),
         openAddMacroModal: () => {
             actions.openModal(MODAL_ADD_MACRO);
         }

@@ -6,10 +6,9 @@ import { useDispatch, useSelector } from 'react-redux';
 import TipTrigger from '../../components/TipTrigger';
 import SvgIcon from '../../components/SvgIcon';
 import {
-    CONNECTION_TYPE_WIFI,
     MODAL_RUN_MACRO,
     MODAL_EDIT_MACRO,
-    WORKFLOW_STATE_IDLE, PROTOCOL_SCREEN, CONNECTION_TYPE_SERIAL
+    WORKFLOW_STATE_IDLE, PROTOCOL_SCREEN
 } from '../../../constants';
 import api from '../../../api';
 // import { Button } from '../../components/Buttons';
@@ -24,7 +23,7 @@ import styles from './index.styl';
 const STATUS_IDLE = 'idle';
 
 function Macro({ widgetId, updateModal, openModal, macros }) {
-    const { workflowState, workflowStatus, isConnected, connectionType } = useSelector(state => state.machine);
+    const { workflowState, workflowStatus, isConnected } = useSelector(state => state.machine);
     const { dataSource } = useSelector(state => state.widget.widgets[widgetId]);
     const [macrosState, setMacrosState] = useState([]);
     const dispatch = useDispatch();
@@ -74,20 +73,10 @@ function Macro({ widgetId, updateModal, openModal, macros }) {
     };
 
     useEffect(() => {
-        if (macros && Array.isArray(macros) && isConnected) {
+        if (macros && Array.isArray(macros)) {
             setMacrosState(macros);
         }
-    }, [macros, isConnected]);
-
-    useEffect(() => {
-        // When connecting to wifi, some gcode is not implemented. Temporarily hide the default macro
-        if (connectionType === CONNECTION_TYPE_WIFI && connectionType === CONNECTION_TYPE_SERIAL) {
-            const _macros = macros.filter((item) => {
-                return item.isDefault !== true;
-            });
-            setMacrosState(_macros);
-        }
-    }, [connectionType, macros]);
+    }, [macros]);
 
     const canClick = actions.canClick();
     return (
