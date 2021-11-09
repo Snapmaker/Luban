@@ -20,6 +20,7 @@ import {
 
 export const getCaseList = (series, toolHead) => {
     const { printingToolhead, laserToolhead } = toolHead;
+    console.log({ toolHead, series });
     let caseList = [];
     let caseListFourAxis = [];
     switch (series) {
