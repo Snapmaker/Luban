@@ -342,6 +342,7 @@ export const actions = {
             'Marlin:settings': (options) => {
                 const { enclosureDoorDetection, enclosureOnline, enclosureFan = 0, enclosureLight = 0,
                     airPurifierHasPower, airPurifier, airPurifierSwitch, airPurifierFanSpeed, airPurifierFilterHealth, emergencyStopOnline } = options.settings;
+                console.log('airPurifier settings', airPurifier);
                 dispatch(baseActions.updateState({
                     enclosureDoorDetection,
                     enclosureOnline,

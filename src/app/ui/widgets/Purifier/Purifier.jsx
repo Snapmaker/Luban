@@ -7,7 +7,8 @@ import styles from './index.styl';
 import {
     SPEED_HIGH,
     SPEED_MEDIUM,
-    SPEED_LOW
+    SPEED_LOW,
+    MACHINE_SERIES
 } from '../../../constants';
 import i18n from '../../../lib/i18n';
 import log from '../../../lib/log';
@@ -15,6 +16,7 @@ import { actions as machineActions } from '../../../flux/machine';
 
 function Purifier({ widgetActions }) {
     const { isConnected, server, connectionType, airPurifier, airPurifierSwitch, airPurifierFanSpeed, airPurifierFilterHealth } = useSelector(state => state.machine);
+    const series = useSelector(state => state.machine.series);
     const [isFilterEnable, setIsFilterEnable] = useState(true);
     const [workSpeed, setWorkSpeed] = useState(SPEED_HIGH);
     const [filterLife, setFilterLife] = useState(2);
@@ -65,12 +67,13 @@ function Purifier({ widgetActions }) {
     }, []);
 
     useEffect(() => {
-        if (airPurifier && isConnected) {
+        console.log('airPurifier && isConnected', airPurifier, isConnected);
+        if (airPurifier && isConnected && series !== MACHINE_SERIES.ORIGINAL.value && series !== MACHINE_SERIES.ORIGINAL_LZ.value) {
             widgetActions.setDisplay(true);
         } else {
             widgetActions.setDisplay(false);
         }
-    }, [isConnected, airPurifier]);
+    }, [isConnected, airPurifier, series]);
 
     useEffect(() => {
         if (airPurifierSwitch !== isFilterEnable) {

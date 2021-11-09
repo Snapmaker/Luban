@@ -55,6 +55,7 @@ const INITIAL_STATE = {
     }
 };
 const ACTION_UPDATE_STATE = 'EDITOR_ACTION_UPDATE_STATE';
+let interval = null;
 
 export const actions = {
     updateState: (headType, state) => {
@@ -74,12 +75,18 @@ export const actions = {
             }
 
             const action = await actions.autoSaveEnvironment(envHeadType);
-            setInterval(() => dispatch(action), 1000);
+            interval && clearInterval(interval);
+            interval = setInterval(() => dispatch(action), 1000);
         };
 
         startService(HEAD_LASER);
         startService(HEAD_CNC);
         startService(HEAD_PRINTING);
+    },
+
+    exitRecoverService: () => () => {
+        interval && clearInterval(interval);
+        interval = null;
     },
 
     autoSaveEnvironment: (headType, force = false) => async (dispatch, getState) => {
