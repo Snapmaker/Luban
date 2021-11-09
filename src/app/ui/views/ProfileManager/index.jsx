@@ -433,8 +433,7 @@ function ProfileManager({ optionConfigGroup, disableCategory = true, managerTitl
                                 <ul className={classNames(styles['manager-name-wrapper'])}>
                                     {(cates.map((cate) => {
                                         const displayCategory = limitStringLength(cate.category ?? '', 28);
-                                        const { category } = cate;
-                                        const isDefault = (category.indexOf('Default') !== -1) || cate.items.some(item => item.isDefault);
+                                        const isDefault = cate.items.some(item => item.isDefault);
                                         const isCategorySelected = cate.category === definitionState?.definitionForManager.category;
                                         return !!cate.items.length && (
                                             <li key={`${cate.category}`}>
