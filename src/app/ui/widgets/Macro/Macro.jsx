@@ -6,7 +6,6 @@ import { useDispatch, useSelector } from 'react-redux';
 import TipTrigger from '../../components/TipTrigger';
 import SvgIcon from '../../components/SvgIcon';
 import {
-    CONNECTION_TYPE_WIFI,
     MODAL_RUN_MACRO,
     MODAL_EDIT_MACRO,
     WORKFLOW_STATE_IDLE, PROTOCOL_SCREEN
@@ -24,7 +23,7 @@ import styles from './index.styl';
 const STATUS_IDLE = 'idle';
 
 function Macro({ widgetId, updateModal, openModal, macros }) {
-    const { workflowState, workflowStatus, isConnected, connectionType } = useSelector(state => state.machine);
+    const { workflowState, workflowStatus, isConnected } = useSelector(state => state.machine);
     const { dataSource } = useSelector(state => state.widget.widgets[widgetId]);
     const [macrosState, setMacrosState] = useState([]);
     const dispatch = useDispatch();
@@ -78,16 +77,6 @@ function Macro({ widgetId, updateModal, openModal, macros }) {
             setMacrosState(macros);
         }
     }, [macros]);
-
-    useEffect(() => {
-        // When connecting to wifi, some gcode is not implemented. Temporarily hide the default macro
-        if (connectionType === CONNECTION_TYPE_WIFI) {
-            const _macros = macros.filter((item) => {
-                return item.isDefault !== true;
-            });
-            setMacrosState(_macros);
-        }
-    }, [connectionType, macros]);
 
     const canClick = actions.canClick();
     return (

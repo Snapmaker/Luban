@@ -1,5 +1,5 @@
 import PropTypes from 'prop-types';
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 // import classNames from 'classnames';
 import { useSelector } from 'react-redux';
 import api from '../../../api';
@@ -24,15 +24,15 @@ function MacroWidget({ widgetId, widgetActions }) {
             setModalName(name);
             setModalParams(params);
         },
-        closeModal: () => {
+        closeModal: useCallback(() => {
             setModalName(MODAL_NONE);
             setModalParams({});
-        },
+        }, []),
         updateModal: (modal) => {
             setModalName(modal.name);
             setModalParams(modal.params);
         },
-        addMacro: async ({ name, content, repeat }) => {
+        addMacro: useCallback(async ({ name, content, repeat }) => {
             try {
                 await api.macros.create({ name, content, repeat });
                 const res = await api.macros.fetch();
@@ -40,8 +40,8 @@ function MacroWidget({ widgetId, widgetActions }) {
             } catch (err) {
                 // Ignore error
             }
-        },
-        deleteMacro: async (id) => {
+        }, []),
+        deleteMacro: useCallback(async (id) => {
             try {
                 let res;
                 res = await api.macros.delete(id);
@@ -50,8 +50,8 @@ function MacroWidget({ widgetId, widgetActions }) {
             } catch (err) {
                 // Ignore error
             }
-        },
-        updateMacro: async (id, { name, content, repeat }) => {
+        }, []),
+        updateMacro: useCallback(async (id, { name, content, repeat }) => {
             try {
                 let res;
                 res = await api.macros.update(id, { name, content, repeat });
@@ -60,7 +60,7 @@ function MacroWidget({ widgetId, widgetActions }) {
             } catch (err) {
                 // Ignore error
             }
-        },
+        }, []),
         openAddMacroModal: () => {
             actions.openModal(MODAL_ADD_MACRO);
         }
