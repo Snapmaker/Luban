@@ -1,7 +1,6 @@
 import React from 'react';
 // import { shallowEqual, useSelector, useDispatch } from 'react-redux';
 import { useSelector, useDispatch, shallowEqual } from 'react-redux';
-import { includes } from 'lodash';
 import PropTypes from 'prop-types';
 import { actions as laserActions } from '../../../flux/laser';
 import { actions as projectActions } from '../../../flux/project';
@@ -17,9 +16,8 @@ import i18n from '../../../lib/i18n';
 const selectedId = DEFAULT_LASER_CONFIG_IDS[0];
 const selectedIdFor10w = DEFAULT_10W_LASER_CONFIG_IDS[0];
 
-function isOfficialDefinition(activeToolList, toolHead) {
-    return includes(toolHead === LEVEL_TWO_POWER_LASER_FOR_SM2 ? DEFAULT_10W_LASER_CONFIG_IDS : DEFAULT_LASER_CONFIG_IDS,
-        activeToolList.definitionId);
+function isOfficialDefinition(activeToolList) {
+    return !!activeToolList.isDefault;
 }
 
 function LaserPresentManager({ closeToolManager, shouldSaveToolpath = false, saveToolPath, setCurrentToolDefinition }) {

@@ -16,7 +16,6 @@ import ConfigValueBox from './ConfigValueBox';
 import useSetState from '../../../lib/hooks/set-state';
 import { limitStringLength } from '../../../lib/normalize-range';
 import styles from './styles.styl';
-import { machineStore } from '../../../store/local-storage';
 
 function creatCateArray(optionList) {
     const cates = [];
@@ -99,7 +98,6 @@ function ProfileManager({ optionConfigGroup, disableCategory = true, managerTitl
         isCategorySelected: false,
         renamingStatus: false
     });
-    const toolHead = machineStore.get('machine.toolHead')[`${headType}Toolhead`];
     const [configExpanded, setConfigExpanded] = useState({});
     const [notificationMessage, setNotificationMessage] = useState('');
     const refs = {
@@ -115,7 +113,7 @@ function ProfileManager({ optionConfigGroup, disableCategory = true, managerTitl
         },
         setRenamingStatus: (status) => {
             const currentDefinition = definitionState?.definitionForManager;
-            if (isOfficialDefinition(currentDefinition, toolHead)) {
+            if (isOfficialDefinition(currentDefinition)) {
                 return;
             } else if (!status) {
                 setDefinitionState({
@@ -193,7 +191,7 @@ function ProfileManager({ optionConfigGroup, disableCategory = true, managerTitl
             });
         },
         onRemoveManagerDefinition: async (definition, isCategorySelected) => {
-            if (isOfficialDefinition(definitionState.definitionForManager, toolHead)) {
+            if (isOfficialDefinition(definitionState.definitionForManager)) {
                 return;
             }
             let newDefinition = {};
@@ -554,7 +552,7 @@ function ProfileManager({ optionConfigGroup, disableCategory = true, managerTitl
                                     <div className="sm-flex justify-space-between padding-vertical-8 padding-horizontal-16">
                                         <SvgIcon
                                             name="Edit"
-                                            disabled={isOfficialDefinition(definitionState.definitionForManager, toolHead)}
+                                            disabled={isOfficialDefinition(definitionState.definitionForManager)}
                                             size={24}
                                             className="padding-vertical-2 padding-horizontal-2"
                                             title={i18n._('key-Printing/ProfileManager-Edit')}
@@ -589,7 +587,7 @@ function ProfileManager({ optionConfigGroup, disableCategory = true, managerTitl
                                             className="padding-vertical-2 padding-horizontal-2"
                                             title={i18n._('key-Printing/ProfileManager-Delete')}
                                             onClick={() => actions.onRemoveManagerDefinition(definitionState.definitionForManager, definitionState.isCategorySelected)}
-                                            disabled={isOfficialDefinition(definitionState.definitionForManager, toolHead)}
+                                            disabled={isOfficialDefinition(definitionState.definitionForManager)}
                                         />
                                     </div>
 

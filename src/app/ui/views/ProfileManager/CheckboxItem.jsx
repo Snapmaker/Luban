@@ -4,7 +4,7 @@ import i18n from '../../../lib/i18n';
 import TipTrigger from '../../components/TipTrigger';
 import Checkbox from '../../components/Checkbox';
 
-function CheckboxItem({ definitionKey, settings, calculateTextIndex = () => 0, width = 'auto', isOfficialDefinition = () => true, onChangeDefinition, defaultValue, toolHead }) {
+function CheckboxItem({ definitionKey, settings, calculateTextIndex = () => 0, width = 'auto', isOfficialDefinition = () => true, onChangeDefinition, defaultValue }) {
     const setting = settings[definitionKey];
     const { label, description } = setting;
     return (
@@ -15,11 +15,11 @@ function CheckboxItem({ definitionKey, settings, calculateTextIndex = () => 0, w
                 <Checkbox
                     className="sm-flex-auto sm-flex-order-negative"
                     style={{ width: width,
-                        cursor: isOfficialDefinition(definitionKey, toolHead) ? 'not-allowed' : 'default',
+                        cursor: isOfficialDefinition(definitionKey) ? 'not-allowed' : 'default',
                         marginLeft: calculateTextIndex(definitionKey)
                     }}
                     checked={defaultValue}
-                    disabled={isOfficialDefinition(definitionKey, toolHead)}
+                    disabled={isOfficialDefinition(definitionKey)}
                     onChange={(event) => onChangeDefinition(definitionKey, event.target.checked)}
                 />
                 <span
@@ -38,8 +38,7 @@ CheckboxItem.propTypes = {
     defaultValue: PropTypes.bool.isRequired,
     isOfficialDefinition: PropTypes.func,
     width: PropTypes.string,
-    onChangeDefinition: PropTypes.func.isRequired,
-    toolHead: PropTypes.string
+    onChangeDefinition: PropTypes.func.isRequired
 };
 
 export default React.memo(CheckboxItem);
