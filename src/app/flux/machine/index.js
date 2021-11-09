@@ -334,8 +334,6 @@ export const actions = {
                     }));
                 }
                 dispatch(baseActions.updateState({
-                    // headType: headType,
-                    // toolHead: toolHead,
                     laser10WErrorState,
                     headStatus: headStatus,
                     laserPower: headPower,
@@ -663,7 +661,6 @@ export const actions = {
                     doorSwitchCount,
                     isEnclosureDoorOpen,
                     headType,
-                    toolHead,
                     heatedBedTargetTemperature,
                     airPurifier,
                     airPurifierSwitch,
@@ -683,10 +680,6 @@ export const actions = {
                     });
                     return;
                 }
-                dispatch(workspaceActions.updateState({
-                    toolHead,
-                    headType
-                }));
                 dispatch(baseActions.updateState({
                     workflowStatus: status,
                     laserFocalLength: laserFocalLength,
@@ -704,8 +697,6 @@ export const actions = {
                     airPurifierSwitch: airPurifierSwitch,
                     airPurifierFanSpeed: airPurifierFanSpeed,
                     airPurifierFilterHealth: airPurifierFilterHealth,
-                    // headType: headType,
-                    // toolHead: toolHead,
                     moduleStatusList,
                     laserCamera
                 }));

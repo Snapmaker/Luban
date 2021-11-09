@@ -274,10 +274,9 @@ function useRenderMainToolBar({ headType, setShowHomePage, setShowJobType, setSh
         renderBody() {
             if (workspaceSeries !== machineSeries || workspaceHeadType !== HEAD_LASER
                 || machineToolHead.laserToolhead !== workspaceToolHead) {
-                console.log('machineToolHead', machineToolHead.laserToolhead, workspaceToolHead, workspaceSeries, machineSeries, workspaceHeadType);
-                // todo
+                // todo, ui
                 return (
-                    <modal> error </modal>
+                    <modal>{i18n._('_key-Camera_capture-cannot use camera of different settings.')}</modal>
                 );
             }
             return (

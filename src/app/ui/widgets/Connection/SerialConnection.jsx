@@ -118,10 +118,11 @@ function SerialConnection() {
                 series: machineSeries,
                 headType: machineHeadType,
 
-                onConfirm: (seriesT, headTypeT) => {
+                onConfirm: (seriesT, headTypeT, toolHeadT) => {
                     dispatch(machineActions.updateMachineState({
                         series: seriesT,
                         headType: headTypeT,
+                        toolHead: toolHeadT,
                         canReselectMachine: true
                     }));
                     dispatch(machineActions.executeGcodeG54(seriesT, headTypeT));
