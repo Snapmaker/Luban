@@ -111,7 +111,6 @@ class SVGParser {
         return this.parseObject(node, element);
     }
 
-
     async parseFile(filePath) {
         const node = await this.readFile(filePath);
         const result = await this.parseObject(node);

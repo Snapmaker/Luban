@@ -39,12 +39,16 @@ function getTransformList(elem) {
     return elem.transform.baseVal;
 }
 
-function genModelConfig(elem, size) {
+function genModelConfig(elem, size, materials = {}) {
     const coord = coordGmSvgToModel(size, elem);
     let deltaLeftX = 0, deltaRightX = 0, deltaTopY = 0, deltaBottomY = 0;
     if (elem.nodeName === 'text') {
+        if (materials?.isRotate) {
+            coord.positionY = materials.length / 2;
+        } else {
+            coord.positionY = 0;
+        }
         coord.positionX = 0;
-        coord.positionY = 0;
     }
     if (elem.nodeName === 'path') {
         coord.positionX = +elem.getAttribute('x') + coord.width / 2 * coord.scaleX - size.x;
@@ -78,7 +82,6 @@ function genModelConfig(elem, size) {
         vy += vheight;
         vheight = -vheight;
     }
-
     // Todo: need to optimize
     const content = `<svg x="0" y="0" width="${vwidth}mm" height="${vheight}mm" `
         + `viewBox="${vx} ${vy} ${vwidth} ${vheight}" `
@@ -666,7 +669,7 @@ class SVGActionsFactory {
         const headType = this.modelGroup.headType;
         const isRotate = this.modelGroup.materials && this.modelGroup.materials.isRotate;
 
-        const data = genModelConfig(element, this.size);
+        const data = genModelConfig(element, this.size, this.modelGroup.materials);
         const { modelID, content, width: dataWidth, height: dataHeight, transformation, config: elemConfig } = data;
         let res, textSize;
         try {
@@ -677,6 +680,9 @@ class SVGActionsFactory {
                     ...elemConfig
                 };
                 res = await api.convertTextToSvg(newConfig);
+                if (res.body.family !== elemConfig['font-family']) {
+                    elemConfig['font-family'] = res.body.family;
+                }
                 textSize = computeTransformationSizeForTextVector(newConfig.text, newConfig['font-size'], newConfig['line-height'], {
                     width: res.body?.width,
                     height: res.body?.height
@@ -695,7 +701,6 @@ class SVGActionsFactory {
             let { config, gcodeConfig } = generateModelDefaultConfigs(headType, sourceType, mode, isRotate);
             config = { ...config, ...elemConfig };
             gcodeConfig = { ...gcodeConfig };
-
 
             const options = {
                 modelID,
@@ -1511,7 +1516,8 @@ class SVGActionsFactory {
                 x: this.size.x + position.x,
                 y: this.size.y + position.y,
                 'font-size': 24,
-                'font-family': 'Arial',
+                'font-family': 'Arial Black',
+                style: 'Regular',
                 alignment: 'left',
                 textContent: content
             }
@@ -1555,11 +1561,16 @@ class SVGActionsFactory {
         if (options.fontSize !== undefined) {
             newConfig['font-size'] = options.fontSize;
         }
+        if (options.style !== undefined) {
+            newConfig.style = options.style;
+        }
 
         api.convertTextToSvg(newConfig)
             .then(async (res) => {
-                const { originalName, uploadName, width, height } = res.body;
-
+                const { originalName, uploadName, width, height, family } = res.body;
+                if (family !== newConfig['font-family']) {
+                    newConfig['font-family'] = res.body.family;
+                }
                 const textSize = computeTransformationSizeForTextVector(newConfig.text, newConfig['font-size'], newConfig['line-height'], {
                     width,
                     height
@@ -1587,8 +1598,6 @@ class SVGActionsFactory {
                     ...baseUpdateData,
                     config: newConfig
                 });
-                const t = SVGActionsFactory.calculateElementsTransformation(this.getSelectedElements());
-                this._setSelectedElementsTransformation(t);
 
                 this.resetSelection();
             });

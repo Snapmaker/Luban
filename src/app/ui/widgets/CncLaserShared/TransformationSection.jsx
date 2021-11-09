@@ -12,7 +12,7 @@ import { NumberInput as Input } from '../../components/Input';
 import { actions as editorActions } from '../../../flux/editor';
 
 import styles from './styles.styl';
-import { HEAD_CNC } from '../../../constants';
+import { HEAD_CNC, SVG_NODE_NAME_TEXT } from '../../../constants';
 
 function convertSVGPointToLogicalPoint(p, size) {
     return {
@@ -41,14 +41,15 @@ const TransformationSection = ({ headType, updateSelectedModelUniformScalingStat
     const sourceType = (selectedModelArray.length === 1) ? selectedModelArray[0].sourceType : null;
     const { x, y, width, height, scaleX, scaleY, angle } = selectedElementsTransformation;
     const isCNC4AxisImage3d = (sourceType === 'image3d' && headType === HEAD_CNC && isRotate);
-
+    const config = useSelector(state => state[headType]?.modelGroup?.getSelectedModel()?.config);
+    const isTextVector = (config.svgNodeName === SVG_NODE_NAME_TEXT);
     // calculate logical transformation
     // TODO: convert positions in flux
     const { x: logicalX, y: logicalY } = convertSVGPointToLogicalPoint({ x, y }, size);
     const logicalWidth = width * Math.abs(scaleX);
     const logicalHeight = height * Math.abs(scaleY);
     const logicalAngle = -angle;
-    const canResize = (sourceType !== 'text' && selectedModelArray.length === 1);
+    const canResize = ((isTextVector ? config?.text?.length > 0 : true) && selectedModelArray.length === 1);
     const canRotate = (selectedModelArray.length === 1);
     const selectedNotHide = (selectedModelArray.length === 1) && selectedModelArray[0].visible || selectedModelArray.length > 1;
 

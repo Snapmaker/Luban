@@ -20,7 +20,7 @@ const TextAreaInput = React.memo(({
         onChange(newValue);
     };
     const debouncedChangeHandler = useCallback(
-        debounce(changeHandler, 300),
+        debounce(changeHandler, 400),
         []
     );
 
@@ -39,6 +39,7 @@ const TextAreaInput = React.memo(({
                 disabled={disabled}
                 allowClear
                 showCount
+                autoSize={{ minRows: 4, maxRows: 6 }}
                 className={classNames(styles.textarea)}
                 value={displayValue}
                 onChange={onInsideChange}

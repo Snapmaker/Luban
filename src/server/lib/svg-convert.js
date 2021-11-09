@@ -9,6 +9,7 @@ import SVGParser from '../../shared/lib/SVGParser';
 import fontManager from '../../shared/lib/FontManager';
 import DataStorage from '../DataStorage';
 import { svgToString } from '../../shared/lib/SVGParser/SvgToString';
+import { unionShapes } from '../../shared/lib/union-shapes';
 
 const log = logger('svg-convert');
 
@@ -88,12 +89,12 @@ const convertRasterToSvg = (options) => {
 };
 
 const convertTextToSvg = async (options) => {
-    const { text, 'font-size': fontSize, 'line-height': lineHeight, 'font-family': fontFamily, name, alignment } = options;
+    const { text, 'font-size': fontSize, 'line-height': lineHeight, 'font-family': fontFamily, style, name, alignment } = options;
     const uploadName = pathWithRandomSuffix(name).replace(/\.svg$/i, 'parsed.svg');
 
-    const fontObj = await fontManager.getFont(fontFamily);
+    const fontObj = await fontManager.getFont(fontFamily, null, style);
     const unitsPerEm = fontObj.unitsPerEm;
-    const descender = fontObj.tables.os2.sTypoDescender;
+    const descender = _.isNil(fontObj?.tables?.os2?.sTypoDescender) ? fontObj?.descender : (fontObj?.tables?.os2?.sTypoDescender || 0);
 
     // Big enough to being rendered clearly on canvas (still has space for improvements)
     const estimatedFontSize = Math.round(fontSize / 72 * 25.4 * 10);
@@ -141,9 +142,16 @@ const convertTextToSvg = async (options) => {
         width: width,
         height: height
     });
+    const svgParser = new SVGParser();
+    // Don't delete, for debugging
+    // const targetPath1 = `${DataStorage.tmpDir}/${uploadName}_new.svg`;
+    // fs.writeFileSync(targetPath1, svgString);
+    const result = await svgParser.parse(svgString);
+    unionShapes(result.shapes);
+
     return new Promise((resolve, reject) => {
         const targetPath = `${DataStorage.tmpDir}/${uploadName}`;
-        fs.writeFile(targetPath, svgString, (err) => {
+        fs.writeFile(targetPath, svgToString(result), (err) => {
             if (err) {
                 log.error(err);
                 reject(err);
@@ -151,8 +159,9 @@ const convertTextToSvg = async (options) => {
                 resolve({
                     originalName: name,
                     uploadName: uploadName,
-                    width: width,
-                    height: height
+                    family: fontObj?.names?.displayName?.en,
+                    width,
+                    height
                 });
             }
         });

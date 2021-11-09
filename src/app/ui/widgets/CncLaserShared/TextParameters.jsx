@@ -14,8 +14,9 @@ const TextParameters = ({ headType, modifyText, disabled }) => {
     const config = useSelector(state => state[headType]?.modelGroup?.getSelectedModel()?.config);
     const fonts = useSelector(state => state?.text?.fonts);
     const fontOptions = fonts.map((font) => ({
-        label: font.displayName,
-        value: font.fontFamily
+        label: `${font.displayName}-${font.style}`,
+        value: font.fontFamily,
+        style: font.style
     }));
     const { text, 'font-size': fontSize, 'font-family': fontFamily, alignment } = config;
     const [expanded, setExpanded] = useState(true);
@@ -41,7 +42,7 @@ const TextParameters = ({ headType, modifyText, disabled }) => {
             }
 
             const newFont = option.value;
-            modifyText(null, { fontFamily: newFont });
+            modifyText(null, { fontFamily: newFont, style: option.style });
         },
         onChangeSize: (newSize) => {
             modifyText(null, { fontSize: `${newSize}` });

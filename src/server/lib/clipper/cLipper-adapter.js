@@ -164,10 +164,25 @@ const recursivePolyUnion = (pathss) => {
     return toResult(solution, type);
 };
 
+const simplifyPolygons = (subPaths) => {
+    if (!subPaths || !subPaths[0]) {
+        return [];
+    }
+
+    const type = checkPathsType(subPaths);
+
+    let cSubPaths = preClipperPaths(subPaths, type);
+    cSubPaths = ClipperLib.Clipper.SimplifyPolygons(cSubPaths, ClipperLib.PolyFillType.pftNonZero);
+
+    return toResult(cSubPaths, type);
+};
+
+
 export {
     polyOffset,
     polyUnion,
     polyDiff,
     polyIntersection,
-    recursivePolyUnion
+    recursivePolyUnion,
+    simplifyPolygons
 };
