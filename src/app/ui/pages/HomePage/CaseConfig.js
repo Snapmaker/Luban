@@ -93,25 +93,57 @@ export const CaseConfigA150LaserPowerTwo = [
     {
         tag: 'laser',
         tag_i18n: 'Laser',
-        title: 'key-HomePage/CaseLibrary-Gift Box',
+        title: 'key-HomePage/CaseLibrary-wood rule',
         mode: 'greyscale', // mode: 'vector','greyscale','bw','text','trace'
-        imgSrc: '../../resources/images/user-case/A150/library_gift_box_97x97.png',
+        imgSrc: '../../resources/images/user-case/Laser-10w/wooden_ruler.png',
         pathConfig: {
             isDatastoragePath: true,
-            path: './UserCase/laser/a150_10w/Laser_a150_10W.snaplzr',
-            name: 'Laser_a150_10W.snaplzr'
+            path: './UserCase/laser/a150_10w/wooden_ruler.snaplzr',
+            name: 'wooden_ruler.snaplzr'
         }
-    },
-    {
+    }, {
         tag: 'laser',
         tag_i18n: 'Laser',
-        title: 'key-HomePage/CaseLibrary-Gift Box',
+        title: 'key-HomePage/CaseLibrary-aluminum fox',
         mode: 'greyscale', // mode: 'vector','greyscale','bw','text','trace'
-        imgSrc: '../../resources/images/user-case/A150/library_gift_box_97x97.png',
+        imgSrc: '../../resources/images/user-case/Laser-10w/aluminum_fox.png',
         pathConfig: {
             isDatastoragePath: true,
-            path: './UserCase/laser/a150_10w/Laser_a150_10W_2.snaplzr',
-            name: 'Laser_a150_10W_2.snaplzr'
+            path: './UserCase/laser/a150_10w/aluminum_fox.snaplzr',
+            name: 'aluminum_fox.snaplzr'
+        }
+    }, {
+        tag: 'laser',
+        tag_i18n: 'Laser',
+        title: 'key-HomePage/CaseLibrary-wood Turtle Jigsaw',
+        mode: 'greyscale', // mode: 'vector','greyscale','bw','text','trace'
+        imgSrc: '../../resources/images/user-case/Laser-10w/wooden_turtle_jigsaw.png',
+        pathConfig: {
+            isDatastoragePath: true,
+            path: './UserCase/laser/a150_10w/wooden_turtle_jigsaw.snaplzr',
+            name: 'wooden_turtle_jigsaw.snaplzr'
+        }
+    }, {
+        tag: 'laser',
+        tag_i18n: 'Laser',
+        title: 'key-HomePage/CaseLibrary-wood rhino jigsaw',
+        mode: 'greyscale', // mode: 'vector','greyscale','bw','text','trace'
+        imgSrc: '../../resources/images/user-case/Laser-10w/wooden_rhino_jigsaw.png',
+        pathConfig: {
+            isDatastoragePath: true,
+            path: './UserCase/laser/a150_10w/wooden_rhino_jigsaw.snaplzr',
+            name: 'wooden_rhino_jigsaw.snaplzr'
+        }
+    }, {
+        tag: 'laser',
+        tag_i18n: 'Laser',
+        title: 'key-HomePage/CaseLibrary-acrylic rhino jigsaw',
+        mode: 'greyscale', // mode: 'vector','greyscale','bw','text','trace'
+        imgSrc: '../../resources/images/user-case/Laser-10w/acrylic_rhino_jigsaw.png',
+        pathConfig: {
+            isDatastoragePath: true,
+            path: './UserCase/laser/a150_10w/acrylic_rhino_jigsaw.snaplzr',
+            name: 'acrylic_rhino_jigsaw.snaplzr'
         }
     }
 ];
@@ -165,25 +197,57 @@ export const CaseConfigA250LaserPowerTwo = [
     {
         tag: 'laser',
         tag_i18n: 'Laser',
-        title: 'key-HomePage/CaseLibrary-Gift Box',
+        title: 'key-HomePage/CaseLibrary-wood rule',
         mode: 'greyscale', // mode: 'vector','greyscale','bw','text','trace'
-        imgSrc: '../../resources/images/user-case/A250/library_gift_box_97x97.png',
+        imgSrc: '../../resources/images/user-case/Laser-10w/wooden_ruler.png',
         pathConfig: {
             isDatastoragePath: true,
-            path: './UserCase/laser/a250_10w/laser_a250a350_10W_1.snaplzr',
-            name: 'laser_a250a350_10W_1.snaplzr'
+            path: './UserCase/laser/a250_10w/wooden_ruler.snaplzr',
+            name: 'wooden_ruler.snaplzr'
         }
-    },
-    {
+    }, {
         tag: 'laser',
         tag_i18n: 'Laser',
-        title: 'key-HomePage/CaseLibrary-Gift Box',
+        title: 'key-HomePage/CaseLibrary-aluminum fox',
         mode: 'greyscale', // mode: 'vector','greyscale','bw','text','trace'
-        imgSrc: '../../resources/images/user-case/A250/library_gift_box_97x97.png',
+        imgSrc: '../../resources/images/user-case/Laser-10w/aluminum_fox.png',
         pathConfig: {
             isDatastoragePath: true,
-            path: './UserCase/laser/a250_10w/Laser_a250a350_10W_2.snaplzr',
-            name: 'Laser_a250a350_10W_2.snaplzr'
+            path: './UserCase/laser/a250_10w/aluminum_fox.snaplzr',
+            name: 'aluminum_fox.snaplzr'
+        }
+    }, {
+        tag: 'laser',
+        tag_i18n: 'Laser',
+        title: 'key-HomePage/CaseLibrary-wood Turtle Jigsaw',
+        mode: 'greyscale', // mode: 'vector','greyscale','bw','text','trace'
+        imgSrc: '../../resources/images/user-case/Laser-10w/wooden_turtle_jigsaw.png',
+        pathConfig: {
+            isDatastoragePath: true,
+            path: './UserCase/laser/a250_10w/wooden_turtle_jigsaw.snaplzr',
+            name: 'wooden_turtle_jigsaw.snaplzr'
+        }
+    }, {
+        tag: 'laser',
+        tag_i18n: 'Laser',
+        title: 'key-HomePage/CaseLibrary-wood rhino jigsaw',
+        mode: 'greyscale', // mode: 'vector','greyscale','bw','text','trace'
+        imgSrc: '../../resources/images/user-case/Laser-10w/wooden_rhino_jigsaw.png',
+        pathConfig: {
+            isDatastoragePath: true,
+            path: './UserCase/laser/a250_10w/wooden_rhino_jigsaw.snaplzr',
+            name: 'wooden_rhino_jigsaw.snaplzr'
+        }
+    }, {
+        tag: 'laser',
+        tag_i18n: 'Laser',
+        title: 'key-HomePage/CaseLibrary-acrylic rhino jigsaw',
+        mode: 'greyscale', // mode: 'vector','greyscale','bw','text','trace'
+        imgSrc: '../../resources/images/user-case/Laser-10w/acrylic_rhino_jigsaw.png',
+        pathConfig: {
+            isDatastoragePath: true,
+            path: './UserCase/laser/a250_10w/acrylic_rhino_jigsaw.snaplzr',
+            name: 'acrylic_rhino_jigsaw.snaplzr'
         }
     }
 ];
@@ -237,25 +301,57 @@ export const CaseConfigA350LaserPowerTwo = [
     {
         tag: 'laser',
         tag_i18n: 'Laser',
-        title: 'key-HomePage/CaseLibrary-Gift Box',
+        title: 'key-HomePage/CaseLibrary-wood rule',
         mode: 'greyscale', // mode: 'vector','greyscale','bw','text','trace'
-        imgSrc: '../../resources/images/user-case/A250/library_gift_box_97x97.png',
+        imgSrc: '../../resources/images/user-case/Laser-10w/wooden_ruler.png',
         pathConfig: {
             isDatastoragePath: true,
-            path: './UserCase/laser/a250_10w/laser_a250a350_10W_1.snaplzr',
-            name: 'laser_a250a350_10W_1.snaplzr'
+            path: './UserCase/laser/a350_10w/wooden_ruler.snaplzr',
+            name: 'wooden_ruler.snaplzr'
         }
-    },
-    {
+    }, {
         tag: 'laser',
         tag_i18n: 'Laser',
-        title: 'key-HomePage/CaseLibrary-Gift Box',
+        title: 'key-HomePage/CaseLibrary-aluminum fox',
         mode: 'greyscale', // mode: 'vector','greyscale','bw','text','trace'
-        imgSrc: '../../resources/images/user-case/A250/library_gift_box_97x97.png',
+        imgSrc: '../../resources/images/user-case/Laser-10w/aluminum_fox.png',
         pathConfig: {
             isDatastoragePath: true,
-            path: './UserCase/laser/a250_10w/laser_a250a350_10W_2.snaplzr',
-            name: 'Laser_a250a350_10W_2.snaplzr'
+            path: './UserCase/laser/a350_10w/aluminum_fox.snaplzr',
+            name: 'aluminum_fox.snaplzr'
+        }
+    }, {
+        tag: 'laser',
+        tag_i18n: 'Laser',
+        title: 'key-HomePage/CaseLibrary-wood Turtle Jigsaw',
+        mode: 'greyscale', // mode: 'vector','greyscale','bw','text','trace'
+        imgSrc: '../../resources/images/user-case/Laser-10w/wooden_turtle_jigsaw.png',
+        pathConfig: {
+            isDatastoragePath: true,
+            path: './UserCase/laser/a350_10w/wooden_turtle_jigsaw.snaplzr',
+            name: 'wooden_turtle_jigsaw.snaplzr'
+        }
+    }, {
+        tag: 'laser',
+        tag_i18n: 'Laser',
+        title: 'key-HomePage/CaseLibrary-wood rhino jigsaw',
+        mode: 'greyscale', // mode: 'vector','greyscale','bw','text','trace'
+        imgSrc: '../../resources/images/user-case/Laser-10w/wooden_rhino_jigsaw.png',
+        pathConfig: {
+            isDatastoragePath: true,
+            path: './UserCase/laser/a350_10w/wooden_rhino_jigsaw.snaplzr',
+            name: 'wooden_rhino_jigsaw.snaplzr'
+        }
+    }, {
+        tag: 'laser',
+        tag_i18n: 'Laser',
+        title: 'key-HomePage/CaseLibrary-acrylic rhino jigsaw',
+        mode: 'greyscale', // mode: 'vector','greyscale','bw','text','trace'
+        imgSrc: '../../resources/images/user-case/Laser-10w/acrylic_rhino_jigsaw.png',
+        pathConfig: {
+            isDatastoragePath: true,
+            path: './UserCase/laser/a350_10w/acrylic_rhino_jigsaw.snaplzr',
+            name: 'acrylic_rhino_jigsaw.snaplzr'
         }
     }
 ];

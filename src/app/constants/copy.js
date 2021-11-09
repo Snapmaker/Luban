@@ -89,6 +89,11 @@ i18n._('key-HomePage/CaseLibrary-Phone Holder');
 i18n._('key-HomePage/CaseLibrary-Knight Chess Piece');
 i18n._('key-HomePage/CaseLibrary-Lion Chess Piece');
 i18n._('key-HomePage/CaseLibrary-Lion Box');
+i18n._('key-HomePage/CaseLibrary-wood rule');
+i18n._('key-HomePage/CaseLibrary-aluminum fox');
+i18n._('key-HomePage/CaseLibrary-wood Turtle Jigsaw');
+i18n._('key-HomePage/CaseLibrary-wood rhino jigsaw');
+i18n._('key-HomePage/CaseLibrary-acrylic rhino jigsaw');
 
 // 3dp material default name
 i18n._('key-unused-PLA');

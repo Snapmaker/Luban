@@ -1,26 +1,21 @@
 import React from 'react';
 // import { shallowEqual, useSelector, useDispatch } from 'react-redux';
 import { useSelector, useDispatch, shallowEqual } from 'react-redux';
-import { includes } from 'lodash';
 import PropTypes from 'prop-types';
 import { actions as laserActions } from '../../../flux/laser';
 import { actions as projectActions } from '../../../flux/project';
 import { actions as editorActions } from '../../../flux/editor';
 
 import { getMachineSeriesWithToolhead, LASER_PRESENT_CONFIG_GROUP,
-    HEAD_LASER, DEFAULT_LASER_CONFIG_IDS } from '../../../constants';
+    HEAD_LASER
+} from '../../../constants';
 import ProfileManager from '../ProfileManager';
 import i18n from '../../../lib/i18n';
 
-const selectedId = DEFAULT_LASER_CONFIG_IDS[0];
+let selectedId = '';
 
 function isOfficialDefinition(activeToolList) {
-    return includes(DEFAULT_LASER_CONFIG_IDS,
-        activeToolList.definitionId);
-}
-function isDefinitionEditable(activeToolList) {
-    return !(includes(DEFAULT_LASER_CONFIG_IDS,
-        activeToolList.definitionId));
+    return !!activeToolList.isDefault;
 }
 
 function LaserPresentManager({ closeToolManager, shouldSaveToolpath = false, saveToolPath, setCurrentToolDefinition }) {
@@ -30,6 +25,9 @@ function LaserPresentManager({ closeToolManager, shouldSaveToolpath = false, sav
     const toolHead = useSelector(state => state?.machine?.toolHead);
     const dispatch = useDispatch();
 
+    if (toolDefinitions && toolDefinitions[0]) {
+        selectedId = toolDefinitions[0].definitionId;
+    }
     const actions = {
         closeManager: () => {
             closeToolManager && closeToolManager();
@@ -112,7 +110,6 @@ function LaserPresentManager({ closeToolManager, shouldSaveToolpath = false, sav
         <ProfileManager
             outsideActions={actions}
             activeDefinition={activeToolListDefinition}
-            isDefinitionEditable={isDefinitionEditable}
             isOfficialDefinition={isOfficialDefinition}
             optionConfigGroup={LASER_PRESENT_CONFIG_GROUP}
             allDefinitions={toolDefinitions}

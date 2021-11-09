@@ -45,7 +45,10 @@ class DefinitionManager {
         this.activeDefinition = res;
         res = await api.profileDefinitions.getDefaultDefinitions(this.headType, this.configPathname);
         // res = await api.profileDefinitions.getConfigDefinitions(this.headType, this.configPathname);
-        this.defaultDefinitions = res.body.definitions;
+        this.defaultDefinitions = res.body.definitions.map(item => {
+            item.isDefault = true;
+            return item;
+        });
     }
 
     /**
@@ -68,7 +71,20 @@ class DefinitionManager {
 
     async getConfigDefinitions() {
         const res = await api.profileDefinitions.getConfigDefinitions(this.headType, this.configPathname);
-        return res.body.definitions;
+        if (!this.defaultDefinitions) {
+            await this.init();
+        }
+        const defaultDefinitionMap = {};
+        this.defaultDefinitions.forEach(item => {
+            defaultDefinitionMap[item.definitionId] = true;
+        });
+        const allDefinitions = res.body.definitions;
+        allDefinitions.forEach(item => {
+            if (defaultDefinitionMap[item.definitionId]) {
+                item.isDefault = true;
+            }
+        });
+        return allDefinitions;
     }
 
     async getDefinitionsByPrefixName(prefix) {
