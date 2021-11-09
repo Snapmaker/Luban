@@ -132,11 +132,13 @@ const GcodePreviewItem = React.memo(({ gcodeFile, index, selected, onSelectFile,
             {/* {selected && <div className={styles['gcode-file-selected-icon']} />} */}
 
             <div className={styles['gcode-file-img']}>
-                <img
-                    src={gcodeFile.thumbnail}
-                    draggable="false"
-                    alt=""
-                />
+                {gcodeFile.thumbnail && (
+                    <img
+                        src={gcodeFile.thumbnail}
+                        draggable="false"
+                        alt=""
+                    />
+                )}
             </div>
             <div className={classNames('input-text', styles['gcode-file-text'])}>
                 <div

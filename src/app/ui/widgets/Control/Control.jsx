@@ -396,7 +396,8 @@ function Control({ widgetId, widgetActions: _widgetActions }) {
             jog: {
                 speed: jogSpeed,
                 keypad: keypadJogging,
-                selectedDistance: state.selectedDistance // '1', '0.1', '0.01', '0.001', or ''
+                selectedDistance: state.selectedDistance, // '1', '0.1', '0.01', '0.001', or ''
+                selectedAngle: state.selectedAngle ? String(state.selectedAngle) : String(state.customAngle)
             }
         }));
 
@@ -412,7 +413,6 @@ function Control({ widgetId, widgetActions: _widgetActions }) {
             }));
         }
     }, [state]);
-
 
     function canClick() {
         return (isConnected

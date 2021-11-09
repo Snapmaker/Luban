@@ -264,7 +264,7 @@ export const actions = {
                 lastModified: +file.lastModified,
                 thumbnail: ''
             };
-            dispatch(actions.renderGcodeFile(gcodeFile, false));
+            dispatch(actions.renderGcodeFile(gcodeFile, true));
         });
     },
 

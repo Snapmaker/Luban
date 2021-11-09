@@ -293,7 +293,7 @@ function Cnc({ location }) {
                         break;
                 }
             }
-            dispatch(projectActions.openProject(pathConfig, history, true));
+            dispatch(projectActions.openProject(pathConfig, history, true, false));
         }
     }
     async function handleBeforeChange(nextIndex) {
