@@ -91,7 +91,6 @@ function SerialConnection() {
         log.debug(`Connected to ${portState}.`);
 
         // save serial port on connection succeeded
-        dispatch(machineActions.connect.setMachineSerialPort(portState));
 
         const { series, seriesSize, headType: _headType } = state;
         const machineSeries = valueOf(MACHINE_SERIES, 'alias', `${series}-${seriesSize}`)

@@ -30,7 +30,6 @@ import MainToolBar from '../layouts/MainToolBar';
 import ControlWidget from '../widgets/Control';
 import ConnectionWidget from '../widgets/Connection';
 import ConsoleWidget from '../widgets/Console';
-import GCodeWidget from '../widgets/GCode';
 import MacroWidget from '../widgets/Macro';
 import PurifierWidget from '../widgets/Purifier';
 import MarlinWidget from '../widgets/Marlin';
@@ -52,7 +51,7 @@ const allWidgets = {
     'control': ControlWidget,
     'connection': ConnectionWidget,
     'console': ConsoleWidget,
-    'gcode': GCodeWidget,
+    // 'gcode': GCodeWidget,
     'macro': MacroWidget,
     'macroPanel': MacroWidget,
     'purifier': PurifierWidget,

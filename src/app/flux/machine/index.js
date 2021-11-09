@@ -374,6 +374,7 @@ export const actions = {
                     connectionType: CONNECTION_TYPE_SERIAL,
                     isEmergencyStopped: false
                 }));
+                machineStore.set('port', port);
             },
             'serialport:connected': (data) => {
                 const { err } = data;
