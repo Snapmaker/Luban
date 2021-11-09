@@ -204,9 +204,9 @@ function VisualizerLeftBar({ defaultSupportSize, setTransformMode, isSupporting,
         rotateOnlyForUniformScale: (rotateFn) => {
             if (actions.isNonUniformScaled()) {
                 modal({
-                    cancelTitle: i18n._('_key-Printing/LeftBar-Close'),
-                    title: i18n._('_key-Printing/LeftBar-Rotate Error'),
-                    body: i18n._('_key-Printing/LeftBar-Non-uniform scaled model can not apply auto rotation currently.')
+                    cancelTitle: i18n._('key-Modal/Common-OK'),
+                    title: i18n._('key-Printing/Rotation-error title'),
+                    body: i18n._('key-Printing/Rotation-error tips')
                 });
             } else {
                 rotateFn && rotateFn();

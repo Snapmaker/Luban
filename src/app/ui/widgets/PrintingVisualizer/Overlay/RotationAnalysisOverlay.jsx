@@ -29,13 +29,13 @@ function initColumns() {
         },
         {
             title: i18n._('key-Printing/RotationAnalyze-Areas'),
-            description: i18n._('key-Printing/RotationAnalyze-Areas'),
+            description: i18n._('key-Printing/RotationAnalyze-Areas Hover'),
             dataIndex: 'area',
             order: ''
         },
         {
             title: i18n._('key-Printing/RoationAnalyze-Support Volume'),
-            description: i18n._('key-Printing/RoationAnalyze-Support Volume'),
+            description: i18n._('key-Printing/RoationAnalyze-Support Volume Hover'),
             dataIndex: 'supportVolume',
             order: ''
         }
