@@ -274,8 +274,8 @@ function useRenderMainToolBar({ headType, setShowHomePage, setShowJobType, setSh
 
     const setBackgroundModal = showCameraCapture && renderModal({
         renderBody() {
-            if (workspaceSeries !== machineSeries || workspaceHeadType !== HEAD_LASER
-                || machineToolHead.laserToolhead !== workspaceToolHead || workspaceIsRotate) {
+            if (!isOriginalSeries && (workspaceSeries !== machineSeries || workspaceHeadType !== HEAD_LASER
+                || machineToolHead.laserToolhead !== workspaceToolHead || workspaceIsRotate)) {
                 // todo, ui
                 return (
                     <modal>{i18n._('_key-Camera_capture-cannot use camera of different settings.')}</modal>
