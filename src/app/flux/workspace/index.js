@@ -43,7 +43,6 @@ export const actions = {
         gcodeRenderingWorker.onmessage = (e) => {
             const data = e.data;
             const { status, value, renderMethod, isDone, boundingBox, isPreview = false, gcodeFileIndex = -1 } = data;
-            console.log('gcodeRenderingWorker', boundingBox);
             switch (status) {
                 case 'succeed': {
                     const { modelGroup, gcodeFile, previewModelGroup, gcodeFiles } = getState().workspace;
@@ -151,7 +150,6 @@ export const actions = {
             .then((res) => {
                 const response = res.body;
                 const header = response.gcodeHeader;
-                console.log('header', header);
                 const gcodeFile = {
                     name: file.name,
                     uploadName: response.uploadName,
@@ -290,7 +288,6 @@ export const actions = {
             await dispatch(actions.loadGcode(gcodeFile));
             gcodeRenderingWorker.postMessage({ func: 'WORKSPACE', gcodeFilename: gcodeFile.uploadName });
         } else {
-            console.log('startPrint', gcodeFile, startPrint);
             await dispatch(actions.updateState({
                 boundingBox: gcodeFile?.boundingBox
             }));

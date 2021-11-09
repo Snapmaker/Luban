@@ -75,7 +75,6 @@ function Control({ widgetId, widgetActions: _widgetActions }) {
     const machine = useSelector(state => state.machine);
     const { widgets } = useSelector(state => state.widget);
     const { boundingBox } = useSelector(state => state.workspace);
-    console.log('boundingBox', boundingBox);
     const workPosition = useSelector(state => state.machine.workPosition);
     const originOffset = useSelector(state => state.machine.originOffset) || {};
     const { jog, axes, dataSource } = widgets[widgetId];
@@ -257,7 +256,6 @@ function Control({ widgetId, widgetActions: _widgetActions }) {
             if (headType === HEAD_CNC) {
                 gcode.push('G91', 'G0 Z5 F400', 'G90');
             }
-            console.log('bbox', bbox, workPosition);
             if (workPosition.isFourAxis) {
                 const angleDiff = Math.abs(bbox.max.b - bbox.min.b);
                 const minB = 0;

@@ -67,7 +67,6 @@ function Purifier({ widgetActions }) {
     }, []);
 
     useEffect(() => {
-        console.log('airPurifier && isConnected', airPurifier, isConnected);
         if (airPurifier && isConnected && series !== MACHINE_SERIES.ORIGINAL.value && series !== MACHINE_SERIES.ORIGINAL_LZ.value) {
             widgetActions.setDisplay(true);
         } else {

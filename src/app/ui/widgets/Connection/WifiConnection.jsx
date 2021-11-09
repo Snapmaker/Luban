@@ -114,6 +114,7 @@ function WifiConnection() {
                 if (err) {
                     actions.showWifiError(err, text);
                 }
+                setserverOpenState(null);
                 if (data.toolHead && data.toolHead === LEVEL_TWO_POWER_LASER_FOR_SM2) {
                     // TODO: can set toolhead hear
                     console.log('tool head data', data);
@@ -198,8 +199,6 @@ function WifiConnection() {
                 inputtext: manualIp,
                 onCancel: actions.onCloseManualWiFi,
                 onConfirm: (text) => {
-                    actions.onCloseManualWiFi();
-
                     dispatch(machineActions.connect.setManualIP(text));
                     const newServer = new Server('Manual', text);
 
@@ -209,6 +208,7 @@ function WifiConnection() {
                     // set state server and then open it
                     setServerState(_server);
                     setserverOpenState(_server);
+                    actions.onCloseManualWiFi();
                 }
             });
             setShowManualWiFiModal(true);
@@ -432,9 +432,8 @@ function WifiConnection() {
                     </div>
                     {!!currentModuleStatusList && !!currentModuleStatusList.length && (
                         <div className={classNames('sm-flex', 'flex-wrap')}>
-                            {/* <ModuleStatus moduleName={currentHeadType} status /> */}
                             {currentModuleStatusList.map(item => (
-                                <ModuleStatus moduleName={item.moduleName} status={item.status} />
+                                <ModuleStatus key={item.moduleName} moduleName={item.moduleName} status={item.status} />
                             ))}
                         </div>
                     )}

@@ -322,13 +322,13 @@ class DataStorage {
      }
 
      clearAll() {
-        rmDir(this.sessionDir, true);
-        rmDir(this.userCaseDir, true);
-        rmDir(this.tmpDir, true);
-        rmDir(this.configDir, true);
-        rmDir(this.defaultConfigDir, true);
-        rmDir(this.fontDir, true);
-        rmDir(this.envDir, true);
+         rmDir(this.sessionDir, true);
+         rmDir(this.userCaseDir, true);
+         rmDir(this.tmpDir, true);
+         rmDir(this.configDir, true);
+         rmDir(this.defaultConfigDir, true);
+         rmDir(this.fontDir, true);
+         rmDir(this.envDir, true);
      }
 }
 
