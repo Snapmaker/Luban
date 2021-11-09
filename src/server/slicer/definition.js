@@ -358,7 +358,7 @@ export function loadAllSeriesDefinitions(isDefault = false, headType, series = '
     const configDir = isDefault ? `${DataStorage.defaultConfigDir}/${headType}`
         : `${DataStorage.configDir}/${headType}`;
     const defaultFilenames = fs.readdirSync(`${configDir}/${series}`);
-    console.log('defaultFileName', configDir, series, _headType, headType);
+
     if (isDefault) {
         for (const filename of predefined) {
             if (includes(defaultFilenames, filename)) {
