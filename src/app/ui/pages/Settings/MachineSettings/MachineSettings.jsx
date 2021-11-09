@@ -220,6 +220,7 @@ function MachineSettings() {
             }, state.series));
             const headType = getCurrentHeadType(window.location.href);
             if (headType) {
+                await dispatch(projectActions.exitRecoverService());
                 await dispatch(projectActions.clearSavedEnvironment(headType));
             }
             window.location.href = '/';

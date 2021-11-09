@@ -107,8 +107,6 @@ function LaserPresentManager({ closeToolManager, shouldSaveToolpath = false, sav
             dispatch(laserActions.resetDefinitionById(definitionId));
         }
     };
-    const optionConfigGroup = LASER_PRESENT_CONFIG_GROUP;
-    const allDefinitions = toolDefinitions;
 
     return (
         <ProfileManager
@@ -116,8 +114,8 @@ function LaserPresentManager({ closeToolManager, shouldSaveToolpath = false, sav
             activeDefinition={activeToolListDefinition}
             isDefinitionEditable={isDefinitionEditable}
             isOfficialDefinition={isOfficialDefinition}
-            optionConfigGroup={optionConfigGroup}
-            allDefinitions={allDefinitions}
+            optionConfigGroup={LASER_PRESENT_CONFIG_GROUP}
+            allDefinitions={toolDefinitions}
             disableCategory={false}
             managerTitle="Present Settings"
             selectedId={selectedId}
