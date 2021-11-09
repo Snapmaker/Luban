@@ -100,7 +100,6 @@ function ProfileManager({ optionConfigGroup, disableCategory = true, managerTitl
         renamingStatus: false
     });
     const toolHead = machineStore.get('machine.toolHead')[`${headType}Toolhead`];
-    console.log({ toolHead, headType });
     const [configExpanded, setConfigExpanded] = useState({});
     const [notificationMessage, setNotificationMessage] = useState('');
     const refs = {
@@ -411,7 +410,6 @@ function ProfileManager({ optionConfigGroup, disableCategory = true, managerTitl
 
     return (
         <React.Fragment>
-            {console.log(definitionState)}
             {definitionState?.definitionForManager && (
                 <Modal
                     size="lg"
@@ -436,7 +434,6 @@ function ProfileManager({ optionConfigGroup, disableCategory = true, managerTitl
                                 )}
                                 <ul className={classNames(styles['manager-name-wrapper'])}>
                                     {(cates.map((cate) => {
-                                        console.log({ cate });
                                         const displayCategory = limitStringLength(cate.category ?? '', 28);
                                         const { category } = cate;
                                         const isDefault = (category.indexOf('Default') !== -1) || cate.items.some(item => item.isDefault);
@@ -497,7 +494,6 @@ function ProfileManager({ optionConfigGroup, disableCategory = true, managerTitl
                                                                     return null;
                                                                 });
                                                             }
-                                                            console.log({ isDefault, isSelected, isAllValueDefault, category });
                                                             if (isUndefined(currentOption.label) || currentOption.isHidden) {
                                                                 return null;
                                                             } else {
