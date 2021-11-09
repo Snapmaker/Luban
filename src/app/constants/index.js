@@ -261,29 +261,6 @@ export const DEFAULT_LASER_CONFIG_IDS = [
     'present.default_PathEngrave'
 ];
 
-// default basswood 1.5mm cutting
-export const DEFAULT_10W_LASER_CONFIG_IDS = [
-    'basswood.cutting_1.5mm',
-    'basswood.cutting_3mm',
-    'basswood.cutting_5mm',
-    'basswood.cutting_8mm',
-    'basswood.vector_engraving',
-    'black_anodized_aluminum.line_filled_engraving',
-    'black_anodized_aluminum.vector_engraving',
-    'cardstock.cutting_200g',
-    'cardstock.cutting_300g',
-    'cardstock.cutting_350g',
-    'coated_paper.cutting_200g',
-    'coated_paper.cutting_300g',
-    'coated_paper.cutting_350g',
-    'crazy_horse_leather.cutting_2mm',
-    'mdf.cutting_2mm',
-    'mdf.cutting_3mm',
-    'pinewood.cutting_4mm',
-    'pinewood.cutting_8mm',
-    'vegetable_tanned_leather.cutting_1.5mm'
-];
-
 export const LASER_PRESENT_CONFIG_GROUP = [
     {
         name: 'key-Laser/ToolpathParameters-Method',
