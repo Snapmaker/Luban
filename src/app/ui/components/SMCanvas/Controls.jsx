@@ -376,6 +376,9 @@ class Controls extends EventEmitter {
                 }
                 this.transformControl.onMouseUp();
                 break;
+            case STATE.ROTATE_PLACEMENT:
+                this.prevState = STATE.ROTATE_PLACEMENT;
+                break;
             default:
                 break;
         }

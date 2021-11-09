@@ -1410,6 +1410,7 @@ export const actions = {
         const { modelGroup } = getState().printing;
         dispatch(actions.recordModelBeforeTransform(modelGroup));
 
+        dispatch(actions.clearAllManualSupport());
         const modelState = modelGroup.autoRotateSelectedModel();
         modelGroup.onModelAfterTransform();
 

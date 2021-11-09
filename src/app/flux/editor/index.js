@@ -101,6 +101,13 @@ const sizeModel = (size, materials, sourceWidth, sourceHeight) => {
     };
 };
 
+function isImageElementReferSVG(element) {
+    if (element.tagName.toLowerCase() === 'image') {
+        return /(\.svg|\.svg\?_=\d*)$/.test(element.href.baseVal);
+    }
+    return false;
+}
+
 // a wrapper function for recording scaled models states
 function recordScaleActionsToHistory(scaleActionsFn, elements, SVGActions, headType, machine, dispatch) {
     if (typeof scaleActionsFn === 'function') {
@@ -174,6 +181,12 @@ function recordScaleActionsToHistory(scaleActionsFn, elements, SVGActions, headT
                         }
                         resolve();
                     };
+                    if (isImageElementReferSVG(element)) {
+                        // after SVG file scaled, reload href and skip browser cache
+                        // convert `/data/Tmp/18382283_21075036parsed.svg?_=1636096912083` to `/data/Tmp/18382283_21075036parsed.svg`
+                        const originalHref = element.href.baseVal.replace(/\?_=\d*$/ig, '');
+                        element.setAttribute('href', `${originalHref}?_=${Date.now()}`);
+                    }
                 });
             } else {
                 return new Promise((resolve) => {
@@ -843,17 +856,15 @@ export const actions = {
         options.materials = materials;
         options.toolParams = toolParams;
 
-        if (selectedModel.elem.getAttribute('from') !== 'inner-svg') {
-            if (!progressStatesManager.inProgress()) {
-                progressStatesManager.startProgress(PROCESS_STAGE.CNC_LASER_PROCESS_IMAGE, [1]);
-            } else {
-                progressStatesManager.startNextStep();
-            }
-            dispatch(baseActions.updateState(headType, {
-                stage: STEP_STAGE.CNC_LASER_PROCESSING_IMAGE,
-                progress: progressStatesManager.updateProgress(STEP_STAGE.CNC_LASER_PROCESSING_IMAGE, 0)
-            }));
+        if (!progressStatesManager.inProgress()) {
+            progressStatesManager.startProgress(PROCESS_STAGE.CNC_LASER_PROCESS_IMAGE, [1]);
+        } else {
+            progressStatesManager.startNextStep();
         }
+        dispatch(baseActions.updateState(headType, {
+            stage: STEP_STAGE.CNC_LASER_PROCESSING_IMAGE,
+            progress: progressStatesManager.updateProgress(STEP_STAGE.CNC_LASER_PROCESSING_IMAGE, 0)
+        }));
 
         dispatch(actions.resetProcessState(headType));
 
@@ -1187,13 +1198,11 @@ export const actions = {
         dispatch(baseActions.resetCalculatedState(headType));
         dispatch(baseActions.render(headType));
 
-        if (model.elem.getAttribute('from') !== 'inner-svg') {
-            dispatch(baseActions.updateState(headType, {
-                stage: STEP_STAGE.CNC_LASER_PROCESSING_IMAGE,
-                progress: progressStatesManager.updateProgress(STEP_STAGE.CNC_LASER_PROCESSING_IMAGE, 1)
-            }));
-            progressStatesManager.finishProgress(true);
-        }
+        dispatch(baseActions.updateState(headType, {
+            stage: STEP_STAGE.CNC_LASER_PROCESSING_IMAGE,
+            progress: progressStatesManager.updateProgress(STEP_STAGE.CNC_LASER_PROCESSING_IMAGE, 1)
+        }));
+        progressStatesManager.finishProgress(true);
     },
 
     getEstimatedTime: (headType, type) => (dispatch, getState) => {
@@ -1552,7 +1561,7 @@ export const actions = {
             return;
         }
         const selectedModel = selectedModels[0];
-        if (selectedModel.sourceType !== 'image3d' && selectedModel.elem.tagName.toLowerCase() === 'image') {
+        if (selectedModel.sourceType !== 'image3d' && !isImageElementReferSVG(selectedModel.elem)) {
             dispatch(actions.processSelectedModel(headType));
         }
 
@@ -1577,7 +1586,7 @@ export const actions = {
             return;
         }
         const selectedModel = selectedModels[0];
-        if (selectedModel.sourceType !== 'image3d' && selectedModel.elem.tagName.toLowerCase() === 'image') {
+        if (selectedModel.sourceType !== 'image3d' && !isImageElementReferSVG(selectedModel.elem)) {
             dispatch(actions.processSelectedModel(headType));
         }
 
@@ -1604,7 +1613,7 @@ export const actions = {
             return;
         }
         const selectedModel = selectedModels[0];
-        if (selectedModel.sourceType !== 'image3d' && selectedModel.elem.tagName.toLowerCase() === 'image') {
+        if (selectedModel.sourceType !== 'image3d' && !isImageElementReferSVG(selectedModel.elem)) {
             dispatch(actions.processSelectedModel(headType));
         }
 
@@ -1630,7 +1639,7 @@ export const actions = {
             return;
         }
         const selectedModel = selectedModels[0];
-        if (selectedModel.sourceType !== 'image3d' && selectedModel.elem.tagName.toLowerCase() === 'image') {
+        if (selectedModel.sourceType !== 'image3d' && !isImageElementReferSVG(selectedModel.elem)) {
             dispatch(actions.processSelectedModel(headType));
         }
 
@@ -1656,7 +1665,7 @@ export const actions = {
             return;
         }
         const selectedModel = selectedModels[0];
-        if (selectedModel.sourceType !== 'image3d' && selectedModel.elem.tagName.toLowerCase() === 'image') {
+        if (selectedModel.sourceType !== 'image3d' && !isImageElementReferSVG(selectedModel.elem)) {
             dispatch(actions.processSelectedModel(headType));
         }
 

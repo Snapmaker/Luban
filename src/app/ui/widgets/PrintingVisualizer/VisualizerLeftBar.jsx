@@ -14,6 +14,7 @@ import SvgIcon from '../../components/SvgIcon';
 import { Button } from '../../components/Buttons';
 import Checkbox from '../../components/Checkbox';
 import RotationAnalysisOverlay from './Overlay/RotationAnalysisOverlay';
+import { EPSILON } from '../../../constants';
 
 function VisualizerLeftBar({ defaultSupportSize, setTransformMode, isSupporting, supportActions, updateBoundingBox, autoRotateSelectedModel }) {
     const size = useSelector(state => state?.machine?.size, shallowEqual);
@@ -186,6 +187,34 @@ function VisualizerLeftBar({ defaultSupportSize, setTransformMode, isSupporting,
             };
             dispatch(printingActions.updateSelectedModelTransformation(newTransformation));
             actions.onModelAfterTransform();
+        },
+        rotateWithAnalysis: () => {
+            actions.rotateOnlyForUniformScale(() => {
+                dispatch(printingActions.startAnalyzeRotationProgress());
+                setTimeout(() => {
+                    setShowRotationAnalyzeModal(true);
+                }, 100);
+            });
+        },
+        autoRotate: () => {
+            actions.rotateOnlyForUniformScale(() => {
+                autoRotateSelectedModel();
+            });
+        },
+        rotateOnlyForUniformScale: (rotateFn) => {
+            if (actions.isNonUniformScaled()) {
+                modal({
+                    cancelTitle: i18n._('key-Modal/Common-OK'),
+                    title: i18n._('key-Printing/Rotation-error title'),
+                    body: i18n._('key-Printing/Rotation-error tips')
+                });
+            } else {
+                rotateFn && rotateFn();
+            }
+        },
+        isNonUniformScaled: () => {
+            const { scaleX, scaleY, scaleZ } = selectedModelArray[0].transformation;
+            return Math.abs(scaleX - scaleY) > EPSILON || Math.abs(scaleX - scaleZ) > EPSILON || Math.abs(scaleY - scaleZ) > EPSILON;
         }
     };
     let moveX = 0;
@@ -572,7 +601,7 @@ function VisualizerLeftBar({ defaultSupportSize, setTransformMode, isSupporting,
                                     type="primary"
                                     priority="level-three"
                                     width="100%"
-                                    onClick={autoRotateSelectedModel}
+                                    onClick={actions.autoRotate}
                                 >
                                     <span>{i18n._('key-Printing/LeftBar-Auto Rotate')}</span>
                                 </Button>
@@ -655,7 +684,7 @@ function VisualizerLeftBar({ defaultSupportSize, setTransformMode, isSupporting,
                                     type="primary"
                                     priority="level-three"
                                     width="100%"
-                                    onClick={autoRotateSelectedModel}
+                                    onClick={actions.autoRotate}
                                 >
                                     <span>{i18n._('key-Printing/LeftBar-Auto Rotate')}</span>
                                 </Button>
@@ -676,12 +705,7 @@ function VisualizerLeftBar({ defaultSupportSize, setTransformMode, isSupporting,
                                     priority="level-three"
                                     width="100%"
                                     disabled={!rotationAnalysisEnable}
-                                    onClick={() => {
-                                        dispatch(printingActions.startAnalyzeRotationProgress());
-                                        setTimeout(() => {
-                                            setShowRotationAnalyzeModal(true);
-                                        }, 100);
-                                    }}
+                                    onClick={actions.rotateWithAnalysis}
                                 >
                                     <span>{i18n._('key-Printing/LeftBar-Rotate on Face')}</span>
                                 </Button>
