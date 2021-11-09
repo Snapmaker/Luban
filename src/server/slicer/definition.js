@@ -33,7 +33,15 @@ const DEFAULT_PREDEFINED = {
         'present.default_CUT.def.json',
         'present.default_HDFill.def.json',
         'present.default_SDFill.def.json',
-        'present.default_PathEngrave.def.json'
+        'present.default_PathEngrave.def.json',
+        'basswood.cutting_1.5mm.def.json',
+        'mdf.cutting_1.5mm.def.json',
+        'basswood.dot_filled_engraving.def.json',
+        'mdf.dot_filled_engraving.def.json',
+        'basswood.line_filled_engraving.def.json',
+        'mdf.line_filled_engraving.def.json',
+        'basswood.vector_engraving.def.json',
+        'mdf.vector_engraving.def.json'
     ],
     '10w-laser': [
         'basswood.cutting_1.5mm.def.json',
