@@ -25,6 +25,7 @@ const INITIAL_STATE = {
     toolHead: '',
     series: MACHINE_SERIES.ORIGINAL.value,
     size: MACHINE_SERIES.ORIGINAL.setting.size,
+    isRotate: false,
     uploadState: 'idle', // uploading, uploaded
     renderState: 'idle',
     previewRenderState: 'idle',
@@ -392,7 +393,7 @@ export const actions = {
     },
 
     updateMachineState: (options) => (dispatch) => {
-        // { headType, toolHead, series, size }
+        // { headType, toolHead, series, size, isRotate }
         dispatch(actions.updateState(options));
     }
 };

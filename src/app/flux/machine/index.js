@@ -293,8 +293,8 @@ export const actions = {
                         || machineState.workPosition.b !== pos.b) {
                         // TODO: Set `isRotate` only once.
                         if (headType === HEAD_LASER || headType === HEAD_CNC) {
-                            dispatch(editorActions.updateMaterials(headType.toLowerCase(), {
-                                isRotate: true
+                            dispatch(workspaceActions.updateMachineState({
+                                isRotate: pos.isFourAxis
                             }));
                         }
                         dispatch(baseActions.updateState({
@@ -310,8 +310,8 @@ export const actions = {
                         || machineState.workPosition.z !== pos.z) {
                         // TODO: Set `isRotate` only once.
                         if (headType === HEAD_LASER || headType === HEAD_CNC) {
-                            dispatch(editorActions.updateMaterials(headType.toLowerCase(), {
-                                isRotate: false
+                            dispatch(workspaceActions.updateMachineState({
+                                isRotate: pos.isFourAxis
                             }));
                         }
                         dispatch(baseActions.updateState({
@@ -616,6 +616,7 @@ export const actions = {
                             toolHead = LEVEL_TWO_POWER_LASER_FOR_SM2;
                         }
                     }
+                    // TODO: set isRotate here
                     dispatch(workspaceActions.updateMachineState({
                         series,
                         headType,
@@ -716,7 +717,7 @@ export const actions = {
                         || Number(workPosition.b) !== b) {
                         // TODO: Set `isRotate` only once.
                         if (headType === HEAD_LASER || headType === HEAD_CNC) {
-                            dispatch(editorActions.updateMaterials(headType.toLowerCase(), {
+                            dispatch(workspaceActions.updateMachineState({
                                 isRotate: true
                             }));
                         }
@@ -737,7 +738,7 @@ export const actions = {
                         || Number(workPosition.z) !== z) {
                         // TODO: Set `isRotate` only once.
                         if (headType === HEAD_LASER || headType === HEAD_CNC) {
-                            dispatch(editorActions.updateMaterials(headType.toLowerCase(), {
+                            dispatch(workspaceActions.updateMachineState({
                                 isRotate: false
                             }));
                         }

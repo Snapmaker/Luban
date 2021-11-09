@@ -9,7 +9,7 @@ import { actions as editorActions } from '../../../flux/editor';
 import Dropdown from '../../components/Dropdown';
 import Cnc3DVisualizer from '../../views/Cnc3DVisualizer';
 import MainToolBar from '../../layouts/MainToolBar';
-import { HEAD_CNC, HEAD_LASER, MACHINE_SERIES } from '../../../constants';
+import { HEAD_CNC, HEAD_LASER, MACHINE_SERIES, CONNECTION_TYPE_WIFI } from '../../../constants';
 import { actions as laserActions } from '../../../flux/laser';
 import { renderModal } from '../../utils';
 import LaserSetBackground from '../../widgets/LaserSetBackground';
@@ -25,9 +25,11 @@ function useRenderMainToolBar({ headType, setShowHomePage, setShowJobType, setSh
     const workspaceSeries = useSelector(state => state?.workspace?.series);
     const workspaceHeadType = useSelector(state => state?.workspace?.headType);
     const workspaceToolHead = useSelector(state => state?.workspace?.toolHead);
+    const workspaceIsRotate = useSelector(state => state?.workspace?.isRotate);
 
     // Laser
     const isConnected = useSelector(state => state?.machine?.isConnected, shallowEqual);
+    const connectionType = useSelector(state => state?.machine?.connectionType, shallowEqual);
     const series = useSelector(state => state?.machine?.series, shallowEqual);
     const [showCameraCapture, setShowCameraCapture] = useState(false);
     const isOriginalSeries = (series === MACHINE_SERIES.ORIGINAL?.value || series === MACHINE_SERIES.ORIGINAL_LZ?.value);
@@ -86,12 +88,12 @@ function useRenderMainToolBar({ headType, setShowHomePage, setShowJobType, setSh
             <Menu style={{ marginTop: '8px' }}>
                 <Menu.Item
                     onClick={() => setShowCameraCapture(true)}
-                    disabled={isOriginalSeries ? false : !isConnected}
+                    disabled={isOriginalSeries ? false : !(isConnected && connectionType === CONNECTION_TYPE_WIFI)}
                 >
                     <div className="align-l width-168">
                         <SvgIcon
                             type={['static']}
-                            disabled={isOriginalSeries ? false : !isConnected}
+                            disabled={isOriginalSeries ? false : !(isConnected && connectionType === CONNECTION_TYPE_WIFI)}
                             name="MainToolbarAddBackground"
                         />
                         <span
@@ -273,7 +275,7 @@ function useRenderMainToolBar({ headType, setShowHomePage, setShowJobType, setSh
     const setBackgroundModal = showCameraCapture && renderModal({
         renderBody() {
             if (workspaceSeries !== machineSeries || workspaceHeadType !== HEAD_LASER
-                || machineToolHead.laserToolhead !== workspaceToolHead) {
+                || machineToolHead.laserToolhead !== workspaceToolHead || workspaceIsRotate) {
                 // todo, ui
                 return (
                     <modal>{i18n._('_key-Camera_capture-cannot use camera of different settings.')}</modal>
