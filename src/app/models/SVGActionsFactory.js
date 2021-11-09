@@ -622,6 +622,7 @@ class SVGActionsFactory {
 
     _pasteFrom(models) {
         this.clearSelection();
+        const newSVGModels = [];
         models.forEach((clonedSVGModel) => {
             clonedSVGModel.transformation.positionX += 5;
             clonedSVGModel.transformation.positionY -= 5;
@@ -637,11 +638,12 @@ class SVGActionsFactory {
             svgModel.transformation.positionZ = (this.modelGroup.models.length + 1) * INDEXMARGIN;
             svgModel.onTransform();
             this.modelGroup.models.push(svgModel);
-
-            this.addSelectedSvgModelsByModels([svgModel]);
-            this.modelGroup.models = [...this.modelGroup.models];
-            this.modelGroup.modelChanged();
+            newSVGModels.push(svgModel);
         });
+        this.addSelectedSvgModelsByModels(newSVGModels);
+        this.svgContentGroup.resetSelector(newSVGModels.map(model => model.elem));
+        this.modelGroup.models = [...this.modelGroup.models];
+        this.modelGroup.modelChanged();
     }
 
     copy() {
