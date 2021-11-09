@@ -1,6 +1,5 @@
 // Reducer for Workspace
 import * as THREE from 'three';
-
 import uuid from 'uuid';
 import api from '../../api';
 import log from '../../lib/log';
@@ -44,6 +43,7 @@ export const actions = {
         gcodeRenderingWorker.onmessage = (e) => {
             const data = e.data;
             const { status, value, renderMethod, isDone, boundingBox, isPreview = false, gcodeFileIndex = -1 } = data;
+            console.log('gcodeRenderingWorker', boundingBox);
             switch (status) {
                 case 'succeed': {
                     const { modelGroup, gcodeFile, previewModelGroup, gcodeFiles } = getState().workspace;
@@ -151,6 +151,7 @@ export const actions = {
             .then((res) => {
                 const response = res.body;
                 const header = response.gcodeHeader;
+                console.log('header', header);
                 const gcodeFile = {
                     name: file.name,
                     uploadName: response.uploadName,
@@ -158,10 +159,20 @@ export const actions = {
                     lastModified: file.lastModified,
                     thumbnail: header[';thumbnail'] || '',
                     renderGcodeFileName: file.renderGcodeFileName || file.name,
-                    maxX: header[';max_x(mm)'],
-                    maxY: header[';max_y(mm)'],
-                    minX: header[';min_x(mm)'],
-                    minY: header[';min_y(mm)']
+                    boundingBox: {
+                        max: {
+                            x: header[';max_x(mm)'],
+                            y: header[';max_y(mm)'],
+                            z: header[';max_z(mm)'],
+                            b: header[';max_b(mm)']
+                        },
+                        min: {
+                            x: header[';min_x(mm)'],
+                            y: header[';min_y(mm)'],
+                            z: header[';min_z(mm)'],
+                            b: header[';min_b(mm)']
+                        }
+                    }
                 };
                 dispatch(actions.addGcodeFiles(gcodeFile));
             })
@@ -278,6 +289,11 @@ export const actions = {
             }));
             await dispatch(actions.loadGcode(gcodeFile));
             gcodeRenderingWorker.postMessage({ func: 'WORKSPACE', gcodeFilename: gcodeFile.uploadName });
+        } else {
+            console.log('startPrint', gcodeFile, startPrint);
+            await dispatch(actions.updateState({
+                boundingBox: gcodeFile?.boundingBox
+            }));
         }
     },
 

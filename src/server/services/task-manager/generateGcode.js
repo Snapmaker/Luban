@@ -31,12 +31,10 @@ const addHeaderToFile = (header, name, tmpFilePath, filePath, thumbnail, estimat
             reject(err);
         });
         ws.on('close', () => {
+            console.log('addHeaderToFile boundingBox', boundingBox);
             resolve({
                 gcodeFile: {
-                    maxX: boundingBox.max.x,
-                    maxY: boundingBox.max.y,
-                    minX: boundingBox.min.x,
-                    minY: boundingBox.min.y,
+                    boundingBox: boundingBox,
                     name: name,
                     uploadName: name,
                     size: ws.bytesWritten,

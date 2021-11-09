@@ -284,7 +284,7 @@ function WifiConnection() {
 
     useEffect(() => {
         autoSetServer(servers, server);
-    }, [servers, server]);
+    }, [JSON.stringify(servers), server]);
 
     useEffect(() => {
         if (serverState?.address === savedServerAddressState && connectionAuto) {
