@@ -234,37 +234,37 @@ function Laser({ location }) {
                     case 'Original Long Z-axis':
                     case 'Original':
                         pathConfig = {
-                            path: './UserCase/laser/original_200mw/Laser_original_200mW.snaplzr',
-                            name: 'Laser_original_200mW.snaplzr'
+                            path: './UserCase/laser/original_200mw/laser_original_200mW.snaplzr',
+                            name: 'laser_original_200mW.snaplzr'
                         };
                         break;
                     case 'A150':
                         pathConfig = {
-                            path: './UserCase/laser/a150_1600mw/Laser_a150_1600mW.snaplzr',
-                            name: 'Laser_a150_1600mW.snaplzr'
+                            path: './UserCase/laser/a150_1600mw/laser_a150_1600mW.snaplzr',
+                            name: 'laser_a150_1600mW.snaplzr'
                         };
                         break;
                     case 'A250':
                         pathConfig = {
-                            path: './UserCase/laser/a250_1600mw/Laser_a250_1600mW.snaplzr',
-                            name: 'Laser_a250_1600mW.snaplzr'
+                            path: './UserCase/laser/a250_1600mw/laser_a250_1600mW.snaplzr',
+                            name: 'laser_a250_1600mW.snaplzr'
                         };
                         break;
                     case 'A350':
                         pathConfig = {
-                            path: './UserCase/laser/a350_1600mw/Laser_a350_1600mW.snaplzr',
-                            name: 'Laser_a350_1600mW.snaplzr'
+                            path: './UserCase/laser/a350_1600mw/laser_a350_1600mW.snaplzr',
+                            name: 'laser_a350_1600mW.snaplzr'
                         };
                         break;
                     default:
                         pathConfig = {
-                            path: './UserCase/laser/original_200mw/Laser_original_200mW.snaplzr',
-                            name: 'Laser_original_200mW.snaplzr'
+                            path: './UserCase/laser/original_200mw/laser_original_200mW.snaplzr',
+                            name: 'laser_original_200mW.snaplzr'
                         };
                         break;
                 }
             }
-            dispatch(projectActions.openProject(pathConfig, history, true, false));
+            dispatch(projectActions.openProject(pathConfig, history, true, true));
         }
     }
     async function handleBeforeChange(nextIndex) {
