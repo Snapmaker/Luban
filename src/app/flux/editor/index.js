@@ -10,7 +10,8 @@ import {
     checkParams,
     DEFAULT_TEXT_CONFIG,
     generateModelDefaultConfigs,
-    limitModelSizeByMachineSize
+    limitModelSizeByMachineSize,
+    isOverSizeModel
 } from '../../models/ModelInfoUtils';
 
 import {
@@ -214,6 +215,7 @@ function recordScaleActionsToHistory(scaleActionsFn, elements, SVGActions, headT
 }
 
 const toolpathRendererWorker = new ToolpathRendererWorker();
+const scaleExtname = ['.svg', '.dxf'];
 
 export const actions = {
 
@@ -474,7 +476,7 @@ export const actions = {
      * 1. Upload image to backend
      * 2. Create Mold from image information
      */
-    uploadImage: (headType, file, mode, onError) => (dispatch, getState) => {
+    uploadImage: (headType, file, mode, onError, isLimit = true) => (dispatch, getState) => {
         const { materials, progressStatesManager } = getState()[headType];
         progressStatesManager.startProgress(PROCESS_STAGE.CNC_LASER_UPLOAD_IMAGE, [1, 1]);
         dispatch(actions.updateState(headType, {
@@ -488,13 +490,12 @@ export const actions = {
 
         api.uploadImage(formData)
             .then((res) => {
-                dispatch(actions.updateState(headType, {
-                    stage: STEP_STAGE.CNC_LASER_UPLOADING_IMAGE,
-                    progress: progressStatesManager.updateProgress(STEP_STAGE.CNC_LASER_UPLOADING_IMAGE, 1)
-                }));
                 const { width, height, originalName, uploadName } = res.body;
-                dispatch(actions.generateModel(headType, originalName, uploadName, width, height, mode, undefined, { svgNodeName: 'image' }));
-                // dispatch(actions.generateMoldFromImage(headType, { originalName, uploadName, width, height }));
+                dispatch(actions.generateModel(
+                    headType, originalName, uploadName,
+                    width, height, mode, undefined, { svgNodeName: 'image' },
+                    undefined, undefined, undefined, undefined, isLimit
+                ));
             })
             .catch((err) => {
                 onError && onError(err);
@@ -504,6 +505,27 @@ export const actions = {
                 }));
                 progressStatesManager.finishProgress(false);
             });
+    },
+
+    checkIsOversizeImage: (headType, file, onError) => (dispatch, getState) => {
+        const { materials, progressStatesManager, coordinateSize } = getState()[headType];
+        const formData = new FormData();
+        formData.append('image', file);
+        formData.append('isRotate', materials.isRotate);
+        api.uploadImage(formData).then((res) => {
+            const { width, height } = res.body;
+            const isOverSize = isOverSizeModel(coordinateSize, width, height);
+            dispatch(actions.updateState(headType, {
+                isOverSize: isOverSize
+            }));
+        }).catch((err) => {
+            onError && onError(err);
+            dispatch(actions.updateState(headType, {
+                stage: STEP_STAGE.CNC_LASER_UPLOAD_IMAGE_FAILED,
+                progress: 1
+            }));
+            progressStatesManager.finishProgress(false);
+        });
     },
 
     prepareStlVisualizer: (headType, model) => (dispatch) => {
@@ -576,11 +598,10 @@ export const actions = {
      * @param transformation - ?
      * @param modelID - optional, used in project recovery
      */
-    generateModel: (headType, originalName, uploadName, sourceWidth, sourceHeight, mode, sourceType, config, gcodeConfig, transformation, modelID, zIndex) => (dispatch, getState) => {
+    generateModel: (headType, originalName, uploadName, sourceWidth, sourceHeight, mode, sourceType, config, gcodeConfig, transformation, modelID, zIndex, isLimit) => (dispatch, getState) => {
         const { size } = getState().machine;
         const { materials, modelGroup, SVGActions, contentGroup, toolPathGroup, coordinateMode, coordinateSize } = getState()[headType];
         sourceType = sourceType || getSourceType(originalName);
-
         if (!checkParams(headType, sourceType, mode)) {
             console.error(`sourceType or mode error, sourceType: ${sourceType}, mode: ${mode}`);
             return;
@@ -607,8 +628,10 @@ export const actions = {
                 scale = newModelSize?.scale;
             }
         } else {
+            const extname = path.extname(originalName);
+            const isScale = !includes(scaleExtname, extname);
             const newModelSize = sourceType !== SOURCE_TYPE_IMAGE3D
-                ? limitModelSizeByMachineSize(coordinateSize, sourceWidth, sourceHeight, config?.svgNodeName)
+                ? limitModelSizeByMachineSize(coordinateSize, sourceWidth, sourceHeight, isLimit, isScale)
                 : sizeModel(size, materials, sourceWidth, sourceHeight);
             width = newModelSize?.width;
             height = newModelSize?.height;
@@ -704,6 +727,9 @@ export const actions = {
 
         // Process image right after created
         dispatch(actions.processSelectedModel(headType));
+        dispatch(actions.updateState(headType, {
+            isOverSize: null
+        }));
     },
 
     insertDefaultTextVector: (headType) => (dispatch) => {

@@ -1,7 +1,9 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import PropTypes from 'prop-types';
 import classNames from 'classnames';
+import path from 'path';
+import { includes } from 'lodash';
 
 import i18n from '../../../lib/i18n';
 import { toFixed, toFixedNumber } from '../../../lib/numeric-utils';
@@ -25,6 +27,7 @@ function convertSVGPointToLogicalPoint(p, size) {
  *
  * This component is used for display properties of selected SVG elements.
  */
+const extnameArray = ['.svg', '.dxf'];
 const TransformationSection = ({ headType, updateSelectedModelUniformScalingState, disabled }) => {
     const size = useSelector(state => state?.machine?.size);
     const modelGroup = useSelector(state => state[headType]?.modelGroup);
@@ -43,6 +46,7 @@ const TransformationSection = ({ headType, updateSelectedModelUniformScalingStat
     const isCNC4AxisImage3d = (sourceType === 'image3d' && headType === HEAD_CNC && isRotate);
     const config = useSelector(state => state[headType]?.modelGroup?.getSelectedModel()?.config);
     const isTextVector = (config.svgNodeName === SVG_NODE_NAME_TEXT);
+    const [minSize, setMinSize] = useState(0.1);
     // calculate logical transformation
     // TODO: convert positions in flux
     const { x: logicalX, y: logicalY } = convertSVGPointToLogicalPoint({ x, y }, size);
@@ -54,6 +58,16 @@ const TransformationSection = ({ headType, updateSelectedModelUniformScalingStat
     const selectedNotHide = (selectedModelArray.length === 1) && selectedModelArray[0].visible || selectedModelArray.length > 1;
 
     const dispatch = useDispatch();
+    useEffect(() => {
+        selectedModelArray.length && selectedModelArray.forEach((item) => {
+            const extname = path.extname(item.uploadName);
+            if (!includes(extnameArray, extname)) {
+                minSize < 1 && setMinSize(1);
+            } else {
+                minSize > 0.1 && setMinSize(0.1);
+            }
+        });
+    }, [selectedModelArray]);
 
     const actions = {
         onChangeLogicalX: (newLogicalX) => {
@@ -184,7 +198,7 @@ const TransformationSection = ({ headType, updateSelectedModelUniformScalingStat
                                         className="margin-horizontal-2"
                                         disabled={disabled || !selectedNotHide || canResize === false}
                                         value={toFixed(logicalWidth, 1)}
-                                        min={1}
+                                        min={minSize}
                                         size="small"
                                         max={size.x}
                                         onChange={(value) => {
@@ -217,7 +231,7 @@ const TransformationSection = ({ headType, updateSelectedModelUniformScalingStat
                                         className="margin-horizontal-2"
                                         disabled={disabled || !selectedNotHide || canResize === false}
                                         value={toFixed(logicalHeight, 1)}
-                                        min={1}
+                                        min={minSize}
                                         max={size.y}
                                         size="small"
                                         onChange={(value) => {
