@@ -12,12 +12,14 @@ import {
 
 
 function MarlinWidget({ widgetActions }) {
-    const { headType, isConnected } = useSelector(state => state.machine);
+    const { isConnected } = useSelector(state => state.machine);
+    const { headType } = useSelector(state => state?.workspace);
+    // TODO: 3dp!
 
     const actions = {
         setTitle: (_headType) => {
             let title = 'Detecting...';
-            if (_headType === HEAD_PRINTING) {
+            if (_headType === HEAD_PRINTING || _headType === '3dp') {
                 title = '3D Printer';
             }
             if (_headType === HEAD_LASER) {
@@ -49,7 +51,7 @@ function MarlinWidget({ widgetActions }) {
 
     return (
         <div>
-            {headType === HEAD_PRINTING && <Printing />}
+            {(headType === HEAD_PRINTING || headType === '3dp') && <Printing />}
             {headType === HEAD_LASER && <Laser />}
             {headType === HEAD_CNC && <CNC />}
         </div>

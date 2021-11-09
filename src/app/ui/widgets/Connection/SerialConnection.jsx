@@ -16,8 +16,8 @@ import {
     MACHINE_HEAD_TYPE,
     WORKFLOW_STATE_IDLE,
     WORKFLOW_STATE_PAUSED,
-    WORKFLOW_STATE_RUNNING, LEVEL_TWO_POWER_LASER_FOR_SM2,
-    HEAD_LASER
+    WORKFLOW_STATE_RUNNING, LEVEL_TWO_POWER_LASER_FOR_SM2, LEVEL_ONE_POWER_LASER_FOR_SM2,
+    HEAD_LASER, HEAD_CNC, HEAD_PRINTING
 } from '../../../constants';
 import { valueOf } from '../../../lib/contants-utils';
 import { actions as machineActions } from '../../../flux/machine';
@@ -102,12 +102,27 @@ function SerialConnection() {
             ? valueOf(MACHINE_SERIES, 'alias', `${series}-${seriesSize}`).value : null;
         let machineHeadType = valueOf(MACHINE_HEAD_TYPE, 'alias', _headType)
             ? valueOf(MACHINE_HEAD_TYPE, 'alias', _headType).value : null;
+        let machineToolHead = '';
         // TODO
-        if (machineHeadType === '10w-laser') {
-            machineHeadType = HEAD_LASER;
+        if (machineHeadType === HEAD_LASER) {
+            machineToolHead = LEVEL_ONE_POWER_LASER_FOR_SM2;
             dispatch(workspaceActions.updateMachineState({
                 headType: HEAD_LASER,
-                toolHead: LEVEL_TWO_POWER_LASER_FOR_SM2
+                toolHead: LEVEL_ONE_POWER_LASER_FOR_SM2,
+                series: machineSeries
+            }));
+        } else if (machineHeadType === '10w-laser') {
+            machineHeadType = HEAD_LASER;
+            machineToolHead = LEVEL_TWO_POWER_LASER_FOR_SM2;
+            dispatch(workspaceActions.updateMachineState({
+                headType: HEAD_LASER,
+                toolHead: LEVEL_TWO_POWER_LASER_FOR_SM2,
+                series: machineSeries
+            }));
+        } else {
+            dispatch(workspaceActions.updateMachineState({
+                headType: machineHeadType,
+                series: machineSeries
             }));
         }
 
@@ -117,12 +132,15 @@ function SerialConnection() {
             MachineSelectModal({
                 series: machineSeries,
                 headType: machineHeadType,
+                toolHead: machineToolHead,
 
                 onConfirm: (seriesT, headTypeT, toolHeadT) => {
-                    dispatch(machineActions.updateMachineState({
+                    dispatch(workspaceActions.updateMachineState({
                         series: seriesT,
                         headType: headTypeT,
-                        toolHead: toolHeadT,
+                        toolHead: toolHeadT
+                    }));
+                    dispatch(machineActions.updateMachineState({
                         canReselectMachine: true
                     }));
                     dispatch(machineActions.executeGcodeG54(seriesT, headTypeT));
@@ -269,30 +287,51 @@ function SerialConnection() {
     useMemo(() => {
         const newModuleStatusList = [];
         if (headType) {
+            // TODO
+            let _headType = headType;
+            if (_headType === '3dp') {
+                _headType = HEAD_PRINTING;
+            }
+            if (_headType === 'LASER') {
+                _headType = HEAD_LASER;
+            }
             if (toolHead === LEVEL_TWO_POWER_LASER_FOR_SM2) { // TODO
                 newModuleStatusList.push({
                     key: 'headtype',
                     moduleName: i18n._('key-Workspace/Connection-10W Laser'),
                     status: true
                 });
-            } else {
+            } else if (_headType === 'laser') {
                 newModuleStatusList.push({
                     key: 'headtype',
-                    moduleName: i18n._(`key-Workspace/Connection-${headType}`),
+                    moduleName: i18n._('key-Workspace/Connection-laser'),
+                    status: true
+                });
+            } else if (_headType === HEAD_PRINTING) {
+                newModuleStatusList.push({
+                    key: 'headtype',
+                    moduleName: i18n._('key-Workspace/Connection-3dp'),
+                    status: true
+                });
+            } else if (_headType === HEAD_CNC) {
+                newModuleStatusList.push({
+                    key: 'headtype',
+                    moduleName: i18n._('key-Workspace/Connection-CNC'),
                     status: true
                 });
             }
-            headType === 'printing' && newModuleStatusList.push({
+            _headType === HEAD_PRINTING && newModuleStatusList.push({
                 key: 'heatedBed',
                 moduleName: i18n._('key-Workspace/Connection-Heated bed'),
                 status: heatedBedTemperature > 0
             });
-            headType === 'laser' && newModuleStatusList.push({
+            _headType === HEAD_LASER && newModuleStatusList.push({
                 key: 'laserCamera',
                 moduleName: i18n._('key-Workspace/Connection-Laser camera'),
                 status: laserCamera
             });
         }
+
         if (seriesInfo !== 'Original' && seriesInfo !== 'Original Long Z-axis') {
             airPurifier && newModuleStatusList.push({
                 key: 'airPurifier',

@@ -12,6 +12,7 @@ import {
     MACHINE_SERIES,
     HEAD_CNC,
     HEAD_LASER,
+    HEAD_PRINTING,
     WORKFLOW_STATE_IDLE,
     WORKFLOW_STATUS_IDLE,
     WORKFLOW_STATUS_PAUSED,
@@ -21,7 +22,7 @@ import {
     SINGLE_EXTRUDER_TOOLHEAD_FOR_ORIGINAL,
     LEVEL_ONE_POWER_LASER_FOR_ORIGINAL,
     STANDARD_CNC_TOOLHEAD_FOR_ORIGINAL,
-    LEVEL_TWO_POWER_LASER_FOR_SM2
+    LEVEL_TWO_POWER_LASER_FOR_SM2, LEVEL_ONE_POWER_LASER_FOR_SM2
 } from '../../constants';
 
 import { valueOf } from '../../lib/contants-utils';
@@ -275,16 +276,14 @@ export const actions = {
                 // TODO: serialPort
                 const { state } = options;
                 const { pos, originOffset, headStatus, headPower, temperature, zFocus, isHomed, zAxisModule, laser10WErrorState } = state;
-                let { headType, toolHead } = state;
+                let { headType } = state;
 
                 if (headType === '10W LASER') {
                     headType = HEAD_LASER;
-                    toolHead = LEVEL_TWO_POWER_LASER_FOR_SM2;
                 }
-                dispatch(workspaceActions.updateMachineState({
-                    headType,
-                    toolHead
-                }));
+                if (headType === '3DP') {
+                    headType = HEAD_PRINTING;
+                }
                 const machineState = getState().machine;
 
                 if (pos.isFourAxis) {
@@ -585,6 +584,7 @@ export const actions = {
 
             server.once('http:confirm', (result) => {
                 const { series, headType, status, isHomed, isEmergencyStopped } = result.data;
+                let { toolHead } = result.data;
 
                 // emergency stop event
                 if (isEmergencyStopped) {
@@ -609,9 +609,17 @@ export const actions = {
                     //     headType: headType,
                     //     canReselectMachine: false
                     // }));
+                    if (headType === HEAD_LASER) {
+                        if (toolHead === 'TOOLHEAD_LASER_1') {
+                            toolHead = LEVEL_ONE_POWER_LASER_FOR_SM2;
+                        } else if (toolHead === 'TOOLHEAD_LASER_2') {
+                            toolHead = LEVEL_TWO_POWER_LASER_FOR_SM2;
+                        }
+                    }
                     dispatch(workspaceActions.updateMachineState({
                         series,
-                        headType
+                        headType,
+                        toolHead
                     }));
                     dispatch(actions.executeGcodeG54(series, headType));
                     if (_.includes([WORKFLOW_STATUS_PAUSED, WORKFLOW_STATUS_RUNNING], status)) {
