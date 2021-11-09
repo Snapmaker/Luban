@@ -708,7 +708,7 @@ class Visualizer extends PureComponent {
 
     autoFocus() {
         const child = this.props.modelGroup.children[0];
-        this.canvas.current.autoFocus(child);
+        this.canvas.current.autoFocus(child, true);
     }
 
     notice() {

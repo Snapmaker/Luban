@@ -381,9 +381,10 @@ class Canvas extends PureComponent {
         this.startTween(tween);
     }
 
-    autoFocus(model) {
+    autoFocus(model, isWorkspaceAutoFocus = false) {
         const target = model ? model.position.clone() : this.initialTarget;
-        this.setCamera(this.cameraInitialPosition, target);
+        // const target = model ? model.position.clone() : new Vector3();
+        this.setCamera(this.cameraInitialPosition, isWorkspaceAutoFocus ? new Vector3() : target);
 
         const object = {
             positionX: this.camera.position.x,

@@ -602,6 +602,7 @@ function VisualizerLeftBar({ defaultSupportSize, setTransformMode, isSupporting,
                                     priority="level-three"
                                     width="100%"
                                     onClick={actions.autoRotate}
+                                    disabled={selectedModelArray.length > 1}
                                 >
                                     <span>{i18n._('key-Printing/LeftBar-Auto Rotate')}</span>
                                 </Button>
@@ -685,6 +686,7 @@ function VisualizerLeftBar({ defaultSupportSize, setTransformMode, isSupporting,
                                     priority="level-three"
                                     width="100%"
                                     onClick={actions.autoRotate}
+                                    disabled={selectedModelArray.length > 1}
                                 >
                                     <span>{i18n._('key-Printing/LeftBar-Auto Rotate')}</span>
                                 </Button>

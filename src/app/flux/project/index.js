@@ -341,7 +341,7 @@ export const actions = {
         await dispatch(actions.clearSavedEnvironment(headType));
     },
 
-    openProject: (file, history, unReload = false) => async (dispatch) => {
+    openProject: (file, history, unReload = false, isGuideTours = false) => async (dispatch) => {
         if (checkIsSnapmakerProjectFile(file.name)) {
             const formData = new FormData();
             let shouldSetFileName = true;
@@ -380,7 +380,7 @@ export const actions = {
             // End of Compatible with old project file
 
             const oldHeadType = getCurrentHeadType(history?.location?.pathname) || headType;
-            await dispatch(actions.save(oldHeadType, {
+            !isGuideTours && await dispatch(actions.save(oldHeadType, {
                 message: i18n._('key-Project/Save-Save the changes you made in the {{headType}} G-code Generator? Your changes will be lost if you don’t save them.', { headType: HEAD_TYPE_ENV_NAME[oldHeadType] })
             }));
             await dispatch(actions.closeProject(oldHeadType));

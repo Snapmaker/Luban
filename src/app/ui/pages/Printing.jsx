@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { shallowEqual, useSelector, useDispatch } from 'react-redux';
 import PropTypes from 'prop-types';
 import { useHistory, withRouter } from 'react-router-dom';
+import { includes } from 'lodash';
 // import { Steps } from 'intro.js-react';
 import 'intro.js/introjs.css';
 import PrintingVisualizer from '../widgets/PrintingVisualizer';
@@ -176,6 +177,7 @@ function useRenderMainToolBar() {
 
 function Printing({ location }) {
     const widgets = useSelector(state => state?.widget[pageHeadType].default.widgets, shallowEqual);
+    const series = useSelector(state => state?.machine?.series);
     const [isDraggingWidget, setIsDraggingWidget] = useState(false);
     const [enabledIntro, setEnabledIntro] = useState(null);
     const [initIndex, setInitIndex] = useState(0);
@@ -257,11 +259,16 @@ function Printing({ location }) {
     const handleChange = async (nextIndex) => {
         if (nextIndex === 1) {
             setInitIndex(1);
-            const pathConfig = {
+            const isOriginal = includes(series, 'Original');
+            const pathConfigForSM2 = {
                 path: './UserCase/printing/a150_single/3dp_a150_single.snap3dp',
                 name: '3dp_a150_single.snap3dp'
             };
-            dispatch(projectActions.openProject(pathConfig, history, true));
+            const pathConfigForOriginal = {
+                path: './UserCase/printing/original_single/3dp_original_single.snap3dp',
+                name: '3dp_original_single.snap3dp'
+            };
+            dispatch(projectActions.openProject(isOriginal ? pathConfigForOriginal : pathConfigForSM2, history, true, true));
         } else if (nextIndex === 4) {
             const thumbnailRef = thumbnail.current.getThumbnail();
             await dispatch(printingActions.generateGcode(thumbnailRef, true));

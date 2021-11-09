@@ -111,7 +111,6 @@ class Visualizer extends PureComponent {
             this.canvas.current.toTopFrontRight();
         },
         onSelectModels: (intersect, selectEvent) => {
-            console.log('selectModel');
             this.props.selectMultiModel(intersect, selectEvent);
         },
         onModelBeforeTransform: () => {
@@ -431,6 +430,7 @@ class Visualizer extends PureComponent {
         const { size, selectedModelArray, modelGroup, gcodeLineGroup, inProgress, hasModel, displayedType } = this.props;
 
         const isModelSelected = (selectedModelArray.length > 0);
+        const isMultipleModel = selectedModelArray.length > 1;
         const isSupportSelected = modelGroup.selectedModelArray.length > 0 && modelGroup.selectedModelArray[0].supportTag === true;
         const notice = this.getNotice();
         const progress = this.props.progress;
@@ -540,7 +540,7 @@ class Visualizer extends PureComponent {
                             {
                                 type: 'item',
                                 label: i18n._('key-Printing/ContextMenu-Auto Rotate'),
-                                disabled: inProgress || !isModelSelected || isSupportSelected,
+                                disabled: inProgress || !isModelSelected || isSupportSelected || isMultipleModel,
                                 onClick: this.actions.autoRotateSelectedModel
                             },
                             {
