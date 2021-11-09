@@ -30,16 +30,20 @@ const DEFAULT_TEXT_CONFIG = {
  * @param width
  * @param height
  */
-const limitModelSizeByMachineSize = (size, width, height, isLimit) => {
+const limitModelSizeByMachineSize = (size, width, height, isLimit, isScale = true) => {
     let height_ = height;
     let width_ = width;
     if (width_ * size.y >= height_ * size.x && width_ > size.x && isLimit) {
-        height_ = size.x * height_ / width_ * 0.6;
-        width_ = size.x * 0.6;
+        height_ = size.x * height_ / width_;
+        width_ = size.x;
     }
     if (height_ * size.x >= width_ * size.y && height_ > size.y && isLimit) {
-        width_ = size.y * width_ / height_ * 0.6;
-        height_ = size.y * 0.6;
+        width_ = size.y * width_ / height_;
+        height_ = size.y;
+    }
+    if (isScale) {
+        height_ *= 0.6;
+        width_ *= 0.6;
     }
     return { width: width_, height: height_, scale: round(width_ / width, 2) };
 };
