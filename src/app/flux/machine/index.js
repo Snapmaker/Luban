@@ -20,8 +20,7 @@ import {
     MACHINE_TOOL_HEADS,
     SINGLE_EXTRUDER_TOOLHEAD_FOR_ORIGINAL,
     LEVEL_ONE_POWER_LASER_FOR_ORIGINAL,
-    STANDARD_CNC_TOOLHEAD_FOR_ORIGINAL,
-    LEVEL_TWO_POWER_LASER_FOR_SM2, LEVEL_ONE_POWER_LASER_FOR_SM2
+    STANDARD_CNC_TOOLHEAD_FOR_ORIGINAL
 } from '../../constants';
 
 import { valueOf } from '../../lib/contants-utils';
@@ -574,8 +573,7 @@ export const actions = {
             server.removeAllListeners('http:close');
 
             server.once('http:confirm', (result) => {
-                const { series, headType, status, isHomed, isEmergencyStopped } = result.data;
-                let { toolHead } = result.data;
+                const { toolHead, series, headType, status, isHomed, isEmergencyStopped } = result.data;
 
                 // emergency stop event
                 if (isEmergencyStopped) {
@@ -595,18 +593,6 @@ export const actions = {
 
                 // get series & headType
                 if (series && headType) {
-                    // dispatch(actions.updateMachineState({
-                    //     series: series,
-                    //     headType: headType,
-                    //     canReselectMachine: false
-                    // }));
-                    if (headType === HEAD_LASER) {
-                        if (toolHead === 'TOOLHEAD_LASER_1') {
-                            toolHead = LEVEL_ONE_POWER_LASER_FOR_SM2;
-                        } else if (toolHead === 'TOOLHEAD_LASER_2') {
-                            toolHead = LEVEL_TWO_POWER_LASER_FOR_SM2;
-                        }
-                    }
                     // TODO: set isRotate here
                     dispatch(workspaceActions.updateMachineState({
                         series,

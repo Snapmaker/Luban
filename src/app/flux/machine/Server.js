@@ -4,12 +4,11 @@ import {
     HEAD_CNC,
     HEAD_LASER,
     HEAD_PRINTING,
-    MACHINE_HEAD_TYPE,
     MACHINE_SERIES,
     WORKFLOW_STATUS_IDLE,
     WORKFLOW_STATUS_UNKNOWN,
-    LEVEL_TWO_POWER_LASER_FOR_SM2,
-    LEVEL_ONE_POWER_LASER_FOR_SM2
+    LEVEL_TWO_POWER_LASER_FOR_SM2, STANDARD_CNC_TOOLHEAD_FOR_SM2,
+    LEVEL_ONE_POWER_LASER_FOR_SM2, SINGLE_EXTRUDER_TOOLHEAD_FOR_SM2
 } from '../../constants';
 import { valueOf } from '../../lib/contants-utils';
 
@@ -133,24 +132,36 @@ export class Server extends events.EventEmitter {
                     return;
                 }
                 if (data) {
-                    const { series, headType } = data;
+                    const { series } = data;
                     const seriesValue = valueOf(MACHINE_SERIES, 'alias', series);
-                    const headTypeValue = valueOf(MACHINE_HEAD_TYPE, 'alias', headType);
                     data.series = seriesValue ? seriesValue.value : null;
-                    data.headType = headTypeValue ? headTypeValue.value : null;
-                    if (data.headType === '3dp') {
-                        data.headType = HEAD_PRINTING;
-                    }
-                    if (data.headType === HEAD_LASER) {
-                        // TODO: original?
-                        data.toolHead = LEVEL_ONE_POWER_LASER_FOR_SM2;
-                    } else if (data.headType === '10w-laser') {
-                        data.headType = HEAD_LASER;
-                        data.toolHead = LEVEL_TWO_POWER_LASER_FOR_SM2;
+
+                    let headType = data.headType;
+                    let toolHead;
+                    switch (data.headType) {
+                        case 1:
+                            headType = HEAD_PRINTING;
+                            toolHead = SINGLE_EXTRUDER_TOOLHEAD_FOR_SM2;
+                            break;
+                        case 2:
+                            headType = HEAD_LASER;
+                            toolHead = LEVEL_ONE_POWER_LASER_FOR_SM2;
+                            break;
+                        case 3:
+                            headType = HEAD_CNC;
+                            toolHead = STANDARD_CNC_TOOLHEAD_FOR_SM2;
+                            break;
+                        case 4:
+                            headType = HEAD_LASER;
+                            toolHead = LEVEL_TWO_POWER_LASER_FOR_SM2;
+                            break;
+                        default:
+                            headType = data.headType;
+                            toolHead = undefined;
                     }
                     this.state.series = data.series;
-                    this.state.headType = data.headType;
-                    this.state.toolHead = data.toolHead;
+                    this.state.headType = headType;
+                    this.state.toolHead = toolHead;
                 }
 
                 this.token = data.token;
@@ -261,7 +272,6 @@ export class Server extends events.EventEmitter {
                 isNotNull(data.airPurifierSwitch) && (this.state.airPurifierSwitch = data.airPurifierSwitch);
                 isNotNull(data.airPurifierFanSpeed) && (this.state.airPurifierFanSpeed = data.airPurifierFanSpeed);
                 isNotNull(data.airPurifierFilterHealth) && (this.state.airPurifierFilterHealth = data.airPurifierFilterHealth);
-                isNotNull(data.toolHead) && (this.state.toolHead = data.toolHead);
                 isNotNull(data.moduleList) && (this.state.moduleStatusList = data.moduleList);
                 this._updateGcodePrintingInfo(data);
 
@@ -521,6 +531,7 @@ export class Server extends events.EventEmitter {
             offsetZ: this.state.originOffset.z,
             series: this.state.series,
             headType: this.state.headType,
+            toolHead: this.state.toolHead,
             isHomed: this.state.isHomed,
             enclosure: this.state.enclosure,
             laserFocalLength: this.state.laserFocalLength,
@@ -540,7 +551,6 @@ export class Server extends events.EventEmitter {
             airPurifierSwitch: this.state.airPurifierSwitch,
             airPurifierFanSpeed: this.state.airPurifierFanSpeed,
             airPurifierFilterHealth: this.state.airPurifierFilterHealth,
-            toolHead: this.state.toolHead,
             moduleStatusList: this.state.moduleStatusList
         };
     };
