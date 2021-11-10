@@ -12,7 +12,6 @@ import {
     MACHINE_SERIES,
     HEAD_CNC,
     HEAD_LASER,
-    HEAD_PRINTING,
     WORKFLOW_STATE_IDLE,
     WORKFLOW_STATUS_IDLE,
     WORKFLOW_STATUS_PAUSED,
@@ -275,15 +274,7 @@ export const actions = {
             'Marlin:state': (options) => {
                 // TODO: serialPort
                 const { state } = options;
-                const { pos, originOffset, headStatus, headPower, temperature, zFocus, isHomed, zAxisModule, laser10WErrorState } = state;
-                let { headType } = state;
-
-                if (headType === '10W LASER') {
-                    headType = HEAD_LASER;
-                }
-                if (headType === '3DP') {
-                    headType = HEAD_PRINTING;
-                }
+                const { headType, pos, originOffset, headStatus, headPower, temperature, zFocus, isHomed, zAxisModule, laser10WErrorState } = state;
                 const machineState = getState().machine;
 
                 if (pos.isFourAxis) {

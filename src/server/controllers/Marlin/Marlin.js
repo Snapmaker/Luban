@@ -4,6 +4,13 @@ import get from 'lodash/get';
 import set from 'lodash/set';
 import events from 'events';
 import semver from 'semver';
+import {
+    HEAD_PRINTING,
+    HEAD_LASER,
+    HEAD_CNC,
+    LEVEL_TWO_POWER_LASER_FOR_SM2,
+    LEVEL_ONE_POWER_LASER_FOR_SM2
+} from '../constants';
 // import PacketManager from '../PacketManager';
 
 // http://stackoverflow.com/questions/10454518/javascript-how-to-retrieve-the-number-of-decimals-of-a-string-number
@@ -787,6 +794,7 @@ class Marlin extends events.EventEmitter {
         version: '1.0.0',
         // tool head type
         headType: '',
+        toolHead: '',
         pos: {
             x: '0.000',
             y: '0.000',
@@ -903,8 +911,31 @@ class Marlin extends events.EventEmitter {
         } else if (type === MarlinReplyParserReleaseDate) {
             this.emit('firmware', payload);
         } else if (type === MarlinReplyParserToolHead) {
+            const newState = {};
+            switch (payload.headType) {
+                case 'LASER':
+                    newState.headType = HEAD_LASER;
+                    newState.toolHead = LEVEL_ONE_POWER_LASER_FOR_SM2;
+                    break;
+                case '10W LASER':
+                    newState.headType = HEAD_LASER;
+                    newState.toolHead = LEVEL_TWO_POWER_LASER_FOR_SM2;
+                    break;
+                case '3DP':
+                    newState.headType = HEAD_PRINTING;
+                    break;
+                case 'CNC':
+                    newState.headType = HEAD_CNC;
+                    break;
+                default:
+                    newState.headType = payload.headType;
+                    break;
+            }
             if (this.state.headType !== payload.headType) {
-                this.setState({ headType: payload.headType });
+                this.setState({
+                    headType: newState.headType,
+                    toolHead: newState.toolHead
+                });
             }
             this.emit('headType', payload);
         } else if (type === MarlinReplyParserZAxisModule) {

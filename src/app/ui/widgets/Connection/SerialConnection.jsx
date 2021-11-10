@@ -13,10 +13,9 @@ import i18n from '../../../lib/i18n';
 import { controller } from '../../../lib/controller';
 import {
     MACHINE_SERIES,
-    MACHINE_HEAD_TYPE,
     WORKFLOW_STATE_IDLE,
     WORKFLOW_STATE_PAUSED,
-    WORKFLOW_STATE_RUNNING, LEVEL_TWO_POWER_LASER_FOR_SM2, LEVEL_ONE_POWER_LASER_FOR_SM2,
+    WORKFLOW_STATE_RUNNING, LEVEL_TWO_POWER_LASER_FOR_SM2,
     HEAD_LASER, HEAD_CNC, HEAD_PRINTING
 } from '../../../constants';
 import { valueOf } from '../../../lib/contants-utils';
@@ -97,34 +96,14 @@ function SerialConnection() {
 
         // save serial port on connection succeeded
 
-        const { series, seriesSize, headType: _headType } = state;
+        const { series, seriesSize, headType: machineHeadType, toolHead: machineToolHead } = state;
         const machineSeries = valueOf(MACHINE_SERIES, 'alias', `${series}-${seriesSize}`)
             ? valueOf(MACHINE_SERIES, 'alias', `${series}-${seriesSize}`).value : null;
-        let machineHeadType = valueOf(MACHINE_HEAD_TYPE, 'alias', _headType)
-            ? valueOf(MACHINE_HEAD_TYPE, 'alias', _headType).value : null;
-        let machineToolHead = '';
-        // TODO
-        if (machineHeadType === HEAD_LASER) {
-            machineToolHead = LEVEL_ONE_POWER_LASER_FOR_SM2;
-            dispatch(workspaceActions.updateMachineState({
-                headType: HEAD_LASER,
-                toolHead: LEVEL_ONE_POWER_LASER_FOR_SM2,
-                series: machineSeries
-            }));
-        } else if (machineHeadType === '10w-laser') {
-            machineHeadType = HEAD_LASER;
-            machineToolHead = LEVEL_TWO_POWER_LASER_FOR_SM2;
-            dispatch(workspaceActions.updateMachineState({
-                headType: HEAD_LASER,
-                toolHead: LEVEL_TWO_POWER_LASER_FOR_SM2,
-                series: machineSeries
-            }));
-        } else {
-            dispatch(workspaceActions.updateMachineState({
-                headType: machineHeadType,
-                series: machineSeries
-            }));
-        }
+        dispatch(workspaceActions.updateMachineState({
+            headType: machineHeadType,
+            toolHead: machineToolHead,
+            series: machineSeries
+        }));
 
         if (machineSeries && machineHeadType) {
             dispatch(machineActions.executeGcodeG54(machineSeries, machineHeadType));
