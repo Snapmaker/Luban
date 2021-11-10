@@ -267,44 +267,37 @@ function SerialConnection() {
         const newModuleStatusList = [];
         if (headType) {
             // TODO
-            let _headType = headType;
-            if (_headType === '3dp') {
-                _headType = HEAD_PRINTING;
-            }
-            if (_headType === 'LASER') {
-                _headType = HEAD_LASER;
-            }
             if (toolHead === LEVEL_TWO_POWER_LASER_FOR_SM2) { // TODO
                 newModuleStatusList.push({
                     key: 'headtype',
                     moduleName: i18n._('key-Workspace/Connection-10W Laser'),
                     status: true
                 });
-            } else if (_headType === 'laser') {
+            } else if (headType === HEAD_LASER) {
                 newModuleStatusList.push({
                     key: 'headtype',
                     moduleName: i18n._('key-Workspace/Connection-laser'),
                     status: true
                 });
-            } else if (_headType === HEAD_PRINTING) {
+            } else if (headType === HEAD_PRINTING) {
                 newModuleStatusList.push({
                     key: 'headtype',
                     moduleName: i18n._('key-Workspace/Connection-3dp'),
                     status: true
                 });
-            } else if (_headType === HEAD_CNC) {
+            } else if (headType === HEAD_CNC) {
                 newModuleStatusList.push({
                     key: 'headtype',
                     moduleName: i18n._('key-Workspace/Connection-CNC'),
                     status: true
                 });
             }
-            _headType === HEAD_PRINTING && newModuleStatusList.push({
+            headType === HEAD_PRINTING && newModuleStatusList.push({
                 key: 'heatedBed',
                 moduleName: i18n._('key-Workspace/Connection-Heated bed'),
                 status: heatedBedTemperature > 0
             });
-            _headType === HEAD_LASER && newModuleStatusList.push({
+            headType === HEAD_LASER && newModuleStatusList.push({
                 key: 'laserCamera',
                 moduleName: i18n._('key-Workspace/Connection-Laser camera'),
                 status: laserCamera
