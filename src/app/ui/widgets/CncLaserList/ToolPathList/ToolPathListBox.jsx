@@ -189,25 +189,25 @@ const ToolPathListBox = (props) => {
         },
         commitGenerateToolPath: (toolPathId) => dispatch(editorActions.commitGenerateToolPath(props.headType, toolPathId)),
         toolPathToUp: () => {
-            if (selectedToolPathIDArray.length === 1) {
+            if (selectedToolPathIDArray.length === 1 && toolPaths[0].id !== selectedToolPathIDArray[0]) {
                 dispatch(editorActions.toolPathToUp(props.headType, selectedToolPathIDArray[0]));
                 dispatch(editorActions.refreshToolPathPreview(props.headType));
             }
         },
         toolPathToDown: () => {
-            if (selectedToolPathIDArray.length === 1) {
+            if (selectedToolPathIDArray.length === 1 && toolPaths[toolPaths.length - 1].id !== selectedToolPathIDArray[0]) {
                 dispatch(editorActions.toolPathToDown(props.headType, selectedToolPathIDArray[0]));
                 dispatch(editorActions.refreshToolPathPreview(props.headType));
             }
         },
         toolPathToTop: () => {
-            if (selectedToolPathIDArray.length === 1) {
+            if (selectedToolPathIDArray.length === 1 && toolPaths[0].id !== selectedToolPathIDArray[0]) {
                 dispatch(editorActions.toolPathToTop(props.headType, selectedToolPathIDArray[0]));
                 dispatch(editorActions.refreshToolPathPreview(props.headType));
             }
         },
         toolPathToBottom: () => {
-            if (selectedToolPathIDArray.length === 1) {
+            if (selectedToolPathIDArray.length === 1 && toolPaths[toolPaths.length - 1].id !== selectedToolPathIDArray[0]) {
                 dispatch(editorActions.toolPathToBottom(props.headType, selectedToolPathIDArray[0]));
                 dispatch(editorActions.refreshToolPathPreview(props.headType));
             }
