@@ -26,7 +26,10 @@ import {
     WORKFLOW_STATUS_PAUSED,
     WORKFLOW_STATUS_RUNNING,
     WORKFLOW_STATUS_UNKNOWN,
-    LEVEL_TWO_POWER_LASER_FOR_SM2
+    LEVEL_TWO_POWER_LASER_FOR_SM2,
+    HEAD_PRINTING,
+    HEAD_LASER,
+    HEAD_CNC
 } from '../../../constants';
 // import widgetStyles from '../styles.styl';
 import styles from './index.styl';
@@ -35,6 +38,7 @@ import styles from './index.styl';
 import ModalSmall from '../../components/Modal/ModalSmall';
 import ModalSmallInput from '../../components/Modal/ModalSmallInput';
 import { Server } from '../../../flux/machine/Server';
+import { actions as workspaceActions } from '../../../flux/workspace';
 // import { machineStore } from '../../../store/local-storage';
 
 export const ModuleStatus = ({ moduleName, status }) => {
@@ -59,15 +63,15 @@ function WifiConnection() {
         manualIp,
         // machine status headType,
         workflowStatus, isOpen, isConnected,
-        currentHeadType,
-        headType,
         moduleStatusList,
         airPurifier,
         // airPurifierStatus,
         heatedBedTemperature,
-        laserCamera,
-        series
+        laserCamera
     } = useSelector(state => state.machine);
+    const {
+        toolHead, headType, series
+    } = useSelector(state => state?.workspace);
     const [savedServerAddressState, setSavedServerAddressState] = useState(savedServerAddress);
     const { emergencyStopButton: emergencyStopButtonStatus, airPurifier: airPurifierStatus, rotaryModule: rotaryModuleStatus, enclosure: enclosureStatus } = moduleStatusList;
     const [showConnectionMessage, setShowConnectionMessage] = useState(false);
@@ -116,8 +120,11 @@ function WifiConnection() {
                 }
                 setserverOpenState(null);
                 if (data.toolHead && data.toolHead === LEVEL_TWO_POWER_LASER_FOR_SM2) {
-                    // TODO: can set toolhead hear
-                    console.log('tool head data', data);
+                    dispatch(workspaceActions.updateMachineState({
+                        headType: data.headType,
+                        toolHead: data.toolHead,
+                        series: series
+                    }));
                 }
             }));
         },
@@ -314,26 +321,41 @@ function WifiConnection() {
 
     const updateModuleStatusList = useMemo(() => {
         const newModuleStatusList = [];
-        if (currentHeadType && currentHeadType !== 'unplugged ') {
+        if (headType === HEAD_PRINTING) {
             newModuleStatusList.push({
-                key: currentHeadType,
+                key: `${headType}-${toolHead}`,
                 status: true,
-                moduleName: i18n._(`key-Workspace/Connection-${currentHeadType}`)
+                moduleName: i18n._('key-Workspace/Connection-3dp')
             });
-            if (headType === 'printing') {
+            newModuleStatusList.push({
+                key: 'heatedBed',
+                moduleName: i18n._('key-Workspace/Connection-Heated bed'),
+                status: heatedBedTemperature > 0
+            });
+        }
+        if (headType === HEAD_LASER) {
+            if (toolHead && toolHead === LEVEL_TWO_POWER_LASER_FOR_SM2) {
                 newModuleStatusList.push({
-                    key: 'heatedBed',
-                    moduleName: i18n._('key-Workspace/Connection-Heated bed'),
-                    status: heatedBedTemperature > 0
+                    key: `${headType}-${toolHead}`,
+                    status: true,
+                    moduleName: i18n._('key-Workspace/Connection-10W Laser')
                 });
-            } else if (headType === 'laser') {
+            } else {
                 newModuleStatusList.push({
-                    key: 'laserCamera',
-                    moduleName: i18n._('key-Workspace/Connection-Laser camera'),
-                    status: laserCamera || false
+                    key: `${headType}-${toolHead}`,
+                    status: true,
+                    moduleName: i18n._('key-Workspace/Connection-laser')
                 });
             }
         }
+        if (headType === HEAD_CNC) {
+            newModuleStatusList.push({
+                key: `${headType}-${toolHead}`,
+                status: true,
+                moduleName: i18n._('key-Workspace/Connection-CNC')
+            });
+        }
+
         Object.keys(moduleStatusList).forEach((key) => {
             if (moduleStatusList[key]) {
                 newModuleStatusList.push({
@@ -353,7 +375,7 @@ function WifiConnection() {
         });
         return newModuleStatusList;
     }, [
-        airPurifier, heatedBedTemperature, headType, currentHeadType,
+        airPurifier, heatedBedTemperature, headType, toolHead,
         emergencyStopButtonStatus, airPurifierStatus, rotaryModuleStatus,
         enclosureStatus, laserCamera
     ]);

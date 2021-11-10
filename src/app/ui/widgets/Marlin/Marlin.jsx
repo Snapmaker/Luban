@@ -12,7 +12,8 @@ import {
 
 
 function MarlinWidget({ widgetActions }) {
-    const { headType, isConnected } = useSelector(state => state.machine);
+    const { isConnected } = useSelector(state => state.machine);
+    const { headType } = useSelector(state => state?.workspace);
 
     const actions = {
         setTitle: (_headType) => {
@@ -49,7 +50,7 @@ function MarlinWidget({ widgetActions }) {
 
     return (
         <div>
-            {headType === HEAD_PRINTING && <Printing />}
+            {(headType === HEAD_PRINTING) && <Printing />}
             {headType === HEAD_LASER && <Laser />}
             {headType === HEAD_CNC && <CNC />}
         </div>

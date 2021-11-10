@@ -84,7 +84,6 @@ const INITIAL_STATE = {
         laserToolhead: MACHINE_TOOL_HEADS[LEVEL_ONE_POWER_LASER_FOR_ORIGINAL].value,
         cncToolhead: MACHINE_TOOL_HEADS[STANDARD_CNC_TOOLHEAD_FOR_ORIGINAL].value
     },
-    headType: null,
     canReselectMachine: false,
     // currentMachine: INITIAL_MACHINE_SERIES_WITH_HEADTOOL,
     size: MACHINE_SERIES.ORIGINAL.setting.size,
@@ -186,7 +185,6 @@ const INITIAL_STATE = {
     multipleEngine: false,
 
     // connect info
-    currentHeadType: '',
     moduleStatusList: {}
 };
 
@@ -275,8 +273,7 @@ export const actions = {
             'Marlin:state': (options) => {
                 // TODO: serialPort
                 const { state } = options;
-                const { pos, headType, originOffset, headStatus, headPower, temperature, zFocus, isHomed, zAxisModule, laser10WErrorState } = state;
-
+                const { headType, pos, originOffset, headStatus, headPower, temperature, zFocus, isHomed, zAxisModule, laser10WErrorState } = state;
                 const machineState = getState().machine;
 
                 if (pos.isFourAxis) {
@@ -286,8 +283,8 @@ export const actions = {
                         || machineState.workPosition.b !== pos.b) {
                         // TODO: Set `isRotate` only once.
                         if (headType === HEAD_LASER || headType === HEAD_CNC) {
-                            dispatch(editorActions.updateMaterials(headType.toLowerCase(), {
-                                isRotate: true
+                            dispatch(workspaceActions.updateMachineState({
+                                isRotate: pos.isFourAxis
                             }));
                         }
                         dispatch(baseActions.updateState({
@@ -303,8 +300,8 @@ export const actions = {
                         || machineState.workPosition.z !== pos.z) {
                         // TODO: Set `isRotate` only once.
                         if (headType === HEAD_LASER || headType === HEAD_CNC) {
-                            dispatch(editorActions.updateMaterials(headType.toLowerCase(), {
-                                isRotate: false
+                            dispatch(workspaceActions.updateMachineState({
+                                isRotate: pos.isFourAxis
                             }));
                         }
                         dispatch(baseActions.updateState({
@@ -325,7 +322,6 @@ export const actions = {
                         }
                     }));
                 }
-
                 dispatch(baseActions.updateState({
                     laser10WErrorState,
                     headStatus: headStatus,
@@ -471,12 +467,9 @@ export const actions = {
         machineStore.set('machine.series', series);
 
         const oldSeries = getState().machine.series;
-        // const toolHead = getState().machine.toolHead;
-        // const headType = getCurrentHeadType(window.location.href) || HEAD_PRINTING;
         if (oldSeries !== series) {
-            dispatch(baseActions.updateState({ series }));
-            // const currentMachine = getMachineSeriesWithToolhead(series, toolHead, headType);
-            // dispatch(baseActions.updateState({ currentMachine }));
+            dispatch(workspaceActions.updateMachineState({ series }));
+            // dispatch(baseActions.updateState({ series }));
             const seriesInfo = valueOf(MACHINE_SERIES, 'value', series);
             if (seriesInfo === MACHINE_SERIES.CUSTOM) {
                 seriesInfo.setting.size = machineStore.get('machine.size') || seriesInfo.setting.size;
@@ -580,7 +573,7 @@ export const actions = {
             server.removeAllListeners('http:close');
 
             server.once('http:confirm', (result) => {
-                const { series, headType, status, isHomed, isEmergencyStopped } = result.data;
+                const { toolHead, series, headType, status, isHomed, isEmergencyStopped } = result.data;
 
                 // emergency stop event
                 if (isEmergencyStopped) {
@@ -600,10 +593,11 @@ export const actions = {
 
                 // get series & headType
                 if (series && headType) {
-                    dispatch(actions.updateMachineState({
-                        series: series,
-                        headType: headType,
-                        canReselectMachine: false
+                    // TODO: set isRotate here
+                    dispatch(workspaceActions.updateMachineState({
+                        series,
+                        headType,
+                        toolHead
                     }));
                     dispatch(actions.executeGcodeG54(series, headType));
                     if (_.includes([WORKFLOW_STATUS_PAUSED, WORKFLOW_STATUS_RUNNING], status)) {
@@ -628,10 +622,11 @@ export const actions = {
                         series: series,
                         headType: headType,
 
-                        onConfirm: (seriesT, headTypeT) => {
-                            dispatch(actions.updateMachineState({
+                        onConfirm: (seriesT, headTypeT, toolHeadT) => {
+                            dispatch(workspaceActions.updateMachineState({
                                 series: seriesT,
                                 headType: headTypeT,
+                                toolHead: toolHeadT,
                                 canReselectMachine: true
                             }));
                             dispatch(actions.executeGcodeG54(seriesT, headTypeT));
@@ -659,7 +654,6 @@ export const actions = {
                     airPurifierFilterHealth,
                     isEmergencyStopped,
                     laser10WErrorState,
-                    currentHeadType,
                     moduleStatusList,
                     laserCamera
                 } = result.data;
@@ -689,7 +683,6 @@ export const actions = {
                     airPurifierSwitch: airPurifierSwitch,
                     airPurifierFanSpeed: airPurifierFanSpeed,
                     airPurifierFilterHealth: airPurifierFilterHealth,
-                    currentHeadType,
                     moduleStatusList,
                     laserCamera
                 }));
@@ -701,7 +694,7 @@ export const actions = {
                         || Number(workPosition.b) !== b) {
                         // TODO: Set `isRotate` only once.
                         if (headType === HEAD_LASER || headType === HEAD_CNC) {
-                            dispatch(editorActions.updateMaterials(headType.toLowerCase(), {
+                            dispatch(workspaceActions.updateMachineState({
                                 isRotate: true
                             }));
                         }
@@ -722,7 +715,7 @@ export const actions = {
                         || Number(workPosition.z) !== z) {
                         // TODO: Set `isRotate` only once.
                         if (headType === HEAD_LASER || headType === HEAD_CNC) {
-                            dispatch(editorActions.updateMaterials(headType.toLowerCase(), {
+                            dispatch(workspaceActions.updateMachineState({
                                 isRotate: false
                             }));
                         }
@@ -801,6 +794,10 @@ export const actions = {
                 connectionStatus: CONNECTION_STATUS_IDLE
             }));
         }
+        dispatch(workspaceActions.updateMachineState({
+            headType: '',
+            toolHead: ''
+        }));
         dispatch(baseActions.updateState({
             workPosition: {
                 x: '0.000',
@@ -882,8 +879,8 @@ export const actions = {
     },
 
     startServerGcode: (callback) => (dispatch, getState) => {
-        const { server, size, workflowStatus, isLaserPrintAutoMode, series, headType, laserFocalLength, materialThickness } = getState().machine;
-        const { gcodeFile } = getState().workspace;
+        const { server, size, workflowStatus, isLaserPrintAutoMode, series, laserFocalLength, materialThickness } = getState().machine;
+        const { gcodeFile, headType } = getState().workspace;
         const { background } = getState().laser;
         if (workflowStatus !== WORKFLOW_STATUS_IDLE || gcodeFile === null) {
             return;

@@ -6,7 +6,15 @@ import classNames from 'classnames';
 import { Button } from '../components/Buttons';
 import i18n from '../../lib/i18n';
 import Modal from '../components/Modal';
-import { HEAD_LASER, HEAD_PRINTING, HEAD_CNC, MACHINE_HEAD_TYPE, MACHINE_SERIES } from '../../constants';
+import {
+    HEAD_LASER,
+    HEAD_PRINTING,
+    HEAD_CNC,
+    MACHINE_HEAD_TYPE,
+    MACHINE_SERIES,
+    LEVEL_TWO_POWER_LASER_FOR_SM2,
+    LEVEL_ONE_POWER_LASER_FOR_SM2
+} from '../../constants';
 import Anchor from '../components/Anchor';
 import styles from './styles.styl';
 
@@ -26,7 +34,8 @@ class MachineSelectModal extends PureComponent {
 
     state = {
         series: this.props.series || MACHINE_SERIES.ORIGINAL.value,
-        headType: this.props.headType || HEAD_PRINTING
+        headType: this.props.headType || HEAD_PRINTING,
+        toolHead: ''
     };
 
     actions = {
@@ -37,7 +46,8 @@ class MachineSelectModal extends PureComponent {
         },
         onChangeHeadType: (v) => {
             this.setState({
-                headType: v.value
+                headType: v.headType,
+                toolHead: v.toolHead
             });
         }
     };
@@ -51,7 +61,7 @@ class MachineSelectModal extends PureComponent {
     handleConfirm = () => {
         setTimeout(() => {
             this.removeContainer();
-            this.props.onConfirm && this.props.onConfirm(this.state.series, this.state.headType);
+            this.props.onConfirm && this.props.onConfirm(this.state.series, this.state.headType, this.state.toolHead);
         });
     };
 
@@ -95,17 +105,28 @@ class MachineSelectModal extends PureComponent {
         const machineHeadTypeOptions = [
             {
                 value: HEAD_PRINTING,
+                headType: HEAD_PRINTING,
                 label: MACHINE_HEAD_TYPE['3DP'].label,
                 img: '/resources/images/machine/function-3d-printing.jpg'
             },
             {
                 value: HEAD_LASER,
+                headType: HEAD_LASER,
+                toolHead: LEVEL_ONE_POWER_LASER_FOR_SM2,
                 label: MACHINE_HEAD_TYPE.LASER.label,
                 img: '/resources/images/machine/function-laser.jpg'
 
             },
             {
+                value: `10W-${HEAD_LASER}`,
+                headType: HEAD_LASER,
+                toolHead: LEVEL_TWO_POWER_LASER_FOR_SM2,
+                label: `10W-${MACHINE_HEAD_TYPE.LASER.label}`,
+                img: '/resources/images/machine/function-laser.jpg'
+            },
+            {
                 value: HEAD_CNC,
+                headType: HEAD_CNC,
                 label: MACHINE_HEAD_TYPE.CNC.label,
                 img: '/resources/images/machine/function-cnc.jpg'
             }
@@ -148,7 +169,7 @@ class MachineSelectModal extends PureComponent {
                                     return (
                                         <div key={v.value} className={styles['select-tool']}>
                                             <Anchor
-                                                className={classNames(styles.selectToolBtn, { [styles.selected]: state.headType === v.value })}
+                                                className={classNames(styles.selectToolBtn, { [styles.selected]: (state.headType === v.headType && state.toolHead === v.toolHead) })}
                                                 onClick={() => actions.onChangeHeadType(v)}
                                             >
                                                 <img

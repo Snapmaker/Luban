@@ -36,3 +36,14 @@ export const MOVEMENT_RESPONSE_EVENT_ID = 0x0c;
 export const LASER_CAMERA_OPERATION_REQUEST_EVENT_ID = 0x0d;
 export const LASER_CAMERA_OPERATION_RESPONSE_EVENT_ID = 0x0e;
 export const UPDATE_REQUEST_EVENT_ID = 0xa9;
+
+export const HEAD_PRINTING = 'printing';
+export const HEAD_LASER = 'laser';
+export const HEAD_CNC = 'cnc';
+
+export const LEVEL_ONE_POWER_LASER_FOR_ORIGINAL = 'levelOneLaserToolheadForOriginal';
+export const LEVEL_TWO_POWER_LASER_FOR_ORIGINAL = 'levelTwoLaserToolheadForOriginal';
+export const LEVEL_ONE_POWER_LASER_FOR_SM2 = 'levelOneLaserToolheadForSM2';
+export const LEVEL_TWO_POWER_LASER_FOR_SM2 = 'levelTwoLaserToolheadForSM2';
+export const STANDARD_CNC_TOOLHEAD_FOR_ORIGINAL = 'standardCNCToolheadForOriginal';
+export const STANDARD_CNC_TOOLHEAD_FOR_SM2 = 'standardCNCToolheadForSM2';

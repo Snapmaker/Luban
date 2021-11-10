@@ -7,7 +7,7 @@ import { generateRandomPathName } from '../../../shared/lib/random-utils';
 import GcodeToArraybufferGeometry from '../../workers/GcodeToArraybufferGeometry.worker';
 
 import gcodeBufferGeometryToObj3d from '../../workers/GcodeToBufferGeometry/gcodeBufferGeometryToObj3d';
-import { CONNECTION_STATUS_CONNECTED, EPSILON, PROTOCOL_TEXT } from '../../constants';
+import { CONNECTION_STATUS_CONNECTED, EPSILON, MACHINE_SERIES, PROTOCOL_TEXT } from '../../constants';
 import { controller } from '../../lib/controller';
 
 // Actions
@@ -21,6 +21,11 @@ export const WORKSPACE_STAGE = {
 };
 
 const INITIAL_STATE = {
+    headType: '',
+    toolHead: '',
+    series: MACHINE_SERIES.ORIGINAL.value,
+    size: MACHINE_SERIES.ORIGINAL.setting.size,
+    isRotate: false,
     uploadState: 'idle', // uploading, uploaded
     renderState: 'idle',
     previewRenderState: 'idle',
@@ -268,15 +273,16 @@ export const actions = {
         });
     },
 
-    renderGcodeFile: (gcodeFile, needToList = true, startPrint = false) => async (dispatch, getState) => {
-        const oldGcodeFile = getState().workspace.gcodeFile;
+    renderGcodeFile: (gcodeFile, needToList = true, startPrint = false) => async (dispatch) => {
+        // const oldGcodeFile = getState().workspace.gcodeFile;
 
         if (needToList) {
             dispatch(actions.addGcodeFiles(gcodeFile));
         }
-        if (oldGcodeFile !== null && oldGcodeFile.uploadName === gcodeFile.uploadName) {
-            return;
-        }
+        // console.log('oldGcodeFile', oldGcodeFile, gcodeFile);
+        // if (oldGcodeFile !== null && oldGcodeFile.uploadName === gcodeFile.uploadName) {
+        //     return;
+        // }
         await dispatch(actions.clearGcode());
         if (startPrint) {
             await dispatch(actions.updateState({
@@ -385,6 +391,11 @@ export const actions = {
     unloadGcode: () => (dispatch) => {
         controller.command('gcode:unload');
         dispatch(actions.updateState({ uploadState: 'idle' }));
+    },
+
+    updateMachineState: (options) => (dispatch) => {
+        // { headType, toolHead, series, size, isRotate }
+        dispatch(actions.updateState(options));
     }
 };
 
