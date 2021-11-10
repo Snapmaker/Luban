@@ -291,7 +291,7 @@ export const CaseConfigA350LaserPowerOne = [
         imgSrc: '../../resources/images/user-case/A150/library_gift_box_97x97.png',
         pathConfig: {
             isDatastoragePath: true,
-            path: './UserCase/laser/a350_1600mw/laser_a250_1600mW.snaplzr',
+            path: './UserCase/laser/a350_1600mw/laser_a350_1600mW.snaplzr',
             name: 'laser_a250_1600mW.snaplzr'
         }
     }
