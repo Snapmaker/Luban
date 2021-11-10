@@ -221,8 +221,8 @@ function WifiTransport({ widgetActions, controlActions }) {
     const isFourAxis = useSelector(state => state?.machine?.workPosition?.isFourAxis);
     const originOffset = useSelector(state => state?.machine?.originOffset);
     const toolHeadName = useSelector(state => state?.machine?.toolHead.laserToolhead);
-    const { previewBoundingBox, gcodeFiles, previewModelGroup, previewRenderState, previewStage } = useSelector(state => state.workspace);
-    const { server, isConnected, headType, connectionType, size, workflowStatus, workflowState, isSendedOnWifi } = useSelector(state => state.machine);
+    const { previewBoundingBox, headType, gcodeFiles, previewModelGroup, previewRenderState, previewStage } = useSelector(state => state.workspace);
+    const { server, isConnected, connectionType, size, workflowStatus, workflowState, isSendedOnWifi } = useSelector(state => state.machine);
     const [loadToWorkspaceOnLoad, setLoadToWorkspaceOnLoad] = useState(true);
     const [selectFileName, setSelectFileName] = useState('');
     const [selectFileType, setSelectFileType] = useState('');

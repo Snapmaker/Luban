@@ -743,7 +743,7 @@ class Visualizer extends PureComponent {
                 </div>
                 {gcodeFile !== null && (
                     <div className={styles['visualizer-info']}>
-                        <p>{i18n._(gcodeFile.renderGcodeFileName)}</p>
+                        <p>{i18n._(gcodeFile?.renderGcodeFileName)}</p>
                     </div>
                 )}
                 <div className={styles['canvas-wrapper']}>

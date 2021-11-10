@@ -273,15 +273,16 @@ export const actions = {
         });
     },
 
-    renderGcodeFile: (gcodeFile, needToList = true, startPrint = false) => async (dispatch, getState) => {
-        const oldGcodeFile = getState().workspace.gcodeFile;
+    renderGcodeFile: (gcodeFile, needToList = true, startPrint = false) => async (dispatch) => {
+        // const oldGcodeFile = getState().workspace.gcodeFile;
 
         if (needToList) {
             dispatch(actions.addGcodeFiles(gcodeFile));
         }
-        if (oldGcodeFile !== null && oldGcodeFile.uploadName === gcodeFile.uploadName) {
-            return;
-        }
+        // console.log('oldGcodeFile', oldGcodeFile, gcodeFile);
+        // if (oldGcodeFile !== null && oldGcodeFile.uploadName === gcodeFile.uploadName) {
+        //     return;
+        // }
         await dispatch(actions.clearGcode());
         if (startPrint) {
             await dispatch(actions.updateState({
