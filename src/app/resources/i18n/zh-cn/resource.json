@@ -566,6 +566,8 @@
     "key-Laser/CameraCapture-The camera on the Laser Module captures nine images of the Laser Engraving and Cutting Platform, and stitches them as a background.": "激光模组上的摄像头捕捉激光雕刻切割平台的图像，将其当作画布背景，用于摆放对象。",
     "key-Laser/CameraCapture-This action cannot be undone. Are you sure you want to stop the job?": "此操作无法撤销。你确定要停止工作吗？",
     "key-Laser/CameraCapture-Warning": "警告",
+    "key-Laser/CameraCapture-diff_setting_error": "Machine Not Matched",
+    "key-Laser/CameraCapture-diff_setting_error_info": "he connected machine model or working head does not match the machine model used in the project, please switch the machine model or working head in the settings.",
     "key-Laser/CameraCaptureOriginal-Back": "返回",
     "key-Laser/CameraCaptureOriginal-Complete": "完成",
     "key-Laser/CameraCaptureOriginal-Device Not Connected": "设备未连接",

@@ -566,6 +566,8 @@
     "key-Laser/CameraCapture-The camera on the Laser Module captures nine images of the Laser Engraving and Cutting Platform, and stitches them as a background.": "",
     "key-Laser/CameraCapture-This action cannot be undone. Are you sure you want to stop the job?": "",
     "key-Laser/CameraCapture-Warning": "",
+    "key-Laser/CameraCapture-diff_setting_error": "",
+    "key-Laser/CameraCapture-diff_setting_error_info": "",
     "key-Laser/CameraCaptureOriginal-Back": "",
     "key-Laser/CameraCaptureOriginal-Complete": "",
     "key-Laser/CameraCaptureOriginal-Device Not Connected": "",

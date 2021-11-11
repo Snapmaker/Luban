@@ -16,6 +16,7 @@ class ChangedReactSelect extends PureComponent {
             PropTypes.bool,
             PropTypes.string
         ]),
+        showSearch: PropTypes.bool,
         disabled: PropTypes.bool,
         options: PropTypes.array.isRequired,
         size: PropTypes.string,
@@ -58,6 +59,7 @@ class ChangedReactSelect extends PureComponent {
             size = '100%',
             className,
             isGroup,
+            showSearch = true,
             disabled = true
         } = this.props;
         let defaultValue = {};
@@ -123,7 +125,7 @@ class ChangedReactSelect extends PureComponent {
                     <Select
                         className={styles[size]}
                         value={defaultValue?.value}
-                        showSearch
+                        showSearch={showSearch}
                         optionFilterProp="children"
                         style={{ width: size }}
                         disabled={disabled}

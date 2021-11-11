@@ -16,7 +16,7 @@ import Modal from '../../../components/Modal';
 
 const PANEL_EXTRACT_TRACE = 1;
 const PANEL_MANUAL_CALIBRATION = 2;
-const DefaultBgiName = '../../../images/camera-aid/Loading.gif';
+const DefaultBgiName = '../../../../resources/images/camera-aid/Loading.gif';
 
 class ExtractSquareTrace extends PureComponent {
     static propTypes = {
