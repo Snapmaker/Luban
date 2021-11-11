@@ -312,7 +312,7 @@
                     "label": "Support Placement",
                     "description": "Adjusts the placement of the support structures. The placement can be set to Touching Build Plate or Everywhere. When set to Everywhere, the support structures will also be printed on the model.",
                     "options": {
-                        "buildplate": "Touching Heated Bed",
+                        "buildplate": "Touching Build Plate",
                         "everywhere": "Everywhere"
                     }
                 },

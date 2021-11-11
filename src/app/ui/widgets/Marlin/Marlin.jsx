@@ -22,7 +22,7 @@ function MarlinWidget({ widgetActions }) {
                 title = '3D Printer';
             }
             if (_headType === HEAD_LASER) {
-                title = 'Laser';
+                title = 'key-unused-Laser';
             }
             if (_headType === HEAD_CNC) {
                 title = 'CNC';

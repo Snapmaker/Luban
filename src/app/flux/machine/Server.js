@@ -144,12 +144,12 @@ export class Server extends events.EventEmitter {
                             toolHead = SINGLE_EXTRUDER_TOOLHEAD_FOR_SM2;
                             break;
                         case 2:
-                            headType = HEAD_LASER;
-                            toolHead = LEVEL_ONE_POWER_LASER_FOR_SM2;
-                            break;
-                        case 3:
                             headType = HEAD_CNC;
                             toolHead = STANDARD_CNC_TOOLHEAD_FOR_SM2;
+                            break;
+                        case 3:
+                            headType = HEAD_LASER;
+                            toolHead = LEVEL_ONE_POWER_LASER_FOR_SM2;
                             break;
                         case 4:
                             headType = HEAD_LASER;

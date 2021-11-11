@@ -114,7 +114,7 @@ function LaserPresentManager({ closeToolManager, shouldSaveToolpath = false, sav
             optionConfigGroup={LASER_PRESENT_CONFIG_GROUP}
             allDefinitions={toolDefinitions}
             disableCategory={false}
-            managerTitle="Present Settings"
+            managerTitle="key-Laser/PresetManager-Preset Settings"
             selectedId={selectedId}
             headType={HEAD_LASER}
         />

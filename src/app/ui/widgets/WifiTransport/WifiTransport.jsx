@@ -740,7 +740,7 @@ function WifiTransport({ widgetActions, controlActions }) {
                                     //     setShowPreviewModal(false);
                                     // }}
                                 >
-                                    {i18n._('key-Workspace/Transport-Start Print')}
+                                    {i18n._('key-Workspace/LaserStartJob-start_job')}
                                 </Button>
                             </Dropdown>
                         )}

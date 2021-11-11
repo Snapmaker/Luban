@@ -107,7 +107,7 @@ class GcodeParameters extends PureComponent {
             }
         });
 
-        // Session Repetition
+        // Session Pass
         const laserDefinitionRepetitionKeys = [];
         const laserDefinitionRepetition = {};
         if (isSVG && pathType === 'path') {

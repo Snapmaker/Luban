@@ -47,7 +47,7 @@ const HomePage = (props) => { // Todo, what's the props ?
                 <MainToolBar
                     leftItems={[
                         {
-                            title: 'Back',
+                            title: 'key-Workspace/Page-Back',
                             name: 'MainToolbarBack',
                             action: () => props?.onClose()
                         }
