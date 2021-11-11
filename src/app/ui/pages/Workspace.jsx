@@ -132,7 +132,7 @@ function Workspace({ isPopup, onClose, style, className }) {
                 return;
             }
             const returnButton = {
-                title: 'Back',
+                title: 'key-Workspace/Page-Back',
                 name: 'MainToolbarBack',
                 action: onClose
             };

@@ -116,7 +116,7 @@ export const PRINTING_QUALITY_CONFIG_KEYS = [
 ];
 export const PRINTING_MATERIAL_CONFIG_GROUP = [
     {
-        name: 'Temperature',
+        name: 'key-printing/material_settings-Temperature',
         fields: [
             'material_diameter',
             'material_flow',
@@ -129,7 +129,7 @@ export const PRINTING_MATERIAL_CONFIG_GROUP = [
         ]
     },
     {
-        name: 'Extrude',
+        name: 'key-printing/material_settings-Extrusion',
         fields: [
             // 'material_flow',
             'material_flow_layer_0'

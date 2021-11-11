@@ -138,10 +138,18 @@ i18n._('Set the speed at which the tool moves on the material when it is not car
 i18n._('Stepdown');
 i18n._('Set the distance along the Z axis per step that the tool is plunged into the material.');
 
+// Laser ToolPath
+i18n._('key-Laser/ToolpathParameters-Method');
+i18n._('key-Laser/PresetManager-Preset Settings');
+
 // CNC tool setting
 i18n._('key-Cnc/ToolManger-Tool Settings');
 i18n._('Carving Tool');
 i18n._('Parameters');
+
+// Printing Profile
+i18n._('key-printing/material_settings-Temperature');
+i18n._('key-printing/material_settings-Extrusion');
 
 // connection message
 i18n._('key-Workspace/Connection-enclosure');

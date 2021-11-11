@@ -16,7 +16,6 @@ const MachineSetting = (props) => {
     const [enclosureDoorDetection, setEnclosureDoorDetection] = useState(machine?.enclosureDoorDetection);
     const [zAxisModule, setZAxisModule] = useState(machine?.zAxisModule);
     useEffect(() => {
-        props.widgetActions.setTitle(i18n._('key-Workspace/MachineSetting-Machine Setting'));
         dispatch(machineActions.getEnclosureState());
         dispatch(machineActions.getZAxisModuleState());
     }, []);
