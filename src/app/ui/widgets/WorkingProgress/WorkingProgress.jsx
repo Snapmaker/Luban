@@ -10,8 +10,8 @@ import SvgIcon from '../../components/SvgIcon';
 const Text = ({ name, value }) => {
     return (
         <div className="margin-top-8 sm-flex align-c">
-            <span className="unit-text margin-right-8 text-overflow-ellipsis display-inline width-112 align-l">{name}</span>
-            <span className="main-text-normal text-overflow-ellipsis display-inline width-102 align-l">{value}</span>
+            <span className="unit-text margin-right-8 text-overflow-ellipsis display-inline align-l">{name}</span>
+            <span className="main-text-normal text-overflow-ellipsis display-inline width-136 align-l">{value}</span>
         </div>
     );
 };
@@ -62,7 +62,7 @@ const WorkingProgress = ({ widgetActions, controlActions }) => {
 
     return (
         <div>
-            <div className="sm-flex justify-space-between align-center margin-top-16 margin-bottom-16">
+            <div className="sm-flex justify-space-between align-center margin-top-8 margin-bottom-16">
                 <div>
                     <Text name={i18n._('key-Workspace/Workprogress-File')} value={fileName || i18n._('key-Workspace/Workprogress-Unknow')} />
                     <Text name={i18n._('key-Workspace/Workprogress-Elapsed Time')} value={formatDuration(elapsedTime, false)} />

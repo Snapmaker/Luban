@@ -44,7 +44,7 @@ import { actions as workspaceActions } from '../../../flux/workspace';
 export const ModuleStatus = ({ moduleName, status }) => {
     return (
         <div className="sm-flex align-center padding-horizontal-8 background-grey-3 border-radius-12 margin-top-8 margin-right-8">
-            <span className="margin-right-8 tooltip-message">{moduleName}</span>
+            <span className="margin-right-8 tooltip-message height-24">{moduleName}</span>
             <span style={{ display: 'inline-block', backgroundColor: status ? '#4CB518' : '#FFA940', height: 6, width: 6, borderRadius: 3 }} />
         </div>
     );
