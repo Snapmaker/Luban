@@ -128,8 +128,8 @@ export const actions = {
             const toolPaths = editorState.toolPathGroup.getToolPaths();
             envObj.toolpaths = toolPaths;
         }
-        const content = JSON.stringify(envObj);
         if (force || !(checkObjectIsEqual(JSON.parse(lastString), envObj))) {
+            const content = JSON.stringify(envObj);
             dispatch(actions.updateState(headType, { content, unSaved: true, initState: false }));
             await api.saveEnv({ content });
         }
@@ -157,7 +157,7 @@ export const actions = {
         dispatch(actions.updateState(headType, { findLastEnvironment: false, unSaved: false }));
     },
 
-    onRecovery: (envHeadType, envObj, backendRecover = true) => async (dispatch, getState) => {
+    onRecovery: (envHeadType, envObj, backendRecover = true, shouldSetFileName = true) => async (dispatch, getState) => {
         UniApi.Window.setOpenedFile();
         let { content } = getState().project[envHeadType];
         if (!envObj) {
@@ -249,9 +249,10 @@ export const actions = {
             dispatch(modActions.updateState(envHeadType, restState));
         }
         // // TODO: set current content to avoid <unSaved> flag mis-set
-        // await dispatch(actions.clearSavedEnvironment(envHeadType));
-        for (const type of [HEAD_PRINTING, HEAD_CNC, HEAD_LASER]) {
-            await dispatch(actions.clearSavedEnvironment(type));
+        if (shouldSetFileName) {
+            for (const type of [HEAD_PRINTING, HEAD_CNC, HEAD_LASER]) {
+                await dispatch(actions.clearSavedEnvironment(type));
+            }
         }
         await dispatch(actions.updateState(envHeadType, { unSaved: true }));
     },
@@ -390,7 +391,7 @@ export const actions = {
             }
             history.push(`/${headType}`);
 
-            await dispatch(actions.onRecovery(headType, envObj, false));
+            await dispatch(actions.onRecovery(headType, envObj, false, shouldSetFileName));
             if (shouldSetFileName) {
                 if (file instanceof File) {
                     const newOpenedFile = {

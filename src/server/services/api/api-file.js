@@ -25,6 +25,18 @@ function copyFileSync(src, dst) {
     }
 }
 
+function getSeriesPathFromMachineInfo(machineInfo) {
+    let currentSeriesPath = '';
+    if (machineInfo) {
+        const series = machineInfo?.series;
+        const headType = machineInfo?.headType;
+        const toolHead = machineInfo?.toolHead || (series === 'Original' ? INITIAL_TOOL_HEAD_FOR_ORIGINAL : INITIAL_TOOL_HEAD_FOR_SM2);
+        const currentMachine = getMachineSeriesWithToolhead(series, toolHead);
+        currentSeriesPath = currentMachine?.configPathname[headType];
+    }
+    return currentSeriesPath;
+}
+
 const cpFileToTmp = async (file, uploadName) => {
     const originalName = path.basename(file.name);
     uploadName = uploadName || originalName;
@@ -242,12 +254,12 @@ export const removeEnv = async (req, res) => {
 export const saveEnv = async (req, res) => {
     const { content } = req.body;
     const config = JSON.parse(content);
-    const headType = config?.machineInfo?.headType;
-    const series = config?.machineInfo?.series;
+    const machineInfo = config?.machineInfo;
+    const headType = machineInfo?.headType;
     const envDir = `${DataStorage.envDir}/${headType}`;
     // TODO: not just remove the category but only change the file when model changed
     rmDir(envDir, false);
-
+    const currentSeriesPath = getSeriesPathFromMachineInfo(machineInfo);
     const result = await new Promise((resolve, reject) => {
         const targetPath = `${envDir}/config.json`;
         fs.writeFile(targetPath, content, (err) => {
@@ -272,10 +284,10 @@ export const saveEnv = async (req, res) => {
         copyFileSync(`${DataStorage.tmpDir}/${uploadName}`, `${envDir}/${uploadName}`);
     });
     if (config.defaultMaterialId && /^material.([0-9_]+)$/.test(config.defaultMaterialId)) {
-        copyFileSync(`${DataStorage.configDir}/${headType}/${series}/${config.defaultMaterialId}.def.json`, `${envDir}/${config.defaultMaterialId}.def.json`);
+        copyFileSync(`${DataStorage.configDir}/${headType}/${currentSeriesPath}/${config.defaultMaterialId}.def.json`, `${envDir}/${config.defaultMaterialId}.def.json`);
     }
     if (config.defaultQualityId && /^quality.([0-9_]+)$/.test(config.defaultQualityId)) {
-        copyFileSync(`${DataStorage.configDir}/${headType}/${series}/${config.defaultQualityId}.def.json`, `${envDir}/${config.defaultQualityId}.def.json`);
+        copyFileSync(`${DataStorage.configDir}/${headType}/${currentSeriesPath}/${config.defaultQualityId}.def.json`, `${envDir}/${config.defaultQualityId}.def.json`);
     }
     res.send(result);
     res.end();
@@ -304,13 +316,9 @@ export const recoverEnv = async (req, res) => {
     const { content } = req.body;
     const config = JSON.parse(content);
     const headType = config?.machineInfo?.headType;
-    const series = config?.machineInfo?.series;
-    const toolHead = config?.machineInfo?.toolHead || (series === 'Original' ? INITIAL_TOOL_HEAD_FOR_ORIGINAL : INITIAL_TOOL_HEAD_FOR_SM2);
-
     const envDir = `${DataStorage.envDir}/${headType}`;
 
-    const currentMachine = getMachineSeriesWithToolhead(series, toolHead);
-    const currentSeriesPath = currentMachine?.configPathname[headType];
+    const currentSeriesPath = getSeriesPathFromMachineInfo(config?.machineInfo);
 
 
     config.models.forEach((model) => {
@@ -396,15 +404,14 @@ export const recoverProjectFile = async (req, res) => {
     content = content.toString();
     const config = JSON.parse(content);
     // const currentMachine = getMachineSeriesWithToolhead(config?.machineInfo?.series, toolHead);
-    let headType = config?.machineInfo?.headType;
+    const machineInfo = config?.machineInfo;
+    let headType = machineInfo?.headType;
     // TODO: for project file of "< version 4.1"
     if (headType === '3dp') {
         headType = HEAD_PRINTING;
+        machineInfo.headType = HEAD_PRINTING;
     }
-    const series = config?.machineInfo?.series;
-    const toolHead = config?.machineInfo?.toolHead || (series === 'Original' ? INITIAL_TOOL_HEAD_FOR_ORIGINAL : INITIAL_TOOL_HEAD_FOR_SM2);
-    const currentMachine = getMachineSeriesWithToolhead(config?.machineInfo?.series, toolHead);
-    const currentSeriesPath = currentMachine?.configPathname[headType];
+    const currentSeriesPath = getSeriesPathFromMachineInfo(machineInfo);
 
     if (config.defaultMaterialId && /^material.([0-9_]+)$/.test(config.defaultMaterialId)) {
         const fname = `${DataStorage.tmpDir}/${config.defaultMaterialId}.def.json`;

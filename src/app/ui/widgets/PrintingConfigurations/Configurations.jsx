@@ -88,7 +88,7 @@ function Configurations({ widgetActions }) {
         },
         updateActiveDefinition: (definition) => {
             dispatch(printingActions.updateActiveDefinition(definition));
-            dispatch(projectActions.autoSaveEnvironment(HEAD_PRINTING, true));
+            dispatch(projectActions.autoSaveEnvironment(HEAD_PRINTING));
         },
         /**
          * Select `definition`.
