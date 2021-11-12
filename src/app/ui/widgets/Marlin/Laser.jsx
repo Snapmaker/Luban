@@ -108,19 +108,13 @@ class Laser extends PureComponent {
 
 
     render() {
-        const { workflowStatus, workflowState } = this.props;
         const { laserPowerOpen, laserPowerMarks, laserPower } = this.state;
         const actions = this.actions;
         const isPrinting = this.actions.isPrinting();
 
         return (
             <div>
-                {(workflowStatus === WORKFLOW_STATUS_RUNNING || workflowStatus === WORKFLOW_STATUS_PAUSED) && (
-                    <WorkSpeed />
-                )}
-                {(workflowState === WORKFLOW_STATE_RUNNING || workflowState === WORKFLOW_STATUS_PAUSED) && (
-                    <WorkSpeed />
-                )}
+                {isPrinting && <WorkSpeed />}
                 <div className="sm-flex justify-space-between margin-vertical-8">
                     <span>{i18n._('key-unused-Laser Power')}</span>
                     {!isWifiPrinting && (
