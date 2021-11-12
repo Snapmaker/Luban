@@ -108,8 +108,8 @@ class Printing extends PureComponent {
     };
 
     render() {
-        const { heatedBedTemperature, isConnected, nozzleTargetTemperature, workflowStatus, nozzleTemperature } = this.props;
-        const { heatedBedTemperatureValue, zOffsetMarks, zOffsetValue } = this.state;
+        const { isConnected, heatedBedTemperature, heatedBedTargetTemperature, nozzleTemperature, nozzleTargetTemperature, workflowStatus } = this.props;
+        const { zOffsetMarks, zOffsetValue } = this.state;
         const actions = this.actions;
         return (
             <div>
@@ -143,7 +143,7 @@ class Printing extends PureComponent {
                         <Input
                             suffix="°C"
                             size="small"
-                            value={heatedBedTemperatureValue}
+                            value={heatedBedTargetTemperature}
                             max={80}
                             min={0}
                             onChange={actions.onChangeHeatedBedTemperatureValue}
