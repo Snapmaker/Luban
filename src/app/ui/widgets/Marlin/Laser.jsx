@@ -34,11 +34,11 @@ class Laser extends PureComponent {
         laserPower: this.props.laserPower || 1,
         laserPowerMarks: {
             0: 0,
-            5: 5,
-            20: 20,
-            40: 40,
-            60: 60,
-            80: 80,
+            // 5: 5,
+            // 20: 20,
+            // 40: 40,
+            // 60: 60,
+            // 80: 80,
             100: 100
         }
     };
@@ -131,7 +131,7 @@ class Laser extends PureComponent {
                         value={laserPower}
                         onChange={actions.onChangeLaserPower}
                     />
-                    <div className="">
+                    <div className="sm-flex height-32">
                         <span>{this.props.laserPower}/</span>
                         <Input
                             suffix="%"
@@ -143,7 +143,7 @@ class Laser extends PureComponent {
                         />
                         <SvgIcon
                             name="Reset"
-                            size={24}
+                            type={['static']}
                             className="border-default-black-5 margin-left-4 border-radius-8"
                             onClick={actions.onSaveLaserPower}
                             borderRadius={8}

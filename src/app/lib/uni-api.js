@@ -237,7 +237,7 @@ const File = {
         if (isElectron()) {
             const fs = window.require('fs');
             const { app } = window.require('electron').remote;
-            const defaultPath = path.resolve(app.getPath('downloads'), path.basename(tmpFile));
+            const defaultPath = path.resolve(app.getPath('downloads'), path.basename(renderGcodeFileName));
             tmpFile = app.getPath('userData') + tmpFile;
             // eslint-disable-next-line no-use-before-define
             const saveDialogReturnValue = await Dialog.showSaveDialog({
@@ -348,6 +348,7 @@ const Dialog = {
         }
     },
     showSaveDialog(options, modal = true) {
+        console.log({ options, modal });
         if (isElectron()) {
             const remote = window.require('electron').remote;
             const { dialog } = remote;
