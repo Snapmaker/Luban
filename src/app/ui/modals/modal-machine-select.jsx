@@ -166,6 +166,11 @@ class MachineSelectModal extends PureComponent {
                             <div className={styles['which-toolhead']}>{i18n._('key-Workspace/MachineSelectModal-Which toolhead is attached to your Snapmaker Luban?')}</div>
                             <div className={styles['select-tools']}>
                                 { machineHeadTypeOptions.map(v => {
+                                    // TODO
+                                    if ((state.series === MACHINE_SERIES.A150.value || state.series === MACHINE_SERIES.ORIGINAL.value || state.series === MACHINE_SERIES.ORIGINAL_LZ)
+                                        && v.toolHead === LEVEL_TWO_POWER_LASER_FOR_SM2) {
+                                        return null;
+                                    }
                                     return (
                                         <div key={v.value} className={styles['select-tool']}>
                                             <Anchor
