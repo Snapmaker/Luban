@@ -150,7 +150,7 @@ class Laser extends PureComponent {
                         />
                     </div>
                 </div>
-                {laserPower > 1 && (
+                {!isWifiPrinting && (
                     <div className="sm-flex">
                         <SvgIcon
                             name="WarningTipsWarning"
