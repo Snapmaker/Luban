@@ -121,7 +121,7 @@ class PrintPreview extends Component {
             return null;
         }
         return (
-            <div ref={this.node} />
+            <div ref={this.node} style={{ width: this.props.width, margin: '0 auto' }} />
         );
     }
 }

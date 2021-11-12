@@ -6,6 +6,7 @@ import ManualCalibrationControls from '../../../../three-extensions/ManualCalibr
 import RectangleGridHelper from '../../../../three-extensions/RectangleGridHelper';
 import WebGLRendererWrapper from '../../../../three-extensions/WebGLRendererWrapper';
 import Detector from '../../../../three-extensions/Detector';
+import styles from '../styles.styl';
 
 
 class ManualCalibration extends Component {
@@ -266,7 +267,7 @@ class ManualCalibration extends Component {
             return null;
         }
         return (
-            <div style={{ border: '1px solid #c8c8c8', overflow: 'hidden', boxSizing: 'border-box', background: '#F5F5F7', borderRadius: 8 }} ref={this.node} />
+            <div className={styles['calibrate-wrapper']} style={{ border: '1px solid #c8c8c8', overflow: 'hidden', boxSizing: 'border-box', background: '#F5F5F7', borderRadius: 8 }} ref={this.node} />
         );
     }
 }

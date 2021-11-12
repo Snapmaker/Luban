@@ -154,8 +154,8 @@ class Laser extends PureComponent {
                     <div className="sm-flex">
                         <SvgIcon
                             name="WarningTipsWarning"
-                            size={24}
                             color="#FFA940"
+                            type={['static']}
                             onClick={actions.onSaveLaserPower}
                         />
                         <span>{i18n._('key-Workspace/Laser-high_power_tips')}</span>

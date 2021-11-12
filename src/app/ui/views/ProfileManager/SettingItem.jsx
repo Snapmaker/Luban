@@ -111,7 +111,7 @@ function SettingItem({ definitionKey, settings, isDefaultDefinition = () => true
     return (
         <TipTrigger title={i18n._(label)} content={i18n._(description)} key={definitionKey}>
             <div className="position-re sm-flex justify-space-between height-32 margin-vertical-8">
-                <span className="text-overflow-ellipsis width-auto main-text-normal">
+                <span className="text-overflow-ellipsis width-auto main-text-normal max-width-160">
                     {i18n._(label)}
                 </span>
                 <div className="sm-flex-auto">

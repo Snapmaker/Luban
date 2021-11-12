@@ -48,7 +48,7 @@ class DefinitionCreator extends PureComponent {
     renderMaterialCreate() {
         return (
             <div>
-                <span className="font-size-base display-block margin-vertical-8">{i18n._('key-Cnc/ToolManger/ProfileCreator-Enter material name')}</span>
+                <span className="font-size-base display-block margin-bottom-8">{i18n._('key-Cnc/ToolManger/ProfileCreator-Enter material name')}</span>
                 <Input
                     size="432px"
                     onChange={(event) => {

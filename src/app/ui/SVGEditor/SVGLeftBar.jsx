@@ -143,21 +143,21 @@ class SVGLeftBar extends PureComponent {
                                     onClick={this.actions.onClickInsertText}
                                 />
                             </div>
-                        </div>
-                        <div className="margin-vertical-4">
-                            <SvgIcon
-                                type={[`${mode === 'ext' ? 'hoverNoBackground' : 'hoverNormal'}`, 'pressSpecial']}
-                                color="#545659"
-                                size={48}
-                                name="ToolbarOtherGraphics"
-                                disabled={!editable}
-                                className={
-                                    classNames('background-transparent',
-                                        'padding-horizontal-4', 'position-re',
-                                        { [styles.selected]: mode === 'ext' })
-                                }
-                                onClick={this.actions.showExt}
-                            />
+                            <div className="margin-vertical-4">
+                                <SvgIcon
+                                    type={[`${mode === 'ext' ? 'hoverNoBackground' : 'hoverNormal'}`, 'pressSpecial']}
+                                    color="#545659"
+                                    size={48}
+                                    name="ToolbarOtherGraphics"
+                                    disabled={!editable}
+                                    className={
+                                        classNames('background-transparent',
+                                            'padding-horizontal-4', 'position-re',
+                                            { [styles.selected]: mode === 'ext' })
+                                    }
+                                    onClick={this.actions.showExt}
+                                />
+                            </div>
                         </div>
                     </div>
                     {showExtShape && mode === 'ext' && (

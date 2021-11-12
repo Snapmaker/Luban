@@ -97,7 +97,19 @@ class SvgIcon extends PureComponent {
         // }
         const hoverBackgroundColor = includes(type, 'hoverNoBackground') ? 'transparent' : '#EEEFF0';
         const hoverIconColor = includes(type, 'hoverNoBackground') ? '#2A2C2E' : color;
-        const pressedBackground = includes(type, 'pressSpecial') ? '#E7F3FF' : '#D5D6D9';// '#D5D6D9'
+        // const pressedBackground = includes(type, 'pressSpecial') ? '#E7F3FF' : '#D5D6D9';// '#D5D6D9'
+        let pressedBackground = '#D5D6D9';
+        switch (true) {
+            case includes(type, 'pressSpecial'):
+                pressedBackground = '#E7F3FF';
+                break;
+            case includes(type, 'pressNoBackground'):
+                pressedBackground = 'transparent';
+                break;
+            default:
+                pressedBackground = '#D5D6D9';
+                break;
+        }
         const pressedIconColor = includes(type, 'pressSpecial') ? '#1890FF' : '#2A2C2E'; // '#2A2C2E'
         const isStaticIcon = includes(type, 'static');
         const onlyIcon = !(spanText || children || this.props.size > 24);

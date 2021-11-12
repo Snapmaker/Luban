@@ -131,6 +131,7 @@ const TextParameters = ({ headType, modifyText, disabled }) => {
                                     name="AlignmentLeft"
                                     disabled={disabled}
                                     size={26}
+                                    type={['hoverNormal', 'pressNoBackground']}
                                     borderRadius={8}
                                     onClick={() => { actions.onChangeAlignment('left'); }}
                                 />
@@ -145,6 +146,7 @@ const TextParameters = ({ headType, modifyText, disabled }) => {
                                     disabled={disabled}
                                     size={26}
                                     borderRadius={8}
+                                    type={['hoverNormal', 'pressNoBackground']}
                                     onClick={() => { actions.onChangeAlignment('middle'); }}
                                 />
                                 <SvgIcon
@@ -158,6 +160,7 @@ const TextParameters = ({ headType, modifyText, disabled }) => {
                                     disabled={disabled}
                                     size={26}
                                     borderRadius={8}
+                                    type={['hoverNormal', 'pressNoBackground']}
                                     onClick={() => { actions.onChangeAlignment('right'); }}
                                 />
                             </span>
