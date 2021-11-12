@@ -6,6 +6,7 @@ import { isEqual } from 'lodash';
 import styles from './styles.styl';
 import Modal from '../Modal';
 import { EPSILON } from '../../../constants';
+import i18n from '../../../lib/i18n';
 
 class ProgressBar extends React.PureComponent {
     static propTypes = {
@@ -37,7 +38,7 @@ class ProgressBar extends React.PureComponent {
                 this.timeout = setTimeout(() => this.setState({ display: 'none' }), 800);
             }
         }
-        if (this.props.tips === 'Failed to load model.') {
+        if (this.props.tips === i18n._('key-Progress/3DP-Failed to load model.')) {
             this.setState({ display: 'none' });
         }
         return prevProps;
