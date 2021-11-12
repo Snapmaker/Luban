@@ -13,7 +13,9 @@ import {
     CONNECTION_TYPE_WIFI,
     LEVEL_TWO_POWER_LASER_FOR_SM2,
     WORKFLOW_STATUS_PAUSED,
-    WORKFLOW_STATUS_RUNNING
+    WORKFLOW_STATUS_RUNNING,
+    WORKFLOW_STATE_PAUSED,
+    WORKFLOW_STATE_RUNNING, CONNECTION_TYPE_SERIAL
 } from '../../../constants';
 
 class Laser extends PureComponent {
@@ -21,6 +23,7 @@ class Laser extends PureComponent {
         headStatus: PropTypes.bool,
         laserPower: PropTypes.number,
         workflowStatus: PropTypes.string,
+        workflowState: PropTypes.string,
         connectionType: PropTypes.string,
         server: PropTypes.object,
         isConnected: PropTypes.bool,
@@ -44,10 +47,10 @@ class Laser extends PureComponent {
     };
 
     actions = {
-        isWifiPrinting: () => {
-            const { workflowStatus, connectionType } = this.props;
-            return _.includes([WORKFLOW_STATUS_RUNNING, WORKFLOW_STATUS_PAUSED], workflowStatus)
-                && connectionType === CONNECTION_TYPE_WIFI;
+        isPrinting: () => {
+            const { workflowStatus, workflowState, connectionType } = this.props;
+            return (_.includes([WORKFLOW_STATUS_RUNNING, WORKFLOW_STATUS_PAUSED], workflowStatus) && connectionType === CONNECTION_TYPE_WIFI)
+                || (_.includes([WORKFLOW_STATE_PAUSED, WORKFLOW_STATE_RUNNING], workflowState) && connectionType === CONNECTION_TYPE_SERIAL);
         },
         onChangeLaserPower: (value) => {
             this.setState({
@@ -55,7 +58,7 @@ class Laser extends PureComponent {
             });
         },
         onClickLaserPower: () => {
-            if (this.actions.isWifiPrinting()) {
+            if (this.actions.isPrinting()) {
                 return;
             }
             if (this.state.laserPowerOpen) {
@@ -74,7 +77,8 @@ class Laser extends PureComponent {
             });
         },
         onSaveLaserPower: () => {
-            if (this.actions.isWifiPrinting()) {
+            if (this.actions.isPrinting()) {
+                // TODO: why allow to update laser power
                 this.props.server.updateLaserPower(this.state.laserPower);
             } else {
                 if (this.state.laserPowerOpen) {
@@ -104,14 +108,17 @@ class Laser extends PureComponent {
 
 
     render() {
-        const { workflowStatus } = this.props;
+        const { workflowStatus, workflowState } = this.props;
         const { laserPowerOpen, laserPowerMarks, laserPower } = this.state;
         const actions = this.actions;
-        const isWifiPrinting = this.actions.isWifiPrinting();
+        const isPrinting = this.actions.isPrinting();
 
         return (
             <div>
                 {(workflowStatus === WORKFLOW_STATUS_RUNNING || workflowStatus === WORKFLOW_STATUS_PAUSED) && (
+                    <WorkSpeed />
+                )}
+                {(workflowState === WORKFLOW_STATE_RUNNING || workflowState === WORKFLOW_STATUS_PAUSED) && (
                     <WorkSpeed />
                 )}
                 <div className="sm-flex justify-space-between margin-vertical-8">
@@ -174,10 +181,11 @@ class Laser extends PureComponent {
 
 const mapStateToProps = (state) => {
     const machine = state.machine;
-    const { workflowStatus, connectionType, server, laserPower, headStatus, isConnected, toolHead } = machine;
+    const { workflowStatus, workflowState, connectionType, server, laserPower, headStatus, isConnected, toolHead } = machine;
 
     return {
         workflowStatus,
+        workflowState,
         connectionType,
         server,
         laserPower,
