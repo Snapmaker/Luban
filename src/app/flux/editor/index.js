@@ -102,13 +102,6 @@ const sizeModel = (size, materials, sourceWidth, sourceHeight) => {
     };
 };
 
-function isImageElementReferSVG(element) {
-    if (element.tagName.toLowerCase() === 'image') {
-        return /(\.svg|\.svg\?_=\d*)$/.test(element.href.baseVal);
-    }
-    return false;
-}
-
 // a wrapper function for recording scaled models states
 function recordScaleActionsToHistory(scaleActionsFn, elements, SVGActions, headType, machine, dispatch) {
     if (typeof scaleActionsFn === 'function') {
@@ -182,7 +175,7 @@ function recordScaleActionsToHistory(scaleActionsFn, elements, SVGActions, headT
                         }
                         resolve();
                     };
-                    if (isImageElementReferSVG(element)) {
+                    if (svgModel.sourceType === 'svg' && /(\.svg|\.svg\?_=\d*)$/.test(element.href.baseVal)) {
                         // after SVG file scaled, reload href and skip browser cache
                         // convert `/data/Tmp/18382283_21075036parsed.svg?_=1636096912083` to `/data/Tmp/18382283_21075036parsed.svg`
                         const originalHref = element.href.baseVal.replace(/\?_=\d*$/ig, '');
@@ -1587,7 +1580,7 @@ export const actions = {
             return;
         }
         const selectedModel = selectedModels[0];
-        if (selectedModel.sourceType !== 'image3d' && !isImageElementReferSVG(selectedModel.elem)) {
+        if (selectedModel.sourceType !== 'image3d' && selectedModel.sourceType !== 'svg') {
             dispatch(actions.processSelectedModel(headType));
         }
 
@@ -1612,7 +1605,7 @@ export const actions = {
             return;
         }
         const selectedModel = selectedModels[0];
-        if (selectedModel.sourceType !== 'image3d' && !isImageElementReferSVG(selectedModel.elem)) {
+        if (selectedModel.sourceType !== 'image3d' && selectedModel.sourceType !== 'svg') {
             dispatch(actions.processSelectedModel(headType));
         }
 
@@ -1639,7 +1632,7 @@ export const actions = {
             return;
         }
         const selectedModel = selectedModels[0];
-        if (selectedModel.sourceType !== 'image3d' && !isImageElementReferSVG(selectedModel.elem)) {
+        if (selectedModel.sourceType !== 'image3d' && selectedModel.sourceType !== 'svg') {
             dispatch(actions.processSelectedModel(headType));
         }
 
@@ -1665,7 +1658,7 @@ export const actions = {
             return;
         }
         const selectedModel = selectedModels[0];
-        if (selectedModel.sourceType !== 'image3d' && !isImageElementReferSVG(selectedModel.elem)) {
+        if (selectedModel.sourceType !== 'image3d' && selectedModel.sourceType !== 'svg') {
             dispatch(actions.processSelectedModel(headType));
         }
 
@@ -1691,7 +1684,7 @@ export const actions = {
             return;
         }
         const selectedModel = selectedModels[0];
-        if (selectedModel.sourceType !== 'image3d' && !isImageElementReferSVG(selectedModel.elem)) {
+        if (selectedModel.sourceType !== 'image3d' && selectedModel.sourceType !== 'svg') {
             dispatch(actions.processSelectedModel(headType));
         }
 
