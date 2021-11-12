@@ -36,7 +36,7 @@ export const formatDuration = (value, withSecond = true) => {
         return '–';
     }
     const d = moment.duration(value, 'ms');
-    const str = moment(d._data).format(`${withSecond ? 'H[h] mm[m] ss[s]' : 'H[h] mm[m]'}`);
+    const str = moment(d._data).format(`${withSecond ? 'H[h] mm[m] ss[s]' : 'H[h] m[m]'}`);
     if (d.days()) {
         return `${d.days()}d ${str}`;
     } else {

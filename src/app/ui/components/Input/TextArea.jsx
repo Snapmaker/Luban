@@ -38,7 +38,7 @@ const TextAreaInput = React.memo(({
                 {...rest}
                 disabled={disabled}
                 allowClear
-                showCount
+                // showCount
                 autoSize={{ minRows: 4, maxRows: 6 }}
                 className={classNames(styles.textarea)}
                 value={displayValue}
