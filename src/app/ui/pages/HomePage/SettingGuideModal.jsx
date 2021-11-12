@@ -43,13 +43,13 @@ const machineSeriesOptions = [
         value: MACHINE_SERIES.A150.value,
         label: MACHINE_SERIES.A150.label,
         size: MACHINE_SERIES.A150.setting.size,
-        img: '/resources/images/machine/size-2.0-A150.jpg'
+        img: '/resources/images/machine/size-2.0-A150.png'
     },
     {
         value: MACHINE_SERIES.A250.value,
         label: MACHINE_SERIES.A250.label,
         size: MACHINE_SERIES.A250.setting.size,
-        img: '/resources/images/machine/size-2.0-A250.jpg'
+        img: '/resources/images/machine/size-2.0-A250.png'
     },
     {
         value: MACHINE_SERIES.A350.value,
@@ -257,7 +257,7 @@ const SettingGuideModal = (props) => {
                                     {`${i18n._('key-HomePage/Begin-Select Language')}`}
                                 </div>
                                 <Select
-                                    className={classNames(styles.langSelectInput, 'margin-auto')}
+                                    className={classNames(styles.langSelectInput, 'margin-auto', 'width-200')}
                                     clearable={false}
                                     size="super-large"
                                     searchable={false}
@@ -344,6 +344,7 @@ const SettingGuideModal = (props) => {
                                                 <span className="main-text-normal margin-right-16">{i18n._('key-App/Settings/MachineSettings-Laser Toolhead')}</span>
                                                 <Select
                                                     value={laserToolheadSelected}
+                                                    showSearch={false}
                                                     options={(machineSeries === 0 ? laserToolHeadOptionForOriginal : laserToolHeadOption).map(item => {
                                                         return {
                                                             value: item.value,

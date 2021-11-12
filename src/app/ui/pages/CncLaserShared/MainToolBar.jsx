@@ -14,6 +14,7 @@ import { actions as laserActions } from '../../../flux/laser';
 import { renderModal } from '../../utils';
 import LaserSetBackground from '../../widgets/LaserSetBackground';
 import LaserCameraAidBackground from '../../widgets/LaserCameraAidBackground';
+import ModalSmall from '../../components/Modal/ModalSmall';
 
 function useRenderMainToolBar({ headType, setShowHomePage, setShowJobType, setShowWorkspace }) {
     const unSaved = useSelector(state => state?.project[headType]?.unSaved, shallowEqual);
@@ -278,7 +279,13 @@ function useRenderMainToolBar({ headType, setShowHomePage, setShowJobType, setSh
                 || machineToolHead.laserToolhead !== workspaceToolHead || workspaceIsRotate)) {
                 // todo, ui
                 return (
-                    <modal>{i18n._('_key-Camera_capture-cannot use camera of different settings.')}</modal>
+                    <ModalSmall
+                        title={i18n._('key-Laser/CameraCapture-diff_setting_error')}
+                        text={i18n._('key-Laser/CameraCapture-diff_setting_error_info')}
+                        img="WarningTipsWarning"
+                        iconColor="#FF4D4F"
+                        onClose={() => { setShowCameraCapture(false); }}
+                    />
                 );
             }
             return (

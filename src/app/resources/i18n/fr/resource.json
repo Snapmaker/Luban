@@ -566,6 +566,8 @@
     "key-Laser/CameraCapture-The camera on the Laser Module captures nine images of the Laser Engraving and Cutting Platform, and stitches them as a background.": "The camera on the Laser Module captures nine images of the Laser Engraving and Cutting Platform, and stitches them as a background.",
     "key-Laser/CameraCapture-This action cannot be undone. Are you sure you want to stop the job?": "Cette action ne peut pas être annulée. Êtes-vous sûr de vouloir arrêter le travail ?",
     "key-Laser/CameraCapture-Warning": "Avertissement",
+    "key-Laser/CameraCapture-diff_setting_error": "Machine Not Matched",
+    "key-Laser/CameraCapture-diff_setting_error_info": "he connected machine model or working head does not match the machine model used in the project, please switch the machine model or working head in the settings.",
     "key-Laser/CameraCaptureOriginal-Back": "Back",
     "key-Laser/CameraCaptureOriginal-Complete": "Compiler et exporter",
     "key-Laser/CameraCaptureOriginal-Device Not Connected": "Device Not Connected",

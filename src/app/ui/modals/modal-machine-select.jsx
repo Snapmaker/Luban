@@ -84,12 +84,12 @@ class MachineSelectModal extends PureComponent {
             {
                 value: MACHINE_SERIES.A150.value,
                 label: MACHINE_SERIES.A150.label,
-                img: '/resources/images/machine/size-2.0-A150.jpg'
+                img: '/resources/images/machine/size-2.0-A150.png'
             },
             {
                 value: MACHINE_SERIES.A250.value,
                 label: MACHINE_SERIES.A250.label,
-                img: '/resources/images/machine/size-2.0-A250.jpg'
+                img: '/resources/images/machine/size-2.0-A250.png'
             },
             {
                 value: MACHINE_SERIES.A350.value,
@@ -122,7 +122,7 @@ class MachineSelectModal extends PureComponent {
                 headType: HEAD_LASER,
                 toolHead: LEVEL_TWO_POWER_LASER_FOR_SM2,
                 label: `10W-${MACHINE_HEAD_TYPE.LASER.label}`,
-                img: '/resources/images/machine/function-laser.jpg'
+                img: '/resources/images/machine/function-laser-10w.jpg'
             },
             {
                 value: HEAD_CNC,
