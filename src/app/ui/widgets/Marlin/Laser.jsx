@@ -150,15 +150,17 @@ class Laser extends PureComponent {
                         />
                     </div>
                 </div>
-                <div className="sm-flex">
-                    <SvgIcon
-                        name="WarningTipsWarning"
-                        size={24}
-                        color="#FFA940"
-                        onClick={actions.onSaveLaserPower}
-                    />
-                    <span>{i18n._('key-Workspace/Laser-high_power_tips')}</span>
-                </div>
+                {!isWifiPrinting && (
+                    <div className="sm-flex">
+                        <SvgIcon
+                            name="WarningTipsWarning"
+                            size={24}
+                            color="#FFA940"
+                            onClick={actions.onSaveLaserPower}
+                        />
+                        <span>{i18n._('key-Workspace/Laser-high_power_tips')}</span>
+                    </div>
+                )}
             </div>
         );
     }
