@@ -109,7 +109,7 @@ class GcodeParameters extends PureComponent {
         // Session Repetition
         const laserDefinitionRepetitionKeys = [];
         const laserDefinitionRepetition = {};
-        if (isSVG && pathType === 'path') {
+        if (pathType === 'path') {
             laserDefinitionRepetitionKeys.push('multiPasses');
             if (multiPasses > 1) {
                 laserDefinitionRepetitionKeys.push('multiPassDepth');
@@ -156,7 +156,7 @@ class GcodeParameters extends PureComponent {
                         styleSize="large"
                     />
                 </div>
-                {(!isSVG || pathType === 'fill') && (
+                {(pathType === 'fill') && (
                     <div>
                         <div className="border-bottom-normal padding-bottom-4 margin-vertical-16">
                             <SvgIcon
@@ -192,7 +192,7 @@ class GcodeParameters extends PureComponent {
                         styleSize="large"
                     />
                 </div>
-                {isSVG && pathType === 'path' && (
+                {pathType === 'path' && (
                     <div>
                         <div className="border-bottom-normal padding-bottom-4 margin-vertical-16">
                             <SvgIcon

@@ -237,7 +237,6 @@ function ToolPathFastConfigurations({ setEditingToolpath, headType, toolpath }) 
                 }
             };
             dispatch(editorActions.saveToolPath(headType, newToolPath));
-            setToolPath(newToolPath);
             dispatch(editorActions.refreshToolPathPreview(headType));
         },
         checkIfDefinitionModified() {
@@ -316,7 +315,6 @@ function ToolPathFastConfigurations({ setEditingToolpath, headType, toolpath }) 
             }
 
             dispatch(editorActions.saveToolPath(headType, newToolPath));
-            setToolPath(newToolPath);
             dispatch(editorActions.refreshToolPathPreview(headType));
         }
     };
