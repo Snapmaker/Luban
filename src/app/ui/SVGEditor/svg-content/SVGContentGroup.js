@@ -175,10 +175,18 @@ class SVGContentGroup {
             if (existingElement && data.element !== existingElement.tagName) {
                 existingElement.remove();
             }
+        } else {
+            if (data.attr) {
+                data.attr = {
+                    ...data.attr,
+                    id: this.getNewId()
+                };
+            } else {
+                data.attr = {
+                    id: this.getNewId()
+                };
+            }
         }
-        data.attr = Object.assign({
-            id: this.getNewId()
-        }, data.attr);
         const element = createSVGElement(data);
         this.group.append(element);
         return element;

@@ -71,25 +71,14 @@ class DefinitionManager {
 
     async getConfigDefinitions() {
         const res = await api.profileDefinitions.getConfigDefinitions(this.headType, this.configPathname);
-        if (!this.defaultDefinitions) {
-            await this.init();
-        }
-        const defaultDefinitionMap = {};
-        this.defaultDefinitions.forEach(item => {
-            defaultDefinitionMap[item.definitionId] = true;
-        });
-        const allDefinitions = res.body.definitions;
-        allDefinitions.forEach(item => {
-            if (defaultDefinitionMap[item.definitionId]) {
-                item.isDefault = true;
-            }
-        });
-        return allDefinitions;
+        const definitions = await this.markDefaultDefinitions(res.body.definitions);
+        return definitions;
     }
 
     async getDefinitionsByPrefixName(prefix) {
         const res = await api.profileDefinitions.getDefinitionsByPrefixName(this.headType, prefix, this.configPathname);
-        return res.body.definitions;
+        const definitions = await this.markDefaultDefinitions(res.body.definitions);
+        return definitions;
     }
 
 
@@ -117,6 +106,22 @@ class DefinitionManager {
     // Only name & settings are configurable
     async updateDefinition(definition) {
         await api.profileDefinitions.updateDefinition(this.headType, definition.definitionId, definition, this.configPathname);
+    }
+
+    async markDefaultDefinitions(remoteDefinitions) {
+        if (!this.defaultDefinitions) {
+            await this.init();
+        }
+        const defaultDefinitionMap = {};
+        this.defaultDefinitions.forEach(item => {
+            defaultDefinitionMap[item.definitionId] = true;
+        });
+        remoteDefinitions.forEach(item => {
+            if (defaultDefinitionMap[item.definitionId]) {
+                item.isDefault = true;
+            }
+        });
+        return remoteDefinitions;
     }
 
     // Start Notice: only used for printing config

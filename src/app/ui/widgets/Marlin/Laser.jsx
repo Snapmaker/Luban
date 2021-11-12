@@ -59,13 +59,15 @@ class Laser extends PureComponent {
                 return;
             }
             if (this.state.laserPowerOpen) {
-                this.props.executeGcode('M5');
+                this.props.executeGcode('M3 P0 S0');
+                // this.props.executeGcode('M5');
             } else {
-                this.props.executeGcode(`M3 P${this.state.laserPower} S${this.state.laserPower * 255 / 100}`);
-                if (this.state.laserPower > 1) {
-                    this.props.executeGcode('G4 P500');
-                    this.props.executeGcode('M3 P1 S2.55');
-                }
+                this.props.executeGcode('M3 P1 S2.55');
+                // this.props.executeGcode(`M3 P${this.state.laserPower} S${this.state.laserPower * 255 / 100}`);
+                // if (this.state.laserPower > 1) {
+                //     this.props.executeGcode('G4 P500');
+                //     this.props.executeGcode('M3 P1 S2.55');
+                // }
             }
             this.setState({
                 laserPowerOpen: !this.state.laserPowerOpen
@@ -114,49 +116,53 @@ class Laser extends PureComponent {
                 )}
                 <div className="sm-flex justify-space-between margin-vertical-8">
                     <span>{i18n._('key-unused-Laser Power')}</span>
-                    <Switch
-                        className="sm-flex-auto"
-                        onClick={this.actions.onClickLaserPower}
-                        disabled={isWifiPrinting}
-                        checked={Boolean(laserPowerOpen)}
-                    />
+                    {!isWifiPrinting && (
+                        <Switch
+                            className="sm-flex-auto"
+                            onClick={this.actions.onClickLaserPower}
+                            disabled={isWifiPrinting}
+                            checked={Boolean(laserPowerOpen)}
+                        />
+                    )}
                 </div>
-                <div className="sm-flex justify-space-between margin-vertical-8">
-                    <Slider
-                        max={100}
-                        min={0}
-                        size="middle"
-                        className="height-56"
-                        marks={laserPowerMarks}
-                        value={laserPower}
-                        onChange={actions.onChangeLaserPower}
-                    />
-                    <div className="sm-flex height-32">
-                        <span>{this.props.laserPower}/</span>
-                        <Input
-                            suffix="%"
-                            value={laserPower}
+                {isWifiPrinting && (
+                    <div className="sm-flex justify-space-between margin-vertical-8">
+                        <Slider
                             max={100}
                             min={0}
-                            size="small"
+                            size="middle"
+                            className="height-56"
+                            marks={laserPowerMarks}
+                            value={laserPower}
                             onChange={actions.onChangeLaserPower}
                         />
-                        <SvgIcon
-                            name="Reset"
-                            type={['static']}
-                            className="border-default-black-5 margin-left-4 border-radius-8"
-                            onClick={actions.onSaveLaserPower}
-                            borderRadius={8}
-                        />
+                        <div className="sm-flex height-32">
+                            <span>{this.props.laserPower}/</span>
+                            <Input
+                                suffix="%"
+                                value={laserPower}
+                                max={100}
+                                min={0}
+                                size="small"
+                                onChange={actions.onChangeLaserPower}
+                            />
+                            <SvgIcon
+                                name="Reset"
+                                type={['static']}
+                                className="border-default-black-5 margin-left-4 border-radius-8"
+                                onClick={actions.onSaveLaserPower}
+                                borderRadius={8}
+                            />
+                        </div>
                     </div>
-                </div>
+                )}
                 {!isWifiPrinting && (
                     <div className="sm-flex">
                         <SvgIcon
                             name="WarningTipsWarning"
                             color="#FFA940"
                             type={['static']}
-                            onClick={actions.onSaveLaserPower}
+                            onClick={() => {}}
                         />
                         <span>{i18n._('key-Workspace/Laser-high_power_tips')}</span>
                     </div>

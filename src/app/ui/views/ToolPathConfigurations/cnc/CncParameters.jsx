@@ -212,7 +212,13 @@ class CncParameters extends PureComponent {
                                             ]}
                                             placeholder={i18n._('key-Cnc/ToolpathParameters-Methodtips_Choose carving path')}
                                             value={pathType}
-                                            onChange={(option) => { this.props.updateGcodeConfig({ pathType: option.value }); }}
+                                            onChange={(option) => {
+                                                const param = { pathType: option.value };
+                                                if (option.value === 'pocket') {
+                                                    param.enableTab = false;
+                                                }
+                                                this.props.updateGcodeConfig(param);
+                                            }}
                                         />
                                     </div>
                                 </TipTrigger>

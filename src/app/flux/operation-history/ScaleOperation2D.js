@@ -19,7 +19,7 @@ export default class ScaleOperation2D extends Operation {
         const model = this.state.target;
         const svgActions = this.state.svgActions;
         const elements = [model.elem];
-        const isImageElement = model.elem.tagName.toLowerCase() === 'image' && model.sourceType !== 'image3d';
+        const isImageElement = model.elem.tagName.toLowerCase() === 'image';
         const restore = () => {
             svgActions.resizeElementsImmediately(elements, {
                 newWidth: this.state.to.width,
@@ -50,7 +50,7 @@ export default class ScaleOperation2D extends Operation {
         const model = this.state.target;
         const svgActions = this.state.svgActions;
         const elements = [model.elem];
-        const isImageElement = model.elem.tagName.toLowerCase() === 'image' && model.sourceType !== 'image3d';
+        const isImageElement = model.elem.tagName.toLowerCase() === 'image';
         const restore = () => {
             svgActions.resizeElementsImmediately(elements, {
                 newWidth: this.state.from.width,
