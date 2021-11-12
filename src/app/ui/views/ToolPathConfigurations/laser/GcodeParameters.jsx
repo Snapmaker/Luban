@@ -62,35 +62,34 @@ class GcodeParameters extends PureComponent {
         // Session Fill
         const laserDefinitionFillKeys = [];
         const laserDefinitionFill = {};
-        if (!isSVG || pathType === 'fill') {
+        if (pathType === 'fill') {
             laserDefinitionFillKeys.push('movementMode');
-            if (isImage) {
+            if (isSVG) {
+                laserDefinitionFillKeys.push('fillInterval');
+            } else if (isImage) {
                 if (movementMode === 'greyscale-line') {
                     laserDefinitionFillKeys.push('direction');
                 }
                 laserDefinitionFillKeys.push('fillInterval');
             }
-            if (isSVG) {
-                laserDefinitionFillKeys.push('fillInterval');
-            }
-            laserDefinitionFillKeys.forEach((key) => {
-                if (allDefinition[key]) {
-                    laserDefinitionFill[key] = allDefinition[key];
-                }
-                if (key === 'movementMode') {
-                    if (isSVG) {
-                        laserDefinitionFill[key].options = {
-                            'greyscale-line': 'Line'
-                        };
-                    } else {
-                        laserDefinitionFill[key].options = {
-                            'greyscale-line': 'Line',
-                            'greyscale-dot': 'Dot'
-                        };
-                    }
-                }
-            });
         }
+        laserDefinitionFillKeys.forEach((key) => {
+            if (allDefinition[key]) {
+                laserDefinitionFill[key] = allDefinition[key];
+            }
+            if (key === 'movementMode') {
+                if (isSVG) {
+                    laserDefinitionFill[key].options = {
+                        'greyscale-line': 'Line'
+                    };
+                } else {
+                    laserDefinitionFill[key].options = {
+                        'greyscale-line': 'Line',
+                        'greyscale-dot': 'Dot'
+                    };
+                }
+            }
+        });
 
         // Session Speed
         const laserDefinitionSpeedKeys = ['jogSpeed'];

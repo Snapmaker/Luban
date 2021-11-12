@@ -257,7 +257,6 @@ class Visualizer extends Component {
         },
         onSelectModels: (intersect, selectEvent) => { // this is a toolpath model? mesh object??
             // todo
-            // console.log('----on process select----', model);
             this.props.selectModelInProcess(intersect, selectEvent);
         },
         /*

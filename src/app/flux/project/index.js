@@ -1,5 +1,5 @@
 import cloneDeep from 'lodash/cloneDeep';
-import { find } from 'lodash';
+import { find, isNull } from 'lodash';
 import pkg from '../../../package.json';
 import {
     HEAD_CNC,
@@ -128,7 +128,10 @@ export const actions = {
             const toolPaths = editorState.toolPathGroup.getToolPaths();
             envObj.toolpaths = toolPaths;
         }
-        if (force || !(checkObjectIsEqual(JSON.parse(lastString), envObj))) {
+        if (!checkObjectIsEqual(JSON.parse(lastString), envObj)) {
+            console.log('ddd', isNull, JSON.parse(lastString), 'ddd', envObj);
+        }
+        if (force || !checkObjectIsEqual(JSON.parse(lastString), envObj)) {
             const content = JSON.stringify(envObj);
             dispatch(actions.updateState(headType, { content, unSaved: true, initState: false }));
             await api.saveEnv({ content });
@@ -543,6 +546,7 @@ export const actions = {
 
     setOpenedFileWithUnSaved: (headType, unSaved) => async (dispatch, getState) => {
         const { openedFile } = getState().project[headType];
+        console.log('setOpenedFileWithUnSaved', openedFile, unSaved);
         if (openedFile) {
             UniApi.Window.setOpenedFile(unSaved ? `${openedFile?.name} *` : openedFile?.name);
         } else {

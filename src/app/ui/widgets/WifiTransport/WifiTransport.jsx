@@ -350,8 +350,9 @@ function WifiTransport({ widgetActions, controlActions }) {
             request.get(gcodePath).end((err1, res) => {
                 const gcode = res.text;
                 const blob = new Blob([gcode], { type: 'text/plain' });
+                console.log('find.renderGcodeFile', find);
                 const file = new File([blob], find.name);
-                server.uploadFile(find.name, file, (err, data, text) => {
+                server.uploadFile(find.renderGcodeFile, file, (err, data, text) => {
                     isSendingFile.current.removeContainer();
                     if (err) {
                         modalSmallHOC({
