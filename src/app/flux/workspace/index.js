@@ -253,7 +253,7 @@ export const actions = {
     //     }));
     // },
 
-    renderGcode: (name, gcode) => (dispatch) => {
+    renderGcode: (name, gcode, shouldRenderGcode = false) => (dispatch) => {
         dispatch(actions.clearGcode());
         const blob = new Blob([gcode], { type: 'text/plain' });
         const file = new File([blob], name);
@@ -269,11 +269,11 @@ export const actions = {
                 lastModified: +file.lastModified,
                 thumbnail: ''
             };
-            dispatch(actions.renderGcodeFile(gcodeFile, true));
+            dispatch(actions.renderGcodeFile(gcodeFile, true, shouldRenderGcode));
         });
     },
 
-    renderGcodeFile: (gcodeFile, needToList = true, startPrint = false) => async (dispatch) => {
+    renderGcodeFile: (gcodeFile, needToList = true, shouldRenderGcode = false) => async (dispatch) => {
         // const oldGcodeFile = getState().workspace.gcodeFile;
 
         if (needToList) {
@@ -284,7 +284,7 @@ export const actions = {
         //     return;
         // }
         await dispatch(actions.clearGcode());
-        if (startPrint) {
+        if (shouldRenderGcode) {
             await dispatch(actions.updateState({
                 gcodeFile,
                 stage: WORKSPACE_STAGE.LOADING_GCODE,
