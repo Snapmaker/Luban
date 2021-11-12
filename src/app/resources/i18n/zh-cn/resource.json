@@ -858,7 +858,7 @@
     "key-Workspace/Connection-Disconnected": "已断开",
     "key-Workspace/Connection-Enclosure": "外罩",
     "key-Workspace/Connection-Error": "错误",
-    "key-Workspace/Connection-Go Home": "返回原位",
+    "key-Workspace/Connection-Go Home": "回原点",
     "key-Workspace/Connection-Heated bed": "热床",
     "key-Workspace/Connection-IP Address": "IP 地址",
     "key-Workspace/Connection-Laser Height": "激光高度",
