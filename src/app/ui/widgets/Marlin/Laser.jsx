@@ -27,7 +27,7 @@ class Laser extends PureComponent {
         connectionType: PropTypes.string,
         server: PropTypes.object,
         isConnected: PropTypes.bool,
-        toolHead: PropTypes.object,
+        toolHead: PropTypes.string,
 
         executeGcode: PropTypes.func.isRequired
     };
@@ -63,14 +63,12 @@ class Laser extends PureComponent {
             }
             if (this.state.laserPowerOpen) {
                 this.props.executeGcode('M3 P0 S0');
-                // this.props.executeGcode('M5');
             } else {
-                this.props.executeGcode('M3 P1 S2.55');
-                // this.props.executeGcode(`M3 P${this.state.laserPower} S${this.state.laserPower * 255 / 100}`);
-                // if (this.state.laserPower > 1) {
-                //     this.props.executeGcode('G4 P500');
-                //     this.props.executeGcode('M3 P1 S2.55');
-                // }
+                if (this.props.toolHead === LEVEL_TWO_POWER_LASER_FOR_SM2) {
+                    this.props.executeGcode('M3 P1 S2.55');
+                } else {
+                    this.props.executeGcode(`M3 P${this.state.laserPower} S${this.state.laserPower * 255 / 100}`);
+                }
             }
             this.setState({
                 laserPowerOpen: !this.state.laserPowerOpen
@@ -98,7 +96,7 @@ class Laser extends PureComponent {
 
     getSnapshotBeforeUpdate(prevProps) {
         if (prevProps.isConnected !== this.props.isConnected && this.props.isConnected) {
-            if (this.props.toolHead.laserToolhead === LEVEL_TWO_POWER_LASER_FOR_SM2) {
+            if (this.props.toolHead === LEVEL_TWO_POWER_LASER_FOR_SM2) {
                 this.setState({
                     laserPower: 1
                 });
@@ -117,47 +115,45 @@ class Laser extends PureComponent {
                 {isPrinting && <WorkSpeed />}
                 <div className="sm-flex justify-space-between margin-vertical-8">
                     <span>{i18n._('key-unused-Laser Power')}</span>
-                    {!isWifiPrinting && (
-                        <Switch
-                            className="sm-flex-auto"
-                            onClick={this.actions.onClickLaserPower}
-                            disabled={isWifiPrinting}
-                            checked={Boolean(laserPowerOpen)}
-                        />
-                    )}
+                    <Switch
+                        className="sm-flex-auto"
+                        onClick={this.actions.onClickLaserPower}
+                        disabled={isPrinting}
+                        checked={Boolean(laserPowerOpen)}
+                    />
                 </div>
-                {isWifiPrinting && (
-                    <div className="sm-flex justify-space-between margin-vertical-8">
-                        <Slider
+                <div className="sm-flex justify-space-between margin-vertical-8">
+                    <Slider
+                        max={100}
+                        min={0}
+                        size="middle"
+                        className="height-56"
+                        marks={laserPowerMarks}
+                        value={laserPower}
+                        onChange={actions.onChangeLaserPower}
+                    />
+                    <div className="sm-flex height-32">
+                        <span>{this.props.laserPower}/</span>
+                        <Input
+                            suffix="%"
+                            value={laserPower}
                             max={100}
                             min={0}
-                            size="middle"
-                            className="height-56"
-                            marks={laserPowerMarks}
-                            value={laserPower}
+                            size="small"
+                            disabled={isPrinting}
                             onChange={actions.onChangeLaserPower}
                         />
-                        <div className="sm-flex height-32">
-                            <span>{this.props.laserPower}/</span>
-                            <Input
-                                suffix="%"
-                                value={laserPower}
-                                max={100}
-                                min={0}
-                                size="small"
-                                onChange={actions.onChangeLaserPower}
-                            />
-                            <SvgIcon
-                                name="Reset"
-                                type={['static']}
-                                className="border-default-black-5 margin-left-4 border-radius-8"
-                                onClick={actions.onSaveLaserPower}
-                                borderRadius={8}
-                            />
-                        </div>
+                        <SvgIcon
+                            name="Reset"
+                            type={['static']}
+                            className="border-default-black-5 margin-left-4 border-radius-8"
+                            onClick={actions.onSaveLaserPower}
+                            borderRadius={8}
+                            disabled={isPrinting}
+                        />
                     </div>
-                )}
-                {!isWifiPrinting && (
+                </div>
+                {!isPrinting && (
                     <div className="sm-flex">
                         <SvgIcon
                             name="WarningTipsWarning"
@@ -175,7 +171,8 @@ class Laser extends PureComponent {
 
 const mapStateToProps = (state) => {
     const machine = state.machine;
-    const { workflowStatus, workflowState, connectionType, server, laserPower, headStatus, isConnected, toolHead } = machine;
+    const { workflowStatus, workflowState, connectionType, server, laserPower, headStatus, isConnected } = machine;
+    const { toolHead } = state.workspace;
 
     return {
         workflowStatus,
