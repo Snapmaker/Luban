@@ -167,7 +167,7 @@ class MachineSelectModal extends PureComponent {
                             <div className={styles['select-tools']}>
                                 { machineHeadTypeOptions.map(v => {
                                     // TODO
-                                    if ((state.series === MACHINE_SERIES.A150.value || state.series === MACHINE_SERIES.ORIGINAL.value || state.series === MACHINE_SERIES.ORIGINAL_LZ)
+                                    if ((state.series === MACHINE_SERIES.A150.value || state.series === MACHINE_SERIES.ORIGINAL.value || state.series === MACHINE_SERIES.CUSTOM.value)
                                         && v.toolHead === LEVEL_TWO_POWER_LASER_FOR_SM2) {
                                         return null;
                                     }
