@@ -56,6 +56,7 @@ class Visualizer extends PureComponent {
         isEnclosureDoorOpen: PropTypes.bool,
         doorSwitchCount: PropTypes.number,
         isEmergencyStopped: PropTypes.bool,
+        materialThickness: PropTypes.number,
 
         laser10WErrorState: PropTypes.number,
 
@@ -78,6 +79,7 @@ class Visualizer extends PureComponent {
         pauseServerGcode: PropTypes.func.isRequired,
         resumeServerGcode: PropTypes.func.isRequired,
         stopServerGcode: PropTypes.func.isRequired,
+        executeGcode: PropTypes.func.isRequired,
 
         gcodePrintingInfo: PropTypes.shape({
             sent: PropTypes.number
@@ -265,6 +267,8 @@ class Visualizer extends PureComponent {
             const { connectionType } = this.props;
             if (connectionType === CONNECTION_TYPE_SERIAL) {
                 const { workflowState } = this.state;
+                this.props.executeGcode('G0 X0 Y0 F1000');
+                this.props.executeGcode(`G0 Z${this.props.materialThickness ?? 0} F1000`);
 
                 if (workflowState === WORKFLOW_STATE_IDLE) {
                     controller.command('gcode:start');
@@ -843,7 +847,8 @@ const mapStateToProps = (state) => {
         boundingBox: workspace.boundingBox,
         renderingTimestamp: workspace.renderingTimestamp,
         stage: workspace.stage,
-        progress: workspace.progress
+        progress: workspace.progress,
+        materialThickness: machine.materialThickness
     };
 };
 
@@ -855,7 +860,8 @@ const mapDispatchToProps = (dispatch) => ({
     startServerGcode: (callback) => dispatch(machineActions.startServerGcode(callback)),
     pauseServerGcode: () => dispatch(machineActions.pauseServerGcode()),
     resumeServerGcode: (callback) => dispatch(machineActions.resumeServerGcode(callback)),
-    stopServerGcode: () => dispatch(machineActions.stopServerGcode())
+    stopServerGcode: () => dispatch(machineActions.stopServerGcode()),
+    executeGcode: (gcode) => dispatch(machineActions.executeGcode(gcode))
 });
 
 export default connect(mapStateToProps, mapDispatchToProps)(Visualizer);

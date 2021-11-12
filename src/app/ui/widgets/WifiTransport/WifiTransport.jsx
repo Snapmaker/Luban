@@ -397,6 +397,12 @@ function WifiTransport({ widgetActions, controlActions }) {
     };
 
     useEffect(() => {
+        if (isFourAxis || connectionType === 'serial') {
+            setIsLaserAutoFocus(false);
+        }
+    }, [isFourAxis, connectionType]);
+
+    useEffect(() => {
         printableArea = new PrintablePlate({
             x: size.x * 2,
             y: size.y * 2
@@ -634,7 +640,7 @@ function WifiTransport({ widgetActions, controlActions }) {
                                 <div className="sm-flex height-32 margin-top-8">
                                     <Checkbox
                                         className="sm-flex-auto"
-                                        disabled={isFourAxis}
+                                        disabled={isFourAxis || connectionType === 'serial'}
                                         checked={isLaserAutoFocus}
                                         onChange={() => setIsLaserAutoFocus(!isLaserAutoFocus)}
                                     >
