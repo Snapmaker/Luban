@@ -14,6 +14,10 @@
         }
     },
     "overrides": {
+        "layer_height": {
+            "label": "Layer Height",
+            "description": "The height of each layer in mm. Higher values produce faster prints in lower resolution, lower values produce slower prints in higher resolution."
+        },
         "adhesion_extruder_nr": {
             "label": "Heated Bed Adhesion Extruder",
             "description": "The extruder train to use for printing the skirt/brim/raft. This is used in multi-extrusion."
@@ -61,8 +65,7 @@
         "infill_pattern": {
             "label": "Infill Pattern",
             "description": "The pattern of the infill material of the print. The line and zig zag infill swap direction on alternate layers, reducing material cost. The grid, triangle, tri-hexagon, cubic, octet, quarter cubic, cross and concentric patterns are fully printed every layer. Gyroid, cubic, quarter cubic and octet infill change with every layer to provide a more equal distribution of strength over each direction.",
-            "options":
-            {
+            "options": {
                 "grid": "Grid",
                 "lines": "Lines",
                 "triangles": "Triangle",
@@ -85,10 +88,6 @@
         "skirt_line_count": {
             "label": "Skirt Line Count",
             "description": "Multiple skirt lines help to prime your extrusion better for small models. Setting this to 0 will disable the skirt."
-        },
-        "layer_height": {
-            "label": "Layer Height",
-            "description": "The height of each layer in mm. Higher values produce faster prints in lower resolution, lower values produce slower prints in higher resolution."
         },
         "layer_height_0": {
             "label": "Initial Layer Height",

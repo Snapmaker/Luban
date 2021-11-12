@@ -10,6 +10,7 @@ const log = logger('definition');
 
 const SETTING_FIELDS = [
     'label', 'description', 'type', 'options', 'unit', 'enabled', 'default_value', 'value', 'enabled',
+    'min', 'max',
     // Snapmaker extended fields:
     'sm_value'
 ];

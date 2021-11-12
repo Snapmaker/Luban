@@ -14,6 +14,10 @@
         }
     },
     "overrides": {
+        "layer_height": {
+            "min": 0.05,
+            "max": 2
+        },
         "machine_name": {
             "default_value": "Snapmaker"
         },
@@ -176,18 +180,18 @@
                 }
             }
         },
-        "support":{
-            "children":{
-                "support_enable":{
+        "support": {
+            "children": {
+                "support_enable": {
                     "label": "Generate Auto Support"
                 },
-                "support_pattern":{
+                "support_pattern": {
                     "enabled": true
                 },
-                "support_infill_rate":{
+                "support_infill_rate": {
                     "enabled": true
                 },
-                "support_z_distance":{
+                "support_z_distance": {
                     "enabled": true
                 }
             }

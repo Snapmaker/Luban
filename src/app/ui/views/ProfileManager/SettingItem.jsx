@@ -12,7 +12,7 @@ function SettingItem({ definitionKey, settings, isDefaultDefinition = () => true
     const setting = settings[definitionKey];
 
     const isProfile = !isDefaultDefinition();
-    const { label, description, type, unit = '', enabled, options } = setting;
+    const { label, description, type, unit = '', enabled, options, min, max } = setting;
     const settingDefaultValue = setting.default_value;
     const isDefault = defaultValue && (defaultValue.value === settingDefaultValue);
     if (typeof enabled === 'string') {
@@ -131,7 +131,8 @@ function SettingItem({ definitionKey, settings, isDefaultDefinition = () => true
                             suffix={unit}
                             className="sm-flex-width align-r"
                             value={settingDefaultValue}
-                            // disabled={!isDefinitionEditable()}
+                            min={min}
+                            max={max}
                             size={styleSize}
                             onChange={(value) => {
                                 onChangeDefinition(definitionKey, value);
