@@ -620,7 +620,7 @@ function ProfileManager({ optionConfigGroup, disableCategory = true, managerTitl
                                 isOfficialDefinition={isOfficialDefinition}
                                 onChangeDefinition={actions.onChangeDefinition}
                                 selectedSettingDefaultValue={definitionState?.selectedSettingDefaultValue}
-                                headType={headType}
+                                showMiddle={managerTitle === 'key-Printing/PrintingConfigurations-Printing Settings'}
                             />
 
                         </div>

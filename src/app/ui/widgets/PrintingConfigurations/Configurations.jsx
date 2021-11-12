@@ -234,7 +234,7 @@ function Configurations({ widgetActions }) {
                                 type="checkbox"
                                 onChangeDefinition={onChangeCustomConfig}
                                 onResetDefinition={actions.onResetDefinition}
-                                headType="printing"
+                                showMiddle
                             />
                         </div>
                     </Modal.Body>

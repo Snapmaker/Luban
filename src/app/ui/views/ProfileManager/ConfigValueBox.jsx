@@ -8,9 +8,8 @@ import CheckboxItem from './CheckboxItem';
 import Anchor from '../../components/Anchor';
 import styles from './styles.styl';
 import SvgIcon from '../../components/SvgIcon';
-import { HEAD_CNC, HEAD_LASER } from '../../../constants';
 
-function ConfigValueBox({ optionConfigGroup, calculateTextIndex, isCategorySelected, type = 'input', isOfficialDefinition = () => true, onChangeDefinition, selectedSettingDefaultValue, definitionForManager, customConfigs, headType }) {
+function ConfigValueBox({ optionConfigGroup, calculateTextIndex, isCategorySelected, type = 'input', isOfficialDefinition = () => true, onChangeDefinition, selectedSettingDefaultValue, definitionForManager, customConfigs, showMiddle = false }) {
     const [activeCateId, setActiveCateId] = useState(2);
     const scrollDom = useRef(null);
     function setActiveCate(cateId) {
@@ -34,7 +33,7 @@ function ConfigValueBox({ optionConfigGroup, calculateTextIndex, isCategorySelec
 
     return (
         <div className="sm-flex">
-            {(headType !== HEAD_LASER && headType !== HEAD_CNC) && (
+            {showMiddle && (
                 <div className={classNames(styles['manager-grouplist'],
                     'border-default-grey-1',
                     'padding-vertical-4',
@@ -132,7 +131,7 @@ ConfigValueBox.propTypes = {
     isOfficialDefinition: PropTypes.func,
     onChangeDefinition: PropTypes.func.isRequired,
     selectedSettingDefaultValue: PropTypes.object,
-    headType: PropTypes.string
+    showMiddle: PropTypes.bool
 };
 
 export default React.memo(ConfigValueBox);
