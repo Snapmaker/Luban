@@ -214,7 +214,9 @@ function VisualizerLeftBar({ defaultSupportSize, setTransformMode, isSupporting,
         },
         isNonUniformScaled: () => {
             const { scaleX, scaleY, scaleZ } = selectedModelArray[0].transformation;
-            return Math.abs(scaleX - scaleY) > EPSILON || Math.abs(scaleX - scaleZ) > EPSILON || Math.abs(scaleY - scaleZ) > EPSILON;
+            return Math.abs(Math.abs(scaleX) - Math.abs(scaleY)) > EPSILON
+                || Math.abs(Math.abs(scaleX) - Math.abs(scaleZ)) > EPSILON
+                || Math.abs(Math.abs(scaleY) - Math.abs(scaleZ)) > EPSILON;
         }
     };
     let moveX = 0;
