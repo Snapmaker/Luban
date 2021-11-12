@@ -20,8 +20,8 @@ import styles from './styles.styl';
 
 const newKeys = cloneDeep(PRINTING_QUALITY_CONFIG_INDEX);
 const ALL_DEFAULT_DEFINITION_ID_ARRAY = ['material.pla', 'material.abs', 'material.petg', 'quality.fast_print', 'quality.normal_quality', 'quality.high_quality'];
-function isDefinitionEditable(key) {
-    return !includes(cloneDeep(PRINTING_QUALITY_CUSTOMIZE_FIELDS), key);
+function isOfficialDefinition(key) {
+    return includes(cloneDeep(PRINTING_QUALITY_CUSTOMIZE_FIELDS), key);
 }
 function calculateTextIndex(key) {
     return `${newKeys[key] * 20}px`;
@@ -88,7 +88,7 @@ function Configurations({ widgetActions }) {
         },
         updateActiveDefinition: (definition) => {
             dispatch(printingActions.updateActiveDefinition(definition));
-            dispatch(projectActions.autoSaveEnvironment(HEAD_PRINTING, true));
+            dispatch(projectActions.autoSaveEnvironment(HEAD_PRINTING));
         },
         /**
          * Select `definition`.
@@ -230,7 +230,7 @@ function Configurations({ widgetActions }) {
                                 customConfigs={printingCustomConfigs}
                                 definitionForManager={selectedDefinition}
                                 optionConfigGroup={PRINTING_QUALITY_CONFIG_GROUP}
-                                isDefinitionEditable={isDefinitionEditable}
+                                isOfficialDefinition={isOfficialDefinition}
                                 type="checkbox"
                                 onChangeDefinition={onChangeCustomConfig}
                                 onResetDefinition={actions.onResetDefinition}

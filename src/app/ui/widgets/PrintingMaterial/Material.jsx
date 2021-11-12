@@ -45,7 +45,7 @@ function Material({ widgetActions }) {
     const updateActiveDefinition = useCallback((definition, shouldSave = false) => {
         if (definition) {
             dispatch(printingActions.updateActiveDefinition(definition, shouldSave));
-            dispatch(projectActions.autoSaveEnvironment(HEAD_PRINTING, true));
+            dispatch(projectActions.autoSaveEnvironment(HEAD_PRINTING));
         }
     }, [dispatch]);
 

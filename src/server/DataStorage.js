@@ -139,7 +139,10 @@ class DataStorage {
              for (const file of files) {
                  const src = path.join(srcDir, file);
                  if (fs.statSync(src).isFile()) {
-                     if (materialRegex.test(file) || qualityRegex.test(file)) {
+                     if (materialRegex.test(file) || qualityRegex.test(file) || includes([
+                         'material.abs.def.json',
+                         'material.pla.def.json',
+                         'material.petg.def.json'], file)) {
                          printingConfigNames.push(file);
                      }
                  } else {

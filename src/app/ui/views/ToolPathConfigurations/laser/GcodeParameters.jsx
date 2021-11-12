@@ -62,35 +62,34 @@ class GcodeParameters extends PureComponent {
         // Session Fill
         const laserDefinitionFillKeys = [];
         const laserDefinitionFill = {};
-        if (!isSVG || pathType === 'fill') {
+        if (pathType === 'fill') {
             laserDefinitionFillKeys.push('movementMode');
-            if (isImage) {
+            if (isSVG) {
+                laserDefinitionFillKeys.push('fillInterval');
+            } else if (isImage) {
                 if (movementMode === 'greyscale-line') {
                     laserDefinitionFillKeys.push('direction');
                 }
                 laserDefinitionFillKeys.push('fillInterval');
             }
-            if (isSVG) {
-                laserDefinitionFillKeys.push('fillInterval');
-            }
-            laserDefinitionFillKeys.forEach((key) => {
-                if (allDefinition[key]) {
-                    laserDefinitionFill[key] = allDefinition[key];
-                }
-                if (key === 'movementMode') {
-                    if (isSVG) {
-                        laserDefinitionFill[key].options = {
-                            'greyscale-line': 'Line'
-                        };
-                    } else {
-                        laserDefinitionFill[key].options = {
-                            'greyscale-line': 'Line',
-                            'greyscale-dot': 'Dot'
-                        };
-                    }
-                }
-            });
         }
+        laserDefinitionFillKeys.forEach((key) => {
+            if (allDefinition[key]) {
+                laserDefinitionFill[key] = allDefinition[key];
+            }
+            if (key === 'movementMode') {
+                if (isSVG) {
+                    laserDefinitionFill[key].options = {
+                        'greyscale-line': 'Line'
+                    };
+                } else {
+                    laserDefinitionFill[key].options = {
+                        'greyscale-line': 'Line',
+                        'greyscale-dot': 'Dot'
+                    };
+                }
+            }
+        });
 
         // Session Speed
         const laserDefinitionSpeedKeys = ['jogSpeed'];
@@ -110,7 +109,7 @@ class GcodeParameters extends PureComponent {
         // Session Pass
         const laserDefinitionRepetitionKeys = [];
         const laserDefinitionRepetition = {};
-        if (isSVG && pathType === 'path') {
+        if (pathType === 'path') {
             laserDefinitionRepetitionKeys.push('multiPasses');
             if (multiPasses > 1) {
                 laserDefinitionRepetitionKeys.push('multiPassDepth');
@@ -157,7 +156,7 @@ class GcodeParameters extends PureComponent {
                         styleSize="large"
                     />
                 </div>
-                {(!isSVG || pathType === 'fill') && (
+                {(pathType === 'fill') && (
                     <div>
                         <div className="border-bottom-normal padding-bottom-4 margin-vertical-16">
                             <SvgIcon
@@ -193,7 +192,7 @@ class GcodeParameters extends PureComponent {
                         styleSize="large"
                     />
                 </div>
-                {isSVG && pathType === 'path' && (
+                {pathType === 'path' && (
                     <div>
                         <div className="border-bottom-normal padding-bottom-4 margin-vertical-16">
                             <SvgIcon

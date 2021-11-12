@@ -1,4 +1,4 @@
-import React, { useState, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import PropTypes from 'prop-types';
 import { includes } from 'lodash';
 import classNames from 'classnames';
@@ -12,6 +12,7 @@ import SvgIcon from '../../components/SvgIcon';
 function ConfigValueBox({ optionConfigGroup, calculateTextIndex, isCategorySelected, type = 'input', isOfficialDefinition = () => true, onChangeDefinition, selectedSettingDefaultValue, definitionForManager, customConfigs, showMiddle = false }) {
     const [activeCateId, setActiveCateId] = useState(2);
     const scrollDom = useRef(null);
+    const fieldsDom = useRef([]);
     function setActiveCate(cateId) {
         if (scrollDom.current) {
             const container = scrollDom.current.parentElement;
@@ -26,6 +27,9 @@ function ConfigValueBox({ optionConfigGroup, calculateTextIndex, isCategorySelec
         }
         return true;
     }
+    useEffect(() => {
+        fieldsDom.current = fieldsDom.current.slice(0, Object.keys(optionConfigGroup).length);
+    }, [Object.keys(optionConfigGroup)]);
     // Make as a demo
     const isEditable = useCallback(() => {
         return !isOfficialDefinition(definitionForManager);
@@ -68,51 +72,56 @@ function ConfigValueBox({ optionConfigGroup, calculateTextIndex, isCategorySelec
                 onWheel={() => { setActiveCate(); }}
             >
                 <div className="sm-parameter-container" ref={scrollDom}>
-                    {!isCategorySelected && optionConfigGroup.map((group) => {
+                    {!isCategorySelected && optionConfigGroup.map((group, index) => {
                         return (
                             <div key={group.name || group.fields[0]}>
-                                { group.name && (
-                                    <div className="border-bottom-normal padding-bottom-8 margin-vertical-16">
-                                        <SvgIcon
-                                            name="TitleSetting"
-                                            type={['static']}
-                                        />
-                                        <span className="margin-left-2">{i18n._(group.name)}</span>
+                                <>
+                                    { group.name && fieldsDom.current[index]?.childNodes?.length > 0 && (
+                                        <div className="border-bottom-normal padding-bottom-8 margin-vertical-16">
+                                            <SvgIcon
+                                                name="TitleSetting"
+                                                type={['static']}
+                                            />
+                                            <span className="margin-left-2">{i18n._(group.name)}</span>
+                                        </div>
+                                    )}
+                                    {/* eslint no-return-assign: 0*/}
+                                    <div ref={el => fieldsDom.current[index] = el}>
+                                        { group.fields && group.fields.map((key) => {
+                                            if (type === 'input') {
+                                                return (
+                                                    <SettingItem
+                                                        settings={definitionForManager?.settings}
+                                                        definitionKey={key}
+                                                        width="160px"
+                                                        key={key}
+                                                        isDefaultDefinition={isEditable}
+                                                        onChangeDefinition={onChangeDefinition}
+                                                        isProfile="true"
+                                                        defaultValue={{ // Check to reset
+                                                            value: selectedSettingDefaultValue && selectedSettingDefaultValue[key].default_value
+                                                        }}
+                                                        styleSize="large"
+                                                    />
+                                                );
+                                            } else if (type === 'checkbox') {
+                                                return (
+                                                    <CheckboxItem
+                                                        calculateTextIndex={calculateTextIndex}
+                                                        settings={definitionForManager?.settings}
+                                                        defaultValue={includes(customConfigs, key)}
+                                                        definitionKey={key}
+                                                        key={key}
+                                                        isOfficialDefinition={isOfficialDefinition}
+                                                        onChangeDefinition={onChangeDefinition}
+                                                    />
+                                                );
+                                            } else {
+                                                return null;
+                                            }
+                                        })}
                                     </div>
-                                )}
-                                { group.fields && group.fields.map((key) => {
-                                    if (type === 'input') {
-                                        return (
-                                            <SettingItem
-                                                settings={definitionForManager?.settings}
-                                                definitionKey={key}
-                                                width="160px"
-                                                key={key}
-                                                isDefaultDefinition={isEditable}
-                                                onChangeDefinition={onChangeDefinition}
-                                                isProfile="true"
-                                                defaultValue={{ // Check to reset
-                                                    value: selectedSettingDefaultValue && selectedSettingDefaultValue[key].default_value
-                                                }}
-                                                styleSize="large"
-                                            />
-                                        );
-                                    } else if (type === 'checkbox') {
-                                        return (
-                                            <CheckboxItem
-                                                calculateTextIndex={calculateTextIndex}
-                                                settings={definitionForManager?.settings}
-                                                defaultValue={includes(customConfigs, key)}
-                                                definitionKey={key}
-                                                key={key}
-                                                isOfficialDefinition={isOfficialDefinition}
-                                                onChangeDefinition={onChangeDefinition}
-                                            />
-                                        );
-                                    } else {
-                                        return null;
-                                    }
-                                })}
+                                </>
                             </div>
                         );
                     })}

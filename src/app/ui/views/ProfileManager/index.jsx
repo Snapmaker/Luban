@@ -1,4 +1,4 @@
-import React, { useLayoutEffect, useState, useRef } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import classNames from 'classnames';
 import PropTypes from 'prop-types';
 // import { useSelector, shallowEqual } from 'react-redux';
@@ -49,7 +49,7 @@ function creatCateArray(optionList) {
 
 function useGetDefinitions(allDefinitions, definitionState, setDefinitionState, selectedId, getDefaultDefinition) {
     const definitionsRef = useRef([]);
-    useLayoutEffect(() => {
+    useEffect(() => {
         const newState = {};
         const lastDefinitionForManager = definitionState?.definitionForManager;
         let definitionForManager = allDefinitions.find(d => d.definitionId === lastDefinitionForManager?.definitionId);

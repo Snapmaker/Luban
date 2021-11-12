@@ -624,7 +624,7 @@ export const actions = {
                 scale = newModelSize?.scale;
             }
         } else {
-            const extname = path.extname(originalName);
+            const extname = path.extname(uploadName);
             const isScale = !includes(scaleExtname, extname);
             const newModelSize = sourceType !== SOURCE_TYPE_IMAGE3D
                 ? limitModelSizeByMachineSize(coordinateSize, sourceWidth, sourceHeight, isLimit, isScale)

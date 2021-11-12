@@ -56,9 +56,8 @@ const NumberInput = React.memo(({
             setDisplayValue(value);
         }
         // call onAfterChange to change value
-        onChange && onChange(numericValue);
-        if (value !== numericValue) {
-            setDisplayValue(value);
+        if (onChange && value !== numericValue) {
+            onChange(numericValue);
         }
         ref.current.blur();
     }
