@@ -230,7 +230,6 @@ class MarlinController {
         // Event Trigger
         this.event = new EventTrigger((event, trigger, commands) => {
             log.debug(`EventTrigger: event="${event}", trigger="${trigger}", commands="${commands}"`);
-            console.log('EventTrigger', event, trigger, commands);
             if (trigger === 'system') {
                 taskRunner.run(commands);
             } else {

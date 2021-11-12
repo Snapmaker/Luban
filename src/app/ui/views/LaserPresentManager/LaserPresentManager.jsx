@@ -68,14 +68,12 @@ function LaserPresentManager({ closeToolManager, shouldSaveToolpath = false, sav
         updateCategoryName: async (definition, selectedName) => {
             try {
                 const definitionsWithSameCategory = toolDefinitions.filter(d => d.category === definition.category);
-                // for (let i = 0; i < definitionsWithSameCategory.length; i++) {
                 await dispatch(laserActions.updateToolDefinitionName(
                     true,
                     definitionsWithSameCategory[0].definitionId,
                     definitionsWithSameCategory[0].category,
                     selectedName,
                 ));
-                // }
                 return null;
             } catch (e) {
                 return Promise.reject(i18n._('key-Laser/PresentManager_rename_error_prompt'));
