@@ -130,6 +130,7 @@ class Laser extends PureComponent {
                         className="height-56"
                         marks={laserPowerMarks}
                         value={laserPower}
+                        disabled={isPrinting}
                         onChange={actions.onChangeLaserPower}
                     />
                     <div className="sm-flex height-32">
