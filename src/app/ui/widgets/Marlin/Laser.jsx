@@ -154,7 +154,7 @@ class Laser extends PureComponent {
                         />
                     </div>
                 </div>
-                {!isPrinting && (
+                {!isPrinting && this.props.toolHead === LEVEL_TWO_POWER_LASER_FOR_SM2 && (
                     <div className="sm-flex">
                         <SvgIcon
                             name="WarningTipsWarning"
