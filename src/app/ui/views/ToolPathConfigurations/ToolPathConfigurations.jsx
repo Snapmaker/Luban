@@ -159,6 +159,11 @@ function ToolPathConfigurations({ toolpath, onClose, headType }) {
                     for (const key of Object.keys(currentToolDefinition.settings)) {
                         gcodeConfig[toHump(key)] = currentToolDefinition.settings[key].default_value;
                     }
+                    // TODO
+                    if (gcodeConfig.pathType === 'fill') {
+                        gcodeConfig.multiPassEnabled = false;
+                        gcodeConfig.multiPasses = 1;
+                    }
                 }
             }
 

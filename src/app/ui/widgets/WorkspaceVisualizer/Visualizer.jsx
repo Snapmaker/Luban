@@ -12,6 +12,7 @@ import Canvas from '../../components/SMCanvas';
 import styles from './index.styl';
 import { controller } from '../../../lib/controller';
 import {
+    LEVEL_TWO_POWER_LASER_FOR_SM2,
     CONNECTION_TYPE_SERIAL,
     MARLIN,
     PROTOCOL_TEXT,
@@ -56,6 +57,8 @@ class Visualizer extends PureComponent {
         isEnclosureDoorOpen: PropTypes.bool,
         doorSwitchCount: PropTypes.number,
         isEmergencyStopped: PropTypes.bool,
+        materialThickness: PropTypes.number,
+        isRotate: PropTypes.bool,
 
         laser10WErrorState: PropTypes.number,
 
@@ -78,6 +81,7 @@ class Visualizer extends PureComponent {
         pauseServerGcode: PropTypes.func.isRequired,
         resumeServerGcode: PropTypes.func.isRequired,
         stopServerGcode: PropTypes.func.isRequired,
+        executeGcode: PropTypes.func.isRequired,
 
         gcodePrintingInfo: PropTypes.shape({
             sent: PropTypes.number
@@ -262,9 +266,13 @@ class Visualizer extends PureComponent {
             return (this.props.headType === HEAD_LASER);
         },
         handleRun: () => {
-            const { connectionType } = this.props;
+            const { connectionType, isRotate } = this.props;
             if (connectionType === CONNECTION_TYPE_SERIAL) {
                 const { workflowState } = this.state;
+                if (this.toolhead === LEVEL_TWO_POWER_LASER_FOR_SM2 && !isRotate) {
+                    this.props.executeGcode('G0 X0 Y0 F1000');
+                    this.props.executeGcode(`G0 Z${this.props.materialThickness ?? 0} F1000`);
+                }
 
                 if (workflowState === WORKFLOW_STATE_IDLE) {
                     controller.command('gcode:start');
@@ -422,7 +430,7 @@ class Visualizer extends PureComponent {
         handleStop: () => {
             const { connectionType } = this.props;
             if (connectionType === CONNECTION_TYPE_SERIAL) {
-                // why cannot stop direct ????
+                // TODO why cannot stop direct ????
                 // const { workflowState } = this.state;
                 // if ([WORKFLOW_STATE_PAUSED].includes(workflowState)) {
                 controller.command('gcode:stop');
@@ -824,7 +832,7 @@ const mapStateToProps = (state) => {
     const machine = state.machine;
     const workspace = state.workspace;
     return {
-        size: machine.size,
+        size: workspace.size,
         doorSwitchCount: machine.doorSwitchCount,
         isEmergencyStopped: machine.isEmergencyStopped,
         isEnclosureDoorOpen: machine.isEnclosureDoorOpen,
@@ -843,7 +851,9 @@ const mapStateToProps = (state) => {
         boundingBox: workspace.boundingBox,
         renderingTimestamp: workspace.renderingTimestamp,
         stage: workspace.stage,
-        progress: workspace.progress
+        progress: workspace.progress,
+        isRotate: workspace.isRotate,
+        materialThickness: machine.materialThickness
     };
 };
 
@@ -855,7 +865,8 @@ const mapDispatchToProps = (dispatch) => ({
     startServerGcode: (callback) => dispatch(machineActions.startServerGcode(callback)),
     pauseServerGcode: () => dispatch(machineActions.pauseServerGcode()),
     resumeServerGcode: (callback) => dispatch(machineActions.resumeServerGcode(callback)),
-    stopServerGcode: () => dispatch(machineActions.stopServerGcode())
+    stopServerGcode: () => dispatch(machineActions.stopServerGcode()),
+    executeGcode: (gcode) => dispatch(machineActions.executeGcode(gcode))
 });
 
 export default connect(mapStateToProps, mapDispatchToProps)(Visualizer);

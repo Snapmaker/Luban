@@ -105,7 +105,8 @@ function SerialConnection() {
             series: machineSeries
         }));
 
-        if (machineSeries && machineHeadType) {
+        // TODO
+        if (machineSeries && (machineHeadType !== 'UNKNOWN' && machineHeadType !== undefined)) {
             dispatch(machineActions.executeGcodeG54(machineSeries, machineHeadType));
         } else {
             MachineSelectModal({
