@@ -218,10 +218,9 @@ function WifiTransport({ widgetActions, controlActions }) {
     const [isLaserAutoFocus, setIsLaserAutoFocus] = useState(true);
     const isLaserPrintAutoMode = useSelector(state => state?.machine?.isLaserPrintAutoMode);
     const materialThickness = useSelector(state => state?.machine?.materialThickness);
-    const isFourAxis = useSelector(state => state?.machine?.workPosition?.isFourAxis);
     const originOffset = useSelector(state => state?.machine?.originOffset);
-    const toolHeadName = useSelector(state => state?.machine?.toolHead.laserToolhead);
-    const { previewBoundingBox, headType, gcodeFiles, previewModelGroup, previewRenderState, previewStage } = useSelector(state => state.workspace);
+    const toolHeadName = useSelector(state => state?.workspace?.toolHead);
+    const { previewBoundingBox, headType, gcodeFiles, previewModelGroup, previewRenderState, previewStage, isRotate } = useSelector(state => state.workspace);
     const { server, isConnected, connectionType, size, workflowStatus, workflowState, isSendedOnWifi } = useSelector(state => state.machine);
     const [loadToWorkspaceOnLoad, setLoadToWorkspaceOnLoad] = useState(true);
     const [selectFileName, setSelectFileName] = useState('');
@@ -310,7 +309,7 @@ function WifiTransport({ widgetActions, controlActions }) {
             }
             await dispatch(workspaceActions.renderGcodeFile(find, false, true));
 
-            if (toolHeadName === LEVEL_TWO_POWER_LASER_FOR_SM2 && isLaserAutoFocus && !isFourAxis) {
+            if (toolHeadName === LEVEL_TWO_POWER_LASER_FOR_SM2 && isLaserAutoFocus && !isRotate) {
                 const { maxX, minX, maxY, minY } = find;
                 const deltaY = 10;
                 const deltaX = 19;
@@ -397,10 +396,13 @@ function WifiTransport({ widgetActions, controlActions }) {
     };
 
     useEffect(() => {
-        if (isFourAxis || connectionType === 'serial') {
+        if (isRotate && toolHeadName === LEVEL_TWO_POWER_LASER_FOR_SM2) {
+            setIsLaserAutoFocus(false);
+            actions.onChangeMaterialThickness(0);
+        } else if (connectionType === 'serial' && isRotate && connectionType === 'serial') {
             setIsLaserAutoFocus(false);
         }
-    }, [isFourAxis, connectionType]);
+    }, [isRotate, connectionType, toolHeadName]);
 
     useEffect(() => {
         printableArea = new PrintablePlate({
@@ -575,31 +577,32 @@ function WifiTransport({ widgetActions, controlActions }) {
                     </Modal.Header>
                     <Modal.Body>
                         <div className="width-438">
-                            {!isFourAxis && toolHeadName !== LEVEL_TWO_POWER_LASER_FOR_SM2 && (
+                            {!isRotate && toolHeadName !== LEVEL_TWO_POWER_LASER_FOR_SM2 && (
                                 <Trans i18nKey="key-Workspace/LaserStartJob-3axis_start_job_prompt">
                                     Under the Auto Mode, the machine will run auto focus according to the material thickness you input, and start the job.<br />
                                     Under the Manual Mode, the machine will use the current work origin to start the job. Make sure you’ve set the work origin before starting.<br />
                                     Safety Info: Before use, make sure the machine has been equipped with an enclosure, and both the operator and bystanders have worn Laser Safety Goggles.
                                 </Trans>
                             )}
-                            {!isFourAxis && toolHeadName === LEVEL_TWO_POWER_LASER_FOR_SM2 && (
+                            {!isRotate && toolHeadName === LEVEL_TWO_POWER_LASER_FOR_SM2 && (
                                 <Trans i18nKey="key-Workspace/LaserStartJob-10w_3axis_start_job_prompt">
                                     Under the Auto Mode, the machine will run auto focus according to the material thickness you input, and start the job.<br />
                                     Under the Manual Mode, the machine will use the current work origin to start the job. Make sure you’ve set the work origin before starting.<br />
                                     Safety Info: Before use, make sure the machine has been equipped with an enclosure, and both the operator and bystanders have worn Laser Safety Goggles.
                                 </Trans>
                             )}
-                            {isFourAxis && (
+                            {isRotate && (
                                 <Trans i18nKey="key-Workspace/LaserStartJob-4axis_start_job_prompt">
                                     The machine will use the current work origin to start the job. Make sure you’ve set the work origin before starting.<br />
                                     Safety Info: Before use, make sure the machine has been equipped with an enclosure, and both the operator and bystanders have worn Laser Safety Goggles.
                                 </Trans>
                             )}
+
                             { toolHeadName !== LEVEL_TWO_POWER_LASER_FOR_SM2 && (
                                 <div className="sm-flex height-32 margin-top-8">
                                     <Checkbox
                                         className="sm-flex-auto"
-                                        disabled={isFourAxis}
+                                        disabled={isRotate}
                                         checked={isLaserPrintAutoMode}
                                         onChange={actions.onChangeLaserPrintMode}
                                     >
@@ -607,7 +610,7 @@ function WifiTransport({ widgetActions, controlActions }) {
                                     </Checkbox>
                                 </div>
                             )}
-                            { toolHeadName !== LEVEL_TWO_POWER_LASER_FOR_SM2 && isLaserPrintAutoMode && !isFourAxis && (
+                            { toolHeadName !== LEVEL_TWO_POWER_LASER_FOR_SM2 && isLaserPrintAutoMode && !isRotate && (
                                 <div className="sm-flex height-32 margin-top-8">
                                     <span className="">{i18n._('key-Workspace/LaserStartJob-3axis_start_job_material_thickness')}</span>
                                     <Input
@@ -621,7 +624,7 @@ function WifiTransport({ widgetActions, controlActions }) {
                                     />
                                 </div>
                             )}
-                            { toolHeadName !== LEVEL_TWO_POWER_LASER_FOR_SM2 && isLaserPrintAutoMode && isFourAxis && (
+                            { toolHeadName !== LEVEL_TWO_POWER_LASER_FOR_SM2 && isLaserPrintAutoMode && isRotate && (
                                 <div className="sm-flex height-32 margin-top-8">
                                     <span className="">{i18n._('key-Workspace/LaserStartJob-3axis_start_job_material_thickness')}</span>
                                     <Input
@@ -640,7 +643,7 @@ function WifiTransport({ widgetActions, controlActions }) {
                                 <div className="sm-flex height-32 margin-top-8">
                                     <Checkbox
                                         className="sm-flex-auto"
-                                        disabled={isFourAxis || connectionType === 'serial'}
+                                        disabled={isRotate || connectionType === 'serial'}
                                         checked={isLaserAutoFocus}
                                         onChange={() => setIsLaserAutoFocus(!isLaserAutoFocus)}
                                     >
@@ -648,7 +651,7 @@ function WifiTransport({ widgetActions, controlActions }) {
                                     </Checkbox>
                                 </div>
                             )}
-                            { toolHeadName === LEVEL_TWO_POWER_LASER_FOR_SM2 && !isLaserAutoFocus && !isFourAxis && (
+                            { toolHeadName === LEVEL_TWO_POWER_LASER_FOR_SM2 && !isLaserAutoFocus && !isRotate && (
                                 <div className="sm-flex height-32 margin-top-8">
                                     <span className="">{i18n._('key-Workspace/LaserStartJob-3axis_start_job_material_thickness')}</span>
                                     <Input
