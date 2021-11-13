@@ -395,6 +395,9 @@ export const actions = {
 
     updateMachineState: (options) => (dispatch) => {
         // { headType, toolHead, series, size, isRotate }
+        if (options.series) {
+            options.size = MACHINE_SERIES[options.series].setting.size;
+        }
         dispatch(actions.updateState(options));
     }
 };

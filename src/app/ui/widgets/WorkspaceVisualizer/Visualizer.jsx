@@ -430,7 +430,7 @@ class Visualizer extends PureComponent {
         handleStop: () => {
             const { connectionType } = this.props;
             if (connectionType === CONNECTION_TYPE_SERIAL) {
-                // why cannot stop direct ????
+                // TODO why cannot stop direct ????
                 // const { workflowState } = this.state;
                 // if ([WORKFLOW_STATE_PAUSED].includes(workflowState)) {
                 controller.command('gcode:stop');
@@ -832,7 +832,7 @@ const mapStateToProps = (state) => {
     const machine = state.machine;
     const workspace = state.workspace;
     return {
-        size: machine.size,
+        size: workspace.size,
         doorSwitchCount: machine.doorSwitchCount,
         isEmergencyStopped: machine.isEmergencyStopped,
         isEnclosureDoorOpen: machine.isEnclosureDoorOpen,
