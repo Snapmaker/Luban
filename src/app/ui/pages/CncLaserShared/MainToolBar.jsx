@@ -283,7 +283,7 @@ function useRenderMainToolBar({ headType, setShowHomePage, setShowJobType, setSh
                         title={i18n._('key-Laser/CameraCapture-diff_setting_error')}
                         text={i18n._('key-Laser/CameraCapture-diff_setting_error_info')}
                         img="WarningTipsWarning"
-                        iconColor="#FF4D4F"
+                        iconColor="#FFA940"
                         onClose={() => { setShowCameraCapture(false); }}
                     />
                 );

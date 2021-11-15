@@ -802,7 +802,7 @@ class Visualizer extends PureComponent {
                         text={i18n._('key-Workspace/Page-One or both of the enclosure panels is/are opened. Please close the panel(s) to continue printing.')}
                         subtext={i18n._('key-Workspace/Page-Please wait one second after you close the panel(s) to continue printing.')}
                         img="WarningTipsWarning"
-                        iconColor="#FF4D4F"
+                        iconColor="#FFA940"
                     />
                 )}
                 {(state.isLaser10WCheck1) && (
@@ -810,7 +810,7 @@ class Visualizer extends PureComponent {
                         title={i18n._('key-Workspace/Window-10W Laser Overheating protection')}
                         text={i18n._('key-Workspace/Window-10W Laser Overheating protection Info')}
                         img="WarningTipsWarning"
-                        iconColor="#FF4D4F"
+                        iconColor="#FFA940"
                         onClose={this.actions.closeModal}
                     />
                 )}
@@ -819,7 +819,7 @@ class Visualizer extends PureComponent {
                         title={i18n._('key-Workspace/Window-10W Laser Attitude detection')}
                         text={i18n._('key-Workspace/Window-10W Laser Attitude detection Info')}
                         img="WarningTipsWarning"
-                        iconColor="#FF4D4F"
+                        iconColor="#FFA940"
                         onClose={this.actions.closeModal}
                     />
                 )}

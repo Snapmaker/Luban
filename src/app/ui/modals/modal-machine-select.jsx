@@ -79,28 +79,28 @@ class MachineSelectModal extends PureComponent {
             {
                 value: MACHINE_SERIES.ORIGINAL.value,
                 label: MACHINE_SERIES.ORIGINAL.label,
-                img: '/resources/images/machine/size-1.0-original.jpg'
+                img: '/resources/images/machine/size-1.0-original2.jpg'
             },
             {
                 value: MACHINE_SERIES.A150.value,
                 label: MACHINE_SERIES.A150.label,
-                img: '/resources/images/machine/size-2.0-A150.png'
+                img: '/resources/images/machine/size-2.0-A1502.jpg'
             },
             {
                 value: MACHINE_SERIES.A250.value,
                 label: MACHINE_SERIES.A250.label,
-                img: '/resources/images/machine/size-2.0-A250.png'
+                img: '/resources/images/machine/size-2.0-A2502.jpg'
             },
             {
                 value: MACHINE_SERIES.A350.value,
                 label: MACHINE_SERIES.A350.label,
-                img: '/resources/images/machine/size-2.0-A350.jpg'
-            },
-            {
-                value: MACHINE_SERIES.CUSTOM.value,
-                label: MACHINE_SERIES.CUSTOM.label,
-                img: '/resources/images/machine/size-1.0-original-z-extension.jpg'
+                img: '/resources/images/machine/size-2.0-A3502.jpg'
             }
+            // {
+            //     value: MACHINE_SERIES.CUSTOM.value,
+            //     label: MACHINE_SERIES.CUSTOM.label,
+            //     img: '/resources/images/machine/size-1.0-original-z-extension.jpg'
+            // }
         ];
         const machineHeadTypeOptions = [
             {

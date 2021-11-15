@@ -280,7 +280,7 @@ const SettingGuideModal = (props) => {
                                             onClick={() => handleMachineChange('up')}
                                             borderRadius={8}
                                         />
-                                        <div>
+                                        <div className="text-align-center">
                                             <img
                                                 width="240px"
                                                 src={machineSeriesOptions[machineSeries].img}
