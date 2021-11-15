@@ -1,4 +1,4 @@
-import { Vector3, Group, Matrix4, BufferGeometry, MeshPhongMaterial, Mesh, DoubleSide, Float32BufferAttribute, MeshBasicMaterial } from 'three';
+import { Vector3, Group, Matrix4, BufferGeometry, MeshPhongMaterial, Mesh, DoubleSide, Float32BufferAttribute, MeshBasicMaterial, CatmullRomCurve3 } from 'three';
 import EventEmitter from 'events';
 // import { EPSILON } from '../../constants';
 import uuid from 'uuid';
@@ -1546,7 +1546,12 @@ class ModelGroup extends EventEmitter {
                 ThreeUtils.setObjectParent(group, model.meshObject);
                 tableResult.forEach((rowInfo) => {
                     const geometry = new BufferGeometry();
-                    geometry.setAttribute('position', new Float32BufferAttribute(rowInfo.planesPosition, 3));
+                    console.log('rowInfo.planesPosition.length', rowInfo.planesPosition.length);
+                    if (rowInfo.planesPosition.length > 90) {
+                        geometry.setAttribute('position', new Float32BufferAttribute(rowInfo.planesPosition, 3));
+                    } else {
+                        geometry.setFromPoints(this.generateRotationFaces(rowInfo.planesPosition));
+                    }
                     // Fix Z-fighting
                     // https://sites.google.com/site/threejstuts/home/polygon_offset
                     // https://stackoverflow.com/questions/40328722/how-can-i-solve-z-fighting-using-three-js
@@ -1590,6 +1595,119 @@ class ModelGroup extends EventEmitter {
             return this.selectedModelConvexMeshGroup;
         }
         return null;
+    }
+
+    isReverseEdge(e1, e2) {
+        return e1[0].x === e2[1].x && e1[0].y === e2[1].y && e1[0].z === e2[1].z
+        && e2[0].x === e1[1].x && e2[0].y === e1[1].y && e2[0].z === e1[1].z;
+    }
+
+    checkEdgeAvailable(newEdge, edges) {
+        console.log('checkEdgeAvailable');
+        let foundReverseEdge = false;
+        for (let j = edges.length - 1; j > -1; j--) {
+            const edge = edges[j];
+            if (this.isReverseEdge(edge, newEdge)) {
+                foundReverseEdge = true;
+                edges.splice(j, 1);
+                break;
+            }
+        }
+        if (!foundReverseEdge) {
+            edges.push(newEdge);
+        }
+    }
+
+    calcPositionBetween(p1, p2, ratio = 2) {
+        return {
+            x: (p1.x + p2.x) / ratio,
+            y: (p1.y + p2.y) / ratio,
+            z: (p1.z + p2.z) / ratio
+        };
+    }
+
+    arrangeEdges(edges) {
+        console.log('arrangeEdges');
+        let edge = edges[0];
+        const tempEdges = edges.slice(1);
+        const arrangedEdges = [edge];
+        while (tempEdges.length > 0) {
+            for (let j = tempEdges.length - 1; j > -1; j--) {
+                const edgeChecked = tempEdges[j];
+                if (edge[1].x === edgeChecked[0].x && edge[1].y === edgeChecked[0].y && edge[1].z === edgeChecked[0].z) {
+                    arrangedEdges.push(edgeChecked);
+                    edge = edgeChecked;
+                    tempEdges.splice(j, 1);
+                    break;
+                }
+            }
+        }
+        return arrangedEdges;
+    }
+
+    generateRotationFaces(positions) {
+        console.log('generateRotationFaces');
+        // console.log(positions);
+        const vertex = [];
+        for (let i = 0; i < positions.length; i += 3) {
+            vertex.push({
+                x: positions[i],
+                y: positions[i + 1],
+                z: positions[i + 2]
+            });
+        }
+        // console.log(vertex);
+        let edges = [];
+        for (let i = 0; i < vertex.length; i += 3) {
+            const edgeA = [vertex[i], vertex[i + 1]];
+            const edgeB = [vertex[i + 1], vertex[i + 2]];
+            const edgeC = [vertex[i + 2], vertex[i]];
+            this.checkEdgeAvailable(edgeA, edges);
+            this.checkEdgeAvailable(edgeB, edges);
+            this.checkEdgeAvailable(edgeC, edges);
+        }
+        edges = this.arrangeEdges(edges);
+        // console.log(edges);
+
+        const facePos = [];
+        function genFacePos(p1, p2, p3) {
+            const n = 2;
+            const x = (p1.x + 6 * p2.x + p3.x) / (4 * n);
+            const y = (p1.y + 6 * p2.y + p3.y) / (4 * n);
+            const z = (p1.z + 6 * p2.z + p3.z) / (4 * n);
+            facePos.push(new Vector3(x, y, z));
+        }
+        console.log('genFacePos');
+        for (let i = 0; i < edges.length - 1; i++) {
+            const p1 = edges[i][0];
+            const p2 = edges[i][1];
+            const p3 = edges[i + 1][1];
+            genFacePos(p1, p2, p3);
+        }
+        genFacePos(edges[edges.length - 1][0], edges[edges.length - 1][1], edges[0][1]);
+        // for (const e of edges) {
+        //     let v = e[0];
+        //     // const result = this.calcPositionBetween(e[0], e[1]);
+        //     if (!facePos.find(v1 => v1.x === v.x && v1.y === v.y && v1.z === v.z)) {
+        //         facePos.push(new Vector3(v.x, v.y, v.z));
+        //     }
+        //     v = e[1];
+        //     if (!facePos.find(v1 => v1.x === v.x && v1.y === v.y && v1.z === v.z)) {
+        //         facePos.push(new Vector3(v.x, v.y, v.z));
+        //     }
+        // }
+        // console.log(facePos);
+        console.log('compute curve');
+        const curve1 = new CatmullRomCurve3(facePos, true, 'catmullrom');
+        const ps = curve1.getPoints(50);
+        const p1 = [ps[0], ps[1], ps[2]];
+        for (let i = 3; i < ps.length; i++) {
+            const last = p1[p1.length - 1];
+            p1.push(p1[0]);
+            p1.push(last);
+            p1.push(ps[i]);
+        }
+        return p1;
     }
 }
 
