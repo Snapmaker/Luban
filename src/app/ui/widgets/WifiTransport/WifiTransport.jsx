@@ -310,7 +310,9 @@ function WifiTransport({ widgetActions, controlActions }) {
             await dispatch(workspaceActions.renderGcodeFile(find, false, true));
 
             if (toolHeadName === LEVEL_TWO_POWER_LASER_FOR_SM2 && isLaserAutoFocus && !isRotate) {
-                const { maxX, minX, maxY, minY } = find;
+                const { min, max } = find.boundingBox;
+                const { x: minX, y: minY } = min;
+                const { x: maxX, y: maxY } = max;
                 const deltaY = 10;
                 const deltaX = 19;
                 const z0 = 166;
