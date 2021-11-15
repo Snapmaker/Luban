@@ -29,7 +29,7 @@
             "default_value": 50
         },
         "material_diameter": {
-            "default_value": 1.75,
+            "default_value": 1.75
         },
         "retraction_enable": {
             "default_value": true

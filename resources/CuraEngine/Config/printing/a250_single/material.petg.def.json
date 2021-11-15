@@ -38,7 +38,7 @@
             "default_value": 100
         },
         "cool_fan_speed_max": {
-            "default_value": 100,
+            "default_value": 100
         },
         "retraction_enable": {
             "default_value": true
