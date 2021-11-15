@@ -160,6 +160,14 @@ class ExtractSquareTrace extends PureComponent {
                     length = 9;
                 }
             } else if (this.props.toolHead.laserToolhead === LEVEL_TWO_POWER_LASER_FOR_SM2) {
+                // TODO
+                this.extractingPreview[0].current.onChangeImage(
+                    DefaultBgiName,
+                    428,
+                    442,
+                    0,
+                    1
+                );
                 cameraOffsetX = 60;
                 cameraOffsetY = 0;
                 position.push({
