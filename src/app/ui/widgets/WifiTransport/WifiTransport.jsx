@@ -389,6 +389,10 @@ function WifiTransport({ widgetActions, controlActions }) {
         },
 
         onChangeMaterialThickness: async (value) => {
+            if (value < 0) {
+                // safely setting
+                value = 0;
+            }
             dispatch(machineActions.updateMaterialThickness(value));
         },
 
