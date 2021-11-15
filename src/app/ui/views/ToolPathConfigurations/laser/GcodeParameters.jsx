@@ -80,7 +80,8 @@ class GcodeParameters extends PureComponent {
             if (key === 'movementMode') {
                 if (isSVG) {
                     laserDefinitionFill[key].options = {
-                        'greyscale-line': 'Line'
+                        'greyscale-line': 'Line',
+                        'greyscale-dot': 'Dot'
                     };
                 } else {
                     laserDefinitionFill[key].options = {

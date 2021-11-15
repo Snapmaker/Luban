@@ -32,7 +32,7 @@ class SVGTagParser extends BaseTagParser {
 
     parse(node, attributes) {
         this.initialize(attributes);
-
+        node.$.viewBox = attributes.viewBox;
         // Add x and y to transform coordinates to world coordinates
         // Note: x and y has no effect on outermost SVG element
         if (attributes.x) {
