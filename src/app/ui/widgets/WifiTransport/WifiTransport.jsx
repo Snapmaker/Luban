@@ -384,7 +384,10 @@ function WifiTransport({ widgetActions, controlActions }) {
                 actions.onClickToUpload();
             }
         },
-        onChangeLaserPrintMode: () => {
+        onChangeLaserPrintMode: async () => {
+            if (isLaserPrintAutoMode) {
+                await actions.onChangeMaterialThickness(0);
+            }
             dispatch(machineActions.updateIsLaserPrintAutoMode(!isLaserPrintAutoMode));
         },
 
@@ -407,6 +410,10 @@ function WifiTransport({ widgetActions, controlActions }) {
             actions.onChangeMaterialThickness(0);
         } else if (connectionType === 'serial' && isRotate && connectionType === 'serial') {
             setIsLaserAutoFocus(false);
+        }
+
+        if (isRotate) {
+            dispatch(machineActions.updateIsLaserPrintAutoMode(false));
         }
     }, [isRotate, connectionType, toolHeadName]);
 
@@ -627,20 +634,6 @@ function WifiTransport({ widgetActions, controlActions }) {
                                         max={size.z - 40}
                                         min={0}
                                         onChange={actions.onChangeMaterialThickness}
-                                    />
-                                </div>
-                            )}
-                            { toolHeadName !== LEVEL_TWO_POWER_LASER_FOR_SM2 && isLaserPrintAutoMode && isRotate && (
-                                <div className="sm-flex height-32 margin-top-8">
-                                    <span className="">{i18n._('key-Workspace/LaserStartJob-3axis_start_job_material_thickness')}</span>
-                                    <Input
-                                        suffix="mm"
-                                        className="sm-flex-auto margin-left-16"
-                                        size="small"
-                                        value={materialThickness * 2}
-                                        max={size.z - 40}
-                                        min={0}
-                                        onChange={actions.onChangeFourAxisMaterialThickness}
                                     />
                                 </div>
                             )}
