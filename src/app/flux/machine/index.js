@@ -872,7 +872,7 @@ export const actions = {
     },
 
     executeGcodeAutoHome: () => (dispatch, getState) => {
-        const { series, headType } = getState().machine;
+        const { series, headType } = getState().workspace;
         dispatch(actions.executeGcode('G53'));
         dispatch(actions.executeGcode('G28'));
         dispatch(actions.executeGcodeG54(series, headType));
