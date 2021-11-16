@@ -64,7 +64,7 @@
     "session-file-store": "1.1.2",
     "shortid": "2.2.16",
     "snapmaker-luban-engine": "0.7.0",
-    "socket.io": "2.2.0",
+    "socket.io": "4.0.2",
     "socketio-jwt": "4.5.1",
     "spawn-default-shell": "2.0.0",
     "static-eval": "2.0.5",
