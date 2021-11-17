@@ -52,6 +52,7 @@ function callCuraEngine(modelConfig, supportConfig, outputPath) {
         args,
         {
             env: {
+                ...process.env,
                 CURA_ENGINE_SEARCH_PATH: `${path.resolve(DataStorage.configDir, HEAD_PRINTING)}`
             }
         }
