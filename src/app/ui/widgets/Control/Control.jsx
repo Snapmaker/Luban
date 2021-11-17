@@ -360,7 +360,7 @@ function Control({ widgetId, widgetActions: _widgetActions }) {
     }, [originOffset]);
 
     useEffect(() => {
-        if (boundingBox === null) {
+        if (boundingBox === undefined) {
             setState({
                 ...state,
                 bbox: {

@@ -327,6 +327,7 @@ export const actions = {
             i++;
         }
         dispatch(actions.updateState({
+            boundingBox: fileInfo.boundingBox,
             gcodeFiles: files
         }));
     },
