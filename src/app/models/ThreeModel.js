@@ -26,6 +26,13 @@ const materialNormal = new THREE.MeshPhongMaterial({
 class ThreeModel extends BaseModel {
     isThreeModel = true;
 
+    extruderConfig = {
+        infill: '1',
+        shell: '0',
+        adhesion: '1',
+        support: '1'
+    };
+
     constructor(modelInfo, modelGroup) {
         super(modelInfo, modelGroup);
         const { width, height, processImageName } = modelInfo;

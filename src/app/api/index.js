@@ -273,6 +273,11 @@ profileDefinitions.createDefinition = defaultAPIFactory((headType, definition, s
     series
 }));
 
+profileDefinitions.createTmpDefinition = defaultAPIFactory((definition, filename) => request.post('/api/profileTmpDefinition').send({
+    definition,
+    filename
+}));
+
 profileDefinitions.removeDefinition = defaultAPIFactory((headType, definitionId, series) => request.delete(`/api/profileDefinition/${headType}/${definitionId}`).send({ series }));
 
 profileDefinitions.updateDefinition = defaultAPIFactory((headType, definitionId, definition, series) => request.put(`/api/profileDefinition/${headType}/${definitionId}`).send({
