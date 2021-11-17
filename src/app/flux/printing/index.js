@@ -1549,7 +1549,7 @@ export const actions = {
     },
     generateModel: (
         headType, originalName, uploadName, sourceWidth, sourceHeight,
-        mode, sourceType, config, gcodeConfig, transformation, modelID
+        mode, sourceType, config, gcodeConfig, transformation, modelID, extruderConfig
     ) => async (dispatch, getState) => {
         const { progressStatesManager } = getState().printing;
         progressStatesManager.startProgress(PROCESS_STAGE.PRINTING_LOAD_MODEL);
@@ -1596,7 +1596,8 @@ export const actions = {
                         geometry: bufferGeometry,
                         material: material,
                         transformation,
-                        modelID
+                        modelID,
+                        extruderConfig
                     });
                     dispatch(actions.updateState(modelState));
                     dispatch(actions.displayModel());
