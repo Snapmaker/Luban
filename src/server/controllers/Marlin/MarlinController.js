@@ -32,7 +32,8 @@ import {
     WRITE_SOURCE_SENDER,
     WRITE_SOURCE_QUERY,
     WRITE_SOURCE_UNKNOWN,
-    HEAD_TYPE_3DP, QUERY_TYPE_ENCLOSURE, QUERY_TYPE_PURIFIER, QUERY_TYPE_EMERGEMCY_STOP
+    QUERY_TYPE_ENCLOSURE, QUERY_TYPE_PURIFIER, QUERY_TYPE_EMERGEMCY_STOP,
+    HEAD_TYPE_PRINTING
 } from '../constants';
 
 // % commands
@@ -160,7 +161,7 @@ class MarlinController {
                 return;
             }
             if (!this.query.type) {
-                if (this.state.headType === HEAD_TYPE_3DP) {
+                if (this.state.headType === HEAD_TYPE_PRINTING) {
                     this.query.type = typeOf3dp[index++ % typeOf3dp.length];
                 } else {
                     this.query.type = type[index++ % type.length];

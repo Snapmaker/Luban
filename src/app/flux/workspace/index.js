@@ -253,7 +253,7 @@ export const actions = {
     //     }));
     // },
 
-    renderGcode: (name, gcode, shouldRenderGcode = false) => (dispatch) => {
+    renderGcode: (name, gcode, shouldRenderGcode = false, isRepeat = false) => (dispatch) => {
         dispatch(actions.clearGcode());
         const blob = new Blob([gcode], { type: 'text/plain' });
         const file = new File([blob], name);
@@ -269,7 +269,7 @@ export const actions = {
                 lastModified: +file.lastModified,
                 thumbnail: ''
             };
-            dispatch(actions.renderGcodeFile(gcodeFile, true, shouldRenderGcode));
+            dispatch(actions.renderGcodeFile(gcodeFile, !isRepeat, shouldRenderGcode));
         });
     },
 
@@ -279,7 +279,6 @@ export const actions = {
         if (needToList) {
             dispatch(actions.addGcodeFiles(gcodeFile));
         }
-        // console.log('oldGcodeFile', oldGcodeFile, gcodeFile);
         // if (oldGcodeFile !== null && oldGcodeFile.uploadName === gcodeFile.uploadName) {
         //     return;
         // }

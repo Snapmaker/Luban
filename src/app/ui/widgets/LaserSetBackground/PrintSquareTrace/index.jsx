@@ -225,7 +225,7 @@ const mapStateToProps = (state) => {
 };
 
 const mapDispatchToProps = (dispatch) => ({
-    renderGcodeFile: (gcode) => dispatch(workspaceActions.renderGcodeFile(gcode, false)),
+    renderGcodeFile: (gcode) => dispatch(workspaceActions.renderGcode('', gcode, true)),
     clearGcode: () => dispatch(workspaceActions.clearGcode())
 });
 

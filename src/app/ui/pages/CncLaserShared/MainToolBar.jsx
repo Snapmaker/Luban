@@ -147,7 +147,7 @@ function useRenderMainToolBar({ headType, setShowHomePage, setShowJobType, setSh
             disabled: !unSaved,
             type: 'button',
             name: 'MainToolbarSave',
-            iconClassName: 'cnc-save-icon',
+            iconClassName: 'cnc-laser-save-icon',
             action: () => {
                 dispatch(projectActions.save(headType));
             }
