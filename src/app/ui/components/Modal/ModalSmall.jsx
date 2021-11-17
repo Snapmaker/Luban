@@ -41,10 +41,7 @@ class ModalSmall extends PureComponent {
                 }}
             >
                 <Modal.Body style={{
-                    // marginBottom: '42px',
-                    maxWidth: '480px',
-                    paddingLeft: '40px',
-                    paddingRight: '40px'
+                    maxWidth: '432px' // 480 - 48 = 432
                 }}
                 >
                     <div className={styles['modal-small-img']}>
