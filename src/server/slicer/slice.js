@@ -163,7 +163,8 @@ function slice(params, onProgress, onSucceed, onError) {
             } else if (item.indexOf(';Filament used:') === 0) {
                 // single extruder: ';Filament used: 0.139049m'
                 // dual extruders: ';Filament used: 0.139049m, 0m'
-                filamentLength = item.replace(';Filament used:', '').split(',').map(str => Number(str.trim().replace('m', ''))).reduce((a, b) => a + b, 0);
+                const filamentLengthArr = item.replace(';Filament used:', '').split(',')
+                filamentLength = filamentLengthArr.map(str => Number(str.trim().replace('m', ''))).reduce((a, b) => a + b, 0);
                 filamentWeight = Math.PI * (1.75 / 2) * (1.75 / 2) * filamentLength * 1.24;
             } else if (item.indexOf('Print time (s):') === 0) {
                 // Times empirical parameter: 1.07
