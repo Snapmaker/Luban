@@ -863,7 +863,7 @@ export const actions = {
         }));
 
         // Prepare model file
-        const { model, support, originalName } = await dispatch(actions.prepareModel());
+        const { model, support, definition, originalName } = await dispatch(actions.prepareModel());
         const currentModelName = path.basename(models[0]?.modelName, path.extname(models[0]?.modelName));
         const renderGcodeFileName = `${currentModelName}_${new Date().getTime()}`;
         // Prepare definition file
@@ -871,6 +871,18 @@ export const actions = {
         await dispatch(actions.updateActiveDefinitionMachineSize(size));
 
         const finalDefinition = definitionManager.finalizeActiveDefinition(activeDefinition);
+        const allModels = modelGroup.getModels();
+        if (allModels && allModels[0]) {
+            const adhesionExtruder = allModels[0].extruderConfig.adhesion;
+            const supportExtruder = allModels[0].extruderConfig.support;
+            finalDefinition.settings.adhesion_extruder_nr.default_value = adhesionExtruder;
+            finalDefinition.settings.support_extruder_nr.default_value = supportExtruder;
+            finalDefinition.settings.support_infill_extruder_nr.default_value = supportExtruder;
+            finalDefinition.settings.support_extruder_nr_layer_0.default_value = supportExtruder;
+            finalDefinition.settings.support_interface_extruder_nr.default_value = supportExtruder;
+            finalDefinition.settings.support_roof_extruder_nr.default_value = supportExtruder;
+            finalDefinition.settings.support_bottom_extruder_nr.default_value = supportExtruder;
+        }
         await api.profileDefinitions.createDefinition(CONFIG_HEADTYPE, finalDefinition);
 
         // slice
@@ -883,6 +895,7 @@ export const actions = {
 
         const boundingBox = modelGroup.getBoundingBox();
         const params = {
+            definition,
             model,
             support,
             originalName,
@@ -895,7 +908,7 @@ export const actions = {
 
     prepareModel: () => (dispatch, getState) => {
         return new Promise((resolve) => {
-            const { modelGroup } = getState().printing;
+            const { modelGroup, activeDefinition } = getState().printing;
 
 
             // modelGroup.removeHiddenMeshObjects();
@@ -904,8 +917,16 @@ export const actions = {
 
             setTimeout(async () => {
                 const models = modelGroup.models.filter(i => i.visible);
-                const ret = { model: [], support: [], originalName: null };
+                const ret = { model: [], support: [], definition: [], originalName: null };
                 for (const item of models) {
+                    const modelDefinition = definitionManager.finalizeModelDefinition(activeDefinition);
+                    modelDefinition.settings.infill_extruder_nr.default_value = item.extruderConfig.infill;
+                    modelDefinition.settings.wall_extruder_nr.default_value = item.extruderConfig.shell;
+                    modelDefinition.settings.wall_0_extruder_nr.default_value = item.extruderConfig.shell;
+                    modelDefinition.settings.wall_x_extruder_nr.default_value = item.extruderConfig.shell;
+                    modelDefinition.settings.roofing_extruder_nr.default_value = item.extruderConfig.shell;
+                    modelDefinition.settings.top_bottom_extruder_nr.default_value = item.extruderConfig.shell;
+
                     const mesh = item.meshObject.clone();
                     mesh.children = []; // remove support children
                     mesh.applyMatrix4(item.meshObject.parent.matrix);
@@ -928,6 +949,9 @@ export const actions = {
                         if (!ret.originalName) {
                             ret.originalName = uploadResult.body.originalName;
                         }
+                        const definitionName = uploadResult.body.uploadName.replace(/\.stl$/, '');
+                        const definitionRes = await api.profileDefinitions.createTmpDefinition(modelDefinition, definitionName);
+                        ret.definition.push(definitionRes.body.uploadName);
                     }
                 }
 
@@ -1529,7 +1553,7 @@ export const actions = {
     },
     generateModel: (
         headType, originalName, uploadName, sourceWidth, sourceHeight,
-        mode, sourceType, config, gcodeConfig, transformation, modelID
+        mode, sourceType, config, gcodeConfig, transformation, modelID, extruderConfig
     ) => async (dispatch, getState) => {
         const { progressStatesManager } = getState().printing;
         progressStatesManager.startProgress(PROCESS_STAGE.PRINTING_LOAD_MODEL);
@@ -1576,7 +1600,8 @@ export const actions = {
                         geometry: bufferGeometry,
                         material: material,
                         transformation,
-                        modelID
+                        modelID,
+                        extruderConfig
                     });
                     dispatch(actions.updateState(modelState));
                     dispatch(actions.displayModel());

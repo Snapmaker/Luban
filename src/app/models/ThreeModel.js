@@ -26,6 +26,13 @@ const materialNormal = new THREE.MeshPhongMaterial({
 class ThreeModel extends BaseModel {
     isThreeModel = true;
 
+    extruderConfig = {
+        infill: '0',
+        shell: '0',
+        adhesion: '0',
+        support: '0'
+    };
+
     constructor(modelInfo, modelGroup) {
         super(modelInfo, modelGroup);
         const { width, height, processImageName } = modelInfo;
@@ -62,6 +69,10 @@ class ThreeModel extends BaseModel {
 
         this.lastToolPathStr = null;
         this.isToolPath = false;
+        this.extruderConfig = {
+            ...this.extruderConfig,
+            ...modelInfo.extruderConfig
+        };
 
         if (modelInfo.convexGeometry) {
             this.setConvexGeometry(modelInfo.convexGeometry);
@@ -612,7 +623,7 @@ class ThreeModel extends BaseModel {
     getSerializableConfig() {
         const {
             modelID, limitSize, headType, sourceType, sourceHeight, sourceWidth, originalName, uploadName, config, mode,
-            transformation, processImageName, supportTag, visible
+            transformation, processImageName, supportTag, visible, extruderConfig
         } = this;
 
         return {
@@ -629,7 +640,8 @@ class ThreeModel extends BaseModel {
             visible,
             transformation,
             processImageName,
-            supportTag
+            supportTag,
+            extruderConfig
         };
     }
 }

@@ -1,0 +1,25 @@
+{
+    "name": "Model",
+    "version": 2,
+    "inherits": "snapmaker2",
+    "overrides": {
+        "infill_extruder_nr": {
+            "default_value": "0"
+        },
+        "wall_extruder_nr": {
+            "default_value": "0"
+        },
+        "wall_0_extruder_nr": {
+            "default_value": "0"
+        },
+        "wall_x_extruder_nr": {
+            "default_value": "0"
+        },
+        "roofing_extruder_nr": {
+            "default_value": "0"
+        }, 
+        "top_bottom_extruder_nr": {
+            "default_value": "0"
+        }
+    }
+}

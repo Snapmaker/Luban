@@ -8,7 +8,7 @@ import DataStorage from '../DataStorage';
 import settings from '../config/settings';
 import { DefinitionLoader } from './definition';
 import { generateRandomPathName } from '../../shared/lib/random-utils';
-import { PRINTING_CONFIG_SUBCATEGORY } from '../constants';
+import { HEAD_PRINTING, PRINTING_CONFIG_SUBCATEGORY } from '../constants';
 
 const log = logger('print3d-slice');
 
@@ -32,8 +32,11 @@ function callCuraEngine(modelConfig, supportConfig, outputPath) {
 
     if (modelConfig && modelConfig.path.length) {
         args.push('-j', modelConfig.configFilePath);
-        for (const filePath of modelConfig.path) {
+        for (let i = 0; i < modelConfig.path.length; i++) {
+            const filePath = modelConfig.path[i];
+            const fileConfig = modelConfig.modelConfigFilePath[i];
             args.push('-l', filePath);
+            args.push('-j', fileConfig);
         }
     }
     if (supportConfig && supportConfig.path.length) {
@@ -44,10 +47,15 @@ function callCuraEngine(modelConfig, supportConfig, outputPath) {
         }
     }
     // log.info(`${enginePath} ${args.join(' ')}`);
-
     return childProcess.spawn(
         enginePath,
-        args
+        args,
+        {
+            env: {
+                ...process.env,
+                CURA_ENGINE_SEARCH_PATH: `${path.resolve(DataStorage.configDir, HEAD_PRINTING)}`
+            }
+        }
     );
 }
 
@@ -98,13 +106,17 @@ function slice(params, onProgress, onSucceed, onError) {
         return;
     }
 
-    const { originalName, model, support, boundingBox, thumbnail, renderGcodeFileName: renderName } = params;
+    const { originalName, model, support, definition, boundingBox, thumbnail, renderGcodeFileName: renderName } = params;
     const modelConfig = {
         configFilePath: `${DataStorage.configDir}/${PRINTING_CONFIG_SUBCATEGORY}/active_final.def.json`,
-        path: []
+        path: [],
+        modelConfigFilePath: []
     };
-    for (const modelName of model) {
+    for (let i = 0; i < model.length; i++) {
+        const modelName = model[i];
+        const definitionName = definition[i];
         const uploadPath = `${DataStorage.tmpDir}/${modelName}`;
+        const uploadDefinitionPath = `${DataStorage.tmpDir}/${definitionName}`;
 
         if (!fs.existsSync(uploadPath)) {
             log.error(`Slice Error: 3d model file does not exist -> ${uploadPath}`);
@@ -112,6 +124,7 @@ function slice(params, onProgress, onSucceed, onError) {
             return;
         }
         modelConfig.path.push(uploadPath);
+        modelConfig.modelConfigFilePath.push(uploadDefinitionPath);
     }
 
     const supportConfig = {
@@ -148,7 +161,10 @@ function slice(params, onProgress, onSucceed, onError) {
                 sliceProgress = Number(item.slice(start, end));
                 onProgress(sliceProgress);
             } else if (item.indexOf(';Filament used:') === 0) {
-                filamentLength = Number(item.replace(';Filament used:', '').replace('m', ''));
+                // single extruder: ';Filament used: 0.139049m'
+                // dual extruders: ';Filament used: 0.139049m, 0m'
+                const filamentLengthArr = item.replace(';Filament used:', '').split(',')
+                filamentLength = filamentLengthArr.map(str => Number(str.trim().replace('m', ''))).reduce((a, b) => a + b, 0);
                 filamentWeight = Math.PI * (1.75 / 2) * (1.75 / 2) * filamentLength * 1.24;
             } else if (item.indexOf('Print time (s):') === 0) {
                 // Times empirical parameter: 1.07
