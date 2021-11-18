@@ -3,6 +3,7 @@ import { connect } from 'react-redux';
 import classNames from 'classnames';
 import PropTypes from
     'prop-types';
+import { Spin } from 'antd';
 import i18n from '../../../../lib/i18n';
 import api from '../../../../api';
 import styles from '../styles.styl';
@@ -45,6 +46,7 @@ class ExtractSquareTrace extends PureComponent {
     multiple = 2;
 
     state = {
+        loading: false, // loading when 10w laser taking photo
         panel: PANEL_EXTRACT_TRACE,
         getPhotoTasks: [],
         imageNames: [],
@@ -160,6 +162,10 @@ class ExtractSquareTrace extends PureComponent {
                     length = 9;
                 }
             } else if (this.props.toolHead.laserToolhead === LEVEL_TWO_POWER_LASER_FOR_SM2) {
+                // TODO
+                this.setState({
+                    loading: true
+                });
                 cameraOffsetX = 60;
                 cameraOffsetY = 0;
                 position.push({
@@ -364,7 +370,8 @@ class ExtractSquareTrace extends PureComponent {
                                             );
                                         }
                                         this.setState({
-                                            outputFilename: filename
+                                            outputFilename: filename,
+                                            loading: false
                                         });
                                         task.status = 2;
                                     });
@@ -579,36 +586,38 @@ class ExtractSquareTrace extends PureComponent {
                             <div style={{ margin: '0 0 16px', width: '432px' }}>
                                 {i18n._('key-Laser/CameraCapture-The camera on the Laser Module captures nine images of the Laser Engraving and Cutting Platform, and stitches them as a background.')}
                             </div>
-                            <div
-                                className={classNames(styles['photo-display'], 'border-radius-8')}
-                                style={{ height: this.props.laserSize.y * 0.85 * this.multiple + 2, width: this.props.laserSize.x * 0.85 * this.multiple + 2 }}
-                            >
-                                {this.extractingPreview.map((previewId, index) => {
-                                    const key = previewId + index;
-                                    return (
-                                        <ExtractPreview
-                                            size={this.props.laserSize}
-                                            series={this.props.series}
-                                            toolHead={this.props.toolHead}
-                                            ref={previewId}
-                                            key={key}
-                                        />
-                                    );
-                                })}
+                            <Spin spinning={this.state.loading} className={classNames(styles.spin)} tip={i18n._('key-StackedModel/Import-Loading')}>
                                 <div
-                                    className={styles['start-background']}
-                                    style={{ display: this.state.canStart ? 'inline-block' : 'none', margin: '0 auto', width: 'auto' }}
-
+                                    className={classNames(styles['photo-display'], 'border-radius-8')}
+                                    style={{ height: this.props.laserSize.y * 0.85 * this.multiple + 2, width: this.props.laserSize.x * 0.85 * this.multiple + 2 }}
                                 >
-                                    <Button
-                                        priority="level-two"
-                                        width="160px"
-                                        onClick={this.actions.startCameraAid}
+                                    {this.extractingPreview.map((previewId, index) => {
+                                        const key = previewId + index;
+                                        return (
+                                            <ExtractPreview
+                                                size={this.props.laserSize}
+                                                series={this.props.series}
+                                                toolHead={this.props.toolHead}
+                                                ref={previewId}
+                                                key={key}
+                                            />
+                                        );
+                                    })}
+                                    <div
+                                        className={styles['start-background']}
+                                        style={{ display: this.state.canStart ? 'inline-block' : 'none', margin: '0 auto', width: 'auto' }}
+
                                     >
-                                        {i18n._('key-Laser/CameraCapture-Start')}
-                                    </Button>
+                                        <Button
+                                            priority="level-two"
+                                            width="160px"
+                                            onClick={this.actions.startCameraAid}
+                                        >
+                                            {i18n._('key-Laser/CameraCapture-Start')}
+                                        </Button>
+                                    </div>
                                 </div>
-                            </div>
+                            </Spin>
                             <div style={{ minHeight: 30, width: this.props.laserSize.x * 0.85 * this.multiple + 2 }}>
                                 <div className="clearfix" />
                                 <Button

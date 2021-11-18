@@ -252,8 +252,8 @@ const SettingGuideModal = (props) => {
                 <Modal.Body>
                     {
                         settingStep === 'lang' && (
-                            <div className={styles.langSelect} style={{ width: '552px', height: '256px', marginTop: '16px' }}>
-                                <div className={classNames(styles.titleLabel, 'heading-2')}>
+                            <div className={styles.langSelect} style={{ width: '552px', height: '256px', paddingTop: '32px' }}>
+                                <div className={classNames(styles.titleLabel, 'heading-1')}>
                                     {`${i18n._('key-HomePage/Begin-Select Language')}`}
                                 </div>
                                 <Select
@@ -270,8 +270,8 @@ const SettingGuideModal = (props) => {
                     }
                     {
                         settingStep === 'machine' && (
-                            <div className={styles.machineSelect}>
-                                <div className={classNames(styles.titleLabel, 'heading-2')}>{i18n._('key-HomePage/Begin-Select Machine')}</div>
+                            <div className={styles.machineSelect} style={{ paddingTop: '12px', paddingLeft: '16px', paddingRight: '16px' }}>
+                                <div className={classNames(styles.titleLabel, 'heading-1')}>{i18n._('key-HomePage/Begin-Select Machine')}</div>
                                 <div className={styles.machineContent}>
                                     <div className={styles.machineImg}>
                                         <SvgIcon
@@ -280,7 +280,7 @@ const SettingGuideModal = (props) => {
                                             onClick={() => handleMachineChange('up')}
                                             borderRadius={8}
                                         />
-                                        <div>
+                                        <div className="text-align-center">
                                             <img
                                                 width="240px"
                                                 src={machineSeriesOptions[machineSeries].img}
