@@ -239,7 +239,8 @@ class DefinitionManager {
             inherits: 'fdmprinter',
             metadata: {
                 machine_extruder_trains: {
-                    0: 'snapmaker_extruder_0'
+                    0: 'snapmaker_extruder_0',
+                    1: 'snapmaker_extruder_1'
                 }
             },
             settings: {},
@@ -257,6 +258,13 @@ class DefinitionManager {
                     };
                     definition.ownKeys.push(key);
                 }
+                if (setting.type === 'extruder') {
+                    definition.settings[key] = {
+                        label: setting.label,
+                        default_value: '0'
+                    };
+                    definition.ownKeys.push(key);
+                }
             });
 
         definition.ownKeys.push('machine_start_gcode');
@@ -264,6 +272,29 @@ class DefinitionManager {
         this.addMachineStartGcode(definition);
         this.addMachineEndGcode(definition);
 
+        return definition;
+    }
+
+    finalizeModelDefinition(activeDefinition) {
+        const definition = {
+            definitionId: 'model_final',
+            name: 'Model Profile',
+            inherits: 'snapmaker2',
+            settings: {},
+            ownKeys: []
+        };
+        Object.keys(activeDefinition.settings)
+            .forEach(key => {
+                const setting = activeDefinition.settings[key];
+
+                if (setting.type === 'optional_extruder') {
+                    definition.settings[key] = {
+                        label: setting.label,
+                        default_value: '0'
+                    };
+                    definition.ownKeys.push(key);
+                }
+            });
         return definition;
     }
 

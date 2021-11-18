@@ -221,14 +221,14 @@ export const actions = {
 
         for (let k = 0; k < models.length; k++) {
             const { headType, originalName, uploadName, config, sourceType, gcodeConfig,
-                sourceWidth, sourceHeight, mode, transformation, modelID, supportTag } = models[k];
+                sourceWidth, sourceHeight, mode, transformation, modelID, supportTag, extruderConfig } = models[k];
             // prevent project recovery recorded into operation history
             if (supportTag) {
                 continue;
             }
             dispatch(operationHistoryActions.excludeModelById(envHeadType, modelID));
             await dispatch(modActions.generateModel(headType, originalName, uploadName, sourceWidth, sourceHeight, mode,
-                sourceType, config, gcodeConfig, transformation, modelID));
+                sourceType, config, gcodeConfig, transformation, modelID, extruderConfig));
         }
         const { toolPathGroup } = modState;
         if (toolPathGroup && toolPathGroup.toolPaths && toolPathGroup.toolPaths.length) {

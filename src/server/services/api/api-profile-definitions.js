@@ -84,6 +84,26 @@ export const createDefinition = (req, res) => {
     });
 };
 
+export const createTmpDefinition = (req, res) => {
+    const { definition, filename } = req.body;
+
+    const definitionLoader = new DefinitionLoader();
+    definitionLoader.fromObject(definition);
+
+    const uploadName = `${filename ?? definitionLoader.definitionId}.def.json`;
+    const filePath = path.join(`${DataStorage.tmpDir}`, uploadName);
+    fs.writeFile(filePath, JSON.stringify(definitionLoader.toJSON(), null, 2), 'utf8', (err) => {
+        if (err) {
+            res.status(ERR_INTERNAL_SERVER_ERROR).send({ err });
+        } else {
+            // load definition using new loader to avoid potential settings override issues
+            res.send({
+                uploadName: uploadName
+            });
+        }
+    });
+};
+
 export const removeDefinition = (req, res) => {
     const { definitionId, headType } = req.params;
     const series = req.body.series;

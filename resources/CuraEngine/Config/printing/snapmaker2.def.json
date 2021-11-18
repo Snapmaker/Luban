@@ -10,7 +10,8 @@
         "manufacturer": "Snapmaker",
         "file_formats": "text/x-gcode",
         "machine_extruder_trains": {
-            "0": "snapmaker_extruder_0"
+            "0": "snapmaker_extruder_0",
+            "1": "snapmaker_extruder_1"
         }
     },
     "overrides": {
