@@ -102,6 +102,13 @@ const sizeModel = (size, materials, sourceWidth, sourceHeight) => {
     };
 };
 
+function shouldProcessModel(selectedModel) {
+    if (selectedModel.sourceType === 'image3d' || selectedModel.mode === 'vector') {
+        return false;
+    }
+    return true;
+}
+
 // a wrapper function for recording scaled models states
 function recordScaleActionsToHistory(scaleActionsFn, elements, SVGActions, headType, machine, dispatch) {
     if (typeof scaleActionsFn === 'function') {
@@ -1583,7 +1590,7 @@ export const actions = {
             return;
         }
         const selectedModel = selectedModels[0];
-        if (selectedModel.sourceType !== 'image3d' && selectedModel.sourceType !== 'svg') {
+        if (shouldProcessModel(selectedModel)) {
             dispatch(actions.processSelectedModel(headType));
         }
 
@@ -1608,7 +1615,7 @@ export const actions = {
             return;
         }
         const selectedModel = selectedModels[0];
-        if (selectedModel.sourceType !== 'image3d' && selectedModel.sourceType !== 'svg') {
+        if (shouldProcessModel(selectedModel)) {
             dispatch(actions.processSelectedModel(headType));
         }
 
@@ -1635,7 +1642,7 @@ export const actions = {
             return;
         }
         const selectedModel = selectedModels[0];
-        if (selectedModel.sourceType !== 'image3d' && selectedModel.sourceType !== 'svg') {
+        if (shouldProcessModel(selectedModel)) {
             dispatch(actions.processSelectedModel(headType));
         }
 
@@ -1661,7 +1668,7 @@ export const actions = {
             return;
         }
         const selectedModel = selectedModels[0];
-        if (selectedModel.sourceType !== 'image3d' && selectedModel.sourceType !== 'svg') {
+        if (shouldProcessModel(selectedModel)) {
             dispatch(actions.processSelectedModel(headType));
         }
 
@@ -1687,7 +1694,7 @@ export const actions = {
             return;
         }
         const selectedModel = selectedModels[0];
-        if (selectedModel.sourceType !== 'image3d' && selectedModel.sourceType !== 'svg') {
+        if (shouldProcessModel(selectedModel)) {
             dispatch(actions.processSelectedModel(headType));
         }
 
