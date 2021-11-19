@@ -35,6 +35,7 @@ import usePrevious from '../../../lib/hooks/previous';
 import { actions as machineActions } from '../../../flux/machine';
 import Checkbox from '../../components/Checkbox';
 import { NumberInput as Input } from '../../components/Input';
+import SecondaryToolbar from '../CanvasToolbar/SecondaryToolbar';
 
 const changeNameInput = [];
 
@@ -706,6 +707,15 @@ function WifiTransport({ widgetActions, controlActions }) {
                                     cameraInitialTarget={new THREE.Vector3(0, 0, 0)}
                                 />
                                 // <Spin />
+                            )}
+                            {previewRenderState === 'rendered' && (
+                                <div className={classNames('position-ab', 'left-8', 'bottom-8')}>
+                                    <SecondaryToolbar
+                                        zoomIn={() => canvas.current.zoomIn()}
+                                        zoomOut={() => canvas.current.zoomOut()}
+                                        toFront={() => canvas.current.autoFocus(previewModelGroup.children[0], true)}
+                                    />
+                                </div>
                             )}
                             {previewRenderState !== 'rendered' && (
                                 <div className="position-ab position-ab-center">
