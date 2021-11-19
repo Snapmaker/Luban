@@ -9,7 +9,7 @@ import Anchor from '../../components/Anchor';
 import styles from './styles.styl';
 import SvgIcon from '../../components/SvgIcon';
 
-function ConfigValueBox({ optionConfigGroup, calculateTextIndex, isCategorySelected, type = 'input', isOfficialDefinition = () => true, onChangeDefinition, selectedSettingDefaultValue, definitionForManager, customConfigs, showMiddle = false }) {
+function ConfigValueBox({ optionConfigGroup, calculateTextIndex, isCategorySelected, type = 'input', isOfficialDefinition = () => true, onChangeDefinition, selectedSettingDefaultValue, definitionForManager, customConfigs, showMiddle = false, hideMiniTitle = false }) {
     const [activeCateId, setActiveCateId] = useState(2);
     const scrollDom = useRef(null);
     const fieldsDom = useRef([]);
@@ -76,7 +76,7 @@ function ConfigValueBox({ optionConfigGroup, calculateTextIndex, isCategorySelec
                         return (
                             <div key={group.name || group.fields[0]}>
                                 <>
-                                    { group.name && fieldsDom.current[index]?.childNodes?.length > 0 && (
+                                    { !hideMiniTitle && group.name && fieldsDom.current[index]?.childNodes?.length > 0 && (
                                         <div className="border-bottom-normal padding-bottom-8 margin-vertical-16">
                                             <SvgIcon
                                                 name="TitleSetting"
@@ -140,7 +140,8 @@ ConfigValueBox.propTypes = {
     isOfficialDefinition: PropTypes.func,
     onChangeDefinition: PropTypes.func.isRequired,
     selectedSettingDefaultValue: PropTypes.object,
-    showMiddle: PropTypes.bool
+    showMiddle: PropTypes.bool,
+    hideMiniTitle: PropTypes.bool
 };
 
 export default React.memo(ConfigValueBox);
