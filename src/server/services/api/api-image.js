@@ -126,7 +126,6 @@ export const set = (req, res) => {
                     });
                 }
             } catch (e) {
-                console.trace(`Failed to read image ${tempName} ,${e} `);
                 next(e);
             }
         }
