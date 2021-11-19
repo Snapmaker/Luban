@@ -573,7 +573,9 @@ export const actions = {
             server.removeAllListeners('http:close');
 
             server.once('http:confirm', (result) => {
-                const { toolHead, series, headType, status, isHomed, isEmergencyStopped } = result.data;
+                const { toolHead, series, headType, status, isHomed, isEmergencyStopped, moduleStatusList } = result.data;
+                // TODO: update orther data
+                const _isRotate = moduleStatusList?.rotaryModule;
 
                 // emergency stop event
                 if (isEmergencyStopped) {
@@ -592,6 +594,9 @@ export const actions = {
                 }));
 
                 // get series & headType
+                dispatch(workspaceActions.updateMachineState({
+                    isRotate: _isRotate
+                }));
                 if (series && headType) {
                     // TODO: set isRotate here
                     dispatch(workspaceActions.updateMachineState({

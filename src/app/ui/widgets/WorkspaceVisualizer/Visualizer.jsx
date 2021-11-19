@@ -12,7 +12,6 @@ import Canvas from '../../components/SMCanvas';
 import styles from './index.styl';
 import { controller } from '../../../lib/controller';
 import {
-    LEVEL_TWO_POWER_LASER_FOR_SM2,
     CONNECTION_TYPE_SERIAL,
     MARLIN,
     PROTOCOL_TEXT,
@@ -58,7 +57,6 @@ class Visualizer extends PureComponent {
         doorSwitchCount: PropTypes.number,
         isEmergencyStopped: PropTypes.bool,
         materialThickness: PropTypes.number,
-        isRotate: PropTypes.bool,
 
         laser10WErrorState: PropTypes.number,
 
@@ -266,10 +264,10 @@ class Visualizer extends PureComponent {
             return (this.props.headType === HEAD_LASER);
         },
         handleRun: () => {
-            const { connectionType, isRotate } = this.props;
+            const { connectionType } = this.props;
             if (connectionType === CONNECTION_TYPE_SERIAL) {
                 const { workflowState } = this.state;
-                if (this.toolhead === LEVEL_TWO_POWER_LASER_FOR_SM2 && !isRotate) {
+                if (this.actions.isLaser()) {
                     this.props.executeGcode('G0 X0 Y0 F1000');
                     this.props.executeGcode(`G0 Z${this.props.materialThickness ?? 0} F1000`);
                 }
@@ -430,9 +428,10 @@ class Visualizer extends PureComponent {
         handleStop: () => {
             const { connectionType } = this.props;
             if (connectionType === CONNECTION_TYPE_SERIAL) {
-                // TODO why cannot stop direct ????
                 // const { workflowState } = this.state;
                 // if ([WORKFLOW_STATE_PAUSED].includes(workflowState)) {
+                // TODO why cannot stop direct ??? Should pause first now.
+                this.actions.handlePause();
                 controller.command('gcode:stop');
                 // }
             } else {
@@ -837,7 +836,7 @@ const mapStateToProps = (state) => {
         isEmergencyStopped: machine.isEmergencyStopped,
         isEnclosureDoorOpen: machine.isEnclosureDoorOpen,
         laser10WErrorState: machine.laser10WErrorState,
-        headType: machine.headType,
+        headType: workspace.headType,
         workflowStatus: machine.workflowStatus,
         isConnected: machine.isConnected,
         connectionType: machine.connectionType,
@@ -852,7 +851,6 @@ const mapStateToProps = (state) => {
         renderingTimestamp: workspace.renderingTimestamp,
         stage: workspace.stage,
         progress: workspace.progress,
-        isRotate: workspace.isRotate,
         materialThickness: machine.materialThickness
     };
 };

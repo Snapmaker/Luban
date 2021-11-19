@@ -405,15 +405,12 @@ function WifiTransport({ widgetActions, controlActions }) {
     };
 
     useEffect(() => {
-        if (isRotate && toolHeadName === LEVEL_TWO_POWER_LASER_FOR_SM2) {
-            setIsLaserAutoFocus(false);
-            actions.onChangeMaterialThickness(0);
-        } else if (connectionType === 'serial' && isRotate && connectionType === 'serial') {
+        if (connectionType === 'serial' || isRotate || toolHeadName !== LEVEL_TWO_POWER_LASER_FOR_SM2) {
             setIsLaserAutoFocus(false);
         }
-
         if (isRotate) {
             dispatch(machineActions.updateIsLaserPrintAutoMode(false));
+            dispatch(machineActions.updateMaterialThickness(0));
         }
     }, [isRotate, connectionType, toolHeadName]);
 
@@ -612,7 +609,7 @@ function WifiTransport({ widgetActions, controlActions }) {
                                 </Trans>
                             )}
 
-                            { toolHeadName !== LEVEL_TWO_POWER_LASER_FOR_SM2 && (
+                            {(toolHeadName !== LEVEL_TWO_POWER_LASER_FOR_SM2 || isRotate) && (
                                 <div className="sm-flex height-32 margin-top-8">
                                     <Checkbox
                                         className="sm-flex-auto"
@@ -624,7 +621,7 @@ function WifiTransport({ widgetActions, controlActions }) {
                                     </Checkbox>
                                 </div>
                             )}
-                            { toolHeadName !== LEVEL_TWO_POWER_LASER_FOR_SM2 && isLaserPrintAutoMode && !isRotate && (
+                            {(toolHeadName !== LEVEL_TWO_POWER_LASER_FOR_SM2 || isRotate) && isLaserPrintAutoMode && (
                                 <div className="sm-flex height-32 margin-top-8">
                                     <span className="">{i18n._('key-Workspace/LaserStartJob-3axis_start_job_material_thickness')}</span>
                                     <Input
@@ -639,11 +636,11 @@ function WifiTransport({ widgetActions, controlActions }) {
                                 </div>
                             )}
 
-                            { toolHeadName === LEVEL_TWO_POWER_LASER_FOR_SM2 && (
+                            {toolHeadName === LEVEL_TWO_POWER_LASER_FOR_SM2 && !isRotate && (
                                 <div className="sm-flex height-32 margin-top-8">
                                     <Checkbox
                                         className="sm-flex-auto"
-                                        disabled={isRotate || connectionType === 'serial'}
+                                        disabled={connectionType === 'serial'}
                                         checked={isLaserAutoFocus}
                                         onChange={() => setIsLaserAutoFocus(!isLaserAutoFocus)}
                                     >
@@ -651,7 +648,7 @@ function WifiTransport({ widgetActions, controlActions }) {
                                     </Checkbox>
                                 </div>
                             )}
-                            { toolHeadName === LEVEL_TWO_POWER_LASER_FOR_SM2 && !isLaserAutoFocus && !isRotate && (
+                            {toolHeadName === LEVEL_TWO_POWER_LASER_FOR_SM2 && !isRotate && !isLaserAutoFocus && (
                                 <div className="sm-flex height-32 margin-top-8">
                                     <span className="">{i18n._('key-Workspace/LaserStartJob-3axis_start_job_material_thickness')}</span>
                                     <Input
