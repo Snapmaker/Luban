@@ -1041,7 +1041,7 @@
     "key-Workspace/Transport-Edit": "Edit",
     "key-Workspace/Transport-Export": "Export",
     "key-Workspace/Transport-Import": "Import",
-    "key-Workspace/Transport-Luban control print": "",
+    "key-Workspace/Transport-Luban control print": "Start on Luban",
     "key-Workspace/Transport-Preview": "Preview",
     "key-Workspace/Transport-Start Print": "Start on Luban",
     "key-Workspace/WifiTransport-Failed to send file.": "Datei konnte nicht gesendet werden.",

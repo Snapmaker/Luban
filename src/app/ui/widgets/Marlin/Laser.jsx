@@ -76,15 +76,14 @@ class Laser extends PureComponent {
         },
         onSaveLaserPower: () => {
             if (this.actions.isPrinting()) {
-                // TODO: why allow to update laser power
-                this.props.server.updateLaserPower(this.state.laserPower);
+                if (this.props.connectionType === CONNECTION_TYPE_WIFI) {
+                    this.props.server.updateLaserPower(this.state.laserPower);
+                } else {
+                    this.props.executeGcode(`M3 P${this.state.laserPower} S${this.state.laserPower * 255 / 100}`);
+                }
             } else {
                 if (this.state.laserPowerOpen) {
                     this.props.executeGcode(`M3 P${this.state.laserPower} S${this.state.laserPower * 255 / 100}`);
-                    if (this.state.laserPower > 1) {
-                        this.props.executeGcode('G4 P500');
-                        this.props.executeGcode('M3 P1 S2.55');
-                    }
                 } else {
                     this.props.executeGcode(`M3 P${this.state.laserPower} S${this.state.laserPower * 255 / 100}`);
                     this.props.executeGcode('M5');
@@ -107,6 +106,7 @@ class Laser extends PureComponent {
 
     render() {
         const { laserPowerOpen, laserPowerMarks, laserPower } = this.state;
+        const { toolHead } = this.props;
         const actions = this.actions;
         const isPrinting = this.actions.isPrinting();
 
@@ -115,45 +115,46 @@ class Laser extends PureComponent {
                 {isPrinting && <WorkSpeed />}
                 <div className="sm-flex justify-space-between margin-vertical-8">
                     <span>{i18n._('key-unused-Laser Power')}</span>
-                    <Switch
-                        className="sm-flex-auto"
-                        onClick={this.actions.onClickLaserPower}
-                        disabled={isPrinting}
-                        checked={Boolean(laserPowerOpen)}
-                    />
+                    {!isPrinting && (
+                        <Switch
+                            className="sm-flex-auto"
+                            onClick={this.actions.onClickLaserPower}
+                            checked={Boolean(laserPowerOpen)}
+                        />
+                    )}
                 </div>
-                <div className="sm-flex justify-space-between margin-vertical-8">
-                    <Slider
-                        max={100}
-                        min={0}
-                        size="middle"
-                        className="height-56"
-                        marks={laserPowerMarks}
-                        value={laserPower}
-                        disabled={isPrinting}
-                        onChange={actions.onChangeLaserPower}
-                    />
-                    <div className="sm-flex height-32">
-                        <span>{this.props.laserPower}/</span>
-                        <Input
-                            suffix="%"
-                            value={laserPower}
+                {(toolHead !== LEVEL_TWO_POWER_LASER_FOR_SM2
+                    || (toolHead === LEVEL_TWO_POWER_LASER_FOR_SM2 && isPrinting)) && (
+                    <div className="sm-flex justify-space-between margin-vertical-8">
+                        <Slider
                             max={100}
                             min={0}
-                            size="small"
-                            disabled={isPrinting}
+                            size="middle"
+                            className="height-56"
+                            marks={laserPowerMarks}
+                            value={laserPower}
                             onChange={actions.onChangeLaserPower}
                         />
-                        <SvgIcon
-                            name="Reset"
-                            type={['static']}
-                            className="border-default-black-5 margin-left-4 border-radius-8"
-                            onClick={actions.onSaveLaserPower}
-                            borderRadius={8}
-                            disabled={isPrinting}
-                        />
+                        <div className="sm-flex height-32">
+                            <span>{this.props.laserPower}/</span>
+                            <Input
+                                suffix="%"
+                                value={laserPower}
+                                max={100}
+                                min={0}
+                                size="small"
+                                onChange={actions.onChangeLaserPower}
+                            />
+                            <SvgIcon
+                                name="Reset"
+                                type={['static']}
+                                className="border-default-black-5 margin-left-4 border-radius-8"
+                                onClick={actions.onSaveLaserPower}
+                                borderRadius={8}
+                            />
+                        </div>
                     </div>
-                </div>
+                )}
                 {!isPrinting && this.props.toolHead === LEVEL_TWO_POWER_LASER_FOR_SM2 && (
                     <div className="sm-flex">
                         <SvgIcon

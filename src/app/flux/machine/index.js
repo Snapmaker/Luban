@@ -573,7 +573,9 @@ export const actions = {
             server.removeAllListeners('http:close');
 
             server.once('http:confirm', (result) => {
-                const { toolHead, series, headType, status, isHomed, isEmergencyStopped } = result.data;
+                const { toolHead, series, headType, status, isHomed, isEmergencyStopped, moduleStatusList } = result.data;
+                // TODO: update orther data
+                const _isRotate = moduleStatusList?.rotaryModule;
 
                 // emergency stop event
                 if (isEmergencyStopped) {
@@ -592,6 +594,9 @@ export const actions = {
                 }));
 
                 // get series & headType
+                dispatch(workspaceActions.updateMachineState({
+                    isRotate: _isRotate
+                }));
                 if (series && headType) {
                     // TODO: set isRotate here
                     dispatch(workspaceActions.updateMachineState({
@@ -872,15 +877,15 @@ export const actions = {
     },
 
     executeGcodeAutoHome: () => (dispatch, getState) => {
-        const { series, headType } = getState().machine;
+        const { series, headType } = getState().workspace;
         dispatch(actions.executeGcode('G53'));
         dispatch(actions.executeGcode('G28'));
         dispatch(actions.executeGcodeG54(series, headType));
     },
 
     startServerGcode: (callback) => (dispatch, getState) => {
-        const { server, size, workflowStatus, isLaserPrintAutoMode, series, laserFocalLength, materialThickness } = getState().machine;
-        const { gcodeFile, headType } = getState().workspace;
+        const { server, size, workflowStatus, isLaserPrintAutoMode, laserFocalLength, materialThickness } = getState().machine;
+        const { gcodeFile, headType, series } = getState().workspace;
         const { background } = getState().laser;
         if (workflowStatus !== WORKFLOW_STATUS_IDLE || gcodeFile === null) {
             return;
@@ -902,9 +907,9 @@ export const actions = {
                 const file = new File([blob], gcodeFile.name);
                 const promises = [];
                 if (series !== MACHINE_SERIES.ORIGINAL.value && series !== MACHINE_SERIES.CUSTOM.value && headType === HEAD_LASER) {
-                    if (isLaserPrintAutoMode && laserFocalLength) {
+                    if (laserFocalLength) {
                         const promise = new Promise((resolve) => {
-                            server.executeGcode(`G53;\nG0 Z${laserFocalLength + materialThickness} F1500;\nG54;`, () => {
+                            server.executeGcode(`G53;\nG0 Z${laserFocalLength + (isLaserPrintAutoMode ? materialThickness : 0)} F1500;\nG54;`, () => {
                                 resolve();
                             });
                         });

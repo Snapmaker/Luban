@@ -3,6 +3,7 @@ import includes from 'lodash/includes';
 import React, { useEffect, useState } from 'react';
 import PropTypes from 'prop-types';
 import { useDispatch, useSelector } from 'react-redux';
+import { isNil } from 'lodash';
 // import Switch from '../../components/Switch';
 import Select from '../../components/Select';
 import { Button } from '../../components/Buttons';
@@ -360,7 +361,7 @@ function Control({ widgetId, widgetActions: _widgetActions }) {
     }, [originOffset]);
 
     useEffect(() => {
-        if (boundingBox === null) {
+        if (isNil(boundingBox)) {
             setState({
                 ...state,
                 bbox: {

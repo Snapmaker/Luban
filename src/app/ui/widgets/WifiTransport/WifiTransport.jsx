@@ -18,7 +18,8 @@ import styles from './index.styl';
 import {
     CONNECTION_TYPE_WIFI, WORKFLOW_STATE_IDLE, WORKFLOW_STATUS_IDLE,
     DATA_PREFIX, HEAD_CNC, HEAD_LASER, HEAD_PRINTING,
-    LEVEL_TWO_POWER_LASER_FOR_SM2
+    LEVEL_TWO_POWER_LASER_FOR_SM2,
+    CONNECTION_TYPE_SERIAL
 } from '../../../constants';
 import { actions as workspaceActions, WORKSPACE_STAGE } from '../../../flux/workspace';
 import { actions as projectActions } from '../../../flux/project';
@@ -37,14 +38,12 @@ import Checkbox from '../../components/Checkbox';
 import { NumberInput as Input } from '../../components/Input';
 
 const changeNameInput = [];
+const suffixLength = 7;
 
 const GcodePreviewItem = React.memo(({ gcodeFile, index, selected, onSelectFile, gRef, setSelectFileIndex, handleShowPreviewModal }) => {
     const dispatch = useDispatch();
-    // const name = gcodeFile.name.length > 25
-    //     ? `${gcodeFile.name.substring(0, 15)}...${gcodeFile.name.substring(gcodeFile.name.length - 10, gcodeFile.name.length)}`
-    //     : gcodeFile.name;
-    const suffixLength = 7;
-    const { prefixName, suffixName } = normalizeNameDisplay(gcodeFile.renderGcodeFileName || gcodeFile.name, suffixLength);
+    const { prefixName, suffixName } = normalizeNameDisplay(gcodeFile?.renderGcodeFileName || gcodeFile?.name, suffixLength);
+
     let size = '';
     const { isRenaming, uploadName } = gcodeFile;
     if (!gcodeFile.size) {
@@ -171,7 +170,7 @@ const GcodePreviewItem = React.memo(({ gcodeFile, index, selected, onSelectFile,
                 )}
                 >
                     <input
-                        defaultValue={gcodeFile.name.replace(/(\.gcode|\.cnc|\.nc)$/, '')}
+                        defaultValue={gcodeFile?.renderGcodeFileName.replace(/(\.gcode|\.cnc|\.nc)$/, '')}
                         className={classNames('input-select')}
                         onBlur={() => onRenameEnd(uploadName, index)}
                         onKeyDown={(event) => onKeyDown(event)}
@@ -260,12 +259,12 @@ function WifiTransport({ widgetActions, controlActions }) {
             setSelectFileName(_selectFileName);
         }
         setSelectFileType(type);
-        const gcodeFile = gcodeFiles.find(item => item?.name === _selectFileName);
+        const gcodeFile = gcodeFiles.find(item => item?.uploadName === _selectFileName);
         dispatch(workspaceActions.updateState({
             gcodeFile: gcodeFile,
             boundingBox: gcodeFile?.boundingBox
         }));
-    }, [selectFileName]);
+    }, [selectFileName, gcodeFiles]);
 
     const actions = {
         onChangeFile: async (event) => {
@@ -310,7 +309,9 @@ function WifiTransport({ widgetActions, controlActions }) {
             await dispatch(workspaceActions.renderGcodeFile(find, false, true));
 
             if (toolHeadName === LEVEL_TWO_POWER_LASER_FOR_SM2 && isLaserAutoFocus && !isRotate) {
-                const { maxX, minX, maxY, minY } = find;
+                const { min, max } = find.boundingBox;
+                const { x: minX, y: minY } = min;
+                const { x: maxX, y: maxY } = max;
                 const deltaY = 10;
                 const deltaX = 19;
                 const z0 = 166;
@@ -382,11 +383,18 @@ function WifiTransport({ widgetActions, controlActions }) {
                 actions.onClickToUpload();
             }
         },
-        onChangeLaserPrintMode: () => {
+        onChangeLaserPrintMode: async () => {
+            if (isLaserPrintAutoMode) {
+                await actions.onChangeMaterialThickness(0);
+            }
             dispatch(machineActions.updateIsLaserPrintAutoMode(!isLaserPrintAutoMode));
         },
 
         onChangeMaterialThickness: async (value) => {
+            if (value < 0) {
+                // safely setting
+                value = 0;
+            }
             dispatch(machineActions.updateMaterialThickness(value));
         },
 
@@ -396,11 +404,12 @@ function WifiTransport({ widgetActions, controlActions }) {
     };
 
     useEffect(() => {
-        if (isRotate && toolHeadName === LEVEL_TWO_POWER_LASER_FOR_SM2) {
+        if (connectionType === CONNECTION_TYPE_SERIAL || isRotate || toolHeadName !== LEVEL_TWO_POWER_LASER_FOR_SM2) {
             setIsLaserAutoFocus(false);
-            actions.onChangeMaterialThickness(0);
-        } else if (connectionType === 'serial' && isRotate && connectionType === 'serial') {
-            setIsLaserAutoFocus(false);
+        }
+        if (isRotate) {
+            dispatch(machineActions.updateIsLaserPrintAutoMode(false));
+            dispatch(machineActions.updateMaterialThickness(0));
         }
     }, [isRotate, connectionType, toolHeadName]);
 
@@ -470,6 +479,7 @@ function WifiTransport({ widgetActions, controlActions }) {
     const selectedFile = _.find(gcodeFiles, { uploadName: selectFileName });
 
     const isWifi = connectionType && connectionType === CONNECTION_TYPE_WIFI;
+    // TODO: what is isSendedOnWifi?
     const isSended = isWifi ? isSendedOnWifi : true;
     const canPlay = hasFile && isConnected && isSended && _.includes([WORKFLOW_STATE_IDLE, WORKFLOW_STATUS_IDLE], currentWorkflowStatus);
     return (
@@ -598,7 +608,7 @@ function WifiTransport({ widgetActions, controlActions }) {
                                 </Trans>
                             )}
 
-                            { toolHeadName !== LEVEL_TWO_POWER_LASER_FOR_SM2 && (
+                            {(toolHeadName !== LEVEL_TWO_POWER_LASER_FOR_SM2 || isRotate) && (
                                 <div className="sm-flex height-32 margin-top-8">
                                     <Checkbox
                                         className="sm-flex-auto"
@@ -610,7 +620,7 @@ function WifiTransport({ widgetActions, controlActions }) {
                                     </Checkbox>
                                 </div>
                             )}
-                            { toolHeadName !== LEVEL_TWO_POWER_LASER_FOR_SM2 && isLaserPrintAutoMode && !isRotate && (
+                            {(toolHeadName !== LEVEL_TWO_POWER_LASER_FOR_SM2 || isRotate) && isLaserPrintAutoMode && (
                                 <div className="sm-flex height-32 margin-top-8">
                                     <span className="">{i18n._('key-Workspace/LaserStartJob-3axis_start_job_material_thickness')}</span>
                                     <Input
@@ -624,26 +634,12 @@ function WifiTransport({ widgetActions, controlActions }) {
                                     />
                                 </div>
                             )}
-                            { toolHeadName !== LEVEL_TWO_POWER_LASER_FOR_SM2 && isLaserPrintAutoMode && isRotate && (
-                                <div className="sm-flex height-32 margin-top-8">
-                                    <span className="">{i18n._('key-Workspace/LaserStartJob-3axis_start_job_material_thickness')}</span>
-                                    <Input
-                                        suffix="mm"
-                                        className="sm-flex-auto margin-left-16"
-                                        size="small"
-                                        value={materialThickness * 2}
-                                        max={size.z - 40}
-                                        min={0}
-                                        onChange={actions.onChangeFourAxisMaterialThickness}
-                                    />
-                                </div>
-                            )}
 
-                            { toolHeadName === LEVEL_TWO_POWER_LASER_FOR_SM2 && (
+                            {toolHeadName === LEVEL_TWO_POWER_LASER_FOR_SM2 && !isRotate && (
                                 <div className="sm-flex height-32 margin-top-8">
                                     <Checkbox
                                         className="sm-flex-auto"
-                                        disabled={isRotate || connectionType === 'serial'}
+                                        disabled={connectionType === 'serial'}
                                         checked={isLaserAutoFocus}
                                         onChange={() => setIsLaserAutoFocus(!isLaserAutoFocus)}
                                     >
@@ -651,7 +647,7 @@ function WifiTransport({ widgetActions, controlActions }) {
                                     </Checkbox>
                                 </div>
                             )}
-                            { toolHeadName === LEVEL_TWO_POWER_LASER_FOR_SM2 && !isLaserAutoFocus && !isRotate && (
+                            {toolHeadName === LEVEL_TWO_POWER_LASER_FOR_SM2 && !isRotate && !isLaserAutoFocus && (
                                 <div className="sm-flex height-32 margin-top-8">
                                     <span className="">{i18n._('key-Workspace/LaserStartJob-3axis_start_job_material_thickness')}</span>
                                     <Input

@@ -621,6 +621,7 @@ function ProfileManager({ optionConfigGroup, disableCategory = true, managerTitl
                                 onChangeDefinition={actions.onChangeDefinition}
                                 selectedSettingDefaultValue={definitionState?.selectedSettingDefaultValue}
                                 showMiddle={managerTitle === 'key-Printing/PrintingConfigurations-Printing Settings'}
+                                hideMiniTitle={managerTitle === 'key-Printing/PrintingConfigurations-Material Settings'}
                             />
 
                         </div>
