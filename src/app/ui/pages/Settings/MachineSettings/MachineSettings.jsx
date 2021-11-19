@@ -109,7 +109,6 @@ function MachineSettings() {
     const size = useSelector(state => state?.machine?.size);
     const enclosureDoorDetection = useSelector(state => state?.machine?.enclosureDoorDetection);
     const zAxisModule = useSelector(state => state?.machine?.zAxisModule);
-    const isConnected = useSelector(state => state?.machine?.isConnected);
     const connectionTimeout = useSelector(state => state?.machine?.connectionTimeout);
 
     const [printingToolheadSelected, setPrintingToolheadSelected] = useState(toolHead.printingToolhead);
@@ -286,7 +285,6 @@ function MachineSettings() {
                 className="margin-vertical-16"
                 searchable={false}
                 size="200px"
-                disabled={isConnected}
                 name="select-machine"
                 options={machineSeriesOptions}
                 value={state.series}

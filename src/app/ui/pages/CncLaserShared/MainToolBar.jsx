@@ -198,7 +198,7 @@ function useRenderMainToolBar({ headType, setShowHomePage, setShowJobType, setSh
             }
         }
     ];
-    if (headType === HEAD_CNC && isRotate) {
+    if (headType === HEAD_CNC) {
         leftItems.push(
             {
                 type: 'separator'
