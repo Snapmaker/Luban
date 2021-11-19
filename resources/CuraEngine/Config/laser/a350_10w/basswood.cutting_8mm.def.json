@@ -9,13 +9,13 @@
       "default_value": "path"
     },
     "work_speed": {
-      "default_value": 300
+      "default_value": 400
     },
     "multi_passes": {
       "default_value": 2
     },
     "multi_pass_depth": {
-      "default_value": 4
+      "default_value": 0
     },
     "fixed_power": {
       "default_value": 100
