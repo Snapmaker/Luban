@@ -907,9 +907,9 @@ export const actions = {
                 const file = new File([blob], gcodeFile.name);
                 const promises = [];
                 if (series !== MACHINE_SERIES.ORIGINAL.value && series !== MACHINE_SERIES.CUSTOM.value && headType === HEAD_LASER) {
-                    if (isLaserPrintAutoMode && laserFocalLength) {
+                    if (laserFocalLength) {
                         const promise = new Promise((resolve) => {
-                            server.executeGcode(`G53;\nG0 Z${laserFocalLength + materialThickness} F1500;\nG54;`, () => {
+                            server.executeGcode(`G53;\nG0 Z${laserFocalLength + (isLaserPrintAutoMode ? materialThickness : 0)} F1500;\nG54;`, () => {
                                 resolve();
                             });
                         });
