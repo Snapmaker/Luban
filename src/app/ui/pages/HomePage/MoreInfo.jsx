@@ -37,7 +37,7 @@ const MoreInfo = () => {
                         {i18n._('key-HomePage/Begin-Snapmaker.com')}
                     </span>
                 </a>
-                <a className={classNames(styles.listItem, styles['right-part'])} href="https://shop.snapmaker.com/" target="_blank" rel="noopener noreferrer">
+                <a className={classNames(styles.listItem, styles['right-part'])} href={lang === 'en' ? 'https://shop.snapmaker.com/' : 'https://snapmaker.world.tmall.com/?spm=a1z10.3-b.w5001-21696184167.3.40be7f386PAuCQ&scene=taobao_shop'} target="_blank" rel="noopener noreferrer">
                     <span className={classNames('heading-3-normal-with-hover')}>
                         {i18n._('key-HomePage/Begin-Store')}
                     </span>

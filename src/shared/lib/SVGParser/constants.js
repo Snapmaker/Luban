@@ -1,4 +1,5 @@
 // SVG Tag
+export const SVG_TAG_SVG = 'svg';
 export const SVG_TAG_USE = 'use';
 export const SVG_TAG_DEFS = 'defs';
 

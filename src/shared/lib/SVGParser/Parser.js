@@ -13,7 +13,8 @@ import PolygonTagParser from './PolygonTagParser';
 import PolylineTagParser from './PolylineTagParser';
 import RectTagParser from './RectTagParser';
 import TextParser from './TextParser';
-import { SVG_ATTR_ID, XLINK_HREF, SVG_ATTR_HREF, SVG_ATTR_TRANSFORM, SVG_TAG_USE } from './constants';
+import { SVG_ATTR_ID, XLINK_HREF, SVG_ATTR_HREF,
+    SVG_ATTR_TRANSFORM, SVG_TAG_USE, SVG_TAG_SVG } from './constants';
 // const DEFAULT_DPI = 72;
 const DEFAULT_MILLIMETER_PER_PIXEL = 25.4 / 72;
 // TODO: General tolerance does not work well if original drawing is small,
@@ -106,7 +107,7 @@ class SVGParser {
         });
     }
 
-    async parse(s, element = 'svg') {
+    async parse(s, element = SVG_TAG_SVG) {
         const node = await this.readString(s);
         return this.parseObject(node, element);
     }
@@ -149,7 +150,7 @@ class SVGParser {
     }
 
 
-    async parseObject(node, element = 'svg') {
+    async parseObject(node, element = SVG_TAG_SVG) {
         const initialAttributes = {
             fill: '#000000',
             stroke: null,
@@ -169,6 +170,11 @@ class SVGParser {
             newSvg.g = newSvg.g.concat(gArray);
         } else {
             newSvg.g = gArray;
+        }
+        if (element === SVG_TAG_SVG) {
+            newSvg.$.width = null;
+            newSvg.$.height = null;
+            newSvg.$.preserveAspectRatio = 'none';
         }
         parsedNode.svg = newSvg;
 
@@ -331,11 +337,8 @@ class SVGParser {
                     break;
                 }
                 // container elements
-                case 'svg': {
+                case SVG_TAG_SVG: {
                     const tagParser = new SVGTagParser(this);
-                    node.$.width = null;
-                    node.$.height = null;
-                    node.$.preserveAspectRatio = 'none'; // prevent uniform scale when scale svg image
                     tagParser.parse(node, attributes);
                     break;
                 }

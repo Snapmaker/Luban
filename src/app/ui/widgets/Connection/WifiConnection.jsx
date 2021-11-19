@@ -119,7 +119,7 @@ function WifiConnection() {
                     actions.showWifiError(err, text);
                 }
                 setserverOpenState(null);
-                if (data.toolHead && data.toolHead === LEVEL_TWO_POWER_LASER_FOR_SM2) {
+                if (data?.toolHead && data.toolHead === LEVEL_TWO_POWER_LASER_FOR_SM2) {
                     dispatch(workspaceActions.updateMachineState({
                         headType: data.headType,
                         toolHead: data.toolHead,
