@@ -1,7 +1,7 @@
 {
   "version": "4.1.0",
-  "name": "Cutting 3mm",
-  "category": "MDF",
+  "name": "Cutting 1.6mm",
+  "category": "Corrugated Paper",
   "inherits": "snapmaker2",
   "metadata": {},
   "overrides": {
@@ -9,7 +9,7 @@
       "default_value": "path"
     },
     "work_speed": {
-      "default_value": 300
+      "default_value": 960
     },
     "multi_passes": {
       "default_value": 1

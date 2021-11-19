@@ -178,6 +178,7 @@ function useRenderMainToolBar() {
 function Printing({ location }) {
     const widgets = useSelector(state => state?.widget[pageHeadType].default.widgets, shallowEqual);
     const series = useSelector(state => state?.machine?.series);
+    const isOriginal = includes(series, 'Original');
     const [isDraggingWidget, setIsDraggingWidget] = useState(false);
     const [enabledIntro, setEnabledIntro] = useState(null);
     const [initIndex, setInitIndex] = useState(0);
@@ -259,7 +260,6 @@ function Printing({ location }) {
     const handleChange = async (nextIndex) => {
         if (nextIndex === 1) {
             setInitIndex(1);
-            const isOriginal = includes(series, 'Original');
             const pathConfigForSM2 = {
                 path: './UserCase/printing/a150_single/3dp_a150_single.snap3dp',
                 name: '3dp_a150_single.snap3dp'
@@ -322,7 +322,7 @@ function Printing({ location }) {
                             disableInteraction: true,
                             tooltipClass: 'printing-placement-intro'
                         }, {
-                            element: '.threedp-widget-list-intro',
+                            element: '.printing-widget-list-intro',
                             intro: printIntroStepThree(
                                 i18n._('key-Printing/Page-Select the material settings and printing settings.'),
                                 i18n._('key-Printing/Page-Click'),
@@ -336,7 +336,8 @@ function Printing({ location }) {
                             element: '.print-output-intro',
                             intro: printIntroStepFour(
                                 i18n._('key-Printing/Page-Slice and preview the object.'),
-                                i18n._('key-Printing/Page-In Preview, you can see printing paths using features, including Line Type and Layer View.')
+                                i18n._('key-Printing/Page-In Preview, you can see printing paths using features, including Line Type and Layer View.'),
+                                isOriginal
                             ),
                             position: 'top',
                             title: `${i18n._('key-Printing/Page-Generate G-code and Preview')} (4/6)`,

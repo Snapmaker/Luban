@@ -1,0 +1,42 @@
+{
+  "version": "4.1.0",
+  "name": "Line-filled Engraving",
+  "category": "Crazy Horse Leather",
+  "inherits": "snapmaker2",
+  "metadata": {},
+  "overrides": {
+    "path_type": {
+      "default_value": "fill"
+    },
+    "work_speed": {
+      "default_value": 3000
+    },
+    "multi_passes": {
+      "default_value": 1
+    },
+    "multi_pass_depth": {
+      "default_value": 1
+    },
+    "fixed_power": {
+      "default_value": 35
+    },
+    "fixed_power_enabled": {
+      "default_value": true
+    },
+    "movement_mode": {
+      "default_value": "greyscale-line"
+    },
+    "fill_interval": {
+      "default_value": 0.2
+    },
+    "dwell_time": {
+      "default_value": 5
+    },
+    "jog_speed": {
+      "default_value": 3000
+    },
+    "direction": {
+      "default_value": "Horizontal"
+    }
+  }
+}

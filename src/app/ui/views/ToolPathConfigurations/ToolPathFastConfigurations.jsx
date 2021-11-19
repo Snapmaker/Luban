@@ -149,13 +149,13 @@ function ToolPathFastConfigurations({ setEditingToolpath, headType, toolpath }) 
     const updateActiveToolDefinition = (currentToolPath) => {
         const { toolParams, gcodeConfig } = currentToolPath;
         const activeToolDefinition = _.cloneDeep(activeToolListDefinition);
-
         const oldTooldefinition = toolDefinitions?.find((d) => {
-            return d.name === toolParams.definitionName;
+            return d.definitionId === toolParams.definitionId;
         });
         if (oldTooldefinition) {
             activeToolDefinition.definitionId = oldTooldefinition.definitionId;
             activeToolDefinition.name = oldTooldefinition.name;
+            activeToolDefinition.category = oldTooldefinition.category;
             const newSettings = activeToolDefinition?.settings;
             if (headType === HEAD_CNC) {
                 if (newSettings.angle) newSettings.angle.default_value = toolParams?.toolAngle;
@@ -192,7 +192,6 @@ function ToolPathFastConfigurations({ setEditingToolpath, headType, toolpath }) 
             updateActiveToolDefinition(toolpath);
         }
     }, [toolpath]);
-
     const actions = {
         setCurrentValueAsProfile: () => {
             const activeToolDefinition = currentToolDefinition;

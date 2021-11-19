@@ -1,7 +1,7 @@
 {
   "version": "4.1.0",
-  "name": "Vector Engraving",
-  "category": "MDF",
+  "name": "Cutting 2mm",
+  "category": "Vegetable Tanned Leather",
   "inherits": "snapmaker2",
   "metadata": {},
   "overrides": {
@@ -9,7 +9,7 @@
       "default_value": "path"
     },
     "work_speed": {
-      "default_value": 1200
+      "default_value": 600
     },
     "multi_passes": {
       "default_value": 1

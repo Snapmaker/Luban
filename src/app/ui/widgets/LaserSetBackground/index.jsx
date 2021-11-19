@@ -2,14 +2,13 @@ import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
 import SetBackground from './SetBackground';
-import { HEAD_LASER } from '../../../constants';
+import { HEAD_LASER, getCurrentHeadType } from '../../../constants';
 
 
 class LaserSetBackgroundWidget extends PureComponent {
     static propTypes = {
         isConnected: PropTypes.bool,
-        hideModal: PropTypes.func.isRequired,
-        headType: PropTypes.string
+        hideModal: PropTypes.func.isRequired
     };
 
     state = {
@@ -27,9 +26,10 @@ class LaserSetBackgroundWidget extends PureComponent {
 
 
     render() {
-        const { isConnected, headType, hideModal } = this.props;
+        const { isConnected, hideModal } = this.props;
         const state = this.state;
         const actions = this.actions;
+        const headType = getCurrentHeadType(window.location.href);
         const isLaser = headType === HEAD_LASER;
 
         return (
@@ -44,11 +44,10 @@ class LaserSetBackgroundWidget extends PureComponent {
     }
 }
 const mapStateToProps = (state) => {
-    const { headType, isConnected } = state.machine;
+    const { isConnected } = state.machine;
 
     return {
-        isConnected,
-        headType
+        isConnected
     };
 };
 

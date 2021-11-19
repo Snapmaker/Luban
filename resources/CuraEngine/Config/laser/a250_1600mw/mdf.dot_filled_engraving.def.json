@@ -6,10 +6,10 @@
   "metadata": {},
   "overrides": {
     "path_type": {
-      "default_value": "path"
+      "default_value": "fill"
     },
     "work_speed": {
-      "default_value": 1200
+      "default_value": 3000
     },
     "multi_passes": {
       "default_value": 1
@@ -18,16 +18,16 @@
       "default_value": 1
     },
     "fixed_power": {
-      "default_value": 20
+      "default_value": 50
     },
     "fixed_power_enabled": {
       "default_value": true
     },
     "movement_mode": {
-      "default_value": "greyscale-line"
+      "default_value": "greyscale-dot"
     },
     "fill_interval": {
-      "default_value": 0.16
+      "default_value": 0.14
     },
     "dwell_time": {
       "default_value": 5

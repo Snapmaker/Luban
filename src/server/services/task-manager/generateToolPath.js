@@ -119,12 +119,16 @@ const generateLaserToolPathFromEngine = async (modelInfos, onProgress) => {
                 modelInfo.uploadName = newUploadName;
             }
         }
+        const gcodeConfig = modelInfo?.gcodeConfig;
         if (headType === 'laser') {
-            modelInfo.gcodeConfig.fillDensity = 1 / modelInfo.gcodeConfig.fillInterval;
-            modelInfo.gcodeConfig.stepOver = modelInfo.gcodeConfig.fillInterval;
+            gcodeConfig.fillDensity = 1 / gcodeConfig.fillInterval;
+            gcodeConfig.stepOver = gcodeConfig.fillInterval;
+            if (gcodeConfig?.pathType === 'path') {
+                gcodeConfig.movementMode = 'greyscale-line';
+            }
         } else {
-            modelInfo.gcodeConfig.fillDensity = 1 / modelInfo.gcodeConfig.stepOver;
-            modelInfo.gcodeConfig.tabHeight -= modelInfo.gcodeConfig.targetDepth;
+            gcodeConfig.fillDensity = 1 / gcodeConfig.stepOver;
+            gcodeConfig.tabHeight -= gcodeConfig.targetDepth;
         }
         modelInfo.toolpathFileName = generateRandomPathName('json');
     }

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useSelector, useDispatch } from 'react-redux';
+import { useSelector, useDispatch, shallowEqual } from 'react-redux';
 import PropTypes from 'prop-types';
 import classNames from 'classnames';
 import { noop } from 'lodash';
@@ -30,6 +30,7 @@ const Output = ({ headType }) => {
     const previewFailed = useSelector(state => state[headType]?.previewFailed);
     const shouldGenerateGcodeCounter = useSelector(state => state[headType]?.shouldGenerateGcodeCounter);
     const modelGroup = useSelector(state => state[headType]?.modelGroup);
+    const hasModel = useSelector(state => state[headType]?.modelGroup.hasModel(), shallowEqual);
     const toolPathGroup = useSelector(state => state[headType]?.toolPathGroup);
     const workflowState = useSelector(state => state.machine?.workflowState);
     const isGcodeGenerating = useSelector(state => state[headType]?.isGcodeGenerating);
@@ -139,7 +140,6 @@ const Output = ({ headType }) => {
         }
     });
 
-    const hasModel = modelGroup.hasModel();
     const isEditor = page === PAGE_EDITOR;
     const hasToolPathModel = (toolPathGroup.toolPaths.length > 0);
     const toolPathRelatedModelInvisible = toolPathGroup.toolPaths.every(toolPath => {

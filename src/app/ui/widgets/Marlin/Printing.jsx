@@ -121,7 +121,8 @@ class Printing extends PureComponent {
                         <Input
                             suffix="°C"
                             size="small"
-                            value={nozzleTargetTemperature}
+                            defaultValue={nozzleTargetTemperature}
+                            value={this.state.nozzleTemperatureValue}
                             max={250}
                             min={0}
                             onChange={actions.onChangeNozzleTemperatureValue}
@@ -143,7 +144,8 @@ class Printing extends PureComponent {
                         <Input
                             suffix="°C"
                             size="small"
-                            value={heatedBedTargetTemperature}
+                            defaultValue={heatedBedTargetTemperature}
+                            value={this.state.heatedBedTemperatureValue}
                             max={80}
                             min={0}
                             onChange={actions.onChangeHeatedBedTemperatureValue}

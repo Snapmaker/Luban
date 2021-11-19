@@ -1544,13 +1544,18 @@ class ModelGroup extends EventEmitter {
 
                 const group = this.resetSelectedModelConvexMeshGroup();
                 ThreeUtils.setObjectParent(group, model.meshObject);
+                const MAX_POINTS_FOR_CURVE_FACE = 54;
                 tableResult.forEach((rowInfo) => {
                     const geometry = new BufferGeometry();
-                    geometry.setAttribute('position', new Float32BufferAttribute(rowInfo.planesPosition, 3));
+                    if (rowInfo.planesPosition.length > MAX_POINTS_FOR_CURVE_FACE) {
+                        geometry.setAttribute('position', new Float32BufferAttribute(rowInfo.planesPosition, 3));
+                    } else {
+                        geometry.setFromPoints(ThreeUtils.generateRotationFaces(rowInfo.planesPosition, model.boundingBox));
+                    }
                     // Fix Z-fighting
                     // https://sites.google.com/site/threejstuts/home/polygon_offset
                     // https://stackoverflow.com/questions/40328722/how-can-i-solve-z-fighting-using-three-js
-                    const material = new MeshBasicMaterial({ color: 0x2A2C2E, depthWrite: false, transparent: true, opacity: 0.2, polygonOffset: true, polygonOffsetFactor: -1, polygonOffsetUnits: -5 });
+                    const material = new MeshBasicMaterial({ color: 0x1890FF, depthWrite: false, transparent: true, opacity: 0.3, polygonOffset: true, polygonOffsetFactor: -1, polygonOffsetUnits: -5 });
                     const mesh = new Mesh(geometry, material);
                     mesh.userData = {
                         index: rowInfo.faceId
