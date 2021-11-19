@@ -34,12 +34,12 @@ function ToolPathConfigurations({ toolpath, onClose, headType }) {
         const activeToolDefinition = _.cloneDeep(currentToolDefinition);
 
         const oldTooldefinition = toolDefinitions?.find((d) => {
-            return d.name === toolParams.definitionName;
-            // return d.definitionId === toolParams.definitionId;
+            return d.definitionId === toolParams.definitionId;
         });
         if (oldTooldefinition) {
             activeToolDefinition.definitionId = oldTooldefinition.definitionId;
             activeToolDefinition.name = oldTooldefinition.name;
+            activeToolDefinition.category = oldTooldefinition.category;
             const newSettings = activeToolDefinition.settings;
             if (headType === HEAD_CNC) {
                 if (newSettings.angle) newSettings.angle.default_value = toolParams?.toolAngle;
