@@ -613,7 +613,7 @@ export const actions = {
                                 suffix = 'cnc';
                             }
                             dispatch(workspaceActions.clearGcode());
-                            dispatch(workspaceActions.renderGcode(`print.${suffix}`, gcode, true));
+                            dispatch(workspaceActions.renderGcode(`print.${suffix}`, gcode, true, true));
                         });
                     }
                 } else {

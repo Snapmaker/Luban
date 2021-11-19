@@ -19,11 +19,11 @@ const printIntroStepThree = (text1, text2, text3) => (
     </div>
 );
 
-const printIntroStepFour = (text1, text2) => (
+const printIntroStepFour = (text1, text2, isOriginal) => (
     <div>
         <div>{text1}</div>
         <div>{text2}</div>
-        <img src="/resources/images/guide-tours/printing-preview.png" alt="" className="width-120" />
+        <img src={isOriginal ? '/resources/images/guide-tours/printing_preview_original.png' : '/resources/images/guide-tours/printing-preview.png'} alt="" className="width-120" />
     </div>
 );
 

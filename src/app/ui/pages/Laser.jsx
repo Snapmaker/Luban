@@ -373,7 +373,7 @@ function Laser({ location }) {
                                     i18n._('key-Laser/Page-Export the G-code file to a local device or load it to Workspace. Use Touchscreen or Luban to start laser engraving or CNC carving.')
                                 )
                             }, {
-                                element: '.laser-save-icon',
+                                element: '.cnc-laser-save-icon',
                                 title: `${i18n._('key-Laser/Page-Save Project')} (8/8)`,
                                 position: 'bottom',
                                 disableInteraction: true,
