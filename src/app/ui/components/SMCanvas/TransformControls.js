@@ -16,8 +16,7 @@ import {
     OctahedronBufferGeometry,
     TorusBufferGeometry,
     MeshBasicMaterial,
-    LineBasicMaterial,
-    Color
+    LineBasicMaterial
 } from 'three';
 // import * as THREE from 'three';
 
@@ -82,10 +81,6 @@ class TransformControls extends Object3D {
     pointStart = new Vector3();
 
     pointEnd = new Vector3();
-
-    colorHover = new Color(0x1890FF);
-
-    colorDefault = new Color(0x2A2C2E);
 
     prevMeshHover = null;
 
@@ -775,14 +770,16 @@ class TransformControls extends Object3D {
         if (this.mode === 'rotate-placement') {
             if (intersect) {
                 if (this.prevMeshHover !== intersect.object) {
-                    if (!intersect.object.material.color.equals(this.colorHover)) {
-                        intersect.object.material.color.set(this.colorHover);
+                    intersect.object.material.opacity = 0.9;
+                    if (this.prevMeshHover) {
+                        this.prevMeshHover.material.opacity = 0.3;
                     }
-                    this.prevMeshHover && this.prevMeshHover.material.color.set(this.colorDefault);
                     this.prevMeshHover = intersect.object;
                 }
             } else {
-                this.prevMeshHover && this.prevMeshHover.material.color.set(this.colorDefault);
+                if (this.prevMeshHover) {
+                    this.prevMeshHover.material.opacity = 0.3;
+                }
                 this.prevMeshHover = null;
             }
             this.dispatchEvent(EVENTS.UPDATE);

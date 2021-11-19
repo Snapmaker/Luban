@@ -1550,7 +1550,7 @@ class ModelGroup extends EventEmitter {
                     // Fix Z-fighting
                     // https://sites.google.com/site/threejstuts/home/polygon_offset
                     // https://stackoverflow.com/questions/40328722/how-can-i-solve-z-fighting-using-three-js
-                    const material = new MeshBasicMaterial({ color: 0x2A2C2E, depthWrite: false, transparent: true, opacity: 0.2, polygonOffset: true, polygonOffsetFactor: -1, polygonOffsetUnits: -5 });
+                    const material = new MeshBasicMaterial({ color: 0x1890FF, depthWrite: false, transparent: true, opacity: 0.3, polygonOffset: true, polygonOffsetFactor: -1, polygonOffsetUnits: -5 });
                     const mesh = new Mesh(geometry, material);
                     mesh.userData = {
                         index: rowInfo.faceId
