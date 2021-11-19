@@ -23,9 +23,11 @@ Text.propTypes = {
 const WorkingProgress = ({ widgetActions, controlActions }) => {
     const {
         isConnected, workflowStatus,
-        gcodePrintingInfo: { progress, fileName, elapsedTime, remainingTime, total, sent },
+        gcodePrintingInfo: { progress, elapsedTime, remainingTime, total, sent },
         connectionType, workflowState
     } = useSelector(state => state.machine);
+    const gcodeFile = useSelector(state => state.workspace.gcodeFile);
+    const fileName = gcodeFile?.renderGcodeFileName ?? gcodeFile?.name;
     const [currentWorkflowStatus, setCurrentWorkflowStatus] = useState(null);
     useEffect(() => {
         widgetActions.setTitle(i18n._('key-Workspace/Workprogress-Working'));

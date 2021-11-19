@@ -102,6 +102,13 @@ const sizeModel = (size, materials, sourceWidth, sourceHeight) => {
     };
 };
 
+function shouldProcessModel(selectedModel) {
+    if (selectedModel.sourceType === 'image3d' || selectedModel.mode === 'vector') {
+        return false;
+    }
+    return true;
+}
+
 // a wrapper function for recording scaled models states
 function recordScaleActionsToHistory(scaleActionsFn, elements, SVGActions, headType, machine, dispatch) {
     if (typeof scaleActionsFn === 'function') {
@@ -643,17 +650,15 @@ export const actions = {
             width,
             height
         };
-        if (sourceType !== SOURCE_TYPE_IMAGE3D) {
-            const coorDelta = {
-                dx: coordinateSize.x / 2 * coordinateMode.setting.sizeMultiplyFactor.x,
-                dy: coordinateSize.y / 2 * coordinateMode.setting.sizeMultiplyFactor.y
-            };
-            defaultTransformation.positionX = coorDelta.dx;
-            if (materials.isRotate) {
-                defaultTransformation.positionY = height / 2;
-            } else {
-                defaultTransformation.positionY = coorDelta.dy;
-            }
+        const coorDelta = {
+            dx: coordinateSize.x / 2 * coordinateMode.setting.sizeMultiplyFactor.x,
+            dy: coordinateSize.y / 2 * coordinateMode.setting.sizeMultiplyFactor.y
+        };
+        defaultTransformation.positionX = coorDelta.dx;
+        if (materials.isRotate) {
+            defaultTransformation.positionY = height / 2;
+        } else {
+            defaultTransformation.positionY = coorDelta.dy;
         }
 
         config = {
@@ -1583,7 +1588,7 @@ export const actions = {
             return;
         }
         const selectedModel = selectedModels[0];
-        if (selectedModel.sourceType !== 'image3d' && selectedModel.sourceType !== 'svg') {
+        if (shouldProcessModel(selectedModel)) {
             dispatch(actions.processSelectedModel(headType));
         }
 
@@ -1608,7 +1613,7 @@ export const actions = {
             return;
         }
         const selectedModel = selectedModels[0];
-        if (selectedModel.sourceType !== 'image3d' && selectedModel.sourceType !== 'svg') {
+        if (shouldProcessModel(selectedModel)) {
             dispatch(actions.processSelectedModel(headType));
         }
 
@@ -1635,7 +1640,7 @@ export const actions = {
             return;
         }
         const selectedModel = selectedModels[0];
-        if (selectedModel.sourceType !== 'image3d' && selectedModel.sourceType !== 'svg') {
+        if (shouldProcessModel(selectedModel)) {
             dispatch(actions.processSelectedModel(headType));
         }
 
@@ -1661,7 +1666,7 @@ export const actions = {
             return;
         }
         const selectedModel = selectedModels[0];
-        if (selectedModel.sourceType !== 'image3d' && selectedModel.sourceType !== 'svg') {
+        if (shouldProcessModel(selectedModel)) {
             dispatch(actions.processSelectedModel(headType));
         }
 
@@ -1687,7 +1692,7 @@ export const actions = {
             return;
         }
         const selectedModel = selectedModels[0];
-        if (selectedModel.sourceType !== 'image3d' && selectedModel.sourceType !== 'svg') {
+        if (shouldProcessModel(selectedModel)) {
             dispatch(actions.processSelectedModel(headType));
         }
 
