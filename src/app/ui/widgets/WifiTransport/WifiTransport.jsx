@@ -221,7 +221,7 @@ function WifiTransport({ widgetActions, controlActions }) {
     const originOffset = useSelector(state => state?.machine?.originOffset);
     const toolHeadName = useSelector(state => state?.workspace?.toolHead);
     const { previewBoundingBox, headType, gcodeFiles, previewModelGroup, previewRenderState, previewStage, isRotate } = useSelector(state => state.workspace);
-    const { server, isConnected, connectionType, size, workflowStatus, workflowState, isSendedOnWifi } = useSelector(state => state.machine);
+    const { server, isConnected, connectionType, size, workflowStatus, workflowState } = useSelector(state => state.machine);
     const [loadToWorkspaceOnLoad, setLoadToWorkspaceOnLoad] = useState(true);
     const [selectFileName, setSelectFileName] = useState('');
     const [selectFileType, setSelectFileType] = useState('');
@@ -483,8 +483,9 @@ function WifiTransport({ widgetActions, controlActions }) {
     const selectedFile = _.find(gcodeFiles, { uploadName: selectFileName });
 
     const isWifi = connectionType && connectionType === CONNECTION_TYPE_WIFI;
-    const isSended = isWifi ? isSendedOnWifi : true;
-    const canPlay = hasFile && isConnected && isSended && _.includes([WORKFLOW_STATE_IDLE, WORKFLOW_STATUS_IDLE], currentWorkflowStatus);
+    // TODO: what is isSendedOnWifi?
+    // const isSended = isWifi ? isSendedOnWifi : true;
+    const canPlay = hasFile && isConnected && _.includes([WORKFLOW_STATE_IDLE, WORKFLOW_STATUS_IDLE], currentWorkflowStatus);
     return (
         <div className="border-default-grey-1 border-radius-8">
             <input
@@ -561,7 +562,7 @@ function WifiTransport({ widgetActions, controlActions }) {
                         type="primary"
                         priority="level-three"
                         width="144px"
-                        disabled={!(hasFile && isConnected && isHeadType && isWifi && isSendedOnWifi)}
+                        disabled={!(hasFile && isConnected && isHeadType && isWifi)}
                         onClick={actions.sendFile}
                     >
                         {i18n._('key-Workspace/WifiTransport-Sending File')}

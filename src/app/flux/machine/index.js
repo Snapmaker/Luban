@@ -879,8 +879,8 @@ export const actions = {
     },
 
     startServerGcode: (callback) => (dispatch, getState) => {
-        const { server, size, workflowStatus, isLaserPrintAutoMode, series, laserFocalLength, materialThickness } = getState().machine;
-        const { gcodeFile, headType } = getState().workspace;
+        const { server, size, workflowStatus, isLaserPrintAutoMode, laserFocalLength, materialThickness } = getState().machine;
+        const { gcodeFile, headType, series } = getState().workspace;
         const { background } = getState().laser;
         if (workflowStatus !== WORKFLOW_STATUS_IDLE || gcodeFile === null) {
             return;
