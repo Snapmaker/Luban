@@ -18,7 +18,8 @@ import styles from './index.styl';
 import {
     CONNECTION_TYPE_WIFI, WORKFLOW_STATE_IDLE, WORKFLOW_STATUS_IDLE,
     DATA_PREFIX, HEAD_CNC, HEAD_LASER, HEAD_PRINTING,
-    LEVEL_TWO_POWER_LASER_FOR_SM2
+    LEVEL_TWO_POWER_LASER_FOR_SM2,
+    CONNECTION_TYPE_SERIAL
 } from '../../../constants';
 import { actions as workspaceActions, WORKSPACE_STAGE } from '../../../flux/workspace';
 import { actions as projectActions } from '../../../flux/project';
@@ -219,7 +220,7 @@ function WifiTransport({ widgetActions, controlActions }) {
     const originOffset = useSelector(state => state?.machine?.originOffset);
     const toolHeadName = useSelector(state => state?.workspace?.toolHead);
     const { previewBoundingBox, headType, gcodeFiles, previewModelGroup, previewRenderState, previewStage, isRotate } = useSelector(state => state.workspace);
-    const { server, isConnected, connectionType, size, workflowStatus, workflowState } = useSelector(state => state.machine);
+    const { server, isConnected, connectionType, size, workflowStatus, workflowState, isSendedOnWifi } = useSelector(state => state.machine);
     const [loadToWorkspaceOnLoad, setLoadToWorkspaceOnLoad] = useState(true);
     const [selectFileName, setSelectFileName] = useState('');
     const [selectFileType, setSelectFileType] = useState('');
@@ -403,7 +404,7 @@ function WifiTransport({ widgetActions, controlActions }) {
     };
 
     useEffect(() => {
-        if (connectionType === 'serial' || isRotate || toolHeadName !== LEVEL_TWO_POWER_LASER_FOR_SM2) {
+        if (connectionType === CONNECTION_TYPE_SERIAL || isRotate || toolHeadName !== LEVEL_TWO_POWER_LASER_FOR_SM2) {
             setIsLaserAutoFocus(false);
         }
         if (isRotate) {
@@ -479,8 +480,8 @@ function WifiTransport({ widgetActions, controlActions }) {
 
     const isWifi = connectionType && connectionType === CONNECTION_TYPE_WIFI;
     // TODO: what is isSendedOnWifi?
-    // const isSended = isWifi ? isSendedOnWifi : true;
-    const canPlay = hasFile && isConnected && _.includes([WORKFLOW_STATE_IDLE, WORKFLOW_STATUS_IDLE], currentWorkflowStatus);
+    const isSended = isWifi ? isSendedOnWifi : true;
+    const canPlay = hasFile && isConnected && isSended && _.includes([WORKFLOW_STATE_IDLE, WORKFLOW_STATUS_IDLE], currentWorkflowStatus);
     return (
         <div className="border-default-grey-1 border-radius-8">
             <input
@@ -557,7 +558,7 @@ function WifiTransport({ widgetActions, controlActions }) {
                         type="primary"
                         priority="level-three"
                         width="144px"
-                        disabled={!(hasFile && isConnected && isHeadType && isWifi)}
+                        disabled={!(hasFile && isConnected && isHeadType && isWifi && isSendedOnWifi)}
                         onClick={actions.sendFile}
                     >
                         {i18n._('key-Workspace/WifiTransport-Sending File')}
