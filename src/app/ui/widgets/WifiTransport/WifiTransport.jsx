@@ -37,14 +37,12 @@ import Checkbox from '../../components/Checkbox';
 import { NumberInput as Input } from '../../components/Input';
 
 const changeNameInput = [];
+const suffixLength = 7;
 
 const GcodePreviewItem = React.memo(({ gcodeFile, index, selected, onSelectFile, gRef, setSelectFileIndex, handleShowPreviewModal }) => {
     const dispatch = useDispatch();
-    // const name = gcodeFile.name.length > 25
-    //     ? `${gcodeFile.name.substring(0, 15)}...${gcodeFile.name.substring(gcodeFile.name.length - 10, gcodeFile.name.length)}`
-    //     : gcodeFile.name;
-    const suffixLength = 7;
-    const { prefixName, suffixName } = normalizeNameDisplay(gcodeFile.renderGcodeFileName || gcodeFile.name, suffixLength);
+    const { prefixName, suffixName } = normalizeNameDisplay(gcodeFile?.renderGcodeFileName || gcodeFile?.name, suffixLength);
+
     let size = '';
     const { isRenaming, uploadName } = gcodeFile;
     if (!gcodeFile.size) {
@@ -171,7 +169,7 @@ const GcodePreviewItem = React.memo(({ gcodeFile, index, selected, onSelectFile,
                 )}
                 >
                     <input
-                        defaultValue={gcodeFile.name.replace(/(\.gcode|\.cnc|\.nc)$/, '')}
+                        defaultValue={gcodeFile?.renderGcodeFileName.replace(/(\.gcode|\.cnc|\.nc)$/, '')}
                         className={classNames('input-select')}
                         onBlur={() => onRenameEnd(uploadName, index)}
                         onKeyDown={(event) => onKeyDown(event)}

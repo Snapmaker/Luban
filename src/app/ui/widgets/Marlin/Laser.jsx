@@ -113,16 +113,16 @@ class Laser extends PureComponent {
         return (
             <div>
                 {isPrinting && <WorkSpeed />}
-                {!isPrinting && (
-                    <div className="sm-flex justify-space-between margin-vertical-8">
-                        <span>{i18n._('key-unused-Laser Power')}</span>
+                <div className="sm-flex justify-space-between margin-vertical-8">
+                    <span>{i18n._('key-unused-Laser Power')}</span>
+                    {!isPrinting && (
                         <Switch
                             className="sm-flex-auto"
                             onClick={this.actions.onClickLaserPower}
                             checked={Boolean(laserPowerOpen)}
                         />
-                    </div>
-                )}
+                    )}
+                </div>
                 {(toolHead !== LEVEL_TWO_POWER_LASER_FOR_SM2
                     || (toolHead === LEVEL_TWO_POWER_LASER_FOR_SM2 && isPrinting)) && (
                     <div className="sm-flex justify-space-between margin-vertical-8">
