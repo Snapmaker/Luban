@@ -100,26 +100,6 @@
                 }
             }
         },
-        "material": {
-            "type": "category",
-            "children": {
-                "retraction_enable": {
-                    "default_value": true,
-                    "label": "Enable Retraction"
-                },
-                "retraction_speed": {
-                    "default_value": 60,
-                    "label": "Retraction Speed"
-                },
-                "retraction_amount": {
-                    "default_value": 5,
-                    "label": "Retraction Distance"
-                },
-                "retract_at_layer_change": {
-                    "default_value": false
-                }
-            }
-        },
         "speed": {
             "type": "category",
             "children": {
@@ -161,17 +141,6 @@
                 "speed_print": {
                     "label": "Printing Speed",
                     "default_value": 40
-                }
-            }
-        },
-        "travel": {
-            "type": "category",
-            "children": {
-                "retraction_hop": {
-                    "default_value": 1
-                },
-                "retraction_hop_enabled": {
-                    "default_value": false
                 }
             }
         },
