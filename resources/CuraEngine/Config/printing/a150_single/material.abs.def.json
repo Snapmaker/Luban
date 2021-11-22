@@ -32,6 +32,24 @@
         },
         "material_diameter": {
             "default_value": 1.75
+        },
+        "retraction_enable": {
+            "default_value": true
+        },
+        "retraction_speed": {
+            "default_value": 25
+        },
+        "retraction_amount": {
+            "default_value": 6.5
+        },
+        "retract_at_layer_change": {
+            "default_value": false
+        },
+        "retraction_hop": {
+            "default_value": 1
+        },
+        "retraction_hop_enabled": {
+            "default_value": false
         }
     }
 }
