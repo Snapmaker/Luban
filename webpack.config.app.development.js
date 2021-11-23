@@ -32,7 +32,7 @@ export default {
             path.resolve(__dirname, 'src/app'),
             'node_modules'
         ],
-        extensions: ['.js', '.json', '.jsx', '.styl', '.ts', '.tsx']
+        extensions: ['.js', '.json', '.jsx', '.styl', '.ts']
     },
     entry: {
         polyfill: [
@@ -93,11 +93,11 @@ export default {
     module: {
         rules: [
             {
-                test: /\.tsx?$/,
+                test: /\.ts$/,
                 loader: 'ts-loader'
             },
             {
-                test: /\.jsx?$|\.tsx?$/,
+                test: /\.jsx?$|\.ts$/,
                 loader: 'eslint-loader',
                 enforce: 'pre',
                 exclude: /node_modules/,

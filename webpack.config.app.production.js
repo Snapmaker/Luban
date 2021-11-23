@@ -41,7 +41,7 @@ module.exports = {
             path.resolve(__dirname, 'src/app'),
             'node_modules'
         ],
-        extensions: ['.js', '.json', '.jsx', '.styl', '.ts', '.tsx']
+        extensions: ['.js', '.json', '.jsx', '.styl', '.ts']
     },
     entry: {
         polyfill: path.resolve(__dirname, 'src/app/polyfill/index.js'),
