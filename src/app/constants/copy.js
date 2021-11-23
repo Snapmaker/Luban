@@ -21,6 +21,14 @@ i18n._('key-CncLaser/JobSetup-Top Left');
 i18n._('key-CncLaser/JobSetup-Top');
 
 // main menu
+i18n._('key-App/Menu-Preferences');
+i18n._('key_menu_About');
+i18n._('key_menu_Services');
+i18n._('key_menu_Hide');
+i18n._('key_menu_Hide Others');
+i18n._('key_menu_Unhide');
+i18n._('key_menu_Quit');
+
 i18n._('key-App/Menu-File');
 i18n._('key-App/Menu-New Project');
 i18n._('key-App/Menu-3D Printing');
@@ -199,3 +207,8 @@ i18n._('key-App/Settings/MachineSettings-1600mW Laser');
 i18n._('key-App/Settings/MachineSettings-Standard CNC');
 i18n._('key-App/Settings/MachineSettings-Dual Extruder Toolhead');
 i18n._('key-App/Settings/MachineSettings-10W Laser');
+
+i18n._('key-settings_message-update_not_ava'); // Snapmaker Luban is up to date.
+i18n._('key-settings_message-updateAva'); // Updates are available.
+i18n._('key-settings_message-checking'); // Checking for updates.
+i18n._('key-settings_message-error'); // An error occurred while checking for updates.
