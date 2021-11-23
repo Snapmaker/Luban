@@ -58,7 +58,7 @@ class CncParameters extends PureComponent {
         }
         ];
 
-        const methodType = type === TOOLPATH_TYPE_VECTOR ? 'Contour' : 'Carve';
+        const methodType = type === TOOLPATH_TYPE_VECTOR ? i18n._('key-Cnc/ToolpathParameters-Outline') : i18n._('key-Cnc/ToolpathParameters-Carve');
         const isSVG = type === TOOLPATH_TYPE_VECTOR;
         const isImage = type === TOOLPATH_TYPE_IMAGE;
         const isSculpt = type === TOOLPATH_TYPE_SCULPT;
@@ -80,10 +80,10 @@ class CncParameters extends PureComponent {
         };
         // Session First
         const toolDefinitionFirstKeys = [];
-        if (isSVG || isImage || isSculpt && !isRotate && methodType === 'Carve') {
+        if (isSVG || isImage || isSculpt && !isRotate && type !== TOOLPATH_TYPE_VECTOR) {
             toolDefinitionFirstKeys.push('targetDepth');
         }
-        if (methodType === 'Carve' || sliceMode === CNC_MESH_SLICE_MODE_ROTATION || sliceMode === CNC_MESH_SLICE_MODE_LINKAGE) {
+        if (type !== TOOLPATH_TYPE_VECTOR || sliceMode === CNC_MESH_SLICE_MODE_ROTATION || sliceMode === CNC_MESH_SLICE_MODE_LINKAGE) {
             toolDefinitionFirstKeys.push('allowance');
         }
         const toolDefinitionFirst = {};

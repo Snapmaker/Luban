@@ -3,6 +3,7 @@ import EventEmitter from 'events';
 // import { EPSILON } from '../../constants';
 import uuid from 'uuid';
 import _ from 'lodash';
+import i18n from '../lib/i18n';
 
 import Model from './BaseModel';
 import ThreeModel from './ThreeModel';
@@ -1438,9 +1439,9 @@ class ModelGroup extends EventEmitter {
             const isText = (config && config.svgNodeName === 'text');
             const isShape = (model.mode === 'vector' && config && config.svgNodeName !== 'image');
             if (isText) {
-                baseName = 'Text';
+                baseName = i18n._('key-2D_model_basename-Text');
             } else if (isShape) {
-                baseName = 'Shape';
+                baseName = i18n._('key-2D_model_basename-Shape');
             } else {
                 baseName = model.originalName;
             }
