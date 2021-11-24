@@ -167,6 +167,7 @@ class Canvas extends PureComponent {
     }
 
     componentWillUnmount() {
+        console.log('componentWillUnmount');
         if (this.controls) {
             this.controls.dispose();
         }
