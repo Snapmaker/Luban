@@ -487,7 +487,7 @@ class TransformControls extends Object3D {
             this.object.matrixWorld.decompose(objectPosition, objectQuaternion, objectScale);
             // parent
             this.object.parent.matrixWorld.decompose(this.parentPosition, this.parentQuaternion, this.parentScale);
-            this.parentQuaternionInv.copy(this.parentQuaternion).inverse();
+            this.parentQuaternionInv.copy(this.parentQuaternion).invert();
 
 
             // Update peripherals as a whole (position, rotation, scale)

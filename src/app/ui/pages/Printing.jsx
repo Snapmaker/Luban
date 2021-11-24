@@ -85,6 +85,8 @@ function useRenderMainToolBar() {
     const enableShortcut = useSelector(state => state?.printing?.enableShortcut, shallowEqual);
     const canRedo = useSelector(state => state?.printing?.history?.canRedo, shallowEqual);
     const canUndo = useSelector(state => state?.printing?.history?.canUndo, shallowEqual);
+    const canGroup = useSelector(state => state?.printing?.modelGroup?.canGroup());
+    const canUngroup = useSelector(state => state?.printing?.modelGroup?.canUngroup());
     const [showHomePage, setShowHomePage] = useState(false);
     const [showWorkspace, setShowWorkspace] = useState(false);
     const dispatch = useDispatch();
@@ -163,6 +165,24 @@ function useRenderMainToolBar() {
                 name: 'MainToolbarRedo',
                 action: () => {
                     dispatch(printingActions.redo());
+                }
+            },
+            {
+                title: i18n._('key-3DP/MainToolBar-Group'),
+                disabled: !canGroup || !enableShortcut,
+                type: 'button',
+                name: 'MainToolbarGroup',
+                action: () => {
+                    dispatch(printingActions.group());
+                }
+            },
+            {
+                title: i18n._('key-3DP/MainToolBar-Ungroup'),
+                disabled: !canUngroup || !enableShortcut,
+                type: 'button',
+                name: 'MainToolbarUngroup',
+                action: () => {
+                    dispatch(printingActions.ungroup());
                 }
             }
         ];

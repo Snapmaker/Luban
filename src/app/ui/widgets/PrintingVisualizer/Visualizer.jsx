@@ -378,36 +378,38 @@ class Visualizer extends PureComponent {
             });
         }
         if (stage !== this.props.stage && stage === STEP_STAGE.PRINTING_LOAD_MODEL_SUCCEED) {
-            const modelSize = new Vector3();
-            selectedModelArray[0].boundingBox.getSize(modelSize);
-            const isLarge = ['x', 'y', 'z'].some((key) => modelSize[key] >= size[key]);
+            if (selectedModelArray[0] && selectedModelArray[0].boundingBox) {
+                const modelSize = new Vector3();
+                selectedModelArray[0].boundingBox.getSize(modelSize);
+                const isLarge = ['x', 'y', 'z'].some((key) => modelSize[key] >= size[key]);
 
-            if (isLarge) {
-                const popupActions = modal({
-                    title: i18n._('key-Printing/ContextMenu-Scale to Fit'),
-                    body: (
-                        <React.Fragment>
-                            <p>{i18n._('key-Printing/ContextMenu-Model size has exceeded the printable area.')}</p>
-                            <p>{i18n._('key-Printing/ContextMenu-Scale it to the maximum printable size?')}</p>
-                        </React.Fragment>
+                if (isLarge) {
+                    const popupActions = modal({
+                        title: i18n._('key-Printing/ContextMenu-Scale to Fit'),
+                        body: (
+                            <React.Fragment>
+                                <p>{i18n._('key-Printing/ContextMenu-Model size has exceeded the printable area.')}</p>
+                                <p>{i18n._('key-Printing/ContextMenu-Scale it to the maximum printable size?')}</p>
+                            </React.Fragment>
 
-                    ),
+                        ),
 
-                    footer: (
-                        <Button
-                            priority="level-two"
-                            type="primary"
-                            width="96px"
-                            className="margin-left-4"
-                            onClick={() => {
-                                this.actions.scaleToFitSelectedModel();
-                                popupActions.close();
-                            }}
-                        >
-                            {i18n._('key-Printing/ContextMenu-Scale')}
-                        </Button>
-                    )
-                });
+                        footer: (
+                            <Button
+                                priority="level-two"
+                                type="primary"
+                                width="96px"
+                                className="margin-left-4"
+                                onClick={() => {
+                                    this.actions.scaleToFitSelectedModel();
+                                    popupActions.close();
+                                }}
+                            >
+                                {i18n._('key-Printing/ContextMenu-Scale')}
+                            </Button>
+                        )
+                    });
+                }
             }
         }
     }
