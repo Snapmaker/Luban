@@ -48,7 +48,8 @@ const QuickStart = (props) => {
                 classNames(
                     styles['case-list'],
                     { [styles.smallList]: !caseConfigFourAxis.length }
-                )}
+                )
+            }
             >
                 {caseConfig.map(caseItem => {
                     return (

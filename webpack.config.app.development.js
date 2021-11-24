@@ -20,7 +20,7 @@ const languages = require('./webpack.config.app-i18n').languages;
 
 const timestamp = new Date().getTime();
 
-module.exports = {
+export default {
     mode: 'development',
     target: 'web',
     devtool: 'source-map',
@@ -32,7 +32,7 @@ module.exports = {
             path.resolve(__dirname, 'src/app'),
             'node_modules'
         ],
-        extensions: ['.js', '.json', '.jsx', '.styl']
+        extensions: ['.js', '.json', '.jsx', '.styl', '.ts']
     },
     entry: {
         polyfill: [
@@ -93,7 +93,11 @@ module.exports = {
     module: {
         rules: [
             {
-                test: /\.jsx?$/,
+                test: /\.ts$/,
+                loader: 'ts-loader'
+            },
+            {
+                test: /\.jsx?$|\.ts$/,
                 loader: 'eslint-loader',
                 enforce: 'pre',
                 exclude: /node_modules/,

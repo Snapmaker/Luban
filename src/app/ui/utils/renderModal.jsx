@@ -20,19 +20,20 @@ export default function renderModal(options) {
     if (!renderFooter) {
         renderFooter = () => (
             <React.Fragment>
-                {actions.map(({ name, isPrimary, isAutoWidth, onClick, disabled = false }) => (
-                    <Button
-                        disabled={disabled}
-                        key={name}
-                        priority="level-two"
-                        className="margin-left-8"
-                        width={isAutoWidth ? 'auto' : '96px'}
-                        type={isPrimary ? 'primary' : 'default'}
-                        onClick={onClick}
-                    >
-                        {name}
-                    </Button>
-                ))
+                {
+                    actions.map(({ name, isPrimary, isAutoWidth, onClick, disabled = false }) => (
+                        <Button
+                            disabled={disabled}
+                            key={name}
+                            priority="level-two"
+                            className="margin-left-8"
+                            width={isAutoWidth ? 'auto' : '96px'}
+                            type={isPrimary ? 'primary' : 'default'}
+                            onClick={onClick}
+                        >
+                            {name}
+                        </Button>
+                    ))
                 }
             </React.Fragment>
         );

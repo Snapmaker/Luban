@@ -160,7 +160,7 @@ function convertPath(pth, toRel) {
                 }
                 d += pathDSegment(letter, [[x1, y1], [x, y]]);
                 break;
-            // eslint-disable-next-line sonarjs/no-duplicated-branches
+            // eslint-disable-next-line
             case 10: // absolute elliptical arc (A)
                 x -= curx;
                 y -= cury;

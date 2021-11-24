@@ -101,7 +101,6 @@ class LaserParameters extends PureComponent {
 
         const { useLegacyEngine, name } = toolPath;
 
-
         return (
             <React.Fragment>
                 <div className="border-default-grey-1 border-radius-8 padding-vertical-8 padding-horizontal-16">
@@ -136,7 +135,6 @@ class LaserParameters extends PureComponent {
                         activeToolDefinition={this.props.activeToolDefinition}
                         updateGcodeConfig={this.actions.updateGcodeConfig}
                         updateToolConfig={this.actions.updateToolConfig}
-
                         toolDefinitions={this.props.toolDefinitions}
                         isModifiedDefinition={this.props.isModifiedDefinition}
                         setCurrentToolDefinition={this.props.setCurrentToolDefinition}

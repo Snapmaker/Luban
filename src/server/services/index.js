@@ -9,8 +9,13 @@ import urljoin from '../lib/urljoin';
 import settings from '../config/settings';
 import * as api from './api';
 
-export configstore from './configstore';
-export monitor from './monitor';
+import configstore from './configstore';
+import monitor from './monitor';
+
+export {
+    configstore,
+    monitor
+};
 
 
 function startServices(server) {

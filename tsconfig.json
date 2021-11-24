@@ -1,0 +1,9 @@
+{
+    "compilerOptions": {
+        "allowJs": true,
+        "sourceMap": true,
+        "target": "es5",
+        "noUnusedLocals": true
+    },
+    "include": ["./src/**/*"]
+}
