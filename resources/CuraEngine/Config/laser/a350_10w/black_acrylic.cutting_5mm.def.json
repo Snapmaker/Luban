@@ -12,10 +12,10 @@
       "default_value": 100
     },
     "multi_passes": {
-      "default_value": 2
+      "default_value": 1
     },
     "multi_pass_depth": {
-      "default_value": 4
+      "default_value": 1
     },
     "fixed_power": {
       "default_value": 100

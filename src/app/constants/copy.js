@@ -165,27 +165,46 @@ i18n._('key-default_name-Flat End Mill 1.5');
 i18n._('key-default-name-Flat End Mill 3.175');
 i18n._('key-default_name-Ball End Mill');
 i18n._('key-default_name-Straight Groove V-bit');
+
 i18n._('key-default_name-Cutting 1.5mm');
 i18n._('key-default_name-Cutting 3mm');
 i18n._('key-default_name-Cutting 5mm');
 i18n._('key-default_name-Cutting 8mm');
 i18n._('key-default_name-Dot-filled Engraving');
-i18n._('key-default_name-');
-i18n._('key-default_name-');
-i18n._('key-default_name-');
-i18n._('key-default_name-');
-i18n._('key-default_name-');
-i18n._('key-default_name-');
-i18n._('key-default_name-');
+i18n._('key-default_name-Line-filled Engraving');
+i18n._('key-default_name-Vector Engraving');
+i18n._('key-default_name-Cutting 2mm');
+i18n._('key-default_name-Cutting 3mm');
+i18n._('key-default_name-Cutting 5mm');
+i18n._('key-default_name-Cutting 200g');
+i18n._('key-default_name-Cutting 300g');
+i18n._('key-default_name-Cutting 350g');
+i18n._('key-default_name-Cutting 1.6mm');
+i18n._('key-default_name-Cutting 4mm');
+
+i18n._('key-default_name-ABS');
+i18n._('key-default_name-PETG');
+i18n._('key-default_name-PLA');
+i18n._('key-default_name-Fast Print');
+i18n._('key-default_name-Normal Quality');
+i18n._('key-default_name-High Quality');
 
 i18n._('key-default_category-Default Material');
 i18n._('key-default_category-Acrylic');
 i18n._('key-default_category-Epoxy Tooling Board');
-i18n._('key-default_category-');
-i18n._('key-default_category-');
-i18n._('key-default_category-');
-i18n._('key-default_category-');
 
+i18n._('key-default_category-Basswood');
+i18n._('key-default_category-Black Acrylic');
+i18n._('key-default_category-Black Anodized Aluminum');
+i18n._('key-default_category-Cardstock');
+i18n._('key-default_category-Coated Paper');
+i18n._('key-default_category-Corrugated Paper');
+i18n._('key-default_category-Crazy Horse Leather');
+i18n._('key-default_category-MDF');
+i18n._('key-default_category-Pinewood');
+i18n._('key-default_category-Vegetable Tanned Leather');
+
+i18n._('key-default_category-Default');
 
 // connection message
 i18n._('key-Workspace/Connection-enclosure');

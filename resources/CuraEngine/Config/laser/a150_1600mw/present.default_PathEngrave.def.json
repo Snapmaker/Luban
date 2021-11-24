@@ -1,9 +1,11 @@
 {
     "category": "Default Material",
+    "name": "Path Engrave",
+    "i18nName": "key-default_name-",
+    "i18nCategory": "key-default_category-",
     "inherits": "snapmaker2",
     "definitionId": "present.default.PathEngrave",
     "version": "1.0.0",
-    "name": "Path Engrave",
     "overrides": {
         "path_type": {
             "default_value": "path"
