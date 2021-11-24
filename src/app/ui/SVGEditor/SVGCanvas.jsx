@@ -1171,10 +1171,10 @@ class SVGCanvas extends PureComponent {
     onMouseWheel = (event) => {
         event.preventDefault();
         if (event.deltaY < 0) {
-            this.scale = this.scale / SCALE_RATE;
+            this.scale /= SCALE_RATE;
             this.updateCanvas();
         } else {
-            this.scale = this.scale * SCALE_RATE;
+            this.scale *= SCALE_RATE;
             this.updateCanvas();
         }
     };

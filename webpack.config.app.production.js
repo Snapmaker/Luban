@@ -41,7 +41,7 @@ module.exports = {
             path.resolve(__dirname, 'src/app'),
             'node_modules'
         ],
-        extensions: ['.js', '.json', '.jsx', '.styl']
+        extensions: ['.js', '.json', '.jsx', '.styl', '.ts']
     },
     entry: {
         polyfill: path.resolve(__dirname, 'src/app/polyfill/index.js'),
@@ -100,7 +100,11 @@ module.exports = {
     module: {
         rules: [
             {
-                test: /\.jsx?$/,
+                test: /\.ts$/,
+                loader: 'ts-loader'
+            },
+            {
+                test: /\.jsx?$|\.ts$/,
                 loader: 'eslint-loader',
                 enforce: 'pre',
                 exclude: /node_modules/

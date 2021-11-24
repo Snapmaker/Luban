@@ -530,7 +530,7 @@ export const actions = {
     },
 
     prepareStlVisualizer: (headType, model) => (dispatch) => {
-        const uploadPath = `${DATA_PREFIX}/${model.uploadName}`;
+        const uploadPath = model.resource.originalFile.path;
         const worker = new LoadModelWorker();
         worker.postMessage({ uploadPath });
         worker.onmessage = async (e) => {

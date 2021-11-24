@@ -172,7 +172,6 @@ class SvgIcon extends PureComponent {
                             <Component
                                 {...props}
                                 disabled={disabled}
-
                                 color={disabled ? '#D5D6D9' : color}
                                 style={{ background: iconBackground, borderBottom: hasBorderBottom ? '1px solid #D5D6D9' : 0 }}
                             />
