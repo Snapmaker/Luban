@@ -95,7 +95,7 @@ function PresentSelector({ toolDefinitions, setCurrentToolDefinition, setCurrent
         toolDefinitionOptions.push({
             name: 'modified',
             definitionId: 'new',
-            label: 'Create profile with current parameters',
+            label: i18n._('key-Laser/ToolpathParameters-Create profile with current parameters'),
             value: 'new-modified'
         });
     }
