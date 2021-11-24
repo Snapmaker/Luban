@@ -92,11 +92,11 @@ export class DefinitionLoader {
 
     name = '';
     // default name key
-    i18nName = undefined;
+    // i18nName = undefined;
 
     category = '';
     // default category key
-    i18nCategory = undefined;
+    // i18nCategory = undefined;
 
     inherits = '';
 
