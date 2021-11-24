@@ -159,6 +159,34 @@ i18n._('Parameters');
 i18n._('key-printing/material_settings-Temperature');
 i18n._('key-printing/material_settings-Extrusion');
 
+// Profile Default name and category
+i18n._('key-default_name-Carving V-bit');
+i18n._('key-default_name-Flat End Mill 1.5');
+i18n._('key-default-name-Flat End Mill 3.175');
+i18n._('key-default_name-Ball End Mill');
+i18n._('key-default_name-Straight Groove V-bit');
+i18n._('key-default_name-Cutting 1.5mm');
+i18n._('key-default_name-Cutting 3mm');
+i18n._('key-default_name-Cutting 5mm');
+i18n._('key-default_name-Cutting 8mm');
+i18n._('key-default_name-Dot-filled Engraving');
+i18n._('key-default_name-');
+i18n._('key-default_name-');
+i18n._('key-default_name-');
+i18n._('key-default_name-');
+i18n._('key-default_name-');
+i18n._('key-default_name-');
+i18n._('key-default_name-');
+
+i18n._('key-default_category-Default Material');
+i18n._('key-default_category-Acrylic');
+i18n._('key-default_category-Epoxy Tooling Board');
+i18n._('key-default_category-');
+i18n._('key-default_category-');
+i18n._('key-default_category-');
+i18n._('key-default_category-');
+
+
 // connection message
 i18n._('key-Workspace/Connection-enclosure');
 i18n._('key-Workspace/Connection-rotaryModule');

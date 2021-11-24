@@ -4,6 +4,8 @@ import { includes } from 'lodash';
 import DataStorage from '../DataStorage';
 import pkg from '../../package.json';
 import logger from '../lib/logger';
+import _ from 'lodash';
+import i18n from '../lib/i18n';
 import { ConfigV1Regex, ConfigV1Suffix } from '../constants';
 
 const log = logger('definition');
@@ -26,9 +28,12 @@ const DEFAULT_PREDEFINED = {
     ],
     'cnc': [
         'tool.default_CVbit.def.json',
-        'tool.default_FEM.def.json',
+        'tool.default_FEM1.5.def.json',
+        'tool.default_FEM3.175.def.json',
         'tool.default_MBEM.def.json',
-        'tool.default_SGVbit.def.json'
+        'tool.default_SGVbit.def.json',
+        'tool.rAcrylic_FEM1.5.def.json',
+        'tool.rEpoxy_SGVbit.def.json'
     ],
     'laser': [
         'present.default_CUT.def.json',
@@ -88,8 +93,12 @@ export class DefinitionLoader {
     definitionId = '';
 
     name = '';
+    // default name key
+    i18nName = undefined;
 
     category = '';
+    // default category key
+    i18nCategory = undefined;
 
     inherits = '';
 
@@ -162,10 +171,10 @@ export class DefinitionLoader {
         }
 
         if (json.name) {
-            this.name = json.name;
+            this.name = (json.i18nName ? i18n._(json.i18nName) : json.name);
         }
         if (json.category) {
-            this.category = json.category;
+            this.category = (json.i18nCategory ? i18n._(json.i18nCategory) : json.category);
         }
 
         // settings
@@ -377,6 +386,7 @@ export function loadDefinitionsByPrefixName(headType, prefix, configPath) {
 }
 
 export function loadAllSeriesDefinitions(isDefault = false, headType, series = 'A150') {
+    // TODO: series name?
     const _headType = (headType === 'laser' && includes(series, '10w')) ? '10w-laser' : headType;
     const predefined = DEFAULT_PREDEFINED[_headType];
     const definitions = [];

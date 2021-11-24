@@ -249,9 +249,12 @@ export const PRINTING_MANAGER_TYPE_QUALITY = 'quality';
 
 export const DEFAULT_CNC_CONFIG_IDS = [
     'tool.default_CVbit',
-    'tool.default_FEM',
+    'tool.default_FEM1.5',
+    'tool.default_FEM3.175',
     'tool.default_MBEM',
-    'tool.default_SGVbit'
+    'tool.default_SGVbit',
+    'tool.rAcrylic_FEM1.5',
+    'tool.rEpoxy_SGVbit'
 ];
 
 export const DEFAULT_LASER_CONFIG_IDS = [

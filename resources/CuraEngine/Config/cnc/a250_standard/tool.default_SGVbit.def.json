@@ -1,8 +1,10 @@
 {
     "category": "Default Material",
+    "name": "Straight Groove V-bit",
+    "i18nCategory": "key-default_category-Default Material",
+    "i18nName": "key-default_name-Straight Groove V-bit",
     "version": "1.0.0",
     "inherits": "snapmaker2",
-    "name": "Straight Groove V-bit",
     "overrides": {
         "diameter": {
             "default_value": 0.3
