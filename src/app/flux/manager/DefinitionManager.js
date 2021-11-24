@@ -71,6 +71,7 @@ class DefinitionManager {
 
     async getConfigDefinitions() {
         const res = await api.profileDefinitions.getConfigDefinitions(this.headType, this.configPathname);
+        console.log('res', res.body.definitions);
         const definitions = await this.markDefaultDefinitions(res.body.definitions);
         return definitions;
     }

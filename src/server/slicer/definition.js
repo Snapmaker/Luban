@@ -4,8 +4,6 @@ import { includes } from 'lodash';
 import DataStorage from '../DataStorage';
 import pkg from '../../package.json';
 import logger from '../lib/logger';
-import _ from 'lodash';
-import i18n from '../lib/i18n';
 import { ConfigV1Regex, ConfigV1Suffix } from '../constants';
 
 const log = logger('definition');
@@ -171,10 +169,16 @@ export class DefinitionLoader {
         }
 
         if (json.name) {
-            this.name = (json.i18nName ? i18n._(json.i18nName) : json.name);
+            this.name = json.name;
+        }
+        if (json.i18nName) {
+            this.i18nName = json.i18nName;
         }
         if (json.category) {
-            this.category = (json.i18nCategory ? i18n._(json.i18nCategory) : json.category);
+            this.category = json.category;
+        }
+        if (json.i18nCategory) {
+            this.i18nCategory = json.i18nCategory;
         }
 
         // settings
@@ -225,6 +229,8 @@ export class DefinitionLoader {
             version: pkg.version,
             name: this.name,
             category: this.category,
+            i18nName: this.i18nName,
+            i18nCategory: this.i18nCategory,
             inherits: this.inherits,
             metadata: this.metadata,
             overrides
@@ -236,6 +242,8 @@ export class DefinitionLoader {
             definitionId: this.definitionId,
             name: this.name,
             category: this.category,
+            i18nName: this.i18nName,
+            i18nCategory: this.i18nCategory,
             inherits: this.inherits,
             settings: this.settings,
             metadata: this.metadata,
