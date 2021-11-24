@@ -2,8 +2,8 @@
     "version": "4.1.0",
     "name": "Vector Engraving",
     "category": "MDF",
-    "i18nName": "key-default_name-",
-    "i18nCategory": "key-default_category-",
+    "i18nName": "key-default_name-Vector Engraving",
+    "i18nCategory": "key-default_category-MDF",
     "inherits": "snapmaker2",
     "metadata": {},
     "overrides": {

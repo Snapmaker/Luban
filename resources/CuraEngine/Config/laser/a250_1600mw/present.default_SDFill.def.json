@@ -1,9 +1,11 @@
 {
-    "category": "Default Material",
-    "inherits": "snapmaker2",
-    "definitionId": "present.default.SDFill",
     "version": "1.0.0",
     "name": "SD Fill",
+    "category": "Default Material",
+    "i18nName": "key-default_name-SD Fill",
+    "i18nCategory": "key-default_category-Default Material",
+    "inherits": "snapmaker2",
+    "definitionId": "present.default.SDFill",
     "overrides": {
         "path_type": {
             "default_value": "fill"

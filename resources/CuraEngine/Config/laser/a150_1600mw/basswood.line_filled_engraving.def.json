@@ -2,8 +2,8 @@
     "version": "4.1.0",
     "name": "Line-filled Engraving",
     "category": "Basswood",
-    "i18nName": "key-default_name-",
-    "i18nCategory": "key-default_category-",
+    "i18nName": "key-default_name-Line-filled Engraving",
+    "i18nCategory": "key-default_category-Basswood",
     "inherits": "snapmaker2",
     "metadata": {},
     "overrides": {

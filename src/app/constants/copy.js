@@ -166,6 +166,10 @@ i18n._('key-default-name-Flat End Mill 3.175');
 i18n._('key-default_name-Ball End Mill');
 i18n._('key-default_name-Straight Groove V-bit');
 
+i18n._('key-default_name-CUT');
+i18n._('key-default_name-HD Fill');
+i18n._('key-default_name-Path Engrave');
+i18n._('key-default_name-SD Fill');
 i18n._('key-default_name-Cutting 1.5mm');
 i18n._('key-default_name-Cutting 3mm');
 i18n._('key-default_name-Cutting 5mm');

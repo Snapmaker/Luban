@@ -2,8 +2,8 @@
     "version": "4.1.0",
     "name": "Cutting 1.5mm",
     "category": "Basswood",
-    "i18nName": "key-default_name-",
-    "i18nCategory": "key-default_category-",
+    "i18nName": "key-default_name-Cutting 1.5mm",
+    "i18nCategory": "key-default_category-Basswood",
     "inherits": "snapmaker2",
     "metadata": {},
     "overrides": {

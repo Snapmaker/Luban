@@ -2,8 +2,8 @@
     "version": "4.1.0",
     "name": "Cutting 3mm",
     "category": "Black Acrylic",
-    "i18nName": "key-default_name-",
-    "i18nCategory": "key-default_category-",
+    "i18nName": "key-default_name-Cutting 3mm",
+    "i18nCategory": "key-default_category-Black Acrylic",
     "inherits": "snapmaker2",
     "metadata": {},
     "overrides": {
