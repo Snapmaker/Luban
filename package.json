@@ -194,7 +194,7 @@
     "detect-browser": "~3.0.0",
     "earcut": "^2.2.3",
     "electron-store": "~5.1.1",
-    "electron-updater": "4.3.9",
+    "electron-updater": "=4.3.9",
     "ensure-array": "~1.0.0",
     "errorhandler": "~1.5.0",
     "es5-shim": "~4.5.9",
@@ -377,4 +377,3 @@
     }
   }
 }
-
