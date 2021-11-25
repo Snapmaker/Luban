@@ -991,7 +991,7 @@ export const DISPLAYED_TYPE_TOOLPATH = 'toolpath';
 
 // SVG Canvas coordinateMode
 export const COORDINATE_MODE_CENTER = {
-    label: 'Center',
+    label: 'key-CncLaser/JobSetup-Center',
     value: 'center',
     setting: {
         sizeMultiplyFactor: {
@@ -1001,7 +1001,7 @@ export const COORDINATE_MODE_CENTER = {
     }
 };
 export const COORDINATE_MODE_TOP_RIGHT = {
-    label: 'Top Right',
+    label: 'key-CncLaser/JobSetup-Top Right',
     value: 'top-right',
     setting: {
         sizeMultiplyFactor: {
@@ -1011,7 +1011,7 @@ export const COORDINATE_MODE_TOP_RIGHT = {
     }
 };
 export const COORDINATE_MODE_BOTTOM_RIGHT = {
-    label: 'Bottom Right',
+    label: 'key-CncLaser/JobSetup-Bottom Right',
     value: 'bottom-right',
     setting: {
         sizeMultiplyFactor: {
@@ -1021,7 +1021,7 @@ export const COORDINATE_MODE_BOTTOM_RIGHT = {
     }
 };
 export const COORDINATE_MODE_TOP_LEFT = {
-    label: 'Top Left',
+    label: 'key-CncLaser/JobSetup-Top Left',
     value: 'top-left',
     setting: {
         sizeMultiplyFactor: {
@@ -1031,7 +1031,7 @@ export const COORDINATE_MODE_TOP_LEFT = {
     }
 };
 export const COORDINATE_MODE_BOTTOM_LEFT = {
-    label: 'Bottom Left',
+    label: 'key-CncLaser/JobSetup-Bottom Left',
     value: 'bottom-left',
     setting: {
         sizeMultiplyFactor: {
@@ -1041,7 +1041,7 @@ export const COORDINATE_MODE_BOTTOM_LEFT = {
     }
 };
 export const COORDINATE_MODE_BOTTOM_CENTER = {
-    label: 'Top',
+    label: 'key-CncLaser/JobSetup-Top',
     value: 'bottom-center',
     setting: {
         sizeMultiplyFactor: {

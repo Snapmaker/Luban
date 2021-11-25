@@ -18,28 +18,28 @@ function JobType({ headType, jobTypeState, setJobTypeState }) {
 
     const coordinateModeList = [
         {
-            label: COORDINATE_MODE_CENTER.label,
-            value: i18n._(COORDINATE_MODE_CENTER.label),
+            label: i18n._(COORDINATE_MODE_CENTER.label),
+            value: COORDINATE_MODE_CENTER.value,
             mode: COORDINATE_MODE_CENTER
         },
         {
-            label: COORDINATE_MODE_BOTTOM_LEFT.label,
-            value: i18n._(COORDINATE_MODE_BOTTOM_LEFT.label),
+            label: i18n._(COORDINATE_MODE_BOTTOM_LEFT.label),
+            value: COORDINATE_MODE_BOTTOM_LEFT.value,
             mode: COORDINATE_MODE_BOTTOM_LEFT
         },
         {
-            label: COORDINATE_MODE_BOTTOM_RIGHT.label,
-            value: i18n._(COORDINATE_MODE_BOTTOM_RIGHT.label),
+            label: i18n._(COORDINATE_MODE_BOTTOM_RIGHT.label),
+            value: COORDINATE_MODE_BOTTOM_RIGHT.value,
             mode: COORDINATE_MODE_BOTTOM_RIGHT
         },
         {
-            label: COORDINATE_MODE_TOP_LEFT.label,
-            value: i18n._(COORDINATE_MODE_TOP_LEFT.label),
+            label: i18n._(COORDINATE_MODE_TOP_LEFT.label),
+            value: COORDINATE_MODE_TOP_LEFT.value,
             mode: COORDINATE_MODE_TOP_LEFT
         },
         {
-            label: COORDINATE_MODE_TOP_RIGHT.label,
-            value: i18n._(COORDINATE_MODE_TOP_RIGHT.label),
+            label: i18n._(COORDINATE_MODE_TOP_RIGHT.label),
+            value: COORDINATE_MODE_TOP_RIGHT.value,
             mode: COORDINATE_MODE_TOP_RIGHT
         }
     ];
@@ -186,7 +186,7 @@ function JobType({ headType, jobTypeState, setJobTypeState }) {
                                 options={coordinateModeList}
                                 isGroup={false}
                                 placeholder={i18n._('key-CncLaser/JobSetup-Choose font')}
-                                value={i18n._(coordinateMode.label ?? COORDINATE_MODE_CENTER.label)}
+                                value={coordinateMode.value ?? COORDINATE_MODE_CENTER.value}
                                 onChange={actions.changeCoordinateMode}
                                 disabled={inProgress || settingSizeDisabled}
                             />
@@ -275,7 +275,7 @@ function JobType({ headType, jobTypeState, setJobTypeState }) {
                                     clearable={false}
                                     options={[
                                         {
-                                            label: 'Top',
+                                            label: i18n._('key-CncLaser/JobSetup-Top'),
                                             value: 'top'
                                         }]}
                                     isGroup={false}
@@ -290,7 +290,7 @@ function JobType({ headType, jobTypeState, setJobTypeState }) {
                                     clearable={false}
                                     options={[
                                         {
-                                            label: 'Center',
+                                            label: i18n._('key-CncLaser/JobSetup-Center'),
                                             value: 'center'
                                         }]}
                                     isGroup={false}
