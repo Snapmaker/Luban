@@ -171,7 +171,12 @@ const INITIAL_STATE = {
     helpersExtruderConfig: {
         adhesion: '0',
         support: '0'
-    }
+    },
+    // extruder modal
+    isOpenSelectModals: false,
+    isOpenHelpers: false,
+    modelExtruderInfoShow: true,
+    helpersExtruderInfoShow: true
 };
 
 
@@ -1279,7 +1284,6 @@ export const actions = {
     },
 
     updateSelectedModelsExtruder: (extruderConfig) => (dispatch, getState) => {
-        console.log({ extruderConfig });
         const { modelGroup } = getState().printing;
         for (const model of modelGroup.selectedModelArray) {
             model.extruderConfig = extruderConfig;
@@ -1288,7 +1292,6 @@ export const actions = {
     },
 
     updateHelpersExtruder: (extruderConfig) => (dispatch) => {
-        console.log({ extruderConfig });
         dispatch(actions.updateState({ helpersExtruderConfig: extruderConfig }));
     },
     arrangeAllModels: () => (dispatch, getState) => {
