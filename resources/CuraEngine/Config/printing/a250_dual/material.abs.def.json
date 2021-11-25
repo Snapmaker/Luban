@@ -1,0 +1,53 @@
+{
+    "name": "ABS",
+    "version": 2,
+    "inherits": "snapmaker",
+    "category": "Default",
+    "overrides": {
+        "material_flow": {
+            "default_value": 100
+        },
+        "machine_heated_bed": {
+            "default_value": true
+        },
+        "material_print_temperature_layer_0": {
+            "default_value": 238
+        },
+        "material_print_temperature": {
+            "default_value": 235
+        },
+        "cool_fan_speed": {
+            "default_value": 0
+        },
+        "material_bed_temperature_layer_0": {
+            "default_value": 80
+        },
+        "material_flow_layer_0": {
+            "default_value": 100
+        },
+        "material_bed_temperature": {
+            "default_value": 80
+        },
+        "material_diameter": {
+            "default_value": 1.75
+        },
+        "retraction_enable": {
+            "default_value": true
+        },
+        "retraction_speed": {
+            "default_value": 25
+        },
+        "retraction_amount": {
+            "default_value": 6.5
+        },
+        "retract_at_layer_change": {
+            "default_value": false
+        },
+        "retraction_hop": {
+            "default_value": 1
+        },
+        "retraction_hop_enabled": {
+            "default_value": false
+        }
+    }
+}

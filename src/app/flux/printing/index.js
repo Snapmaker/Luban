@@ -165,7 +165,13 @@ const INITIAL_STATE = {
     rotationAnalysisSelectedRowId: -1,
     leftBarOverlayVisible: false,
 
-    enableShortcut: true
+    enableShortcut: true,
+
+    // helpers extruder config
+    helpersExtruderConfig: {
+        adhesion: '0',
+        support: '0'
+    }
 };
 
 
@@ -289,7 +295,8 @@ export const actions = {
             }
         }
         dispatch(actions.updateState({
-            activeDefinition: definitionManager.activeDefinition
+            activeDefinition: definitionManager.activeDefinition,
+            helpersExtruderConfig: { adhesion: '0', support: '0' }
         }));
         // todo：init 'activeDefinition' by localStorage
         // dispatch(actions.updateActiveDefinition(definitionManager.snapmakerDefinition));
@@ -1271,6 +1278,19 @@ export const actions = {
         dispatch(actions.render());
     },
 
+    updateSelectedModelsExtruder: (extruderConfig) => (dispatch, getState) => {
+        console.log({ extruderConfig });
+        const { modelGroup } = getState().printing;
+        for (const model of modelGroup.selectedModelArray) {
+            model.extruderConfig = extruderConfig;
+        }
+        dispatch(actions.updateState(modelGroup.selectedModelArray));
+    },
+
+    updateHelpersExtruder: (extruderConfig) => (dispatch) => {
+        console.log({ extruderConfig });
+        dispatch(actions.updateState({ helpersExtruderConfig: extruderConfig }));
+    },
     arrangeAllModels: () => (dispatch, getState) => {
         const { modelGroup } = getState().printing;
         dispatch(actions.recordModelBeforeTransform(modelGroup));
