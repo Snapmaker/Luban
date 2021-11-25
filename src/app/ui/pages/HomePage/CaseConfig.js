@@ -1,7 +1,7 @@
 export const CaseConfigOriginalPrintingSingle = [
     {
         tag: 'printing', // printing、laser、cnc
-        tag_i18n: '3DP',
+        tag_i18n: 'key-HomePage/CaseLibrary_title-3DP',
         title: 'key-HomePage/CaseLibrary-Fabric',
         imgSrc: '../../resources/images/user-case/Origin/library_fabric_97x97.png',
         pathConfig: {
@@ -16,7 +16,7 @@ export const CaseConfigOriginalPrintingSingle = [
 export const CaseConfigOriginalLaserPowerOne = [
     {
         tag: 'laser',
-        tag_i18n: 'Laser',
+        tag_i18n: 'key-HomePage/CaseLibrary_title-Laser',
         title: 'key-HomePage/CaseLibrary-Feather',
         mode: 'greyscale', // mode: 'vector','greyscale','bw','text','trace'
         imgSrc: '../../resources/images/user-case/Origin/library_feather_97x97.png',
@@ -31,7 +31,7 @@ export const CaseConfigOriginalLaserPowerOne = [
 export const CaseConfigOriginalLaserPowerTwo = [
     {
         tag: 'laser',
-        tag_i18n: 'Laser',
+        tag_i18n: 'key-HomePage/CaseLibrary_title-Laser',
         title: 'key-HomePage/CaseLibrary-Feather',
         mode: 'greyscale', // mode: 'vector','greyscale','bw','text','trace'
         imgSrc: '../../resources/images/user-case/Origin/library_feather_97x97.png',
@@ -46,7 +46,7 @@ export const CaseConfigOriginalLaserPowerTwo = [
 export const CaseConfigOriginalCncStandard = [
     {
         tag: 'cnc',
-        tag_i18n: 'CNC',
+        tag_i18n: 'key-HomePage/CaseLibrary_title-CNC',
         // title: 'CNC Cut Sign',
         title: 'key-HomePage/CaseLibrary-Sign',
         mode: 'vector', // mode: 'vector','greyscale','bw','text','trace'
@@ -62,7 +62,7 @@ export const CaseConfigOriginalCncStandard = [
 export const CaseConfigA150PrintingSingle = [
     {
         tag: 'printing', // printing、laser、cnc
-        tag_i18n: '3DP',
+        tag_i18n: 'key-HomePage/CaseLibrary_title-3DP',
         // title: '3D Printed Spiral Vase',
         title: 'key-HomePage/CaseLibrary-Spiral Vase',
         imgSrc: '../../resources/images/user-case/A150/library_spiral_vase_97x97.png',
@@ -77,7 +77,7 @@ export const CaseConfigA150PrintingSingle = [
 export const CaseConfigA150LaserPowerOne = [
     {
         tag: 'laser',
-        tag_i18n: 'Laser',
+        tag_i18n: 'key-HomePage/CaseLibrary_title-Laser',
         title: 'key-HomePage/CaseLibrary-Gift Box',
         mode: 'greyscale', // mode: 'vector','greyscale','bw','text','trace'
         imgSrc: '../../resources/images/user-case/A150/library_gift_box_97x97.png',
@@ -92,7 +92,7 @@ export const CaseConfigA150LaserPowerOne = [
 export const CaseConfigA150LaserPowerTwo = [
     {
         tag: 'laser',
-        tag_i18n: 'Laser',
+        tag_i18n: 'key-HomePage/CaseLibrary_title-Laser',
         title: 'key-HomePage/CaseLibrary-wood rule',
         mode: 'greyscale', // mode: 'vector','greyscale','bw','text','trace'
         imgSrc: '../../resources/images/user-case/Laser-10w/wooden_ruler.png',
@@ -103,7 +103,7 @@ export const CaseConfigA150LaserPowerTwo = [
         }
     }, {
         tag: 'laser',
-        tag_i18n: 'Laser',
+        tag_i18n: 'key-HomePage/CaseLibrary_title-Laser',
         title: 'key-HomePage/CaseLibrary-aluminum fox',
         mode: 'greyscale', // mode: 'vector','greyscale','bw','text','trace'
         imgSrc: '../../resources/images/user-case/Laser-10w/aluminum_fox.png',
@@ -114,7 +114,7 @@ export const CaseConfigA150LaserPowerTwo = [
         }
     }, {
         tag: 'laser',
-        tag_i18n: 'Laser',
+        tag_i18n: 'key-HomePage/CaseLibrary_title-Laser',
         title: 'key-HomePage/CaseLibrary-wood Turtle Jigsaw',
         mode: 'greyscale', // mode: 'vector','greyscale','bw','text','trace'
         imgSrc: '../../resources/images/user-case/Laser-10w/wooden_turtle_jigsaw.png',
@@ -125,7 +125,7 @@ export const CaseConfigA150LaserPowerTwo = [
         }
     }, {
         tag: 'laser',
-        tag_i18n: 'Laser',
+        tag_i18n: 'key-HomePage/CaseLibrary_title-Laser',
         title: 'key-HomePage/CaseLibrary-wood rhino jigsaw',
         mode: 'greyscale', // mode: 'vector','greyscale','bw','text','trace'
         imgSrc: '../../resources/images/user-case/Laser-10w/wooden_rhino_jigsaw.png',
@@ -136,7 +136,7 @@ export const CaseConfigA150LaserPowerTwo = [
         }
     }, {
         tag: 'laser',
-        tag_i18n: 'Laser',
+        tag_i18n: 'key-HomePage/CaseLibrary_title-Laser',
         title: 'key-HomePage/CaseLibrary-acrylic rhino jigsaw',
         mode: 'greyscale', // mode: 'vector','greyscale','bw','text','trace'
         imgSrc: '../../resources/images/user-case/Laser-10w/acrylic_rhino_jigsaw.png',
@@ -151,7 +151,7 @@ export const CaseConfigA150LaserPowerTwo = [
 export const CaseConfigA150CncStandard = [
     {
         tag: 'cnc',
-        tag_i18n: 'CNC',
+        tag_i18n: 'key-HomePage/CaseLibrary_title-CNC',
         title: 'key-HomePage/CaseLibrary-Keychain',
         mode: 'vector', // mode: 'vector','greyscale','bw','text','trace'
         imgSrc: '../../resources/images/user-case/A150/library_phone_holder_97x97.png',
@@ -166,7 +166,7 @@ export const CaseConfigA150CncStandard = [
 export const CaseConfigA250PrintingSingle = [
     {
         tag: 'printing', // printing、laser、cnc
-        tag_i18n: '3DP',
+        tag_i18n: 'key-HomePage/CaseLibrary_title-3DP',
         // title: '3D Printed Spiral Vase',
         title: 'key-HomePage/CaseLibrary-Spiral Vase',
         imgSrc: '../../resources/images/user-case/A250/library_spiral_vase_97x97.png',
@@ -181,7 +181,7 @@ export const CaseConfigA250PrintingSingle = [
 export const CaseConfigA250LaserPowerOne = [
     {
         tag: 'laser',
-        tag_i18n: 'Laser',
+        tag_i18n: 'key-HomePage/CaseLibrary_title-Laser',
         title: 'key-HomePage/CaseLibrary-Gift Box',
         mode: 'greyscale', // mode: 'vector','greyscale','bw','text','trace'
         imgSrc: '../../resources/images/user-case/A250/library_gift_box_97x97.png',
@@ -196,7 +196,7 @@ export const CaseConfigA250LaserPowerOne = [
 export const CaseConfigA250LaserPowerTwo = [
     {
         tag: 'laser',
-        tag_i18n: 'Laser',
+        tag_i18n: 'key-HomePage/CaseLibrary_title-Laser',
         title: 'key-HomePage/CaseLibrary-wood rule',
         mode: 'greyscale', // mode: 'vector','greyscale','bw','text','trace'
         imgSrc: '../../resources/images/user-case/Laser-10w/wooden_ruler.png',
@@ -207,7 +207,7 @@ export const CaseConfigA250LaserPowerTwo = [
         }
     }, {
         tag: 'laser',
-        tag_i18n: 'Laser',
+        tag_i18n: 'key-HomePage/CaseLibrary_title-Laser',
         title: 'key-HomePage/CaseLibrary-aluminum fox',
         mode: 'greyscale', // mode: 'vector','greyscale','bw','text','trace'
         imgSrc: '../../resources/images/user-case/Laser-10w/aluminum_fox.png',
@@ -218,7 +218,7 @@ export const CaseConfigA250LaserPowerTwo = [
         }
     }, {
         tag: 'laser',
-        tag_i18n: 'Laser',
+        tag_i18n: 'key-HomePage/CaseLibrary_title-Laser',
         title: 'key-HomePage/CaseLibrary-wood Turtle Jigsaw',
         mode: 'greyscale', // mode: 'vector','greyscale','bw','text','trace'
         imgSrc: '../../resources/images/user-case/Laser-10w/wooden_turtle_jigsaw.png',
@@ -229,7 +229,7 @@ export const CaseConfigA250LaserPowerTwo = [
         }
     }, {
         tag: 'laser',
-        tag_i18n: 'Laser',
+        tag_i18n: 'key-HomePage/CaseLibrary_title-Laser',
         title: 'key-HomePage/CaseLibrary-wood rhino jigsaw',
         mode: 'greyscale', // mode: 'vector','greyscale','bw','text','trace'
         imgSrc: '../../resources/images/user-case/Laser-10w/wooden_rhino_jigsaw.png',
@@ -240,7 +240,7 @@ export const CaseConfigA250LaserPowerTwo = [
         }
     }, {
         tag: 'laser',
-        tag_i18n: 'Laser',
+        tag_i18n: 'key-HomePage/CaseLibrary_title-Laser',
         title: 'key-HomePage/CaseLibrary-acrylic rhino jigsaw',
         mode: 'greyscale', // mode: 'vector','greyscale','bw','text','trace'
         imgSrc: '../../resources/images/user-case/Laser-10w/acrylic_rhino_jigsaw.png',
@@ -255,7 +255,7 @@ export const CaseConfigA250LaserPowerTwo = [
 export const CaseConfigA250CncStandard = [
     {
         tag: 'cnc',
-        tag_i18n: 'CNC',
+        tag_i18n: 'key-HomePage/CaseLibrary_title-CNC',
         title: 'key-HomePage/CaseLibrary-Keychain',
         mode: 'vector', // mode: 'vector','greyscale','bw','text','trace'
         imgSrc: '../../resources/images/user-case/A250/library_phone_holder_97x97.png',
@@ -270,7 +270,7 @@ export const CaseConfigA250CncStandard = [
 export const CaseConfigA350PrintingSingle = [
     {
         tag: 'printing', // printing、laser、cnc
-        tag_i18n: '3DP',
+        tag_i18n: 'key-HomePage/CaseLibrary_title-3DP',
         // title: '3D Printed Spiral Vase',
         title: 'key-HomePage/CaseLibrary-Spiral Vase',
         imgSrc: '../../resources/images/user-case/A150/library_spiral_vase_97x97.png',
@@ -285,7 +285,7 @@ export const CaseConfigA350PrintingSingle = [
 export const CaseConfigA350LaserPowerOne = [
     {
         tag: 'laser',
-        tag_i18n: 'Laser',
+        tag_i18n: 'key-HomePage/CaseLibrary_title-Laser',
         title: 'key-HomePage/CaseLibrary-Gift Box',
         mode: 'greyscale', // mode: 'vector','greyscale','bw','text','trace'
         imgSrc: '../../resources/images/user-case/A150/library_gift_box_97x97.png',
@@ -300,7 +300,7 @@ export const CaseConfigA350LaserPowerOne = [
 export const CaseConfigA350LaserPowerTwo = [
     {
         tag: 'laser',
-        tag_i18n: 'Laser',
+        tag_i18n: 'key-HomePage/CaseLibrary_title-Laser',
         title: 'key-HomePage/CaseLibrary-wood rule',
         mode: 'greyscale', // mode: 'vector','greyscale','bw','text','trace'
         imgSrc: '../../resources/images/user-case/Laser-10w/wooden_ruler.png',
@@ -311,7 +311,7 @@ export const CaseConfigA350LaserPowerTwo = [
         }
     }, {
         tag: 'laser',
-        tag_i18n: 'Laser',
+        tag_i18n: 'key-HomePage/CaseLibrary_title-Laser',
         title: 'key-HomePage/CaseLibrary-aluminum fox',
         mode: 'greyscale', // mode: 'vector','greyscale','bw','text','trace'
         imgSrc: '../../resources/images/user-case/Laser-10w/aluminum_fox.png',
@@ -322,7 +322,7 @@ export const CaseConfigA350LaserPowerTwo = [
         }
     }, {
         tag: 'laser',
-        tag_i18n: 'Laser',
+        tag_i18n: 'key-HomePage/CaseLibrary_title-Laser',
         title: 'key-HomePage/CaseLibrary-wood Turtle Jigsaw',
         mode: 'greyscale', // mode: 'vector','greyscale','bw','text','trace'
         imgSrc: '../../resources/images/user-case/Laser-10w/wooden_turtle_jigsaw.png',
@@ -333,7 +333,7 @@ export const CaseConfigA350LaserPowerTwo = [
         }
     }, {
         tag: 'laser',
-        tag_i18n: 'Laser',
+        tag_i18n: 'key-HomePage/CaseLibrary_title-Laser',
         title: 'key-HomePage/CaseLibrary-wood rhino jigsaw',
         mode: 'greyscale', // mode: 'vector','greyscale','bw','text','trace'
         imgSrc: '../../resources/images/user-case/Laser-10w/wooden_rhino_jigsaw.png',
@@ -344,7 +344,7 @@ export const CaseConfigA350LaserPowerTwo = [
         }
     }, {
         tag: 'laser',
-        tag_i18n: 'Laser',
+        tag_i18n: 'key-HomePage/CaseLibrary_title-Laser',
         title: 'key-HomePage/CaseLibrary-acrylic rhino jigsaw',
         mode: 'greyscale', // mode: 'vector','greyscale','bw','text','trace'
         imgSrc: '../../resources/images/user-case/Laser-10w/acrylic_rhino_jigsaw.png',
@@ -359,7 +359,7 @@ export const CaseConfigA350LaserPowerTwo = [
 export const CaseConfigA350CncStandard = [
     {
         tag: 'cnc',
-        tag_i18n: 'CNC',
+        tag_i18n: 'key-HomePage/CaseLibrary_title-CNC',
         title: 'key-HomePage/CaseLibrary-Keychain',
         mode: 'vector', // mode: 'vector','greyscale','bw','text','trace'
         imgSrc: '../../resources/images/user-case/A150/library_phone_holder_97x97.png',
@@ -374,7 +374,7 @@ export const CaseConfigA350CncStandard = [
 export const CaseConfigA250CncFourAxis = [
     {
         tag: 'cnc',
-        tag_i18n: 'CNC',
+        tag_i18n: 'key-HomePage/CaseLibrary_title-CNC',
         title: 'key-HomePage/CaseLibrary-Knight Chess Piece',
         mode: 'greyscale',
         imgSrc: '../../resources/images/user-case/FourAxis/library_chess_piece_97x97.png',
@@ -386,7 +386,7 @@ export const CaseConfigA250CncFourAxis = [
     },
     {
         tag: 'cnc',
-        tag_i18n: 'CNC',
+        tag_i18n: 'key-HomePage/CaseLibrary_title-CNC',
         title: 'key-HomePage/CaseLibrary-Lion Chess Piece',
         mode: 'greyscale',
         imgSrc: '../../resources/images/user-case/FourAxis/library_cnc_lion_97x97.png',
@@ -401,7 +401,7 @@ export const CaseConfigA250CncFourAxis = [
 export const CaseConfigA250LaserFourAxis = [
     {
         tag: 'laser',
-        tag_i18n: 'Laser',
+        tag_i18n: 'key-HomePage/CaseLibrary_title-Laser',
         // title: 'Rotary Laser Engraved Lion',
         title: 'key-HomePage/CaseLibrary-Lion Box',
         // sourceType: 'svg', // raster/svg/text
@@ -418,7 +418,7 @@ export const CaseConfigA250LaserFourAxis = [
 export const CaseConfigA350CncFourAxis = [
     {
         tag: 'cnc',
-        tag_i18n: 'CNC',
+        tag_i18n: 'key-HomePage/CaseLibrary_title-CNC',
         title: 'key-HomePage/CaseLibrary-Knight Chess Piece',
         mode: 'greyscale',
         imgSrc: '../../resources/images/user-case/FourAxis/library_chess_piece_97x97.png',
@@ -430,7 +430,7 @@ export const CaseConfigA350CncFourAxis = [
     },
     {
         tag: 'cnc',
-        tag_i18n: 'CNC',
+        tag_i18n: 'key-HomePage/CaseLibrary_title-CNC',
         title: 'key-HomePage/CaseLibrary-Lion Chess Piece',
         mode: 'greyscale',
         imgSrc: '../../resources/images/user-case/FourAxis/library_cnc_lion_97x97.png',
@@ -445,7 +445,7 @@ export const CaseConfigA350CncFourAxis = [
 export const CaseConfigA350LaserFourAxis = [
     {
         tag: 'laser',
-        tag_i18n: 'Laser',
+        tag_i18n: 'key-HomePage/CaseLibrary_title-Laser',
         // title: 'Rotary Laser Engraved Lion',
         title: 'key-HomePage/CaseLibrary-Lion Box',
         // sourceType: 'svg', // raster/svg/text

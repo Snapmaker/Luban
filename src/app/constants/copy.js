@@ -87,6 +87,9 @@ i18n._('key-App/Menu-Firmware Tool');
 i18n._('key-App/Menu-Beginners Guide');
 
 // case lib
+i18n._('key-HomePage/CaseLibrary_title-3DP');
+i18n._('key-HomePage/CaseLibrary_title-CNC');
+i18n._('key-HomePage/CaseLibrary_title-Laser');
 i18n._('key-HomePage/CaseLibrary-Fabric');
 i18n._('key-HomePage/CaseLibrary-Feather');
 i18n._('key-HomePage/CaseLibrary-Sign');
