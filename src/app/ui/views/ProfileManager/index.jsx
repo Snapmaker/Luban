@@ -264,7 +264,7 @@ function ProfileManager({ optionConfigGroup, disableCategory = true, managerTitl
             if (isCreate && disableCategory) {
                 title = i18n._('key-Printing/ProfileManager-Create Profile');
                 copyType = 'Tool';
-                copyToolName = 'New Profile';
+                copyToolName = i18n._('key-default_category-New Profile');
             }
             isCreate = isCreate && !disableCategory;
 
