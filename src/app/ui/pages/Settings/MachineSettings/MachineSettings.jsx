@@ -84,25 +84,31 @@ const cncToolHeadOption = [
         label: MACHINE_TOOL_HEADS[STANDARD_CNC_TOOLHEAD_FOR_SM2].label
     }
 ];
-const machineSeriesOptions = [
-    {
-        ...MACHINE_SERIES.ORIGINAL
-    },
-    {
-        ...MACHINE_SERIES.ORIGINAL_LZ
-    },
-    {
-        ...MACHINE_SERIES.A150
-    },
-    {
-        ...MACHINE_SERIES.A250
-    },
-    {
-        ...MACHINE_SERIES.A350
-    }
-];
 
 function MachineSettings() {
+    // TODO
+    const machineSeriesOptions = [
+        {
+            ...MACHINE_SERIES.ORIGINAL,
+            label: i18n._('key-Luban/Machine/MachineSeries-Snapmaker Original')
+        },
+        {
+            ...MACHINE_SERIES.ORIGINAL_LZ,
+            label: i18n._('key-Luban/Machine/MachineSeries-Snapmaker Original with Z-axis Extension Module')
+        },
+        {
+            ...MACHINE_SERIES.A150,
+            label: i18n._('key-Luban/Machine/MachineSeries-Snapmaker 2.0 A150')
+        },
+        {
+            ...MACHINE_SERIES.A250,
+            label: i18n._('key-Luban/Machine/MachineSeries-Snapmaker 2.0 A250')
+        },
+        {
+            ...MACHINE_SERIES.A350,
+            label: i18n._('key-Luban/Machine/MachineSeries-Snapmaker 2.0 A350')
+        }
+    ];
     const dispatch = useDispatch();
     const series = useSelector(state => state?.machine?.series);
     const toolHead = useSelector(state => state?.machine?.toolHead);

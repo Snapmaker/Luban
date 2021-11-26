@@ -4,7 +4,6 @@ const i18n = {
 };
 
 // machine size name
-// TODO, no used
 i18n._('key-Luban/Machine/MachineSeries-Snapmaker Original');
 i18n._('key-Luban/Machine/MachineSeries-Snapmaker Original with Z-axis Extension Module');
 i18n._('key-Luban/Machine/MachineSeries-Snapmaker 2.0 A150');
