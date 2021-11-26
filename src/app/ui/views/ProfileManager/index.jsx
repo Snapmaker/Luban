@@ -32,7 +32,7 @@ function creatCateArray(optionList) {
                 cates.push(eachCate);
             }
         } else {
-            const idx = regex.test(option.value) ? 'Custom' : 'Default';
+            const idx = regex.test(option.value) ? i18n._('key-default_category-Custom') : i18n._('key-default_category-Default');
             const cateItem = cates.find((cate) => cate.category === idx);
             if (cateItem) {
                 cateItem.items.push(option);
