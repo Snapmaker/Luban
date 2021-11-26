@@ -51,10 +51,10 @@ class CncParameters extends PureComponent {
 
         const sliceModeOptions = [{
             value: CNC_MESH_SLICE_MODE_ROTATION,
-            label: 'Rotation'
+            label: i18n._('key-Cnc/ToolpathParameters-Rotation')
         }, {
             value: CNC_MESH_SLICE_MODE_LINKAGE,
-            label: 'Linkage'
+            label: i18n._('key-Cnc/ToolpathParameters-Linkage')
         }
         ];
 
