@@ -197,7 +197,7 @@ class PrintableArea {
                     id: uuid.v4(),
                     stroke: color,
                     fill: 'none',
-                    'stroke-width': 1 / this.scale,
+                    'stroke-width': ((i - y) === 0) ? (4 / this.scale) : (1 / this.scale),
                     opacity: 1,
                     'fill-opacity': 1
                 }
@@ -237,7 +237,7 @@ class PrintableArea {
                     id: uuid.v4(),
                     stroke: color,
                     fill: 'none',
-                    'stroke-width': 1 / this.scale,
+                    'stroke-width': ((i - y) === 0) ? (4 / this.scale) : (1 / this.scale),
                     opacity: 1,
                     'fill-opacity': 1
                 }
@@ -277,7 +277,7 @@ class PrintableArea {
                     id: uuid.v4(),
                     stroke: color,
                     fill: 'none',
-                    'stroke-width': 1 / this.scale,
+                    'stroke-width': ((i - x) === 0) ? (4 / this.scale) : (1 / this.scale),
                     opacity: 1,
                     'fill-opacity': 1
                 }
@@ -314,7 +314,7 @@ class PrintableArea {
                     id: uuid.v4(),
                     stroke: color,
                     fill: 'none',
-                    'stroke-width': 1 / this.scale,
+                    'stroke-width': ((i - x) === 0) ? (4 / this.scale) : (1 / this.scale),
                     opacity: 1,
                     'fill-opacity': 1
                 }
