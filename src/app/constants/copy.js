@@ -165,7 +165,7 @@ i18n._('key-printing/material_settings-Extrusion');
 // Profile Default name and category
 i18n._('key-default_name-Carving V-bit');
 i18n._('key-default_name-Flat End Mill 1.5');
-i18n._('key-default-name-Flat End Mill 3.175');
+i18n._('key-default_name-Flat End Mill 3.175');
 i18n._('key-default_name-Ball End Mill');
 i18n._('key-default_name-Straight Groove V-bit');
 
