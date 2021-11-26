@@ -218,7 +218,9 @@ class PrintableArea {
                     'stroke-opacity': 0
                 }
             });
-            label.innerHTML = -(i - y);
+            if (i - y !== 0) {
+                label.innerHTML = -(i - y);
+            }
             label.style.cursor = 'default';
             this.printableAreaGroup.append(line);
             this.printableAreaGroup.append(label);
@@ -256,7 +258,9 @@ class PrintableArea {
                     'stroke-opacity': 0
                 }
             });
-            label.innerHTML = -(i - y);
+            if (i - y !== 0) {
+                label.innerHTML = -(i - y);
+            }
             label.style.cursor = 'default';
             this.printableAreaGroup.append(line);
             this.printableAreaGroup.append(label);
@@ -294,9 +298,7 @@ class PrintableArea {
                     'stroke-opacity': 0
                 }
             });
-            if (i - x !== 0) {
-                label.innerHTML = i - x;
-            }
+            label.innerHTML = i - x;
             this.printableAreaGroup.append(line);
             this.printableAreaGroup.append(label);
         }
@@ -333,9 +335,7 @@ class PrintableArea {
                     'stroke-opacity': 0
                 }
             });
-            if (i - x !== 0) {
-                label.innerHTML = i - x;
-            }
+            label.innerHTML = i - x;
             this.printableAreaGroup.append(line);
             this.printableAreaGroup.append(label);
         }
