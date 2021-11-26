@@ -4,6 +4,7 @@ import { app, BrowserWindow, screen, ipcMain } from 'electron';
 import { autoUpdater } from 'electron-updater';
 import Store from 'electron-store';
 import { isUndefined, isNull } from 'lodash';
+import i18n from './app/lib/i18n';
 import path from 'path';
 import { configureWindow } from './electron-app/window';
 import MenuBuilder, { addRecentFile, cleanAllRecentFiles } from './electron-app/Menu';
@@ -109,20 +110,20 @@ function updateHandle() {
     autoUpdater.autoInstallOnAppQuit = false;
 
     autoUpdater.on('error', (err) => {
-        sendUpdateMessage(message.error, err);
+        sendUpdateMessage(i18n._(message.error), err);
     });
     // Emitted when checking if an update has started.
     autoUpdater.on('checking-for-update', () => {
-        sendUpdateMessage(message.checking);
+        sendUpdateMessage(i18n._(message.checking));
     });
     // Emitted when there is an available update. The update is downloaded automatically if autoDownload is true.
     autoUpdater.on('update-available', (downloadInfo) => {
-        sendUpdateMessage(message.updateAva);
+        sendUpdateMessage(i18n._(message.updateAva));
         mainWindow.webContents.send('update-available', downloadInfo, app.getVersion());
     });
     // Emitted when there is no available update.
     autoUpdater.on('update-not-available', () => {
-        sendUpdateMessage(message.updateNotAva);
+        sendUpdateMessage(i18n._(message.updateNotAva));
     });
     autoUpdater.on('download-progress', (progressObj) => {
         mainWindow.setProgressBar(progressObj.percent / 100);
