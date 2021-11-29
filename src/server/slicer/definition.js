@@ -15,6 +15,15 @@ const SETTING_FIELDS = [
     'sm_value'
 ];
 
+const DEFAULT_PRINTING_MATERIAL = [
+    'material.pla.def.json',
+    'material.pla.black.def.json',
+    'material.abs.def.json',
+    'material.abs.black.def.json',
+    'material.petg.def.json',
+    'material.petg.black.def.json'
+];
+
 const DEFAULT_PREDEFINED = {
     'printing': [
         'quality.fast_print.def.json',
@@ -22,7 +31,10 @@ const DEFAULT_PREDEFINED = {
         'quality.high_quality.def.json',
         'material.pla.def.json',
         'material.abs.def.json',
-        'material.petg.def.json'
+        'material.petg.def.json',
+        'material.pla.black.def.json',
+        'material.abs.black.def.json',
+        'material.petg.black.def.json'
     ],
     'cnc': [
         'tool.default_CVbit.def.json',
@@ -306,17 +318,17 @@ export function loadDefinitionLoaderByFilename(headType, filename, configPath, i
 
 // TODO: merge 'loadMaterialDefinitions' and 'loadQualityDefinitions' function
 export function loadMaterialDefinitions(headType, configPath) {
-    const predefined = [];
+    const predefined = DEFAULT_PRINTING_MATERIAL;
 
-    const regex = /^material.([A-Za-z0-9_]+).def.json$/;
+    const regex = /^material.([A-Za-z0-9_]+).([A-Za-z0-9_.]+?)def.json$/;
     const defaultDefinitionLoader = loadDefinitionLoaderByFilename(headType, 'material.pla.def.json', configPath);
-    predefined.push('material.pla.def.json');
-    predefined.push('material.abs.def.json');
-    predefined.push('material.petg.def.json');
+    // predefined.push('material.pla.def.json');
+    // predefined.push('material.abs.def.json');
+    // predefined.push('material.petg.def.json');
 
     const configDir = `${DataStorage.configDir}/${headType}`;
     const defaultFilenames = fs.readdirSync(`${configDir}/${configPath}`);
-
+    console.log('predefined', predefined, defaultFilenames);
     // Load pre-defined definitions first
     const definitions = [];
     for (const filename of predefined) {

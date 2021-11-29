@@ -1,6 +1,6 @@
 {
     "version": 2,
-    "name": "PETG-White",
+    "name": "PETG-Black",
     "inherits": "snapmaker",
     "category": "Default",
     "overrides": {

@@ -1,34 +1,35 @@
 import React, { useEffect, useCallback } from 'react';
 import PropTypes from 'prop-types';
 import { useSelector, useDispatch, shallowEqual } from 'react-redux';
+// mock, antd TreeSelect
+import { TreeSelect } from 'antd';
 import classNames from 'classnames';
-import Select from '../../components/Select';
+// import Select from '../../components/Select';
 import SvgIcon from '../../components/SvgIcon';
 import i18n from '../../../lib/i18n';
-// import Anchor from '../../components/Anchor';
 import { actions as printingActions } from '../../../flux/printing';
 import { actions as projectActions } from '../../../flux/project';
-// import styles from './styles.styl';
-import { HEAD_PRINTING, PRINTING_MANAGER_TYPE_MATERIAL } from '../../../constants';
+import { DUAL_EXTRUDER_TOOLHEAD_FOR_SM2, HEAD_PRINTING, PRINTING_MANAGER_TYPE_MATERIAL } from '../../../constants';
+import { machineStore } from '../../../store/local-storage';
 import { getSelectOptions } from '../../utils/profileManager';
 
-
-// const MATERIAL_CONFIG_KEYS = [
-//     'material_diameter',
-//     'material_flow',
-//     'material_print_temperature',
-//     'material_print_temperature_layer_0',
-//     'cool_fan_speed',
-//     'machine_heated_bed',
-//     'material_bed_temperature',
-//     'material_bed_temperature_layer_0',
-//     'material_flow_layer_0'
-// ];
 const plaMaterialId = 'material.pla';
-
+// const MaterialText = ({ name, color }) => {
+//     return (
+//         <div className="sm-flex align-center justify-space-between">
+//             <span>{name}</span>
+//             <div className={`width-16 height-16 material-background-${color?.toLowerCase()}`} />
+//         </div>
+//     );
+// };
+// MaterialText.propTypes = {
+//     name: PropTypes.string,
+//     color: PropTypes.string
+// };
 function Material({ widgetActions }) {
     const materialDefinitions = useSelector(state => state?.printing?.materialDefinitions,);
     const defaultMaterialId = useSelector(state => state?.printing?.defaultMaterialId, shallowEqual);
+    const printingToolhead = machineStore.get('machine.toolHead.printingToolhead');
     const inProgress = useSelector(state => state?.printing?.inProgress);
     const dispatch = useDispatch();
 
@@ -45,7 +46,7 @@ function Material({ widgetActions }) {
     }, [dispatch]);
 
     function onChangeMaterialValue(option) {
-        const definitionId = option.value;
+        const definitionId = option;
         const definition = materialDefinitions.find(d => d.definitionId === definitionId);
         if (definition) {
             // update selectedId
@@ -79,7 +80,6 @@ function Material({ widgetActions }) {
     return (
         <React.Fragment>
             <div className={classNames(
-                'sm-flex',
                 'margin-top-8'
             )}
             >
