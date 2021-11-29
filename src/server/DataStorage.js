@@ -90,9 +90,9 @@ class DataStorage {
 
      async init() {
          const definitionUpdated = config.get('DefinitionUpdated');
-         let overwriteTag = false;
+         let inherit = false;
          if (settings.version === '4.1.0' && (!definitionUpdated || !definitionUpdated[settings.version])) {
-             overwriteTag = true;
+             inherit = true;
              config.set('DefinitionUpdated', {
                  '4.1.0': true
              });
@@ -108,7 +108,7 @@ class DataStorage {
          rmDir(this.tmpDir, false);
          rmDir(this.sessionDir, false);
 
-         await this.initSlicer(overwriteTag);
+         await this.initSlicer(inherit);
          await this.initEnv();
 
          await this.initFonts();
@@ -253,7 +253,7 @@ class DataStorage {
          }
      }
 
-     async initSlicer(overwriteTag = true) {
+     async initSlicer(inherit = false) {
          mkdirp.sync(this.configDir);
          mkdirp.sync(this.defaultConfigDir);
          mkdirp.sync(`${this.configDir}/${CNC_CONFIG_SUBCATEGORY}`);
@@ -261,7 +261,7 @@ class DataStorage {
          mkdirp.sync(`${this.configDir}/${PRINTING_CONFIG_SUBCATEGORY}`);
 
          const CURA_ENGINE_CONFIG_LOCAL = '../resources/CuraEngine/Config';
-         await this.copyDirForInitSlicer(CURA_ENGINE_CONFIG_LOCAL, this.configDir, overwriteTag, true);
+         await this.copyDirForInitSlicer(CURA_ENGINE_CONFIG_LOCAL, this.configDir, true, inherit);
          this.upgradeConfigFile(this.configDir);
          await this.copyDirForInitSlicer(CURA_ENGINE_CONFIG_LOCAL, this.defaultConfigDir, true, true);
      }

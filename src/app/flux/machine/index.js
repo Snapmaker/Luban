@@ -23,6 +23,7 @@ import {
     STANDARD_CNC_TOOLHEAD_FOR_ORIGINAL
 } from '../../constants';
 
+import i18n from '../../lib/i18n';
 import { valueOf } from '../../lib/contants-utils';
 import { machineStore } from '../../store/local-storage';
 import { actions as printingActions } from '../printing';
@@ -1037,7 +1038,7 @@ export const actions = {
     // region Auto Update (need refactor)
     // TODO: Move Auto-Update code somewhere else.
     updateAutoupdateMessage: (autoupdateMessage) => (dispatch) => {
-        dispatch(baseActions.updateState({ autoupdateMessage: autoupdateMessage }));
+        dispatch(baseActions.updateState({ autoupdateMessage: i18n._(autoupdateMessage) }));
     },
     updateIsDownloading: (isDownloading) => (dispatch) => {
         dispatch(baseActions.updateState({ isDownloading: isDownloading }));
