@@ -23,9 +23,8 @@ export const getFonts = (req, res) => {
     fonts = fonts.filter(font => !!font.family)
         .map((font) => {
             if (font.family[0] === '"') {
-                font.family = font.family.substr(1, font.length - 2);
+                font.family = font.family.substr(1, font.family.length - 2);
             }
-
             return {
                 ...font,
                 fontFamily: font.family,

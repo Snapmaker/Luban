@@ -52,6 +52,9 @@ class FontManager {
         libFontManager.getAvailableFontsSync().forEach((font) => {
             if (path.extname(font.path).toLocaleLowerCase() !== '.ttc'
                 && this.systemFonts.findIndex(i => i.family === font.family) < 0) {
+                if (font.fontFamily === 'Arial') {
+                    console.log('font', font);
+                }
                 this.systemFonts.push(font);
             }
         });
@@ -79,9 +82,18 @@ class FontManager {
         const fonts = (await Promise.all(promises)).filter(font => !!font);
 
         this.fonts = fonts;
-        console.log('fonts before', this.systemFonts?.length);
-        this.systemFonts.push(...fonts);
-        console.log('fonts', fonts, this.systemFonts?.length);
+        this.fonts.forEach((font) => {
+            if (this.systemFonts.findIndex(i => i.family === font?.names?.fontFamily?.en) < 0) {
+                const newFont = {
+                    family: font.names.fontFamily.en,
+                    fontSubfamily: font.names.fontSubfamily.en,
+                    style: font.names.fontSubfamily.en,
+                    fullName: font.names.fullName.en,
+                    displayName: font.names.displayName.en
+                };
+                this.systemFonts.push(newFont);
+            }
+        });
         return fonts;
     }
 
