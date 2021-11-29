@@ -12,11 +12,11 @@
                     "label": "Layer Height"
                 },
                 "layer_height_0": {
-                    "default_value": 0.2,
+                    "default_value": 0.28,
                     "label": "Initial Layer Height"
                 },
                 "initial_layer_line_width_factor": {
-                    "default_value": 100,
+                    "default_value": 150,
                     "label": "Initial Layer Line Width"
                 }
             }
@@ -149,7 +149,7 @@
                     "label": "Printing Speed"
                 },
                 "speed_print_layer_0": {
-                    "default_value": 18,
+                    "default_value": 40,
                     "label": "Initial Layer Printing Speed"
                 },
                 "speed_travel_layer_0": {
