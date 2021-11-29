@@ -10,6 +10,15 @@ import { PRINTING_MANAGER_TYPE_MATERIAL, PRINTING_MANAGER_TYPE_QUALITY,
 import ProfileManager from '../ProfileManager';
 import i18n from '../../../lib/i18n';
 
+// const materialText = (label, color) => {
+//     return (
+//         <div>
+//             <span>{label}</span>
+//             <div className={`width-16 height-16 background-${color}`} />
+//         </div>
+//     );
+// };
+
 // Only custom material is editable, changes on diameter is not allowed as well
 function isDefinitionEditable(definition, key) {
     return !definition?.metadata?.readonly
@@ -27,6 +36,8 @@ function PrintingManager() {
     const defaultQualityId = useSelector(state => state?.printing?.defaultQualityId, shallowEqual);
     const managerDisplayType = useSelector(state => state?.printing?.managerDisplayType, shallowEqual);
     const materialDefinitions = useSelector(state => state?.printing?.materialDefinitions);
+    // TODO: Update materialDifinitions Data, for TreeSelect
+    // const [materialOptions, setMaterialOptions] = useState(materialDefinitions);
     const qualityDefinitions = useSelector(state => state?.printing?.qualityDefinitions);
     const series = useSelector(state => state?.machine?.series);
     const toolHead = useSelector(state => state?.machine?.toolHead);
@@ -35,6 +46,19 @@ function PrintingManager() {
         return null;
     }
 
+    // useEffect(() => {
+    //     const newMaterialOptions = [];
+    //     materialDefinitions.forEach(item => {
+    //         const color = item.name.split('-')[1];
+    //         console.log({ color });
+    //         newMaterialOptions.push({
+    //             title: <div>test</div>,
+    //             value: item.definitionId
+    //         });
+    //     });
+    //     setMaterialOptions(newMaterialOptions);
+    //     console.log({ newMaterialOptions, materialOptions });
+    // }, []);
     const actions = {
         closeManager: () => {
             dispatch(printingActions.updateShowPrintingManager(false));
