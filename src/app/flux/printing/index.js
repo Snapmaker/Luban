@@ -1052,6 +1052,7 @@ export const actions = {
                 break;
             case ['rotationX', 'rotationY', 'rotationZ'].some(item => item in transformation):
                 transformMode = 'rotate';
+                dispatch(actions.clearAllManualSupport());
                 break;
             default: break;
         }
@@ -1276,6 +1277,9 @@ export const actions = {
                 }
             }
             return true;
+        }
+        if (transformMode === 'rotate') {
+            dispatch(actions.clearAllManualSupport());
         }
         for (const model of modelGroup.selectedModelArray) {
             dispatch(operationHistoryActions.updateTargetTmpState(INITIAL_STATE.name, model.modelID, {
