@@ -272,7 +272,7 @@ class AttributesParser {
 
     parseAttribute(attributes, parentAttributes, key, value, isTextElement) {
         if (isTextElement && key === 'font-family') {
-            attributes.fontFamily = value;
+            attributes.fontFamily = value.replace(/['"]+/g, '');
         }
         switch (key) {
             case 'font-size': {
