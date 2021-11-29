@@ -79,6 +79,9 @@ class FontManager {
         const fonts = (await Promise.all(promises)).filter(font => !!font);
 
         this.fonts = fonts;
+        console.log('fonts before', this.systemFonts?.length);
+        this.systemFonts.push(...fonts);
+        console.log('fonts', fonts, this.systemFonts?.length);
         return fonts;
     }
 
