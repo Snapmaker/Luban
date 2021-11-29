@@ -983,7 +983,7 @@ class ModelGroup extends EventEmitter {
                     return true;
                 });
                 if (shouldApplyScaleToObjects) {
-                    this.selectedGroup.scale.setX(scaleX);
+                    this.selectedGroup.scale.setX(scaleX * this.selectedGroup.scale.x);
                 }
             }
             if (scaleY !== undefined) {
@@ -995,7 +995,7 @@ class ModelGroup extends EventEmitter {
                     return true;
                 });
                 if (shouldApplyScaleToObjects) {
-                    this.selectedGroup.scale.setY(scaleY);
+                    this.selectedGroup.scale.setY(scaleY * this.selectedGroup.scale.y);
                 }
             }
             if (scaleZ !== undefined) {
@@ -1007,7 +1007,7 @@ class ModelGroup extends EventEmitter {
                     return true;
                 });
                 if (shouldApplyScaleToObjects) {
-                    this.selectedGroup.scale.setZ(scaleZ);
+                    this.selectedGroup.scale.setZ(scaleZ * this.selectedGroup.scale.z);
                 }
             }
         }
