@@ -5,7 +5,8 @@ import { Button } from '../components/Buttons';
 import i18n from '../../lib/i18n';
 
 export default function renderModal(options) {
-    const { actions, onClose } = options;
+    const { actions, onClose, zIndex } = options;
+
     let { renderFooter, renderBody, size, title } = options;
     const { shouldRenderFooter = true } = options;
 
@@ -41,7 +42,7 @@ export default function renderModal(options) {
     }
 
     return (
-        <Modal disableOverlay size={size} onClose={onClose}>
+        <Modal disableOverlay size={size} onClose={onClose} zIndex={zIndex}>
             <Modal.Header>
                 {/* <Modal.Title> */}
                 {title}

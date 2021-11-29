@@ -9,7 +9,7 @@ import useSetState from '../../lib/hooks/set-state';
 import modal from '../../lib/modal';
 import LaserVisualizer from '../widgets/LaserVisualizer';
 
-import { renderPopup, logPageView, useUnsavedTitle, renderModal } from '../utils';
+import { renderPopup, logPageView, useUnsavedTitle, renderModal, maxZindex } from '../utils';
 import Dropzone from '../components/Dropzone';
 import { actions as editorActions } from '../../flux/editor';
 import { actions as laserActions } from '../../flux/laser';
@@ -401,4 +401,51 @@ Laser.propTypes = {
     // history: PropTypes.object
     location: PropTypes.object
 };
-export default withRouter(Laser);
+
+function Guard({ location }) {
+    const series = useSelector(state => state.machine.series, shallowEqual);
+
+    const [showUpdateAlert, setShowUpdateAlert] = useState((() => {
+        if ((series === 'A150' || series === 'A250' || series === 'A350') && !machineStore.get('shouldHiddenMachineUpdate')) {
+            return true;
+        } else {
+            return false;
+        }
+    })());
+
+    const onClose = () => {
+        machineStore.set('shouldHiddenMachineUpdate', true);
+
+        setShowUpdateAlert(false);
+    };
+
+    return (
+        <>
+            {
+                showUpdateAlert && renderModal({
+                    zIndex: maxZindex(),
+                    onClose,
+                    title: i18n._('key-laser/firmware_update_title-Please Update Machine Firmware'),
+                    renderBody() {
+                        return (<p>{i18n._('key-laser/firmware_update_content-Luban updated the parameters on the laser. This change requires the machine to be updated to version 1.13.4 or higher to adapt.')}</p>);
+                    },
+                    actions: [
+                        {
+                            name: i18n._('key-laser/firmware-OK'),
+                            isPrimary: true,
+                            onClick: () => onClose()
+                        }
+                    ]
+                })
+            }
+            <Laser location={location} />
+        </>
+    );
+}
+Guard.propTypes = {
+    // history: PropTypes.object
+    location: PropTypes.object
+};
+
+export default withRouter(Guard);
+// export default withRouter(Laser);
