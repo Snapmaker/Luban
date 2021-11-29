@@ -380,7 +380,7 @@ class Visualizer extends PureComponent {
         if (stage !== this.props.stage && stage === STEP_STAGE.PRINTING_LOAD_MODEL_SUCCEED) {
             const modelSize = new Vector3();
             selectedModelArray[0].boundingBox.getSize(modelSize);
-            const isLarge = ['x', 'y', 'x'].some((key) => modelSize[key] >= size[key]);
+            const isLarge = ['x', 'y', 'z'].some((key) => modelSize[key] >= size[key]);
 
             if (isLarge) {
                 const popupActions = modal({
