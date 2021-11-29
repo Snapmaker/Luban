@@ -84,25 +84,31 @@ const cncToolHeadOption = [
         label: MACHINE_TOOL_HEADS[STANDARD_CNC_TOOLHEAD_FOR_SM2].label
     }
 ];
-const machineSeriesOptions = [
-    {
-        ...MACHINE_SERIES.ORIGINAL
-    },
-    {
-        ...MACHINE_SERIES.ORIGINAL_LZ
-    },
-    {
-        ...MACHINE_SERIES.A150
-    },
-    {
-        ...MACHINE_SERIES.A250
-    },
-    {
-        ...MACHINE_SERIES.A350
-    }
-];
 
 function MachineSettings() {
+    // TODO
+    const machineSeriesOptions = [
+        {
+            ...MACHINE_SERIES.ORIGINAL,
+            label: i18n._(MACHINE_SERIES.ORIGINAL.label)
+        },
+        {
+            ...MACHINE_SERIES.ORIGINAL_LZ,
+            label: i18n._(MACHINE_SERIES.ORIGINAL_LZ.label)
+        },
+        {
+            ...MACHINE_SERIES.A150,
+            label: i18n._(MACHINE_SERIES.A150.label)
+        },
+        {
+            ...MACHINE_SERIES.A250,
+            label: i18n._(MACHINE_SERIES.A250.label)
+        },
+        {
+            ...MACHINE_SERIES.A350,
+            label: i18n._(MACHINE_SERIES.A350.label)
+        }
+    ];
     const dispatch = useDispatch();
     const series = useSelector(state => state?.machine?.series);
     const toolHead = useSelector(state => state?.machine?.toolHead);

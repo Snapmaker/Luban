@@ -1,8 +1,10 @@
 {
     "version": 2,
-    "name": "PETG",
-    "inherits": "snapmaker",
     "category": "Default",
+    "name": "PETG",
+    "i18nName": "key-default_name-PETG",
+    "i18nCategory": "key-default_category-Default",
+    "inherits": "snapmaker",
     "overrides": {
         "material_flow": {
             "default_value": 100

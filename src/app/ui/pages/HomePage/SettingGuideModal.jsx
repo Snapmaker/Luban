@@ -286,7 +286,7 @@ const SettingGuideModal = (props) => {
                                                 src={machineSeriesOptions[machineSeries].img}
                                                 alt={machineSeriesOptions[machineSeries].value}
                                             />
-                                            <div className="align-c heading-3 margin-bottom-8">{machineSeriesOptions[machineSeries].label}</div>
+                                            <div className="align-c heading-3 margin-bottom-8">{i18n._(machineSeriesOptions[machineSeries].label)}</div>
                                             <div className={styles.machineSize}>
                                                 <span className="main-text-normal margin-right-12">{i18n._('key-HomePage/Begin-Work Area')}:</span>
                                                 {

@@ -1,5 +1,6 @@
 {
     "category": "Default Material",
+    "i18nCategory": "key-default_category-Default Material",
     "definitionId": "snapmaker2",
     "version": "1.0.0",
     "name": "Carving V-bit",

@@ -5,6 +5,7 @@ import {
     PROCESS_MODE_HALFTONE, PROCESS_MODE_MESH, PROCESS_MODE_VECTOR,
     TOOLPATH_TYPE_IMAGE, TOOLPATH_TYPE_SCULPT, TOOLPATH_TYPE_VECTOR
 } from '../constants';
+import i18n from '../lib/i18n';
 
 const crossKeys = (...args) => {
     const _crossKeys = (param, keys, res) => {
@@ -79,21 +80,24 @@ export const getModelsByToolPathType = (models) => {
 };
 
 export const createToolPathNameByType = (count, type, headType) => {
+    let baseName = i18n._('key-toolpath_basename-unknown');
     if (headType === HEAD_CNC) {
         if (type === 'vector') {
-            return `Vector Toolpath - ${count++}`;
+            baseName = i18n._('key-toolpath_basename-Vector Toolpath');
         } else {
-            return `Carve Toolpath - ${count++}`;
+            baseName = i18n._('key-toolpath_basename-Carve Toolpath');
         }
+        return `${baseName} - ${count++}`;
     }
     if (headType === HEAD_LASER) {
         if (type === 'vector') {
-            return `Vector Toolpath - ${count++}`;
+            baseName = i18n._('key-toolpath_basename-Vector Toolpath');
         } else {
-            return `Image Toolpath - ${count++}`;
+            baseName = i18n._('key-toolpath_basename-Image Toolpath');
         }
+        return `${baseName} - ${count++}`;
     }
-    return 'unknown';
+    return baseName;
 };
 
 export const IDLE = 'idle';

@@ -21,22 +21,22 @@ const Image3dParameters = ({ config, disabled, updateSelectedModelConfig }) => {
 
     const Options = [{
         value: FRONT,
-        label: 'Front'
+        label: i18n._('key-Cnc/StlSection/orientation_Front-Front')
     }, {
         value: BACK,
-        label: 'Back'
+        label: i18n._('key-Cnc/StlSection/orientation_Back-Back')
     }, {
         value: LEFT,
-        label: 'Left'
+        label: i18n._('key-Cnc/StlSection/orientation_Left-Left')
     }, {
         value: RIGHT,
-        label: 'Right'
+        label: i18n._('key-Cnc/StlSection/orientation_Right-Right')
     }, {
         value: TOP,
-        label: 'Top'
+        label: i18n._('key-Cnc/StlSection/orientation_Top-Top')
     }, {
         value: BOTTOM,
-        label: 'Bottom'
+        label: i18n._('key-Cnc/StlSection/orientation_Bottom-Bottom')
     }];
 
     const actions = {

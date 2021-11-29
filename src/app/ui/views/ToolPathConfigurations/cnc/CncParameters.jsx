@@ -51,14 +51,14 @@ class CncParameters extends PureComponent {
 
         const sliceModeOptions = [{
             value: CNC_MESH_SLICE_MODE_ROTATION,
-            label: 'Rotation'
+            label: i18n._('key-Cnc/ToolpathParameters-Rotation')
         }, {
             value: CNC_MESH_SLICE_MODE_LINKAGE,
-            label: 'Linkage'
+            label: i18n._('key-Cnc/ToolpathParameters-Linkage')
         }
         ];
 
-        const methodType = type === TOOLPATH_TYPE_VECTOR ? 'Contour' : 'Carve';
+        const methodType = type === TOOLPATH_TYPE_VECTOR ? i18n._('key-Cnc/ToolpathParameters-Outline') : i18n._('key-Cnc/ToolpathParameters-Carve');
         const isSVG = type === TOOLPATH_TYPE_VECTOR;
         const isImage = type === TOOLPATH_TYPE_IMAGE;
         const isSculpt = type === TOOLPATH_TYPE_SCULPT;
@@ -80,10 +80,10 @@ class CncParameters extends PureComponent {
         };
         // Session First
         const toolDefinitionFirstKeys = [];
-        if (isSVG || isImage || isSculpt && !isRotate && methodType === 'Carve') {
+        if (isSVG || isImage || isSculpt && !isRotate && type !== TOOLPATH_TYPE_VECTOR) {
             toolDefinitionFirstKeys.push('targetDepth');
         }
-        if (methodType === 'Carve' || sliceMode === CNC_MESH_SLICE_MODE_ROTATION || sliceMode === CNC_MESH_SLICE_MODE_LINKAGE) {
+        if (type !== TOOLPATH_TYPE_VECTOR || sliceMode === CNC_MESH_SLICE_MODE_ROTATION || sliceMode === CNC_MESH_SLICE_MODE_LINKAGE) {
             toolDefinitionFirstKeys.push('allowance');
         }
         const toolDefinitionFirst = {};
@@ -261,7 +261,7 @@ class CncParameters extends PureComponent {
                                 {isRotate && (
                                     <React.Fragment>
                                         <TipTrigger
-                                            title={i18n._('key-Cnc/ToolpathParameters-Slicing Mode')}
+                                            title={i18n._('key-Cnc/ToolpathParameters-Method')}
                                             content={(
                                                 <div>
                                                     <p>{i18n._('key-Cnc/ToolpathParameters-Set the processing method of the 3D model.')}</p>

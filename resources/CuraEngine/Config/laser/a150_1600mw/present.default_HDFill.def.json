@@ -1,9 +1,11 @@
 {
     "category": "Default Material",
+    "name": "HD Fill",
+    "i18nName": "key-default_name-HD Fill",
+    "i18nCategory": "key-default_category-Default Material",
     "inherits": "snapmaker2",
     "definitionId": "present.default.HDFill",
     "version": "1.0.0",
-    "name": "HD Fill",
     "overrides": {
         "path_type": {
             "default_value": "fill"

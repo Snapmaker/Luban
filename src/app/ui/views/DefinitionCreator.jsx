@@ -24,8 +24,8 @@ class DefinitionCreator extends PureComponent {
 
     state = {
         createType: 'Material',
-        materialName: 'Default Material',
-        toolName: 'Default Tool'
+        materialName: i18n._('key-default_category-Default Material'),
+        toolName: i18n._('key-default_category-Default Tool')
     }
 
     componentDidMount() {

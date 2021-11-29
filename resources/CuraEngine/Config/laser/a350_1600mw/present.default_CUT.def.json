@@ -1,9 +1,11 @@
 {
-    "category": "Default Material",
-    "inherits": "snapmaker2",
-    "definitionId": "present.default.CUT",
     "version": "1.0.0",
     "name": "CUT",
+    "category": "Default Material",
+    "i18nName": "key-default_name-CUT",
+    "i18nCategory": "key-default_category-Default Material",
+    "inherits": "snapmaker2",
+    "definitionId": "present.default.CUT",
     "overrides": {
         "path_type": {
             "default_value": "path"

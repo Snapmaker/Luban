@@ -1,8 +1,10 @@
 {
-    "name": "Normal Quality",
     "version": 2,
-    "inherits": "snapmaker2",
     "category": "Default",
+    "name": "Normal Quality",
+    "i18nName": "key-default_name-Normal Quality",
+    "i18nCategory": "key-default_category-Default",
+    "inherits": "snapmaker2",
     "overrides": {
         "resolution": {
             "type": "category",

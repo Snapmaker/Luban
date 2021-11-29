@@ -4,7 +4,6 @@ const i18n = {
 };
 
 // machine size name
-// TODO, no used
 i18n._('key-Luban/Machine/MachineSeries-Snapmaker Original');
 i18n._('key-Luban/Machine/MachineSeries-Snapmaker Original with Z-axis Extension Module');
 i18n._('key-Luban/Machine/MachineSeries-Snapmaker 2.0 A150');
@@ -21,6 +20,14 @@ i18n._('key-CncLaser/JobSetup-Top Left');
 i18n._('key-CncLaser/JobSetup-Top');
 
 // main menu
+i18n._('key-App/Menu-Preferences');
+i18n._('key_menu_About');
+i18n._('key_menu_Services');
+i18n._('key_menu_Hide');
+i18n._('key_menu_Hide Others');
+i18n._('key_menu_Unhide');
+i18n._('key_menu_Quit');
+
 i18n._('key-App/Menu-File');
 i18n._('key-App/Menu-New Project');
 i18n._('key-App/Menu-3D Printing');
@@ -79,6 +86,9 @@ i18n._('key-App/Menu-Firmware Tool');
 i18n._('key-App/Menu-Beginners Guide');
 
 // case lib
+i18n._('key-HomePage/CaseLibrary_title-3DP');
+i18n._('key-HomePage/CaseLibrary_title-CNC');
+i18n._('key-HomePage/CaseLibrary_title-Laser');
 i18n._('key-HomePage/CaseLibrary-Fabric');
 i18n._('key-HomePage/CaseLibrary-Feather');
 i18n._('key-HomePage/CaseLibrary-Sign');
@@ -151,6 +161,57 @@ i18n._('Parameters');
 i18n._('key-printing/material_settings-Temperature');
 i18n._('key-printing/material_settings-Extrusion');
 
+// Profile Default name and category
+i18n._('key-default_name-Carving V-bit');
+i18n._('key-default_name-Flat End Mill 1.5');
+i18n._('key-default_name-Flat End Mill 3.175');
+i18n._('key-default_name-Ball End Mill');
+i18n._('key-default_name-Straight Groove V-bit');
+
+i18n._('key-default_name-CUT');
+i18n._('key-default_name-HD Fill');
+i18n._('key-default_name-Path Engrave');
+i18n._('key-default_name-SD Fill');
+i18n._('key-default_name-Cutting 1.5mm');
+i18n._('key-default_name-Cutting 3mm');
+i18n._('key-default_name-Cutting 5mm');
+i18n._('key-default_name-Cutting 8mm');
+i18n._('key-default_name-Dot-filled Engraving');
+i18n._('key-default_name-Line-filled Engraving');
+i18n._('key-default_name-Vector Engraving');
+i18n._('key-default_name-Cutting 2mm');
+i18n._('key-default_name-Cutting 3mm');
+i18n._('key-default_name-Cutting 5mm');
+i18n._('key-default_name-Cutting 200g');
+i18n._('key-default_name-Cutting 300g');
+i18n._('key-default_name-Cutting 350g');
+i18n._('key-default_name-Cutting 1.6mm');
+i18n._('key-default_name-Cutting 4mm');
+
+i18n._('key-default_name-ABS');
+i18n._('key-default_name-PETG');
+i18n._('key-default_name-PLA');
+i18n._('key-default_name-Fast Print');
+i18n._('key-default_name-Normal Quality');
+i18n._('key-default_name-High Quality');
+
+i18n._('key-default_category-Default Material');
+i18n._('key-default_category-Acrylic');
+i18n._('key-default_category-Epoxy Tooling Board');
+
+i18n._('key-default_category-Basswood');
+i18n._('key-default_category-Black Acrylic');
+i18n._('key-default_category-Black Anodized Aluminum');
+i18n._('key-default_category-Cardstock');
+i18n._('key-default_category-Coated Paper');
+i18n._('key-default_category-Corrugated Paper');
+i18n._('key-default_category-Crazy Horse Leather');
+i18n._('key-default_category-MDF');
+i18n._('key-default_category-Pinewood');
+i18n._('key-default_category-Vegetable Tanned Leather');
+
+i18n._('key-default_category-Default');
+
 // connection message
 i18n._('key-Workspace/Connection-enclosure');
 i18n._('key-Workspace/Connection-rotaryModule');
@@ -199,3 +260,8 @@ i18n._('key-App/Settings/MachineSettings-1600mW Laser');
 i18n._('key-App/Settings/MachineSettings-Standard CNC');
 i18n._('key-App/Settings/MachineSettings-Dual Extruder Toolhead');
 i18n._('key-App/Settings/MachineSettings-10W Laser');
+
+i18n._('key-settings_message-update_not_ava'); // Snapmaker Luban is up to date.
+i18n._('key-settings_message-updateAva'); // Updates are available.
+i18n._('key-settings_message-checking'); // Checking for updates.
+i18n._('key-settings_message-error'); // An error occurred while checking for updates.

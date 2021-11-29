@@ -1,4 +1,5 @@
 import api from '../../api';
+import i18n from '../../lib/i18n';
 import { HEAD_CNC } from '../../constants';
 
 class DefinitionManager {
@@ -119,6 +120,8 @@ class DefinitionManager {
         remoteDefinitions.forEach(item => {
             if (defaultDefinitionMap[item.definitionId]) {
                 item.isDefault = true;
+                item.name = (item.i18nName ? i18n._(item.i18nName) : item.name);
+                item.category = (item.i18nCategory ? i18n._(item.i18nCategory) : item.category);
             }
         });
         return remoteDefinitions;

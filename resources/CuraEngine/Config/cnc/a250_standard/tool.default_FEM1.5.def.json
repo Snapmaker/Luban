@@ -1,8 +1,10 @@
 {
-    "category": "Acrylic",
-    "version": "1.0.0",
-    "name": "Flat End Mill",
+    "category": "Default Material",
+    "name": "Flat End Mill 1.5",
+    "i18nCategory": "key-default_category-Default Material",
+    "i18nName": "key-default_name-Flat End Mill 1.5",
     "inherits": "snapmaker2",
+    "version": "1.0.0",
     "overrides": {
         "diameter": {
             "default_value": 1.5
@@ -23,10 +25,10 @@
             "default_value": 300
         },
         "step_down": {
-            "default_value": 0.4
+            "default_value": 0.5
         },
         "step_over": {
-            "default_value": 0.5
+            "default_value": 1.2
         }
     }
 }

@@ -249,9 +249,12 @@ export const PRINTING_MANAGER_TYPE_QUALITY = 'quality';
 
 export const DEFAULT_CNC_CONFIG_IDS = [
     'tool.default_CVbit',
-    'tool.default_FEM',
+    'tool.default_FEM1.5',
+    'tool.default_FEM3.175',
     'tool.default_MBEM',
-    'tool.default_SGVbit'
+    'tool.default_SGVbit',
+    'tool.rAcrylic_FEM1.5',
+    'tool.rEpoxy_SGVbit'
 ];
 
 export const DEFAULT_LASER_CONFIG_IDS = [
@@ -666,7 +669,7 @@ export const SELECTEVENT = {
 export const MACHINE_SERIES = {
     ORIGINAL: {
         value: 'Original',
-        label: 'Snapmaker Original',
+        label: 'key-Luban/Machine/MachineSeries-Snapmaker Original',
         setting: {
             size: {
                 x: 125,
@@ -683,7 +686,7 @@ export const MACHINE_SERIES = {
     ORIGINAL_LZ: {
         value: 'Original Long Z-axis',
         configPath: 'Original',
-        label: 'Snapmaker Original with Z-axis Extension Module',
+        label: 'key-Luban/Machine/MachineSeries-Snapmaker Original with Z-axis Extension Module',
         setting: {
             size: {
                 x: 125,
@@ -699,7 +702,7 @@ export const MACHINE_SERIES = {
     },
     A150: {
         value: 'A150',
-        label: 'Snapmaker 2.0 A150',
+        label: 'key-Luban/Machine/MachineSeries-Snapmaker 2.0 A150',
         setting: {
             size: {
                 x: 160,
@@ -716,7 +719,7 @@ export const MACHINE_SERIES = {
     },
     A250: {
         value: 'A250',
-        label: 'Snapmaker 2.0 A250',
+        label: 'key-Luban/Machine/MachineSeries-Snapmaker 2.0 A250',
         setting: {
             size: {
                 x: 230,
@@ -734,7 +737,7 @@ export const MACHINE_SERIES = {
     },
     A350: {
         value: 'A350',
-        label: 'Snapmaker 2.0 A350',
+        label: 'key-Luban/Machine/MachineSeries-Snapmaker 2.0 A350',
         setting: {
             size: {
                 x: 320,
@@ -751,7 +754,7 @@ export const MACHINE_SERIES = {
     },
     CUSTOM: {
         value: 'Custom',
-        label: 'Custom',
+        label: 'key-Luban/Machine/MachineSeries-Custom',
         setting: {
             size: {
                 x: 125,
@@ -988,7 +991,7 @@ export const DISPLAYED_TYPE_TOOLPATH = 'toolpath';
 
 // SVG Canvas coordinateMode
 export const COORDINATE_MODE_CENTER = {
-    label: 'Center',
+    label: 'key-CncLaser/JobSetup-Center',
     value: 'center',
     setting: {
         sizeMultiplyFactor: {
@@ -998,7 +1001,7 @@ export const COORDINATE_MODE_CENTER = {
     }
 };
 export const COORDINATE_MODE_TOP_RIGHT = {
-    label: 'Top Right',
+    label: 'key-CncLaser/JobSetup-Top Right',
     value: 'top-right',
     setting: {
         sizeMultiplyFactor: {
@@ -1008,7 +1011,7 @@ export const COORDINATE_MODE_TOP_RIGHT = {
     }
 };
 export const COORDINATE_MODE_BOTTOM_RIGHT = {
-    label: 'Bottom Right',
+    label: 'key-CncLaser/JobSetup-Bottom Right',
     value: 'bottom-right',
     setting: {
         sizeMultiplyFactor: {
@@ -1018,7 +1021,7 @@ export const COORDINATE_MODE_BOTTOM_RIGHT = {
     }
 };
 export const COORDINATE_MODE_TOP_LEFT = {
-    label: 'Top Left',
+    label: 'key-CncLaser/JobSetup-Top Left',
     value: 'top-left',
     setting: {
         sizeMultiplyFactor: {
@@ -1028,7 +1031,7 @@ export const COORDINATE_MODE_TOP_LEFT = {
     }
 };
 export const COORDINATE_MODE_BOTTOM_LEFT = {
-    label: 'Bottom Left',
+    label: 'key-CncLaser/JobSetup-Bottom Left',
     value: 'bottom-left',
     setting: {
         sizeMultiplyFactor: {
@@ -1038,7 +1041,7 @@ export const COORDINATE_MODE_BOTTOM_LEFT = {
     }
 };
 export const COORDINATE_MODE_BOTTOM_CENTER = {
-    label: 'Top',
+    label: 'key-CncLaser/JobSetup-Top',
     value: 'bottom-center',
     setting: {
         sizeMultiplyFactor: {

@@ -1,8 +1,10 @@
 {
-    "name": "Fast Print",
     "version": 2,
-    "inherits": "snapmaker2",
     "category": "Default",
+    "name": "Fast Print",
+    "i18nName": "key-default_name-Fast Print",
+    "i18nCategory": "key-default_category-Default",
+    "inherits": "snapmaker2",
     "overrides": {
         "resolution": {
             "type": "category",

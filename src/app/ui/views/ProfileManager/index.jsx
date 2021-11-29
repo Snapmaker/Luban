@@ -32,7 +32,7 @@ function creatCateArray(optionList) {
                 cates.push(eachCate);
             }
         } else {
-            const idx = regex.test(option.value) ? 'Custom' : 'Default';
+            const idx = regex.test(option.value) ? i18n._('key-default_category-Custom') : i18n._('key-default_category-Default');
             const cateItem = cates.find((cate) => cate.category === idx);
             if (cateItem) {
                 cateItem.items.push(option);
@@ -264,7 +264,7 @@ function ProfileManager({ optionConfigGroup, disableCategory = true, managerTitl
             if (isCreate && disableCategory) {
                 title = i18n._('key-Printing/ProfileManager-Create Profile');
                 copyType = 'Tool';
-                copyToolName = 'New Profile';
+                copyToolName = i18n._('key-default_category-New Profile');
             }
             isCreate = isCreate && !disableCategory;
 

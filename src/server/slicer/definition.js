@@ -26,9 +26,12 @@ const DEFAULT_PREDEFINED = {
     ],
     'cnc': [
         'tool.default_CVbit.def.json',
-        'tool.default_FEM.def.json',
+        'tool.default_FEM1.5.def.json',
+        'tool.default_FEM3.175.def.json',
         'tool.default_MBEM.def.json',
-        'tool.default_SGVbit.def.json'
+        'tool.default_SGVbit.def.json',
+        'tool.rAcrylic_FEM1.5.def.json',
+        'tool.rEpoxy_SGVbit.def.json'
     ],
     'laser': [
         'present.default_CUT.def.json',
@@ -88,8 +91,12 @@ export class DefinitionLoader {
     definitionId = '';
 
     name = '';
+    // default name key
+    // i18nName = undefined;
 
     category = '';
+    // default category key
+    // i18nCategory = undefined;
 
     inherits = '';
 
@@ -164,8 +171,14 @@ export class DefinitionLoader {
         if (json.name) {
             this.name = json.name;
         }
+        if (json.i18nName) {
+            this.i18nName = json.i18nName;
+        }
         if (json.category) {
             this.category = json.category;
+        }
+        if (json.i18nCategory) {
+            this.i18nCategory = json.i18nCategory;
         }
 
         // settings
@@ -216,6 +229,8 @@ export class DefinitionLoader {
             version: pkg.version,
             name: this.name,
             category: this.category,
+            i18nName: this.i18nName,
+            i18nCategory: this.i18nCategory,
             inherits: this.inherits,
             metadata: this.metadata,
             overrides
@@ -227,6 +242,8 @@ export class DefinitionLoader {
             definitionId: this.definitionId,
             name: this.name,
             category: this.category,
+            i18nName: this.i18nName,
+            i18nCategory: this.i18nCategory,
             inherits: this.inherits,
             settings: this.settings,
             metadata: this.metadata,
@@ -377,6 +394,7 @@ export function loadDefinitionsByPrefixName(headType, prefix, configPath) {
 }
 
 export function loadAllSeriesDefinitions(isDefault = false, headType, series = 'A150') {
+    // TODO: series name?
     const _headType = (headType === 'laser' && includes(series, '10w')) ? '10w-laser' : headType;
     const predefined = DEFAULT_PREDEFINED[_headType];
     const definitions = [];
