@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import PropTypes from 'prop-types';
+import _ from 'lodash';
 import classNames from 'classnames';
 import i18n from '../../../lib/i18n';
 import { getCaseList } from '../../../lib/caseLibrary';
@@ -21,9 +22,9 @@ const QuickStart = (props) => {
     const dispatch = useDispatch();
 
     //  method
-    const loadCase = (caseItem) => {
+    const loadCase = _.debounce((caseItem) => {
         dispatch(projectActions.openProject(caseItem.pathConfig, history));
-    };
+    }, 500);
 
     //  useEffect
     useEffect(() => {
