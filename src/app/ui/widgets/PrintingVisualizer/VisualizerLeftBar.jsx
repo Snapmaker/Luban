@@ -18,6 +18,7 @@ import { EPSILON } from '../../../constants';
 
 function VisualizerLeftBar({ defaultSupportSize, setTransformMode, isSupporting, supportActions, updateBoundingBox, autoRotateSelectedModel }) {
     const size = useSelector(state => state?.machine?.size, shallowEqual);
+    const selectedGroup = useSelector(state => state?.printing?.modelGroup?.selectedGroup, shallowEqual);
     const selectedModelArray = useSelector(state => state?.printing?.modelGroup?.selectedModelArray);
     const isSupportSelected = useSelector(state => state?.printing?.modelGroup?.isSupportSelected());
     const transformMode = useSelector(state => state?.printing?.transformMode, shallowEqual);
@@ -30,6 +31,9 @@ function VisualizerLeftBar({ defaultSupportSize, setTransformMode, isSupporting,
         const model = selectedModelArray[0];
         const { min, max } = model.boundingBox;
         modelSize = {
+            scaledX: (max.x - min.x) / selectedGroup.scale.x,
+            scaledY: (max.y - min.y) / selectedGroup.scale.y,
+            scaledZ: (max.z - min.z) / selectedGroup.scale.z,
             x: Number((max.x - min.x).toFixed(1)),
             y: Number((max.y - min.y).toFixed(1)),
             z: Number((max.z - min.z).toFixed(1))
@@ -559,7 +563,7 @@ function VisualizerLeftBar({ defaultSupportSize, setTransformMode, isSupporting,
                                         value={modelSize.x}
                                         suffix="mm"
                                         onChange={(value) => {
-                                            actions.onModelTransform({ 'scaleX': value / modelSize.x });
+                                            actions.onModelTransform({ 'scaleX': value / modelSize.scaledX });
                                             actions.onModelAfterTransform();
                                         }}
                                     />
@@ -574,7 +578,7 @@ function VisualizerLeftBar({ defaultSupportSize, setTransformMode, isSupporting,
                                         value={modelSize.y}
                                         suffix="mm"
                                         onChange={(value) => {
-                                            actions.onModelTransform({ 'scaleY': value / modelSize.y });
+                                            actions.onModelTransform({ 'scaleY': value / modelSize.scaledY });
                                             actions.onModelAfterTransform();
                                         }}
                                     />
@@ -589,7 +593,7 @@ function VisualizerLeftBar({ defaultSupportSize, setTransformMode, isSupporting,
                                         suffix="mm"
                                         value={modelSize.z}
                                         onChange={(value) => {
-                                            actions.onModelTransform({ 'scaleZ': value / modelSize.z });
+                                            actions.onModelTransform({ 'scaleZ': value / modelSize.scaledZ });
                                             actions.onModelAfterTransform();
                                         }}
                                     />
