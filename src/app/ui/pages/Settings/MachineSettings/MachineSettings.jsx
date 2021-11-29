@@ -90,23 +90,23 @@ function MachineSettings() {
     const machineSeriesOptions = [
         {
             ...MACHINE_SERIES.ORIGINAL,
-            label: i18n._('key-Luban/Machine/MachineSeries-Snapmaker Original')
+            label: i18n._(MACHINE_SERIES.ORIGINAL.label)
         },
         {
             ...MACHINE_SERIES.ORIGINAL_LZ,
-            label: i18n._('key-Luban/Machine/MachineSeries-Snapmaker Original with Z-axis Extension Module')
+            label: i18n._(MACHINE_SERIES.ORIGINAL_LZ.label)
         },
         {
             ...MACHINE_SERIES.A150,
-            label: i18n._('key-Luban/Machine/MachineSeries-Snapmaker 2.0 A150')
+            label: i18n._(MACHINE_SERIES.A150.label)
         },
         {
             ...MACHINE_SERIES.A250,
-            label: i18n._('key-Luban/Machine/MachineSeries-Snapmaker 2.0 A250')
+            label: i18n._(MACHINE_SERIES.A250.label)
         },
         {
             ...MACHINE_SERIES.A350,
-            label: i18n._('key-Luban/Machine/MachineSeries-Snapmaker 2.0 A350')
+            label: i18n._(MACHINE_SERIES.A350.label)
         }
     ];
     const dispatch = useDispatch();

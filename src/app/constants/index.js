@@ -669,7 +669,7 @@ export const SELECTEVENT = {
 export const MACHINE_SERIES = {
     ORIGINAL: {
         value: 'Original',
-        label: 'Snapmaker Original',
+        label: 'key-Luban/Machine/MachineSeries-Snapmaker Original',
         setting: {
             size: {
                 x: 125,
@@ -686,7 +686,7 @@ export const MACHINE_SERIES = {
     ORIGINAL_LZ: {
         value: 'Original Long Z-axis',
         configPath: 'Original',
-        label: 'Snapmaker Original with Z-axis Extension Module',
+        label: 'key-Luban/Machine/MachineSeries-Snapmaker Original with Z-axis Extension Module',
         setting: {
             size: {
                 x: 125,
@@ -702,7 +702,7 @@ export const MACHINE_SERIES = {
     },
     A150: {
         value: 'A150',
-        label: 'Snapmaker 2.0 A150',
+        label: 'key-Luban/Machine/MachineSeries-Snapmaker 2.0 A150',
         setting: {
             size: {
                 x: 160,
@@ -719,7 +719,7 @@ export const MACHINE_SERIES = {
     },
     A250: {
         value: 'A250',
-        label: 'Snapmaker 2.0 A250',
+        label: 'key-Luban/Machine/MachineSeries-Snapmaker 2.0 A250',
         setting: {
             size: {
                 x: 230,
@@ -737,7 +737,7 @@ export const MACHINE_SERIES = {
     },
     A350: {
         value: 'A350',
-        label: 'Snapmaker 2.0 A350',
+        label: 'key-Luban/Machine/MachineSeries-Snapmaker 2.0 A350',
         setting: {
             size: {
                 x: 320,
@@ -754,7 +754,7 @@ export const MACHINE_SERIES = {
     },
     CUSTOM: {
         value: 'Custom',
-        label: 'Custom',
+        label: 'key-Luban/Machine/MachineSeries-Custom',
         setting: {
             size: {
                 x: 125,

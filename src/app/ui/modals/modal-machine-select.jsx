@@ -78,22 +78,22 @@ class MachineSelectModal extends PureComponent {
         const machineSeriesOptions = [
             {
                 value: MACHINE_SERIES.ORIGINAL.value,
-                label: MACHINE_SERIES.ORIGINAL.label,
+                label: i18n._(MACHINE_SERIES.ORIGINAL.label),
                 img: '/resources/images/machine/size-1.0-original2.jpg'
             },
             {
                 value: MACHINE_SERIES.A150.value,
-                label: MACHINE_SERIES.A150.label,
+                label: i18n._(MACHINE_SERIES.A150.label),
                 img: '/resources/images/machine/size-2.0-A1502.jpg'
             },
             {
                 value: MACHINE_SERIES.A250.value,
-                label: MACHINE_SERIES.A250.label,
+                label: i18n._(MACHINE_SERIES.A250.label),
                 img: '/resources/images/machine/size-2.0-A2502.jpg'
             },
             {
                 value: MACHINE_SERIES.A350.value,
-                label: MACHINE_SERIES.A350.label,
+                label: i18n._(MACHINE_SERIES.A350.label),
                 img: '/resources/images/machine/size-2.0-A3502.jpg'
             }
             // {
