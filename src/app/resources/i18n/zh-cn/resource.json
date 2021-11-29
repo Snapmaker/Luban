@@ -399,7 +399,6 @@
     "key-Cnc/ToolpathParameters-Set the processing method of the 2D object or 3D model.": "设置 2D 对象或 3D 模型的加工方法。",
     "key-Cnc/ToolpathParameters-Set the processing method of the 3D model.": "设置 3D 模型的加工方法。",
     "key-Cnc/ToolpathParameters-Set the processing method of the object.": "设置对象的加工方法。",
-    "key-Cnc/ToolpathParameters-Slicing Mode": "切片模式",
     "key-Cnc/ToolpathParameters-Stop Height": "停止高度",
     "key-Cnc/ToolpathParameters-Tab": "夹持凸台",
     "key-Cnc/ToolpathParameters-Tab Height": "夹持凸台高度",

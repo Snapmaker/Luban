@@ -261,7 +261,7 @@ class CncParameters extends PureComponent {
                                 {isRotate && (
                                     <React.Fragment>
                                         <TipTrigger
-                                            title={i18n._('key-Cnc/ToolpathParameters-Slicing Mode')}
+                                            title={i18n._('key-Cnc/ToolpathParameters-Method')}
                                             content={(
                                                 <div>
                                                     <p>{i18n._('key-Cnc/ToolpathParameters-Set the processing method of the 3D model.')}</p>
