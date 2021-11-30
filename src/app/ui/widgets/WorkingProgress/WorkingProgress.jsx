@@ -23,7 +23,7 @@ Text.propTypes = {
 const WorkingProgress = ({ widgetActions, controlActions }) => {
     const {
         isConnected, workflowStatus,
-        gcodePrintingInfo: { progress, elapsedTime, remainingTime, total, sent },
+        gcodePrintingInfo: { progress, elapsedTime, remainingTime, total, sent, printStatus },
         connectionType, workflowState
     } = useSelector(state => state.machine);
     const gcodeFile = useSelector(state => state.workspace.gcodeFile);
@@ -73,7 +73,7 @@ const WorkingProgress = ({ widgetActions, controlActions }) => {
                 </div>
                 <Progress percent={Math.floor(progress ? progress * 100 : (sent / total) * 100)} type="circle" width={88} />
             </div>
-            {!(sent >= total && total !== 0) && (
+            {printStatus !== 'Complete' && (
                 <div className="sm-flex justify-space-between align-center margin-top-16">
                     <Button width="160px" type="default" onClick={() => handleMachine(currentWorkflowStatus === 'running' ? 'pause' : 'run')}>
                         <SvgIcon

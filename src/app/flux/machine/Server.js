@@ -775,7 +775,7 @@ export class Server extends events.EventEmitter {
         if (!data) {
             return;
         }
-        const { currentLine, estimatedTime, totalLines, fileName = '', progress, elapsedTime, remainingTime } = data;
+        const { currentLine, estimatedTime, totalLines, fileName = '', progress, elapsedTime, remainingTime, printStatus } = data;
         if (!currentLine || !estimatedTime || !totalLines) {
             return;
         }
@@ -796,7 +796,8 @@ export class Server extends events.EventEmitter {
             elapsedTime: elapsedTime * 1000,
             remainingTime: remainingTime * 1000,
             fileName,
-            progress
+            progress,
+            printStatus
         };
     }
 }

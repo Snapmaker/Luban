@@ -94,7 +94,7 @@ class GcodeParameters extends PureComponent {
 
         // Session Speed
         const laserDefinitionSpeedKeys = ['jogSpeed'];
-        if (pathType === 'fill' || movementMode === 'greyscale-line') {
+        if (pathType === 'fill' && movementMode === 'greyscale-line') {
             laserDefinitionSpeedKeys.push('workSpeed');
         }
         if (movementMode === 'greyscale-dot') {

@@ -60,19 +60,24 @@ function getFastEditSettingsKeys(toolPath) {
         if (toolPathType === 'vector') {
             const multiPasses = gcodeConfig?.multiPasses;
             const pathType = gcodeConfig?.pathType;
-
+            const allKeys = ['pathType'];
             if (pathType === 'fill') {
-                return ['pathType', 'fillInterval', 'workSpeed', 'fixedPower'];
-            }
-            if (multiPasses === 1) {
-                return [
-                    'pathType', 'workSpeed', 'multiPasses', 'fixedPower'
-                ];
+                allKeys.push('fillInterval', 'fixedPower');
+                if (gcodeConfig?.movementMode === 'greyscale-line') {
+                    allKeys.push('workSpeed');
+                }
             } else {
-                return [
-                    'pathType', 'workSpeed', 'multiPasses', 'multiPassDepth', 'fixedPower'
-                ];
+                if (multiPasses === 1) {
+                    allKeys.push(
+                        'workSpeed', 'multiPasses', 'fixedPower'
+                    );
+                } else {
+                    allKeys.push(
+                        'workSpeed', 'multiPasses', 'multiPassDepth', 'fixedPower'
+                    );
+                }
             }
+            return allKeys;
         }
         if (toolPathType === 'image') {
             const movementMode = gcodeConfig?.movementMode;
@@ -258,8 +263,8 @@ function ToolPathFastConfigurations({ setEditingToolpath, headType, toolpath }) 
                 if (option.movementMode === 'greyscale-dot') {
                     option.dwellTime = 5;
                     option.fillInterval = 0.14;
-                    option.jogSpeed = 2500;
-                    option.workSpeed = 2500;
+                    option.jogSpeed = 3000;
+                    // option.workSpeed = 2500;
                     option.fixedPower = 60;
                 }
                 if (option.movementMode === 'greyscale-line') {

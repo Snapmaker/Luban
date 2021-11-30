@@ -963,11 +963,7 @@ export const actions = {
         server.resumeGcode((err) => {
             if (err) {
                 callback && callback(err);
-                return;
             }
-            dispatch(baseActions.updateState({
-                workflowStatus: WORKFLOW_STATUS_RUNNING
-            }));
         });
     },
 
@@ -976,14 +972,7 @@ export const actions = {
         if (workflowStatus !== WORKFLOW_STATUS_RUNNING) {
             return;
         }
-        server.pauseGcode((msg) => {
-            if (msg) {
-                return;
-            }
-            dispatch(baseActions.updateState({
-                workflowStatus: WORKFLOW_STATUS_PAUSED
-            }));
-        });
+        server.pauseGcode();
     },
 
     stopServerGcode: () => (dispatch, getState) => {

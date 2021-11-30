@@ -722,21 +722,20 @@ function WifiTransport({ widgetActions, controlActions }) {
                     </Modal.Body>
                     <Modal.Footer>
                         <Button priority="level-two" type="default" width="88px" onClick={() => setShowPreviewModal(false)} className="margin-right-8">{i18n._('key-unused-Cancel')}</Button>
-                        {isConnected && (
+                        {isConnected && (currentWorkflowStatus !== WORKFLOW_STATUS_IDLE && connectionType === CONNECTION_TYPE_WIFI) && <Button priority="level-two" type="primary" width="200px" onClick={actions.sendFile}>{i18n._('key-Workspace/WifiTransport-Sending File')}</Button>}
+                        {isConnected && (currentWorkflowStatus === WORKFLOW_STATUS_IDLE && connectionType === CONNECTION_TYPE_WIFI) && (
                             <Dropdown
                                 className="display-inline"
                                 overlay={() => (
                                     <Menu>
-                                        {currentWorkflowStatus === 'idle' && connectionType === 'wifi' && (
-                                            <Menu.Item
-                                                onClick={() => {
-                                                    actions.sendFile();
-                                                    setShowPreviewModal(false);
-                                                }}
-                                            >
-                                                <div className="align-c">{i18n._('key-Workspace/WifiTransport-Sending File')}</div>
-                                            </Menu.Item>
-                                        )}
+                                        <Menu.Item
+                                            onClick={() => {
+                                                actions.sendFile();
+                                                setShowPreviewModal(false);
+                                            }}
+                                        >
+                                            <div className="align-c">{i18n._('key-Workspace/WifiTransport-Sending File')}</div>
+                                        </Menu.Item>
                                         <Menu.Item onClick={() => {
                                             actions.startPrint();
                                             setShowPreviewModal(false);
@@ -761,6 +760,19 @@ function WifiTransport({ widgetActions, controlActions }) {
                                     {i18n._('key-Workspace/LaserStartJob-start_job')}
                                 </Button>
                             </Dropdown>
+                        )}
+                        {isConnected && (currentWorkflowStatus === WORKFLOW_STATE_IDLE && connectionType === CONNECTION_TYPE_SERIAL) && (
+                            <Button
+                                priority="level-two"
+                                type="primary"
+                                width="200px"
+                                onClick={() => {
+                                    actions.startPrint();
+                                    setShowPreviewModal(false);
+                                }}
+                            >
+                                <div className="align-c">{i18n._('key-Workspace/Transport-Luban control print')}</div>
+                            </Button>
                         )}
                     </Modal.Footer>
                 </Modal>
