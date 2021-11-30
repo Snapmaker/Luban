@@ -43,13 +43,13 @@ class WebGLRendererWrapper {
             return;
         }
         try {
+            this.renderer.forceContextLoss();
             this.renderer.context = null;
             this.renderer.domElement = null;
             this.renderer.dispose();
-            this.renderer.forceContextLoss();
             this.renderer = null;
         } catch (e) {
-            console.warn(`dddddd${e}`);
+            console.warn(e);
         }
     }
 }

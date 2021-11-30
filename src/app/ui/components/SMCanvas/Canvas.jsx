@@ -578,9 +578,7 @@ class Canvas extends PureComponent {
         if (!this.isCanvasInitialized()) return;
         const T = clock.getDelta();
         timeS += T;
-        // console.log('T', T, timeS, renderT);
         if (timeS > renderT) {
-            console.log('render时间间隔', renderT * 1000, `${timeS * 1000}毫秒`);
             this.light.position.copy(this.camera.position);
 
             this.renderer.render(this.scene, this.camera);

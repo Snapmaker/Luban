@@ -653,7 +653,6 @@ class Controls extends EventEmitter {
             this.spherical.radius = Math.max(this.minDistance, Math.min(this.maxDistance, this.spherical.radius));
             // suport zoomToCursor (mouse only)
             if (this.zoomToCursor && shouldUpdateTarget) {
-                console.log('this.spherical.radius', this.spherical.radius);
                 this.target.lerp(this.mouse3D, 1 - this.spherical.radius / prevRadius);
             }
             spherialOffset.setFromSpherical(this.spherical);
