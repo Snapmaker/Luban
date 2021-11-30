@@ -1034,7 +1034,7 @@ class MarlinController {
                 this.event.trigger('gcode:start');
 
                 // lock screen when running G-code (safety concern)
-                if (semver.gte(this.controller.state.version, '2.4.0')) {
+                if (this.controller.state.series !== 'SM2' && semver.gte(this.controller.state.version, '2.4.0')) {
                     this.writeln('M1001 L');
                 }
 
@@ -1050,7 +1050,7 @@ class MarlinController {
                 this.event.trigger('gcode:resume');
 
                 // lock screen when running G-code (safety concern)
-                if (semver.gte(this.controller.state.version, '2.4.0')) {
+                if (this.controller.state.series !== 'SM2' && semver.gte(this.controller.state.version, '2.4.0')) {
                     this.writeln('M1001 L');
                 }
 
@@ -1060,7 +1060,7 @@ class MarlinController {
                 this.event.trigger('gcode:pause');
 
                 // unlock screen
-                if (semver.gte(this.controller.state.version, '2.4.0')) {
+                if (this.controller.state.series !== 'SM2' && semver.gte(this.controller.state.version, '2.4.0')) {
                     this.writeln('M1001 U');
                 }
 

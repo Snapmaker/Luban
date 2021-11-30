@@ -722,19 +722,21 @@ function WifiTransport({ widgetActions, controlActions }) {
                     </Modal.Body>
                     <Modal.Footer>
                         <Button priority="level-two" type="default" width="88px" onClick={() => setShowPreviewModal(false)} className="margin-right-8">{i18n._('key-unused-Cancel')}</Button>
-                        {isConnected && (currentWorkflowStatus !== 'idle' || connectionType === 'serial') && <Button priority="level-two" type="primary" width="200px">{i18n._('key-Workspace/WifiTransport-Sending File')}</Button>}
-                        {isConnected && (currentWorkflowStatus === 'idle' && connectionType === 'wifi') && (
+                        {isConnected && (
                             <Dropdown
                                 className="display-inline"
                                 overlay={() => (
                                     <Menu>
-                                        <Menu.Item onClick={() => {
-                                            actions.sendFile();
-                                            setShowPreviewModal(false);
-                                        }}
-                                        >
-                                            <div className="align-c">{i18n._('key-Workspace/WifiTransport-Sending File')}</div>
-                                        </Menu.Item>
+                                        {currentWorkflowStatus === 'idle' && connectionType === 'wifi' && (
+                                            <Menu.Item
+                                                onClick={() => {
+                                                    actions.sendFile();
+                                                    setShowPreviewModal(false);
+                                                }}
+                                            >
+                                                <div className="align-c">{i18n._('key-Workspace/WifiTransport-Sending File')}</div>
+                                            </Menu.Item>
+                                        )}
                                         <Menu.Item onClick={() => {
                                             actions.startPrint();
                                             setShowPreviewModal(false);
