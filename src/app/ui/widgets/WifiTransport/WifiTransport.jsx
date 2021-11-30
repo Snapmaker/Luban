@@ -722,8 +722,8 @@ function WifiTransport({ widgetActions, controlActions }) {
                     </Modal.Body>
                     <Modal.Footer>
                         <Button priority="level-two" type="default" width="88px" onClick={() => setShowPreviewModal(false)} className="margin-right-8">{i18n._('key-unused-Cancel')}</Button>
-                        {isConnected && (currentWorkflowStatus !== 'idle' && connectionType === 'wifi') && <Button priority="level-two" type="primary" width="200px" onClick={actions.sendFile}>{i18n._('key-Workspace/WifiTransport-Sending File')}</Button>}
-                        {isConnected && (currentWorkflowStatus === 'idle' && connectionType === 'wifi') && (
+                        {isConnected && (currentWorkflowStatus !== WORKFLOW_STATUS_IDLE && connectionType === CONNECTION_TYPE_WIFI) && <Button priority="level-two" type="primary" width="200px" onClick={actions.sendFile}>{i18n._('key-Workspace/WifiTransport-Sending File')}</Button>}
+                        {isConnected && (currentWorkflowStatus === WORKFLOW_STATUS_IDLE && connectionType === CONNECTION_TYPE_WIFI) && (
                             <Dropdown
                                 className="display-inline"
                                 overlay={() => (
@@ -760,7 +760,7 @@ function WifiTransport({ widgetActions, controlActions }) {
                                 </Button>
                             </Dropdown>
                         )}
-                        {isConnected && (currentWorkflowStatus === 'idle' && connectionType === 'serial') && (
+                        {isConnected && (currentWorkflowStatus === WORKFLOW_STATE_IDLE && connectionType === CONNECTION_TYPE_SERIAL) && (
                             <Button
                                 priority="level-two"
                                 type="primary"
