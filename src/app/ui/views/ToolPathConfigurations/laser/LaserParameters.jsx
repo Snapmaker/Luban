@@ -58,8 +58,8 @@ class LaserParameters extends PureComponent {
             if (option.movementMode === 'greyscale-dot') {
                 option.dwellTime = 5;
                 option.fillInterval = 0.14;
-                option.jogSpeed = 2500;
-                option.workSpeed = 2500;
+                option.jogSpeed = 3000;
+                // option.workSpeed = 2500;
                 option.fixedPower = 60;
             }
             if (option.movementMode === 'greyscale-line') {
