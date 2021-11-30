@@ -11,6 +11,12 @@ i18n._('key-Luban/Machine/MachineSeries-Snapmaker 2.0 A250');
 i18n._('key-Luban/Machine/MachineSeries-Snapmaker 2.0 A350');
 i18n._('key-Luban/Machine/MachineSeries-Custom');
 
+i18n._('key-machine_selection-Workspace');
+i18n._('key-machine_selection-3D Printing');
+i18n._('key-machine_selection-Laser');
+i18n._('key-machine_selection-10W Laser');
+i18n._('key-machine_selection-CNC');
+
 // coordinate size name
 i18n._('key-CncLaser/JobSetup-Center');
 i18n._('key-CncLaser/JobSetup-Bottom Left');
