@@ -362,7 +362,7 @@ export const CaseConfigA350CncStandard = [
         tag_i18n: 'key-HomePage/CaseLibrary_title-CNC',
         title: 'key-HomePage/CaseLibrary-Phone Holder',
         mode: 'vector', // mode: 'vector','greyscale','bw','text','trace'
-        imgSrc: '../../resources/images/user-case/A150/library_phone_holder_97x97.png',
+        imgSrc: '../../resources/images/user-case/A250/library_phone_holder_97x97.png',
         pathConfig: {
             isDatastoragePath: true,
             path: './UserCase/cnc/a350_standard/cnc_a350_standard.snapcnc',
