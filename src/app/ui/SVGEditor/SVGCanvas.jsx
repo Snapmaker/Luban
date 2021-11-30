@@ -1134,6 +1134,7 @@ class SVGCanvas extends PureComponent {
                     this.selectOnly([target]);
                 } else {
                     this.clearSelection();
+                    element.remove();
                 }
                 this.setMode('select');
             }
