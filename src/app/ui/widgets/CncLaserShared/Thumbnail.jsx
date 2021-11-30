@@ -87,7 +87,7 @@ class Thumbnail extends PureComponent {
         this.object.position.x += -x;
         this.object.position.y += -y;
         this.object.position.z += -z;
-        this.camera.position.copy(new Vector3(0, 0, rz + 20));
+        this.camera.position.copy(new Vector3(0, 0, (rz + 80)));
         this.scene.add(this.object);
 
         this.renderScene();

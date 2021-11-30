@@ -159,7 +159,7 @@ const convertTextToSvg = async (options) => {
                 resolve({
                     originalName: name,
                     uploadName: uploadName,
-                    family: fontObj?.names?.displayName?.en,
+                    family: fontObj?.names?.fontFamily?.en,
                     width,
                     height
                 });
