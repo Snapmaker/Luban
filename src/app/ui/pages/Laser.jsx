@@ -429,15 +429,13 @@ function Guard({ location }) {
                         // 1000 larger than the Steps zindex
                         zIndex={100001000}
                         centered
-                        style={{ width: '468px', height: '660px', paddingBottom: '0px' }}
-                        size="lg"
                         onClose={onClose}
                     >
                         <Modal.Header>
-                            {i18n._('key-Laser_firmware_update_title-Please Update Machine Firmware')}
+                            <div className="width-432 text-overflow-ellipsis">{i18n._('key-Laser_firmware_update_title-Please Update Machine Firmware')}</div>
                         </Modal.Header>
                         <Modal.Body>
-                            <div className="width-438">
+                            <div className="width-432">
                                 {i18n._('key-Laser_firmware_update_content-Luban updated the parameters on the laser. This change requires the machine to be updated to version 1.13.4 or higher to adapt.')}
                             </div>
                         </Modal.Body>
