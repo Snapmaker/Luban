@@ -423,7 +423,8 @@ function Guard({ location }) {
         <>
             {
                 !hiddenMachineUpdate && renderModal({
-                    zIndex: 9999999999,
+                    // 1000 larger than the Steps zindex
+                    zIndex: 100001000,
                     onClose,
                     title: i18n._('key-Laser_firmware_update_title-Please Update Machine Firmware'),
                     renderBody() {
