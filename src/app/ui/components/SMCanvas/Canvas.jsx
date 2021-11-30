@@ -584,7 +584,7 @@ class Canvas extends PureComponent {
             this.renderer.render(this.scene, this.camera);
 
             TWEEN.update();
-            timeS = 0;
+            timeS %= renderT;
         }
     }
 
