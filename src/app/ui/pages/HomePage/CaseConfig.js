@@ -152,7 +152,7 @@ export const CaseConfigA150CncStandard = [
     {
         tag: 'cnc',
         tag_i18n: 'key-HomePage/CaseLibrary_title-CNC',
-        title: 'key-HomePage/CaseLibrary-Keychain',
+        title: 'key-HomePage/CaseLibrary-Phone Holder',
         mode: 'vector', // mode: 'vector','greyscale','bw','text','trace'
         imgSrc: '../../resources/images/user-case/A150/library_phone_holder_97x97.png',
         pathConfig: {
@@ -256,7 +256,7 @@ export const CaseConfigA250CncStandard = [
     {
         tag: 'cnc',
         tag_i18n: 'key-HomePage/CaseLibrary_title-CNC',
-        title: 'key-HomePage/CaseLibrary-Keychain',
+        title: 'key-HomePage/CaseLibrary-Phone Holder',
         mode: 'vector', // mode: 'vector','greyscale','bw','text','trace'
         imgSrc: '../../resources/images/user-case/A250/library_phone_holder_97x97.png',
         pathConfig: {
@@ -360,7 +360,7 @@ export const CaseConfigA350CncStandard = [
     {
         tag: 'cnc',
         tag_i18n: 'key-HomePage/CaseLibrary_title-CNC',
-        title: 'key-HomePage/CaseLibrary-Keychain',
+        title: 'key-HomePage/CaseLibrary-Phone Holder',
         mode: 'vector', // mode: 'vector','greyscale','bw','text','trace'
         imgSrc: '../../resources/images/user-case/A150/library_phone_holder_97x97.png',
         pathConfig: {

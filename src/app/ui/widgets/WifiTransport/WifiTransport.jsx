@@ -722,7 +722,7 @@ function WifiTransport({ widgetActions, controlActions }) {
                     </Modal.Body>
                     <Modal.Footer>
                         <Button priority="level-two" type="default" width="88px" onClick={() => setShowPreviewModal(false)} className="margin-right-8">{i18n._('key-unused-Cancel')}</Button>
-                        {isConnected && (currentWorkflowStatus !== 'idle' || connectionType === 'serial') && <Button priority="level-two" type="primary" width="200px">{i18n._('key-Workspace/WifiTransport-Sending File')}</Button>}
+                        {isConnected && (currentWorkflowStatus !== 'idle' && connectionType === 'wifi') && <Button priority="level-two" type="primary" width="200px" onClick={actions.sendFile}>{i18n._('key-Workspace/WifiTransport-Sending File')}</Button>}
                         {isConnected && (currentWorkflowStatus === 'idle' && connectionType === 'wifi') && (
                             <Dropdown
                                 className="display-inline"
@@ -759,6 +759,19 @@ function WifiTransport({ widgetActions, controlActions }) {
                                     {i18n._('key-Workspace/LaserStartJob-start_job')}
                                 </Button>
                             </Dropdown>
+                        )}
+                        {isConnected && (currentWorkflowStatus === 'idle' && connectionType === 'serial') && (
+                            <Button
+                                priority="level-two"
+                                type="primary"
+                                width="200px"
+                                onClick={() => {
+                                    actions.startPrint();
+                                    setShowPreviewModal(false);
+                                }}
+                            >
+                                <div className="align-c">{i18n._('key-Workspace/Transport-Luban control print')}</div>
+                            </Button>
                         )}
                     </Modal.Footer>
                 </Modal>
