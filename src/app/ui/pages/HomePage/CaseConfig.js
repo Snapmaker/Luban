@@ -152,9 +152,9 @@ export const CaseConfigA150CncStandard = [
     {
         tag: 'cnc',
         tag_i18n: 'key-HomePage/CaseLibrary_title-CNC',
-        title: 'key-HomePage/CaseLibrary-Phone Holder',
+        title: 'key-HomePage/CaseLibrary-Keychain',
         mode: 'vector', // mode: 'vector','greyscale','bw','text','trace'
-        imgSrc: '../../resources/images/user-case/A150/library_phone_holder_97x97.png',
+        imgSrc: '../../resources/images/user-case/A150/library_keychain_97x97.png',
         pathConfig: {
             isDatastoragePath: true,
             path: './UserCase/cnc/a150_standard/cnc_a150_standard.snapcnc',
@@ -380,8 +380,8 @@ export const CaseConfigA250CncFourAxis = [
         imgSrc: '../../resources/images/user-case/FourAxis/library_chess_piece_97x97.png',
         pathConfig: {
             isDatastoragePath: true,
-            path: './UserCase/cnc/a250_standard/cnc_4th_a250a350_standard.snapcnc',
-            name: 'cnc_4th_a250a350_standard.snapcnc'
+            path: './UserCase/cnc/a250_standard/cnc_4th_a250a350_chess.snapcnc',
+            name: 'cnc_4th_a250a350_chess.snapcnc'
         }
     },
     {
@@ -424,8 +424,8 @@ export const CaseConfigA350CncFourAxis = [
         imgSrc: '../../resources/images/user-case/FourAxis/library_chess_piece_97x97.png',
         pathConfig: {
             isDatastoragePath: true,
-            path: './UserCase/cnc/a350_standard/cnc_4th_a250a350_standard.snapcnc',
-            name: 'cnc_4th_a250a350_standard.snapcnc'
+            path: './UserCase/cnc/a350_standard/cnc_4th_a250a350_chess.snapcnc',
+            name: 'cnc_4th_a250a350_chess.snapcnc'
         }
     },
     {
