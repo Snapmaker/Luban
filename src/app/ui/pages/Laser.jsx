@@ -407,9 +407,9 @@ function Guard({ location }) {
 
     const [hiddenMachineUpdate, setHiddenMachineUpdate] = useState((() => {
         if ((series === 'A150' || series === 'A250' || series === 'A350') && !machineStore.get('hiddenMachineUpdate')) {
-            return true;
-        } else {
             return false;
+        } else {
+            return true;
         }
     })());
 
