@@ -906,26 +906,26 @@ export const MACHINE_TOOL_HEADS = {
 export const MACHINE_HEAD_TYPE = {
     WORKSPACE: {
         value: 'workspace',
-        label: 'Workspace'
+        label: 'key-machine_selection-Workspace'
     },
     '3DP': {
         value: '3dp',
-        label: '3D Printing',
+        label: 'key-machine_selection-3D Printing',
         alias: ['3DP', '1']
     },
     LASER: {
         value: 'laser',
-        label: 'Laser',
+        label: 'key-machine_selection-Laser',
         alias: ['LASER', 'LASER350', 'LASER1600', '3']
     },
     '10W LASER': {
         value: '10w-laser',
-        label: '10W Laser',
+        label: 'key-machine_selection-10W Laser',
         alias: ['10W LASER', '4']
     },
     CNC: {
         value: 'cnc',
-        label: 'CNC',
+        label: 'key-machine_selection-CNC',
         alias: ['CNC', '2']
     }
 };
