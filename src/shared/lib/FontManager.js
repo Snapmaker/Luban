@@ -52,9 +52,6 @@ class FontManager {
         libFontManager.getAvailableFontsSync().forEach((font) => {
             if (path.extname(font.path).toLocaleLowerCase() !== '.ttc'
                 && this.systemFonts.findIndex(i => i.family === font.family) < 0) {
-                if (font.fontFamily === 'Arial') {
-                    console.log('font', font);
-                }
                 this.systemFonts.push(font);
             }
         });
