@@ -29,6 +29,8 @@ import Thumbnail from '../widgets/CncLaserShared/Thumbnail';
 import { laserCncIntroStepOne, laserCncIntroStepTwo, laserCncIntroStepFive, laserCncIntroStepSix, laser4AxisStepOne } from './introContent';
 import Steps from '../components/Steps';
 import StackedModel from '../widgets/LaserStackedModel';
+import Modal from '../components/Modal';
+import { Button } from '../components/Buttons';
 
 const ACCEPT = '.svg, .png, .jpg, .jpeg, .bmp, .dxf';
 const pageHeadType = HEAD_LASER;
@@ -422,22 +424,36 @@ function Guard({ location }) {
     return (
         <>
             {
-                !hiddenMachineUpdate && renderModal({
-                    // 1000 larger than the Steps zindex
-                    zIndex: 100001000,
-                    onClose,
-                    title: i18n._('key-Laser_firmware_update_title-Please Update Machine Firmware'),
-                    renderBody() {
-                        return (<p>{i18n._('key-Laser_firmware_update_content-Luban updated the parameters on the laser. This change requires the machine to be updated to version 1.13.4 or higher to adapt.')}</p>);
-                    },
-                    actions: [
-                        {
-                            name: i18n._('key-Laser_firmware_ok-OK'),
-                            isPrimary: true,
-                            onClick: () => onClose()
-                        }
-                    ]
-                })
+                !hiddenMachineUpdate && (
+                    <Modal
+                        // 1000 larger than the Steps zindex
+                        zIndex={100001000}
+                        centered
+                        style={{ width: '468px', height: '660px', paddingBottom: '0px' }}
+                        size="lg"
+                        onClose={onClose}
+                    >
+                        <Modal.Header>
+                            {i18n._('key-Laser_firmware_update_title-Please Update Machine Firmware')}
+                        </Modal.Header>
+                        <Modal.Body>
+                            <div className="width-438">
+                                {i18n._('key-Laser_firmware_update_content-Luban updated the parameters on the laser. This change requires the machine to be updated to version 1.13.4 or higher to adapt.')}
+                            </div>
+                        </Modal.Body>
+                        <Modal.Footer>
+                            <Button
+                                priority="level-two"
+                                className="align-r"
+                                width="96px"
+                                type="primary"
+                                onClick={onClose}
+                            >
+                                { i18n._('key-Laser_firmware_ok-OK')}
+                            </Button>
+                        </Modal.Footer>
+                    </Modal>
+                )
             }
             <Laser location={location} />
         </>
