@@ -106,28 +106,28 @@ class MachineSelectModal extends PureComponent {
             {
                 value: HEAD_PRINTING,
                 headType: HEAD_PRINTING,
-                label: MACHINE_HEAD_TYPE['3DP'].label,
+                label: i18n._(MACHINE_HEAD_TYPE['3DP'].label),
                 img: '/resources/images/machine/function-3d-printing.jpg'
             },
             {
                 value: HEAD_LASER,
                 headType: HEAD_LASER,
                 toolHead: LEVEL_ONE_POWER_LASER_FOR_SM2,
-                label: MACHINE_HEAD_TYPE.LASER.label,
+                label: i18n._(MACHINE_HEAD_TYPE.LASER.label),
                 img: '/resources/images/machine/function-laser.jpg'
 
             },
             {
-                value: `10W-${HEAD_LASER}`,
+                value: '10W-LASER',
                 headType: HEAD_LASER,
                 toolHead: LEVEL_TWO_POWER_LASER_FOR_SM2,
-                label: `10W-${MACHINE_HEAD_TYPE.LASER.label}`,
+                label: i18n._(MACHINE_HEAD_TYPE['10W LASER'].label),
                 img: '/resources/images/machine/function-laser-10w.jpg'
             },
             {
                 value: HEAD_CNC,
                 headType: HEAD_CNC,
-                label: MACHINE_HEAD_TYPE.CNC.label,
+                label: i18n._(MACHINE_HEAD_TYPE.CNC.label),
                 img: '/resources/images/machine/function-cnc.jpg'
             }
         ];

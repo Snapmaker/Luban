@@ -56,9 +56,13 @@ class Controls extends EventEmitter {
 
     lastQuaternion = new THREE.Quaternion();
 
+    minDistance = 10;
+
     // calculation temporary variables
     // spherical rotation
     enableRotate = true;
+
+    maxDistance = 3500;
 
     spherical = new THREE.Spherical();
 
@@ -567,10 +571,10 @@ class Controls extends EventEmitter {
             v.unproject(scope.camera);
 
             v.sub(scope.camera.position).normalize();
+            // now v is Vector3 which is from mouse position camera position
+            const distanceAll = v1.copy(scope.target).sub(scope.camera.position).length();
 
-            const distance = v1.copy(scope.target).sub(scope.camera.position).dot(new THREE.Vector3(1, 1, 1)) / v.dot(new THREE.Vector3(1, 1, 1));
-
-            scope.mouse3D.copy(scope.camera.position).add(v.multiplyScalar(distance));
+            scope.mouse3D.copy(scope.camera.position).add(v.multiplyScalar(distanceAll));
         };
     })();
 
@@ -582,7 +586,7 @@ class Controls extends EventEmitter {
             this.dollyOut();
         }
 
-        this.updateCamera();
+        this.updateCamera(true);
     };
 
     setSelectableObjects(objects) {
@@ -616,7 +620,7 @@ class Controls extends EventEmitter {
         this.prevState = STATE.NONE;
     }
 
-    updateCamera() {
+    updateCamera(shouldUpdateTarget = false) {
         this.offset.copy(this.camera.position).sub(this.target);
 
         const spherialOffset = new THREE.Vector3();
@@ -643,11 +647,12 @@ class Controls extends EventEmitter {
             if (this.maxScale > 0 && this.spherical.radius < this.scaleSize / this.maxScale) {
                 this.spherical.radius = this.scaleSize / this.maxScale;
             }
-            if (this.minScale > 0 && this.spherical.radius > this.scaleSize / this.minScale) {
+            if (this.minScale > 0 && (this.spherical.radius > this.scaleSize / this.minScale)) {
                 this.spherical.radius = this.scaleSize / this.minScale;
             }
+            this.spherical.radius = Math.max(this.minDistance, Math.min(this.maxDistance, this.spherical.radius));
             // suport zoomToCursor (mouse only)
-            if (this.zoomToCursor) {
+            if (this.zoomToCursor && shouldUpdateTarget) {
                 this.target.lerp(this.mouse3D, 1 - this.spherical.radius / prevRadius);
             }
             spherialOffset.setFromSpherical(this.spherical);
@@ -666,6 +671,7 @@ class Controls extends EventEmitter {
             this.target.add(this.panOffset);
             this.panOffset.set(0, 0, 0);
         }
+
 
         // re-position camera
         this.camera.position.copy(this.target).add(this.offset);

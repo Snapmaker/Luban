@@ -84,9 +84,6 @@ class Laser extends PureComponent {
             } else {
                 if (this.state.laserPowerOpen) {
                     this.props.executeGcode(`M3 P${this.state.laserPower} S${this.state.laserPower * 255 / 100}`);
-                } else {
-                    this.props.executeGcode(`M3 P${this.state.laserPower} S${this.state.laserPower * 255 / 100}`);
-                    this.props.executeGcode('M5');
                 }
                 this.props.executeGcode('M500');
             }

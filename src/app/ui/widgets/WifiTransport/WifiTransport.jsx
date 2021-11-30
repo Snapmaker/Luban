@@ -728,10 +728,11 @@ function WifiTransport({ widgetActions, controlActions }) {
                                 className="display-inline"
                                 overlay={() => (
                                     <Menu>
-                                        <Menu.Item onClick={() => {
-                                            actions.sendFile();
-                                            setShowPreviewModal(false);
-                                        }}
+                                        <Menu.Item
+                                            onClick={() => {
+                                                actions.sendFile();
+                                                setShowPreviewModal(false);
+                                            }}
                                         >
                                             <div className="align-c">{i18n._('key-Workspace/WifiTransport-Sending File')}</div>
                                         </Menu.Item>

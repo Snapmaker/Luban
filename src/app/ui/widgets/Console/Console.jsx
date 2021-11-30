@@ -11,7 +11,9 @@ import usePrevious from '../../../lib/hooks/previous';
 import { actions as machineActions } from '../../../flux/machine';
 import { controller } from '../../../lib/controller';
 import Terminal from './Terminal';
-import { ABSENT_OBJECT, CONNECTION_TYPE_SERIAL, CONNECTION_TYPE_WIFI } from '../../../constants';
+import { ABSENT_OBJECT, CONNECTION_TYPE_SERIAL, CONNECTION_TYPE_WIFI,
+    WORKFLOW_STATE_RUNNING, WORKFLOW_STATE_PAUSED
+} from '../../../constants';
 
 let pubsubTokens = [];
 let unlisten = null;
@@ -285,7 +287,7 @@ function Console({ widgetId, widgetActions, minimized, isDefault, clearRenderSta
         if (connectionType === CONNECTION_TYPE_SERIAL) {
             widgetActions.setDisplay(true);
         } else if (connectionType === CONNECTION_TYPE_WIFI) {
-            if (workflowStatus === 'running') {
+            if (workflowStatus === WORKFLOW_STATE_RUNNING || workflowStatus === WORKFLOW_STATE_PAUSED) {
                 widgetActions.setDisplay(false);
             } else {
                 widgetActions.setDisplay(true);
