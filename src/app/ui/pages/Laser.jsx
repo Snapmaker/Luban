@@ -9,7 +9,7 @@ import useSetState from '../../lib/hooks/set-state';
 import modal from '../../lib/modal';
 import LaserVisualizer from '../widgets/LaserVisualizer';
 
-import { renderPopup, logPageView, useUnsavedTitle, renderModal, maxZindex } from '../utils';
+import { renderPopup, logPageView, useUnsavedTitle, renderModal } from '../utils';
 import Dropzone from '../components/Dropzone';
 import { actions as editorActions } from '../../flux/editor';
 import { actions as laserActions } from '../../flux/laser';
@@ -405,7 +405,7 @@ Laser.propTypes = {
 function Guard({ location }) {
     const series = useSelector(state => state.machine.series, shallowEqual);
 
-    const [showUpdateAlert, setShowUpdateAlert] = useState((() => {
+    const [hiddenMachineUpdate, setHiddenMachineUpdate] = useState((() => {
         if ((series === 'A150' || series === 'A250' || series === 'A350') && !machineStore.get('shouldHiddenMachineUpdate')) {
             return true;
         } else {
@@ -416,14 +416,14 @@ function Guard({ location }) {
     const onClose = () => {
         machineStore.set('shouldHiddenMachineUpdate', true);
 
-        setShowUpdateAlert(false);
+        setHiddenMachineUpdate(true);
     };
 
     return (
         <>
             {
-                showUpdateAlert && renderModal({
-                    zIndex: maxZindex(),
+                !hiddenMachineUpdate && renderModal({
+                    zIndex: 9999999999,
                     onClose,
                     title: i18n._('key-Laser_firmware_update_title-Please Update Machine Firmware'),
                     renderBody() {
@@ -448,4 +448,3 @@ Guard.propTypes = {
 };
 
 export default withRouter(Guard);
-// export default withRouter(Laser);
