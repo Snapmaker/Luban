@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="24px" height="24px" viewBox="0 0 24 24" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <title>icon_extruder_white_24x24</title>
+    <g id="控件" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <g id="编组">
+            <rect id="矩形" x="0" y="0" width="24" height="24"></rect>
+            <g id="编组-3" transform="translate(5.000000, 5.000000)" fill="#FFFFFF" stroke="#B9BCBF">
+                <path d="M13.0218151,0.517639825 L13.4194672,2.26251988 L12.125,2.81077034 L12.125,9.34229905 L7.691014,14.3097376 L6.87990388,14.4591963 L2.5317574,9.88546115 L2.0957859,2.64155934 L0.982119854,2.64260123 L0.620725287,1.05681764 L13.0218151,0.517639825 Z" id="形状结合"></path>
+            </g>
+        </g>
+    </g>
+</svg>

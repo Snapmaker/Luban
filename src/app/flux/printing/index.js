@@ -61,6 +61,7 @@ const defaultDefinitionKeys = {
 };
 const CONFIG_ID = {
     material: 'material.pla',
+    materialRight: 'material.pla',
     quality: 'quality.fast_print'
 };
 const CONFIG_HEADTYPE = 'printing';
@@ -90,6 +91,7 @@ const INITIAL_STATE = {
     qualityDefinitions: [],
     isRecommended: true, // Using recommended settings
     defaultMaterialId: 'material.pla', // TODO: selectedMaterialId
+    defaultMaterialIdRight: 'material.pla', // for dual extruder --- right extruder
     defaultQualityId: '', // TODO: selectedQualityId
     // Active definition
     // Hierarchy: FDM Printer -> Snapmaker -> Active Definition (combination of machine, material, adhesion configurations)
@@ -146,6 +148,7 @@ const INITIAL_STATE = {
     // PrintingManager
     showPrintingManager: false,
     managerDisplayType: PRINTING_MANAGER_TYPE_MATERIAL,
+    materialManagerDirection: 'left',
 
     // others
     transformMode: 'translate', // translate/scale/rotate
@@ -295,6 +298,7 @@ export const actions = {
             if (newConfigId[series]) {
                 dispatch(actions.updateState({
                     defaultMaterialId: newConfigId[series]?.material,
+                    defaultMaterialIdRight: newConfigId[series]?.materialRight,
                     defaultQualityId: newConfigId[series]?.quality
                 }));
             }
@@ -325,7 +329,7 @@ export const actions = {
         gcodeLineGroup.position.set(-size.x / 2, -size.y / 2, 0);
     },
 
-    updateDefaultConfigId: (type, defaultId) => (dispatch, getState) => {
+    updateDefaultConfigId: (type, defaultId, direction = 'left') => (dispatch, getState) => {
         let { series } = getState().machine;
         series = getRealSeries(series);
         let originalConfigId = {};
@@ -333,7 +337,20 @@ export const actions = {
             originalConfigId = JSON.parse(machineStore.get('defaultConfigId'));
         }
         if (originalConfigId[series]) {
-            originalConfigId[series][type] = defaultId;
+            if (type === PRINTING_MANAGER_TYPE_MATERIAL) {
+                switch (direction) {
+                    case 'left':
+                        originalConfigId[series].material = defaultId;
+                        break;
+                    case 'right':
+                        originalConfigId[series].materialRight = defaultId;
+                        break;
+                    default:
+                        break;
+                }
+            } else {
+                originalConfigId[series][type] = defaultId;
+            }
         } else {
             originalConfigId[series] = {
                 ...CONFIG_ID,
@@ -793,9 +810,10 @@ export const actions = {
         dispatch(actions.destroyGcodeLine());
         dispatch(actions.displayModel());
     },
-    updateDefaultMaterialId: (materialId) => (dispatch) => {
-        dispatch(actions.updateDefaultConfigId(PRINTING_MANAGER_TYPE_MATERIAL, materialId));
-        dispatch(actions.updateState({ defaultMaterialId: materialId }));
+    updateDefaultMaterialId: (materialId, direction = 'left') => (dispatch) => {
+        const updateKey = direction === 'left' ? 'defaultMaterialId' : 'defaultMaterialIdRight';
+        dispatch(actions.updateDefaultConfigId(PRINTING_MANAGER_TYPE_MATERIAL, materialId, direction));
+        dispatch(actions.updateState({ [updateKey]: materialId }));
     },
 
     updateDefaultQualityId: (qualityId) => (dispatch) => {

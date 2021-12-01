@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="24px" height="24px" viewBox="0 0 24 24" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <title>icon_extruder_white_left_24x24</title>
+    <g id="控件" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <g id="icon_extruder_white_left_24x24">
+            <rect id="矩形" x="0" y="0" width="24" height="24"></rect>
+            <path d="M12.0002759,20 C11.934469,20 11.8357586,20 11.7041447,20 C11.5382644,20 11.3802119,19.9411059 11.2618348,19.8377008 L11.1958243,19.7704315 L7.04362531,15.0976856 L6.97155094,15.0660737 C6.7608201,14.9724831 6.625,14.7635412 6.625,14.5329622 L6.625,8.142 L5.58333333,8.14297453 C5.26116723,8.14297453 5,7.8818073 5,7.55964119 L5,5.58333333 C5,5.26116723 5.26116723,5 5.58333333,5 C8.43381187,5 10.5716708,5 11.9969101,5" id="形状结合" fill="#B9BCBF" fill-rule="nonzero"></path>
+            <polygon id="路径" fill="#FFFFFF" fill-rule="nonzero" points="12.0002759 5.999 6 5.999 6 7.142 7.625 7.14106402 7.625 14.259 7.64411494 14.2679832 11.847 19 12.0002759 19"></polygon>
+        </g>
+    </g>
+</svg>

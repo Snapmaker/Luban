@@ -117,8 +117,9 @@ export const actions = {
             envObj.coordinateMode = coordinateMode;
             envObj.coordinateSize = coordinateSize;
         } else if (headType === HEAD_PRINTING) {
-            const { defaultMaterialId, defaultQualityId } = editorState;
+            const { defaultMaterialId, defaultMaterialIdRight, defaultQualityId } = editorState;
             envObj.defaultMaterialId = defaultMaterialId;
+            envObj.defaultMaterialIdRight = defaultMaterialIdRight;
             envObj.defaultQualityId = defaultQualityId;
         }
         for (let key = 0; key < models.length; key++) {

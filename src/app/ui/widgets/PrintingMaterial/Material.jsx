@@ -9,7 +9,7 @@ import SvgIcon from '../../components/SvgIcon';
 import i18n from '../../../lib/i18n';
 import { actions as printingActions } from '../../../flux/printing';
 import { actions as projectActions } from '../../../flux/project';
-import { DUAL_EXTRUDER_TOOLHEAD_FOR_SM2, HEAD_PRINTING, PRINTING_MANAGER_TYPE_MATERIAL } from '../../../constants';
+import { DUAL_EXTRUDER_TOOLHEAD_FOR_SM2, HEAD_PRINTING, LEFT_EXTRUDER, PRINTING_MANAGER_TYPE_MATERIAL, RIGHT_EXTRUDER } from '../../../constants';
 import { machineStore } from '../../../store/local-storage';
 import { getSelectOptions } from '../../utils/profileManager';
 
@@ -29,13 +29,15 @@ const plaMaterialId = 'material.pla';
 function Material({ widgetActions }) {
     const materialDefinitions = useSelector(state => state?.printing?.materialDefinitions,);
     const defaultMaterialId = useSelector(state => state?.printing?.defaultMaterialId, shallowEqual);
+    const defaultMaterialIdRight = useSelector(state => state?.printing?.defaultMaterialIdRight, shallowEqual);
     const printingToolhead = machineStore.get('machine.toolHead.printingToolhead');
     const inProgress = useSelector(state => state?.printing?.inProgress);
     const dispatch = useDispatch();
 
-    function onShowPrintingManager() {
+    function onShowPrintingManager(direction = 'left') {
         dispatch(printingActions.updateManagerDisplayType(PRINTING_MANAGER_TYPE_MATERIAL));
         dispatch(printingActions.updateShowPrintingManager(true));
+        dispatch(printingActions.updateState({ materialManagerDirection: direction }));
     }
 
     const updateActiveDefinition = useCallback((definition, shouldSave = false) => {
@@ -45,13 +47,13 @@ function Material({ widgetActions }) {
         }
     }, [dispatch]);
 
-    function onChangeMaterialValue(option) {
+    function onChangeMaterialValue(option, direction) {
         const definitionId = option;
         const definition = materialDefinitions.find(d => d.definitionId === definitionId);
         if (definition) {
             // update selectedId
-            dispatch(printingActions.updateDefaultConfigId(PRINTING_MANAGER_TYPE_MATERIAL, definition.definitionId));
-            dispatch(printingActions.updateDefaultMaterialId(definition.definitionId));
+            dispatch(printingActions.updateDefaultConfigId(PRINTING_MANAGER_TYPE_MATERIAL, definition.definitionId, direction));
+            dispatch(printingActions.updateDefaultMaterialId(definition.definitionId, direction));
             // update active definition
             updateActiveDefinition(definition);
 
