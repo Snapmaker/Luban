@@ -3,7 +3,7 @@ import { useDispatch, useSelector, shallowEqual } from 'react-redux';
 import PropTypes from 'prop-types';
 import classNames from 'classnames';
 import * as THREE from 'three';
-import { cloneDeep, filter } from 'lodash';
+import { cloneDeep, filter, find } from 'lodash';
 import i18n from '../../../lib/i18n';
 import { toFixed } from '../../../lib/numeric-utils';
 import UniApi from '../../../lib/uni-api';
@@ -35,6 +35,11 @@ const originalHelpersExtruder = {
     support: '1',
     adhesion: '1'
 };
+const materialColorMap = {
+    black: '#000000',
+    white: '#ffffff'
+};
+const whiteHex = '#ffffff';
 function VisualizerLeftBar({ defaultSupportSize, setTransformMode, isSupporting, supportActions, updateBoundingBox, autoRotateSelectedModel }) {
     const size = useSelector(state => state?.machine?.size, shallowEqual);
     const selectedGroup = useSelector(state => state?.printing?.modelGroup?.selectedGroup, shallowEqual);
@@ -52,8 +57,13 @@ function VisualizerLeftBar({ defaultSupportSize, setTransformMode, isSupporting,
     const [isOpenModels, setIsOpenModels] = useState(isOpenSelectModals);
     const [isOpenHelpers, setIsOpenHelpers] = useState(_isOpenHelpers);
     const selectedModelBBoxDes = useSelector(state => state?.printing?.modelGroup?.getSelectedModelBBoxWHD(), shallowEqual);
-    const colorL = '#FF8B00';
-    const colorR = '#0053AA';
+    // const colorL = '#FF8B00';
+    // const colorR = '#0053AA';
+    const [colorL, setColorL] = useState(whiteHex);
+    const [colorR, setColorR] = useState(whiteHex);
+    const defaultDefinitions = useSelector(state => state?.printing?.defaultDefinitions, shallowEqual);
+    const defaultMaterialId = useSelector(state => state?.printing?.defaultMaterialId, shallowEqual);
+    const defaultMaterialIdRight = useSelector(state => state?.printing?.defaultMaterialIdRight, shallowEqual);
     let modelSize = {};
     if (isSupportSelected) {
         const model = selectedModelArray[0];
@@ -332,12 +342,16 @@ function VisualizerLeftBar({ defaultSupportSize, setTransformMode, isSupporting,
             >
                 <div className="sm-flex justify-space-between">
                     <span className="display-inline width-96 text-overflow-ellipsis">{i18n._('key-Printing/LeftBar-Extruder L')}</span>
-                    <SvgIcon
-                        name="Extruder"
-                        size={24}
-                        color={colorL}
-                        type={['static']}
-                    />
+                    {colorL !== whiteHex ? (
+                        <SvgIcon
+                            name="Extruder"
+                            size={24}
+                            color={colorL}
+                            type={['static']}
+                        />
+                    ) : (
+                        <img src="/resources/images/24x24/icon_extruder_white_24x24.svg" alt="" />
+                    )}
                 </div>
             </Menu.Item>
             <Menu.Item
@@ -346,47 +360,63 @@ function VisualizerLeftBar({ defaultSupportSize, setTransformMode, isSupporting,
             >
                 <div className="sm-flex justify-space-between">
                     <span className="display-inline width-96 text-overflow-ellipsis">{i18n._('key-Printing/LeftBar-Extruder R')}</span>
-                    <SvgIcon
-                        name="Extruder"
-                        size={24}
-                        color={colorR}
-                        type={['static']}
-                    />
+                    {colorR !== whiteHex ? (
+                        <SvgIcon
+                            name="Extruder"
+                            size={24}
+                            color={colorR}
+                            type={['static']}
+                        />
+                    ) : (
+                        <img src="/resources/images/24x24/icon_extruder_white_24x24.svg" alt="" />
+                    )}
                 </div>
             </Menu.Item>
         </Menu>
     );
-    const renderExtruderStatus = (status) => (
+    const renderExtruderStatus = (status) => {
         // <div>{i18n._(`key-Printing/LeftBar-${extruderLabelMap[status]}`)}</div>
-        <div className="sm-flex justify-space-between margin-left-16 width-160 border-default-black-5 border-radius-8 padding-vertical-4 padding-left-8">
-            <span>{extruderLabelMap[status]}</span>
-            <div className="sm-flex">
-                <div className="position-re width-24">
+        const leftExtruderColor = status === '1' ? colorR : colorL;
+        const rightExtruderColor = status === '0' ? colorL : colorR;
+        return (
+            <div className="sm-flex justify-space-between margin-left-16 width-160 border-default-black-5 border-radius-8 padding-vertical-4 padding-left-8">
+                <span>{extruderLabelMap[status]}</span>
+                <div className="sm-flex">
+                    <div className="position-re width-24">
+                        {leftExtruderColor !== whiteHex ? (
+                            <SvgIcon
+                                color={leftExtruderColor}
+                                size={24}
+                                name="ExtruderLeft"
+                                type={['static']}
+                                className="position-ab"
+                            />
+                        ) : (
+                            <img className="position-ab" src="/resources/images/24x24/icon_extruder_white_left_24x24.svg" alt="" />
+                        )}
+                        {rightExtruderColor !== whiteHex ? (
+                            <SvgIcon
+                                color={rightExtruderColor}
+                                size={24}
+                                name="ExtruderRight"
+                                type={['static']}
+                                className="position-ab right-1"
+                            />
+                        ) : (
+                            <img src="/resources/images/24x24/icon_extruder_white_right_24x24.svg" alt="" className="position-ab" />
+                        )}
+                    </div>
                     <SvgIcon
-                        color={status === '1' ? colorR : colorL}
-                        size={24}
-                        name="ExtruderLeft"
                         type={['static']}
-                        className="position-ab"
-                    />
-                    <SvgIcon
-                        color={status === '0' ? colorL : colorR}
                         size={24}
-                        name="ExtruderRight"
-                        type={['static']}
-                        className="position-ab right-1"
+                        hoversize={24}
+                        color="#545659"
+                        name="DropdownOpen"
                     />
                 </div>
-                <SvgIcon
-                    type={['static']}
-                    size={24}
-                    hoversize={24}
-                    color="#545659"
-                    name="DropdownOpen"
-                />
             </div>
-        </div>
-    );
+        );
+    };
     let moveX = 0;
     let moveY = 0;
     let scaleXPercent = 100;
@@ -481,6 +511,15 @@ function VisualizerLeftBar({ defaultSupportSize, setTransformMode, isSupporting,
             }
         }
     }, [models.length, models]);
+
+    useEffect(() => {
+        const leftExtrualMaterial = find(defaultDefinitions, { definitionId: defaultMaterialId });
+        const rightExtrualMaterial = find(defaultDefinitions, { definitionId: defaultMaterialIdRight });
+        const newColorL = leftExtrualMaterial?.name?.split('-')[1]?.toLowerCase();
+        const newColorR = rightExtrualMaterial?.name?.split('-')[1]?.toLowerCase();
+        newColorL && setColorL(materialColorMap[newColorL]);
+        newColorR && setColorR(materialColorMap[newColorR]);
+    }, [defaultDefinitions, defaultMaterialIdRight, defaultMaterialId]);
 
     return (
         <React.Fragment>
