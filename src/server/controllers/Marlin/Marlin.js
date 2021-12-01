@@ -672,14 +672,16 @@ class MarlinParserHomeState {
 
 class MarlinParserLaser10WErrorState {
     static parse(line) {
-        const r = line.match(/^security_state: ([0-9]),.*$/);
-        if (!r) {
+        const r1 = line.match(/^security_state: ([0-9]),.*$/);
+        const r2 = line.match(/^Laser 10w security state: 0x([0-9]+).*$/);
+        if (!r1 && !r2) {
             return null;
         }
+        const securityState = (r1 && r1[1]) || (r2 && r2[1]);
         return {
             type: MarlinParserLaser10WErrorState,
             payload: {
-                laser10WErrorState: parseInt(r[1], 10)
+                laser10WErrorState: parseInt(securityState, 10)
             }
         };
     }
