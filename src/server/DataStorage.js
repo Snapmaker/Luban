@@ -91,10 +91,10 @@ class DataStorage {
      async init() {
          const definitionUpdated = config.get('DefinitionUpdated');
          let inherit = false;
-         if (settings.version === '4.1.0' && (!definitionUpdated || !definitionUpdated[settings.version])) {
+         if (settings.version.substr(0, 3) === '4.1' && (!definitionUpdated || !definitionUpdated['4.1'])) {
              inherit = true;
              config.set('DefinitionUpdated', {
-                 '4.1.0': true
+                 '4.1': true
              });
          }
          mkdirp.sync(this.envDir);
