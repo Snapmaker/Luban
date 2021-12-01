@@ -6,6 +6,7 @@ import { connect } from 'react-redux';
 import { withRouter } from 'react-router-dom';
 import PropTypes from 'prop-types';
 import path from 'path';
+import classNames from 'classnames';
 
 import i18n from '../../../lib/i18n';
 import { controller } from '../../../lib/controller';
@@ -303,6 +304,9 @@ class Visualizer extends Component {
         if (renderingTimestamp !== this.props.renderingTimestamp) {
             this.canvas.current.renderScene();
             this.canvas.current.setCameraOnTop();
+
+            this.canvas.current.controls.panOffset.add(new THREE.Vector3(this.props.target.x, this.props.target.y, 0));
+            this.canvas.current.controls.updateCamera();
         }
 
         if (nextProps.displayedType !== this.props.displayedType) {
@@ -459,7 +463,7 @@ class Visualizer extends Component {
                     />
                 </div>
                 <div
-                    className={styles['canvas-content']}
+                    className={classNames(styles['canvas-content'], styles['canvas-wrapper'])}
                     style={{
                         visibility: (displayedType === DISPLAYED_TYPE_TOOLPATH) ? 'visible' : 'hidden'
                     }}
