@@ -66,6 +66,9 @@ class GcodeParameters extends PureComponent {
             laserDefinitionFillKeys.push('movementMode');
             if (isSVG) {
                 laserDefinitionFillKeys.push('fillInterval');
+                if (movementMode === 'greyscale-line') {
+                    laserDefinitionFillKeys.push('direction');
+                }
             } else if (isImage) {
                 if (movementMode === 'greyscale-line') {
                     laserDefinitionFillKeys.push('direction');
@@ -96,8 +99,10 @@ class GcodeParameters extends PureComponent {
         const laserDefinitionSpeedKeys = ['jogSpeed'];
         if (pathType === 'fill' && movementMode === 'greyscale-line') {
             laserDefinitionSpeedKeys.push('workSpeed');
+        } else if (pathType === 'path') {
+            laserDefinitionSpeedKeys.push('workSpeed');
         }
-        if (movementMode === 'greyscale-dot') {
+        if (pathType === 'fill' && movementMode === 'greyscale-dot') {
             laserDefinitionSpeedKeys.push('dwellTime');
         }
         const laserDefinitionSpeed = {};
