@@ -92,7 +92,7 @@ DxfArrayScanner.prototype.peek = function peek() {
 
 DxfArrayScanner.prototype.rewind = function rewind(numberOfGroups) {
     numberOfGroups = numberOfGroups || 1;
-    this._pointer = this._pointer - numberOfGroups * 2;
+    this._pointer -= numberOfGroups * 2;
 };
 
 /**
