@@ -125,7 +125,7 @@ function recordScaleActionsToHistory(scaleActionsFn, elements, SVGActions, headT
             const svgModel = SVGActions.getSVGModelByElement(element);
             // record image element final state after image has been processed asynchrously,
             // other elements state can be recorded immediately
-            if (element.tagName.toLowerCase() === 'image') {
+            if (element.tagName.toLowerCase() === 'image' && svgModel.sourceType !== 'image3d') {
                 return new Promise((resolve, reject) => {
                     element.onerror = reject;
                     element.onload = () => {
@@ -187,8 +187,6 @@ function recordScaleActionsToHistory(scaleActionsFn, elements, SVGActions, headT
                         // convert `/data/Tmp/18382283_21075036parsed.svg?_=1636096912083` to `/data/Tmp/18382283_21075036parsed.svg`
                         const originalHref = element.href.baseVal.replace(/\?_=\d*$/ig, '');
                         element.setAttribute('href', `${originalHref}?_=${Date.now()}`);
-                    } else if (svgModel.sourceType === 'image3d') {
-                        element.onload();
                     }
                 });
             } else {

@@ -491,10 +491,12 @@ class SvgModel extends BaseModel {
                 break;
             }
             case 'image': {
-                elem.setAttribute('x', x - transformation.width / 2);
-                elem.setAttribute('y', y - transformation.height / 2);
-                elem.setAttribute('width', transformation.width);
-                elem.setAttribute('height', transformation.height);
+                const originalWidth = Math.abs(transformation.width / transformation.scaleX);
+                const originalHeight = Math.abs(transformation.height / transformation.scaleY);
+                elem.setAttribute('x', x - originalWidth / 2);
+                elem.setAttribute('y', y - originalHeight / 2);
+                elem.setAttribute('width', originalWidth);
+                elem.setAttribute('height', originalHeight);
                 if (!elem.getAttribute('href')) {
                     elem.setAttribute('href', checkIsImageSuffix(href) ? href : './resources/images/loading.gif');
                 }
@@ -1157,15 +1159,15 @@ class SvgModel extends BaseModel {
     getSerializableConfig() {
         const {
             modelID, limitSize, headType, sourceType, originalName, config, mode,
-            transformation, visible, uploadName, processImageName
+            transformation, visible, uploadName, processImageName, sourceHeight, sourceWidth
         } = this;
         return {
             modelID,
             limitSize,
             headType,
             sourceType,
-            sourceHeight: transformation.height,
-            sourceWidth: transformation.width,
+            sourceHeight,
+            sourceWidth,
             originalName,
             uploadName,
             config,
