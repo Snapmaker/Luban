@@ -261,8 +261,8 @@ class DataStorage {
          mkdirp.sync(`${this.configDir}/${PRINTING_CONFIG_SUBCATEGORY}`);
 
          const CURA_ENGINE_CONFIG_LOCAL = '../resources/CuraEngine/Config';
-         await this.copyDirForInitSlicer(CURA_ENGINE_CONFIG_LOCAL, this.configDir, true, inherit);
          this.upgradeConfigFile(this.configDir);
+         await this.copyDirForInitSlicer(CURA_ENGINE_CONFIG_LOCAL, this.configDir, true, inherit);
          await this.copyDirForInitSlicer(CURA_ENGINE_CONFIG_LOCAL, this.defaultConfigDir, true, true);
      }
 
