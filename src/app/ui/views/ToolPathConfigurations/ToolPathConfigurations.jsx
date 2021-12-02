@@ -6,7 +6,7 @@ import classNames from 'classnames';
 import _ from 'lodash';
 import modal from '../../../lib/modal';
 import styles from './styles.styl';
-import { HEAD_CNC, HEAD_LASER } from '../../../constants';
+import { HEAD_CNC, HEAD_LASER, PROCESS_MODE_VECTOR, LEVEL_ONE_POWER_LASER_FOR_SM2, LEVEL_TWO_POWER_LASER_FOR_SM2 } from '../../../constants';
 import i18n from '../../../lib/i18n';
 import { actions as editorActions } from '../../../flux/editor';
 import Modal from '../../components/Modal';
@@ -15,12 +15,35 @@ import CncParameters from './cnc/CncParameters';
 import { toHump } from '../../../../shared/lib/utils';
 import LaserParameters from './laser/LaserParameters';
 
+function getDefaultDefinition(headType, laserToolHead, modelMode, toolDefinitions) {
+    let res;
+    if (headType === HEAD_LASER) {
+        if (laserToolHead === LEVEL_ONE_POWER_LASER_FOR_SM2) {
+            if (modelMode === PROCESS_MODE_VECTOR) {
+                res = toolDefinitions.find(d => d?.definitionId === 'basswood.cutting_1.5mm');
+            } else {
+                res = toolDefinitions.find(d => d?.definitionId === 'basswood.dot_filled_engraving');
+            }
+        } else if (laserToolHead === LEVEL_TWO_POWER_LASER_FOR_SM2) {
+            if (modelMode === PROCESS_MODE_VECTOR) {
+                res = toolDefinitions.find(d => d?.definitionId === 'basswood.cutting_3mm');
+            } else {
+                res = toolDefinitions.find(d => d?.definitionId === 'basswood.dot_filled_engraving');
+            }
+        }
+    }
+    if (!res) {
+        res = toolDefinitions[0];
+    }
+    return res;
+}
+
 function ToolPathConfigurations({ toolpath, onClose, headType }) {
     const toolDefinitions = useSelector(state => state[headType]?.toolDefinitions, shallowEqual);
-
+    const laserToolHead = useSelector(state => state?.machine?.toolHead?.laserToolhead, shallowEqual);
     const dispatch = useDispatch();
 
-    const [currentToolDefinition, setCurrentToolDefinition] = useState(toolDefinitions[0]);
+    const [currentToolDefinition, setCurrentToolDefinition] = useState(getDefaultDefinition(headType, laserToolHead, toolpath?.modelMode, toolDefinitions));
 
     /**
      *

@@ -1,8 +1,7 @@
 import React, { PureComponent } from 'react';
 import { connect } from 'react-redux';
 import classNames from 'classnames';
-import PropTypes from
-    'prop-types';
+import PropTypes from 'prop-types';
 import { Spin } from 'antd';
 import i18n from '../../../../lib/i18n';
 import api from '../../../../api';

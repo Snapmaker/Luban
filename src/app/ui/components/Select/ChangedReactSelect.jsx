@@ -7,7 +7,8 @@ import { Select, TreeSelect } from 'antd';
 import styles from './styles.styl';
 
 const { Option } = Select;
-const { TreeNode } = TreeSelect;
+const CustomValue = 'new';
+// const { TreeNode } = TreeSelect;
 
 class ChangedReactSelect extends PureComponent {
     static propTypes = {
@@ -45,8 +46,32 @@ class ChangedReactSelect extends PureComponent {
             const option = this.props.options.find(d => d.value === value);
             this.props.onChange && this.props.onChange(option);
         },
-        handleTreeChange: (option, allTreeOptions) => {
-            const currentOption = allTreeOptions.find(d => d.definitionId === option);
+        handleTreeChange: (definitionId) => {
+            let currentOption = {};
+            console.log('handleTreeChange', definitionId, CustomValue);
+            if (definitionId !== CustomValue) {
+                this.props.options.some((option) => {
+                    return option.options.some((item) => {
+                        if (item.definitionId === definitionId) {
+                            currentOption = item;
+                            return true;
+                        } else {
+                            return false;
+                        }
+                    });
+                });
+            } else {
+                console.log('this.props.options', this.props.options);
+                this.props.options.some((option) => {
+                    if (option.definitionId === CustomValue) {
+                        currentOption = option;
+                        return true;
+                    } else {
+                        return false;
+                    }
+                });
+            }
+            // console.log('handleTreeChange', definitionId, this.props.options);
             this.props.onChange && this.props.onChange(currentOption);
         }
     }
@@ -75,38 +100,35 @@ class ChangedReactSelect extends PureComponent {
                     }
                 });
             }
-            const allTreeOptions = [];
-            options.forEach((group) => {
-                if (group.definitionId === 'new') {
-                    allTreeOptions.push(group);
+            const treeData = options.map((oldOption, index) => {
+                const newOption = {};
+                newOption.title = oldOption.label;
+                newOption.value = oldOption.definitionId === 'new' ? oldOption.definitionId : oldOption.definitionId + index;
+                if (oldOption.definitionId !== CustomValue) {
+                    newOption.disabled = true;
+                    newOption.children = oldOption.options.map((child) => {
+                        child.value = child.definitionId;
+                        child.title = child?.name;
+                        child.disabled = false;
+                        return child;
+                    });
                 } else {
-                    allTreeOptions.push({ disabled: true, label: group.label, isTitle: true });
+                    newOption.disabled = false;
                 }
-                group.options && group.options.forEach((item) => {
-                    allTreeOptions.push(item);
-                });
+
+                return newOption;
             });
+
             return (
                 <div className={classNames(styles['override-select'], className)} style={{ width: size }}>
                     <TreeSelect
                         className={styles[size]}
-                        value={defaultValue.definitionId}
-                        // value={firstValue}
-                        onChange={(option) => this.actions.handleTreeChange(option, allTreeOptions)}
-                        disabled={disabled}
-                        treeDefaultExpandAll
-                    >
-                        {(allTreeOptions.map((option) => {
-                            return (
-                                <TreeNode
-                                    key={option.definitionId || option.label}
-                                    disabled={!!option.disabled}
-                                    value={option.definitionId}
-                                    title={option.label || option?.name}
-                                />
-                            );
-                        }))}
-                    </TreeSelect>
+                        showSearch
+                        style={{ width: size }}
+                        value={defaultValue?.definitionId}
+                        treeData={treeData}
+                        onChange={(option) => this.actions.handleTreeChange(option)}
+                    />
                 </div>
             );
         } else {
