@@ -672,7 +672,9 @@ class MarlinParserHomeState {
 
 class MarlinParserLaser10WErrorState {
     static parse(line) {
+        // security_state: 2, temp……
         const r1 = line.match(/^security_state: ([0-9]),.*$/);
+        // Laser 10w security state: 0x02
         const r2 = line.match(/^Laser 10w security state: 0x([0-9]+).*$/);
         if (!r1 && !r2) {
             return null;
