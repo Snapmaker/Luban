@@ -1,5 +1,5 @@
 import PropTypes from 'prop-types';
-import isNil from 'lodash/isNil';
+import { isNil, difference } from 'lodash';
 import classNames from 'classnames';
 import React, { PureComponent } from 'react';
 // import { components } from 'react-select';
@@ -41,38 +41,79 @@ class ChangedReactSelect extends PureComponent {
         disabled: false
     };
 
+    state = {
+        expandedKeys: []
+    }
+
     actions = {
+        onDropdownVisibleChange: (open) => {
+            if (open) {
+                let newExpandedKeys = this.state.expandedKeys;
+                this.props.options.some((oldOption) => {
+                    if (oldOption.definitionId !== CustomValue) {
+                        return oldOption.options.some((child) => {
+                            if (child.definitionId === this.props.valueObj.firstValue) {
+                                newExpandedKeys = [0 + oldOption.definitionId];
+                                return true;
+                            }
+                            return false;
+                        });
+                    }
+                    return false;
+                });
+                if (newExpandedKeys !== this.state.expandedKeys) {
+                    this.setState({
+                        expandedKeys: newExpandedKeys
+                    });
+                }
+            }
+        },
+        onTreeExpand: (newExpandedKeys) => {
+            this.setState({
+                expandedKeys: difference(newExpandedKeys, this.state.expandedKeys)
+            });
+        },
         handleChange: (value) => {
             const option = this.props.options.find(d => d.value === value);
             this.props.onChange && this.props.onChange(option);
         },
         handleTreeChange: (definitionId) => {
-            let currentOption = {};
-            console.log('handleTreeChange', definitionId, CustomValue);
-            if (definitionId !== CustomValue) {
-                this.props.options.some((option) => {
-                    return option.options.some((item) => {
-                        if (item.definitionId === definitionId) {
-                            currentOption = item;
+            if (definitionId.slice(0, 1) === '0') {
+                if (this.state.expandedKeys.length === 1 && definitionId === this.state.expandedKeys[0]) {
+                    this.setState({
+                        expandedKeys: []
+                    });
+                } else {
+                    this.setState({
+                        expandedKeys: [definitionId]
+                    });
+                }
+            } else {
+                let currentOption = {};
+                // 0tool.28575028
+                if (definitionId !== CustomValue) {
+                    this.props.options.some((option) => {
+                        return option.options.some((item) => {
+                            if (item.definitionId === definitionId) {
+                                currentOption = item;
+                                return true;
+                            } else {
+                                return false;
+                            }
+                        });
+                    });
+                } else {
+                    this.props.options.some((option) => {
+                        if (option.definitionId === CustomValue) {
+                            currentOption = option;
                             return true;
                         } else {
                             return false;
                         }
                     });
-                });
-            } else {
-                console.log('this.props.options', this.props.options);
-                this.props.options.some((option) => {
-                    if (option.definitionId === CustomValue) {
-                        currentOption = option;
-                        return true;
-                    } else {
-                        return false;
-                    }
-                });
+                }
+                this.props.onChange && this.props.onChange(currentOption);
             }
-            // console.log('handleTreeChange', definitionId, this.props.options);
-            this.props.onChange && this.props.onChange(currentOption);
         }
     }
 
@@ -100,12 +141,12 @@ class ChangedReactSelect extends PureComponent {
                     }
                 });
             }
-            const treeData = options.map((oldOption, index) => {
+            const treeData = options.map((oldOption) => {
                 const newOption = {};
                 newOption.title = oldOption.label;
-                newOption.value = oldOption.definitionId === 'new' ? oldOption.definitionId : oldOption.definitionId + index;
+                newOption.value = oldOption.definitionId === 'new' ? oldOption.definitionId : 0 + oldOption.definitionId;
                 if (oldOption.definitionId !== CustomValue) {
-                    newOption.disabled = true;
+                    // newOption.disabled = true;
                     newOption.children = oldOption.options.map((child) => {
                         child.value = child.definitionId;
                         child.title = child?.name;
@@ -123,8 +164,11 @@ class ChangedReactSelect extends PureComponent {
                 <div className={classNames(styles['override-select'], className)} style={{ width: size }}>
                     <TreeSelect
                         className={styles[size]}
+                        onTreeExpand={this.actions.onTreeExpand}
                         showSearch
                         style={{ width: size }}
+                        onDropdownVisibleChange={this.actions.onDropdownVisibleChange}
+                        treeExpandedKeys={this.state.expandedKeys}
                         value={defaultValue?.definitionId}
                         treeData={treeData}
                         onChange={(option) => this.actions.handleTreeChange(option)}
