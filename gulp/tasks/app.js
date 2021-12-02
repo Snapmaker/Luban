@@ -37,7 +37,7 @@ export function appCopyProduction() {
 //
 export function appBuildProduction() {
     return new Promise((resolve) => {
-        const webpackConfig = require('../../webpack.config.app.production.js');
+        const webpackConfig = require('../../webpack.config.app.production');
         webpack(webpackConfig, (err, stats) => {
             if (err) {
                 throw new PluginError('app:build-prod', err);
