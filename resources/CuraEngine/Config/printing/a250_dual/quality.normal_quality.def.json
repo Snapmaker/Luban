@@ -202,6 +202,38 @@
                     }
                 }
             }
+        },
+        "dual": {
+            "type": "category",
+            "children": {
+                "extruders_enabled_count": {
+                    "default_value": 2
+                },
+                "prime_tower_enable": {
+                    "default_value": true
+                },
+                "prime_tower_wipe_enabled": {
+                    "default_value": true
+                },
+                "prime_tower_brim_enable": {
+                    "default_value": true
+                },
+                "ooze_shield_enabled": {
+                    "default_value": false
+                },
+                "ooze_shield_angle": {
+                    "default_value": 60
+                },
+                "ooze_shield_dist": {
+                    "default_value": 2
+                },
+                "switch_extruder_retraction_amount": {
+                    "default_value": 5
+                },
+                "switch_extruder_retraction_speeds": {
+                    "default_value": 60
+                }
+            }
         }
     }
 }

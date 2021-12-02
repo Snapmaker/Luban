@@ -118,12 +118,16 @@ export const removeDefinition = (req, res) => {
     });
 };
 
-export const updateDefinition = (req, res) => {
+export const updateDefinition = async (req, res) => {
     const { definitionId, headType } = req.params;
     const series = req.body.series;
 
     const definitionLoader = new DefinitionLoader();
-    definitionLoader.loadDefinition(headType, definitionId, series);
+    if (definitionId === 'snapmaker_extruder_0' || definitionId === 'snapmaker_extruder_1') {
+        definitionLoader.loadDefinition(headType, definitionId);
+    } else {
+        definitionLoader.loadDefinition(headType, definitionId, series);
+    }
 
     const { definition } = req.body;
 
@@ -138,7 +142,12 @@ export const updateDefinition = (req, res) => {
         definitionLoader.updateSettings(definition.settings);
     }
 
-    const filePath = path.join(`${DataStorage.configDir}/${headType}/${series}`, `${definitionId}.def.json`);
+    let filePath = '';
+    if (definitionId === 'snapmaker_extruder_0' || definitionId === 'snapmaker_extruder_1') {
+        filePath = path.join(`${DataStorage.configDir}/${headType}`, `${definitionId}.def.json`);
+    } else {
+        filePath = path.join(`${DataStorage.configDir}/${headType}/${series}`, `${definitionId}.def.json`);
+    }
     fs.writeFile(filePath, JSON.stringify(definitionLoader.toJSON(), null, 2), 'utf8', (err) => {
         if (err) {
             res.status(ERR_INTERNAL_SERVER_ERROR).send({ err });

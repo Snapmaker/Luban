@@ -3,10 +3,14 @@ import { includes } from 'lodash';
 import { shallowEqual, useSelector, useDispatch } from 'react-redux';
 import { actions as printingActions } from '../../../flux/printing';
 import { actions as projectActions } from '../../../flux/project';
-import { PRINTING_MANAGER_TYPE_MATERIAL, PRINTING_MANAGER_TYPE_QUALITY,
-    PRINTING_MATERIAL_CONFIG_KEYS, PRINTING_QUALITY_CONFIG_KEYS,
+import {
+    PRINTING_MANAGER_TYPE_MATERIAL, PRINTING_MANAGER_TYPE_QUALITY,
+    PRINTING_MATERIAL_CONFIG_KEYS_SINGLE, PRINTING_MATERIAL_CONFIG_KEYS_DUAL,
+    PRINTING_QUALITY_CONFIG_KEYS_SINGLE, PRINTING_QUALITY_CONFIG_KEYS_DUAL,
     getMachineSeriesWithToolhead, HEAD_PRINTING,
-    PRINTING_MATERIAL_CONFIG_GROUP, PRINTING_QUALITY_CONFIG_GROUP,
+    PRINTING_MATERIAL_CONFIG_GROUP_SINGLE, PRINTING_MATERIAL_CONFIG_GROUP_DUAL,
+    PRINTING_QUALITY_CONFIG_GROUP_SINGLE, PRINTING_QUALITY_CONFIG_GROUP_DUAL,
+    SINGLE_EXTRUDER_TOOLHEAD_FOR_SM2,
     LEFT_EXTRUDER
 } from '../../../constants';
 import ProfileManager from '../ProfileManager';
@@ -46,6 +50,10 @@ function PrintingManager() {
     const series = useSelector(state => state?.machine?.series);
     const toolHead = useSelector(state => state?.machine?.toolHead);
     const dispatch = useDispatch();
+    const printingMaterialConfigKeys = (toolHead.printingToolhead === SINGLE_EXTRUDER_TOOLHEAD_FOR_SM2 ? PRINTING_MATERIAL_CONFIG_KEYS_SINGLE : PRINTING_MATERIAL_CONFIG_KEYS_DUAL);
+    const printingQualityConfigKeys = (toolHead.printingToolhead === SINGLE_EXTRUDER_TOOLHEAD_FOR_SM2 ? PRINTING_QUALITY_CONFIG_KEYS_SINGLE : PRINTING_QUALITY_CONFIG_KEYS_DUAL);
+    const printingMaterialConfigGroup = (toolHead.printingToolhead === SINGLE_EXTRUDER_TOOLHEAD_FOR_SM2 ? PRINTING_MATERIAL_CONFIG_GROUP_SINGLE : PRINTING_MATERIAL_CONFIG_GROUP_DUAL);
+    const printingQualityConfigGroup = (toolHead.printingToolhead === SINGLE_EXTRUDER_TOOLHEAD_FOR_SM2 ? PRINTING_QUALITY_CONFIG_GROUP_SINGLE : PRINTING_QUALITY_CONFIG_GROUP_DUAL);
     if (!showPrintingManager) {
         return null;
     }
@@ -71,7 +79,7 @@ function PrintingManager() {
         },
         onUpdateDefaultDefinition: (definitionForManager) => {
             const definitionId = definitionForManager.definitionId;
-            dispatch(printingActions.updateDefaultIdByType(managerDisplayType, definitionId));
+            dispatch(printingActions.updateDefaultIdByType(managerDisplayType, definitionId, materialManagerDirection));
         },
         onSaveDefinitionForManager: (newDefinition) => {
             // now setDefinitionState is synchronize, so remove setTimeout
@@ -84,7 +92,7 @@ function PrintingManager() {
         onSaveQualityForManager: async (type, newDefinition) => {
             const newDefinitionSettings = {};
             for (const [key, value] of Object.entries(newDefinition.settings)) {
-                if (PRINTING_QUALITY_CONFIG_KEYS.indexOf(key) > -1) {
+                if (printingQualityConfigKeys.indexOf(key) > -1) {
                     newDefinitionSettings[key] = { 'default_value': value.default_value };
                 }
             }
@@ -95,7 +103,7 @@ function PrintingManager() {
         onSaveMaterialForManager: async (type, newDefinition) => {
             const newDefinitionSettings = {};
             for (const [key, value] of Object.entries(newDefinition?.settings)) {
-                if (PRINTING_MATERIAL_CONFIG_KEYS.indexOf(key) > -1) {
+                if (printingMaterialConfigKeys.indexOf(key) > -1) {
                     newDefinitionSettings[key] = { 'default_value': value.default_value };
                 }
             }
@@ -128,7 +136,7 @@ function PrintingManager() {
         }
     };
 
-    const optionConfigGroup = managerDisplayType === PRINTING_MANAGER_TYPE_MATERIAL ? PRINTING_MATERIAL_CONFIG_GROUP : PRINTING_QUALITY_CONFIG_GROUP;
+    const optionConfigGroup = managerDisplayType === PRINTING_MANAGER_TYPE_MATERIAL ? printingMaterialConfigGroup : printingQualityConfigGroup;
     const allDefinitions = managerDisplayType === PRINTING_MANAGER_TYPE_MATERIAL ? materialDefinitions : qualityDefinitions;
 
     const selectedIds = {
@@ -148,7 +156,7 @@ function PrintingManager() {
             allDefinitions={allDefinitions}
             managerTitle={managerDisplayType === PRINTING_MANAGER_TYPE_MATERIAL ? 'key-Printing/PrintingConfigurations-Material Settings' : 'key-Printing/PrintingConfigurations-Printing Settings'}
             selectedId={selectedIds[managerDisplayType].id}
-            headType="printing"
+            headType={HEAD_PRINTING}
         />
     );
 }

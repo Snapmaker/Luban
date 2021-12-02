@@ -96,6 +96,8 @@ const INITIAL_STATE = {
     // Active definition
     // Hierarchy: FDM Printer -> Snapmaker -> Active Definition (combination of machine, material, adhesion configurations)
     activeDefinition: ABSENT_OBJECT,
+    extruderLDefinition: ABSENT_OBJECT,
+    extruderRDefinition: ABSENT_OBJECT,
 
     // Stage reflects current state of visualizer
     stage: STEP_STAGE.EMPTY,
@@ -305,7 +307,10 @@ export const actions = {
         }
         dispatch(actions.updateState({
             activeDefinition: definitionManager.activeDefinition,
-            helpersExtruderConfig: { adhesion: LEFT_EXTRUDER_MAP_NUMBER, support: LEFT_EXTRUDER_MAP_NUMBER }
+            helpersExtruderConfig: { adhesion: LEFT_EXTRUDER_MAP_NUMBER, support: LEFT_EXTRUDER_MAP_NUMBER },
+
+            extruderLDefinition: definitionManager.extruderLDefinition,
+            extruderRDefinition: definitionManager.extruderRDefinition,
         }));
         // todo：init 'activeDefinition' by localStorage
         // dispatch(actions.updateActiveDefinition(definitionManager.snapmakerDefinition));
@@ -540,8 +545,11 @@ export const actions = {
         }
     },
 
-    updateShowPrintingManager: (showPrintingManager) => (dispatch) => {
-        dispatch(actions.updateState({ showPrintingManager }));
+    updateShowPrintingManager: (showPrintingManager, direction = LEFT_EXTRUDER) => (dispatch) => {
+        dispatch(actions.updateState({
+            showPrintingManager,
+            materialManagerDirection: direction
+        }));
     },
 
     updateManagerDisplayType: (managerDisplayType) => (dispatch) => {
@@ -617,6 +625,62 @@ export const actions = {
         dispatch(actions.updateState({ activeDefinition }));
     },
 
+    updateExtuderDefinition: (definition, direction = LEFT_EXTRUDER) => (dispatch, getState) => {
+        const state = getState().printing;
+
+        if (!definition) {
+            return;
+        }
+
+        let extruderDef = {};
+        if (direction === LEFT_EXTRUDER) {
+            extruderDef = state.extruderLDefinition;
+        } else {
+            extruderDef = state.extruderRDefinition;
+        }
+
+        if (definition !== extruderDef) {
+            if (direction === LEFT_EXTRUDER) {
+                extruderDef = {
+                    ...state.extruderLDefinition
+                };
+            } else {
+                extruderDef = {
+                    ...state.extruderRDefinition
+                };
+            }
+            for (const key of definition.ownKeys) {
+                if (typeof extruderDef.settings === 'undefined') {
+                    return;
+                }
+                if (extruderDef.settings[key] === undefined) {
+                    continue;
+                }
+                extruderDef.settings[key].default_value = definition.settings[key].default_value;
+                extruderDef.settings[key].from = definition.definitionId;
+            }
+        }
+
+        if (direction === LEFT_EXTRUDER) {
+            dispatch(actions.updateState({
+                extruderLDefinition: extruderDef
+            }));
+            console.log('ex', extruderDef);
+            definitionManager.updateDefinition({
+                ...extruderDef,
+                definitionId: 'snapmaker_extruder_0'
+            });
+        } else {
+            dispatch(actions.updateState({
+                extruderRDefinition: extruderDef
+            }));
+            definitionManager.updateDefinition({
+                ...extruderDef,
+                definitionId: 'snapmaker_extruder_1'
+            });
+        }
+    },
+
     updateDefinitionsForManager: (definitionId, type) => async (dispatch, getState) => {
         const state = getState().printing;
         const savedDefinition = await definitionManager.getDefinition(definitionId);
@@ -631,6 +695,7 @@ export const actions = {
                 return item;
             }
         });
+
         dispatch(actions.updateState({
             [definitionsKey]: [...newDefinitions]
         }));
@@ -803,10 +868,17 @@ export const actions = {
     updateIsRecommended: (isRecommended) => (dispatch) => {
         dispatch(actions.updateState({ isRecommended }));
     },
-    updateDefaultIdByType: (type, newDefinitionId) => (dispatch) => {
-        const defaultId = defaultDefinitionKeys[type].id;
+    updateDefaultIdByType: (type, newDefinitionId, direction = LEFT_EXTRUDER) => (dispatch) => {
+        let defaultId;
+        if (type === 'material') {
+            defaultId = direction === LEFT_EXTRUDER ? 'defaultMaterialId' : 'defaultMaterialIdRight';
+        } else {
+            defaultId = defaultDefinitionKeys[type].id;
+        }
         dispatch(actions.updateDefaultConfigId(type, newDefinitionId));
-        dispatch(actions.updateState({ [defaultId]: newDefinitionId }));
+        dispatch(actions.updateState({
+            [defaultId]: newDefinitionId
+        }));
         dispatch(actions.destroyGcodeLine());
         dispatch(actions.displayModel());
     },

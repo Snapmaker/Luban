@@ -62,8 +62,15 @@ function callCuraEngine(modelConfig, supportConfig, outputPath) {
 let sliceProgress, filamentLength, filamentWeight, printTime;
 
 function processGcodeHeaderAfterCuraEngine(gcodeFilePath, boundingBox, thumbnail) {
-    const definitionLoader = new DefinitionLoader();
-    definitionLoader.loadDefinition(PRINTING_CONFIG_SUBCATEGORY, 'active_final');
+    const activeFinal = new DefinitionLoader();
+    activeFinal.loadDefinition(PRINTING_CONFIG_SUBCATEGORY, 'active_final');
+    const isTwoExtruder = activeFinal?.settings?.extruders_enabled_count?.default_value;
+
+    const extruderL = new DefinitionLoader();
+    extruderL.loadDefinition(PRINTING_CONFIG_SUBCATEGORY, 'snapmaker_extruder_0');
+    const extruderR = new DefinitionLoader();
+    extruderR.loadDefinition(PRINTING_CONFIG_SUBCATEGORY, 'snapmaker_extruder_1');
+
     const readFileSync = fs.readFileSync(gcodeFilePath, 'utf8');
 
     const date = new Date();
@@ -77,9 +84,12 @@ function processGcodeHeaderAfterCuraEngine(gcodeFilePath, boundingBox, thumbnail
         + `;thumbnail: ${thumbnail}\n`
         + `;file_total_lines: ${readFileSync.split('\n').length + 20}\n`
         + `;estimated_time(s): ${printTime}\n`
-        + `;nozzle_temperature(°C): ${definitionLoader.settings.material_print_temperature_layer_0.default_value}\n`
-        + `;build_plate_temperature(°C): ${definitionLoader.settings.material_bed_temperature_layer_0.default_value}\n`
-        + `;work_speed(mm/minute): ${definitionLoader.settings.speed_infill.default_value * 60}\n`
+        + `;nozzle_0_temperature(°C): ${extruderL.settings.material_print_temperature_layer_0.default_value}\n`
+        + `;nozzle_1_temperature(°C): ${isTwoExtruder ? extruderR?.settings?.material_print_temperature_layer_0?.default_value : 'null'}\n`
+        + `;nozzle_0_diameter(mm): ${extruderL.settings.machine_nozzle_size.default_value}\n`
+        + `;nozzle_1_diameter(mm): ${isTwoExtruder ? extruderR?.settings?.machine_nozzle_size?.default_value : 'null'}\n`
+        + `;build_plate_temperature(°C): ${activeFinal.settings.material_bed_temperature_layer_0.default_value}\n`
+        + `;work_speed(mm/minute): ${activeFinal.settings.speed_infill.default_value * 60}\n`
         + `;max_x(mm): ${boundingBoxMax.x}\n`
         + `;max_y(mm): ${boundingBoxMax.y}\n`
         + `;max_z(mm): ${boundingBoxMax.z}\n`

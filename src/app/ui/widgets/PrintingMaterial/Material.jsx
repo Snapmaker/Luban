@@ -1,7 +1,10 @@
-import React, { useEffect, useCallback } from 'react';
+import React, { useEffect, useCallback, useState } from 'react';
 import PropTypes from 'prop-types';
 import { useSelector, useDispatch, shallowEqual } from 'react-redux';
 import classNames from 'classnames';
+import { Divider, Input } from 'antd';
+import { PlusOutlined } from '@ant-design/icons';
+import Anchor from '../../components/Anchor';
 import Select from '../../components/Select';
 import SvgIcon from '../../components/SvgIcon';
 import i18n from '../../../lib/i18n';
@@ -20,14 +23,17 @@ function Material({ widgetActions }) {
     const materialDefinitions = useSelector(state => state?.printing?.materialDefinitions,);
     const defaultMaterialId = useSelector(state => state?.printing?.defaultMaterialId, shallowEqual);
     const defaultMaterialIdRight = useSelector(state => state?.printing?.defaultMaterialIdRight, shallowEqual);
+    const extruderLDefinition = useSelector(state => state?.printing?.extruderLDefinition);
+    const extruderRDefinition = useSelector(state => state?.printing?.extruderRDefinition);
+    const leftDiameter = useSelector(state => state?.printing?.extruderLDefinition?.settings?.machine_nozzle_size?.default_value);
+    const rightDiameter = useSelector(state => state?.printing?.extruderRDefinition?.settings?.machine_nozzle_size?.default_value);
     const printingToolhead = machineStore.get('machine.toolHead.printingToolhead');
     const inProgress = useSelector(state => state?.printing?.inProgress);
     const dispatch = useDispatch();
 
-    function onShowPrintingManager(direction = 'left') {
+    function onShowPrintingManager(direction = LEFT_EXTRUDER) {
         dispatch(printingActions.updateManagerDisplayType(PRINTING_MANAGER_TYPE_MATERIAL));
-        dispatch(printingActions.updateShowPrintingManager(true));
-        dispatch(printingActions.updateState({ materialManagerDirection: direction }));
+        dispatch(printingActions.updateShowPrintingManager(true, direction));
     }
 
     const updateActiveDefinition = useCallback((definition, shouldSave = false) => {
@@ -44,6 +50,7 @@ function Material({ widgetActions }) {
             // update selectedId
             dispatch(printingActions.updateDefaultConfigId(PRINTING_MANAGER_TYPE_MATERIAL, definition.definitionId, direction));
             dispatch(printingActions.updateDefaultMaterialId(definition.definitionId, direction));
+            dispatch(printingActions.updateExtuderDefinition(definition, direction));
             // update active definition
             updateActiveDefinition(definition);
 
@@ -73,14 +80,101 @@ function Material({ widgetActions }) {
         firstValue: defaultMaterialIdRight
     };
 
+    function setDiameter(direction, value) {
+        const def = (direction === LEFT_EXTRUDER ? extruderLDefinition : extruderRDefinition);
+        def.settings.machine_nozzle_size.default_value = value;
+        dispatch(printingActions.updateExtuderDefinition(def, direction));
+    }
+    const [diametersOptions, setDiametersOptions] = useState([
+        { value: 0.2, label: 0.2 },
+        { value: 0.4, label: 0.4 },
+        { value: 0.6, label: 0.6 }
+    ]);
+    const [selectorCustomValue, setSelectorCustomValue] = useState(0);
+
+    function dropdownRender(direction = LEFT_EXTRUDER) {
+        return (
+            (menu) => (
+                <div>
+                    {menu}
+                    <Divider style={{ margin: '4px 0' }} />
+                    <div style={{ display: 'flex', flexWrap: 'nowrap', padding: 8 }}>
+                        <Input
+                            style={{ flex: 'auto' }}
+                            value={selectorCustomValue}
+                            onChange={event => {
+                                const v = Number(event.target.value);
+                                setSelectorCustomValue(v);
+                            }}
+                        />
+                        <Anchor
+                            style={{ flex: 'none', padding: '8px', display: 'block', cursor: 'pointer' }}
+                            onClick={() => {
+                                const v = selectorCustomValue;
+                                if (!diametersOptions.find(d => d.value === v)) {
+                                    diametersOptions.push({
+                                        value: v,
+                                        label: v
+                                    });
+                                    setDiametersOptions(diametersOptions);
+                                }
+                                setDiameter(direction, v);
+                            }}
+                        >
+                            <PlusOutlined />
+                        </Anchor>
+                    </div>
+                </div>
+            )
+        );
+    }
     return (
         <React.Fragment>
             <div className={classNames(
                 'margin-top-8'
             )}
             >
-                <div className="sm-flex justify-space-between">
-                    <span className="display-inline width-88 text-overflow-ellipsis height-32">
+                <div className="sm-flex align-center justify-space-between">
+                    <span className="display-inline color-black-3 width-112 text-overflow-ellipsis height-32">
+                        {i18n._('Nozzle Diameter')}
+                    </span>
+                    <div>
+                        <div className="display-inline">
+                            <span style={{ color: '#86868B' }}>L</span>
+                            <Select
+                                className="margin-left-4"
+                                dropdownRender={dropdownRender(LEFT_EXTRUDER)}
+                                size="80px"
+                                options={diametersOptions}
+                                value={leftDiameter}
+                                onChange={
+                                    (option) => {
+                                        setDiameter(LEFT_EXTRUDER, option.value);
+                                    }
+                                }
+                            />
+                        </div>
+                        {printingToolhead === DUAL_EXTRUDER_TOOLHEAD_FOR_SM2 && (
+                            <div className="display-inline margin-left-16">
+                                <span style={{ color: '#86868B' }}>R</span>
+                                <Select
+                                    className="margin-left-4"
+                                    dropdownRender={dropdownRender(RIGHT_EXTRUDER)}
+                                    size="80px"
+                                    options={diametersOptions}
+                                    value={rightDiameter}
+                                    onChange={
+                                        (option) => {
+                                            setDiameter(RIGHT_EXTRUDER, option.value);
+                                        }
+                                    }
+                                />
+                            </div>
+                        )}
+                    </div>
+                </div>
+                <div className="sm-flex align-center color-black-3 justify-space-between margin-top-8">
+                    <span className="display-inline width-88 text-overflow-ellipsis">
                         {printingToolhead === DUAL_EXTRUDER_TOOLHEAD_FOR_SM2 ? i18n._('key-Printing/PrintingConfigurations-Extruder L') : i18n._('key-Printing/PrintingConfigurations-Extruder')}
                     </span>
                     <div>
@@ -95,7 +189,7 @@ function Material({ widgetActions }) {
                             disabled={inProgress}
                         />
                         <SvgIcon
-                            className="border-default-black-5 margin-left-4"
+                            className="border-default-black-5 margin-left-8"
                             name="PrintingSettingNormal"
                             size={24}
                             disabled={inProgress}
@@ -105,7 +199,7 @@ function Material({ widgetActions }) {
                     </div>
                 </div>
                 {printingToolhead === DUAL_EXTRUDER_TOOLHEAD_FOR_SM2 && (
-                    <div className="sm-flex justify-space-between margin-top-8">
+                    <div className="sm-flex align-center color-black-3 justify-space-between margin-top-8">
                         <span className="display-inline width-88 text-overflow-ellipsis height-32">{i18n._('key-Printing/PrintingConfigurations-Extruder R')}</span>
                         <div>
                             <Select
@@ -119,7 +213,7 @@ function Material({ widgetActions }) {
                                 disabled={inProgress}
                             />
                             <SvgIcon
-                                className="border-default-black-5 margin-left-4"
+                                className="border-default-black-5 margin-left-8"
                                 name="PrintingSettingNormal"
                                 size={24}
                                 disabled={inProgress}
