@@ -19,7 +19,7 @@ export function serverCopyDevelopment() {
 // Development Build
 //
 export function serverBuildDevelopment(cb) {
-    const webpackConfig = require('../../webpack.config.server.development.js');
+    const webpackConfig = require('../../webpack.config.server.development');
     webpack(webpackConfig, (err, stats) => {
         if (err) {
             throw new PluginError('server:build', err);
@@ -80,7 +80,7 @@ export function serverCopyProduction() {
 //
 export function serverBuildProduction() {
     return new Promise((resolve) => {
-        const webpackConfig = require('../../webpack.config.server.production.js');
+        const webpackConfig = require('../../webpack.config.server.production');
         webpack(webpackConfig, (err, stats) => {
             if (err) {
                 throw new PluginError('server:build', err);
