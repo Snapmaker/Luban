@@ -278,6 +278,7 @@ function VisualizerLeftBar({ defaultSupportSize, setTransformMode, isSupporting,
                             newHelpersExtruder[key] = direction;
                         });
                         setHelpersExtruder(newHelpersExtruder);
+                        dispatch(printingActions.updateHelpersExtruder({ support: direction, adhesion: direction }));
                     }
                     break;
                 case 'infill':
