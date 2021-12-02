@@ -597,7 +597,7 @@ export const actions = {
      * @param transformation - ?
      * @param modelID - optional, used in project recovery
      */
-    generateModel: (headType, originalName, uploadName, sourceWidth, sourceHeight, mode, sourceType, config, gcodeConfig, transformation, modelID, zIndex, isLimit) => (dispatch, getState) => {
+    generateModel: (headType, { originalName, uploadName, sourceWidth, sourceHeight, mode, sourceType, config, gcodeConfig, transformation, modelID, zIndex, isLimit }) => (dispatch, getState) => {
         const { size } = getState().machine;
         const { materials, modelGroup, SVGActions, contentGroup, toolPathGroup, coordinateMode, coordinateSize } = getState()[headType];
         sourceType = sourceType || getSourceType(originalName);
