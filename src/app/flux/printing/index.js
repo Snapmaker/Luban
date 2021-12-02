@@ -875,8 +875,7 @@ export const actions = {
     },
 
     generateGcode: (thumbnail, isGuideTours = false) => async (dispatch, getState) => {
-        const { hasModel, activeDefinition, modelGroup, progressStatesManager } = getState().printing;
-
+        const { hasModel, activeDefinition, modelGroup, progressStatesManager, helpersExtruderConfig } = getState().printing;
         if (!hasModel) {
             return;
         }
@@ -909,18 +908,15 @@ export const actions = {
         await dispatch(actions.updateActiveDefinitionMachineSize(size));
 
         const finalDefinition = definitionManager.finalizeActiveDefinition(activeDefinition);
-        const allModels = modelGroup.getModels();
-        if (allModels && allModels[0]) {
-            const adhesionExtruder = allModels[0].extruderConfig.adhesion;
-            const supportExtruder = allModels[0].extruderConfig.support;
-            finalDefinition.settings.adhesion_extruder_nr.default_value = adhesionExtruder;
-            finalDefinition.settings.support_extruder_nr.default_value = supportExtruder;
-            finalDefinition.settings.support_infill_extruder_nr.default_value = supportExtruder;
-            finalDefinition.settings.support_extruder_nr_layer_0.default_value = supportExtruder;
-            finalDefinition.settings.support_interface_extruder_nr.default_value = supportExtruder;
-            finalDefinition.settings.support_roof_extruder_nr.default_value = supportExtruder;
-            finalDefinition.settings.support_bottom_extruder_nr.default_value = supportExtruder;
-        }
+        const adhesionExtruder = helpersExtruderConfig.adhesion;
+        const supportExtruder = helpersExtruderConfig.support;
+        finalDefinition.settings.adhesion_extruder_nr.default_value = adhesionExtruder;
+        finalDefinition.settings.support_extruder_nr.default_value = supportExtruder;
+        finalDefinition.settings.support_infill_extruder_nr.default_value = supportExtruder;
+        finalDefinition.settings.support_extruder_nr_layer_0.default_value = supportExtruder;
+        finalDefinition.settings.support_interface_extruder_nr.default_value = supportExtruder;
+        finalDefinition.settings.support_roof_extruder_nr.default_value = supportExtruder;
+        finalDefinition.settings.support_bottom_extruder_nr.default_value = supportExtruder;
         await api.profileDefinitions.createDefinition(CONFIG_HEADTYPE, finalDefinition);
 
         // slice
