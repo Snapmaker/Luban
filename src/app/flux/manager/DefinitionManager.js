@@ -48,6 +48,12 @@ class DefinitionManager {
         // res = await api.profileDefinitions.getConfigDefinitions(this.headType, this.configPathname);
         this.defaultDefinitions = res.body.definitions.map(item => {
             item.isDefault = true;
+            if (item.i18nCategory) {
+                item.category = i18n._(item.i18nCategory);
+            }
+            if (item.i18nName) {
+                item.name = i18n._(item.i18nName);
+            }
             return item;
         });
     }
@@ -67,8 +73,14 @@ class DefinitionManager {
         } else {
             res = await api.profileDefinitions.getDefinition(this.headType, definitionId);
         }
-        console.log('res', res.body.definition);
-        return res.body.definition;
+        const definition = res.body.definition;
+        if (definition.i18nCategory) {
+            definition.category = i18n._(definition.i18nCategory);
+        }
+        if (definition.i18nName) {
+            definition.name = i18n._(definition.i18nName);
+        }
+        return definition;
     }
 
     async getConfigDefinitions() {

@@ -588,7 +588,6 @@ export const actions = {
     updateDefinitionsForManager: (definitionId, type) => async (dispatch, getState) => {
         const state = getState().printing;
         const savedDefinition = await definitionManager.getDefinition(definitionId);
-        console.log('savedDefinition', savedDefinition);
         if (!savedDefinition) {
             return;
         }
