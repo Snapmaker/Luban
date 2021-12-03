@@ -41,12 +41,14 @@ class ToolPath {
     modelGroup;
 
     constructor(options) {
-        const { id, name, baseName, headType, type, useLegacyEngine = false, modelIDs, gcodeConfig, toolParams = {}, materials = {}, modelGroup } = options;
+        const { id, name, baseName, headType, type, useLegacyEngine = false, modelMode,
+            modelIDs, gcodeConfig, toolParams = {}, materials = {}, modelGroup } = options;
 
         this.id = id || uuid.v4();
         this.name = name;
         this.baseName = baseName;
         this.headType = headType;
+        this.modelMode = modelMode;
         this.type = type;
         this.status = IDLE;
         this.useLegacyEngine = useLegacyEngine;
@@ -91,6 +93,7 @@ class ToolPath {
             visible: this.visible,
             deleteModel: this.deleteModel,
             modelMap: this.modelMap,
+            modelMode: this.modelMode,
             // object: this.object,
             modelIDs,
             toolPathFiles,

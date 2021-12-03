@@ -685,6 +685,7 @@ export const actions = {
             definitionId,
             name,
             inherits: definition.inherits,
+            category: definition.category,
             ownKeys: definition.ownKeys,
             metadata,
             settings: {}
@@ -694,6 +695,9 @@ export const actions = {
         // Find a name not being used
         while (state[definitionsKey].find(d => d.name === newDefinition.name)) {
             newDefinition.name = `#${newDefinition.name}`;
+        }
+        while (state[definitionsKey].find(d => d.category === newDefinition.category)) {
+            newDefinition.category = `#${newDefinition.category}`;
         }
 
         // Simplify settings

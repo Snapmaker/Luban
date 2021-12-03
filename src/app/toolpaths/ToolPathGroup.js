@@ -186,6 +186,7 @@ class ToolPathGroup {
         const toolPathInfo = new ToolPath({
             name: createToolPathNameByType(this.count, type, this.headType),
             baseName: models[0] instanceof ThreeModel ? models[0].uploadName : models[0].resource.originalFile.name,
+            modelMode: models[0].mode,
             headType: this.headType,
             type,
             modelIDs: this.modelGroup.selectedModelIDArray,

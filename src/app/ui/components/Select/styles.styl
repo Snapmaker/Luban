@@ -74,6 +74,22 @@
   width auto !important;
   max-width: 200px;
   padding: 4px 0 !important;
+  :global(.ant-select-tree-switcher_open)::before, :global(.ant-select-tree-switcher_close)::before {
+    content: '';
+    position: absolute;
+    //right: -310px;
+    top: 0;
+    left: 0;
+    bottom: 0;
+  }
+  :global(.ant-select-tree-switcher_open), :global(.ant-select-tree-switcher_close) {
+      padding-right: 115%
+      z-index: 100
+  }
+  :global(.ant-select-tree-node-content-wrapper-close), :global(.ant-select-tree-node-content-wrapper-open) {
+      margin-left: -115%
+      z-index: 10
+  }
   :global(.ant-select-tree-list-holder) {
     :global(.ant-select-tree-switcher-noop) {
       display: none;
@@ -81,7 +97,7 @@
     :global(.ant-select-tree-treenode) {
       height 32px
       padding 0 !important
-      width 100%
+      width 86%
     }
     :global(.ant-select-tree-node-selected) {
       background: #E7F3FF !important;
