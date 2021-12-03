@@ -54,7 +54,6 @@ function ToolSelector({ toolDefinitions, setCurrentToolDefinition, setCurrentVal
     toolDefinitions.forEach(tool => {
         const category = tool.category;
         const definitionId = tool.definitionId;
-
         if (Object.keys(tool?.settings).length > 0) {
             const checkboxAndSelectGroup = {};
             const name = tool.name;

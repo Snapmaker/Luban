@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useCallback } from 'react';
 import PropTypes from 'prop-types';
 import { useSelector, useDispatch, shallowEqual } from 'react-redux';
 import classNames from 'classnames';
@@ -10,8 +10,7 @@ import { actions as printingActions } from '../../../flux/printing';
 import { actions as projectActions } from '../../../flux/project';
 // import styles from './styles.styl';
 import { HEAD_PRINTING, PRINTING_MANAGER_TYPE_MATERIAL } from '../../../constants';
-// import OptionalDropdown from '../../components/OptionalDropdown';
-// import Space from '../../components/Space';
+import { getSelectOptions } from '../../utils/profileManager';
 
 
 // const MATERIAL_CONFIG_KEYS = [
@@ -26,16 +25,12 @@ import { HEAD_PRINTING, PRINTING_MANAGER_TYPE_MATERIAL } from '../../../constant
 //     'material_flow_layer_0'
 // ];
 const plaMaterialId = 'material.pla';
+
 function Material({ widgetActions }) {
     const materialDefinitions = useSelector(state => state?.printing?.materialDefinitions,);
     const defaultMaterialId = useSelector(state => state?.printing?.defaultMaterialId, shallowEqual);
     const inProgress = useSelector(state => state?.printing?.inProgress);
     const dispatch = useDispatch();
-    const newOptions = materialDefinitions.map(d => ({
-        label: d.name,
-        value: d.definitionId
-    }));
-    const [materialDefinitionOptions, setMaterialDefinitionOptions] = useState([newOptions]);
 
     function onShowPrintingManager() {
         dispatch(printingActions.updateManagerDisplayType(PRINTING_MANAGER_TYPE_MATERIAL));
@@ -64,22 +59,22 @@ function Material({ widgetActions }) {
             dispatch(printingActions.displayModel());
         }
     }
-
     useEffect(() => {
         widgetActions.setTitle(i18n._('key-Printing/PrintingConfigurations-Material Settings'));
     }, [widgetActions]);
     useEffect(() => {
-        const newMaterialDefinitionOptions = materialDefinitions.map(d => ({
-            label: d.name,
-            value: d.definitionId
-        }));
         const definition = materialDefinitions.find(d => d.definitionId === defaultMaterialId);
         if (!definition) {
             dispatch(printingActions.updateDefaultMaterialId(plaMaterialId));
         }
         updateActiveDefinition(definition);
-        setMaterialDefinitionOptions(newMaterialDefinitionOptions);
-    }, [materialDefinitions, defaultMaterialId]);
+    }, [defaultMaterialId]);
+
+    const toolDefinitionOptions = getSelectOptions(materialDefinitions);
+    const valueObj = {
+        firstKey: 'definitionId',
+        firstValue: defaultMaterialId
+    };
 
     return (
         <React.Fragment>
@@ -91,14 +86,14 @@ function Material({ widgetActions }) {
                 <Select
                     clearable={false}
                     size="292px"
-                    searchable
-                    options={materialDefinitionOptions}
+                    isGroup
+                    valueObj={valueObj}
+                    options={toolDefinitionOptions}
                     value={defaultMaterialId}
                     onChange={onChangeMaterialValue}
                     disabled={inProgress}
                 />
                 <SvgIcon
-                    // className="border-radius-8 border-default-grey-1 padding-vertical-2 padding-horizontal-2 margin-left-4"
                     className="border-default-black-5 margin-left-4"
                     name="PrintingSettingNormal"
                     size={24}
