@@ -8,7 +8,7 @@ import styles from './styles.styl';
 
 const { Option } = Select;
 const CustomValue = 'new';
-// const { TreeNode } = TreeSelect;
+const PARENT_ID = 'parent';
 
 class ChangedReactSelect extends PureComponent {
     static propTypes = {
@@ -53,7 +53,7 @@ class ChangedReactSelect extends PureComponent {
                     if (oldOption.definitionId !== CustomValue) {
                         return oldOption.options.some((child) => {
                             if (child.definitionId === this.props.valueObj.firstValue) {
-                                newExpandedKeys = [0 + oldOption.definitionId];
+                                newExpandedKeys = [PARENT_ID + oldOption.definitionId];
                                 return true;
                             }
                             return false;
@@ -144,7 +144,7 @@ class ChangedReactSelect extends PureComponent {
             const treeData = options.map((oldOption) => {
                 const newOption = {};
                 newOption.title = oldOption.label;
-                newOption.value = oldOption.definitionId === 'new' ? oldOption.definitionId : 0 + oldOption.definitionId;
+                newOption.value = oldOption.definitionId === 'new' ? oldOption.definitionId : PARENT_ID + oldOption.definitionId;
                 if (oldOption.definitionId !== CustomValue) {
                     // newOption.disabled = true;
                     newOption.children = oldOption.options.map((child) => {
