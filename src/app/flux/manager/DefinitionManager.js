@@ -67,6 +67,7 @@ class DefinitionManager {
         } else {
             res = await api.profileDefinitions.getDefinition(this.headType, definitionId);
         }
+        console.log('res', res.body.definition);
         return res.body.definition;
     }
 
