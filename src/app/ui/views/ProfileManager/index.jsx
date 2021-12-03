@@ -205,7 +205,7 @@ function ProfileManager({ optionConfigGroup, disableCategory = true, managerTitl
                 title: i18n._('key-Printing/ProfileManager-Delete Profile'),
                 body: (
                     <React.Fragment>
-                        <p>{`Are you sure to delete profile "${deleteName}"?`}</p>
+                        <p>{i18n._('key-ProfileManager-Are you sure to delete profile "{{name}}"?', { name: deleteName })}</p>
                     </React.Fragment>
                 ),
 
