@@ -117,6 +117,7 @@ class ToolPath {
         };
     };
 
+    // TODO:
     offsetAddLine = (start, end) => {
         this.fn.addLine(this.modal, this.offsetG92(start), this.offsetG92(end));
     };
@@ -716,6 +717,7 @@ class ToolPath {
         },
         'T': (tool) => {
             if (tool !== undefined) {
+                // this.modal.gcodeType = 'start';
                 this.setModal({ tool: tool });
             }
         }

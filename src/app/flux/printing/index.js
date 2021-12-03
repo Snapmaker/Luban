@@ -132,6 +132,7 @@ const INITIAL_STATE = {
     layerCount: 0,
     layerCountDisplayed: 0,
     gcodeTypeInitialVisibility: {},
+    renderLineType: false,
 
     // progress bar
     progress: 0,
@@ -453,20 +454,24 @@ export const actions = {
             const { status, value } = data;
             switch (status) {
                 case 'succeed': {
-                    const { positions, colors, layerIndices, typeCodes, layerCount, bounds } = value;
-
+                    const { positions, colors, colors1, layerIndices, typeCodes, toolCodes, layerCount, bounds } = value;
                     const bufferGeometry = new THREE.BufferGeometry();
                     const positionAttribute = new THREE.Float32BufferAttribute(positions, 3);
                     const colorAttribute = new THREE.Uint8BufferAttribute(colors, 3);
                     // this will map the buffer values to 0.0f - +1.0f in the shader
                     colorAttribute.normalized = true;
+                    const color1Attribute = new THREE.Uint8BufferAttribute(colors1, 3);
+                    color1Attribute.normalized = true;
                     const layerIndexAttribute = new THREE.Float32BufferAttribute(layerIndices, 1);
                     const typeCodeAttribute = new THREE.Float32BufferAttribute(typeCodes, 1);
+                    const toolCodeAttribute = new THREE.Float32BufferAttribute(toolCodes, 1);
 
                     bufferGeometry.setAttribute('position', positionAttribute);
                     bufferGeometry.setAttribute('a_color', colorAttribute);
+                    bufferGeometry.setAttribute('a_color1', color1Attribute);
                     bufferGeometry.setAttribute('a_layer_index', layerIndexAttribute);
                     bufferGeometry.setAttribute('a_type_code', typeCodeAttribute);
+                    bufferGeometry.setAttribute('a_tool_code', toolCodeAttribute);
 
                     const object3D = gcodeBufferGeometryToObj3d('3DP', bufferGeometry);
 
@@ -481,19 +486,24 @@ export const actions = {
                         SUPPORT: true,
                         FILL: true,
                         TRAVEL: false,
-                        UNKNOWN: true
+                        UNKNOWN: true,
+                        TOOL0: true,
+                        TOOL1: true
                     };
                     dispatch(actions.updateState({
                         layerCount,
                         layerCountDisplayed: layerCount - 1,
                         gcodeTypeInitialVisibility,
+                        renderLineType: false,
                         gcodeLine: object3D
                     }));
 
                     Object.keys(gcodeTypeInitialVisibility).forEach((type) => {
                         const visible = gcodeTypeInitialVisibility[type];
-                        dispatch(actions.setGcodeVisibilityByType(type, visible ? 1 : 0));
+                        dispatch(actions.setGcodeVisibilityByTypeAndDirection(type, LEFT_EXTRUDER, visible ? 1 : 0));
+                        dispatch(actions.setGcodeVisibilityByTypeAndDirection(type, RIGHT_EXTRUDER, visible ? 1 : 0));
                     });
+                    dispatch(actions.setGcodeColorByRenderLineType());
 
                     const { minX, minY, minZ, maxX, maxY, maxZ } = bounds;
                     dispatch(actions.checkGcodeBoundary(minX, minY, minZ, maxX, maxY, maxZ));
@@ -519,7 +529,7 @@ export const actions = {
                 }
                 case 'err': {
                     const { progressStatesManager } = getState().printing;
-                    progressStatesManager.finish(false);
+                    progressStatesManager.finishProgress(false);
                     dispatch(actions.updateState({
                         stage: STEP_STAGE.PRINTING_PREVIEW_FAILED,
                         progress: 0
@@ -1169,38 +1179,76 @@ export const actions = {
     },
 
     // preview
-    setGcodeVisibilityByType: (type, visible) => (dispatch, getState) => {
+    setGcodeVisibilityByTypeAndDirection: (type, direction = LEFT_EXTRUDER, visible) => (dispatch, getState) => {
         const { gcodeLine } = getState().printing;
         const uniforms = gcodeLine.material.uniforms;
         const value = visible ? 1 : 0;
-        switch (type) {
-            case 'WALL-INNER':
-                uniforms.u_wall_inner_visible.value = value;
-                break;
-            case 'WALL-OUTER':
-                uniforms.u_wall_outer_visible.value = value;
-                break;
-            case 'SKIN':
-                uniforms.u_skin_visible.value = value;
-                break;
-            case 'SKIRT':
-                uniforms.u_skirt_visible.value = value;
-                break;
-            case 'SUPPORT':
-                uniforms.u_support_visible.value = value;
-                break;
-            case 'FILL':
-                uniforms.u_fill_visible.value = value;
-                break;
-            case 'TRAVEL':
-                uniforms.u_travel_visible.value = value;
-                break;
-            case 'UNKNOWN':
-                uniforms.u_unknown_visible.value = value;
-                break;
-            default:
-                break;
+        if (direction === LEFT_EXTRUDER) {
+            switch (type) {
+                case 'WALL-INNER':
+                    uniforms.u_l_wall_inner_visible.value = value;
+                    break;
+                case 'WALL-OUTER':
+                    uniforms.u_l_wall_outer_visible.value = value;
+                    break;
+                case 'SKIN':
+                    uniforms.u_l_skin_visible.value = value;
+                    break;
+                case 'SKIRT':
+                    uniforms.u_l_skirt_visible.value = value;
+                    break;
+                case 'SUPPORT':
+                    uniforms.u_l_support_visible.value = value;
+                    break;
+                case 'FILL':
+                    uniforms.u_l_fill_visible.value = value;
+                    break;
+                case 'TRAVEL':
+                    uniforms.u_l_travel_visible.value = value;
+                    break;
+                case 'UNKNOWN':
+                    uniforms.u_l_unknown_visible.value = value;
+                    break;
+                default:
+                    break;
+            }
+        } else {
+            switch (type) {
+                case 'WALL-INNER':
+                    uniforms.u_r_wall_inner_visible.value = value;
+                    break;
+                case 'WALL-OUTER':
+                    uniforms.u_r_wall_outer_visible.value = value;
+                    break;
+                case 'SKIN':
+                    uniforms.u_r_skin_visible.value = value;
+                    break;
+                case 'SKIRT':
+                    uniforms.u_r_skirt_visible.value = value;
+                    break;
+                case 'SUPPORT':
+                    uniforms.u_r_support_visible.value = value;
+                    break;
+                case 'FILL':
+                    uniforms.u_r_fill_visible.value = value;
+                    break;
+                case 'TRAVEL':
+                    uniforms.u_r_travel_visible.value = value;
+                    break;
+                case 'UNKNOWN':
+                    uniforms.u_r_unknown_visible.value = value;
+                    break;
+                default:
+                    break;
+            }
         }
+        dispatch(actions.render());
+    },
+
+    setGcodeColorByRenderLineType: () => (dispatch, getState) => {
+        const { gcodeLine, renderLineType } = getState().printing;
+        const uniforms = gcodeLine.material.uniforms;
+        uniforms.u_color_type.value = renderLineType ? 1 : 0;
         dispatch(actions.render());
     },
 
@@ -1736,13 +1784,15 @@ export const actions = {
     },
 
     loadGcode: (gcodeFilename) => (dispatch, getState) => {
-        const { progressStatesManager } = getState().printing;
+        const { progressStatesManager, extruderLDefinition, extruderRDefinition } = getState().printing;
         progressStatesManager.startNextStep();
         dispatch(actions.updateState({
             stage: STEP_STAGE.PRINTING_PREVIEWING,
             progress: progressStatesManager.updateProgress(STEP_STAGE.PRINTING_SLICING, 0)
         }));
-        gcodeRenderingWorker.postMessage({ func: '3DP', gcodeFilename });
+        const extruderColors = { toolColor0: extruderLDefinition.settings.color.default_value, toolColor1: extruderRDefinition.settings.color.default_value };
+        console.log('extruderColors', extruderColors);
+        gcodeRenderingWorker.postMessage({ func: '3DP', gcodeFilename, extruderColors });
     },
     saveSupport: (model) => (dispatch, getState) => {
         const { modelGroup } = getState().printing;
