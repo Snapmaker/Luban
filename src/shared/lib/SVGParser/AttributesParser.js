@@ -338,7 +338,7 @@ class AttributesParser {
                     if (kv.length === 2) {
                         const k = kv[0].trim();
                         const v = kv[1].trim();
-                        this.parseAttribute(attributes, parentAttributes, k, v);
+                        this.parseAttribute(attributes, parentAttributes, k, v, isTextElement);
                     }
                 }
                 break;
