@@ -1,31 +1,21 @@
 import React, { useEffect, useCallback } from 'react';
 import PropTypes from 'prop-types';
 import { useSelector, useDispatch, shallowEqual } from 'react-redux';
-// mock, antd TreeSelect
-import { TreeSelect } from 'antd';
 import classNames from 'classnames';
-// import Select from '../../components/Select';
+import Select from '../../components/Select';
 import SvgIcon from '../../components/SvgIcon';
 import i18n from '../../../lib/i18n';
 import { actions as printingActions } from '../../../flux/printing';
 import { actions as projectActions } from '../../../flux/project';
-import { DUAL_EXTRUDER_TOOLHEAD_FOR_SM2, HEAD_PRINTING, LEFT_EXTRUDER, PRINTING_MANAGER_TYPE_MATERIAL, RIGHT_EXTRUDER } from '../../../constants';
+import {
+    LEFT_EXTRUDER, PRINTING_MANAGER_TYPE_MATERIAL, HEAD_PRINTING, DUAL_EXTRUDER_TOOLHEAD_FOR_SM2,
+    RIGHT_EXTRUDER
+} from '../../../constants';
 import { machineStore } from '../../../store/local-storage';
-import { getSelectOptions } from '../../utils/profileManager';
+import { getMaterialSelectOptions } from '../../utils/profileManager';
 
 const plaMaterialId = 'material.pla';
-// const MaterialText = ({ name, color }) => {
-//     return (
-//         <div className="sm-flex align-center justify-space-between">
-//             <span>{name}</span>
-//             <div className={`width-16 height-16 material-background-${color?.toLowerCase()}`} />
-//         </div>
-//     );
-// };
-// MaterialText.propTypes = {
-//     name: PropTypes.string,
-//     color: PropTypes.string
-// };
+
 function Material({ widgetActions }) {
     const materialDefinitions = useSelector(state => state?.printing?.materialDefinitions,);
     const defaultMaterialId = useSelector(state => state?.printing?.defaultMaterialId, shallowEqual);
@@ -48,7 +38,7 @@ function Material({ widgetActions }) {
     }, [dispatch]);
 
     function onChangeMaterialValue(option, direction) {
-        const definitionId = option;
+        const definitionId = option.definitionId;
         const definition = materialDefinitions.find(d => d.definitionId === definitionId);
         if (definition) {
             // update selectedId
@@ -73,10 +63,14 @@ function Material({ widgetActions }) {
         updateActiveDefinition(definition);
     }, [defaultMaterialId]);
 
-    const toolDefinitionOptions = getSelectOptions(materialDefinitions);
+    const materialDefinitionOptions = getMaterialSelectOptions(materialDefinitions);
     const valueObj = {
         firstKey: 'definitionId',
         firstValue: defaultMaterialId
+    };
+    const valueObjForRight = {
+        firstKey: 'definitionId',
+        firstValue: defaultMaterialIdRight
     };
 
     return (
@@ -85,24 +79,56 @@ function Material({ widgetActions }) {
                 'margin-top-8'
             )}
             >
-                <Select
-                    clearable={false}
-                    size="292px"
-                    isGroup
-                    valueObj={valueObj}
-                    options={toolDefinitionOptions}
-                    value={defaultMaterialId}
-                    onChange={onChangeMaterialValue}
-                    disabled={inProgress}
-                />
-                <SvgIcon
-                    className="border-default-black-5 margin-left-4"
-                    name="PrintingSettingNormal"
-                    size={24}
-                    disabled={inProgress}
-                    onClick={onShowPrintingManager}
-                    borderRadius={8}
-                />
+                <div className="sm-flex justify-space-between">
+                    <span className="display-inline width-88 text-overflow-ellipsis">
+                        {printingToolhead === DUAL_EXTRUDER_TOOLHEAD_FOR_SM2 ? i18n._('key-Printing/PrintingConfigurations-Extruder L') : i18n._('key-Printing/PrintingConfigurations-Extruder')}
+                    </span>
+                    <div>
+                        <Select
+                            clearable={false}
+                            size="160px"
+                            isGroup
+                            valueObj={valueObj}
+                            options={materialDefinitionOptions}
+                            value={defaultMaterialId}
+                            onChange={(option) => onChangeMaterialValue(option, LEFT_EXTRUDER)}
+                            disabled={inProgress}
+                        />
+                        <SvgIcon
+                            className="border-default-black-5 margin-left-4"
+                            name="PrintingSettingNormal"
+                            size={24}
+                            disabled={inProgress}
+                            onClick={() => onShowPrintingManager(LEFT_EXTRUDER)}
+                            borderRadius={8}
+                        />
+                    </div>
+                </div>
+                {printingToolhead === DUAL_EXTRUDER_TOOLHEAD_FOR_SM2 && (
+                    <div className="sm-flex justify-space-between margin-top-8">
+                        <span className="display-inline width-88 text-overflow-ellipsis">{i18n._('key-Printing/PrintingConfigurations-Extruder R')}</span>
+                        <div>
+                            <Select
+                                clearable={false}
+                                size="160px"
+                                isGroup
+                                valueObj={valueObjForRight}
+                                options={materialDefinitionOptions}
+                                value={defaultMaterialIdRight}
+                                onChange={(option) => onChangeMaterialValue(option, RIGHT_EXTRUDER)}
+                                disabled={inProgress}
+                            />
+                            <SvgIcon
+                                className="border-default-black-5 margin-left-4"
+                                name="PrintingSettingNormal"
+                                size={24}
+                                disabled={inProgress}
+                                onClick={() => onShowPrintingManager(RIGHT_EXTRUDER)}
+                                borderRadius={8}
+                            />
+                        </div>
+                    </div>
+                )}
             </div>
         </React.Fragment>
     );
