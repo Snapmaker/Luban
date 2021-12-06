@@ -1084,7 +1084,6 @@ export const actions = {
                 break;
             case ['rotationX', 'rotationY', 'rotationZ'].some(item => item in transformation):
                 transformMode = 'rotate';
-                dispatch(actions.clearAllManualSupport());
                 break;
             default: break;
         }
@@ -1311,7 +1310,7 @@ export const actions = {
             return true;
         }
         if (transformMode === 'rotate') {
-            dispatch(actions.clearAllManualSupport());
+            dispatch(actions.clearAllManualSupport({ combinedOperations: operations }));
         }
         for (const model of modelGroup.selectedModelArray) {
             dispatch(operationHistoryActions.updateTargetTmpState(INITIAL_STATE.name, model.modelID, {
@@ -1446,7 +1445,6 @@ export const actions = {
         const { modelGroup } = getState().printing;
         dispatch(actions.recordModelBeforeTransform(modelGroup));
 
-        dispatch(actions.clearAllManualSupport());
         const modelState = modelGroup.autoRotateSelectedModel();
         modelGroup.onModelAfterTransform();
 
@@ -1539,18 +1537,23 @@ export const actions = {
             dispatch(operationHistoryActions.setOperations(INITIAL_STATE.name, operations));
         }
     },
-    clearAllManualSupport: () => (dispatch, getState) => {
+    clearAllManualSupport: ({ combinedOperations }) => (dispatch, getState) => {
         const { modelGroup } = getState().printing;
         const supports = modelGroup.models.filter(item => item.supportTag === true);
         if (supports && supports.length > 0) {
-            const operations = new Operations();
+            let operations = new Operations();
+            if (combinedOperations) {
+                operations = combinedOperations;
+            }
             for (const model of supports) {
                 const operation = new DeleteOperation3D({
                     target: model
                 });
                 operations.push(operation);
             }
-            dispatch(operationHistoryActions.setOperations(INITIAL_STATE.name, operations));
+            if (!combinedOperations) {
+                dispatch(operationHistoryActions.setOperations(INITIAL_STATE.name, operations));
+            }
 
             modelGroup.removeAllManualSupport();
         }
@@ -1731,8 +1734,6 @@ export const actions = {
     analyzeSelectedModelRotation: () => (dispatch, getState) => {
         const { modelGroup, progressStatesManager } = getState().printing;
         if (modelGroup.getSelectedModelArray()?.length === 1) {
-            // clear supports in selected model
-            dispatch(actions.clearAllManualSupport());
             // calculate model rotation info, convex calculation may take more time, use async way
             modelGroup.analyzeSelectedModelRotationAsync().then(tableResult => {
                 if (tableResult) {
@@ -1789,8 +1790,9 @@ export const actions = {
         groups.forEach(group => {
             groupChildrenMap.set(group, group.children.slice(0));
         });
+        const operations = new Operations();
 
-        dispatch(actions.clearAllManualSupport());
+        dispatch(actions.clearAllManualSupport({ combinedOperations: operations }));
         const modelState = modelGroup.group();
 
         const modelsafterGroup = modelGroup.getModels().slice(0);
@@ -1803,7 +1805,6 @@ export const actions = {
             target: modelGroup.getSelectedModelArray()[0],
             modelGroup
         });
-        const operations = new Operations();
         operations.push(operation);
         operations.registCallbackAfterAll(() => {
             dispatch(actions.updateState(modelGroup.getState()));
@@ -1825,11 +1826,11 @@ export const actions = {
         groups.forEach(group => {
             groupChildrenMap.set(group, group.children.slice(0));
         });
+        const operations = new Operations();
 
-        dispatch(actions.clearAllManualSupport());
+        dispatch(actions.clearAllManualSupport({ combinedOperations: operations }));
         const modelState = modelGroup.ungroup();
 
-        const operations = new Operations();
         groups.forEach(group => {
             const operation = new UngroupOperation3D({
                 target: group,
