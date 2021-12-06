@@ -516,10 +516,13 @@ export default class ThreeGroup extends BaseModel {
         this.modelGroup && this.modelGroup.modelChanged();
     }
 
-    clearSupports() {
+    cloneMeshWithoutSupports(): THREE.Object3D {
+        const clonedGroup = this.meshObject.clone();
         this.children.forEach(model => {
-            model.clearSupports();
+            const mesh: THREE.Mesh = model.cloneMeshWithoutSupports() as unknown as THREE.Mesh;
+            clonedGroup.add(mesh);
         });
+        return clonedGroup;
     }
 
     getSerializableConfig(): ModelInfo {

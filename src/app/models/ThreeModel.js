@@ -544,8 +544,10 @@ class ThreeModel extends BaseModel {
         this.modelGroup && this.modelGroup.modelChanged();
     }
 
-    clearSupports() {
-        this.meshObject.children = [];
+    cloneMeshWithoutSupports() {
+        const clonedMesh = this.meshObject.clone();
+        clonedMesh.children = [];
+        return clonedMesh;
     }
 
     getSerializableConfig() {

@@ -935,8 +935,7 @@ export const actions = {
                     modelDefinition.settings.roofing_extruder_nr.default_value = item.extruderConfig.shell;
                     modelDefinition.settings.top_bottom_extruder_nr.default_value = item.extruderConfig.shell;
 
-                    const mesh = item.meshObject.clone();
-                    item.clearSupports();
+                    const mesh = item.cloneMeshWithoutSupports();
                     // mesh.children = []; // remove support children
                     mesh.applyMatrix4(item.meshObject.parent.matrix);
                     const stl = new ModelExporter().parse(mesh, 'stl', true);
