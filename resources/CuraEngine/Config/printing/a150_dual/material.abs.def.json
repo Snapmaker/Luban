@@ -2,7 +2,7 @@
     "name": "ABS-White",
     "version": 2,
     "inherits": "snapmaker",
-    "category": "Default",
+    "category": "ABS",
     "overrides": {
         "material_flow": {
             "default_value": 100

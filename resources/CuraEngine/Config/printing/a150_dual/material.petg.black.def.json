@@ -2,7 +2,7 @@
     "version": 2,
     "name": "PETG-Black",
     "inherits": "snapmaker",
-    "category": "Default",
+    "category": "PETG",
     "overrides": {
         "material_flow": {
             "default_value": 100
