@@ -219,7 +219,7 @@ export const actions = {
         }
         const definitionsWithSameCategory = isCreate ? [{
             ...activeToolList,
-            name: 'Default Tool',
+            name: i18n._('key-default_category-Default Tool'),
             settings: toolDefinitions[0]?.settings
         }]
             : state.toolDefinitions.filter(d => d.category === oldCategory);

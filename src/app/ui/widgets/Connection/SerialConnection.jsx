@@ -75,7 +75,7 @@ function SerialConnection() {
     function onPortOpened(options) {
         const { port: _port, err: _err } = options;
         if (err && err !== 'inuse') {
-            setErr('Can not open this port');
+            setErr(i18n._('key-workspace_open_port-Can not open this port'));
             log.error(`Error opening serial port '${_port}'`, _err);
 
             return;
@@ -88,7 +88,7 @@ function SerialConnection() {
     function onPortReady(data) {
         const { state, err: _err } = data;
         if (_err) {
-            setErr('The machine is not ready');
+            setErr(i18n._('key-workspace_open_port-The machine is not ready'));
             return;
         }
 
@@ -145,7 +145,7 @@ function SerialConnection() {
     function onPortClosed(options) {
         const { port: _port, err: _err } = options;
         if (_err) {
-            setErr('Can not close this port');
+            setErr(i18n._('key-workspace_open_port-Can not close this port'));
             log.error(_err);
             return;
         }
