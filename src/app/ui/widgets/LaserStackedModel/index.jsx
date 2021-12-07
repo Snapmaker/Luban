@@ -17,7 +17,7 @@ let scale = 1, canvasRange = {};
 const MAX_Z = 500, MIN_SIZE = 0.1, MAX_THICKNESS = 50, DEFAULT_THICKNESS = 1.5;
 
 const StackedModel = ({ setStackedModelModalDsiabled }) => {
-    const { isProcessing = false, svgInfo, stlInfo, modelInitSize } = useSelector(state => state[HEAD_LASER].cutModelInfo);
+    const { isProcessing = false, svgInfo, stlInfo, modelInitSize, initScale } = useSelector(state => state[HEAD_LASER].cutModelInfo);
     const coordinateSize = useSelector(state => state[HEAD_LASER].coordinateSize, shallowEqual);
     const [disabled, setDisabled] = useState(false);
     const [size, setSize] = useState(modelInitSize);
@@ -111,7 +111,7 @@ const StackedModel = ({ setStackedModelModalDsiabled }) => {
         dispatch(editorActions.setShortcutStatus(HEAD_LASER, false));
         dispatch(menuActions.disableMenu());
         canvasRange = { x: coordinateSize.x, y: coordinateSize.y, z: MAX_Z };
-        scale = 1;
+        scale = initScale;
 
         return () => {
             dispatch(editorActions.setShortcutStatus(HEAD_LASER, true));
