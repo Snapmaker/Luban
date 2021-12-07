@@ -275,15 +275,14 @@ export const actions = {
 
     renderGcodeFile: (gcodeFile, needToList = true, shouldRenderGcode = false) => async (dispatch) => {
         // const oldGcodeFile = getState().workspace.gcodeFile;
-
         if (needToList) {
             dispatch(actions.addGcodeFiles(gcodeFile));
         }
         // if (oldGcodeFile !== null && oldGcodeFile.uploadName === gcodeFile.uploadName) {
         //     return;
         // }
-        await dispatch(actions.clearGcode());
         if (shouldRenderGcode) {
+            await dispatch(actions.clearGcode());
             await dispatch(actions.updateState({
                 gcodeFile,
                 stage: WORKSPACE_STAGE.LOADING_GCODE,

@@ -71,6 +71,7 @@ class ToolPath {
     getState() {
         let modelIDs = [];
         let toolPathFiles = [];
+        // TODO: not just remove modelID
         const modelsInModelIDs = this.modelGroup.models.filter(model => {
             return this.modelIDs.includes(model.modelID) && model.visible === true;
         });

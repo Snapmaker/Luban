@@ -148,6 +148,11 @@ const INITIAL_STATE = {
         y: 0,
         z: 0
     },
+
+    pause3dpStatus: {
+        pausing: false,
+        pos: null
+    },
     // endregion
 
     // laser print mode
@@ -536,7 +541,9 @@ export const actions = {
     updateMaterialThickness: (materialThickness) => (dispatch) => {
         dispatch(baseActions.updateState({ materialThickness }));
     },
-
+    updatePause3dpStatus: (pause3dpStatus) => (dispatch) => {
+        dispatch(baseActions.updateState({ pause3dpStatus }));
+    },
     /**
      * Open HTTP server.
      */
