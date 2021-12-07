@@ -122,20 +122,44 @@
         "machine_nozzle_size": {
             "default_value": 0.4
         },
+        "machine_max_feedrate_x": {
+            "default_value": 120
+        },
+        "machine_max_feedrate_y": {
+            "default_value": 120
+        },
+        "machine_max_feedrate_z": {
+            "default_value": 40
+        },
+        "machine_max_feedrate_e": {
+            "default_value": 25
+        },
         "machine_max_acceleration_x": {
-            "default_value": 1000
+            "default_value": 3000
         },
         "machine_max_acceleration_y": {
-            "default_value": 1000
+            "default_value": 3000
         },
         "machine_max_acceleration_z": {
-            "default_value": 1000
+            "default_value": 100
         },
         "machine_max_acceleration_e": {
-            "default_value": 1000
+            "default_value": 10000
         },
         "machine_acceleration": {
             "default_value": 1000
+        },
+        "machine_max_jerk_xy": {
+            "default_value": 10
+        },
+        "machine_max_jerk_z": {
+            "default_value": 0.3
+        },
+        "machine_max_jerk_e": {
+            "default_value": 5
+        },
+        "machine_minimum_feedrate": {
+            "default_value": 0.05
         },
         "magic_mesh_surface_mode": {
             "label": "Surface Mode",
