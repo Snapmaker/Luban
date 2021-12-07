@@ -1310,7 +1310,7 @@ export const actions = {
             return true;
         }
         if (transformMode === 'rotate') {
-            dispatch(actions.clearAllManualSupport({ combinedOperations: operations }));
+            dispatch(actions.clearAllManualSupport(operations));
         }
         for (const model of modelGroup.selectedModelArray) {
             dispatch(operationHistoryActions.updateTargetTmpState(INITIAL_STATE.name, model.modelID, {
@@ -1537,7 +1537,7 @@ export const actions = {
             dispatch(operationHistoryActions.setOperations(INITIAL_STATE.name, operations));
         }
     },
-    clearAllManualSupport: ({ combinedOperations }) => (dispatch, getState) => {
+    clearAllManualSupport: (combinedOperations) => (dispatch, getState) => {
         const { modelGroup } = getState().printing;
         const supports = modelGroup.models.filter(item => item.supportTag === true);
         if (supports && supports.length > 0) {
@@ -1792,7 +1792,7 @@ export const actions = {
         });
         const operations = new Operations();
 
-        dispatch(actions.clearAllManualSupport({ combinedOperations: operations }));
+        dispatch(actions.clearAllManualSupport(operations));
         const modelState = modelGroup.group();
 
         const modelsafterGroup = modelGroup.getModels().slice(0);
@@ -1828,7 +1828,7 @@ export const actions = {
         });
         const operations = new Operations();
 
-        dispatch(actions.clearAllManualSupport({ combinedOperations: operations }));
+        dispatch(actions.clearAllManualSupport(operations));
         const modelState = modelGroup.ungroup();
 
         groups.forEach(group => {
