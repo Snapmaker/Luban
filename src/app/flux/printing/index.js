@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import path from 'path';
-import { cloneDeep, isNil, filter } from 'lodash';
+import { cloneDeep, isNil, filter, find as lodashFind } from 'lodash';
 // import FileSaver from 'file-saver';
 import LoadModelWorker from '../../workers/LoadModel.worker';
 import GcodeToBufferGeometryWorker from '../../workers/GcodeToBufferGeometry.worker';
@@ -1299,10 +1299,15 @@ export const actions = {
 
     updateSelectedModelsExtruder: (extruderConfig) => (dispatch, getState) => {
         const { modelGroup } = getState().printing;
+        const models = Object.assign([], getState().printing.modelGroup.models);
         for (const model of modelGroup.selectedModelArray) {
-            model.extruderConfig = extruderConfig;
+            const modelItem = lodashFind(models, { modelID: model.modelID });
+            modelItem.extruderConfig = extruderConfig;
         }
-        dispatch(actions.updateState(modelGroup.selectedModelArray));
+        modelGroup.models = models;
+        dispatch(actions.updateState({
+            modelGroup
+        }));
     },
 
     updateHelpersExtruder: (extruderConfig) => (dispatch) => {

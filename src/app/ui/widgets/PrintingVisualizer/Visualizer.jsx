@@ -71,7 +71,7 @@ class Visualizer extends PureComponent {
         scaleToFitSelectedModel: PropTypes.func.isRequired,
         resetSelectedModelTransformation: PropTypes.func.isRequired,
         progressStatesManager: PropTypes.object.isRequired,
-        setRotationPlacementFace: PropTypes.func.isRequired
+        setRotationPlacementFace: PropTypes.func.isRequired,
     };
 
     state = {

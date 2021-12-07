@@ -35,8 +35,8 @@ class ThreeModel extends BaseModel {
     extruderConfig = {
         infill: '0',
         shell: '0',
-        adhesion: '0',
-        support: '0'
+        // adhesion: '0',
+        // support: '0'
     };
 
     constructor(modelInfo, modelGroup) {

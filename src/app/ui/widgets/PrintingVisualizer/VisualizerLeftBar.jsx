@@ -35,11 +35,37 @@ const originalHelpersExtruder = {
     support: '1',
     adhesion: '1'
 };
-const materialColorMap = {
+export const materialColorMap = {
     black: '#000000',
     white: '#ffffff'
 };
-const whiteHex = '#ffffff';
+export const whiteHex = '#ffffff';
+export const renderExtruderIcon = (leftExtruderColor, rightExtruderColor) => (
+    <div className="position-re width-24">
+        {leftExtruderColor !== whiteHex ? (
+            <SvgIcon
+                color={leftExtruderColor}
+                size={24}
+                name="ExtruderLeft"
+                type={['static']}
+                className="position-ab"
+            />
+        ) : (
+            <img className="position-ab" src="/resources/images/24x24/icon_extruder_white_left_24x24.svg" alt="" />
+        )}
+        {rightExtruderColor !== whiteHex ? (
+            <SvgIcon
+                color={rightExtruderColor}
+                size={24}
+                name="ExtruderRight"
+                type={['static']}
+                className="position-ab right-1"
+            />
+        ) : (
+            <img src="/resources/images/24x24/icon_extruder_white_right_24x24.svg" alt="" className="position-ab" />
+        )}
+    </div>
+);
 function VisualizerLeftBar({ defaultSupportSize, setTransformMode, isSupporting, supportActions, updateBoundingBox, autoRotateSelectedModel }) {
     const size = useSelector(state => state?.machine?.size, shallowEqual);
     const selectedGroup = useSelector(state => state?.printing?.modelGroup?.selectedGroup, shallowEqual);
@@ -384,30 +410,7 @@ function VisualizerLeftBar({ defaultSupportSize, setTransformMode, isSupporting,
             <div className="sm-flex justify-space-between margin-left-16 width-160 border-default-black-5 border-radius-8 padding-vertical-4 padding-left-8">
                 <span>{extruderLabelMap[status]}</span>
                 <div className="sm-flex">
-                    <div className="position-re width-24">
-                        {leftExtruderColor !== whiteHex ? (
-                            <SvgIcon
-                                color={leftExtruderColor}
-                                size={24}
-                                name="ExtruderLeft"
-                                type={['static']}
-                                className="position-ab"
-                            />
-                        ) : (
-                            <img className="position-ab" src="/resources/images/24x24/icon_extruder_white_left_24x24.svg" alt="" />
-                        )}
-                        {rightExtruderColor !== whiteHex ? (
-                            <SvgIcon
-                                color={rightExtruderColor}
-                                size={24}
-                                name="ExtruderRight"
-                                type={['static']}
-                                className="position-ab right-1"
-                            />
-                        ) : (
-                            <img src="/resources/images/24x24/icon_extruder_white_right_24x24.svg" alt="" className="position-ab" />
-                        )}
-                    </div>
+                    {renderExtruderIcon(leftExtruderColor, rightExtruderColor)}
                     <SvgIcon
                         type={['static']}
                         size={24}
