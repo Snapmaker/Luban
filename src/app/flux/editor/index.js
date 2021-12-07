@@ -1001,12 +1001,14 @@ export const actions = {
         const toolPaths = toolPathGroup.getToolPaths();
         const emptyToolPaths = [];
         toolPaths.forEach((item) => {
-            for (const id of item.modelIDs) {
-                if (!selectedModelIDArray.includes(id) && allModelIDs.includes(id)) {
-                    return;
+            if (item.modelIDs && item.modelIDs.length) {
+                for (const id of item.modelIDs) {
+                    if (!selectedModelIDArray.includes(id) && allModelIDs.includes(id)) {
+                        return;
+                    }
                 }
+                emptyToolPaths.push(item);
             }
-            emptyToolPaths.push(item);
         });
         if (emptyToolPaths.length === 0) {
             removingModelsWarningCallback();
