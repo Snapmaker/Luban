@@ -132,24 +132,28 @@ class Laser extends PureComponent {
                             value={laserPower}
                             onChange={actions.onChangeLaserPower}
                         />
-                        <div className="sm-flex height-32">
-                            <span>{this.props.laserPower}/</span>
-                            <Input
-                                suffix="%"
-                                value={laserPower}
-                                max={100}
-                                min={0}
-                                size="small"
-                                onChange={actions.onChangeLaserPower}
-                            />
-                            <SvgIcon
-                                name="Reset"
-                                type={['static']}
-                                className="border-default-black-5 margin-left-4 border-radius-8 padding-horizontal-2"
-                                onClick={actions.onSaveLaserPower}
-                                borderRadius={8}
-                                size={24}
-                            />
+                        <div className="sm-flex">
+                            <div className="height-32 margin-right-4">
+                                <span>{this.props.laserPower}/</span>
+                                <Input
+                                    suffix="%"
+                                    value={laserPower}
+                                    max={100}
+                                    min={0}
+                                    size="small"
+                                    onChange={actions.onChangeLaserPower}
+                                />
+                            </div>
+                            <div className="height-only-32 width-32 sm-flex-auto">
+                                <SvgIcon
+                                    name="Reset"
+                                    hoversize={30}
+                                    className="border-default-black-5 border-radius-8"
+                                    onClick={actions.onSaveLaserPower}
+                                    size={24}
+                                    borderRadius={8}
+                                />
+                            </div>
                         </div>
                     </div>
                 )}
