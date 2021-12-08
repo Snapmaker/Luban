@@ -88,7 +88,8 @@ class Visualizer extends PureComponent {
 
         modelGroup: PropTypes.object,
         onRef: PropTypes.func,
-        preview: PropTypes.bool
+        preview: PropTypes.bool,
+        isRotate: PropTypes.bool
     };
 
     previewPrintableArea = null;
@@ -264,12 +265,14 @@ class Visualizer extends PureComponent {
             return (this.props.headType === HEAD_LASER);
         },
         handleRun: () => {
-            const { connectionType } = this.props;
+            const { connectionType, isRotate } = this.props;
             if (connectionType === CONNECTION_TYPE_SERIAL) {
                 const { workflowState } = this.state;
                 if (this.actions.isLaser()) {
                     this.props.executeGcode('G0 X0 Y0 F1000');
-                    this.props.executeGcode(`G0 Z${this.props.materialThickness ?? 0} F1000`);
+                    if (!isRotate) {
+                        this.props.executeGcode(`G0 Z${this.props.materialThickness ?? 0} F1000`);
+                    }
                 }
 
                 if (workflowState === WORKFLOW_STATE_IDLE) {
@@ -851,7 +854,8 @@ const mapStateToProps = (state) => {
         renderingTimestamp: workspace.renderingTimestamp,
         stage: workspace.stage,
         progress: workspace.progress,
-        materialThickness: machine.materialThickness
+        materialThickness: machine.materialThickness,
+        isRotate: workspace.isRotate
     };
 };
 
