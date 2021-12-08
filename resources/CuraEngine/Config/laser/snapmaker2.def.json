@@ -23,7 +23,7 @@
             "max": 6000,
             "step": 1,
             "unit": "mm/min",
-            "enabled": "resolveOrValue('movement_mode') == 'greyscale-line'"
+            "enabled": "resolveOrValue('path_type') == 'path' or resolveOrValue('movement_mode') == 'greyscale-line'"
         },
         "multi_passes": {
             "default_value": 1,
