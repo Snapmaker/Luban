@@ -259,8 +259,8 @@ function Cnc({ location }) {
             let pathConfig = {};
             if (isRotate) {
                 pathConfig = {
-                    path: './UserCase/cnc/a250_standard/cnc_4th_a250a350_standard.snapcnc',
-                    name: 'cnc_4th_a250a350_standard.snapcnc'
+                    path: './UserCase/cnc/a250_standard/cnc_4th_a250a350_chess.snapcnc',
+                    name: 'cnc_4th_a250a350_chess.snapcnc'
                 };
             } else {
                 switch (series) {
@@ -325,6 +325,7 @@ function Cnc({ location }) {
                     onDropRejected={actions.onDropRejected}
                 >
                     <CNCVisualizer />
+                    {console.log({ isRotate })}
                     {enabledIntro && (
                         <Steps
                             options={{

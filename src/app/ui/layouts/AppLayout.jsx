@@ -1,4 +1,5 @@
 import React, { PureComponent } from 'react';
+import { Group } from 'three';
 import { withRouter } from 'react-router-dom';
 import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
@@ -261,8 +262,13 @@ class AppLayout extends PureComponent {
             } else {
                 format = path.split('.').pop();
             }
-
-            const output = new ModelExporter().parse(this.props.modelGroup.object, format, isBinary);
+            const outputObject = new Group();
+            this.props.modelGroup.models.forEach(item => {
+                if (item.visible) {
+                    outputObject.add(item.meshObject);
+                }
+            });
+            const output = new ModelExporter().parse(outputObject, format, isBinary);
             if (!output) {
                 // export error
                 return;

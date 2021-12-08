@@ -145,9 +145,10 @@ class Laser extends PureComponent {
                             <SvgIcon
                                 name="Reset"
                                 type={['static']}
-                                className="border-default-black-5 margin-left-4 border-radius-8"
+                                className="border-default-black-5 margin-left-4 border-radius-8 padding-horizontal-2"
                                 onClick={actions.onSaveLaserPower}
                                 borderRadius={8}
+                                size={24}
                             />
                         </div>
                     </div>

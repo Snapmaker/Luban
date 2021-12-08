@@ -163,7 +163,7 @@ class ModelGroup extends EventEmitter {
     // Calculate selectedGroup's BBox in modelGroup
     getSelectedModelBBoxDes() {
         const selectedGroup = this.selectedGroup;
-        if (selectedGroup.children.length > 0 && selectedGroup.shouldUpdateBoundingbox) {
+        if (selectedGroup.children.length > 0) {
             const whd = new Vector3(0, 0, 0);
             ThreeUtils.computeBoundingBox(this.selectedGroup).getSize(whd);
             return `${whd.x.toFixed(1)} × ${whd.y.toFixed(1)} × ${whd.z.toFixed(1)} mm`;
