@@ -451,6 +451,8 @@ class AppLayout extends PureComponent {
                 const oldPathname = this.props.history.location.pathname;
                 const history = this.props.history;
                 const { toolHead, series } = this.props.machineInfo;
+                await this.props.startProject(oldPathname, `/${headType}`, history);
+                await this.props.updateMachineToolHead(toolHead, series, headType);
                 if (headType === HEAD_CNC || headType === HEAD_LASER) {
                     if (!isRotate) {
                         const { materials } = this.props.store?.[headType];
@@ -473,8 +475,6 @@ class AppLayout extends PureComponent {
                         }
                     }
                 }
-                await this.props.startProject(oldPathname, `/${headType}`, history);
-                await this.props.updateMachineToolHead(toolHead, series, headType);
             });
             UniApi.Event.on('appbar-menu:clear-recent-files', () => {
                 this.actions.updateRecentFile([], 'reset');
