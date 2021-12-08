@@ -335,12 +335,12 @@ export const CNC_DEFAULT_GCODE_PARAMETERS_DEFINITION = {
         value: 'allowance'
     },
     'sliceMode': {
-        label: 'Slicing Mode',
+        label: 'Method',
         description: 'Select the slicing mode of the mesh toolpath',
         type: 'enum',
         options: {
-            'rotation': 'Rotation',
-            'linkage': 'Linkage'
+            'rotation': 'key-Cnc/ToolpathParameters-Rotation', // TODO
+            'linkage': 'key-Cnc/ToolpathParameters-Linkage' // TODO
         },
         default_value: 'rotation'
     },

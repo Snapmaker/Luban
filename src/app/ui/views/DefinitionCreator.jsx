@@ -29,16 +29,27 @@ class DefinitionCreator extends PureComponent {
     }
 
     componentDidMount() {
+        let materialName, toolName;
+        if (this.props.headType === HEAD_LASER) {
+            materialName = i18n._('key-default_category-Default Material');
+            toolName = i18n._('key-default_category-Default Preset');
+        } else {
+            materialName = i18n._('key-default_category-Default Material');
+            toolName = i18n._('key-default_category-Default Tool');
+        }
+
         if (this.props.copyCategoryName) {
-            this.setState({
-                materialName: this.props.copyCategoryName
-            });
+            materialName = this.props.copyCategoryName;
         }
+
         if (this.props.copyToolName) {
-            this.setState({
-                toolName: this.props.copyToolName
-            });
+            toolName = this.props.copyToolName;
         }
+
+        this.setState({
+            toolName,
+            materialName
+        });
     }
 
     getData() {

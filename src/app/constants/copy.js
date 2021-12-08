@@ -128,6 +128,7 @@ i18n._('key-Cnc/StlSection/orientation_Bottom-Bottom');
 i18n._('Allowance');
 i18n._('Set the amount of the material remaining on the object that needs to be carved in future operations.');
 i18n._('Slicing Mode');
+i18n._('Select the slicing mode of the mesh toolpath');
 i18n._('Method');
 i18n._('Target Depth');
 i18n._('Set the depth of the object to be carved. The depth should be smaller than the flute length.');
@@ -209,6 +210,7 @@ i18n._('key-default_name-High Quality');
 i18n._('key-default_category-Default Material');
 i18n._('key-default_category-Acrylic');
 i18n._('key-default_category-Epoxy Tooling Board');
+i18n._('key-default_category-Default Preset');
 
 i18n._('key-default_category-Basswood');
 i18n._('key-default_category-Black Acrylic');
