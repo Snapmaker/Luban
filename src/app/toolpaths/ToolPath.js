@@ -158,7 +158,7 @@ class ToolPath {
     deleteModel(modelId) {
         this.modelIDs = this.modelIDs.filter(v => v !== modelId);
         const modelObj = this.modelMap.get(modelId);
-        modelObj.meshObj && this.object.remove(modelObj.meshObj);
+        modelObj.meshObj && this.object && this.object.remove(modelObj.meshObj);
         this.modelMap.delete(modelId);
     }
 
