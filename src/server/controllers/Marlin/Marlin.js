@@ -1004,7 +1004,6 @@ class Marlin extends events.EventEmitter {
             if (this.settings.airPurifierSwitch !== payload.airPurifierSwitch) {
                 this.set({ airPurifierSwitch: payload.airPurifierSwitch });
             }
-            console.log('purifier', payload);
             this.emit('purifier', payload);
         } else if (type === MarlinReplyParserPurifierFanSpeed) {
             if (this.settings.airPurifierFanSpeed !== payload.airPurifierFanSpeed) {

@@ -108,7 +108,6 @@ const cncIntroStepTwo = (text) => (
 );
 
 const laser4AxisStepOne = (text1, text2, text3) => {
-    console.log('laser4axis');
     return (
         <div className="laser-intro-one-content-4-axis">
             <div className="top-content">

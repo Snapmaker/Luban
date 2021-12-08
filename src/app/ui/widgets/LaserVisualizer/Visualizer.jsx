@@ -670,7 +670,6 @@ const mapStateToProps = (state, ownProps) => {
         isChangedAfterGcodeGenerating, renderingTimestamp, stage, progress, coordinateMode, coordinateSize, enableShortcut, isOverSize } = state.laser;
     const selectedModelArray = modelGroup.getSelectedModelArray();
     const selectedToolPathModelArray = modelGroup.getSelectedToolPathModels();
-    console.log('machine', materials);
 
     return {
         enableShortcut,

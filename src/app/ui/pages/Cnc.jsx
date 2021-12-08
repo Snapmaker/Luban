@@ -325,7 +325,6 @@ function Cnc({ location }) {
                     onDropRejected={actions.onDropRejected}
                 >
                     <CNCVisualizer />
-                    {console.log({ isRotate })}
                     {enabledIntro && (
                         <Steps
                             options={{
