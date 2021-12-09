@@ -492,11 +492,9 @@ export const actions = {
         api.uploadImage(formData)
             .then((res) => {
                 const { width, height, originalName, uploadName } = res.body;
-                dispatch(actions.generateModel(
-                    headType, originalName, uploadName,
-                    width, height, mode, undefined, { svgNodeName: 'image' },
-                    undefined, undefined, undefined, undefined, isLimit
-                ));
+                dispatch(actions.generateModel(headType, {
+                    originalName, uploadName, sourceWidth: width, sourceHeight: height, mode, config: { svgNodeName: 'image' }, isLimit
+                }));
             })
             .catch((err) => {
                 onError && onError(err);
@@ -599,7 +597,7 @@ export const actions = {
      * @param transformation - ?
      * @param modelID - optional, used in project recovery
      */
-    generateModel: (headType, originalName, uploadName, sourceWidth, sourceHeight, mode, sourceType, config, gcodeConfig, transformation, modelID, zIndex, isLimit) => (dispatch, getState) => {
+    generateModel: (headType, { originalName, uploadName, sourceWidth, sourceHeight, mode, sourceType, config, gcodeConfig, transformation, modelID, zIndex, isLimit }) => (dispatch, getState) => {
         const { size } = getState().machine;
         const { materials, modelGroup, SVGActions, contentGroup, toolPathGroup, coordinateMode, coordinateSize } = getState()[headType];
         sourceType = sourceType || getSourceType(originalName);
@@ -741,7 +739,9 @@ export const actions = {
                 const sourceType = 'text';
                 const mode = 'vector';
 
-                dispatch(actions.generateModel(headType, originalName, uploadName, width, height, mode, sourceType));
+                dispatch(actions.generateModel(headType, {
+                    originalName, uploadName, sourceWidth: width, sourceHeight: height, mode, sourceType
+                }));
             });
     },
 
@@ -1991,7 +1991,9 @@ export const actions = {
                 height = coordinateSize.y;
             }
             const uploadName = svgFileInfo.filename, originalName = `${index}.svg`;
-            dispatch(actions.generateModel(headType, originalName, uploadName, width, height, mode, undefined, { svgNodeName: 'image' }));
+            dispatch(actions.generateModel(headType, {
+                originalName, uploadName, sourceWidth: width, sourceHeight: height, mode, sourceType: undefined, config: { svgNodeName: 'image' }
+            }));
         });
     },
 

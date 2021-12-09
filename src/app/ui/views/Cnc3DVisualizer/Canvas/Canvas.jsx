@@ -124,7 +124,7 @@ class Canvas extends Component {
             this.renderScene();
         }
         if (prevProps.worldTransform !== this.props.worldTransform) {
-            this.group.applyMatrix4(new Matrix4().getInverse(this.group.matrix));
+            this.group.applyMatrix4(new Matrix4().copy(this.group.matrix).invert());
             if (this.props.worldTransform) {
                 this.group.applyMatrix4(this.props.worldTransform);
             }

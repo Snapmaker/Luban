@@ -10,7 +10,8 @@ import {
     PROCESS_MODE_MESH,
     getCurrentHeadType,
     COORDINATE_MODE_CENTER, COORDINATE_MODE_BOTTOM_CENTER, PAGE_EDITOR, DISPLAYED_TYPE_MODEL,
-    MAX_RECENT_FILES_LENGTH
+    MAX_RECENT_FILES_LENGTH,
+    LOAD_MODEL_FROM_OUTER
 } from '../../constants';
 import api from '../../api';
 import { actions as printingActions } from '../printing';
@@ -157,6 +158,28 @@ export const actions = {
         dispatch(actions.updateState(headType, { findLastEnvironment: false, unSaved: false }));
     },
 
+    recoverModels: (modActions, models, envHeadType) => async (dispatch) => {
+        for (let k = 0; k < models.length; k++) {
+            const { headType, originalName, uploadName, modelName, config, sourceType, gcodeConfig,
+                sourceWidth, sourceHeight, mode, transformation, modelID, supportTag, extruderConfig, children, parentModelID } = models[k];
+            // prevent project recovery recorded into operation history
+            if (supportTag) {
+                continue;
+            }
+            if (!children) {
+                // excludeModelById only works for models except group
+                dispatch(operationHistoryActions.excludeModelById(envHeadType, modelID));
+            }
+
+            await dispatch(modActions.generateModel(headType, {
+                loadFrom: LOAD_MODEL_FROM_OUTER, originalName, uploadName, modelName, sourceWidth, sourceHeight, mode, sourceType, config, gcodeConfig, transformation, modelID, extruderConfig, isGroup: !!children, parentModelID, children
+            }));
+            if (children && children.length > 0) {
+                await dispatch(actions.recoverModels(modActions, children, envHeadType));
+            }
+        }
+    },
+
     onRecovery: (envHeadType, envObj, backendRecover = true, shouldSetFileName = true) => async (dispatch, getState) => {
         UniApi.Window.setOpenedFile();
         let { content } = getState().project[envHeadType];
@@ -219,17 +242,8 @@ export const actions = {
             }
         }
 
-        for (let k = 0; k < models.length; k++) {
-            const { headType, originalName, uploadName, config, sourceType, gcodeConfig,
-                sourceWidth, sourceHeight, mode, transformation, modelID, supportTag, extruderConfig } = models[k];
-            // prevent project recovery recorded into operation history
-            if (supportTag) {
-                continue;
-            }
-            dispatch(operationHistoryActions.excludeModelById(envHeadType, modelID));
-            await dispatch(modActions.generateModel(headType, originalName, uploadName, sourceWidth, sourceHeight, mode,
-                sourceType, config, gcodeConfig, transformation, modelID, extruderConfig));
-        }
+        await dispatch(actions.recoverModels(modActions, models, envHeadType));
+
         const { toolPathGroup } = modState;
         if (toolPathGroup && toolPathGroup.toolPaths && toolPathGroup.toolPaths.length) {
             toolPathGroup.deleteAllToolPaths();

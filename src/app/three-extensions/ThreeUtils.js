@@ -77,7 +77,7 @@ const ThreeUtils = {
     setObjectWorldPosition(object, position) {
         const parent = object.parent;
         parent.updateMatrixWorld();
-        const matrix = new THREE.Matrix4().getInverse(parent.matrixWorld);
+        const matrix = new THREE.Matrix4().copy(parent.matrixWorld).invert();
         position.applyMatrix4(matrix);
         object.position.copy(position);
     },
@@ -91,7 +91,7 @@ const ThreeUtils = {
         object.setRotationFromQuaternion(quaternion);
 
         const parentQuaternion = ThreeUtils.getObjectWorldQuaternion(object.parent);
-        object.applyQuaternion(parentQuaternion.inverse());
+        object.applyQuaternion(parentQuaternion.invert());
     },
 
     scaleObjectToWorldSize(object, targetSize, pivot) {
@@ -172,11 +172,11 @@ const ThreeUtils = {
 
         this.removeObjectParent(obj);
         parent.updateMatrixWorld();
-        obj.applyMatrix4(new THREE.Matrix4().getInverse(parent.matrixWorld));
+        obj.applyMatrix4(new THREE.Matrix4().copy(parent.matrixWorld).invert());
         parent.add(obj);
     },
     applyObjectMatrix(obj, matrix) {
-        const inverse = new THREE.Matrix4().getInverse(matrix);
+        const inverse = new THREE.Matrix4().copy(matrix).invert();
         obj.children.forEach(child => {
             child.applyMatrix4(inverse);
         });
@@ -188,7 +188,7 @@ const ThreeUtils = {
         const child = obj.children[0];
         const m = child.matrix;
         obj.applyMatrix4(m);
-        child.applyMatrix4(new THREE.Matrix4().getInverse(m));
+        child.applyMatrix4(new THREE.Matrix4().copy(m).invert());
     },
     // eslint-disable-next-line func-names
     computeBoundingBox: (function () {

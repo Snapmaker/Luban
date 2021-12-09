@@ -90,7 +90,7 @@ const getMeshSize = (mesh) => {
 
 
 const setMeshTransform = (mesh, sourceScale, transformation, isRotate, direction = FRONT, placement = BOTTOM) => {
-    mesh.applyMatrix4(new Matrix4().getInverse(mesh.matrix));
+    mesh.applyMatrix4(new Matrix4().copy(mesh.matrix).invert());
     mesh.applyMatrix4(isRotate ? placementMatrixes[placement] : directionMatrixes[direction]);
 
     mesh.applyMatrix4(new Matrix4().makeScale(transformation.scaleX * sourceScale, Math.abs(transformation.scaleY * sourceScale), transformation.scaleY * sourceScale));

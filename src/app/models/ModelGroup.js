@@ -5,12 +5,13 @@ import uuid from 'uuid';
 import _ from 'lodash';
 import i18n from '../lib/i18n';
 
-import Model from './BaseModel';
+import Model from './ThreeBaseModel.ts';
 import ThreeModel from './ThreeModel';
 import SvgModel from './SvgModel';
 import { SELECTEVENT } from '../constants';
 
 import ThreeUtils from '../three-extensions/ThreeUtils';
+import ThreeGroup from './ThreeGroup.ts';
 
 const EVENTS = {
     UPDATE: { type: 'update' }
@@ -18,6 +19,8 @@ const EVENTS = {
 const INDEXMARGIN = 0.02;
 
 class ModelGroup extends EventEmitter {
+    groupsChildrenMap = new Map();
+
     constructor(headType) {
         super();
         this.headType = headType;
@@ -112,8 +115,15 @@ class ModelGroup extends EventEmitter {
         return this.models.find(d => d.modelID === modelID);
     }
 
-    getModelByModelName(modelName) {
-        return this.models.find(d => d.modelName === modelName);
+    getModelByModelName(modelName, models = this.models) {
+        return models.find(d => {
+            if (d.modelName === modelName) {
+                return true;
+            } else if (d.children && d.children.length > 0) {
+                return this.getModelByModelName(modelName, d.children);
+            }
+            return false;
+        });
     }
 
     // TODO: Unify method return type, it causes unnecessary calculations.
@@ -269,7 +279,7 @@ class ModelGroup extends EventEmitter {
         const models = this.getModels();
         for (const model of models) {
             model.meshObject.removeEventListener('update', this.onModelUpdate);
-            model.meshObject.parent.remove(model.meshObject);
+            model.meshObject.parent && model.meshObject.parent.remove(model.meshObject);
         }
         this.models = [];
     }
@@ -557,6 +567,15 @@ class ModelGroup extends EventEmitter {
         return this.getState(false);
     }
 
+    findModelByMesh(meshObject) {
+        return this.models.find(d => {
+            if (d instanceof ThreeGroup) {
+                return d.isMeshInGroup(meshObject);
+            }
+            return d.meshObject === meshObject;
+        });
+    }
+
     // use for canvas
     selectMultiModel(intersect, selectEvent) {
         let model;
@@ -566,13 +585,13 @@ class ModelGroup extends EventEmitter {
                 break;
             case SELECTEVENT.UNSELECT_ADDSELECT:
                 this.unselectAllModels();
-                model = this.models.find(d => d.meshObject === intersect.object);
+                model = this.findModelByMesh(intersect.object);
                 if (model) {
                     this.addModelToSelectedGroup(model);
                 }
                 break;
             case SELECTEVENT.ADDSELECT:
-                model = this.models.find(d => d.meshObject === intersect.object);
+                model = this.findModelByMesh(intersect.object);
                 if (model) {
                     // cannot select model and support
                     // cannot select multi support
@@ -583,7 +602,7 @@ class ModelGroup extends EventEmitter {
                 }
                 break;
             case SELECTEVENT.REMOVESELECT:
-                model = this.models.find(d => d.meshObject === intersect.object);
+                model = this.findModelByMesh(intersect.object);
                 if (model) {
                     this.removeModelFromSelectedGroup(model);
                 }
@@ -600,7 +619,7 @@ class ModelGroup extends EventEmitter {
         if (!(model instanceof Model)) return;
 
         model.setSelected(true);
-        ThreeUtils.applyObjectMatrix(this.selectedGroup, new Matrix4().getInverse(this.selectedGroup.matrix));
+        ThreeUtils.applyObjectMatrix(this.selectedGroup, new Matrix4().copy(this.selectedGroup.matrix).invert());
         this.selectedModelArray = [...this.selectedModelArray, model];
 
         ThreeUtils.setObjectParent(model.meshObject, this.selectedGroup);
@@ -612,7 +631,7 @@ class ModelGroup extends EventEmitter {
         if (!this.selectedGroup.children.find(obj => obj === model.meshObject)) return;
 
         model.setSelected(false);
-        ThreeUtils.applyObjectMatrix(this.selectedGroup, new Matrix4().getInverse(this.selectedGroup.matrix));
+        ThreeUtils.applyObjectMatrix(this.selectedGroup, new Matrix4().copy(this.selectedGroup.matrix).invert());
         let parent = this.object;
         if (model.supportTag) { // support parent should be the target model
             parent = model.target.meshObject;
@@ -630,7 +649,7 @@ class ModelGroup extends EventEmitter {
     // refresh selected group matrix
     prepareSelectedGroup() {
         if (this.selectedModelArray.length === 1) {
-            ThreeUtils.applyObjectMatrix(this.selectedGroup, new Matrix4().getInverse(this.selectedGroup.matrix));
+            ThreeUtils.applyObjectMatrix(this.selectedGroup, new Matrix4().copy(this.selectedGroup.matrix).invert());
             ThreeUtils.liftObjectOnlyChildMatrix(this.selectedGroup);
             this.selectedGroup.uniformScalingState = this.selectedGroup.children[0].uniformScalingState;
         } else if (this.selectedModelArray.length > 1) {
@@ -716,7 +735,7 @@ class ModelGroup extends EventEmitter {
         modelsToCopy.forEach((model) => {
             const newModel = model.clone(this);
 
-            if (model.isThreeModel) {
+            if (model.isThreeModel || model instanceof ThreeGroup) {
                 newModel.stickToPlate();
                 newModel.modelName = this._createNewModelName(newModel);
                 newModel.meshObject.position.x = 0;
@@ -878,7 +897,7 @@ class ModelGroup extends EventEmitter {
         if (selected.length === 0) {
             return null;
         }
-        ThreeUtils.applyObjectMatrix(this.selectedGroup, new Matrix4().getInverse(this.selectedGroup.matrix));
+        ThreeUtils.applyObjectMatrix(this.selectedGroup, new Matrix4().copy(this.selectedGroup.matrix).invert());
 
         selected.forEach((item) => {
             item.updateTransformation({
@@ -1195,7 +1214,7 @@ class ModelGroup extends EventEmitter {
         let isOverstepped = false;
         // TODO: Using 'computeBoundingBox' here will make it's boundingBox uncorrect
         // model.computeBoundingBox();
-        isOverstepped = this._bbox && !this._bbox.containsBox(model.boundingBox);
+        isOverstepped = this._bbox && model.boundingBox && !this._bbox.containsBox(model.boundingBox);
         return isOverstepped;
     }
 
@@ -1293,6 +1312,12 @@ class ModelGroup extends EventEmitter {
      * @returns {Model}
      */
     addModel(modelInfo) {
+        if (modelInfo.sourceType === '3d' && modelInfo.isGroup) {
+            const group = new ThreeGroup(modelInfo, this);
+            group.updateTransformation(modelInfo.transformation);
+            this.groupsChildrenMap.set(group, modelInfo.children.map(item => item.modelID));
+            return group;
+        }
         if (!modelInfo.modelName) {
             modelInfo.modelName = this._createNewModelName({
                 sourceType: modelInfo.sourceType,
@@ -1313,14 +1338,49 @@ class ModelGroup extends EventEmitter {
 
         model.computeBoundingBox();
 
-        // add to group and select
-        this.models.push(model);
-        // todo, use this to refresh obj list
-        this.models = [...this.models];
-        this.object.add(model.meshObject);
         if (model.sourceType === '3d') {
-            this.selectModelById(model.modelID);
+            if (modelInfo.parentModelID) {
+                // when recovering project, add model to its group
+                this.groupsChildrenMap.forEach((subModelIDs, group) => {
+                    if (modelInfo.parentModelID === group.modelID) {
+                        const newSubModelIDs = subModelIDs.map(id => {
+                            if (id === model.modelID) {
+                                return model;
+                            }
+                            return id;
+                        });
+                        if (newSubModelIDs.every(id => id instanceof ThreeModel)) {
+                            this.unselectAllModels();
+                            group.add(newSubModelIDs);
+                            this.groupsChildrenMap.delete(group);
+                            this.models = [...this.models, group];
+                            this.addModelToSelectedGroup(group);
+
+                            group.computeBoundingBox();
+                            const overstepped = this._checkOverstepped(group);
+                            group.setOversteppedAndSelected(overstepped, group.isSelected);
+                        } else {
+                            this.groupsChildrenMap.set(group, newSubModelIDs);
+                        }
+                    }
+                });
+            } else {
+                // add to group and select
+                this.models.push(model);
+                // todo, use this to refresh obj list
+                this.models = [...this.models];
+                this.object.add(model.meshObject);
+
+                this.selectModelById(model.modelID);
+            }
+        } else {
+            // add to group and select
+            this.models.push(model);
+            // todo, use this to refresh obj list
+            this.models = [...this.models];
+            this.object.add(model.meshObject);
         }
+
         this.emit('add', model);
         // refresh view
         this.modelChanged();
@@ -1434,7 +1494,11 @@ class ModelGroup extends EventEmitter {
     _createNewModelName(model) {
         let baseName = '';
         if (model.sourceType === '3d') {
-            baseName = model.originalName;
+            if (model instanceof ThreeGroup) {
+                baseName = 'Group';
+            } else {
+                baseName = model.originalName;
+            }
         } else {
             const { config } = model;
             const isText = (config && config.svgNodeName === 'text');
@@ -1455,9 +1519,17 @@ class ModelGroup extends EventEmitter {
                 name = `${baseName} ${count.toString()}`;
             } else {
                 if (count === 1) {
-                    name = baseName;
+                    if (model instanceof ThreeGroup) {
+                        name = `${baseName} ${count.toString()}`;
+                    } else {
+                        name = baseName;
+                    }
                 } else {
-                    name = `${baseName} (${count.toString()})`;
+                    if (model instanceof ThreeGroup) {
+                        name = `${baseName} ${count.toString()}`;
+                    } else {
+                        name = `${baseName} (${count.toString()})`;
+                    }
                 }
             }
             if (!this.getModelByModelName(name)) {
@@ -1509,10 +1581,16 @@ class ModelGroup extends EventEmitter {
             if (this.selectedModelArray.length === 1) {
                 const model = this.selectedModelArray[0];
                 if (!model.convexGeometry) {
-                    this.once('set-convex', () => {
+                    if (model instanceof ThreeGroup) {
+                        model.computeConvex();
                         const result = this.analyzeSelectedModelRotation();
                         resolve(result);
-                    });
+                    } else {
+                        this.once('set-convex', () => {
+                            const result = this.analyzeSelectedModelRotation();
+                            resolve(result);
+                        });
+                    }
                 } else {
                     const result = this.analyzeSelectedModelRotation();
                     resolve(result);
@@ -1597,6 +1675,87 @@ class ModelGroup extends EventEmitter {
             return this.selectedModelConvexMeshGroup;
         }
         return null;
+    }
+
+    _flattenGroups(modelsArray) {
+        const ungroupedModels = [];
+        modelsArray.forEach(model => {
+            if (model instanceof ThreeGroup) {
+                if (model.visible) {
+                    const children = model.destroy();
+                    ungroupedModels.push(...children);
+                }
+            } else {
+                ungroupedModels.push(model);
+            }
+        });
+        return ungroupedModels;
+    }
+
+    group() {
+        const selectedModelArray = this.selectedModelArray.slice(0);
+        this.unselectAllModels();
+        // check visible models or groups
+        if (selectedModelArray.some(model => model.visible)) {
+            // insert group to the first model position in selectedModelArray
+            const indexesOfSelectedModels = selectedModelArray.map(model => {
+                return this.models.indexOf(model);
+            });
+            const modelsToGroup = this._flattenGroups(selectedModelArray);
+            const group = new ThreeGroup({}, this);
+            group.modelName = this._createNewModelName(group);
+            group.add(modelsToGroup);
+            const insertIndex = Math.min(indexesOfSelectedModels);
+            this.models.splice(insertIndex, 0, group);
+            this.models = this.models.filter(model => selectedModelArray.indexOf(model) === -1);
+
+            this.object.add(group.meshObject);
+            this.addModelToSelectedGroup(group);
+            group.stickToPlate();
+        }
+        return this.getState();
+    }
+
+    canGroup() {
+        if (this.selectedModelArray.some(model => model.visible)) {
+            return true;
+        }
+        return false;
+    }
+
+    canUngroup() {
+        if (this.selectedModelArray.some(model => model instanceof ThreeGroup && model.visible)) {
+            return true;
+        }
+        return false;
+    }
+
+    ungroup() {
+        const selectedModelArray = this.selectedModelArray.slice(0);
+        this.unselectAllModels();
+        // only visible groups can ungroup, others keep selected
+        if (selectedModelArray.some(model => model instanceof ThreeGroup && model.visible)) {
+            const ungroupedModels = [];
+            selectedModelArray.forEach(model => {
+                if (model instanceof ThreeGroup) {
+                    if (model.visible) {
+                        const insertIndex = this.models.indexOf(model);
+                        this.models.splice(insertIndex, 1);
+                        const children = model.destroy();
+                        ungroupedModels.push(...children);
+                        this.models.splice(insertIndex, 0, ...children);
+                    }
+                } else {
+                    ungroupedModels.push(model);
+                }
+            });
+
+            ungroupedModels.forEach(model => {
+                this.addModelToSelectedGroup(model);
+                model.stickToPlate();
+            });
+        }
+        return this.getState();
     }
 }
 

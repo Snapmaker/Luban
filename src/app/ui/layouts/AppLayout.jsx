@@ -199,7 +199,7 @@ class AppLayout extends PureComponent {
                         }
                     }
                 } catch (e) {
-                    console.log(e.message);
+                    console.log(e);
                 }
             }
         },

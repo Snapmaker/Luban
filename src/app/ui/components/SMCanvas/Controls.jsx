@@ -464,8 +464,7 @@ class Controls extends EventEmitter {
             if (isMultiSelect) {
                 if (isRightClick) {
                     if (intersect) {
-                        const objectIndex = this.selectedGroup.children.indexOf(intersect.object);
-                        if (objectIndex === -1) {
+                        if (!this.isObjectInSelectedGroup(intersect.object)) {
                             selectEvent = SELECTEVENT.UNSELECT_ADDSELECT;
                         }
                     } else {
@@ -473,8 +472,7 @@ class Controls extends EventEmitter {
                     }
                 } else {
                     if (intersect) {
-                        const objectIndex = this.selectedGroup.children.indexOf(intersect.object);
-                        if (objectIndex === -1) {
+                        if (!this.isObjectInSelectedGroup(intersect.object)) {
                             selectEvent = SELECTEVENT.ADDSELECT;
                         } else {
                             selectEvent = SELECTEVENT.REMOVESELECT;
@@ -484,8 +482,7 @@ class Controls extends EventEmitter {
             } else {
                 if (isRightClick) {
                     if (intersect) {
-                        const objectIndex = this.selectedGroup.children.indexOf(intersect.object);
-                        if (objectIndex === -1) {
+                        if (!this.isObjectInSelectedGroup(intersect.object)) {
                             selectEvent = SELECTEVENT.UNSELECT_ADDSELECT;
                         }
                     } else {
@@ -519,6 +516,16 @@ class Controls extends EventEmitter {
             this.mouseDownPosition = null;
         }
     };
+
+    isObjectInSelectedGroup(object) {
+        let found = false;
+        this.selectedGroup.traverse((object3d) => {
+            if (object3d === object) {
+                found = true;
+            }
+        });
+        return found;
+    }
 
     onMouseWheel = (event) => {
         if (this.state === STATE.NONE || this.state === STATE.ROTATE_PLACEMENT) {

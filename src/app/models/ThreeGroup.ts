@@ -1,133 +1,209 @@
-import uuid from 'uuid';
 import * as THREE from 'three';
-import {
-    LOAD_MODEL_FROM_INNER
-} from '../constants';
-
+import BaseModel, { ModelTransformation, ModelInfo } from './ThreeBaseModel.ts';
+import type ModelGroup from './ModelGroup';
+import ThreeModel from './ThreeModel';
 import ThreeUtils from '../three-extensions/ThreeUtils';
+import { HEAD_PRINTING } from '../constants';
+import ConvexGeometry from '../three-extensions/ConvexGeometry';
 
-import BaseModel from './ThreeBaseModel.ts';
+window.THREE = THREE;
+require('three/examples/js/utils/BufferGeometryUtils');
 
-const materialOverstepped = new THREE.MeshPhongMaterial({
-    color: 0xff0000,
-    shininess: 30,
-    transparent: true,
-    opacity: 0.6
-});
-const materialSelected = new THREE.MeshPhongMaterial({
-    color: 0xffffff,
-    side: THREE.DoubleSide,
-    shininess: 10
-});
+export default class ThreeGroup extends BaseModel {
+    estimatedTime: number = 0;
 
-const materialNormal = new THREE.MeshPhongMaterial({
-    color: 0xcecece,
-    side: THREE.DoubleSide
-});
+    image3dObj: Object;
 
-class ThreeModel extends BaseModel {
-    loadFrom = LOAD_MODEL_FROM_INNER;
+    processObject3D: Object;
 
-    parent = null;
+    modelObject3D: Object;
 
-    isThreeModel = true;
+    processImageName: string;
 
-    extruderConfig = {
+    transformation: ModelTransformation;
+
+    geometry: THREE.Group;
+
+    meshObject: THREE.Object3D;
+
+    children: Array<ThreeModel | ThreeGroup>;
+
+    boundingBox: THREE.Box3;
+
+    overstepped: boolean;
+
+    convexGeometry: THREE.Geometry;
+
+    modelGroup: ModelGroup;
+
+    lastToolPathStr: string;
+
+    isToolPath: boolean;
+
+    sourceType: string = '3d';
+
+    modelName: string;
+
+    supportTag: boolean;
+
+    isSelected: boolean = false;
+
+    limitSize: Object;
+
+    headType: string = HEAD_PRINTING;
+
+    sourceHeight: number;
+
+    sourceWidth: number;
+
+    originalName: string;
+
+    uploadName: string;
+
+    extruderConfig: Object = {
         infill: '0',
         shell: '0',
         adhesion: '0',
         support: '0'
     };
 
-    constructor(modelInfo, modelGroup) {
+    config: Object;
+
+    mode: string;
+
+    parent: ThreeGroup;
+
+    constructor(modelInfo: ModelInfo, modelGroup: ModelGroup) {
         super(modelInfo, modelGroup);
-        const { width, height, processImageName } = modelInfo;
-
-
-        this.geometry = modelInfo.geometry || new THREE.PlaneGeometry(width, height);
-        const material = modelInfo.material || new THREE.MeshBasicMaterial({ color: 0xe0e0e0, visible: false });
-
-        this.meshObject = new THREE.Mesh(this.geometry, material);
-
-        this.processImageName = processImageName;
-
-        if (!this.transformation.width && !this.transformation.height) {
-            this.transformation.width = width;
-            this.transformation.height = height;
-        }
-        if (width && height) {
-            this.transformation.scaleX = this.transformation.width / width;
-            this.transformation.scaleY = this.transformation.height / height;
-        }
-
-        this.modelObject3D = null;
-        this.processObject3D = null;
-
-        // for cnc model visualizer
-        this.image3dObj = null;
-
-        this.estimatedTime = 0;
-
-        this.boundingBox = null;
-        this.overstepped = false;
-        this.convexGeometry = null;
-        this.modelGroup = modelGroup;
-
-        this.lastToolPathStr = null;
-        this.isToolPath = false;
-        this.extruderConfig = {
-            ...this.extruderConfig,
-            ...modelInfo.extruderConfig
+        this.meshObject = new THREE.Group();
+        this.children = [];
+        this.transformation = {
+            positionX: 0,
+            positionY: 0,
+            positionZ: 0,
+            scaleX: 1,
+            scaleY: 1,
+            scaleZ: 1,
+            rotationX: 0,
+            rotationY: 0,
+            rotationZ: 0,
+            uniformScalingState: true
         };
+    }
 
-        if (modelInfo.convexGeometry) {
-            this.setConvexGeometry(modelInfo.convexGeometry);
-        }
+    add(models: Array<ThreeModel | ThreeGroup>) {
+        this.children = [...this.children, ...models];
 
-        this.updateTransformation(this.transformation);
-        this.meshObject.addEventListener('update', this.modelGroup.onModelUpdate);
-        if (modelInfo.loadFrom === LOAD_MODEL_FROM_INNER) {
-            if (this.sourceType === '3d' && this.transformation.positionX === 0 && this.transformation.positionY === 0) {
-                this.stickToPlate();
-                const point = modelGroup._computeAvailableXY(this);
-                this.meshObject.position.x = point.x;
-                this.meshObject.position.y = point.y;
-                this.transformation.positionX = point.x;
-                this.transformation.positionY = point.y;
+        models.forEach(model => {
+            this.meshObject.add(model.meshObject);
+            model.parent = this;
+        });
+        if (models.length === 1) {
+            ThreeUtils.liftObjectOnlyChildMatrix(this.meshObject);
+            (this.meshObject as any).uniformScalingState = (this.meshObject.children[0] as any).uniformScalingState;
+        } else if (models.length > 1) {
+            let p;
+            const boundingBoxTemp = ThreeUtils.computeBoundingBox(this.meshObject);
+            if (this.meshObject.children.length >= 1) {
+                p = new THREE.Vector3(
+                    (boundingBoxTemp.max.x + boundingBoxTemp.min.x) / 2,
+                    (boundingBoxTemp.max.y + boundingBoxTemp.min.y) / 2,
+                    boundingBoxTemp.max.z / 2
+                );
+            } else {
+                p = new THREE.Vector3(
+                    0,
+                    0,
+                    0
+                );
             }
+            // set selected group position need to remove children temporarily
+            const children = [...this.meshObject.children];
+            children.map(obj => ThreeUtils.removeObjectParent(obj));
+            // only make the diff translation
+            const oldPosition = new THREE.Vector3();
+            this.meshObject.getWorldPosition(oldPosition);
+            const matrix = new THREE.Matrix4().makeTranslation(p.x - oldPosition.x, p.y - oldPosition.y, p.z - oldPosition.z);
+            ThreeUtils.applyObjectMatrix(this.meshObject, matrix);
+            children.map(obj => ThreeUtils.setObjectParent(obj, this.meshObject));
+            (this.meshObject as any).uniformScalingState = true;
         }
+    }
+
+    destroy(): ThreeModel[] {
+        ThreeUtils.applyObjectMatrix(this.meshObject, new THREE.Matrix4().copy(this.meshObject.matrix).invert());
+        // apply group transformation to children
+        const models = [];
+        // this.meshObject.updateMatrixWorld();
+        this.children.forEach(model => {
+            model.parent = null;
+            // model.meshObject.applyMatrix4(this.meshObject.matrixWorld);
+            if (model instanceof ThreeGroup) {
+                const children = model.destroy();
+                models.push(...children);
+            } else {
+                ThreeUtils.setObjectParent(model.meshObject, this.meshObject.parent);
+                models.push(model);
+            }
+        });
+        this.meshObject.children = [];
+        this.children = [];
+        return models;
+    }
+
+    /**
+     * Experimental
+     * @returns THREE.BufferGeometry
+     */
+    mergeGeometriesInGroup(): THREE.BufferGeometry {
+        let geometry = new THREE.BufferGeometry();
+        if (this.children.length > 0) {
+            geometry = THREE.BufferGeometryUtils.mergeBufferGeometries(this.children.map(model => {
+                if (model.meshObject instanceof THREE.Group) {
+                    return (model as ThreeGroup).mergeGeometriesInGroup();
+                } else {
+                    model.meshObject.updateMatrixWorld();
+                    const clonedGeometry = (model.meshObject as THREE.Mesh).geometry.clone() as THREE.BufferGeometry;
+                    clonedGeometry.applyMatrix4(model.meshObject.matrixWorld);
+                    return clonedGeometry;
+                }
+            }));
+        }
+        return geometry;
+    }
+
+    isMeshInGroup(mesh: THREE.Mesh) {
+        return this.children.some(model => {
+            if (model instanceof ThreeGroup) {
+                return model.isMeshInGroup(mesh);
+            }
+            return model.meshObject === mesh;
+        });
     }
 
     get visible() {
         return this.meshObject.visible;
     }
 
-    set visible(value) {
+    set visible(value: boolean) {
         this.meshObject.visible = value;
     }
 
-    updateModelName(newName) {
-        this.modelName = newName;
-    }
-
+    /**
+     * Experimental
+     * @returns ModelTransformation
+     */
     onTransform() {
-        const geometrySize = ThreeUtils.getGeometrySize(this.meshObject.geometry, true);
-        const { uniformScalingState } = this.meshObject;
+        const geometrySize = ThreeUtils.getGeometrySize(this.mergeGeometriesInGroup(), true);
+        const { uniformScalingState } = this.meshObject as any;
 
-        let position, scale, rotation;
-        if (this.parent) {
-            position = this.meshObject.position.clone();
-            scale = this.meshObject.scale.clone();
-            rotation = this.meshObject.rotation.clone();
-        } else {
-            position = new THREE.Vector3();
-            this.meshObject.getWorldPosition(position);
-            scale = new THREE.Vector3();
-            this.meshObject.getWorldScale(scale);
-            const quaternion = new THREE.Quaternion();
-            this.meshObject.getWorldQuaternion(quaternion);
-            rotation = new THREE.Euler().setFromQuaternion(quaternion, undefined, false);
-        }
+        const position = new THREE.Vector3();
+        this.meshObject.getWorldPosition(position);
+        const scale = new THREE.Vector3();
+        this.meshObject.getWorldScale(scale);
+        const quaternion = new THREE.Quaternion();
+        this.meshObject.getWorldQuaternion(quaternion);
+        const rotation = new THREE.Euler().setFromQuaternion(quaternion, undefined);
 
         const transformation = {
             positionX: position.x,
@@ -149,19 +225,21 @@ class ThreeModel extends BaseModel {
             ...transformation
         };
 
+        this.children.forEach(model => model.onTransform());
+
         return this.transformation;
     }
 
-    updateTransformation(transformation) {
+    updateTransformation(transformation: ModelTransformation): ModelTransformation {
         super.updateTransformation(transformation);
+        return this.transformation;
     }
 
     computeBoundingBox() {
         this.boundingBox = ThreeUtils.computeBoundingBox(this.meshObject);
     }
 
-    // 3D
-    setConvexGeometry(convexGeometry) {
+    setConvexGeometry(convexGeometry: THREE.BufferGeometry | THREE.Geometry) {
         if (convexGeometry instanceof THREE.BufferGeometry) {
             this.convexGeometry = new THREE.Geometry().fromBufferGeometry(convexGeometry);
             this.convexGeometry.mergeVertices();
@@ -184,77 +262,59 @@ class ThreeModel extends BaseModel {
         revert();
     }
 
-    // 3D
-    setMatrix(matrix) {
+    setMatrix(matrix: THREE.Matrix4) {
         this.meshObject.updateMatrix();
-        this.meshObject.applyMatrix4(new THREE.Matrix4().copy(this.meshObject.matrix).invert());
+        this.meshObject.applyMatrix4(this.meshObject.matrix.clone().invert());
         this.meshObject.applyMatrix4(matrix);
-        // attention: do not use Object3D.applyMatrix(matrix : Matrix4)
-        // because applyMatrix is accumulated
-        // anther way: decompose Matrix and reset position/rotation/scale
-        // let position = new THREE.Vector3();
-        // let quaternion = new THREE.Quaternion();
-        // let scale = new THREE.Vector3();
-        // matrix.decompose(position, quaternion, scale);
-        // this.position.copy(position);
-        // this.quaternion.copy(quaternion);
-        // this.scale.copy(scale);
     }
 
-    setOversteppedAndSelected(overstepped, isSelected) {
+    setOversteppedAndSelected(overstepped: boolean, isSelected: boolean) {
         this.overstepped = overstepped;
+        this.children.forEach(model => {
+            model.overstepped = overstepped;
+        });
         this.setSelected(isSelected);
     }
 
-    setSelected(isSelected) {
+    setSelected(isSelected?: boolean) {
         if (typeof isSelected === 'boolean') {
             this.isSelected = isSelected;
         }
-        if (this.overstepped === true) {
-            this.meshObject.material = materialOverstepped.clone();
-        } else if (this.isSelected === true) {
-            this.meshObject.material = materialSelected.clone();
-        } else {
-            this.meshObject.material = materialNormal.clone();
-        }
-        // for indexed geometry
-        if (isSelected && this.meshObject.geometry.getAttribute('color')) {
-            this.meshObject.material.vertexColors = true;
-        }
-        // for support geometry
-        if (this.supportTag) {
-            this.meshObject.material.color.set(0xFFD700);
-        }
+        this.children.forEach(model => {
+            model.setSelected(isSelected);
+        });
     }
 
-    /**
-     * Note that you need to give cloned Model a new model name.
-     *
-     * @returns {ThreeModel}
-     */
-    clone(modelGroup) {
-        const modelInfo = {
-            ...this,
-            loadFrom: LOAD_MODEL_FROM_INNER,
-            material: this.meshObject.material
+    clone(modelGroup: ModelGroup) {
+        const clonedSubModels = [];
+        const modelInfo: ModelInfo = {
+            modelID: this.modelID,
+            limitSize: this.limitSize,
+            headType: this.headType,
+            sourceType: this.sourceType,
+            sourceHeight: this.sourceHeight,
+            sourceWidth: this.sourceWidth,
+            originalName: this.originalName,
+            uploadName: this.uploadName,
+            config: this.config,
+            mode: this.mode,
+            // visible: this.visible,
+            transformation: this.transformation,
+            processImageName: this.processImageName,
+            supportTag: this.supportTag
         };
-        const clone = new ThreeModel(modelInfo, modelGroup);
-        clone.originModelID = this.modelID;
-        clone.modelID = uuid.v4();
-        this.meshObject.updateMatrixWorld();
-
-        clone.setMatrix(this.meshObject.matrixWorld);
-        // set proper material for new model
-        clone.setSelected();
-
+        this.children.forEach(model => {
+            clonedSubModels.push(model.clone(modelGroup));
+        });
+        const clone = new ThreeGroup(modelInfo, modelGroup);
+        clone.add(clonedSubModels);
+        clone.isSelected = true;
         return clone;
     }
 
     /**
-     * Find the best fit direction, and rotate the model
-     * step1. get big planes of convex geometry
-     * step2. calculate area, support volumes of each big plane
-     * step3. find the best fit plane using formula below
+     * Experimental
+     * @returns void
      */
     autoRotate() {
         if (this.sourceType !== '3d' || !this.convexGeometry) {
@@ -263,9 +323,8 @@ class ThreeModel extends BaseModel {
 
         const revertParent = ThreeUtils.removeObjectParent(this.meshObject);
         this.meshObject.updateMatrixWorld();
-        const geometry = this.meshObject.geometry;
-        geometry.computeBoundingBox();
-        const box3 = geometry.boundingBox;
+        this.computeBoundingBox();
+        const box3 = this.boundingBox;
         const x = (box3.max.x + box3.min.x) / 2;
         const y = (box3.max.y + box3.min.y) / 2;
         const z = (box3.max.z + box3.min.z) / 2;
@@ -288,7 +347,7 @@ class ThreeModel extends BaseModel {
         if (!bigPlanes.planes.length) return;
 
         const xyPlaneNormal = new THREE.Vector3(0, 0, -1);
-        const objPlanes = ThreeUtils.computeGeometryPlanes(this.meshObject.geometry, this.meshObject.matrixWorld, bigPlanes.planes, center, false);
+        const objPlanes = ThreeUtils.computeGeometryPlanes(this.mergeGeometriesInGroup(), this.meshObject.matrixWorld, bigPlanes.planes, center, false);
 
         let targetPlane;
         const minSupportVolume = Math.min.apply(null, objPlanes.supportVolumes);
@@ -325,7 +384,11 @@ class ThreeModel extends BaseModel {
         revertParent();
     }
 
-    rotateByPlane(targetPlane) {
+    /**
+     * Experimental
+     * @returns void
+     */
+    rotateByPlane(targetPlane: THREE.Plane) {
         const xyPlaneNormal = new THREE.Vector3(0, 0, -1);
         const revertParent = ThreeUtils.removeObjectParent(this.meshObject);
         this.meshObject.updateMatrixWorld();
@@ -337,13 +400,33 @@ class ThreeModel extends BaseModel {
         revertParent();
     }
 
+    /**
+     * Experimental
+     * @returns void
+     */
+    computeConvex() {
+        const bufferGeometry = this.mergeGeometriesInGroup();
+        const positions = bufferGeometry.getAttribute('position').array;
+        // Calculate convex of model
+        const vertices = [];
+        for (let i = 0; i < positions.length; i += 3) {
+            vertices.push(new THREE.Vector3(positions[i], positions[i + 1], positions[i + 2]));
+        }
+        const convexGeometry = new ConvexGeometry(vertices);
+
+        this.setConvexGeometry(convexGeometry as unknown as THREE.Geometry);
+    }
+
+    /**
+     * Experimental
+     * @returns Object
+     */
     analyzeRotation() {
         if (this.sourceType !== '3d' || !this.convexGeometry) {
             return null;
         }
-        const geometry = this.meshObject.geometry;
-        geometry.computeBoundingBox();
-        const box3 = geometry.boundingBox;
+        this.computeBoundingBox();
+        const box3 = this.boundingBox;
         const x = (box3.max.x + box3.min.x) / 2;
         const y = (box3.max.y + box3.min.y) / 2;
         const z = (box3.max.z + box3.min.z) / 2;
@@ -370,7 +453,7 @@ class ThreeModel extends BaseModel {
         });
 
         if (!bigPlanes.planes.length) return null;
-        const objPlanes = ThreeUtils.computeGeometryPlanes(this.meshObject.geometry, this.meshObject.matrixWorld, bigPlanes.planes, center, false);
+        const objPlanes = ThreeUtils.computeGeometryPlanes(this.mergeGeometriesInGroup(), this.meshObject.matrixWorld, bigPlanes.planes, center, false);
         revertParent();
 
         const minSupportVolume = Math.min.apply(null, objPlanes.supportVolumes);
@@ -397,107 +480,30 @@ class ThreeModel extends BaseModel {
         return result;
     }
 
-    scaleToFit(size) {
-        const revertParent = ThreeUtils.removeObjectParent(this.meshObject);
-        const modelSize = new THREE.Vector3();
-        this.computeBoundingBox();
-        this.boundingBox.getSize(modelSize);
-        const scalar = ['x', 'y', 'z'].reduce((prev, key) => Math.min((size[key] - 5) / modelSize[key], prev), Number.POSITIVE_INFINITY);
-        this.meshObject.scale.multiplyScalar(scalar);
-        this.meshObject.position.set(0, 0, 0);
-        this.meshObject.updateMatrix();
-        this.setSelected();
-        this.stickToPlate();
-        this.onTransform();
-        revertParent();
-    }
-
-    layFlat() {
-        if (this.sourceType !== '3d') {
-            return;
-        }
-
-        const positionX = this.meshObject.position.x;
-        const positionY = this.meshObject.position.y;
-
-        if (!this.convexGeometry) {
-            return;
-        }
-
-        const revertParent = ThreeUtils.removeObjectParent(this.meshObject);
-        // Attention: the minY-vertex and min-angle-vertex must be in the same face
-        // transform convexGeometry clone
-        const convexGeometryClone = this.convexGeometry.clone();
-        convexGeometryClone.computeVertexNormals();
-        // this.updateMatrix();
-        this.meshObject.updateMatrix();
-        convexGeometryClone.applyMatrix4(this.meshObject.matrix);
-        const faces = convexGeometryClone.faces;
-        let minAngleFace = null;
-        let minAngle = Math.PI;
-        for (let i = 0; i < faces.length; i++) {
-            const face = faces[i];
-            const angle = face.normal.angleTo(new THREE.Vector3(0, 0, -1));
-            if (angle < minAngle) {
-                minAngle = angle;
-                minAngleFace = face;
-            }
-        }
-
-
-        const xyPlaneNormal = new THREE.Vector3(0, 0, -1);
-        const vb2 = minAngleFace.normal;
-        this.meshObject.applyQuaternion(new THREE.Quaternion().setFromUnitVectors(vb2, xyPlaneNormal));
-        this.stickToPlate();
-        this.meshObject.position.x = positionX;
-        this.meshObject.position.y = positionY;
-        this.meshObject.updateMatrix();
-
-        this.onTransform();
-        revertParent();
-    }
-
-    setSupportPosition(position) {
+    /**
+     * Experimental
+     * @returns void
+     */
+    setSupportPosition(position: THREE.Vector3) {
         const object = this.meshObject;
         object.position.copy(position);
         object.updateMatrix();
         this.generateSupportGeometry();
     }
 
-    generateSupportGeometry() {
-        const target = this.target;
-        const center = new THREE.Vector3();
-        this.meshObject.getWorldPosition(center);
-        center.setZ(0);
+    /**
+     * Experimental
+     * @returns void
+     */
+    generateSupportGeometry() {}
 
-        const rayDirection = new THREE.Vector3(0, 0, 1);
-        const size = this.supportSize;
-        const raycaster = new THREE.Raycaster(center, rayDirection);
-        const intersects = raycaster.intersectObject(target.meshObject, true);
-
-        let intersect = intersects[0];
-        if (intersects.length >= 2) {
-            intersect = intersects[intersects.length - 2];
-        }
-        this.isInitSupport = true;
-        let height = 100;
-        if (intersect && intersect.distance > 0) {
-            this.isInitSupport = false;
-            height = intersect.point.z;
-        }
-
-        const geometry = ThreeUtils.generateSupportBoxGeometry(size.x, size.y, height);
-
-        geometry.computeVertexNormals();
-
-        this.meshObject.geometry = geometry;
-        this.geometry = geometry;
-        this.computeBoundingBox();
-    }
-
+    /**
+     * Experimental
+     * @returns void
+     */
     setVertexColors() {
         this.meshObject.updateMatrixWorld();
-        const bufferGeometry = this.meshObject.geometry;
+        const bufferGeometry = this.mergeGeometriesInGroup();
         const clone = bufferGeometry.clone();
         clone.applyMatrix4(this.meshObject.matrixWorld.clone());
 
@@ -537,24 +543,36 @@ class ThreeModel extends BaseModel {
         setTimeout(worker, 10);
     }
 
+    /**
+     * Experimental
+     * @returns void
+     */
     removeVertexColors() {
-        const bufferGeometry = this.meshObject.geometry;
+        const bufferGeometry = this.mergeGeometriesInGroup();
         bufferGeometry.deleteAttribute('color');
         this.setSelected();
         this.modelGroup && this.modelGroup.modelChanged();
     }
 
-    cloneMeshWithoutSupports() {
-        const clonedMesh = this.meshObject.clone();
-        clonedMesh.children = [];
-        return clonedMesh;
+    cloneMeshWithoutSupports(): THREE.Object3D {
+        const clonedGroup = this.meshObject.clone();
+        this.children.forEach(model => {
+            const mesh: THREE.Mesh = model.cloneMeshWithoutSupports() as unknown as THREE.Mesh;
+            clonedGroup.add(mesh);
+        });
+        return clonedGroup;
     }
 
-    getSerializableConfig() {
+    getSerializableConfig(): ModelInfo {
         const {
             modelID, limitSize, headType, sourceType, sourceHeight, sourceWidth, originalName, uploadName, config, mode,
             transformation, processImageName, supportTag, visible, extruderConfig, modelName
         } = this;
+        const children = this.children.map(model => {
+            const serializableConfig: ModelInfo = model.getSerializableConfig();
+            serializableConfig.parentModelID = modelID;
+            return serializableConfig;
+        });
 
         return {
             modelID,
@@ -572,9 +590,8 @@ class ThreeModel extends BaseModel {
             processImageName,
             supportTag,
             extruderConfig,
+            children,
             modelName
         };
     }
 }
-
-export default ThreeModel;
