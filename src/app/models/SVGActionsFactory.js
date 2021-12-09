@@ -1571,10 +1571,7 @@ class SVGActionsFactory {
 
         api.convertTextToSvg(newConfig)
             .then(async (res) => {
-                const { originalName, uploadName, width, height, family } = res.body;
-                if (family !== newConfig['font-family']) {
-                    newConfig['font-family'] = res.body.family;
-                }
+                const { originalName, uploadName, width, height } = res.body;
                 const textSize = computeTransformationSizeForTextVector(newConfig.text, newConfig['font-size'], newConfig['line-height'], {
                     width,
                     height

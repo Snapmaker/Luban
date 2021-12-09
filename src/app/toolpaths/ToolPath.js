@@ -71,6 +71,7 @@ class ToolPath {
     getState() {
         let modelIDs = [];
         let toolPathFiles = [];
+        // TODO: not just remove modelID
         const modelsInModelIDs = this.modelGroup.models.filter(model => {
             return this.modelIDs.includes(model.modelID) && model.visible === true;
         });
@@ -157,7 +158,7 @@ class ToolPath {
     deleteModel(modelId) {
         this.modelIDs = this.modelIDs.filter(v => v !== modelId);
         const modelObj = this.modelMap.get(modelId);
-        modelObj.meshObj && this.object.remove(modelObj.meshObj);
+        modelObj.meshObj && this.object && this.object.remove(modelObj.meshObj);
         this.modelMap.delete(modelId);
     }
 

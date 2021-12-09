@@ -31,7 +31,7 @@ import {
 import { ensureRange } from '../../../lib/numeric-utils';
 import TargetPoint from '../../../three-extensions/TargetPoint';
 import { actions as machineActions } from '../../../flux/machine';
-import { actions, WORKSPACE_STAGE } from '../../../flux/workspace';
+import { actions as workspaceActions, WORKSPACE_STAGE } from '../../../flux/workspace';
 import PrintablePlate from './PrintablePlate';
 
 import { loadTexture } from './helpers';
@@ -81,6 +81,9 @@ class Visualizer extends PureComponent {
         resumeServerGcode: PropTypes.func.isRequired,
         stopServerGcode: PropTypes.func.isRequired,
         executeGcode: PropTypes.func.isRequired,
+        updatePause3dpStatus: PropTypes.func.isRequired,
+        pause3dpStatus: PropTypes.object,
+
 
         gcodePrintingInfo: PropTypes.shape({
             sent: PropTypes.number
@@ -112,11 +115,6 @@ class Visualizer extends PureComponent {
     pauseStatus = {
         headStatus: false,
         headPower: 0
-    };
-
-    pause3dpStatus = {
-        pausing: false,
-        pos: null
     };
 
     state = {
@@ -282,10 +280,13 @@ class Visualizer extends PureComponent {
                 }
                 if (workflowState === WORKFLOW_STATE_PAUSED) {
                     if (this.actions.is3DP()) {
-                        this.pause3dpStatus.pausing = false;
-                        const pos = this.pause3dpStatus.pos;
+                        const pos = this.props.pause3dpStatus.pos;
                         const cmd = `G1 X${pos.x} Y${pos.y} Z${pos.z} F1000\n`;
                         controller.command('gcode', cmd);
+                        this.props.updatePause3dpStatus({
+                            pos: null,
+                            pausing: false
+                        });
                         controller.command('gcode:resume');
                     } else if (this.actions.isLaser()) {
                         if (this.pauseStatus.headStatus) {
@@ -384,16 +385,17 @@ class Visualizer extends PureComponent {
                     }
 
                     // toolhead has stopped
-                    if (this.pause3dpStatus.pausing) {
-                        this.pause3dpStatus.pausing = false;
+                    if (this.props.pause3dpStatus?.pausing) {
+                        const pause3dpStatus = {};
+                        pause3dpStatus.pausing = false;
                         const workPosition = this.state.workPosition;
-                        this.pause3dpStatus.pos = {
+                        pause3dpStatus.pos = {
                             x: Number(workPosition.x),
                             y: Number(workPosition.y),
                             z: Number(workPosition.z),
                             e: Number(workPosition.e)
                         };
-                        const pos = this.pause3dpStatus.pos;
+                        const pos = pause3dpStatus.pos;
                         // experience params for retraction: F3000, E->(E-5)
                         const targetE = Math.max(pos.e - 5, 0);
                         const targetZ = Math.min(pos.z + 30, this.props.size.z);
@@ -403,6 +405,7 @@ class Visualizer extends PureComponent {
                             `G1 F100 E${pos.e}\n`
                         ];
                         controller.command('gcode', cmd);
+                        this.props.updatePause3dpStatus(pause3dpStatus);
                     }
                 } else {
                     this.actions.tryPause();
@@ -417,8 +420,10 @@ class Visualizer extends PureComponent {
                     controller.command('gcode:pause');
 
                     if (this.actions.is3DP()) {
-                        this.pause3dpStatus.pausing = true;
-                        this.pause3dpStatus.pos = null;
+                        this.props.updatePause3dpStatus({
+                            pausing: true,
+                            pos: null
+                        });
                     }
 
                     this.actions.tryPause();
@@ -837,6 +842,7 @@ const mapStateToProps = (state) => {
     const workspace = state.workspace;
     return {
         size: workspace.size,
+        pause3dpStatus: machine.pause3dpStatus,
         doorSwitchCount: machine.doorSwitchCount,
         isEmergencyStopped: machine.isEmergencyStopped,
         isEnclosureDoorOpen: machine.isEnclosureDoorOpen,
@@ -863,15 +869,16 @@ const mapStateToProps = (state) => {
 };
 
 const mapDispatchToProps = (dispatch) => ({
-    clearGcode: () => dispatch(actions.clearGcode()),
-    unloadGcode: () => dispatch(actions.unloadGcode()),
-    setGcodePrintingIndex: (index) => dispatch(actions.setGcodePrintingIndex(index)),
+    clearGcode: () => dispatch(workspaceActions.clearGcode()),
+    unloadGcode: () => dispatch(workspaceActions.unloadGcode()),
+    setGcodePrintingIndex: (index) => dispatch(workspaceActions.setGcodePrintingIndex(index)),
 
     startServerGcode: (callback) => dispatch(machineActions.startServerGcode(callback)),
     pauseServerGcode: () => dispatch(machineActions.pauseServerGcode()),
     resumeServerGcode: (callback) => dispatch(machineActions.resumeServerGcode(callback)),
     stopServerGcode: () => dispatch(machineActions.stopServerGcode()),
-    executeGcode: (gcode) => dispatch(machineActions.executeGcode(gcode))
+    executeGcode: (gcode) => dispatch(machineActions.executeGcode(gcode)),
+    updatePause3dpStatus: (pause3dpStatus) => dispatch(machineActions.updatePause3dpStatus(pause3dpStatus))
 });
 
 export default connect(mapStateToProps, mapDispatchToProps)(Visualizer);

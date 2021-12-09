@@ -339,6 +339,11 @@ class SVGParser {
                 // container elements
                 case SVG_TAG_SVG: {
                     const tagParser = new SVGTagParser(this);
+                    if (attributes.viewBox) {
+                        node.$.viewBox = attributes.viewBox.join(' ');
+                    } else {
+                        node.$.viewBox = `0 0 ${attributes.width} ${attributes.height}`;
+                    }
                     tagParser.parse(node, attributes);
                     break;
                 }

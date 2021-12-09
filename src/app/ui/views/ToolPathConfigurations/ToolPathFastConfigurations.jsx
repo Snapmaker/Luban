@@ -57,41 +57,33 @@ function getFastEditSettingsKeys(toolPath) {
         }
     }
     if (headType === HEAD_LASER) {
-        if (toolPathType === 'vector') {
-            const multiPasses = gcodeConfig?.multiPasses;
-            const pathType = gcodeConfig?.pathType;
-            const allKeys = ['pathType'];
-            if (pathType === 'fill') {
-                allKeys.push('fillInterval', 'fixedPower');
-                if (gcodeConfig?.movementMode === 'greyscale-line') {
-                    allKeys.push('workSpeed');
-                }
-            } else {
-                if (multiPasses === 1) {
-                    allKeys.push(
-                        'workSpeed', 'multiPasses', 'fixedPower'
-                    );
-                } else {
-                    allKeys.push(
-                        'workSpeed', 'multiPasses', 'multiPassDepth', 'fixedPower'
-                    );
-                }
-            }
-            return allKeys;
-        }
-        if (toolPathType === 'image') {
+        const pathType = gcodeConfig?.pathType;
+        const allKeys = [];
+        if (pathType === 'fill') {
             const movementMode = gcodeConfig?.movementMode;
             if (movementMode === 'greyscale-line') {
-                return [
+                allKeys.push(
                     'movementMode', 'fillInterval', 'workSpeed', 'fixedPower'
-                ];
+                );
             }
             if (movementMode === 'greyscale-dot') {
-                return [
+                allKeys.push(
                     'movementMode', 'fillInterval', 'dwellTime', 'fixedPower'
-                ];
+                );
+            }
+        } else {
+            const multiPasses = gcodeConfig?.multiPasses;
+            if (multiPasses === 1) {
+                allKeys.push(
+                    'workSpeed', 'multiPasses', 'fixedPower'
+                );
+            } else {
+                allKeys.push(
+                    'workSpeed', 'multiPasses', 'multiPassDepth', 'fixedPower'
+                );
             }
         }
+        return allKeys;
     }
     return [];
 }
@@ -317,7 +309,6 @@ function ToolPathFastConfigurations({ setEditingToolpath, headType, toolpath }) 
                     setCurrentToolDefinition(currentToolDefinition);
                 }
             }
-
             dispatch(editorActions.saveToolPath(headType, newToolPath));
             dispatch(editorActions.refreshToolPathPreview(headType));
         }

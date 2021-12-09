@@ -7,8 +7,8 @@
 
 import noop from 'lodash/noop';
 import React, { PureComponent } from 'react';
-import { isNil } from 'lodash';
-import { Vector3, Clock, PerspectiveCamera, Scene, Group, HemisphereLight, DirectionalLight } from 'three';
+import { isNil, throttle } from 'lodash';
+import { Vector3, PerspectiveCamera, Scene, Group, HemisphereLight, DirectionalLight } from 'three';
 import PropTypes from 'prop-types';
 import TWEEN from '@tweenjs/tween.js';
 
@@ -23,8 +23,6 @@ const DEFAULT_MODEL_POSITION = new Vector3(0, 0, 0);
 const EPS = 0.000001;
 const FPS = 60;
 const renderT = 1 / FPS;
-const clock = new Clock();
-let timeS = 0;
 
 class Canvas extends PureComponent {
     node = React.createRef();
@@ -575,17 +573,14 @@ class Canvas extends PureComponent {
     }
 
     renderScene() {
-        if (!this.isCanvasInitialized()) return;
-        const T = clock.getDelta();
-        timeS += T;
-        if (timeS > renderT) {
+        throttle(() => {
+            if (!this.isCanvasInitialized()) return;
             this.light.position.copy(this.camera.position);
 
             this.renderer.render(this.scene, this.camera);
 
             TWEEN.update();
-            timeS %= renderT;
-        }
+        }, renderT)();
     }
 
     render() {
