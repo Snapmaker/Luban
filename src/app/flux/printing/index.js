@@ -1303,6 +1303,9 @@ export const actions = {
         for (const model of modelGroup.selectedModelArray) {
             const modelItem = lodashFind(models, { modelID: model.modelID });
             modelItem.extruderConfig = extruderConfig;
+            modelItem.children && modelItem.children.length && modelItem.children.forEach(item => {
+                item.extruderConfig = extruderConfig;
+            });
         }
         modelGroup.models = models;
         dispatch(actions.updateState({

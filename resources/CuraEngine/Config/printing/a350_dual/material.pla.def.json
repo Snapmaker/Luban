@@ -1,8 +1,8 @@
 {
-    "name": "PLA",
+    "name": "PLA-White",
     "version": 2,
     "inherits": "snapmaker",
-    "category": "Default",
+    "category": "PLA",
     "overrides": {
         "material_flow": {
             "default_value": 100

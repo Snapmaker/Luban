@@ -80,7 +80,7 @@ function Material({ widgetActions }) {
             )}
             >
                 <div className="sm-flex justify-space-between">
-                    <span className="display-inline width-88 text-overflow-ellipsis">
+                    <span className="display-inline width-88 text-overflow-ellipsis height-32">
                         {printingToolhead === DUAL_EXTRUDER_TOOLHEAD_FOR_SM2 ? i18n._('key-Printing/PrintingConfigurations-Extruder L') : i18n._('key-Printing/PrintingConfigurations-Extruder')}
                     </span>
                     <div>
@@ -106,7 +106,7 @@ function Material({ widgetActions }) {
                 </div>
                 {printingToolhead === DUAL_EXTRUDER_TOOLHEAD_FOR_SM2 && (
                     <div className="sm-flex justify-space-between margin-top-8">
-                        <span className="display-inline width-88 text-overflow-ellipsis">{i18n._('key-Printing/PrintingConfigurations-Extruder R')}</span>
+                        <span className="display-inline width-88 text-overflow-ellipsis height-32">{i18n._('key-Printing/PrintingConfigurations-Extruder R')}</span>
                         <div>
                             <Select
                                 clearable={false}

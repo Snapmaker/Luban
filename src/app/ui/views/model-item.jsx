@@ -31,6 +31,10 @@ const getExtruderColor = (shell, infill, leftMaterialColor, rightMaterialColor) 
                 _leftExtruderColor = rightMaterialColor;
                 _rightExtruderColor = rightMaterialColor;
                 break;
+            case '2':
+                _leftExtruderColor = leftMaterialColor;
+                _rightExtruderColor = rightMaterialColor;
+                break;
             default:
                 break;
         }
@@ -52,26 +56,8 @@ function ModelItem({
     if (!model) {
         return null;
     }
-    console.log({ isDualExtruder, leftMaterialColor, rightMaterialColor, isExpend });
     if (isDualExtruder) {
         const { extruderConfig: { shell, infill } } = model;
-        // if (shell === infill) {
-        //     switch (shell) {
-        //         case '0':
-        //             leftExtruderColor = leftMaterialColor;
-        //             rightExtruderColor = leftMaterialColor;
-        //             break;
-        //         case '1':
-        //             leftExtruderColor = rightMaterialColor;
-        //             rightExtruderColor = rightMaterialColor;
-        //             break;
-        //         default:
-        //             break;
-        //     }
-        // } else {
-        //     leftExtruderColor = leftMaterialColor;
-        //     rightExtruderColor = rightMaterialColor;
-        // }
         const { _leftExtruderColor, _rightExtruderColor } = getExtruderColor(shell, infill, leftMaterialColor, rightMaterialColor);
         leftExtruderColor = _leftExtruderColor;
         rightExtruderColor = _rightExtruderColor;
@@ -212,7 +198,6 @@ function ModelItem({
                 const { prefixName: _prefixName, suffixName: _suffixName } = normalizeNameDisplay(modelItem.modelName, suffixLength);
                 const { shell, infill } = modelItem.extruderConfig;
                 const { _leftExtruderColor, _rightExtruderColor } = getExtruderColor(shell, infill, leftMaterialColor, rightMaterialColor);
-                console.log({ _leftExtruderColor, _rightExtruderColor });
                 return (
                     <TipTrigger
                         key={modelItem.modelName}

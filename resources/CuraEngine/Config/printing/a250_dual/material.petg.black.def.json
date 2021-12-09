@@ -1,8 +1,8 @@
 {
-    "name": "ABS-White",
     "version": 2,
+    "name": "PETG-Black",
     "inherits": "snapmaker",
-    "category": "ABS",
+    "category": "PETG",
     "overrides": {
         "material_flow": {
             "default_value": 100
@@ -11,25 +11,34 @@
             "default_value": true
         },
         "material_print_temperature_layer_0": {
-            "default_value": 238
+            "default_value": 235
         },
         "material_print_temperature": {
             "default_value": 235
         },
         "cool_fan_speed": {
-            "default_value": 0
+            "default_value": 100
         },
         "material_bed_temperature_layer_0": {
-            "default_value": 80
+            "default_value": 75
         },
         "material_flow_layer_0": {
             "default_value": 100
         },
         "material_bed_temperature": {
-            "default_value": 80
+            "default_value": 70
         },
         "material_diameter": {
             "default_value": 1.75
+        },
+        "material_final_print_temperature": {
+            "default_value": 235
+        },
+        "cool_fan_speed_min": {
+            "default_value": 100
+        },
+        "cool_fan_speed_max": {
+            "default_value": 100
         },
         "retraction_enable": {
             "default_value": true

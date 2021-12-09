@@ -9,6 +9,11 @@ import ConvexGeometry from '../three-extensions/ConvexGeometry';
 window.THREE = THREE;
 require('three/examples/js/utils/BufferGeometryUtils');
 
+type ExtruderConfig = {
+    infill: string,
+    shell: string,
+};
+
 export default class ThreeGroup extends BaseModel {
     estimatedTime: number = 0;
 
@@ -60,11 +65,9 @@ export default class ThreeGroup extends BaseModel {
 
     uploadName: string;
 
-    extruderConfig: Object = {
+    extruderConfig: ExtruderConfig = {
         infill: '0',
-        shell: '0',
-        // adhesion: '0',
-        // support: '0'
+        shell: '0'
     };
 
     config: Object;
@@ -101,6 +104,8 @@ export default class ThreeGroup extends BaseModel {
         if (models.length === 1) {
             ThreeUtils.liftObjectOnlyChildMatrix(this.meshObject);
             (this.meshObject as any).uniformScalingState = (this.meshObject.children[0] as any).uniformScalingState;
+            // update group extruder config
+            this.extruderConfig = models[0].extruderConfig as ExtruderConfig;
         } else if (models.length > 1) {
             let p;
             const boundingBoxTemp = ThreeUtils.computeBoundingBox(this.meshObject);
@@ -127,6 +132,20 @@ export default class ThreeGroup extends BaseModel {
             ThreeUtils.applyObjectMatrix(this.meshObject, matrix);
             children.map(obj => ThreeUtils.setObjectParent(obj, this.meshObject));
             (this.meshObject as any).uniformScalingState = true;
+            const tempExtruderConfig: ExtruderConfig = Object.assign({}, models[0].extruderConfig as ExtruderConfig);
+            for (const modelItem of models.slice(1)) {
+                const { infill, shell } = (modelItem.extruderConfig as ExtruderConfig);
+                if (infill !== tempExtruderConfig.infill && tempExtruderConfig.infill !== '2') {
+                    tempExtruderConfig.infill = '2';
+                }
+                if (shell !== tempExtruderConfig.shell && tempExtruderConfig.shell !== '2') {
+                    tempExtruderConfig.shell = '2';
+                }
+                if (tempExtruderConfig.infill === '2' && tempExtruderConfig.shell === '2') {
+                    break;
+                }
+            }
+            this.extruderConfig = tempExtruderConfig;
         }
     }
 

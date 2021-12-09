@@ -1,8 +1,8 @@
 {
-    "name": "ABS-White",
+    "name": "PLA-Black",
     "version": 2,
     "inherits": "snapmaker",
-    "category": "ABS",
+    "category": "PLA",
     "overrides": {
         "material_flow": {
             "default_value": 100
@@ -11,22 +11,22 @@
             "default_value": true
         },
         "material_print_temperature_layer_0": {
-            "default_value": 238
+            "default_value": 205
         },
         "material_print_temperature": {
-            "default_value": 235
+            "default_value": 205
         },
         "cool_fan_speed": {
-            "default_value": 0
+            "default_value": 100
         },
         "material_bed_temperature_layer_0": {
-            "default_value": 80
+            "default_value": 70
         },
         "material_flow_layer_0": {
             "default_value": 100
         },
         "material_bed_temperature": {
-            "default_value": 80
+            "default_value": 50
         },
         "material_diameter": {
             "default_value": 1.75

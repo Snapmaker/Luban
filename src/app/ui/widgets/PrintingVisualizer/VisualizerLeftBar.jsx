@@ -408,7 +408,7 @@ function VisualizerLeftBar({ defaultSupportSize, setTransformMode, isSupporting,
         const rightExtruderColor = status === '0' ? colorL : colorR;
         return (
             <div className="sm-flex justify-space-between margin-left-16 width-160 border-default-black-5 border-radius-8 padding-vertical-4 padding-left-8">
-                <span>{extruderLabelMap[status]}</span>
+                <span className="text-overflow-ellipsis">{i18n._(`key-Printing/LeftBar-${extruderLabelMap[status]}`)}</span>
                 <div className="sm-flex">
                     {renderExtruderIcon(leftExtruderColor, rightExtruderColor)}
                     <SvgIcon
