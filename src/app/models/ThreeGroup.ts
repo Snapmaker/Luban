@@ -151,6 +151,10 @@ export default class ThreeGroup extends BaseModel {
         return models;
     }
 
+    /**
+     * Experimental
+     * @returns THREE.BufferGeometry
+     */
     mergeGeometriesInGroup(): THREE.BufferGeometry {
         let geometry = new THREE.BufferGeometry();
         if (this.children.length > 0) {
@@ -177,8 +181,6 @@ export default class ThreeGroup extends BaseModel {
         });
     }
 
-    applyMatrixToChildren() {}
-
     get visible() {
         return this.meshObject.visible;
     }
@@ -187,6 +189,10 @@ export default class ThreeGroup extends BaseModel {
         this.meshObject.visible = value;
     }
 
+    /**
+     * Experimental
+     * @returns ModelTransformation
+     */
     onTransform() {
         const geometrySize = ThreeUtils.getGeometrySize(this.mergeGeometriesInGroup(), true);
         const { uniformScalingState } = this.meshObject as any;
@@ -306,6 +312,10 @@ export default class ThreeGroup extends BaseModel {
         return clone;
     }
 
+    /**
+     * Experimental
+     * @returns void
+     */
     autoRotate() {
         if (this.sourceType !== '3d' || !this.convexGeometry) {
             return;
@@ -374,6 +384,10 @@ export default class ThreeGroup extends BaseModel {
         revertParent();
     }
 
+    /**
+     * Experimental
+     * @returns void
+     */
     rotateByPlane(targetPlane: THREE.Plane) {
         const xyPlaneNormal = new THREE.Vector3(0, 0, -1);
         const revertParent = ThreeUtils.removeObjectParent(this.meshObject);
@@ -386,6 +400,10 @@ export default class ThreeGroup extends BaseModel {
         revertParent();
     }
 
+    /**
+     * Experimental
+     * @returns void
+     */
     computeConvex() {
         const bufferGeometry = this.mergeGeometriesInGroup();
         const positions = bufferGeometry.getAttribute('position').array;
@@ -399,6 +417,10 @@ export default class ThreeGroup extends BaseModel {
         this.setConvexGeometry(convexGeometry as unknown as THREE.Geometry);
     }
 
+    /**
+     * Experimental
+     * @returns Object
+     */
     analyzeRotation() {
         if (this.sourceType !== '3d' || !this.convexGeometry) {
             return null;
@@ -458,6 +480,10 @@ export default class ThreeGroup extends BaseModel {
         return result;
     }
 
+    /**
+     * Experimental
+     * @returns void
+     */
     setSupportPosition(position: THREE.Vector3) {
         const object = this.meshObject;
         object.position.copy(position);
@@ -465,8 +491,16 @@ export default class ThreeGroup extends BaseModel {
         this.generateSupportGeometry();
     }
 
+    /**
+     * Experimental
+     * @returns void
+     */
     generateSupportGeometry() {}
 
+    /**
+     * Experimental
+     * @returns void
+     */
     setVertexColors() {
         this.meshObject.updateMatrixWorld();
         const bufferGeometry = this.mergeGeometriesInGroup();
@@ -509,6 +543,10 @@ export default class ThreeGroup extends BaseModel {
         setTimeout(worker, 10);
     }
 
+    /**
+     * Experimental
+     * @returns void
+     */
     removeVertexColors() {
         const bufferGeometry = this.mergeGeometriesInGroup();
         bufferGeometry.deleteAttribute('color');
