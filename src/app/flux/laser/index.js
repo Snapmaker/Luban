@@ -126,6 +126,7 @@ const INITIAL_STATE = {
         uploadName: '',
         originalName: '',
         modelInitSize: { x: 0, y: 0, z: 0 },
+        initScale: 1,
         svgInfo: [],
         stlInfo: {}
     },

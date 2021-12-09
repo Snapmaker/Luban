@@ -1001,12 +1001,14 @@ export const actions = {
         const toolPaths = toolPathGroup.getToolPaths();
         const emptyToolPaths = [];
         toolPaths.forEach((item) => {
-            for (const id of item.modelIDs) {
-                if (!selectedModelIDArray.includes(id) && allModelIDs.includes(id)) {
-                    return;
+            if (item.modelIDs && item.modelIDs.length) {
+                for (const id of item.modelIDs) {
+                    if (!selectedModelIDArray.includes(id) && allModelIDs.includes(id)) {
+                        return;
+                    }
                 }
+                emptyToolPaths.push(item);
             }
-            emptyToolPaths.push(item);
         });
         if (emptyToolPaths.length === 0) {
             removingModelsWarningCallback();
@@ -1974,11 +1976,20 @@ export const actions = {
         const {
             cutModelInfo: {
                 svgInfo
-            }
+            },
+            coordinateSize
         } = getState()[headType];
         const mode = PROCESS_MODE_VECTOR;
         svgInfo.forEach((svgFileInfo, index) => {
-            const width = svgFileInfo.width, height = svgFileInfo.height;
+            let width = svgFileInfo.width, height = svgFileInfo.height;
+            if (width > coordinateSize.x) {
+                height *= coordinateSize.x / width;
+                width = coordinateSize.x;
+            }
+            if (height > coordinateSize.y) {
+                width *= coordinateSize.y / height;
+                height = coordinateSize.y;
+            }
             const uploadName = svgFileInfo.filename, originalName = `${index}.svg`;
             dispatch(actions.generateModel(headType, originalName, uploadName, width, height, mode, undefined, { svgNodeName: 'image' }));
         });
@@ -2068,11 +2079,12 @@ export const actions = {
                                 z: box3.max.z - box3.min.z
                             };
 
+                            let scale = 1;
                             const MAX_Z = 500;
                             const canvasRange = { x: coordinateSize.x, y: coordinateSize.y, z: MAX_Z };
                             if (box3.max.x - box3.min.x > canvasRange.x || box3.max.y - box3.min.y > canvasRange.y) {
                                 const _scale = findSuitableScale(Infinity, canvasRange);
-                                const scale = 0.9 * _scale;
+                                scale = 0.9 * _scale;
                                 geometry.scale(scale, scale, scale);
                                 geometry.computeBoundingBox();
                                 box3 = geometry.boundingBox;
@@ -2085,7 +2097,7 @@ export const actions = {
                             dispatch(actions.updateState(headType, {
                                 showImportStackedModelModal: true,
                                 cutModelInfo: {
-                                    originalName, uploadName, modelInitSize
+                                    originalName, uploadName, modelInitSize, initScale: scale
                                 }
                             }));
                             dispatch(actions.updateState(headType, {
