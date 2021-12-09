@@ -129,7 +129,7 @@ function Cnc({ location }) {
         coordinateSize,
         materials
     });
-    const { isRotate } = materials;
+    const [isRotate, setIsRotate] = useState(materials?.isRotate);
     const dispatch = useDispatch();
     const history = useHistory();
     const page = useSelector(state => state?.cnc.page);
@@ -153,11 +153,11 @@ function Cnc({ location }) {
     }, [coordinateMode, coordinateSize, materials]);
 
     useEffect(() => {
-        if (location?.state?.shouldShowJobType) {
-            setShowJobType(true);
-        } else {
-            setShowJobType(false);
-        }
+        setIsRotate(!!location?.state?.isRotate);
+    }, [location?.state?.isRotate]);
+
+    useEffect(() => {
+        setShowJobType(!!location?.state?.shouldShowJobType);
     }, [location?.state?.shouldShowJobType]);
 
     useEffect(() => {
@@ -259,8 +259,8 @@ function Cnc({ location }) {
             let pathConfig = {};
             if (isRotate) {
                 pathConfig = {
-                    path: './UserCase/cnc/a250_standard/cnc_4th_a250a350_standard.snapcnc',
-                    name: 'cnc_4th_a250a350_standard.snapcnc'
+                    path: './UserCase/cnc/a250_standard/cnc_4th_a250a350_chess.snapcnc',
+                    name: 'cnc_4th_a250a350_chess.snapcnc'
                 };
             } else {
                 switch (series) {
@@ -309,6 +309,84 @@ function Cnc({ location }) {
     function handleExit() {
         setEnabledIntro(false);
     }
+
+    const renderStep = () => {
+        const stepArr = [
+            {
+                intro: isRotate ? cnc4AxisStepOne(
+                    i18n._('key-Cnc/Page-Set the work size and where the work origin will be.'),
+                    i18n._('key-Cnc/Page-D is the diameter of the material,  and L is the length of the material.'),
+                    i18n._('key-Cnc/Page-Origin is fixed at the center of the cross-section of the cylinder, far way from the chuck.')
+                ) : laserCncIntroStepOne(
+                    i18n._('key-Cnc/Page-Set the work size and where the work origin will be.'),
+                    i18n._('key-Cnc/Page-X is the width of the material,  and Y is the height of the material.'),
+                    i18n._('key-Cnc/Page-Origin can be set at any corner or the middle of the job. This point (X0, Y0) is the origin of the design coordinate system. It also represents the origin of the workpiece coordinate system that you should set on the material using the machine tool.')
+                ),
+                title: `${i18n._('key-Cnc/Page-Job Setup')} (1/8)`
+            }, {
+                element: '.cnc-tool-bar-open-icon',
+                title: `${i18n._('key-Cnc/Page-Import Object')} (2/8)`,
+                intro: laserCncIntroStepTwo(i18n._('key-Cnc/Page-Import an object, or drag an object to Luban.')),
+                disableInteraction: true,
+                tooltipClass: 'cnc-import-intro',
+                position: 'right'
+            }, {
+                element: '.cnc-draw-intro-part',
+                title: `${i18n._('key-Cnc/Page-Draw Object')} (3/8)`,
+                intro: laserCncIntroStepTwo(i18n._('key-Cnc/Page-Alternatively, you can draw simple objects or add text for laser engrave or CNC carve.')),
+                disableInteraction: true,
+                tooltipClass: 'cnc-draw-intro',
+                position: 'right'
+            }, {
+            // element: '.laser-intro-edit-panel',
+                element: '.widget-list-intro',
+                title: `${i18n._('key-Cnc/Page-Edit Panel')} (4/8)`,
+                intro: laserCncIntroStepTwo(i18n._('key-Cnc/Page-The Edit panel shows the property related to object. When an object is selected, Luban displays this panel where you can transform the object, switch the Processing Mode, or enter the Process Panel.')),
+                disableInteraction: true,
+                tooltipClass: 'cnc-edit-panel-intro',
+                position: 'left'
+            }, {
+                element: '.cnc-widget-list-intro',
+                title: `${i18n._('key-Cnc/Page-Process Panel')} (5/8)`,
+                intro: laserCncIntroStepFive(
+                    i18n._('key-Cnc/Page-The Process panel shows the Toolpath List and the relevant property of the toolpath.'),
+                    i18n._('key-Cnc/Page-After the selected object is edited, click Create Toolpath to create a toolpath of the object. Below the Toolpath List are the parameters you often use.'),
+                    i18n._('key-Cnc/Page-Create Toolpath')
+                ),
+                disableInteraction: true,
+                position: 'left'
+            }, {
+                element: '.cnc-preview-export-intro-part',
+                title: `${i18n._('key-Cnc/Page-Generate G-code and Preview')} (6/8)`,
+                position: 'top',
+                disableInteraction: true,
+                intro: laserCncIntroStepSix(
+                    i18n._('key-Cnc/Page-Click to generate and preview the G-code file.'),
+                    i18n._('key-Cnc/Page-For laser engraving, you can preview the toolpath. For CNC carving, you can preview the toolpath and simulate the operation result.'),
+                    // isRotate ? '/resources/images/guide-tours/cnc_4_axis_priview.png' : '/resources/images/guide-tours/cnc_3_axis_priview.png'
+                    isRotate,
+                    series,
+                    'cnc'
+                )
+            }, {
+                element: '.cnc-preview-export-intro-part',
+                title: `${i18n._('key-Cnc/Page-Export')} (7/8)`,
+                position: 'top',
+                disableInteraction: true,
+                intro: laserCncIntroStepTwo(
+                    i18n._('key-Cnc/Page-Export the G-code file to a local device or load it to Workspace. Use Touchscreen or Luban to start laser engraving or CNC carving.')
+                )
+            }, {
+                element: '.cnc-laser-save-icon',
+                title: `${i18n._('key-Cnc/Page-Save Project')} (8/8)`,
+                position: 'bottom',
+                disableInteraction: true,
+                intro: laserCncIntroStepTwo(i18n._('key-Cnc/Page-Save the project to a local device for reuse.'))
+            }
+        ];
+        return stepArr;
+    };
+
     return (
         <div>
             <ProjectLayout
@@ -335,79 +413,7 @@ function Cnc({ location }) {
                             onChange={handleChange}
                             onBeforeChange={handleBeforeChange}
                             onExit={handleExit}
-                            steps={[
-                                {
-                                    intro: isRotate ? cnc4AxisStepOne(
-                                        i18n._('key-Cnc/Page-Set the work size and where the work origin will be.'),
-                                        i18n._('key-Cnc/Page-D is the diameter of the material,  and L is the length of the material.'),
-                                        i18n._('key-Cnc/Page-Origin is fixed at the center of the cross-section of the cylinder, far way from the chuck.')
-                                    ) : laserCncIntroStepOne(
-                                        i18n._('key-Cnc/Page-Set the work size and where the work origin will be.'),
-                                        i18n._('key-Cnc/Page-X is the width of the material,  and Y is the height of the material.'),
-                                        i18n._('key-Cnc/Page-Origin can be set at any corner or the middle of the job. This point (X0, Y0) is the origin of the design coordinate system. It also represents the origin of the workpiece coordinate system that you should set on the material using the machine tool.')
-                                    ),
-                                    title: `${i18n._('key-Cnc/Page-Job Setup')} (1/8)`
-                                }, {
-                                    element: '.cnc-tool-bar-open-icon',
-                                    title: `${i18n._('key-Cnc/Page-Import Object')} (2/8)`,
-                                    intro: laserCncIntroStepTwo(i18n._('key-Cnc/Page-Import an object, or drag an object to Luban.')),
-                                    disableInteraction: true,
-                                    tooltipClass: 'cnc-import-intro',
-                                    position: 'right'
-                                }, {
-                                    element: '.cnc-draw-intro-part',
-                                    title: `${i18n._('key-Cnc/Page-Draw Object')} (3/8)`,
-                                    intro: laserCncIntroStepTwo(i18n._('key-Cnc/Page-Alternatively, you can draw simple objects or add text for laser engrave or CNC carve.')),
-                                    disableInteraction: true,
-                                    tooltipClass: 'cnc-draw-intro',
-                                    position: 'right'
-                                }, {
-                                // element: '.laser-intro-edit-panel',
-                                    element: '.widget-list-intro',
-                                    title: `${i18n._('key-Cnc/Page-Edit Panel')} (4/8)`,
-                                    intro: laserCncIntroStepTwo(i18n._('key-Cnc/Page-The Edit panel shows the property related to object. When an object is selected, Luban displays this panel where you can transform the object, switch the Processing Mode, or enter the Process Panel.')),
-                                    disableInteraction: true,
-                                    tooltipClass: 'cnc-edit-panel-intro',
-                                    position: 'left'
-                                }, {
-                                    element: '.cnc-widget-list-intro',
-                                    title: `${i18n._('key-Cnc/Page-Process Panel')} (5/8)`,
-                                    intro: laserCncIntroStepFive(
-                                        i18n._('key-Cnc/Page-The Process panel shows the Toolpath List and the relevant property of the toolpath.'),
-                                        i18n._('key-Cnc/Page-After the selected object is edited, click Create Toolpath to create a toolpath of the object. Below the Toolpath List are the parameters you often use.'),
-                                        i18n._('key-Cnc/Page-Create Toolpath')
-                                    ),
-                                    disableInteraction: true,
-                                    position: 'left'
-                                }, {
-                                    element: '.cnc-preview-export-intro-part',
-                                    title: `${i18n._('key-Cnc/Page-Generate G-code and Preview')} (6/8)`,
-                                    position: 'top',
-                                    disableInteraction: true,
-                                    intro: laserCncIntroStepSix(
-                                        i18n._('key-Cnc/Page-Click to generate and preview the G-code file.'),
-                                        i18n._('key-Cnc/Page-For laser engraving, you can preview the toolpath. For CNC carving, you can preview the toolpath and simulate the operation result.'),
-                                        // isRotate ? '/resources/images/guide-tours/cnc_4_axis_priview.png' : '/resources/images/guide-tours/cnc_3_axis_priview.png'
-                                        isRotate,
-                                        series,
-                                        'cnc'
-                                    )
-                                }, {
-                                    element: '.cnc-preview-export-intro-part',
-                                    title: `${i18n._('key-Cnc/Page-Export')} (7/8)`,
-                                    position: 'top',
-                                    disableInteraction: true,
-                                    intro: laserCncIntroStepTwo(
-                                        i18n._('key-Cnc/Page-Export the G-code file to a local device or load it to Workspace. Use Touchscreen or Luban to start laser engraving or CNC carving.')
-                                    )
-                                }, {
-                                    element: '.cnc-laser-save-icon',
-                                    title: `${i18n._('key-Cnc/Page-Save Project')} (8/8)`,
-                                    position: 'bottom',
-                                    disableInteraction: true,
-                                    intro: laserCncIntroStepTwo(i18n._('key-Cnc/Page-Save the project to a local device for reuse.'))
-                                }
-                            ]}
+                            steps={renderStep()}
                         />
                     )}
                 </Dropzone>

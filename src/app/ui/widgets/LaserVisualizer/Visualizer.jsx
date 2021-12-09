@@ -339,7 +339,7 @@ class Visualizer extends Component {
     componentWillReceiveProps(nextProps) {
         const { renderingTimestamp, isOverSize } = nextProps;
 
-        if (!isEqual(nextProps.size, this.props.size) || !isEqual(nextProps.materials, this.props.materials)) {
+        if (!isEqual(nextProps.size, this.props.size)) {
             const { size, materials } = nextProps;
             this.printableArea.updateSize(size, materials);
             this.canvas.current.setCamera(new THREE.Vector3(0, 0, VISUALIZER_CAMERA_HEIGHT), new THREE.Vector3());
@@ -367,7 +367,7 @@ class Visualizer extends Component {
             }
         }
 
-        if (nextProps.coordinateMode !== this.props.coordinateMode) {
+        if (nextProps.coordinateMode !== this.props.coordinateMode || !isEqual(nextProps.materials, this.props.materials)) {
             const { size, materials, coordinateMode } = nextProps;
             this.printableArea = new PrintablePlate(size, materials, coordinateMode);
             this.actions.autoFocus();

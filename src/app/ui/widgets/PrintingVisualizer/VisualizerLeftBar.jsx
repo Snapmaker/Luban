@@ -164,6 +164,7 @@ function VisualizerLeftBar({ defaultSupportSize, setTransformMode, isSupporting,
                 default:
                     break;
             }
+            updateBoundingBox();
         },
         onModelAfterTransform: () => {
             dispatch(printingActions.onModelAfterTransform());

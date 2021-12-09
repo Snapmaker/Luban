@@ -74,7 +74,7 @@ function SerialConnection() {
 
     function onPortOpened(options) {
         const { port: _port, err: _err } = options;
-        if (err && err !== 'inuse') {
+        if (_err && _err !== 'inuse') {
             setErr(i18n._('key-workspace_open_port-Can not open this port'));
             log.error(`Error opening serial port '${_port}'`, _err);
 
