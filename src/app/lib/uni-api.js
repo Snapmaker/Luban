@@ -1,6 +1,7 @@
 import isElectron from 'is-electron';
 import request from 'superagent';
 import FileSaver from 'file-saver';
+import { isNil } from 'lodash';
 import events from 'events';
 import path from 'path';
 import i18n from './i18n';
@@ -231,13 +232,19 @@ const File = {
 
     // export file for 3dp/laser/cnc
     async exportAs(targetFile, tmpFile, renderGcodeFileName) {
-        if (renderGcodeFileName === '') {
+        if (isNil(renderGcodeFileName)) {
             renderGcodeFileName = targetFile;
+        } else {
+            if (renderGcodeFileName.slice(renderGcodeFileName.length - 9) === '.def.json') {
+                renderGcodeFileName = renderGcodeFileName.slice(renderGcodeFileName.length - 9);
+            } else {
+                renderGcodeFileName = path.basename(renderGcodeFileName);
+            }
         }
         if (isElectron()) {
             const fs = window.require('fs');
             const { app } = window.require('electron').remote;
-            const defaultPath = path.resolve(app.getPath('downloads'), path.basename(renderGcodeFileName));
+            const defaultPath = path.resolve(app.getPath('downloads'), renderGcodeFileName);
             tmpFile = app.getPath('userData') + tmpFile;
             // eslint-disable-next-line no-use-before-define
             const saveDialogReturnValue = await Dialog.showSaveDialog({
