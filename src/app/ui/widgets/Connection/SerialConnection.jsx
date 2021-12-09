@@ -73,7 +73,6 @@ function SerialConnection() {
     }
 
     function onPortOpened(options) {
-        console.log({ options });
         const { port: _port, err: _err } = options;
         if (_err && _err !== 'inuse') {
             setErr('Can not open this port');

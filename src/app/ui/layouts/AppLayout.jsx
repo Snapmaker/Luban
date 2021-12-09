@@ -451,7 +451,7 @@ class AppLayout extends PureComponent {
                 const oldPathname = this.props.history.location.pathname;
                 const history = this.props.history;
                 const { toolHead, series } = this.props.machineInfo;
-                await this.props.startProject(oldPathname, `/${headType}`, history);
+                await this.props.startProject(oldPathname, `/${headType}`, history, isRotate);
                 await this.props.updateMachineToolHead(toolHead, series, headType);
                 if (headType === HEAD_CNC || headType === HEAD_LASER) {
                     if (!isRotate) {
@@ -635,7 +635,7 @@ const mapDispatchToProps = (dispatch) => {
         save: (headType, dialogOptions) => dispatch(projectActions.save(headType, dialogOptions)),
         saveAndClose: (headType, opts) => dispatch(projectActions.saveAndClose(headType, opts)),
         openProject: (file, history) => dispatch(projectActions.openProject(file, history)),
-        startProject: (from, to, history) => dispatch(projectActions.startProject(from, to, history)),
+        startProject: (from, to, history, isRotate) => dispatch(projectActions.startProject(from, to, history, false, isRotate)),
         updateRecentProject: (arr, type) => dispatch(projectActions.updateRecentFile(arr, type)),
         changeCoordinateMode: (headType, coordinateMode, coordinateSize) => dispatch(editorActions.changeCoordinateMode(headType, coordinateMode, coordinateSize)),
         updateMaterials: (headType, newMaterials) => dispatch(editorActions.updateMaterials(headType, newMaterials)),

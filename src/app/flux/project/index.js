@@ -412,7 +412,7 @@ export const actions = {
         }
     },
 
-    startProject: (from, to, history, restartGuide = false) => async (dispatch, getState) => {
+    startProject: (from, to, history, restartGuide = false, isRotate = false) => async (dispatch, getState) => {
         const newHeadType = getCurrentHeadType(to);
         const oldHeadType = getCurrentHeadType(from) || newHeadType;
         if (oldHeadType === null) {
@@ -437,7 +437,7 @@ export const actions = {
         let isGuideTours = false;
         let shouldShowGuideTours = false;
         const toPath = to.slice(1);
-        const isRotate = getState()[toPath]?.materials?.isRotate;
+        isRotate = restartGuide ? getState()[toPath]?.materials?.isRotate : isRotate;
         if (from === to) {
             const currentGuideTours = machineStore.get('guideTours');
             history.push({
@@ -477,7 +477,8 @@ export const actions = {
             pathname: to,
             state: {
                 shouldShowJobType: restartGuide ? false : !!isGuideTours,
-                shouldShowGuideTours: to === from ? (!shouldShowGuideTours || restartGuide) : (!isGuideTours || restartGuide)
+                shouldShowGuideTours: to === from ? (!shouldShowGuideTours || restartGuide) : (!isGuideTours || restartGuide),
+                isRotate: isRotate
             }
         });
 
