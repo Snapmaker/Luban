@@ -128,6 +128,7 @@ i18n._('key-Cnc/StlSection/orientation_Bottom-Bottom');
 i18n._('Allowance');
 i18n._('Set the amount of the material remaining on the object that needs to be carved in future operations.');
 i18n._('Slicing Mode');
+i18n._('Select the slicing mode of the mesh toolpath');
 i18n._('Method');
 i18n._('Target Depth');
 i18n._('Set the depth of the object to be carved. The depth should be smaller than the flute length.');
@@ -153,6 +154,11 @@ i18n._('Jog Speed');
 i18n._('Set the speed at which the tool moves on the material when it is not carving.');
 i18n._('Stepdown');
 i18n._('Set the distance along the Z axis per step that the tool is plunged into the material.');
+
+i18n._('On the Path');
+i18n._('Outline');
+i18n._('Fill');
+i18n._('Set the processing method of the object.\n -On the Path: Carves along the shape of the object. \n -Outline: Carves along the outline of the object.\n -Fill: Carves away the inner area of the object.');
 
 // Laser ToolPath
 i18n._('key-Laser/ToolpathParameters-Method');
@@ -204,6 +210,7 @@ i18n._('key-default_name-High Quality');
 i18n._('key-default_category-Default Material');
 i18n._('key-default_category-Acrylic');
 i18n._('key-default_category-Epoxy Tooling Board');
+i18n._('key-default_category-Default Preset');
 
 i18n._('key-default_category-Basswood');
 i18n._('key-default_category-Black Acrylic');

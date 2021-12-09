@@ -4,7 +4,7 @@ import mkdirp from 'mkdirp';
 import { includes } from 'lodash';
 import { app } from 'electron';
 import isElectron from 'is-electron';
-// import semver from 'semver';
+import semver from 'semver';
 import { CNC_CONFIG_SUBCATEGORY, LASER_CONFIG_SUBCATEGORY, PRINTING_CONFIG_SUBCATEGORY } from './constants';
 import { cncUniformProfile } from './lib/profile/cnc-uniform-profile';
 import logger from './lib/logger';
@@ -90,11 +90,11 @@ class DataStorage {
 
      async init() {
          const definitionUpdated = config.get('DefinitionUpdated');
-         let inherit = false;
-         if (settings.version.substr(0, 3) === '4.1' && (!definitionUpdated || !definitionUpdated['4.1'])) {
-             inherit = true;
+         let overwriteProfiles = false;
+         if (semver.gte(settings.version, '4.1.0') && (!definitionUpdated || !definitionUpdated['4.1.0'])) {
+             overwriteProfiles = true;
              config.set('DefinitionUpdated', {
-                 '4.1': true
+                 '4.1.0': true
              });
          }
          mkdirp.sync(this.envDir);
@@ -108,7 +108,7 @@ class DataStorage {
          rmDir(this.tmpDir, false);
          rmDir(this.sessionDir, false);
 
-         await this.initSlicer(inherit);
+         await this.initSlicer(overwriteProfiles);
          await this.initEnv();
 
          await this.initFonts();
@@ -253,7 +253,8 @@ class DataStorage {
          }
      }
 
-     async initSlicer(inherit = false) {
+     async initSlicer(overwriteProfiles = false) {
+         overwriteProfiles && rmDir(this.configDir);
          mkdirp.sync(this.configDir);
          mkdirp.sync(this.defaultConfigDir);
          mkdirp.sync(`${this.configDir}/${CNC_CONFIG_SUBCATEGORY}`);
@@ -261,8 +262,8 @@ class DataStorage {
          mkdirp.sync(`${this.configDir}/${PRINTING_CONFIG_SUBCATEGORY}`);
 
          const CURA_ENGINE_CONFIG_LOCAL = '../resources/CuraEngine/Config';
-         this.upgradeConfigFile(this.configDir);
-         await this.copyDirForInitSlicer(CURA_ENGINE_CONFIG_LOCAL, this.configDir, true, inherit);
+         // this.upgradeConfigFile(this.configDir);
+         await this.copyDirForInitSlicer(CURA_ENGINE_CONFIG_LOCAL, this.configDir, true, overwriteProfiles);
          await this.copyDirForInitSlicer(CURA_ENGINE_CONFIG_LOCAL, this.defaultConfigDir, true, true);
      }
 
