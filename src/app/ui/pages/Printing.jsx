@@ -168,6 +168,15 @@ function useRenderMainToolBar() {
                 }
             },
             {
+                title: i18n._('key-3DP/MainToolBar-Parts Align'),
+                disabled: !canGroup || !enableShortcut,
+                type: 'button',
+                name: 'MainToolbarUngroup',
+                action: () => {
+                    dispatch(printingActions.groupAndAlign());
+                }
+            },
+            {
                 title: i18n._('key-3DP/MainToolBar-Group'),
                 disabled: !canGroup || !enableShortcut,
                 type: 'button',

@@ -749,6 +749,7 @@ class ModelGroup extends EventEmitter {
                 newModel.computeBoundingBox();
 
                 newModel.modelID = modelID || uuid.v4();
+                console.log('newModel', newModel);
             } else {
                 newModel.meshObject.addEventListener('update', this.onModelUpdate);
                 newModel.modelID = modelID || uuid.v4();
@@ -945,6 +946,44 @@ class ModelGroup extends EventEmitter {
         });
     }
 
+    updateModelsPositionBaseFirstModel(models) {
+        if (models && models.length > 0) {
+            const firstModel = models[0];
+            models.forEach((model) => {
+                const newPosition = {
+                    x: model.originalPosition.x - firstModel.originalPosition.x + firstModel.transformation.positionX,
+                    y: model.originalPosition.y - firstModel.originalPosition.y + firstModel.transformation.positionY,
+                    z: model.originalPosition.z - firstModel.originalPosition.z + firstModel.transformation.positionZ,
+                };
+                model.updateTransformation({
+                    positionX: newPosition.x,
+                    positionY: newPosition.y,
+                    positionZ: newPosition.z,
+                });
+                model.meshObject.position.x = newPosition.x;
+                model.meshObject.position.y = newPosition.y;
+                model.meshObject.position.z = newPosition.z;
+            });
+            this.selectedGroup.updateMatrix();
+        }
+    }
+
+    updateModelPositionByPosition(modelID, position) {
+        console.log('modelID, position', modelID, position);
+        if (modelID) {
+            const model = this.models.find(d => d.modelID === modelID);
+            model.updateTransformation({
+                positionX: position.x,
+                positionY: position.y,
+                positionZ: position.z,
+            });
+            model.meshObject.position.x = position.x;
+            model.meshObject.position.y = position.y;
+            model.meshObject.position.z = position.z;
+            this.selectedGroup.updateMatrix();
+        }
+    }
+
     /**
      * Update transformation of selected group.
      *
@@ -1066,10 +1105,10 @@ class ModelGroup extends EventEmitter {
 
     // model transformation triggered by controls
     // Note: the function is only useful for 3D object operations on Canvas
-    onModelAfterTransform() {
+    onModelAfterTransform(shouldStickToPlate = true) {
         const selectedModelArray = this.selectedModelArray;
         selectedModelArray.forEach((selected) => {
-            if (selected.sourceType === '3d') {
+            if (selected.sourceType === '3d' && shouldStickToPlate) {
                 selected.stickToPlate();
             }
             if (selected.supportTag && selected.isSelected) {
@@ -1695,14 +1734,16 @@ class ModelGroup extends EventEmitter {
     group() {
         const selectedModelArray = this.selectedModelArray.slice(0);
         this.unselectAllModels();
+        const group = new ThreeGroup({}, this);
         // check visible models or groups
         if (selectedModelArray.some(model => model.visible)) {
             // insert group to the first model position in selectedModelArray
             const indexesOfSelectedModels = selectedModelArray.map(model => {
-                return this.models.indexOf(model);
+                return this.models.findIndex(element => {
+                    return element.modelID === model.modelID;
+                });
             });
             const modelsToGroup = this._flattenGroups(selectedModelArray);
-            const group = new ThreeGroup({}, this);
             group.modelName = this._createNewModelName(group);
             group.add(modelsToGroup);
             const insertIndex = Math.min(indexesOfSelectedModels);
@@ -1713,7 +1754,10 @@ class ModelGroup extends EventEmitter {
             this.addModelToSelectedGroup(group);
             group.stickToPlate();
         }
-        return this.getState();
+        return {
+            newGroup: group,
+            modelState: this.getState()
+        };
     }
 
     canGroup() {

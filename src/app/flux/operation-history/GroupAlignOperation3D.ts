@@ -9,11 +9,12 @@ type GroupState = {
     modelsafterGroup: Model[],
     selectedModels: ThreeModel[] | ThreeGroup[],
     groupChildrenMap: Map<ThreeGroup, ThreeModel[]>
+    selectedModelsPositionMap: Map<string, any>
     target: ThreeGroup,
     modelGroup: ModelGroup
 };
 
-export default class GroupOperation3D extends Operation {
+export default class GroupAlginOperation3D extends Operation {
     state: GroupState;
 
     constructor(state) {
@@ -23,6 +24,7 @@ export default class GroupOperation3D extends Operation {
             modelsafterGroup: [],
             selectedModels: [],
             groupChildrenMap: new Map(),
+            selectedModelsPositionMap: new Map(),
             target: null,
             modelGroup: null,
             ...state
@@ -32,8 +34,11 @@ export default class GroupOperation3D extends Operation {
     redo() {
         const target = this.state.target;
         const modelGroup = this.state.modelGroup;
+        const selectedModels = this.state.selectedModels;
 
         modelGroup.unselectAllModels();
+        modelGroup.updateModelsPositionBaseFirstModel(selectedModels);
+
         const modelsToGroup = [];
         this.state.selectedModels.forEach(model => {
             if (model instanceof ThreeGroup) {
@@ -43,8 +48,9 @@ export default class GroupOperation3D extends Operation {
                 modelsToGroup.push(model);
             }
         });
-        console.log('redo ', target);
+        console.log('redo align', target);
         target.add(modelsToGroup);
+        target.stickToPlate();
         modelGroup.object.add(target.meshObject);
         modelGroup.models = [...this.state.modelsafterGroup];
     }
@@ -58,9 +64,8 @@ export default class GroupOperation3D extends Operation {
         modelGroup.ungroup();
 
         modelGroup.unselectAllModels();
-        this.state.groupChildrenMap.forEach((subModels, group) => {
-            group.add(subModels);
-            modelGroup.object.add(group.meshObject);
+        this.state.selectedModelsPositionMap.forEach((position, modelID) => {
+            modelGroup.updateModelPositionByPosition(modelID, position);
         });
         console.log('this.state.modelsbeforeGroup', modelGroup, this.state.modelsbeforeGroup);
         modelGroup.models = [...this.state.modelsbeforeGroup];
