@@ -37,13 +37,16 @@ export function serverStartDevelopment(cb) {
 
     nodemon({
         restartable: 'rs',
-        script: './bin/cli',
+        script: './output/main',
+        // script: './bin/cli',
         args: args,
         ignore: [
             '.git',
             'node_modules/**/node_modules'
         ],
         verbose: true,
+        exec: 'electron --inspect',
+        // exec: 'electron --inspect-brk',
         execMap: {
             'js': 'node --harmony'
         },
@@ -59,7 +62,10 @@ export function serverStartDevelopment(cb) {
         },
         ext: 'js json ts',
         tasks: ['serverBuildDevelopment'],
-        done: cb
+        done: cb,
+        stdout: false
+    }).on('readable', function() {
+        this.stdout.pipe(process.stdout);
     });
 }
 

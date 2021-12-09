@@ -2,6 +2,7 @@ import webpack from 'webpack';
 import webpackDevMiddleware from 'webpack-dev-middleware';
 import webpackHotMiddleware from 'webpack-hot-middleware';
 import config from '../../webpack.config.app.development';
+import electron from 'electron';
 
 const webpackDevServer = (app) => {
     // https://github.com/webpack/webpack-dev-middleware
@@ -9,7 +10,7 @@ const webpackDevServer = (app) => {
 
     // https://github.com/webpack/webpack-dev-middleware
     // webpack-dev-middleware handle the files in memory.
-    app.use(webpackDevMiddleware(compiler, {
+    const devMiddleware = webpackDevMiddleware(compiler, {
         lazy: false,
         // https://webpack.github.io/docs/node.js-api.html#compiler
         watchOptions: {
@@ -20,7 +21,13 @@ const webpackDevServer = (app) => {
         stats: {
             colors: true
         }
-    }));
+    });
+    devMiddleware.waitUntilValid(() => {
+        electron.BrowserWindow.getAllWindows().forEach(window => {
+            window.webContents.reload();
+        });
+    });
+    app.use(devMiddleware);
 
     app.use(webpackHotMiddleware(compiler));
 };
