@@ -7,6 +7,7 @@ import isElectron from 'is-electron';
 import Mousetrap from 'mousetrap';
 import i18next from 'i18next';
 import classNames from 'classnames';
+import { cloneDeep } from 'lodash';
 import { renderModal } from '../utils';
 import AppBar from '../views/AppBar';
 import i18n from '../../lib/i18n';
@@ -265,7 +266,8 @@ class AppLayout extends PureComponent {
             const outputObject = new Group();
             this.props.modelGroup.models.forEach(item => {
                 if (item.visible) {
-                    outputObject.add(item.meshObject);
+                    const tempMeshObject = cloneDeep(item.meshObject);
+                    outputObject.add(tempMeshObject);
                 }
             });
             const output = new ModelExporter().parse(outputObject, format, isBinary);
