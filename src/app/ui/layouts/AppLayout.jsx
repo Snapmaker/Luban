@@ -231,7 +231,7 @@ class AppLayout extends PureComponent {
         },
         closeFile: async () => {
             const currentHeadType = getCurrentHeadType(this.props.history.location.pathname);
-            const message = i18n._('Save the changes you made in the {{headType}} G-code Generator? Your changes will be lost if you don’t save them.', { headType: HEAD_TYPE_ENV_NAME[currentHeadType] });
+            const message = i18n._('Save the changes you made in the {{headType}} G-code Generator? Your changes will be lost if you don’t save them.', { headType: i18n._(HEAD_TYPE_ENV_NAME[currentHeadType]) });
             if (currentHeadType) {
                 await this.props.saveAndClose(currentHeadType, { message });
             }

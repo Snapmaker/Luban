@@ -123,6 +123,7 @@ class ChangedReactSelect extends PureComponent {
             return (
                 <div className={classNames(styles['override-select'], className)}>
                     <Select
+                        emptyText=""
                         className={styles[size]}
                         value={defaultValue?.value}
                         showSearch={showSearch}

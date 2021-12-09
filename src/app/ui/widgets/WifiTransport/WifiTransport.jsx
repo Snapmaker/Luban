@@ -385,9 +385,6 @@ function WifiTransport({ widgetActions, controlActions }) {
             }
         },
         onChangeLaserPrintMode: async () => {
-            if (isLaserPrintAutoMode) {
-                await actions.onChangeMaterialThickness(0);
-            }
             dispatch(machineActions.updateIsLaserPrintAutoMode(!isLaserPrintAutoMode));
         },
 
@@ -410,7 +407,6 @@ function WifiTransport({ widgetActions, controlActions }) {
         }
         if (isRotate) {
             dispatch(machineActions.updateIsLaserPrintAutoMode(false));
-            dispatch(machineActions.updateMaterialThickness(0));
         }
     }, [isRotate, connectionType, toolHeadName]);
 

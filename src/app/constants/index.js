@@ -335,12 +335,12 @@ export const CNC_DEFAULT_GCODE_PARAMETERS_DEFINITION = {
         value: 'allowance'
     },
     'sliceMode': {
-        label: 'Slicing Mode',
+        label: 'Method',
         description: 'Select the slicing mode of the mesh toolpath',
         type: 'enum',
         options: {
-            'rotation': 'Rotation',
-            'linkage': 'Linkage'
+            'rotation': 'key-Cnc/ToolpathParameters-Rotation', // TODO
+            'linkage': 'key-Cnc/ToolpathParameters-Linkage' // TODO
         },
         default_value: 'rotation'
     },
@@ -938,9 +938,9 @@ export const IMAGE_WIFI_WAITING = '/resources/images/connection/ic_WI-FI_64x64.p
 export const IMAGE_WIFI_WARNING = '/resources/images/ic_warning-64x64.png';
 export const IMAGE_EMERGENCY_STOP = '/resources/images/connection/ic_emergency_stop.png';
 export const HEAD_TYPE_ENV_NAME = {
-    'printing': '3D printing',
-    'laser': 'Laser',
-    'cnc': 'CNC'
+    'printing': 'key-machine_selection-3D printing',
+    'laser': 'key-machine_selection-Laser',
+    'cnc': 'key-machine_selection-CNC'
 };
 export const LASER_MOCK_PLATE_HEIGHT = 6;
 
