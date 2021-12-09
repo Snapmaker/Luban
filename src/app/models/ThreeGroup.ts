@@ -189,15 +189,11 @@ export default class ThreeGroup extends BaseModel {
         this.meshObject.visible = value;
     }
 
-<<<<<<< Updated upstream
     /**
      * Experimental
      * @returns ModelTransformation
      */
-=======
 
-
->>>>>>> Stashed changes
     onTransform() {
         const geometrySize = ThreeUtils.getGeometrySize(this.mergeGeometriesInGroup(), true);
         const { uniformScalingState } = this.meshObject as any;

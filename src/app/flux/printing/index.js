@@ -1788,11 +1788,6 @@ export const actions = {
         const modelsbeforeGroup = modelGroup.getModels().slice(0);
         const selectedModels = modelGroup.getSelectedModelArray().slice(0);
         const selectedModelsPositionMap = new Map();
-        const firstModelPosition = {
-            positionX: selectedModels[0]?.transformation?.positionX,
-            positionY: selectedModels[0]?.transformation?.positionY,
-            positionZ: selectedModels[0]?.transformation?.positionZ,
-        };
         selectedModels.forEach(model => {
             selectedModelsPositionMap.set(model.modelID, {
                 x: model.transformation.positionX,
@@ -1801,31 +1796,12 @@ export const actions = {
             });
             console.log('model', model.transformation);
         });
-        modelGroup.updateSelectedGroupTransformation(firstModelPosition);
         modelGroup.updateModelsPositionBaseFirstModel(selectedModels);
         modelGroup.onModelAfterTransform(false);
 
         dispatch(actions.clearAllManualSupport());
-        const { newGroup, modelState } = modelGroup.group();
-        console.log('newGroup', newGroup);
+        const { modelState } = modelGroup.group();
         const modelsafterGroup = modelGroup.getModels().slice(0);
-        // if (selectedModels[0]) {
-        //     const point = modelGroup._computeAvailableXY(newGroup);
-        //     // const point = modelGroup._computeAvailableXY(newGroup, modelsafterGroup.filter(d => d !== newGroup));
-        //     console.log('point', point, newGroup, modelsafterGroup.filter(d => d !== newGroup), modelGroup.getModels());
-        //     modelGroup.updateSelectedGroupTransformation({
-        //         positionX: point.x,
-        //         positionY: point.y,
-        //     });
-        //     modelGroup.onModelAfterTransform(false);
-        //     // newGroup.updateTransformation({
-        //     //     positionX: point.x,
-        //     //     positionY: point.y,
-        //     // });
-        //     // newGroup.onTransform();
-        // }
-        // console.log('selectedModels', selectedModels, modelsbeforeGroup[0].transformation, modelsbeforeGroup[1].transformation);
-
 
         const operation = new GroupAlignOperation3D({
             selectedModelsPositionMap,

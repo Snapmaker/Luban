@@ -749,7 +749,6 @@ class ModelGroup extends EventEmitter {
                 newModel.computeBoundingBox();
 
                 newModel.modelID = modelID || uuid.v4();
-                console.log('newModel', newModel);
             } else {
                 newModel.meshObject.addEventListener('update', this.onModelUpdate);
                 newModel.modelID = modelID || uuid.v4();
@@ -949,27 +948,27 @@ class ModelGroup extends EventEmitter {
     updateModelsPositionBaseFirstModel(models) {
         if (models && models.length > 0) {
             const firstModel = models[0];
-            models.forEach((model) => {
+            const otherModels = models.filter(d => d.meshObject !== firstModel.meshObject);
+            otherModels.forEach((model) => {
                 const newPosition = {
-                    x: model.originalPosition.x - firstModel.originalPosition.x + firstModel.transformation.positionX,
-                    y: model.originalPosition.y - firstModel.originalPosition.y + firstModel.transformation.positionY,
-                    z: model.originalPosition.z - firstModel.originalPosition.z + firstModel.transformation.positionZ,
+                    positionX: model.originalPosition.x - firstModel.originalPosition.x + firstModel.transformation.positionX,
+                    positionY: model.originalPosition.y - firstModel.originalPosition.y + firstModel.transformation.positionY,
+                    positionZ: model.originalPosition.z - firstModel.originalPosition.z + firstModel.transformation.positionZ,
                 };
-                model.updateTransformation({
-                    positionX: newPosition.x,
-                    positionY: newPosition.y,
-                    positionZ: newPosition.z,
-                });
-                model.meshObject.position.x = newPosition.x;
-                model.meshObject.position.y = newPosition.y;
-                model.meshObject.position.z = newPosition.z;
+                this.selectModelById(model.modelID);
+                this.updateSelectedGroupTransformation(newPosition);
             });
-            this.selectedGroup.updateMatrix();
+            this.unselectAllModels();
+            models.forEach((item) => {
+                this.addModelToSelectedGroup(item);
+            });
+
+            this.modelChanged();
         }
+        return this.getState();
     }
 
     updateModelPositionByPosition(modelID, position) {
-        console.log('modelID, position', modelID, position);
         if (modelID) {
             const model = this.models.find(d => d.modelID === modelID);
             model.updateTransformation({
@@ -982,6 +981,7 @@ class ModelGroup extends EventEmitter {
             model.meshObject.position.z = position.z;
             this.selectedGroup.updateMatrix();
         }
+        return this.getState();
     }
 
     /**
@@ -1760,18 +1760,18 @@ class ModelGroup extends EventEmitter {
         };
     }
 
+    canMerge() {
+        return this.selectedModelArray?.length > 1 && !this.selectedModelArray.some(model => model instanceof ThreeGroup);
+    }
+
     canGroup() {
-        if (this.selectedModelArray.some(model => model.visible)) {
-            return true;
-        }
-        return false;
+        return this.selectedModelArray.some(model => {
+            return model.visible;
+        });
     }
 
     canUngroup() {
-        if (this.selectedModelArray.some(model => model instanceof ThreeGroup && model.visible)) {
-            return true;
-        }
-        return false;
+        return this.selectedModelArray.some(model => model instanceof ThreeGroup && model.visible);
     }
 
     ungroup() {

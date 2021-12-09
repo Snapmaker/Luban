@@ -48,7 +48,6 @@ export default class GroupAlginOperation3D extends Operation {
                 modelsToGroup.push(model);
             }
         });
-        console.log('redo align', target);
         target.add(modelsToGroup);
         target.stickToPlate();
         modelGroup.object.add(target.meshObject);
@@ -67,7 +66,6 @@ export default class GroupAlginOperation3D extends Operation {
         this.state.selectedModelsPositionMap.forEach((position, modelID) => {
             modelGroup.updateModelPositionByPosition(modelID, position);
         });
-        console.log('this.state.modelsbeforeGroup', modelGroup, this.state.modelsbeforeGroup);
         modelGroup.models = [...this.state.modelsbeforeGroup];
     }
 }

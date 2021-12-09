@@ -86,6 +86,7 @@ function useRenderMainToolBar() {
     const canRedo = useSelector(state => state?.printing?.history?.canRedo, shallowEqual);
     const canUndo = useSelector(state => state?.printing?.history?.canUndo, shallowEqual);
     const canGroup = useSelector(state => state?.printing?.modelGroup?.canGroup());
+    const canMerge = useSelector(state => state?.printing?.modelGroup?.canMerge());
     const canUngroup = useSelector(state => state?.printing?.modelGroup?.canUngroup());
     const [showHomePage, setShowHomePage] = useState(false);
     const [showWorkspace, setShowWorkspace] = useState(false);
@@ -168,8 +169,8 @@ function useRenderMainToolBar() {
                 }
             },
             {
-                title: i18n._('key-3DP/MainToolBar-Parts Align'),
-                disabled: !canGroup || !enableShortcut,
+                title: i18n._('key-3DP/MainToolBar-Merge'),
+                disabled: !canMerge || !enableShortcut,
                 type: 'button',
                 name: 'MainToolbarUngroup',
                 action: () => {
