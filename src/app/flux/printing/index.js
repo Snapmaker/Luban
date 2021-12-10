@@ -665,7 +665,6 @@ export const actions = {
             dispatch(actions.updateState({
                 extruderLDefinition: extruderDef
             }));
-            console.log('ex', extruderDef);
             definitionManager.updateDefinition({
                 ...extruderDef,
                 definitionId: 'snapmaker_extruder_0'

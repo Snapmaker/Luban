@@ -85,11 +85,28 @@ function Material({ widgetActions }) {
         def.settings.machine_nozzle_size.default_value = value;
         dispatch(printingActions.updateExtuderDefinition(def, direction));
     }
+
     const [diametersOptions, setDiametersOptions] = useState([
-        { value: 0.2, label: 0.2 },
+        { value: 0.25, label: 0.25 },
         { value: 0.4, label: 0.4 },
-        { value: 0.6, label: 0.6 }
+        { value: 0.5, label: 0.5 }
     ]);
+    useEffect(() => {
+        if (leftDiameter && !diametersOptions.find(d => d.value === leftDiameter)) {
+            diametersOptions.push({
+                value: leftDiameter,
+                label: leftDiameter
+            });
+        }
+        if (rightDiameter && !diametersOptions.find(d => d.value === rightDiameter)) {
+            diametersOptions.push({
+                value: rightDiameter,
+                label: rightDiameter
+            });
+        }
+        setDiametersOptions(diametersOptions);
+    }, [leftDiameter, rightDiameter]);
+
     const [selectorCustomValue, setSelectorCustomValue] = useState(0);
 
     function dropdownRender(direction = LEFT_EXTRUDER) {
@@ -103,14 +120,16 @@ function Material({ widgetActions }) {
                             style={{ flex: 'auto' }}
                             value={selectorCustomValue}
                             onChange={event => {
-                                const v = Number(event.target.value);
-                                setSelectorCustomValue(v);
+                                setSelectorCustomValue(event.target.value);
                             }}
                         />
                         <Anchor
                             style={{ flex: 'none', padding: '8px', display: 'block', cursor: 'pointer' }}
                             onClick={() => {
-                                const v = selectorCustomValue;
+                                const v = Number(selectorCustomValue);
+                                if (Number.isNaN(v) || v < 0.1 || v > 1.75) {
+                                    return;
+                                }
                                 if (!diametersOptions.find(d => d.value === v)) {
                                     diametersOptions.push({
                                         value: v,
@@ -140,11 +159,11 @@ function Material({ widgetActions }) {
                     </span>
                     <div>
                         <div className="display-inline">
-                            <span style={{ color: '#86868B' }}>L</span>
+                            {printingToolhead === DUAL_EXTRUDER_TOOLHEAD_FOR_SM2 && (<span style={{ color: '#86868B' }}>L</span>)}
                             <Select
                                 className="margin-left-4"
                                 dropdownRender={dropdownRender(LEFT_EXTRUDER)}
-                                size="80px"
+                                size={printingToolhead === DUAL_EXTRUDER_TOOLHEAD_FOR_SM2 ? '80px' : '200px'}
                                 options={diametersOptions}
                                 value={leftDiameter}
                                 onChange={
