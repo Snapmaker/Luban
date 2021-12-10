@@ -377,7 +377,7 @@ export const PRINTING_QUALITY_CONFIG_GROUP_DUAL = [
         ]
     },
     {
-        name: 'dual',
+        name: 'Dual Extrusion',
         fields: [
             'prime_tower_enable',
             'prime_tower_wipe_enabled',

@@ -87,9 +87,9 @@ function Material({ widgetActions }) {
     }
 
     const [diametersOptions, setDiametersOptions] = useState([
-        { value: 0.25, label: 0.25 },
+        { value: 0.2, label: 0.2 },
         { value: 0.4, label: 0.4 },
-        { value: 0.5, label: 0.5 }
+        { value: 0.6, label: 0.6 }
     ]);
     useEffect(() => {
         if (leftDiameter && !diametersOptions.find(d => d.value === leftDiameter)) {
