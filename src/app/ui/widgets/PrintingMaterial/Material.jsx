@@ -3,7 +3,6 @@ import PropTypes from 'prop-types';
 import { useSelector, useDispatch, shallowEqual } from 'react-redux';
 import classNames from 'classnames';
 import { Divider, Input } from 'antd';
-import { PlusOutlined } from '@ant-design/icons';
 import Anchor from '../../components/Anchor';
 import Select from '../../components/Select';
 import SvgIcon from '../../components/SvgIcon';
@@ -98,7 +97,7 @@ function Material({ widgetActions }) {
                 label: leftDiameter
             });
         }
-        if (rightDiameter && !diametersOptions.find(d => d.value === rightDiameter)) {
+        if (printingToolhead === DUAL_EXTRUDER_TOOLHEAD_FOR_SM2 && rightDiameter && !diametersOptions.find(d => d.value === rightDiameter)) {
             diametersOptions.push({
                 value: rightDiameter,
                 label: rightDiameter
@@ -107,24 +106,24 @@ function Material({ widgetActions }) {
         setDiametersOptions(diametersOptions);
     }, [leftDiameter, rightDiameter]);
 
-    const [selectorCustomValue, setSelectorCustomValue] = useState(0);
+    const [selectorCustomValue, setSelectorCustomValue] = useState(null);
 
     function dropdownRender(direction = LEFT_EXTRUDER) {
         return (
             (menu) => (
                 <div>
                     {menu}
-                    <Divider style={{ margin: '4px 0' }} />
-                    <div style={{ display: 'flex', flexWrap: 'nowrap', padding: 8 }}>
+                    <Divider style={{ margin: '0' }} />
+                    <div style={{ display: 'flex', flexWrap: 'nowrap' }}>
                         <Input
-                            style={{ flex: 'auto' }}
+                            placeholder="+Add Item"
+                            bordered={false}
                             value={selectorCustomValue}
                             onChange={event => {
                                 setSelectorCustomValue(event.target.value);
                             }}
                         />
                         <Anchor
-                            style={{ flex: 'none', padding: '8px', display: 'block', cursor: 'pointer' }}
                             onClick={() => {
                                 const v = Number(selectorCustomValue);
                                 if (Number.isNaN(v) || v < 0.1 || v > 1.75) {
@@ -140,7 +139,11 @@ function Material({ widgetActions }) {
                                 setDiameter(direction, v);
                             }}
                         >
-                            <PlusOutlined />
+                            <SvgIcon
+                                className="margin-left-8"
+                                name="CameraCaptureExtract"
+                                size={12}
+                            />
                         </Anchor>
                     </div>
                 </div>
