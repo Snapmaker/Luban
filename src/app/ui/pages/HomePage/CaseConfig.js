@@ -22,8 +22,8 @@ export const CaseConfigOriginalLaserPowerOne = [
         imgSrc: '../../resources/images/user-case/Origin/library_feather_97x97.png',
         pathConfig: {
             isDatastoragePath: true,
-            path: './UserCase/laser/original_200mw/Laser_original_200mW.snaplzr',
-            name: 'Laser_original_200mW.snaplzr'
+            path: './UserCase/laser/original_200mw/laser_original_200mW.snaplzr',
+            name: 'laser_original_200mW.snaplzr'
         }
     }
 ];
@@ -37,8 +37,8 @@ export const CaseConfigOriginalLaserPowerTwo = [
         imgSrc: '../../resources/images/user-case/Origin/library_feather_97x97.png',
         pathConfig: {
             isDatastoragePath: true,
-            path: './UserCase/laser/original_1600mw/Laser_original_1600mW.snaplzr',
-            name: 'Laser_original_1600mW.snaplzr'
+            path: './UserCase/laser/original_1600mw/laser_original_1600mW.snaplzr',
+            name: 'laser_original_1600mW.snaplzr'
         }
     }
 ];
@@ -83,8 +83,8 @@ export const CaseConfigA150LaserPowerOne = [
         imgSrc: '../../resources/images/user-case/A150/library_gift_box_97x97.png',
         pathConfig: {
             isDatastoragePath: true,
-            path: './UserCase/laser/a150_1600mw/Laser_a150_1600mW.snaplzr',
-            name: 'Laser_a150_1600mW.snaplzr'
+            path: './UserCase/laser/a150_1600mw/laser_a150_1600mW.snaplzr',
+            name: 'laser_a150_1600mW.snaplzr'
         }
     }
 ];
