@@ -48,6 +48,13 @@ export const STAGE_GENERATED = 4;
 export const PAGE_EDITOR = 'editor';
 export const PAGE_PROCESS = 'process';
 
+// for dual extruder
+export const LEFT_EXTRUDER = 'left';
+export const RIGHT_EXTRUDER = 'right';
+export const LEFT_EXTRUDER_MAP_NUMBER = '0';
+export const RIGHT_EXTRUDER_MAP_NUMBER = '1';
+export const BOTH_EXTRUDER_MAP_NUMBER = '2';
+
 // Stages for 3d print
 export const STAGES_3DP = {
     noModel: 10,

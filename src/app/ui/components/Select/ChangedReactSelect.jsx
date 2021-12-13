@@ -145,6 +145,7 @@ class ChangedReactSelect extends PureComponent {
                 const newOption = {};
                 newOption.title = oldOption.label;
                 newOption.value = oldOption.definitionId === 'new' ? oldOption.definitionId : PARENT_ID + oldOption.definitionId;
+                newOption.selectable = false;
                 if (oldOption.definitionId !== CustomValue) {
                     // newOption.disabled = true;
                     newOption.children = oldOption.options.map((child) => {

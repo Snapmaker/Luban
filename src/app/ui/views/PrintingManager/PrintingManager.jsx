@@ -6,7 +6,9 @@ import { actions as projectActions } from '../../../flux/project';
 import { PRINTING_MANAGER_TYPE_MATERIAL, PRINTING_MANAGER_TYPE_QUALITY,
     PRINTING_MATERIAL_CONFIG_KEYS, PRINTING_QUALITY_CONFIG_KEYS,
     getMachineSeriesWithToolhead, HEAD_PRINTING,
-    PRINTING_MATERIAL_CONFIG_GROUP, PRINTING_QUALITY_CONFIG_GROUP } from '../../../constants';
+    PRINTING_MATERIAL_CONFIG_GROUP, PRINTING_QUALITY_CONFIG_GROUP,
+    LEFT_EXTRUDER
+} from '../../../constants';
 import ProfileManager from '../ProfileManager';
 import i18n from '../../../lib/i18n';
 
@@ -24,9 +26,13 @@ function isOfficialDefinition(definition) {
 function PrintingManager() {
     const showPrintingManager = useSelector(state => state?.printing?.showPrintingManager, shallowEqual);
     const defaultMaterialId = useSelector(state => state?.printing?.defaultMaterialId, shallowEqual);
+    const defaultMaterialIdRight = useSelector(state => state?.printing?.defaultMaterialIdRight, shallowEqual);
     const defaultQualityId = useSelector(state => state?.printing?.defaultQualityId, shallowEqual);
     const managerDisplayType = useSelector(state => state?.printing?.managerDisplayType, shallowEqual);
     const materialDefinitions = useSelector(state => state?.printing?.materialDefinitions);
+    const materialManagerDirection = useSelector(state => state?.printing?.materialManagerDirection, shallowEqual);
+    // TODO: Update materialDifinitions Data, for TreeSelect
+    // const [materialOptions, setMaterialOptions] = useState(materialDefinitions);
     const qualityDefinitions = useSelector(state => state?.printing?.qualityDefinitions);
     const series = useSelector(state => state?.machine?.series);
     const toolHead = useSelector(state => state?.machine?.toolHead);
@@ -118,7 +124,7 @@ function PrintingManager() {
 
     const selectedIds = {
         [PRINTING_MANAGER_TYPE_MATERIAL]: {
-            id: defaultMaterialId
+            id: materialManagerDirection === LEFT_EXTRUDER ? defaultMaterialId : defaultMaterialIdRight
         },
         [PRINTING_MANAGER_TYPE_QUALITY]: {
             id: defaultQualityId

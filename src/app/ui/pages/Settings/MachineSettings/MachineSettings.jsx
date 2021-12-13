@@ -320,7 +320,6 @@ function MachineSettings() {
                         })}
                         onChange={e => actions.handleToolheadChange(e, 'printing')}
                         size="large"
-                        disabled
                     />
                 </div>
                 <div className="margin-bottom-16">

@@ -3,6 +3,7 @@ import { useDispatch, useSelector, shallowEqual } from 'react-redux';
 import PropTypes from 'prop-types';
 import classNames from 'classnames';
 import * as THREE from 'three';
+import { cloneDeep, filter, find } from 'lodash';
 import i18n from '../../../lib/i18n';
 import { toFixed } from '../../../lib/numeric-utils';
 import UniApi from '../../../lib/uni-api';
@@ -13,19 +14,82 @@ import modal from '../../../lib/modal';
 import SvgIcon from '../../components/SvgIcon';
 import { Button } from '../../components/Buttons';
 import Checkbox from '../../components/Checkbox';
+import Dropdown from '../../components/Dropdown';
+import Menu from '../../components/Menu';
 import RotationAnalysisOverlay from './Overlay/RotationAnalysisOverlay';
-import { EPSILON } from '../../../constants';
+import { DUAL_EXTRUDER_TOOLHEAD_FOR_SM2, EPSILON, BOTH_EXTRUDER_MAP_NUMBER, LEFT_EXTRUDER_MAP_NUMBER } from '../../../constants';
+import { machineStore } from '../../../store/local-storage';
 
+const extruderLabelMap = {
+    '0': 'Extruder L',
+    '1': 'Extruder R',
+    '2': 'Extruder Both'
+};
+const originalModelsExtruder = {
+    multiple: LEFT_EXTRUDER_MAP_NUMBER,
+    infill: LEFT_EXTRUDER_MAP_NUMBER,
+    shell: LEFT_EXTRUDER_MAP_NUMBER
+};
+const originalHelpersExtruder = {
+    multiple: LEFT_EXTRUDER_MAP_NUMBER,
+    support: LEFT_EXTRUDER_MAP_NUMBER,
+    adhesion: LEFT_EXTRUDER_MAP_NUMBER
+};
+export const materialColorMap = {
+    black: '#000000',
+    white: '#ffffff'
+};
+export const whiteHex = '#ffffff';
+export const renderExtruderIcon = (leftExtruderColor, rightExtruderColor) => (
+    <div className="position-re width-24">
+        {leftExtruderColor !== whiteHex ? (
+            <SvgIcon
+                color={leftExtruderColor}
+                size={24}
+                name="ExtruderLeft"
+                type={['static']}
+                className="position-ab"
+            />
+        ) : (
+            <img className="position-ab" src="/resources/images/24x24/icon_extruder_white_left_24x24.svg" alt="" />
+        )}
+        {rightExtruderColor !== whiteHex ? (
+            <SvgIcon
+                color={rightExtruderColor}
+                size={24}
+                name="ExtruderRight"
+                type={['static']}
+                className="position-ab right-1"
+            />
+        ) : (
+            <img src="/resources/images/24x24/icon_extruder_white_right_24x24.svg" alt="" className="position-ab" />
+        )}
+    </div>
+);
 function VisualizerLeftBar({ defaultSupportSize, setTransformMode, isSupporting, supportActions, updateBoundingBox, autoRotateSelectedModel }) {
     const size = useSelector(state => state?.machine?.size, shallowEqual);
     const selectedGroup = useSelector(state => state?.printing?.modelGroup?.selectedGroup, shallowEqual);
     const selectedModelArray = useSelector(state => state?.printing?.modelGroup?.selectedModelArray);
+    const models = useSelector(state => state?.printing?.modelGroup?.models);
+    const helpersExtruderConfig = useSelector(state => state?.printing?.helpersExtruderConfig);
+    const { isOpenSelectModals, isOpenHelpers: _isOpenHelpers, modelExtruderInfoShow, helpersExtruderInfoShow } = useSelector(state => state?.printing);
     const isSupportSelected = useSelector(state => state?.printing?.modelGroup?.isSupportSelected());
     const transformMode = useSelector(state => state?.printing?.transformMode, shallowEqual);
     const transformation = useSelector(state => state?.printing?.modelGroup?.getSelectedModelTransformationForPrinting(), shallowEqual);
     const enableShortcut = useSelector(state => state?.printing?.enableShortcut, shallowEqual);
     const [showRotationAnalyzeModal, setShowRotationAnalyzeModal] = useState(false);
+    const [modelsExtruder, setModelsExtruder] = useState(originalModelsExtruder);
+    const [helpersExturder, setHelpersExtruder] = useState(helpersExtruderConfig || originalHelpersExtruder);
+    const [isOpenModels, setIsOpenModels] = useState(isOpenSelectModals);
+    const [isOpenHelpers, setIsOpenHelpers] = useState(_isOpenHelpers);
     const selectedModelBBoxDes = useSelector(state => state?.printing?.modelGroup?.getSelectedModelBBoxWHD(), shallowEqual);
+    // const colorL = '#FF8B00';
+    // const colorR = '#0053AA';
+    const [colorL, setColorL] = useState(whiteHex);
+    const [colorR, setColorR] = useState(whiteHex);
+    const defaultDefinitions = useSelector(state => state?.printing?.defaultDefinitions, shallowEqual);
+    const defaultMaterialId = useSelector(state => state?.printing?.defaultMaterialId, shallowEqual);
+    const defaultMaterialIdRight = useSelector(state => state?.printing?.defaultMaterialIdRight, shallowEqual);
     let modelSize = {};
     if (isSupportSelected) {
         const model = selectedModelArray[0];
@@ -47,6 +111,7 @@ function VisualizerLeftBar({ defaultSupportSize, setTransformMode, isSupporting,
             <RotationAnalysisOverlay onClose={() => { setShowRotationAnalyzeModal(false); }} />
         );
     };
+
     const actions = {
         onClickToUpload: () => {
             fileInput.current.value = null;
@@ -222,7 +287,140 @@ function VisualizerLeftBar({ defaultSupportSize, setTransformMode, isSupporting,
             return Math.abs(Math.abs(scaleX) - Math.abs(scaleY)) > EPSILON
                 || Math.abs(Math.abs(scaleX) - Math.abs(scaleZ)) > EPSILON
                 || Math.abs(Math.abs(scaleY) - Math.abs(scaleZ)) > EPSILON;
+        },
+        onChangeExtruder: (type, direction) => {
+            const typeArr = type.split('.');
+            switch (typeArr[1]) {
+                case 'multiple':
+                    if (typeArr[0] === 'models') {
+                        const newModelsExtruder = cloneDeep(modelsExtruder);
+                        Object.keys(newModelsExtruder).forEach(key => {
+                            newModelsExtruder[key] = direction;
+                        });
+                        setModelsExtruder(newModelsExtruder);
+                        dispatch(printingActions.updateSelectedModelsExtruder({ infill: direction, shell: direction }));
+                    } else {
+                        const newHelpersExtruder = cloneDeep(helpersExturder);
+                        Object.keys(newHelpersExtruder).forEach(key => {
+                            newHelpersExtruder[key] = direction;
+                        });
+                        setHelpersExtruder(newHelpersExtruder);
+                        dispatch(printingActions.updateHelpersExtruder({ support: direction, adhesion: direction }));
+                    }
+                    break;
+                case 'infill':
+                    setModelsExtruder({
+                        ...modelsExtruder,
+                        infill: direction,
+                        multiple: modelsExtruder.shell === direction ? direction : BOTH_EXTRUDER_MAP_NUMBER
+                    });
+                    dispatch(printingActions.updateSelectedModelsExtruder({ infill: direction, shell: modelsExtruder.shell }));
+                    break;
+                case 'shell':
+                    setModelsExtruder({
+                        ...modelsExtruder,
+                        shell: direction,
+                        multiple: modelsExtruder.infill === direction ? direction : BOTH_EXTRUDER_MAP_NUMBER
+                    });
+                    dispatch(printingActions.updateSelectedModelsExtruder({ shell: direction, infill: modelsExtruder.infill }));
+                    break;
+                case 'adhesion':
+                    setHelpersExtruder({
+                        ...helpersExturder,
+                        adhesion: direction,
+                        multiple: helpersExturder.support === direction ? direction : BOTH_EXTRUDER_MAP_NUMBER
+                    });
+                    dispatch(printingActions.updateHelpersExtruder({ support: helpersExturder.support, adhesion: direction }));
+                    break;
+                case 'support':
+                    setHelpersExtruder({
+                        ...helpersExturder,
+                        support: direction,
+                        multiple: helpersExturder.adhesion === direction ? direction : BOTH_EXTRUDER_MAP_NUMBER
+                    });
+                    dispatch(printingActions.updateHelpersExtruder({ adhesion: helpersExturder.adhesion, support: direction }));
+                    break;
+                default:
+                    break;
+            }
+        },
+        handleOpen: (type) => {
+            let temp = null;
+            switch (type) {
+                case 'models':
+                    temp = !isOpenModels;
+                    setIsOpenModels(temp);
+                    dispatch(printingActions.updateState({ isOpenSelectModals: temp }));
+                    break;
+                case 'helpers':
+                    temp = !isOpenHelpers;
+                    setIsOpenHelpers(temp);
+                    dispatch(printingActions.updateState({ isOpenHelpers: temp }));
+                    break;
+                default:
+                    break;
+            }
         }
+    };
+    const extruderOverlay = (type) => (
+        <Menu>
+            <Menu.Item
+                onClick={() => actions.onChangeExtruder(type, '0')}
+                key="L"
+            >
+                <div className="sm-flex justify-space-between">
+                    <span className="display-inline width-96 text-overflow-ellipsis">{i18n._('key-Printing/LeftBar-Extruder L')}</span>
+                    {colorL !== whiteHex ? (
+                        <SvgIcon
+                            name="Extruder"
+                            size={24}
+                            color={colorL}
+                            type={['static']}
+                        />
+                    ) : (
+                        <img src="/resources/images/24x24/icon_extruder_white_24x24.svg" alt="" />
+                    )}
+                </div>
+            </Menu.Item>
+            <Menu.Item
+                onClick={() => actions.onChangeExtruder(type, '1')}
+                key="R"
+            >
+                <div className="sm-flex justify-space-between">
+                    <span className="display-inline width-96 text-overflow-ellipsis">{i18n._('key-Printing/LeftBar-Extruder R')}</span>
+                    {colorR !== whiteHex ? (
+                        <SvgIcon
+                            name="Extruder"
+                            size={24}
+                            color={colorR}
+                            type={['static']}
+                        />
+                    ) : (
+                        <img src="/resources/images/24x24/icon_extruder_white_24x24.svg" alt="" />
+                    )}
+                </div>
+            </Menu.Item>
+        </Menu>
+    );
+    const renderExtruderStatus = (status) => {
+        // <div>{i18n._(`key-Printing/LeftBar-${extruderLabelMap[status]}`)}</div>
+        const leftExtruderColor = status === '1' ? colorR : colorL;
+        const rightExtruderColor = status === '0' ? colorL : colorR;
+        return (
+            <div className="sm-flex justify-space-between margin-left-16 width-160 border-default-black-5 border-radius-8 padding-vertical-4 padding-left-8">
+                <span className="text-overflow-ellipsis">{i18n._(`key-Printing/LeftBar-${extruderLabelMap[status]}`)}</span>
+                <div className="sm-flex">
+                    {renderExtruderIcon(leftExtruderColor, rightExtruderColor)}
+                    <SvgIcon
+                        type={['static']}
+                        size={24}
+                        hoversize={24}
+                        color="#545659"
+                        name="DropdownOpen"
+                    />
+                </div>
+            </div>
+        );
     };
     let moveX = 0;
     let moveY = 0;
@@ -243,7 +441,8 @@ function VisualizerLeftBar({ defaultSupportSize, setTransformMode, isSupporting,
     const rotationAnalysisEnable = (selectedModelArray.length === 1 && selectedModelArray.every((model) => {
         return model.visible === true;
     }));
-
+    const isDualExtruder = machineStore.get('machine.toolHead.printingToolhead') === DUAL_EXTRUDER_TOOLHEAD_FOR_SM2;
+    const [dualExtruderDisabled, setDualExtruderDisabled] = useState(!models.length);
     if (selectedModelArray.length >= 1) {
         moveX = Number(toFixed(transformation.positionX, 1));
         moveY = Number(toFixed(transformation.positionY, 1));
@@ -258,10 +457,74 @@ function VisualizerLeftBar({ defaultSupportSize, setTransformMode, isSupporting,
 
     useEffect(() => {
         UniApi.Event.on('appbar-menu:printing.import', actions.importFile);
+        let newHelpersExtruder = cloneDeep(helpersExturder);
+        newHelpersExtruder = {
+            ...newHelpersExtruder,
+            multiple: newHelpersExtruder.support === newHelpersExtruder.adhesion ? newHelpersExtruder.support : BOTH_EXTRUDER_MAP_NUMBER
+        };
+        setHelpersExtruder(newHelpersExtruder);
         return () => {
             UniApi.Event.off('appbar-menu:printing.import', actions.importFile);
         };
     }, []);
+
+    useEffect(() => {
+        let tempInfillExtruder = '';
+        let tempShellExtruder = '';
+        if (selectedModelArray.length > 0) {
+            const selectedHiddenModel = filter(selectedModelArray, { visible: false });
+            setDualExtruderDisabled(selectedHiddenModel?.length);
+            let extruderConfig = selectedModelArray[0].extruderConfig;
+            tempInfillExtruder = extruderConfig.infill;
+            tempShellExtruder = extruderConfig.shell;
+            if (selectedModelArray.length > 1) {
+                for (const item of selectedModelArray.slice(1)) {
+                    extruderConfig = item.extruderConfig;
+                    if (extruderConfig.infill !== tempInfillExtruder && tempInfillExtruder !== BOTH_EXTRUDER_MAP_NUMBER) {
+                        tempInfillExtruder = BOTH_EXTRUDER_MAP_NUMBER;
+                    }
+                    if (extruderConfig.shell !== tempShellExtruder && tempShellExtruder !== BOTH_EXTRUDER_MAP_NUMBER) {
+                        tempShellExtruder = BOTH_EXTRUDER_MAP_NUMBER;
+                    }
+                    if (tempShellExtruder === BOTH_EXTRUDER_MAP_NUMBER && tempInfillExtruder === BOTH_EXTRUDER_MAP_NUMBER) {
+                        break;
+                    }
+                }
+            }
+        } else if (!selectedModelArray.length && models.length) {
+            const visibleModel = filter(models, { visible: true });
+            setDualExtruderDisabled(!visibleModel.length);
+        }
+        setModelsExtruder({
+            multiple: tempInfillExtruder === tempShellExtruder ? tempInfillExtruder : BOTH_EXTRUDER_MAP_NUMBER,
+            infill: tempInfillExtruder,
+            shell: tempShellExtruder
+        });
+    }, [selectedModelArray]);
+
+    useEffect(() => {
+        if (!models.length) {
+            setDualExtruderDisabled(true);
+        } else if (models.length && !selectedModelArray.length) {
+            for (const model of models) {
+                if (model.visible) {
+                    setDualExtruderDisabled(false);
+                    break;
+                } else {
+                    !dualExtruderDisabled && setDualExtruderDisabled(true);
+                }
+            }
+        }
+    }, [models.length, models]);
+
+    useEffect(() => {
+        const leftExtrualMaterial = find(defaultDefinitions, { definitionId: defaultMaterialId });
+        const rightExtrualMaterial = find(defaultDefinitions, { definitionId: defaultMaterialIdRight });
+        const newColorL = leftExtrualMaterial?.name?.split('-')[1]?.toLowerCase();
+        const newColorR = rightExtrualMaterial?.name?.split('-')[1]?.toLowerCase();
+        newColorL && setColorL(materialColorMap[newColorL]);
+        newColorR && setColorR(materialColorMap[newColorR]);
+    }, [defaultDefinitions, defaultMaterialIdRight, defaultMaterialId]);
 
     return (
         <React.Fragment>
@@ -387,6 +650,25 @@ function VisualizerLeftBar({ defaultSupportSize, setTransformMode, isSupporting,
                                         disabled={supportDisabled}
                                     />
                                 </li>
+                                {isDualExtruder && (
+                                    <li className="margin-vertical-4">
+                                        <SvgIcon
+                                            color="#545659"
+                                            className={classNames(
+                                                { [styles.selected]: (!transformDisabled && transformMode === 'extruder') },
+                                                'padding-horizontal-4'
+                                            )}
+                                            type={[`${!transformDisabled && transformMode === 'extruder' ? 'hoverNoBackground' : 'hoverSpecial'}`, 'pressSpecial']}
+                                            name="ToolbarExtruder"
+                                            size={48}
+                                            onClick={() => {
+                                                setTransformMode('extruder');
+                                                !selectedModelArray.length && dispatch(printingActions.selectAllModels());
+                                            }}
+                                            disabled={dualExtruderDisabled}
+                                        />
+                                    </li>
+                                )}
                             </ul>
                         </span>
                     </nav>
@@ -843,6 +1125,147 @@ function VisualizerLeftBar({ defaultSupportSize, setTransformMode, isSupporting,
                             >
                                 <span>{i18n._('key-Printing/LeftBar-Clear All Support')}</span>
                             </Button>
+                        </div>
+                    </div>
+                )}
+                {!transformDisabled && transformMode === 'extruder' && isDualExtruder && (
+                    <div
+                        className="position-ab width-328 margin-left-72 border-default-grey-1 border-radius-8 background-color-white"
+                        style={{
+                            marginTop: '320px'
+                        }}
+                    >
+                        <div className="border-bottom-normal padding-vertical-10 padding-horizontal-16 height-40">
+                            {i18n._('key-Printing/LeftBar-Extruder')}
+                        </div>
+                        <div className="padding-bottom-16 padding-top-8 padding-right-16 padding-left-8">
+                            <div className="select-models-container">
+                                {modelExtruderInfoShow && (
+                                    <div className="sm-flex align-center justify-space-between background-color-blue border-default-blue border-radius-8 margin-right-16 margin-left-8">
+                                        <div className="sm-flex align-center">
+                                            <SvgIcon
+                                                color="#1890FF"
+                                                size={24}
+                                                type={['static']}
+                                                name="WarningTipsTips"
+                                                className="margin-vertical-8 margin-left-8 margin-right-4"
+                                            />
+                                            <span className="display-inline width-200 text-overflow-ellipsis">{i18n._('key-Printing/LeftBar-Selected Models Extruder Info')}</span>
+                                        </div>
+                                        <SvgIcon
+                                            color="#545659"
+                                            size={24}
+                                            type={['static']}
+                                            name="Cancel"
+                                            className="margin-right-8"
+                                            onClick={() => {
+                                                dispatch(printingActions.updateState({ modelExtruderInfoShow: false }));
+                                            }}
+                                        />
+                                    </div>
+                                )}
+                                <div className="sm-flex align-center margin-top-8">
+                                    <SvgIcon
+                                        size={24}
+                                        hoversize={24}
+                                        name="DropdownOpen"
+                                        color="#545659"
+                                        onClick={() => actions.handleOpen('models')}
+                                    />
+                                    <div role="presentation" onClick={() => actions.handleOpen('models')} className="display-block width-96 text-overflow-ellipsis margin-left-4">{i18n._('key-Printing/LeftBar-Selected Models')}</div>
+                                    <Dropdown
+                                        placement="bottomRight"
+                                        overlay={() => extruderOverlay('models.multiple')}
+                                        trigger="click"
+                                    >
+                                        {renderExtruderStatus(modelsExtruder.multiple)}
+                                    </Dropdown>
+                                </div>
+                                <div className={`sm-flex align-center margin-left-24 margin-top-8 ${isOpenModels ? 'sm-flex' : 'display-none'}`}>
+                                    <span className="display-block width-96 text-overflow-ellipsis margin-left-4">{i18n._('key-Printing/LeftBar-Shells')}</span>
+                                    <Dropdown
+                                        placement="bottomRight"
+                                        overlay={() => extruderOverlay('models.shell')}
+                                        trigger="click"
+                                    >
+                                        {renderExtruderStatus(modelsExtruder.shell)}
+                                    </Dropdown>
+                                </div>
+                                <div className={`sm-flex align-center margin-left-24 margin-top-8 ${isOpenModels ? 'sm-flex' : 'display-none'}`}>
+                                    <span className="display-block width-96 text-overflow-ellipsis margin-left-4">{i18n._('key-Printing/LeftBar-Infill')}</span>
+                                    <Dropdown
+                                        placement="bottomRight"
+                                        overlay={() => extruderOverlay('models.infill')}
+                                        trigger="click"
+                                    >
+                                        {renderExtruderStatus(modelsExtruder.infill)}
+                                    </Dropdown>
+                                </div>
+                            </div>
+                            <div className="height-1 border-bottom-dashed-grey-1 margin-right-16 margin-left-8 margin-top-16 margin-bottom-8" />
+                            <div className="select-models-container">
+                                {helpersExtruderInfoShow && (
+                                    <div className="sm-flex align-center justify-space-between background-color-blue border-default-blue border-radius-8 margin-right-16 margin-left-8">
+                                        <div className="sm-flex align-center">
+                                            <SvgIcon
+                                                color="#1890FF"
+                                                size={24}
+                                                type={['static']}
+                                                name="WarningTipsTips"
+                                                className="margin-vertical-8 margin-left-8 margin-right-4"
+                                            />
+                                            <span className="display-inline width-200 text-overflow-ellipsis">{i18n._('key-Printing/LeftBar-Helpers Extruder Info')}</span>
+                                        </div>
+                                        <SvgIcon
+                                            color="#545659"
+                                            size={24}
+                                            type={['static']}
+                                            name="Cancel"
+                                            className="margin-right-8"
+                                            onClick={() => {
+                                                dispatch(printingActions.updateState({ helpersExtruderInfoShow: false }));
+                                            }}
+                                        />
+                                    </div>
+                                )}
+                                <div className="sm-flex align-center padding-top-8">
+                                    <SvgIcon
+                                        size={24}
+                                        hoversize={24}
+                                        name="DropdownOpen"
+                                        color="#545659"
+                                        onClick={() => actions.handleOpen('helpers')}
+                                    />
+                                    <div role="presentation" onClick={() => actions.handleOpen('helpers')} className="display-block width-96 text-overflow-ellipsis margin-left-4">{i18n._('key-Printing/LeftBar-All Helpers')}</div>
+                                    <Dropdown
+                                        placement="bottomRight"
+                                        overlay={() => extruderOverlay('helpers.multiple')}
+                                        trigger="click"
+                                    >
+                                        {renderExtruderStatus(helpersExturder.multiple)}
+                                    </Dropdown>
+                                </div>
+                                <div className={`align-center margin-left-24 margin-top-8 ${isOpenHelpers ? 'sm-flex' : 'display-none'}`}>
+                                    <span className="display-block width-96 text-overflow-ellipsis margin-left-4">{i18n._('key-Printing/LeftBar-Adhesion')}</span>
+                                    <Dropdown
+                                        placement="bottomRight"
+                                        overlay={() => extruderOverlay('helpers.adhesion')}
+                                        trigger="click"
+                                    >
+                                        {renderExtruderStatus(helpersExturder.adhesion)}
+                                    </Dropdown>
+                                </div>
+                                <div className={`sm-flex align-center margin-left-24 margin-top-8 ${isOpenHelpers ? 'sm-flex' : 'display-none'}`}>
+                                    <span className="display-block width-96 text-overflow-ellipsis margin-left-4">{i18n._('key-Printing/LeftBar-Support')}</span>
+                                    <Dropdown
+                                        placement="bottomRight"
+                                        overlay={() => extruderOverlay('helpers.support')}
+                                        trigger="click"
+                                    >
+                                        {renderExtruderStatus(helpersExturder.support)}
+                                    </Dropdown>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 )}
