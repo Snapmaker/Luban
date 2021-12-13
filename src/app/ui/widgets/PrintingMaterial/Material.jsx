@@ -3,7 +3,7 @@ import PropTypes from 'prop-types';
 import { useSelector, useDispatch, shallowEqual } from 'react-redux';
 import classNames from 'classnames';
 import { Divider, Input } from 'antd';
-import Anchor from '../../components/Anchor';
+import Cascader from '../../components/Cascader';
 import Select from '../../components/Select';
 import SvgIcon from '../../components/SvgIcon';
 import i18n from '../../../lib/i18n';
@@ -86,9 +86,9 @@ function Material({ widgetActions }) {
     }
 
     const [diametersOptions, setDiametersOptions] = useState([
-        { value: 0.2, label: 0.2 },
-        { value: 0.4, label: 0.4 },
-        { value: 0.6, label: 0.6 }
+        { value: 0.2, label: '0.2' },
+        { value: 0.4, label: '0.4' },
+        { value: 0.6, label: '0.6' }
     ]);
     useEffect(() => {
         if (leftDiameter && !diametersOptions.find(d => d.value === leftDiameter)) {
@@ -106,7 +106,7 @@ function Material({ widgetActions }) {
         setDiametersOptions(diametersOptions);
     }, [leftDiameter, rightDiameter]);
 
-    const [selectorCustomValue, setSelectorCustomValue] = useState(null);
+    const [selectorCustomValue, setSelectorCustomValue] = useState('');
 
     function dropdownRender(direction = LEFT_EXTRUDER) {
         return (
@@ -114,8 +114,9 @@ function Material({ widgetActions }) {
                 <div>
                     {menu}
                     <Divider style={{ margin: '0' }} />
-                    <div style={{ display: 'flex', flexWrap: 'nowrap' }}>
+                    <div className="height-36 padding-right-4 padding-bottom-4" style={{ display: 'flex', flexWrap: 'nowrap' }}>
                         <Input
+                            className="height-32"
                             placeholder="+Add Item"
                             bordered={false}
                             value={selectorCustomValue}
@@ -123,28 +124,29 @@ function Material({ widgetActions }) {
                                 setSelectorCustomValue(event.target.value);
                             }}
                         />
-                        <Anchor
-                            onClick={() => {
-                                const v = Number(selectorCustomValue);
-                                if (Number.isNaN(v) || v < 0.1 || v > 1.75) {
-                                    return;
-                                }
-                                if (!diametersOptions.find(d => d.value === v)) {
-                                    diametersOptions.push({
-                                        value: v,
-                                        label: v
-                                    });
-                                    setDiametersOptions(diametersOptions);
-                                }
-                                setDiameter(direction, v);
-                            }}
-                        >
+                        { selectorCustomValue !== '' && (
                             <SvgIcon
-                                className="margin-left-8"
+                                style={{
+                                    marginTop: '1px'
+                                }}
+                                color="#1890FF"
                                 name="CameraCaptureExtract"
-                                size={12}
+                                onClick={() => {
+                                    const v = Number(selectorCustomValue);
+                                    if (Number.isNaN(v) || v < 0.1 || v > 1.75) {
+                                        return;
+                                    }
+                                    if (!diametersOptions.find(d => d.value === v)) {
+                                        diametersOptions.push({
+                                            value: v,
+                                            label: v
+                                        });
+                                        setDiametersOptions(diametersOptions);
+                                    }
+                                    setDiameter(direction, v);
+                                }}
                             />
-                        </Anchor>
+                        )}
                     </div>
                 </div>
             )
@@ -163,15 +165,15 @@ function Material({ widgetActions }) {
                     <div>
                         <div className="display-inline">
                             {printingToolhead === DUAL_EXTRUDER_TOOLHEAD_FOR_SM2 && (<span style={{ color: '#86868B' }}>L</span>)}
-                            <Select
-                                className="margin-left-4"
+                            <Cascader
+                                className={printingToolhead === DUAL_EXTRUDER_TOOLHEAD_FOR_SM2 ? 'margin-left-4 width-80' : 'margin-left-4 width-200'}
                                 dropdownRender={dropdownRender(LEFT_EXTRUDER)}
-                                size={printingToolhead === DUAL_EXTRUDER_TOOLHEAD_FOR_SM2 ? '80px' : '200px'}
                                 options={diametersOptions}
                                 value={leftDiameter}
+                                placement="bottomLeft"
                                 onChange={
                                     (option) => {
-                                        setDiameter(LEFT_EXTRUDER, option.value);
+                                        setDiameter(LEFT_EXTRUDER, option[0]);
                                     }
                                 }
                             />
@@ -179,15 +181,15 @@ function Material({ widgetActions }) {
                         {printingToolhead === DUAL_EXTRUDER_TOOLHEAD_FOR_SM2 && (
                             <div className="display-inline margin-left-16">
                                 <span style={{ color: '#86868B' }}>R</span>
-                                <Select
-                                    className="margin-left-4"
+                                <Cascader
+                                    className="margin-left-4 width-80"
                                     dropdownRender={dropdownRender(RIGHT_EXTRUDER)}
-                                    size="80px"
                                     options={diametersOptions}
+                                    placement="bottomRight"
                                     value={rightDiameter}
                                     onChange={
                                         (option) => {
-                                            setDiameter(RIGHT_EXTRUDER, option.value);
+                                            setDiameter(RIGHT_EXTRUDER, option[0]);
                                         }
                                     }
                                 />
