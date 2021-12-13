@@ -1,6 +1,8 @@
 {
     "version": 2,
     "name": "PETG-Black",
+    "i18nName": "key-default_name-PETG-Black",
+    "i18nCategory": "key-default_category-PETG",
     "inherits": "snapmaker",
     "category": "PETG",
     "overrides": {

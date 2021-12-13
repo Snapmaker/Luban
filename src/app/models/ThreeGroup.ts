@@ -135,12 +135,14 @@ export default class ThreeGroup extends BaseModel {
             const tempExtruderConfig: ExtruderConfig = Object.assign({}, models[0].extruderConfig as ExtruderConfig);
             for (const modelItem of models.slice(1)) {
                 const { infill, shell } = (modelItem.extruderConfig as ExtruderConfig);
+                // another model use different extruder, change status to 'both'
                 if (infill !== tempExtruderConfig.infill && tempExtruderConfig.infill !== BOTH_EXTRUDER_MAP_NUMBER) {
                     tempExtruderConfig.infill = BOTH_EXTRUDER_MAP_NUMBER;
                 }
                 if (shell !== tempExtruderConfig.shell && tempExtruderConfig.shell !== BOTH_EXTRUDER_MAP_NUMBER) {
                     tempExtruderConfig.shell = BOTH_EXTRUDER_MAP_NUMBER;
                 }
+                // extruder status all is 'both', break out the loop
                 if (tempExtruderConfig.infill === BOTH_EXTRUDER_MAP_NUMBER && tempExtruderConfig.shell === BOTH_EXTRUDER_MAP_NUMBER) {
                     break;
                 }

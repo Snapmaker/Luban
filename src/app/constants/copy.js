@@ -279,3 +279,15 @@ i18n._('key-settings_message-update_not_ava'); // Snapmaker Luban is up to date.
 i18n._('key-settings_message-updateAva'); // Updates are available.
 i18n._('key-settings_message-checking'); // Checking for updates.
 i18n._('key-settings_message-error'); // An error occurred while checking for updates.
+
+// Material for 3dp
+i18n._('key-default_name-PLA-White');
+i18n._('key-default_name-PLA-Black');
+i18n._('key-default_category-PLA');
+i18n._('key-default_name-ABS-White');
+i18n._('key-default_name-ABS-Black');
+i18n._('key-default_category-ABS');
+i18n._('key-default_name-PETG-White');
+i18n._('key-default_name-PETG-Black');
+i18n._('key-default_category-PETG');
+

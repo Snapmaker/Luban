@@ -1307,10 +1307,10 @@ export const actions = {
                 item.extruderConfig = extruderConfig;
             });
         }
-        modelGroup.models = models;
-        dispatch(actions.updateState({
-            modelGroup
-        }));
+        modelGroup.models = [...models];
+        // dispatch(actions.updateState({
+        //     modelGroup
+        // }));
     },
 
     updateHelpersExtruder: (extruderConfig) => (dispatch) => {

@@ -2,6 +2,8 @@
     "name": "PLA-Black",
     "version": 2,
     "inherits": "snapmaker",
+    "i18nName": "key-default_name-PLA-Black",
+    "i18nCategory": "key-default_category-PLA",
     "category": "PLA",
     "overrides": {
         "material_flow": {
