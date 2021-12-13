@@ -17,7 +17,7 @@ import Checkbox from '../../components/Checkbox';
 import Dropdown from '../../components/Dropdown';
 import Menu from '../../components/Menu';
 import RotationAnalysisOverlay from './Overlay/RotationAnalysisOverlay';
-import { DUAL_EXTRUDER_TOOLHEAD_FOR_SM2, EPSILON } from '../../../constants';
+import { DUAL_EXTRUDER_TOOLHEAD_FOR_SM2, EPSILON, BOTH_EXTRUDER_MAP_NUMBER, LEFT_EXTRUDER_MAP_NUMBER } from '../../../constants';
 import { machineStore } from '../../../store/local-storage';
 
 const extruderLabelMap = {
@@ -26,14 +26,14 @@ const extruderLabelMap = {
     '2': 'Extruder Both'
 };
 const originalModelsExtruder = {
-    multiple: '0',
-    infill: '0',
-    shell: '0'
+    multiple: LEFT_EXTRUDER_MAP_NUMBER,
+    infill: LEFT_EXTRUDER_MAP_NUMBER,
+    shell: LEFT_EXTRUDER_MAP_NUMBER
 };
 const originalHelpersExtruder = {
-    multiple: '1',
-    support: '1',
-    adhesion: '1'
+    multiple: LEFT_EXTRUDER_MAP_NUMBER,
+    support: LEFT_EXTRUDER_MAP_NUMBER,
+    adhesion: LEFT_EXTRUDER_MAP_NUMBER
 };
 export const materialColorMap = {
     black: '#000000',
@@ -312,7 +312,7 @@ function VisualizerLeftBar({ defaultSupportSize, setTransformMode, isSupporting,
                     setModelsExtruder({
                         ...modelsExtruder,
                         infill: direction,
-                        multiple: modelsExtruder.shell === direction ? direction : '2'
+                        multiple: modelsExtruder.shell === direction ? direction : BOTH_EXTRUDER_MAP_NUMBER
                     });
                     dispatch(printingActions.updateSelectedModelsExtruder({ infill: direction, shell: modelsExtruder.shell }));
                     break;
@@ -320,7 +320,7 @@ function VisualizerLeftBar({ defaultSupportSize, setTransformMode, isSupporting,
                     setModelsExtruder({
                         ...modelsExtruder,
                         shell: direction,
-                        multiple: modelsExtruder.infill === direction ? direction : '2'
+                        multiple: modelsExtruder.infill === direction ? direction : BOTH_EXTRUDER_MAP_NUMBER
                     });
                     dispatch(printingActions.updateSelectedModelsExtruder({ shell: direction, infill: modelsExtruder.infill }));
                     break;
@@ -328,7 +328,7 @@ function VisualizerLeftBar({ defaultSupportSize, setTransformMode, isSupporting,
                     setHelpersExtruder({
                         ...helpersExturder,
                         adhesion: direction,
-                        multiple: helpersExturder.support === direction ? direction : '2'
+                        multiple: helpersExturder.support === direction ? direction : BOTH_EXTRUDER_MAP_NUMBER
                     });
                     dispatch(printingActions.updateHelpersExtruder({ support: helpersExturder.support, adhesion: direction }));
                     break;
@@ -336,7 +336,7 @@ function VisualizerLeftBar({ defaultSupportSize, setTransformMode, isSupporting,
                     setHelpersExtruder({
                         ...helpersExturder,
                         support: direction,
-                        multiple: helpersExturder.adhesion === direction ? direction : '2'
+                        multiple: helpersExturder.adhesion === direction ? direction : BOTH_EXTRUDER_MAP_NUMBER
                     });
                     dispatch(printingActions.updateHelpersExtruder({ adhesion: helpersExturder.adhesion, support: direction }));
                     break;
@@ -460,7 +460,7 @@ function VisualizerLeftBar({ defaultSupportSize, setTransformMode, isSupporting,
         let newHelpersExtruder = cloneDeep(helpersExturder);
         newHelpersExtruder = {
             ...newHelpersExtruder,
-            multiple: newHelpersExtruder.support === newHelpersExtruder.adhesion ? newHelpersExtruder.support : '2'
+            multiple: newHelpersExtruder.support === newHelpersExtruder.adhesion ? newHelpersExtruder.support : BOTH_EXTRUDER_MAP_NUMBER
         };
         setHelpersExtruder(newHelpersExtruder);
         return () => {
@@ -480,13 +480,13 @@ function VisualizerLeftBar({ defaultSupportSize, setTransformMode, isSupporting,
             if (selectedModelArray.length > 1) {
                 for (const item of selectedModelArray.slice(1)) {
                     extruderConfig = item.extruderConfig;
-                    if (extruderConfig.infill !== tempInfillExtruder && tempInfillExtruder !== '2') {
-                        tempInfillExtruder = '2';
+                    if (extruderConfig.infill !== tempInfillExtruder && tempInfillExtruder !== BOTH_EXTRUDER_MAP_NUMBER) {
+                        tempInfillExtruder = BOTH_EXTRUDER_MAP_NUMBER;
                     }
-                    if (extruderConfig.shell !== tempShellExtruder && tempShellExtruder !== '2') {
-                        tempShellExtruder = '2';
+                    if (extruderConfig.shell !== tempShellExtruder && tempShellExtruder !== BOTH_EXTRUDER_MAP_NUMBER) {
+                        tempShellExtruder = BOTH_EXTRUDER_MAP_NUMBER;
                     }
-                    if (tempShellExtruder === '2' && tempInfillExtruder === '2') {
+                    if (tempShellExtruder === BOTH_EXTRUDER_MAP_NUMBER && tempInfillExtruder === BOTH_EXTRUDER_MAP_NUMBER) {
                         break;
                     }
                 }
@@ -496,7 +496,7 @@ function VisualizerLeftBar({ defaultSupportSize, setTransformMode, isSupporting,
             setDualExtruderDisabled(!visibleModel.length);
         }
         setModelsExtruder({
-            multiple: tempInfillExtruder === tempShellExtruder ? tempInfillExtruder : '2',
+            multiple: tempInfillExtruder === tempShellExtruder ? tempInfillExtruder : BOTH_EXTRUDER_MAP_NUMBER,
             infill: tempInfillExtruder,
             shell: tempShellExtruder
         });

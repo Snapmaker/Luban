@@ -3,7 +3,7 @@ import BaseModel, { ModelTransformation, ModelInfo } from './ThreeBaseModel.ts';
 import type ModelGroup from './ModelGroup';
 import ThreeModel from './ThreeModel';
 import ThreeUtils from '../three-extensions/ThreeUtils';
-import { HEAD_PRINTING } from '../constants';
+import { HEAD_PRINTING, BOTH_EXTRUDER_MAP_NUMBER } from '../constants';
 import ConvexGeometry from '../three-extensions/ConvexGeometry';
 
 window.THREE = THREE;
@@ -135,13 +135,13 @@ export default class ThreeGroup extends BaseModel {
             const tempExtruderConfig: ExtruderConfig = Object.assign({}, models[0].extruderConfig as ExtruderConfig);
             for (const modelItem of models.slice(1)) {
                 const { infill, shell } = (modelItem.extruderConfig as ExtruderConfig);
-                if (infill !== tempExtruderConfig.infill && tempExtruderConfig.infill !== '2') {
-                    tempExtruderConfig.infill = '2';
+                if (infill !== tempExtruderConfig.infill && tempExtruderConfig.infill !== BOTH_EXTRUDER_MAP_NUMBER) {
+                    tempExtruderConfig.infill = BOTH_EXTRUDER_MAP_NUMBER;
                 }
-                if (shell !== tempExtruderConfig.shell && tempExtruderConfig.shell !== '2') {
-                    tempExtruderConfig.shell = '2';
+                if (shell !== tempExtruderConfig.shell && tempExtruderConfig.shell !== BOTH_EXTRUDER_MAP_NUMBER) {
+                    tempExtruderConfig.shell = BOTH_EXTRUDER_MAP_NUMBER;
                 }
-                if (tempExtruderConfig.infill === '2' && tempExtruderConfig.shell === '2') {
+                if (tempExtruderConfig.infill === BOTH_EXTRUDER_MAP_NUMBER && tempExtruderConfig.shell === BOTH_EXTRUDER_MAP_NUMBER) {
                     break;
                 }
             }

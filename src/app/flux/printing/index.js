@@ -5,7 +5,7 @@ import { cloneDeep, isNil, filter, find as lodashFind } from 'lodash';
 import LoadModelWorker from '../../workers/LoadModel.worker';
 import GcodeToBufferGeometryWorker from '../../workers/GcodeToBufferGeometry.worker';
 import { ABSENT_OBJECT, EPSILON, DATA_PREFIX, PRINTING_MANAGER_TYPE_MATERIAL,
-    PRINTING_MANAGER_TYPE_QUALITY, MACHINE_SERIES, HEAD_PRINTING, getMachineSeriesWithToolhead, LOAD_MODEL_FROM_INNER } from '../../constants';
+    PRINTING_MANAGER_TYPE_QUALITY, MACHINE_SERIES, HEAD_PRINTING, getMachineSeriesWithToolhead, LOAD_MODEL_FROM_INNER, LEFT_EXTRUDER, RIGHT_EXTRUDER, LEFT_EXTRUDER_MAP_NUMBER } from '../../constants';
 import { timestamp } from '../../../shared/lib/random-utils';
 import { machineStore } from '../../store/local-storage';
 import ProgressStatesManager, { PROCESS_STAGE, STEP_STAGE } from '../../lib/manager/ProgressManager';
@@ -148,7 +148,7 @@ const INITIAL_STATE = {
     // PrintingManager
     showPrintingManager: false,
     managerDisplayType: PRINTING_MANAGER_TYPE_MATERIAL,
-    materialManagerDirection: 'left',
+    materialManagerDirection: LEFT_EXTRUDER,
 
     // others
     transformMode: 'translate', // translate/scale/rotate
@@ -172,8 +172,8 @@ const INITIAL_STATE = {
 
     // helpers extruder config
     helpersExtruderConfig: {
-        adhesion: '0',
-        support: '0'
+        adhesion: LEFT_EXTRUDER_MAP_NUMBER,
+        support: LEFT_EXTRUDER_MAP_NUMBER
     },
     // extruder modal
     isOpenSelectModals: false,
@@ -305,7 +305,7 @@ export const actions = {
         }
         dispatch(actions.updateState({
             activeDefinition: definitionManager.activeDefinition,
-            helpersExtruderConfig: { adhesion: '0', support: '0' }
+            helpersExtruderConfig: { adhesion: LEFT_EXTRUDER_MAP_NUMBER, support: LEFT_EXTRUDER_MAP_NUMBER }
         }));
         // todo：init 'activeDefinition' by localStorage
         // dispatch(actions.updateActiveDefinition(definitionManager.snapmakerDefinition));
@@ -329,7 +329,7 @@ export const actions = {
         gcodeLineGroup.position.set(-size.x / 2, -size.y / 2, 0);
     },
 
-    updateDefaultConfigId: (type, defaultId, direction = 'left') => (dispatch, getState) => {
+    updateDefaultConfigId: (type, defaultId, direction = LEFT_EXTRUDER) => (dispatch, getState) => {
         let { series } = getState().machine;
         series = getRealSeries(series);
         let originalConfigId = {};
@@ -339,10 +339,10 @@ export const actions = {
         if (originalConfigId[series]) {
             if (type === PRINTING_MANAGER_TYPE_MATERIAL) {
                 switch (direction) {
-                    case 'left':
+                    case LEFT_EXTRUDER:
                         originalConfigId[series].material = defaultId;
                         break;
-                    case 'right':
+                    case RIGHT_EXTRUDER:
                         originalConfigId[series].materialRight = defaultId;
                         break;
                     default:
@@ -810,8 +810,8 @@ export const actions = {
         dispatch(actions.destroyGcodeLine());
         dispatch(actions.displayModel());
     },
-    updateDefaultMaterialId: (materialId, direction = 'left') => (dispatch) => {
-        const updateKey = direction === 'left' ? 'defaultMaterialId' : 'defaultMaterialIdRight';
+    updateDefaultMaterialId: (materialId, direction = LEFT_EXTRUDER) => (dispatch) => {
+        const updateKey = direction === LEFT_EXTRUDER ? 'defaultMaterialId' : 'defaultMaterialIdRight';
         dispatch(actions.updateDefaultConfigId(PRINTING_MANAGER_TYPE_MATERIAL, materialId, direction));
         dispatch(actions.updateState({ [updateKey]: materialId }));
     },
