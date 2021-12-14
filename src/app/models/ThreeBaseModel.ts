@@ -6,16 +6,16 @@ import type ThreeGroup from './ThreeGroup';
 const uuid = require('uuid');
 
 export type ModelTransformation = {
-    positionX: number;
-    positionY: number;
-    positionZ: number;
-    rotationX: number;
-    rotationY: number;
-    rotationZ: number;
-    scaleX: number;
-    scaleY: number;
-    scaleZ: number;
-    uniformScalingState: boolean;
+    positionX?: number;
+    positionY?: number;
+    positionZ?: number;
+    rotationX?: number;
+    rotationY?: number;
+    rotationZ?: number;
+    scaleX?: number;
+    scaleY?: number;
+    scaleZ?: number;
+    uniformScalingState?: boolean;
     width?: number;
     height?: number;
 };

@@ -4,6 +4,12 @@ import type ThreeModel from '../../models/ThreeModel';
 import ThreeGroup from '../../models/ThreeGroup.ts';
 import type ModelGroup from '../../models/ModelGroup';
 
+type PositionObject = {
+    positionX: number,
+    positionY: number,
+    positionZ?: number,
+};
+
 type GroupState = {
     modelsbeforeGroup: Model[],
     modelsafterGroup: Model[],
@@ -11,6 +17,7 @@ type GroupState = {
     groupChildrenMap: Map<ThreeGroup, ThreeModel[]>
     selectedModelsPositionMap: Map<string, any>
     target: ThreeGroup,
+    newPosition: PositionObject,
     modelGroup: ModelGroup
 };
 
@@ -35,6 +42,7 @@ export default class GroupAlginOperation3D extends Operation {
         const target = this.state.target;
         const modelGroup = this.state.modelGroup;
         const selectedModels = this.state.selectedModels;
+        const newPosition = this.state.newPosition;
 
         modelGroup.unselectAllModels();
         modelGroup.updateModelsPositionBaseFirstModel(selectedModels);
@@ -49,6 +57,9 @@ export default class GroupAlginOperation3D extends Operation {
             }
         });
         target.add(modelsToGroup);
+        if (newPosition) {
+            target.updateTransformation(newPosition);
+        }
         target.stickToPlate();
         modelGroup.object.add(target.meshObject);
         modelGroup.models = [...this.state.modelsafterGroup];
@@ -63,7 +74,11 @@ export default class GroupAlginOperation3D extends Operation {
         modelGroup.ungroup();
 
         modelGroup.unselectAllModels();
-        this.state.selectedModelsPositionMap.forEach((position, modelID) => {
+        // this.state.groupChildrenMap.forEach((subModels, group) => {
+        //     group.add(subModels);
+        //     modelGroup.object.add(group.meshObject);
+        // });
+        this.state.selectedModelsPositionMap.forEach((position : PositionObject, modelID : string) => {
             modelGroup.updateModelPositionByPosition(modelID, position);
         });
         modelGroup.models = [...this.state.modelsbeforeGroup];

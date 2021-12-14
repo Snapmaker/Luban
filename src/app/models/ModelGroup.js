@@ -965,23 +965,25 @@ class ModelGroup extends EventEmitter {
 
             this.modelChanged();
         }
-        return this.getState();
+        console.log('this.selectedGroup', this.selectedGroup, this.selectedGroup?.position);
+        const newPosition = this.selectedGroup?.position;
+        return {
+            positionX: newPosition.x,
+            positionY: newPosition.y,
+        };
     }
 
     updateModelPositionByPosition(modelID, position) {
         if (modelID) {
             const model = this.models.find(d => d.modelID === modelID);
-            model.updateTransformation({
+            this.selectModelById(model.modelID);
+            this.updateSelectedGroupTransformation({
                 positionX: position.x,
                 positionY: position.y,
                 positionZ: position.z,
             });
-            model.meshObject.position.x = position.x;
-            model.meshObject.position.y = position.y;
-            model.meshObject.position.z = position.z;
-            this.selectedGroup.updateMatrix();
+            this.onModelAfterTransform();
         }
-        return this.getState();
     }
 
     /**

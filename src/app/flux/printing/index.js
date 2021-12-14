@@ -1784,7 +1784,6 @@ export const actions = {
     groupAndAlign: () => (dispatch, getState) => {
         const { modelGroup } = getState().printing;
 
-        // const groups = modelGroup.getSelectedModelArray().filter(model => model instanceof ThreeGroup);
         const modelsbeforeGroup = modelGroup.getModels().slice(0);
         const selectedModels = modelGroup.getSelectedModelArray().slice(0);
         const selectedModelsPositionMap = new Map();
@@ -1794,24 +1793,30 @@ export const actions = {
                 y: model.transformation.positionY,
                 z: model.transformation.positionZ,
             });
-            console.log('model', model.transformation);
         });
-        modelGroup.updateModelsPositionBaseFirstModel(selectedModels);
+        // const groups = modelGroup.getSelectedModelArray().filter(model => model instanceof ThreeGroup);
+        // const groupChildrenMap = new Map();
+        // groups.forEach(group => {
+        //     groupChildrenMap.set(group, group.children.slice(0));
+        // });
+        const newPosition = modelGroup.updateModelsPositionBaseFirstModel(selectedModels);
         modelGroup.onModelAfterTransform(false);
+        const operations = new Operations();
 
-        dispatch(actions.clearAllManualSupport());
+        dispatch(actions.clearAllManualSupport(operations));
         const { modelState } = modelGroup.group();
         const modelsafterGroup = modelGroup.getModels().slice(0);
 
         const operation = new GroupAlignOperation3D({
             selectedModelsPositionMap,
+            // groupChildrenMap,
             modelsbeforeGroup,
             modelsafterGroup,
             selectedModels,
+            newPosition,
             target: modelGroup.getSelectedModelArray()[0],
             modelGroup
         });
-        const operations = new Operations();
         operations.push(operation);
         operations.registCallbackAfterAll(() => {
             dispatch(actions.updateState(modelGroup.getState()));
