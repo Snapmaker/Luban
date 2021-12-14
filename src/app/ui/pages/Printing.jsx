@@ -172,7 +172,7 @@ function useRenderMainToolBar() {
                 title: i18n._('key-3DP/MainToolBar-Align'),
                 disabled: !canMerge || !enableShortcut,
                 type: 'button',
-                name: 'MainToolbarUngroup',
+                name: 'MainToolbarMerge',
                 action: () => {
                     dispatch(printingActions.groupAndAlign());
                 }
