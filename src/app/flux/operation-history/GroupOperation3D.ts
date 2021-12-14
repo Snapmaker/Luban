@@ -43,7 +43,6 @@ export default class GroupOperation3D extends Operation {
                 modelsToGroup.push(model);
             }
         });
-        console.log('redo ', target);
         target.add(modelsToGroup);
         modelGroup.object.add(target.meshObject);
         modelGroup.models = [...this.state.modelsafterGroup];
@@ -62,7 +61,6 @@ export default class GroupOperation3D extends Operation {
             group.add(subModels);
             modelGroup.object.add(group.meshObject);
         });
-        console.log('this.state.modelsbeforeGroup', modelGroup, this.state.modelsbeforeGroup);
         modelGroup.models = [...this.state.modelsbeforeGroup];
     }
 }

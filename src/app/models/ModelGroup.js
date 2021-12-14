@@ -965,7 +965,6 @@ class ModelGroup extends EventEmitter {
 
             this.modelChanged();
         }
-        console.log('this.selectedGroup', this.selectedGroup, this.selectedGroup?.position);
         const newPosition = this.selectedGroup?.position;
         return {
             positionX: newPosition.x,
@@ -1741,9 +1740,7 @@ class ModelGroup extends EventEmitter {
         if (selectedModelArray.some(model => model.visible)) {
             // insert group to the first model position in selectedModelArray
             const indexesOfSelectedModels = selectedModelArray.map(model => {
-                return this.models.findIndex(element => {
-                    return element.modelID === model.modelID;
-                });
+                return this.models.indexOf(model);
             });
             const modelsToGroup = this._flattenGroups(selectedModelArray);
             group.modelName = this._createNewModelName(group);

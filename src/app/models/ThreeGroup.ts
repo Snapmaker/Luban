@@ -193,7 +193,6 @@ export default class ThreeGroup extends BaseModel {
      * Experimental
      * @returns ModelTransformation
      */
-
     onTransform() {
         const geometrySize = ThreeUtils.getGeometrySize(this.mergeGeometriesInGroup(), true);
         const { uniformScalingState } = this.meshObject as any;
