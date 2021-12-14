@@ -1,6 +1,23 @@
+import * as THREE from 'three';
 import uuid from 'uuid';
+import type ModelGroup from './ModelGroup';
 
-const DEFAULT_TRANSFORMATION = {
+export interface ModelTransformation {
+    positionX: number,
+    positionY: number,
+    positionZ: number,
+    rotationX: number,
+    rotationY: number,
+    rotationZ: number,
+    scaleX: number,
+    scaleY: number,
+    scaleZ: number,
+    uniformScalingState: boolean,
+    width?: number;
+    height?: number;
+}
+
+const DEFAULT_TRANSFORMATION: ModelTransformation = {
     positionX: 0,
     positionY: 0,
     positionZ: 0,
@@ -15,10 +32,20 @@ const DEFAULT_TRANSFORMATION = {
 
 // BaseModel only do data process
 // isolated from Model.js which renamed to ThreeModel.js
-class BaseModel {
+abstract class BaseModel {
     visible = true;
 
-    constructor(modelInfo, modelGroup) {
+    modelGroup = null;
+
+    modelID = '';
+
+    modelName = '';
+
+    transformation = DEFAULT_TRANSFORMATION;
+
+    meshObject: THREE.Mesh & { uniformScalingState: boolean };
+
+    constructor(modelInfo: unknown, modelGroup: ModelGroup) {
         this.modelGroup = modelGroup;
 
         // eslint-disable-next-line no-return-assign
@@ -29,7 +56,7 @@ class BaseModel {
         this.transformation = { ...DEFAULT_TRANSFORMATION, ...this.transformation };
     }
 
-    updateTransformation(transformation) {
+    public updateTransformation(transformation: ModelTransformation) {
         const { positionX, positionY, positionZ, rotationX, rotationY, rotationZ, scaleX, scaleY, scaleZ, uniformScalingState } = transformation;
         const { width, height } = transformation;
 

@@ -1,5 +1,5 @@
-export default class Operation {
-    state = {};
+export default abstract class Operation<T> {
+    protected state: T;
 
     description = this.constructor.name;
 

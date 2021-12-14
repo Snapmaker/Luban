@@ -24,6 +24,15 @@ function copyFileSync(src, dst) {
         fs.copyFileSync(src, dst);
     }
 }
+function traverse(models, callback) {
+    models.forEach(model => {
+        if (model.children) {
+            traverse(model.children, callback);
+        } else {
+            callback && callback(model);
+        }
+    });
+}
 
 function getSeriesPathFromMachineInfo(machineInfo) {
     let currentSeriesPath = '';
@@ -273,16 +282,18 @@ export const saveEnv = async (req, res) => {
             }
         });
     });
-    config.models.forEach((model) => {
+    traverse(config.models, (model) => {
         // why copy all not just 'uploadName'
         const { uploadName } = model;
-        if (/\.svg$/.test(uploadName) && !(/parsed\.svg$/.test(uploadName))) {
-            const parseName = uploadName.replace(/\.svg$/, 'parsed.svg');
-            copyFileSync(`${DataStorage.tmpDir}/${parseName}`, `${envDir}/${parseName}`);
+        if (uploadName) {
+            if (/\.svg$/.test(uploadName) && !(/parsed\.svg$/.test(uploadName))) {
+                const parseName = uploadName.replace(/\.svg$/, 'parsed.svg');
+                copyFileSync(`${DataStorage.tmpDir}/${parseName}`, `${envDir}/${parseName}`);
+            }
+            copyFileSync(`${DataStorage.tmpDir}/${uploadName}`, `${envDir}/${uploadName}`);
         }
-
-        copyFileSync(`${DataStorage.tmpDir}/${uploadName}`, `${envDir}/${uploadName}`);
     });
+
     if (config.defaultMaterialId && /^material.([0-9_]+)$/.test(config.defaultMaterialId)) {
         copyFileSync(`${DataStorage.configDir}/${headType}/${currentSeriesPath}/${config.defaultMaterialId}.def.json`, `${envDir}/${config.defaultMaterialId}.def.json`);
     }
@@ -324,7 +335,7 @@ export const recoverEnv = async (req, res) => {
     const currentSeriesPath = getSeriesPathFromMachineInfo(config?.machineInfo);
 
 
-    config.models.forEach((model) => {
+    traverse(config.models, (model) => {
         const { originalName, uploadName } = model;
 
         copyFileSync(`${envDir}/${originalName}`, `${DataStorage.tmpDir}/${originalName}`);

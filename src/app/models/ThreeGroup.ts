@@ -1,7 +1,7 @@
 import * as THREE from 'three';
-import BaseModel, { ModelTransformation, ModelInfo } from './ThreeBaseModel.ts';
+import BaseModel, { ModelTransformation, ModelInfo } from './ThreeBaseModel';
 import type ModelGroup from './ModelGroup';
-import ThreeModel from './ThreeModel';
+import type ThreeModel from './ThreeModel';
 import ThreeUtils from '../three-extensions/ThreeUtils';
 import { HEAD_PRINTING, GROUP_OPERATION, BOTH_EXTRUDER_MAP_NUMBER } from '../constants';
 import ConvexGeometry from '../three-extensions/ConvexGeometry';
@@ -13,6 +13,7 @@ type ExtruderConfig = {
     infill: string,
     shell: string,
 };
+type traverseCallback = (mesh: ThreeModel) => void;
 
 export default class ThreeGroup extends BaseModel {
     estimatedTime: number = 0;
@@ -33,6 +34,7 @@ export default class ThreeGroup extends BaseModel {
 
     meshObject: THREE.Object3D;
 
+    // eslint-disable-next-line no-use-before-define
     children: Array<ThreeModel | ThreeGroup>;
 
     boundingBox: THREE.Box3;
@@ -50,8 +52,6 @@ export default class ThreeGroup extends BaseModel {
     sourceType: string = '3d';
 
     modelName: string;
-
-    supportTag: boolean;
 
     isSelected: boolean = false;
 
@@ -76,11 +76,17 @@ export default class ThreeGroup extends BaseModel {
 
     mode: string;
 
-    parent: ThreeGroup;
+    // eslint-disable-next-line no-use-before-define
+    parent: ThreeGroup = null;
+
+    modelID: string;
 
     constructor(modelInfo: ModelInfo, modelGroup: ModelGroup) {
         super(modelInfo, modelGroup);
         this.meshObject = new THREE.Group();
+        this.meshObject.userData = {
+            name: 'ThreeGroup'
+        };
         this.children = [];
         this.groupFrom = modelInfo.groupFrom || GROUP_OPERATION;
         this.transformation = {
@@ -110,16 +116,16 @@ export default class ThreeGroup extends BaseModel {
             // update group extruder config
             this.extruderConfig = models[0].extruderConfig as ExtruderConfig;
         } else if (models.length > 1) {
-            let p;
-            const boundingBoxTemp = ThreeUtils.computeBoundingBox(this.meshObject);
+            let center;
             if (this.meshObject.children.length >= 1) {
-                p = new THREE.Vector3(
+                const boundingBoxTemp = ThreeUtils.computeBoundingBox(this.meshObject);
+                center = new THREE.Vector3(
                     (boundingBoxTemp.max.x + boundingBoxTemp.min.x) / 2,
                     (boundingBoxTemp.max.y + boundingBoxTemp.min.y) / 2,
                     boundingBoxTemp.max.z / 2
                 );
             } else {
-                p = new THREE.Vector3(
+                center = new THREE.Vector3(
                     0,
                     0,
                     0
@@ -131,7 +137,7 @@ export default class ThreeGroup extends BaseModel {
             // only make the diff translation
             const oldPosition = new THREE.Vector3();
             this.meshObject.getWorldPosition(oldPosition);
-            const matrix = new THREE.Matrix4().makeTranslation(p.x - oldPosition.x, p.y - oldPosition.y, p.z - oldPosition.z);
+            const matrix = new THREE.Matrix4().makeTranslation(center.x - oldPosition.x, center.y - oldPosition.y, center.z - oldPosition.z);
             ThreeUtils.applyObjectMatrix(this.meshObject, matrix);
             children.map(obj => ThreeUtils.setObjectParent(obj, this.meshObject));
             (this.meshObject as any).uniformScalingState = true;
@@ -152,9 +158,10 @@ export default class ThreeGroup extends BaseModel {
             }
             this.extruderConfig = tempExtruderConfig;
         }
+        this.onTransform();
     }
 
-    destroy(): ThreeModel[] {
+    disassemble(): ThreeModel[] {
         ThreeUtils.applyObjectMatrix(this.meshObject, new THREE.Matrix4().copy(this.meshObject.matrix).invert());
         // apply group transformation to children
         const models = [];
@@ -163,7 +170,7 @@ export default class ThreeGroup extends BaseModel {
             model.parent = null;
             // model.meshObject.applyMatrix4(this.meshObject.matrixWorld);
             if (model instanceof ThreeGroup) {
-                const children = model.destroy();
+                const children = model.disassemble();
                 models.push(...children);
             } else {
                 ThreeUtils.setObjectParent(model.meshObject, this.meshObject.parent);
@@ -186,9 +193,9 @@ export default class ThreeGroup extends BaseModel {
                 if (model.meshObject instanceof THREE.Group) {
                     return (model as ThreeGroup).mergeGeometriesInGroup();
                 } else {
-                    model.meshObject.updateMatrixWorld();
+                    model.meshObject.updateMatrix();
                     const clonedGeometry = (model.meshObject as THREE.Mesh).geometry.clone() as THREE.BufferGeometry;
-                    clonedGeometry.applyMatrix4(model.meshObject.matrixWorld);
+                    clonedGeometry.applyMatrix4(model.meshObject.matrix);
                     return clonedGeometry;
                 }
             }));
@@ -196,13 +203,59 @@ export default class ThreeGroup extends BaseModel {
         return geometry;
     }
 
-    isMeshInGroup(mesh: THREE.Mesh) {
-        return this.children.some(model => {
+    traverse(callback: traverseCallback) {
+        this.children.forEach(model => {
             if (model instanceof ThreeGroup) {
-                return model.isMeshInGroup(mesh);
+                model.traverse(callback);
+            } else {
+                (typeof callback === 'function') && callback(model);
             }
-            return model.meshObject === mesh;
         });
+    }
+
+    findModelInGroupByMesh(mesh: THREE.Mesh) {
+        let modelFound = null, hasSelectedModel = false;
+        this.traverse((model) => {
+            if (model.meshObject === mesh) {
+                modelFound = model;
+            }
+        });
+        this.traverse((model) => {
+            if (model.isSelected) {
+                hasSelectedModel = true;
+            }
+        });
+
+        if (modelFound) {
+            if (hasSelectedModel) {
+                return modelFound;
+            } else if (modelFound.isSelected) {
+                return modelFound;
+            } else if (!this.isSelected) {
+                return this;
+            }
+        }
+        return modelFound;
+    }
+
+    intersectSupportTargetMeshInGroup(support: ThreeModel): ThreeModel | null {
+        const center = new THREE.Vector3();
+        support.meshObject.getWorldPosition(center);
+        center.setZ(0);
+
+        const rayDirection = new THREE.Vector3(0, 0, 1);
+        const raycaster = new THREE.Raycaster(center, rayDirection);
+        const intersects = raycaster.intersectObject(this.meshObject, true);
+
+        let target = null;
+        if (intersects && intersects[0]) {
+            this.traverse((model) => {
+                if (model.meshObject === intersects[0].object) {
+                    target = model;
+                }
+            });
+        }
+        return target;
     }
 
     get visible() {
@@ -211,6 +264,27 @@ export default class ThreeGroup extends BaseModel {
 
     set visible(value: boolean) {
         this.meshObject.visible = value;
+    }
+
+    scaleToFit(size) {
+        const revertParent = ThreeUtils.removeObjectParent(this.meshObject);
+        const modelSize = new THREE.Vector3();
+        this.computeBoundingBox();
+        this.boundingBox.getSize(modelSize);
+        const scalar = ['x', 'y', 'z'].reduce((prev, key) => Math.min((size[key] - 5) / modelSize[key], prev), Number.POSITIVE_INFINITY);
+        this.meshObject.scale.multiplyScalar(scalar);
+        this.meshObject.position.set(0, 0, 0);
+        this.meshObject.updateMatrix();
+        this.setSelected();
+        this.stickToPlate();
+        this.onTransform();
+        revertParent();
+    }
+
+    updateMaterialColor(color) {
+        this.children.forEach((model) => {
+            model.updateMaterialColor(color);
+        });
     }
 
     /**
@@ -255,8 +329,9 @@ export default class ThreeGroup extends BaseModel {
     }
 
     updateTransformation(transformation: ModelTransformation): ModelTransformation {
-        super.updateTransformation(transformation);
-        return this.transformation;
+        this.children.forEach(model => model.updateTransformation(transformation));
+
+        return super.updateTransformation(transformation);
     }
 
     computeBoundingBox() {
@@ -281,7 +356,7 @@ export default class ThreeGroup extends BaseModel {
 
         this.computeBoundingBox();
         this.meshObject.position.z -= this.boundingBox.min.z;
-        this.computeBoundingBox(); // update boundingbox after position changed
+        this.computeBoundingBox();
         this.onTransform();
         revert();
     }
@@ -295,9 +370,10 @@ export default class ThreeGroup extends BaseModel {
     setOversteppedAndSelected(overstepped: boolean, isSelected: boolean) {
         this.overstepped = overstepped;
         this.children.forEach(model => {
-            model.overstepped = overstepped;
+            model.setOversteppedAndSelected(overstepped, model.isSelected);
         });
-        this.setSelected(isSelected);
+        // this.setSelected(isSelected);
+        this.isSelected = isSelected;
     }
 
     setSelected(isSelected?: boolean) {
@@ -325,7 +401,6 @@ export default class ThreeGroup extends BaseModel {
             // visible: this.visible,
             transformation: this.transformation,
             processImageName: this.processImageName,
-            supportTag: this.supportTag
         };
         this.children.forEach(model => {
             clonedSubModels.push(model.clone(modelGroup));
@@ -504,82 +579,24 @@ export default class ThreeGroup extends BaseModel {
         return result;
     }
 
-    /**
-     * Experimental
-     * @returns void
-     */
-    setSupportPosition(position: THREE.Vector3) {
-        const object = this.meshObject;
-        object.position.copy(position);
-        object.updateMatrix();
-        this.generateSupportGeometry();
-    }
+    setSupportPosition() { }
 
-    /**
-     * Experimental
-     * @returns void
-     */
-    generateSupportGeometry() {}
+    generateSupportGeometry() { }
 
-    /**
-     * Experimental
-     * @returns void
-     */
     setVertexColors() {
-        this.meshObject.updateMatrixWorld();
-        const bufferGeometry = this.mergeGeometriesInGroup();
-        const clone = bufferGeometry.clone();
-        clone.applyMatrix4(this.meshObject.matrixWorld.clone());
-
-        const positions = clone.getAttribute('position').array;
-
-        const colors = [];
-        const normals = clone.getAttribute('normal').array;
-        let start = 0;
-        const worker = () => {
-            let i = start;
-            do {
-                const normal = new THREE.Vector3(normals[i], normals[i + 1], normals[i + 2]);
-                const angle = normal.angleTo(new THREE.Vector3(0, 0, 1)) / Math.PI * 180;
-                const avgZ = (positions[i + 2] + positions[i + 5] + positions[i + 8]) / 3;
-
-                if (angle > 120 && avgZ > 1) {
-                    colors.push(1, 0.2, 0.2);
-                    colors.push(1, 0.2, 0.2);
-                    colors.push(1, 0.2, 0.2);
-                } else {
-                    colors.push(0.9, 0.9, 0.9);
-                    colors.push(0.9, 0.9, 0.9);
-                    colors.push(0.9, 0.9, 0.9);
-                }
-                i += 9;
-            } while (i - start < 10000 && i < normals.length);
-            if (i < normals.length) {
-                start = i;
-                setTimeout(worker, 1);
-            } else {
-                bufferGeometry.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3));
-                this.setSelected(true);
-                this.modelGroup.modelChanged();
-            }
-        };
-
-        setTimeout(worker, 10);
+        this.traverse((model) => {
+            model.setVertexColors();
+        });
     }
 
-    /**
-     * Experimental
-     * @returns void
-     */
     removeVertexColors() {
-        const bufferGeometry = this.mergeGeometriesInGroup();
-        bufferGeometry.deleteAttribute('color');
-        this.setSelected();
-        this.modelGroup && this.modelGroup.modelChanged();
+        this.traverse((model) => {
+            model.removeVertexColors();
+        });
     }
 
     cloneMeshWithoutSupports(): THREE.Object3D {
-        const clonedGroup = this.meshObject.clone();
+        const clonedGroup = this.meshObject.clone(false);
         this.children.forEach(model => {
             const mesh: THREE.Mesh = model.cloneMeshWithoutSupports() as unknown as THREE.Mesh;
             clonedGroup.add(mesh);
@@ -590,7 +607,7 @@ export default class ThreeGroup extends BaseModel {
     getSerializableConfig(): ModelInfo {
         const {
             modelID, limitSize, headType, sourceType, sourceHeight, sourceWidth, originalName, uploadName, config, mode,
-            transformation, processImageName, supportTag, visible, extruderConfig, modelName
+            transformation, processImageName, visible, extruderConfig, modelName
         } = this;
         const children = this.children.map(model => {
             const serializableConfig: ModelInfo = model.getSerializableConfig();
@@ -612,7 +629,6 @@ export default class ThreeGroup extends BaseModel {
             visible,
             transformation,
             processImageName,
-            supportTag,
             extruderConfig,
             children,
             modelName

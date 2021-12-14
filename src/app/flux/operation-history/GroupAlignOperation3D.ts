@@ -1,7 +1,7 @@
 import Operation from './Operation';
 import type Model from '../../models/ThreeBaseModel';
 import type ThreeModel from '../../models/ThreeModel';
-import ThreeGroup from '../../models/ThreeGroup.ts';
+import ThreeGroup from '../../models/ThreeGroup';
 import type ModelGroup from '../../models/ModelGroup';
 
 type PositionObject = {
@@ -21,7 +21,7 @@ type GroupState = {
     modelGroup: ModelGroup
 };
 
-export default class GroupAlginOperation3D extends Operation {
+export default class GroupAlginOperation3D extends Operation<GroupState> {
     state: GroupState;
 
     constructor(state) {
@@ -50,7 +50,7 @@ export default class GroupAlginOperation3D extends Operation {
         const modelsToGroup = [];
         this.state.selectedModels.forEach(model => {
             if (model instanceof ThreeGroup) {
-                const children = model.destroy();
+                const children = model.disassemble();
                 modelsToGroup.push(...children);
             } else {
                 modelsToGroup.push(model);
@@ -78,7 +78,7 @@ export default class GroupAlginOperation3D extends Operation {
         //     group.add(subModels);
         //     modelGroup.object.add(group.meshObject);
         // });
-        this.state.selectedModelsPositionMap.forEach((position : PositionObject, modelID : string) => {
+        this.state.selectedModelsPositionMap.forEach((position: PositionObject, modelID: string) => {
             modelGroup.updateModelPositionByPosition(modelID, position);
         });
         modelGroup.models = [...this.state.modelsbeforeGroup];

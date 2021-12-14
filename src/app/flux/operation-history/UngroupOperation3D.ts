@@ -1,28 +1,35 @@
 import type ModelGroup from '../../models/ModelGroup';
 import type ThreeGroup from '../../models/ThreeGroup';
 import type ThreeModel from '../../models/ThreeModel';
+import type { ModelTransformation } from '../../models/ThreeBaseModel';
 import Operation from './Operation';
 import { ALIGN_OPERATION } from '../../constants';
 
+type ModelState = {
+    target: ThreeModel,
+    transformation: ModelTransformation
+};
+
 type UngroupState = {
-    target: ThreeGroup
-    subModels: ThreeModel[]
+    modelsBeforeUngroup: Array<ThreeModel | ThreeGroup>,
+    target: ThreeGroup,
+    groupTransformation: ModelTransformation,
+    subModelStates: ModelState[]
     modelGroup: ModelGroup
 };
-export default class UngroupOperation3D extends Operation {
-    state: UngroupState;
-
-    constructor(state) {
+export default class UngroupOperation3D extends Operation<UngroupState> {
+    constructor(props: UngroupState) {
         super();
         this.state = {
-            target: null,
-            subModels: [],
-            modelGroup: null,
-            ...state
+            modelsBeforeUngroup: props.modelsBeforeUngroup || [],
+            target: props.target || null,
+            groupTransformation: props.groupTransformation || null,
+            subModelStates: props.subModelStates || [],
+            modelGroup: props.modelGroup || null,
         };
     }
 
-    redo() {
+    public redo() {
         const target = this.state.target;
         const modelGroup = this.state.modelGroup;
 
@@ -32,23 +39,20 @@ export default class UngroupOperation3D extends Operation {
         modelGroup.unselectAllModels();
     }
 
-    undo() {
+    public undo() {
         const target = this.state.target;
         const modelGroup = this.state.modelGroup;
-        const subModels = this.state.subModels;
+        const subModelStates = this.state.subModelStates;
 
         modelGroup.unselectAllModels();
-        const children = [], others = [];
-        modelGroup.getModels().forEach(model => {
-            if (subModels.indexOf(model) > -1) {
-                children.push(model);
-            } else {
-                others.push(model);
-            }
+        const subModels = [];
+        subModelStates.forEach(item => {
+            item.target.updateTransformation(item.transformation);
+            subModels.push(item.target);
         });
-        if (children) {
+        if (subModels && subModels.length) {
             if (target.groupFrom === ALIGN_OPERATION) {
-                children.forEach((model) => {
+                subModels.forEach((model) => {
                     modelGroup.selectModelById(model.modelID);
                     modelGroup.updateSelectedGroupTransformation({
                         positionZ: model.originalPosition.z
@@ -56,10 +60,12 @@ export default class UngroupOperation3D extends Operation {
                 });
                 modelGroup.unselectAllModels();
             }
-            target.add(children);
-            target.stickToPlate();
-            modelGroup.object.add(target.meshObject);
-            modelGroup.models = [...others, target];
+            target.add(subModels);
         }
+        target.updateTransformation(this.state.groupTransformation);
+        target.add(subModels);
+        modelGroup.object.add(target.meshObject);
+        modelGroup.models = [...this.state.modelsBeforeUngroup];
+        target.stickToPlate();
     }
 }

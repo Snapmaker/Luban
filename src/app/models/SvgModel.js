@@ -11,7 +11,7 @@ import { NS } from '../ui/SVGEditor/lib/namespaces';
 import api from '../api';
 import { checkIsImageSuffix } from '../../shared/lib/utils';
 import BaseModel from './BaseModel';
-import Resource from './Resource.ts';
+import Resource from './Resource';
 // import { DEFAULT_FILL_COLOR } from '../ui/SVGEditor/constants';
 
 const EVENTS = {

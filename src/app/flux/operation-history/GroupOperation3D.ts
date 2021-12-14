@@ -1,35 +1,47 @@
+import * as THREE from 'three';
 import Operation from './Operation';
 import type Model from '../../models/ThreeBaseModel';
 import type ThreeModel from '../../models/ThreeModel';
-import ThreeGroup from '../../models/ThreeGroup.ts';
+import ThreeGroup from '../../models/ThreeGroup';
 import type ModelGroup from '../../models/ModelGroup';
+import { ModelTransformation } from '../../models/ThreeBaseModel';
+
+type ModelSnapshot = {
+    groupModel: ThreeGroup,
+    groupMesh: THREE.Mesh,
+    modelTransformation: ModelTransformation,
+    groupTransformation: ModelTransformation
+}
 
 type GroupState = {
-    modelsbeforeGroup: Model[],
-    modelsafterGroup: Model[],
-    selectedModels: ThreeModel[] | ThreeGroup[],
+    modelsBeforeGroup: Model[],
+    modelsAfterGroup: Model[],
+    selectedModels: Array<ThreeModel | ThreeGroup>,
     groupChildrenMap: Map<ThreeGroup, ThreeModel[]>
     target: ThreeGroup,
-    modelGroup: ModelGroup
+    modelGroup: ModelGroup,
+    modelsInGroup: Map<string, ModelSnapshot>
+    targetTransformation: ModelTransformation,
+    targetChildrenTransformation: Map<string, ModelTransformation>
 };
 
-export default class GroupOperation3D extends Operation {
-    state: GroupState;
-
-    constructor(state) {
+export default class GroupOperation3D extends Operation<GroupState> {
+    constructor(state: GroupState) {
         super();
         this.state = {
-            modelsbeforeGroup: [],
-            modelsafterGroup: [],
-            selectedModels: [],
-            groupChildrenMap: new Map(),
-            target: null,
-            modelGroup: null,
-            ...state
+            modelsBeforeGroup: state.modelsBeforeGroup || [],
+            modelsAfterGroup: state.modelsAfterGroup || [],
+            selectedModels: state.selectedModels || [],
+            groupChildrenMap: state.groupChildrenMap || new Map(),
+            target: state.target,
+            modelGroup: state.modelGroup,
+            modelsInGroup: state.modelsInGroup || new Map(),
+            targetTransformation: state.targetTransformation,
+            targetChildrenTransformation: state.targetChildrenTransformation
         };
     }
 
-    redo() {
+    public redo() {
         const target = this.state.target;
         const modelGroup = this.state.modelGroup;
 
@@ -37,18 +49,37 @@ export default class GroupOperation3D extends Operation {
         const modelsToGroup = [];
         this.state.selectedModels.forEach(model => {
             if (model instanceof ThreeGroup) {
-                const children = model.destroy();
+                const children = (model as ThreeGroup).disassemble();
                 modelsToGroup.push(...children);
             } else {
                 modelsToGroup.push(model);
             }
+            const modelSnapshot = this.state.modelsInGroup.get(model.modelID);
+            if (model.parent && model.parent instanceof ThreeGroup && modelSnapshot) {
+                const index = model.parent.children.findIndex(subModel => subModel.modelID === model.modelID);
+                model.parent.children.splice(index, 1);
+                modelGroup.models.push(model);
+                model.parent.meshObject.remove(model.meshObject);
+                // this.models.push(model);
+                if (model.parent.meshObject.children.length === 0) {
+                    modelGroup.object.remove(model.parent.meshObject);
+                    modelGroup.models = modelGroup.models.filter(m => m.modelID !== model.parent.modelID);
+                }
+            }
         });
         target.add(modelsToGroup);
         modelGroup.object.add(target.meshObject);
-        modelGroup.models = [...this.state.modelsafterGroup];
+
+        target.updateTransformation(this.state.targetTransformation);
+        target.children.forEach((subModel) => {
+            const subModelTransformation = this.state.targetChildrenTransformation.get(subModel.modelID);
+            subModelTransformation && subModel.updateTransformation(subModelTransformation);
+        });
+
+        modelGroup.models = [...this.state.modelsAfterGroup];
     }
 
-    undo() {
+    public undo() {
         const target = this.state.target;
         const modelGroup = this.state.modelGroup;
 
@@ -61,6 +92,27 @@ export default class GroupOperation3D extends Operation {
             group.add(subModels);
             modelGroup.object.add(group.meshObject);
         });
-        modelGroup.models = [...this.state.modelsbeforeGroup];
+
+        this.state.selectedModels.forEach(model => {
+            const modelSnapshot = this.state.modelsInGroup.get(model.modelID);
+            if (modelSnapshot) {
+                const group = modelGroup.getModel(modelSnapshot.groupModel.modelID);
+                if (group) {
+                    modelGroup.recoveryGroup(group, model);
+                    model.updateTransformation(modelSnapshot.modelTransformation);
+                    modelGroup.models = modelGroup.getModels().filter((m: ThreeModel) => {
+                        return m.modelID !== model.modelID;
+                    });
+                    group.stickToPlate();
+                } else {
+                    modelGroup.models = modelGroup.models.concat(modelSnapshot.groupModel);
+                    modelGroup.object.add(modelSnapshot.groupMesh);
+                    modelSnapshot.groupModel.updateTransformation(modelSnapshot.groupTransformation);
+                    // modelSnapshot.groupModel.updateTransformation(modelSnapshot.modelTransformation);
+                }
+            }
+        });
+
+        modelGroup.models = [...this.state.modelsBeforeGroup];
     }
 }
