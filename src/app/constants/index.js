@@ -1298,5 +1298,11 @@ export const LASER_10W_TAKE_PHOTO_POSITION = {
     }
 };
 
+export const NOZZLE_SIZE_DEFAULT_OPTIONS = [
+    { value: 0.2, label: '0.2' },
+    { value: 0.4, label: '0.4' },
+    { value: 0.6, label: '0.6' }
+];
+
 export const LOAD_MODEL_FROM_INNER = 0;
 export const LOAD_MODEL_FROM_OUTER = 1;

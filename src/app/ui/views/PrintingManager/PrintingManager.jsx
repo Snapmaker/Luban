@@ -50,10 +50,18 @@ function PrintingManager() {
     const series = useSelector(state => state?.machine?.series);
     const toolHead = useSelector(state => state?.machine?.toolHead);
     const dispatch = useDispatch();
-    const printingMaterialConfigKeys = (toolHead.printingToolhead === SINGLE_EXTRUDER_TOOLHEAD_FOR_SM2 ? PRINTING_MATERIAL_CONFIG_KEYS_SINGLE : PRINTING_MATERIAL_CONFIG_KEYS_DUAL);
-    const printingQualityConfigKeys = (toolHead.printingToolhead === SINGLE_EXTRUDER_TOOLHEAD_FOR_SM2 ? PRINTING_QUALITY_CONFIG_KEYS_SINGLE : PRINTING_QUALITY_CONFIG_KEYS_DUAL);
-    const printingMaterialConfigGroup = (toolHead.printingToolhead === SINGLE_EXTRUDER_TOOLHEAD_FOR_SM2 ? PRINTING_MATERIAL_CONFIG_GROUP_SINGLE : PRINTING_MATERIAL_CONFIG_GROUP_DUAL);
-    const printingQualityConfigGroup = (toolHead.printingToolhead === SINGLE_EXTRUDER_TOOLHEAD_FOR_SM2 ? PRINTING_QUALITY_CONFIG_GROUP_SINGLE : PRINTING_QUALITY_CONFIG_GROUP_DUAL);
+    let printingMaterialConfigKeys, printingQualityConfigKeys, printingMaterialConfigGroup, printingQualityConfigGroup;
+    if (toolHead.printingToolhead === SINGLE_EXTRUDER_TOOLHEAD_FOR_SM2) {
+        printingMaterialConfigKeys = PRINTING_MATERIAL_CONFIG_KEYS_SINGLE;
+        printingQualityConfigKeys = PRINTING_QUALITY_CONFIG_KEYS_SINGLE;
+        printingMaterialConfigGroup = PRINTING_MATERIAL_CONFIG_GROUP_SINGLE;
+        printingQualityConfigGroup = PRINTING_QUALITY_CONFIG_GROUP_SINGLE;
+    } else {
+        printingMaterialConfigKeys = PRINTING_MATERIAL_CONFIG_KEYS_DUAL;
+        printingQualityConfigKeys = PRINTING_QUALITY_CONFIG_KEYS_DUAL;
+        printingMaterialConfigGroup = PRINTING_MATERIAL_CONFIG_GROUP_DUAL;
+        printingQualityConfigGroup = PRINTING_QUALITY_CONFIG_GROUP_DUAL;
+    }
     if (!showPrintingManager) {
         return null;
     }

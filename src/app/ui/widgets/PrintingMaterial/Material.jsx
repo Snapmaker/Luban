@@ -11,7 +11,7 @@ import { actions as printingActions } from '../../../flux/printing';
 import { actions as projectActions } from '../../../flux/project';
 import {
     LEFT_EXTRUDER, PRINTING_MANAGER_TYPE_MATERIAL, HEAD_PRINTING, DUAL_EXTRUDER_TOOLHEAD_FOR_SM2,
-    RIGHT_EXTRUDER
+    RIGHT_EXTRUDER, NOZZLE_SIZE_DEFAULT_OPTIONS
 } from '../../../constants';
 import { machineStore } from '../../../store/local-storage';
 import { getMaterialSelectOptions } from '../../utils/profileManager';
@@ -85,11 +85,7 @@ function Material({ widgetActions }) {
         dispatch(printingActions.updateExtuderDefinition(def, direction));
     }
 
-    const [diametersOptions, setDiametersOptions] = useState([
-        { value: 0.2, label: '0.2' },
-        { value: 0.4, label: '0.4' },
-        { value: 0.6, label: '0.6' }
-    ]);
+    const [diametersOptions, setDiametersOptions] = useState(NOZZLE_SIZE_DEFAULT_OPTIONS);
     useEffect(() => {
         if (leftDiameter && !diametersOptions.find(d => d.value === leftDiameter)) {
             diametersOptions.push({

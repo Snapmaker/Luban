@@ -278,9 +278,16 @@ function MachineSettings() {
         });
     }, [series, size, enclosureDoorDetection, zAxisModule, connectionTimeout]);
 
-    const printingOptions = (state.series === 'Original' || state.series === 'Original Long Z-axis' ? printingToolHeadOptionForOriginal : printingToolHeadOption);
-    const laserOptions = (state.series === 'Original' || state.series === 'Original Long Z-axis' ? laserToolHeadOptionForOriginal : laserToolHeadOption);
-    const cncOptions = (state.series === 'Original' || state.series === 'Original Long Z-axis' ? cncToolHeadOptionForOriginal : cncToolHeadOption);
+    let printingOptions, laserOptions, cncOptions;
+    if (state.series === 'Original' || state.series === 'Original Long Z-axis') {
+        printingOptions = printingToolHeadOptionForOriginal;
+        laserOptions = laserToolHeadOptionForOriginal;
+        cncOptions = cncToolHeadOptionForOriginal;
+    } else {
+        printingOptions = printingToolHeadOption;
+        laserOptions = laserToolHeadOption;
+        cncOptions = cncToolHeadOption;
+    }
 
     return (
         <div className={styles['form-container']}>
