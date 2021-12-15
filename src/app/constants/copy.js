@@ -207,6 +207,13 @@ i18n._('key-default_name-PLA');
 i18n._('key-default_name-Fast Print');
 i18n._('key-default_name-Normal Quality');
 i18n._('key-default_name-High Quality');
+i18n._('key-default_name-ABS_Black');
+i18n._('key-default_name-ABS_White');
+i18n._('key-default_name-PLA_Black');
+i18n._('key-default_name-PLA_White');
+i18n._('key-default_name-PETG_Black');
+i18n._('key-default_name-PETG_White');
+
 
 i18n._('key-default_category-Default Material');
 i18n._('key-default_category-Acrylic');
@@ -225,6 +232,9 @@ i18n._('key-default_category-Pinewood');
 i18n._('key-default_category-Vegetable Tanned Leather');
 
 i18n._('key-default_category-Default');
+i18n._('key-default_category-PLA');
+i18n._('key-default_category-PETG');
+i18n._('key-default_category-ABS');
 
 // connection message
 i18n._('key-Workspace/Connection-enclosure');
@@ -279,15 +289,3 @@ i18n._('key-settings_message-update_not_ava'); // Snapmaker Luban is up to date.
 i18n._('key-settings_message-updateAva'); // Updates are available.
 i18n._('key-settings_message-checking'); // Checking for updates.
 i18n._('key-settings_message-error'); // An error occurred while checking for updates.
-
-// Material for 3dp
-i18n._('key-default_name-PLA-White');
-i18n._('key-default_name-PLA-Black');
-i18n._('key-default_category-PLA');
-i18n._('key-default_name-ABS-White');
-i18n._('key-default_name-ABS-Black');
-i18n._('key-default_category-ABS');
-i18n._('key-default_name-PETG-White');
-i18n._('key-default_name-PETG-Black');
-i18n._('key-default_category-PETG');
-

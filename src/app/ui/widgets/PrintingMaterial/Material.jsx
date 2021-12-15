@@ -110,8 +110,11 @@ function Material({ widgetActions }) {
                 <div>
                     {menu}
                     <Divider style={{ margin: '0' }} />
-                    <div className="height-36 padding-right-4 padding-bottom-4" style={{ display: 'flex', flexWrap: 'nowrap' }}>
+                    <div className="sm-flex height-36 padding-right-4 padding-bottom-4">
                         <Input
+                            style={{
+                                width: '152px'
+                            }}
                             className="height-32"
                             placeholder="+Add Item"
                             bordered={false}
@@ -122,9 +125,7 @@ function Material({ widgetActions }) {
                         />
                         { selectorCustomValue !== '' && (
                             <SvgIcon
-                                style={{
-                                    marginTop: '1px'
-                                }}
+                                className="margin-top-2"
                                 color="#1890FF"
                                 name="CameraCaptureExtract"
                                 onClick={() => {
