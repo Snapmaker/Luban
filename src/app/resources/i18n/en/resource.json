@@ -81,7 +81,7 @@
     "Multiplier of the line width on the first layer. Increasing this could improve bed adhesion.": "Multiplier of the line width on the first layer. Increasing this could improve bed adhesion.",
     "None": "None",
     "Normal": "Normal",
-    "Nozzle Diameter": "Nozzle Diameter",
+    "Nozzle Diameter": "Nozzle Diameter_",
     "Nozzle Switch Retraction Distance": "Nozzle Switch Retraction Distance",
     "Nozzle Switch Retraction Speed": "Nozzle Switch Retraction Speed",
     "Number of Passes": "Number of Passes",

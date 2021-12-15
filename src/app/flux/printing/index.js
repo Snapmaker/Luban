@@ -4,8 +4,20 @@ import { cloneDeep, isNil, filter, find as lodashFind } from 'lodash';
 // import FileSaver from 'file-saver';
 import LoadModelWorker from '../../workers/LoadModel.worker';
 import GcodeToBufferGeometryWorker from '../../workers/GcodeToBufferGeometry.worker';
-import { ABSENT_OBJECT, EPSILON, DATA_PREFIX, PRINTING_MANAGER_TYPE_MATERIAL,
-    PRINTING_MANAGER_TYPE_QUALITY, MACHINE_SERIES, HEAD_PRINTING, getMachineSeriesWithToolhead, LOAD_MODEL_FROM_INNER, LEFT_EXTRUDER, RIGHT_EXTRUDER, LEFT_EXTRUDER_MAP_NUMBER } from '../../constants';
+import {
+    ABSENT_OBJECT,
+    EPSILON,
+    DATA_PREFIX,
+    PRINTING_MANAGER_TYPE_MATERIAL,
+    PRINTING_MANAGER_TYPE_QUALITY,
+    MACHINE_SERIES,
+    HEAD_PRINTING,
+    getMachineSeriesWithToolhead,
+    LOAD_MODEL_FROM_INNER,
+    LEFT_EXTRUDER,
+    RIGHT_EXTRUDER,
+    LEFT_EXTRUDER_MAP_NUMBER,
+} from '../../constants';
 import { timestamp } from '../../../shared/lib/random-utils';
 import { machineStore } from '../../store/local-storage';
 import ProgressStatesManager, { PROCESS_STAGE, STEP_STAGE } from '../../lib/manager/ProgressManager';
@@ -678,6 +690,7 @@ export const actions = {
                 definitionId: 'snapmaker_extruder_1'
             });
         }
+        dispatch(actions.destroyGcodeLine());
     },
 
     updateDefinitionsForManager: (definitionId, type) => async (dispatch, getState) => {

@@ -191,7 +191,6 @@ class ChangedReactSelect extends PureComponent {
             return (
                 <div className={classNames(styles['override-select'], className)}>
                     <Select
-                        emptyText=""
                         dropdownRender={this.props.dropdownRender}
                         className={styles[size]}
                         value={defaultValue?.value}
