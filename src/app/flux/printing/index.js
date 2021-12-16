@@ -691,6 +691,7 @@ export const actions = {
             });
         }
         dispatch(actions.destroyGcodeLine());
+        dispatch(actions.displayModel());
     },
 
     updateDefinitionsForManager: (definitionId, type) => async (dispatch, getState) => {
