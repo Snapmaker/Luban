@@ -259,7 +259,7 @@ export const actions = {
 
     exportFile: (targetFile, renderGcodeFileName = null) => async (dispatch) => {
         const tmpFile = `/Tmp/${targetFile}`;
-        await UniApi.File.exportAs(targetFile, tmpFile, renderGcodeFileName, actions.updateSurveyConditionTwo(targetFile, dispatch));
+        await UniApi.File.exportAs(targetFile, tmpFile, renderGcodeFileName, actions.updateSurveyConditionTwo, dispatch);
     },
 
     exportConfigFile: (targetFile, subCategory) => async (dispatch) => {
@@ -269,7 +269,7 @@ export const actions = {
         } else {
             configFile = `/Config/${targetFile}`;
         }
-        await UniApi.File.exportAs(targetFile, configFile, null, actions.updateSurveyConditionTwo(targetFile, dispatch));
+        await UniApi.File.exportAs(targetFile, configFile, null, actions.updateSurveyConditionTwo, dispatch);
     },
 
     updateSurveyConditionTwo: (_targetFile, dispatch) => {

@@ -230,7 +230,7 @@ const File = {
     },
 
     // export file for 3dp/laser/cnc
-    async exportAs(targetFile, tmpFile, renderGcodeFileName, updateSurveyCondition) {
+    async exportAs(targetFile, tmpFile, renderGcodeFileName, updateSurveyCondition, dispatch) {
         if (isNil(renderGcodeFileName)) {
             renderGcodeFileName = targetFile;
         } else {
@@ -257,7 +257,7 @@ const File = {
 
             const file = { path: targetFile, name: renderGcodeFileName };
             fs.copyFileSync(tmpFile, targetFile);
-            updateSurveyCondition && updateSurveyCondition();
+            updateSurveyCondition && updateSurveyCondition(renderGcodeFileName, dispatch);
             return file;
         } else {
             request
@@ -267,7 +267,7 @@ const File = {
                     // FileSaver.saveAs(res.body, targetFile, true);
                     FileSaver.saveAs(res.body, renderGcodeFileName, true);
                 });
-            updateSurveyCondition && updateSurveyCondition();
+            updateSurveyCondition && updateSurveyCondition(renderGcodeFileName, dispatch);
             return null;
         }
     },

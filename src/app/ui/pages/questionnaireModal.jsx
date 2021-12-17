@@ -17,7 +17,7 @@ const QuestionnaireModal = ({ onClose, onComfirm }) => {
                     size={60}
                 />
                 <div className="margin-top-32">
-                    <span className="heading-3">{i18n._('key-QuestionnaireModal/Title-Luban User Experience Questionnaire')}</span>
+                    <div className="heading-3 align-c">{i18n._('key-QuestionnaireModal/Title-Luban User Experience Questionnaire')}</div>
                     <p className="align-c margin-top-10 margin-bottom-8">
                         <Trans i18nKey="key-QuestionnaireModal/Tip-Tip1">
                             Would you like to fill in this questionnaire to help us <br />
