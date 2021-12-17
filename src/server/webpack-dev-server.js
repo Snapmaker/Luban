@@ -1,8 +1,8 @@
 import webpack from 'webpack';
 import webpackDevMiddleware from 'webpack-dev-middleware';
 import webpackHotMiddleware from 'webpack-hot-middleware';
-import config from '../../webpack.config.app.development';
 import electron from 'electron';
+import config from '../../webpack.config.app.development';
 
 const webpackDevServer = (app) => {
     // https://github.com/webpack/webpack-dev-middleware
