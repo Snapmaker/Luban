@@ -410,15 +410,6 @@ export const actions = {
             options.size = MACHINE_SERIES[options.series].setting.size;
         }
         dispatch(actions.updateState(options));
-    },
-
-    getQuestionnaire: () => async () => {
-        // const req = await api.getQuestionnaireStatus();
-        await api.getQuestionnaireStatus().then(res => {
-            return res;
-        }).catch(err => {
-            console.log({ err });
-        });
     }
 };
 

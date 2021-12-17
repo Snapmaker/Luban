@@ -231,8 +231,10 @@ function Workspace({ isPopup, onClose, style, className }) {
             } else {
                 setShowQuestionaire(false);
             }
+        }).catch(err => {
+            console.log({ err });
+            setShowQuestionaire(false);
         });
-        setShowQuestionaire(isShow);
     }, [surveyConditionOne, isFinishQuestionnaire]);
 
     function renderModalView(_connected) {

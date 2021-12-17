@@ -225,8 +225,10 @@ function Printing({ location }) {
             } else {
                 setShowQuestionnaire(false); // mock false
             }
+        }).catch(err => {
+            console.log({ err });
+            setShowQuestionnaire(false);
         });
-        setShowQuestionnaire(isShow);
     }, [surveyConditionTwo, isFinishSurvey]);
 
     async function onDropAccepted(file) {
