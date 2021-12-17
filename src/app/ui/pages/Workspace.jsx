@@ -3,7 +3,7 @@ import classNames from 'classnames';
 import React, { useEffect, useRef, useState } from 'react';
 import includes from 'lodash/includes';
 import { useHistory } from 'react-router-dom';
-import { useDispatch, useSelector } from 'react-redux';
+import { shallowEqual, useDispatch, useSelector } from 'react-redux';
 import PropTypes from 'prop-types';
 import { Button } from '../components/Buttons';
 import Modal from '../components/Modal';
@@ -46,6 +46,9 @@ import WorkingProgress from '../widgets/WorkingProgress';
 import JobType from '../widgets/JobType';
 import PrintingVisualizer from '../widgets/PrintingVisualizer';
 import MachineSettingWidget from '../widgets/MachineSetting';
+import QuestionnaireModal from './questionnaireModal';
+import { machineStore } from '../../store/local-storage';
+import api from '../../api';
 
 const allWidgets = {
     'control': ControlWidget,
@@ -82,12 +85,15 @@ let workspaceVisualizerRef = null;
 function Workspace({ isPopup, onClose, style, className }) {
     const history = useHistory();
     const dispatch = useDispatch();
+    const isFinishQuestionnaire = machineStore.get('questionnaire.finish');
+    const surveyConditionOne = useSelector(state => state.workspace.surveyConditionOne, shallowEqual);
     const primaryWidgets = useSelector(state => state.widget.workspace.left.widgets);
     const secondaryWidgets = useSelector(state => state.widget.workspace.right.widgets);
     const defaultWidgets = useSelector(state => state.widget.workspace.default.widgets);
     const [previewModalShow, setPreviewModalShow] = useState(false);
     const [isDraggingWidget, setIsDraggingWidget] = useState(false);
     const [connected, setConnected] = useState(controller.connected);
+    const [showQuestionaire, setShowQuestionaire] = useState(false);
     const [leftItems, setLeftItems] = useState([
         {
             title: i18n._('key-Workspace/Page-Back'),
@@ -164,6 +170,10 @@ function Workspace({ isPopup, onClose, style, className }) {
                 widgets.push(widgetId);
                 actions.updateTabContainer('default', { widgets: widgets });
             }
+        },
+        onCloseQuestionnaire: () => {
+            setShowQuestionaire(false);
+            machineStore.set('questionnaire.finish', true);
         }
     };
 
@@ -201,7 +211,6 @@ function Workspace({ isPopup, onClose, style, className }) {
 
     useEffect(() => {
         addControllerEvents();
-
         if (isPopup && onClose) {
             actions.addReturnButton();
         }
@@ -213,6 +222,18 @@ function Workspace({ isPopup, onClose, style, className }) {
             removeControllerEvents();
         };
     }, []);
+
+    useEffect(() => {
+        const isShow = surveyConditionOne && !isFinishQuestionnaire;
+        api.getQuestionnaireStatus().then(res => {
+            if (res?.data?.questionnaire) {
+                setShowQuestionaire(isShow);
+            } else {
+                setShowQuestionaire(false);
+            }
+        });
+        setShowQuestionaire(isShow);
+    }, [surveyConditionOne, isFinishQuestionnaire]);
 
     function renderModalView(_connected) {
         if (_connected) {
@@ -244,7 +265,6 @@ function Workspace({ isPopup, onClose, style, className }) {
             );
         }
     }
-
 
     const renderMainToolBar = () => {
         return (
@@ -280,6 +300,12 @@ function Workspace({ isPopup, onClose, style, className }) {
                     </div>
                 </Dropzone>
                 {renderModalView(connected)}
+                {showQuestionaire && (
+                    <QuestionnaireModal
+                        onClose={actions.onCloseQuestionnaire}
+                        onComfirm={actions.onCloseQuestionnaire}
+                    />
+                )}
             </WorkspaceLayout>
         </div>
     );

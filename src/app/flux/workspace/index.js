@@ -38,7 +38,11 @@ const INITIAL_STATE = {
     renderingTimestamp: 0,
     stage: WORKSPACE_STAGE.EMPTY,
     previewStage: WORKSPACE_STAGE.EMPTY,
-    progress: 0
+    progress: 0,
+    // for questionnaire condition
+    surveyConditionOne: false, // export gcode to workspace
+    surveyConditionTwo: false, // export gcode to file
+    surveyConditionThree: false // get api from website
 };
 
 const gcodeRenderingWorker = new GcodeToArraybufferGeometry();
@@ -273,8 +277,16 @@ export const actions = {
         });
     },
 
-    renderGcodeFile: (gcodeFile, needToList = true, shouldRenderGcode = false) => async (dispatch) => {
-        // const oldGcodeFile = getState().workspace.gcodeFile;
+    renderGcodeFile: (gcodeFile, needToList = true, shouldRenderGcode = false, isPrinting = false) => async (dispatch) => {
+        if (isPrinting) {
+            dispatch(actions.updateState({
+                surveyConditionOne: true
+            }));
+        } else {
+            dispatch(actions.updateState({
+                surveyConditionOne: false
+            }));
+        }
         if (needToList) {
             dispatch(actions.addGcodeFiles(gcodeFile));
         }
@@ -398,6 +410,15 @@ export const actions = {
             options.size = MACHINE_SERIES[options.series].setting.size;
         }
         dispatch(actions.updateState(options));
+    },
+
+    getQuestionnaire: () => async () => {
+        // const req = await api.getQuestionnaireStatus();
+        await api.getQuestionnaireStatus().then(res => {
+            return res;
+        }).catch(err => {
+            console.log({ err });
+        });
     }
 };
 
