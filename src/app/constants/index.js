@@ -76,7 +76,7 @@ export const PRINTING_MATERIAL_CONFIG_COLORS = [
 export const PRINTING_MATERIAL_CONFIG_KEYS_SINGLE = [
     // Color
     'color',
-
+    // Temperature
     'material_diameter',
     'material_print_temperature',
     'material_print_temperature_layer_0',
@@ -98,7 +98,7 @@ export const PRINTING_MATERIAL_CONFIG_KEYS_SINGLE = [
 export const PRINTING_MATERIAL_CONFIG_KEYS_DUAL = [
     // Color
     'color',
-
+    // Temperature
     'material_diameter',
     'material_print_temperature',
     'material_print_temperature_layer_0',
