@@ -42,7 +42,13 @@ function getMaterialSelectOptions(materialDefinitions) {
         if (Object.keys(tool?.settings).length > 0) {
             const checkboxAndSelectGroup = {};
             const name = tool.name;
-            const color = name.split('-')[1];
+            let color = name.split('-')[1];
+            // TODO: remove after material color settings
+            if (color === '白色_') {
+                color = 'white';
+            } else if (color === '黑色_') {
+                color = 'black';
+            }
             checkboxAndSelectGroup.name = <MaterialWithColor name={name} color={color} />;
             checkboxAndSelectGroup.definitionId = definitionId;
             checkboxAndSelectGroup.value = `${definitionId}-${name}`;

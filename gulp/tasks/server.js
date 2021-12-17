@@ -64,7 +64,7 @@ export function serverStartDevelopment(cb) {
         tasks: ['serverBuildDevelopment'],
         done: cb,
         stdout: false
-    }).on('readable', function() {
+    }).on('readable', function () {
         this.stdout.pipe(process.stdout);
     });
 }

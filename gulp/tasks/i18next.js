@@ -153,6 +153,18 @@ const curaFields = [
     'support_angle',
     'support_infill_rate',
     'support_z_distance',
+
+    // 3DP dual
+    'machine_nozzle_size',
+    'dual',
+    'prime_tower_enable',
+    'prime_tower_wipe_enabled',
+    'prime_tower_brim_enable',
+    'ooze_shield_enabled',
+    'ooze_shield_angle',
+    'ooze_shield_dist',
+    'switch_extruder_retraction_amount',
+    'switch_extruder_retraction_speeds',
     // Laser
     'path_type',
     'movement_mode',

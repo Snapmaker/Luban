@@ -1,10 +1,10 @@
 {
+    "name": "PLA-White",
     "version": 2,
-    "category": "Default",
-    "name": "PLA",
-    "i18nName": "key-default_name-PLA",
-    "i18nCategory": "key-default_category-Default",
     "inherits": "snapmaker",
+    "category": "PLA",
+    "i18nName": "key-default_name-PLA_White",
+    "i18nCategory": "key-default_category-PLA",
     "overrides": {
         "material_flow": {
             "default_value": 100

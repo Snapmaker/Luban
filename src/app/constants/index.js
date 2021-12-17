@@ -62,7 +62,7 @@ export const STAGES_3DP = {
     gcodeRendered: 12
 };
 // !important: keys in PRINTING_QUALITY_CONFIG_KEYS, PRINTING_QUALITY_CONFIG_GROUP should change togethor
-export const PRINTING_MATERIAL_CONFIG_KEYS = [
+export const PRINTING_MATERIAL_CONFIG_KEYS_SINGLE = [
     'material_diameter',
     'material_print_temperature',
     'material_print_temperature_layer_0',
@@ -81,7 +81,26 @@ export const PRINTING_MATERIAL_CONFIG_KEYS = [
     'retraction_hop_enabled',
     'retraction_hop'
 ];
-export const PRINTING_QUALITY_CONFIG_KEYS = [
+export const PRINTING_MATERIAL_CONFIG_KEYS_DUAL = [
+    'material_diameter',
+    'material_print_temperature',
+    'material_print_temperature_layer_0',
+    'cool_fan_speed',
+    'machine_heated_bed',
+    'material_bed_temperature',
+    'material_bed_temperature_layer_0',
+    // Extrude
+    'material_flow',
+    'material_flow_layer_0',
+    // retraction
+    'retraction_enable',
+    'retract_at_layer_change',
+    'retraction_amount',
+    'retraction_speed',
+    'retraction_hop_enabled',
+    'retraction_hop'
+];
+export const PRINTING_QUALITY_CONFIG_KEYS_SINGLE = [
     'layer_height',
     'layer_height_0',
     'initial_layer_line_width_factor',
@@ -115,7 +134,50 @@ export const PRINTING_QUALITY_CONFIG_KEYS = [
     'support_infill_rate',
     'support_z_distance'
 ];
-export const PRINTING_MATERIAL_CONFIG_GROUP = [
+export const PRINTING_QUALITY_CONFIG_KEYS_DUAL = [
+    'layer_height',
+    'layer_height_0',
+    'initial_layer_line_width_factor',
+    'wall_thickness',
+    'top_thickness',
+    'bottom_thickness',
+    'outer_inset_first',
+    'infill_sparse_density',
+    'infill_pattern',
+    // 'speed_print',
+    'speed_print_layer_0',
+    'speed_infill',
+    'speed_wall_0',
+    'speed_wall_x',
+    'speed_topbottom',
+    'speed_travel',
+    'speed_travel_layer_0',
+    // 'Surface'
+    'magic_spiralize',
+    'magic_mesh_surface_mode',
+    // 'HeatedBedAdhesionType'
+    'adhesion_type',
+    'skirt_line_count',
+    'brim_line_count',
+    'raft_margin',
+    // 'Support'
+    'support_enable',
+    'support_type',
+    'support_angle',
+    'support_pattern',
+    'support_infill_rate',
+    'support_z_distance',
+    // 'dual'
+    'prime_tower_enable',
+    'prime_tower_wipe_enabled',
+    'prime_tower_brim_enable',
+    'ooze_shield_enabled',
+    'ooze_shield_angle',
+    'ooze_shield_dist',
+    'switch_extruder_retraction_amount',
+    'switch_extruder_retraction_speeds'
+];
+export const PRINTING_MATERIAL_CONFIG_GROUP_SINGLE = [
     {
         name: 'key-printing/material_settings-Temperature',
         fields: [
@@ -147,7 +209,39 @@ export const PRINTING_MATERIAL_CONFIG_GROUP = [
         ]
     }
 ];
-export const PRINTING_QUALITY_CONFIG_GROUP = [
+export const PRINTING_MATERIAL_CONFIG_GROUP_DUAL = [
+    {
+        name: 'key-printing/material_settings-Temperature',
+        fields: [
+            'material_diameter',
+            'material_print_temperature',
+            'material_print_temperature_layer_0',
+            'cool_fan_speed',
+            'machine_heated_bed',
+            'material_bed_temperature',
+            'material_bed_temperature_layer_0'
+        ]
+    },
+    {
+        name: 'key-printing/material_settings-Extrusion',
+        fields: [
+            'material_flow',
+            'material_flow_layer_0'
+        ]
+    },
+    {
+        name: 'Retract & Z Hop',
+        fields: [
+            'retraction_enable',
+            'retract_at_layer_change',
+            'retraction_amount',
+            'retraction_speed',
+            'retraction_hop_enabled',
+            'retraction_hop'
+        ]
+    }
+];
+export const PRINTING_QUALITY_CONFIG_GROUP_SINGLE = [
     {
         name: 'Quality',
         fields: [
@@ -212,6 +306,87 @@ export const PRINTING_QUALITY_CONFIG_GROUP = [
             // 'support_xy_distance',
             // 'support_xy_overrides_z',
             'support_angle'
+        ]
+    }
+];
+export const PRINTING_QUALITY_CONFIG_GROUP_DUAL = [
+    {
+        name: 'Quality',
+        fields: [
+            'layer_height',
+            'layer_height_0',
+            'initial_layer_line_width_factor'
+        ]
+    },
+    {
+        name: 'Shell',
+        fields: [
+            'wall_thickness',
+            'top_thickness',
+            'bottom_thickness',
+            'outer_inset_first'
+        ]
+    },
+    {
+        name: 'Infill',
+        fields: [
+            'infill_sparse_density',
+            'infill_pattern'
+        ]
+    },
+    {
+        name: 'Speed',
+        fields: [
+            // 'speed_print',
+            'speed_print_layer_0',
+            'speed_infill',
+            'speed_wall_0',
+            'speed_wall_x',
+            'speed_topbottom',
+            'speed_travel',
+            'speed_travel_layer_0'
+        ]
+    },
+    {
+        name: 'Surface',
+        fields: [
+            'magic_spiralize',
+            'magic_mesh_surface_mode'
+        ]
+    },
+    {
+        name: 'Build Plate Adhesion Type',
+        fields: [
+            'adhesion_type',
+            'skirt_line_count',
+            'brim_line_count',
+            'raft_margin'
+        ]
+    },
+    {
+        name: 'Support',
+        fields: [
+            'support_enable',
+            'support_type',
+            'support_pattern',
+            'support_infill_rate',
+            'support_z_distance',
+            // 'support_xy_distance',
+            // 'support_xy_overrides_z',
+            'support_angle'
+        ]
+    },
+    {
+        name: 'Dual Extrusion',
+        fields: [
+            'prime_tower_enable',
+            'prime_tower_wipe_enabled',
+            'prime_tower_brim_enable',
+            'ooze_shield_enabled',
+            'ooze_shield_angle',
+            'ooze_shield_dist',
+            'switch_extruder_retraction_amount',
+            'switch_extruder_retraction_speeds'
         ]
     }
 ];
@@ -1122,6 +1297,12 @@ export const LASER_10W_TAKE_PHOTO_POSITION = {
         z: 150
     }
 };
+
+export const NOZZLE_SIZE_DEFAULT_OPTIONS = [
+    { value: 0.2, label: '0.2' },
+    { value: 0.4, label: '0.4' },
+    { value: 0.6, label: '0.6' }
+];
 
 export const LOAD_MODEL_FROM_INNER = 0;
 export const LOAD_MODEL_FROM_OUTER = 1;
