@@ -3,7 +3,7 @@ import BaseModel, { ModelTransformation, ModelInfo } from './ThreeBaseModel.ts';
 import type ModelGroup from './ModelGroup';
 import ThreeModel from './ThreeModel';
 import ThreeUtils from '../three-extensions/ThreeUtils';
-import { HEAD_PRINTING } from '../constants';
+import { HEAD_PRINTING, GROUP_OPERATION } from '../constants';
 import ConvexGeometry from '../three-extensions/ConvexGeometry';
 
 window.THREE = THREE;
@@ -19,6 +19,8 @@ export default class ThreeGroup extends BaseModel {
     modelObject3D: Object;
 
     processImageName: string;
+
+    groupFrom: string = GROUP_OPERATION;
 
     transformation: ModelTransformation;
 
@@ -77,6 +79,7 @@ export default class ThreeGroup extends BaseModel {
         super(modelInfo, modelGroup);
         this.meshObject = new THREE.Group();
         this.children = [];
+        this.groupFrom = modelInfo.groupFrom || GROUP_OPERATION;
         this.transformation = {
             positionX: 0,
             positionY: 0,

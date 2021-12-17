@@ -31,6 +31,7 @@ export type ModelInfo = {
     originalName: string,
     uploadName: string,
     modelName?: string,
+    groupFrom?: string,
     config: Object,
     mode: string,
     visible?: boolean,

@@ -4,7 +4,7 @@ import { cloneDeep, isNil, filter } from 'lodash';
 // import FileSaver from 'file-saver';
 import LoadModelWorker from '../../workers/LoadModel.worker';
 import GcodeToBufferGeometryWorker from '../../workers/GcodeToBufferGeometry.worker';
-import { ABSENT_OBJECT, EPSILON, DATA_PREFIX, PRINTING_MANAGER_TYPE_MATERIAL,
+import { ABSENT_OBJECT, EPSILON, DATA_PREFIX, PRINTING_MANAGER_TYPE_MATERIAL, ALIGN_OPERATION,
     PRINTING_MANAGER_TYPE_QUALITY, MACHINE_SERIES, HEAD_PRINTING, getMachineSeriesWithToolhead, LOAD_MODEL_FROM_INNER } from '../../constants';
 import { timestamp } from '../../../shared/lib/random-utils';
 import { machineStore } from '../../store/local-storage';
@@ -1804,7 +1804,7 @@ export const actions = {
         const operations = new Operations();
 
         dispatch(actions.clearAllManualSupport(operations));
-        const { modelState } = modelGroup.group();
+        const { modelState } = modelGroup.group(ALIGN_OPERATION);
         const modelsafterGroup = modelGroup.getModels().slice(0);
 
         const operation = new GroupAlignOperation3D({

@@ -949,11 +949,13 @@ class ModelGroup extends EventEmitter {
         if (models && models.length > 0) {
             const firstModel = models[0];
             const otherModels = models.filter(d => d.meshObject !== firstModel.meshObject);
+            this.selectModelById(firstModel.modelID);
+            this.updateSelectedGroupTransformation({ positionZ: firstModel.originalPosition.z });
             otherModels.forEach((model) => {
                 const newPosition = {
                     positionX: model.originalPosition.x - firstModel.originalPosition.x + firstModel.transformation.positionX,
                     positionY: model.originalPosition.y - firstModel.originalPosition.y + firstModel.transformation.positionY,
-                    positionZ: model.originalPosition.z - firstModel.originalPosition.z + firstModel.transformation.positionZ,
+                    positionZ: model.originalPosition.z,
                 };
                 this.selectModelById(model.modelID);
                 this.updateSelectedGroupTransformation(newPosition);
@@ -996,8 +998,8 @@ class ModelGroup extends EventEmitter {
      *
      * @param transformation
      */
-    updateSelectedGroupTransformation(transformation, newUniformScalingState) {
-        const { positionX, positionY, rotationX, rotationY, rotationZ, scaleX, scaleY, scaleZ, width, height, uniformScalingState } = transformation;
+    updateSelectedGroupTransformation(transformation, newUniformScalingState = this.selectedGroup.uniformScalingState) {
+        const { positionX, positionY, positionZ, rotationX, rotationY, rotationZ, scaleX, scaleY, scaleZ, width, height, uniformScalingState } = transformation;
         const shouldUniformScale = newUniformScalingState ?? this.selectedGroup.uniformScalingState;
         // todo, width and height use for 2d
         if (width !== undefined) {
@@ -1012,6 +1014,9 @@ class ModelGroup extends EventEmitter {
         }
         if (positionY !== undefined) {
             this.selectedGroup.position.setY(positionY);
+        }
+        if (positionZ !== undefined) {
+            this.selectedGroup.position.setZ(positionZ);
         }
         // Note that this is new value, but not a proportion, not to change pls.
         if (shouldUniformScale) {
@@ -1732,10 +1737,10 @@ class ModelGroup extends EventEmitter {
         return ungroupedModels;
     }
 
-    group() {
+    group(groupFrom) {
         const selectedModelArray = this.selectedModelArray.slice(0);
         this.unselectAllModels();
-        const group = new ThreeGroup({}, this);
+        const group = new ThreeGroup({ groupFrom }, this);
         // check visible models or groups
         if (selectedModelArray.some(model => model.visible)) {
             // insert group to the first model position in selectedModelArray
