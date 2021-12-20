@@ -145,7 +145,6 @@ class ToolPath {
     _getModels() {
         const models = this.modelGroup.getModels();
         return models.filter(model => {
-            // 不太必要再对比
             return includes(this.visibleModelIDs, model.modelID) && model.visible;
         });
     }
