@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import PropTypes from 'prop-types';
 import { GithubPicker } from 'react-color';
+import classNames from 'classnames';
 import i18n from '../../../lib/i18n';
 import Select from '../../components/Select';
 import { NumberInput as Input } from '../../components/Input';
@@ -9,6 +10,7 @@ import { PRINTING_MATERIAL_CONFIG_COLORS } from '../../../constants';
 
 import TipTrigger from '../../components/TipTrigger';
 import SvgIcon from '../../components/SvgIcon';
+import styles from './styles.styl';
 
 function SettingItem({ definitionKey, settings, isDefaultDefinition = () => true, onChangeDefinition, defaultValue, styleSize = 'large' }) {
     const [showColor, setShowColor] = useState(false);
@@ -197,12 +199,13 @@ function SettingItem({ definitionKey, settings, isDefaultDefinition = () => true
                     )}
                     {type === 'color' && (
                         <div
-                            className="sm-flex-width align-r height-percent-100 width-96 display-inline"
+                            className="sm-flex-width align-r height-percent-100 width-96 display-inline border-radius-8"
                             role="button"
-                            tabIndex="0"
+                            tabIndex="-1"
                             onKeyPress={() => {}}
                             style={{
-                                background: settingDefaultValue
+                                background: settingDefaultValue,
+                                border: '1px solid #B9BCBF'
                             }}
                             onClick={() => setShowColor(!showColor)}
                         />
@@ -210,10 +213,13 @@ function SettingItem({ definitionKey, settings, isDefaultDefinition = () => true
                 </div>
             </div>
             {showColor && (
-                <div className="sm-flex-width align-r">
+                <div className={classNames(styles['color-selection'])}>
+                    <span>
+                        color
+                    </span>
                     <GithubPicker
-                        width={220}
-                        triangle="top-right"
+                        width={300}
+                        triangle="hide"
                         colors={PRINTING_MATERIAL_CONFIG_COLORS}
                         color={settingDefaultValue}
                         onChangeComplete={(event) => {
