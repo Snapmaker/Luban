@@ -25,9 +25,9 @@ const publicPath = (function calculatePublicPath(payload) {
     const hash = crypto.createHash(algorithm).update(buf).digest('hex');
     return `/${hash.substr(0, 8)}/`; // 8 digits
 }(pkg.version));
-
+const newPublicPath = './';
 const timestamp = new Date().getTime();
-
+console.log('newPublicPath', publicPath, newPublicPath);
 
 module.exports = {
     mode: 'production',
@@ -57,7 +57,7 @@ module.exports = {
         path: path.resolve(__dirname, 'dist/Luban/app'),
         chunkFilename: `[name].[chunkhash].bundle.js?_=${timestamp}`,
         filename: `[name].[chunkhash].bundle.js?_=${timestamp}`,
-        publicPath: publicPath
+        publicPath: newPublicPath
     },
     optimization: {
         // see notes on webpack.config.server.production.js
@@ -92,8 +92,8 @@ module.exports = {
             preserve: false
         }),*/
         new HtmlWebpackPlugin({
-            filename: 'index.hbs',
-            template: path.resolve(__dirname, 'src/app/resources/assets/index.hbs'),
+            filename: 'index.html',
+            template: path.resolve(__dirname, 'src/app/resources/assets/index.html'),
             chunksSortMode: 'dependency' // Sort chunks by dependency
         })
     ],

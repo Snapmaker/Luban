@@ -72,6 +72,7 @@
     "tar": "^6.0.2",
     "three": "~0.124.0",
     "universal-logger": "~1.0.1",
+    "url-parse": "^1.5.3",
     "uuid": "~3.3.2",
     "watch": "~1.0.2",
     "webappengine": "~1.2.0",

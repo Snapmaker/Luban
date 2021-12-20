@@ -26,7 +26,7 @@ import i18n from '../../../lib/i18n';
 import { actions as editorActions } from '../../../flux/editor';
 // import styles from './styles.styl';
 
-const texture = new TextureLoader().load('../resources/images/wood.png');
+const texture = new TextureLoader().load('/resources/images/wood.png');
 
 const getModelTransformation = (t, size, coordinateMode, coordinateSize) => {
     const posDiff = {

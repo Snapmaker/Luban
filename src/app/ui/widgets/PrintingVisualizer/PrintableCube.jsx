@@ -55,7 +55,7 @@ class PrintableCube extends Object3D {
         // Add logo
         const minSideLength = Math.min(this.size.x, this.size.y);
         const geometry = new PlaneGeometry(minSideLength / 2, minSideLength / 8);
-        const texture = new TextureLoader().load('./resources/images/snapmaker-logo-1024x256.png', this.update);
+        const texture = new TextureLoader().load('/resources/images/snapmaker-logo-1024x256.png', this.update);
         texture.minFilter = LinearFilter;
         const material = new MeshBasicMaterial({
             map: texture,

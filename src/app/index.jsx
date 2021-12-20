@@ -13,7 +13,6 @@ import ReactGA from 'react-ga';
 import LanguageDetector from 'i18next-browser-languagedetector';
 import XHR from 'i18next-xhr-backend';
 import { TRACE, DEBUG, INFO, WARN, ERROR } from 'universal-logger';
-
 import settings from './config/settings';
 import { controller, screenController } from './lib/controller';
 import log from './lib/log';
@@ -28,6 +27,19 @@ import { appbarMenuMiddleware } from './lib/redux-middleware';
 import 'antd/dist/antd.css';
 
 series([
+    // (next) => {
+    //     if (isElectron()) {
+    //         const { ipcRenderer } = window.require('electron');
+    //         ipcRenderer.send('find-server-data');
+    //         ipcRenderer.on('get-server-data', (event, newServerData) => {
+    //             serverData = newServerData;
+    //             console.log('event, serverData', event, newServerData);
+    //             next();
+    //         });
+    //     } else {
+    //         next();
+    //     }
+    // },
     (next) => {
         // Setup log level
         const queryParams = toQueryObject(window.location.search);

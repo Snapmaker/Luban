@@ -15,7 +15,7 @@ export class ViewPathRenderer {
 
     _generateTexture() {
         return new Promise(resolve => {
-            this.texture = new THREE.TextureLoader().load('../../resources/images/wood.png', () => {
+            this.texture = new THREE.TextureLoader().load('/resources/images/wood.png', () => {
                 resolve();
             });
         });
