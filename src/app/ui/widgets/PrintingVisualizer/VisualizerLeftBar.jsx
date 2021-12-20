@@ -35,10 +35,6 @@ const originalHelpersExtruder = {
     support: LEFT_EXTRUDER_MAP_NUMBER,
     adhesion: LEFT_EXTRUDER_MAP_NUMBER
 };
-export const materialColorMap = {
-    black: '#000000',
-    white: '#ffffff'
-};
 export const whiteHex = '#ffffff';
 export const renderExtruderIcon = (leftExtruderColor, rightExtruderColor) => (
     <div className="position-re width-24">
@@ -87,7 +83,7 @@ function VisualizerLeftBar({ defaultSupportSize, setTransformMode, isSupporting,
     // const colorR = '#0053AA';
     const [colorL, setColorL] = useState(whiteHex);
     const [colorR, setColorR] = useState(whiteHex);
-    const defaultDefinitions = useSelector(state => state?.printing?.defaultDefinitions, shallowEqual);
+    const materialDefinitions = useSelector(state => state?.printing?.materialDefinitions, shallowEqual);
     const defaultMaterialId = useSelector(state => state?.printing?.defaultMaterialId, shallowEqual);
     const defaultMaterialIdRight = useSelector(state => state?.printing?.defaultMaterialIdRight, shallowEqual);
     let modelSize = {};
@@ -518,13 +514,13 @@ function VisualizerLeftBar({ defaultSupportSize, setTransformMode, isSupporting,
     }, [models.length, models]);
 
     useEffect(() => {
-        const leftExtrualMaterial = find(defaultDefinitions, { definitionId: defaultMaterialId });
-        const rightExtrualMaterial = find(defaultDefinitions, { definitionId: defaultMaterialIdRight });
-        const newColorL = leftExtrualMaterial?.name?.split('-')[1]?.toLowerCase();
-        const newColorR = rightExtrualMaterial?.name?.split('-')[1]?.toLowerCase();
-        newColorL && setColorL(materialColorMap[newColorL]);
-        newColorR && setColorR(materialColorMap[newColorR]);
-    }, [defaultDefinitions, defaultMaterialIdRight, defaultMaterialId]);
+        const leftExtrualMaterial = find(materialDefinitions, { definitionId: defaultMaterialId });
+        const rightExtrualMaterial = find(materialDefinitions, { definitionId: defaultMaterialIdRight });
+        const newColorL = leftExtrualMaterial?.settings?.color?.default_value;
+        const newColorR = rightExtrualMaterial?.settings?.color?.default_value;
+        newColorL && setColorL(newColorL);
+        newColorR && setColorR(newColorR);
+    }, [materialDefinitions, defaultMaterialIdRight, defaultMaterialId]);
 
     return (
         <React.Fragment>

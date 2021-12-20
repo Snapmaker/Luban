@@ -234,6 +234,12 @@ export const PRINTING_MATERIAL_CONFIG_GROUP_SINGLE = [
 ];
 export const PRINTING_MATERIAL_CONFIG_GROUP_DUAL = [
     {
+        name: 'Color',
+        fields: [
+            'color'
+        ]
+    },
+    {
         name: 'key-printing/material_settings-Temperature',
         fields: [
             'material_diameter',
