@@ -226,7 +226,7 @@ function Workspace({ isPopup, onClose, style, className }) {
     useEffect(() => {
         const isShow = surveyConditionOne && !isFinishQuestionnaire;
         api.getQuestionnaireStatus().then(res => {
-            if (res?.data?.questionnaire) {
+            if (res?.data?.questionnaire === 'true') {
                 setShowQuestionaire(isShow);
             } else {
                 setShowQuestionaire(false);

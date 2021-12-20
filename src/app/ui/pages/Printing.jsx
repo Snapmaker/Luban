@@ -220,7 +220,7 @@ function Printing({ location }) {
     useEffect(() => {
         const isShow = surveyConditionTwo && !isFinishSurvey;
         api.getQuestionnaireStatus().then(res => {
-            if (res?.data?.questionnaire) {
+            if (res?.data?.questionnaire === 'true') {
                 setShowQuestionnaire(isShow);
             } else {
                 setShowQuestionnaire(false); // mock false
