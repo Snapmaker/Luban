@@ -26,8 +26,8 @@ export default class AddOperation2D extends Operation {
                 toolPathGroup.toolPaths.push(item);
                 toolPathGroup.toolPathObjects.add(item.object);
             }
-            if (item.modelIDs.indexOf(id) < 0) {
-                item.modelIDs.push(id);
+            if (!item.modelMap.get(id)) {
+                item.modelMap.set(id, model);
             }
         });
         toolPathGroup._updated();
@@ -50,14 +50,13 @@ export default class AddOperation2D extends Operation {
 
         const id = model.modelID;
         toolPathGroup.toolPaths.forEach((item) => {
-            const index = item.modelIDs.indexOf(id);
-            if (index > -1) {
+            if (item.modelMap.get(id)) {
                 this.state.toolPaths.push(item);
-                item.modelIDs.splice(index, 1);
+                item.modelMap.delete(id);
             }
         });
         for (const toolPath of this.state.toolPaths) {
-            if (toolPath.modelIDs.length === 0) {
+            if (toolPath.modelMap.size === 0) {
                 toolPathGroup.deleteToolPath(toolPath.id);
             }
         }
