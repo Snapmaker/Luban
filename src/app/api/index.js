@@ -1,5 +1,6 @@
 import superagent from 'superagent';
 import superagentUse from 'superagent-use';
+import axios from 'axios';
 import ensureArray from '../lib/ensure-array';
 import { machineStore } from '../store/local-storage';
 
@@ -300,6 +301,11 @@ macros.update = defaultAPIFactory((id, options) => request.put(`/api/macros/${id
 
 macros.delete = defaultAPIFactory((id) => request.delete(`/api/macros/${id}`));
 
+const getQuestionnaireStatus = () => {
+    const api = 'https://api.snapmaker.com/v1/versions';
+    return axios.get(api);
+};
+
 export default {
     // version
     getLatestVersion,
@@ -353,5 +359,6 @@ export default {
     controllers, // Controllers
     // users, // Users
     macros,
-    watch // Watch Directory
+    watch, // Watch Directory
+    getQuestionnaireStatus
 };

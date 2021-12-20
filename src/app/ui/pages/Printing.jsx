@@ -49,6 +49,8 @@ import {
 } from './introContent';
 import '../../styles/introCustom.styl';
 import Steps from '../components/Steps';
+import QuestionnaireModal from './questionnaireModal';
+import api from '../../api';
 
 const allWidgets = {
     'control': ControlWidget,
@@ -178,10 +180,13 @@ function useRenderMainToolBar() {
 function Printing({ location }) {
     const widgets = useSelector(state => state?.widget[pageHeadType].default.widgets, shallowEqual);
     const series = useSelector(state => state?.machine?.series);
+    const surveyConditionTwo = useSelector(state => state?.workspace?.surveyConditionTwo, shallowEqual);
     const isOriginal = includes(series, 'Original');
+    const isFinishSurvey = machineStore.get('questionnaire.finish', false);
     const [isDraggingWidget, setIsDraggingWidget] = useState(false);
     const [enabledIntro, setEnabledIntro] = useState(null);
     const [initIndex, setInitIndex] = useState(0);
+    const [showQuestionnaire, setShowQuestionnaire] = useState(false);
     const dispatch = useDispatch();
     const history = useHistory();
     const [renderHomepage, renderMainToolBar, renderWorkspace] = useRenderMainToolBar();
@@ -211,6 +216,20 @@ function Printing({ location }) {
             machineStore.set('guideTours.guideTours3dp', true);
         }
     }, [enabledIntro]);
+
+    useEffect(() => {
+        const isShow = surveyConditionTwo && !isFinishSurvey;
+        api.getQuestionnaireStatus().then(res => {
+            if (res?.data?.questionnaire === 'true') {
+                setShowQuestionnaire(isShow);
+            } else {
+                setShowQuestionnaire(false); // mock false
+            }
+        }).catch(err => {
+            console.log({ err });
+            setShowQuestionnaire(false);
+        });
+    }, [surveyConditionTwo, isFinishSurvey]);
 
     async function onDropAccepted(file) {
         try {
@@ -280,6 +299,10 @@ function Printing({ location }) {
         setEnabledIntro(false);
     };
 
+    const handleCloseSurvey = () => {
+        setShowQuestionnaire(false);
+        machineStore.set('questionnaire.finish', true);
+    };
     return (
         <ProjectLayout
             renderMainToolBar={renderMainToolBar}
@@ -367,6 +390,12 @@ function Printing({ location }) {
                 ref={thumbnail}
                 modelGroup={modelGroup}
             />
+            {showQuestionnaire && (
+                <QuestionnaireModal
+                    onClose={handleCloseSurvey}
+                    onComfirm={handleCloseSurvey}
+                />
+            )}
         </ProjectLayout>
     );
 }

@@ -257,19 +257,31 @@ export const actions = {
         await dispatch(actions.updateState(envHeadType, { unSaved: true }));
     },
 
-    exportFile: (targetFile, renderGcodeFileName = null) => async () => {
+    exportFile: (targetFile, renderGcodeFileName = null) => async (dispatch) => {
         const tmpFile = `/Tmp/${targetFile}`;
-        await UniApi.File.exportAs(targetFile, tmpFile, renderGcodeFileName);
+        await UniApi.File.exportAs(targetFile, tmpFile, renderGcodeFileName, actions.updateSurveyConditionTwo, dispatch);
     },
 
-    exportConfigFile: (targetFile, subCategory) => async () => {
+    exportConfigFile: (targetFile, subCategory) => async (dispatch) => {
         let configFile;
         if (subCategory) {
             configFile = `/Config/${subCategory}/${targetFile}`;
         } else {
             configFile = `/Config/${targetFile}`;
         }
-        await UniApi.File.exportAs(targetFile, configFile);
+        await UniApi.File.exportAs(targetFile, configFile, null, actions.updateSurveyConditionTwo, dispatch);
+    },
+
+    updateSurveyConditionTwo: (_targetFile, dispatch) => {
+        if (_targetFile.slice(_targetFile.length - 6) === '.gcode') {
+            dispatch(workspaceActions.updateState({
+                surveyConditionTwo: true
+            }));
+        } else {
+            dispatch(workspaceActions.updateState({
+                surveyConditionTwo: false
+            }));
+        }
     },
 
     setOpenedFileWithType: (headType, openedFile) => async (dispatch) => {
