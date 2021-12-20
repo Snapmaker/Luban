@@ -793,9 +793,8 @@ export const actions = {
         ) {
             const toolPaths = toolPathGroup.getToolPaths();
             toolPaths.forEach((item) => {
-                const idx = item.modelIDs.findIndex((id) => id === selectedModel.modelID);
-                if (idx > -1) {
-                    if (item.modelIDs?.length === 1) {
+                if (item.modelMap.has(selectedModel.modelID)) {
+                    if (item.modelMap.size === 1) {
                         dispatch(actions.deleteToolPath(headType, [item.id]));
                     } else {
                         item.deleteModel(selectedModel.modelID);
@@ -1001,8 +1000,8 @@ export const actions = {
         const toolPaths = toolPathGroup.getToolPaths();
         const emptyToolPaths = [];
         toolPaths.forEach((item) => {
-            if (item.modelIDs && item.modelIDs.length) {
-                for (const id of item.modelIDs) {
+            if (item.visibleModelIDs && item.visibleModelIDs.length) {
+                for (const id of item.visibleModelIDs) {
                     if (!selectedModelIDArray.includes(id) && allModelIDs.includes(id)) {
                         return;
                     }
@@ -1023,7 +1022,6 @@ export const actions = {
 
     removeSelectedModel: (headType) => (dispatch, getState) => {
         const { modelGroup, SVGActions, toolPathGroup } = getState()[headType];
-
         const operations = new Operations();
         for (const svgModel of modelGroup.getSelectedModelArray()) {
             const operation = new DeleteOperation2D({
@@ -1031,9 +1029,8 @@ export const actions = {
                 svgActions: SVGActions,
                 toolPathGroup,
                 toolPaths: toolPathGroup.toolPaths.filter((item) => {
-                    const index = item.modelIDs.indexOf(svgModel.modelID);
-                    if (index > -1) {
-                        item.modelIDs.splice(index, 1);
+                    if (item.modelMap.has(svgModel.modelID)) {
+                        item.modelMap.delete(svgModel.modelID);
                         return true;
                     }
                     return false;
@@ -1046,11 +1043,8 @@ export const actions = {
         const toolPaths = toolPathGroup.getToolPaths();
         toolPaths.forEach((item) => {
             for (const id of selectedModelIDArray) {
-                if (item.modelIDs.includes(id)) {
-                    const index = item.modelIDs.indexOf(id);
-                    if (index > -1) {
-                        item.modelIDs.splice(index, 1);
-                    }
+                if (item.modelMap.has(id)) {
+                    item.modelMap.deldete(id);
                 }
             }
         });

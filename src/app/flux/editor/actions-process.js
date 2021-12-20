@@ -204,14 +204,6 @@ export const processActions = {
         toolPathGroup.selectOneToolPathId(toolPathId);
     },
 
-    updatingToolPath: (headType, toolPathId) => (dispatch, getState) => {
-        const { toolPathGroup } = getState()[headType];
-        const toolPath = toolPathGroup.getToolPath(toolPathId);
-        dispatch(baseActions.updateState(headType, {
-            updatingToolPath: toolPath
-        }));
-    },
-
     saveToolPath: (headType, toolPath) => (dispatch, getState) => {
         const { toolPathGroup, materials, autoPreviewEnabled, displayedType } = getState()[headType];
         if (toolPathGroup.getToolPath(toolPath.id)) {
@@ -227,7 +219,6 @@ export const processActions = {
                 simulationNeedToPreview: true,
                 displayedType: DISPLAYED_TYPE_MODEL,
                 needToPreview: true,
-                updatingToolPath: null,
                 isChangedAfterGcodeGenerating: true
             }));
         }
@@ -357,15 +348,15 @@ export const processActions = {
         const { modelGroup, toolPathGroup, progressStatesManager } = getState()[headType];
         const { toolPaths } = toolPathGroup;
         const suffix = headType === 'laser' ? '.nc' : '.cnc';
-        let toolPathsModelId = [];
         const models = _.filter(modelGroup.getModels(), { 'visible': true });
-        toolPaths.forEach((item) => {
+        const toolPathsModelIds = toolPaths.reduce((prev, item) => {
             if (item.visible) {
-                toolPathsModelId = toolPathsModelId.concat(item.modelIDs);
+                prev.add(item.visibleModelIDs);
             }
-        });
+            return prev;
+        }, new Set());
         const currentModelName = _.find(models, (item) => {
-            return _.includes(toolPathsModelId, item.modelID);
+            return toolPathsModelIds.has(item.modelID);
         })?.modelName.substr(0, 128);
         const renderGcodeFileName = `${_.replace(currentModelName, /(\.svg|\.dxf|\.png|\.jpg|\.jpeg|\.bmp)$/, '')}_${new Date().getTime()}${suffix}`;
         if (taskResult.taskStatus === 'failed') {

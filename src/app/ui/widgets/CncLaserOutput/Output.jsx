@@ -135,7 +135,7 @@ const Output = ({ headType }) => {
         if (toolPath.visible === false) {
             return true;
         } else {
-            const toolPathRelatedModels = modelGroup.models.filter(model => toolPath.modelIDs.includes(model.modelID));
+            const toolPathRelatedModels = modelGroup.models.filter(model => toolPath.modelMap.has(model.modelID));
             return toolPathRelatedModels.every(model => model.visible === false);
         }
     });
@@ -143,7 +143,7 @@ const Output = ({ headType }) => {
     const isEditor = page === PAGE_EDITOR;
     const hasToolPathModel = (toolPathGroup.toolPaths.length > 0);
     const toolPathRelatedModelInvisible = toolPathGroup.toolPaths.every(toolPath => {
-        const toolPathRelatedModels = modelGroup.models.filter(model => toolPath.modelIDs.includes(model.modelID));
+        const toolPathRelatedModels = modelGroup.models.filter(model => toolPath.modelMap.has(model.modelID));
         return toolPathRelatedModels.every(model => model.visible === false);
     });
     const disablePreview = toolPathGroup.toolPaths.every(item => item.visible === false) || toolPathRelatedModelInvisible;
