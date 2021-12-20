@@ -22,7 +22,8 @@ class SocketController {
         }
 
         this.socket && this.socket.destroy();
-        this.socket = io.connect({
+
+        this.socket = io.connect('', {
             query: `token=${token}`
         });
 

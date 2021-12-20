@@ -289,18 +289,6 @@ const createApplication = () => {
             };
         }));
     }
-    // app.get(urljoin(settings.route, '/'), renderPage('index.hbs', (req) => {
-    //     const webroot = settings.assets.app.routes[0] || ''; // with trailing slash
-    //     const lng = req.language;
-    //     const t = req.t;
-    //
-    //     return {
-    //         webroot: webroot,
-    //         lang: lng,
-    //         title: `Snapmaker Luban ${settings.version}`,
-    //         loading: t('loading')
-    //     };
-    // }));
 
     // Error handling
     app.use(errlog());

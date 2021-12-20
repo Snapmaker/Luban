@@ -206,63 +206,63 @@ const showMainWindow = async () => {
     configureWindow(window);
 
     const loadUrl = `http://${address}:${port}`;
-    if (process.env.NODE_ENV !== 'development') {
-        const filter = {
-            urls: [
-                // 'http://*/',
-                'http://*/resources/images/*',
-                'http://*/app.css',
-                'http://*/polyfill.*.*',
-                'http://*/vendor.*.*',
-                'http://*/app.*.*',
-                'http://*/*/*.worker.js',
-            ]
-        };
-        protocol.registerFileProtocol(
-            'local',
-            (request, callback) => {
-                const { pathname } = parse(request.url, true);
-                // const { pathname, query } = parse(request.url, true);
-                const p = pathname === '/' ? 'index.html' : pathname.substr(1);
-                callback(fs.createReadStream(path.normalize(`${__dirname}/app/${p}`)));
-            },
-            (error) => {
-                if (error) {
-                    console.error('error', error);
-                }
+    // if (process.env.NODE_ENV !== 'development') {
+    const filter = {
+        urls: [
+            // 'http://*/',
+            'http://*/resources/images/*',
+            'http://*/app.css',
+            'http://*/polyfill.*.*',
+            'http://*/vendor.*.*',
+            'http://*/app.*.*',
+            'http://*/*/*.worker.js',
+        ]
+    };
+    protocol.registerFileProtocol(
+        'local',
+        (request, callback) => {
+            const { pathname } = parse(request.url, true);
+            // const { pathname, query } = parse(request.url, true);
+            const p = pathname === '/' ? 'index.html' : pathname.substr(1);
+            callback(fs.createReadStream(path.normalize(`${__dirname}/app/${p}`)));
+        },
+        (error) => {
+            if (error) {
+                console.error('error', error);
             }
-        );
-        // https://github.com/electron/electron/issues/21675
-        // If needed, resolve CORS. https://stackoverflow.com/questions/51254618/how-do-you-handle-cors-in-an-electron-app
-        // const filter2 = {
-        //     urls: ['http://*/api/*'
-        //     ]
-        // };
-        // session.defaultSession.webRequest.onBeforeSendHeaders(filter2, (details, callback) => {
-        //     details.requestHeaders.Origin = loadUrl;
-        //     callback({
-        //         requestHeaders: details.requestHeaders
-        //     });
-        // });
-        //
-        // session.defaultSession.webRequest.onHeadersReceived(filter2, (details, callback) => {
-        //     details.responseHeaders['Access-Control-Allow-Origin'] = ['*'];
-        //     details.responseHeaders['Access-Control-Allow-Methods'] = ['GET,PUT,POST,OPTIONS,DELETE'];
-        //     details.responseHeaders['Access-Control-Allow-Headers'] = ['*'];
-        //     details.responseHeaders['Access-Control-Max-Age'] = [86400];
-        //     callback({
-        //         responseHeaders: details.responseHeaders
-        //     });
-        // });
+        }
+    );
+    // https://github.com/electron/electron/issues/21675
+    // If needed, resolve CORS. https://stackoverflow.com/questions/51254618/how-do-you-handle-cors-in-an-electron-app
+    // const filter2 = {
+    //     urls: ['http://*/api/*'
+    //     ]
+    // };
+    // session.defaultSession.webRequest.onBeforeSendHeaders(filter2, (details, callback) => {
+    //     details.requestHeaders.Origin = loadUrl;
+    //     callback({
+    //         requestHeaders: details.requestHeaders
+    //     });
+    // });
+    //
+    // session.defaultSession.webRequest.onHeadersReceived(filter2, (details, callback) => {
+    //     details.responseHeaders['Access-Control-Allow-Origin'] = ['*'];
+    //     details.responseHeaders['Access-Control-Allow-Methods'] = ['GET,PUT,POST,OPTIONS,DELETE'];
+    //     details.responseHeaders['Access-Control-Allow-Headers'] = ['*'];
+    //     details.responseHeaders['Access-Control-Max-Age'] = [86400];
+    //     callback({
+    //         responseHeaders: details.responseHeaders
+    //     });
+    // });
 
-        session.defaultSession.webRequest.onBeforeRequest(
-            filter,
-            (request, callback) => {
-                const redirectURL = request.url.replace(/^http/, 'local');
-                callback({ redirectURL });
-            }
-        );
-    }
+    session.defaultSession.webRequest.onBeforeRequest(
+        filter,
+        (request, callback) => {
+            const redirectURL = request.url.replace(/^http/, 'local');
+            callback({ redirectURL });
+        }
+    );
+    // }
 
     // Ignore proxy settings
     // https://electronjs.org/docs/api/session#sessetproxyconfig-callback

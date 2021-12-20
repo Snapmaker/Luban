@@ -27,19 +27,6 @@ import { appbarMenuMiddleware } from './lib/redux-middleware';
 import 'antd/dist/antd.css';
 
 series([
-    // (next) => {
-    //     if (isElectron()) {
-    //         const { ipcRenderer } = window.require('electron');
-    //         ipcRenderer.send('find-server-data');
-    //         ipcRenderer.on('get-server-data', (event, newServerData) => {
-    //             serverData = newServerData;
-    //             console.log('event, serverData', event, newServerData);
-    //             next();
-    //         });
-    //     } else {
-    //         next();
-    //     }
-    // },
     (next) => {
         // Setup log level
         const queryParams = toQueryObject(window.location.search);
