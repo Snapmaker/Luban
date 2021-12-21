@@ -14,14 +14,16 @@ onmessage = (e) => {
             // Translate model by x:[-a, a]  z:[-b, b]  y:[-c, c], which center the model at zero
             geometry.computeBoundingBox();
             const box3 = geometry.boundingBox;
-            const x = -(box3.max.x + box3.min.x) / 2;
-            const y = -(box3.max.y + box3.min.y) / 2;
-            const z = -(box3.max.z + box3.min.z) / 2;
-            geometry.translate(x, y, z);
+            const originalPosition = {
+                x: (box3.max.x + box3.min.x) / 2,
+                y: (box3.max.y + box3.min.y) / 2,
+                z: (box3.max.z + box3.min.z) / 2,
+            };
+            geometry.translate(-originalPosition.x, -originalPosition.y, -originalPosition.z);
 
             // Send positions back to caller
             const positions = geometry.getAttribute('position').array;
-            postMessage({ type: 'LOAD_MODEL_POSITIONS', positions });
+            postMessage({ type: 'LOAD_MODEL_POSITIONS', positions, originalPosition });
 
             // Calculate convex of model
             const vertices = [];

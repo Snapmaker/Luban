@@ -2,7 +2,7 @@ import type ModelGroup from '../../models/ModelGroup';
 import type ThreeGroup from '../../models/ThreeGroup';
 import type ThreeModel from '../../models/ThreeModel';
 import Operation from './Operation';
-
+import { ALIGN_OPERATION } from '../../constants';
 
 type UngroupState = {
     target: ThreeGroup
@@ -47,7 +47,17 @@ export default class UngroupOperation3D extends Operation {
             }
         });
         if (children) {
+            if (target.groupFrom === ALIGN_OPERATION) {
+                children.forEach((model) => {
+                    modelGroup.selectModelById(model.modelID);
+                    modelGroup.updateSelectedGroupTransformation({
+                        positionZ: model.originalPosition.z
+                    }, true);
+                });
+                modelGroup.unselectAllModels();
+            }
             target.add(children);
+            target.stickToPlate();
             modelGroup.object.add(target.meshObject);
             modelGroup.models = [...others, target];
         }

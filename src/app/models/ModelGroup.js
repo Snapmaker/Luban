@@ -945,6 +945,48 @@ class ModelGroup extends EventEmitter {
         });
     }
 
+    updateModelsPositionBaseFirstModel(models) {
+        if (models && models.length > 0) {
+            const firstModel = models[0];
+            const otherModels = models.filter(d => d.meshObject !== firstModel.meshObject);
+            this.selectModelById(firstModel.modelID);
+            this.updateSelectedGroupTransformation({ positionZ: firstModel.originalPosition.z });
+            otherModels.forEach((model) => {
+                const newPosition = {
+                    positionX: model.originalPosition.x - firstModel.originalPosition.x + firstModel.transformation.positionX,
+                    positionY: model.originalPosition.y - firstModel.originalPosition.y + firstModel.transformation.positionY,
+                    positionZ: model.originalPosition.z,
+                };
+                this.selectModelById(model.modelID);
+                this.updateSelectedGroupTransformation(newPosition);
+            });
+            this.unselectAllModels();
+            models.forEach((item) => {
+                this.addModelToSelectedGroup(item);
+            });
+
+            this.modelChanged();
+        }
+        const newPosition = this.selectedGroup?.position;
+        return {
+            positionX: newPosition.x,
+            positionY: newPosition.y,
+        };
+    }
+
+    updateModelPositionByPosition(modelID, position) {
+        if (modelID) {
+            const model = this.models.find(d => d.modelID === modelID);
+            this.selectModelById(model.modelID);
+            this.updateSelectedGroupTransformation({
+                positionX: position.x,
+                positionY: position.y,
+                positionZ: position.z,
+            });
+            this.onModelAfterTransform();
+        }
+    }
+
     /**
      * Update transformation of selected group.
      *
@@ -956,8 +998,8 @@ class ModelGroup extends EventEmitter {
      *
      * @param transformation
      */
-    updateSelectedGroupTransformation(transformation, newUniformScalingState) {
-        const { positionX, positionY, rotationX, rotationY, rotationZ, scaleX, scaleY, scaleZ, width, height, uniformScalingState } = transformation;
+    updateSelectedGroupTransformation(transformation, newUniformScalingState = this.selectedGroup.uniformScalingState) {
+        const { positionX, positionY, positionZ, rotationX, rotationY, rotationZ, scaleX, scaleY, scaleZ, width, height, uniformScalingState } = transformation;
         const shouldUniformScale = newUniformScalingState ?? this.selectedGroup.uniformScalingState;
         // todo, width and height use for 2d
         if (width !== undefined) {
@@ -972,6 +1014,9 @@ class ModelGroup extends EventEmitter {
         }
         if (positionY !== undefined) {
             this.selectedGroup.position.setY(positionY);
+        }
+        if (positionZ !== undefined) {
+            this.selectedGroup.position.setZ(positionZ);
         }
         // Note that this is new value, but not a proportion, not to change pls.
         if (shouldUniformScale) {
@@ -1066,10 +1111,10 @@ class ModelGroup extends EventEmitter {
 
     // model transformation triggered by controls
     // Note: the function is only useful for 3D object operations on Canvas
-    onModelAfterTransform() {
+    onModelAfterTransform(shouldStickToPlate = true) {
         const selectedModelArray = this.selectedModelArray;
         selectedModelArray.forEach((selected) => {
-            if (selected.sourceType === '3d') {
+            if (selected.sourceType === '3d' && shouldStickToPlate) {
                 selected.stickToPlate();
             }
             if (selected.supportTag && selected.isSelected) {
@@ -1692,9 +1737,10 @@ class ModelGroup extends EventEmitter {
         return ungroupedModels;
     }
 
-    group() {
+    group(groupFrom) {
         const selectedModelArray = this.selectedModelArray.slice(0);
         this.unselectAllModels();
+        const group = new ThreeGroup({ groupFrom }, this);
         // check visible models or groups
         if (selectedModelArray.some(model => model.visible)) {
             // insert group to the first model position in selectedModelArray
@@ -1702,7 +1748,6 @@ class ModelGroup extends EventEmitter {
                 return this.models.indexOf(model);
             });
             const modelsToGroup = this._flattenGroups(selectedModelArray);
-            const group = new ThreeGroup({}, this);
             group.modelName = this._createNewModelName(group);
             group.add(modelsToGroup);
             const insertIndex = Math.min(indexesOfSelectedModels);
@@ -1713,21 +1758,24 @@ class ModelGroup extends EventEmitter {
             this.addModelToSelectedGroup(group);
             group.stickToPlate();
         }
-        return this.getState();
+        return {
+            newGroup: group,
+            modelState: this.getState()
+        };
+    }
+
+    canMerge() {
+        return this.selectedModelArray?.length > 1 && !this.selectedModelArray.some(model => model instanceof ThreeGroup);
     }
 
     canGroup() {
-        if (this.selectedModelArray.some(model => model.visible)) {
-            return true;
-        }
-        return false;
+        return this.selectedModelArray.some(model => {
+            return model.visible;
+        });
     }
 
     canUngroup() {
-        if (this.selectedModelArray.some(model => model instanceof ThreeGroup && model.visible)) {
-            return true;
-        }
-        return false;
+        return this.selectedModelArray.some(model => model instanceof ThreeGroup && model.visible);
     }
 
     ungroup() {

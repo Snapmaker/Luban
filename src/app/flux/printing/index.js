@@ -39,6 +39,7 @@ import AddOperation3D from '../operation-history/AddOperation3D';
 import VisibleOperation3D from '../operation-history/VisibleOperation3D';
 import OperationHistory from '../operation-history/OperationHistory';
 import GroupOperation3D from '../operation-history/GroupOperation3D.ts';
+import GroupAlignOperation3D from '../operation-history/GroupAlignOperation3D.ts';
 import ThreeGroup from '../../models/ThreeGroup.ts';
 import UngroupOperation3D from '../operation-history/UngroupOperation3D.ts';
 
@@ -1199,7 +1200,7 @@ export const actions = {
             default: break;
         }
         dispatch(actions.recordModelBeforeTransform(modelGroup));
-
+        // TODO
         modelGroup.updateSelectedGroupTransformation(transformation, newUniformScalingState);
         modelGroup.onModelAfterTransform();
 
@@ -1741,7 +1742,7 @@ export const actions = {
 
                 switch (type) {
                     case 'LOAD_MODEL_POSITIONS': {
-                        const { positions } = data;
+                        const { positions, originalPosition } = data;
 
                         const bufferGeometry = new THREE.BufferGeometry();
                         const modelPositionAttribute = new THREE.BufferAttribute(positions, 3);
@@ -1768,6 +1769,7 @@ export const actions = {
                             geometry: bufferGeometry,
                             material: material,
                             transformation,
+                            originalPosition,
                             modelID,
                             extruderConfig,
                             parentModelID
@@ -1908,6 +1910,54 @@ export const actions = {
         dispatch(actions.updateState({
             leftBarOverlayVisible: visible
         }));
+    },
+    groupAndAlign: () => (dispatch, getState) => {
+        const { modelGroup } = getState().printing;
+
+        const modelsbeforeGroup = modelGroup.getModels().slice(0);
+        const selectedModels = modelGroup.getSelectedModelArray().slice(0);
+        const selectedModelsPositionMap = new Map();
+        selectedModels.forEach(model => {
+            selectedModelsPositionMap.set(model.modelID, {
+                x: model.transformation.positionX,
+                y: model.transformation.positionY,
+                z: model.transformation.positionZ,
+            });
+        });
+        // const groups = modelGroup.getSelectedModelArray().filter(model => model instanceof ThreeGroup);
+        // const groupChildrenMap = new Map();
+        // groups.forEach(group => {
+        //     groupChildrenMap.set(group, group.children.slice(0));
+        // });
+        const newPosition = modelGroup.updateModelsPositionBaseFirstModel(selectedModels);
+        modelGroup.onModelAfterTransform(false);
+        const operations = new Operations();
+
+        dispatch(actions.clearAllManualSupport(operations));
+        const { modelState } = modelGroup.group(ALIGN_OPERATION);
+        const modelsafterGroup = modelGroup.getModels().slice(0);
+
+        const operation = new GroupAlignOperation3D({
+            selectedModelsPositionMap,
+            // groupChildrenMap,
+            modelsbeforeGroup,
+            modelsafterGroup,
+            selectedModels,
+            newPosition,
+            target: modelGroup.getSelectedModelArray()[0],
+            modelGroup
+        });
+        operations.push(operation);
+        operations.registCallbackAfterAll(() => {
+            dispatch(actions.updateState(modelGroup.getState()));
+            dispatch(actions.destroyGcodeLine());
+            dispatch(actions.displayModel());
+        });
+
+        dispatch(operationHistoryActions.setOperations(INITIAL_STATE.name, operations));
+        dispatch(actions.updateState(modelState));
+        dispatch(actions.destroyGcodeLine());
+        dispatch(actions.displayModel());
     },
 
     group: () => (dispatch, getState) => {

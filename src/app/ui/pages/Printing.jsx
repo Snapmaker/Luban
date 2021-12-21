@@ -86,6 +86,7 @@ function useRenderMainToolBar() {
     const canRedo = useSelector(state => state?.printing?.history?.canRedo, shallowEqual);
     const canUndo = useSelector(state => state?.printing?.history?.canUndo, shallowEqual);
     const canGroup = useSelector(state => state?.printing?.modelGroup?.canGroup());
+    const canMerge = useSelector(state => state?.printing?.modelGroup?.canMerge());
     const canUngroup = useSelector(state => state?.printing?.modelGroup?.canUngroup());
     const [showHomePage, setShowHomePage] = useState(false);
     const [showWorkspace, setShowWorkspace] = useState(false);
@@ -165,6 +166,15 @@ function useRenderMainToolBar() {
                 name: 'MainToolbarRedo',
                 action: () => {
                     dispatch(printingActions.redo());
+                }
+            },
+            {
+                title: i18n._('key-3DP/MainToolBar-Align'),
+                disabled: !canMerge || !enableShortcut,
+                type: 'button',
+                name: 'MainToolbarMerge',
+                action: () => {
+                    dispatch(printingActions.groupAndAlign());
                 }
             },
             {
