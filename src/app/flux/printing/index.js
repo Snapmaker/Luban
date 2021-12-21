@@ -17,6 +17,7 @@ import {
     LEFT_EXTRUDER,
     RIGHT_EXTRUDER,
     LEFT_EXTRUDER_MAP_NUMBER,
+    RIGHT_EXTRUDER_MAP_NUMBER
 } from '../../constants';
 import { timestamp } from '../../../shared/lib/random-utils';
 import { machineStore } from '../../store/local-storage';
@@ -672,6 +673,39 @@ export const actions = {
                 extruderDef.settings[key].default_value = definition.settings[key].default_value;
                 extruderDef.settings[key].from = definition.definitionId;
             }
+        }
+
+        // update relative definitions
+        // nozzle size
+        const nozzleSize = extruderDef.settings.machine_nozzle_size.default_value;
+        extruderDef.settings.line_width.default_value = nozzleSize;
+        extruderDef.settings.wall_line_width.default_value = nozzleSize;
+        extruderDef.settings.wall_line_width_0.default_value = nozzleSize;
+        extruderDef.settings.wall_line_width_x.default_value = nozzleSize;
+        extruderDef.settings.skin_line_width.default_value = nozzleSize;
+        extruderDef.settings.infill_line_width.default_value = nozzleSize;
+        extruderDef.settings.skirt_brim_line_width.default_value = nozzleSize;
+        extruderDef.settings.support_line_width.default_value = nozzleSize;
+        extruderDef.settings.support_interface_line_width.default_value = nozzleSize;
+        extruderDef.settings.support_roof_line_width.default_value = nozzleSize;
+        extruderDef.settings.prime_tower_line_width.default_value = nozzleSize;
+        // heated bed
+        if (direction === LEFT_EXTRUDER) {
+            state.activeDefinition.settings.machine_heated_bed.default_value = extruderDef.settings.machine_heated_bed.default_value;
+            state.activeDefinition.settings.material_bed_temperature_layer_0.default_value = extruderDef.settings.material_bed_temperature_layer_0.default_value;
+            state.activeDefinition.settings.material_bed_temperature.default_value = extruderDef.settings.material_bed_temperature.default_value;
+        }
+        // line width active final
+        if (state.helpersExtruderConfig.adhesion === LEFT_EXTRUDER_MAP_NUMBER && direction === LEFT_EXTRUDER
+            || state.helpersExtruderConfig.adhesion === RIGHT_EXTRUDER_MAP_NUMBER && direction === RIGHT_EXTRUDER) {
+            state.activeDefinition.settings.skirt_brim_line_width.default_value = extruderDef.settings.skirt_brim_line_width.default_value;
+        }
+        if (state.helpersExtruderConfig.support === LEFT_EXTRUDER_MAP_NUMBER && direction === LEFT_EXTRUDER
+            || state.helpersExtruderConfig.support === RIGHT_EXTRUDER_MAP_NUMBER && direction === RIGHT_EXTRUDER) {
+            state.activeDefinition.settings.support_line_width.default_value = extruderDef.settings.support_line_width.default_value;
+            state.activeDefinition.settings.support_interface_line_width.default_value = extruderDef.settings.support_interface_line_width.default_value;
+            state.activeDefinition.settings.support_roof_line_width.default_value = extruderDef.settings.support_roof_line_width.default_value;
+            state.activeDefinition.settings.prime_tower_line_width.default_value = extruderDef.settings.prime_tower_line_width.default_value;
         }
 
         if (direction === LEFT_EXTRUDER) {
