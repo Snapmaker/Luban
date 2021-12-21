@@ -337,7 +337,6 @@ const SettingGuideModal = (props) => {
                                                     })}
                                                     onChange={e => handleToolheadChange(e, 'printing')}
                                                     size="large"
-                                                    disabled
                                                 />
                                             </div>
                                             <div className={classNames(styles.laserSelect, 'margin-bottom-16')}>

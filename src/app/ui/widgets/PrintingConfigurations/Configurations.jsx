@@ -12,8 +12,15 @@ import { actions as printingActions } from '../../../flux/printing';
 import { actions as projectActions } from '../../../flux/project';
 import { actions as machineActions } from '../../../flux/machine';
 
-import { HEAD_PRINTING, PRINTING_MANAGER_TYPE_QUALITY, PRINTING_QUALITY_CONFIG_INDEX,
-    PRINTING_QUALITY_CUSTOMIZE_FIELDS, PRINTING_QUALITY_CONFIG_GROUP } from '../../../constants';
+import {
+    HEAD_PRINTING,
+    PRINTING_MANAGER_TYPE_QUALITY,
+    PRINTING_QUALITY_CONFIG_INDEX,
+    PRINTING_QUALITY_CUSTOMIZE_FIELDS,
+    PRINTING_QUALITY_CONFIG_GROUP_DUAL,
+    PRINTING_QUALITY_CONFIG_GROUP_SINGLE,
+    SINGLE_EXTRUDER_TOOLHEAD_FOR_SM2
+} from '../../../constants';
 import SettingItem from '../../views/ProfileManager/SettingItem';
 import ConfigValueBox from '../../views/ProfileManager/ConfigValueBox';
 import styles from './styles.styl';
@@ -34,6 +41,8 @@ function Configurations({ widgetActions }) {
     const qualityDefinitions = useSelector(state => state?.printing?.qualityDefinitions);
     const defaultQualityId = useSelector(state => state?.printing?.defaultQualityId, shallowEqual);
     let printingCustomConfigs = useSelector(state => state?.machine?.printingCustomConfigs);
+    const toolHead = useSelector(state => state?.machine?.toolHead);
+    const printingQualityConfigGroup = (toolHead.printingToolhead === SINGLE_EXTRUDER_TOOLHEAD_FOR_SM2 ? PRINTING_QUALITY_CONFIG_GROUP_SINGLE : PRINTING_QUALITY_CONFIG_GROUP_DUAL);
     const dispatch = useDispatch();
 
     const actions = {
@@ -232,7 +241,7 @@ function Configurations({ widgetActions }) {
                                 calculateTextIndex={calculateTextIndex}
                                 customConfigs={printingCustomConfigs}
                                 definitionForManager={selectedDefinition}
-                                optionConfigGroup={PRINTING_QUALITY_CONFIG_GROUP}
+                                optionConfigGroup={printingQualityConfigGroup}
                                 isOfficialDefinition={isOfficialDefinition}
                                 type="checkbox"
                                 onChangeDefinition={onChangeCustomConfig}

@@ -172,6 +172,7 @@ i18n._('Parameters');
 // Printing Profile
 i18n._('key-printing/material_settings-Temperature');
 i18n._('key-printing/material_settings-Extrusion');
+i18n._('key-Printing/LeftBar-Extruder Both');
 
 // Profile Default name and category
 i18n._('key-default_name-Carving V-bit');
@@ -206,6 +207,13 @@ i18n._('key-default_name-PLA');
 i18n._('key-default_name-Fast Print');
 i18n._('key-default_name-Normal Quality');
 i18n._('key-default_name-High Quality');
+i18n._('key-default_name-ABS_Black');
+i18n._('key-default_name-ABS_White');
+i18n._('key-default_name-PLA_Black');
+i18n._('key-default_name-PLA_White');
+i18n._('key-default_name-PETG_Black');
+i18n._('key-default_name-PETG_White');
+
 
 i18n._('key-default_category-Default Material');
 i18n._('key-default_category-Acrylic');
@@ -224,6 +232,9 @@ i18n._('key-default_category-Pinewood');
 i18n._('key-default_category-Vegetable Tanned Leather');
 
 i18n._('key-default_category-Default');
+i18n._('key-default_category-PLA');
+i18n._('key-default_category-PETG');
+i18n._('key-default_category-ABS');
 
 // connection message
 i18n._('key-Workspace/Connection-enclosure');

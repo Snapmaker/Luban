@@ -350,7 +350,7 @@
     "progress": "~2.0.0",
     "react-textarea-autosize": "^7.1.0",
     "redux-devtools": "~3.7.0",
-    "snapmaker-react-icon": "~1.19.4",
+    "snapmaker-react-icon": "~1.19.5",
     "style-loader": "~0.21.0",
     "stylint": "~1.5.9",
     "stylus": "~0.54.5",

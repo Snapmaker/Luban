@@ -7,6 +7,10 @@ class DefinitionManager {
 
     activeDefinition = null;
 
+    extruderLDefinition = null;
+
+    extruderRDefinition = null;
+
     defaultDefinitions = [];
 
     configPathname = '';
@@ -56,6 +60,12 @@ class DefinitionManager {
             }
             return item;
         });
+
+        res = await this.getDefinition('snapmaker_extruder_0', false);
+        this.extruderLDefinition = res;
+
+        res = await this.getDefinition('snapmaker_extruder_1', false);
+        this.extruderRDefinition = res;
     }
 
     /**

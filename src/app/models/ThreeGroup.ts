@@ -3,11 +3,16 @@ import BaseModel, { ModelTransformation, ModelInfo } from './ThreeBaseModel.ts';
 import type ModelGroup from './ModelGroup';
 import ThreeModel from './ThreeModel';
 import ThreeUtils from '../three-extensions/ThreeUtils';
-import { HEAD_PRINTING, GROUP_OPERATION } from '../constants';
+import { HEAD_PRINTING, GROUP_OPERATION, BOTH_EXTRUDER_MAP_NUMBER } from '../constants';
 import ConvexGeometry from '../three-extensions/ConvexGeometry';
 
 window.THREE = THREE;
 require('three/examples/js/utils/BufferGeometryUtils');
+
+type ExtruderConfig = {
+    infill: string,
+    shell: string,
+};
 
 export default class ThreeGroup extends BaseModel {
     estimatedTime: number = 0;
@@ -62,11 +67,9 @@ export default class ThreeGroup extends BaseModel {
 
     uploadName: string;
 
-    extruderConfig: Object = {
+    extruderConfig: ExtruderConfig = {
         infill: '0',
-        shell: '0',
-        adhesion: '0',
-        support: '0'
+        shell: '0'
     };
 
     config: Object;
@@ -104,6 +107,8 @@ export default class ThreeGroup extends BaseModel {
         if (models.length === 1) {
             ThreeUtils.liftObjectOnlyChildMatrix(this.meshObject);
             (this.meshObject as any).uniformScalingState = (this.meshObject.children[0] as any).uniformScalingState;
+            // update group extruder config
+            this.extruderConfig = models[0].extruderConfig as ExtruderConfig;
         } else if (models.length > 1) {
             let p;
             const boundingBoxTemp = ThreeUtils.computeBoundingBox(this.meshObject);
@@ -130,6 +135,22 @@ export default class ThreeGroup extends BaseModel {
             ThreeUtils.applyObjectMatrix(this.meshObject, matrix);
             children.map(obj => ThreeUtils.setObjectParent(obj, this.meshObject));
             (this.meshObject as any).uniformScalingState = true;
+            const tempExtruderConfig: ExtruderConfig = Object.assign({}, models[0].extruderConfig as ExtruderConfig);
+            for (const modelItem of models.slice(1)) {
+                const { infill, shell } = (modelItem.extruderConfig as ExtruderConfig);
+                // another model use different extruder, change status to 'both'
+                if (infill !== tempExtruderConfig.infill && tempExtruderConfig.infill !== BOTH_EXTRUDER_MAP_NUMBER) {
+                    tempExtruderConfig.infill = BOTH_EXTRUDER_MAP_NUMBER;
+                }
+                if (shell !== tempExtruderConfig.shell && tempExtruderConfig.shell !== BOTH_EXTRUDER_MAP_NUMBER) {
+                    tempExtruderConfig.shell = BOTH_EXTRUDER_MAP_NUMBER;
+                }
+                // extruder status all is 'both', break out the loop
+                if (tempExtruderConfig.infill === BOTH_EXTRUDER_MAP_NUMBER && tempExtruderConfig.shell === BOTH_EXTRUDER_MAP_NUMBER) {
+                    break;
+                }
+            }
+            this.extruderConfig = tempExtruderConfig;
         }
     }
 

@@ -1,0 +1,24 @@
+@import "../../../styles/global-var.styl";
+
+.override-cascader {
+    display: inline-block;
+
+    input
+    .ant-input {
+        border: 1px solid $black-5;
+        border-radius: 8px;
+    }
+}
+
+:global(.ant-cascader-menus) {
+    border-radius: 8px !important;
+    border: 1px solid $black-5;
+}
+
+:global(.ant-cascader-menu) {
+    width: 188px;
+    max-height: 188px;
+    height: 100% !important;
+    overflow auto;
+}
+

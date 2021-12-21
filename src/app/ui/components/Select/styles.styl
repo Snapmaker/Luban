@@ -83,11 +83,14 @@
     bottom: 0;
   }
   :global(.ant-select-tree-switcher_open), :global(.ant-select-tree-switcher_close) {
-      padding-right: 115%
+      padding-right: 100%
       z-index: 100
+      :global(.ant-select-tree-switcher-icon) {
+          margin-left: 8px;
+      }
   }
   :global(.ant-select-tree-node-content-wrapper-close), :global(.ant-select-tree-node-content-wrapper-open) {
-      margin-left: -115%
+      margin-left: -100%
       z-index: 10
   }
   :global(.ant-select-tree-list-holder) {
@@ -97,9 +100,12 @@
     :global(.ant-select-tree-treenode) {
       height 32px
       padding 0 !important
-      width 86%
+      width 100%
+      &:hover {
+          background: #eeeff0;
+      }
     }
-    :global(.ant-select-tree-node-selected) {
+    :global(.ant-select-tree-treenode-selected), :global(.ant-select-tree-node-selected) {
       background: #E7F3FF !important;
     }
     :global(.ant-select-tree-node-content-wrapper) {
@@ -117,8 +123,13 @@
         width 100%
       }
       &:hover {
-        background: #EEEFF0;
+        background: transparent;
       }
+    }
+
+    :global(.ant-select-tree-node-content-wrapper-normal) {
+        padding-left 8px;
+        padding-right: 12px;
     }
     :global(.ant-select-tree-treenode-disabled) {
       :global(.ant-select-tree-node-content-wrapper) {
