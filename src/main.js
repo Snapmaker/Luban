@@ -206,7 +206,6 @@ const showMainWindow = async () => {
     configureWindow(window);
 
     const loadUrl = `http://${address}:${port}`;
-    // if (process.env.NODE_ENV !== 'development') {
     const filter = {
         urls: [
             // 'http://*/',
@@ -222,7 +221,6 @@ const showMainWindow = async () => {
         'local',
         (request, callback) => {
             const { pathname } = parse(request.url, true);
-            // const { pathname, query } = parse(request.url, true);
             const p = pathname === '/' ? 'index.html' : pathname.substr(1);
             callback(fs.createReadStream(path.normalize(`${__dirname}/app/${p}`)));
         },
@@ -262,7 +260,6 @@ const showMainWindow = async () => {
             callback({ redirectURL });
         }
     );
-    // }
 
     // Ignore proxy settings
     // https://electronjs.org/docs/api/session#sessetproxyconfig-callback
