@@ -289,7 +289,6 @@ class DefinitionManager {
         const definition = {
             definitionId: 'model_final',
             name: 'Model Profile',
-            inherits: 'snapmaker2',
             settings: {},
             ownKeys: []
         };

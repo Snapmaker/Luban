@@ -13,24 +13,6 @@
             "default_value": "skirt"
         },
 
-        "line_width": {
-            "default_value": 0.4
-        },
-        "wall_line_width": {
-            "default_value": 0.4
-        },
-        "wall_line_width_0": {
-            "default_value": 0.4
-        },
-        "wall_line_width_x": {
-            "default_value": 0.4
-        },
-        "skin_line_width": {
-            "default_value": 0.4
-        },
-        "infill_line_width": {
-            "default_value": 0.4
-        },
         "skirt_brim_line_width": {
             "default_value": 0.4
         },

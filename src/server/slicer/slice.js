@@ -46,6 +46,7 @@ function callCuraEngine(modelConfig, supportConfig, outputPath) {
             args.push('-j', supportConfig.configFilePath);
         }
     }
+    console.log(args.join(' '));
     // log.info(`${enginePath} ${args.join(' ')}`);
     return childProcess.spawn(
         enginePath,
