@@ -15,7 +15,7 @@ type GroupState = {
     modelsafterGroup: Model[],
     selectedModels: ThreeModel[] | ThreeGroup[],
     groupChildrenMap: Map<ThreeGroup, ThreeModel[]>
-    selectedModelsPositionMap: Map<string, any>
+    selectedModelsPositionMap: Map<string, PositionObject>
     target: ThreeGroup,
     newPosition: PositionObject,
     modelGroup: ModelGroup
