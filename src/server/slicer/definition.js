@@ -320,7 +320,7 @@ export function loadDefinitionLoaderByFilename(headType, filename, configPath, i
 export function loadMaterialDefinitions(headType, configPath) {
     const predefined = DEFAULT_PRINTING_MATERIAL;
 
-    const regex = /^material.([A-Za-z0-9_]+).([A-Za-z0-9_]+?).def.json$/;
+    const regex = /^material\.([A-Za-z0-9_]+)\.([A-Za-z0-9_]+?)\.def\.json$/;
     const defaultDefinitionLoader = loadDefinitionLoaderByFilename(headType, 'material.pla.def.json', configPath);
     // predefined.push('material.pla.def.json');
     // predefined.push('material.abs.def.json');

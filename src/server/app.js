@@ -62,6 +62,7 @@ const verifyToken = (token) => {
     }
     return true;
 };
+const DEFAULT_FILE = 'index.html';
 
 const createApplication = () => {
     const app = express();
@@ -261,34 +262,18 @@ const createApplication = () => {
         }
     });
     // page
-    if (process.env.NODE_ENV === 'development') {
-        app.get(urljoin(settings.route, '/'), renderPage('index.hbs', (req) => {
-            const webroot = settings.assets.app.routes[0] || ''; // with trailing slash
-            const lng = req.language;
-            const t = req.t;
+    app.get(urljoin(settings.route, '/'), renderPage(DEFAULT_FILE, (req) => {
+        const webroot = settings.assets.app.routes[0] || ''; // with trailing slash
+        const lng = req.language;
+        const t = req.t;
 
-            return {
-                webroot: webroot,
-                lang: lng,
-                title: `Snapmaker Luban ${settings.version}`,
-                loading: t('loading')
-            };
-        }));
-    } else {
-        app.get(urljoin(settings.route, '/'), renderPage('index.html', (req) => {
-            const webroot = settings.assets.app.routes[0] || ''; // with trailing slash
-            console.log('webroot', webroot);
-            const lng = req.language;
-            const t = req.t;
-
-            return {
-                webroot: webroot,
-                lang: lng,
-                title: `Snapmaker Luban ${settings.version}`,
-                loading: t('loading')
-            };
-        }));
-    }
+        return {
+            webroot: webroot,
+            lang: lng,
+            title: `Snapmaker Luban ${settings.version}`,
+            loading: t('loading')
+        };
+    }));
 
     // Error handling
     app.use(errlog());
