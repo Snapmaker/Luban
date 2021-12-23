@@ -307,6 +307,21 @@ class DefinitionManager {
         return definition;
     }
 
+    finalizeExtruderDefinition(extruderDefinition, materialDefinition) {
+        const definition = {
+            ...extruderDefinition
+        };
+        Object.keys(extruderDefinition.ownKeys)
+            .forEach(index => {
+                const key = extruderDefinition.ownKeys[index];
+                const setting = materialDefinition.settings[key];
+                if (setting) {
+                    definition.settings[key].default_value = setting.default_value;
+                }
+            });
+        return definition;
+    }
+
     addMachineStartGcode(definition) {
         const settings = definition.settings;
 

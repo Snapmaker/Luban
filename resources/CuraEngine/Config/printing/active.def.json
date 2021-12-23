@@ -25,6 +25,9 @@
         "support_roof_line_width": {
             "default_value": 0.4
         },
+        "support_bottom_line_width": {
+            "default_value": 0.4
+        },
         "prime_tower_line_width": {
             "default_value": 0.4
         },

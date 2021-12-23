@@ -280,7 +280,9 @@ export const actions = {
         dispatch(actions.updateState({
             activeDefinition: definitionManager.activeDefinition,
             materialDefinitions: await definitionManager.getDefinitionsByPrefixName('material'),
-            qualityDefinitions: await definitionManager.getDefinitionsByPrefixName('quality')
+            qualityDefinitions: await definitionManager.getDefinitionsByPrefixName('quality'),
+            extruderLDefinition: await definitionManager.getDefinitionsByPrefixName('snapmaker_extruder_0'),
+            extruderRDefinition: await definitionManager.getDefinitionsByPrefixName('snapmaker_extruder_1')
         }));
         // model group
         modelGroup.updateBoundingBox(new THREE.Box3(
@@ -639,6 +641,14 @@ export const actions = {
         dispatch(actions.updateState({ activeDefinition }));
     },
 
+    /**
+     *
+     * @param definition
+     *      {
+     *          nozzleSize
+     *      }
+     * @param direction
+     */
     updateExtuderDefinition: (definition, direction = LEFT_EXTRUDER) => (dispatch, getState) => {
         const state = getState().printing;
 
@@ -688,13 +698,9 @@ export const actions = {
         extruderDef.settings.support_line_width.default_value = nozzleSize;
         extruderDef.settings.support_interface_line_width.default_value = nozzleSize;
         extruderDef.settings.support_roof_line_width.default_value = nozzleSize;
+        extruderDef.settings.support_bottom_line_width.default_value = nozzleSize;
         extruderDef.settings.prime_tower_line_width.default_value = nozzleSize;
-        // heated bed
-        if (direction === LEFT_EXTRUDER) {
-            state.activeDefinition.settings.machine_heated_bed.default_value = extruderDef.settings.machine_heated_bed.default_value;
-            state.activeDefinition.settings.material_bed_temperature_layer_0.default_value = extruderDef.settings.material_bed_temperature_layer_0.default_value;
-            state.activeDefinition.settings.material_bed_temperature.default_value = extruderDef.settings.material_bed_temperature.default_value;
-        }
+
         // line width active final
         if (state.helpersExtruderConfig.adhesion === LEFT_EXTRUDER_MAP_NUMBER && direction === LEFT_EXTRUDER
             || state.helpersExtruderConfig.adhesion === RIGHT_EXTRUDER_MAP_NUMBER && direction === RIGHT_EXTRUDER) {
@@ -705,6 +711,7 @@ export const actions = {
             state.activeDefinition.settings.support_line_width.default_value = extruderDef.settings.support_line_width.default_value;
             state.activeDefinition.settings.support_interface_line_width.default_value = extruderDef.settings.support_interface_line_width.default_value;
             state.activeDefinition.settings.support_roof_line_width.default_value = extruderDef.settings.support_roof_line_width.default_value;
+            state.activeDefinition.settings.support_bottom_line_width.default_value = extruderDef.settings.support_bottom_line_width.default_value;
             state.activeDefinition.settings.prime_tower_line_width.default_value = extruderDef.settings.prime_tower_line_width.default_value;
         }
 
@@ -995,10 +1002,29 @@ export const actions = {
     },
 
     generateGcode: (thumbnail, isGuideTours = false) => async (dispatch, getState) => {
-        const { hasModel, activeDefinition, modelGroup, progressStatesManager, helpersExtruderConfig } = getState().printing;
+        const { hasModel, activeDefinition, modelGroup, progressStatesManager, helpersExtruderConfig,
+            extruderLDefinition, extruderRDefinition, defaultMaterialId, defaultMaterialIdRight, materialDefinitions } = getState().printing;
         if (!hasModel) {
             return;
         }
+
+        // update extruder definitions
+        const indexL = materialDefinitions.findIndex(d => d.definitionId === defaultMaterialId);
+        const indexR = materialDefinitions.findIndex(d => d.definitionId === defaultMaterialIdRight);
+        const newExtruderLDefinition = definitionManager.finalizeExtruderDefinition(extruderLDefinition, materialDefinitions[indexL]);
+        const newExtruderRDefinition = definitionManager.finalizeExtruderDefinition(extruderRDefinition, materialDefinitions[indexR]);
+        dispatch(actions.updateState({
+            extruderLDefinition: newExtruderLDefinition,
+            extruderRDefinition: newExtruderRDefinition
+        }));
+        definitionManager.updateDefinition({
+            ...newExtruderLDefinition,
+            definitionId: 'snapmaker_extruder_0'
+        });
+        definitionManager.updateDefinition({
+            ...newExtruderRDefinition,
+            definitionId: 'snapmaker_extruder_1'
+        });
 
         const models = filter(modelGroup.getModels(), { 'visible': true });
 
@@ -1037,6 +1063,11 @@ export const actions = {
         finalDefinition.settings.support_interface_extruder_nr.default_value = supportExtruder;
         finalDefinition.settings.support_roof_extruder_nr.default_value = supportExtruder;
         finalDefinition.settings.support_bottom_extruder_nr.default_value = supportExtruder;
+
+        finalDefinition.settings.machine_heated_bed.default_value = extruderLDefinition.settings.machine_heated_bed.default_value;
+        finalDefinition.settings.material_bed_temperature.default_value = extruderLDefinition.settings.material_bed_temperature.default_value;
+        finalDefinition.settings.material_bed_temperature_layer_0.default_value = extruderLDefinition.settings.material_bed_temperature_layer_0.default_value;
+
         await api.profileDefinitions.createDefinition(CONFIG_HEADTYPE, finalDefinition);
 
         // slice
