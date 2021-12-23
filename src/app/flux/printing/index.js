@@ -688,18 +688,19 @@ export const actions = {
         // update relative definitions
         // nozzle size
         const nozzleSize = extruderDef.settings.machine_nozzle_size.default_value;
-        extruderDef.settings.line_width.default_value = nozzleSize;
-        extruderDef.settings.wall_line_width.default_value = nozzleSize;
-        extruderDef.settings.wall_line_width_0.default_value = nozzleSize;
-        extruderDef.settings.wall_line_width_x.default_value = nozzleSize;
-        extruderDef.settings.skin_line_width.default_value = nozzleSize;
-        extruderDef.settings.infill_line_width.default_value = nozzleSize;
-        extruderDef.settings.skirt_brim_line_width.default_value = nozzleSize;
-        extruderDef.settings.support_line_width.default_value = nozzleSize;
-        extruderDef.settings.support_interface_line_width.default_value = nozzleSize;
-        extruderDef.settings.support_roof_line_width.default_value = nozzleSize;
-        extruderDef.settings.support_bottom_line_width.default_value = nozzleSize;
-        extruderDef.settings.prime_tower_line_width.default_value = nozzleSize;
+        const nozzleSizeRelationSettingsKeys = [
+            'line_width',
+            'wall_line_width', 'wall_line_width_0', 'wall_line_width_x',
+            'skin_line_width',
+            'infill_line_width',
+            'skirt_brim_line_width',
+            'support_line_width',
+            'support_interface_line_width', 'support_roof_line_width', 'support_bottom_line_width',
+            'prime_tower_line_width'
+        ];
+        for (const key of nozzleSizeRelationSettingsKeys) {
+            extruderDef.settings[key].default_value = nozzleSize;
+        }
 
         // line width active final
         if (state.helpersExtruderConfig.adhesion === LEFT_EXTRUDER_MAP_NUMBER && direction === LEFT_EXTRUDER
