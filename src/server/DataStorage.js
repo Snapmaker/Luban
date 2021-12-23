@@ -12,7 +12,9 @@ import { initFonts } from '../shared/lib/FontManager';
 import settings from './config/settings';
 import config from './services/configstore';
 
+
 const log = logger('server:DataStorage');
+
 
 export const rmDir = (dirPath, removeSelf) => {
     log.info(`Clearing folder ${dirPath}`);
@@ -42,6 +44,7 @@ export const rmDir = (dirPath, removeSelf) => {
         fs.rmdirSync(dirPath);
     }
 };
+
 
 class DataStorage {
      userDataDir;
@@ -177,7 +180,6 @@ class DataStorage {
                  }
              }
          }
-         console.log('printingConfigNames', printingConfigNames, cncConfigPaths);
          if (printingConfigNames.length) {
              const printingDir = `${srcDir}/${PRINTING_CONFIG_SUBCATEGORY}`;
              const seriesFiles = fs.readdirSync(printingDir);
@@ -191,7 +193,6 @@ class DataStorage {
                      const src = path.join(printingDir, currentFile);
                      if (!fs.statSync(src).isFile()) {
                          const newFilePath = `${src}/${oldFileName}`;
-                         console.log('printing', oldFilePath, newFilePath);
                          fs.copyFileSync(oldFilePath, newFilePath);
                      }
                  }
@@ -222,7 +223,6 @@ class DataStorage {
                              newFileName = newFileName.replace(/\.defv2\.json$/, '.def.json');
                          }
                          const newFilePath = `${src}/${newFileName}`;
-                         console.log('cnc', oldFilePath, newFilePath);
                          fs.copyFileSync(oldFilePath, newFilePath);
                      }
                  }
