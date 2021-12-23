@@ -17,7 +17,8 @@ import {
     LEFT_EXTRUDER,
     RIGHT_EXTRUDER,
     LEFT_EXTRUDER_MAP_NUMBER,
-    RIGHT_EXTRUDER_MAP_NUMBER
+    RIGHT_EXTRUDER_MAP_NUMBER,
+    ALIGN_OPERATION
 } from '../../constants';
 import { timestamp } from '../../../shared/lib/random-utils';
 import { machineStore } from '../../store/local-storage';
@@ -1008,7 +1009,6 @@ export const actions = {
         if (!hasModel) {
             return;
         }
-
         // update extruder definitions
         const indexL = materialDefinitions.findIndex(d => d.definitionId === defaultMaterialId);
         const indexR = materialDefinitions.findIndex(d => d.definitionId === defaultMaterialIdRight);

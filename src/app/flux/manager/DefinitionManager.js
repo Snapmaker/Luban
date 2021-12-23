@@ -311,12 +311,14 @@ class DefinitionManager {
         const definition = {
             ...extruderDefinition
         };
-        Object.keys(extruderDefinition.ownKeys)
+        Object.keys(materialDefinition.ownKeys)
             .forEach(index => {
-                const key = extruderDefinition.ownKeys[index];
+                const key = materialDefinition.ownKeys[index];
                 const setting = materialDefinition.settings[key];
                 if (setting) {
-                    definition.settings[key].default_value = setting.default_value;
+                    definition.settings[key] = {
+                        default_value: setting.default_value
+                    };
                 }
             });
         return definition;
