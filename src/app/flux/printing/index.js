@@ -956,14 +956,14 @@ export const actions = {
      * @returns {Function}
      * @private
      */
-    __loadModel: (originalName, uploadName) => (dispatch) => {
+    __loadModel: (originalName, uploadName) => async (dispatch) => {
         const headType = 'printing';
         const sourceType = '3d';
         const mode = '3d';
         const width = 0;
         const height = 0;
 
-        dispatch(actions.generateModel(headType, {
+        await dispatch(actions.generateModel(headType, {
             originalName, uploadName, sourceWidth: width, sourceHeight: height, mode, sourceType, transformation: {}
         }));
     },
@@ -1458,6 +1458,7 @@ export const actions = {
                 item.extruderConfig = extruderConfig;
             });
         }
+        dispatch(actions.updateAllModelColors());
         modelGroup.models = [...models];
         // dispatch(actions.updateState({
         //     modelGroup
@@ -1585,6 +1586,7 @@ export const actions = {
         dispatch(operationHistoryActions.setOperations(INITIAL_STATE.name, operations));
 
         dispatch(actions.updateState(modelState));
+        dispatch(actions.updateAllModelColors());
         dispatch(actions.destroyGcodeLine());
         dispatch(actions.displayModel());
     },
@@ -1620,6 +1622,7 @@ export const actions = {
         dispatch(operationHistoryActions.setOperations(INITIAL_STATE.name, operations));
 
         dispatch(actions.updateState(modelState));
+        dispatch(actions.updateAllModelColors());
         dispatch(actions.destroyGcodeLine());
         dispatch(actions.displayModel());
     },
@@ -1768,7 +1771,7 @@ export const actions = {
 
         const { size } = getState().machine;
         const uploadPath = `${DATA_PREFIX}/${uploadName}`;
-        const { modelGroup, activeDefinition } = getState().printing;
+        const { modelGroup } = getState().printing;
 
         if (isGroup) {
             const modelState = await modelGroup.generateModel({
@@ -1837,10 +1840,10 @@ export const actions = {
                             originalPosition,
                             modelID,
                             extruderConfig,
-                            color: activeDefinition.settings.color.default_value,
                             parentModelID
                         });
                         dispatch(actions.updateState(modelState));
+                        dispatch(actions.updateAllModelColors());
                         dispatch(actions.displayModel());
                         dispatch(actions.destroyGcodeLine());
                         dispatch(actions.updateState({
@@ -2098,12 +2101,29 @@ export const actions = {
         dispatch(actions.displayModel());
     },
 
-    setModelsColor: (color) => (dispatch, getState) => {
+    setModelsMeshColor: (direction, color) => (dispatch, getState) => {
         const { modelGroup } = getState().printing;
         const models = modelGroup.getModels();
         models.forEach((model) => {
-            model.updateMaterialColor(color);
+            if (model.extruderConfig.shell === (direction === LEFT_EXTRUDER ? '0' : '1')) {
+                model.updateMaterialColor(color);
+            }
         });
+        dispatch(actions.render());
+    },
+
+    getMeshColor: (direction) => (dispatch, getState) => {
+        const { materialDefinitions, defaultMaterialId, defaultMaterialIdRight } = getState().printing;
+        const materialID = (direction === LEFT_EXTRUDER ? defaultMaterialId : defaultMaterialIdRight);
+        const index = materialDefinitions.findIndex(d => d.definitionId === materialID);
+        return materialDefinitions[index].settings.color.default_value;
+    },
+
+    updateAllModelColors: () => (dispatch) => {
+        const leftColor = dispatch(actions.getMeshColor(LEFT_EXTRUDER));
+        dispatch(actions.setModelsMeshColor(LEFT_EXTRUDER, leftColor));
+        const rightColor = dispatch(actions.getMeshColor(RIGHT_EXTRUDER));
+        dispatch(actions.setModelsMeshColor(RIGHT_EXTRUDER, rightColor));
     }
 };
 
