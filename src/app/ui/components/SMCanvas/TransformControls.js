@@ -84,11 +84,12 @@ class TransformControls extends Object3D {
 
     prevMeshHover = null;
 
-    constructor(camera) {
+    constructor(camera, isPrimeTower) {
         super();
 
         this.camera = camera;
         this.visible = false;
+        this.isPrimeTower = isPrimeTower;
         this.objectConvexMeshGroup = new Group();
 
         this.initDefaults();
@@ -254,26 +255,32 @@ class TransformControls extends Object3D {
 
     initTranslatePeripherals() {
         const defaults = this.defaults;
-
-        this.translatePeripheral = this.createPeripheral([
+        const xyTranslatePeripheralArr = [
             ['X', new Line(defaults.LINE.clone(), defaults.LINE_MATERIAL_RED.clone())],
             ['X', new Mesh(defaults.ARROW.clone(), defaults.MESH_MATERIAL_RED.clone()), [1, 0, 0], [0, 0, -Math.PI / 2]],
             ['Y', new Line(defaults.LINE.clone(), defaults.LINE_MATERIAL_GREEN.clone()), null, [0, 0, Math.PI / 2]],
             ['Y', new Mesh(defaults.ARROW.clone(), defaults.MESH_MATERIAL_GREEN.clone()), [0, 1, 0]],
-            ['XY', new Mesh(defaults.PLANE.clone(), defaults.MESH_MATERIAL_BLUE.clone()), [0.15, 0.15, 0]],
+            ['XY', new Mesh(defaults.PLANE.clone(), defaults.MESH_MATERIAL_BLUE.clone()), [0.15, 0.15, 0]]
+        ];
+        const zTranslatePeripheralArr = [
             ['Z', new Line(defaults.LINE.clone(), defaults.LINE_MATERIAL_BLUE.clone()), null, [0, -Math.PI / 2, 0]],
             ['Z', new Mesh(defaults.ARROW.clone(), defaults.MESH_MATERIAL_BLUE.clone()), [0, 0, 1], [Math.PI / 2, 0, 0]]
-        ]);
-
+        ];
+        const tempPeripheralArr = this.isPrimeTower ? xyTranslatePeripheralArr : xyTranslatePeripheralArr.concat(zTranslatePeripheralArr);
+        this.translatePeripheral = this.createPeripheral(tempPeripheralArr);
         this.translatePeripheral.visible = false;
         this.add(this.translatePeripheral);
 
-        this.translatePicker = this.createPeripheral([
+        const xyTranslatePickerArr = [
             ['X', new Mesh(defaults.TRANSLATE_PICKER.clone(), defaults.MESH_MATERIAL_INVISIBLE), [0.6, 0, 0], [0, 0, -Math.PI / 2]],
             ['Y', new Mesh(defaults.TRANSLATE_PICKER.clone(), defaults.MESH_MATERIAL_INVISIBLE), [0, 0.6, 0]],
-            ['XY', new Mesh(defaults.PLANE.clone(), defaults.MESH_MATERIAL_INVISIBLE.clone()), [0.15, 0.15, 0]],
+            ['XY', new Mesh(defaults.PLANE.clone(), defaults.MESH_MATERIAL_INVISIBLE.clone()), [0.15, 0.15, 0]]
+        ];
+        const zTranslatePickerArr = [
             ['Z', new Mesh(defaults.TRANSLATE_PICKER.clone(), defaults.MESH_MATERIAL_INVISIBLE), [0, 0, 0.6], [Math.PI / 2, 0, 0]]
-        ]);
+        ];
+        const tempTranslatePickerArr = this.isPrimeTower ? xyTranslatePickerArr : xyTranslatePickerArr.concat(zTranslatePickerArr);
+        this.translatePicker = this.createPeripheral(tempTranslatePickerArr);
         this.translatePicker.visiable = false;
         this.add(this.translatePicker);
     }
@@ -381,22 +388,42 @@ class TransformControls extends Object3D {
 
     initScalePeripherals() {
         const defaults = this.defaults;
-
-        this.scalePeripheral = this.createPeripheral([
+        const xyScalePeripheral = [
             ['X', new Line(defaults.LINE.clone(), defaults.LINE_MATERIAL_RED.clone())],
             ['X', new Mesh(defaults.BOX.clone(), defaults.MESH_MATERIAL_RED.clone()), [1, 0, 0], [0, 0, -Math.PI / 2]],
             ['Y', new Line(defaults.LINE.clone(), defaults.LINE_MATERIAL_GREEN.clone()), null, [0, 0, Math.PI / 2]],
-            ['Y', new Mesh(defaults.BOX.clone(), defaults.MESH_MATERIAL_GREEN.clone()), [0, 1, 0]],
+            ['Y', new Mesh(defaults.BOX.clone(), defaults.MESH_MATERIAL_GREEN.clone()), [0, 1, 0]]
+        ];
+        const zScalePeripheral = [
             ['Z', new Line(defaults.LINE.clone(), defaults.LINE_MATERIAL_BLUE.clone()), null, [0, -Math.PI / 2, 0]],
-            ['Z', new Mesh(defaults.BOX.clone(), defaults.MESH_MATERIAL_BLUE.clone()), [0, 0, 1], [Math.PI / 2, 0, 0]]
-        ]);
+            ['Z', new Line(defaults.LINE.clone(), defaults.LINE_MATERIAL_BLUE.clone()), null, [0, -Math.PI / 2, 0]]
+        ];
+        const tempPeripheral = this.isPrimeTower ? xyScalePeripheral : xyScalePeripheral.concat(zScalePeripheral);
+        // this.scalePeripheral = this.createPeripheral([
+        //     ['X', new Line(defaults.LINE.clone(), defaults.LINE_MATERIAL_RED.clone())],
+        //     ['X', new Mesh(defaults.BOX.clone(), defaults.MESH_MATERIAL_RED.clone()), [1, 0, 0], [0, 0, -Math.PI / 2]],
+        //     ['Y', new Line(defaults.LINE.clone(), defaults.LINE_MATERIAL_GREEN.clone()), null, [0, 0, Math.PI / 2]],
+        //     ['Y', new Mesh(defaults.BOX.clone(), defaults.MESH_MATERIAL_GREEN.clone()), [0, 1, 0]],
+        //     // ['Z', new Line(defaults.LINE.clone(), defaults.LINE_MATERIAL_BLUE.clone()), null, [0, -Math.PI / 2, 0]],
+        //     // ['Z', new Line(defaults.LINE.clone(), defaults.LINE_MATERIAL_BLUE.clone()), null, [0, -Math.PI / 2, 0]],
+        // ]);
+        this.scalePeripheral = this.createPeripheral(tempPeripheral);
         this.add(this.scalePeripheral);
 
-        this.scalePicker = this.createPeripheral([
+        const xyScalePickerArr = [
             ['X', new Mesh(defaults.TRANSLATE_PICKER.clone(), defaults.MESH_MATERIAL_INVISIBLE), [0.6, 0, 0], [0, 0, -Math.PI / 2]],
-            ['Y', new Mesh(defaults.TRANSLATE_PICKER.clone(), defaults.MESH_MATERIAL_INVISIBLE), [0, 0.6, 0]],
+            ['Y', new Mesh(defaults.TRANSLATE_PICKER.clone(), defaults.MESH_MATERIAL_INVISIBLE), [0, 0.6, 0]]
+        ];
+        const zScalePickerArr = [
             ['Z', new Mesh(defaults.TRANSLATE_PICKER.clone(), defaults.MESH_MATERIAL_INVISIBLE), [0, 0, 0.6], [Math.PI / 2, 0, 0]]
-        ]);
+        ];
+        const tempPickerArr = this.isPrimeTower ? xyScalePickerArr : xyScalePickerArr.concat(zScalePickerArr);
+        // this.scalePicker = this.createPeripheral([
+        //     ['X', new Mesh(defaults.TRANSLATE_PICKER.clone(), defaults.MESH_MATERIAL_INVISIBLE), [0.6, 0, 0], [0, 0, -Math.PI / 2]],
+        //     ['Y', new Mesh(defaults.TRANSLATE_PICKER.clone(), defaults.MESH_MATERIAL_INVISIBLE), [0, 0.6, 0]],
+        //     // ['Z', new Mesh(defaults.TRANSLATE_PICKER.clone(), defaults.MESH_MATERIAL_INVISIBLE), [0, 0, 0.6], [Math.PI / 2, 0, 0]]
+        // ]);
+        this.scalePicker = this.createPeripheral(tempPickerArr);
         this.scalePicker.visiable = false;
         this.add(this.scalePicker);
 
@@ -479,9 +506,9 @@ class TransformControls extends Object3D {
             this.object.children.forEach((child) => {
                 // Update peripherals
                 this.translatePeripheral.visible = (this.mode === 'translate' && child.visible);
-                this.rotatePeripheral.visible = (this.mode === 'rotate' && child.visible);
+                this.rotatePeripheral.visible = (this.mode === 'rotate' && child.visible && !this.isPrimeTower);
                 this.scalePeripheral.visible = (this.mode === 'scale' && child.visible);
-                this.mirrorPeripheral.visible = (this.mode === 'mirror' && child.visible);
+                this.mirrorPeripheral.visible = (this.mode === 'mirror' && child.visible && !this.isPrimeTower);
             });
 
             this.object.matrixWorld.decompose(objectPosition, objectQuaternion, objectScale);
@@ -813,7 +840,7 @@ class TransformControls extends Object3D {
         return true;
     }
 
-    onMouseMove(coord) {
+    onMouseMove(coord, isPrimeTower = false) {
         this.object.shouldUpdateBoundingbox = false;
         if (!(this.object.children && this.object.children.length > 0) || !this.axis || !this.dragging) {
             return false;
@@ -878,9 +905,15 @@ class TransformControls extends Object3D {
                         parentEVec.x = parentEVec.z;
                     }
                 } else {
-                    parentEVec.x = (this.axis === 'X' ? parentEVec.x : 1);
-                    parentEVec.y = (this.axis === 'Y' ? parentEVec.y : 1);
-                    parentEVec.z = (this.axis === 'Z' ? parentEVec.z : 1);
+                    if (isPrimeTower) {
+                        parentEVec.x = this.axis === 'Y' ? parentEVec.y : parentEVec.x;
+                        parentEVec.y = this.axis === 'X' ? parentEVec.x : parentEVec.y;
+                        parentEVec.z = 1;
+                    } else {
+                        parentEVec.x = (this.axis === 'X' ? parentEVec.x : 1);
+                        parentEVec.y = (this.axis === 'Y' ? parentEVec.y : 1);
+                        parentEVec.z = (this.axis === 'Z' ? parentEVec.z : 1);
+                    }
                 }
                 if (this.shouldApplyScaleToObjects(parentEVec)) {
                     this.object.scale.copy(this.scaleStart).multiply(parentEVec);
@@ -919,7 +952,9 @@ class TransformControls extends Object3D {
 
     // Calculate the bbox of each model in the selectedGroup
     updateBoundingBox() {
-        this.object.shouldUpdateBoundingbox = true;
+        if (this.object) {
+            this.object.shouldUpdateBoundingbox = true;
+        }
     }
 
     setObjectConvexMeshGroup(group) {

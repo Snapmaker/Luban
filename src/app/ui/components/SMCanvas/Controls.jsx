@@ -128,6 +128,7 @@ class Controls extends EventEmitter {
         this.minScale = minScale;
         this.maxScale = maxScale;
         this.scaleSize = scaleSize;
+        this.isPrimeTower = false;
 
         this.bindEventListeners();
     }
@@ -150,7 +151,12 @@ class Controls extends EventEmitter {
         this.group.remove(this.transformControl);
     }
 
-    recoverTransformControls() {
+    recoverTransformControls(_isPrimeTower = false) {
+        if (_isPrimeTower) {
+            this.transformControl = new TransformControls(this.camera, _isPrimeTower);
+        } else {
+            this.transformControl = new TransformControls(this.camera);
+        }
         this.group.add(this.transformControl);
     }
 
@@ -170,6 +176,10 @@ class Controls extends EventEmitter {
         this.target = target;
 
         this.updateCamera();
+    }
+
+    setPrimeTower(value) {
+        this.isPrimeTower = value;
     }
 
     bindEventListeners() {
@@ -344,7 +354,7 @@ class Controls extends EventEmitter {
                 break;
             case STATE.TRANSFORM:
                 if (this.canOperateModel) {
-                    this.transformControl.onMouseMove(this.getMouseCoord(event));
+                    this.transformControl.onMouseMove(this.getMouseCoord(event), this.isPrimeTower);
                 }
                 this.emit(EVENTS.TRANSFORM_OBJECT);
                 break;

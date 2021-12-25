@@ -61,7 +61,9 @@ class Canvas extends PureComponent {
         showContextMenu: PropTypes.func,
 
         // inProgress
-        inProgress: PropTypes.bool
+        inProgress: PropTypes.bool,
+
+        primeTowerSelected: PropTypes.bool
     };
 
     static defaultProps = {
@@ -162,6 +164,18 @@ class Canvas extends PureComponent {
                 this.controls.removeTransformControls();
             } else {
                 this.controls.recoverTransformControls();
+            }
+            this.renderScene();
+        }
+
+        if (nextProps.primeTowerSelected !== this.props.primeTowerSelected) {
+            this.controls.removeTransformControls();
+            if (nextProps.primeTowerSelected) {
+                this.controls.recoverTransformControls(true);
+                this.controls.setPrimeTower(true);
+            } else {
+                this.controls.recoverTransformControls();
+                this.controls.setPrimeTower(false);
             }
             this.renderScene();
         }

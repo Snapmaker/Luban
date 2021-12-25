@@ -2,8 +2,9 @@ import PropTypes from 'prop-types';
 import React, { PureComponent } from 'react';
 import { connect } from 'react-redux';
 import { withRouter } from 'react-router';
-import isEqual from 'lodash/isEqual';
-import { Vector3, Box3 } from 'three';
+// import isEqual from 'lodash/isEqual';
+import { isEqual, find, some } from 'lodash';
+import { Vector3, Box3, MeshPhongMaterial, DoubleSide, Mesh, CylinderBufferGeometry } from 'three';
 
 import { shortcutActions, priorities, ShortcutManager } from '../../../lib/shortcut';
 import { EPSILON, HEAD_PRINTING } from '../../../constants';
@@ -40,6 +41,7 @@ class Visualizer extends PureComponent {
         leftBarOverlayVisible: PropTypes.bool.isRequired,
         displayedType: PropTypes.string,
         menuDisabledCount: PropTypes.number,
+        allModel: PropTypes.array,
 
         hideSelectedModel: PropTypes.func.isRequired,
         recordAddOperation: PropTypes.func.isRequired,
@@ -72,6 +74,10 @@ class Visualizer extends PureComponent {
         resetSelectedModelTransformation: PropTypes.func.isRequired,
         progressStatesManager: PropTypes.object.isRequired,
         setRotationPlacementFace: PropTypes.func.isRequired,
+        // enablePrimeTower: PropTypes.bool,
+        primeTowerHeight: PropTypes.number.isRequired,
+        // hidePrimeTower: PropTypes.func,
+        // showPrimeTower: PropTypes.func
     };
 
     state = {
@@ -325,7 +331,7 @@ class Visualizer extends PureComponent {
     }
 
     componentWillReceiveProps(nextProps) {
-        const { size, transformMode, selectedModelArray, renderingTimestamp, modelGroup, stage } = nextProps;
+        const { size, transformMode, selectedModelArray, renderingTimestamp, modelGroup, stage, primeTowerHeight } = nextProps;
         if (transformMode !== this.props.transformMode) {
             this.canvas.current.setTransformMode(transformMode);
             if (transformMode === 'rotate-placement') {
@@ -334,7 +340,7 @@ class Visualizer extends PureComponent {
                 this.supportActions.stopSupportMode();
             }
         }
-        if (selectedModelArray !== this.props.selectedModelArray) {
+        if (!isEqual(selectedModelArray, this.props.selectedModelArray)) {
             // selectedModelIDArray.forEach((modelID) => {
             //     const model = modelGroup.models.find(d => d.modelID === modelID);
             //     modelGroup.selectedGroup.add(model.meshObject);
@@ -412,6 +418,39 @@ class Visualizer extends PureComponent {
                 }
             }
         }
+        if (primeTowerHeight !== this.props.primeTowerHeight) {
+            const primeTowerModel = find(this.props.allModel, { primeTowerTag: true });
+            const positionX = primeTowerModel?.transformation?.positionX;
+            const positionY = primeTowerModel?.transformation?.positionY;
+            const newGeometry = new CylinderBufferGeometry(10, 10, primeTowerHeight, 60);
+            newGeometry.rotateX(Math.PI / 2);
+            const material = new MeshPhongMaterial({
+                side: DoubleSide,
+                color: 0xB9BCBF
+            });
+            const newMesh = new Mesh(newGeometry, material);
+            if (primeTowerModel) {
+                modelGroup.object.remove(primeTowerModel.meshObject);
+                primeTowerModel.meshObject = newMesh;
+                modelGroup.object.add(newMesh);
+                primeTowerModel.updateTransformation({
+                    positionX,
+                    positionY,
+                    positionZ: primeTowerHeight / 2,
+                    uniformScalingState: false
+                });
+                this.actions.setTransformMode('translate');
+                primeTowerModel.computeBoundingBox();
+            }
+        }
+        // if (enablePrimeTower !== this.props.enablePrimeTower) {
+        //     const primeTowerModel = find(this.props.allModel, { primeTowerTag: true });
+        //     if (!enablePrimeTower) {
+        //         this.props.hidePrimeTower(primeTowerModel);
+        //     } else {
+        //         this.props.showPrimeTower(primeTowerModel);
+        //     }
+        // }
     }
 
     componentWillUnmount() {
@@ -437,6 +476,7 @@ class Visualizer extends PureComponent {
         const notice = this.getNotice();
         const progress = this.props.progress;
         const pasteDisabled = (modelGroup.clipboard.length === 0);
+        const primeTowerSelected = selectedModelArray.length > 0 && some(selectedModelArray, { primeTowerTag: true });
         return (
             <div
                 className={styles['printing-visualizer']}
@@ -484,6 +524,7 @@ class Visualizer extends PureComponent {
                         onModelBeforeTransform={this.actions.onModelBeforeTransform}
                         onModelTransform={this.actions.onModelTransform}
                         showContextMenu={this.showContextMenu}
+                        primeTowerSelected={primeTowerSelected}
                     />
                 </div>
                 <ContextMenu
@@ -578,8 +619,13 @@ const mapStateToProps = (state, ownProps) => {
         renderingTimestamp,
         inProgress,
         enableShortcut,
-        leftBarOverlayVisible
+        leftBarOverlayVisible,
+        primeTowerHeight,
+        qualityDefinitions,
+        defaultQualityId
     } = printing;
+    const activeQualityDefinition = find(qualityDefinitions, { definitionId: defaultQualityId });
+    const enablePrimeTower = activeQualityDefinition?.settings?.prime_tower_enable?.default_value;
     let isActive = true;
     if (enableShortcut) {
         if (!currentModalPath && ownProps.location.pathname.indexOf(HEAD_PRINTING) > 0) {
@@ -607,7 +653,9 @@ const mapStateToProps = (state, ownProps) => {
         displayedType,
         renderingTimestamp,
         inProgress,
-        progressStatesManager
+        progressStatesManager,
+        enablePrimeTower,
+        primeTowerHeight
     };
 };
 
@@ -642,8 +690,9 @@ const mapDispatchToProps = (dispatch) => ({
     setTransformMode: (value) => dispatch(printingActions.setTransformMode(value)),
     clearAllManualSupport: () => dispatch(printingActions.clearAllManualSupport()),
     saveSupport: (model) => dispatch(printingActions.saveSupport(model)),
-    setRotationPlacementFace: (userData) => dispatch(printingActions.setRotationPlacementFace(userData))
-
+    setRotationPlacementFace: (userData) => dispatch(printingActions.setRotationPlacementFace(userData)),
+    // hidePrimeTower: (targetModel) => dispatch(printingActions.hideSelectedModel(targetModel)),
+    // showPrimeTower: (targetModel) => dispatch(printingActions.showSelectedModel(targetModel))
 });
 
 export default withRouter(connect(mapStateToProps, mapDispatchToProps)(Visualizer));
