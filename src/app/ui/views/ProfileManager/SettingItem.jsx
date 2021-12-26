@@ -218,7 +218,7 @@ function SettingItem({ definitionKey, settings, isDefaultDefinition = () => true
                         color
                     </span>
                     <GithubPicker
-                        width={300}
+                        width={275}
                         triangle="hide"
                         colors={PRINTING_MATERIAL_CONFIG_COLORS}
                         color={settingDefaultValue}

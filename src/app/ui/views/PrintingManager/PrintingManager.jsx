@@ -32,8 +32,11 @@ function isDefinitionEditable(definition, key) {
 }
 
 function isOfficialDefinition(definition) {
-    return definition && includes(['material.pla', 'material.abs', 'material.petg', 'quality.fast_print', 'quality.normal_quality', 'quality.high_quality'],
-        definition.definitionId);
+    return definition && includes([
+        'material.pla', 'material.abs', 'material.petg',
+        'material.pla.black', 'material.abs.black', 'material.petg.black',
+        'quality.fast_print', 'quality.normal_quality', 'quality.high_quality'
+    ], definition.definitionId);
 }
 
 function PrintingManager() {

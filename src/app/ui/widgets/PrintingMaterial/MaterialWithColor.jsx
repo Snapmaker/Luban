@@ -5,14 +5,16 @@ export const MaterialWithColor = ({ name, color }) => {
     return (
         <div className="sm-flex align-center justify-space-between">
             <span>{name}</span>
-            <div
-                className="width-16 height-16"
-                style={{
-                    backgroundColor: color,
-                    border: '1px solid #B9BCBF',
-                    borderRadius: '4px'
-                }}
-            />
+            {color && (
+                <div
+                    className="width-16 height-16"
+                    style={{
+                        backgroundColor: color,
+                        border: '1px solid #B9BCBF',
+                        borderRadius: '4px'
+                    }}
+                />
+            )}
         </div>
     );
 };
