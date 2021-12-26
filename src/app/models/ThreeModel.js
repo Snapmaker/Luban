@@ -117,7 +117,6 @@ class ThreeModel extends BaseModel {
     onTransform() {
         const geometrySize = ThreeUtils.getGeometrySize(this.meshObject.geometry, true);
         const { uniformScalingState } = this.meshObject;
-        console.log('onTransform', uniformScalingState, this.primeTowerTag);
 
         let position, scale, rotation;
         if (this.parent) {
@@ -129,7 +128,6 @@ class ThreeModel extends BaseModel {
             this.meshObject.getWorldPosition(position);
             scale = new THREE.Vector3();
             this.meshObject.getWorldScale(scale);
-            // console.log({ scale });
             scale.x = scale.y;
             const quaternion = new THREE.Quaternion();
             this.meshObject.getWorldQuaternion(quaternion);
@@ -155,7 +153,6 @@ class ThreeModel extends BaseModel {
             ...this.transformation,
             ...transformation
         };
-        console.log('this.transformation', this.transformation);
         return this.transformation;
     }
 

@@ -396,7 +396,7 @@ class TransformControls extends Object3D {
         ];
         const zScalePeripheral = [
             ['Z', new Line(defaults.LINE.clone(), defaults.LINE_MATERIAL_BLUE.clone()), null, [0, -Math.PI / 2, 0]],
-            ['Z', new Line(defaults.LINE.clone(), defaults.LINE_MATERIAL_BLUE.clone()), null, [0, -Math.PI / 2, 0]]
+            ['Z', new Mesh(defaults.BOX.clone(), defaults.MESH_MATERIAL_BLUE.clone()), [0, 0, 1], [Math.PI / 2, 0, 0]]
         ];
         const tempPeripheral = this.isPrimeTower ? xyScalePeripheral : xyScalePeripheral.concat(zScalePeripheral);
         // this.scalePeripheral = this.createPeripheral([
@@ -892,7 +892,6 @@ class TransformControls extends Object3D {
                 const parentSVec = new Vector3().copy(this.pointStart).sub(objectPosition).applyQuaternion(this.parentQuaternionInv);
                 const parentEVec = new Vector3().copy(this.pointEnd).sub(objectPosition).applyQuaternion(this.parentQuaternionInv);
                 parentEVec.divide(parentSVec);
-
                 if (this.object.uniformScalingState === true) {
                     if (this.axis === 'X') {
                         parentEVec.y = parentEVec.x;

@@ -398,10 +398,16 @@ export const actions = {
         await dispatch(actions.initSize());
 
         const printingState = getState().printing;
-        const { modelGroup, gcodeLineGroup, initEventFlag } = printingState;
+        const { modelGroup, gcodeLineGroup, initEventFlag, qualityDefinitions, defaultQualityId } = printingState;
         const printingToolhead = machineStore.get('machine.toolHead.printingToolhead');
+        const activeQualityDefinition = lodashFind(qualityDefinitions, { definitionId: defaultQualityId });
         modelGroup.removeAllModels();
         printingToolhead === DUAL_EXTRUDER_TOOLHEAD_FOR_SM2 && modelGroup.initPrimeTower();
+        const primeTowerModal = lodashFind(modelGroup.models, { primeTowerTag: true });
+        const enablePrimeTower = activeQualityDefinition?.settings?.prime_tower_enable?.default_value;
+        if (!enablePrimeTower) {
+            dispatch(actions.hideSelectedModel(primeTowerModal));
+        }
         if (!initEventFlag) {
             dispatch(actions.updateState({
                 initEventFlag: true
@@ -1359,7 +1365,7 @@ export const actions = {
             targetModels = [targetModel];
         }
 
-        const modelState = modelGroup.hideSelectedModel();
+        const modelState = modelGroup.hideSelectedModel(targetModels);
 
         const operations = new Operations();
         targetModels.forEach(model => {
@@ -1383,7 +1389,7 @@ export const actions = {
 
     showSelectedModel: (targetModel) => (dispatch, getState) => {
         const { modelGroup } = getState().printing;
-        const modelState = modelGroup.showSelectedModel();
+        const modelState = modelGroup.showSelectedModel([targetModel]);
 
         const operation = new VisibleOperation3D({
             target: targetModel,

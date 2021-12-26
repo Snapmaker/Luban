@@ -68,6 +68,7 @@ function VisualizerLeftBar({ defaultSupportSize, setTransformMode, isSupporting,
     const selectedModelArray = useSelector(state => state?.printing?.modelGroup?.selectedModelArray);
     const modelGroup = useSelector(state => state?.printing?.modelGroup);
     const models = useSelector(state => state?.printing?.modelGroup?.models);
+    const primeTowerHeight = useSelector(state => state?.printing?.primeTowerHeight, shallowEqual);
     const helpersExtruderConfig = useSelector(state => state?.printing?.helpersExtruderConfig);
     const { isOpenSelectModals, isOpenHelpers: _isOpenHelpers, modelExtruderInfoShow, helpersExtruderInfoShow } = useSelector(state => state?.printing);
     const isSupportSelected = useSelector(state => state?.printing?.modelGroup?.isSupportSelected());
@@ -198,7 +199,7 @@ function VisualizerLeftBar({ defaultSupportSize, setTransformMode, isSupporting,
             actions.onModelTransform({
                 'scaleX': 1,
                 'scaleY': 1,
-                'scaleZ': 1,
+                'scaleZ': _isPrimeTowerSelected ? primeTowerHeight / 0.1 : 1,
                 'uniformScalingState': !_isPrimeTowerSelected
             }, true);
             actions.onModelAfterTransform();
@@ -762,7 +763,7 @@ function VisualizerLeftBar({ defaultSupportSize, setTransformMode, isSupporting,
                                             min={1}
                                             value={modelSize.x}
                                             onChange={(value) => {
-                                                actions.onModelTransform({ 'scaleX': value / modelSize.x }, false, true);
+                                                actions.onModelTransform({ 'scaleX': value / modelSize.scaledX }, false, true);
                                                 actions.onModelAfterTransform();
                                             }}
                                             className="margin-right-8"
@@ -790,7 +791,7 @@ function VisualizerLeftBar({ defaultSupportSize, setTransformMode, isSupporting,
                                             min={1}
                                             value={modelSize.y}
                                             onChange={(value) => {
-                                                actions.onModelTransform({ 'scaleY': value / modelSize.y }, false, true);
+                                                actions.onModelTransform({ 'scaleY': value / modelSize.scaledY }, false, true);
                                                 actions.onModelAfterTransform();
                                             }}
                                             className="margin-right-8"
@@ -825,22 +826,21 @@ function VisualizerLeftBar({ defaultSupportSize, setTransformMode, isSupporting,
                                     </div>
                                 </div>
                             )}
-                            {!isPrimeTowerSelected && (
-                                <div className="sm-flex height-32 margin-bottom-8">
-                                    <Checkbox
-                                        defaultChecked={uniformScalingState}
-                                        checked={uniformScalingState}
-                                        onClick={() => {
-                                            actions.changeUniformScalingState(uniformScalingState); // Todo: bug, state error
-                                        }}
-                                    />
-                                    <span
-                                        className="height-20 margin-horizontal-8"
-                                    >
-                                        {i18n._('key-Printing/LeftBar-Uniform Scaling')}
-                                    </span>
-                                </div>
-                            )}
+                            <div className="sm-flex height-32 margin-bottom-8">
+                                <Checkbox
+                                    defaultChecked={isPrimeTowerSelected ? true : uniformScalingState}
+                                    checked={isPrimeTowerSelected ? true : uniformScalingState}
+                                    onClick={() => {
+                                        actions.changeUniformScalingState(uniformScalingState); // Todo: bug, state error
+                                    }}
+                                    disabled={isPrimeTowerSelected}
+                                />
+                                <span
+                                    className="height-20 margin-horizontal-8"
+                                >
+                                    {i18n._('key-Printing/LeftBar-Uniform Scaling')}
+                                </span>
+                            </div>
                             <div className="sm-flex">
                                 {!isPrimeTowerSelected && (
                                     <Button

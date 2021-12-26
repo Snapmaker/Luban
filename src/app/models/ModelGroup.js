@@ -202,8 +202,8 @@ class ModelGroup extends EventEmitter {
         return this.models.filter(m => !m.supportTag).some((model) => model.visible);
     }
 
-    hideSelectedModel() {
-        const models = this.getSelectedModelArray();
+    hideSelectedModel(targetModels = null) {
+        const models = targetModels || this.getSelectedModelArray();
         models.forEach((model) => {
             model.visible = false;
             model.meshObject.visible = false;
@@ -213,8 +213,8 @@ class ModelGroup extends EventEmitter {
         return this.getState();
     }
 
-    showSelectedModel() {
-        const models = this.getSelectedModelArray();
+    showSelectedModel(targetModels = null) {
+        const models = targetModels || this.getSelectedModelArray();
         models.forEach((model) => {
             model.visible = true;
             model.meshObject.visible = true;
@@ -247,6 +247,7 @@ class ModelGroup extends EventEmitter {
         model.meshObject.removeEventListener('update', this.onModelUpdate);
         this.models = this.models.filter(item => item !== model);
         this.modelChanged();
+        this.updatePrimeTowerHeight();
     }
 
     // remove selected models' supports
@@ -1817,7 +1818,7 @@ class ModelGroup extends EventEmitter {
 
     // prime tower
     initPrimeTower() {
-        const geometry = new CylinderBufferGeometry(10, 10, 0.1, 60);
+        const geometry = new CylinderBufferGeometry(10, 10, 1, 60);
         const material = new MeshPhongMaterial({
             side: DoubleSide,
             color: 0xB9BCBF
@@ -1837,10 +1838,11 @@ class ModelGroup extends EventEmitter {
         model.updateTransformation({
             positionX: Math.max(this._bbox.max.x - 50, this._bbox.min.x - 50),
             positionY: Math.max(this._bbox.max.y - 50, this._bbox.min.y - 50),
-            positionZ: 0.05,
+            scaleZ: 0.1,
             uniformScalingState: false
         });
-        model.computeBoundingBox();
+        model.stickToPlate();
+        // model.computeBoundingBox();
         this.models = [...this.models, model];
         this.object.add(model.meshObject);
         return model;
@@ -1849,13 +1851,14 @@ class ModelGroup extends EventEmitter {
     updatePrimeTowerHeight() {
         const modelTemp = _.cloneDeep(this.models);
         let maxHeight = 0.1;
+        const maxBoundingBoxHeight = this._bbox.max.z;
         modelTemp.forEach(modelItem => {
             if (modelItem.headType === HEAD_PRINTING && !modelItem.primeTowerTag && !modelItem.supportTag) {
                 const modelItemHeight = modelItem.boundingBox.max.z - modelItem.boundingBox.min.z;
                 maxHeight = Math.max(maxHeight, modelItemHeight);
             }
         });
-        this.primeTowerHeightCallback(maxHeight);
+        this.primeTowerHeightCallback(Math.min(maxHeight, maxBoundingBoxHeight));
     }
 }
 
