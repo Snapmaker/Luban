@@ -402,8 +402,12 @@ function WifiTransport({ widgetActions, controlActions }) {
     };
 
     useEffect(() => {
-        if (connectionType === CONNECTION_TYPE_SERIAL || isRotate || toolHeadName !== LEVEL_TWO_POWER_LASER_FOR_SM2) {
+        if (connectionType === CONNECTION_TYPE_SERIAL || toolHeadName !== LEVEL_TWO_POWER_LASER_FOR_SM2) {
             setIsLaserAutoFocus(false);
+            dispatch(machineActions.updateIsLaserPrintAutoMode(false));
+        } else {
+            setIsLaserAutoFocus(true);
+            dispatch(machineActions.updateIsLaserPrintAutoMode(true));
         }
         if (isRotate) {
             dispatch(machineActions.updateIsLaserPrintAutoMode(false));
