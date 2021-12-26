@@ -414,17 +414,21 @@ export function loadAllSeriesDefinitions(isDefault = false, headType, series = '
         const defaultDefinitionLoader = loadDefinitionLoaderByFilename(headType, predefined[0], series);
         for (const filename of defaultFilenames) {
             if (ConfigV1Regex.test(filename)) {
-                const definitionLoader = loadDefinitionLoaderByFilename(headType, filename, series, isDefault);
-                if (defaultDefinitionLoader) {
-                    const ownKeys = Array.from(defaultDefinitionLoader.ownKeys).filter(e => !definitionLoader.ownKeys.has(e));
-                    if (ownKeys && ownKeys.length > 0) {
-                        for (const ownKey of ownKeys) {
-                            definitionLoader.ownKeys.add(ownKey);
+                try {
+                    const definitionLoader = loadDefinitionLoaderByFilename(headType, filename, series, isDefault);
+                    if (defaultDefinitionLoader) {
+                        const ownKeys = Array.from(defaultDefinitionLoader.ownKeys).filter(e => !definitionLoader.ownKeys.has(e));
+                        if (ownKeys && ownKeys.length > 0) {
+                            for (const ownKey of ownKeys) {
+                                definitionLoader.ownKeys.add(ownKey);
+                            }
+                            writeDefinition(headType, filename, series, definitionLoader);
                         }
-                        writeDefinition(headType, filename, series, definitionLoader);
                     }
+                    definitions.push(definitionLoader.toObject());
+                } catch (e) {
+                    console.log('e', e);
                 }
-                definitions.push(definitionLoader.toObject());
             }
         }
     }
