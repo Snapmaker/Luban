@@ -575,8 +575,25 @@ export const actions = {
 
     // Update definition settings and save.
     updateDefinitionSettings: (definition, settings) => (dispatch, getState) => {
-        const { modelGroup } = getState().printing;
-        settings = definitionManager.calculateDependencies(definition, settings, modelGroup && modelGroup.hasSupportModel());
+        const { modelGroup, extruderLDefinition, extruderRDefinition } = getState().printing;
+        const { settings: newSettings, extruderLDefinitionSettings, extruderRDefinitionSettings } = definitionManager.calculateDependencies(definition, settings, modelGroup && modelGroup.hasSupportModel(), extruderLDefinition.settings, extruderRDefinition.settings);
+        settings = newSettings;
+        definitionManager.updateDefinition({
+            definitionId: 'snapmaker_extruder_0',
+            settings: extruderLDefinitionSettings
+        });
+        extruderLDefinition.settings = extruderLDefinitionSettings;
+        dispatch(actions.updateState({
+            extruderLDefinition
+        }));
+        definitionManager.updateDefinition({
+            definitionId: 'snapmaker_extruder_1',
+            settings: extruderRDefinitionSettings
+        });
+        extruderRDefinition.settings = extruderRDefinitionSettings;
+        dispatch(actions.updateState({
+            extruderRDefinition
+        }));
         return definitionManager.updateDefinition({
             definitionId: definition.definitionId,
             settings
@@ -634,8 +651,8 @@ export const actions = {
             dispatch(actions.updateDefinitionSettings(activeDefinition, activeDefinition.settings));
         } else {
             // TODO: Optimize performance
-            const { modelGroup } = getState().printing;
-            definitionManager.calculateDependencies(activeDefinition, activeDefinition.settings, modelGroup && modelGroup.hasSupportModel());
+            const { modelGroup, extruderLDefinition, extruderRDefinition } = getState().printing;
+            definitionManager.calculateDependencies(activeDefinition, activeDefinition.settings, modelGroup && modelGroup.hasSupportModel(), extruderLDefinition.settings, extruderRDefinition.settings);
         }
 
         // Update activeDefinition to force component re-render
@@ -651,7 +668,8 @@ export const actions = {
      * @param direction
      */
     updateExtuderDefinition: (definition, direction = LEFT_EXTRUDER) => (dispatch, getState) => {
-        const state = getState().printing;
+        const { activeDefinition, extruderLDefinition, extruderRDefinition, helpersExtruderConfig } = getState().printing;
+
 
         if (!definition) {
             return;
@@ -659,19 +677,19 @@ export const actions = {
 
         let extruderDef = {};
         if (direction === LEFT_EXTRUDER) {
-            extruderDef = state.extruderLDefinition;
+            extruderDef = extruderLDefinition;
         } else {
-            extruderDef = state.extruderRDefinition;
+            extruderDef = extruderRDefinition;
         }
 
         if (definition !== extruderDef) {
             if (direction === LEFT_EXTRUDER) {
                 extruderDef = {
-                    ...state.extruderLDefinition
+                    ...extruderLDefinition
                 };
             } else {
                 extruderDef = {
-                    ...state.extruderRDefinition
+                    ...extruderRDefinition
                 };
             }
             for (const key of definition.ownKeys) {
@@ -704,18 +722,19 @@ export const actions = {
         }
 
         // line width active final
-        if (state.helpersExtruderConfig.adhesion === LEFT_EXTRUDER_MAP_NUMBER && direction === LEFT_EXTRUDER
-            || state.helpersExtruderConfig.adhesion === RIGHT_EXTRUDER_MAP_NUMBER && direction === RIGHT_EXTRUDER) {
-            state.activeDefinition.settings.skirt_brim_line_width.default_value = extruderDef.settings.skirt_brim_line_width.default_value;
+        if (helpersExtruderConfig.adhesion === LEFT_EXTRUDER_MAP_NUMBER && direction === LEFT_EXTRUDER
+            || helpersExtruderConfig.adhesion === RIGHT_EXTRUDER_MAP_NUMBER && direction === RIGHT_EXTRUDER) {
+            activeDefinition.settings.skirt_brim_line_width.default_value = extruderDef.settings.skirt_brim_line_width.default_value;
         }
-        if (state.helpersExtruderConfig.support === LEFT_EXTRUDER_MAP_NUMBER && direction === LEFT_EXTRUDER
-            || state.helpersExtruderConfig.support === RIGHT_EXTRUDER_MAP_NUMBER && direction === RIGHT_EXTRUDER) {
-            state.activeDefinition.settings.support_line_width.default_value = extruderDef.settings.support_line_width.default_value;
-            state.activeDefinition.settings.support_interface_line_width.default_value = extruderDef.settings.support_interface_line_width.default_value;
-            state.activeDefinition.settings.support_roof_line_width.default_value = extruderDef.settings.support_roof_line_width.default_value;
-            state.activeDefinition.settings.support_bottom_line_width.default_value = extruderDef.settings.support_bottom_line_width.default_value;
-            state.activeDefinition.settings.prime_tower_line_width.default_value = extruderDef.settings.prime_tower_line_width.default_value;
+        if (helpersExtruderConfig.support === LEFT_EXTRUDER_MAP_NUMBER && direction === LEFT_EXTRUDER
+            || helpersExtruderConfig.support === RIGHT_EXTRUDER_MAP_NUMBER && direction === RIGHT_EXTRUDER) {
+            activeDefinition.settings.support_line_width.default_value = extruderDef.settings.support_line_width.default_value;
+            activeDefinition.settings.support_interface_line_width.default_value = extruderDef.settings.support_interface_line_width.default_value;
+            activeDefinition.settings.support_roof_line_width.default_value = extruderDef.settings.support_roof_line_width.default_value;
+            activeDefinition.settings.support_bottom_line_width.default_value = extruderDef.settings.support_bottom_line_width.default_value;
+            activeDefinition.settings.prime_tower_line_width.default_value = extruderDef.settings.prime_tower_line_width.default_value;
         }
+        dispatch(actions.updateDefinitionSettings(activeDefinition, activeDefinition.settings));
 
         if (direction === LEFT_EXTRUDER) {
             dispatch(actions.updateState({

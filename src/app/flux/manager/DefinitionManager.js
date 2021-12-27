@@ -152,34 +152,49 @@ class DefinitionManager {
 
     // Start Notice: only used for printing config
     // Calculate hidden settings
-    calculateDependencies(definition, settings, hasSupportModel) {
+    calculateDependencies(definition, settings, hasSupportModel, extruderLDefinitionSettings, extruderRDefinitionSettings) {
         if (settings.infill_sparse_density) {
-            const infillLineWidth = definition.settings.infill_line_width.default_value; // 0.4
             const infillSparseDensity = settings.infill_sparse_density.default_value;
+            // L: infill_line_distance
+            const infillLineWidthL = extruderLDefinitionSettings.machine_nozzle_size.default_value; // infill_line_width
 
-            const infillLineDistance = (infillSparseDensity < 1) ? 0 : (infillLineWidth * 100) / infillSparseDensity * 2;
+            const infillLineDistanceL = (infillSparseDensity < 1) ? 0 : (infillLineWidthL * 100) / infillSparseDensity * 2;
+            extruderLDefinitionSettings.infill_line_distance = { default_value: infillLineDistanceL };
 
-            definition.settings.infill_line_distance.default_value = infillLineDistance;
-            settings.infill_line_distance = { default_value: infillLineDistance };
+            // R: infill_line_distance
+            const infillLineWidthR = extruderRDefinitionSettings.machine_nozzle_size.default_value; // infill_line_width
 
+            const infillLineDistanceR = (infillSparseDensity < 1) ? 0 : (infillLineWidthR * 100) / infillSparseDensity * 2;
+            extruderRDefinitionSettings.infill_line_distance = { default_value: infillLineDistanceR };
+
+            // top_layers & bottom_layers
             if (settings.infill_sparse_density.default_value === 100) {
                 settings.top_layers = { default_value: 0 };
                 settings.bottom_layers = { default_value: 999999 };
             }
         }
 
+        if (settings.wall_thickness) {
+            // "1 if magic_spiralize else max(1, round((wall_thickness - wall_line_width_0) / wall_line_width_x) + 1) if wall_thickness != 0 else 0"
+            const wallThickness = settings.wall_thickness.default_value;
+
+            // L: wall_line_count
+            const wallOutLineWidthL = extruderLDefinitionSettings.machine_nozzle_size.default_value; // wall_line_width_0
+            const wallInnerLineWidthL = extruderLDefinitionSettings.machine_nozzle_size.default_value; // wall_line_width_x
+            const wallLineCountL = wallThickness !== 0 ? Math.max(1, Math.round((wallThickness - wallOutLineWidthL) / wallInnerLineWidthL) + 1) : 0;
+            console.log('wallLineCountL', wallThickness, wallOutLineWidthL, wallInnerLineWidthL, Math.round((wallThickness - wallOutLineWidthL) / wallInnerLineWidthL) + 1, wallLineCountL);
+            extruderLDefinitionSettings.wall_line_count = { default_value: wallLineCountL };
+
+            // R: wall_line_count
+            const wallOutLineWidthR = extruderRDefinitionSettings.machine_nozzle_size.default_value; // wall_line_width_0
+            const wallInnerLineWidthR = extruderRDefinitionSettings.machine_nozzle_size.default_value; // wall_line_width_x
+            const wallLineCountR = wallThickness !== 0 ? Math.max(1, Math.round((wallThickness - wallOutLineWidthR) / wallInnerLineWidthR) + 1) : 0;
+            extruderRDefinitionSettings.wall_line_count = { default_value: wallLineCountR };
+        }
+
         if (settings.layer_height) {
             const layerHeight = settings.layer_height.default_value;
-
-            // "1 if magic_spiralize else max(1, round((wall_thickness - wall_line_width_0) / wall_line_width_x) + 1) if wall_thickness != 0 else 0"
-            const wallThickness = definition.settings.wall_thickness.default_value;
-            const wallOutLineWidth = definition.settings.wall_line_width_0.default_value;
-            const wallInnerLineWidth = definition.settings.wall_line_width_x.default_value;
             const infillSparseDensity = definition.settings.infill_sparse_density.default_value;
-
-            const wallLineCount = wallThickness !== 0 ? Math.max(1, Math.round((wallThickness - wallOutLineWidth) / wallInnerLineWidth) + 1) : 0;
-            definition.settings.wall_line_count.default_value = wallLineCount;
-            settings.wall_line_count = { default_value: wallLineCount };
 
             // "0 if infill_sparse_density == 100 else math.ceil(round(top_thickness / resolveOrValue('layer_height'), 4))"
             const topThickness = definition.settings.top_thickness.default_value;
@@ -200,7 +215,7 @@ class DefinitionManager {
         }
         if (settings.support_infill_rate) {
             const supportInfillRate = settings.support_infill_rate.default_value;
-            const supportLineWidth = definition.settings.support_line_width.default_value;
+            const supportLineWidth = extruderLDefinitionSettings.machine_nozzle_size.default_value; // support_line_width
 
             // "0 if support_infill_rate == 0 else (support_line_width * 100) / support_infill_rate *
             // (2 if support_pattern == 'grid' else (3 if support_pattern == 'triangles' else 1))"
@@ -239,8 +254,16 @@ class DefinitionManager {
         } else if (definition.settings.support_xy_distance.default_value === definition.settings.support_z_distance.default_value) {
             settings.support_xy_distance.default_value = 0.875; // reset xy
         }
-        return settings;
+        return {
+            settings,
+            extruderLDefinitionSettings,
+            extruderRDefinitionSettings
+        };
     }
+
+    // calculateExtruderDependencies(definition, settings) {
+    //
+    // }
 
     finalizeActiveDefinition(activeDefinition) {
         const definition = {

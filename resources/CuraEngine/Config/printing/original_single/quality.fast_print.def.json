@@ -26,9 +26,6 @@
                 "wall_thickness": {
                     "default_value": 0.8
                 },
-                "wall_line_count": {
-                    "default_value": 4
-                },
                 "top_thickness": {
                     "default_value": 0.8
                 },
@@ -46,9 +43,6 @@
         "infill": {
             "type": "category",
             "children": {
-                "infill_line_distance": {
-                    "default_value": 10
-                },
                 "infill_sparse_density": {
                     "default_value": 8
                 }

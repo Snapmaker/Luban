@@ -30,10 +30,6 @@
                     "default_value": 0.8,
                     "label": "Wall Thickness"
                 },
-                "wall_line_count": {
-                    "default_value": 2,
-                    "label": "Wall Line Count"
-                },
                 "top_thickness": {
                     "default_value": 0.8,
                     "label": "Top Thickness"
@@ -62,10 +58,6 @@
         "infill": {
             "type": "category",
             "children": {
-                "infill_line_distance": {
-                    "default_value": 8,
-                    "label": "Infill Line Distance"
-                },
                 "infill_sparse_density": {
                     "default_value": 15,
                     "label": "Infill Density"
