@@ -21,25 +21,27 @@ export type ModelTransformation = {
 };
 
 export type ModelInfo = {
-    modelID: string,
+    modelID?: string,
     parentModelID?: string,
-    limitSize: Object,
-    headType: string,
-    sourceType: string,
-    sourceHeight: number,
-    sourceWidth: number,
-    originalName: string,
-    uploadName: string,
+    limitSize?: Object,
+    headType?: string,
+    sourceType?: string,
+    sourceHeight?: number,
+    sourceWidth?: number,
+    originalName?: string,
+    uploadName?: string,
     modelName?: string,
+    config?: Object,
+    mode?: string,
     groupFrom?: string,
-    config: Object,
-    mode: string,
     visible?: boolean,
-    transformation: ModelTransformation,
-    processImageName: string,
-    supportTag: boolean,
+    transformation?: ModelTransformation,
+    processImageName?: string,
+    supportTag?: boolean,
     extruderConfig?: any,
     children?: Array<ModelInfo>
+    geometry?: THREE.BufferGeometry,
+    material?: THREE.Material
 };
 
 const DEFAULT_TRANSFORMATION: ModelTransformation = {

@@ -357,10 +357,12 @@ export const actions = {
         await dispatch(actions.clearSavedEnvironment(headType));
     },
 
-    openProject: (file, history, unReload = false, isGuideTours = false) => async (dispatch) => {
+    openProject: (file, history, unReload = false, isGuideTours = false) => async (dispatch, getState) => {
         if (checkIsSnapmakerProjectFile(file.name)) {
             const formData = new FormData();
             let shouldSetFileName = true;
+            const { modelGroup: { models } } = getState().printing;
+            const isOnlyPrimeTower = models.length && models?.every(modelItem => modelItem.primeTowerTag);
             if (!(file instanceof File)) {
                 if (new RegExp(/^\.\//).test(file?.path)) {
                     shouldSetFileName = false;
@@ -396,7 +398,7 @@ export const actions = {
             // End of Compatible with old project file
 
             const oldHeadType = getCurrentHeadType(history?.location?.pathname) || headType;
-            !isGuideTours && await dispatch(actions.save(oldHeadType, {
+            !isGuideTours && !isOnlyPrimeTower && await dispatch(actions.save(oldHeadType, {
                 message: i18n._('key-Project/Save-Save the changes you made in the {{headType}} G-code Generator? Your changes will be lost if you don’t save them.', { headType: i18n._(HEAD_TYPE_ENV_NAME[oldHeadType]) })
             }));
             await dispatch(actions.closeProject(oldHeadType));
@@ -430,11 +432,13 @@ export const actions = {
     startProject: (from, to, history, restartGuide = false, isRotate = false) => async (dispatch, getState) => {
         const newHeadType = getCurrentHeadType(to);
         const oldHeadType = getCurrentHeadType(from) || newHeadType;
+        const { modelGroup: { models } } = getState().printing;
+        const isOnlyPrimeTower = models.length && models?.every(modelItem => modelItem.primeTowerTag);
         if (oldHeadType === null) {
             history.push(to);
             return;
         }
-        await dispatch(actions.save(oldHeadType, {
+        !isOnlyPrimeTower && await dispatch(actions.save(oldHeadType, {
             message: i18n._('key-Project/Save-Save the changes you made in the {{headType}} G-code Generator? Your changes will be lost if you don’t save them.', { headType: i18n._(HEAD_TYPE_ENV_NAME[oldHeadType]) })
         }));
         await dispatch(actions.closeProject(oldHeadType));

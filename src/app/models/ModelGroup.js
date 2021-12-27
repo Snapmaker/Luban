@@ -1,4 +1,4 @@
-import { Vector3, Group, Matrix4, BufferGeometry, MeshPhongMaterial, Mesh, DoubleSide, Float32BufferAttribute, MeshBasicMaterial, CylinderBufferGeometry } from 'three';
+import { Vector3, Group, Matrix4, BufferGeometry, MeshPhongMaterial, Mesh, DoubleSide, Float32BufferAttribute, MeshBasicMaterial } from 'three';
 import EventEmitter from 'events';
 // import { EPSILON } from '../../constants';
 import uuid from 'uuid';
@@ -12,6 +12,7 @@ import { SELECTEVENT } from '../constants';
 
 import ThreeUtils from '../three-extensions/ThreeUtils';
 import ThreeGroup from './ThreeGroup.ts';
+import PrimeTowerModel from './PrimeTowerModel.ts';
 import { HEAD_PRINTING } from '../../server/constants';
 
 const EVENTS = {
@@ -603,6 +604,10 @@ class ModelGroup extends EventEmitter {
                     if (this.selectedModelArray.length && (this.selectedModelArray[0].supportTag !== model.supportTag || model.supportTag)) {
                         break;
                     }
+                    // cannot select model and prime tower
+                    if (this.selectedModelArray.length && this.selectedModelArray[0].primeTowerTag !== model.primeTowerTag) {
+                        break;
+                    }
                     this.addModelToSelectedGroup(model);
                 }
                 break;
@@ -676,7 +681,7 @@ class ModelGroup extends EventEmitter {
         this.selectedModelArray = [];
 
         this.models.forEach((model) => {
-            if (model.supportTag) return;
+            if (model.supportTag || model.primeTowerTag) return;
             if (model.visible) {
                 this.addModelToSelectedGroup(model);
             }
@@ -1817,34 +1822,8 @@ class ModelGroup extends EventEmitter {
     }
 
     // prime tower
-    initPrimeTower() {
-        const geometry = new CylinderBufferGeometry(10, 10, 1, 60);
-        const material = new MeshPhongMaterial({
-            side: DoubleSide,
-            color: 0xB9BCBF
-        });
-        geometry.rotateX(Math.PI / 2);
-        const model = this.newModel({
-            sourceType: '3d',
-            geometry,
-            material,
-            primeTowerTag: true
-        });
-        model.primeTowerTag = true;
-        model.originalName = `prime_tower_${(Math.random() * 1000).toFixed(0)}`;
-        model.modelName = this._createNewModelName({
-            sourceType: '3d'
-        });
-        model.updateTransformation({
-            positionX: Math.max(this._bbox.max.x - 50, this._bbox.min.x - 50),
-            positionY: Math.max(this._bbox.max.y - 50, this._bbox.min.y - 50),
-            scaleZ: 0.1,
-            uniformScalingState: false
-        });
-        model.stickToPlate();
-        // model.computeBoundingBox();
-        this.models = [...this.models, model];
-        this.object.add(model.meshObject);
+    initPrimeTower(initHeight = 0.1) {
+        const model = new PrimeTowerModel(initHeight, this);
         return model;
     }
 

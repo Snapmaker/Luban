@@ -427,6 +427,8 @@ class Visualizer extends PureComponent {
                 });
                 primeTowerModel.stickToPlate();
                 this.canvas.current.renderScene();
+            } else {
+                modelGroup.initPrimeTower(primeTowerHeight);
             }
         }
         if (enablePrimeTower !== this.props.enablePrimeTower) {
