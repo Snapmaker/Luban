@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 import * as THREE from 'three';
-import { DATA_PREFIX } from '../../../../constants';
+import { DATA_PREFIX, DEFAULT_LUBAN_HOST } from '../../../../constants';
 import api from '../../../../api';
 import ExtractControls from '../../../../three-extensions/ExtractControls';
 import RectangleGridHelper from '../../../../three-extensions/RectangleGridHelper';
@@ -141,7 +141,7 @@ class ExtractPreview extends Component {
         // add logo
         const minSideLength = Math.min(size.x, size.y);
         const geometry = new THREE.PlaneGeometry(minSideLength / 2, minSideLength / 8);
-        const texture = new THREE.TextureLoader().load('./resources/images/snapmaker-logo-512x128.png');
+        const texture = new THREE.TextureLoader().load(`${DEFAULT_LUBAN_HOST}/resources/images/snapmaker-logo-512x128.png`);
         const material = new THREE.MeshBasicMaterial({
             map: texture,
             side: THREE.DoubleSide,

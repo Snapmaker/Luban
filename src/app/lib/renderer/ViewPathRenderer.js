@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { DEFAULT_LUBAN_HOST } from '../../constants';
 
 export class ViewPathRenderer {
     async render(viewPaths, size) {
@@ -15,7 +16,7 @@ export class ViewPathRenderer {
 
     _generateTexture() {
         return new Promise(resolve => {
-            this.texture = new THREE.TextureLoader().load('/resources/images/wood.png', () => {
+            this.texture = new THREE.TextureLoader().load(`${DEFAULT_LUBAN_HOST}/resources/images/wood.png`, () => {
                 resolve();
             });
         });

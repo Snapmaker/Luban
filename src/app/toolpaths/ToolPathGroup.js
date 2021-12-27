@@ -2,7 +2,7 @@ import * as THREE from 'three';
 import ToolPath from './ToolPath';
 import { createToolPathNameByType, getModelsByToolPathType, getToolPathType, SUCCESS } from './utils';
 import { generateModelDefaultConfigs } from '../models/ModelInfoUtils';
-import { DATA_PREFIX, HEAD_LASER } from '../constants';
+import { DATA_PREFIX, HEAD_LASER, DEFAULT_LUBAN_HOST } from '../constants';
 import { ViewPathRenderer } from '../lib/renderer/ViewPathRenderer';
 import { MATERIAL_UNSELECTED, MATERIAL_SELECTED } from '../workers/ShaderMaterial/ToolpathRendererMeterial';
 import ThreeModel from '../models/ThreeModel';
@@ -439,7 +439,7 @@ class ToolPathGroup {
         this.materialsObject = null;
         if (materials.isRotate) {
             const geometry = new THREE.CylinderGeometry(materials.diameter / 2 - 0.1, materials.diameter / 2 - 0.1, materials.length, 32);
-            const texture = new THREE.TextureLoader().load('/resources/images/wood.png');
+            const texture = new THREE.TextureLoader().load(`${DEFAULT_LUBAN_HOST}/resources/images/wood.png`);
             const material = new THREE.MeshPhongMaterial(
                 {
                     color: '#ffffff',

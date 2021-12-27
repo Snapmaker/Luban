@@ -1,5 +1,6 @@
 import { valueOf } from '../lib/contants-utils';
 
+export const DEFAULT_LUBAN_HOST = 'luban://127.0.0.1';
 // Metric and Imperial units
 export const IMPERIAL_UNITS = 'in';
 export const METRIC_UNITS = 'mm';

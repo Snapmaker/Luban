@@ -10,7 +10,6 @@ import { NS } from '../ui/SVGEditor/lib/namespaces';
 
 import api from '../api';
 import { checkIsImageSuffix } from '../../shared/lib/utils';
-
 import BaseModel from './BaseModel';
 import Resource from './Resource.ts';
 // import { DEFAULT_FILL_COLOR } from '../ui/SVGEditor/constants';
@@ -933,7 +932,8 @@ class SvgModel extends BaseModel {
     generateModelObject3D() {
         if (this.sourceType !== '3d' && this.sourceType !== 'image3d') {
             const uploadPath = this.resource.originalFile.path;
-            const texture = new THREE.TextureLoader().load(uploadPath, () => {
+            console.log('uploadPath', uploadPath);
+            const texture = new THREE.TextureLoader().load(`${uploadPath}`, () => {
                 this.meshObject.dispatchEvent(EVENTS.UPDATE);
             });
             // TODO make the 'MeshBasicMaterial' to be transparent
@@ -961,8 +961,7 @@ class SvgModel extends BaseModel {
             return;
         }
         const uploadPath = this.resource.processedFile.path;
-        // const texture = new THREE.TextureLoader().load(uploadPath);
-        const texture = new THREE.TextureLoader().load(uploadPath, () => {
+        const texture = new THREE.TextureLoader().load(`${uploadPath}`, () => {
             this.meshObject.dispatchEvent(EVENTS.UPDATE);
         });
         const material = new THREE.MeshBasicMaterial({

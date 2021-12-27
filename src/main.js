@@ -218,7 +218,7 @@ const showMainWindow = async () => {
         ]
     };
     protocol.registerFileProtocol(
-        'local',
+        'luban',
         (request, callback) => {
             const { pathname } = parse(request.url, true);
             const p = pathname === '/' ? 'index.html' : pathname.substr(1);
@@ -232,31 +232,11 @@ const showMainWindow = async () => {
     );
     // https://github.com/electron/electron/issues/21675
     // If needed, resolve CORS. https://stackoverflow.com/questions/51254618/how-do-you-handle-cors-in-an-electron-app
-    // const filter2 = {
-    //     urls: ['http://*/api/*'
-    //     ]
-    // };
-    // session.defaultSession.webRequest.onBeforeSendHeaders(filter2, (details, callback) => {
-    //     details.requestHeaders.Origin = loadUrl;
-    //     callback({
-    //         requestHeaders: details.requestHeaders
-    //     });
-    // });
-    //
-    // session.defaultSession.webRequest.onHeadersReceived(filter2, (details, callback) => {
-    //     details.responseHeaders['Access-Control-Allow-Origin'] = ['*'];
-    //     details.responseHeaders['Access-Control-Allow-Methods'] = ['GET,PUT,POST,OPTIONS,DELETE'];
-    //     details.responseHeaders['Access-Control-Allow-Headers'] = ['*'];
-    //     details.responseHeaders['Access-Control-Max-Age'] = [86400];
-    //     callback({
-    //         responseHeaders: details.responseHeaders
-    //     });
-    // });
 
     session.defaultSession.webRequest.onBeforeRequest(
         filter,
         (request, callback) => {
-            const redirectURL = request.url.replace(/^http/, 'local');
+            const redirectURL = request.url.replace(/^http/, 'luban');
             callback({ redirectURL });
         }
     );
@@ -431,7 +411,7 @@ app.on('second-instance', (event, commandLine) => {
         }
     }
 });
-protocol.registerSchemesAsPrivileged([{ scheme: 'local', privileges: { standard: true } }]);
+protocol.registerSchemesAsPrivileged([{ scheme: 'luban', privileges: { standard: true } }]);
 
 /**
  * when ready
