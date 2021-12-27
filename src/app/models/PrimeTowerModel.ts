@@ -1,12 +1,12 @@
 import * as THREE from 'three';
 import ThreeModel from './ThreeModel';
 import type ModelGroup from './ModelGroup';
-import { ModelInfo } from './ThreeBaseModel.ts';
+import { ModelInfo, ModelTransformation } from './ThreeBaseModel.ts';
 
 class PrimeTowerModel extends ThreeModel {
     // meshObject: THREE.Object3D;
 
-    constructor(initHeight: Number, modelGroup: ModelGroup) {
+    constructor(initHeight: Number, modelGroup: ModelGroup, transformation?: ModelTransformation) {
         const geometry = new THREE.CylinderBufferGeometry(10, 10, 1, 60);
         const material = new THREE.MeshPhongMaterial({
             side: THREE.DoubleSide,
@@ -23,17 +23,25 @@ class PrimeTowerModel extends ThreeModel {
             originalName,
             uploadName: `${originalName}.stl`,
             modelName,
-            mode: 'translate',
+            mode: '3d',
             geometry,
             material,
-            headType: 'printing'
+            headType: 'printing',
+            sourceHeight: 0,
+            sourceWidth: 0,
+            primeTowerTag: true
         };
 
         super(modelInfo, modelGroup);
-        this.primeTowerTag = true;
+        const positionX = transformation?.positionX || Math.max(modelGroup._bbox.max.x - 50, modelGroup._bbox.min.x - 50);
+        const positionY = transformation?.positionY || Math.max(modelGroup._bbox.max.y - 50, modelGroup._bbox.min.y - 50);
+        const scaleX = transformation?.scaleX || 1;
+        const scaleY = transformation?.scaleY || 1;
         this.updateTransformation({
-            positionX: Math.max(modelGroup._bbox.max.x - 50, modelGroup._bbox.min.x - 50),
-            positionY: Math.max(modelGroup._bbox.max.y - 50, modelGroup._bbox.min.y - 50),
+            positionX,
+            positionY,
+            scaleX,
+            scaleY,
             scaleZ: initHeight,
             uniformScalingState: false
         });

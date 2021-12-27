@@ -1803,7 +1803,7 @@ export const actions = {
         const { modelGroup } = getState().printing;
         modelGroup.defaultSupportSize = size;
     },
-    generateModel: (headType, { loadFrom = LOAD_MODEL_FROM_INNER, originalName, uploadName, sourceWidth, sourceHeight, mode, sourceType, transformation, modelID, extruderConfig, isGroup = false, parentModelID = '', modelName, children }) => async (dispatch, getState) => {
+    generateModel: (headType, { loadFrom = LOAD_MODEL_FROM_INNER, originalName, uploadName, sourceWidth, sourceHeight, mode, sourceType, transformation, modelID, extruderConfig, isGroup = false, parentModelID = '', modelName, children, primeTowerTag }) => async (dispatch, getState) => {
         const { progressStatesManager } = getState().printing;
         progressStatesManager.startProgress(PROCESS_STAGE.PRINTING_LOAD_MODEL);
         dispatch(actions.updateState({
@@ -1844,6 +1844,9 @@ export const actions = {
                 stage: STEP_STAGE.PRINTING_LOAD_MODEL_SUCCEED,
                 progress: progressStatesManager.updateProgress(STEP_STAGE.PRINTING_LOADING_MODEL, 1)
             }));
+        } else if (primeTowerTag) {
+            console.log({ transformation });
+            modelGroup.initPrimeTower(0.1, transformation);
         } else {
             const onMessage = async (e) => {
                 const data = e.data;

@@ -41,7 +41,8 @@ export type ModelInfo = {
     extruderConfig?: any,
     children?: Array<ModelInfo>
     geometry?: THREE.BufferGeometry,
-    material?: THREE.Material
+    material?: THREE.Material,
+    primeTowerTag?: boolean
 };
 
 const DEFAULT_TRANSFORMATION: ModelTransformation = {

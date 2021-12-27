@@ -1822,8 +1822,8 @@ class ModelGroup extends EventEmitter {
     }
 
     // prime tower
-    initPrimeTower(initHeight = 0.1) {
-        const model = new PrimeTowerModel(initHeight, this);
+    initPrimeTower(initHeight = 0.1, transformation) {
+        const model = new PrimeTowerModel(initHeight, this, transformation);
         return model;
     }
 

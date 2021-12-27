@@ -1,5 +1,5 @@
 import cloneDeep from 'lodash/cloneDeep';
-import { find } from 'lodash';
+import { find, includes } from 'lodash';
 import pkg from '../../../package.json';
 import {
     HEAD_CNC,
@@ -163,6 +163,7 @@ export const actions = {
         for (let k = 0; k < models.length; k++) {
             const { headType, originalName, uploadName, modelName, config, sourceType, gcodeConfig,
                 sourceWidth, sourceHeight, mode, transformation, modelID, supportTag, extruderConfig, children, parentModelID } = models[k];
+            const primeTowerTag = includes(originalName, 'prime_tower');
             // prevent project recovery recorded into operation history
             if (supportTag) {
                 continue;
@@ -173,7 +174,7 @@ export const actions = {
             }
 
             await dispatch(modActions.generateModel(headType, {
-                loadFrom: LOAD_MODEL_FROM_OUTER, originalName, uploadName, modelName, sourceWidth, sourceHeight, mode, sourceType, config, gcodeConfig, transformation, modelID, extruderConfig, isGroup: !!children, parentModelID, children
+                loadFrom: LOAD_MODEL_FROM_OUTER, originalName, uploadName, modelName, sourceWidth, sourceHeight, mode, sourceType, config, gcodeConfig, transformation, modelID, extruderConfig, isGroup: !!children, parentModelID, children, primeTowerTag
             }));
             if (children && children.length > 0) {
                 await dispatch(actions.recoverModels(modActions, children, envHeadType));
