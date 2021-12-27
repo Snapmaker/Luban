@@ -56,17 +56,20 @@ function ModelItem({
     if (!model) {
         return null;
     }
-    if (isDualExtruder) {
-        const { extruderConfig: { shell, infill } } = model;
-        const { _leftExtruderColor, _rightExtruderColor } = getExtruderColor(shell, infill, leftMaterialColor, rightMaterialColor);
-        leftExtruderColor = _leftExtruderColor;
-        rightExtruderColor = _rightExtruderColor;
-    } else {
-        const { extruderConfig: { shell, infill } } = model;
-        const { _leftExtruderColor } = getExtruderColor(shell, infill, leftMaterialColor, rightMaterialColor);
-        // left = right, when single extruder
-        leftExtruderColor = _leftExtruderColor;
-        rightExtruderColor = _leftExtruderColor;
+
+    if (model.headType === '3dp' || model.headType === HEAD_PRINTING) {
+        if (isDualExtruder) {
+            const { extruderConfig: { shell, infill } } = model;
+            const { _leftExtruderColor, _rightExtruderColor } = getExtruderColor(shell, infill, leftMaterialColor, rightMaterialColor);
+            leftExtruderColor = _leftExtruderColor;
+            rightExtruderColor = _rightExtruderColor;
+        } else {
+            const { extruderConfig: { shell, infill } } = model;
+            const { _leftExtruderColor } = getExtruderColor(shell, infill, leftMaterialColor, rightMaterialColor);
+            // left = right, when single extruder
+            leftExtruderColor = _leftExtruderColor;
+            rightExtruderColor = _leftExtruderColor;
+        }
     }
     // TODO: '3dp' for project file of "< version 4.1"
     if (model.headType === '3dp' || model.headType === HEAD_PRINTING) {
