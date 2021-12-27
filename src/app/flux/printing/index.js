@@ -956,6 +956,7 @@ export const actions = {
         dispatch(actions.updateState({
             [defaultId]: newDefinitionId
         }));
+        dispatch(actions.updateAllModelColors());
         dispatch(actions.destroyGcodeLine());
         dispatch(actions.displayModel());
     },

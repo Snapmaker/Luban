@@ -182,7 +182,6 @@ class DefinitionManager {
             const wallOutLineWidthL = extruderLDefinitionSettings.machine_nozzle_size.default_value; // wall_line_width_0
             const wallInnerLineWidthL = extruderLDefinitionSettings.machine_nozzle_size.default_value; // wall_line_width_x
             const wallLineCountL = wallThickness !== 0 ? Math.max(1, Math.round((wallThickness - wallOutLineWidthL) / wallInnerLineWidthL) + 1) : 0;
-            console.log('wallLineCountL', wallThickness, wallOutLineWidthL, wallInnerLineWidthL, Math.round((wallThickness - wallOutLineWidthL) / wallInnerLineWidthL) + 1, wallLineCountL);
             extruderLDefinitionSettings.wall_line_count = { default_value: wallLineCountL };
 
             // R: wall_line_count
