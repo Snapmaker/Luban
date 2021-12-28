@@ -75,7 +75,7 @@ function VisualizerLeftBar({ defaultSupportSize, setTransformMode, isSupporting,
     const enableShortcut = useSelector(state => state?.printing?.enableShortcut, shallowEqual);
     const [showRotationAnalyzeModal, setShowRotationAnalyzeModal] = useState(false);
     const [modelsExtruder, setModelsExtruder] = useState(originalModelsExtruder);
-    const [helpersExturder, setHelpersExtruder] = useState(helpersExtruderConfig || originalHelpersExtruder);
+    const [helpersExtrurder, setHelpersExtruder] = useState(helpersExtruderConfig || originalHelpersExtruder);
     const [isOpenModels, setIsOpenModels] = useState(isOpenSelectModals);
     const [isOpenHelpers, setIsOpenHelpers] = useState(_isOpenHelpers);
     const selectedModelBBoxDes = useSelector(state => state?.printing?.modelGroup?.getSelectedModelBBoxWHD(), shallowEqual);
@@ -296,7 +296,7 @@ function VisualizerLeftBar({ defaultSupportSize, setTransformMode, isSupporting,
                         setModelsExtruder(newModelsExtruder);
                         dispatch(printingActions.updateSelectedModelsExtruder({ infill: direction, shell: direction }));
                     } else {
-                        const newHelpersExtruder = cloneDeep(helpersExturder);
+                        const newHelpersExtruder = cloneDeep(helpersExtrurder);
                         Object.keys(newHelpersExtruder).forEach(key => {
                             newHelpersExtruder[key] = direction;
                         });
@@ -322,19 +322,19 @@ function VisualizerLeftBar({ defaultSupportSize, setTransformMode, isSupporting,
                     break;
                 case 'adhesion':
                     setHelpersExtruder({
-                        ...helpersExturder,
+                        ...helpersExtrurder,
                         adhesion: direction,
-                        multiple: helpersExturder.support === direction ? direction : BOTH_EXTRUDER_MAP_NUMBER
+                        multiple: helpersExtrurder.support === direction ? direction : BOTH_EXTRUDER_MAP_NUMBER
                     });
-                    dispatch(printingActions.updateHelpersExtruder({ support: helpersExturder.support, adhesion: direction }));
+                    dispatch(printingActions.updateHelpersExtruder({ support: helpersExtrurder.support, adhesion: direction }));
                     break;
                 case 'support':
                     setHelpersExtruder({
-                        ...helpersExturder,
+                        ...helpersExtrurder,
                         support: direction,
-                        multiple: helpersExturder.adhesion === direction ? direction : BOTH_EXTRUDER_MAP_NUMBER
+                        multiple: helpersExtrurder.adhesion === direction ? direction : BOTH_EXTRUDER_MAP_NUMBER
                     });
-                    dispatch(printingActions.updateHelpersExtruder({ adhesion: helpersExturder.adhesion, support: direction }));
+                    dispatch(printingActions.updateHelpersExtruder({ adhesion: helpersExtrurder.adhesion, support: direction }));
                     break;
                 default:
                     break;
@@ -453,7 +453,7 @@ function VisualizerLeftBar({ defaultSupportSize, setTransformMode, isSupporting,
 
     useEffect(() => {
         UniApi.Event.on('appbar-menu:printing.import', actions.importFile);
-        let newHelpersExtruder = cloneDeep(helpersExturder);
+        let newHelpersExtruder = cloneDeep(helpersExtrurder);
         newHelpersExtruder = {
             ...newHelpersExtruder,
             multiple: newHelpersExtruder.support === newHelpersExtruder.adhesion ? newHelpersExtruder.support : BOTH_EXTRUDER_MAP_NUMBER
@@ -1238,7 +1238,7 @@ function VisualizerLeftBar({ defaultSupportSize, setTransformMode, isSupporting,
                                         overlay={() => extruderOverlay('helpers.multiple')}
                                         trigger="click"
                                     >
-                                        {renderExtruderStatus(helpersExturder.multiple)}
+                                        {renderExtruderStatus(helpersExtrurder.multiple)}
                                     </Dropdown>
                                 </div>
                                 <div className={`align-center margin-left-24 margin-top-8 ${isOpenHelpers ? 'sm-flex' : 'display-none'}`}>
@@ -1248,7 +1248,7 @@ function VisualizerLeftBar({ defaultSupportSize, setTransformMode, isSupporting,
                                         overlay={() => extruderOverlay('helpers.adhesion')}
                                         trigger="click"
                                     >
-                                        {renderExtruderStatus(helpersExturder.adhesion)}
+                                        {renderExtruderStatus(helpersExtrurder.adhesion)}
                                     </Dropdown>
                                 </div>
                                 <div className={`sm-flex align-center margin-left-24 margin-top-8 ${isOpenHelpers ? 'sm-flex' : 'display-none'}`}>
@@ -1258,7 +1258,7 @@ function VisualizerLeftBar({ defaultSupportSize, setTransformMode, isSupporting,
                                         overlay={() => extruderOverlay('helpers.support')}
                                         trigger="click"
                                     >
-                                        {renderExtruderStatus(helpersExturder.support)}
+                                        {renderExtruderStatus(helpersExtrurder.support)}
                                     </Dropdown>
                                 </div>
                             </div>

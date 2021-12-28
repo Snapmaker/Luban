@@ -1,6 +1,6 @@
 import api from '../../api';
 import i18n from '../../lib/i18n';
-import { HEAD_CNC } from '../../constants';
+import { HEAD_CNC, LEFT_EXTRUDER_MAP_NUMBER } from '../../constants';
 
 class DefinitionManager {
     headType = HEAD_CNC;
@@ -152,7 +152,7 @@ class DefinitionManager {
 
     // Start Notice: only used for printing config
     // Calculate hidden settings
-    calculateDependencies(definition, settings, hasSupportModel, extruderLDefinitionSettings, extruderRDefinitionSettings) {
+    calculateDependencies(definition, settings, hasSupportModel, extruderLDefinitionSettings, extruderRDefinitionSettings, helpersExtruderConfig) {
         if (settings.infill_sparse_density) {
             const infillSparseDensity = settings.infill_sparse_density.default_value;
             // L: infill_line_distance
@@ -214,7 +214,12 @@ class DefinitionManager {
         }
         if (settings.support_infill_rate) {
             const supportInfillRate = settings.support_infill_rate.default_value;
-            const supportLineWidth = extruderLDefinitionSettings.machine_nozzle_size.default_value; // support_line_width
+            let supportLineWidth;
+            if (helpersExtruderConfig.support === LEFT_EXTRUDER_MAP_NUMBER) {
+                supportLineWidth = extruderLDefinitionSettings.machine_nozzle_size.default_value; // support_line_width
+            } else {
+                supportLineWidth = extruderRDefinitionSettings.machine_nozzle_size.default_value; // support_line_width
+            }
 
             // "0 if support_infill_rate == 0 else (support_line_width * 100) / support_infill_rate *
             // (2 if support_pattern == 'grid' else (3 if support_pattern == 'triangles' else 1))"
@@ -259,10 +264,6 @@ class DefinitionManager {
             extruderRDefinitionSettings
         };
     }
-
-    // calculateExtruderDependencies(definition, settings) {
-    //
-    // }
 
     finalizeActiveDefinition(activeDefinition) {
         const definition = {

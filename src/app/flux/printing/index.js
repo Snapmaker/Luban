@@ -575,8 +575,8 @@ export const actions = {
 
     // Update definition settings and save.
     updateDefinitionSettings: (definition, settings) => (dispatch, getState) => {
-        const { modelGroup, extruderLDefinition, extruderRDefinition } = getState().printing;
-        const { settings: newSettings, extruderLDefinitionSettings, extruderRDefinitionSettings } = definitionManager.calculateDependencies(definition, settings, modelGroup && modelGroup.hasSupportModel(), extruderLDefinition.settings, extruderRDefinition.settings);
+        const { modelGroup, extruderLDefinition, extruderRDefinition, helpersExtruderConfig } = getState().printing;
+        const { settings: newSettings, extruderLDefinitionSettings, extruderRDefinitionSettings } = definitionManager.calculateDependencies(definition, settings, modelGroup && modelGroup.hasSupportModel(), extruderLDefinition.settings, extruderRDefinition.settings, helpersExtruderConfig);
         settings = newSettings;
         definitionManager.updateDefinition({
             definitionId: 'snapmaker_extruder_0',
@@ -651,8 +651,8 @@ export const actions = {
             dispatch(actions.updateDefinitionSettings(activeDefinition, activeDefinition.settings));
         } else {
             // TODO: Optimize performance
-            const { modelGroup, extruderLDefinition, extruderRDefinition } = getState().printing;
-            definitionManager.calculateDependencies(activeDefinition, activeDefinition.settings, modelGroup && modelGroup.hasSupportModel(), extruderLDefinition.settings, extruderRDefinition.settings);
+            const { modelGroup, extruderLDefinition, extruderRDefinition, helpersExtruderConfig } = getState().printing;
+            definitionManager.calculateDependencies(activeDefinition, activeDefinition.settings, modelGroup && modelGroup.hasSupportModel(), extruderLDefinition.settings, extruderRDefinition.settings, helpersExtruderConfig);
         }
 
         // Update activeDefinition to force component re-render
