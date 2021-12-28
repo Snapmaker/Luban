@@ -16,6 +16,7 @@ import ConfigValueBox from './ConfigValueBox';
 import useSetState from '../../../lib/hooks/set-state';
 import { limitStringLength } from '../../../lib/normalize-range';
 import styles from './styles.styl';
+import { MaterialWithColor } from '../../widgets/PrintingMaterial/MaterialWithColor';
 
 function creatCateArray(optionList) {
     const cates = [];
@@ -67,6 +68,7 @@ function useGetDefinitions(allDefinitions, definitionState, setDefinitionState, 
             checkboxAndSelectGroup.label = d.name;
             checkboxAndSelectGroup.value = d.definitionId;
             checkboxAndSelectGroup.isDefault = !!d.isDefault;
+            checkboxAndSelectGroup.color = d.settings.color.default_value;
             if (d?.category) {
                 checkboxAndSelectGroup.category = d.category;
             }
@@ -475,8 +477,14 @@ function ProfileManager({ optionConfigGroup, disableCategory = true, managerTitl
                                                 {!configExpanded[cate.category] && (
                                                     <ul style={{ listStyle: 'none', paddingLeft: '0' }}>
                                                         {(cate.items.map((currentOption) => {
-                                                            const displayName = limitStringLength(currentOption.label ?? '', 24);
                                                             const definitionForManager = definitionState?.definitionForManager;
+                                                            const materialSettingName = limitStringLength(currentOption.label ?? '', 24);
+                                                            const materialSettingColor = currentOption.color;
+                                                            const displayName = (
+                                                                <div className="display-inherit width-180 margin-left-4">
+                                                                    <MaterialWithColor name={materialSettingName} color={materialSettingColor} />
+                                                                </div>
+                                                            );
                                                             const isSelected = !definitionState.isCategorySelected && currentOption.value === definitionForManager.definitionId;
                                                             let isAllValueDefault = isDefault && isSelected;
                                                             if (isDefault && isSelected && definitionState?.selectedSettingDefaultValue) {
@@ -507,7 +515,7 @@ function ProfileManager({ optionConfigGroup, disableCategory = true, managerTitl
                                                                                 <SvgIcon
                                                                                     name="Reset"
                                                                                     size={24}
-                                                                                    className="margin-left-n-28 margin-right-4"
+                                                                                    className="margin-left-n-30"
                                                                                     onClick={() => {
                                                                                         outsideActions.resetDefinitionById(currentOption.value);
                                                                                     }}

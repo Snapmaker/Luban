@@ -8,7 +8,7 @@ import ModelItem from '../../views/model-item';
 import { actions as printingActions } from '../../../flux/printing';
 import { machineStore } from '../../../store/local-storage';
 import { DUAL_EXTRUDER_TOOLHEAD_FOR_SM2, LEFT_EXTRUDER, RIGHT_EXTRUDER } from '../../../constants';
-import { whiteHex, materialColorMap } from '../PrintingVisualizer/VisualizerLeftBar';
+import { whiteHex } from '../PrintingVisualizer/VisualizerLeftBar';
 
 function PrintingObjectListBox() {
     const selectedModelArray = useSelector(state => state?.printing?.modelGroup?.selectedModelArray);
@@ -45,13 +45,13 @@ function PrintingObjectListBox() {
             }
         },
         updateMaterialColor(definition, direction) {
-            const color = definition?.name?.split('-')[1]?.toLowerCase();
+            const color = definition?.settings?.color?.default_value;
             switch (direction) {
                 case LEFT_EXTRUDER:
-                    setLeftMaterialColor(materialColorMap[color]);
+                    setLeftMaterialColor(color);
                     break;
                 case RIGHT_EXTRUDER:
-                    setRightMaterialColor(materialColorMap[color]);
+                    setRightMaterialColor(color);
                     break;
                 default:
                     break;

@@ -6,6 +6,9 @@
     "i18nCategory": "key-default_category-Default",
     "inherits": "snapmaker",
     "overrides": {
+        "color": {
+            "default_value": "#000000"
+        },
         "material_flow": {
             "default_value": 100
         },

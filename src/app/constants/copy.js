@@ -154,6 +154,7 @@ i18n._('Jog Speed');
 i18n._('Set the speed at which the tool moves on the material when it is not carving.');
 i18n._('Stepdown');
 i18n._('Set the distance along the Z axis per step that the tool is plunged into the material.');
+i18n._('Color');
 
 i18n._('On the Path');
 i18n._('Outline');

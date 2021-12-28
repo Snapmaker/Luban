@@ -13,7 +13,6 @@ import {
     LEFT_EXTRUDER, PRINTING_MANAGER_TYPE_MATERIAL, HEAD_PRINTING, DUAL_EXTRUDER_TOOLHEAD_FOR_SM2,
     RIGHT_EXTRUDER, NOZZLE_SIZE_DEFAULT_OPTIONS
 } from '../../../constants';
-import { machineStore } from '../../../store/local-storage';
 import { getMaterialSelectOptions } from '../../utils/profileManager';
 
 const plaMaterialId = 'material.pla';
@@ -26,7 +25,7 @@ function Material({ widgetActions }) {
     const extruderRDefinition = useSelector(state => state?.printing?.extruderRDefinition);
     const leftDiameter = useSelector(state => state?.printing?.extruderLDefinition?.settings?.machine_nozzle_size?.default_value);
     const rightDiameter = useSelector(state => state?.printing?.extruderRDefinition?.settings?.machine_nozzle_size?.default_value);
-    const printingToolhead = machineStore.get('machine.toolHead.printingToolhead');
+    const printingToolhead = useSelector(state => state?.machine?.toolHead?.printingToolhead);
     const inProgress = useSelector(state => state?.printing?.inProgress);
     const dispatch = useDispatch();
 

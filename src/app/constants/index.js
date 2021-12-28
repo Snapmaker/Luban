@@ -64,7 +64,19 @@ export const STAGES_3DP = {
     gcodeRendered: 12
 };
 // !important: keys in PRINTING_QUALITY_CONFIG_KEYS, PRINTING_QUALITY_CONFIG_GROUP should change togethor
+
+
+export const PRINTING_MATERIAL_CONFIG_COLORS = [
+    '#B30006', '#b36100', '#d4cc00', '#35a000', '#00685a', '#006a99', '#003c7c', '#4c2868', '#b3196f', '#86868b',
+    '#ff0008', '#ff8b00', '#fff500', '#7bf93c', '#00bea6', '#0092d3', '#0053aa', '#753fa0', '#f9239b', '#7f7f7f',
+    '#ffd2d3', '#ffca8a', '#fbfb74', '#baff79', '#68d7c9', '#71cdec', '#7eadd8', '#bba4d3', '#ef9fd0', '#cccccc',
+    '#ffffff', '#000000',
+];
+
 export const PRINTING_MATERIAL_CONFIG_KEYS_SINGLE = [
+    // Color
+    'color',
+    // Temperature
     'material_diameter',
     'material_print_temperature',
     'material_print_temperature_layer_0',
@@ -84,6 +96,9 @@ export const PRINTING_MATERIAL_CONFIG_KEYS_SINGLE = [
     'retraction_hop'
 ];
 export const PRINTING_MATERIAL_CONFIG_KEYS_DUAL = [
+    // Color
+    'color',
+    // Temperature
     'material_diameter',
     'material_print_temperature',
     'material_print_temperature_layer_0',
@@ -181,6 +196,12 @@ export const PRINTING_QUALITY_CONFIG_KEYS_DUAL = [
 ];
 export const PRINTING_MATERIAL_CONFIG_GROUP_SINGLE = [
     {
+        name: 'Color',
+        fields: [
+            'color'
+        ]
+    },
+    {
         name: 'key-printing/material_settings-Temperature',
         fields: [
             'material_diameter',
@@ -212,6 +233,12 @@ export const PRINTING_MATERIAL_CONFIG_GROUP_SINGLE = [
     }
 ];
 export const PRINTING_MATERIAL_CONFIG_GROUP_DUAL = [
+    {
+        name: 'Color',
+        fields: [
+            'color'
+        ]
+    },
     {
         name: 'key-printing/material_settings-Temperature',
         fields: [

@@ -27,7 +27,11 @@ import styles from './styles.styl';
 import { getSelectOptions } from '../../utils/profileManager';
 
 const newKeys = cloneDeep(PRINTING_QUALITY_CONFIG_INDEX);
-const ALL_DEFAULT_DEFINITION_ID_ARRAY = ['material.pla', 'material.abs', 'material.petg', 'quality.fast_print', 'quality.normal_quality', 'quality.high_quality'];
+const ALL_DEFAULT_DEFINITION_ID_ARRAY = [
+    'material.pla', 'material.abs', 'material.petg',
+    'material.pla.black', 'material.abs.black', 'material.petg.black',
+    'quality.fast_print', 'quality.normal_quality', 'quality.high_quality'
+];
 function isOfficialDefinition(key) {
     return includes(cloneDeep(PRINTING_QUALITY_CUSTOMIZE_FIELDS), key);
 }

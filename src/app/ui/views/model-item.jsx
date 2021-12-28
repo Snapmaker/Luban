@@ -56,11 +56,20 @@ function ModelItem({
     if (!model) {
         return null;
     }
-    if (isDualExtruder) {
-        const { extruderConfig: { shell, infill } } = model;
-        const { _leftExtruderColor, _rightExtruderColor } = getExtruderColor(shell, infill, leftMaterialColor, rightMaterialColor);
-        leftExtruderColor = _leftExtruderColor;
-        rightExtruderColor = _rightExtruderColor;
+
+    if (model.headType === '3dp' || model.headType === HEAD_PRINTING) {
+        if (isDualExtruder) {
+            const { extruderConfig: { shell, infill } } = model;
+            const { _leftExtruderColor, _rightExtruderColor } = getExtruderColor(shell, infill, leftMaterialColor, rightMaterialColor);
+            leftExtruderColor = _leftExtruderColor;
+            rightExtruderColor = _rightExtruderColor;
+        } else {
+            const { extruderConfig: { shell, infill } } = model;
+            const { _leftExtruderColor } = getExtruderColor(shell, infill, leftMaterialColor, rightMaterialColor);
+            // left = right, when single extruder
+            leftExtruderColor = _leftExtruderColor;
+            rightExtruderColor = _leftExtruderColor;
+        }
     }
     // TODO: '3dp' for project file of "< version 4.1"
     if (model.headType === '3dp' || model.headType === HEAD_PRINTING) {
@@ -176,11 +185,9 @@ function ModelItem({
                             </span>
                         </Anchor>
                         <div className="sm-flex">
-                            {isDualExtruder && (
-                                <>
-                                    {renderExtruderIcon(leftExtruderColor, rightExtruderColor)}
-                                </>
-                            )}
+                            <>
+                                {renderExtruderIcon(leftExtruderColor, rightExtruderColor)}
+                            </>
                             <SvgIcon
                                 name={visible ? 'ShowNormal' : 'HideNormal'}
                                 title={visible ? i18n._('key-PrintingCncLaser/ObjectList-Hide') : i18n._('key-PrintingCncLaser/ObjectList-Show')}
@@ -238,11 +245,9 @@ function ModelItem({
                                 </span>
                             </Anchor>
                             <div className="sm-flex">
-                                {isDualExtruder && (
-                                    <>
-                                        {renderExtruderIcon(_leftExtruderColor, _rightExtruderColor)}
-                                    </>
-                                )}
+                                <>
+                                    {renderExtruderIcon(_leftExtruderColor, _rightExtruderColor)}
+                                </>
                                 <SvgIcon
                                     name={modelItem.visible ? 'ShowNormal' : 'HideNormal'}
                                     title={modelItem.visible ? i18n._('key-PrintingCncLaser/ObjectList-Hide') : i18n._('key-PrintingCncLaser/ObjectList-Show')}

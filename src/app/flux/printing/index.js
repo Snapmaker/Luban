@@ -18,6 +18,8 @@ import {
     LEFT_EXTRUDER,
     RIGHT_EXTRUDER,
     LEFT_EXTRUDER_MAP_NUMBER,
+    RIGHT_EXTRUDER_MAP_NUMBER,
+    ALIGN_OPERATION
 } from '../../constants';
 import { timestamp } from '../../../shared/lib/random-utils';
 import { machineStore } from '../../store/local-storage';
@@ -280,7 +282,9 @@ export const actions = {
         dispatch(actions.updateState({
             activeDefinition: definitionManager.activeDefinition,
             materialDefinitions: await definitionManager.getDefinitionsByPrefixName('material'),
-            qualityDefinitions: await definitionManager.getDefinitionsByPrefixName('quality')
+            qualityDefinitions: await definitionManager.getDefinitionsByPrefixName('quality'),
+            extruderLDefinition: await definitionManager.getDefinitionsByPrefixName('snapmaker_extruder_0'),
+            extruderRDefinition: await definitionManager.getDefinitionsByPrefixName('snapmaker_extruder_1')
         }));
         // model group
         modelGroup.updateBoundingBox(new THREE.Box3(
@@ -572,8 +576,25 @@ export const actions = {
 
     // Update definition settings and save.
     updateDefinitionSettings: (definition, settings) => (dispatch, getState) => {
-        const { modelGroup } = getState().printing;
-        settings = definitionManager.calculateDependencies(definition, settings, modelGroup && modelGroup.hasSupportModel());
+        const { modelGroup, extruderLDefinition, extruderRDefinition, helpersExtruderConfig } = getState().printing;
+        const { settings: newSettings, extruderLDefinitionSettings, extruderRDefinitionSettings } = definitionManager.calculateDependencies(definition, settings, modelGroup && modelGroup.hasSupportModel(), extruderLDefinition.settings, extruderRDefinition.settings, helpersExtruderConfig);
+        settings = newSettings;
+        definitionManager.updateDefinition({
+            definitionId: 'snapmaker_extruder_0',
+            settings: extruderLDefinitionSettings
+        });
+        extruderLDefinition.settings = extruderLDefinitionSettings;
+        dispatch(actions.updateState({
+            extruderLDefinition
+        }));
+        definitionManager.updateDefinition({
+            definitionId: 'snapmaker_extruder_1',
+            settings: extruderRDefinitionSettings
+        });
+        extruderRDefinition.settings = extruderRDefinitionSettings;
+        dispatch(actions.updateState({
+            extruderRDefinition
+        }));
         return definitionManager.updateDefinition({
             definitionId: definition.definitionId,
             settings
@@ -631,16 +652,25 @@ export const actions = {
             dispatch(actions.updateDefinitionSettings(activeDefinition, activeDefinition.settings));
         } else {
             // TODO: Optimize performance
-            const { modelGroup } = getState().printing;
-            definitionManager.calculateDependencies(activeDefinition, activeDefinition.settings, modelGroup && modelGroup.hasSupportModel());
+            const { modelGroup, extruderLDefinition, extruderRDefinition, helpersExtruderConfig } = getState().printing;
+            definitionManager.calculateDependencies(activeDefinition, activeDefinition.settings, modelGroup && modelGroup.hasSupportModel(), extruderLDefinition.settings, extruderRDefinition.settings, helpersExtruderConfig);
         }
 
         // Update activeDefinition to force component re-render
         dispatch(actions.updateState({ activeDefinition }));
     },
 
+    /**
+     *
+     * @param definition
+     *      {
+     *          nozzleSize
+     *      }
+     * @param direction
+     */
     updateExtuderDefinition: (definition, direction = LEFT_EXTRUDER) => (dispatch, getState) => {
-        const state = getState().printing;
+        const { activeDefinition, extruderLDefinition, extruderRDefinition, helpersExtruderConfig } = getState().printing;
+
 
         if (!definition) {
             return;
@@ -648,19 +678,19 @@ export const actions = {
 
         let extruderDef = {};
         if (direction === LEFT_EXTRUDER) {
-            extruderDef = state.extruderLDefinition;
+            extruderDef = extruderLDefinition;
         } else {
-            extruderDef = state.extruderRDefinition;
+            extruderDef = extruderRDefinition;
         }
 
         if (definition !== extruderDef) {
             if (direction === LEFT_EXTRUDER) {
                 extruderDef = {
-                    ...state.extruderLDefinition
+                    ...extruderLDefinition
                 };
             } else {
                 extruderDef = {
-                    ...state.extruderRDefinition
+                    ...extruderRDefinition
                 };
             }
             for (const key of definition.ownKeys) {
@@ -674,6 +704,38 @@ export const actions = {
                 extruderDef.settings[key].from = definition.definitionId;
             }
         }
+
+        // update relative definitions
+        // nozzle size
+        const nozzleSize = extruderDef.settings.machine_nozzle_size.default_value;
+        const nozzleSizeRelationSettingsKeys = [
+            'line_width',
+            'wall_line_width', 'wall_line_width_0', 'wall_line_width_x',
+            'skin_line_width',
+            'infill_line_width',
+            'skirt_brim_line_width',
+            'support_line_width',
+            'support_interface_line_width', 'support_roof_line_width', 'support_bottom_line_width',
+            'prime_tower_line_width'
+        ];
+        for (const key of nozzleSizeRelationSettingsKeys) {
+            extruderDef.settings[key].default_value = nozzleSize;
+        }
+
+        // line width active final
+        if (helpersExtruderConfig.adhesion === LEFT_EXTRUDER_MAP_NUMBER && direction === LEFT_EXTRUDER
+            || helpersExtruderConfig.adhesion === RIGHT_EXTRUDER_MAP_NUMBER && direction === RIGHT_EXTRUDER) {
+            activeDefinition.settings.skirt_brim_line_width.default_value = extruderDef.settings.skirt_brim_line_width.default_value;
+        }
+        if (helpersExtruderConfig.support === LEFT_EXTRUDER_MAP_NUMBER && direction === LEFT_EXTRUDER
+            || helpersExtruderConfig.support === RIGHT_EXTRUDER_MAP_NUMBER && direction === RIGHT_EXTRUDER) {
+            activeDefinition.settings.support_line_width.default_value = extruderDef.settings.support_line_width.default_value;
+            activeDefinition.settings.support_interface_line_width.default_value = extruderDef.settings.support_interface_line_width.default_value;
+            activeDefinition.settings.support_roof_line_width.default_value = extruderDef.settings.support_roof_line_width.default_value;
+            activeDefinition.settings.support_bottom_line_width.default_value = extruderDef.settings.support_bottom_line_width.default_value;
+            activeDefinition.settings.prime_tower_line_width.default_value = extruderDef.settings.prime_tower_line_width.default_value;
+        }
+        dispatch(actions.updateDefinitionSettings(activeDefinition, activeDefinition.settings));
 
         if (direction === LEFT_EXTRUDER) {
             dispatch(actions.updateState({
@@ -692,6 +754,7 @@ export const actions = {
                 definitionId: 'snapmaker_extruder_1'
             });
         }
+        dispatch(actions.updateAllModelColors());
         dispatch(actions.destroyGcodeLine());
         dispatch(actions.displayModel());
     },
@@ -847,7 +910,7 @@ export const actions = {
         const state = getState().printing;
 
         const newMaterialDefinitions = [];
-        const defaultDefinitionIds = ['material.pla', 'material.abs', 'material.petg'];
+        const defaultDefinitionIds = ['material.pla', 'material.abs', 'material.petg', 'material.pla.black', 'material.abs.black', 'material.petg.black'];
         for (const definition of state.materialDefinitions) {
             if (defaultDefinitionIds.includes(definition.definitionId)) {
                 newMaterialDefinitions.push(definition);
@@ -894,6 +957,7 @@ export const actions = {
         dispatch(actions.updateState({
             [defaultId]: newDefinitionId
         }));
+        dispatch(actions.updateAllModelColors());
         dispatch(actions.destroyGcodeLine());
         dispatch(actions.displayModel());
     },
@@ -916,14 +980,14 @@ export const actions = {
      * @returns {Function}
      * @private
      */
-    __loadModel: (originalName, uploadName) => (dispatch) => {
+    __loadModel: (originalName, uploadName) => async (dispatch) => {
         const headType = 'printing';
         const sourceType = '3d';
         const mode = '3d';
         const width = 0;
         const height = 0;
 
-        dispatch(actions.generateModel(headType, {
+        await dispatch(actions.generateModel(headType, {
             originalName, uploadName, sourceWidth: width, sourceHeight: height, mode, sourceType, transformation: {}
         }));
     },
@@ -962,10 +1026,28 @@ export const actions = {
     },
 
     generateGcode: (thumbnail, isGuideTours = false) => async (dispatch, getState) => {
-        const { hasModel, activeDefinition, modelGroup, progressStatesManager, helpersExtruderConfig } = getState().printing;
+        const { hasModel, activeDefinition, modelGroup, progressStatesManager, helpersExtruderConfig,
+            extruderLDefinition, extruderRDefinition, defaultMaterialId, defaultMaterialIdRight, materialDefinitions } = getState().printing;
         if (!hasModel) {
             return;
         }
+        // update extruder definitions
+        const indexL = materialDefinitions.findIndex(d => d.definitionId === defaultMaterialId);
+        const indexR = materialDefinitions.findIndex(d => d.definitionId === defaultMaterialIdRight);
+        const newExtruderLDefinition = definitionManager.finalizeExtruderDefinition(extruderLDefinition, materialDefinitions[indexL]);
+        const newExtruderRDefinition = definitionManager.finalizeExtruderDefinition(extruderRDefinition, materialDefinitions[indexR]);
+        dispatch(actions.updateState({
+            extruderLDefinition: newExtruderLDefinition,
+            extruderRDefinition: newExtruderRDefinition
+        }));
+        definitionManager.updateDefinition({
+            ...newExtruderLDefinition,
+            definitionId: 'snapmaker_extruder_0'
+        });
+        definitionManager.updateDefinition({
+            ...newExtruderRDefinition,
+            definitionId: 'snapmaker_extruder_1'
+        });
 
         const models = filter(modelGroup.getModels(), { 'visible': true });
 
@@ -1004,6 +1086,11 @@ export const actions = {
         finalDefinition.settings.support_interface_extruder_nr.default_value = supportExtruder;
         finalDefinition.settings.support_roof_extruder_nr.default_value = supportExtruder;
         finalDefinition.settings.support_bottom_extruder_nr.default_value = supportExtruder;
+
+        finalDefinition.settings.machine_heated_bed.default_value = extruderLDefinition.settings.machine_heated_bed.default_value;
+        finalDefinition.settings.material_bed_temperature.default_value = extruderLDefinition.settings.material_bed_temperature.default_value;
+        finalDefinition.settings.material_bed_temperature_layer_0.default_value = extruderLDefinition.settings.material_bed_temperature_layer_0.default_value;
+
         await api.profileDefinitions.createDefinition(CONFIG_HEADTYPE, finalDefinition);
 
         // slice
@@ -1394,6 +1481,7 @@ export const actions = {
                 item.extruderConfig = extruderConfig;
             });
         }
+        dispatch(actions.updateAllModelColors());
         modelGroup.models = [...models];
         // dispatch(actions.updateState({
         //     modelGroup
@@ -1521,6 +1609,7 @@ export const actions = {
         dispatch(operationHistoryActions.setOperations(INITIAL_STATE.name, operations));
 
         dispatch(actions.updateState(modelState));
+        dispatch(actions.updateAllModelColors());
         dispatch(actions.destroyGcodeLine());
         dispatch(actions.displayModel());
     },
@@ -1556,6 +1645,7 @@ export const actions = {
         dispatch(operationHistoryActions.setOperations(INITIAL_STATE.name, operations));
 
         dispatch(actions.updateState(modelState));
+        dispatch(actions.updateAllModelColors());
         dispatch(actions.destroyGcodeLine());
         dispatch(actions.displayModel());
     },
@@ -1776,6 +1866,7 @@ export const actions = {
                             parentModelID
                         });
                         dispatch(actions.updateState(modelState));
+                        dispatch(actions.updateAllModelColors());
                         dispatch(actions.displayModel());
                         dispatch(actions.destroyGcodeLine());
                         dispatch(actions.updateState({
@@ -2002,7 +2093,8 @@ export const actions = {
     ungroup: () => (dispatch, getState) => {
         const { modelGroup } = getState().printing;
 
-        const groups = modelGroup.getSelectedModelArray().filter(model => model instanceof ThreeGroup);
+        const groups = modelGroup.getSelectedModelArray()
+            .filter(model => model instanceof ThreeGroup);
         const groupChildrenMap = new Map();
         groups.forEach(group => {
             groupChildrenMap.set(group, group.children.slice(0));
@@ -2030,6 +2122,31 @@ export const actions = {
         dispatch(actions.updateState(modelState));
         dispatch(actions.destroyGcodeLine());
         dispatch(actions.displayModel());
+    },
+
+    setModelsMeshColor: (direction, color) => (dispatch, getState) => {
+        const { modelGroup } = getState().printing;
+        const models = modelGroup.getModels();
+        models.forEach((model) => {
+            if (model.extruderConfig.shell === (direction === LEFT_EXTRUDER ? '0' : '1')) {
+                model.updateMaterialColor(color);
+            }
+        });
+        dispatch(actions.render());
+    },
+
+    getMeshColor: (direction) => (dispatch, getState) => {
+        const { materialDefinitions, defaultMaterialId, defaultMaterialIdRight } = getState().printing;
+        const materialID = (direction === LEFT_EXTRUDER ? defaultMaterialId : defaultMaterialIdRight);
+        const index = materialDefinitions.findIndex(d => d.definitionId === materialID);
+        return materialDefinitions[index].settings.color.default_value;
+    },
+
+    updateAllModelColors: () => (dispatch) => {
+        const leftColor = dispatch(actions.getMeshColor(LEFT_EXTRUDER));
+        dispatch(actions.setModelsMeshColor(LEFT_EXTRUDER, leftColor));
+        const rightColor = dispatch(actions.getMeshColor(RIGHT_EXTRUDER));
+        dispatch(actions.setModelsMeshColor(RIGHT_EXTRUDER, rightColor));
     }
 };
 

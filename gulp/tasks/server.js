@@ -66,6 +66,7 @@ export function serverStartDevelopment(cb) {
         stdout: false
     }).on('readable', function () {
         this.stdout.pipe(process.stdout);
+        this.stderr.pipe(process.stderr);
     });
 }
 

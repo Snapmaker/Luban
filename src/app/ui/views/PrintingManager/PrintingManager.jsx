@@ -32,8 +32,11 @@ function isDefinitionEditable(definition, key) {
 }
 
 function isOfficialDefinition(definition) {
-    return definition && includes(['material.pla', 'material.abs', 'material.petg', 'quality.fast_print', 'quality.normal_quality', 'quality.high_quality'],
-        definition.definitionId);
+    return definition && includes([
+        'material.pla', 'material.abs', 'material.petg',
+        'material.pla.black', 'material.abs.black', 'material.petg.black',
+        'quality.fast_print', 'quality.normal_quality', 'quality.high_quality'
+    ], definition.definitionId);
 }
 
 function PrintingManager() {
@@ -113,6 +116,9 @@ function PrintingManager() {
             for (const [key, value] of Object.entries(newDefinition?.settings)) {
                 if (printingMaterialConfigKeys.indexOf(key) > -1) {
                     newDefinitionSettings[key] = { 'default_value': value.default_value };
+                }
+                if (key === 'color') {
+                    dispatch(printingActions.setModelsMeshColor(materialManagerDirection, value.default_value));
                 }
             }
             await dispatch(printingActions.updateDefinitionSettings(newDefinition, newDefinitionSettings));
