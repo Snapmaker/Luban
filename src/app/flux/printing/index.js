@@ -18,12 +18,8 @@ import {
     LEFT_EXTRUDER,
     RIGHT_EXTRUDER,
     LEFT_EXTRUDER_MAP_NUMBER,
-<<<<<<< HEAD
     RIGHT_EXTRUDER_MAP_NUMBER,
-    ALIGN_OPERATION
-=======
     DUAL_EXTRUDER_TOOLHEAD_FOR_SM2
->>>>>>> 0b9902aaf (Feature: Add prime tower pt 1)
 } from '../../constants';
 import { timestamp } from '../../../shared/lib/random-utils';
 import { machineStore } from '../../store/local-storage';
