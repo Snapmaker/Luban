@@ -151,12 +151,16 @@ class Controls extends EventEmitter {
         this.group.remove(this.transformControl);
     }
 
-    recoverTransformControls(_isPrimeTower = false) {
+    recoverTransformControls(_isPrimeTower = false, mode) {
         if (_isPrimeTower) {
             this.transformControl = new TransformControls(this.camera, _isPrimeTower);
         } else {
             this.transformControl = new TransformControls(this.camera);
         }
+        this.transformControl.addEventListener('update', () => {
+            this.emit(EVENTS.UPDATE);
+        });
+        mode && this.setTransformMode(mode);
         this.group.add(this.transformControl);
     }
 

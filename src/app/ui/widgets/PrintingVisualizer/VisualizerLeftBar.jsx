@@ -199,7 +199,7 @@ function VisualizerLeftBar({ defaultSupportSize, setTransformMode, isSupporting,
             actions.onModelTransform({
                 'scaleX': 1,
                 'scaleY': 1,
-                'scaleZ': _isPrimeTowerSelected ? primeTowerHeight / 0.1 : 1,
+                'scaleZ': _isPrimeTowerSelected ? primeTowerHeight : 1,
                 'uniformScalingState': !_isPrimeTowerSelected
             }, true);
             actions.onModelAfterTransform();

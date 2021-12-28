@@ -248,7 +248,7 @@ class ModelGroup extends EventEmitter {
         model.meshObject.removeEventListener('update', this.onModelUpdate);
         this.models = this.models.filter(item => item !== model);
         this.modelChanged();
-        this.updatePrimeTowerHeight();
+        model.sourceType === '3d' && this.updatePrimeTowerHeight();
     }
 
     // remove selected models' supports
@@ -298,6 +298,7 @@ class ModelGroup extends EventEmitter {
         this.unselectAllModels();
 
         this.modelChanged();
+        this.updatePrimeTowerHeight();
         return this._getEmptyState();
     }
 
@@ -1438,7 +1439,7 @@ class ModelGroup extends EventEmitter {
         this.emit('add', model);
         // refresh view
         this.modelChanged();
-        this.updatePrimeTowerHeight();
+        modelInfo.sourceType === '3d' && this.updatePrimeTowerHeight();
         return model;
     }
 
@@ -1453,9 +1454,7 @@ class ModelGroup extends EventEmitter {
     }
 
     isPrimeTowerSelected() {
-        return this.selectedModelArray.length === 1 && this.selectedModelArray.every((model) => {
-            return model.primeTowerTag;
-        });
+        return this.selectedModelArray.length === 1 && this.selectedModelArray[0].primeTowerTag;
     }
 
     addSupportOnSelectedModel(defaultSupportSize) {
@@ -1828,12 +1827,11 @@ class ModelGroup extends EventEmitter {
     }
 
     updatePrimeTowerHeight() {
-        const modelTemp = _.cloneDeep(this.models);
         let maxHeight = 0.1;
-        const maxBoundingBoxHeight = this._bbox.max.z;
-        modelTemp.forEach(modelItem => {
+        const maxBoundingBoxHeight = this._bbox?.max.z;
+        this.models.forEach(modelItem => {
             if (modelItem.headType === HEAD_PRINTING && !modelItem.primeTowerTag && !modelItem.supportTag) {
-                const modelItemHeight = modelItem.boundingBox.max.z - modelItem.boundingBox.min.z;
+                const modelItemHeight = modelItem.boundingBox?.max.z - modelItem.boundingBox?.min.z;
                 maxHeight = Math.max(maxHeight, modelItemHeight);
             }
         });

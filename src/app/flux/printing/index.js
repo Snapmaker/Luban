@@ -402,11 +402,11 @@ export const actions = {
         const printingToolhead = machineStore.get('machine.toolHead.printingToolhead');
         const activeQualityDefinition = lodashFind(qualityDefinitions, { definitionId: defaultQualityId });
         modelGroup.removeAllModels();
-        printingToolhead === DUAL_EXTRUDER_TOOLHEAD_FOR_SM2 && modelGroup.initPrimeTower();
-        const primeTowerModal = lodashFind(modelGroup.models, { primeTowerTag: true });
-        const enablePrimeTower = activeQualityDefinition?.settings?.prime_tower_enable?.default_value;
-        if (!enablePrimeTower) {
-            dispatch(actions.hideSelectedModel(primeTowerModal));
+        if (printingToolhead === DUAL_EXTRUDER_TOOLHEAD_FOR_SM2) {
+            modelGroup.initPrimeTower();
+            const primeTowerModel = lodashFind(modelGroup.models, { primeTowerTag: true });
+            const enablePrimeTower = activeQualityDefinition?.settings?.prime_tower_enable?.default_value;
+            !enablePrimeTower && dispatch(actions.hideSelectedModel(primeTowerModel));
         }
         if (!initEventFlag) {
             dispatch(actions.updateState({
@@ -1287,7 +1287,6 @@ export const actions = {
 
     updateSelectedModelTransformation: (transformation, newUniformScalingState) => (dispatch, getState) => {
         const { modelGroup } = getState().printing;
-
         let transformMode;
         switch (true) {
             // TODO: transformMode update to Array
@@ -1845,8 +1844,8 @@ export const actions = {
                 progress: progressStatesManager.updateProgress(STEP_STAGE.PRINTING_LOADING_MODEL, 1)
             }));
         } else if (primeTowerTag) {
-            console.log({ transformation });
-            modelGroup.initPrimeTower(0.1, transformation);
+            const initHeight = transformation?.scaleZ || 0.1;
+            modelGroup.initPrimeTower(initHeight, transformation);
         } else {
             const onMessage = async (e) => {
                 const data = e.data;

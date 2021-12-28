@@ -399,14 +399,6 @@ class TransformControls extends Object3D {
             ['Z', new Mesh(defaults.BOX.clone(), defaults.MESH_MATERIAL_BLUE.clone()), [0, 0, 1], [Math.PI / 2, 0, 0]]
         ];
         const tempPeripheral = this.isPrimeTower ? xyScalePeripheral : xyScalePeripheral.concat(zScalePeripheral);
-        // this.scalePeripheral = this.createPeripheral([
-        //     ['X', new Line(defaults.LINE.clone(), defaults.LINE_MATERIAL_RED.clone())],
-        //     ['X', new Mesh(defaults.BOX.clone(), defaults.MESH_MATERIAL_RED.clone()), [1, 0, 0], [0, 0, -Math.PI / 2]],
-        //     ['Y', new Line(defaults.LINE.clone(), defaults.LINE_MATERIAL_GREEN.clone()), null, [0, 0, Math.PI / 2]],
-        //     ['Y', new Mesh(defaults.BOX.clone(), defaults.MESH_MATERIAL_GREEN.clone()), [0, 1, 0]],
-        //     // ['Z', new Line(defaults.LINE.clone(), defaults.LINE_MATERIAL_BLUE.clone()), null, [0, -Math.PI / 2, 0]],
-        //     // ['Z', new Line(defaults.LINE.clone(), defaults.LINE_MATERIAL_BLUE.clone()), null, [0, -Math.PI / 2, 0]],
-        // ]);
         this.scalePeripheral = this.createPeripheral(tempPeripheral);
         this.add(this.scalePeripheral);
 
@@ -418,11 +410,6 @@ class TransformControls extends Object3D {
             ['Z', new Mesh(defaults.TRANSLATE_PICKER.clone(), defaults.MESH_MATERIAL_INVISIBLE), [0, 0, 0.6], [Math.PI / 2, 0, 0]]
         ];
         const tempPickerArr = this.isPrimeTower ? xyScalePickerArr : xyScalePickerArr.concat(zScalePickerArr);
-        // this.scalePicker = this.createPeripheral([
-        //     ['X', new Mesh(defaults.TRANSLATE_PICKER.clone(), defaults.MESH_MATERIAL_INVISIBLE), [0.6, 0, 0], [0, 0, -Math.PI / 2]],
-        //     ['Y', new Mesh(defaults.TRANSLATE_PICKER.clone(), defaults.MESH_MATERIAL_INVISIBLE), [0, 0.6, 0]],
-        //     // ['Z', new Mesh(defaults.TRANSLATE_PICKER.clone(), defaults.MESH_MATERIAL_INVISIBLE), [0, 0, 0.6], [Math.PI / 2, 0, 0]]
-        // ]);
         this.scalePicker = this.createPeripheral(tempPickerArr);
         this.scalePicker.visiable = false;
         this.add(this.scalePicker);
@@ -502,7 +489,6 @@ class TransformControls extends Object3D {
             const objectPosition = new Vector3();
             const objectScale = new Vector3();
             const objectQuaternion = new Quaternion();
-
             this.object.children.forEach((child) => {
                 // Update peripherals
                 this.translatePeripheral.visible = (this.mode === 'translate' && child.visible);

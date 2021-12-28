@@ -30,7 +30,7 @@ class ThreeModel extends BaseModel {
 
     constructor(modelInfo, modelGroup) {
         super(modelInfo, modelGroup);
-        const { width, height, processImageName, primeTowerTag } = modelInfo;
+        const { width, height, processImageName } = modelInfo;
 
 
         this.geometry = modelInfo.geometry || new THREE.PlaneGeometry(width, height);
@@ -68,7 +68,6 @@ class ThreeModel extends BaseModel {
             ...this.extruderConfig,
             ...modelInfo.extruderConfig
         };
-        this.primeTowerTag = primeTowerTag;
 
         if (modelInfo.convexGeometry) {
             this.setConvexGeometry(modelInfo.convexGeometry);
@@ -128,7 +127,6 @@ class ThreeModel extends BaseModel {
             this.meshObject.getWorldPosition(position);
             scale = new THREE.Vector3();
             this.meshObject.getWorldScale(scale);
-            scale.x = scale.y;
             const quaternion = new THREE.Quaternion();
             this.meshObject.getWorldQuaternion(quaternion);
             rotation = new THREE.Euler().setFromQuaternion(quaternion, undefined, false);
@@ -226,9 +224,9 @@ class ThreeModel extends BaseModel {
         if (isSelected && !this.primeTowerTag && this.meshObject.geometry.getAttribute('color')) {
             this.meshObject.material.vertexColors = true;
         }
-        if (isSelected && this.primeTowerTag && this.meshObject.geometry._bufferGeometry?.getAttribute('color')) {
-            this.meshObject.material.vertexColors = true;
-        }
+        // if (isSelected && this.primeTowerTag && this.meshObject.geometry._bufferGeometry?.getAttribute('color')) {
+        //     this.meshObject.material.vertexColors = true;
+        // }
         // for support geometry
         if (this.supportTag) {
             this.meshObject.material.color.set(0xFFD700);

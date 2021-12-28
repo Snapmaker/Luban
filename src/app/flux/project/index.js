@@ -101,6 +101,7 @@ export const actions = {
         const { initState, content: lastString } = getState().project[headType];
         const models = editorState.modelGroup.getModels();
         if (!models.length && initState) return;
+        if (models.length === 1 && models[0].primeTowerTag) return;
         const machineState = getState().machine;
         const { size, series, toolHead } = machineState;
         const machineInfo = {};
@@ -501,7 +502,7 @@ export const actions = {
                 isRotate: isRotate
             }
         });
-
+        dispatch(printingActions.displayModel());
         // clear operation history
         dispatch(operationHistoryActions.clear(newHeadType));
     },

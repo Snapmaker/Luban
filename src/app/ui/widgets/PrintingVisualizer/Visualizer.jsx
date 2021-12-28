@@ -8,7 +8,7 @@ import { Vector3, Box3 } from 'three';
 // , MeshPhongMaterial, DoubleSide, Mesh, CylinderBufferGeometry
 
 import { shortcutActions, priorities, ShortcutManager } from '../../../lib/shortcut';
-import { EPSILON, HEAD_PRINTING } from '../../../constants';
+import { DUAL_EXTRUDER_TOOLHEAD_FOR_SM2, EPSILON, HEAD_PRINTING } from '../../../constants';
 import i18n from '../../../lib/i18n';
 import modal from '../../../lib/modal';
 import ProgressBar from '../../components/ProgressBar';
@@ -78,7 +78,8 @@ class Visualizer extends PureComponent {
         enablePrimeTower: PropTypes.bool,
         primeTowerHeight: PropTypes.number.isRequired,
         hidePrimeTower: PropTypes.func,
-        showPrimeTower: PropTypes.func
+        showPrimeTower: PropTypes.func,
+        printingToolhead: PropTypes.string
     };
 
     state = {
@@ -332,7 +333,7 @@ class Visualizer extends PureComponent {
     }
 
     componentWillReceiveProps(nextProps) {
-        const { size, transformMode, selectedModelArray, renderingTimestamp, modelGroup, stage, primeTowerHeight, enablePrimeTower } = nextProps;
+        const { size, transformMode, selectedModelArray, renderingTimestamp, modelGroup, stage, primeTowerHeight, enablePrimeTower, printingToolhead } = nextProps;
         if (transformMode !== this.props.transformMode) {
             this.canvas.current.setTransformMode(transformMode);
             if (transformMode === 'rotate-placement') {
@@ -427,11 +428,13 @@ class Visualizer extends PureComponent {
                 });
                 primeTowerModel.stickToPlate();
                 this.canvas.current.renderScene();
-            } else {
-                modelGroup.initPrimeTower(primeTowerHeight);
+            } else if (!primeTowerModel && printingToolhead === DUAL_EXTRUDER_TOOLHEAD_FOR_SM2) {
+                modelGroup.initPrimeTower();
+                this.canvas.current.renderScene();
             }
         }
-        if (enablePrimeTower !== this.props.enablePrimeTower) {
+        this.canvas.current.renderScene();
+        if (enablePrimeTower !== this.props.enablePrimeTower && printingToolhead === DUAL_EXTRUDER_TOOLHEAD_FOR_SM2) {
             const primeTowerModel = find(modelGroup.models, { primeTowerTag: true });
             if (primeTowerModel) {
                 if (!enablePrimeTower) {
@@ -458,7 +461,7 @@ class Visualizer extends PureComponent {
     };
 
     render() {
-        const { size, selectedModelArray, modelGroup, gcodeLineGroup, inProgress, hasModel, displayedType } = this.props;
+        const { size, selectedModelArray, modelGroup, gcodeLineGroup, inProgress, hasModel, displayedType, transformMode } = this.props; // transformMode
 
         const isModelSelected = (selectedModelArray.length > 0);
         const isMultipleModel = selectedModelArray.length > 1;
@@ -515,6 +518,7 @@ class Visualizer extends PureComponent {
                         onModelTransform={this.actions.onModelTransform}
                         showContextMenu={this.showContextMenu}
                         primeTowerSelected={primeTowerSelected}
+                        transformMode={transformMode}
                     />
                 </div>
                 <ContextMenu
@@ -594,7 +598,7 @@ const mapStateToProps = (state, ownProps) => {
     const machine = state.machine;
     const { currentModalPath } = state.appbarMenu;
     const printing = state.printing;
-    const { size } = machine;
+    const { size, toolHead: { printingToolhead } } = machine;
     const { menuDisabledCount } = state.appbarMenu;
     // TODO: be to organized
     const {
@@ -645,7 +649,8 @@ const mapStateToProps = (state, ownProps) => {
         inProgress,
         progressStatesManager,
         enablePrimeTower,
-        primeTowerHeight
+        primeTowerHeight,
+        printingToolhead
     };
 };
 
