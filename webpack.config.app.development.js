@@ -85,8 +85,8 @@ export default {
             chunkFilename: '[id].css'
         }),
         new HtmlWebpackPlugin({
-            filename: 'index.hbs',
-            template: path.resolve(__dirname, 'src/app/resources/assets/index.hbs'),
+            filename: 'index.html',
+            template: path.resolve(__dirname, 'src/app/resources/assets/index.html'),
             chunksSortMode: 'dependency' // Sort chunks by dependency
         })
     ],

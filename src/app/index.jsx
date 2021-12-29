@@ -13,7 +13,6 @@ import ReactGA from 'react-ga';
 import LanguageDetector from 'i18next-browser-languagedetector';
 import XHR from 'i18next-xhr-backend';
 import { TRACE, DEBUG, INFO, WARN, ERROR } from 'universal-logger';
-
 import settings from './config/settings';
 import { controller, screenController } from './lib/controller';
 import log from './lib/log';

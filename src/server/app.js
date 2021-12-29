@@ -62,6 +62,7 @@ const verifyToken = (token) => {
     }
     return true;
 };
+const DEFAULT_FILE = 'index.html';
 
 const createApplication = () => {
     const app = express();
@@ -127,6 +128,7 @@ const createApplication = () => {
 
         next();
     });
+
 
     // Removes the 'X-Powered-By' header in earlier versions of Express
     app.use((req, res, next) => {
@@ -254,8 +256,13 @@ const createApplication = () => {
     // register http service api
     registerApis(app);
     // Also see "src/app/app.js"
+    app.use((req, res) => {
+        if (req.method === 'OPTIONS') {
+            res.sendStatus(200);
+        }
+    });
     // page
-    app.get(urljoin(settings.route, '/'), renderPage('index.hbs', (req) => {
+    app.get(urljoin(settings.route, '/'), renderPage(DEFAULT_FILE, (req) => {
         const webroot = settings.assets.app.routes[0] || ''; // with trailing slash
         const lng = req.language;
         const t = req.t;
