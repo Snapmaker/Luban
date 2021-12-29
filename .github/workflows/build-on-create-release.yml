@@ -58,7 +58,7 @@ jobs:
 
       - name: Upload Release Asset - Windows x64 Installer
         id: upload-release-asset-x64
-        uses: softprops/action-gh-release@v1
+        uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
@@ -69,7 +69,7 @@ jobs:
 
       - name: Upload Release Asset - YAML (Auto Updates)
         id: upload-release-asset-yaml
-        uses: softprops/action-gh-release@v1
+        uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
@@ -80,7 +80,7 @@ jobs:
 
       - name: Upload Release Asset - Windows x64 Installer (Auto Updates)
         id: upload-release-asset-x64-au
-        uses: softprops/action-gh-release@v1
+        uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
@@ -114,7 +114,7 @@ jobs:
 
       - name: Upload Release Asset - Windows x86 Installer
         id: upload-release-asset-x86
-        uses: softprops/action-gh-release@v1
+        uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
@@ -178,7 +178,7 @@ jobs:
 
       - name: Upload Release Asset - macOS DMG Installer
         id: upload-release-asset-dmg
-        uses: softprops/action-gh-release@v1
+        uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
@@ -189,7 +189,7 @@ jobs:
 
       - name: Upload Release Asset - YAML (Auto Updates)
         id: upload-release-asset-yaml
-        uses: softprops/action-gh-release@v1
+        uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
@@ -200,7 +200,7 @@ jobs:
 
       - name: Upload Release Asset - macOS ZIP (Auto Updates)
         id: upload-release-asset-zip
-        uses: softprops/action-gh-release@v1
+        uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
@@ -274,7 +274,7 @@ jobs:
           echo "TAR_ASSET_NAME=$TAR_ASSET_NAME" >> $GITHUB_ENV
 
       - name: Upload Release Asset - Debian
-        uses: softprops/action-gh-release@v1
+        uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
@@ -284,7 +284,7 @@ jobs:
           asset_content_type: application/octet-stream
 
       - name: Upload Release Asset - RPM
-        uses: softprops/action-gh-release@v1
+        uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
@@ -294,7 +294,7 @@ jobs:
           asset_content_type: application/octet-stream
 
       - name: Upload Release Asset - TAR
-        uses: softprops/action-gh-release@v1
+        uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
