@@ -390,7 +390,6 @@ const Window = {
         if (isElectron()) {
             this.window = window.require('electron').remote.getCurrentWindow();
             this.initTitle = `Snapmaker Luban ${pkg.version}`;
-            console.log('this.initTitle', this.initTitle);
         } else {
             this.window = {
                 setTitle(title) {
@@ -409,7 +408,6 @@ const Window = {
         if (filename) {
             title = `${this.initTitle} / ${filename}`;
         }
-        console.log('this.initTitle title', title, this.initTitle);
         this.window.setTitle(title);
     },
 
