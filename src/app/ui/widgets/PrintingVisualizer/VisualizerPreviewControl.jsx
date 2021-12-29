@@ -95,6 +95,7 @@ function VisualizerPreviewControl() {
     const isDualExtruder = (machineStore.get('machine.toolHead.printingToolhead') === DUAL_EXTRUDER_TOOLHEAD_FOR_SM2);
     const gcodeLine = useSelector(state => state?.printing?.gcodeLine, shallowEqual);
     const displayedType = useSelector(state => state?.printing?.displayedType, shallowEqual);
+    // TODO, change init
     const gcodeTypeInitialVisibility = useSelector(state => state?.printing?.gcodeTypeInitialVisibility, shallowEqual);
     const renderLineType = useSelector(state => state?.printing?.renderLineType, shallowEqual);
     const dispatch = useDispatch();
@@ -144,7 +145,7 @@ function VisualizerPreviewControl() {
                 showUnknown: gcodeTypeInitialVisibility.UNKNOWN
             }
         });
-    }, [gcodeTypeInitialVisibility, setAllShowTypes]);
+    }, [gcodeLine, gcodeTypeInitialVisibility, setAllShowTypes]);
 
     if (!gcodeLine) {
         return null;
@@ -237,7 +238,7 @@ function VisualizerPreviewControl() {
                                                 onChange={togglePreviewOptionFactoryByTypeAndDirection('showWallInner', 'WALL-INNER', LEFT_EXTRUDER)}
                                             />
                                             <span className="v-align-m margin-left-8">
-                                                {i18n._('key-Printing/Preview-Inner Wall')}
+                                                {i18n._('key-Printing/Preview-Inner Wall')} {isDualExtruder && 'L'}
                                             </span>
                                         </div>
                                         <div>
@@ -252,7 +253,7 @@ function VisualizerPreviewControl() {
                                                     onChange={togglePreviewOptionFactoryByTypeAndDirection('showWallInner', 'WALL-INNER', RIGHT_EXTRUDER)}
                                                 />
                                                 <span className="v-align-m margin-left-8">
-                                                    {i18n._('key-Printing/Preview-Inner Wall')}
+                                                    {i18n._('key-Printing/Preview-Inner Wall')} R
                                                 </span>
                                             </div>
                                             <div>
@@ -267,7 +268,7 @@ function VisualizerPreviewControl() {
                                                 onChange={togglePreviewOptionFactoryByTypeAndDirection('showWallOuter', 'WALL-OUTER', LEFT_EXTRUDER)}
                                             />
                                             <span className="v-align-m margin-left-8">
-                                                {i18n._('key-Printing/Preview-Outer Wall')}
+                                                {i18n._('key-Printing/Preview-Outer Wall')} {isDualExtruder && 'L'}
                                             </span>
                                         </div>
                                         <div>
@@ -282,7 +283,7 @@ function VisualizerPreviewControl() {
                                                     onChange={togglePreviewOptionFactoryByTypeAndDirection('showWallOuter', 'WALL-OUTER', RIGHT_EXTRUDER)}
                                                 />
                                                 <span className="v-align-m margin-left-8">
-                                                    {i18n._('key-Printing/Preview-Outer Wall')}
+                                                    {i18n._('key-Printing/Preview-Outer Wall')} R
                                                 </span>
                                             </div>
                                             <div>
@@ -297,7 +298,7 @@ function VisualizerPreviewControl() {
                                                 onChange={togglePreviewOptionFactoryByTypeAndDirection('showSkin', 'SKIN', LEFT_EXTRUDER)}
                                             />
                                             <span className="v-align-m margin-left-8">
-                                                {i18n._('key-Printing/Preview-Skin')}
+                                                {i18n._('key-Printing/Preview-Skin')} {isDualExtruder && 'L'}
                                             </span>
                                         </div>
                                         <div>
@@ -312,7 +313,7 @@ function VisualizerPreviewControl() {
                                                     onChange={togglePreviewOptionFactoryByTypeAndDirection('showSkin', 'SKIN', RIGHT_EXTRUDER)}
                                                 />
                                                 <span className="v-align-m margin-left-8">
-                                                    {i18n._('key-Printing/Preview-Skin')}
+                                                    {i18n._('key-Printing/Preview-Skin')} R
                                                 </span>
                                             </div>
                                             <div>
@@ -327,7 +328,7 @@ function VisualizerPreviewControl() {
                                                 onChange={togglePreviewOptionFactoryByTypeAndDirection('showSupport', 'SUPPORT', LEFT_EXTRUDER)}
                                             />
                                             <span className="v-align-m margin-left-8">
-                                                {i18n._('key-Printing/Preview-Helper')}
+                                                {i18n._('key-Printing/Preview-Helper')} {isDualExtruder && 'L'}
                                             </span>
                                         </div>
                                         <div>
@@ -342,7 +343,7 @@ function VisualizerPreviewControl() {
                                                     onChange={togglePreviewOptionFactoryByTypeAndDirection('showSupport', 'SUPPORT', RIGHT_EXTRUDER)}
                                                 />
                                                 <span className="v-align-m margin-left-8">
-                                                    {i18n._('key-Printing/Preview-Helper')}
+                                                    {i18n._('key-Printing/Preview-Helper')} R
                                                 </span>
                                             </div>
                                             <div>
@@ -357,7 +358,7 @@ function VisualizerPreviewControl() {
                                                 onChange={togglePreviewOptionFactoryByTypeAndDirection('showFill', 'FILL', LEFT_EXTRUDER)}
                                             />
                                             <span className="v-align-m margin-left-8">
-                                                {i18n._('key-Printing/Preview-Fill')}
+                                                {i18n._('key-Printing/Preview-Fill')} {isDualExtruder && 'L'}
                                             </span>
                                         </div>
                                         <div>
@@ -372,7 +373,7 @@ function VisualizerPreviewControl() {
                                                     onChange={togglePreviewOptionFactoryByTypeAndDirection('showFill', 'FILL', RIGHT_EXTRUDER)}
                                                 />
                                                 <span className="v-align-m margin-left-8">
-                                                    {i18n._('key-Printing/Preview-Fill')}
+                                                    {i18n._('key-Printing/Preview-Fill')} R
                                                 </span>
                                             </div>
                                             <div>
@@ -387,7 +388,7 @@ function VisualizerPreviewControl() {
                                                 onChange={togglePreviewOptionFactoryByTypeAndDirection('showTravel', 'TRAVEL', LEFT_EXTRUDER)}
                                             />
                                             <span className="v-align-m margin-left-8">
-                                                {i18n._('key-Printing/Preview-Travel')}
+                                                {i18n._('key-Printing/Preview-Travel')} {isDualExtruder && 'L'}
                                             </span>
                                         </div>
                                         <div>
@@ -402,7 +403,7 @@ function VisualizerPreviewControl() {
                                                     onChange={togglePreviewOptionFactoryByTypeAndDirection('showTravel', 'TRAVEL', RIGHT_EXTRUDER)}
                                                 />
                                                 <span className="v-align-m margin-left-8">
-                                                    {i18n._('key-Printing/Preview-Travel')}
+                                                    {i18n._('key-Printing/Preview-Travel')} R
                                                 </span>
                                             </div>
                                             <div>
@@ -417,7 +418,7 @@ function VisualizerPreviewControl() {
                                                 onChange={togglePreviewOptionFactoryByTypeAndDirection('showUnknown', 'UNKNOWN', LEFT_EXTRUDER)}
                                             />
                                             <span className="v-align-m margin-left-8">
-                                                {i18n._('key-Printing/Preview-Unknown')}
+                                                {i18n._('key-Printing/Preview-Unknown')} {isDualExtruder && 'L'}
                                             </span>
                                         </div>
                                         <div>
@@ -432,7 +433,7 @@ function VisualizerPreviewControl() {
                                                     onChange={togglePreviewOptionFactoryByTypeAndDirection('showUnknown', 'UNKNOWN', RIGHT_EXTRUDER)}
                                                 />
                                                 <span className="v-align-m margin-left-8">
-                                                    {i18n._('key-Printing/Preview-Unknown')}
+                                                    {i18n._('key-Printing/Preview-Unknown')} R
                                                 </span>
                                             </div>
                                             <div>

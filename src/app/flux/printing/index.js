@@ -492,7 +492,9 @@ export const actions = {
                     dispatch(actions.updateState({
                         layerCount,
                         layerCountDisplayed: layerCount - 1,
-                        gcodeTypeInitialVisibility,
+                        gcodeTypeInitialVisibility: {
+                            ...gcodeTypeInitialVisibility
+                        },
                         renderLineType: false,
                         gcodeLine: object3D
                     }));
