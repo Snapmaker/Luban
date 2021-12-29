@@ -34,7 +34,6 @@ onmessage = (e) => {
         const layerIndices = bufferGeometry.getAttribute('a_layer_index').array;
         const typeCodes = bufferGeometry.getAttribute('a_type_code').array;
         const toolCodes = bufferGeometry.getAttribute('a_tool_code').array;
-        console.log('bufferGeometry', bufferGeometry);
         const data = {
             status: 'succeed',
             value: {

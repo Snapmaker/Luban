@@ -1528,6 +1528,8 @@ export const actions = {
                 item.extruderConfig = extruderConfig;
             });
         }
+        dispatch(actions.destroyGcodeLine());
+        dispatch(actions.displayModel());
         dispatch(actions.updateAllModelColors());
         modelGroup.models = [...models];
         // dispatch(actions.updateState({
@@ -1537,6 +1539,8 @@ export const actions = {
 
     updateHelpersExtruder: (extruderConfig) => (dispatch) => {
         dispatch(actions.updateState({ helpersExtruderConfig: extruderConfig }));
+        dispatch(actions.destroyGcodeLine());
+        dispatch(actions.displayModel());
     },
     arrangeAllModels: () => (dispatch, getState) => {
         const { modelGroup } = getState().printing;
@@ -1790,7 +1794,6 @@ export const actions = {
             progress: progressStatesManager.updateProgress(STEP_STAGE.PRINTING_SLICING, 0)
         }));
         const extruderColors = { toolColor0: extruderLDefinition.settings.color.default_value, toolColor1: extruderRDefinition.settings.color.default_value };
-        console.log('extruderColors', extruderColors);
         gcodeRenderingWorker.postMessage({ func: '3DP', gcodeFilename, extruderColors });
     },
     saveSupport: (model) => (dispatch, getState) => {

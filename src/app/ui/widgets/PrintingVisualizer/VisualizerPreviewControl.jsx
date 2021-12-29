@@ -10,7 +10,8 @@ import { actions as printingActions } from '../../../flux/printing';
 import i18n from '../../../lib/i18n';
 import useSetState from '../../../lib/hooks/set-state';
 import Select from '../../components/Select';
-import { LEFT_EXTRUDER, RIGHT_EXTRUDER } from '../../../constants';
+import { DUAL_EXTRUDER_TOOLHEAD_FOR_SM2, LEFT_EXTRUDER, RIGHT_EXTRUDER } from '../../../constants';
+import { machineStore } from '../../../store/local-storage';
 
 function useShowToggleBtn() {
     const [showToggleBtn, setShowToggleBtn] = useState(true);
@@ -91,6 +92,7 @@ function VisualizerPreviewControl() {
             showUnknown: false,
         }
     });
+    const isDualExtruder = (machineStore.get('machine.toolHead.printingToolhead') === DUAL_EXTRUDER_TOOLHEAD_FOR_SM2);
     const gcodeLine = useSelector(state => state?.printing?.gcodeLine, shallowEqual);
     const displayedType = useSelector(state => state?.printing?.displayedType, shallowEqual);
     const gcodeTypeInitialVisibility = useSelector(state => state?.printing?.gcodeTypeInitialVisibility, shallowEqual);
@@ -169,33 +171,37 @@ function VisualizerPreviewControl() {
                                     {i18n._('key-Printing/Preview-Line Type')}
                                 </div>
                                 <div className="padding-vertical-16 padding-horizontal-16">
-                                    <div className="sm-flex justify-space-between height-24 margin-bottom-8">
-                                        <div>
-                                            <span className="v-align-m margin-left-8">
-                                                {i18n._('Color Method')}
-                                            </span>
+                                    { isDualExtruder && (
+                                        <div className="sm-flex justify-space-between height-24 margin-bottom-8">
+                                            <div>
+                                                <span className="v-align-m margin-left-8">
+                                                    {i18n._('Color Method')}
+                                                </span>
+                                            </div>
                                         </div>
-                                    </div>
-                                    <div className="sm-flex justify-space-between margin-vertical-8">
-                                        <Select
-                                            className={classNames(
-                                                'margin-top-16'
-                                            )}
-                                            size="large"
-                                            value={renderLineType}
-                                            onChange={toggleRenderLineType}
-                                            options={[
-                                                {
-                                                    value: true,
-                                                    label: '按喷嘴'
-                                                },
-                                                {
-                                                    value: false,
-                                                    label: '按结构'
-                                                }
-                                            ]}
-                                        />
-                                    </div>
+                                    )}
+                                    { isDualExtruder && (
+                                        <div className="sm-flex justify-space-between margin-vertical-8">
+                                            <Select
+                                                className={classNames(
+                                                    'margin-top-16'
+                                                )}
+                                                size="large"
+                                                value={renderLineType}
+                                                onChange={toggleRenderLineType}
+                                                options={[
+                                                    {
+                                                        value: true,
+                                                        label: '按喷嘴'
+                                                    },
+                                                    {
+                                                        value: false,
+                                                        label: '按结构'
+                                                    }
+                                                ]}
+                                            />
+                                        </div>
+                                    )}
                                     {/*<div className="sm-flex justify-space-between height-24 margin-vertical-8">*/}
                                     {/*    <div>*/}
                                     {/*        <Checkbox*/}
@@ -238,20 +244,22 @@ function VisualizerPreviewControl() {
                                             <span className="display-inline width-16 height-16 v-align-m border-radius-4" style={{ backgroundColor: '#00ff00' }} />
                                         </div>
                                     </div>
-                                    <div className="sm-flex justify-space-between height-24 margin-vertical-8">
-                                        <div>
-                                            <Checkbox
-                                                checked={allShowTypes[RIGHT_EXTRUDER].showWallInner}
-                                                onChange={togglePreviewOptionFactoryByTypeAndDirection('showWallInner', 'WALL-INNER', RIGHT_EXTRUDER)}
-                                            />
-                                            <span className="v-align-m margin-left-8">
-                                                {i18n._('key-Printing/Preview-Inner Wall')}
-                                            </span>
+                                    {isDualExtruder && (
+                                        <div className="sm-flex justify-space-between height-24 margin-vertical-8">
+                                            <div>
+                                                <Checkbox
+                                                    checked={allShowTypes[RIGHT_EXTRUDER].showWallInner}
+                                                    onChange={togglePreviewOptionFactoryByTypeAndDirection('showWallInner', 'WALL-INNER', RIGHT_EXTRUDER)}
+                                                />
+                                                <span className="v-align-m margin-left-8">
+                                                    {i18n._('key-Printing/Preview-Inner Wall')}
+                                                </span>
+                                            </div>
+                                            <div>
+                                                <span className="display-inline width-16 height-16 v-align-m border-radius-4" style={{ backgroundColor: '#00ff00' }} />
+                                            </div>
                                         </div>
-                                        <div>
-                                            <span className="display-inline width-16 height-16 v-align-m border-radius-4" style={{ backgroundColor: '#00ff00' }} />
-                                        </div>
-                                    </div>
+                                    )}
                                     <div className="sm-flex justify-space-between height-24 margin-vertical-8">
                                         <div>
                                             <Checkbox
@@ -266,20 +274,22 @@ function VisualizerPreviewControl() {
                                             <span className="display-inline width-16 height-16 v-align-m border-radius-4" style={{ backgroundColor: '#ff2121' }} />
                                         </div>
                                     </div>
-                                    <div className="sm-flex justify-space-between height-24 margin-vertical-8">
-                                        <div>
-                                            <Checkbox
-                                                checked={allShowTypes[RIGHT_EXTRUDER].showWallOuter}
-                                                onChange={togglePreviewOptionFactoryByTypeAndDirection('showWallOuter', 'WALL-OUTER', RIGHT_EXTRUDER)}
-                                            />
-                                            <span className="v-align-m margin-left-8">
-                                                {i18n._('key-Printing/Preview-Outer Wall')}
-                                            </span>
+                                    { isDualExtruder && (
+                                        <div className="sm-flex justify-space-between height-24 margin-vertical-8">
+                                            <div>
+                                                <Checkbox
+                                                    checked={allShowTypes[RIGHT_EXTRUDER].showWallOuter}
+                                                    onChange={togglePreviewOptionFactoryByTypeAndDirection('showWallOuter', 'WALL-OUTER', RIGHT_EXTRUDER)}
+                                                />
+                                                <span className="v-align-m margin-left-8">
+                                                    {i18n._('key-Printing/Preview-Outer Wall')}
+                                                </span>
+                                            </div>
+                                            <div>
+                                                <span className="display-inline width-16 height-16 v-align-m border-radius-4" style={{ backgroundColor: '#ff2121' }} />
+                                            </div>
                                         </div>
-                                        <div>
-                                            <span className="display-inline width-16 height-16 v-align-m border-radius-4" style={{ backgroundColor: '#ff2121' }} />
-                                        </div>
-                                    </div>
+                                    )}
                                     <div className="sm-flex justify-space-between height-24 margin-vertical-8">
                                         <div>
                                             <Checkbox
@@ -294,20 +304,22 @@ function VisualizerPreviewControl() {
                                             <span className="display-inline width-16 height-16 v-align-m border-radius-4" style={{ backgroundColor: '#ffff00' }} />
                                         </div>
                                     </div>
-                                    <div className="sm-flex justify-space-between height-24 margin-vertical-8">
-                                        <div>
-                                            <Checkbox
-                                                checked={allShowTypes[RIGHT_EXTRUDER].showSkin}
-                                                onChange={togglePreviewOptionFactoryByTypeAndDirection('showSkin', 'SKIN', RIGHT_EXTRUDER)}
-                                            />
-                                            <span className="v-align-m margin-left-8">
-                                                {i18n._('key-Printing/Preview-Skin')}
-                                            </span>
+                                    { isDualExtruder && (
+                                        <div className="sm-flex justify-space-between height-24 margin-vertical-8">
+                                            <div>
+                                                <Checkbox
+                                                    checked={allShowTypes[RIGHT_EXTRUDER].showSkin}
+                                                    onChange={togglePreviewOptionFactoryByTypeAndDirection('showSkin', 'SKIN', RIGHT_EXTRUDER)}
+                                                />
+                                                <span className="v-align-m margin-left-8">
+                                                    {i18n._('key-Printing/Preview-Skin')}
+                                                </span>
+                                            </div>
+                                            <div>
+                                                <span className="display-inline width-16 height-16 v-align-m border-radius-4" style={{ backgroundColor: '#ffff00' }} />
+                                            </div>
                                         </div>
-                                        <div>
-                                            <span className="display-inline width-16 height-16 v-align-m border-radius-4" style={{ backgroundColor: '#ffff00' }} />
-                                        </div>
-                                    </div>
+                                    )}
                                     <div className="sm-flex justify-space-between height-24 margin-vertical-8">
                                         <div>
                                             <Checkbox
@@ -322,20 +334,22 @@ function VisualizerPreviewControl() {
                                             <span className="display-inline width-16 height-16 v-align-m border-radius-4" style={{ backgroundColor: '#4b0082' }} />
                                         </div>
                                     </div>
-                                    <div className="sm-flex justify-space-between height-24 margin-vertical-8">
-                                        <div>
-                                            <Checkbox
-                                                checked={allShowTypes[RIGHT_EXTRUDER].showSupport}
-                                                onChange={togglePreviewOptionFactoryByTypeAndDirection('showSupport', 'SUPPORT', RIGHT_EXTRUDER)}
-                                            />
-                                            <span className="v-align-m margin-left-8">
-                                                {i18n._('key-Printing/Preview-Helper')}
-                                            </span>
+                                    { isDualExtruder && (
+                                        <div className="sm-flex justify-space-between height-24 margin-vertical-8">
+                                            <div>
+                                                <Checkbox
+                                                    checked={allShowTypes[RIGHT_EXTRUDER].showSupport}
+                                                    onChange={togglePreviewOptionFactoryByTypeAndDirection('showSupport', 'SUPPORT', RIGHT_EXTRUDER)}
+                                                />
+                                                <span className="v-align-m margin-left-8">
+                                                    {i18n._('key-Printing/Preview-Helper')}
+                                                </span>
+                                            </div>
+                                            <div>
+                                                <span className="display-inline width-16 height-16 v-align-m border-radius-4" style={{ backgroundColor: '#4b0082' }} />
+                                            </div>
                                         </div>
-                                        <div>
-                                            <span className="display-inline width-16 height-16 v-align-m border-radius-4" style={{ backgroundColor: '#4b0082' }} />
-                                        </div>
-                                    </div>
+                                    )}
                                     <div className="sm-flex justify-space-between height-24 margin-vertical-8">
                                         <div>
                                             <Checkbox
@@ -350,20 +364,22 @@ function VisualizerPreviewControl() {
                                             <span className="display-inline width-16 height-16 v-align-m border-radius-4" style={{ backgroundColor: '#8d4bbb' }} />
                                         </div>
                                     </div>
-                                    <div className="sm-flex justify-space-between height-24 margin-vertical-8">
-                                        <div>
-                                            <Checkbox
-                                                checked={allShowTypes[RIGHT_EXTRUDER].showFill}
-                                                onChange={togglePreviewOptionFactoryByTypeAndDirection('showFill', 'FILL', RIGHT_EXTRUDER)}
-                                            />
-                                            <span className="v-align-m margin-left-8">
-                                                {i18n._('key-Printing/Preview-Fill')}
-                                            </span>
+                                    { isDualExtruder && (
+                                        <div className="sm-flex justify-space-between height-24 margin-vertical-8">
+                                            <div>
+                                                <Checkbox
+                                                    checked={allShowTypes[RIGHT_EXTRUDER].showFill}
+                                                    onChange={togglePreviewOptionFactoryByTypeAndDirection('showFill', 'FILL', RIGHT_EXTRUDER)}
+                                                />
+                                                <span className="v-align-m margin-left-8">
+                                                    {i18n._('key-Printing/Preview-Fill')}
+                                                </span>
+                                            </div>
+                                            <div>
+                                                <span className="display-inline width-16 height-16 v-align-m border-radius-4" style={{ backgroundColor: '#8d4bbb' }} />
+                                            </div>
                                         </div>
-                                        <div>
-                                            <span className="display-inline width-16 height-16 v-align-m border-radius-4" style={{ backgroundColor: '#8d4bbb' }} />
-                                        </div>
-                                    </div>
+                                    )}
                                     <div className="sm-flex justify-space-between height-24 margin-vertical-8">
                                         <div>
                                             <Checkbox
@@ -378,20 +394,22 @@ function VisualizerPreviewControl() {
                                             <span className="display-inline width-16 height-16 v-align-m border-radius-4" style={{ backgroundColor: '#44cef6' }} />
                                         </div>
                                     </div>
-                                    <div className="sm-flex justify-space-between height-24 margin-vertical-8">
-                                        <div>
-                                            <Checkbox
-                                                checked={allShowTypes[RIGHT_EXTRUDER].showTravel}
-                                                onChange={togglePreviewOptionFactoryByTypeAndDirection('showTravel', 'TRAVEL', RIGHT_EXTRUDER)}
-                                            />
-                                            <span className="v-align-m margin-left-8">
-                                                {i18n._('key-Printing/Preview-Travel')}
-                                            </span>
+                                    { isDualExtruder && (
+                                        <div className="sm-flex justify-space-between height-24 margin-vertical-8">
+                                            <div>
+                                                <Checkbox
+                                                    checked={allShowTypes[RIGHT_EXTRUDER].showTravel}
+                                                    onChange={togglePreviewOptionFactoryByTypeAndDirection('showTravel', 'TRAVEL', RIGHT_EXTRUDER)}
+                                                />
+                                                <span className="v-align-m margin-left-8">
+                                                    {i18n._('key-Printing/Preview-Travel')}
+                                                </span>
+                                            </div>
+                                            <div>
+                                                <span className="display-inline width-16 height-16 v-align-m border-radius-4" style={{ backgroundColor: '#44cef6' }} />
+                                            </div>
                                         </div>
-                                        <div>
-                                            <span className="display-inline width-16 height-16 v-align-m border-radius-4" style={{ backgroundColor: '#44cef6' }} />
-                                        </div>
-                                    </div>
+                                    )}
                                     <div className="sm-flex justify-space-between height-24 margin-top-8">
                                         <div>
                                             <Checkbox
@@ -406,20 +424,22 @@ function VisualizerPreviewControl() {
                                             <span className="display-inline width-16 height-16 v-align-m border-radius-4" style={{ backgroundColor: '#4b0082' }} />
                                         </div>
                                     </div>
-                                    <div className="sm-flex justify-space-between height-24 margin-top-8">
-                                        <div>
-                                            <Checkbox
-                                                checked={allShowTypes[RIGHT_EXTRUDER].showUnknown}
-                                                onChange={togglePreviewOptionFactoryByTypeAndDirection('showUnknown', 'UNKNOWN', RIGHT_EXTRUDER)}
-                                            />
-                                            <span className="v-align-m margin-left-8">
-                                                {i18n._('key-Printing/Preview-Unknown')}
-                                            </span>
+                                    { isDualExtruder && (
+                                        <div className="sm-flex justify-space-between height-24 margin-top-8">
+                                            <div>
+                                                <Checkbox
+                                                    checked={allShowTypes[RIGHT_EXTRUDER].showUnknown}
+                                                    onChange={togglePreviewOptionFactoryByTypeAndDirection('showUnknown', 'UNKNOWN', RIGHT_EXTRUDER)}
+                                                />
+                                                <span className="v-align-m margin-left-8">
+                                                    {i18n._('key-Printing/Preview-Unknown')}
+                                                </span>
+                                            </div>
+                                            <div>
+                                                <span className="display-inline width-16 height-16 v-align-m border-radius-4" style={{ backgroundColor: '#4b0082' }} />
+                                            </div>
                                         </div>
-                                        <div>
-                                            <span className="display-inline width-16 height-16 v-align-m border-radius-4" style={{ backgroundColor: '#4b0082' }} />
-                                        </div>
-                                    </div>
+                                    )}
                                 </div>
                             </div>
                         )}
