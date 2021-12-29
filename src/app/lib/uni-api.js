@@ -5,6 +5,7 @@ import { isNil } from 'lodash';
 import events from 'events';
 import path from 'path';
 import i18n from './i18n';
+import pkg from '../../../package.json';
 
 class AppbarMenuEvent extends events.EventEmitter {}
 
@@ -388,7 +389,8 @@ const Window = {
     initWindow() {
         if (isElectron()) {
             this.window = window.require('electron').remote.getCurrentWindow();
-            this.initTitle = this.window.getTitle();
+            this.initTitle = `Snapmaker Luban ${pkg.version}`;
+            console.log('this.initTitle', this.initTitle);
         } else {
             this.window = {
                 setTitle(title) {
@@ -407,6 +409,7 @@ const Window = {
         if (filename) {
             title = `${this.initTitle} / ${filename}`;
         }
+        console.log('this.initTitle title', title, this.initTitle);
         this.window.setTitle(title);
     },
 

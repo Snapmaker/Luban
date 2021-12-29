@@ -3,7 +3,7 @@ import 'regenerator-runtime/runtime';
 import { app, BrowserWindow, protocol, screen, session, ipcMain } from 'electron';
 import { autoUpdater } from 'electron-updater';
 import Store from 'electron-store';
-import parse from 'url-parse';
+import url from 'url';
 import fs from 'fs';
 import { isUndefined, isNull } from 'lodash';
 import path from 'path';
@@ -220,7 +220,7 @@ const showMainWindow = async () => {
     protocol.registerFileProtocol(
         'luban',
         (request, callback) => {
-            const { pathname } = parse(request.url, true);
+            const { pathname } = url.parse(request.url);
             const p = pathname === '/' ? 'index.html' : pathname.substr(1);
             callback(fs.createReadStream(path.normalize(`${__dirname}/app/${p}`)));
         },
@@ -247,6 +247,9 @@ const showMainWindow = async () => {
     const webContentsSession = window.webContents.session;
     webContentsSession.setProxy({ proxyRules: 'direct://' })
         .then(() => window.loadURL(loadUrl));
+
+
+
 
     window.on('close', (e) => {
         e.preventDefault();

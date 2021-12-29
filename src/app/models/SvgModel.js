@@ -932,7 +932,6 @@ class SvgModel extends BaseModel {
     generateModelObject3D() {
         if (this.sourceType !== '3d' && this.sourceType !== 'image3d') {
             const uploadPath = this.resource.originalFile.path;
-            console.log('uploadPath', uploadPath);
             const texture = new THREE.TextureLoader().load(`${uploadPath}`, () => {
                 this.meshObject.dispatchEvent(EVENTS.UPDATE);
             });
