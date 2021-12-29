@@ -1835,7 +1835,9 @@ class ModelGroup extends EventEmitter {
                 maxHeight = Math.max(maxHeight, modelItemHeight);
             }
         });
-        this.primeTowerHeightCallback(Math.min(maxHeight, maxBoundingBoxHeight));
+        if (typeof this.primeTowerHeightCallback === 'function') {
+            this.primeTowerHeightCallback(Math.min(maxHeight, maxBoundingBoxHeight));
+        }
     }
 }
 
