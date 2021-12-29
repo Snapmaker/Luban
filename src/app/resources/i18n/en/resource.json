@@ -814,6 +814,8 @@
     "key-Printing/Preview-Line Type": "Line Type",
     "key-Printing/Preview-Outer Wall": "Outer Wall",
     "key-Printing/Preview-Skin": "Skin",
+    "key-Printing/Preview-Tool0": "Extruder L",
+    "key-Printing/Preview-Tool1": "Extruder R",
     "key-Printing/Preview-Travel": "Travel",
     "key-Printing/Preview-Unknown": "Unknown",
     "key-Printing/PrintingConfigurations-Close": "Close",

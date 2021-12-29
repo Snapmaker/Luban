@@ -6,7 +6,7 @@ onmessage = (e) => {
         postMessage({ status: 'err', value: 'Data is empty' });
         return;
     }
-    const { func, gcodeFilename } = e.data;
+    const { func, gcodeFilename, extruderColors } = e.data;
     if (!['3DP', 'LASER', 'CNC'].includes(func.toUpperCase())) {
         postMessage({ status: 'err', value: `Unsupported func: ${func}` });
         return;
@@ -19,6 +19,7 @@ onmessage = (e) => {
     gcodeToBufferGeometry(
         func.toUpperCase(),
         gcodeFilename,
+        extruderColors,
         (progress) => {
             postMessage({ status: 'progress', value: progress });
         },
@@ -29,16 +30,19 @@ onmessage = (e) => {
         const { bufferGeometry, layerCount, bounds } = result;
         const positions = bufferGeometry.getAttribute('position').array;
         const colors = bufferGeometry.getAttribute('a_color').array;
+        const colors1 = bufferGeometry.getAttribute('a_color1').array;
         const layerIndices = bufferGeometry.getAttribute('a_layer_index').array;
         const typeCodes = bufferGeometry.getAttribute('a_type_code').array;
-
+        const toolCodes = bufferGeometry.getAttribute('a_tool_code').array;
         const data = {
             status: 'succeed',
             value: {
                 positions,
                 colors,
+                colors1,
                 layerIndices,
                 typeCodes,
+                toolCodes,
                 layerCount,
                 bounds
             }
@@ -48,8 +52,10 @@ onmessage = (e) => {
             [
                 positions.buffer,
                 colors.buffer,
+                colors1.buffer,
                 layerIndices.buffer,
-                typeCodes.buffer
+                typeCodes.buffer,
+                toolCodes.buffer,
             ]
         );
     });

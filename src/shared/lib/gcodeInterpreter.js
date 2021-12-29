@@ -100,8 +100,10 @@ const interpret = (self, data) => {
             cmd = (letter + code);
             args = fromPairs(words.slice(1));
         } else if (letter === 'T') { // T1 ; w/o M6
-            cmd = letter;
-            args = code;
+            if (words.length === 1) { // except M104 T{x} S{x}
+                cmd = letter;
+                args = code;
+            }
         } else if (letter === 'F') { // F750 ; w/o motion command
             cmd = letter;
             args = code;

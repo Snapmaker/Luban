@@ -117,9 +117,6 @@ function PrintingManager() {
                 if (printingMaterialConfigKeys.indexOf(key) > -1) {
                     newDefinitionSettings[key] = { 'default_value': value.default_value };
                 }
-                if (key === 'color') {
-                    dispatch(printingActions.setModelsMeshColor(materialManagerDirection, value.default_value));
-                }
             }
             await dispatch(printingActions.updateDefinitionSettings(newDefinition, newDefinitionSettings));
             dispatch(printingActions.updateDefinitionsForManager(newDefinition.definitionId, type));
