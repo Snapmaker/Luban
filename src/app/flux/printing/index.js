@@ -788,6 +788,7 @@ export const actions = {
         dispatch(actions.updateState({
             [definitionsKey]: [...newDefinitions]
         }));
+        dispatch(actions.updateAllModelColors());
     },
 
     onUploadManagerDefinition: (file, type) => (dispatch, getState) => {

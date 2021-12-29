@@ -93,6 +93,7 @@ function PrintingManager() {
             dispatch(printingActions.updateDefaultIdByType(managerDisplayType, definitionId, materialManagerDirection));
         },
         onSaveDefinitionForManager: (newDefinition) => {
+            console.log('newDefinition', managerDisplayType, newDefinition);
             // now setDefinitionState is synchronize, so remove setTimeout
             if (managerDisplayType === PRINTING_MANAGER_TYPE_MATERIAL) {
                 actions.onSaveMaterialForManager(managerDisplayType, newDefinition);
@@ -116,9 +117,6 @@ function PrintingManager() {
             for (const [key, value] of Object.entries(newDefinition?.settings)) {
                 if (printingMaterialConfigKeys.indexOf(key) > -1) {
                     newDefinitionSettings[key] = { 'default_value': value.default_value };
-                }
-                if (key === 'color') {
-                    dispatch(printingActions.setModelsMeshColor(materialManagerDirection, value.default_value));
                 }
             }
             await dispatch(printingActions.updateDefinitionSettings(newDefinition, newDefinitionSettings));
