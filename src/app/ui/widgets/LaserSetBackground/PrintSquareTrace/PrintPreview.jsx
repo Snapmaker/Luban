@@ -4,7 +4,7 @@ import * as THREE from 'three';
 import RectangleGridHelper from '../../../../three-extensions/RectangleGridHelper';
 import WebGLRendererWrapper from '../../../../three-extensions/WebGLRendererWrapper';
 import Detector from '../../../../three-extensions/Detector';
-
+import { DEFAULT_LUBAN_HOST } from '../../../../constants';
 
 class PrintPreview extends Component {
     static propTypes = {
@@ -101,7 +101,7 @@ class PrintPreview extends Component {
         // add logo
         const minSideLength = Math.min(size.x, size.y);
         const geometry = new THREE.PlaneGeometry(minSideLength / 2, minSideLength / 8);
-        const texture = new THREE.TextureLoader().load('./resources/images/snapmaker-logo-512x128.png');
+        const texture = new THREE.TextureLoader().load(`${DEFAULT_LUBAN_HOST}/resources/images/snapmaker-logo-512x128.png`);
         const material = new THREE.MeshBasicMaterial({
             map: texture,
             side: THREE.DoubleSide,

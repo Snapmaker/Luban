@@ -5,6 +5,7 @@ import {
 } from 'three';
 import Rectangle from '../../../three-extensions/objects/Rectangle';
 import Grid from '../../../three-extensions/objects/Grid';
+import { DEFAULT_LUBAN_HOST } from '../../../constants';
 // import RectangleHelper from '../../components/three-extensions/RectangleHelper';
 // import RectangleGridHelper from '../../components/three-extensions/RectangleGridHelper';
 
@@ -51,7 +52,7 @@ class PrintableCube extends Object3D {
         // Add logo
         const minSideLength = Math.min(this.size.x, this.size.y);
         const geometry = new PlaneGeometry(minSideLength / 2, minSideLength / 8);
-        const texture = new TextureLoader().load('./resources/images/snapmaker-logo-512x128.png', this.update);
+        const texture = new TextureLoader().load(`${DEFAULT_LUBAN_HOST}/resources/images/snapmaker-logo-512x128.png`, this.update);
         const material = new MeshBasicMaterial({
             map: texture,
             side: DoubleSide,

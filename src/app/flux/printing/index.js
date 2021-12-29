@@ -19,7 +19,6 @@ import {
     RIGHT_EXTRUDER,
     LEFT_EXTRUDER_MAP_NUMBER,
     RIGHT_EXTRUDER_MAP_NUMBER,
-    ALIGN_OPERATION
 } from '../../constants';
 import { timestamp } from '../../../shared/lib/random-utils';
 import { machineStore } from '../../store/local-storage';

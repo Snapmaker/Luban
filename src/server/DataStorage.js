@@ -127,7 +127,8 @@ class DataStorage {
                      if (fs.existsSync(dst) && !overwriteTag) {
                          return;
                      }
-                     fs.copyFileSync(src, dst, () => {
+                     fs.copyFileSync(src, dst, (err) => {
+                         console.error('err', err);
                      });
                  } else {
                      await this.copyDirForInitSlicer(src, dst, inherit ? overwriteTag : false, inherit);
