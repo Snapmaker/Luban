@@ -42,6 +42,7 @@ export default class DeleteOperation3D extends Operation {
             modelGroup.unselectAllModels();
         }
         modelGroup.modelChanged();
+        modelGroup.updatePrimeTowerHeight();
     }
 
     undo() {
@@ -61,5 +62,6 @@ export default class DeleteOperation3D extends Operation {
         modelGroup.models.push(model);
         modelGroup.models = [...modelGroup.models]; // trigger <ModelItem> component to show the unselected model
         modelGroup.modelChanged();
+        modelGroup.updatePrimeTowerHeight();
     }
 }

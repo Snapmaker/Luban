@@ -151,7 +151,6 @@ class ThreeModel extends BaseModel {
             ...this.transformation,
             ...transformation
         };
-
         return this.transformation;
     }
 
@@ -220,10 +219,14 @@ class ThreeModel extends BaseModel {
         } else {
             this.meshObject.material = this._materialNormal.clone();
         }
+
         // for indexed geometry
-        if (isSelected && this.meshObject.geometry.getAttribute('color')) {
+        if (isSelected && !this.primeTowerTag && this.meshObject.geometry.getAttribute('color')) {
             this.meshObject.material.vertexColors = true;
         }
+        // if (isSelected && this.primeTowerTag && this.meshObject.geometry._bufferGeometry?.getAttribute('color')) {
+        //     this.meshObject.material.vertexColors = true;
+        // }
         // for support geometry
         if (this.supportTag) {
             this.meshObject.material.color.set(0xFFD700);

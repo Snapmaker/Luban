@@ -43,6 +43,7 @@ class Canvas extends PureComponent {
         scaleSize: PropTypes.number,
         target: PropTypes.object,
         displayedType: PropTypes.string,
+        transformMode: PropTypes.string,
 
         supportActions: PropTypes.object,
 
@@ -61,7 +62,9 @@ class Canvas extends PureComponent {
         showContextMenu: PropTypes.func,
 
         // inProgress
-        inProgress: PropTypes.bool
+        inProgress: PropTypes.bool,
+
+        primeTowerSelected: PropTypes.bool
     };
 
     static defaultProps = {
@@ -161,7 +164,19 @@ class Canvas extends PureComponent {
             if (nextProps.displayedType === 'gcode') {
                 this.controls.removeTransformControls();
             } else {
-                this.controls.recoverTransformControls();
+                this.controls.recoverTransformControls(nextProps.primeTowerSelected, nextProps.transformMode);
+            }
+            this.renderScene();
+        }
+
+        if (nextProps.primeTowerSelected !== this.props.primeTowerSelected && nextProps.displayedType !== 'gcode') {
+            this.controls.removeTransformControls();
+            if (nextProps.primeTowerSelected) {
+                this.controls.recoverTransformControls(true, nextProps.transformMode);
+                this.controls.setPrimeTower(true);
+            } else {
+                this.controls.recoverTransformControls(false, nextProps.transformMode);
+                this.controls.setPrimeTower(false);
             }
             this.renderScene();
         }
@@ -587,7 +602,6 @@ class Canvas extends PureComponent {
         if (!Detector.isWebGLAvailable()) {
             return Detector.getWebGLErrorMessage();
         }
-
         return (
             <div
                 ref={this.node}

@@ -26,6 +26,7 @@ export default class AddOperation3D extends Operation {
         model.meshObject.addEventListener('update', modelGroup.onModelUpdate);
         modelGroup.models.push(model);
         modelGroup.models = [...modelGroup.models]; // trigger <ModelItem> component to show the unselected model
+        modelGroup.updatePrimeTowerHeight();
         modelGroup.modelChanged();
     }
 
@@ -47,6 +48,7 @@ export default class AddOperation3D extends Operation {
             // trigger <VisualizerLeftBar> component hidden
             modelGroup.unselectAllModels();
         }
+        modelGroup.updatePrimeTowerHeight();
         modelGroup.modelChanged();
     }
 }

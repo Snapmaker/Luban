@@ -29,6 +29,7 @@ export default class ScaleOperation3D extends Operation {
             model.meshObject.scale.set(this.state.to.scaleX, this.state.to.scaleY, this.state.to.scaleZ);
             model.stickToPlate();
             model.computeBoundingBox();
+            modelGroup.updatePrimeTowerHeight();
         }
         const overstepped = modelGroup._checkOverstepped(model);
         model.setOversteppedAndSelected(overstepped, model.isSelected);
@@ -53,6 +54,7 @@ export default class ScaleOperation3D extends Operation {
             model.meshObject.scale.set(this.state.from.scaleX, this.state.from.scaleY, this.state.from.scaleZ);
             model.stickToPlate();
             model.computeBoundingBox();
+            modelGroup.updatePrimeTowerHeight();
         }
         const overstepped = modelGroup._checkOverstepped(model);
         model.setOversteppedAndSelected(overstepped, model.isSelected);

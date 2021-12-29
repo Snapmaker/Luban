@@ -66,10 +66,13 @@ function VisualizerLeftBar({ defaultSupportSize, setTransformMode, isSupporting,
     const size = useSelector(state => state?.machine?.size, shallowEqual);
     const selectedGroup = useSelector(state => state?.printing?.modelGroup?.selectedGroup, shallowEqual);
     const selectedModelArray = useSelector(state => state?.printing?.modelGroup?.selectedModelArray);
+    const modelGroup = useSelector(state => state?.printing?.modelGroup);
     const models = useSelector(state => state?.printing?.modelGroup?.models);
+    const primeTowerHeight = useSelector(state => state?.printing?.primeTowerHeight, shallowEqual);
     const helpersExtruderConfig = useSelector(state => state?.printing?.helpersExtruderConfig);
     const { isOpenSelectModals, isOpenHelpers: _isOpenHelpers, modelExtruderInfoShow, helpersExtruderInfoShow } = useSelector(state => state?.printing);
     const isSupportSelected = useSelector(state => state?.printing?.modelGroup?.isSupportSelected());
+    const isPrimeTowerSelected = useSelector(state => state?.printing?.modelGroup?.isPrimeTowerSelected());
     const transformMode = useSelector(state => state?.printing?.transformMode, shallowEqual);
     const transformation = useSelector(state => state?.printing?.modelGroup?.getSelectedModelTransformationForPrinting(), shallowEqual);
     const enableShortcut = useSelector(state => state?.printing?.enableShortcut, shallowEqual);
@@ -87,7 +90,7 @@ function VisualizerLeftBar({ defaultSupportSize, setTransformMode, isSupporting,
     const defaultMaterialId = useSelector(state => state?.printing?.defaultMaterialId, shallowEqual);
     const defaultMaterialIdRight = useSelector(state => state?.printing?.defaultMaterialIdRight, shallowEqual);
     let modelSize = {};
-    if (isSupportSelected) {
+    if (isSupportSelected || isPrimeTowerSelected) {
         const model = selectedModelArray[0];
         const { min, max } = model.boundingBox;
         modelSize = {
@@ -130,7 +133,7 @@ function VisualizerLeftBar({ defaultSupportSize, setTransformMode, isSupporting,
             dispatch(printingActions.updateSelectedModelTransformation(newTransformation));
             actions.onModelAfterTransform();
         },
-        onModelTransform: (transformations, isReset) => {
+        onModelTransform: (transformations, isReset, _isPrimeTowerSelected = false) => {
             const newTransformation = {};
             for (const type of Object.keys(transformations)) {
                 let value = transformations[type];
@@ -144,9 +147,17 @@ function VisualizerLeftBar({ defaultSupportSize, setTransformMode, isSupporting,
                         newTransformation.positionY = value;
                         break;
                     case 'scaleX':
+                        if (_isPrimeTowerSelected) {
+                            newTransformation.scaleY = (transformation.scaleX > 0 ? value : -value);
+                            newTransformation.uniformScalingState = false;
+                        }
                         newTransformation.scaleX = (transformation.scaleX > 0 ? value : -value);
                         break;
                     case 'scaleY':
+                        if (_isPrimeTowerSelected) {
+                            newTransformation.scaleX = (transformation.scaleY > 0 ? value : -value);
+                            newTransformation.uniformScalingState = false;
+                        }
                         newTransformation.scaleY = (transformation.scaleY > 0 ? value : -value);
                         break;
                     case 'scaleZ':
@@ -169,24 +180,27 @@ function VisualizerLeftBar({ defaultSupportSize, setTransformMode, isSupporting,
                 }
             }
             if (isReset) {
-                dispatch(printingActions.updateSelectedModelTransformation(newTransformation, false));
+                dispatch(printingActions.updateSelectedModelTransformation(newTransformation, _isPrimeTowerSelected));
             } else {
                 dispatch(printingActions.updateSelectedModelTransformation(newTransformation));
             }
         },
-        resetPosition: () => {
+        resetPosition: (_isPrimeTowerSelected = false) => {
+            const { max } = modelGroup._bbox;
+            const moveX = _isPrimeTowerSelected ? max.x - 50 : 0;
+            const moveY = _isPrimeTowerSelected ? max.y - 50 : 0;
             actions.onModelTransform({
-                'moveX': 0,
-                'moveY': 0
+                'moveX': moveX,
+                'moveY': moveY
             });
             actions.onModelAfterTransform();
         },
-        resetScale: () => {
+        resetScale: (_isPrimeTowerSelected) => {
             actions.onModelTransform({
                 'scaleX': 1,
                 'scaleY': 1,
-                'scaleZ': 1,
-                'uniformScalingState': true
+                'scaleZ': _isPrimeTowerSelected ? primeTowerHeight : 1,
+                'uniformScalingState': !_isPrimeTowerSelected
             }, true);
             actions.onModelAfterTransform();
         },
@@ -605,7 +619,7 @@ function VisualizerLeftBar({ defaultSupportSize, setTransformMode, isSupporting,
                                         onClick={() => {
                                             setTransformMode('rotate');
                                         }}
-                                        disabled={transformDisabled || isSupportSelected}
+                                        disabled={transformDisabled || isSupportSelected || isPrimeTowerSelected}
                                     />
                                 </li>
                                 <li
@@ -623,7 +637,7 @@ function VisualizerLeftBar({ defaultSupportSize, setTransformMode, isSupporting,
                                         onClick={() => {
                                             setTransformMode('mirror');
                                         }}
-                                        disabled={transformDisabled || isSupportSelected}
+                                        disabled={transformDisabled || isSupportSelected || isPrimeTowerSelected}
                                     />
                                 </li>
                             </ul>
@@ -643,7 +657,7 @@ function VisualizerLeftBar({ defaultSupportSize, setTransformMode, isSupporting,
                                         onClick={() => {
                                             setTransformMode('support');
                                         }}
-                                        disabled={supportDisabled}
+                                        disabled={supportDisabled || isPrimeTowerSelected}
                                     />
                                 </li>
                                 {isDualExtruder && (
@@ -719,7 +733,7 @@ function VisualizerLeftBar({ defaultSupportSize, setTransformMode, isSupporting,
                                         type="primary"
                                         priority="level-three"
                                         width="100%"
-                                        onClick={actions.resetPosition}
+                                        onClick={() => actions.resetPosition(isPrimeTowerSelected)}
                                     >
                                         <span>{i18n._('key-Printing/LeftBar-Reset')}</span>
                                     </Button>
@@ -742,13 +756,26 @@ function VisualizerLeftBar({ defaultSupportSize, setTransformMode, isSupporting,
                             <div className="sm-flex height-32 margin-bottom-8">
                                 <span className="sm-flex-auto width-16 color-red-1">X</span>
                                 <div className="position-ab sm-flex-auto margin-horizontal-24">
+                                    {isPrimeTowerSelected && (
+                                        <Input
+                                            suffix="mm"
+                                            size="small"
+                                            min={1}
+                                            value={modelSize.x}
+                                            onChange={(value) => {
+                                                actions.onModelTransform({ 'scaleX': value / modelSize.scaledX }, false, true);
+                                                actions.onModelAfterTransform();
+                                            }}
+                                            className="margin-right-8"
+                                        />
+                                    )}
                                     <Input
                                         suffix="%"
                                         size="small"
                                         min={1}
                                         value={scaleXPercent}
                                         onChange={(value) => {
-                                            actions.onModelTransform({ 'scaleX': value / 100 });
+                                            actions.onModelTransform({ 'scaleX': value / 100 }, false, isPrimeTowerSelected);
                                             actions.onModelAfterTransform();
                                         }}
                                     />
@@ -757,40 +784,56 @@ function VisualizerLeftBar({ defaultSupportSize, setTransformMode, isSupporting,
                             <div className="sm-flex height-32 margin-bottom-8">
                                 <span className="sm-flex-auto width-16 color-green-1">Y</span>
                                 <div className="position-ab sm-flex-auto margin-horizontal-24">
+                                    {isPrimeTowerSelected && (
+                                        <Input
+                                            suffix="mm"
+                                            size="small"
+                                            min={1}
+                                            value={modelSize.y}
+                                            onChange={(value) => {
+                                                actions.onModelTransform({ 'scaleY': value / modelSize.scaledY }, false, true);
+                                                actions.onModelAfterTransform();
+                                            }}
+                                            className="margin-right-8"
+                                        />
+                                    )}
                                     <Input
                                         suffix="%"
                                         size="small"
                                         min={1}
                                         value={scaleYPercent}
                                         onChange={(value) => {
-                                            actions.onModelTransform({ 'scaleY': value / 100 });
+                                            actions.onModelTransform({ 'scaleY': value / 100 }, false, isPrimeTowerSelected);
                                             actions.onModelAfterTransform();
                                         }}
                                     />
                                 </div>
                             </div>
-                            <div className="sm-flex height-32 margin-bottom-8">
-                                <span className="sm-flex-auto width-16 color-blue-2">Z</span>
-                                <div className="position-ab sm-flex-auto margin-horizontal-24">
-                                    <Input
-                                        suffix="%"
-                                        size="small"
-                                        min={1}
-                                        value={scaleZPercent}
-                                        onChange={(value) => {
-                                            actions.onModelTransform({ 'scaleZ': value / 100 });
-                                            actions.onModelAfterTransform();
-                                        }}
-                                    />
+                            {!isPrimeTowerSelected && (
+                                <div className="sm-flex height-32 margin-bottom-8">
+                                    <span className="sm-flex-auto width-16 color-blue-2">Z</span>
+                                    <div className="position-ab sm-flex-auto margin-horizontal-24">
+                                        <Input
+                                            suffix="%"
+                                            size="small"
+                                            min={1}
+                                            value={scaleZPercent}
+                                            onChange={(value) => {
+                                                actions.onModelTransform({ 'scaleZ': value / 100 });
+                                                actions.onModelAfterTransform();
+                                            }}
+                                        />
+                                    </div>
                                 </div>
-                            </div>
+                            )}
                             <div className="sm-flex height-32 margin-bottom-8">
                                 <Checkbox
-                                    defaultChecked={uniformScalingState}
-                                    checked={uniformScalingState}
+                                    defaultChecked={isPrimeTowerSelected ? true : uniformScalingState}
+                                    checked={isPrimeTowerSelected ? true : uniformScalingState}
                                     onClick={() => {
                                         actions.changeUniformScalingState(uniformScalingState); // Todo: bug, state error
                                     }}
+                                    disabled={isPrimeTowerSelected}
                                 />
                                 <span
                                     className="height-20 margin-horizontal-8"
@@ -799,21 +842,23 @@ function VisualizerLeftBar({ defaultSupportSize, setTransformMode, isSupporting,
                                 </span>
                             </div>
                             <div className="sm-flex">
-                                <Button
-                                    className="margin-top-32 margin-right-8"
-                                    type="primary"
-                                    priority="level-three"
-                                    width="100%"
-                                    onClick={actions.scaleToFitSelectedModel}
-                                >
-                                    <span>{i18n._('key-Printing/LeftBar-Scale to Fit')}</span>
-                                </Button>
+                                {!isPrimeTowerSelected && (
+                                    <Button
+                                        className="margin-top-32 margin-right-8"
+                                        type="primary"
+                                        priority="level-three"
+                                        width="100%"
+                                        onClick={actions.scaleToFitSelectedModel}
+                                    >
+                                        <span>{i18n._('key-Printing/LeftBar-Scale to Fit')}</span>
+                                    </Button>
+                                )}
                                 <Button
                                     className="margin-top-32 margin-left-8"
                                     type="primary"
                                     priority="level-three"
                                     width="100%"
-                                    onClick={actions.resetScale}
+                                    onClick={() => actions.resetScale(isPrimeTowerSelected)}
                                 >
                                     <span>{i18n._('key-Printing/LeftBar-Reset')}</span>
                                 </Button>
@@ -905,7 +950,7 @@ function VisualizerLeftBar({ defaultSupportSize, setTransformMode, isSupporting,
                     </div>
                 )}
                 {showRotationAnalyzeModal && renderRotationAnalyzeModal()}
-                {!transformDisabled && transformMode === 'rotate' && (
+                {!transformDisabled && transformMode === 'rotate' && !isPrimeTowerSelected && (
                     <div
                         className="position-ab width-280 margin-left-72 border-default-grey-1 border-radius-8 background-color-white"
                         style={{
@@ -1001,7 +1046,7 @@ function VisualizerLeftBar({ defaultSupportSize, setTransformMode, isSupporting,
                     </div>
                 )}
 
-                {!transformDisabled && transformMode === 'mirror' && (
+                {!transformDisabled && transformMode === 'mirror' && !isPrimeTowerSelected && (
                     <div
                         className="position-ab width-280 margin-left-72 border-default-grey-1 border-radius-8 background-color-white"
                         style={{
@@ -1048,7 +1093,7 @@ function VisualizerLeftBar({ defaultSupportSize, setTransformMode, isSupporting,
                     </div>
                 )}
 
-                {!supportDisabled && transformMode === 'support' && (
+                {!supportDisabled && transformMode === 'support' && !isPrimeTowerSelected && (
                     <div
                         className="position-ab width-280 margin-left-72 border-default-grey-1 border-radius-8 background-color-white"
                         style={{

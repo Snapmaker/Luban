@@ -19,6 +19,7 @@ import {
     RIGHT_EXTRUDER,
     LEFT_EXTRUDER_MAP_NUMBER,
     RIGHT_EXTRUDER_MAP_NUMBER,
+    DUAL_EXTRUDER_TOOLHEAD_FOR_SM2
 } from '../../constants';
 import { timestamp } from '../../../shared/lib/random-utils';
 import { machineStore } from '../../store/local-storage';
@@ -196,7 +197,10 @@ const INITIAL_STATE = {
     isOpenSelectModals: false,
     isOpenHelpers: false,
     modelExtruderInfoShow: true,
-    helpersExtruderInfoShow: true
+    helpersExtruderInfoShow: true,
+    // Prime Tower
+    enabledPrimeTower: true,
+    primeTowerHeight: 0.1
 };
 
 
@@ -300,13 +304,15 @@ export const actions = {
         // state
         const printingState = getState().printing;
         const { modelGroup, gcodeLineGroup } = printingState;
+        const { toolHead } = getState().machine;
         modelGroup.setDataChangedCallback(() => {
             dispatch(actions.render());
+        }, (height) => {
+            dispatch(actions.updateState({ primeTowerHeight: height }));
         });
 
         let { series } = getState().machine;
         series = getRealSeries(series);
-        const { toolHead } = getState().machine;
         // await dispatch(machineActions.updateMachineToolHead(toolHead, series, CONFIG_HEADTYPE));
         const currentMachine = getMachineSeriesWithToolhead(series, toolHead);
         await definitionManager.init(CONFIG_HEADTYPE, currentMachine.configPathname[CONFIG_HEADTYPE]);
@@ -388,10 +394,16 @@ export const actions = {
         await dispatch(actions.initSize());
 
         const printingState = getState().printing;
-        const { modelGroup, gcodeLineGroup, initEventFlag } = printingState;
-
+        const { modelGroup, gcodeLineGroup, initEventFlag, qualityDefinitions, defaultQualityId } = printingState;
+        const printingToolhead = machineStore.get('machine.toolHead.printingToolhead');
+        const activeQualityDefinition = lodashFind(qualityDefinitions, { definitionId: defaultQualityId });
         modelGroup.removeAllModels();
-
+        if (printingToolhead === DUAL_EXTRUDER_TOOLHEAD_FOR_SM2) {
+            modelGroup.initPrimeTower();
+            const primeTowerModel = lodashFind(modelGroup.models, { primeTowerTag: true });
+            const enablePrimeTower = activeQualityDefinition?.settings?.prime_tower_enable?.default_value;
+            !enablePrimeTower && dispatch(actions.hideSelectedModel(primeTowerModel));
+        }
         if (!initEventFlag) {
             dispatch(actions.updateState({
                 initEventFlag: true
@@ -1271,7 +1283,6 @@ export const actions = {
 
     updateSelectedModelTransformation: (transformation, newUniformScalingState) => (dispatch, getState) => {
         const { modelGroup } = getState().printing;
-
         let transformMode;
         switch (true) {
             // TODO: transformMode update to Array
@@ -1349,7 +1360,7 @@ export const actions = {
             targetModels = [targetModel];
         }
 
-        const modelState = modelGroup.hideSelectedModel();
+        const modelState = modelGroup.hideSelectedModel(targetModels);
 
         const operations = new Operations();
         targetModels.forEach(model => {
@@ -1373,7 +1384,7 @@ export const actions = {
 
     showSelectedModel: (targetModel) => (dispatch, getState) => {
         const { modelGroup } = getState().printing;
-        const modelState = modelGroup.showSelectedModel();
+        const modelState = modelGroup.showSelectedModel([targetModel]);
 
         const operation = new VisibleOperation3D({
             target: targetModel,
@@ -1401,6 +1412,9 @@ export const actions = {
         const { modelGroup } = getState().printing;
         const operations = new Operations();
         for (const model of modelGroup.selectedModelArray) {
+            if (model.primeTowerTag) {
+                continue;
+            }
             const operation = new DeleteOperation3D({
                 target: model
             });
@@ -1439,6 +1453,7 @@ export const actions = {
         const { modelGroup } = getState().printing;
         const operations = new Operations();
         for (const model of modelGroup.models) {
+            if (model.primeTowerTag) continue;
             const operation = new DeleteOperation3D({
                 target: model,
                 parent: null
@@ -1783,7 +1798,7 @@ export const actions = {
         const { modelGroup } = getState().printing;
         modelGroup.defaultSupportSize = size;
     },
-    generateModel: (headType, { loadFrom = LOAD_MODEL_FROM_INNER, originalName, uploadName, sourceWidth, sourceHeight, mode, sourceType, transformation, modelID, extruderConfig, isGroup = false, parentModelID = '', modelName, children }) => async (dispatch, getState) => {
+    generateModel: (headType, { loadFrom = LOAD_MODEL_FROM_INNER, originalName, uploadName, sourceWidth, sourceHeight, mode, sourceType, transformation, modelID, extruderConfig, isGroup = false, parentModelID = '', modelName, children, primeTowerTag }) => async (dispatch, getState) => {
         const { progressStatesManager } = getState().printing;
         progressStatesManager.startProgress(PROCESS_STAGE.PRINTING_LOAD_MODEL);
         dispatch(actions.updateState({
@@ -1824,12 +1839,14 @@ export const actions = {
                 stage: STEP_STAGE.PRINTING_LOAD_MODEL_SUCCEED,
                 progress: progressStatesManager.updateProgress(STEP_STAGE.PRINTING_LOADING_MODEL, 1)
             }));
+        } else if (primeTowerTag) {
+            const initHeight = transformation?.scaleZ || 0.1;
+            modelGroup.initPrimeTower(initHeight, transformation);
         } else {
             const onMessage = async (e) => {
                 const data = e.data;
 
                 const { type } = data;
-
                 switch (type) {
                     case 'LOAD_MODEL_POSITIONS': {
                         const { positions, originalPosition } = data;

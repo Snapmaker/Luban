@@ -12,6 +12,8 @@ import { SELECTEVENT } from '../constants';
 
 import ThreeUtils from '../three-extensions/ThreeUtils';
 import ThreeGroup from './ThreeGroup.ts';
+import PrimeTowerModel from './PrimeTowerModel.ts';
+import { HEAD_PRINTING } from '../../server/constants';
 
 const EVENTS = {
     UPDATE: { type: 'update' }
@@ -59,8 +61,11 @@ class ModelGroup extends EventEmitter {
         this.materials = materials;
     }
 
-    setDataChangedCallback(handler) {
+    setDataChangedCallback(handler, update) {
         this.onDataChangedCallback = handler;
+        if (update) {
+            this.primeTowerHeightCallback = update;
+        }
     }
 
     // TODO: save last value and compare changes
@@ -198,8 +203,8 @@ class ModelGroup extends EventEmitter {
         return this.models.filter(m => !m.supportTag).some((model) => model.visible);
     }
 
-    hideSelectedModel() {
-        const models = this.getSelectedModelArray();
+    hideSelectedModel(targetModels = null) {
+        const models = targetModels || this.getSelectedModelArray();
         models.forEach((model) => {
             model.visible = false;
             model.meshObject.visible = false;
@@ -209,8 +214,8 @@ class ModelGroup extends EventEmitter {
         return this.getState();
     }
 
-    showSelectedModel() {
-        const models = this.getSelectedModelArray();
+    showSelectedModel(targetModels = null) {
+        const models = targetModels || this.getSelectedModelArray();
         models.forEach((model) => {
             model.visible = true;
             model.meshObject.visible = true;
@@ -243,6 +248,7 @@ class ModelGroup extends EventEmitter {
         model.meshObject.removeEventListener('update', this.onModelUpdate);
         this.models = this.models.filter(item => item !== model);
         this.modelChanged();
+        model.sourceType === '3d' && this.updatePrimeTowerHeight();
     }
 
     // remove selected models' supports
@@ -292,6 +298,7 @@ class ModelGroup extends EventEmitter {
         this.unselectAllModels();
 
         this.modelChanged();
+        this.updatePrimeTowerHeight();
         return this._getEmptyState();
     }
 
@@ -598,6 +605,10 @@ class ModelGroup extends EventEmitter {
                     if (this.selectedModelArray.length && (this.selectedModelArray[0].supportTag !== model.supportTag || model.supportTag)) {
                         break;
                     }
+                    // cannot select model and prime tower
+                    if (this.selectedModelArray.length && this.selectedModelArray[0].primeTowerTag !== model.primeTowerTag) {
+                        break;
+                    }
                     this.addModelToSelectedGroup(model);
                 }
                 break;
@@ -671,7 +682,7 @@ class ModelGroup extends EventEmitter {
         this.selectedModelArray = [];
 
         this.models.forEach((model) => {
-            if (model.supportTag) return;
+            if (model.supportTag || model.primeTowerTag) return;
             if (model.visible) {
                 this.addModelToSelectedGroup(model);
             }
@@ -1104,7 +1115,6 @@ class ModelGroup extends EventEmitter {
             model.generateSupportGeometry();
             revert();
         }
-
         this.modelChanged();
         return this.getState();
     }
@@ -1134,7 +1144,7 @@ class ModelGroup extends EventEmitter {
                 this.addModelToSelectedGroup(selected);
             }
         });
-
+        this.updatePrimeTowerHeight();
         if (selectedModelArray.length === 0) {
             return {};
         } else {
@@ -1429,7 +1439,7 @@ class ModelGroup extends EventEmitter {
         this.emit('add', model);
         // refresh view
         this.modelChanged();
-
+        modelInfo.sourceType === '3d' && this.updatePrimeTowerHeight();
         return model;
     }
 
@@ -1441,6 +1451,10 @@ class ModelGroup extends EventEmitter {
         return this.selectedModelArray.length === 1 && this.selectedModelArray.every((model) => {
             return model.supportTag;
         });
+    }
+
+    isPrimeTowerSelected() {
+        return this.selectedModelArray.length === 1 && this.selectedModelArray[0].primeTowerTag;
     }
 
     addSupportOnSelectedModel(defaultSupportSize) {
@@ -1804,6 +1818,26 @@ class ModelGroup extends EventEmitter {
             });
         }
         return this.getState();
+    }
+
+    // prime tower
+    initPrimeTower(initHeight = 0.1, transformation) {
+        const model = new PrimeTowerModel(initHeight, this, transformation);
+        return model;
+    }
+
+    updatePrimeTowerHeight() {
+        let maxHeight = 0.1;
+        const maxBoundingBoxHeight = this._bbox?.max.z;
+        this.models.forEach(modelItem => {
+            if (modelItem.headType === HEAD_PRINTING && !modelItem.primeTowerTag && !modelItem.supportTag) {
+                const modelItemHeight = modelItem.boundingBox?.max.z - modelItem.boundingBox?.min.z;
+                maxHeight = Math.max(maxHeight, modelItemHeight);
+            }
+        });
+        if (typeof this.primeTowerHeightCallback === 'function') {
+            this.primeTowerHeightCallback(Math.min(maxHeight, maxBoundingBoxHeight));
+        }
     }
 }
 
