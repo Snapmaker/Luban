@@ -93,7 +93,6 @@ function PrintingManager() {
             dispatch(printingActions.updateDefaultIdByType(managerDisplayType, definitionId, materialManagerDirection));
         },
         onSaveDefinitionForManager: (newDefinition) => {
-            console.log('newDefinition', managerDisplayType, newDefinition);
             // now setDefinitionState is synchronize, so remove setTimeout
             if (managerDisplayType === PRINTING_MANAGER_TYPE_MATERIAL) {
                 actions.onSaveMaterialForManager(managerDisplayType, newDefinition);
