@@ -4,23 +4,6 @@ import type ModelGroup from './ModelGroup';
 import { ModelInfo, ModelTransformation } from './ThreeBaseModel.ts';
 
 class PrimeTowerModel extends ThreeModel {
-    // meshObject: THREE.Object3D;
-    geometry: THREE.BufferGeometry;
-
-    material: THREE.Material;
-
-    originalName: string;
-
-    modelName: string;
-
-    positionX: number;
-
-    positionY: number;
-
-    scaleX: number;
-
-    scaleY: number;
-
     primeTowerTag: boolean;
 
     constructor(initHeight: Number, modelGroup: ModelGroup, transformation?: ModelTransformation) {
