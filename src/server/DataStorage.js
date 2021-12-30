@@ -91,10 +91,11 @@ class DataStorage {
      async init() {
          const definitionUpdated = config.get('DefinitionUpdated');
          let overwriteProfiles = false;
-         if (semver.gte(settings.version, '4.1.0') && (!definitionUpdated || !definitionUpdated['4.1.0'])) {
+         if (semver.gte(settings.version, '4.1.0') && (!definitionUpdated || !definitionUpdated[settings.version])) {
              overwriteProfiles = true;
              config.set('DefinitionUpdated', {
-                 '4.1.0': true
+                 ...definitionUpdated,
+                 [settings.version]: true
              });
          }
          mkdirp.sync(this.envDir);

@@ -583,7 +583,7 @@ function VisualizerLeftBar({ defaultSupportSize, setTransformMode, isSupporting,
                                         onClick={() => {
                                             setTransformMode('translate');
                                         }}
-                                        disabled={transformDisabled}
+                                        disabled={!!transformDisabled}
                                     />
                                 </li>
                                 <li
@@ -601,7 +601,7 @@ function VisualizerLeftBar({ defaultSupportSize, setTransformMode, isSupporting,
                                         onClick={() => {
                                             setTransformMode('scale');
                                         }}
-                                        disabled={transformDisabled}
+                                        disabled={!!transformDisabled}
                                     />
                                 </li>
                                 <li
@@ -619,7 +619,7 @@ function VisualizerLeftBar({ defaultSupportSize, setTransformMode, isSupporting,
                                         onClick={() => {
                                             setTransformMode('rotate');
                                         }}
-                                        disabled={transformDisabled || isSupportSelected || isPrimeTowerSelected}
+                                        disabled={!!(transformDisabled || isSupportSelected || isPrimeTowerSelected)}
                                     />
                                 </li>
                                 <li
@@ -637,7 +637,7 @@ function VisualizerLeftBar({ defaultSupportSize, setTransformMode, isSupporting,
                                         onClick={() => {
                                             setTransformMode('mirror');
                                         }}
-                                        disabled={transformDisabled || isSupportSelected || isPrimeTowerSelected}
+                                        disabled={!!(transformDisabled || isSupportSelected || isPrimeTowerSelected)}
                                     />
                                 </li>
                             </ul>
@@ -657,7 +657,7 @@ function VisualizerLeftBar({ defaultSupportSize, setTransformMode, isSupporting,
                                         onClick={() => {
                                             setTransformMode('support');
                                         }}
-                                        disabled={supportDisabled || isPrimeTowerSelected}
+                                        disabled={!!(supportDisabled || isPrimeTowerSelected)}
                                     />
                                 </li>
                                 {isDualExtruder && (
@@ -675,7 +675,7 @@ function VisualizerLeftBar({ defaultSupportSize, setTransformMode, isSupporting,
                                                 setTransformMode('extruder');
                                                 !selectedModelArray.length && dispatch(printingActions.selectAllModels());
                                             }}
-                                            disabled={dualExtruderDisabled}
+                                            disabled={!!dualExtruderDisabled}
                                         />
                                     </li>
                                 )}
