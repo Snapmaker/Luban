@@ -623,7 +623,11 @@ class ModelGroup extends EventEmitter {
         } else {
             this.unselectAllModels({ recursive: true });
             if (selectModel) {
-                this.addModelToSelectedGroup(selectModel);
+                if (selectModel?.parent?.children.length === 1) {
+                    this.addModelToSelectedGroup(selectModel.parent);
+                } else {
+                    this.addModelToSelectedGroup(selectModel);
+                }
             }
         }
 
@@ -692,6 +696,10 @@ class ModelGroup extends EventEmitter {
                 if (model.parent) {
                     this.unselectAllModelsInGroup(model.parent);
                     this.unselectAllModels();
+                    // Uncheck if there is only one model in the group
+                    if (model.parent.children.length === 1) {
+                        break;
+                    }
                 } else {
                     this.unselectAllModels({ recursive: true });
                 }
@@ -724,6 +732,7 @@ class ModelGroup extends EventEmitter {
                     if (this.selectedModelArray.length && this.selectedModelArray[0].primeTowerTag !== model.primeTowerTag) {
                         break;
                     }
+                    // If all models in the group are selected, select group
                     if (model.parent && this.selectedModelArray.length === model.parent.children.length - 1) {
                         this.unselectAllModels({ recursive: true });
                         this.addModelToSelectedGroup(model.parent);
@@ -1350,6 +1359,7 @@ class ModelGroup extends EventEmitter {
         const box3Arr = [];
         for (const m of arrangedModels) {
             m.stickToPlate();
+            m.computeBoundingBox();
             box3Arr.push(m.boundingBox);
         }
 
