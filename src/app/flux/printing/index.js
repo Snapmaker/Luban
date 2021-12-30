@@ -2138,15 +2138,13 @@ export const actions = {
 
         const { recovery } = modelGroup.unselectAllModels({ recursive: true });
 
-        const modelsInGroup = selectedModels.filter((selectd) => {
-            return selectd.parent && selectd.parent instanceof ThreeGroup;
-        }).reduce((pre, selectd) => {
-            const group = selectd.parent.clone(modelGroup);
+        const modelsInGroup = selectedModels.reduce((pre, selectd) => {
+            const group = selectd.parent?.clone(modelGroup);
             pre.set(selectd.modelID, {
                 groupModel: group,
-                groupMesh: selectd.parent.meshObject.clone(),
+                groupMesh: selectd.parent?.meshObject.clone(),
                 modelTransformation: selectd.transformation,
-                groupTransformation: group.transformation
+                groupTransformation: group?.transformation
             });
             return pre;
         }, new Map());
