@@ -1,6 +1,5 @@
 import { v4 as uuid } from 'uuid';
 import * as THREE from 'three';
-import { ObjectLoader } from 'three';
 import {
     LOAD_MODEL_FROM_INNER
 } from '../constants';
@@ -42,17 +41,31 @@ class ThreeModel extends BaseModel {
         let material = modelInfo.material || new THREE.MeshStandardMaterial({ color: 0xe0e0e0, visible: false });
 
         try {
-            const objectLoader = new ObjectLoader();
+            const objectLoader = new THREE.ObjectLoader();
             const json = JSON.parse(machineStore.get('scene'));
-            const object = objectLoader.parse(json);
-            const shapes = objectLoader.parseShapes(json.shapes);
-            const geometries = objectLoader.parseGeometries(json.geometries, shapes);
+            // const object = objectLoader.parse(json);
+            // const shapes = objectLoader.parseShapes(json.shapes);
+            // const geometries = objectLoader.parseGeometries(json.geometries, shapes);
             const images = objectLoader.parseImages(json.images);
             const textures = objectLoader.parseTextures(json.textures, images);
             const materials = objectLoader.parseMaterials(json.materials, textures);
             const newMaterial = materials['720E037C-55F1-4569-94A2-A03F6BD38BE0'];
-            newMaterial.color = new THREE.Color(0xff0000);
-            console.log('object', geometries, object, newMaterial);
+            // newMaterial.map = textures['325A3E9F-28DE-4572-B69F-8336753363FF'];
+
+            // const textureLoader = new THREE.TextureLoader();
+            // // load a texture
+            // console.log('window', window.location.origin, modelInfo?.geometry, this.geometry);
+            // const texture = textureLoader.load(
+            //     `${window.location.origin.replace(/^http/, 'luban')}/resources/images/a-textrue.jpg`
+            // );
+            // // create a "standard" material using
+            // // the texture we just loaded as a color map
+            // const newMaterial = new THREE.MeshStandardMaterial({
+            //     side: THREE.DoubleSide,
+            //     map: texture,
+            // });
+
+            console.log('object', textures, newMaterial, 'ddd', this.geometry);
             material = newMaterial;
         } catch (e) {
             console.error('error', e);
