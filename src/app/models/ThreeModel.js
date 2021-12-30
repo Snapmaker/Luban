@@ -6,7 +6,9 @@ import {
 
 import ThreeUtils from '../three-extensions/ThreeUtils';
 
-import BaseModel from './ThreeBaseModel.ts';
+import BaseModel from './ThreeBaseModel';
+import WorkerManager from '../lib/manager/WorkerManager';
+import ThreeGroup from './ThreeGroup';
 
 const materialOverstepped = new THREE.MeshPhongMaterial({
     color: 0xff0000,
@@ -27,6 +29,12 @@ class ThreeModel extends BaseModel {
         // adhesion: '0',
         // support: '0'
     };
+
+    isSelected = false;
+
+    target = null;
+
+    supportTag = false;
 
     constructor(modelInfo, modelGroup) {
         super(modelInfo, modelGroup);
@@ -119,9 +127,17 @@ class ThreeModel extends BaseModel {
 
         let position, scale, rotation;
         if (this.parent) {
-            position = this.meshObject.position.clone();
-            scale = this.meshObject.scale.clone();
-            rotation = this.meshObject.rotation.clone();
+            if (this.modelGroup.isModelSelected(this)) {
+                const { recovery } = this.modelGroup.unselectAllModels({ recursive: true });
+                position = this.meshObject.position.clone();
+                scale = this.meshObject.scale.clone();
+                rotation = this.meshObject.rotation.clone();
+                recovery();
+            } else {
+                position = this.meshObject.position.clone();
+                scale = this.meshObject.scale.clone();
+                rotation = this.meshObject.rotation.clone();
+            }
         } else {
             position = new THREE.Vector3();
             this.meshObject.getWorldPosition(position);
@@ -172,11 +188,18 @@ class ThreeModel extends BaseModel {
         }
     }
 
+    isModelInGroup() {
+        return this.parent && this.parent instanceof ThreeGroup;
+    }
+
     stickToPlate() {
         if (this.sourceType !== '3d') {
             return;
         }
-
+        if (this.isModelInGroup()) {
+            this.parent.stickToPlate();
+            return;
+        }
         const revert = ThreeUtils.removeObjectParent(this.meshObject);
 
         this.computeBoundingBox();
@@ -508,39 +531,14 @@ class ThreeModel extends BaseModel {
         clone.applyMatrix4(this.meshObject.matrixWorld.clone());
 
         const positions = clone.getAttribute('position').array;
-
-        const colors = [];
         const normals = clone.getAttribute('normal').array;
-        let start = 0;
-        const worker = () => {
-            let i = start;
-            do {
-                const normal = new THREE.Vector3(normals[i], normals[i + 1], normals[i + 2]);
-                const angle = normal.angleTo(new THREE.Vector3(0, 0, 1)) / Math.PI * 180;
-                const avgZ = (positions[i + 2] + positions[i + 5] + positions[i + 8]) / 3;
 
-                if (angle > 120 && avgZ > 1) {
-                    colors.push(1, 0.2, 0.2);
-                    colors.push(1, 0.2, 0.2);
-                    colors.push(1, 0.2, 0.2);
-                } else {
-                    colors.push(0.9, 0.9, 0.9);
-                    colors.push(0.9, 0.9, 0.9);
-                    colors.push(0.9, 0.9, 0.9);
-                }
-                i += 9;
-            } while (i - start < 10000 && i < normals.length);
-            if (i < normals.length) {
-                start = i;
-                setTimeout(worker, 1);
-            } else {
-                bufferGeometry.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3));
-                this.setSelected(true);
-                this.modelGroup.modelChanged();
-            }
-        };
-
-        setTimeout(worker, 10);
+        WorkerManager.evaluateSupportArea({ positions, normals }, (e) => {
+            const { colors } = e.data;
+            bufferGeometry.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3));
+            this.setSelected(true);
+            this.modelGroup.modelChanged();
+        });
     }
 
     removeVertexColors() {
@@ -551,8 +549,7 @@ class ThreeModel extends BaseModel {
     }
 
     cloneMeshWithoutSupports() {
-        const clonedMesh = this.meshObject.clone();
-        clonedMesh.children = [];
+        const clonedMesh = this.meshObject.clone(false);
         return clonedMesh;
     }
 

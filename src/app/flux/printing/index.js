@@ -18,7 +18,8 @@ import {
     RIGHT_EXTRUDER,
     LEFT_EXTRUDER_MAP_NUMBER,
     RIGHT_EXTRUDER_MAP_NUMBER,
-    DUAL_EXTRUDER_TOOLHEAD_FOR_SM2
+    DUAL_EXTRUDER_TOOLHEAD_FOR_SM2,
+    ALIGN_OPERATION
 } from '../../constants';
 import { timestamp } from '../../../shared/lib/random-utils';
 import { machineStore } from '../../store/local-storage';
@@ -40,10 +41,10 @@ import DeleteOperation3D from '../operation-history/DeleteOperation3D';
 import AddOperation3D from '../operation-history/AddOperation3D';
 import VisibleOperation3D from '../operation-history/VisibleOperation3D';
 import OperationHistory from '../operation-history/OperationHistory';
-import GroupOperation3D from '../operation-history/GroupOperation3D.ts';
-import GroupAlignOperation3D from '../operation-history/GroupAlignOperation3D.ts';
-import ThreeGroup from '../../models/ThreeGroup.ts';
-import UngroupOperation3D from '../operation-history/UngroupOperation3D.ts';
+import GroupOperation3D from '../operation-history/GroupOperation3D';
+import GroupAlignOperation3D from '../operation-history/GroupAlignOperation3D';
+import ThreeGroup from '../../models/ThreeGroup';
+import UngroupOperation3D from '../operation-history/UngroupOperation3D';
 
 const operationHistory = new OperationHistory();
 
@@ -57,7 +58,7 @@ const isDefaultQualityDefinition = (definitionId) => {
 const getRealSeries = (series) => {
     if (
         series === MACHINE_SERIES.ORIGINAL_LZ.value
-       || series === MACHINE_SERIES.CUSTOM.value
+        || series === MACHINE_SERIES.CUSTOM.value
     ) {
         series = MACHINE_SERIES.ORIGINAL.value;
     }
@@ -1589,9 +1590,9 @@ export const actions = {
         const operations = new Operations();
         let operation;
 
-        function stateEqual(stateFrom, stateTo) {
+        function stateEqual(model, stateFrom, stateTo) {
             for (const key of Object.keys(stateFrom)) {
-                if (key !== 'positionZ' && Math.abs(stateFrom[key] - stateTo[key]) > EPSILON) {
+                if ((model.parent instanceof ThreeGroup || key !== 'positionZ') && Math.abs(stateFrom[key] - stateTo[key]) > EPSILON) {
                     return false;
                 }
             }
@@ -1604,7 +1605,7 @@ export const actions = {
             dispatch(operationHistoryActions.updateTargetTmpState(INITIAL_STATE.name, model.modelID, {
                 to: { ...model.transformation }
             }));
-            if (stateEqual(targetTmpState[model.modelID].from, targetTmpState[model.modelID].to)) {
+            if (stateEqual(model, targetTmpState[model.modelID].from, targetTmpState[model.modelID].to)) {
                 continue;
             }
             switch (transformMode) {
@@ -1830,7 +1831,7 @@ export const actions = {
     },
     clearAllManualSupport: (combinedOperations) => (dispatch, getState) => {
         const { modelGroup } = getState().printing;
-        const supports = modelGroup.models.filter(item => item.supportTag === true);
+        const supports = modelGroup.getSupports();
         if (supports && supports.length > 0) {
             let operations = new Operations();
             if (combinedOperations) {
@@ -2043,7 +2044,7 @@ export const actions = {
                 }));
                 dispatch(actions.destroyGcodeLine());
                 dispatch(actions.displayModel());
-            }).catch(() => {});
+            }).catch(() => { });
         }
     },
 
@@ -2127,7 +2128,7 @@ export const actions = {
         const { modelGroup } = getState().printing;
 
         const groups = modelGroup.getSelectedModelArray().filter(model => model instanceof ThreeGroup);
-        const modelsbeforeGroup = modelGroup.getModels().slice(0);
+        const modelsBeforeGroup = modelGroup.getModels().slice(0);
         const selectedModels = modelGroup.getSelectedModelArray().slice(0);
         const groupChildrenMap = new Map();
         groups.forEach(group => {
@@ -2135,18 +2136,41 @@ export const actions = {
         });
         const operations = new Operations();
 
+        const { recovery } = modelGroup.unselectAllModels({ recursive: true });
+
+        const modelsInGroup = selectedModels.reduce((pre, selectd) => {
+            const group = selectd.parent?.clone(modelGroup);
+            pre.set(selectd.modelID, {
+                groupModel: group,
+                groupMesh: selectd.parent?.meshObject.clone(),
+                modelTransformation: selectd.transformation,
+                groupTransformation: group?.transformation
+            });
+            return pre;
+        }, new Map());
+        recovery();
+
+
         dispatch(actions.clearAllManualSupport(operations));
         const modelState = modelGroup.group();
 
-        const modelsafterGroup = modelGroup.getModels().slice(0);
-
+        const modelsAfterGroup = modelGroup.getModels().slice(0);
+        const newGroup = modelGroup.getSelectedModelArray()[0];
         const operation = new GroupOperation3D({
             groupChildrenMap,
-            modelsbeforeGroup,
-            modelsafterGroup,
+            modelsBeforeGroup,
+            modelsAfterGroup,
             selectedModels,
-            target: modelGroup.getSelectedModelArray()[0],
-            modelGroup
+            target: newGroup,
+            targetTransformation: { ...newGroup.transformation },
+            targetChildrenTransformation: newGroup.children.reduce((pre, subModel) => {
+                pre.set(subModel.modelID, {
+                    ...subModel.transformation
+                });
+                return pre;
+            }, new Map()),
+            modelGroup,
+            modelsInGroup
         });
         operations.push(operation);
         operations.registCallbackAfterAll(() => {
@@ -2164,11 +2188,19 @@ export const actions = {
     ungroup: () => (dispatch, getState) => {
         const { modelGroup } = getState().printing;
 
-        const groups = modelGroup.getSelectedModelArray()
-            .filter(model => model instanceof ThreeGroup);
+        const groups = modelGroup.getSelectedModelArray().filter(model => model instanceof ThreeGroup);
+        const modelsBeforeUngroup = modelGroup.getModels().slice(0);
         const groupChildrenMap = new Map();
         groups.forEach(group => {
-            groupChildrenMap.set(group, group.children.slice(0));
+            groupChildrenMap.set(group, {
+                groupTransformation: { ...group.transformation },
+                subModelStates: group.children.map(model => {
+                    return {
+                        target: model,
+                        transformation: { ...model.transformation }
+                    };
+                })
+            });
         });
         const operations = new Operations();
 
@@ -2177,8 +2209,10 @@ export const actions = {
 
         groups.forEach(group => {
             const operation = new UngroupOperation3D({
+                modelsBeforeUngroup,
                 target: group,
-                subModels: groupChildrenMap.get(group),
+                groupTransformation: groupChildrenMap.get(group).groupTransformation,
+                subModelStates: groupChildrenMap.get(group).subModelStates,
                 modelGroup,
             });
             operations.push(operation);

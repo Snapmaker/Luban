@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import ThreeModel from './ThreeModel';
 import type ModelGroup from './ModelGroup';
-import { ModelInfo, ModelTransformation } from './ThreeBaseModel.ts';
+import { ModelInfo, ModelTransformation } from './ThreeBaseModel';
 
 class PrimeTowerModel extends ThreeModel {
     primeTowerTag: boolean;

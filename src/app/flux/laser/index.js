@@ -57,7 +57,6 @@ const INITIAL_STATE = {
 
     displayedType: DISPLAYED_TYPE_MODEL,
     toolPathGroup: new ToolPathGroup(initModelGroup, 'laser'),
-    updatingToolPath: null,
     showToolPath: false,
     showSimulation: false,
 

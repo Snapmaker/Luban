@@ -95,7 +95,7 @@ function ModelItem({
     return (
         <div>
             <TipTrigger
-                key={model.modelName}
+                key={model.modelID}
                 title={i18n._('key-PrintingCncLaser/ObjectList-Object')}
                 content={model.modelName}
                 placement={placment || undefined}
@@ -207,7 +207,7 @@ function ModelItem({
                 const { _leftExtruderColor, _rightExtruderColor } = getExtruderColor(shell, infill, leftMaterialColor, rightMaterialColor);
                 return (
                     <TipTrigger
-                        key={modelItem.modelName}
+                        key={modelItem.modelID}
                         title={i18n._('key-PrintingCncLaser/ObjectList-Object')}
                         content={modelItem.modelName}
                         placement={placment || undefined}
@@ -219,7 +219,7 @@ function ModelItem({
                                 'padding-left-36',
                                 'sm-flex',
                                 styles.objectListItem,
-                                isSelected ? styles.selected : null,
+                                modelItem.isSelected ? styles.selected : null,
                             )}
                         >
                             <Anchor

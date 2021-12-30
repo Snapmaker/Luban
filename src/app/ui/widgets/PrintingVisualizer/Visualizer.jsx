@@ -350,9 +350,6 @@ class Visualizer extends PureComponent {
             this.canvas.current.updateBoundingBox();
             this.canvas.current.attach(modelGroup.selectedGroup);
 
-            if (transformMode !== 'rotate-placement') {
-                this.supportActions.stopSupportMode();
-            }
             if (selectedModelArray.length === 1 && selectedModelArray[0].supportTag && !['translate', 'scale'].includes(transformMode)) {
                 this.actions.setTransformMode('translate');
             }
@@ -676,7 +673,9 @@ const mapDispatchToProps = (dispatch) => ({
     arrangeAllModels: () => dispatch(printingActions.arrangeAllModels()),
     onModelTransform: () => dispatch(printingActions.onModelTransform()),
     onModelAfterTransform: () => dispatch(printingActions.onModelAfterTransform()),
-    updateSelectedModelTransformation: (transformation, newUniformScalingState) => dispatch(printingActions.updateSelectedModelTransformation(transformation, newUniformScalingState)),
+    updateSelectedModelTransformation: (transformation, newUniformScalingState) => {
+        return dispatch(printingActions.updateSelectedModelTransformation(transformation, newUniformScalingState));
+    },
     duplicateSelectedModel: () => dispatch(printingActions.duplicateSelectedModel()),
     layFlatSelectedModel: () => dispatch(printingActions.layFlatSelectedModel()),
     resetSelectedModelTransformation: () => dispatch(printingActions.resetSelectedModelTransformation()),

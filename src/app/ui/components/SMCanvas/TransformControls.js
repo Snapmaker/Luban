@@ -53,7 +53,7 @@ class TransformControls extends Object3D {
 
     _axis = null;
 
-    _inProgress= false;
+    _inProgress = false;
 
     // ray for intersect calculation
     ray = new Raycaster();
@@ -510,7 +510,7 @@ class TransformControls extends Object3D {
             const unitX = new Vector3(1, 0, 0);
             const unitY = new Vector3(0, 1, 0);
             const unitZ = new Vector3(0, 0, 1);
-
+            let boxCenter = null;
             if (this.object.shouldUpdateBoundingbox) {
                 const selectedPeripheralsVisible = (this.objectConvexMeshGroup.children.length === 0);
                 this.allSelectedPeripherals.forEach((peripheral) => {
@@ -580,36 +580,42 @@ class TransformControls extends Object3D {
                     peripheral.scale.set(multiObjectWidth.x, multiObjectWidth.y, multiObjectWidth.z);
                     handles.push(...peripheral.children);
                 });
+
+                boxCenter = new Vector3(
+                    (maxObjectBoundingBox.x + minObjectBoundingBox.x) / 2,
+                    (maxObjectBoundingBox.y + minObjectBoundingBox.y) / 2,
+                    (maxObjectBoundingBox.z + minObjectBoundingBox.z) / 2
+                );
             }
 
             if (this.mode === 'translate') {
-                this.translatePeripheral.position.copy(multiObjectPosition);
+                this.translatePeripheral.position.copy(boxCenter || multiObjectPosition);
                 this.translatePeripheral.scale.set(1, 1, 1).multiplyScalar(eyeDistance / 8);
 
-                this.translatePicker.position.copy(multiObjectPosition);
+                this.translatePicker.position.copy(boxCenter || multiObjectPosition);
                 this.translatePicker.scale.set(1, 1, 1).multiplyScalar(eyeDistance / 8);
 
                 handles.push(...this.translatePeripheral.children);
             } else if (this.mode === 'rotate') {
-                this.rotatePeripheral.position.copy(multiObjectPosition);
+                this.rotatePeripheral.position.copy(boxCenter || multiObjectPosition);
                 this.rotatePeripheral.scale.set(1, 1, 1).multiplyScalar(eyeDistance / 8);
 
-                this.rotatePicker.position.copy(multiObjectPosition);
+                this.rotatePicker.position.copy(boxCenter || multiObjectPosition);
                 this.rotatePicker.scale.set(1, 1, 1).multiplyScalar(eyeDistance / 8);
 
                 handles.push(...this.rotatePeripheral.children);
             } else if (this.mode === 'scale') {
-                this.scalePeripheral.position.copy(multiObjectPosition);
+                this.scalePeripheral.position.copy(boxCenter || multiObjectPosition);
                 this.scalePeripheral.quaternion.copy(objectQuaternion);
                 this.scalePeripheral.scale.set(1, 1, 1).multiplyScalar(eyeDistance / 8);
 
-                this.scalePicker.position.copy(multiObjectPosition);
+                this.scalePicker.position.copy(boxCenter || multiObjectPosition);
                 this.scalePicker.quaternion.copy(objectQuaternion);
                 this.scalePicker.scale.set(1, 1, 1).multiplyScalar(eyeDistance / 8);
 
                 handles.push(...this.scalePeripheral.children);
             } else if (this.mode === 'mirror') {
-                this.mirrorPeripheral.position.copy(multiObjectPosition);
+                this.mirrorPeripheral.position.copy(boxCenter || multiObjectPosition);
                 this.mirrorPeripheral.quaternion.copy(objectQuaternion);
                 this.mirrorPeripheral.scale.set(1, 1, 1).multiplyScalar(eyeDistance / 8);
             }
@@ -926,8 +932,8 @@ class TransformControls extends Object3D {
     shouldApplyScaleToObjects(parentEVec) {
         return this.object.children.every((meshObject) => {
             if (Math.abs(parentEVec.x * this.object.scale.x * meshObject.scale.x) < 0.01
-              || Math.abs(parentEVec.y * this.object.scale.y * meshObject.scale.y) < 0.01
-              || Math.abs(parentEVec.z * this.object.scale.z * meshObject.scale.z) < 0.01
+                || Math.abs(parentEVec.y * this.object.scale.y * meshObject.scale.y) < 0.01
+                || Math.abs(parentEVec.z * this.object.scale.z * meshObject.scale.z) < 0.01
             ) {
                 return false; // should disable
             }

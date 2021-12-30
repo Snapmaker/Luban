@@ -93,6 +93,10 @@ export default {
     module: {
         rules: [
             {
+                test: /\.worker\.(j|t)s$/,
+                use: { loader: 'worker-loader' }
+            },
+            {
                 test: /\.ts$/,
                 loader: 'ts-loader'
             },
@@ -163,10 +167,6 @@ export default {
             {
                 test: /\.(ttf|eot)(\?v=[0-9]\.[0-9]\.[0-9])?$/,
                 loader: 'file-loader'
-            },
-            {
-                test: /\.worker\.js$/,
-                use: { loader: 'worker-loader' }
             }
         ]
     },

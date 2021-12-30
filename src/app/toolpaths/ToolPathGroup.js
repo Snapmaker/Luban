@@ -189,7 +189,7 @@ class ToolPathGroup {
             modelMode: models[0].mode,
             headType: this.headType,
             type,
-            modelIDs: this.modelGroup.selectedModelIDArray,
+            visibleModelIDs: this.modelGroup.selectedModelIDArray,
             modelGroup: this.modelGroup,
             gcodeConfig,
             materials
@@ -213,7 +213,7 @@ class ToolPathGroup {
                 baseName: modelsWithSameType[0] instanceof ThreeModel ? modelsWithSameType[0].uploadName : modelsWithSameType[0].resource.originalFile.name,
                 headType: this.headType,
                 type,
-                modelIDs: toolPathModelIDs,
+                visibleModelIDs: toolPathModelIDs,
                 modelGroup: this.modelGroup,
                 gcodeConfig,
                 toolParams,
@@ -251,8 +251,8 @@ class ToolPathGroup {
         });
         this.selectedToolPathArray.forEach((id) => {
             const selectedToolpath = this._getToolPath(id);
-            if (selectedToolpath && selectedToolpath.modelIDs) {
-                for (const modelId of selectedToolpath?.modelIDs) {
+            if (selectedToolpath && selectedToolpath.visibleModelIDs) {
+                for (const modelId of selectedToolpath?.visibleModelIDs) {
                     const model = modelGroup.getModel(modelId);
                     model && model.updateIsToolPathSelect(true);
                 }

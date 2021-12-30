@@ -3,7 +3,7 @@ import { baseActions as printingBaseActions } from '../printing/actions-base';
 
 const updateState = (headType, state) => {
     if (headType === 'printing') {
-        return printingBaseActions.updateState(state);
+        return printingBaseActions.updateState(headType, state);
     } else if (headType === 'cnc' || headType === 'laser') {
         return editorBaseActions.updateState(headType, state);
     }
