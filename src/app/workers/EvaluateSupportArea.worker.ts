@@ -29,3 +29,5 @@ onmessage = (event) => {
     }
     postMessage({ colors });
 };
+
+export default {};
