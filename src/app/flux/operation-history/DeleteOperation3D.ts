@@ -13,7 +13,8 @@ type DeleteOperationState = {
     target: ThreeGroup | ThreeModel,
     modelGroup: ModelGroup
     groupTransformation: ModelTransformation,
-    modelTransformation: Map<string, ModelTransformation>
+    modelTransformation: Map<string, ModelTransformation>,
+    childrens?: Array<ThreeGroup | ThreeModel>
 };
 
 export default class DeleteOperation3D extends Operation<DeleteOperationState> {
@@ -35,13 +36,17 @@ export default class DeleteOperation3D extends Operation<DeleteOperationState> {
                 }
                 return null;
             })(),
-            modelTransformation: new Map()
+            modelTransformation: new Map(),
+            childrens: []
         };
 
         if (model instanceof ThreeModel) {
             this.state.modelTransformation.set(model.modelID, model.transformation);
         } else if (model instanceof ThreeGroup) {
-            model.children.forEach(subModel => this.state.modelTransformation.set(subModel.modelID, subModel.transformation));
+            model.children.forEach(subModel => {
+                this.state.childrens.push(subModel);
+                this.state.modelTransformation.set(subModel.modelID, { ...subModel.transformation });
+            });
         }
 
         // an object to be deleted will be selected at first, unwrapped from parent group
@@ -111,12 +116,13 @@ export default class DeleteOperation3D extends Operation<DeleteOperationState> {
                 model.updateTransformation(this.state.modelTransformation.get(model.modelID));
             }
         } else if (model instanceof ThreeGroup) {
+            model.children = this.state.childrens;
             modelGroup.models = modelGroup.models.concat(model);
             ThreeUtils.setObjectParent(model.meshObject, modelGroup.object);
             model.updateTransformation(this.state.groupTransformation);
             model.children.forEach(subModel => {
                 ThreeUtils.setObjectParent(subModel.meshObject, model.meshObject);
-                this.state.modelTransformation.get(subModel.modelID);
+                subModel.updateTransformation(this.state.modelTransformation.get(subModel.modelID));
             });
         }
         if (model.isSelected) {
