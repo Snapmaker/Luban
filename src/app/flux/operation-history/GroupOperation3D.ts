@@ -96,19 +96,24 @@ export default class GroupOperation3D extends Operation<GroupState> {
         this.state.selectedModels.forEach(model => {
             const modelSnapshot = this.state.modelsInGroup.get(model.modelID);
             if (modelSnapshot) {
-                const group = modelGroup.getModel(modelSnapshot.groupModel.modelID);
-                if (group) {
-                    modelGroup.recoveryGroup(group, model);
-                    model.updateTransformation(modelSnapshot.modelTransformation);
-                    modelGroup.models = modelGroup.getModels().filter((m: ThreeModel) => {
-                        return m.modelID !== model.modelID;
-                    });
-                    group.stickToPlate();
+                if (modelSnapshot.groupModel) {
+                    const group = modelGroup.getModel(modelSnapshot.groupModel.modelID);
+                    if (group) {
+                        modelGroup.recoveryGroup(group, model);
+                        model.updateTransformation(modelSnapshot.modelTransformation);
+                        modelGroup.models = modelGroup.getModels().filter((m: ThreeModel) => {
+                            return m.modelID !== model.modelID;
+                        });
+                        group.stickToPlate();
+                    } else {
+                        modelGroup.models = modelGroup.models.concat(modelSnapshot.groupModel);
+                        modelGroup.object.add(modelSnapshot.groupMesh);
+                        modelSnapshot.groupModel.updateTransformation(modelSnapshot.groupTransformation);
+                        // modelSnapshot.groupModel.updateTransformation(modelSnapshot.modelTransformation);
+                    }
                 } else {
-                    modelGroup.models = modelGroup.models.concat(modelSnapshot.groupModel);
-                    modelGroup.object.add(modelSnapshot.groupMesh);
-                    modelSnapshot.groupModel.updateTransformation(modelSnapshot.groupTransformation);
-                    // modelSnapshot.groupModel.updateTransformation(modelSnapshot.modelTransformation);
+                    // update models which is not inside group
+                    model.updateTransformation(modelSnapshot.modelTransformation);
                 }
             }
         });
