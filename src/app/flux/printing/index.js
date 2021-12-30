@@ -2211,7 +2211,11 @@ export const actions = {
         const { materialDefinitions, defaultMaterialId, defaultMaterialIdRight } = getState().printing;
         const materialID = (direction === LEFT_EXTRUDER ? defaultMaterialId : defaultMaterialIdRight);
         const index = materialDefinitions.findIndex(d => d.definitionId === materialID);
-        return materialDefinitions[index].settings.color.default_value;
+        if (index >= 0) {
+            return materialDefinitions[index].settings.color.default_value;
+        } else {
+            return materialDefinitions[0].settings.color.default_value;
+        }
     },
 
     updateAllModelColors: () => (dispatch) => {

@@ -68,7 +68,7 @@ function useGetDefinitions(allDefinitions, definitionState, setDefinitionState, 
             checkboxAndSelectGroup.label = d.name;
             checkboxAndSelectGroup.value = d.definitionId;
             checkboxAndSelectGroup.isDefault = !!d.isDefault;
-            checkboxAndSelectGroup.color = d.settings.color.default_value;
+            if (d.settings.color) checkboxAndSelectGroup.color = d.settings.color.default_value;
             if (d?.category) {
                 checkboxAndSelectGroup.category = d.category;
             }
