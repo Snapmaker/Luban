@@ -1,6 +1,6 @@
 import api from '../../api';
 import i18n from '../../lib/i18n';
-import { HEAD_CNC, LEFT_EXTRUDER_MAP_NUMBER } from '../../constants';
+import { HEAD_CNC, RIGHT_EXTRUDER_MAP_NUMBER } from '../../constants';
 
 class DefinitionManager {
     headType = HEAD_CNC;
@@ -215,10 +215,10 @@ class DefinitionManager {
         if (settings.support_infill_rate) {
             const supportInfillRate = settings.support_infill_rate.default_value;
             let supportLineWidth;
-            if (helpersExtruderConfig.support === LEFT_EXTRUDER_MAP_NUMBER) {
-                supportLineWidth = extruderLDefinitionSettings.machine_nozzle_size.default_value; // support_line_width
-            } else {
+            if (helpersExtruderConfig.support === RIGHT_EXTRUDER_MAP_NUMBER) {
                 supportLineWidth = extruderRDefinitionSettings.machine_nozzle_size.default_value; // support_line_width
+            } else {
+                supportLineWidth = extruderLDefinitionSettings.machine_nozzle_size.default_value; // support_line_width
             }
 
             // "0 if support_infill_rate == 0 else (support_line_width * 100) / support_infill_rate *
@@ -308,7 +308,7 @@ class DefinitionManager {
         return definition;
     }
 
-    finalizeModelDefinition(activeDefinition) {
+    finalizeModelDefinition(activeDefinition, item, extruderLDefinition, extruderRDefinition) {
         const definition = {
             definitionId: 'model_final',
             name: 'Model Profile',
@@ -327,6 +327,43 @@ class DefinitionManager {
                     definition.ownKeys.push(key);
                 }
             });
+        const meshKeys = ['infill_line_distance', 'infill_line_width',
+            'wall_line_count', 'wall_line_width', 'wall_line_width_0', 'wall_line_width_x', 'skin_line_width'];
+        meshKeys.forEach((key) => {
+            definition.settings[key] = {
+                default_value: 0
+            };
+            definition.ownKeys.push(key);
+        });
+
+        definition.settings.infill_extruder_nr.default_value = item.extruderConfig.infill;
+        definition.settings.wall_extruder_nr.default_value = item.extruderConfig.shell;
+        definition.settings.wall_0_extruder_nr.default_value = item.extruderConfig.shell;
+        definition.settings.wall_x_extruder_nr.default_value = item.extruderConfig.shell;
+        definition.settings.roofing_extruder_nr.default_value = item.extruderConfig.shell;
+        definition.settings.top_bottom_extruder_nr.default_value = item.extruderConfig.shell;
+
+        if (item.extruderConfig.infill === '0') {
+            definition.settings.infill_line_distance.default_value = extruderLDefinition.settings.infill_line_distance.default_value;
+            definition.settings.infill_line_width.default_value = extruderLDefinition.settings.infill_line_width.default_value;
+        } else {
+            definition.settings.infill_line_distance.default_value = extruderRDefinition.settings.infill_line_distance.default_value;
+            definition.settings.infill_line_width.default_value = extruderRDefinition.settings.infill_line_width.default_value;
+        }
+
+        if (item.extruderConfig.shell === '0') {
+            definition.settings.wall_line_count.default_value = extruderLDefinition.settings.wall_line_count.default_value;
+            definition.settings.wall_line_width.default_value = extruderLDefinition.settings.wall_line_width.default_value;
+            definition.settings.wall_line_width_0.default_value = extruderLDefinition.settings.wall_line_width_0.default_value;
+            definition.settings.wall_line_width_x.default_value = extruderLDefinition.settings.wall_line_width_x.default_value;
+            definition.settings.skin_line_width.default_value = extruderLDefinition.settings.skin_line_width.default_value;
+        } else {
+            definition.settings.wall_line_count.default_value = extruderRDefinition.settings.wall_line_count.default_value;
+            definition.settings.wall_line_width.default_value = extruderRDefinition.settings.wall_line_width.default_value;
+            definition.settings.wall_line_width_0.default_value = extruderRDefinition.settings.wall_line_width_0.default_value;
+            definition.settings.wall_line_width_x.default_value = extruderRDefinition.settings.wall_line_width_x.default_value;
+            definition.settings.skin_line_width.default_value = extruderRDefinition.settings.skin_line_width.default_value;
+        }
         return definition;
     }
 
