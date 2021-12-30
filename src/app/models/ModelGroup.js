@@ -694,12 +694,14 @@ class ModelGroup extends EventEmitter {
             case SELECTEVENT.UNSELECT_ADDSELECT:
                 model = this.findModelByMesh(intersect.object);
                 if (model.parent) {
-                    this.unselectAllModelsInGroup(model.parent);
-                    this.unselectAllModels();
-                    // Uncheck if there is only one model in the group
-                    if (model.parent.children.length === 1) {
+                    // Unselect if there is only one model in the group
+                    if (model.parent.children.length === 1 && model.parent.isSelected) {
+                        this.unselectAllModelsInGroup(model.parent);
+                        this.unselectAllModels();
                         break;
                     }
+                    this.unselectAllModelsInGroup(model.parent);
+                    this.unselectAllModels();
                 } else {
                     this.unselectAllModels({ recursive: true });
                 }
@@ -1977,7 +1979,8 @@ class ModelGroup extends EventEmitter {
                     const index = model.parent.children.findIndex(subModel => subModel.modelID === model.modelID);
                     model.parent.children.splice(index, 1);
                     this.models.push(model);
-                    model.parent.meshObject.remove(model.meshObject);
+                    ThreeUtils.setObjectParent(model.meshObject, model.parent.meshObject.parent);
+                    model.parent.computeBoundingBox();
                     if (model.parent.meshObject.children.length === 0) {
                         this.object.remove(model.parent.meshObject);
                         this.models = this.models.filter(m => m.modelID !== model.parent.modelID);
@@ -1996,15 +1999,11 @@ class ModelGroup extends EventEmitter {
             this.models = this.models.filter(model => selectedModelArray.indexOf(model) === -1);
 
             this.object.add(group.meshObject);
-            this.addModelToSelectedGroup(group);
             group.stickToPlate();
-
-            const point = this._computeAvailableXY(group, this.models.filter(model => model !== group));
-            group.meshObject.position.x = point.x;
-            group.meshObject.position.y = point.y;
             group.meshObject.updateMatrix();
             group.computeBoundingBox();
             group.onTransform();
+            this.addModelToSelectedGroup(group);
         }
         return {
             newGroup: group,
