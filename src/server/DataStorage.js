@@ -91,10 +91,11 @@ class DataStorage {
      async init() {
          const definitionUpdated = config.get('DefinitionUpdated');
          let overwriteProfiles = false;
-         if (semver.gte(settings.version, '4.1.0') && (!definitionUpdated || !definitionUpdated['4.1.0'])) {
+         if (semver.gte(settings.version, '4.1.0') && (!definitionUpdated || !definitionUpdated[settings.version])) {
              overwriteProfiles = true;
              config.set('DefinitionUpdated', {
-                 '4.1.0': true
+                 ...definitionUpdated,
+                 [settings.version]: true
              });
          }
          mkdirp.sync(this.envDir);
@@ -185,6 +186,7 @@ class DataStorage {
              const printingDir = `${srcDir}/${PRINTING_CONFIG_SUBCATEGORY}`;
              const seriesFiles = fs.readdirSync(printingDir);
              for (const oldFileName of printingConfigNames) {
+                 const oldFilePath = `${srcDir}/${oldFileName}`;
                  for (const file of seriesFiles) {
                      let currentFile = file;
                      if (includes(officialMachine, file)) {
@@ -192,11 +194,11 @@ class DataStorage {
                      }
                      const src = path.join(printingDir, currentFile);
                      if (!fs.statSync(src).isFile()) {
-                         const oldFilePath = `${srcDir}/${oldFileName}`;
                          const newFilePath = `${src}/${oldFileName}`;
                          fs.copyFileSync(oldFilePath, newFilePath);
                      }
                  }
+                 fs.unlinkSync(oldFilePath);
              }
          }
          if (cncConfigPaths.length) {
@@ -255,7 +257,6 @@ class DataStorage {
      }
 
      async initSlicer(overwriteProfiles = false) {
-         overwriteProfiles && rmDir(this.configDir);
          mkdirp.sync(this.configDir);
          mkdirp.sync(this.defaultConfigDir);
          mkdirp.sync(`${this.configDir}/${CNC_CONFIG_SUBCATEGORY}`);
@@ -263,11 +264,10 @@ class DataStorage {
          mkdirp.sync(`${this.configDir}/${PRINTING_CONFIG_SUBCATEGORY}`);
 
          const CURA_ENGINE_CONFIG_LOCAL = '../resources/CuraEngine/Config';
-         // this.upgradeConfigFile(this.configDir);
          await this.copyDirForInitSlicer(CURA_ENGINE_CONFIG_LOCAL, this.configDir, true, overwriteProfiles);
+         this.upgradeConfigFile(this.configDir);
          await this.copyDirForInitSlicer(CURA_ENGINE_CONFIG_LOCAL, this.defaultConfigDir, true, true);
      }
-
 
      async initFonts() {
          mkdirp.sync(this.fontDir);

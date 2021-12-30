@@ -17,7 +17,8 @@
         "color": {
             "label": "Color",
             "description": "Set Luban render color.",
-            "type": "color"
+            "type": "color",
+            "default_value": "#000000"
         },
         "adhesion_extruder_nr": {
             "label": "Heated Bed Adhesion Extruder",

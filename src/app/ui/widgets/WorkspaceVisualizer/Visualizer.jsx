@@ -24,6 +24,7 @@ import {
     WORKFLOW_STATUS_UNKNOWN,
     IMAGE_WIFI_ERROR,
     IMAGE_WIFI_WARNING,
+    LEVEL_TWO_POWER_LASER_FOR_SM2,
     HEAD_CNC,
     HEAD_PRINTING,
     HEAD_LASER
@@ -58,6 +59,7 @@ class Visualizer extends PureComponent {
         isEmergencyStopped: PropTypes.bool,
         materialThickness: PropTypes.number,
         isLaserPrintAutoMode: PropTypes.bool,
+        toolHead: PropTypes.string,
 
         laser10WErrorState: PropTypes.number,
 
@@ -264,14 +266,18 @@ class Visualizer extends PureComponent {
             return (this.props.headType === HEAD_LASER);
         },
         handleRun: () => {
-            const { connectionType, isRotate } = this.props;
+            const { connectionType, isRotate, toolHead } = this.props;
             if (connectionType === CONNECTION_TYPE_SERIAL) {
                 const { workflowState } = this.state;
                 const { isLaserPrintAutoMode, materialThickness } = this.props;
                 if (this.actions.isLaser()) {
                     this.props.executeGcode('G0 X0 Y0 F1000');
                     if (!isRotate) {
-                        this.props.executeGcode(`G0 Z${(isLaserPrintAutoMode ? 0 : materialThickness)} F1000`);
+                        if (toolHead === LEVEL_TWO_POWER_LASER_FOR_SM2) {
+                            this.props.executeGcode(`G0 Z${(isLaserPrintAutoMode ? 0 : materialThickness)} F1000`);
+                        } else {
+                            this.props.executeGcode(`G0 Z${(isLaserPrintAutoMode ? materialThickness : 0)} F1000`);
+                        }
                     }
                 }
 
@@ -848,6 +854,7 @@ const mapStateToProps = (state) => {
         isEnclosureDoorOpen: machine.isEnclosureDoorOpen,
         laser10WErrorState: machine.laser10WErrorState,
         headType: workspace.headType,
+        toolHead: workspace.toolHead,
         workflowStatus: machine.workflowStatus,
         isConnected: machine.isConnected,
         connectionType: machine.connectionType,
