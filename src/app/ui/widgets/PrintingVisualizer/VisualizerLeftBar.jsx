@@ -674,7 +674,7 @@ function VisualizerLeftBar({ defaultSupportSize, setTransformMode, isSupporting,
                                                 setTransformMode('extruder');
                                                 !selectedModelArray.length && dispatch(printingActions.selectAllModels());
                                             }}
-                                            disabled={!!dualExtruderDisabled}
+                                            disabled={Boolean(dualExtruderDisabled)}
                                         />
                                     </li>
                                 )}

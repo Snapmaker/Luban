@@ -1,21 +1,19 @@
 import { v4 as uuid } from 'uuid';
 import * as THREE from 'three';
+import { ObjectLoader } from 'three';
 import {
     LOAD_MODEL_FROM_INNER
 } from '../constants';
 
 import ThreeUtils from '../three-extensions/ThreeUtils';
 
-import BaseModel from './ThreeBaseModel';
 import WorkerManager from '../lib/manager/WorkerManager';
 import ThreeGroup from './ThreeGroup';
+import BaseModel from './ThreeBaseModel.ts';
+import { machineStore } from '../store/local-storage';
 
-const materialOverstepped = new THREE.MeshPhongMaterial({
-    color: 0xff0000,
-    shininess: 30,
-    transparent: true,
-    opacity: 0.6
-});
+const materialOverstepped = new THREE.Color(0xff0000);
+
 class ThreeModel extends BaseModel {
     loadFrom = LOAD_MODEL_FROM_INNER;
 
@@ -40,9 +38,25 @@ class ThreeModel extends BaseModel {
         super(modelInfo, modelGroup);
         const { width, height, processImageName } = modelInfo;
 
-
         this.geometry = modelInfo.geometry || new THREE.PlaneGeometry(width, height);
-        const material = modelInfo.material || new THREE.MeshBasicMaterial({ color: 0xe0e0e0, visible: false });
+        let material = modelInfo.material || new THREE.MeshStandardMaterial({ color: 0xe0e0e0, visible: false });
+
+        try {
+            const objectLoader = new ObjectLoader();
+            const json = JSON.parse(machineStore.get('scene'));
+            const object = objectLoader.parse(json);
+            const shapes = objectLoader.parseShapes(json.shapes);
+            const geometries = objectLoader.parseGeometries(json.geometries, shapes);
+            const images = objectLoader.parseImages(json.images);
+            const textures = objectLoader.parseTextures(json.textures, images);
+            const materials = objectLoader.parseMaterials(json.materials, textures);
+            const newMaterial = materials['720E037C-55F1-4569-94A2-A03F6BD38BE0'];
+            newMaterial.color = new THREE.Color(0xff0000);
+            console.log('object', geometries, object, newMaterial);
+            material = newMaterial;
+        } catch (e) {
+            console.error('error', e);
+        }
 
         this.meshObject = new THREE.Mesh(this.geometry, material);
 
@@ -110,14 +124,8 @@ class ThreeModel extends BaseModel {
     }
 
     updateMaterialColor(color) {
-        this._materialNormal = new THREE.MeshPhongMaterial({
-            color: color,
-            side: THREE.DoubleSide
-        });
-        this._materialSelected = new THREE.MeshPhysicalMaterial({
-            color: color,
-            side: THREE.DoubleSide
-        });
+        this._materialNormal = new THREE.Color(color);
+        this._materialSelected = new THREE.Color(color);
         this.setSelected();
     }
 
@@ -236,18 +244,17 @@ class ThreeModel extends BaseModel {
             this.isSelected = isSelected;
         }
         if (this.overstepped === true) {
-            this.meshObject.material = materialOverstepped.clone();
+            this.meshObject.material.color.set(materialOverstepped);
         } else if (this.isSelected === true) {
-            this.meshObject.material = this._materialSelected.clone();
+            this.meshObject.material.color.set(this._materialSelected.clone());
         } else {
-            this.meshObject.material = this._materialNormal.clone();
+            this.meshObject.material.color.set(this._materialNormal.clone());
         }
 
         // for indexed geometry
         if (isSelected && this.type !== 'primeTower' && this.meshObject.geometry.getAttribute('color')) {
             this.meshObject.material.vertexColors = true;
         }
-
         // for support geometry
         if (this.supportTag) {
             this.meshObject.material.color.set(0xFFD700);

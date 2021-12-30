@@ -189,6 +189,7 @@ export const updateDefinition = async (req, res) => {
 export const uploadDefinition = (req, res) => {
     const { headType } = req.params;
     const { definitionId, uploadName, series } = req.body;
+    console.log('DataStorage.tmpDir', DataStorage.tmpDir);
     const readFileSync = fs.readFileSync(`${DataStorage.tmpDir}/${uploadName}`, 'utf-8');
     let obj;
     try {

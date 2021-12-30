@@ -56,7 +56,7 @@ class Controls extends EventEmitter {
 
     lastQuaternion = new THREE.Quaternion();
 
-    minDistance = 10;
+    minDistance = 0.0000001;
 
     // calculation temporary variables
     // spherical rotation

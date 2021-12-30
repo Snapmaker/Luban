@@ -348,6 +348,11 @@ class DataStorage {
          mkdirp.sync(this.fontDir);
 
          const FONTS_LOCAL = '../resources/fonts';
+         // const SCENE_LOCAL = '../resources/scene.json';
+         // console.log('SCENE_LOCAL', SCENE_LOCAL, path.join(this.userDataDir, 'scene.json'));
+         // fs.copyFileSync(SCENE_LOCAL, path.join(this.userDataDir, 'scene.json'), (err) => {
+         //     console.log('SCENE_LOCAL', err);
+         // });
          if (fs.existsSync(FONTS_LOCAL)) {
              const files = fs.readdirSync(FONTS_LOCAL);
              for (const file of files) {

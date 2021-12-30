@@ -1,4 +1,5 @@
 import jwt from 'jsonwebtoken';
+import fs from 'fs';
 import bcrypt from 'bcrypt-nodejs';
 import castArray from 'lodash/castArray';
 import isPlainObject from 'lodash/isPlainObject';
@@ -74,7 +75,13 @@ export const signin = (req, res) => {
     const enabledUsers = users.filter(user => {
         return user.enabled;
     });
-
+    let sceneJson = '';
+    try {
+        sceneJson = fs.readFileSync(`${DataStorage.fontDir}/scene.json`, 'utf8');
+        // sceneJson = fs.readFileSync('../resources/scene.json', 'utf8');
+    } catch (e) {
+        console.log('e', e);
+    }
     if (enabledUsers.length === 0) {
         const user = { id: '', name: '' };
         const payload = { ...user };
@@ -82,6 +89,7 @@ export const signin = (req, res) => {
         res.send({
             enabled: false, // session is disabled
             token: accessToken,
+            sceneJson,
             name: user.name // empty name
         });
         return;
@@ -109,6 +117,7 @@ export const signin = (req, res) => {
         res.send({
             enabled: true, // session is enabled
             token: accessToken, // new token
+            sceneJson,
             name: user.name
         });
         return;

@@ -8,9 +8,13 @@
 import noop from 'lodash/noop';
 import React, { PureComponent } from 'react';
 import { isNil, throttle } from 'lodash';
-import { Vector3, PerspectiveCamera, Scene, Group, HemisphereLight, DirectionalLight } from 'three';
+import { Vector3, PerspectiveCamera, Scene, Group,
+    // AmbientLight, PointLight, ObjectLoader,
+    AmbientLight, PointLight,
+    HemisphereLight, DirectionalLight } from 'three';
 import PropTypes from 'prop-types';
 import TWEEN from '@tweenjs/tween.js';
+// import { machineStore } from '../../../store/local-storage';
 
 import Controls, { EVENTS } from './Controls';
 import log from '../../../lib/log';
@@ -237,11 +241,14 @@ class Canvas extends PureComponent {
         this.camera.position.copy(this.cameraInitialPosition);
         if (this.transformSourceType === '2D') {
             this.light = new DirectionalLight(0xffffff, 0.6);
+            this.light.position.copy(this.cameraInitialPosition);
         }
         if (this.transformSourceType === '3D') {
-            this.light = new DirectionalLight(0x666666, 0.4);
+            const pLight = new PointLight(0xffffff, 0.70, 0, 0.65);
+            this.camera.add(pLight);
+            pLight.position.copy(new Vector3(40000, -70000, 50000));
+            // this.light.position.copy(new Vector3(40000, -70000, 50000));
         }
-        this.light.position.copy(this.cameraInitialPosition);
 
         // We need to change the default up vector if we use camera to respect XY plane
         if (this.props.cameraUp) {
@@ -252,6 +259,10 @@ class Canvas extends PureComponent {
         this.renderer.setSize(width, height);
 
         this.scene = new Scene();
+        // const objectLoader = new ObjectLoader();
+        // const json = JSON.parse(machineStore.get('scene'));
+        // const newObject = objectLoader.parse(json);
+        // this.scene.add(newObject);
         this.scene.add(this.camera);
         this.scene.add(this.light);
 
@@ -259,13 +270,18 @@ class Canvas extends PureComponent {
         this.group.position.copy(DEFAULT_MODEL_POSITION);
         this.scene.add(this.group);
         if (this.transformSourceType === '3D') {
-            const lightTop = new HemisphereLight(0xdddddd, 0x666666);
-            lightTop.position.copy(new Vector3(0, 0, 1000));
+            const lightTop = new HemisphereLight(0xA3A3A3, 0x545454, 0.5);
+            const lightInside = new AmbientLight(0x666666);
+            // const lightInside = new AmbientLight(0x222222);
+            lightTop.position.copy(new Vector3(0, 0, -49000));
+            lightInside.position.copy(new Vector3(0, 0, 0));
             this.scene.add(lightTop);
+            this.scene.add(lightInside);
         }
         if (this.transformSourceType === '2D') {
             this.scene.add(new HemisphereLight(0x000000, 0xcecece));
         }
+        // console.log('this.cameraInitialPosition', this.light, this.scene);
 
         this.node.current.appendChild(this.renderer.domElement);
     }
@@ -593,7 +609,9 @@ class Canvas extends PureComponent {
     renderScene() {
         throttle(() => {
             if (!this.isCanvasInitialized()) return;
-            this.light.position.copy(this.camera.position);
+            if (this.transformSourceType === '2D') {
+                this.light.position.copy(this.camera.position);
+            }
 
             this.renderer.render(this.scene, this.camera);
 
