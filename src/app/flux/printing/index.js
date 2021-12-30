@@ -1140,7 +1140,7 @@ export const actions = {
 
     prepareModel: () => (dispatch, getState) => {
         return new Promise((resolve) => {
-            const { modelGroup, activeDefinition } = getState().printing;
+            const { modelGroup, activeDefinition, extruderLDefinition, extruderRDefinition } = getState().printing;
 
 
             // modelGroup.removeHiddenMeshObjects();
@@ -1151,13 +1151,7 @@ export const actions = {
                 const models = modelGroup.models.filter(i => i.visible);
                 const ret = { model: [], support: [], definition: [], originalName: null };
                 for (const item of models) {
-                    const modelDefinition = definitionManager.finalizeModelDefinition(activeDefinition);
-                    modelDefinition.settings.infill_extruder_nr.default_value = item.extruderConfig.infill;
-                    modelDefinition.settings.wall_extruder_nr.default_value = item.extruderConfig.shell;
-                    modelDefinition.settings.wall_0_extruder_nr.default_value = item.extruderConfig.shell;
-                    modelDefinition.settings.wall_x_extruder_nr.default_value = item.extruderConfig.shell;
-                    modelDefinition.settings.roofing_extruder_nr.default_value = item.extruderConfig.shell;
-                    modelDefinition.settings.top_bottom_extruder_nr.default_value = item.extruderConfig.shell;
+                    const modelDefinition = definitionManager.finalizeModelDefinition(activeDefinition, item, extruderLDefinition, extruderRDefinition);
 
                     const mesh = item.cloneMeshWithoutSupports();
                     // mesh.children = []; // remove support children
