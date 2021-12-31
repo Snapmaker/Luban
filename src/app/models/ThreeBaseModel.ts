@@ -42,7 +42,7 @@ export type ModelInfo = {
     children?: Array<ModelInfo>
     geometry?: THREE.BufferGeometry,
     material?: THREE.Material,
-    primeTowerTag?: boolean
+    type?: string
 };
 
 const DEFAULT_TRANSFORMATION: ModelTransformation = {
@@ -75,6 +75,8 @@ export default class BaseModel {
 
     meshObject: THREE.Object3D;
 
+    type: string;
+
     constructor(modelInfo, modelGroup) {
         this.modelGroup = modelGroup;
 
@@ -84,6 +86,7 @@ export default class BaseModel {
         this.modelID = this.modelID || `id${uuid()}`;
         this.modelName = this.modelName ?? 'unnamed';
         this.transformation = { ...DEFAULT_TRANSFORMATION, ...this.transformation };
+        this.type = modelInfo.type || 'baseModel';
     }
 
     updateTransformation(transformation: ModelTransformation): ModelTransformation {

@@ -382,7 +382,7 @@ class Controls extends EventEmitter {
                         this.onClick(event, true);
                         // Right click to open context menu
                         // Note that the event is mouse up, not really contextmenu
-                        this.emit(EVENTS.CONTEXT_MENU, event);
+                        !this.isPrimeTower && this.emit(EVENTS.CONTEXT_MENU, event);
                     }
                 } else {
                     this.onPan();

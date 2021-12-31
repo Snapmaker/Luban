@@ -4,7 +4,7 @@ import type ModelGroup from './ModelGroup';
 import { ModelInfo, ModelTransformation } from './ThreeBaseModel';
 
 class PrimeTowerModel extends ThreeModel {
-    primeTowerTag: boolean;
+    type: string;
 
     constructor(initHeight: Number, modelGroup: ModelGroup, transformation?: ModelTransformation) {
         const geometry = new THREE.CylinderBufferGeometry(10, 10, 1, 60);
@@ -29,7 +29,7 @@ class PrimeTowerModel extends ThreeModel {
             headType: 'printing',
             sourceHeight: 0,
             sourceWidth: 0,
-            primeTowerTag: true
+            type: 'primeTower'
         };
 
         super(modelInfo, modelGroup);

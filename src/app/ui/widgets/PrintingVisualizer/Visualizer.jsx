@@ -418,8 +418,12 @@ class Visualizer extends PureComponent {
             }
         }
         if (!Number.isNaN(primeTowerHeight) && !Number.isNaN(this.props.primeTowerHeight) && primeTowerHeight !== this.props.primeTowerHeight) {
-            const primeTowerModel = find(modelGroup.models, { primeTowerTag: true });
+            const primeTowerModel = find(modelGroup.models, { type: 'primeTower' });
             if (primeTowerModel) {
+                const isSelected = primeTowerModel.isSelected;
+                if (isSelected) {
+                    modelGroup.removeModelFromSelectedGroup(primeTowerModel);
+                }
                 primeTowerModel.updateTransformation({
                     scaleZ: primeTowerHeight / 1,
                 });
@@ -432,7 +436,7 @@ class Visualizer extends PureComponent {
         }
         this.canvas.current.renderScene();
         if (enablePrimeTower !== this.props.enablePrimeTower && printingToolhead === DUAL_EXTRUDER_TOOLHEAD_FOR_SM2) {
-            const primeTowerModel = find(modelGroup.models, { primeTowerTag: true });
+            const primeTowerModel = find(modelGroup.models, { type: 'primeTower' });
             if (primeTowerModel) {
                 if (!enablePrimeTower) {
                     this.props.hidePrimeTower(primeTowerModel);
@@ -466,7 +470,7 @@ class Visualizer extends PureComponent {
         const notice = this.getNotice();
         const progress = this.props.progress;
         const pasteDisabled = (modelGroup.clipboard.length === 0);
-        const primeTowerSelected = selectedModelArray.length > 0 && some(selectedModelArray, { primeTowerTag: true });
+        const primeTowerSelected = selectedModelArray.length > 0 && some(selectedModelArray, { type: 'primeTower' });
         return (
             <div
                 className={styles['printing-visualizer']}
