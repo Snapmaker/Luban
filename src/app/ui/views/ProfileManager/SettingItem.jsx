@@ -24,9 +24,6 @@ function SettingItem({ definitionKey, settings, isDefaultDefinition = () => true
     if (typeof enabled === 'string') {
         if (enabled.indexOf(' and ') !== -1) {
             const andConditions = enabled.split(' and ').map(c => c.trim());
-            if (definitionKey === 'prime_tower_brim_enable') {
-                console.log('andConditions', andConditions);
-            }
             for (const condition of andConditions) {
             // parse resolveOrValue('adhesion_type') == 'skirt'
                 const enabledKey = condition.match("resolveOrValue\\('(.[^)|']*)'") ? condition.match("resolveOrValue\\('(.[^)|']*)'")[1] : null;

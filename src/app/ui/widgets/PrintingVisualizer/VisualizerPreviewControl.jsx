@@ -14,6 +14,52 @@ import Select from '../../components/Select';
 import { DUAL_EXTRUDER_TOOLHEAD_FOR_SM2, LEFT_EXTRUDER, RIGHT_EXTRUDER } from '../../../constants';
 import { machineStore } from '../../../store/local-storage';
 
+// TODO
+const lineTypeObjects0 = [
+    {
+        fatherContent: i18n._('key-Printing/Preview-Inner Wall'),
+        fatherColor: '#00ff00',
+        showType: 'showWallInner',
+        showTypeName: 'WALL-INNER'
+    },
+    {
+        fatherContent: i18n._('key-Printing/Preview-Outer Wall'),
+        fatherColor: '#ff2121',
+        showType: 'showWallOuter',
+        showTypeName: 'WALL-OUTER'
+    },
+    {
+        fatherContent: i18n._('key-Printing/Preview-Skin'),
+        fatherColor: '#ffff00',
+        showType: 'showSkin',
+        showTypeName: 'SKIN'
+    },
+    {
+        fatherContent: i18n._('key-Printing/Preview-Helper'),
+        fatherColor: '#4b0082',
+        showType: 'showSupport',
+        showTypeName: 'SUPPORT'
+    },
+    {
+        fatherContent: i18n._('key-Printing/Preview-Fill'),
+        fatherColor: '#8d4bbb',
+        showType: 'showFill',
+        showTypeName: 'FILL'
+    },
+    {
+        fatherContent: i18n._('key-Printing/Preview-Travel'),
+        fatherColor: '#44cef6',
+        showType: 'showTravel',
+        showTypeName: 'TRAVEL'
+    },
+    {
+        fatherContent: i18n._('key-Printing/Preview-Unknown'),
+        fatherColor: '#4b0082',
+        showType: 'showUnknown',
+        showTypeName: 'UNKNOWN'
+    },
+];
+
 function useShowToggleBtn() {
     const [showToggleBtn, setShowToggleBtn] = useState(true);
     function onToggleToggleBtn() {
@@ -162,50 +208,6 @@ function VisualizerPreviewControl() {
     }
 
     // TODO
-    const lineTypeObjects0 = [
-        {
-            fatherContent: i18n._('key-Printing/Preview-Inner Wall'),
-            fatherColor: '#00ff00',
-            showType: 'showWallInner',
-            showTypeName: 'WALL-INNER'
-        },
-        {
-            fatherContent: i18n._('key-Printing/Preview-Outer Wall'),
-            fatherColor: '#ff2121',
-            showType: 'showWallOuter',
-            showTypeName: 'WALL-OUTER'
-        },
-        {
-            fatherContent: i18n._('key-Printing/Preview-Skin'),
-            fatherColor: '#ffff00',
-            showType: 'showSkin',
-            showTypeName: 'SKIN'
-        },
-        {
-            fatherContent: i18n._('key-Printing/Preview-Helper'),
-            fatherColor: '#4b0082',
-            showType: 'showSupport',
-            showTypeName: 'SUPPORT'
-        },
-        {
-            fatherContent: i18n._('key-Printing/Preview-Fill'),
-            fatherColor: '#8d4bbb',
-            showType: 'showFill',
-            showTypeName: 'FILL'
-        },
-        {
-            fatherContent: i18n._('key-Printing/Preview-Travel'),
-            fatherColor: '#44cef6',
-            showType: 'showTravel',
-            showTypeName: 'TRAVEL'
-        },
-        {
-            fatherContent: i18n._('key-Printing/Preview-Unknown'),
-            fatherColor: '#4b0082',
-            showType: 'showUnknown',
-            showTypeName: 'UNKNOWN'
-        },
-    ];
 
     const lineTypeObjects1 = [
         {

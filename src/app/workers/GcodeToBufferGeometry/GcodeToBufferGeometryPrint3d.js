@@ -114,9 +114,6 @@ class GcodeToBufferGeometryPrint3d {
                 if (!lastTypeCode) {
                     lastTypeCode = typeCode;
                 }
-                if (layerIndex < 10) {
-                    console.log(toolCode, layerIndex);
-                }
                 if (lastTypeCode !== typeCode) {
                     lastTypeCode = typeCode;
 
