@@ -140,6 +140,9 @@ STLLoader.prototype = {
 
 			var vertices = [];
 			var normals = [];
+			var faceVertexUvs = [[]];
+			var uv = [];
+			console.log('faces', faces);
 
 			for ( var face = 0; face < faces; face ++ ) {
 			    if (face / faces - progress > 0.01) {
@@ -151,6 +154,9 @@ STLLoader.prototype = {
 				var normalX = reader.getFloat32( start, true );
 				var normalY = reader.getFloat32( start + 4, true );
 				var normalZ = reader.getFloat32( start + 8, true );
+				if (face === 0) {
+					console.log('geometry geometry', normalX, normalY, normalZ);
+				}
 
 				if ( hasColors ) {
 
@@ -191,11 +197,19 @@ STLLoader.prototype = {
 					}
 
 				}
+				faceVertexUvs[0].push([new THREE.Vector2(0,1), new THREE.Vector2(1,1), new THREE.Vector2(0,0)]);
 
 			}
 
 			geometry.setAttribute( 'position', new THREE.BufferAttribute( new Float32Array( vertices ), 3 ) );
 			geometry.setAttribute( 'normal', new THREE.BufferAttribute( new Float32Array( normals ), 3 ) );
+		    // https://stackoverflow.com/questions/55472178/how-to-add-texture-to-buffergeometry-faces
+			faceVertexUvs[0].forEach( function ( faceUvs ) {
+	          for (let i = 0; i < 3; ++i) {
+	              uv.push( ...faceUvs[i].toArray() );
+	          }
+	        });
+			geometry.setAttribute( 'uv', new THREE.BufferAttribute( new Float32Array( uv ), 2 ));
 
 			if ( hasColors ) {
 

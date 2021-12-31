@@ -54,18 +54,18 @@ class ThreeModel extends BaseModel {
 
             // const textureLoader = new THREE.TextureLoader();
             // // load a texture
-            // console.log('window', window.location.origin, modelInfo?.geometry, this.geometry);
+            // console.log('window', window.location.origin);
             // const texture = textureLoader.load(
             //     `${window.location.origin.replace(/^http/, 'luban')}/resources/images/a-textrue.jpg`
             // );
-            // // create a "standard" material using
-            // // the texture we just loaded as a color map
+            // // // create a "standard" material using
+            // // // the texture we just loaded as a color map
             // const newMaterial = new THREE.MeshStandardMaterial({
             //     side: THREE.DoubleSide,
             //     map: texture,
             // });
 
-            console.log('object', textures, newMaterial, 'ddd', this.geometry);
+            console.log('object', textures, newMaterial, 'ddd');
             material = newMaterial;
         } catch (e) {
             console.error('error', e);

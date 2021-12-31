@@ -476,6 +476,7 @@ class ModelGroup extends EventEmitter {
 
     setConvexGeometry(uploadName, convexGeometry) {
         const models = this.models.filter(m => m.uploadName === uploadName);
+        console.log('uploadName, convexGeometry', uploadName, convexGeometry);
         if (models.length) {
             for (let idx = 0; idx < models.length; idx++) {
                 const model = models[idx];

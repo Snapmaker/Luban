@@ -77,8 +77,7 @@ export const signin = (req, res) => {
     });
     let sceneJson = '';
     try {
-        sceneJson = fs.readFileSync(`${DataStorage.fontDir}/scene.json`, 'utf8');
-        // sceneJson = fs.readFileSync('../resources/scene.json', 'utf8');
+        sceneJson = fs.readFileSync(`${DataStorage.fontDir}/scene7.json`, 'utf8');
     } catch (e) {
         console.log('e', e);
     }
