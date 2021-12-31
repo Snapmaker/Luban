@@ -28,15 +28,8 @@ class ModelGroup extends EventEmitter {
         this.headType = headType;
         // this.object = new Object3D();
         this.object = new Group();
-        this.object.userData = {
-            name: 'ModelGroup'
-        };
         this.models = [];
-
         this.selectedGroup = new Group();
-        this.selectedGroup.userData = {
-            name: 'SelectedGroup'
-        };
         this.selectedGroup.uniformScalingState = true;
         this.selectedGroup.boundingBox = [];
         this.selectedGroup.shouldUpdateBoundingbox = true;

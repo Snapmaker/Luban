@@ -48,9 +48,6 @@ class PrimeTowerModel extends ThreeModel {
         this.stickToPlate();
         // model.computeBoundingBox();
         modelGroup.models = [this, ...modelGroup.models];
-        this.meshObject.userData = {
-            name: 'PrimeTowerModel'
-        };
         modelGroup.object.add(this.meshObject);
     }
 }
