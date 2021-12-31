@@ -19,8 +19,7 @@ import {
     RIGHT_EXTRUDER,
     LEFT_EXTRUDER_MAP_NUMBER,
     RIGHT_EXTRUDER_MAP_NUMBER,
-    DUAL_EXTRUDER_TOOLHEAD_FOR_SM2,
-    ALIGN_OPERATION
+    DUAL_EXTRUDER_TOOLHEAD_FOR_SM2
 } from '../../constants';
 import { timestamp } from '../../../shared/lib/random-utils';
 import { machineStore } from '../../store/local-storage';
@@ -325,7 +324,7 @@ export const actions = {
             if (newConfigId[series]) {
                 dispatch(actions.updateState({
                     defaultMaterialId: newConfigId[series]?.material,
-                    defaultMaterialIdRight: newConfigId[series]?.materialRight,
+                    defaultMaterialIdRight: newConfigId[series]?.materialRight || 'material.pla',
                     defaultQualityId: newConfigId[series]?.quality
                 }));
             }
