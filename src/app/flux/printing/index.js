@@ -2104,7 +2104,6 @@ export const actions = {
         //     groupChildrenMap.set(group, group.children.slice(0));
         // });
         const newPosition = modelGroup.updateModelsPositionBaseFirstModel(selectedModels);
-        modelGroup.onModelAfterTransform(false);
         const operations = new Operations();
 
         dispatch(actions.clearAllManualSupport(operations));

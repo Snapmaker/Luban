@@ -1297,30 +1297,25 @@ class ModelGroup extends EventEmitter {
     onModelAfterTransform(shouldStickToPlate = true) {
         const selectedModelArray = this.selectedModelArray;
         const { recovery } = this.unselectAllModels({ recursive: true });
+        // update model's boundingbox which has supports
         selectedModelArray.forEach((selected) => {
             if (selected.sourceType === '3d' && shouldStickToPlate) {
-                selected.stickToPlate();
-            }
-            if (selected.supportTag && selected.isSelected) {
-                selected.meshObject.parent.position.setZ(0);
-                selected.meshObject.parent.updateMatrix();
+                if (selected.supportTag && selected.isSelected) {
+                    selected.meshObject.parent.position.setZ(0);
+                    selected.meshObject.parent.updateMatrix();
+                    this.removeModelFromSelectedGroup(selected);
+                    this.stickToPlateAndCheckOverstepped(selected.target);
+                    this.addModelToSelectedGroup(selected);
+                } else {
+                    this.stickToPlateAndCheckOverstepped(selected);
+                    selected.parent && this.stickToPlateAndCheckOverstepped(selected.parent);
+                }
             }
             selected.computeBoundingBox();
         });
         this.selectedGroup.shouldUpdateBoundingbox = false;
 
         this.prepareSelectedGroup();
-        // update model's boundingbox which has supports
-        selectedModelArray.forEach((selected) => {
-            if (selected.supportTag && selected.isSelected) {
-                this.removeModelFromSelectedGroup(selected);
-                this.stickToPlateAndCheckOverstepped(selected.target);
-                this.addModelToSelectedGroup(selected);
-            } else {
-                this.stickToPlateAndCheckOverstepped(selected);
-                selected.parent && this.stickToPlateAndCheckOverstepped(selected.parent);
-            }
-        });
         this.updatePrimeTowerHeight();
         recovery();
 
