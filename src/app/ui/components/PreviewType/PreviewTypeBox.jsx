@@ -1,27 +1,94 @@
 import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
 import Checkbox from '../Checkbox';
-// import { LEFT_EXTRUDER, RIGHT_EXTRUDER } from '../../../constants';
-// import i18n from '../../../lib/i18n';
+import SvgIcon from '../SvgIcon';
 
 class PreviewTypeBox extends PureComponent {
     static propTypes = {
-        fatherValue: PropTypes.bool.isRequired,
         fatherContent: PropTypes.string.isRequired,
         fatherColor: PropTypes.string,
-        onChangeFatherValue: PropTypes.func.isRequired
-        // isDropdown: PropTypes.bool
+
+        isDropdown: PropTypes.bool,
+
+        // object: {
+        // value, content, color, onChangeValue
+        // }
+        childrenObjects: PropTypes.array
     };
 
+    state = {
+        showDropdown: false,
+        fatherValue: false,
+        indeterminate: false
+    };
+
+    renderFatherObject() {
+        let count = 0;
+        this.props.childrenObjects.forEach((child) => {
+            if (child.value) {
+                count += 1;
+            }
+        });
+        if (count === this.props.childrenObjects.length) {
+            this.setState({
+                fatherValue: true,
+                indeterminate: false
+            });
+        } else if (count === 0) {
+            this.setState({
+                fatherValue: false,
+                indeterminate: false
+            });
+        } else {
+            this.setState({
+                fatherValue: false,
+                indeterminate: true
+            });
+        }
+    }
+
+    componentDidMount() {
+        this.renderFatherObject();
+    }
+
+    componentDidUpdate(prevProps) {
+        if (prevProps.childrenObjects !== this.props.childrenObjects) {
+            this.renderFatherObject();
+        }
+    }
+
+    onChangeFatherValue = (event) => {
+        this.props.childrenObjects.forEach((child) => {
+            child.onChangeValue(event);
+        });
+    }
+
     render() {
-        const { fatherValue, fatherContent, fatherColor, onChangeFatherValue } = this.props;
+        const { fatherContent, fatherColor, isDropdown, childrenObjects } = this.props;
+        const { showDropdown, indeterminate, fatherValue } = this.state;
+        const { onChangeFatherValue } = this;
         return (
             <div>
                 <div className="sm-flex justify-space-between height-24 margin-vertical-8">
                     <div>
+                        {isDropdown && (
+                            <SvgIcon
+                                name={showDropdown ? 'DropdownOpen' : 'DropdownClose'}
+                                size={24}
+                                type={['static']}
+                                onClick={() => {
+                                    this.setState({
+                                        showDropdown: !showDropdown
+                                    });
+                                }}
+                            />
+                        )}
                         <Checkbox
+                            indeterminate={indeterminate}
                             checked={fatherValue}
-                            onChange={onChangeFatherValue}
+                            onChange={(event) => {
+                                onChangeFatherValue(event);
+                            }}
                         />
                         <span className="v-align-m margin-left-8">
                             {fatherContent}
@@ -33,22 +100,29 @@ class PreviewTypeBox extends PureComponent {
                         </div>
                     )}
                 </div>
-                {/*{isDualExtruder && (*/}
-                {/*    <div className="sm-flex justify-space-between height-24 margin-vertical-8">*/}
-                {/*        <div>*/}
-                {/*            <Checkbox*/}
-                {/*                checked={allShowTypes[RIGHT_EXTRUDER].showWallInner}*/}
-                {/*                onChange={togglePreviewOptionFactoryByTypeAndDirection('showWallInner', 'WALL-INNER', RIGHT_EXTRUDER)}*/}
-                {/*            />*/}
-                {/*            <span className="v-align-m margin-left-8">*/}
-                {/*                                            {i18n._('key-Printing/Preview-Inner Wall')}*/}
-                {/*                                        </span>*/}
-                {/*        </div>*/}
-                {/*        <div>*/}
-                {/*            <span className="display-inline width-16 height-16 v-align-m border-radius-4" style={{ backgroundColor: '#00ff00' }} />*/}
-                {/*        </div>*/}
-                {/*    </div>*/}
-                {/*)}*/}
+                {showDropdown && (childrenObjects.map((child) => {
+                    const { value, onChangeValue, color, content } = child;
+                    return (
+                        <div className="sm-flex justify-space-between height-24 margin-vertical-8 margin-left-40">
+                            <div>
+                                <Checkbox
+                                    checked={value}
+                                    onChange={(event) => {
+                                        onChangeValue(event);
+                                    }}
+                                />
+                                <span className="v-align-m margin-left-8">
+                                    {content}
+                                </span>
+                            </div>
+                            {color && (
+                                <div>
+                                    <span className="display-inline width-16 height-16 v-align-m border-radius-4" style={{ backgroundColor: color }} />
+                                </div>
+                            )}
+                        </div>
+                    );
+                }))}
             </div>
         );
     }

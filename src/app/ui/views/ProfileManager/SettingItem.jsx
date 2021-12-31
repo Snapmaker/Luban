@@ -28,6 +28,7 @@ function SettingItem({ definitionKey, settings, isDefaultDefinition = () => true
             // parse resolveOrValue('adhesion_type') == 'skirt'
                 const enabledKey = condition.match("resolveOrValue\\('(.[^)|']*)'") ? condition.match("resolveOrValue\\('(.[^)|']*)'")[1] : null;
                 const enabledEqualValue = condition.match("== ?'(.[^)|']*)'") ? condition.match("== ?'(.[^)|']*)'")[1] : null;
+                const enabledUnequalValue = condition.match("!= ?'(.[^)|']*)'") ? condition.match("!= ?'(.[^)|']*)'")[1] : null;
                 const enabledGreaterValue = condition.match('> ?([0-9]+)') ? condition.match('> ?([0-9]+)')[1] : null;
                 const enabledLessValue = condition.match('< ?([0-9]+)') ? condition.match('< ?([0-9]+)')[1] : null;
                 if (enabledKey) {
@@ -36,10 +37,16 @@ function SettingItem({ definitionKey, settings, isDefaultDefinition = () => true
                         if (enabledEqualValue && value !== enabledEqualValue) {
                             return null;
                         }
+                        if (enabledUnequalValue && value === enabledUnequalValue) {
+                            return null;
+                        }
                         if (enabledGreaterValue && value <= enabledGreaterValue) {
                             return null;
                         }
                         if (enabledLessValue && value >= enabledLessValue) {
+                            return null;
+                        }
+                        if (settings[enabledKey].type === 'bool' && !value) {
                             return null;
                         }
                     }
