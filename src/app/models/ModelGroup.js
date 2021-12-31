@@ -249,6 +249,7 @@ class ModelGroup extends EventEmitter {
     }
 
     removeModel(model) {
+        if (model.type === 'primeTower') return;
         if (model instanceof ThreeGroup) {
             model.children.forEach((child) => {
                 this.removeModel(child);
@@ -731,7 +732,9 @@ class ModelGroup extends EventEmitter {
                         break;
                     }
                     // cannot select model and prime tower
-                    if (this.selectedModelArray.length && this.selectedModelArray[0].primeTowerTag !== model.primeTowerTag) {
+                    if (this.selectedModelArray.length && _.some(this.selectedModelArray, (item) => {
+                        return item.type !== model.type && (item.type === 'primeTower' || model.type === 'primeTower');
+                    })) {
                         break;
                     }
                     // If all models in the group are selected, select group
@@ -761,7 +764,7 @@ class ModelGroup extends EventEmitter {
 
     addModelToSelectedGroup(model) {
         if (!(model instanceof Model)) return;
-
+        if (model.type === 'primeTower' && !model.visible) return;
         model.setSelected(true);
         ThreeUtils.applyObjectMatrix(this.selectedGroup, new Matrix4().copy(this.selectedGroup.matrix).invert());
         this.selectedModelArray = [...this.selectedModelArray, model];
@@ -823,7 +826,7 @@ class ModelGroup extends EventEmitter {
         this.selectedModelArray = [];
 
         this.models.forEach((model) => {
-            if (model.supportTag || model.primeTowerTag) return;
+            if (model.supportTag || model.type === 'primeTower') return;
             if (model.visible) {
                 this.addModelToSelectedGroup(model);
             }
@@ -897,7 +900,7 @@ class ModelGroup extends EventEmitter {
     }
 
     duplicateSelectedModel(modelID) {
-        const modelsToCopy = this.selectedModelArray;
+        const modelsToCopy = _.filter(this.selectedModelArray, (model) => model.type !== 'primeTower');
         if (modelsToCopy.length === 0) return this._getEmptyState();
 
         // Unselect all models
@@ -943,7 +946,7 @@ class ModelGroup extends EventEmitter {
      * Copy action: copy selected models (simply save the objects without their current positions).
      */
     copy() {
-        this.clipboard = this.selectedModelArray.map(model => model.clone(this));
+        this.clipboard = this.selectedModelArray.filter((model) => model.type !== 'primeTower').map(model => model.type !== 'primeTower' && model.clone(this));
     }
 
     /**
@@ -980,6 +983,7 @@ class ModelGroup extends EventEmitter {
                 this.models.push(newModel);
                 this.object.add(newModel.meshObject);
                 this.addModelToSelectedGroup(newModel);
+                this.updatePrimeTowerHeight();
             }
         });
 
@@ -1625,7 +1629,7 @@ class ModelGroup extends EventEmitter {
     }
 
     isPrimeTowerSelected() {
-        return this.selectedModelArray.length === 1 && this.selectedModelArray[0].primeTowerTag;
+        return this.selectedModelArray.length === 1 && this.selectedModelArray[0].type === 'primeTower';
     }
 
     addSupportOnSelectedModel(defaultSupportSize) {
@@ -2012,7 +2016,7 @@ class ModelGroup extends EventEmitter {
 
     canGroup() {
         return this.selectedModelArray.some(model => {
-            return model.visible;
+            return model.visible && model.type !== 'primeTower';
         });
     }
 
@@ -2058,7 +2062,7 @@ class ModelGroup extends EventEmitter {
         let maxHeight = 0.1;
         const maxBoundingBoxHeight = this._bbox?.max.z;
         this.models.forEach(modelItem => {
-            if (modelItem.headType === HEAD_PRINTING && !modelItem.primeTowerTag && !modelItem.supportTag) {
+            if (modelItem.headType === HEAD_PRINTING && modelItem.type !== 'primeTower' && !modelItem.supportTag) {
                 const modelItemHeight = modelItem.boundingBox?.max.z - modelItem.boundingBox?.min.z;
                 maxHeight = Math.max(maxHeight, modelItemHeight);
             }
