@@ -155,7 +155,7 @@ function VisualizerPreviewControl() {
                 showUnknown: gcodeTypeInitialVisibility.UNKNOWN
             }
         });
-    }, [gcodeLine, gcodeTypeInitialVisibility, setAllShowTypes]);
+    }, [gcodeLine, gcodeTypeInitialVisibility]);
 
     if (!gcodeLine) {
         return null;
@@ -291,6 +291,7 @@ function VisualizerPreviewControl() {
             ]
         }
     ];
+    console.log('allShowTypes', allShowTypes[LEFT_EXTRUDER], lineTypeObjects1);
     return (
         <React.Fragment>
             <div>

@@ -109,7 +109,7 @@ class GcodeToBufferGeometryPrint3d {
                     g1 = 0;
                 }
                 const toolColorRGB0 = [r0, g0, b0];
-                const toolColorRGB1 = [r1, b1, g1];
+                const toolColorRGB1 = [r1, g1, b1];
 
                 // duplicate one point to display without interpolation
                 // color of end point decides line color

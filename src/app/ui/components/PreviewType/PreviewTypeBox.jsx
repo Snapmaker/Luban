@@ -47,6 +47,10 @@ class PreviewTypeBox extends PureComponent {
         }
     }
 
+    componentDidMount() {
+        this.renderFatherObject();
+    }
+
     componentDidUpdate(prevProps) {
         if (prevProps.childrenObjects !== this.props.childrenObjects) {
             this.renderFatherObject();
