@@ -198,7 +198,7 @@ export const actions = {
         UniApi.Window.setOpenedFile();
         let content = machineStore.get(envHeadType);
         if (!envObj) {
-            envObj = JSON.parse(content);
+            envObj = content;
         }
         // backup project if needed
         if (backendRecover) {

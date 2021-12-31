@@ -1,6 +1,7 @@
 import superagent from 'superagent';
 import superagentUse from 'superagent-use';
 import ensureArray from '../lib/ensure-array';
+
 let AuthToken;
 
 const bearer = (request) => {
