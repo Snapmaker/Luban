@@ -2289,9 +2289,7 @@ export const actions = {
 export default function reducer(state = INITIAL_STATE, action) {
     switch (action.type) {
         case ACTION_UPDATE_STATE: {
-            const s = Object.assign({}, state, action.state);
-            window.pp = s;
-            return s;
+            return Object.assign({}, state, action.state);
         }
         case ACTION_UPDATE_TRANSFORMATION: {
             return Object.assign({}, state, {
