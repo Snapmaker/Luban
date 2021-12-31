@@ -104,7 +104,9 @@ class ToolPath {
 
         isRotate: false,
 
-        diameter: 0
+        diameter: 0,
+
+        layer: 0
     };
 
     offsetG92 = (pos) => {
@@ -178,6 +180,12 @@ class ToolPath {
         ';diameter': (param) => {
             if (param !== undefined && param !== null) {
                 this.modal.diameter = param;
+            }
+        },
+
+        ';LAYER': (param) => {
+            if (param !== undefined && param !== null) {
+                this.modal.layer = param;
             }
         }
     };

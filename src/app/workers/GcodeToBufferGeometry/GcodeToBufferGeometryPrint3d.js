@@ -64,7 +64,6 @@ class GcodeToBufferGeometryPrint3d {
         };
 
         let layerIndex = 0;
-        let height = null;
         let lastTypeCode = null;
 
         let progress = 0;
@@ -75,11 +74,7 @@ class GcodeToBufferGeometryPrint3d {
                 const toolCode = modal.tool;
                 const typeSetting = this.getTypeSetting(typeCode);
 
-                // height change means layer changes
-                if ((v2.z - height).toFixed(3) >= modal.layerHeight) {
-                    height = v2.z;
-                    ++layerIndex;
-                }
+                layerIndex = modal.layer;
 
                 const rgb = [
                     typeSetting.rgb[0],
@@ -118,6 +113,9 @@ class GcodeToBufferGeometryPrint3d {
                 // if type changes then push "last position & current color"
                 if (!lastTypeCode) {
                     lastTypeCode = typeCode;
+                }
+                if (layerIndex < 10) {
+                    console.log(toolCode, layerIndex);
                 }
                 if (lastTypeCode !== typeCode) {
                     lastTypeCode = typeCode;
