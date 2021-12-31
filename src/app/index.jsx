@@ -18,6 +18,7 @@ import { controller, screenController } from './lib/controller';
 import log from './lib/log';
 import { toQueryObject } from './lib/query';
 import user from './lib/user';
+import api from './api';
 import { machineStore } from './store/local-storage';
 import reducer from './flux';
 import App from './ui/App';
@@ -66,6 +67,7 @@ series([
     },
     (next) => {
         const token = machineStore.get('session.token');
+        api.setToken(token);
         user.signin({ token: token })
             .then(({ authenticated }) => {
                 if (authenticated) {

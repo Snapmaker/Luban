@@ -1,12 +1,11 @@
 import superagent from 'superagent';
 import superagentUse from 'superagent-use';
 import ensureArray from '../lib/ensure-array';
-import { machineStore } from '../store/local-storage';
+let AuthToken;
 
 const bearer = (request) => {
-    const token = machineStore.get('session.token');
-    if (token) {
-        request.set('Authorization', `Bearer ${token}`);
+    if (AuthToken) {
+        request.set('Authorization', `Bearer ${AuthToken}`);
     }
 };
 
@@ -22,8 +21,12 @@ const noCache = (request) => {
 };
 
 const request = superagentUse(superagent);
-request.use(bearer);
 request.use(noCache);
+
+const setToken = (token) => {
+    AuthToken = token;
+    request.use(bearer);
+};
 
 
 // Default API factory that performs the request, and then convert its result to `Promise`.
@@ -306,6 +309,7 @@ macros.update = defaultAPIFactory((id, options) => request.put(`/api/macros/${id
 macros.delete = defaultAPIFactory((id) => request.delete(`/api/macros/${id}`));
 
 export default {
+    setToken,
     // version
     getLatestVersion,
 

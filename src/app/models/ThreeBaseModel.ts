@@ -88,7 +88,6 @@ export default class BaseModel {
 
     updateTransformation(transformation: ModelTransformation): ModelTransformation {
         const { positionX, positionY, positionZ, rotationX, rotationY, rotationZ, scaleX, scaleY, scaleZ, uniformScalingState } = transformation;
-        const { width, height } = transformation;
 
         if (uniformScalingState !== undefined) {
             (this.meshObject as any).uniformScalingState = uniformScalingState;
@@ -130,13 +129,6 @@ export default class BaseModel {
         if (scaleZ !== undefined) {
             this.meshObject.scale.z = scaleZ;
             this.transformation.scaleZ = scaleZ;
-        }
-        // width & height dont effected on meshobject any more
-        if (width) {
-            this.transformation.width = width;
-        }
-        if (height) {
-            this.transformation.height = height;
         }
         this.transformation = { ...this.transformation };
         return this.transformation;

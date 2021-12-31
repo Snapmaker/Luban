@@ -20,34 +20,33 @@ import { actions as editorActions } from '../editor';
 import { actions as workspaceActions } from '../workspace';
 import { bubbleSortByAttribute } from '../../lib/numeric-utils';
 import { UniformToolpathConfig } from '../../lib/uniform-toolpath-config';
-import { checkIsSnapmakerProjectFile, checkIsGCodeFile, checkObjectIsEqual } from '../../lib/check-name';
+import { checkIsSnapmakerProjectFile, checkIsGCodeFile } from '../../lib/check-name';
 
 import { actions as operationHistoryActions } from '../operation-history';
 import { machineStore } from '../../store/local-storage';
 
 import i18n from '../../lib/i18n';
 import UniApi from '../../lib/uni-api';
+import WorkerManager from '../../lib/manager/WorkerManager';
 
+const token = machineStore.get('session.token');
 const INITIAL_STATE = {
     [HEAD_PRINTING]: {
         findLastEnvironment: false,
         openedFile: null,
         unSaved: false,
-        content: null,
         initState: true
     },
     [HEAD_CNC]: {
         findLastEnvironment: false,
         openedFile: null,
         unSaved: false,
-        content: null,
         initState: true
     },
     [HEAD_LASER]: {
         findLastEnvironment: false,
         openedFile: null,
         unSaved: false,
-        content: null,
         initState: true
     },
     general: {
@@ -98,7 +97,7 @@ export const actions = {
 
     autoSaveEnvironment: (headType, force = false) => async (dispatch, getState) => {
         const editorState = getState()[headType];
-        const { initState, content: lastString } = getState().project[headType];
+        const { initState, unSaved } = getState().project[headType];
         const models = editorState.modelGroup.getModels();
         if (!models.length && initState) return;
         if (models.length === 1 && models[0].primeTowerTag) return;
@@ -131,23 +130,35 @@ export const actions = {
             const toolPaths = editorState.toolPathGroup.getToolPaths();
             envObj.toolpaths = toolPaths;
         }
-        if (force || !checkObjectIsEqual(JSON.parse(lastString), envObj)) {
-            const content = JSON.stringify(envObj);
-            dispatch(actions.updateState(headType, { content, unSaved: true, initState: false }));
-            await api.saveEnv({ content });
-        }
+        // WARN: when luban switch to multi window, `machineStore.get` should be modified, because it save current status only used for single window
+        const lastEnvObj = machineStore.get(headType);
+        WorkerManager.compareObject({ lastEnvObj, envObj, token, force }, async (e) => {
+            const { isEqual } = e.data;
+            if (force || !isEqual) {
+                // WARN: when luban switch to multi window, `machineStore.set` should be modified, because it save current status only used for single window
+                machineStore.set(headType, envObj);
+                if (!(initState === false && unSaved === true)) {
+                    dispatch(actions.updateState(headType, { unSaved: true, initState: false }));
+                }
+            }
+        });
     },
 
     getLastEnvironment: (headType) => async (dispatch) => {
         const { body: { content } } = await api.getEnv({ headType });
+        let envObj;
         try {
-            const envObj = JSON.parse(content);
+            envObj = JSON.parse(content);
             if (!envObj.models.length) return;
         } catch (e) {
             console.info('Error content JSON');
+            return;
         }
 
-        content && dispatch(actions.updateState(headType, { findLastEnvironment: true, content }));
+        if (content) {
+            dispatch(actions.updateState(headType, { findLastEnvironment: true }));
+            machineStore.set(headType, envObj);
+        }
     },
 
     clearSavedEnvironment: (headType) => async (dispatch) => {
@@ -185,7 +196,7 @@ export const actions = {
 
     onRecovery: (envHeadType, envObj, backendRecover = true, shouldSetFileName = true) => async (dispatch, getState) => {
         UniApi.Window.setOpenedFile();
-        let { content } = getState().project[envHeadType];
+        let content = machineStore.get(envHeadType);
         if (!envObj) {
             envObj = JSON.parse(content);
         }
@@ -404,7 +415,10 @@ export const actions = {
                 message: i18n._('key-Project/Save-Save the changes you made in the {{headType}} G-code Generator? Your changes will be lost if you don’t save them.', { headType: i18n._(HEAD_TYPE_ENV_NAME[oldHeadType]) })
             }));
             await dispatch(actions.closeProject(oldHeadType));
-            content && dispatch(actions.updateState(headType, { findLastEnvironment: false, content, unSaved: false }));
+            if (content) {
+                dispatch(actions.updateState(headType, { findLastEnvironment: false, unSaved: false }));
+                machineStore.set(headType, envObj);
+            }
             if (oldHeadType === headType && !unReload) {
                 history.push('/');
             }
@@ -421,7 +435,8 @@ export const actions = {
                 } else {
                     await dispatch(actions.setOpenedFileWithType(headType, JSON.parse(file)));
                 }
-                await dispatch(actions.updateState(headType, { unSaved: false, content }));
+                await dispatch(actions.updateState(headType, { unSaved: false }));
+                machineStore.set(headType, envObj);
             } else {
                 await dispatch(actions.updateState(headType, { unSaved: true, openedFile: null }));
             }

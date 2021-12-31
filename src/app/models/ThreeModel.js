@@ -38,24 +38,16 @@ class ThreeModel extends BaseModel {
 
     constructor(modelInfo, modelGroup) {
         super(modelInfo, modelGroup);
-        const { width, height, processImageName } = modelInfo;
+        const { processImageName } = modelInfo;
 
 
-        this.geometry = modelInfo.geometry || new THREE.PlaneGeometry(width, height);
-        const material = modelInfo.material || new THREE.MeshBasicMaterial({ color: 0xe0e0e0, visible: false });
+        this.geometry = modelInfo.geometry; // || new THREE.PlaneGeometry(width, height);
+        const material = modelInfo.material; // || new THREE.MeshBasicMaterial({ color: 0xe0e0e0, visible: false });
 
         this.meshObject = new THREE.Mesh(this.geometry, material);
 
         this.processImageName = processImageName;
 
-        if (!this.transformation.width && !this.transformation.height) {
-            this.transformation.width = width;
-            this.transformation.height = height;
-        }
-        if (width && height) {
-            this.transformation.scaleX = this.transformation.width / width;
-            this.transformation.scaleY = this.transformation.height / height;
-        }
 
         this.modelObject3D = null;
         this.processObject3D = null;
@@ -122,7 +114,6 @@ class ThreeModel extends BaseModel {
     }
 
     onTransform() {
-        const geometrySize = ThreeUtils.getGeometrySize(this.meshObject.geometry, true);
         const { uniformScalingState } = this.meshObject;
 
         let position, scale, rotation;
@@ -158,8 +149,6 @@ class ThreeModel extends BaseModel {
             scaleX: scale.x,
             scaleY: scale.y,
             scaleZ: scale.z,
-            width: geometrySize.x * scale.x,
-            height: geometrySize.y * scale.y,
             uniformScalingState
         };
 

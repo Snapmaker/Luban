@@ -292,7 +292,6 @@ export default class ThreeGroup extends BaseModel {
      * @returns ModelTransformation
      */
     onTransform() {
-        const geometrySize = ThreeUtils.getGeometrySize(this.mergeGeometriesInGroup(), true);
         const { uniformScalingState } = this.meshObject as any;
 
         const position = new THREE.Vector3();
@@ -313,8 +312,6 @@ export default class ThreeGroup extends BaseModel {
             scaleX: scale.x,
             scaleY: scale.y,
             scaleZ: scale.z,
-            width: geometrySize.x * scale.x,
-            height: geometrySize.y * scale.y,
             uniformScalingState
         };
 
@@ -323,7 +320,7 @@ export default class ThreeGroup extends BaseModel {
             ...transformation
         };
 
-        this.children.forEach(model => model.onTransform());
+        // this.children.forEach(model => model.onTransform());
 
         return this.transformation;
     }
