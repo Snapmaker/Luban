@@ -135,8 +135,8 @@ export const actions = {
         WorkerManager.compareObject({ lastEnvObj, envObj, token, force }, async (e) => {
             const { isEqual } = e.data;
             if (force || !isEqual) {
-                // WARN: when luban switch to multi window, `machineStore.set` should be modified, because it save current status only used for single window
-                machineStore.set(headType, envObj);
+                // WARN: when luban switch to multi window, `machineStore.replace` should be modified, because it save current status only used for single window
+                machineStore.replace(headType, envObj);
                 if (!(initState === false && unSaved === true)) {
                     dispatch(actions.updateState(headType, { unSaved: true, initState: false }));
                 }
@@ -157,7 +157,7 @@ export const actions = {
 
         if (content) {
             dispatch(actions.updateState(headType, { findLastEnvironment: true }));
-            machineStore.set(headType, envObj);
+            machineStore.replace(headType, envObj);
         }
     },
 
@@ -417,7 +417,7 @@ export const actions = {
             await dispatch(actions.closeProject(oldHeadType));
             if (content) {
                 dispatch(actions.updateState(headType, { findLastEnvironment: false, unSaved: false }));
-                machineStore.set(headType, envObj);
+                machineStore.replace(headType, envObj);
             }
             if (oldHeadType === headType && !unReload) {
                 history.push('/');
@@ -436,7 +436,7 @@ export const actions = {
                     await dispatch(actions.setOpenedFileWithType(headType, JSON.parse(file)));
                 }
                 await dispatch(actions.updateState(headType, { unSaved: false }));
-                machineStore.set(headType, envObj);
+                machineStore.replace(headType, envObj);
             } else {
                 await dispatch(actions.updateState(headType, { unSaved: true, openedFile: null }));
             }
