@@ -52,6 +52,7 @@ export default class MoveOperation3D extends Operation<MoveOperationState> {
         } else {
             model.meshObject.position.set(positionX, positionY, positionZ);
             modelGroup.stickToPlateAndCheckOverstepped(model);
+            modelGroup.updatePrimeTowerHeight();
         }
     }
 }

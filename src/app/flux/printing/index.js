@@ -19,8 +19,7 @@ import {
     RIGHT_EXTRUDER,
     LEFT_EXTRUDER_MAP_NUMBER,
     RIGHT_EXTRUDER_MAP_NUMBER,
-    DUAL_EXTRUDER_TOOLHEAD_FOR_SM2,
-    ALIGN_OPERATION
+    DUAL_EXTRUDER_TOOLHEAD_FOR_SM2
 } from '../../constants';
 import { timestamp } from '../../../shared/lib/random-utils';
 import { machineStore } from '../../store/local-storage';
@@ -1149,7 +1148,14 @@ export const actions = {
             // Use setTimeout to force export executes in next tick, preventing block of updateState()
 
             setTimeout(async () => {
-                const models = modelGroup.models.filter(i => i.visible);
+                const models = modelGroup.models.filter(i => i.visible).reduce((pre, model) => {
+                    if (model instanceof ThreeGroup) {
+                        pre.push(...model.children);
+                    } else {
+                        pre.push(model);
+                    }
+                    return pre;
+                }, []);
                 const ret = { model: [], support: [], definition: [], originalName: null };
                 for (const item of models) {
                     const modelDefinition = definitionManager.finalizeModelDefinition(activeDefinition, item, extruderLDefinition, extruderRDefinition);
@@ -1535,11 +1541,18 @@ export const actions = {
         const { modelGroup } = getState().printing;
         const models = Object.assign([], getState().printing.modelGroup.models);
         for (const model of modelGroup.selectedModelArray) {
-            const modelItem = lodashFind(models, { modelID: model.modelID });
-            modelItem.extruderConfig = extruderConfig;
-            modelItem.children && modelItem.children.length && modelItem.children.forEach(item => {
-                item.extruderConfig = extruderConfig;
+            let modelItem = null;
+            modelGroup.traverseModels(models, (item) => {
+                if (model.modelID === item.modelID) {
+                    modelItem = item;
+                }
             });
+            if (modelItem) {
+                modelItem.extruderConfig = extruderConfig;
+                modelItem.children && modelItem.children.length && modelItem.children.forEach(item => {
+                    item.extruderConfig = extruderConfig;
+                });
+            }
         }
         dispatch(actions.destroyGcodeLine());
         dispatch(actions.displayModel());
@@ -2138,9 +2151,16 @@ export const actions = {
             pre.set(selectd.modelID, {
                 groupModel: group,
                 groupMesh: selectd.parent?.meshObject.clone(),
-                modelTransformation: selectd.transformation,
-                groupTransformation: group?.transformation
+                modelTransformation: { ...selectd.transformation },
+                groupTransformation: { ...group?.transformation }
             });
+            if (selectd instanceof ThreeGroup) {
+                selectd.children.forEach((subModel) => {
+                    pre.set(subModel.modelID, {
+                        modelTransformation: { ...subModel.transformation }
+                    });
+                });
+            }
             return pre;
         }, new Map());
         recovery();
@@ -2227,11 +2247,23 @@ export const actions = {
     setModelsMeshColor: (direction, color) => (dispatch, getState) => {
         const { modelGroup } = getState().printing;
         const models = modelGroup.getModels();
-        models.forEach((model) => {
+        modelGroup.traverseModels(models, (model) => {
             if (model.extruderConfig.shell === (direction === LEFT_EXTRUDER ? '0' : '1')) {
                 model.updateMaterialColor(color);
             }
+            if (model?.parent && model.parent instanceof ThreeGroup) {
+                const groupShell = model.parent.children.reduce((pre, subModel) => {
+                    pre.add(subModel.extruderConfig.shell);
+                    return pre;
+                }, new Set());
+                if (groupShell.size === 1) {
+                    model.parent.extruderConfig.shell = Array.from(groupShell.values())[0];
+                } else {
+                    model.parent.extruderConfig.shell = '2';
+                }
+            }
         });
+        modelGroup.models = models.concat();
         dispatch(actions.render());
     },
 
@@ -2257,7 +2289,9 @@ export const actions = {
 export default function reducer(state = INITIAL_STATE, action) {
     switch (action.type) {
         case ACTION_UPDATE_STATE: {
-            return Object.assign({}, state, action.state);
+            const s = Object.assign({}, state, action.state);
+            window.pp = s;
+            return s;
         }
         case ACTION_UPDATE_TRANSFORMATION: {
             return Object.assign({}, state, {

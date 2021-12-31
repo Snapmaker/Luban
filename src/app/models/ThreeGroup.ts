@@ -595,15 +595,6 @@ export default class ThreeGroup extends BaseModel {
         });
     }
 
-    cloneMeshWithoutSupports(): THREE.Object3D {
-        const clonedGroup = this.meshObject.clone(false);
-        this.children.forEach(model => {
-            const mesh: THREE.Mesh = model.cloneMeshWithoutSupports() as unknown as THREE.Mesh;
-            clonedGroup.add(mesh);
-        });
-        return clonedGroup;
-    }
-
     getSerializableConfig(): ModelInfo {
         const {
             modelID, limitSize, headType, sourceType, sourceHeight, sourceWidth, originalName, uploadName, config, mode,
