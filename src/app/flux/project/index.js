@@ -101,7 +101,7 @@ export const actions = {
         const { initState, content: lastString } = getState().project[headType];
         const models = editorState.modelGroup.getModels();
         if (!models.length && initState) return;
-        if (models.length === 1 && models[0].primeTowerTag) return;
+        if (models.length === 1 && models[0].type === 'primeTower') return;
         const machineState = getState().machine;
         const { size, series, toolHead } = machineState;
         const machineInfo = {};
@@ -364,7 +364,7 @@ export const actions = {
             const formData = new FormData();
             let shouldSetFileName = true;
             const { modelGroup: { models } } = getState().printing;
-            const isOnlyPrimeTower = models.length && models?.every(modelItem => modelItem.primeTowerTag);
+            const isOnlyPrimeTower = models.length && models?.every(modelItem => modelItem.type === 'primeTower');
             if (!(file instanceof File)) {
                 if (new RegExp(/^\.\//).test(file?.path)) {
                     shouldSetFileName = false;
@@ -435,7 +435,7 @@ export const actions = {
         const newHeadType = getCurrentHeadType(to);
         const oldHeadType = getCurrentHeadType(from) || newHeadType;
         const { modelGroup: { models } } = getState().printing;
-        const isOnlyPrimeTower = models.length && models?.every(modelItem => modelItem.primeTowerTag);
+        const isOnlyPrimeTower = models.length && models?.every(modelItem => modelItem.type === 'primeTower');
         if (oldHeadType === null) {
             history.push(to);
             return;

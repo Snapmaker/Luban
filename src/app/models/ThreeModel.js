@@ -244,12 +244,10 @@ class ThreeModel extends BaseModel {
         }
 
         // for indexed geometry
-        if (isSelected && !this.primeTowerTag && this.meshObject.geometry.getAttribute('color')) {
+        if (isSelected && this.type !== 'primeTower' && this.meshObject.geometry.getAttribute('color')) {
             this.meshObject.material.vertexColors = true;
         }
-        // if (isSelected && this.primeTowerTag && this.meshObject.geometry._bufferGeometry?.getAttribute('color')) {
-        //     this.meshObject.material.vertexColors = true;
-        // }
+
         // for support geometry
         if (this.supportTag) {
             this.meshObject.material.color.set(0xFFD700);

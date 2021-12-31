@@ -402,7 +402,7 @@ export const actions = {
         modelGroup.removeAllModels();
         if (printingToolhead === DUAL_EXTRUDER_TOOLHEAD_FOR_SM2) {
             modelGroup.initPrimeTower();
-            const primeTowerModel = lodashFind(modelGroup.models, { primeTowerTag: true });
+            const primeTowerModel = lodashFind(modelGroup.models, { type: 'primeTower' });
             const enablePrimeTower = activeQualityDefinition?.settings?.prime_tower_enable?.default_value;
             !enablePrimeTower && dispatch(actions.hideSelectedModel(primeTowerModel));
         }
@@ -1409,13 +1409,21 @@ export const actions = {
         const modelState = modelGroup.hideSelectedModel(targetModels);
 
         const operations = new Operations();
-        targetModels.forEach(model => {
+        // targetModels.forEach(model => {
+        //     const operation = new VisibleOperation3D({
+        //         target: model,
+        //         visible: false
+        //     });
+        //     operations.push(operation);
+        // });
+        for (const model of targetModels) {
+            if (model.type === 'primeTower') continue;
             const operation = new VisibleOperation3D({
                 target: model,
                 visible: false
             });
             operations.push(operation);
-        });
+        }
         operations.registCallbackAfterAll(() => {
             dispatch(actions.updateState(modelGroup.getState()));
             dispatch(actions.destroyGcodeLine());
@@ -1437,12 +1445,14 @@ export const actions = {
             visible: true
         });
         const operations = new Operations();
-        operations.push(operation);
-        operations.registCallbackAfterAll(() => {
-            dispatch(actions.updateState(modelGroup.getState()));
-            dispatch(actions.destroyGcodeLine());
-            dispatch(actions.displayModel());
-        });
+        if (targetModel.type !== 'primeTower') {
+            operations.push(operation);
+            operations.registCallbackAfterAll(() => {
+                dispatch(actions.updateState(modelGroup.getState()));
+                dispatch(actions.destroyGcodeLine());
+                dispatch(actions.displayModel());
+            });
+        }
 
         dispatch(operationHistoryActions.setOperations(INITIAL_STATE.name, operations));
         dispatch(actions.updateState(modelState));
@@ -1458,7 +1468,7 @@ export const actions = {
         const { modelGroup } = getState().printing;
         const operations = new Operations();
         for (const model of modelGroup.selectedModelArray) {
-            if (model.primeTowerTag) {
+            if (model.type === 'primeTower') {
                 continue;
             }
             const operation = new DeleteOperation3D({
@@ -1499,7 +1509,7 @@ export const actions = {
         const { modelGroup } = getState().printing;
         const operations = new Operations();
         for (const model of modelGroup.models) {
-            if (model.primeTowerTag) continue;
+            if (model.type === 'primeTower') continue;
             const operation = new DeleteOperation3D({
                 target: model,
                 parent: null
@@ -1656,9 +1666,9 @@ export const actions = {
     duplicateSelectedModel: () => (dispatch, getState) => {
         const { modelGroup } = getState().printing;
         const modelState = modelGroup.duplicateSelectedModel();
-
+        const canDuplicateModels = filter(modelGroup.selectedModelArray, (model) => model.type !== 'primeTower');
         const operations = new Operations();
-        for (const model of modelGroup.selectedModelArray) {
+        for (const model of canDuplicateModels) {
             const operation = new AddOperation3D({
                 target: model,
                 parent: null
@@ -1695,6 +1705,7 @@ export const actions = {
 
         const operations = new Operations();
         for (const model of modelGroup.getSelectedModelArray()) {
+            if (model.type === 'primeTower') continue;
             const operation = new AddOperation3D({
                 target: model,
                 parent: null
@@ -1850,7 +1861,8 @@ export const actions = {
         modelGroup.defaultSupportSize = size;
     },
     generateModel: (headType, { loadFrom = LOAD_MODEL_FROM_INNER, originalName, uploadName, sourceWidth, sourceHeight, mode, sourceType, transformation, modelID, extruderConfig, isGroup = false, parentModelID = '', modelName, children, primeTowerTag }) => async (dispatch, getState) => {
-        const { progressStatesManager } = getState().printing;
+        const { progressStatesManager, defaultQualityId, qualityDefinitions } = getState().printing;
+        const { toolHead: { printingToolhead } } = getState().machine;
         progressStatesManager.startProgress(PROCESS_STAGE.PRINTING_LOAD_MODEL);
         dispatch(actions.updateState({
             stage: STEP_STAGE.PRINTING_LOADING_MODEL,
@@ -1890,9 +1902,13 @@ export const actions = {
                 stage: STEP_STAGE.PRINTING_LOAD_MODEL_SUCCEED,
                 progress: progressStatesManager.updateProgress(STEP_STAGE.PRINTING_LOADING_MODEL, 1)
             }));
-        } else if (primeTowerTag) {
+        } else if (primeTowerTag && printingToolhead === DUAL_EXTRUDER_TOOLHEAD_FOR_SM2) {
+            const activeActiveQualityDefinition = lodashFind(qualityDefinitions, { definitionId: defaultQualityId });
             const initHeight = transformation?.scaleZ || 0.1;
             modelGroup.initPrimeTower(initHeight, transformation);
+            const enabledPrimeTower = activeActiveQualityDefinition.settings.prime_tower_enable.default_value;
+            const primeTowerModel = lodashFind(modelGroup.models, { type: 'primeTower' });
+            !enabledPrimeTower && dispatch(actions.hideSelectedModel(primeTowerModel));
         } else {
             const onMessage = async (e) => {
                 const data = e.data;
