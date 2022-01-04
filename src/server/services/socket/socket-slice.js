@@ -25,6 +25,27 @@ const handleSlice = (socket, params) => {
     );
 };
 
+const handleGenerateSupport = (socket, params) => {
+    console.log(params);
+    socket.emit('generate-support:started');
+    setTimeout(() => {
+        socket.emit('generate-support:progress', 0.5);
+    }, 1500);
+    setTimeout(() => {
+        socket.emit('generate-support:completed', {
+            // gcodeFilename,
+            // gcodeFileLength,
+            // printTime,
+            // filamentLength,
+            // filamentWeight,
+            // gcodeFilePath,
+            // renderGcodeFileName
+        });
+    }, 3000);
+    // socket.emit('generate-support:error', err);
+};
+
 export default {
-    handleSlice
+    handleSlice,
+    handleGenerateSupport
 };

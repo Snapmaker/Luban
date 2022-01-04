@@ -502,35 +502,6 @@ class ModelGroup extends EventEmitter {
         return totalEstimatedTime_;
     }
 
-    undoRedo(models) {
-        const newModels = models.map(d => d.clone(this));
-
-        this.unselectAllModels();
-        for (const model of this.models) {
-            model.meshObject.removeEventListener('update', this.onModelUpdate);
-            ThreeUtils.removeObjectParent(model.meshObject);
-        }
-        this.models.splice(0);
-        for (const model of newModels) {
-            if (model.supportTag) {
-                if (!model.target) continue;
-                model.target = newModels.find(i => i.originModelID === model.target.modelID);
-                if (!model.target) continue;
-            }
-            model.meshObject.addEventListener('update', this.onModelUpdate);
-            model.computeBoundingBox();
-            model.stickToPlate();
-            this.models.push(model);
-            let parent = this.object;
-            if (model.supportTag) { // support parent should be the target model
-                parent = model.target.meshObject;
-            }
-            ThreeUtils.setObjectParent(model.meshObject, parent);
-        }
-
-        return this.getState();
-    }
-
     getModels() {
         const models = [];
         for (const model of this.models) {
@@ -2063,6 +2034,22 @@ class ModelGroup extends EventEmitter {
         });
         if (typeof this.primeTowerHeightCallback === 'function') {
             this.primeTowerHeightCallback(Math.min(maxHeight, maxBoundingBoxHeight));
+        }
+    }
+
+    filterModelsCanAttachSupport(models = this.models) {
+        return models.filter(model => {
+            return model.visible && model.canAttachSupport;
+        });
+    }
+
+    computeSupportArea(angle) {
+        const models = this.selectedModelArray.length > 0 ? this.selectedModelArray : this.models;
+        if (models.length > 0) {
+            const availModels = this.filterModelsCanAttachSupport(models);
+            availModels.forEach(model => {
+                model.autoMarkSupportArea(angle);
+            });
         }
     }
 }

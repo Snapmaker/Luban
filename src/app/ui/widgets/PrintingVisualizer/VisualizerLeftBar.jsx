@@ -1100,11 +1100,20 @@ function VisualizerLeftBar({ defaultSupportSize, setTransformMode, isSupporting,
                         }}
                     >
                         <div className="border-bottom-normal padding-vertical-10 padding-horizontal-16 height-40">
-                            {i18n._('key-Printing/LeftBar-Manual Support')}
+                            {i18n._('key-Printing/LeftBar-支撑_')}
                         </div>
                         <div className="padding-vertical-16 padding-horizontal-16">
-                            <div className="sm-flex">{i18n._('key-Printing/LeftBar-Support Size')}</div>
-                            <div className="sm-flex height-32 margin-bottom-8 margin-top-16">
+                            <div className="sm-flex">{i18n._('key-Printing/LeftBar-自动支撑_')}</div>
+                            <Button
+                                className="margin-top-16"
+                                type="primary"
+                                priority="level-three"
+                                width="100%"
+                                onClick={supportActions.clearAllManualSupport}
+                            >
+                                <span>{i18n._('key-Printing/LeftBar-自动生成所有_')}</span>
+                            </Button>
+                            {/* <div className="sm-flex height-32 margin-bottom-8 margin-top-16">
                                 <span className="sm-flex-auto width-16 color-red-1">X</span>
                                 <div className="position-ab sm-flex-auto margin-horizontal-24">
                                     <Input
@@ -1119,9 +1128,9 @@ function VisualizerLeftBar({ defaultSupportSize, setTransformMode, isSupporting,
                                         }}
                                     />
                                 </div>
-                            </div>
+                            </div> */}
                             <div className="sm-flex height-32">
-                                <span className="sm-flex-auto width-16 color-green-1">Y</span>
+                                <span className="sm-flex-auto width-16 color-green-1">{i18n._('key-Printing/LeftBar-悬垂角度_')}</span>
                                 <div className="position-ab sm-flex-auto margin-horizontal-24">
                                     <Input
                                         suffix="mm"
@@ -1136,7 +1145,7 @@ function VisualizerLeftBar({ defaultSupportSize, setTransformMode, isSupporting,
                                     />
                                 </div>
                             </div>
-                            <div className="sm-flex margin-top-32">
+                            {/* <div className="sm-flex margin-top-32">
                                 <Button
                                     type="primary"
                                     priority="level-three"
@@ -1155,7 +1164,17 @@ function VisualizerLeftBar({ defaultSupportSize, setTransformMode, isSupporting,
                                 >
                                     <span>{i18n._('key-Printing/LeftBar-Done')}</span>
                                 </Button>
-                            </div>
+                            </div> */}
+                            <div className="sm-flex">{i18n._('key-Printing/LeftBar-编辑支撑_')}</div>
+                            <Button
+                                className="margin-top-16"
+                                type="primary"
+                                priority="level-three"
+                                width="100%"
+                                onClick={supportActions.clearAllManualSupport}
+                            >
+                                <span>{i18n._('key-Printing/LeftBar-编辑支撑区域_')}</span>
+                            </Button>
                             <Button
                                 className="margin-top-16"
                                 type="primary"
@@ -1164,6 +1183,7 @@ function VisualizerLeftBar({ defaultSupportSize, setTransformMode, isSupporting,
                                 onClick={supportActions.clearAllManualSupport}
                             >
                                 <span>{i18n._('key-Printing/LeftBar-Clear All Support')}</span>
+                                {/* <span>{i18n._('key-Printing/LeftBar-Clear Object Support')}</span> */}
                             </Button>
                         </div>
                     </div>

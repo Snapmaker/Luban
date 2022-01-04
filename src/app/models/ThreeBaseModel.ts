@@ -74,6 +74,8 @@ export default class BaseModel {
 
     type: string;
 
+    canAttachSupport: boolean = true; // PrmieTowerModel should set false
+
     constructor(modelInfo, modelGroup) {
         this.modelGroup = modelGroup;
 

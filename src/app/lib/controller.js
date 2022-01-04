@@ -242,6 +242,10 @@ class SerialPortClient {
         socketController.emit('taskCommit:generateToolPath', taskArray);
     }
 
+    generateSupport(params) {
+        socketController.emit('generate-support', params);
+    }
+
 
     commitViewPathTask(task) {
         socketController.emit('taskCommit:generateViewPath', task);

@@ -33,6 +33,7 @@ function startServices(server) {
 
     // slice
     socketServer.registerEvent('slice', socketSlice.handleSlice);
+    socketServer.registerEvent('generate-support', socketSlice.handleGenerateSupport);
 
     // communication: http
     socketServer.registerEvent('http:discover', wifiServerManager.refreshDevices);

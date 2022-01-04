@@ -558,6 +558,55 @@ export const actions = {
                     stage: STEP_STAGE.PRINTING_SLICE_FAILED
                 }));
             });
+
+            // generate supports
+            controller.on('generate-support:started', () => {
+                const { progressStatesManager } = getState().printing;
+                dispatch(actions.updateState({
+                    stage: STEP_STAGE.PRINTING_GENERAtE_SUPPORT_MODEL,
+                    progress: progressStatesManager.updateProgress(STEP_STAGE.PRINTING_GENERAtE_SUPPORT_MODEL, 0.01)
+                }));
+            });
+            controller.on('generate-support:completed', (args) => {
+                console.log(args);
+                // const { gcodeFilename, gcodeFileLength, printTime, filamentLength, filamentWeight, renderGcodeFileName } = args;
+                const { progressStatesManager } = getState().printing;
+                dispatch(actions.updateState({
+                    // gcodeFile: {
+                    //     name: gcodeFilename,
+                    //     uploadName: gcodeFilename,
+                    //     size: gcodeFileLength,
+                    //     lastModified: +new Date(),
+                    //     thumbnail: '',
+                    //     renderGcodeFileName
+                    // },
+                    // printTime,
+                    // filamentLength,
+                    // filamentWeight,
+                    stage: STEP_STAGE.PRINTING_GENERAtE_SUPPORT_MODEL,
+                    progress: progressStatesManager.updateProgress(STEP_STAGE.PRINTING_GENERAtE_SUPPORT_MODEL, 1)
+                }));
+
+                // modelGroup.unselectAllModels();
+                // dispatch(actions.loadGcode(gcodeFilename));
+            });
+            controller.on('generate-support:progress', (progress) => {
+                const state = getState().printing;
+                const { progressStatesManager } = state;
+                if (progress - state.progress > 0.01 || progress > 1 - EPSILON) {
+                    dispatch(actions.updateState({
+                        progress: progressStatesManager.updateProgress(STEP_STAGE.PRINTING_GENERAtE_SUPPORT_MODEL, progress)
+                    }));
+                }
+            });
+            controller.on('generate-support:error', () => {
+                const state = getState().printing;
+                const { progressStatesManager } = state;
+                progressStatesManager.finishProgress(false);
+                dispatch(actions.updateState({
+                    stage: STEP_STAGE.PRINTING_GENERAtE_SUPPORT_FAILED
+                }));
+            });
         }
     },
     gcodeRenderingCallback: (data) => (dispatch, getState) => {
@@ -1370,6 +1419,71 @@ export const actions = {
             renderGcodeFileName
         };
         controller.slice(params);
+    },
+
+    generateAutoSupports: (models, thumbnail, isGuideTours = false) => async (dispatch, getState) => {
+        const { activeDefinition, modelGroup, helpersExtruderConfig, progressStatesManager } = getState().printing;
+
+        if (!models || models.length === 0) {
+            return;
+        }
+
+        if (!progressStatesManager.inProgress()) {
+            progressStatesManager.startProgress(PROCESS_STAGE.PRINTING_GENERAtE_SUPPORT, [1]);
+        } else {
+            progressStatesManager.startNextStep();
+        }
+        dispatch(actions.updateState({
+            stage: STEP_STAGE.PRINTING_GENERAtE_SUPPORT_MODEL,
+            progress: progressStatesManager.updateProgress(STEP_STAGE.PRINTING_GENERAtE_SUPPORT_MODEL, 0)
+        }));
+
+        modelGroup.unselectAllModels();
+        if (isGuideTours) {
+            // dispatch(actions.updateState({
+            //     thumbnail: thumbnail
+            // }));
+        }
+
+        // Prepare model file
+        const { model, support, definition, originalName } = await dispatch(actions.prepareModel());
+        const currentModelName = path.basename(models[0]?.modelName, path.extname(models[0]?.modelName));
+        const renderGcodeFileName = `${currentModelName}_${new Date().getTime()}`;
+        // Prepare definition file
+        const { size } = getState().machine;
+        await dispatch(actions.updateActiveDefinitionMachineSize(size));
+
+        const finalDefinition = definitionManager.finalizeActiveDefinition(activeDefinition);
+        const adhesionExtruder = helpersExtruderConfig.adhesion;
+        const supportExtruder = helpersExtruderConfig.support;
+        finalDefinition.settings.adhesion_extruder_nr.default_value = adhesionExtruder;
+        finalDefinition.settings.support_extruder_nr.default_value = supportExtruder;
+        finalDefinition.settings.support_infill_extruder_nr.default_value = supportExtruder;
+        finalDefinition.settings.support_extruder_nr_layer_0.default_value = supportExtruder;
+        finalDefinition.settings.support_interface_extruder_nr.default_value = supportExtruder;
+        finalDefinition.settings.support_roof_extruder_nr.default_value = supportExtruder;
+        finalDefinition.settings.support_bottom_extruder_nr.default_value = supportExtruder;
+        await api.profileDefinitions.createDefinition(CONFIG_HEADTYPE, finalDefinition);
+
+        // slice
+        /*
+        const params = {
+            modelName: name,
+            modelFileName: filename
+        };
+        */
+
+        const boundingBox = modelGroup.getBoundingBox();
+        const params = {
+            definition,
+            model,
+            support,
+            originalName,
+            boundingBox,
+            thumbnail: thumbnail,
+            renderGcodeFileName
+        };
+        controller.generateSupport(params);
     },
 
     prepareModel: () => (dispatch, getState) => {
@@ -2567,6 +2681,27 @@ export const actions = {
                 isNewUser: true
             }));
         });
+    },
+
+    computeAutoSupports: (angle) => (getState, dispatch) => {
+        const { modelGroup } = getState().printing;
+
+        const { progressStatesManager } = getState().printing;
+        progressStatesManager.startProgress(PROCESS_STAGE.PRINTING_GENERAtE_SUPPORT, [1, 1]);
+        dispatch(actions.updateState({
+            stage: STEP_STAGE.PRINTING_GENERAtE_SUPPORT_AREA,
+            progress: progressStatesManager.updateProgress(STEP_STAGE.PRINTING_GENERAtE_SUPPORT_AREA, 0.25)
+        }));
+
+        const models = modelGroup.computeSupportArea(angle);
+
+        dispatch(actions.updateState({
+            stage: STEP_STAGE.PRINTING_GENERAtE_SUPPORT_AREA,
+            progress: progressStatesManager.updateProgress(STEP_STAGE.PRINTING_GENERAtE_SUPPORT_AREA, 1)
+        }));
+        if (models.length > 0) {
+            dispatch(actions.generateAutoSupports(models));
+        }
     }
 };
 
