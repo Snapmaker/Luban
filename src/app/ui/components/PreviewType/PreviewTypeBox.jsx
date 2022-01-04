@@ -69,10 +69,13 @@ class PreviewTypeBox extends PureComponent {
         const { onChangeFatherValue } = this;
         return (
             <div>
-                <div className="sm-flex justify-space-between height-24 margin-vertical-8">
+                <div
+                    className="sm-flex justify-space-between height-24 margin-vertical-8 padding-right-16"
+                >
                     <div>
                         {isDropdown && (
                             <SvgIcon
+                                className="margin-left-n-8"
                                 name={showDropdown ? 'DropdownOpen' : 'DropdownClose'}
                                 size={24}
                                 type={['static']}
@@ -103,7 +106,7 @@ class PreviewTypeBox extends PureComponent {
                 {showDropdown && (childrenObjects.map((child) => {
                     const { value, onChangeValue, color, content } = child;
                     return (
-                        <div className="sm-flex justify-space-between height-24 margin-vertical-8 margin-left-40">
+                        <div className="sm-flex justify-space-between height-24 margin-vertical-8 margin-left-32 padding-right-16">
                             <div>
                                 <Checkbox
                                     checked={value}

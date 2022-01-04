@@ -15,51 +15,6 @@ import { DUAL_EXTRUDER_TOOLHEAD_FOR_SM2, LEFT_EXTRUDER, RIGHT_EXTRUDER } from '.
 import { machineStore } from '../../../store/local-storage';
 
 // TODO
-const lineTypeObjects0 = [
-    {
-        fatherContent: i18n._('key-Printing/Preview-Inner Wall'),
-        fatherColor: '#00ff00',
-        showType: 'showWallInner',
-        showTypeName: 'WALL-INNER'
-    },
-    {
-        fatherContent: i18n._('key-Printing/Preview-Outer Wall'),
-        fatherColor: '#ff2121',
-        showType: 'showWallOuter',
-        showTypeName: 'WALL-OUTER'
-    },
-    {
-        fatherContent: i18n._('key-Printing/Preview-Skin'),
-        fatherColor: '#ffff00',
-        showType: 'showSkin',
-        showTypeName: 'SKIN'
-    },
-    {
-        fatherContent: i18n._('key-Printing/Preview-Helper'),
-        fatherColor: '#4b0082',
-        showType: 'showSupport',
-        showTypeName: 'SUPPORT'
-    },
-    {
-        fatherContent: i18n._('key-Printing/Preview-Fill'),
-        fatherColor: '#8d4bbb',
-        showType: 'showFill',
-        showTypeName: 'FILL'
-    },
-    {
-        fatherContent: i18n._('key-Printing/Preview-Travel'),
-        fatherColor: '#44cef6',
-        showType: 'showTravel',
-        showTypeName: 'TRAVEL'
-    },
-    {
-        fatherContent: i18n._('key-Printing/Preview-Unknown'),
-        fatherColor: '#4b0082',
-        showType: 'showUnknown',
-        showTypeName: 'UNKNOWN'
-    },
-];
-
 function useShowToggleBtn() {
     const [showToggleBtn, setShowToggleBtn] = useState(true);
     function onToggleToggleBtn() {
@@ -208,7 +163,50 @@ function VisualizerPreviewControl() {
     }
 
     // TODO
-
+    const lineTypeObjects0 = [
+        {
+            fatherContent: i18n._('key-Printing/Preview-Inner Wall'),
+            fatherColor: '#00ff00',
+            showType: 'showWallInner',
+            showTypeName: 'WALL-INNER'
+        },
+        {
+            fatherContent: i18n._('key-Printing/Preview-Outer Wall'),
+            fatherColor: '#ff2121',
+            showType: 'showWallOuter',
+            showTypeName: 'WALL-OUTER'
+        },
+        {
+            fatherContent: i18n._('key-Printing/Preview-Skin'),
+            fatherColor: '#ffff00',
+            showType: 'showSkin',
+            showTypeName: 'SKIN'
+        },
+        {
+            fatherContent: i18n._('key-Printing/Preview-Helper'),
+            fatherColor: '#4b0082',
+            showType: 'showSupport',
+            showTypeName: 'SUPPORT'
+        },
+        {
+            fatherContent: i18n._('key-Printing/Preview-Fill'),
+            fatherColor: '#8d4bbb',
+            showType: 'showFill',
+            showTypeName: 'FILL'
+        },
+        {
+            fatherContent: i18n._('key-Printing/Preview-Travel'),
+            fatherColor: '#44cef6',
+            showType: 'showTravel',
+            showTypeName: 'TRAVEL'
+        },
+        {
+            fatherContent: i18n._('key-Printing/Preview-Unknown'),
+            fatherColor: '#4b0082',
+            showType: 'showUnknown',
+            showTypeName: 'UNKNOWN'
+        },
+    ];
     const lineTypeObjects1 = [
         {
             fatherContent: i18n._('key-Printing/Preview-Tool0'),
@@ -311,82 +309,86 @@ function VisualizerPreviewControl() {
                                     'background-color-white',
                                 )}
                             >
-                                <div className="border-bottom-normal padding-vertical-10 padding-horizontal-16 height-40 heading-3">
+                                <div className="border-bottom-normal padding-horizontal-16 height-40 heading-3">
                                     {i18n._('key-Printing/Preview-Line Type')}
                                 </div>
-                                <div className="padding-vertical-16 padding-horizontal-16">
+                                <div className="padding-vertical-16 padding-left-16">
                                     { isDualExtruder && (
-                                        <div className="sm-flex justify-space-between height-24 margin-bottom-8">
+                                        <div className="sm-flex justify-space-between height-16 margin-bottom-10">
                                             <div>
-                                                <span className="v-align-m margin-left-8">
-                                                    {i18n._('Color Method')}
+                                                <span className="v-align-m">
+                                                    {i18n._('key-Printing/Preview-Color Scheme')}
                                                 </span>
                                             </div>
                                         </div>
                                     )}
                                     { isDualExtruder && (
-                                        <div className="sm-flex justify-space-between margin-vertical-8">
+                                        <div className="sm-flex justify-space-between margin-top-10">
                                             <Select
-                                                className={classNames(
-                                                    'margin-top-16'
-                                                )}
                                                 size="large"
                                                 value={renderLineType}
                                                 onChange={toggleRenderLineType}
                                                 options={[
                                                     {
                                                         value: true,
-                                                        label: '按喷嘴'
+                                                        label: i18n._('key-Printing/Preview_Options-Extruder')
                                                     },
                                                     {
                                                         value: false,
-                                                        label: '按结构'
+                                                        label: i18n._('key-Printing/Preview_Options-Line Type')
                                                     }
                                                 ]}
                                             />
                                         </div>
                                     )}
-                                    {!renderLineType && (lineTypeObjects0.map((obj) => {
-                                        const { fatherContent, fatherColor, showType, showTypeName } = obj;
-                                        return (
-                                            <PreviewType
-                                                fatherContent={fatherContent}
-                                                fatherColor={fatherColor}
-                                                isDropdown={isDualExtruder}
-                                                childrenObjects={
-                                                    isDualExtruder ? [
-                                                        {
-                                                            value: allShowTypes[LEFT_EXTRUDER][showType],
-                                                            content: i18n._('key-Printing/Preview-Tool0'),
-                                                            onChangeValue: togglePreviewOptionFactoryByTypeAndDirection(showType, showTypeName, LEFT_EXTRUDER)
-                                                        },
-                                                        {
-                                                            value: allShowTypes[RIGHT_EXTRUDER][showType],
-                                                            content: i18n._('key-Printing/Preview-Tool1'),
-                                                            onChangeValue: togglePreviewOptionFactoryByTypeAndDirection(showType, showTypeName, RIGHT_EXTRUDER)
-                                                        }
-                                                    ] : [
-                                                        {
-                                                            value: allShowTypes[LEFT_EXTRUDER][showType],
-                                                            content: i18n._('key-Printing/Preview-Tool0'),
-                                                            onChangeValue: togglePreviewOptionFactoryByTypeAndDirection(showType, showTypeName, LEFT_EXTRUDER)
-                                                        }
-                                                    ]
-                                                }
-                                            />
-                                        );
-                                    }))}
-                                    {renderLineType && (lineTypeObjects1.map((obj) => {
-                                        const { fatherContent, fatherColor, childrenObjects } = obj;
-                                        return (
-                                            <PreviewType
-                                                fatherContent={fatherContent}
-                                                fatherColor={fatherColor}
-                                                isDropdown
-                                                childrenObjects={childrenObjects}
-                                            />
-                                        );
-                                    }))}
+                                    <div
+                                        style={{
+                                            overflow: 'auto',
+                                            maxHeight: '440px'
+                                        }}
+                                    >
+                                        {!renderLineType && (lineTypeObjects0.map((obj) => {
+                                            const { fatherContent, fatherColor, showType, showTypeName } = obj;
+                                            return (
+                                                <PreviewType
+                                                    fatherContent={fatherContent}
+                                                    fatherColor={fatherColor}
+                                                    isDropdown={isDualExtruder}
+                                                    childrenObjects={
+                                                        isDualExtruder ? [
+                                                            {
+                                                                value: allShowTypes[LEFT_EXTRUDER][showType],
+                                                                content: i18n._('key-Printing/Preview-Tool0'),
+                                                                onChangeValue: togglePreviewOptionFactoryByTypeAndDirection(showType, showTypeName, LEFT_EXTRUDER)
+                                                            },
+                                                            {
+                                                                value: allShowTypes[RIGHT_EXTRUDER][showType],
+                                                                content: i18n._('key-Printing/Preview-Tool1'),
+                                                                onChangeValue: togglePreviewOptionFactoryByTypeAndDirection(showType, showTypeName, RIGHT_EXTRUDER)
+                                                            }
+                                                        ] : [
+                                                            {
+                                                                value: allShowTypes[LEFT_EXTRUDER][showType],
+                                                                content: i18n._('key-Printing/Preview-Tool0'),
+                                                                onChangeValue: togglePreviewOptionFactoryByTypeAndDirection(showType, showTypeName, LEFT_EXTRUDER)
+                                                            }
+                                                        ]
+                                                    }
+                                                />
+                                            );
+                                        }))}
+                                        {renderLineType && (lineTypeObjects1.map((obj) => {
+                                            const { fatherContent, fatherColor, childrenObjects } = obj;
+                                            return (
+                                                <PreviewType
+                                                    fatherContent={fatherContent}
+                                                    fatherColor={fatherColor}
+                                                    isDropdown
+                                                    childrenObjects={childrenObjects}
+                                                />
+                                            );
+                                        }))}
+                                    </div>
                                 </div>
                             </div>
                         )}

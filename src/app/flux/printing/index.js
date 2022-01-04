@@ -8,7 +8,6 @@ import {
     ABSENT_OBJECT,
     EPSILON,
     DATA_PREFIX,
-    ALIGN_OPERATION,
     PRINTING_MANAGER_TYPE_MATERIAL,
     PRINTING_MANAGER_TYPE_QUALITY,
     MACHINE_SERIES,
@@ -20,6 +19,7 @@ import {
     LEFT_EXTRUDER_MAP_NUMBER,
     RIGHT_EXTRUDER_MAP_NUMBER,
     DUAL_EXTRUDER_TOOLHEAD_FOR_SM2,
+    ALIGN_OPERATION
 } from '../../constants';
 import { timestamp } from '../../../shared/lib/random-utils';
 import { machineStore } from '../../store/local-storage';
