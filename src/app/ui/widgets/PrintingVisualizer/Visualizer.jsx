@@ -8,7 +8,14 @@ import { Vector3, Box3 } from 'three';
 // , MeshPhongMaterial, DoubleSide, Mesh, CylinderBufferGeometry
 
 import { shortcutActions, priorities, ShortcutManager } from '../../../lib/shortcut';
-import { DUAL_EXTRUDER_TOOLHEAD_FOR_SM2, EPSILON, HEAD_PRINTING } from '../../../constants';
+import {
+    ADHESION_TYPE_BORDER,
+    DUAL_EXTRUDER_LIMIT_WIDTH_L,
+    DUAL_EXTRUDER_LIMIT_WIDTH_R,
+    DUAL_EXTRUDER_TOOLHEAD_FOR_SM2,
+    EPSILON,
+    HEAD_PRINTING
+} from '../../../constants';
 import i18n from '../../../lib/i18n';
 import modal from '../../../lib/modal';
 import ProgressBar from '../../components/ProgressBar';
@@ -79,12 +86,13 @@ class Visualizer extends PureComponent {
         primeTowerHeight: PropTypes.number.isRequired,
         hidePrimeTower: PropTypes.func,
         showPrimeTower: PropTypes.func,
-        printingToolhead: PropTypes.string
+        printingToolhead: PropTypes.string,
+        stopArea: PropTypes.object
     };
 
     state = {
         isSupporting: false,
-        defaultSupportSize: { x: 5, y: 5 }
+        defaultSupportSize: { x: 5, y: 5 },
     };
 
     printableArea = null;
@@ -332,9 +340,9 @@ class Visualizer extends PureComponent {
         this.props.modelGroup.on('add', this.props.recordAddOperation);
     }
 
-    componentWillReceiveProps(nextProps) {
-        const { size, transformMode, selectedModelArray, renderingTimestamp, modelGroup, stage, primeTowerHeight, enablePrimeTower, printingToolhead } = nextProps;
-        if (transformMode !== this.props.transformMode) {
+    componentDidUpdate(prevProps) {
+        const { size, stopArea, transformMode, selectedModelArray, renderingTimestamp, modelGroup, stage, primeTowerHeight, enablePrimeTower, printingToolhead } = this.props;
+        if (transformMode !== prevProps.transformMode) {
             this.canvas.current.setTransformMode(transformMode);
             if (transformMode === 'rotate-placement') {
                 this.canvas.current.setSelectedModelConvexMeshGroup(modelGroup.selectedModelConvexMeshGroup);
@@ -342,7 +350,7 @@ class Visualizer extends PureComponent {
                 this.supportActions.stopSupportMode();
             }
         }
-        if (selectedModelArray !== this.props.selectedModelArray) {
+        if (selectedModelArray !== prevProps.selectedModelArray) {
             // selectedModelIDArray.forEach((modelID) => {
             //     const model = modelGroup.models.find(d => d.modelID === modelID);
             //     modelGroup.selectedGroup.add(model.meshObject);
@@ -355,9 +363,13 @@ class Visualizer extends PureComponent {
             }
         }
 
-        if (!isEqual(size, this.props.size)) {
-            this.printableArea.updateSize(size);
-            const { gcodeLineGroup } = this.props;
+        if (isEqual(stopArea, prevProps.stopArea)) {
+            this.printableArea.updateSize(size, stopArea);
+        }
+
+        if (!isEqual(size, prevProps.size)) {
+            this.printableArea.updateSize(size, stopArea);
+            const { gcodeLineGroup } = prevProps;
 
             modelGroup.updateBoundingBox(new Box3(
                 new Vector3(-size.x / 2 - EPSILON, -size.y / 2 - EPSILON, -EPSILON),
@@ -371,18 +383,18 @@ class Visualizer extends PureComponent {
                 this.supportActions.stopSupportMode();
             }
         }
-        if (renderingTimestamp !== this.props.renderingTimestamp) {
+        if (renderingTimestamp !== prevProps.renderingTimestamp) {
             this.canvas.current.renderScene();
         }
 
-        if (stage !== this.props.stage && stage === STEP_STAGE.PRINTING_LOAD_MODEL_FAILED) {
+        if (stage !== prevProps.stage && stage === STEP_STAGE.PRINTING_LOAD_MODEL_FAILED) {
             modal({
                 cancelTitle: i18n._(''),
                 title: i18n._('key-Printing/ContextMenu-Import Error'),
                 body: i18n._('Failed to import this object. \nPlease select a supported file format.')
             });
         }
-        if (stage !== this.props.stage && stage === STEP_STAGE.PRINTING_LOAD_MODEL_SUCCEED) {
+        if (stage !== prevProps.stage && stage === STEP_STAGE.PRINTING_LOAD_MODEL_SUCCEED) {
             if (selectedModelArray[0] && selectedModelArray[0].boundingBox) {
                 const modelSize = new Vector3();
                 selectedModelArray[0].boundingBox.getSize(modelSize);
@@ -417,7 +429,7 @@ class Visualizer extends PureComponent {
                 }
             }
         }
-        if (!Number.isNaN(primeTowerHeight) && !Number.isNaN(this.props.primeTowerHeight) && primeTowerHeight !== this.props.primeTowerHeight) {
+        if (!Number.isNaN(primeTowerHeight) && !Number.isNaN(prevProps.primeTowerHeight) && primeTowerHeight !== prevProps.primeTowerHeight) {
             const primeTowerModel = find(modelGroup.models, { type: 'primeTower' });
             if (primeTowerModel) {
                 const isSelected = primeTowerModel.isSelected;
@@ -435,13 +447,13 @@ class Visualizer extends PureComponent {
             }
         }
         this.canvas.current.renderScene();
-        if (enablePrimeTower !== this.props.enablePrimeTower && printingToolhead === DUAL_EXTRUDER_TOOLHEAD_FOR_SM2) {
+        if (enablePrimeTower !== prevProps.enablePrimeTower && printingToolhead === DUAL_EXTRUDER_TOOLHEAD_FOR_SM2) {
             const primeTowerModel = find(modelGroup.models, { type: 'primeTower' });
             if (primeTowerModel) {
                 if (!enablePrimeTower) {
-                    this.props.hidePrimeTower(primeTowerModel);
+                    prevProps.hidePrimeTower(primeTowerModel);
                 } else {
-                    this.props.showPrimeTower(primeTowerModel);
+                    prevProps.showPrimeTower(primeTowerModel);
                 }
             }
         }
@@ -631,7 +643,19 @@ const mapStateToProps = (state, ownProps) => {
     } else {
         isActive = false;
     }
+
+    // stop area border
+    const adhesionType = activeQualityDefinition?.settings?.adhesion_type?.default_value;
+    const border = ADHESION_TYPE_BORDER[adhesionType];
+    const stopArea = {
+        left: border + (printingToolhead === DUAL_EXTRUDER_TOOLHEAD_FOR_SM2 ? DUAL_EXTRUDER_LIMIT_WIDTH_L : 0),
+        right: border + (printingToolhead === DUAL_EXTRUDER_TOOLHEAD_FOR_SM2 ? DUAL_EXTRUDER_LIMIT_WIDTH_R : 0),
+        bottom: border,
+        top: border,
+    };
+
     return {
+        stopArea,
         leftBarOverlayVisible,
         isActive,
         stage,
