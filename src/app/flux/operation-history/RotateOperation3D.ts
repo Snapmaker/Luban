@@ -1,7 +1,6 @@
 import type ModelGroup from '../../models/ModelGroup';
 import type ThreeGroup from '../../models/ThreeGroup';
 import type ThreeModel from '../../models/ThreeModel';
-import ThreeUtils from '../../three-extensions/ThreeUtils';
 import Operation from './Operation';
 
 type Positon = {
@@ -45,18 +44,18 @@ export default class RotateOperation3D extends Operation<RotateOperationState> {
         this.exec(this.state.from);
     }
 
-    private exec({ positionX, positionY, positionZ, rotationX, rotationY, rotationZ, scaleX, scaleY, scaleZ }) {
+    private exec({ rotationX, rotationY, rotationZ }) {
         const model = this.state.target;
         const modelGroup = this.state.modelGroup;
-        modelGroup.unselectAllModels();
-        if (model.parent) {
-            ThreeUtils.setObjectParent(model.meshObject, model.parent.meshObject);
-        } else {
-            ThreeUtils.setObjectParent(model.meshObject, modelGroup.object);
-        }
-        model.meshObject.position.set(positionX, positionY, positionZ);
-        model.meshObject.rotation.set(rotationX, rotationY, rotationZ);
-        model.meshObject.scale.set(scaleX, scaleY, scaleZ);
+        modelGroup.unselectAllModels({ recursive: true });
+
+        modelGroup.addModelToSelectedGroup(model);
+        modelGroup.updateSelectedGroupTransformation({
+            rotationX,
+            rotationY,
+            rotationZ
+        });
+        modelGroup.unselectAllModels({ recursive: true });
 
         model.stickToPlate();
         model.computeBoundingBox();

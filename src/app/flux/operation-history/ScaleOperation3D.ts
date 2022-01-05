@@ -44,24 +44,31 @@ export default class ScaleOperation3D extends Operation<ScaleOperationState> {
         this.exec(this.state.from);
     }
 
-    private exec({ positionX, positionY, positionZ, rotationX, rotationY, rotationZ, scaleX, scaleY, scaleZ }) {
+    private exec({ scaleX, scaleY, scaleZ }) {
         const model = this.state.target;
         const modelGroup = this.state.modelGroup;
-        modelGroup.unselectAllModels({ recursive: !!model.parent });
+        modelGroup.unselectAllModels({ recursive: true });
 
         if (model instanceof ThreeModel && model.supportTag) {
             modelGroup.addModelToSelectedGroup(model);
-            model.meshObject.parent.position.set(positionX, positionY, 0);
-            model.meshObject.parent.scale.set(scaleX, scaleY, scaleZ);
-            model.meshObject.parent.updateMatrix();
-            modelGroup.unselectAllModels();
+            modelGroup.updateSelectedGroupTransformation({
+                scaleX,
+                scaleY,
+                scaleZ
+            });
+            modelGroup.unselectAllModels({ recursive: true });
             model.computeBoundingBox();
             model.target.stickToPlate();
             model.target.computeBoundingBox();
         } else {
-            model.meshObject.position.set(positionX, positionY, positionZ);
-            model.meshObject.rotation.set(rotationX, rotationY, rotationZ);
-            model.meshObject.scale.set(scaleX, scaleY, scaleZ);
+            modelGroup.addModelToSelectedGroup(model);
+            modelGroup.updateSelectedGroupTransformation({
+                scaleX,
+                scaleY,
+                scaleZ
+            });
+            modelGroup.unselectAllModels({ recursive: true });
+
             model.stickToPlate();
             model.computeBoundingBox();
             modelGroup.updatePrimeTowerHeight();

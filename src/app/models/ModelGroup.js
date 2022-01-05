@@ -160,6 +160,7 @@ class ModelGroup extends EventEmitter {
             return {
                 positionX: this.selectedGroup.position.x,
                 positionY: this.selectedGroup.position.y,
+                positionZ: this.selectedGroup.position.z,
                 scaleX: this.selectedGroup.scale.x,
                 scaleY: this.selectedGroup.scale.y,
                 scaleZ: this.selectedGroup.scale.z,
@@ -545,7 +546,9 @@ class ModelGroup extends EventEmitter {
         }
     }
 
-    // used only for laser/cnc
+    /**
+     * used only for laser/cnc
+     */
     addSelectedModels(modelArray) {
         this.selectedGroup = new Group();
         for (const model of modelArray) {
@@ -756,7 +759,7 @@ class ModelGroup extends EventEmitter {
     }
 
     addModelToSelectedGroup(model) {
-        if (!(model instanceof Model)) return;
+        if (!(model instanceof Model) || model.isSelected) return;
         if (model.type === 'primeTower' && !model.visible) return;
         model.setSelected(true);
         ThreeUtils.applyObjectMatrix(this.selectedGroup, new Matrix4().copy(this.selectedGroup.matrix).invert());
