@@ -60,7 +60,6 @@ export default class UngroupOperation3D extends Operation<UngroupState> {
                 });
                 modelGroup.unselectAllModels();
             }
-            target.add(subModels);
         }
         target.updateTransformation(this.state.groupTransformation);
         target.add(subModels);
