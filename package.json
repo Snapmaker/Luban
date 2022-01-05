@@ -307,6 +307,7 @@
     "@commitlint/cli": "8.3.6",
     "@typescript-eslint/eslint-plugin": "5.0.0",
     "@typescript-eslint/parser": "5.0.0",
+    "@types/uuid": "8.3.3",
     "babel-eslint": "10.1.0",
     "babel-loader": "8.1.0",
     "bundle-loader": "0.5.6",
