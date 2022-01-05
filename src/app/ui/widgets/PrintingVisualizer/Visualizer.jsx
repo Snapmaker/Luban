@@ -71,8 +71,8 @@ class Visualizer extends PureComponent {
         updateSelectedModelTransformation: PropTypes.func.isRequired,
         duplicateSelectedModel: PropTypes.func.isRequired,
         setTransformMode: PropTypes.func.isRequired,
-        saveSupport: PropTypes.func.isRequired,
-        clearAllManualSupport: PropTypes.func.isRequired,
+        moveSupportBrush: PropTypes.func.isRequired,
+        applySupportBrush: PropTypes.func.isRequired,
         autoRotateSelectedModel: PropTypes.func.isRequired,
         layFlatSelectedModel: PropTypes.func.isRequired,
         scaleToFitSelectedModel: PropTypes.func.isRequired,
@@ -85,11 +85,6 @@ class Visualizer extends PureComponent {
         showPrimeTower: PropTypes.func,
         printingToolhead: PropTypes.string,
         stopArea: PropTypes.object
-    };
-
-    state = {
-        isSupporting: false,
-        defaultSupportSize: { x: 5, y: 5 },
     };
 
     printableArea = null;
@@ -203,52 +198,24 @@ class Visualizer extends PureComponent {
 
     // all support related actions used in VisualizerModelTransformation & canvas.controls & contextmenu
     supportActions = {
-        isSupporting: () => {
-            return this.state.isSupporting;
-        },
         startSupportMode: () => {
             this.props.destroyGcodeLine();
             this.actions.setTransformMode('support');
-            this.setState({ isSupporting: true });
             this.canvas.current.startSupportMode();
-            const model = this.props.selectedModelArray[0];
-            model.setVertexColors();
+            // const model = this.props.selectedModelArray[0];
+            // model.setVertexColors();
         },
         stopSupportMode: () => {
-            this.setState({ isSupporting: false });
-            this.supportActions.saveSupport();
+            // this.supportActions.saveSupport();
             this.canvas.current.stopSupportMode();
-            const model = this.props.selectedModelArray[0];
-            model && model.removeVertexColors();
+            // const model = this.props.selectedModelArray[0];
+            // model && model.removeVertexColors();
         },
-        moveSupport: (position) => {
-            const { modelGroup } = this.props;
-            if (!this._model) {
-                this._model = modelGroup.addSupportOnSelectedModel(this.state.defaultSupportSize);
-            }
-            this._model.setSupportPosition(position);
+        moveSupport: (raycastResult) => {
+            this.props.moveSupportBrush(raycastResult);
         },
-        saveSupport: () => {
-            if (this._model) {
-                this.props.saveSupport(this._model);
-                this._model = null;
-            }
-        },
-        setDefaultSupportSize: (size) => {
-            let defaultSupportSize = this.state.defaultSupportSize;
-            defaultSupportSize = { ...defaultSupportSize, ...size };
-            this.setState({ defaultSupportSize });
-        },
-        clearSelectedSupport: () => {
-            const { modelGroup } = this.props;
-            // support can only be selected with supports
-            const isSupportSelected = modelGroup.selectedModelArray.length > 0 && modelGroup.selectedModelArray[0].supportTag === true;
-            if (isSupportSelected) {
-                this.props.removeSelectedModel();
-            }
-        },
-        clearAllManualSupport: () => {
-            this.props.clearAllManualSupport();
+        applyBrush: (raycastResult) => {
+            this.props.applySupportBrush(raycastResult);
         }
     };
 
@@ -324,7 +291,7 @@ class Visualizer extends PureComponent {
         this.props.clearOperationHistory();
         this.canvas.current.resizeWindow();
         this.canvas.current.enable3D();
-        this.setState({ defaultSupportSize: { x: 5, y: 5 } });
+        // this.setState({ defaultSupportSize: { x: 5, y: 5 } });
         ShortcutManager.register(this.shortcutHandler);
         window.addEventListener(
             'hashchange',
@@ -344,8 +311,11 @@ class Visualizer extends PureComponent {
             this.canvas.current.setTransformMode(transformMode);
             if (transformMode === 'rotate-placement') {
                 this.canvas.current.setSelectedModelConvexMeshGroup(modelGroup.selectedModelConvexMeshGroup);
-            } else if (transformMode !== 'support') {
-                this.supportActions.stopSupportMode();
+            } else if (transformMode !== 'support-edit') {
+                // this.supportActions.stopSupportMode();
+                this.canvas.current.stopSupportMode();
+            } else if (transformMode === 'support-edit') {
+                this.canvas.current.startSupportMode();
             }
         }
         if (selectedModelArray !== prevProps.selectedModelArray) {
@@ -491,8 +461,6 @@ class Visualizer extends PureComponent {
                     updateBoundingBox={this.actions.updateBoundingBox}
                     setTransformMode={this.actions.setTransformMode}
                     supportActions={this.supportActions}
-                    defaultSupportSize={this.state.defaultSupportSize}
-                    isSupporting={this.state.isSupporting}
                     scaleToFitSelectedModel={this.actions.scaleToFitSelectedModel}
                     autoRotateSelectedModel={this.actions.autoRotateSelectedModel}
                 />
@@ -699,8 +667,8 @@ const mapDispatchToProps = (dispatch) => ({
     autoRotateSelectedModel: () => dispatch(printingActions.autoRotateSelectedModel()),
     scaleToFitSelectedModel: () => dispatch(printingActions.scaleToFitSelectedModel()),
     setTransformMode: (value) => dispatch(printingActions.setTransformMode(value)),
-    clearAllManualSupport: () => dispatch(printingActions.clearAllManualSupport()),
-    saveSupport: (model) => dispatch(printingActions.saveSupport(model)),
+    moveSupportBrush: (raycastResult) => dispatch(printingActions.moveSupportBrush(raycastResult)),
+    applySupportBrush: (raycastResult) => dispatch(printingActions.applySupportBrush(raycastResult)),
     setRotationPlacementFace: (userData) => dispatch(printingActions.setRotationPlacementFace(userData)),
     hidePrimeTower: (targetModel) => dispatch(printingActions.hideSelectedModel(targetModel)),
     showPrimeTower: (targetModel) => dispatch(printingActions.showSelectedModel(targetModel))

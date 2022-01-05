@@ -1,4 +1,4 @@
-import slice from '../../slicer/slice';
+import slice, { generateSupport } from '../../slicer/slice';
 
 const handleSlice = (socket, params) => {
     socket.emit('slice:started');
@@ -26,23 +26,21 @@ const handleSlice = (socket, params) => {
 };
 
 const handleGenerateSupport = (socket, params) => {
-    console.log(params);
     socket.emit('generate-support:started');
-    setTimeout(() => {
-        socket.emit('generate-support:progress', 0.5);
-    }, 1500);
-    setTimeout(() => {
-        socket.emit('generate-support:completed', {
-            // gcodeFilename,
-            // gcodeFileLength,
-            // printTime,
-            // filamentLength,
-            // filamentWeight,
-            // gcodeFilePath,
-            // renderGcodeFileName
-        });
-    }, 3000);
-    // socket.emit('generate-support:error', err);
+    generateSupport(
+        params,
+        (progress) => {
+            socket.emit('generate-support:progress', progress);
+        },
+        (result) => {
+            socket.emit('generate-support:completed', {
+                supportFilePaths: result.files
+            });
+        },
+        (err) => {
+            socket.emit('generate-support:error', err);
+        }
+    );
 };
 
 export default {

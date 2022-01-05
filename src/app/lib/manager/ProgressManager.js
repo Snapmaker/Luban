@@ -232,9 +232,9 @@ class ProgressStatesManager {
                     percent: 1
                 }
             ],
-            'key-Progress/LaserCNC-Loading object {{progress}}%',
-            'key-Progress/LaserCNC-Loaded object successfully.',
-            'key-Progress/LaserCNC-Failed to load object.');
+            'key-Progress/3DP-Generating support {{progress}}%',
+            'key-Progress/3DP-Generate support successfully.',
+            'key-Progress/3DP-Failed to generate support.');
     }
 
     push(processStageID, stages, notice, successNotice, failedNotice) {

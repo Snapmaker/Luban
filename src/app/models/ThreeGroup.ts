@@ -576,21 +576,23 @@ export default class ThreeGroup extends BaseModel {
         return result;
     }
 
-    setSupportPosition() { }
+    // setSupportPosition() { }
 
-    generateSupportGeometry() { }
+    // generateSupportGeometry() { }
 
-    setVertexColors() {
-        this.traverse((model) => {
-            model.setVertexColors();
-        });
-    }
+    // setVertexColors() {
+    //     this.traverse((model) => {
+    //         model.setVertexColors();
+    //     });
+    // }
 
-    removeVertexColors() {
-        this.traverse((model) => {
-            model.removeVertexColors();
-        });
-    }
+    // removeVertexColors() {
+    //     this.traverse((model) => {
+    //         model.removeVertexColors();
+    //     });
+    // }
+
+    // autoMarkSupportArea(): void {}
 
     getSerializableConfig(): ModelInfo {
         const {

@@ -97,7 +97,7 @@ STLExporter.prototype = {
 		        }
 		    }
 
-		    function writeFace(a, b, c, positionAttribute, object) {
+		    function writeFace(a, b, c, positionAttribute, object, extraAttrValue = 0) {
 	            vA.fromBufferAttribute(positionAttribute, a);
 	            vB.fromBufferAttribute(positionAttribute, b);
 	            vC.fromBufferAttribute(positionAttribute, c);
@@ -119,7 +119,7 @@ STLExporter.prototype = {
 	            writeVertex(vC);
 
 	            if (binary === true) {
-	                output.setUint16(offset, 0, true); offset += 2;
+	                output.setUint16(offset, extraAttrValue, true); offset += 2;
 	            } else {
 	                output += '\t\tendloop\n';
 	                output += '\tendfacet\n';
@@ -132,6 +132,7 @@ STLExporter.prototype = {
 
 	            const index = geometry.index;
 	            const positionAttribute = geometry.getAttribute('position');
+	            const supportMark = geometry.getAttribute('support_mark')?.array ?? [];
 
 	            if (index !== null) {
 	                // indexed geometry
@@ -140,18 +141,20 @@ STLExporter.prototype = {
 	                    const a = index.getX(j + 0);
 	                    const b = index.getX(j + 1);
 	                    const c = index.getX(j + 2);
+                        const extraAttrValue = supportMark[j / 3];
 
-	                    writeFace(a, b, c, positionAttribute, object);
+	                    writeFace(a, b, c, positionAttribute, object, extraAttrValue);
 	                }
 	            } else {
 	                // non-indexed geometry
                     const remainder = positionAttribute.count % 3 > 1;
 	                for (let j = 0; j < positionAttribute.count-1; j += 3) {
 	                    const a = j;
-	                    const b = j + 1 <= positionAttribute.count ? j + 1  : positionAttribute.count ;
-	                    const c = j + 2 <= positionAttribute.count ? j + 2  : positionAttribute.count ;
+	                    const b = j + 1 <= positionAttribute.count ? j + 1  : positionAttribute.count;
+	                    const c = j + 2 <= positionAttribute.count ? j + 2  : positionAttribute.count;
+                        const extraAttrValue = supportMark[j / 3];
 
-	                    writeFace(a, b, c, positionAttribute, object);
+	                    writeFace(a, b, c, positionAttribute, object, extraAttrValue);
 	                }
 	            }
 	        }
