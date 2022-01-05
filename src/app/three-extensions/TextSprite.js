@@ -40,7 +40,8 @@ class TextSprite {
         const material = new THREE.SpriteMaterial({
             map: texture,
             transparent: true,
-            opacity: opacity
+            opacity: opacity,
+            alphaTest: 0.5
         });
 
         textObject.position.x = options.x || 0;
