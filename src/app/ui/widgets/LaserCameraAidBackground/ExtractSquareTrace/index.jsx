@@ -10,7 +10,7 @@ import styles from '../styles.styl';
 import ExtractPreview from './ExtractPreview';
 import ManualCalibration from '../ManualCalibration';
 import { LEVEL_ONE_POWER_LASER_FOR_SM2, LEVEL_TWO_POWER_LASER_FOR_SM2,
-    MACHINE_SERIES, LASER_10W_TAKE_PHOTO_POSITION } from '../../../../constants';
+    MACHINE_SERIES, LASER_10W_TAKE_PHOTO_POSITION, getCurrentHeadType } from '../../../../constants';
 import { actions } from '../../../../flux/machine';
 import { Button } from '../../../components/Buttons';
 import Modal from '../../../components/Modal';
@@ -205,6 +205,7 @@ class ExtractSquareTrace extends PureComponent {
                 this.props.updateEachPicSize('ySize', this.state.ySize);
 
                 if (this.props.toolHead.laserToolhead === LEVEL_ONE_POWER_LASER_FOR_SM2) {
+                    console.log('test123123');
                     this.actions.processStitch(this.state.options);
                 } else if (this.props.toolHead.laserToolhead === LEVEL_TWO_POWER_LASER_FOR_SM2) {
                     this.setState({
@@ -339,7 +340,6 @@ class ExtractSquareTrace extends PureComponent {
                                                 this.multiple
                                             );
                                         }
-                                        this.props.executeGcodeG54(this.props.series, this.props.headType);
                                         task.status = 2;
                                     });
                                 } else if (this.props.toolHead.laserToolhead === LEVEL_TWO_POWER_LASER_FOR_SM2) {
@@ -563,7 +563,6 @@ class ExtractSquareTrace extends PureComponent {
         imagesName[item2] = swap;
     }
 
-
     render() {
         if (this.props.series === MACHINE_SERIES.A350.value) {
             this.multiple = 1.5;
@@ -670,9 +669,10 @@ class ExtractSquareTrace extends PureComponent {
 
 const mapStateToProps = (state) => {
     const machine = state.machine;
+    const headType = getCurrentHeadType(window.location.href);
     return {
         series: machine.series,
-        headType: machine.headType,
+        headType,
         size: machine.size,
         server: machine.server,
         laserSize: machine.laserSize
