@@ -37,6 +37,7 @@ import * as THREE from "three";
 const STLLoader = function ( manager ) {
 	this.manager = ( manager !== undefined ) ? manager : THREE.DefaultLoadingManager;
 };
+const rotateZMatrix = new THREE.Matrix4();
 
 STLLoader.prototype = {
 
@@ -154,9 +155,9 @@ STLLoader.prototype = {
 				var normalX = reader.getFloat32( start, true );
 				var normalY = reader.getFloat32( start + 4, true );
 				var normalZ = reader.getFloat32( start + 8, true );
-				if (face === 0) {
-					console.log('geometry geometry', normalX, normalY, normalZ);
-				}
+				var maxX = Number.MIN_SAFE_INTEGER, minX = Number.MAX_SAFE_INTEGER, maxY = Number.MIN_SAFE_INTEGER, minY = Number.MAX_SAFE_INTEGER;
+				var currentVertices = [];
+				var currentUv = [];
 
 				if ( hasColors ) {
 
@@ -183,10 +184,35 @@ STLLoader.prototype = {
 				for ( var i = 1; i <= 3; i ++ ) {
 
 					var vertexstart = start + i * 12;
+					var vertice1 = reader.getFloat32( vertexstart, true );
+					var vertice2 = reader.getFloat32( vertexstart+ 4, true );
+					var vertice3 = reader.getFloat32( vertexstart+ 8, true );
 
-					vertices.push( reader.getFloat32( vertexstart, true ) );
-					vertices.push( reader.getFloat32( vertexstart + 4, true ) );
-					vertices.push( reader.getFloat32( vertexstart + 8, true ) );
+					vertices.push( vertice1 );
+					vertices.push( vertice2 );
+					vertices.push( vertice3 );
+					let currentVertice = new THREE.Vector3(vertice1, vertice2, vertice3);
+					const xyVecrtice = new THREE.Vector3(vertice1, vertice2, 0);
+					// console.log('xyVecrtice', currentVertice, xyVecrtice);
+					const angle = currentVertice.angleTo(xyVecrtice);
+					let currentXyVertice = currentVertice;
+
+					// if (angle > 5*Math.PI/180 && angle < 175*Math.PI/180 ) {
+						rotateZMatrix.set(
+							Math.cos(angle), -Math.sin(angle), 0, 0,
+							Math.sin(angle),  Math.cos(angle), 0, 0,
+							0,       0,      1,  0,
+							0,       0,      0,  1
+						);
+						currentXyVertice = currentVertice.applyMatrix4(rotateZMatrix);
+					// }
+
+					minX = Math.min(currentXyVertice.x, minX);
+					minY = Math.min(currentXyVertice.y, minY);
+					maxX = Math.max(currentXyVertice.x, maxX);
+					maxY = Math.max(currentXyVertice.y, maxY);
+
+					currentVertices.push(currentXyVertice)
 
 					normals.push( normalX, normalY, normalZ );
 
@@ -197,7 +223,17 @@ STLLoader.prototype = {
 					}
 
 				}
-				faceVertexUvs[0].push([new THREE.Vector2(0,1), new THREE.Vector2(1,1), new THREE.Vector2(0,0)]);
+					let maxLength = Math.max(maxX-minX, maxY - minY);
+					// console.log('maxX',  maxLength, currentVertices);
+					currentUv = currentVertices.map((item) => {
+						let newX, newY;
+						newX = (item.x - minX)/maxLength;
+						newY = (item.y - minY)/maxLength;
+						// console.log('newX, newY', newX, newY);
+						return new THREE.Vector2(newX,newY)
+					});
+				faceVertexUvs[0].push(currentUv);
+				// faceVertexUvs[0].push([new THREE.Vector2(0,1), new THREE.Vector2(1,1), new THREE.Vector2(0,0)]);
 
 			}
 
