@@ -11,6 +11,9 @@ import {
     LEVEL_ONE_POWER_LASER_FOR_SM2, SINGLE_EXTRUDER_TOOLHEAD_FOR_SM2
 } from '../../constants';
 import { valueOf } from '../../lib/contants-utils';
+import HeartBeatWorker from '../../workers/HeartBeat.worker';
+
+const heartBeatWorker = new HeartBeatWorker();
 
 /**
  * Server represents HTTP Server on Snapmaker 2.
@@ -97,7 +100,9 @@ export class Server extends events.EventEmitter {
 
     _closeServer() {
         this._stateInit();
-        this.endRequestStatus();
+        heartBeatWorker.postMessage({
+            stop: true
+        });
         this.gcodeInfos = [];
         this.isGcodeExecuting = false;
     }
@@ -166,7 +171,7 @@ export class Server extends events.EventEmitter {
 
                 this.token = data.token;
                 this.waitConfirm = true;
-                this.startRequestStatus();
+                this.startHeartbeat();
                 callback(null, data);
             });
     };
@@ -184,18 +189,22 @@ export class Server extends events.EventEmitter {
             });
     };
 
-    startRequestStatus = () => {
-        this.endRequestStatus();
-        this.requestStatus();
-        this.statusTimer = setInterval(this.requestStatus, 1000);
-    };
+    startHeartbeat = () => {
+        heartBeatWorker.postMessage({
+            host: this.host,
+            token: this.token
+        });
+        heartBeatWorker.onmessage = (e) => {
+            const { status, msg, res } = e.data;
 
-    endRequestStatus = () => {
-        if (this.statusTimer) {
-            clearInterval(this.statusTimer);
-            this.statusTimer = null;
-        }
-    };
+            if (status === 'offline') {
+                this.emit('http:close', { err: msg });
+            } else {
+                const { data, code } = this._getResult(null, res);
+                this.receiveHeartbeat(data, code);
+            }
+        };
+    }
 
     uploadFile = (filename, file, callback) => {
         if (!this.token) {
@@ -215,74 +224,54 @@ export class Server extends events.EventEmitter {
             });
     };
 
-    requestStatus = () => {
-        if (!this.token) {
+    receiveHeartbeat = (data, code) => {
+        if (code === 204) { // No Content
             return;
         }
-        const api = `${this.host}/api/v1/status?token=${this.token}`;
-        request
-            .get(api)
-            .timeout(3000)
-            .end((err, res) => {
-                const { data, msg, code } = this._getResult(err, res);
-                if (msg) {
-                    this.errorCount++;
-                    if (this.errorCount >= 3) {
-                        this._closeServer();
-                        this.emit('http:close', { err: msg });
-                    }
-                    return;
-                }
-                this.errorCount = 0;
 
-                if (code === 204) { // No Content
-                    return;
-                }
+        const { status, x, y, z, b, offsetX, offsetY, offsetZ } = data;
 
-                const { status, x, y, z, b, offsetX, offsetY, offsetZ } = data;
+        this.status = status.toLowerCase();
+        this.state.workPosition = {
+            x: x,
+            y: y,
+            z: z,
+            b: b
+        };
+        this.state.originOffset = {
+            x: offsetX,
+            y: offsetY,
+            z: offsetZ
+        };
 
-                this.status = status.toLowerCase();
-                this.state.workPosition = {
-                    x: x,
-                    y: y,
-                    z: z,
-                    b: b
-                };
-                this.state.originOffset = {
-                    x: offsetX,
-                    y: offsetY,
-                    z: offsetZ
-                };
+        isNotNull(data.homed) && (this.state.isHomed = data.homed);
+        isNotNull(data.laserFocalLength) && (this.state.laserFocalLength = data.laserFocalLength);
+        isNotNull(data.laserPower) && (this.state.laserPower = data.laserPower);
+        isNotNull(data.laserCamera) && (this.state.laserCamera = data.laserCamera);
+        isNotNull(data.workSpeed) && (this.state.workSpeed = data.workSpeed);
+        isNotNull(data.nozzleTemperature) && (this.state.nozzleTemperature = data.nozzleTemperature);
+        isNotNull(data.nozzleTargetTemperature) && (this.state.nozzleTargetTemperature = data.nozzleTargetTemperature);
+        isNotNull(data.heatedBedTemperature) && (this.state.heatedBedTemperature = data.heatedBedTemperature);
+        isNotNull(data.heatedBedTargetTemperature) && (this.state.heatedBedTargetTemperature = data.heatedBedTargetTemperature);
+        isNotNull(data.isEnclosureDoorOpen) && (this.state.isEnclosureDoorOpen = data.isEnclosureDoorOpen);
+        isNotNull(data.doorSwitchCount) && (this.state.doorSwitchCount = data.doorSwitchCount);
+        isNotNull(data.isEmergencyStopped) && (this.state.isEmergencyStopped = data.isEmergencyStopped);
+        isNotNull(data.laser10WErrorState) && (this.state.laser10WErrorState = data.laser10WErrorState);
+        // this state controls filter widget disable
+        this.state.airPurifier = isNotNull(data.airPurifierSwitch);
+        isNotNull(data.airPurifierSwitch) && (this.state.airPurifierSwitch = data.airPurifierSwitch);
+        isNotNull(data.airPurifierFanSpeed) && (this.state.airPurifierFanSpeed = data.airPurifierFanSpeed);
+        isNotNull(data.airPurifierFilterHealth) && (this.state.airPurifierFilterHealth = data.airPurifierFilterHealth);
+        isNotNull(data.moduleList) && (this.state.moduleStatusList = data.moduleList);
+        this._updateGcodePrintingInfo(data);
 
-                isNotNull(data.homed) && (this.state.isHomed = data.homed);
-                isNotNull(data.laserFocalLength) && (this.state.laserFocalLength = data.laserFocalLength);
-                isNotNull(data.laserPower) && (this.state.laserPower = data.laserPower);
-                isNotNull(data.laserCamera) && (this.state.laserCamera = data.laserCamera);
-                isNotNull(data.workSpeed) && (this.state.workSpeed = data.workSpeed);
-                isNotNull(data.nozzleTemperature) && (this.state.nozzleTemperature = data.nozzleTemperature);
-                isNotNull(data.nozzleTargetTemperature) && (this.state.nozzleTargetTemperature = data.nozzleTargetTemperature);
-                isNotNull(data.heatedBedTemperature) && (this.state.heatedBedTemperature = data.heatedBedTemperature);
-                isNotNull(data.heatedBedTargetTemperature) && (this.state.heatedBedTargetTemperature = data.heatedBedTargetTemperature);
-                isNotNull(data.isEnclosureDoorOpen) && (this.state.isEnclosureDoorOpen = data.isEnclosureDoorOpen);
-                isNotNull(data.doorSwitchCount) && (this.state.doorSwitchCount = data.doorSwitchCount);
-                isNotNull(data.isEmergencyStopped) && (this.state.isEmergencyStopped = data.isEmergencyStopped);
-                isNotNull(data.laser10WErrorState) && (this.state.laser10WErrorState = data.laser10WErrorState);
-                // this state controls filter widget disable
-                this.state.airPurifier = isNotNull(data.airPurifierSwitch);
-                isNotNull(data.airPurifierSwitch) && (this.state.airPurifierSwitch = data.airPurifierSwitch);
-                isNotNull(data.airPurifierFanSpeed) && (this.state.airPurifierFanSpeed = data.airPurifierFanSpeed);
-                isNotNull(data.airPurifierFilterHealth) && (this.state.airPurifierFilterHealth = data.airPurifierFilterHealth);
-                isNotNull(data.moduleList) && (this.state.moduleStatusList = data.moduleList);
-                this._updateGcodePrintingInfo(data);
-
-                if (this.waitConfirm) {
-                    this.waitConfirm = false;
-                    this.isConnected = true;
-                    this.emit('http:confirm', { data: this._getStatus() });
-                } else {
-                    this.emit('http:status', { data: this._getStatus() });
-                }
-            });
+        if (this.waitConfirm) {
+            this.waitConfirm = false;
+            this.isConnected = true;
+            this.emit('http:confirm', { data: this._getStatus() });
+        } else {
+            this.emit('http:status', { data: this._getStatus() });
+        }
     };
 
     uploadGcodeFile = (filename, file, type, callback) => {
