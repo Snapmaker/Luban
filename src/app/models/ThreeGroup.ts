@@ -310,8 +310,6 @@ export default class ThreeGroup extends BaseModel {
     }
 
     updateTransformation(transformation: ModelTransformation): ModelTransformation {
-        this.children.forEach(model => model.updateTransformation(transformation));
-
         return super.updateTransformation(transformation);
     }
 

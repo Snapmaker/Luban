@@ -1580,11 +1580,11 @@ class ModelGroup extends EventEmitter {
                             group.add(newSubModelIDs);
                             this.groupsChildrenMap.delete(group);
                             this.models = [...this.models, group];
-                            this.addModelToSelectedGroup(group);
-
+                            group.stickToPlate();
                             group.computeBoundingBox();
                             const overstepped = this._checkOverstepped(group);
                             group.setOversteppedAndSelected(overstepped, group.isSelected);
+                            this.addModelToSelectedGroup(group);
                         } else {
                             this.groupsChildrenMap.set(group, newSubModelIDs);
                         }
@@ -1592,6 +1592,7 @@ class ModelGroup extends EventEmitter {
                 });
             } else {
                 // add to group and select
+                model.stickToPlate();
                 this.models.push(model);
                 // todo, use this to refresh obj list
                 this.models = [...this.models];
