@@ -2171,22 +2171,23 @@ export const actions = {
         const selectedModels = modelGroup.getSelectedModelArray().slice(0);
         const selectedModelsPositionMap = new Map();
         selectedModels.forEach(model => {
+            const { recovery } = modelGroup.unselectAllModels({ recursive: true });
+            modelGroup.selectModelById(model.modelID);
             selectedModelsPositionMap.set(model.modelID, {
-                x: model.transformation.positionX,
-                y: model.transformation.positionY,
-                z: model.transformation.positionZ,
+                ...modelGroup.getSelectedModelTransformationForPrinting()
             });
+            recovery();
         });
         // const groups = modelGroup.getSelectedModelArray().filter(model => model instanceof ThreeGroup);
         // const groupChildrenMap = new Map();
         // groups.forEach(group => {
         //     groupChildrenMap.set(group, group.children.slice(0));
         // });
-        const newPosition = modelGroup.updateModelsPositionBaseFirstModel(selectedModels);
+        modelGroup.updateModelsPositionBaseFirstModel(selectedModels);
         const operations = new Operations();
 
         dispatch(actions.clearAllManualSupport(operations));
-        const { modelState } = modelGroup.group(ALIGN_OPERATION);
+        const { newGroup, modelState } = modelGroup.group(ALIGN_OPERATION);
         const modelsafterGroup = modelGroup.getModels().slice(0);
 
         const operation = new GroupAlignOperation3D({
@@ -2195,7 +2196,7 @@ export const actions = {
             modelsbeforeGroup,
             modelsafterGroup,
             selectedModels,
-            newPosition,
+            newPosition: newGroup.transformation,
             target: modelGroup.getSelectedModelArray()[0],
             modelGroup
         });
