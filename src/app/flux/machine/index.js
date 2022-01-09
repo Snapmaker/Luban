@@ -599,6 +599,7 @@ export const actions = {
                 dispatch(baseActions.updateState({
                     workflowStatus: status,
                     isConnected: true,
+                    isSendedOnWifi: true,
                     connectionStatus: CONNECTION_STATUS_CONNECTED,
                     isHomed: isHomed
                 }));
@@ -898,9 +899,10 @@ export const actions = {
 
     executeGcodeAutoHome: (homingModel = false) => (dispatch, getState) => {
         const { series, headType } = getState().workspace;
+        const { connectionType } = getState().machine;
         dispatch(actions.executeGcode('G53'));
         dispatch(actions.executeGcode('G28'));
-        if (homingModel) {
+        if (homingModel && connectionType === CONNECTION_TYPE_WIFI) {
             dispatch(baseActions.updateState({
                 homingModel
             }));
