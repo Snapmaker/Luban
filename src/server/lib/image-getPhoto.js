@@ -10,9 +10,12 @@ const fs = require('fs');
  * Server represents HTTP Server on Snapmaker 2.
  */
 export const takePhoto = (options) => {
-    const { address, index, x, y, z, feedRate } = options;
+    const { address, index, x, y, z, feedRate, photoQuality } = options;
     let api = `http://${address}:8080/api/request_capture_photo`;
     api += `?index=${index}&x=${x}&y=${y}&z=${z}&feedRate=${feedRate}`;
+    if (photoQuality >= 0 && photoQuality <= 255) {
+        api += `&photoQuality=${photoQuality}`;
+    }
     return new Promise((resolve) => {
         request.get(api).end((err, res) => {
             resolve({
