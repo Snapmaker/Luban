@@ -40,7 +40,7 @@ import SecondaryToolbar from '../CanvasToolbar/SecondaryToolbar';
 
 const changeNameInput = [];
 const suffixLength = 7;
-
+const cancelRequestEvent = new CustomEvent('cancelReq');
 const GcodePreviewItem = React.memo(({ gcodeFile, index, selected, onSelectFile, gRef, setSelectFileIndex, handleShowPreviewModal }) => {
     const dispatch = useDispatch();
     const { prefixName, suffixName } = normalizeNameDisplay(gcodeFile?.renderGcodeFileName || gcodeFile?.name, suffixLength);
@@ -327,8 +327,8 @@ function WifiTransport({ widgetActions, controlActions }) {
                 server.getLaserMaterialThickness(options, async ({ status, thickness }) => {
                     if (status) {
                         await actions.onChangeMaterialThickness(thickness);
+                        controlActions.onCallBackRun();
                     }
-                    controlActions.onCallBackRun();
                 });
                 return;
             }
@@ -401,6 +401,11 @@ function WifiTransport({ widgetActions, controlActions }) {
         }
     };
 
+    useEffect(() => {
+        if (!isConnected) {
+            window.dispatchEvent(cancelRequestEvent);
+        }
+    }, [isConnected]);
     useEffect(() => {
         if (connectionType === CONNECTION_TYPE_SERIAL || isRotate || toolHeadName !== LEVEL_TWO_POWER_LASER_FOR_SM2) {
             setIsLaserAutoFocus(false);

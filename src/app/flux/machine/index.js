@@ -191,7 +191,9 @@ const INITIAL_STATE = {
     multipleEngine: false,
 
     // connect info
-    moduleStatusList: {}
+    moduleStatusList: {},
+    // wifi connection, home button in control widget
+    homingModel: false
 };
 
 
@@ -597,6 +599,7 @@ export const actions = {
                 dispatch(baseActions.updateState({
                     workflowStatus: status,
                     isConnected: true,
+                    isSendedOnWifi: true,
                     connectionStatus: CONNECTION_STATUS_CONNECTED,
                     isHomed: isHomed
                 }));
@@ -865,9 +868,14 @@ export const actions = {
 
     executeGcode: (gcode, context) => (dispatch, getState) => {
         const machine = getState().machine;
-
+        const { homingModel } = machine;
         const { isConnected, connectionType, server } = machine;
         if (!isConnected) {
+            if (homingModel) {
+                dispatch(baseActions.updateState({
+                    homingModel: false
+                }));
+            }
             return;
         }
         // if (port && workflowState === WORKFLOW_STATE_IDLE) {
@@ -879,15 +887,26 @@ export const actions = {
             server.executeGcode(gcode, (result) => {
                 if (result) {
                     dispatch(actions.addConsoleLogs(result));
+                    if (homingModel) {
+                        dispatch(baseActions.updateState({
+                            homingModel: false
+                        }));
+                    }
                 }
             });
         }
     },
 
-    executeGcodeAutoHome: () => (dispatch, getState) => {
+    executeGcodeAutoHome: (homingModel = false) => (dispatch, getState) => {
         const { series, headType } = getState().workspace;
+        const { connectionType } = getState().machine;
         dispatch(actions.executeGcode('G53'));
         dispatch(actions.executeGcode('G28'));
+        if (homingModel && connectionType === CONNECTION_TYPE_WIFI) {
+            dispatch(baseActions.updateState({
+                homingModel
+            }));
+        }
         dispatch(actions.executeGcodeG54(series, headType));
     },
 
