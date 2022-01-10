@@ -217,18 +217,20 @@ class ExtractSquareTrace extends PureComponent {
 
         takePhotos: (address, position) => {
             const getPhotoTasks = this.state.getPhotoTasks;
-            let z;
+            let z, photoQuality;
             if (this.props.toolHead.laserToolhead === LEVEL_ONE_POWER_LASER_FOR_SM2) {
                 z = 170;
                 if (this.state.options.picAmount === 4) {
                     z = 140;
                 }
+                photoQuality = 31;
             }
             if (this.props.toolHead.laserToolhead === LEVEL_TWO_POWER_LASER_FOR_SM2) {
                 const defaultPos = LASER_10W_TAKE_PHOTO_POSITION[this.props.series];
                 z = defaultPos.z;
                 position[0].x = defaultPos.x;
                 position[0].y = defaultPos.y;
+                photoQuality = 10;
             }
             return new Promise(async (resolve, reject) => {
                 for (let i = 0; i < position.length; i++) {
@@ -244,7 +246,8 @@ class ExtractSquareTrace extends PureComponent {
                         'y': position[i].y,
                         'z': z,
                         'feedRate': 3000,
-                        'address': address
+                        'address': address,
+                        'photoQuality': photoQuality
                     });
                     getPhotoTasks.push({
                         address: address,
