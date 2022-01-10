@@ -205,7 +205,6 @@ class ExtractSquareTrace extends PureComponent {
                 this.props.updateEachPicSize('ySize', this.state.ySize);
 
                 if (this.props.toolHead.laserToolhead === LEVEL_ONE_POWER_LASER_FOR_SM2) {
-                    console.log('test123123');
                     this.actions.processStitch(this.state.options);
                 } else if (this.props.toolHead.laserToolhead === LEVEL_TWO_POWER_LASER_FOR_SM2) {
                     this.setState({
