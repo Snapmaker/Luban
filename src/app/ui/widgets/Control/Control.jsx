@@ -30,6 +30,7 @@ import {
     DISTANCE_STEP,
     DEFAULT_AXES
 } from './constants';
+import ModalSmall from '../../components/Modal/ModalSmall';
 
 const DEFAULT_SPEED_OPTIONS = [
     {
@@ -80,19 +81,32 @@ function Control({ widgetId, widgetActions: _widgetActions }) {
     const originOffset = useSelector(state => state.machine.originOffset) || {};
     const { jog, axes, dataSource } = widgets[widgetId];
     const { speed = 1500, keypad, selectedDistance, customDistance, selectedAngle, customAngle } = jog;
-    const { headType, isConnected, workflowState, workflowStatus } = machine;
+    const { headType, isConnected, workflowState, workflowStatus, homingModel } = machine;
     const dispatch = useDispatch();
-
     function getInitialState() {
         const jogSpeed = speed;
-
+        let _workPosition = {
+            x: '0.000',
+            y: '0.000',
+            z: '0.000'
+        };
+        let _originOffset = {
+            x: 0,
+            y: 0,
+            z: 0
+        };
         // init jog speed options, add saved speed when it doesn't exists in default options
         const jogSpeedOptions = DEFAULT_SPEED_OPTIONS;
         const optionFound = jogSpeedOptions.find(option => option.value === jogSpeed);
         if (!optionFound) {
             jogSpeedOptions.push({ label: jogSpeed, value: jogSpeed });
         }
-
+        if (workPosition) {
+            _workPosition = workPosition;
+        }
+        if (originOffset) {
+            _originOffset = originOffset;
+        }
         return {
             // config
             axes: axes || DEFAULT_AXES,
@@ -111,17 +125,9 @@ function Control({ widgetId, widgetActions: _widgetActions }) {
 
             units: METRIC_UNITS,
 
-            workPosition: { // work position
-                x: '0.000',
-                y: '0.000',
-                z: '0.000'
-            },
+            workPosition: _workPosition,
 
-            originOffset: {
-                x: 0,
-                y: 0,
-                z: 0
-            },
+            originOffset: _originOffset,
 
             // Bounding box
             bbox: {
@@ -455,7 +461,7 @@ function Control({ widgetId, widgetActions: _widgetActions }) {
                     level="level-three"
                     width="96px"
                     disabled={!_canClick}
-                    onClick={() => dispatch(machineActions.executeGcodeAutoHome())}
+                    onClick={() => dispatch(machineActions.executeGcodeAutoHome(true))}
                 >
                     {i18n._('key-Workspace/Console-Home')}
                 </Button>
@@ -481,6 +487,16 @@ function Control({ widgetId, widgetActions: _widgetActions }) {
                 actions={actions}
                 executeGcode={actions.executeGcode}
             />
+            {homingModel && (
+                <ModalSmall
+                    closable={false}
+                    isImage={false}
+                    img="WarningTipsWarning"
+                    centered
+                    title="key-Workspace/Connection-Go Home"
+                    iconColor="#FFA940"
+                />
+            )}
         </div>
     );
 }

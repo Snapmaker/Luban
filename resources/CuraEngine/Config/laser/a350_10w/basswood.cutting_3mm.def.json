@@ -11,7 +11,7 @@
             "default_value": "path"
         },
         "work_speed": {
-            "default_value": 480
+            "default_value": 300
         },
         "multi_passes": {
             "default_value": 1
@@ -20,7 +20,7 @@
             "default_value": 1
         },
         "fixed_power": {
-            "default_value": 90
+            "default_value": 100
         },
         "fixed_power_enabled": {
             "default_value": true

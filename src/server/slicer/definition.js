@@ -85,6 +85,7 @@ const DEFAULT_PREDEFINED = {
         'crazy_horse_leather.line_filled_engraving.def.json',
         'crazy_horse_leather.vector_engraving.def.json',
         'mdf.cutting_2mm.def.json',
+        'mdf.cutting_3mm.def.json',
         'mdf.dot_filled_engraving.def.json',
         'mdf.line_filled_engraving.def.json',
         'mdf.vector_engraving.def.json',

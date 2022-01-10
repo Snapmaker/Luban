@@ -20,7 +20,7 @@
             "default_value": 1
         },
         "fixed_power": {
-            "default_value": 35
+            "default_value": 20
         },
         "fixed_power_enabled": {
             "default_value": true

@@ -14,7 +14,7 @@
             "default_value": 600
         },
         "multi_passes": {
-            "default_value": 2
+            "default_value": 1
         },
         "multi_pass_depth": {
             "default_value": 1

@@ -322,18 +322,20 @@ export class Server extends events.EventEmitter {
         }
         const { x, y, feedRate } = options;
         const api = `${this.host}/api/request_Laser_Material_Thickness?token=${this.token}&x=${x}&y=${y}&feedRate=${feedRate}`;
-        request
-            .get(api)
-            .end((err, res) => {
-                const { data } = this._getResult(err, res);
-                const { status, thickness } = data;
-                if (callback) {
-                    callback({
-                        status,
-                        thickness
-                    });
-                }
-            });
+        const req = request.get(api);
+        req.end((err, res) => {
+            const { data } = this._getResult(err, res);
+            const { status, thickness } = data;
+            if (callback) {
+                callback({
+                    status,
+                    thickness
+                });
+            }
+        });
+        window.addEventListener('cancelReq', () => {
+            req.abort();
+        });
     }
 
     getGcodeFile = (callback) => {
@@ -486,9 +488,8 @@ export class Server extends events.EventEmitter {
     _executeGcode = (gcode) => {
         const api = `${this.host}/api/v1/execute_code`;
         return new Promise((resolve) => {
-            request
-                .post(api)
-                .timeout(300000)
+            const req = request.post(api);
+            req.timeout(300000)
                 .send(`token=${this.token}`)
                 .send(`code=${gcode}`)
                 // .send(formData)
@@ -496,6 +497,9 @@ export class Server extends events.EventEmitter {
                     const { data, text } = this._getResult(err, res);
                     resolve({ data, text });
                 });
+            window.addEventListener('cancelReq', () => {
+                req.abort();
+            });
         });
     };
 
