@@ -917,9 +917,15 @@ export const actions = {
                 if (series !== MACHINE_SERIES.ORIGINAL.value && series !== MACHINE_SERIES.CUSTOM.value && headType === HEAD_LASER && !isRotate) {
                     if (laserFocalLength) {
                         const promise = new Promise((resolve) => {
-                            server.executeGcode(`G53;\nG0 Z${laserFocalLength + (isLaserPrintAutoMode ? materialThickness : 0)} F1500;\nG54;`, () => {
-                                resolve();
-                            });
+                            if (isLaserPrintAutoMode) {
+                                server.executeGcode(`G53;\nG0 Z${laserFocalLength + materialThickness} F1500;\nG54;`, () => {
+                                    resolve();
+                                });
+                            } else {
+                                server.executeGcode('G0 Z0 F1500;', () => {
+                                    resolve();
+                                });
+                            }
                         });
                         promises.push(promise);
                     }
