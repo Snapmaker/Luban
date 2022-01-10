@@ -834,6 +834,7 @@ export const actions = {
                 const response = res.body;
                 const definitionId = `${type}.${timestamp()}`;
                 const definition = await definitionManager.uploadDefinition(definitionId, response.uploadName);
+                definition.category = i18n._('key-default_category-Custom');
                 let name = definition.name;
                 const definitionsKey = defaultDefinitionKeys[type].definitions;
                 const defaultId = defaultDefinitionKeys[type].id;
@@ -844,7 +845,8 @@ export const actions = {
                 definition.name = name;
                 await definitionManager.updateDefinition({
                     definitionId: definition.definitionId,
-                    name
+                    name,
+                    category: definition.category
                 });
                 dispatch(actions.updateState({
                     [definitionsKey]: [...definitions, definition],

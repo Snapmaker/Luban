@@ -166,7 +166,12 @@ class GcodeToBufferGeometryPrint3d {
                     colors1.push(toolColorRGB1[2]);
                 }
 
-                if (modal.gcodeType === 'start' && (v1.x !== v2.x || v1.y !== v2.y || v1.z !== v2.z)) {
+                if (
+                    modal.gcodeType === 'start'
+                    && (v1.x !== v2.x || v1.y !== v2.y || v1.z !== v2.z)
+                    // TODO, calculate bounds after start
+                    && (v1.x > -10 && v1.y > -10)
+                ) {
                     bounds.minX = Math.min(v2.x, bounds.minX);
                     bounds.minY = Math.min(v2.y, bounds.minY);
                     bounds.minZ = Math.min(v2.z, bounds.minZ);
