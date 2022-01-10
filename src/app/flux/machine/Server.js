@@ -488,9 +488,8 @@ export class Server extends events.EventEmitter {
     _executeGcode = (gcode) => {
         const api = `${this.host}/api/v1/execute_code`;
         return new Promise((resolve) => {
-            request
-                .post(api)
-                .timeout(300000)
+            const req = request.post(api);
+            req.timeout(300000)
                 .send(`token=${this.token}`)
                 .send(`code=${gcode}`)
                 // .send(formData)
@@ -498,6 +497,9 @@ export class Server extends events.EventEmitter {
                     const { data, text } = this._getResult(err, res);
                     resolve({ data, text });
                 });
+            window.addEventListener('cancelReq', () => {
+                req.abort();
+            });
         });
     };
 
