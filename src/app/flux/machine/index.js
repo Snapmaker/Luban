@@ -922,7 +922,7 @@ export const actions = {
                                     resolve();
                                 });
                             } else {
-                                server.executeGcode('G54;\nG0 Z0 F1500;\nG54;', () => {
+                                server.executeGcode('G0 Z0 F1500;', () => {
                                     resolve();
                                 });
                             }
