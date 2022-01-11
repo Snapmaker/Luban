@@ -1634,7 +1634,7 @@ export const actions = {
     recordModelBeforeTransform: (modelGroup) => (dispatch) => {
         dispatch(operationHistoryActions.clearTargetTmpState(INITIAL_STATE.name));
         for (const model of modelGroup.selectedModelArray) {
-            const { recovery } = modelGroup.unselectAllModels({ recursive: true });
+            const { recovery } = modelGroup.unselectAllModels();
             modelGroup.addModelToSelectedGroup(model);
             if (model.supportTag) {
                 dispatch(actions.onModelTransform());
@@ -1663,7 +1663,7 @@ export const actions = {
             dispatch(actions.clearAllManualSupport(operations));
         }
         for (const model of modelGroup.selectedModelArray) {
-            const { recovery } = modelGroup.unselectAllModels({ recursive: true });
+            const { recovery } = modelGroup.unselectAllModels();
             modelGroup.addModelToSelectedGroup(model);
             dispatch(operationHistoryActions.updateTargetTmpState(INITIAL_STATE.name, model.modelID, {
                 to: { ...modelGroup.getSelectedModelTransformationForPrinting() }
@@ -2152,7 +2152,7 @@ export const actions = {
         const selectedModels = modelGroup.getSelectedModelArray().slice(0);
         const selectedModelsPositionMap = new Map();
         selectedModels.forEach(model => {
-            const { recovery } = modelGroup.unselectAllModels({ recursive: true });
+            const { recovery } = modelGroup.unselectAllModels();
             modelGroup.selectModelById(model.modelID);
             selectedModelsPositionMap.set(model.modelID, {
                 ...modelGroup.getSelectedModelTransformationForPrinting()
@@ -2206,7 +2206,7 @@ export const actions = {
         });
         const operations = new Operations();
 
-        const { recovery } = modelGroup.unselectAllModels({ recursive: true });
+        const { recovery } = modelGroup.unselectAllModels();
 
         const modelsInGroup = selectedModels.reduce((pre, selectd) => {
             const group = selectd.parent?.clone(modelGroup);

@@ -316,7 +316,7 @@ class ModelGroup extends EventEmitter {
     // todo, remove mesh obj in 2d
     removeSelectedModel() {
         this._removeSelectedModels();
-        this.unselectAllModels({ recursive: true });
+        this.unselectAllModels();
         return this.getState();
     }
 
@@ -333,7 +333,7 @@ class ModelGroup extends EventEmitter {
      * Remove all models.
      */
     removeAllModels() {
-        this.unselectAllModels({ recursive: true });
+        this.unselectAllModels();
         this._removeAllModels();
 
         this.modelChanged();
@@ -613,11 +613,11 @@ class ModelGroup extends EventEmitter {
                         }
                     }
                     if (isModelAcrossGroup) {
-                        this.unselectAllModels({ recursive: true });
+                        this.unselectAllModels();
                     }
 
                     if (selectModel.parent && this.selectedModelArray.length === selectModel.parent.children.length - 1) {
-                        this.unselectAllModels({ recursive: true });
+                        this.unselectAllModels();
                         this.addModelToSelectedGroup(selectModel.parent);
                     } else {
                         this.addModelToSelectedGroup(selectModel);
@@ -627,7 +627,7 @@ class ModelGroup extends EventEmitter {
                 }
             }
         } else {
-            this.unselectAllModels({ recursive: true });
+            this.unselectAllModels();
             if (selectModel) {
                 if (selectModel?.parent?.children.length === 1) {
                     this.addModelToSelectedGroup(selectModel.parent);
@@ -671,7 +671,7 @@ class ModelGroup extends EventEmitter {
         let model;
         switch (selectEvent) {
             case SELECTEVENT.UNSELECT:
-                this.unselectAllModels({ recursive: true });
+                this.unselectAllModels();
                 break;
             case SELECTEVENT.UNSELECT_ADDSELECT:
                 model = this.findModelByMesh(intersect.object);
@@ -685,7 +685,7 @@ class ModelGroup extends EventEmitter {
                     this.unselectAllModelsInGroup(model.parent);
                     this.unselectAllModels();
                 } else {
-                    this.unselectAllModels({ recursive: true });
+                    this.unselectAllModels();
                 }
                 if (model) {
                     this.addModelToSelectedGroup(model);
@@ -703,7 +703,7 @@ class ModelGroup extends EventEmitter {
                         }
                     }
                     if (isModelAcrossGroup) {
-                        this.unselectAllModels({ recursive: true });
+                        this.unselectAllModels();
                     }
                     // cannot select model and support
                     // cannot select multi support
@@ -720,7 +720,7 @@ class ModelGroup extends EventEmitter {
                     }
                     // If all models in the group are selected, select group
                     if (model.parent && this.selectedModelArray.length === model.parent.children.length - 1) {
-                        this.unselectAllModels({ recursive: true });
+                        this.unselectAllModels();
                         this.addModelToSelectedGroup(model.parent);
                     } else {
                         this.addModelToSelectedGroup(model);
@@ -812,7 +812,7 @@ class ModelGroup extends EventEmitter {
                 this.addModelToSelectedGroup(model);
             }
         });
-
+        this.prepareSelectedGroup();
         this.modelChanged();
 
         return { // warning: this may not be correct
@@ -829,13 +829,12 @@ class ModelGroup extends EventEmitter {
         });
     }
 
-    // Should the parameter be omitted ?
-    unselectAllModels({ recursive } = { recursive: false }) {
+    unselectAllModels() {
         const cancelSelectedModels = this.selectedModelArray.slice(0);
         this.selectedModelArray = [];
         if (this.headType === 'printing') {
             this.models.forEach((model) => {
-                if (recursive && model instanceof ThreeGroup) {
+                if (model instanceof ThreeGroup) {
                     model.children.forEach((subModel) => {
                         this.removeModelFromSelectedGroup(subModel);
                     });
@@ -885,7 +884,7 @@ class ModelGroup extends EventEmitter {
         if (modelsToCopy.length === 0) return this._getEmptyState();
 
         // Unselect all models
-        this.unselectAllModels({ recursive: true });
+        this.unselectAllModels();
 
         modelsToCopy.forEach((model) => {
             const newModel = model.clone(this);
@@ -1277,7 +1276,7 @@ class ModelGroup extends EventEmitter {
     // Note: the function is only useful for 3D object operations on Canvas
     onModelAfterTransform(shouldStickToPlate = true) {
         const selectedModelArray = this.selectedModelArray;
-        const { recovery } = this.unselectAllModels({ recursive: true });
+        const { recovery } = this.unselectAllModels();
         // update model's boundingbox which has supports
         selectedModelArray.forEach((selected) => {
             if (selected.sourceType === '3d' && shouldStickToPlate) {
@@ -1289,7 +1288,10 @@ class ModelGroup extends EventEmitter {
                     this.addModelToSelectedGroup(selected);
                 } else {
                     this.stickToPlateAndCheckOverstepped(selected);
-                    selected.parent && this.stickToPlateAndCheckOverstepped(selected.parent);
+                    if (selected.parent && selected.parent instanceof ThreeGroup) {
+                        this.stickToPlateAndCheckOverstepped(selected.parent);
+                        selected.parent.computeBoundingBox();
+                    }
                 }
             }
             selected.computeBoundingBox();
@@ -1949,7 +1951,7 @@ class ModelGroup extends EventEmitter {
 
     group() {
         const selectedModelArray = this.selectedModelArray.slice(0);
-        this.unselectAllModels({ recursive: true });
+        this.unselectAllModels();
 
         const group = new ThreeGroup({}, this);
         // check visible models or groups

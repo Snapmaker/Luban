@@ -41,7 +41,7 @@ export default class MoveOperation3D extends Operation<MoveOperationState> {
     private exec({ positionX, positionY, positionZ }) {
         const model = this.state.target;
         const modelGroup = this.state.modelGroup;
-        modelGroup.unselectAllModels({ recursive: !!model.parent });
+        modelGroup.unselectAllModels();
         if (model instanceof ThreeModel && model.supportTag) {
             modelGroup.addModelToSelectedGroup(model);
             modelGroup.updateSelectedGroupTransformation({
@@ -57,7 +57,7 @@ export default class MoveOperation3D extends Operation<MoveOperationState> {
                 positionX, positionY, positionZ
             });
 
-            modelGroup.unselectAllModels({ recursive: true });
+            modelGroup.unselectAllModels();
             if (model instanceof ThreeGroup) {
                 modelGroup.stickToPlateAndCheckOverstepped(model);
             }

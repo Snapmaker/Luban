@@ -36,19 +36,19 @@ export default class ScaleOperation3D extends Operation<ScaleOperationState> {
     private exec(transform: ModelTransformation) {
         const model = this.state.target;
         const modelGroup = this.state.modelGroup;
-        modelGroup.unselectAllModels({ recursive: true });
+        modelGroup.unselectAllModels();
 
         if (model instanceof ThreeModel && model.supportTag) {
             modelGroup.addModelToSelectedGroup(model);
             modelGroup.updateSelectedGroupTransformation({ ...transform }, false);
-            modelGroup.unselectAllModels({ recursive: true });
+            modelGroup.unselectAllModels();
             model.computeBoundingBox();
             model.target.stickToPlate();
             model.target.computeBoundingBox();
         } else {
             modelGroup.addModelToSelectedGroup(model);
             modelGroup.updateSelectedGroupTransformation({ ...transform }, false);
-            modelGroup.unselectAllModels({ recursive: true });
+            modelGroup.unselectAllModels();
 
             model.stickToPlate();
             model.computeBoundingBox();

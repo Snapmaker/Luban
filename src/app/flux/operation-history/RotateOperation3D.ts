@@ -37,13 +37,13 @@ export default class RotateOperation3D extends Operation<RotateOperationState> {
     private exec(transform: ModelTransformation) {
         const model = this.state.target;
         const modelGroup = this.state.modelGroup;
-        modelGroup.unselectAllModels({ recursive: true });
+        modelGroup.unselectAllModels();
 
         modelGroup.addModelToSelectedGroup(model);
         modelGroup.updateSelectedGroupTransformation({
             ...transform
         });
-        modelGroup.unselectAllModels({ recursive: true });
+        modelGroup.unselectAllModels();
 
         model.stickToPlate();
         model.computeBoundingBox();

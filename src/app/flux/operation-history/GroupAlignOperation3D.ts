@@ -68,7 +68,7 @@ export default class GroupAlginOperation3D extends Operation<GroupState> {
         modelGroup.addModelToSelectedGroup(target);
         modelGroup.ungroup();
 
-        modelGroup.unselectAllModels({ recursive: true });
+        modelGroup.unselectAllModels();
         // this.state.groupChildrenMap.forEach((subModels, group) => {
         //     group.add(subModels);
         //     modelGroup.object.add(group.meshObject);
@@ -77,7 +77,7 @@ export default class GroupAlginOperation3D extends Operation<GroupState> {
             modelGroup.selectModelById(modelID);
             modelGroup.updateSelectedGroupTransformation(position);
             modelGroup.stickToPlateAndCheckOverstepped(modelGroup.selectedModelArray[0]);
-            modelGroup.unselectAllModels({ recursive: true });
+            modelGroup.unselectAllModels();
         });
         modelGroup.models = [...this.state.modelsbeforeGroup];
     }
