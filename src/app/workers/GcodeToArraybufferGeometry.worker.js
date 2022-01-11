@@ -6,7 +6,7 @@ onmessage = (e) => {
         postMessage({ status: 'err', value: 'Data is empty' });
         return;
     }
-    const { func, gcodeFilename, gcode, isPreview = false, gcodeFileIndex = -1 } = e.data;
+    const { func, gcodeFilename, gcode, isPreview = false } = e.data;
     if (!['WORKSPACE'].includes(func.toUpperCase())) {
         postMessage({ status: 'err', value: `Unsupported func: ${func}` });
         return;
@@ -32,7 +32,7 @@ onmessage = (e) => {
                 boundingBox: boundingBox,
                 renderMethod: renderMethod,
                 isPreview,
-                gcodeFileIndex,
+                gcodeFilename,
                 value: {
                     positions,
                     colors,
