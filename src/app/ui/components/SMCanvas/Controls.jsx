@@ -569,7 +569,6 @@ class Controls extends EventEmitter {
     };
 
     handleMouseMovePan = (event) => {
-        console.log('handleMouseMovePan', event.clientX - this.panPosition.x, event.clientY - this.panPosition.y);
         this.pan(event.clientX - this.panPosition.x, event.clientY - this.panPosition.y);
         this.panPosition.set(event.clientX, event.clientY);
         this.updateCamera();

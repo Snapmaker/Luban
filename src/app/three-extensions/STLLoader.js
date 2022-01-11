@@ -192,6 +192,7 @@ STLLoader.prototype = {
 					vertices.push( vertice2 );
 					vertices.push( vertice3 );
 					let currentVertice = new THREE.Vector3(vertice1, vertice2, vertice3);
+					// console.log('vertice1, vertice2, vertice3', vertice1, vertice2, vertice3);
 					const xyVecrtice = new THREE.Vector3(vertice1, vertice2, 0);
 					// console.log('xyVecrtice', currentVertice, xyVecrtice);
 					const angle = currentVertice.angleTo(xyVecrtice);
@@ -212,6 +213,9 @@ STLLoader.prototype = {
 					maxX = Math.max(currentXyVertice.x, maxX);
 					maxY = Math.max(currentXyVertice.y, maxY);
 
+					// if (vertice1 === 109.88607025146484 && vertice2 === -81.95313262939453) {
+						console.log('currentXyVertice',new THREE.Vector3(vertice1, vertice2, vertice3), currentXyVertice, angle);
+					// }
 					currentVertices.push(currentXyVertice)
 
 					normals.push( normalX, normalY, normalZ );
@@ -225,13 +229,14 @@ STLLoader.prototype = {
 				}
 					let maxLength = Math.max(maxX-minX, maxY - minY);
 					// console.log('maxX',  maxLength, currentVertices);
-					currentUv = currentVertices.map((item) => {
+					currentUv = currentVertices.map((item, index) => {
 						let newX, newY;
 						newX = (item.x - minX)/maxLength;
 						newY = (item.y - minY)/maxLength;
-						// console.log('newX, newY', newX, newY);
+						console.log('newX, newY',index, newX, newY);
 						return new THREE.Vector2(newX,newY)
 					});
+					// console.log('currentUv', currentUv);
 				faceVertexUvs[0].push(currentUv);
 				// faceVertexUvs[0].push([new THREE.Vector2(0,1), new THREE.Vector2(1,1), new THREE.Vector2(0,0)]);
 
