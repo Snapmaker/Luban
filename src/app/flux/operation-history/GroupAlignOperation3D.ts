@@ -48,6 +48,7 @@ export default class GroupAlginOperation3D extends Operation<GroupState> {
         target.children.forEach((subModel) => {
             const subModelTransform = this.state.subModelPosition.get(subModel.modelID);
             subModel.updateTransformation(subModelTransform);
+            modelGroup.stickToPlateAndCheckOverstepped(subModel);
         });
         target.stickToPlate();
         modelGroup.object.add(target.meshObject);
@@ -75,6 +76,7 @@ export default class GroupAlginOperation3D extends Operation<GroupState> {
         this.state.selectedModelsPositionMap.forEach((position: ModelTransformation, modelID: string) => {
             modelGroup.selectModelById(modelID);
             modelGroup.updateSelectedGroupTransformation(position);
+            modelGroup.stickToPlateAndCheckOverstepped(modelGroup.selectedModelArray[0]);
             modelGroup.unselectAllModels({ recursive: true });
         });
         modelGroup.models = [...this.state.modelsbeforeGroup];

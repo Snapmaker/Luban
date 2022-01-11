@@ -31,7 +31,6 @@ export type ModelInfo = {
     modelName?: string,
     config?: Object,
     mode?: string,
-    groupFrom?: string,
     visible?: boolean,
     transformation?: ModelTransformation,
     processImageName?: string,

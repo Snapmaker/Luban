@@ -8,7 +8,6 @@ import {
     ABSENT_OBJECT,
     EPSILON,
     DATA_PREFIX,
-    ALIGN_OPERATION,
     PRINTING_MANAGER_TYPE_MATERIAL,
     PRINTING_MANAGER_TYPE_QUALITY,
     MACHINE_SERIES,
@@ -1600,7 +1599,9 @@ export const actions = {
                         };
                     }
                 });
-                dispatch(actions.updateGroupExtruder(modelItem.parent));
+                if (modelItem.parent && modelItem.parent instanceof ThreeGroup) {
+                    modelItem.parent.updateGroupExtruder();
+                }
             }
         }
         dispatch(actions.destroyGcodeLine());
@@ -1610,32 +1611,6 @@ export const actions = {
         // dispatch(actions.updateState({
         //     modelGroup
         // }));
-    },
-
-    updateGroupExtruder: (group) => () => {
-        if (group && group instanceof ThreeGroup) {
-            group.extruderConfig.shell = null;
-            for (const subModel of group.children) {
-                /**
-                 * extruderConfig.shell and extruderConfig.infill corresponding nozzle number
-                 * 0 which means the left nozzle is used
-                 * 1 which means the right nozzle is used
-                 * 2 which means that both the left nozzle and the right nozzle are used
-                 */
-
-                // First cycle assignment
-                if (!group.extruderConfig.shell) {
-                    group.extruderConfig.shell = subModel.extruderConfig.shell;
-                    group.extruderConfig.infill = subModel.extruderConfig.infill;
-                }
-                if (group.extruderConfig.shell !== subModel.extruderConfig.shell) {
-                    group.extruderConfig.shell = '2';
-                }
-                if (group.extruderConfig.infill !== subModel.extruderConfig.infill) {
-                    group.extruderConfig.infill = '2';
-                }
-            }
-        }
     },
 
     updateHelpersExtruder: (extruderConfig) => (dispatch) => {
@@ -2193,7 +2168,7 @@ export const actions = {
         const operations = new Operations();
 
         dispatch(actions.clearAllManualSupport(operations));
-        const { newGroup, modelState } = modelGroup.group(ALIGN_OPERATION);
+        const { newGroup, modelState } = modelGroup.group();
         const modelsafterGroup = modelGroup.getModels().slice(0);
 
         const operation = new GroupAlignOperation3D({

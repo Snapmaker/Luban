@@ -242,11 +242,11 @@ class ModelGroup extends EventEmitter {
         });
     }
 
-    removeModel(model) {
+    removeModel(model, loop = false) {
         if (model.type === 'primeTower') return;
         if (model instanceof ThreeGroup) {
             model.children.forEach((child) => {
-                this.removeModel(child);
+                this.removeModel(child, true);
             });
         }
         if (!model.supportTag && model instanceof ThreeModel) { // remove support children
@@ -254,7 +254,12 @@ class ModelGroup extends EventEmitter {
                 .filter(i => i.supportTag && i.target === model)
                 .map(m => this.removeModel(m));
         }
-
+        if (model.meshObject && model.parent instanceof ThreeGroup) {
+            // Reset the model to be deleted to the object
+            // Then update the tran of the model to the coordinates based on the world coordinate system
+            ThreeUtils.setObjectParent(model.meshObject, this.object);
+            model.onTransform();
+        }
         if (model.meshObject && model.meshObject.parent) {
             model.meshObject.parent.remove(model.meshObject);
         }
@@ -264,19 +269,23 @@ class ModelGroup extends EventEmitter {
         }
         model.meshObject.removeEventListener('update', this.onModelUpdate);
         if (model.parent instanceof ThreeGroup) {
-            this.models = this.filterModels(this.models, (item) => {
-                if (model === item) {
-                    if (item.parent.children.length === 1) {
-                        this.object.remove(item.parent.meshObject);
-                    }
-                    return false;
+            const groupIndex = this.models.findIndex(m => m.modelID === model.parent.modelID);
+            if (this.models[groupIndex].children.length === 1) {
+                this.models[groupIndex].onTransform();
+                this.models.splice(groupIndex, 1);
+            } else {
+                this.models[groupIndex].children = this.models[groupIndex].children.filter(subModel => subModel !== model);
+                if (!loop) {
+                    // When deleting a group, do not do stickToPlate again. To avoid updating the center point of the group
+                    // Otherwise, the z-axis of the model in the group being deleted will be affected
+                    this.stickToPlateAndCheckOverstepped(this.models[groupIndex]);
                 }
-                return true;
-            });
+                this.models[groupIndex].updateGroupExtruder();
+            }
+            this.models = this.models.concat();
         } else {
             this.models = this.models.filter(item => item !== model);
         }
-        this.stickToPlateAndCheckOverstepped(model);
         this.modelChanged();
         model.sourceType === '3d' && this.updatePrimeTowerHeight();
     }
@@ -638,30 +647,6 @@ class ModelGroup extends EventEmitter {
                 this.traverseModels(model.children, callback);
             }
             (typeof callback === 'function') && callback(model);
-        });
-    }
-
-    /**
-     * filter models, If the return value of callback is false, it will filter
-     * @param {Array} models
-     * @param {Function} callback Callback function has a parameter, which is an item of the loop
-     * @returns new models
-     */
-    filterModels(models, callback) {
-        return models.filter((model) => {
-            if (model instanceof ThreeGroup) {
-                return callback(model) !== false && this.filterModels(model.children, callback).length > 0;
-            }
-            if (typeof callback === 'function') {
-                return callback(model);
-            }
-            return true;
-        }).map((model) => {
-            if (model instanceof ThreeGroup) {
-                model.children = this.filterModels(model.children, callback);
-                return model;
-            }
-            return model;
         });
     }
 
@@ -1962,11 +1947,11 @@ class ModelGroup extends EventEmitter {
         return this.getState();
     }
 
-    group(groupFrom) {
+    group() {
         const selectedModelArray = this.selectedModelArray.slice(0);
         this.unselectAllModels({ recursive: true });
 
-        const group = new ThreeGroup({ groupFrom }, this);
+        const group = new ThreeGroup({}, this);
         // check visible models or groups
         if (selectedModelArray.some(model => model.visible)) {
             // insert group to the first model position in selectedModelArray

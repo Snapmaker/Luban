@@ -3,7 +3,6 @@ import type ThreeGroup from '../../models/ThreeGroup';
 import type ThreeModel from '../../models/ThreeModel';
 import type { ModelTransformation } from '../../models/ThreeBaseModel';
 import Operation from './Operation';
-import { ALIGN_OPERATION } from '../../constants';
 
 type ModelState = {
     target: ThreeModel,
@@ -50,17 +49,6 @@ export default class UngroupOperation3D extends Operation<UngroupState> {
             item.target.updateTransformation(item.transformation);
             subModels.push(item.target);
         });
-        if (subModels && subModels.length) {
-            if (target.groupFrom === ALIGN_OPERATION) {
-                subModels.forEach((model) => {
-                    modelGroup.selectModelById(model.modelID);
-                    modelGroup.updateSelectedGroupTransformation({
-                        positionZ: model.originalPosition.z
-                    }, true);
-                });
-                modelGroup.unselectAllModels();
-            }
-        }
         target.updateTransformation(this.state.groupTransformation);
         target.add(subModels);
         modelGroup.object.add(target.meshObject);

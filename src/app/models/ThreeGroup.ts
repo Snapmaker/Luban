@@ -3,7 +3,7 @@ import BaseModel, { ModelTransformation, ModelInfo } from './ThreeBaseModel';
 import type ModelGroup from './ModelGroup';
 import type ThreeModel from './ThreeModel';
 import ThreeUtils from '../three-extensions/ThreeUtils';
-import { HEAD_PRINTING, GROUP_OPERATION, BOTH_EXTRUDER_MAP_NUMBER } from '../constants';
+import { HEAD_PRINTING, BOTH_EXTRUDER_MAP_NUMBER } from '../constants';
 import ConvexGeometry from '../three-extensions/ConvexGeometry';
 
 window.THREE = THREE;
@@ -25,8 +25,6 @@ export default class ThreeGroup extends BaseModel {
     modelObject3D: Object;
 
     processImageName: string;
-
-    groupFrom: string = GROUP_OPERATION;
 
     transformation: ModelTransformation;
 
@@ -90,7 +88,6 @@ export default class ThreeGroup extends BaseModel {
             name: 'ThreeGroup'
         };
         this.children = [];
-        this.groupFrom = modelInfo.groupFrom || GROUP_OPERATION;
         this.transformation = {
             positionX: 0,
             positionY: 0,
@@ -110,36 +107,18 @@ export default class ThreeGroup extends BaseModel {
         this.children = [...this.children, ...models];
 
         models.forEach(model => {
-            this.meshObject.add(model.meshObject);
+            ThreeUtils.setObjectParent(model.meshObject, this.meshObject);
             model.parent = this;
         });
         if (models.length === 1) {
             ThreeUtils.liftObjectOnlyChildMatrix(this.meshObject);
             (this.meshObject as any).uniformScalingState = (this.meshObject.children[0] as any).uniformScalingState;
-            // update group extruder config
-            this.extruderConfig = models[0].extruderConfig as ExtruderConfig;
         } else if (models.length > 1) {
             this.computeBoundingBox();
-
             (this.meshObject as any).uniformScalingState = true;
-            const tempExtruderConfig: ExtruderConfig = Object.assign({}, models[0].extruderConfig as ExtruderConfig);
-            for (const modelItem of models.slice(1)) {
-                const { infill, shell } = (modelItem.extruderConfig as ExtruderConfig);
-                // another model use different extruder, change status to 'both'
-                if (infill !== tempExtruderConfig.infill && tempExtruderConfig.infill !== BOTH_EXTRUDER_MAP_NUMBER) {
-                    tempExtruderConfig.infill = BOTH_EXTRUDER_MAP_NUMBER;
-                }
-                if (shell !== tempExtruderConfig.shell && tempExtruderConfig.shell !== BOTH_EXTRUDER_MAP_NUMBER) {
-                    tempExtruderConfig.shell = BOTH_EXTRUDER_MAP_NUMBER;
-                }
-                // extruder status all is 'both', break out the loop
-                if (tempExtruderConfig.infill === BOTH_EXTRUDER_MAP_NUMBER && tempExtruderConfig.shell === BOTH_EXTRUDER_MAP_NUMBER) {
-                    break;
-                }
-            }
-            this.extruderConfig = tempExtruderConfig;
         }
         this.onTransform();
+        this.updateGroupExtruder();
     }
 
     disassemble(): ThreeModel[] {
@@ -160,6 +139,10 @@ export default class ThreeGroup extends BaseModel {
         });
         this.meshObject.children = [];
         this.children = [];
+        this.extruderConfig = {
+            infill: '0',
+            shell: '0'
+        };
         return models;
     }
 
@@ -406,13 +389,13 @@ export default class ThreeGroup extends BaseModel {
             // visible: this.visible,
             transformation: this.transformation,
             processImageName: this.processImageName,
+            extruderConfig: this.extruderConfig
         };
         this.children.forEach(model => {
             clonedSubModels.push(model.clone(modelGroup));
         });
         const clone = new ThreeGroup(modelInfo, modelGroup);
         clone.add(clonedSubModels);
-        clone.isSelected = true;
         return clone;
     }
 
@@ -629,5 +612,28 @@ export default class ThreeGroup extends BaseModel {
             children,
             modelName
         };
+    }
+
+    updateGroupExtruder() {
+        this.extruderConfig.shell = null;
+        for (const subModel of this.children) {
+            /**
+             * extruderConfig.shell and extruderConfig.infill corresponding nozzle number
+             * 0 which means the left nozzle is used
+             * 1 which means the right nozzle is used
+             * 2 which means that both the left nozzle and the right nozzle are used
+             */
+            // First cycle assignment
+            if (!this.extruderConfig.shell) {
+                this.extruderConfig.shell = subModel.extruderConfig.shell;
+                this.extruderConfig.infill = subModel.extruderConfig.infill;
+            }
+            if (this.extruderConfig.shell !== subModel.extruderConfig.shell) {
+                this.extruderConfig.shell = BOTH_EXTRUDER_MAP_NUMBER;
+            }
+            if (this.extruderConfig.infill !== subModel.extruderConfig.infill) {
+                this.extruderConfig.infill = BOTH_EXTRUDER_MAP_NUMBER;
+            }
+        }
     }
 }

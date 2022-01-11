@@ -1,24 +1,13 @@
 import type ModelGroup from '../../models/ModelGroup';
+import { ModelTransformation } from '../../models/ThreeBaseModel';
 import type ThreeGroup from '../../models/ThreeGroup';
 import ThreeModel from '../../models/ThreeModel';
 import Operation from './Operation';
 
-type Positon = {
-    positionX: number,
-    positionY: number,
-    positionZ: number,
-    rotationX: number,
-    rotationY: number,
-    rotationZ: number,
-    scaleX: number,
-    scaleY: number,
-    scaleZ: number
-}
-
 type ScaleOperationProp = {
     target: ThreeGroup | ThreeModel,
-    from: Positon,
-    to: Positon
+    from: ModelTransformation,
+    to: ModelTransformation
 }
 
 type ScaleOperationState = ScaleOperationProp & {
@@ -44,29 +33,21 @@ export default class ScaleOperation3D extends Operation<ScaleOperationState> {
         this.exec(this.state.from);
     }
 
-    private exec({ scaleX, scaleY, scaleZ }) {
+    private exec(transform: ModelTransformation) {
         const model = this.state.target;
         const modelGroup = this.state.modelGroup;
         modelGroup.unselectAllModels({ recursive: true });
 
         if (model instanceof ThreeModel && model.supportTag) {
             modelGroup.addModelToSelectedGroup(model);
-            modelGroup.updateSelectedGroupTransformation({
-                scaleX,
-                scaleY,
-                scaleZ
-            });
+            modelGroup.updateSelectedGroupTransformation({ ...transform }, false);
             modelGroup.unselectAllModels({ recursive: true });
             model.computeBoundingBox();
             model.target.stickToPlate();
             model.target.computeBoundingBox();
         } else {
             modelGroup.addModelToSelectedGroup(model);
-            modelGroup.updateSelectedGroupTransformation({
-                scaleX,
-                scaleY,
-                scaleZ
-            });
+            modelGroup.updateSelectedGroupTransformation({ ...transform }, false);
             modelGroup.unselectAllModels({ recursive: true });
 
             model.stickToPlate();

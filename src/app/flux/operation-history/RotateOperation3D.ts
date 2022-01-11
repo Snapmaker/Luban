@@ -1,24 +1,14 @@
 import type ModelGroup from '../../models/ModelGroup';
+import { ModelTransformation } from '../../models/ThreeBaseModel';
 import type ThreeGroup from '../../models/ThreeGroup';
 import type ThreeModel from '../../models/ThreeModel';
 import Operation from './Operation';
 
-type Positon = {
-    positionX: number,
-    positionY: number,
-    positionZ: number,
-    rotationX: number,
-    rotationY: number,
-    rotationZ: number,
-    scaleX: number,
-    scaleY: number,
-    scaleZ: number
-}
 
 type RotateOperationProp = {
     target: ThreeGroup | ThreeModel,
-    from: Positon,
-    to: Positon
+    from: ModelTransformation,
+    to: ModelTransformation
 }
 
 type RotateOperationState = RotateOperationProp & {
@@ -44,16 +34,14 @@ export default class RotateOperation3D extends Operation<RotateOperationState> {
         this.exec(this.state.from);
     }
 
-    private exec({ rotationX, rotationY, rotationZ }) {
+    private exec(transform: ModelTransformation) {
         const model = this.state.target;
         const modelGroup = this.state.modelGroup;
         modelGroup.unselectAllModels({ recursive: true });
 
         modelGroup.addModelToSelectedGroup(model);
         modelGroup.updateSelectedGroupTransformation({
-            rotationX,
-            rotationY,
-            rotationZ
+            ...transform
         });
         modelGroup.unselectAllModels({ recursive: true });
 
