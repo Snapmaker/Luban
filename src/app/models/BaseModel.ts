@@ -1,6 +1,7 @@
 import * as THREE from 'three';
-import uuid from 'uuid';
+import { v4 } from 'uuid';
 import type ModelGroup from './ModelGroup';
+// Having to import v4 from @types/uuid in ts file
 
 export interface ModelTransformation {
     positionX: number,
@@ -51,7 +52,7 @@ abstract class BaseModel {
         // eslint-disable-next-line no-return-assign
         Object.keys(modelInfo).map(key => this[key] = modelInfo[key]);
 
-        this.modelID = this.modelID || `id${uuid.v4()}`;
+        this.modelID = this.modelID || `id${v4()}`;
         this.modelName = this.modelName ?? 'unnamed';
         this.transformation = { ...DEFAULT_TRANSFORMATION, ...this.transformation };
     }

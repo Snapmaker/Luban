@@ -171,6 +171,7 @@
     "@trendmicro/react-toggle-switch": "0.5.7",
     "@trendmicro/react-validation": "0.1.0",
     "@tweenjs/tween.js": "17.2.0",
+    "@types/uuid": "8.3.4",
     "antd": "4.16.13",
     "async": "2.5.0",
     "bcrypt-nodejs": "0.0.3",
