@@ -72,7 +72,7 @@
     "tar": "6.1.11",
     "three": "0.124.0",
     "universal-logger": "1.0.1",
-    "uuid": "3.3.3",
+    "uuid": "8.3.2",
     "watch": "1.0.2",
     "webappengine": "1.2.0",
     "winston": "3.0.1",
