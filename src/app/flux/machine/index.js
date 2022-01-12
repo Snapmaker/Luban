@@ -901,12 +901,12 @@ export const actions = {
         const { series, headType } = getState().workspace;
         const { connectionType } = getState().machine;
         dispatch(actions.executeGcode('G53'));
-        dispatch(actions.executeGcode('G28'));
         if (homingModel && connectionType === CONNECTION_TYPE_WIFI) {
             dispatch(baseActions.updateState({
                 homingModel
             }));
         }
+        dispatch(actions.executeGcode('G28'));
         dispatch(actions.executeGcodeG54(series, headType));
     },
 
