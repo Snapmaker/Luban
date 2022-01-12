@@ -171,7 +171,7 @@ const GcodePreviewItem = React.memo(({ gcodeFile, index, selected, onSelectFile,
                 )}
                 >
                     <input
-                        defaultValue={gcodeFile?.renderGcodeFileName.replace(/(\.gcode|\.cnc|\.nc)$/, '')}
+                        defaultValue={gcodeFile?.renderGcodeFileName?.replace(/(\.gcode|\.cnc|\.nc)$/, '')}
                         className={classNames('input-select')}
                         onBlur={() => onRenameEnd(uploadName, index)}
                         onKeyDown={(event) => onKeyDown(event)}
