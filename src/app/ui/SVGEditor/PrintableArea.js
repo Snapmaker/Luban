@@ -1,4 +1,4 @@
-import uuid from 'uuid';
+import { v4 as uuid } from 'uuid';
 import { createSVGElement } from './element-utils';
 import {
     EPSILON
@@ -7,7 +7,7 @@ import { isEqual } from '../../../shared/lib/utils';
 
 class PrintableArea {
     constructor(svgFactory) {
-        this.id = uuid.v4();
+        this.id = uuid();
         this.svgFactory = svgFactory;
         this.size = {
             ...svgFactory.size
@@ -116,7 +116,7 @@ class PrintableArea {
                     y1: i,
                     x2: xMax,
                     y2: i,
-                    id: uuid.v4(),
+                    id: uuid(),
                     stroke: color,
                     fill: 'none',
                     'stroke-width': 1 / this.scale,
@@ -135,7 +135,7 @@ class PrintableArea {
                     y1: i,
                     x2: xMax,
                     y2: i,
-                    id: uuid.v4(),
+                    id: uuid(),
                     stroke: color,
                     fill: 'none',
                     'stroke-width': 1 / this.scale,
@@ -154,7 +154,7 @@ class PrintableArea {
                     y1: yMin,
                     x2: i,
                     y2: yMax,
-                    id: uuid.v4(),
+                    id: uuid(),
                     stroke: color,
                     fill: 'none',
                     'stroke-width': 1 / this.scale,
@@ -173,7 +173,7 @@ class PrintableArea {
                     y1: yMin,
                     x2: i,
                     y2: yMax,
-                    id: uuid.v4(),
+                    id: uuid(),
                     stroke: color,
                     fill: 'none',
                     'stroke-width': 1 / this.scale,
@@ -194,7 +194,7 @@ class PrintableArea {
                     y1: i,
                     x2: xMax,
                     y2: i,
-                    id: uuid.v4(),
+                    id: uuid(),
                     stroke: color,
                     fill: 'none',
                     'stroke-width': 1 / this.scale,
@@ -207,7 +207,7 @@ class PrintableArea {
                 attr: {
                     x: x + (coordinateModeName.indexOf('right') !== -1 ? 6 : -6),
                     y: i + 1.2,
-                    id: uuid.v4(),
+                    id: uuid(),
                     'font-size': textSize,
                     'font-family': 'roboto',
                     fill: colorTextFill,
@@ -232,7 +232,7 @@ class PrintableArea {
                     y1: i,
                     x2: xMax,
                     y2: i,
-                    id: uuid.v4(),
+                    id: uuid(),
                     stroke: color,
                     fill: 'none',
                     'stroke-width': 1 / this.scale,
@@ -245,7 +245,7 @@ class PrintableArea {
                 attr: {
                     x: x + (coordinateModeName.indexOf('right') !== -1 ? 6 : -6),
                     y: i + 1.2,
-                    id: uuid.v4(),
+                    id: uuid(),
                     'font-size': textSize,
                     'font-family': 'roboto',
                     fill: colorTextFill,
@@ -270,7 +270,7 @@ class PrintableArea {
                     y1: yMin,
                     x2: i,
                     y2: yMax,
-                    id: uuid.v4(),
+                    id: uuid(),
                     stroke: color,
                     fill: 'none',
                     'stroke-width': 1 / this.scale,
@@ -283,7 +283,7 @@ class PrintableArea {
                 attr: {
                     x: i,
                     y: y + (coordinateModeName.indexOf('top') !== -1 ? -3 : 6),
-                    id: uuid.v4(),
+                    id: uuid(),
                     'font-size': textSize,
                     'font-family': 'roboto',
                     fill: colorTextFill,
@@ -309,7 +309,7 @@ class PrintableArea {
                     y1: yMin,
                     x2: i,
                     y2: yMax,
-                    id: uuid.v4(),
+                    id: uuid(),
                     stroke: color,
                     fill: 'none',
                     'stroke-width': 1 / this.scale,
@@ -322,7 +322,7 @@ class PrintableArea {
                 attr: {
                     x: i,
                     y: y + (coordinateModeName.indexOf('top') !== -1 ? -3 : 6),
-                    id: uuid.v4(),
+                    id: uuid(),
                     'font-size': textSize,
                     'font-family': 'roboto',
                     fill: colorTextFill,
@@ -349,7 +349,7 @@ class PrintableArea {
                 y1: yMin,
                 x2: xMin,
                 y2: yMax,
-                id: uuid.v4(),
+                id: uuid(),
                 stroke: borderColor,
                 fill: 'none',
                 'stroke-width': 1 / this.scale,
@@ -364,7 +364,7 @@ class PrintableArea {
                 y1: yMin,
                 x2: xMax,
                 y2: yMax,
-                id: uuid.v4(),
+                id: uuid(),
                 stroke: borderColor,
                 fill: 'none',
                 'stroke-width': 1 / this.scale,
@@ -379,7 +379,7 @@ class PrintableArea {
                 y1: yMin,
                 x2: xMax,
                 y2: yMin,
-                id: uuid.v4(),
+                id: uuid(),
                 stroke: borderColor,
                 fill: 'none',
                 'stroke-width': 1 / this.scale,
@@ -394,7 +394,7 @@ class PrintableArea {
                 y1: yMax,
                 x2: xMax,
                 y2: yMax,
-                id: uuid.v4(),
+                id: uuid(),
                 stroke: borderColor,
                 fill: 'none',
                 'stroke-width': 1 / this.scale,
@@ -416,7 +416,7 @@ class PrintableArea {
                 y1: y1,
                 x2: x2,
                 y2: y2,
-                id: uuid.v4(),
+                id: uuid(),
                 stroke: color,
                 fill: 'none',
                 'stroke-dasharray': dashed ? '1, 1' : '',
@@ -433,7 +433,7 @@ class PrintableArea {
             attr: {
                 x: 30,
                 y: 30,
-                id: uuid.v4(),
+                id: uuid(),
                 'font-size': 24,
                 'font-family': 'roboto',
                 fill: '#ff7f00',
@@ -462,7 +462,7 @@ class PrintableArea {
                 y: yMin,
                 width: xMax - xMin,
                 height: yMax - yMin,
-                id: uuid.v4(),
+                id: uuid(),
                 stroke: '#B9BCBF',
                 fill: '#FFFFFF',
                 'stroke-width': 2 / this.scale,

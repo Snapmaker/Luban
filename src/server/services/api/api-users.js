@@ -4,7 +4,7 @@ import castArray from 'lodash/castArray';
 import isPlainObject from 'lodash/isPlainObject';
 import find from 'lodash/find';
 import some from 'lodash/some';
-import uuid from 'uuid';
+import { v4 as uuid } from 'uuid';
 import settings from '../../config/settings';
 import logger from '../../lib/logger';
 import config from '../configstore';
@@ -45,7 +45,7 @@ const getSanitizedRecords = () => {
         const record = records[i];
 
         if (!record.id) {
-            record.id = uuid.v4();
+            record.id = uuid();
             shouldUpdate = true;
         }
 
@@ -195,7 +195,7 @@ export const create = (req, res) => {
         const hash = bcrypt.hashSync(password.trim(), salt);
         const records2 = getSanitizedRecords();
         const record = {
-            id: uuid.v4(),
+            id: uuid(),
             mtime: new Date().getTime(),
             enabled: enabled,
             name: name,

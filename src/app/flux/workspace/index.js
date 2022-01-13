@@ -1,6 +1,6 @@
 // Reducer for Workspace
 import * as THREE from 'three';
-import uuid from 'uuid';
+import { v4 as uuid } from 'uuid';
 import api from '../../api';
 import log from '../../lib/log';
 import { generateRandomPathName } from '../../../shared/lib/random-utils';
@@ -69,7 +69,7 @@ export const actions = {
 
                     const object3D = gcodeBufferGeometryToObj3d('WORKSPACE', bufferGeometry, renderMethod);
                     // object3D.material.uniforms.u_visible_index_count.value = 20000;
-                    object3D.name = gcodeFile ? `${gcodeFile.name}-${uuid.v4()}` : `${gcodeFiles[gcodeFileIndex].name}-${uuid.v4()}`;
+                    object3D.name = gcodeFile ? `${gcodeFile.name}-${uuid()}` : `${gcodeFiles[gcodeFileIndex].name}-${uuid()}`;
 
                     if (isPreview) {
                         previewModelGroup.add(object3D);

@@ -1,7 +1,7 @@
 import path from 'path';
 import mv from 'mv';
 import fs from 'fs';
-import uuid from 'uuid';
+import { v4 as uuid } from 'uuid';
 import { pathWithRandomSuffix } from '../../lib/random-utils';
 import logger from '../../lib/logger';
 import DataStorage, { rmDir } from '../../DataStorage';
@@ -371,7 +371,7 @@ export const packageEnv = async (req, res) => {
     // const content = fs.readFileSync(targetPath).toString();
     // const config = JSON.parse(content);
 
-    const targetFile = `${uuid.v4().substring(0, 8)}${tails[headType]}`;
+    const targetFile = `${uuid().substring(0, 8)}${tails[headType]}`;
     await zipFolder(envDir, `../../Tmp/${targetFile}`);
     // config.models.forEach((model) => {
     //     const { originalName, uploadName } = model;
