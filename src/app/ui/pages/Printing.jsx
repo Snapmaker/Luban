@@ -3,8 +3,10 @@ import { shallowEqual, useSelector, useDispatch } from 'react-redux';
 import PropTypes from 'prop-types';
 import { useHistory, withRouter } from 'react-router-dom';
 import { includes } from 'lodash';
+import isElectron from 'is-electron';
 // import { Steps } from 'intro.js-react';
 import 'intro.js/introjs.css';
+import { Trans } from 'react-i18next';
 import PrintingVisualizer from '../widgets/PrintingVisualizer';
 // import PrintingOutput from '../widgets/PrintingOutput';
 import PrintingManager from '../views/PrintingManager';
@@ -49,6 +51,8 @@ import {
 } from './introContent';
 import '../../styles/introCustom.styl';
 import Steps from '../components/Steps';
+import Modal from '../components/Modal';
+import { Button } from '../components/Buttons';
 
 const allWidgets = {
     'control': ControlWidget,
@@ -216,16 +220,23 @@ function Printing({ location }) {
     const history = useHistory();
     const [renderHomepage, renderMainToolBar, renderWorkspace] = useRenderMainToolBar();
     const modelGroup = useSelector(state => state.printing.modelGroup);
+    const isNewUser = useSelector(state => state.printing.isNewUser);
     const thumbnail = useRef();
     const stepRef = useRef();
     useUnsavedTitle(pageHeadType);
-
+    const [showTipModal, setShowTipModal] = useState(!isNewUser);
     useEffect(() => {
         dispatch(printingActions.init());
+        dispatch(printingActions.checkNewUser());
         logPageView({
             pathname: '/printing'
         });
     }, []);
+    useEffect(() => {
+        const readTip = machineStore.get('readTip', false);
+        setShowTipModal(!isNewUser && !readTip);
+    }, [isNewUser]);
+
     useEffect(() => {
         if (location?.state?.shouldShowGuideTours) {
             setEnabledIntro(true);
@@ -309,7 +320,16 @@ function Printing({ location }) {
         // machineStore.set('guideTours.guideTours3dp', true); // mock   ---> true
         setEnabledIntro(false);
     };
-
+    const handleCloseTipModal = () => {
+        setShowTipModal(false);
+        machineStore.set('readTip', true);
+    };
+    const openFolder = () => {
+        if (isElectron()) {
+            const ipc = window.require('electron').ipcRenderer;
+            ipc.send('open-recover-folder');
+        }
+    };
     return (
         <ProjectLayout
             renderMainToolBar={renderMainToolBar}
@@ -397,6 +417,37 @@ function Printing({ location }) {
                 ref={thumbnail}
                 modelGroup={modelGroup}
             />
+            {showTipModal && (
+                <Modal
+                    onClose={handleCloseTipModal}
+                    centered
+                >
+                    <Modal.Header>
+                        {i18n._('key-Printing/Modal-Profile migrated')}
+                    </Modal.Header>
+                    <Modal.Body>
+                        <div className="width-432">
+                            <span>
+                                {i18n._('key-Printing/Modal-Retraction profile migrated')},
+                                <a href="https://www.baidu.com" target="_blank" rel="noreferrer" className="link-text">{i18n._('key-Printing/Modal-Click here to learn more')}</a>.
+                            </span>
+                            <Trans i18nKey="key-Printing/Modal-Backup Tip">
+                                For your historical data back up in <span role="presentation" onClick={openFolder} className="link-text">here</span>.
+                            </Trans>
+                        </div>
+                    </Modal.Body>
+                    <Modal.Footer>
+                        <Button
+                            priority="level-two"
+                            type="primary"
+                            width="96px"
+                            onClick={handleCloseTipModal}
+                        >
+                            {i18n._('key-Printing/Modal-Got it')}
+                        </Button>
+                    </Modal.Footer>
+                </Modal>
+            )}
         </ProjectLayout>
     );
 }

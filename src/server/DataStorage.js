@@ -1,7 +1,7 @@
 import path from 'path';
-import fs from 'fs';
+import fs, { mkdir } from 'fs';
 import mkdirp from 'mkdirp';
-import { includes } from 'lodash';
+import { includes, isUndefined, gt } from 'lodash';
 import { app } from 'electron';
 import isElectron from 'is-electron';
 import semver from 'semver';
@@ -11,6 +11,7 @@ import logger from './lib/logger';
 import { initFonts } from '../shared/lib/FontManager';
 import settings from './config/settings';
 import config from './services/configstore';
+import pkg from '../../package.json';
 
 
 const log = logger('server:DataStorage');
@@ -78,6 +79,9 @@ class DataStorage {
          this.defaultConfigDir = `${this.userDataDir}/Default`;
          this.fontDir = `${this.userDataDir}/Fonts`;
          this.envDir = `${this.userDataDir}/env`;
+         this.recoverDir = `${this.userDataDir}/snapmaker-recover`;
+         this.activeConfigDir = `${this.recoverDir}/Config-active`;
+         this.longTermConfigDir = '';
      }
 
      resolveRelativePath(pathString) {
@@ -88,7 +92,7 @@ class DataStorage {
          return pathString;
      }
 
-     async init() {
+     async init(isReset = false) {
          const definitionUpdated = config.get('DefinitionUpdated');
          let overwriteProfiles = false;
          if (semver.gte(settings.version, '4.1.0') && (!definitionUpdated || !definitionUpdated[settings.version])) {
@@ -106,15 +110,21 @@ class DataStorage {
          mkdirp.sync(this.tmpDir);
          mkdirp.sync(this.sessionDir);
          mkdirp.sync(this.userCaseDir);
+         !isReset && mkdirp.sync(this.recoverDir);
          rmDir(this.tmpDir, false);
          rmDir(this.sessionDir, false);
 
+         !isReset && await this.checkNewUser();
+         this.initLongTermRecover(isReset);
          await this.initSlicer(overwriteProfiles);
          await this.initEnv();
 
          await this.initFonts();
          await this.initUserCase();
          //  await this.versionAdaptation();
+
+         // if alt+shift+r, cannot init recover config
+         !isReset && await this.initRecoverActive();
      }
 
      async copyDirForInitSlicer(srcDir, dstDir, overwriteTag = false, inherit = false) {
@@ -235,6 +245,11 @@ class DataStorage {
          }
      }
 
+     async checkNewUser() {
+        const hasConfigDir = fs.existsSync(this.configDir);
+        config.set('isNewUser', !hasConfigDir);
+     }
+
      async initEnv() {
          const srcDir = this.envDir;
          if (fs.existsSync(srcDir)) {
@@ -267,6 +282,30 @@ class DataStorage {
          await this.copyDirForInitSlicer(CURA_ENGINE_CONFIG_LOCAL, this.configDir, true, overwriteProfiles);
          this.upgradeConfigFile(this.configDir);
          await this.copyDirForInitSlicer(CURA_ENGINE_CONFIG_LOCAL, this.defaultConfigDir, true, true);
+     }
+
+     async initRecoverActive() {
+         mkdirp.sync(this.activeConfigDir);
+         await this.copyDirForInitSlicer(this.configDir, this.activeConfigDir, true, true);
+        }
+        
+     async createLongTermRecover(backupVersion, pkgVersion, isReset) {
+        this.longTermConfigDir = `${this.recoverDir}/Config-${new Date().getTime()}`;
+        if (isUndefined(backupVersion) || gt(pkgVersion, backupVersion) || isReset) {
+            mkdirp.sync(this.longTermConfigDir);
+            await this.copyDirForInitSlicer(this.configDir, this.longTermConfigDir, true, true);
+        } else {
+            return;
+        }
+        config.set('backupVersion', pkgVersion);
+     }
+
+     async initLongTermRecover(isReset) {
+        const pkgVersion = pkg.version;
+        const backupVersion = config.get('backupVersion');
+        if (isUndefined(backupVersion) || gt(pkgVersion, backupVersion) || isReset) {
+            this.createLongTermRecover(backupVersion, pkgVersion, isReset);
+        }
      }
 
      async initFonts() {

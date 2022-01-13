@@ -143,12 +143,28 @@ export const updateDefinition = async (req, res) => {
     }
 
     let filePath = '';
+    let activeRecoverPath = '';
     if (definitionId === 'snapmaker_extruder_0' || definitionId === 'snapmaker_extruder_1') {
         filePath = path.join(`${DataStorage.configDir}/${headType}`, `${definitionId}.def.json`);
+        activeRecoverPath = path.join(`${DataStorage.activeConfigDir}/${headType}`, `${definitionId}.def.json`)
     } else {
         filePath = path.join(`${DataStorage.configDir}/${headType}/${series}`, `${definitionId}.def.json`);
+        activeRecoverPath = path.join(`${DataStorage.activeConfigDir}/${headType}/${series}`, `${definitionId}.def.json`)
     }
-    fs.writeFile(filePath, JSON.stringify(definitionLoader.toJSON(), null, 2), 'utf8', (err) => {
+    const data = JSON.stringify(definitionLoader.toJSON(), null, 2);
+    fs.writeFile(filePath, data, 'utf8', (err) => {
+        if (err) {
+            res.status(ERR_INTERNAL_SERVER_ERROR).send({ err });
+        } else {
+            // load definition using new loader to avoid potential settings override issues
+            res.send({ status: 'ok' });
+        }
+    });
+    fsWriteFile(activeRecoverPath, data, res);
+};
+
+const fsWriteFile = (filePath, data, res) => {
+    fs.writeFile(filePath, data, 'utf8', (err) => {
         if (err) {
             res.status(ERR_INTERNAL_SERVER_ERROR).send({ err });
         } else {

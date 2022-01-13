@@ -19,7 +19,7 @@ import {
     RIGHT_EXTRUDER,
     LEFT_EXTRUDER_MAP_NUMBER,
     RIGHT_EXTRUDER_MAP_NUMBER,
-    DUAL_EXTRUDER_TOOLHEAD_FOR_SM2,
+    DUAL_EXTRUDER_TOOLHEAD_FOR_SM2
 } from '../../constants';
 import { timestamp } from '../../../shared/lib/random-utils';
 import { machineStore } from '../../store/local-storage';
@@ -201,7 +201,8 @@ const INITIAL_STATE = {
     helpersExtruderInfoShow: true,
     // Prime Tower
     enabledPrimeTower: true,
-    primeTowerHeight: 0.1
+    primeTowerHeight: 0.1,
+    isNewUser: true,
 };
 
 
@@ -2323,6 +2324,20 @@ export const actions = {
         dispatch(actions.setModelsMeshColor(LEFT_EXTRUDER, leftColor));
         const rightColor = dispatch(actions.getMeshColor(RIGHT_EXTRUDER));
         dispatch(actions.setModelsMeshColor(RIGHT_EXTRUDER, rightColor));
+    },
+
+    checkNewUser: () => (dispatch) => {
+        api.checkNewUser().then((res) => {
+            const isNewUser = res?.body?.isNewUser;
+            dispatch(actions.updateState({
+                isNewUser
+            }));
+        }).catch((err) => {
+            console.log({ err });
+            dispatch(actions.updateState({
+                isNewUser: true
+            }));
+        });
     }
 };
 

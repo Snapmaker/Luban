@@ -61,6 +61,12 @@ function registerApis(app) {
     app.post(urljoin(settings.route, 'api/signin'), api.users.signin);
     app.delete(urljoin(settings.route, 'api/user/resetConfig'), api.users.resetConfig);
 
+    // backup by user
+    app.put(urljoin(settings.route, 'api/user/backup'), api.users.longTermBackupConfig);
+
+    // check new user
+    app.get(urljoin(settings.route, 'api/checkNewUser'), api.users.checkNewUser);
+
     // Register API routes with authorized access
     // Version
     app.get(urljoin(settings.route, 'api/version/latest'), api.version.getLatestVersion);

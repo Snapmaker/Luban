@@ -50,6 +50,9 @@ export const actions = {
             dispatch(projectActions.cleanAllRecentFiles());
             UniApi.Window.forceReload();
         }).catch(() => { console.info('reset failed'); });
+    },
+    longTermBackupConfig: () => () => {
+        api.longTermBackupConfig();
     }
 };
 

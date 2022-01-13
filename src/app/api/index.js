@@ -54,6 +54,9 @@ const resetUserConfig = defaultAPIFactory(() => {
     return request.delete('/api/user/resetConfig');
 });
 
+const longTermBackupConfig = defaultAPIFactory(() => request.put('/api/user/backup'));
+const checkNewUser = defaultAPIFactory(() => request.get('/api/checkNewUser'));
+
 //
 // Image
 //
@@ -355,6 +358,8 @@ export default {
 
     signin,
     resetUserConfig,
+    longTermBackupConfig,
+    checkNewUser,
     controllers, // Controllers
     // users, // Users
     macros,

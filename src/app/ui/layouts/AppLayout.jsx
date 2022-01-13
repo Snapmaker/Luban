@@ -40,6 +40,7 @@ import { actions as machineActions } from '../../flux/machine';
 import { actions as editorActions } from '../../flux/editor';
 import { actions as projectActions } from '../../flux/project';
 import { actions as operationHistoryActions } from '../../flux/operation-history';
+import { actions as settingsActions } from '../../flux/setting';
 import styles from './styles/appbar.styl';
 // import HomePage from '../pages/HomePage';
 // import Workspace from '../pages/Workspace';
@@ -73,7 +74,8 @@ class AppLayout extends PureComponent {
         children: PropTypes.array.isRequired,
         restartGuideTours: PropTypes.func.isRequired,
         machineInfo: PropTypes.object.isRequired,
-        updateMachineToolHead: PropTypes.func.isRequired
+        updateMachineToolHead: PropTypes.func.isRequired,
+        longTermBackupConfig: PropTypes.func.isRequired
     };
 
     state = {
@@ -120,6 +122,9 @@ class AppLayout extends PureComponent {
                     }
                 ]
             });
+        },
+        longTermBackupConfig: () => {
+            this.props.longTermBackupConfig();
         },
         showPreferences: ({ activeTab }) => {
             this.activeTab = activeTab;
@@ -390,6 +395,9 @@ class AppLayout extends PureComponent {
             UniApi.Event.on('preferences.show', (event, ...args) => {
                 UniApi.Event.emit('appbar-menu:preferences.show', ...args);
             });
+            UniApi.Event.on('longterm-backup-config', (event, ...args) => {
+                UniApi.Event.emit('appbar-menu:longterm-backup-config', ...args);
+            });
 
             UniApi.Event.on('appbar-menu:open-file', (file, arr) => {
                 this.actions.openProject(file);
@@ -590,12 +598,14 @@ class AppLayout extends PureComponent {
         UniApi.Event.on('appbar-menu:preferences.show', this.actions.showPreferences);
         UniApi.Event.on('appbar-menu:developer-tools.show', this.actions.showDevelopTools);
         UniApi.Event.on('appbar-menu:check-for-updates.show', this.actions.showCheckForUpdates);
+        UniApi.Event.on('appbar-menu:longterm-backup-config', this.actions.longTermBackupConfig);
     }
 
     componentWillUnmount() {
         UniApi.Event.off('appbar-menu:preferences.show', this.actions.showPreferences);
         UniApi.Event.off('appbar-menu:developer-tools.show', this.actions.showDevelopTools);
         UniApi.Event.off('appbar-menu:check-for-updates.show', this.actions.showCheckForUpdates);
+        UniApi.Event.off('appbar-menu:longterm-backup-config', this.actions.longTermBackupConfig);
     }
 
     render() {
@@ -651,7 +661,8 @@ const mapDispatchToProps = (dispatch) => {
         updateAutoupdateMessage: (message) => dispatch(machineActions.updateAutoupdateMessage(message)),
         updateIsDownloading: (isDownloading) => dispatch(machineActions.updateIsDownloading(isDownloading)),
         restartGuideTours: (pathname, history) => dispatch(projectActions.startProject(pathname, pathname, history, true)),
-        updateMachineToolHead: (toolHead, series, headType) => dispatch(machineActions.updateMachineToolHead(toolHead, series, headType))
+        updateMachineToolHead: (toolHead, series, headType) => dispatch(machineActions.updateMachineToolHead(toolHead, series, headType)),
+        longTermBackupConfig: () => dispatch(settingsActions.longTermBackupConfig())
     };
 };
 

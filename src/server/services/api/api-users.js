@@ -18,6 +18,7 @@ import {
     ERR_INTERNAL_SERVER_ERROR
 } from '../../constants';
 import DataStorage from '../../DataStorage';
+import pkg from '../../../package.json';
 
 const log = logger('api:users');
 const CONFIG_KEY = 'users';
@@ -320,7 +321,7 @@ export const __delete = (req, res) => {
 export const resetConfig = async (req, res) => {
     try {
         DataStorage.clearAll();
-        await DataStorage.init();
+        await DataStorage.init(true);
         res.status(200).send({
             msg: 'Reset user config successfully'
         });
@@ -330,3 +331,30 @@ export const resetConfig = async (req, res) => {
         });
     }
 };
+
+export const longTermBackupConfig = async (req, res) => {
+    try {
+        const version = pkg.version;
+        await DataStorage.createLongTermRecover(version, version, true);
+        res.status(200).send({
+            msg: 'Backup config successfully'
+        });
+    } catch (e) {
+        res.status(500).send({
+            msg: 'Backup config failed'
+        });
+    }
+};
+
+export const checkNewUser = async (req, res) => {
+    try {
+        const isNewUser = config.get('isNewUser');
+        res.status(200).send({
+            isNewUser
+        });
+    } catch (e) {
+        res.status(500).send({
+            isNewUser: true
+        });
+    }
+}

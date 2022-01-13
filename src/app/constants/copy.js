@@ -90,6 +90,7 @@ i18n._('key-App/Menu-Store');
 i18n._('key-App/Menu-Software Update');
 i18n._('key-App/Menu-Firmware Tool');
 i18n._('key-App/Menu-Beginners Guide');
+i18n._('key-App/Menu-Backup config');
 
 // case lib
 i18n._('key-HomePage/CaseLibrary_title-3DP');
@@ -290,3 +291,5 @@ i18n._('key-settings_message-update_not_ava'); // Snapmaker Luban is up to date.
 i18n._('key-settings_message-updateAva'); // Updates are available.
 i18n._('key-settings_message-checking'); // Checking for updates.
 i18n._('key-settings_message-error'); // An error occurred while checking for updates.
+
+i18n._('key-Printing/Modal-Backup Tip');

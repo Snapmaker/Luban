@@ -1,6 +1,6 @@
 import 'core-js/stable';
 import 'regenerator-runtime/runtime';
-import { app, BrowserWindow, protocol, screen, session, ipcMain } from 'electron';
+import { app, BrowserWindow, protocol, screen, session, ipcMain, shell } from 'electron';
 import { autoUpdater } from 'electron-updater';
 import Store from 'electron-store';
 import url from 'url';
@@ -292,6 +292,12 @@ const showMainWindow = async () => {
     ipcMain.on('add-recent-file', (event, file) => {
         addRecentFile(file);
     });
+
+    ipcMain.on('open-recover-folder', () => {
+        const userDataDir = app.getPath('userData');
+        console.log('userDataDir', userDataDir);
+        shell.openItem(`${userDataDir}/snapmaker-recover`);
+    })
 
     updateHandle();
 };
