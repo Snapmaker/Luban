@@ -18,6 +18,7 @@ import {
     WORKFLOW_STATUS_RUNNING,
     WORKFLOW_STATUS_UNKNOWN,
     MACHINE_TOOL_HEADS,
+    LEVEL_TWO_POWER_LASER_FOR_SM2,
     SINGLE_EXTRUDER_TOOLHEAD_FOR_ORIGINAL,
     LEVEL_ONE_POWER_LASER_FOR_ORIGINAL,
     STANDARD_CNC_TOOLHEAD_FOR_ORIGINAL
@@ -912,7 +913,7 @@ export const actions = {
 
     startServerGcode: (callback) => (dispatch, getState) => {
         const { server, size, workflowStatus, isLaserPrintAutoMode, laserFocalLength, materialThickness } = getState().machine;
-        const { gcodeFile, headType, series, isRotate } = getState().workspace;
+        const { gcodeFile, headType, series, isRotate, toolHead } = getState().workspace;
         const { background } = getState().laser;
         if (workflowStatus !== WORKFLOW_STATUS_IDLE || gcodeFile === null) {
             return;
@@ -941,9 +942,15 @@ export const actions = {
                                     resolve();
                                 });
                             } else {
-                                server.executeGcode('G0 Z0 F1500;', () => {
-                                    resolve();
-                                });
+                                if (toolHead === LEVEL_TWO_POWER_LASER_FOR_SM2) {
+                                    server.executeGcode(`G0 Z${materialThickness} F1500;`, () => {
+                                        resolve();
+                                    });
+                                } else {
+                                    server.executeGcode('G0 Z0 F1500;', () => {
+                                        resolve();
+                                    });
+                                }
                             }
                         });
                         promises.push(promise);
