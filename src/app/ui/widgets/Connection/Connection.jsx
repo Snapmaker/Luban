@@ -69,13 +69,6 @@ function Connection({ widgetId, widgetActions }) {
         }
     }, [isHomed, isConnected]);
 
-    // useEffect(() => {
-    //     if (!isConnected) {
-    //         actions.closeHomeModal();
-    //         setHoming(false);
-    //     }
-    // }, [isConnected]);
-
     const isOriginal = series === MACHINE_SERIES.ORIGINAL.value;
     return (
         <div>
