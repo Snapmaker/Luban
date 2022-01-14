@@ -20,7 +20,7 @@
             "default_value": 1
         },
         "fixed_power": {
-            "default_value": 30
+            "default_value": 100
         },
         "fixed_power_enabled": {
             "default_value": true
@@ -32,7 +32,7 @@
             "default_value": 0.14
         },
         "dwell_time": {
-            "default_value": 5
+            "default_value": 10
         },
         "jog_speed": {
             "default_value": 3000
