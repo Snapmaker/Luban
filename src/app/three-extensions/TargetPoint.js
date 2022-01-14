@@ -26,6 +26,7 @@ class TargetPoint {
         );
         const material = new THREE.MeshBasicMaterial({
             color: color,
+            alphaTest: 0.5,
             opacity: 0.9,
             transparent: true
         });
