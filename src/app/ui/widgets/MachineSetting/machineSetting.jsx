@@ -13,8 +13,8 @@ const MachineSetting = (props) => {
     const dispatch = useDispatch();
     const machine = useSelector(state => state?.machine);
     const workspace = useSelector(state => state?.workspace);
-    const { isConnected, connectionType, series, workflowState } = machine;
-    const { headType } = workspace;
+    const { isConnected, connectionType, workflowState } = machine;
+    const { headType, series } = workspace;
     const [enclosureDoorDetection, setEnclosureDoorDetection] = useState(machine?.enclosureDoorDetection);
     const [zAxisModule, setZAxisModule] = useState(machine?.zAxisModule);
     useEffect(() => {
