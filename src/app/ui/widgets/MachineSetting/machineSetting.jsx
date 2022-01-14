@@ -12,10 +12,13 @@ import Select from '../../components/Select';
 const MachineSetting = (props) => {
     const dispatch = useDispatch();
     const machine = useSelector(state => state?.machine);
-    const { isConnected, connectionType, headType, series, workflowState } = machine;
+    const workspace = useSelector(state => state?.workspace);
+    const { isConnected, connectionType, workflowState } = machine;
+    const { headType, series } = workspace;
     const [enclosureDoorDetection, setEnclosureDoorDetection] = useState(machine?.enclosureDoorDetection);
     const [zAxisModule, setZAxisModule] = useState(machine?.zAxisModule);
     useEffect(() => {
+        props.widgetActions.setTitle(i18n._('key-App/Settings/Settings-Machine Settings'));
         dispatch(machineActions.getEnclosureState());
         dispatch(machineActions.getZAxisModuleState());
     }, []);

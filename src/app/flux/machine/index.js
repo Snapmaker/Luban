@@ -193,7 +193,7 @@ const INITIAL_STATE = {
     // connect info
     moduleStatusList: {},
     // wifi connection, home button in control widget
-    homingModel: false
+    homingModal: false
 };
 
 
@@ -868,12 +868,12 @@ export const actions = {
 
     executeGcode: (gcode, context) => (dispatch, getState) => {
         const machine = getState().machine;
-        const { homingModel } = machine;
+        const { homingModal } = machine;
         const { isConnected, connectionType, server } = machine;
         if (!isConnected) {
-            if (homingModel) {
+            if (homingModal) {
                 dispatch(baseActions.updateState({
-                    homingModel: false
+                    homingModal: false
                 }));
             }
             return;
@@ -887,9 +887,9 @@ export const actions = {
             server.executeGcode(gcode, (result) => {
                 if (result) {
                     dispatch(actions.addConsoleLogs(result));
-                    if (homingModel) {
+                    if (homingModal) {
                         dispatch(baseActions.updateState({
-                            homingModel: false
+                            homingModal: false
                         }));
                     }
                 }
@@ -897,16 +897,16 @@ export const actions = {
         }
     },
 
-    executeGcodeAutoHome: (homingModel = false) => (dispatch, getState) => {
+    executeGcodeAutoHome: (homingModal = false) => (dispatch, getState) => {
         const { series, headType } = getState().workspace;
         const { connectionType } = getState().machine;
         dispatch(actions.executeGcode('G53'));
-        dispatch(actions.executeGcode('G28'));
-        if (homingModel && connectionType === CONNECTION_TYPE_WIFI) {
+        if (homingModal && connectionType === CONNECTION_TYPE_WIFI) {
             dispatch(baseActions.updateState({
-                homingModel
+                homingModal
             }));
         }
+        dispatch(actions.executeGcode('G28'));
         dispatch(actions.executeGcodeG54(series, headType));
     },
 

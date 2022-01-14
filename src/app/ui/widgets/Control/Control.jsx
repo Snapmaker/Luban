@@ -81,7 +81,7 @@ function Control({ widgetId, widgetActions: _widgetActions }) {
     const originOffset = useSelector(state => state.machine.originOffset) || {};
     const { jog, axes, dataSource } = widgets[widgetId];
     const { speed = 1500, keypad, selectedDistance, customDistance, selectedAngle, customAngle } = jog;
-    const { headType, isConnected, workflowState, workflowStatus, homingModel } = machine;
+    const { headType, isConnected, workflowState, workflowStatus, homingModal } = machine;
     const dispatch = useDispatch();
     function getInitialState() {
         const jogSpeed = speed;
@@ -146,6 +146,7 @@ function Control({ widgetId, widgetActions: _widgetActions }) {
     }
 
     const [state, setState] = useState(() => getInitialState());
+    const [homingModalShow, setHomingModalShow] = useState(homingModal);
     const prevState = usePrevious({
         customDistance: state.customDistance,
         units: state.units,
@@ -421,6 +422,14 @@ function Control({ widgetId, widgetActions: _widgetActions }) {
         }
     }, [state]);
 
+    useEffect(() => {
+        if (!isConnected) {
+            setHomingModalShow(false);
+        } else {
+            setHomingModalShow(homingModal);
+        }
+    }, [homingModal, isConnected]);
+
     function canClick() {
         return (isConnected
             && includes([WORKFLOW_STATE_IDLE], workflowState)
@@ -487,7 +496,7 @@ function Control({ widgetId, widgetActions: _widgetActions }) {
                 actions={actions}
                 executeGcode={actions.executeGcode}
             />
-            {homingModel && (
+            {homingModalShow && (
                 <ModalSmall
                     closable={false}
                     isImage={false}

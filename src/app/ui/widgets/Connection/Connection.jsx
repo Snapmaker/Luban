@@ -57,7 +57,7 @@ function Connection({ widgetId, widgetActions }) {
     }, []);
 
     useEffect(() => {
-        if (!isHomed) {
+        if (!isHomed && isConnected) {
             if (dataSource === PROTOCOL_TEXT) {
                 actions.openHomeModal();
             }
@@ -67,7 +67,7 @@ function Connection({ widgetId, widgetActions }) {
                 actions.closeHomeModal();
             }
         }
-    }, [isHomed]);
+    }, [isHomed, isConnected]);
 
     const isOriginal = series === MACHINE_SERIES.ORIGINAL.value;
     return (
