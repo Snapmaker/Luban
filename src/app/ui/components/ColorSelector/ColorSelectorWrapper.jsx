@@ -36,7 +36,8 @@ const ColorSelectorPicker = React.memo(({ onChangeComplete, onClose, value }) =>
                                     }}
                                 >
                                     <div
-                                        className={classNames('margin-left-2', 'margin-top-2',
+                                        className={classNames(colorLines.indexOf(color) > 0 ? 'margin-left-2' : null,
+                                            'margin-top-2',
                                             'width-32', 'height-32',
                                             'padding-vertical-3', 'padding-horizontal-3',
                                             color === value ? 'border-default-black-2' : null,
