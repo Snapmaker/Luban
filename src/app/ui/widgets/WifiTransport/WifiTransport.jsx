@@ -618,7 +618,7 @@ function WifiTransport({ widgetActions, controlActions }) {
                                 <div className="sm-flex height-32 margin-top-8">
                                     <Checkbox
                                         className="sm-flex-auto"
-                                        disabled={isRotate}
+                                        disabled={isRotate || connectionType === CONNECTION_TYPE_SERIAL}
                                         checked={isLaserPrintAutoMode}
                                         onChange={actions.onChangeLaserPrintMode}
                                     >
