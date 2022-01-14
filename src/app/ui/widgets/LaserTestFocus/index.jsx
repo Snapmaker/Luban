@@ -40,8 +40,8 @@ class LaserTestFocusWidget extends PureComponent {
     }
 
     componentDidMount() {
-        const { isConnected, headType } = this.props;
-        if (headType === HEAD_LASER && isConnected) {
+        const { isConnected, headType, connectionType, series } = this.props;
+        if (headType === HEAD_LASER && isConnected && connectionType === 'serial' && (series === 'Original' || series === 'Original Long Z-axis')) {
             this.props.widgetActions.setDisplay(true);
         } else {
             this.props.widgetActions.setDisplay(false);
@@ -84,7 +84,8 @@ class LaserTestFocusWidget extends PureComponent {
     }
 }
 const mapStateToProps = (state) => {
-    const { headType, isConnected, workflowState, connectionType, series } = state.machine;
+    const { isConnected, workflowState, connectionType } = state.machine;
+    const { headType, series } = state.workspace;
     return {
         headType: headType,
         isConnected,
