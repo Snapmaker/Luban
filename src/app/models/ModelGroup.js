@@ -211,7 +211,7 @@ class ModelGroup extends EventEmitter {
                     subModel.visible = visible;
                     subModel.meshObject.visible = visible;
                 });
-            } else if (model.parent) {
+            } else if (model.parent && model.parent instanceof ThreeGroup) {
                 let parentVisible = false;
                 model.parent.traverse((subModel) => {
                     parentVisible = subModel.visible || parentVisible;

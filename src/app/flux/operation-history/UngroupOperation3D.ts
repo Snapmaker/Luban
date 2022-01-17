@@ -3,6 +3,7 @@ import type ThreeGroup from '../../models/ThreeGroup';
 import type ThreeModel from '../../models/ThreeModel';
 import type { ModelTransformation } from '../../models/ThreeBaseModel';
 import Operation from './Operation';
+import ThreeUtils from '../../three-extensions/ThreeUtils';
 
 type ModelState = {
     target: ThreeModel,
@@ -44,14 +45,18 @@ export default class UngroupOperation3D extends Operation<UngroupState> {
         const subModelStates = this.state.subModelStates;
 
         modelGroup.unselectAllModels();
+        ThreeUtils.setObjectParent(target.meshObject, modelGroup.object);
         const subModels = [];
         subModelStates.forEach(item => {
-            item.target.updateTransformation(item.transformation);
             subModels.push(item.target);
         });
-        target.updateTransformation(this.state.groupTransformation);
         target.add(subModels);
         modelGroup.object.add(target.meshObject);
+
+        subModelStates.forEach(item => {
+            item.target.updateTransformation(item.transformation);
+        });
+        target.updateTransformation(this.state.groupTransformation);
         modelGroup.models = [...this.state.modelsBeforeUngroup];
         target.stickToPlate();
     }

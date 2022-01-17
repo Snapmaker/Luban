@@ -48,7 +48,8 @@ export default class GroupAlginOperation3D extends Operation<GroupState> {
         target.children.forEach((subModel) => {
             const subModelTransform = this.state.subModelPosition.get(subModel.modelID);
             subModel.updateTransformation(subModelTransform);
-            modelGroup.stickToPlateAndCheckOverstepped(subModel);
+            const overstepped = modelGroup._checkOverstepped(subModel);
+            subModel.setOversteppedAndSelected(overstepped, subModel.isSelected);
         });
         target.stickToPlate();
         modelGroup.object.add(target.meshObject);
@@ -62,7 +63,9 @@ export default class GroupAlginOperation3D extends Operation<GroupState> {
         modelGroup.unselectAllModels();
 
         target.children.forEach((subModel) => {
-            this.state.subModelPosition.set(subModel.modelID, subModel.transformation);
+            this.state.subModelPosition.set(subModel.modelID, {
+                ...subModel.transformation
+            });
         });
 
         modelGroup.addModelToSelectedGroup(target);
@@ -76,7 +79,10 @@ export default class GroupAlginOperation3D extends Operation<GroupState> {
         this.state.selectedModelsPositionMap.forEach((position: ModelTransformation, modelID: string) => {
             modelGroup.selectModelById(modelID);
             modelGroup.updateSelectedGroupTransformation(position);
-            modelGroup.stickToPlateAndCheckOverstepped(modelGroup.selectedModelArray[0]);
+            const model = modelGroup.selectedModelArray[0];
+            const overstepped = modelGroup._checkOverstepped(model);
+            model.setOversteppedAndSelected(overstepped, model.isSelected);
+
             modelGroup.unselectAllModels();
         });
         modelGroup.models = [...this.state.modelsbeforeGroup];
