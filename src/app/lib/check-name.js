@@ -74,6 +74,20 @@ const checkObjectIsEqual = (objOld, objNew) => {
                             }
                         });
                     });
+                } else if (key === 'toolpaths') {
+                    if (value?.length !== objNew[key]?.length) {
+                        return false;
+                    }
+                    return value.every((oldModel, index) => {
+                        const newModel = objNew[key][index];
+                        return Object.entries(oldModel).every(([modelKey, modelValue]) => {
+                            if (modelKey === 'status' || modelKey === 'toolPathFiles') {
+                                return true;
+                            } else {
+                                return JSON.stringify(newModel[modelKey]) === JSON.stringify(modelValue);
+                            }
+                        });
+                    });
                 } else {
                     return JSON.stringify(objNew[key]) === JSON.stringify(value);
                 }

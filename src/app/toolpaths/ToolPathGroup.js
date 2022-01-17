@@ -10,6 +10,8 @@ import ThreeModel from '../models/ThreeModel';
 class ToolPathGroup {
     toolPaths = [];
 
+    allToolPaths = [];
+
     selectedToolPathArray = [];
 
     modelGroup;
@@ -82,14 +84,31 @@ class ToolPathGroup {
         this.simulationObject && (this.simulationObject.visible = show);
     }
 
-    async onGenerateToolPath(taskResult, renderResult) {
-        const toolPath = this.toolPaths.find(v => v.id === taskResult.taskId);
-
-        if (toolPath) {
-            await toolPath.onGenerateToolPath(taskResult, renderResult, () => { this._updated(); });
-            this.addSelectedToolpathColor(true);
-            this._updated();
+    addRenderToolPath(taskId, model, filename, renderResult) {
+        this.allToolPaths.push({
+            taskId,
+            model,
+            filename,
+            renderResult
+        });
+        const toolpath = this._getToolPath(taskId);
+        if (toolpath) {
+            toolpath.onGenerateToolpathModel(model, filename, renderResult);
         }
+    }
+
+    renderAllToolPath() {
+        this.allToolPaths.forEach(({ taskId, model, renderResult }) => {
+            const toolpath = this._getToolPath(taskId);
+            const toolPathObj3D = toolpath.renderToolpathObj(renderResult);
+            const modelMapResult = toolpath.modelMap.get(model.modelID);
+
+            const oldMeshObj = modelMapResult.meshObj;
+            oldMeshObj && this.object.remove(oldMeshObj);
+            modelMapResult.meshObj = toolPathObj3D;
+            toolpath.object.add(toolPathObj3D);
+        });
+        this.allToolPaths = [];
     }
 
     setUpdatedCallBack(updatedCallback) {

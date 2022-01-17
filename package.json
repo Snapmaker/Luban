@@ -181,6 +181,7 @@
     "chalk": "2.4.2",
     "classnames": "2.2.6",
     "cli-color": "1.4.0",
+    "workerpool": "6.1.5",
     "clusterize.js": "0.17.6",
     "color-convert": "2.0.1",
     "colornames": "1.1.1",
@@ -370,7 +371,7 @@
     "webpack-hot-middleware": "2.25.1",
     "webpack-manifest-plugin": "2.2.0",
     "word-wrap": "1.2.3",
-    "worker-loader": "2.0.0",
+    "worker-loader": "3.0.8",
     "write-file-webpack-plugin": "4.3.2",
     "xlsx": "0.13.5"
   },

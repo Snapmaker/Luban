@@ -29,7 +29,8 @@ export const processActions = {
         }));
 
         // start generate toolpath
-        toolPathGroup.toolPaths.forEach((toolPath) => {
+        toolPathGroup.toolPaths.forEach((toolPath, index) => {
+            console.log('pool333 index', index);
             dispatch(processActions.commitGenerateToolPath(headType, toolPath.id));
         });
     },
@@ -390,6 +391,7 @@ export const processActions = {
             isGcodeGenerating: false,
             progress: progressStatesManager.updateProgress(STEP_STAGE.CNC_LASER_GENERATING_GCODE, 1)
         }));
+        toolPathGroup.renderAllToolPath();
         progressStatesManager.finishProgress(true);
         dispatch(baseActions.render(headType));
     },
