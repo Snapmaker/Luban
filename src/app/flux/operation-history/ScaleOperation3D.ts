@@ -42,6 +42,7 @@ export default class ScaleOperation3D extends Operation<ScaleOperationState> {
             modelGroup.addModelToSelectedGroup(model);
             modelGroup.updateSelectedGroupTransformation({ ...transform }, false);
             modelGroup.unselectAllModels();
+            model.onTransform();
             model.computeBoundingBox();
             model.target.stickToPlate();
             model.target.computeBoundingBox();
@@ -49,6 +50,7 @@ export default class ScaleOperation3D extends Operation<ScaleOperationState> {
             modelGroup.addModelToSelectedGroup(model);
             modelGroup.updateSelectedGroupTransformation({ ...transform }, false);
             modelGroup.unselectAllModels();
+            model.onTransform();
 
             model.stickToPlate();
             model.computeBoundingBox();

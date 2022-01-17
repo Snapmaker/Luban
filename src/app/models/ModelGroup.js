@@ -1160,6 +1160,8 @@ class ModelGroup extends EventEmitter {
      *
      * TODO: Laser and CNC was moved to somewhere else.
      *
+     * TODO: Is there a need to update the transform of the model?
+     *
      * @param transformation
      */
     updateSelectedGroupTransformation(transformation, newUniformScalingState = this.selectedGroup.uniformScalingState) {

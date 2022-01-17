@@ -44,6 +44,7 @@ export default class RotateOperation3D extends Operation<RotateOperationState> {
             ...transform
         });
         modelGroup.unselectAllModels();
+        model.onTransform();
 
         model.stickToPlate();
         model.computeBoundingBox();

@@ -84,6 +84,7 @@ export default class GroupAlginOperation3D extends Operation<GroupState> {
             model.setOversteppedAndSelected(overstepped, model.isSelected);
 
             modelGroup.unselectAllModels();
+            model.onTransform();
         });
         modelGroup.models = [...this.state.modelsbeforeGroup];
     }

@@ -49,6 +49,7 @@ export default class MoveOperation3D extends Operation<MoveOperationState> {
             });
             model.meshObject.parent.updateMatrix();
             modelGroup.unselectAllModels();
+            model.onTransform();
 
             modelGroup.stickToPlateAndCheckOverstepped(model.target);
         } else {
@@ -58,6 +59,7 @@ export default class MoveOperation3D extends Operation<MoveOperationState> {
             });
 
             modelGroup.unselectAllModels();
+            model.onTransform();
             if (model instanceof ThreeGroup) {
                 modelGroup.stickToPlateAndCheckOverstepped(model);
             }
