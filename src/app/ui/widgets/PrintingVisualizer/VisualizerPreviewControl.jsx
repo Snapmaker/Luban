@@ -314,7 +314,7 @@ function VisualizerPreviewControl() {
                                 </div>
                                 <div className="padding-vertical-16 padding-left-16">
                                     { isDualExtruder && (
-                                        <div className="sm-flex justify-space-between height-16 margin-bottom-10">
+                                        <div className="sm-flex justify-space-between height-24 margin-bottom-10">
                                             <div>
                                                 <span className="v-align-m">
                                                     {i18n._('key-Printing/Preview-Color Scheme')}
