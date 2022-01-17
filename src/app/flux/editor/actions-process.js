@@ -29,8 +29,7 @@ export const processActions = {
         }));
 
         // start generate toolpath
-        toolPathGroup.toolPaths.forEach((toolPath, index) => {
-            console.log('pool333 index', index);
+        toolPathGroup.toolPaths.forEach((toolPath) => {
             dispatch(processActions.commitGenerateToolPath(headType, toolPath.id));
         });
     },
