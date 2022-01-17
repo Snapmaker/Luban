@@ -1,7 +1,7 @@
 import { Vector3, Group, Matrix4, BufferGeometry, MeshPhongMaterial, Mesh, DoubleSide, Float32BufferAttribute, MeshBasicMaterial } from 'three';
 import EventEmitter from 'events';
 // import { EPSILON } from '../../constants';
-import uuid from 'uuid';
+import { v4 as uuid } from 'uuid';
 import _ from 'lodash';
 import i18n from '../lib/i18n';
 
@@ -915,10 +915,10 @@ class ModelGroup extends EventEmitter {
                 newModel.meshObject.updateMatrix();
                 newModel.computeBoundingBox();
 
-                newModel.modelID = modelID || uuid.v4();
+                newModel.modelID = modelID || uuid();
             } else {
                 newModel.meshObject.addEventListener('update', this.onModelUpdate);
-                newModel.modelID = modelID || uuid.v4();
+                newModel.modelID = modelID || uuid();
                 newModel.computeBoundingBox();
                 newModel.updateTransformation({
                     positionX: 0,
@@ -971,7 +971,7 @@ class ModelGroup extends EventEmitter {
                 newModel.meshObject.updateMatrix();
                 newModel.computeBoundingBox();
 
-                newModel.modelID = uuid.v4();
+                newModel.modelID = uuid();
 
                 this.models.push(newModel);
                 this.object.add(newModel.meshObject);

@@ -1,4 +1,4 @@
-import uuid from 'uuid';
+import { v4 as uuid } from 'uuid';
 import { includes } from 'lodash';
 import * as THREE from 'three';
 import { controller } from '../lib/controller';
@@ -44,7 +44,7 @@ class ToolPath {
         const { id, name, baseName, headType, type, useLegacyEngine = false, modelMode,
             visibleModelIDs, gcodeConfig, toolParams = {}, materials = {}, modelGroup } = options;
 
-        this.id = id || uuid.v4();
+        this.id = id || uuid();
         this.name = name;
         this.baseName = baseName;
         this.headType = headType;

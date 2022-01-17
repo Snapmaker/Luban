@@ -1,9 +1,7 @@
 import * as THREE from 'three';
-// import uuid from 'uuid';
+import { v4 as uuid } from 'uuid';
 import type ModelGroup from './ModelGroup';
 import type ThreeGroup from './ThreeGroup';
-
-const uuid = require('uuid');
 
 export type ModelTransformation = {
     positionX?: number;

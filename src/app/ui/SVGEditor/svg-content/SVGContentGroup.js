@@ -1,4 +1,4 @@
-import uuid from 'uuid';
+import { v4 as uuid } from 'uuid';
 import { createSVGElement, getBBox, toString } from '../element-utils';
 import { NS } from '../lib/namespaces';
 // import SelectorManager from './SelectorManager';
@@ -69,7 +69,7 @@ class SVGContentGroup {
 
     // for create new elem
     getNewId() {
-        this.svgId = `id${uuid.v4()}`;
+        this.svgId = `id${uuid()}`;
         return this.svgId;
     }
 
@@ -117,7 +117,7 @@ class SVGContentGroup {
     }
 
     findSVGElement(id) {
-        // uuid.v4() may generate id starts with digit, that will cause querySelector fail
+        // uuid() may generate id starts with digit, that will cause querySelector fail
         // https://stackoverflow.com/questions/37270787/uncaught-syntaxerror-failed-to-execute-queryselector-on-document
         return this.svgContent.getElementById(`${id}`);
     }
