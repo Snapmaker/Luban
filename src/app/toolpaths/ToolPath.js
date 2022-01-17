@@ -42,7 +42,7 @@ class ToolPath {
 
     constructor(options) {
         const { id, name, baseName, headType, type, useLegacyEngine = false, modelMode,
-            visibleModelIDs, gcodeConfig, toolParams = {}, materials = {}, modelGroup } = options;
+            visibleModelIDs, modelIDs, gcodeConfig, toolParams = {}, materials = {}, modelGroup } = options;
 
         this.id = id || uuid();
         this.name = name;
@@ -52,7 +52,7 @@ class ToolPath {
         this.type = type;
         this.status = IDLE;
         this.useLegacyEngine = useLegacyEngine;
-        this.visibleModelIDs = visibleModelIDs.map(v => v);
+        this.visibleModelIDs = (visibleModelIDs || modelIDs).map(v => v);
 
         for (const modelID of this.visibleModelIDs) {
             this.modelMap.set(modelID, {
