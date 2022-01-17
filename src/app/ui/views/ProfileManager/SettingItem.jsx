@@ -220,6 +220,7 @@ function SettingItem({ definitionKey, settings, isDefaultDefinition = () => true
             {showColor && (
                 <div>
                     <ColorSelector
+                        recentColorKey="profile-manager"
                         colors={PRINTING_MATERIAL_CONFIG_COLORS}
                         value={settingDefaultValue}
                         onClose={() => {
@@ -244,4 +245,3 @@ SettingItem.propTypes = {
 };
 
 export default React.memo(SettingItem);
-// export default (SettingItem);
