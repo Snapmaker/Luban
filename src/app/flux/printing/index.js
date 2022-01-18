@@ -367,6 +367,36 @@ export const actions = {
         const extruderRDefinitionSettings = extruderRDefinition.settings;
         const { size, toolHead: { printingToolhead } } = getState().machine;
         // TODO
+        let useLeft = false;
+        let useRight = false;
+        if (helpersExtruderConfig.adhesion === RIGHT_EXTRUDER_MAP_NUMBER) {
+            useRight = true;
+        } else {
+            useLeft = true;
+        }
+        if (helpersExtruderConfig.support === RIGHT_EXTRUDER_MAP_NUMBER) {
+            useRight = true;
+        } else {
+            useLeft = true;
+        }
+        modelGroup.getModels().forEach((model) => {
+            if (model.type === 'baseModel') {
+                if (model.extruderConfig.infill === RIGHT_EXTRUDER_MAP_NUMBER) {
+                    useRight = true;
+                } else {
+                    useLeft = true;
+                }
+                if (model.extruderConfig.shell === RIGHT_EXTRUDER_MAP_NUMBER) {
+                    useRight = true;
+                } else {
+                    useLeft = true;
+                }
+            }
+        });
+
+        const leftExtruderBorder = ((useRight && printingToolhead === DUAL_EXTRUDER_TOOLHEAD_FOR_SM2) ? DUAL_EXTRUDER_LIMIT_WIDTH_L : 0);
+        const rightExtruderBorder = ((useLeft && printingToolhead === DUAL_EXTRUDER_TOOLHEAD_FOR_SM2) ? DUAL_EXTRUDER_LIMIT_WIDTH_R : 0);
+
         const adhesionType = activeDefinition?.settings?.adhesion_type?.default_value;
         let border = 0;
         let supportLineWidth = 0;
@@ -378,6 +408,7 @@ export const actions = {
                     supportLineWidth = extruderRDefinitionSettings.machine_nozzle_size.default_value;
                 }
                 border = 7 + (skirtLineCount - 1) * supportLineWidth;
+
                 break;
             }
             case 'brim': {
@@ -399,8 +430,8 @@ export const actions = {
                 break;
         }
         const newStopArea = {
-            left: (printingToolhead === DUAL_EXTRUDER_TOOLHEAD_FOR_SM2 ? DUAL_EXTRUDER_LIMIT_WIDTH_L : 0) + border,
-            right: (printingToolhead === DUAL_EXTRUDER_TOOLHEAD_FOR_SM2 ? DUAL_EXTRUDER_LIMIT_WIDTH_R : 0) + border,
+            left: leftExtruderBorder + border,
+            right: rightExtruderBorder + border,
             front: border,
             back: border
         };
@@ -777,7 +808,7 @@ export const actions = {
      *      }
      * @param direction
      */
-    updateExtuderDefinition: (definition, direction = LEFT_EXTRUDER) => (dispatch, getState) => {
+    updateExtruderDefinition: (definition, direction = LEFT_EXTRUDER) => (dispatch, getState) => {
         const { activeDefinition, extruderLDefinition, extruderRDefinition, helpersExtruderConfig } = getState().printing;
 
         if (!definition) {
@@ -1655,6 +1686,7 @@ export const actions = {
         dispatch(actions.destroyGcodeLine());
         dispatch(actions.displayModel());
         dispatch(actions.updateAllModelColors());
+        dispatch(actions.updateBoundingBox());
         modelGroup.models = [...models];
         // dispatch(actions.updateState({
         //     modelGroup

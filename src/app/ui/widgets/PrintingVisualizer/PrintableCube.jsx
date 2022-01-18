@@ -25,6 +25,7 @@ class PrintableCube extends Object3D {
         this.type = 'PrintCube';
         this.size = size;
         this._setup();
+        this._setupStopArea();
     }
 
     updateSize(size, stopArea) {
