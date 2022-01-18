@@ -115,8 +115,8 @@ class DataStorage {
          rmDir(this.sessionDir, false);
 
          !isReset && await this.checkNewUser();
-         this.initLongTermRecover(isReset);
-         await this.initSlicer(overwriteProfiles);
+         await this.initLongTermRecover(isReset);
+         await this.initSlicer(overwriteProfiles, isReset);
          await this.initEnv();
 
          await this.initFonts();
@@ -271,7 +271,7 @@ class DataStorage {
          }
      }
 
-     async initSlicer(overwriteProfiles = false) {
+     async initSlicer(overwriteProfiles = false, isReset = false) {
          mkdirp.sync(this.configDir);
          mkdirp.sync(this.defaultConfigDir);
          mkdirp.sync(`${this.configDir}/${CNC_CONFIG_SUBCATEGORY}`);
@@ -282,6 +282,8 @@ class DataStorage {
          await this.copyDirForInitSlicer(CURA_ENGINE_CONFIG_LOCAL, this.configDir, true, overwriteProfiles);
          this.upgradeConfigFile(this.configDir);
          await this.copyDirForInitSlicer(CURA_ENGINE_CONFIG_LOCAL, this.defaultConfigDir, true, true);
+         const isNewUser = config.get('isNewUser');
+         isNewUser && !isReset && await this.copyDirForInitSlicer(this.configDir, this.longTermConfigDir, true, true);
      }
 
      async initRecoverActive() {
@@ -293,7 +295,7 @@ class DataStorage {
         this.longTermConfigDir = `${this.recoverDir}/Config-${new Date().getTime()}`;
         if (isUndefined(backupVersion) || gt(pkgVersion, backupVersion) || isReset) {
             mkdirp.sync(this.longTermConfigDir);
-            await this.copyDirForInitSlicer(this.configDir, this.longTermConfigDir, true, true);
+            await this.copyDirForInitSlicer(isReset ? this.activeConfigDir : this.configDir, this.longTermConfigDir, true, true);
         } else {
             return;
         }
