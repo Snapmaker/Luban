@@ -45,7 +45,11 @@ class PrintableArea {
             this.scale = scale;
             for (const child of this.printableAreaGroup.childNodes) {
                 if (child.getAttribute('stroke-width') !== '0') {
-                    child.setAttribute('stroke-width', 1 / scale);
+                    let realStrokeWidth = 1 / scale;
+                    if (child.getAttribute('virtualX') === '0' || child.getAttribute('virtualY') === '0') {
+                        realStrokeWidth = 4 / scale;
+                    }
+                    child.setAttribute('stroke-width', realStrokeWidth);
                 }
             }
         }
@@ -119,7 +123,8 @@ class PrintableArea {
                     id: uuid(),
                     stroke: color,
                     fill: 'none',
-                    'stroke-width': 1 / this.scale,
+                    virtualY: i - y,
+                    'stroke-width': ((i - y) === 0) ? (4 / this.scale) : (1 / this.scale),
                     opacity: 1,
                     'fill-opacity': 1
                 }
@@ -138,7 +143,8 @@ class PrintableArea {
                     id: uuid(),
                     stroke: color,
                     fill: 'none',
-                    'stroke-width': 1 / this.scale,
+                    virtualY: i - y,
+                    'stroke-width': ((i - y) === 0) ? (4 / this.scale) : (1 / this.scale),
                     opacity: 1,
                     'fill-opacity': 1
                 }
@@ -157,7 +163,8 @@ class PrintableArea {
                     id: uuid(),
                     stroke: color,
                     fill: 'none',
-                    'stroke-width': 1 / this.scale,
+                    virtualX: i - x,
+                    'stroke-width': ((i - x) === 0) ? (4 / this.scale) : (1 / this.scale),
                     opacity: 1,
                     'fill-opacity': 1
                 }
@@ -176,7 +183,8 @@ class PrintableArea {
                     id: uuid(),
                     stroke: color,
                     fill: 'none',
-                    'stroke-width': 1 / this.scale,
+                    virtualX: i - x,
+                    'stroke-width': ((i - x) === 0) ? (4 / this.scale) : (1 / this.scale),
                     opacity: 1,
                     'fill-opacity': 1
                 }
