@@ -80,16 +80,19 @@ const getLocalStore = (name) => {
 
 export const widgetStore = getLocalStore('widget');
 export const machineStore = getLocalStore('machine');
+export const componentsStore = getLocalStore('components');
 
 const storeManager = {
     widgetStore,
     machineStore,
+    componentsStore,
     clear: () => {
         machineStore.clear();
         widgetStore.clear();
+        componentsStore.clear();
     },
     get: () => {
-        return _.merge(machineStore.get(), widgetStore.get());
+        return _.merge(machineStore.get(), widgetStore.get(), componentsStore.get());
     }
 };
 export default storeManager;

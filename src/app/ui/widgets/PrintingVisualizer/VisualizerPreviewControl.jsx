@@ -163,7 +163,7 @@ function VisualizerPreviewControl() {
     }
 
     // TODO
-    const lineTypeObjects0 = [
+    const lineTypeStructureObjects = [
         {
             fatherContent: i18n._('key-Printing/Preview-Inner Wall'),
             fatherColor: '#00ff00',
@@ -207,7 +207,7 @@ function VisualizerPreviewControl() {
             showTypeName: 'UNKNOWN'
         },
     ];
-    const lineTypeObjects1 = [
+    const lineTypeExtruderObjects = [
         {
             fatherContent: i18n._('key-Printing/Preview-Tool0'),
             fatherColor: colorL,
@@ -347,7 +347,7 @@ function VisualizerPreviewControl() {
                                             maxHeight: '440px'
                                         }}
                                     >
-                                        {!renderLineType && (lineTypeObjects0.map((obj) => {
+                                        {!renderLineType && (lineTypeStructureObjects.map((obj) => {
                                             const { fatherContent, fatherColor, showType, showTypeName } = obj;
                                             return (
                                                 <PreviewType
@@ -377,7 +377,7 @@ function VisualizerPreviewControl() {
                                                 />
                                             );
                                         }))}
-                                        {renderLineType && (lineTypeObjects1.map((obj) => {
+                                        {renderLineType && (lineTypeExtruderObjects.map((obj) => {
                                             const { fatherContent, fatherColor, childrenObjects } = obj;
                                             return (
                                                 <PreviewType
