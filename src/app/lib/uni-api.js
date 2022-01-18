@@ -166,10 +166,12 @@ const File = {
             const fileReader = new FileReader();
             fileReader.onload = () => {
                 window.require('fs').writeFileSync(newPath, Buffer.from(new Uint8Array(fileReader.result)));
+                console.log('export_model-electron', newPath);
             };
             fileReader.readAsArrayBuffer(blob);
         } else {
             FileSaver.saveAs(blob, newPath, true);
+            console.log('export_model-web');
         }
     },
     save(targetFile, tmpFile) {
@@ -219,6 +221,7 @@ const File = {
             const { ipcRenderer } = window.require('electron');
             ipcRenderer.send('add-recent-file', file);
 
+            console.log('save_project-electron', targetFile);
             return file;
         } else {
             request
@@ -227,6 +230,7 @@ const File = {
                 .end((err, res) => {
                     FileSaver.saveAs(res.body, targetFile, true);
                 });
+            console.log('save_project-web');
             return null;
         }
     },
@@ -260,6 +264,7 @@ const File = {
             const file = { path: targetFile, name: renderGcodeFileName };
             fs.copyFileSync(tmpFile, targetFile);
 
+            console.log('export_gcode-electron', targetFile);
             return file;
         } else {
             request
@@ -269,6 +274,7 @@ const File = {
                     // FileSaver.saveAs(res.body, targetFile, true);
                     FileSaver.saveAs(res.body, renderGcodeFileName, true);
                 });
+            console.log('export_gcode-web');
             return null;
         }
     },
