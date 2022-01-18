@@ -1077,6 +1077,7 @@ export const actions = {
     generateGcode: (thumbnail, isGuideTours = false) => async (dispatch, getState) => {
         const { hasModel, activeDefinition, modelGroup, progressStatesManager, helpersExtruderConfig,
             extruderLDefinition, extruderRDefinition, defaultMaterialId, defaultMaterialIdRight, materialDefinitions } = getState().printing;
+        const { size, toolHead: { printingToolhead } } = getState().machine;
         if (!hasModel) {
             return;
         }
@@ -1098,8 +1099,9 @@ export const actions = {
             definitionId: 'snapmaker_extruder_1'
         });
 
-        const models = filter(modelGroup.getModels(), { 'visible': true });
-
+        const models = filter(modelGroup.getModels(), (modelItem) => {
+            return modelItem.visible && modelItem.type !== 'primeTower';
+        });
         if (!models || models.length === 0) {
             return;
         }
@@ -1121,11 +1123,20 @@ export const actions = {
         const { model, support, definition, originalName } = await dispatch(actions.prepareModel());
         const currentModelName = path.basename(models[0]?.modelName, path.extname(models[0]?.modelName));
         const renderGcodeFileName = `${currentModelName}_${new Date().getTime()}`;
+        const hasPrimeTower = (printingToolhead === DUAL_EXTRUDER_TOOLHEAD_FOR_SM2 && activeDefinition.settings.prime_tower_enable.default_value);
         // Prepare definition file
-        const { size } = getState().machine;
         await dispatch(actions.updateActiveDefinitionMachineSize(size));
-
-        const finalDefinition = definitionManager.finalizeActiveDefinition(activeDefinition);
+        if (hasPrimeTower) {
+            const modelGroupBBox = modelGroup._bbox;
+            const primeTowerModel = lodashFind(modelGroup.getModels(), { type: 'primeTower' });
+            const primeTowerWidth = primeTowerModel.boundingBox.max.x - primeTowerModel.boundingBox.min.x;
+            const primeTowerPositionX = modelGroupBBox.max.x - (primeTowerModel.boundingBox.max.x + primeTowerModel.boundingBox.min.x + primeTowerWidth) / 2;
+            const primeTowerPositionY = modelGroupBBox.max.y - (primeTowerModel.boundingBox.max.y + primeTowerModel.boundingBox.min.y - primeTowerWidth) / 2;
+            activeDefinition.settings.prime_tower_position_x.default_value = size.x - primeTowerPositionX;
+            activeDefinition.settings.prime_tower_position_y.default_value = size.y - primeTowerPositionY;
+            activeDefinition.settings.prime_tower_size.default_value = primeTowerWidth;
+        }
+        const finalDefinition = definitionManager.finalizeActiveDefinition(activeDefinition, true);
         const adhesionExtruder = helpersExtruderConfig.adhesion;
         const supportExtruder = helpersExtruderConfig.support;
         finalDefinition.settings.adhesion_extruder_nr.default_value = adhesionExtruder;
@@ -1173,7 +1184,7 @@ export const actions = {
             // Use setTimeout to force export executes in next tick, preventing block of updateState()
 
             setTimeout(async () => {
-                const models = modelGroup.models.filter(i => i.visible).reduce((pre, model) => {
+                const models = modelGroup.models.filter(i => i.visible && i.type !== 'primeTower').reduce((pre, model) => {
                     if (model instanceof ThreeGroup) {
                         pre.push(...model.children);
                     } else {
