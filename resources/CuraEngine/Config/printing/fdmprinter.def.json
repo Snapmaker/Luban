@@ -5858,6 +5858,16 @@
                     "settable_per_mesh": false,
                     "settable_per_extruder": false
                 },
+                "prime_tower_wipe_enabled":
+                {
+                    "label": "Wipe Inactive Nozzle on Prime Tower",
+                    "description": "After printing the prime tower with one nozzle, wipe the oozed material from the other nozzle off on the prime tower.",
+                    "type": "bool",
+                    "enabled": "resolveOrValue('prime_tower_enable')",
+                    "default_value": true,
+                    "settable_per_mesh": false,
+                    "settable_per_extruder": true
+                },
                 "prime_tower_brim_enable":
                 {
                     "label": "Prime Tower Brim",

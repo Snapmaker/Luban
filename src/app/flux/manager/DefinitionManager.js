@@ -8,7 +8,8 @@ const primeTowerDefinitionKeys = [
     'prime_tower_size',
     'prime_tower_position_x',
     'prime_tower_position_y',
-    'prime_tower_brim_enbale'
+    'prime_tower_brim_enbale',
+    'prime_tower_wipe_enabled'
 ];
 class DefinitionManager {
     headType = HEAD_CNC;

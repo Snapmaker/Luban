@@ -780,6 +780,7 @@ export const actions = {
             activeDefinition.settings.support_roof_line_width.default_value = extruderDef.settings.support_roof_line_width.default_value;
             activeDefinition.settings.support_bottom_line_width.default_value = extruderDef.settings.support_bottom_line_width.default_value;
             activeDefinition.settings.prime_tower_line_width.default_value = extruderDef.settings.prime_tower_line_width.default_value;
+            activeDefinition.settings.prime_tower_wipe_enabled.default_value = true;
         }
         dispatch(actions.updateDefinitionSettings(activeDefinition, activeDefinition.settings));
 
@@ -1135,6 +1136,7 @@ export const actions = {
             activeDefinition.settings.prime_tower_position_x.default_value = size.x - primeTowerPositionX;
             activeDefinition.settings.prime_tower_position_y.default_value = size.y - primeTowerPositionY;
             activeDefinition.settings.prime_tower_size.default_value = primeTowerWidth;
+            activeDefinition.settings.prime_tower_wipe_enabled.default_value = true;
         }
         const finalDefinition = definitionManager.finalizeActiveDefinition(activeDefinition, true);
         const adhesionExtruder = helpersExtruderConfig.adhesion;

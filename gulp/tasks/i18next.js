@@ -158,7 +158,7 @@ const curaFields = [
     'machine_nozzle_size',
     'dual',
     'prime_tower_enable',
-    'prime_tower_brim_enable',
+    'prime_tower_wipe_enabled',
     'ooze_shield_enabled',
     'ooze_shield_angle',
     'ooze_shield_dist',
