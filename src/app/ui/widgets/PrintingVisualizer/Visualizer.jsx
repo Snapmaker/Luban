@@ -9,9 +9,6 @@ import { Vector3, Box3 } from 'three';
 
 import { shortcutActions, priorities, ShortcutManager } from '../../../lib/shortcut';
 import {
-    ADHESION_TYPE_BORDER,
-    DUAL_EXTRUDER_LIMIT_WIDTH_L,
-    DUAL_EXTRUDER_LIMIT_WIDTH_R,
     DUAL_EXTRUDER_TOOLHEAD_FOR_SM2,
     EPSILON,
     HEAD_PRINTING
@@ -629,7 +626,8 @@ const mapStateToProps = (state, ownProps) => {
         leftBarOverlayVisible,
         primeTowerHeight,
         qualityDefinitions,
-        defaultQualityId
+        defaultQualityId,
+        stopArea
     } = printing;
     const activeQualityDefinition = find(qualityDefinitions, { definitionId: defaultQualityId });
     const enablePrimeTower = activeQualityDefinition?.settings?.prime_tower_enable?.default_value;
@@ -643,16 +641,6 @@ const mapStateToProps = (state, ownProps) => {
     } else {
         isActive = false;
     }
-
-    // stop area border
-    const adhesionType = activeQualityDefinition?.settings?.adhesion_type?.default_value;
-    const border = ADHESION_TYPE_BORDER[adhesionType];
-    const stopArea = {
-        left: border + (printingToolhead === DUAL_EXTRUDER_TOOLHEAD_FOR_SM2 ? DUAL_EXTRUDER_LIMIT_WIDTH_L : 0),
-        right: border + (printingToolhead === DUAL_EXTRUDER_TOOLHEAD_FOR_SM2 ? DUAL_EXTRUDER_LIMIT_WIDTH_R : 0),
-        bottom: border,
-        top: border,
-    };
 
     return {
         stopArea,

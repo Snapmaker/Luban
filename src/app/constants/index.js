@@ -977,12 +977,6 @@ export const STANDARD_CNC_TOOLHEAD_FOR_SM2 = 'standardCNCToolheadForSM2';
 
 export const DUAL_EXTRUDER_LIMIT_WIDTH_L = 20;
 export const DUAL_EXTRUDER_LIMIT_WIDTH_R = 20;
-export const ADHESION_TYPE_BORDER = {
-    'skirt': 20,
-    'brim': 10,
-    'raft': 30,
-    'none': 0
-};
 
 export const MACHINE_TOOL_HEADS = {
     [SINGLE_EXTRUDER_TOOLHEAD_FOR_ORIGINAL]: {

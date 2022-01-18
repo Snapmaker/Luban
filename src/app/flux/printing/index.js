@@ -21,8 +21,7 @@ import {
     DUAL_EXTRUDER_TOOLHEAD_FOR_SM2,
     ALIGN_OPERATION,
     DUAL_EXTRUDER_LIMIT_WIDTH_L,
-    DUAL_EXTRUDER_LIMIT_WIDTH_R,
-    ADHESION_TYPE_BORDER
+    DUAL_EXTRUDER_LIMIT_WIDTH_R
 } from '../../constants';
 import { timestamp } from '../../../shared/lib/random-utils';
 import { machineStore } from '../../store/local-storage';
@@ -166,6 +165,13 @@ const INITIAL_STATE = {
     isAnyModelOverstepped: false,
     // model: null, // selected model
     // boundingBox: new THREE.Box3(new THREE.Vector3(), new THREE.Vector3()), // bbox of selected model
+    stopArea: {
+        left: 0,
+        right: 0,
+        front: 0,
+        back: 0
+    },
+
 
     // PrintingManager
     showPrintingManager: false,
@@ -356,14 +362,55 @@ export const actions = {
     },
 
     updateBoundingBox: () => (dispatch, getState) => {
-        const { modelGroup, activeDefinition } = getState().printing;
+        const { modelGroup, activeDefinition, extruderLDefinition, extruderRDefinition, helpersExtruderConfig } = getState().printing;
+        const extruderLDefinitionSettings = extruderLDefinition.settings;
+        const extruderRDefinitionSettings = extruderRDefinition.settings;
         const { size, toolHead: { printingToolhead } } = getState().machine;
         // TODO
         const adhesionType = activeDefinition?.settings?.adhesion_type?.default_value;
-        const border = ADHESION_TYPE_BORDER[adhesionType];
+        let border = 0;
+        let supportLineWidth = 0;
+        switch (adhesionType) {
+            case 'skirt': {
+                const skirtLineCount = activeDefinition?.settings?.skirt_line_count?.default_value;
+                supportLineWidth = extruderLDefinitionSettings?.machine_nozzle_size?.default_value ?? 0;
+                if (helpersExtruderConfig.adhesion === RIGHT_EXTRUDER_MAP_NUMBER) {
+                    supportLineWidth = extruderRDefinitionSettings.machine_nozzle_size.default_value;
+                }
+                border = 7 + (skirtLineCount - 1) * supportLineWidth;
+                break;
+            }
+            case 'brim': {
+                const brimLineCount = activeDefinition?.settings?.brim_line_count?.default_value;
+                supportLineWidth = extruderLDefinitionSettings?.machine_nozzle_size?.default_value ?? 0;
+                if (helpersExtruderConfig.adhesion === RIGHT_EXTRUDER_MAP_NUMBER) {
+                    supportLineWidth = extruderRDefinitionSettings.machine_nozzle_size.default_value;
+                }
+                border = brimLineCount * supportLineWidth;
+                break;
+            }
+            case 'raft': {
+                const raftMargin = activeDefinition?.settings?.raft_margin?.default_value;
+                border = raftMargin;
+                break;
+            }
+            default:
+                border = 0;
+                break;
+        }
+        const newStopArea = {
+            left: (printingToolhead === DUAL_EXTRUDER_TOOLHEAD_FOR_SM2 ? DUAL_EXTRUDER_LIMIT_WIDTH_L : 0) + border,
+            right: (printingToolhead === DUAL_EXTRUDER_TOOLHEAD_FOR_SM2 ? DUAL_EXTRUDER_LIMIT_WIDTH_R : 0) + border,
+            front: border,
+            back: border
+        };
+        dispatch(actions.updateState({
+            stopArea: newStopArea
+        }));
+
         modelGroup.updateBoundingBox(new THREE.Box3(
-            new THREE.Vector3(-size.x / 2 - EPSILON + (printingToolhead === DUAL_EXTRUDER_TOOLHEAD_FOR_SM2 ? DUAL_EXTRUDER_LIMIT_WIDTH_L : 0) + border, -size.y / 2 + border - EPSILON, -EPSILON),
-            new THREE.Vector3(size.x / 2 + EPSILON - (printingToolhead === DUAL_EXTRUDER_TOOLHEAD_FOR_SM2 ? DUAL_EXTRUDER_LIMIT_WIDTH_R : 0) - border, size.y / 2 - border + EPSILON, size.z + EPSILON)
+            new THREE.Vector3(-size.x / 2 - EPSILON + newStopArea.left, -size.y / 2 + newStopArea.front - EPSILON, -EPSILON),
+            new THREE.Vector3(size.x / 2 + EPSILON - newStopArea.right, size.y / 2 - newStopArea.back + EPSILON, size.z + EPSILON)
         ));
     },
 
