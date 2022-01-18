@@ -21,7 +21,7 @@ import {
     DUAL_EXTRUDER_TOOLHEAD_FOR_SM2,
     ALIGN_OPERATION,
     DUAL_EXTRUDER_LIMIT_WIDTH_L,
-    DUAL_EXTRUDER_LIMIT_WIDTH_R
+    DUAL_EXTRUDER_LIMIT_WIDTH_R, BOTH_EXTRUDER_MAP_NUMBER
 } from '../../constants';
 import { timestamp } from '../../../shared/lib/random-utils';
 import { machineStore } from '../../store/local-storage';
@@ -380,15 +380,18 @@ export const actions = {
             useLeft = true;
         }
         modelGroup.getModels().forEach((model) => {
-            if (model.type === 'baseModel') {
-                if (model.extruderConfig.infill === RIGHT_EXTRUDER_MAP_NUMBER) {
+            // TODO, use constants
+            if (model.type === 'baseModel' || model.type === 'group') {
+                if (model.extruderConfig.infill === RIGHT_EXTRUDER_MAP_NUMBER || model.extruderConfig.infill === BOTH_EXTRUDER_MAP_NUMBER) {
                     useRight = true;
-                } else {
+                }
+                if (model.extruderConfig.infill === LEFT_EXTRUDER_MAP_NUMBER || model.extruderConfig.infill === BOTH_EXTRUDER_MAP_NUMBER) {
                     useLeft = true;
                 }
-                if (model.extruderConfig.shell === RIGHT_EXTRUDER_MAP_NUMBER) {
+                if (model.extruderConfig.shell === RIGHT_EXTRUDER_MAP_NUMBER || model.extruderConfig.infill === BOTH_EXTRUDER_MAP_NUMBER) {
                     useRight = true;
-                } else {
+                }
+                if (model.extruderConfig.infill === LEFT_EXTRUDER_MAP_NUMBER || model.extruderConfig.infill === BOTH_EXTRUDER_MAP_NUMBER) {
                     useLeft = true;
                 }
             }
@@ -1697,6 +1700,7 @@ export const actions = {
         dispatch(actions.updateState({ helpersExtruderConfig: extruderConfig }));
         dispatch(actions.destroyGcodeLine());
         dispatch(actions.displayModel());
+        dispatch(actions.updateBoundingBox());
     },
     arrangeAllModels: () => (dispatch, getState) => {
         const { modelGroup } = getState().printing;

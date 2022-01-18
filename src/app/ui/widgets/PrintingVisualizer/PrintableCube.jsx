@@ -20,6 +20,8 @@ class PrintableCube extends Object3D {
         back: 20,
     };
 
+    stopAreaObjects = [];
+
     constructor(size) {
         super();
         this.type = 'PrintCube';
@@ -32,6 +34,19 @@ class PrintableCube extends Object3D {
         this.size = size;
         this.remove(...this.children);
         this._setup();
+
+        this.stopArea.left = stopArea.left ?? this.stopArea.left;
+        this.stopArea.right = stopArea.right ?? this.stopArea.right;
+        this.stopArea.back = stopArea.back ?? this.stopArea.back;
+        this.stopArea.front = stopArea.front ?? this.stopArea.front;
+        this._setupStopArea();
+    }
+
+    updateStopArea(stopArea) {
+        this.stopAreaObjects.forEach((mesh) => {
+            this.remove(mesh);
+        });
+        this.stopAreaObjects = [];
 
         this.stopArea.left = stopArea.left ?? this.stopArea.left;
         this.stopArea.right = stopArea.right ?? this.stopArea.right;
@@ -58,6 +73,8 @@ class PrintableCube extends Object3D {
         const mesh1 = new Mesh(geometry1, material1);
         mesh1.position.set(0, -y / 2 + front / 2, 0);
         this.add(mesh1);
+        this.stopAreaObjects.push(mesh1);
+
         // back
         const geometry2 = new PlaneGeometry(x, back);
         const material2 = new MeshBasicMaterial({
@@ -69,6 +86,7 @@ class PrintableCube extends Object3D {
         const mesh2 = new Mesh(geometry2, material2);
         mesh2.position.set(0, y / 2 - back / 2, 0);
         this.add(mesh2);
+        this.stopAreaObjects.push(mesh2);
 
         // left
         const geometry3 = new PlaneGeometry(left, y - back - front);
@@ -81,6 +99,8 @@ class PrintableCube extends Object3D {
         const mesh3 = new Mesh(geometry3, material3);
         mesh3.position.set(-x / 2 + left / 2, (front - back) / 2, 0);
         this.add(mesh3);
+        this.stopAreaObjects.push(mesh3);
+
         // right
         const geometry4 = new PlaneGeometry(right, y - back - front);
         const material4 = new MeshBasicMaterial({
@@ -92,6 +112,7 @@ class PrintableCube extends Object3D {
         const mesh4 = new Mesh(geometry4, material4);
         mesh4.position.set(x / 2 - right / 2, (front - back) / 2, 0);
         this.add(mesh4);
+        this.stopAreaObjects.push(mesh4);
     }
 
     _setup() {

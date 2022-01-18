@@ -360,8 +360,8 @@ class Visualizer extends PureComponent {
             }
         }
 
-        if (isEqual(stopArea, prevProps.stopArea)) {
-            this.printableArea.updateSize(size, stopArea);
+        if (!isEqual(stopArea, prevProps.stopArea)) {
+            this.printableArea.updateStopArea(stopArea);
         }
 
         if (!isEqual(size, prevProps.size)) {
