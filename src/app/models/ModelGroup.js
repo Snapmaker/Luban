@@ -1965,10 +1965,6 @@ class ModelGroup extends EventEmitter {
                     this.models.push(model);
                     ThreeUtils.setObjectParent(model.meshObject, model.parent.meshObject.parent);
                     model.parent.computeBoundingBox();
-                    if (model.parent.meshObject.children.length === 0) {
-                        this.object.remove(model.parent.meshObject);
-                        this.models = this.models.filter(m => m.modelID !== model.parent.modelID);
-                    }
                 }
             });
 
