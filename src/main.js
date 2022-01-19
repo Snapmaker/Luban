@@ -37,7 +37,11 @@ function getBrowserWindowOptions() {
         useContentSize: true,
         title: `${pkg.name} ${pkg.version}`,
         webPreferences: {
-            nodeIntegration: true
+            nodeIntegration: true,
+            contextIsolation: false,
+            enableRemoteModule: true,
+            nodeIntegrationInWorker: true,
+            webviewTag: true
         }
     };
 

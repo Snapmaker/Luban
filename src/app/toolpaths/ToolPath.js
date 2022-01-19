@@ -52,7 +52,7 @@ class ToolPath {
         this.type = type;
         this.status = IDLE;
         this.useLegacyEngine = useLegacyEngine;
-        this.visibleModelIDs = (visibleModelIDs).map(v => v);
+        this.visibleModelIDs = (visibleModelIDs || modelIDs).map(v => v);
 
         for (const modelID of this.visibleModelIDs) {
             this.modelMap.set(modelID, {
