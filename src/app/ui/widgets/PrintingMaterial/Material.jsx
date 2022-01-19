@@ -115,7 +115,7 @@ function Material({ widgetActions }) {
                                 width: '152px'
                             }}
                             className="height-32"
-                            placeholder="+Add Item"
+                            placeholder={i18n._('key-Printing/PrintingConfigurations-Add Item')}
                             bordered={false}
                             value={selectorCustomValue}
                             onChange={event => {
@@ -140,6 +140,7 @@ function Material({ widgetActions }) {
                                         setDiametersOptions(diametersOptions);
                                     }
                                     setDiameter(direction, v);
+                                    setSelectorCustomValue('');
                                 }}
                             />
                         )}

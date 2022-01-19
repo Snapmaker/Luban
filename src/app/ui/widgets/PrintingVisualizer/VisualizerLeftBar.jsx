@@ -1178,7 +1178,7 @@ function VisualizerLeftBar({ defaultSupportSize, setTransformMode, isSupporting,
                         <div className="border-bottom-normal padding-vertical-10 padding-horizontal-16 height-40">
                             {i18n._('key-Printing/LeftBar-Extruder')}
                         </div>
-                        <div className="padding-bottom-16 padding-top-8 padding-right-16 padding-left-8">
+                        <div className="padding-bottom-16 padding-top-8 padding-left-8">
                             <div className="select-models-container">
                                 {modelExtruderInfoShow && (
                                     <div className="sm-flex align-center justify-space-between background-color-blue border-default-blue border-radius-8 margin-right-16 margin-left-8">
