@@ -2196,37 +2196,22 @@ export const actions = {
 
     group: () => (dispatch, getState) => {
         const { modelGroup } = getState().printing;
-
-        const groups = modelGroup.getSelectedModelArray().filter(model => model instanceof ThreeGroup);
+        // Stores the model structure before the group operation, which is used to restore the undo operation
         const modelsBeforeGroup = modelGroup.getModels().slice(0);
         const selectedModels = modelGroup.getSelectedModelArray().slice(0);
-        const groupChildrenMap = new Map();
-        groups.forEach(group => {
-            groupChildrenMap.set(group, group.children.slice(0));
-        });
         const operations = new Operations();
-
         const { recovery } = modelGroup.unselectAllModels();
 
         const modelsInGroup = selectedModels.reduce((pre, selectd) => {
-            const group = selectd.parent?.clone(modelGroup);
+            const groupModelID = selectd.parent?.modelID;
             pre.set(selectd.modelID, {
-                groupModel: group,
-                groupMesh: selectd.parent?.meshObject.clone(),
-                modelTransformation: { ...selectd.transformation },
-                groupTransformation: { ...group?.transformation }
+                groupModelID,
+                children: selectd instanceof ThreeGroup ? selectd.children.slice(0) : null,
+                modelTransformation: { ...selectd.transformation }
             });
-            if (selectd instanceof ThreeGroup) {
-                selectd.children.forEach((subModel) => {
-                    pre.set(subModel.modelID, {
-                        modelTransformation: { ...subModel.transformation }
-                    });
-                });
-            }
             return pre;
         }, new Map());
         recovery();
-
 
         dispatch(actions.clearAllManualSupport(operations));
         const modelState = modelGroup.group();
@@ -2234,18 +2219,10 @@ export const actions = {
         const modelsAfterGroup = modelGroup.getModels().slice(0);
         const newGroup = modelGroup.getSelectedModelArray()[0];
         const operation = new GroupOperation3D({
-            groupChildrenMap,
             modelsBeforeGroup,
             modelsAfterGroup,
             selectedModels,
             target: newGroup,
-            targetTransformation: { ...newGroup.transformation },
-            targetChildrenTransformation: newGroup.children.reduce((pre, subModel) => {
-                pre.set(subModel.modelID, {
-                    ...subModel.transformation
-                });
-                return pre;
-            }, new Map()),
             modelGroup,
             modelsInGroup
         });

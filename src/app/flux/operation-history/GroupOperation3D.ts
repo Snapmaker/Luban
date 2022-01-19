@@ -1,4 +1,3 @@
-import * as THREE from 'three';
 import Operation from './Operation';
 import type Model from '../../models/ThreeBaseModel';
 import ThreeModel from '../../models/ThreeModel';
@@ -8,24 +7,24 @@ import { ModelTransformation } from '../../models/ThreeBaseModel';
 import ThreeUtils from '../../three-extensions/ThreeUtils';
 
 type ModelSnapshot = {
-    groupModel: ThreeGroup,
-    groupMesh: THREE.Mesh,
+    groupModelID: string,
     modelTransformation: ModelTransformation,
-    groupTransformation: ModelTransformation
+    children?: ThreeModel[]
 }
 
 type GroupState = {
     modelsBeforeGroup: Model[],
     modelsAfterGroup: Model[],
     selectedModels: Array<ThreeModel | ThreeGroup>,
-    groupChildrenMap: Map<ThreeGroup, ThreeModel[]>
     target: ThreeGroup,
     modelGroup: ModelGroup,
     modelsInGroup: Map<string, ModelSnapshot>
-    targetTransformation: ModelTransformation,
-    targetChildrenTransformation: Map<string, ModelTransformation>
 };
 
+// Scenario 1: one or more models outside the group are selected
+// Scenario 2: one or more groups are selected
+// Scenario 3: multiple models in a group are selected. If all models in the group are selected, it is scenario 2
+// Scenario 4: both the model outside the group and the group are selected
 export default class GroupOperation3D extends Operation<GroupState> {
     constructor(state: GroupState) {
         super();
@@ -33,12 +32,9 @@ export default class GroupOperation3D extends Operation<GroupState> {
             modelsBeforeGroup: state.modelsBeforeGroup || [],
             modelsAfterGroup: state.modelsAfterGroup || [],
             selectedModels: state.selectedModels || [],
-            groupChildrenMap: state.groupChildrenMap || new Map(),
             target: state.target,
             modelGroup: state.modelGroup,
-            modelsInGroup: state.modelsInGroup || new Map(),
-            targetTransformation: state.targetTransformation,
-            targetChildrenTransformation: state.targetChildrenTransformation
+            modelsInGroup: state.modelsInGroup || new Map()
         };
     }
 
@@ -56,26 +52,16 @@ export default class GroupOperation3D extends Operation<GroupState> {
                 modelsToGroup.push(model);
             }
             const modelSnapshot = this.state.modelsInGroup.get(model.modelID);
+            // If it is a sunModel, Remove it from the group
+            // After removal, there are always other models in the group
             if (model.parent && model.parent instanceof ThreeGroup && modelSnapshot) {
                 const index = model.parent.children.findIndex(subModel => subModel.modelID === model.modelID);
                 model.parent.children.splice(index, 1);
-                modelGroup.models.push(model);
                 ThreeUtils.setObjectParent(model.meshObject, model.parent.meshObject.parent);
-                if (model.parent.meshObject.children.length === 0) {
-                    modelGroup.object.remove(model.parent.meshObject);
-                    modelGroup.models = modelGroup.models.filter(m => m.modelID !== model.parent.modelID);
-                }
             }
         });
         target.add(modelsToGroup);
         modelGroup.object.add(target.meshObject);
-
-        target.updateTransformation(this.state.targetTransformation);
-        target.children.forEach((subModel) => {
-            const subModelTransformation = this.state.targetChildrenTransformation.get(subModel.modelID);
-            subModelTransformation && subModel.updateTransformation(subModelTransformation);
-        });
-
         modelGroup.models = [...this.state.modelsAfterGroup];
     }
 
@@ -85,46 +71,27 @@ export default class GroupOperation3D extends Operation<GroupState> {
 
         modelGroup.unselectAllModels();
         modelGroup.addModelToSelectedGroup(target);
-        modelGroup.ungroup();
-
+        modelGroup.ungroup({ autoStickToPlate: false });
         modelGroup.unselectAllModels();
-        this.state.groupChildrenMap.forEach((subModels, group) => {
-            group.add(subModels);
-            modelGroup.object.add(group.meshObject);
-        });
+        modelGroup.object.remove(target.meshObject);
 
         this.state.selectedModels.forEach(model => {
             const modelSnapshot = this.state.modelsInGroup.get(model.modelID);
             if (model instanceof ThreeModel && modelSnapshot) {
-                if (modelSnapshot.groupModel) {
+                if (modelSnapshot.groupModelID) {
                     // SubModel of the original group
-                    const group = modelGroup.getModel(modelSnapshot.groupModel.modelID);
-                    if (group) {
-                        // The original group still exists
-                        modelGroup.recoveryGroup(group, model);
-                        model.updateTransformation(modelSnapshot.modelTransformation);
-                        modelGroup.models = modelGroup.getModels().filter((m: ThreeModel) => {
-                            return m.modelID !== model.modelID;
-                        });
-                        group.stickToPlate();
-                    } else {
-                        // The original group does not exist. To recovery group
-                        modelGroup.models = modelGroup.models.concat(modelSnapshot.groupModel);
-                        modelGroup.object.add(modelSnapshot.groupMesh);
-                        modelSnapshot.groupModel.updateTransformation(modelSnapshot.groupTransformation);
-                        // modelSnapshot.groupModel.updateTransformation(modelSnapshot.modelTransformation);
-                    }
+                    const group = modelGroup.getModel(modelSnapshot.groupModelID);
+                    // The original group will always exist
+                    modelGroup.recoveryGroup(group, model);
+                    group.stickToPlate();
                 } else {
                     // update models which is not inside group
                     model.updateTransformation(modelSnapshot.modelTransformation);
                 }
             } else if (model instanceof ThreeGroup) {
-                modelGroup.models = modelGroup.models.concat(model);
+                model.add(modelSnapshot.children);
                 modelGroup.object.add(model.meshObject);
                 model.updateTransformation(modelSnapshot.modelTransformation);
-                model.children.forEach((subModel) => {
-                    subModel.updateTransformation(this.state.modelsInGroup.get(subModel.modelID).modelTransformation);
-                });
             }
         });
 
