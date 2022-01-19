@@ -22,10 +22,12 @@ class PrintableCube extends Object3D {
 
     stopAreaObjects = [];
 
-    constructor(size) {
+    constructor(size, stopArea) {
         super();
         this.type = 'PrintCube';
         this.size = size;
+        this.stopArea = stopArea;
+        this.stopAreaObjects = [];
         this._setup();
         this._setupStopArea();
     }
@@ -35,11 +37,7 @@ class PrintableCube extends Object3D {
         this.remove(...this.children);
         this._setup();
 
-        this.stopArea.left = stopArea.left ?? this.stopArea.left;
-        this.stopArea.right = stopArea.right ?? this.stopArea.right;
-        this.stopArea.back = stopArea.back ?? this.stopArea.back;
-        this.stopArea.front = stopArea.front ?? this.stopArea.front;
-        this._setupStopArea();
+        this.updateStopArea(stopArea);
     }
 
     updateStopArea(stopArea) {

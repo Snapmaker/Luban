@@ -312,7 +312,8 @@ class Visualizer extends PureComponent {
     constructor(props) {
         super(props);
         const size = props.size;
-        this.printableArea = new PrintableCube(size);
+        const stopArea = props.stopArea;
+        this.printableArea = new PrintableCube(size, stopArea);
     }
 
     // hideContextMenu = () => {
@@ -360,10 +361,6 @@ class Visualizer extends PureComponent {
             }
         }
 
-        if (!isEqual(stopArea, prevProps.stopArea)) {
-            this.printableArea.updateStopArea(stopArea);
-        }
-
         if (!isEqual(size, prevProps.size)) {
             this.printableArea.updateSize(size, stopArea);
             const { gcodeLineGroup } = prevProps;
@@ -380,6 +377,10 @@ class Visualizer extends PureComponent {
                 this.supportActions.stopSupportMode();
             }
         }
+        if (!isEqual(stopArea, prevProps.stopArea)) {
+            this.printableArea.updateStopArea(stopArea);
+        }
+
         if (renderingTimestamp !== prevProps.renderingTimestamp) {
             this.canvas.current.renderScene();
         }
