@@ -15,7 +15,8 @@ if (isElectron()) {
     userData = {
         path: {
             'widget': path.join(app.getPath('userData'), 'widget.json'),
-            'machine': path.join(app.getPath('userData'), 'machine.json')
+            'machine': path.join(app.getPath('userData'), 'machine.json'),
+            'components': path.join(app.getPath('userData'), 'component.json')
         }
     };
 }
