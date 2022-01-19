@@ -2009,7 +2009,7 @@ class ModelGroup extends EventEmitter {
         return this.selectedModelArray.some(model => model instanceof ThreeGroup && model.visible);
     }
 
-    ungroup() {
+    ungroup({ autoStickToPlate } = { autoStickToPlate: true }) {
         const selectedModelArray = this.selectedModelArray.slice(0);
         this.unselectAllModels();
         // only visible groups can ungroup, others keep selected
@@ -2031,7 +2031,7 @@ class ModelGroup extends EventEmitter {
 
             ungroupedModels.forEach(model => {
                 this.addModelToSelectedGroup(model);
-                model.stickToPlate();
+                autoStickToPlate && model.stickToPlate();
             });
         }
         return this.getState();
