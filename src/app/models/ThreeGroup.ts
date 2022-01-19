@@ -41,6 +41,8 @@ export default class ThreeGroup extends BaseModel {
 
     convexGeometry: THREE.Geometry;
 
+    mergedGeometry: THREE.BufferGeometry;
+
     modelGroup: ModelGroup;
 
     lastToolPathStr: string;
@@ -143,6 +145,8 @@ export default class ThreeGroup extends BaseModel {
             infill: '0',
             shell: '0'
         };
+        this.mergedGeometry = null;
+        this.convexGeometry = null;
         return models;
     }
 
@@ -165,6 +169,9 @@ export default class ThreeGroup extends BaseModel {
                 }
             }));
         }
+        // this.meshObject.updateMatrixWorld();
+        // geometry.applyMatrix4(this.meshObject.matrixWorld);
+        this.mergedGeometry = geometry;
         return geometry;
     }
 
@@ -402,14 +409,16 @@ export default class ThreeGroup extends BaseModel {
      * @returns void
      */
     autoRotate() {
+        this.computeConvex();
         if (this.sourceType !== '3d' || !this.convexGeometry) {
             return;
         }
 
         const revertParent = ThreeUtils.removeObjectParent(this.meshObject);
         this.meshObject.updateMatrixWorld();
-        this.computeBoundingBox();
-        const box3 = this.boundingBox;
+        const geometry = this.mergedGeometry;
+        geometry.computeBoundingBox();
+        const box3 = geometry.boundingBox;
         const x = (box3.max.x + box3.min.x) / 2;
         const y = (box3.max.y + box3.min.y) / 2;
         const z = (box3.max.z + box3.min.z) / 2;
@@ -432,7 +441,7 @@ export default class ThreeGroup extends BaseModel {
         if (!bigPlanes.planes.length) return;
 
         const xyPlaneNormal = new THREE.Vector3(0, 0, -1);
-        const objPlanes = ThreeUtils.computeGeometryPlanes(this.mergeGeometriesInGroup(), this.meshObject.matrixWorld, bigPlanes.planes, center, false);
+        const objPlanes = ThreeUtils.computeGeometryPlanes(this.mergedGeometry, this.meshObject.matrixWorld, bigPlanes.planes, center, false);
 
         let targetPlane;
         const minSupportVolume = Math.min.apply(null, objPlanes.supportVolumes);
@@ -507,11 +516,13 @@ export default class ThreeGroup extends BaseModel {
      * @returns Object
      */
     analyzeRotation() {
+        this.computeConvex();
         if (this.sourceType !== '3d' || !this.convexGeometry) {
             return null;
         }
-        this.computeBoundingBox();
-        const box3 = this.boundingBox;
+        const geometry = this.mergedGeometry;
+        geometry.computeBoundingBox();
+        const box3 = geometry.boundingBox;
         const x = (box3.max.x + box3.min.x) / 2;
         const y = (box3.max.y + box3.min.y) / 2;
         const z = (box3.max.z + box3.min.z) / 2;
@@ -538,7 +549,7 @@ export default class ThreeGroup extends BaseModel {
         });
 
         if (!bigPlanes.planes.length) return null;
-        const objPlanes = ThreeUtils.computeGeometryPlanes(this.mergeGeometriesInGroup(), this.meshObject.matrixWorld, bigPlanes.planes, center, false);
+        const objPlanes = ThreeUtils.computeGeometryPlanes(this.mergedGeometry, this.meshObject.matrixWorld, bigPlanes.planes, center, false);
         revertParent();
 
         const minSupportVolume = Math.min.apply(null, objPlanes.supportVolumes);

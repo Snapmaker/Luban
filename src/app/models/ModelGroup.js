@@ -1818,20 +1818,19 @@ class ModelGroup extends EventEmitter {
         return new Promise((resolve, reject) => {
             if (this.selectedModelArray.length === 1) {
                 const model = this.selectedModelArray[0];
-                if (!model.convexGeometry) {
-                    if (model instanceof ThreeGroup) {
-                        model.computeConvex();
-                        const result = this.analyzeSelectedModelRotation();
-                        resolve(result);
-                    } else {
+                if (model instanceof ThreeGroup) {
+                    const result = this.analyzeSelectedModelRotation();
+                    resolve(result);
+                } else {
+                    if (!model.convexGeometry) {
                         this.once('set-convex', () => {
                             const result = this.analyzeSelectedModelRotation();
                             resolve(result);
                         });
+                    } else {
+                        const result = this.analyzeSelectedModelRotation();
+                        resolve(result);
                     }
-                } else {
-                    const result = this.analyzeSelectedModelRotation();
-                    resolve(result);
                 }
             } else {
                 reject();
@@ -1891,8 +1890,8 @@ class ModelGroup extends EventEmitter {
                         isRotationFace: true
                     };
                     group.add(mesh);
-                    model.meshObject.add(group);
                 });
+                model.meshObject.add(group);
             }
             return tableResult;
         }
