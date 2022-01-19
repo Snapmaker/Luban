@@ -56,7 +56,7 @@ export default {
         },
         {
             id: 'longterm-backup-config',
-            label: 'key-App/Menu-Backup Config',
+            label: 'key-App/Menu-Backup config',
             enabled: true,
             click: (menuItem, browserWindow) => {
                 if (isElectron()) {

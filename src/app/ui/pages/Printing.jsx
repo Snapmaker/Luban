@@ -54,6 +54,12 @@ import Steps from '../components/Steps';
 import Modal from '../components/Modal';
 import { Button } from '../components/Buttons';
 
+export const openFolder = () => {
+    if (isElectron()) {
+        const ipc = window.require('electron').ipcRenderer;
+        ipc.send('open-recover-folder');
+    }
+};
 const allWidgets = {
     'control': ControlWidget,
     'connection': ConnectionWidget,
@@ -324,12 +330,7 @@ function Printing({ location }) {
         setShowTipModal(false);
         machineStore.set('readTip', true);
     };
-    const openFolder = () => {
-        if (isElectron()) {
-            const ipc = window.require('electron').ipcRenderer;
-            ipc.send('open-recover-folder');
-        }
-    };
+
     return (
         <ProjectLayout
             renderMainToolBar={renderMainToolBar}
@@ -421,6 +422,7 @@ function Printing({ location }) {
                 <Modal
                     onClose={handleCloseTipModal}
                     centered
+                    zIndex={100001000}
                 >
                     <Modal.Header>
                         {i18n._('key-Printing/Modal-Profile migrated')}

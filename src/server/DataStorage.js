@@ -127,10 +127,11 @@ class DataStorage {
          !isReset && await this.initRecoverActive();
      }
 
-     async copyDirForInitSlicer(srcDir, dstDir, overwriteTag = false, inherit = false) {
+     async copyDirForInitSlicer(srcDir, dstDir, overwriteTag = false, inherit = false, needUpdateVersion = false) {
          mkdirp.sync(dstDir);
          if (fs.existsSync(srcDir)) {
              const files = fs.readdirSync(srcDir);
+             let json = {};
              for (const file of files) {
                  const src = path.join(srcDir, file);
                  const dst = path.join(dstDir, file);
@@ -138,11 +139,21 @@ class DataStorage {
                      if (fs.existsSync(dst) && !overwriteTag) {
                          return;
                      }
-                     fs.copyFileSync(src, dst, (err) => {
-                         console.error('err', err);
-                     });
+                     if (needUpdateVersion) {
+                        const data = fs.readFileSync(src, 'utf8');
+                        json = JSON.parse(data);
+                        json = {
+                            ...json,
+                            version: pkg.version
+                        };
+                        fs.writeFileSync(dst, JSON.stringify(json), 'utf8');
+                     }else {
+                         fs.copyFileSync(src, dst, (err) => {
+                             console.error('err', err);
+                         });
+                     }
                  } else {
-                     await this.copyDirForInitSlicer(src, dst, inherit ? overwriteTag : false, inherit);
+                     await this.copyDirForInitSlicer(src, dst, inherit ? overwriteTag : false, inherit, needUpdateVersion);
                  }
              }
          }
@@ -279,9 +290,9 @@ class DataStorage {
          mkdirp.sync(`${this.configDir}/${PRINTING_CONFIG_SUBCATEGORY}`);
 
          const CURA_ENGINE_CONFIG_LOCAL = '../resources/CuraEngine/Config';
-         await this.copyDirForInitSlicer(CURA_ENGINE_CONFIG_LOCAL, this.configDir, true, overwriteProfiles);
+         await this.copyDirForInitSlicer(CURA_ENGINE_CONFIG_LOCAL, this.configDir, true, overwriteProfiles, true);
          this.upgradeConfigFile(this.configDir);
-         await this.copyDirForInitSlicer(CURA_ENGINE_CONFIG_LOCAL, this.defaultConfigDir, true, true);
+         await this.copyDirForInitSlicer(CURA_ENGINE_CONFIG_LOCAL, this.defaultConfigDir, true, true, true);
          const isNewUser = config.get('isNewUser');
          isNewUser && !isReset && await this.copyDirForInitSlicer(this.configDir, this.longTermConfigDir, true, true);
      }
