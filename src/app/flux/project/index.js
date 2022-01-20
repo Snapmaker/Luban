@@ -18,6 +18,7 @@ import { actions as printingActions } from '../printing';
 import { actions as editorActions } from '../editor';
 // import machineAction from '../machine/action-base';
 import { actions as workspaceActions } from '../workspace';
+import { actions as appGlobalActions } from '../app-global';
 import { bubbleSortByAttribute } from '../../lib/numeric-utils';
 import { UniformToolpathConfig } from '../../lib/uniform-toolpath-config';
 import { checkIsSnapmakerProjectFile, checkIsGCodeFile, checkObjectIsEqual } from '../../lib/check-name';
@@ -274,19 +275,39 @@ export const actions = {
         await dispatch(actions.updateState(envHeadType, { unSaved: true }));
     },
 
-    exportFile: (targetFile, renderGcodeFileName = null) => async () => {
+    exportFile: (targetFile, renderGcodeFileName = null) => async (dispatch) => {
         const tmpFile = `/Tmp/${targetFile}`;
-        await UniApi.File.exportAs(targetFile, tmpFile, renderGcodeFileName);
+        await UniApi.File.exportAs(targetFile, tmpFile, renderGcodeFileName, (type, filePath = '') => {
+            const pos = filePath.lastIndexOf('/');
+            if (pos > -1) {
+                filePath = filePath.substr(0, pos + 1);
+            }
+            dispatch(appGlobalActions.updateSavedModal({
+                showSavedModal: true,
+                savedModalType: type,
+                savedModalFilePath: filePath
+            }));
+        });
     },
 
-    exportConfigFile: (targetFile, subCategory) => async () => {
+    exportConfigFile: (targetFile, subCategory) => async (dispatch) => {
         let configFile;
         if (subCategory) {
             configFile = `/Config/${subCategory}/${targetFile}`;
         } else {
             configFile = `/Config/${targetFile}`;
         }
-        await UniApi.File.exportAs(targetFile, configFile);
+        await UniApi.File.exportAs(targetFile, configFile, null, (type, filePath = '') => {
+            const pos = filePath.lastIndexOf('/');
+            if (pos > -1) {
+                filePath = filePath.substr(0, pos + 1);
+            }
+            dispatch(appGlobalActions.updateSavedModal({
+                showSavedModal: true,
+                savedModalType: type,
+                savedModalFilePath: filePath
+            }));
+        });
     },
 
     setOpenedFileWithType: (headType, openedFile) => async (dispatch) => {
@@ -298,7 +319,17 @@ export const actions = {
     saveAsFile: (headType) => async (dispatch) => {
         const { body: { targetFile } } = await api.packageEnv({ headType });
         const tmpFile = `/Tmp/${targetFile}`;
-        const openedFile = await UniApi.File.saveAs(targetFile, tmpFile);
+        const openedFile = await UniApi.File.saveAs(targetFile, tmpFile, (type, filePath = '') => {
+            const pos = filePath.lastIndexOf('/');
+            if (pos > -1) {
+                filePath = filePath.substr(0, pos + 1);
+            }
+            dispatch(appGlobalActions.updateSavedModal({
+                showSavedModal: true,
+                savedModalType: type,
+                savedModalFilePath: filePath
+            }));
+        });
         if (openedFile) {
             await dispatch(actions.setOpenedFileWithType(headType, openedFile));
         }

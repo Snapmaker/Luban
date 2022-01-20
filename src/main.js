@@ -1,6 +1,6 @@
 import 'core-js/stable';
 import 'regenerator-runtime/runtime';
-import { app, BrowserWindow, protocol, screen, session, ipcMain } from 'electron';
+import { app, BrowserWindow, protocol, screen, session, ipcMain, shell } from 'electron';
 import { autoUpdater } from 'electron-updater';
 import Store from 'electron-store';
 import url from 'url';
@@ -152,6 +152,9 @@ function updateHandle() {
     });
     ipcMain.on('updateShouldCheckForUpdate', (event, shouldCheckForUpdate) => {
         mainWindow.webContents.send('update-should-check-for-update', shouldCheckForUpdate);
+    });
+    ipcMain.on('open-saved-path', (event, path) => {
+        shell.openItem(path);
     });
 }
 

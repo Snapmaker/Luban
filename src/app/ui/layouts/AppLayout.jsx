@@ -40,10 +40,12 @@ import { actions as machineActions } from '../../flux/machine';
 import { actions as editorActions } from '../../flux/editor';
 import { actions as projectActions } from '../../flux/project';
 import { actions as operationHistoryActions } from '../../flux/operation-history';
+import { actions as appGlobalActions } from '../../flux/app-global';
 import styles from './styles/appbar.styl';
 // import HomePage from '../pages/HomePage';
 // import Workspace from '../pages/Workspace';
 import ModelExporter from '../widgets/PrintingVisualizer/ModelExporter';
+import Anchor from '../components/Anchor';
 
 class AppLayout extends PureComponent {
     static propTypes = {
@@ -73,7 +75,11 @@ class AppLayout extends PureComponent {
         children: PropTypes.array.isRequired,
         restartGuideTours: PropTypes.func.isRequired,
         machineInfo: PropTypes.object.isRequired,
-        updateMachineToolHead: PropTypes.func.isRequired
+        updateMachineToolHead: PropTypes.func.isRequired,
+        showSavedModal: PropTypes.bool.isRequired,
+        savedModalType: PropTypes.string.isRequired,
+        savedModalFilePath: PropTypes.string.isRequired,
+        updateSavedModal: PropTypes.func.isRequired
     };
 
     state = {
@@ -185,6 +191,49 @@ class AppLayout extends PureComponent {
                 showCheckForUpdatesModal: true
             });
         },
+        renderSavedModal: () => {
+            const onClose = () => {
+                this.props.updateSavedModal({ showSavedModal: false });
+            };
+            if (this.props.savedModalType === 'web') {
+                return renderModal({
+                    title: '保存成功了亲',
+                    renderBody: () => {
+                        return (
+                            <div>
+                                Saved
+                            </div>
+                        );
+                    },
+                    onClose,
+                    actions: []
+                });
+            }
+            if (this.props.savedModalType === 'electron') {
+                const openFolder = () => {
+                    const ipc = window.require('electron').ipcRenderer;
+                    ipc.send('open-saved-path', this.props.savedModalFilePath);
+                };
+                return renderModal({
+                    title: '保存成功了亲',
+                    renderBody: () => {
+                        return (
+                            <div>
+                                Saved to:
+                                <Anchor
+                                    onClick={openFolder}
+                                >
+                                    Open Folder 开TMD
+                                </Anchor>
+                            </div>
+                        );
+                    },
+                    onClose,
+                    actions: []
+                });
+            }
+            return null;
+        },
         openProject: async (file) => {
             if (!file) {
                 // this.fileInput.current.value = null;
@@ -276,7 +325,17 @@ class AppLayout extends PureComponent {
                 return;
             }
             const blob = new Blob([output], { type: 'text/plain;charset=utf-8' });
-            UniApi.File.writeBlobToFile(blob, path);
+            UniApi.File.writeBlobToFile(blob, path, (type, filePath = '') => {
+                const pos = filePath.lastIndexOf('/');
+                if (pos > -1) {
+                    filePath = filePath.substr(0, pos + 1);
+                }
+                this.props.updateSavedModal({
+                    showSavedModal: true,
+                    savedModalType: type,
+                    savedModalFilePath: filePath
+                });
+            });
         },
         initUniEvent: () => {
             UniApi.Event.on('message', (event, message) => {
@@ -600,12 +659,14 @@ class AppLayout extends PureComponent {
 
     render() {
         const { showSettingsModal, showDevelopToolsModal, showCheckForUpdatesModal } = this.state;
+        const { showSavedModal } = this.props;
         return (
             <div className={isElectron() ? null : 'appbar'}>
                 <AppBar />
                 { showSettingsModal ? this.actions.renderSettingModal() : null }
                 { showDevelopToolsModal ? this.actions.renderDevelopToolsModal() : null }
                 { showCheckForUpdatesModal ? this.actions.renderCheckForUpdatesModal() : null }
+                { showSavedModal ? this.actions.renderSavedModal() : null }
                 <div className={isElectron() ? null : classNames(styles['app-content'])}>
                     {this.props.children}
                 </div>
@@ -619,13 +680,17 @@ const mapStateToProps = (state) => {
     const { currentModalPath } = state.appbarMenu;
     const { shouldCheckForUpdate } = machineInfo;
     const { modelGroup } = state.printing;
+    const { showSavedModal, savedModalType, savedModalFilePath } = state.appGlobal;
     // const projectState = state.project;
     return {
         currentModalPath: currentModalPath ? currentModalPath.slice(1) : currentModalPath, // exclude hash character `#`
         machineInfo,
         shouldCheckForUpdate,
         store: state,
-        modelGroup
+        modelGroup,
+        showSavedModal,
+        savedModalType,
+        savedModalFilePath
     };
 };
 
@@ -651,7 +716,8 @@ const mapDispatchToProps = (dispatch) => {
         updateAutoupdateMessage: (message) => dispatch(machineActions.updateAutoupdateMessage(message)),
         updateIsDownloading: (isDownloading) => dispatch(machineActions.updateIsDownloading(isDownloading)),
         restartGuideTours: (pathname, history) => dispatch(projectActions.startProject(pathname, pathname, history, true)),
-        updateMachineToolHead: (toolHead, series, headType) => dispatch(machineActions.updateMachineToolHead(toolHead, series, headType))
+        updateMachineToolHead: (toolHead, series, headType) => dispatch(machineActions.updateMachineToolHead(toolHead, series, headType)),
+        updateSavedModal: (options) => dispatch(appGlobalActions.updateSavedModal(options))
     };
 };
 

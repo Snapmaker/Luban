@@ -161,17 +161,17 @@ const Menu = {
  * File control in electron
  */
 const File = {
-    writeBlobToFile(blob, newPath) {
+    writeBlobToFile(blob, newPath, callback = undefined) {
         if (isElectron()) {
             const fileReader = new FileReader();
             fileReader.onload = () => {
                 window.require('fs').writeFileSync(newPath, Buffer.from(new Uint8Array(fileReader.result)));
-                console.log('export_model-electron', newPath);
+                callback && callback('electron', newPath);
             };
             fileReader.readAsArrayBuffer(blob);
         } else {
             FileSaver.saveAs(blob, newPath, true);
-            console.log('export_model-web');
+            callback && callback('web');
         }
     },
     save(targetFile, tmpFile) {
@@ -198,7 +198,7 @@ const File = {
      * @param tmpFile - temporary file path, e.g. "/Tmp/xxx.stl"
      */
     // export file for project file
-    async saveAs(targetFile, tmpFile) {
+    async saveAs(targetFile, tmpFile, callback = undefined) {
         if (isElectron()) {
             const fs = window.require('fs');
             const { app } = window.require('electron').remote;
@@ -221,7 +221,7 @@ const File = {
             const { ipcRenderer } = window.require('electron');
             ipcRenderer.send('add-recent-file', file);
 
-            console.log('save_project-electron', targetFile);
+            callback && callback('electron', targetFile);
             return file;
         } else {
             request
@@ -229,14 +229,14 @@ const File = {
                 .responseType('blob')
                 .end((err, res) => {
                     FileSaver.saveAs(res.body, targetFile, true);
+                    callback && callback('web');
                 });
-            console.log('save_project-web');
             return null;
         }
     },
 
     // export file for 3dp/laser/cnc
-    async exportAs(targetFile, tmpFile, renderGcodeFileName) {
+    async exportAs(targetFile, tmpFile, renderGcodeFileName = null, callback = undefined) {
         if (isNil(renderGcodeFileName)) {
             renderGcodeFileName = targetFile;
         } else {
@@ -264,7 +264,7 @@ const File = {
             const file = { path: targetFile, name: renderGcodeFileName };
             fs.copyFileSync(tmpFile, targetFile);
 
-            console.log('export_gcode-electron', targetFile);
+            callback && callback('electron', targetFile);
             return file;
         } else {
             request
@@ -273,8 +273,8 @@ const File = {
                 .end((err, res) => {
                     // FileSaver.saveAs(res.body, targetFile, true);
                     FileSaver.saveAs(res.body, renderGcodeFileName, true);
+                    callback && callback('web');
                 });
-            console.log('export_gcode-web');
             return null;
         }
     },
@@ -362,7 +362,6 @@ const Dialog = {
         }
     },
     showSaveDialog(options, modal = true) {
-        console.log({ options, modal });
         if (isElectron()) {
             const remote = window.require('electron').remote;
             const { dialog } = remote;
