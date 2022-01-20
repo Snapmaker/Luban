@@ -128,13 +128,14 @@ export const removeDefinition = (req, res) => {
         if (err) {
             return res.status(ERR_INTERNAL_SERVER_ERROR).send({ err });
         } else {
-            fs.unlink(backupPath, (err) => {
-                if (err) {
+            fs.unlink(backupPath, (unlinkErr) => {
+                if (unlinkErr) {
                     return res.send({ status: 'ok', msg: 'Back up Remove failed!' });
                 } else {
                     return res.send({ status: 'ok', msg: 'Back up Remove success!' });
                 }
             });
+            return null;
         }
     });
 };
@@ -167,10 +168,10 @@ export const updateDefinition = async (req, res) => {
     let activeRecoverPath = '';
     if (definitionId === 'snapmaker_extruder_0' || definitionId === 'snapmaker_extruder_1') {
         filePath = path.join(`${DataStorage.configDir}/${headType}`, `${definitionId}.def.json`);
-        activeRecoverPath = path.join(`${DataStorage.activeConfigDir}/${headType}`, `${definitionId}.def.json`)
+        activeRecoverPath = path.join(`${DataStorage.activeConfigDir}/${headType}`, `${definitionId}.def.json`);
     } else {
         filePath = path.join(`${DataStorage.configDir}/${headType}/${series}`, `${definitionId}.def.json`);
-        activeRecoverPath = path.join(`${DataStorage.activeConfigDir}/${headType}/${series}`, `${definitionId}.def.json`)
+        activeRecoverPath = path.join(`${DataStorage.activeConfigDir}/${headType}/${series}`, `${definitionId}.def.json`);
     }
     const data = JSON.stringify(definitionLoader.toJSON(), null, 2);
     const callback = () => {
@@ -221,8 +222,8 @@ export const uploadDefinition = (req, res) => {
                 } else {
                     return res.send({ status: 'ok', definition: definitionLoader.toObject(), msg: 'Back up success!' });
                 }
-            })
-        }
+            });
+        };
         fsWriteFile(filePath, data, res, callback);
     } catch (e) {
         res.status(ERR_INTERNAL_SERVER_ERROR).send({ err: e });

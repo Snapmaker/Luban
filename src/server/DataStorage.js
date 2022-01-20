@@ -1,5 +1,5 @@
 import path from 'path';
-import fs, { mkdir } from 'fs';
+import fs from 'fs';
 import mkdirp from 'mkdirp';
 import { includes, isUndefined, gt } from 'lodash';
 import { app } from 'electron';
@@ -130,28 +130,28 @@ class DataStorage {
      async copyDirForInitSlicer({
          srcDir, dstDir,
          overwriteTag = false, inherit = false
-    }) {
+     }) {
          mkdirp.sync(dstDir);
          if (fs.existsSync(srcDir)) {
              const files = fs.readdirSync(srcDir);
-             let json = {};
              for (const file of files) {
                  const src = path.join(srcDir, file);
                  const dst = path.join(dstDir, file);
                  if (fs.statSync(src).isFile()) {
                      if (fs.existsSync(dst) && !overwriteTag) {
-                        return;
+                         return;
                      }
-                    fs.copyFileSync(src, dst, (err) => {
-                        console.error('err', err);
-                    });
-                } else {
-                    const overwriteTag = inherit ? overwriteTag : false;
-                    await this.copyDirForInitSlicer({
-                        srcDir: src, dstDir: dst,
-                        overwriteTag, inherit
-                    });
-                }
+                     fs.copyFileSync(src, dst, (err) => {
+                         console.error('err', err);
+                     });
+                 } else {
+                     await this.copyDirForInitSlicer({
+                         srcDir: src,
+                         dstDir: dst,
+                         overwriteTag: inherit ? overwriteTag : false,
+                         inherit
+                     });
+                 }
              }
          }
      }
@@ -254,8 +254,8 @@ class DataStorage {
      }
 
      async checkNewUser() {
-        const hasConfigDir = fs.existsSync(this.configDir);
-        config.set('isNewUser', !hasConfigDir);
+         const hasConfigDir = fs.existsSync(this.configDir);
+         config.set('isNewUser', !hasConfigDir);
      }
 
      async initEnv() {
@@ -288,60 +288,60 @@ class DataStorage {
 
          const CURA_ENGINE_CONFIG_LOCAL = '../resources/CuraEngine/Config';
          await this.copyDirForInitSlicer({
-            srcDir: CURA_ENGINE_CONFIG_LOCAL, 
-            dstDir: this.configDir, 
-            overwriteTag: true,
-            inherit: overwriteProfiles
-        });
+             srcDir: CURA_ENGINE_CONFIG_LOCAL,
+             dstDir: this.configDir,
+             overwriteTag: true,
+             inherit: overwriteProfiles
+         });
          this.upgradeConfigFile(this.configDir);
          await this.copyDirForInitSlicer({
-            srcDir: CURA_ENGINE_CONFIG_LOCAL,
-            dstDir: this.defaultConfigDir,
-            overwriteTag: true,
-            inherit: true
-        });
+             srcDir: CURA_ENGINE_CONFIG_LOCAL,
+             dstDir: this.defaultConfigDir,
+             overwriteTag: true,
+             inherit: true
+         });
          const isNewUser = config.get('isNewUser');
          isNewUser && !isReset && await this.copyDirForInitSlicer({
-            srcDir: this.configDir,
-            dstDir: this.longTermConfigDir,
-            overwriteTag: true,
-            inherit: true
-        });
+             srcDir: this.configDir,
+             dstDir: this.longTermConfigDir,
+             overwriteTag: true,
+             inherit: true
+         });
      }
 
      async initRecoverActive() {
          mkdirp.sync(this.activeConfigDir);
          await this.copyDirForInitSlicer({
-            srcDir: this.configDir,
-            dstDir: this.activeConfigDir,
-            overwriteTag: true,
-            inherit: true
-        });
-    }
-        
+             srcDir: this.configDir,
+             dstDir: this.activeConfigDir,
+             overwriteTag: true,
+             inherit: true
+         });
+     }
+
      async createLongTermRecover(backupVersion, pkgVersion, isReset) {
-        this.longTermConfigDir = `${this.recoverDir}/Config-${new Date().getTime()}`;
-        if (isUndefined(backupVersion) || gt(pkgVersion, backupVersion) || isReset) {
-            mkdirp.sync(this.longTermConfigDir);
-            const srcDir = isReset ? this.activeConfigDir : this.configDir;
-            await this.copyDirForInitSlicer({
-                srcDir,
-                dstDir: this.longTermConfigDir,
-                overwriteTag: true,
-                inherit: true
-            });
-        } else {
-            return;
-        }
-        config.set('backupVersion', pkgVersion);
+         this.longTermConfigDir = `${this.recoverDir}/Config-${new Date().getTime()}`;
+         if (isUndefined(backupVersion) || gt(pkgVersion, backupVersion) || isReset) {
+             mkdirp.sync(this.longTermConfigDir);
+             const srcDir = isReset ? this.activeConfigDir : this.configDir;
+             await this.copyDirForInitSlicer({
+                 srcDir,
+                 dstDir: this.longTermConfigDir,
+                 overwriteTag: true,
+                 inherit: true
+             });
+         } else {
+             return;
+         }
+         config.set('backupVersion', pkgVersion);
      }
 
      async initLongTermRecover(isReset) {
-        const pkgVersion = pkg.version;
-        const backupVersion = config.get('backupVersion');
-        if (isUndefined(backupVersion) || gt(pkgVersion, backupVersion) || isReset) {
-            this.createLongTermRecover(backupVersion, pkgVersion, isReset);
-        }
+         const pkgVersion = pkg.version;
+         const backupVersion = config.get('backupVersion');
+         if (isUndefined(backupVersion) || gt(pkgVersion, backupVersion) || isReset) {
+             this.createLongTermRecover(backupVersion, pkgVersion, isReset);
+         }
      }
 
      async initFonts() {
