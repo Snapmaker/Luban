@@ -131,7 +131,7 @@ export class DefinitionLoader {
         // in case of JSON parse error, set default json inherits from snapmaker2.def.json
         let json = {
             'name': 'Snapmaker Default',
-            'version': 2,
+            'version': pkg.version,
             'inherits': 'snapmaker2'
         };
         try {
@@ -155,7 +155,7 @@ export class DefinitionLoader {
         // in case of JSON parse error, set default json inherits from snapmaker2.def.json
         let json = {
             'name': 'Snapmaker Default',
-            'version': 2,
+            'version': pkg.version,
             'inherits': 'snapmaker2'
         };
         try {

@@ -53,6 +53,18 @@ export default {
                     });
                 }
             }
+        },
+        {
+            id: 'longterm-backup-config',
+            label: 'key-App/Menu-Backup config',
+            enabled: true,
+            click: (menuItem, browserWindow) => {
+                if (isElectron()) {
+                    browserWindow.webContents.send('longterm-backup-config');
+                } else {
+                    UniApi.Event.emit('appbar-menu:longterm-backup-config');
+                }
+            }
         }
     ]
 };

@@ -63,6 +63,15 @@ export const getConfigDefinitions = (req, res) => {
     res.send({ definitions });
 };
 
+const fsWriteFile = (filePath, data, res, callback) => {
+    fs.writeFile(filePath, data, 'utf8', (err) => {
+        if (err) {
+            res.status(ERR_INTERNAL_SERVER_ERROR).send({ err });
+        } else {
+            callback();
+        }
+    });
+};
 export const createDefinition = (req, res) => {
     const { headType } = req.params;
     const { definition } = req.body;
@@ -72,16 +81,21 @@ export const createDefinition = (req, res) => {
     const series = req.body.series ?? '';
 
     const filePath = path.join(`${DataStorage.configDir}/${headType}/${series}`, `${definitionLoader.definitionId}.def.json`);
-    fs.writeFile(filePath, JSON.stringify(definitionLoader.toJSON(), null, 2), 'utf8', (err) => {
-        if (err) {
-            res.status(ERR_INTERNAL_SERVER_ERROR).send({ err });
-        } else {
-            // load definition using new loader to avoid potential settings override issues
-            const loader = new DefinitionLoader();
-            loader.loadDefinition(headType, definitionLoader.definitionId, series);
-            res.send({ definition: loader.toObject() });
-        }
-    });
+    const backupPath = path.join(`${DataStorage.activeConfigDir}/${headType}/${series}`, `${definitionLoader.definitionId}.def.json`);
+    const data = JSON.stringify(definitionLoader.toJSON(), null, 2);
+    const callback = () => {
+        const loader = new DefinitionLoader();
+        loader.loadDefinition(headType, definitionLoader.definitionId, series);
+        // res.send({ definition: loader.toObject() });
+        fsWriteFile(backupPath, data, res, (err) => {
+            if (err) {
+                return res.send({ definition: loader.toObject(), msg: 'Back up failed!' });
+            } else {
+                return res.send({ definition: loader.toObject(), msg: 'Back up success!' });
+            }
+        });
+    };
+    fsWriteFile(filePath, data, res, callback);
 };
 
 export const createTmpDefinition = (req, res) => {
@@ -109,11 +123,18 @@ export const removeDefinition = (req, res) => {
     const series = req.body.series;
 
     const filePath = path.join(`${DataStorage.configDir}/${headType}/${series}`, `${definitionId}.def.json`);
+    const backupPath = path.join(`${DataStorage.activeConfigDir}/${headType}/${series}`, `${definitionId}.def.json`);
     fs.unlink(filePath, (err) => {
         if (err) {
-            res.status(ERR_INTERNAL_SERVER_ERROR).send({ err });
+            return res.status(ERR_INTERNAL_SERVER_ERROR).send({ err });
         } else {
-            res.send({ status: 'ok' });
+            fs.unlink(backupPath, (err) => {
+                if (err) {
+                    return res.send({ status: 'ok', msg: 'Back up Remove failed!' });
+                } else {
+                    return res.send({ status: 'ok', msg: 'Back up Remove success!' });
+                }
+            });
         }
     });
 };
@@ -143,19 +164,25 @@ export const updateDefinition = async (req, res) => {
     }
 
     let filePath = '';
+    let activeRecoverPath = '';
     if (definitionId === 'snapmaker_extruder_0' || definitionId === 'snapmaker_extruder_1') {
         filePath = path.join(`${DataStorage.configDir}/${headType}`, `${definitionId}.def.json`);
+        activeRecoverPath = path.join(`${DataStorage.activeConfigDir}/${headType}`, `${definitionId}.def.json`)
     } else {
         filePath = path.join(`${DataStorage.configDir}/${headType}/${series}`, `${definitionId}.def.json`);
+        activeRecoverPath = path.join(`${DataStorage.activeConfigDir}/${headType}/${series}`, `${definitionId}.def.json`)
     }
-    fs.writeFile(filePath, JSON.stringify(definitionLoader.toJSON(), null, 2), 'utf8', (err) => {
-        if (err) {
-            res.status(ERR_INTERNAL_SERVER_ERROR).send({ err });
-        } else {
-            // load definition using new loader to avoid potential settings override issues
-            res.send({ status: 'ok' });
-        }
-    });
+    const data = JSON.stringify(definitionLoader.toJSON(), null, 2);
+    const callback = () => {
+        fsWriteFile(activeRecoverPath, data, res, (err) => {
+            if (err) {
+                return res.send({ status: 'ok', msg: 'Back up failed!' });
+            } else {
+                return res.send({ status: 'ok', msg: 'Back up success!' });
+            }
+        });
+    };
+    fsWriteFile(filePath, data, res, callback);
 };
 
 export const uploadDefinition = (req, res) => {
@@ -185,13 +212,18 @@ export const uploadDefinition = (req, res) => {
     try {
         definitionLoader.loadJSON(headType, definitionId, obj);
         const filePath = path.join(`${DataStorage.configDir}/${headType}/${series}`, `${definitionId}.def.json`);
-        fs.writeFile(filePath, JSON.stringify(definitionLoader.toJSON(), null, 2), 'utf8', (err) => {
-            if (err) {
-                res.status(ERR_INTERNAL_SERVER_ERROR).send({ err });
-            } else {
-                res.send({ status: 'ok', definition: definitionLoader.toObject() });
-            }
-        });
+        const backupPath = path.join(`${DataStorage.activeConfigDir}/${headType}/${series}`, `${definitionId}.def.json`);
+        const data = JSON.stringify(definitionLoader.toJSON(), null, 2);
+        const callback = () => {
+            fsWriteFile(backupPath, data, res, (err) => {
+                if (err) {
+                    return res.send({ status: 'ok', definition: definitionLoader.toObject(), msg: 'Backup failed!' });
+                } else {
+                    return res.send({ status: 'ok', definition: definitionLoader.toObject(), msg: 'Back up success!' });
+                }
+            })
+        }
+        fsWriteFile(filePath, data, res, callback);
     } catch (e) {
         res.status(ERR_INTERNAL_SERVER_ERROR).send({ err: e });
     }

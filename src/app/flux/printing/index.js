@@ -200,7 +200,8 @@ const INITIAL_STATE = {
     helpersExtruderInfoShow: true,
     // Prime Tower
     enabledPrimeTower: true,
-    primeTowerHeight: 0.1
+    primeTowerHeight: 0.1,
+    isNewUser: true,
 };
 
 
@@ -2324,6 +2325,20 @@ export const actions = {
         dispatch(actions.setModelsMeshColor(LEFT_EXTRUDER, leftColor));
         const rightColor = dispatch(actions.getMeshColor(RIGHT_EXTRUDER));
         dispatch(actions.setModelsMeshColor(RIGHT_EXTRUDER, rightColor));
+    },
+
+    checkNewUser: () => (dispatch) => {
+        api.checkNewUser().then((res) => {
+            const isNewUser = res?.body?.isNewUser;
+            dispatch(actions.updateState({
+                isNewUser
+            }));
+        }).catch((err) => {
+            console.log({ err });
+            dispatch(actions.updateState({
+                isNewUser: true
+            }));
+        });
     }
 };
 
