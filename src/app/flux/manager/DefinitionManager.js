@@ -27,38 +27,13 @@ class DefinitionManager {
     // series = '';
 
     async init(headType, configPathname) {
-        // if (
-        //     seriesWithToolhead.series === MACHINE_SERIES.ORIGINAL_LZ.value
-        // //    || series === MACHINE_SERIES.CUSTOM.value
-        // ) {
-        //     this.seriesWithToolhead = seriesWithToolhead.seriesWithToolhead;
-        // } else {
-        //     this.seriesWithToolhead = series;
-        // }
         this.configPathname = configPathname;
         this.headType = headType;
         let res;
-        // TODO useless
-        // let definitionId = 'snapmaker2';
-        // if (
-        //     this.series === MACHINE_SERIES.ORIGINAL.value
-        //     || this.series === MACHINE_SERIES.ORIGINAL_LZ.value
-        //     || this.series === MACHINE_SERIES.CUSTOM.value
-        // ) {
-        //     definitionId = 'snapmaker';
-        // } else {
-        //     definitionId = 'snapmaker2';
-        // }
-        //
-        // res = await api.profileDefinitions.getDefinition(headType, definitionId, this.series);
-        // this.snapmakerDefinition = res.body.definition;
-        // End TODO useless
-
         // active definition
         res = await this.getDefinition('active', false);
         this.activeDefinition = res;
         res = await api.profileDefinitions.getDefaultDefinitions(this.headType, this.configPathname);
-        // res = await api.profileDefinitions.getConfigDefinitions(this.headType, this.configPathname);
         this.defaultDefinitions = res.body.definitions.map(item => {
             item.isDefault = true;
             if (item.i18nCategory) {

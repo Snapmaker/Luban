@@ -11,7 +11,8 @@ import {
     getCurrentHeadType,
     COORDINATE_MODE_CENTER, COORDINATE_MODE_BOTTOM_CENTER, PAGE_EDITOR, DISPLAYED_TYPE_MODEL,
     MAX_RECENT_FILES_LENGTH,
-    LOAD_MODEL_FROM_OUTER
+    LOAD_MODEL_FROM_OUTER,
+    SINGLE_EXTRUDER_TOOLHEAD_FOR_SM2
 } from '../../constants';
 import api from '../../api';
 import { actions as printingActions } from '../printing';
@@ -186,21 +187,30 @@ export const actions = {
     onRecovery: (envHeadType, envObj, backendRecover = true, shouldSetFileName = true) => async (dispatch, getState) => {
         UniApi.Window.setOpenedFile();
         let { content } = getState().project[envHeadType];
+        const { toolHead: { printingToolhead } } = getState().machine;
         if (!envObj) {
             envObj = JSON.parse(content);
         }
+        if (envObj?.machineInfo?.headType === '3dp') envObj.machineInfo.headType = HEAD_PRINTING;
+        const allModels = envObj?.models;
+        allModels.forEach((model) => {
+            if (model.headType === '3dp') {
+                model.headType = HEAD_PRINTING;
+            }
+        });
         // backup project if needed
         if (backendRecover) {
-            if (envObj?.machineInfo?.headType === '3dp') envObj.machineInfo.headType = HEAD_PRINTING;
-            const allModels = envObj?.models;
-            allModels.forEach((model) => {
-                if (model.headType === '3dp') {
-                    model.headType = HEAD_PRINTING;
-                }
-            });
             UniformToolpathConfig(envObj);
             content = JSON.stringify(envObj);
             await api.recoverEnv({ content });
+        }
+        if (envObj?.machineInfo?.headType === HEAD_PRINTING && printingToolhead === SINGLE_EXTRUDER_TOOLHEAD_FOR_SM2) {
+            allModels.forEach((model) => {
+                model.extruderConfig = {
+                    infill: '0',
+                    shell: '0',
+                };
+            });
         }
         let modActions = null;
         const modState = getState()[envHeadType];
