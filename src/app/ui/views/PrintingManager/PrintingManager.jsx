@@ -165,6 +165,7 @@ function PrintingManager() {
             isOfficialDefinition={isOfficialDefinition}
             optionConfigGroup={optionConfigGroup}
             allDefinitions={allDefinitions}
+            managerDisplayType={managerDisplayType}
             managerTitle={managerDisplayType === PRINTING_MANAGER_TYPE_MATERIAL ? 'key-Printing/PrintingConfigurations-Material Settings' : 'key-Printing/PrintingConfigurations-Printing Settings'}
             selectedId={selectedIds[managerDisplayType].id}
             headType={HEAD_PRINTING}

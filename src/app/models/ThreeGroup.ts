@@ -3,7 +3,7 @@ import BaseModel, { ModelTransformation, ModelInfo } from './ThreeBaseModel';
 import type ModelGroup from './ModelGroup';
 import type ThreeModel from './ThreeModel';
 import ThreeUtils from '../three-extensions/ThreeUtils';
-import { HEAD_PRINTING, GROUP_OPERATION, BOTH_EXTRUDER_MAP_NUMBER } from '../constants';
+import { HEAD_PRINTING, BOTH_EXTRUDER_MAP_NUMBER } from '../constants';
 import ConvexGeometry from '../three-extensions/ConvexGeometry';
 
 window.THREE = THREE;
@@ -26,8 +26,6 @@ export default class ThreeGroup extends BaseModel {
 
     processImageName: string;
 
-    groupFrom: string = GROUP_OPERATION;
-
     transformation: ModelTransformation;
 
     geometry: THREE.Group;
@@ -42,6 +40,8 @@ export default class ThreeGroup extends BaseModel {
     overstepped: boolean;
 
     convexGeometry: THREE.Geometry;
+
+    mergedGeometry: THREE.BufferGeometry;
 
     modelGroup: ModelGroup;
 
@@ -90,7 +90,6 @@ export default class ThreeGroup extends BaseModel {
             name: 'ThreeGroup'
         };
         this.children = [];
-        this.groupFrom = modelInfo.groupFrom || GROUP_OPERATION;
         this.transformation = {
             positionX: 0,
             positionY: 0,
@@ -110,58 +109,18 @@ export default class ThreeGroup extends BaseModel {
         this.children = [...this.children, ...models];
 
         models.forEach(model => {
-            this.meshObject.add(model.meshObject);
+            ThreeUtils.setObjectParent(model.meshObject, this.meshObject);
             model.parent = this;
         });
         if (models.length === 1) {
             ThreeUtils.liftObjectOnlyChildMatrix(this.meshObject);
             (this.meshObject as any).uniformScalingState = (this.meshObject.children[0] as any).uniformScalingState;
-            // update group extruder config
-            this.extruderConfig = models[0].extruderConfig as ExtruderConfig;
         } else if (models.length > 1) {
-            let center;
-            if (this.meshObject.children.length >= 1) {
-                const boundingBoxTemp = ThreeUtils.computeBoundingBox(this.meshObject);
-                center = new THREE.Vector3(
-                    (boundingBoxTemp.max.x + boundingBoxTemp.min.x) / 2,
-                    (boundingBoxTemp.max.y + boundingBoxTemp.min.y) / 2,
-                    boundingBoxTemp.max.z / 2
-                );
-            } else {
-                center = new THREE.Vector3(
-                    0,
-                    0,
-                    0
-                );
-            }
-            // set selected group position need to remove children temporarily
-            const children = [...this.meshObject.children];
-            children.map(obj => ThreeUtils.removeObjectParent(obj));
-            // only make the diff translation
-            const oldPosition = new THREE.Vector3();
-            this.meshObject.getWorldPosition(oldPosition);
-            const matrix = new THREE.Matrix4().makeTranslation(center.x - oldPosition.x, center.y - oldPosition.y, center.z - oldPosition.z);
-            ThreeUtils.applyObjectMatrix(this.meshObject, matrix);
-            children.map(obj => ThreeUtils.setObjectParent(obj, this.meshObject));
+            this.computeBoundingBox();
             (this.meshObject as any).uniformScalingState = true;
-            const tempExtruderConfig: ExtruderConfig = Object.assign({}, models[0].extruderConfig as ExtruderConfig);
-            for (const modelItem of models.slice(1)) {
-                const { infill, shell } = (modelItem.extruderConfig as ExtruderConfig);
-                // another model use different extruder, change status to 'both'
-                if (infill !== tempExtruderConfig.infill && tempExtruderConfig.infill !== BOTH_EXTRUDER_MAP_NUMBER) {
-                    tempExtruderConfig.infill = BOTH_EXTRUDER_MAP_NUMBER;
-                }
-                if (shell !== tempExtruderConfig.shell && tempExtruderConfig.shell !== BOTH_EXTRUDER_MAP_NUMBER) {
-                    tempExtruderConfig.shell = BOTH_EXTRUDER_MAP_NUMBER;
-                }
-                // extruder status all is 'both', break out the loop
-                if (tempExtruderConfig.infill === BOTH_EXTRUDER_MAP_NUMBER && tempExtruderConfig.shell === BOTH_EXTRUDER_MAP_NUMBER) {
-                    break;
-                }
-            }
-            this.extruderConfig = tempExtruderConfig;
         }
         this.onTransform();
+        this.updateGroupExtruder();
     }
 
     disassemble(): ThreeModel[] {
@@ -182,6 +141,12 @@ export default class ThreeGroup extends BaseModel {
         });
         this.meshObject.children = [];
         this.children = [];
+        this.extruderConfig = {
+            infill: '0',
+            shell: '0'
+        };
+        this.mergedGeometry = null;
+        this.convexGeometry = null;
         return models;
     }
 
@@ -196,6 +161,7 @@ export default class ThreeGroup extends BaseModel {
                 if (model.meshObject instanceof THREE.Group) {
                     return (model as ThreeGroup).mergeGeometriesInGroup();
                 } else {
+                    model.updateTransformation(model.transformation);
                     model.meshObject.updateMatrix();
                     const clonedGeometry = (model.meshObject as THREE.Mesh).geometry.clone() as THREE.BufferGeometry;
                     clonedGeometry.applyMatrix4(model.meshObject.matrix);
@@ -203,6 +169,9 @@ export default class ThreeGroup extends BaseModel {
                 }
             }));
         }
+        // this.meshObject.updateMatrixWorld();
+        // geometry.applyMatrix4(this.meshObject.matrixWorld);
+        this.mergedGeometry = geometry;
         return geometry;
     }
 
@@ -295,7 +264,6 @@ export default class ThreeGroup extends BaseModel {
      * @returns ModelTransformation
      */
     onTransform() {
-        const geometrySize = ThreeUtils.getGeometrySize(this.mergeGeometriesInGroup(), true);
         const { uniformScalingState } = this.meshObject as any;
 
         const position = new THREE.Vector3();
@@ -316,8 +284,6 @@ export default class ThreeGroup extends BaseModel {
             scaleX: scale.x,
             scaleY: scale.y,
             scaleZ: scale.z,
-            width: geometrySize.x * scale.x,
-            height: geometrySize.y * scale.y,
             uniformScalingState
         };
 
@@ -332,12 +298,36 @@ export default class ThreeGroup extends BaseModel {
     }
 
     updateTransformation(transformation: ModelTransformation): ModelTransformation {
-        this.children.forEach(model => model.updateTransformation(transformation));
-
         return super.updateTransformation(transformation);
     }
 
     computeBoundingBox() {
+        let center;
+        if (this.meshObject.children.length >= 1) {
+            const boundingBoxTemp = ThreeUtils.computeBoundingBox(this.meshObject);
+            center = new THREE.Vector3(
+                (boundingBoxTemp.max.x + boundingBoxTemp.min.x) / 2,
+                (boundingBoxTemp.max.y + boundingBoxTemp.min.y) / 2,
+                boundingBoxTemp.max.z / 2
+            );
+        } else {
+            center = new THREE.Vector3(
+                0,
+                0,
+                0
+            );
+        }
+
+        // set selected group position need to remove children temporarily
+        const children = [...this.meshObject.children];
+        children.map(obj => ThreeUtils.removeObjectParent(obj));
+        // only make the diff translation
+        const oldPosition = new THREE.Vector3();
+        this.meshObject.getWorldPosition(oldPosition);
+        const matrix = new THREE.Matrix4().makeTranslation(center.x - oldPosition.x, center.y - oldPosition.y, center.z - oldPosition.z);
+        ThreeUtils.applyObjectMatrix(this.meshObject, matrix);
+        children.map(obj => ThreeUtils.setObjectParent(obj, this.meshObject));
+
         this.boundingBox = ThreeUtils.computeBoundingBox(this.meshObject);
     }
 
@@ -404,13 +394,13 @@ export default class ThreeGroup extends BaseModel {
             // visible: this.visible,
             transformation: this.transformation,
             processImageName: this.processImageName,
+            extruderConfig: this.extruderConfig
         };
         this.children.forEach(model => {
             clonedSubModels.push(model.clone(modelGroup));
         });
         const clone = new ThreeGroup(modelInfo, modelGroup);
         clone.add(clonedSubModels);
-        clone.isSelected = true;
         return clone;
     }
 
@@ -419,14 +409,16 @@ export default class ThreeGroup extends BaseModel {
      * @returns void
      */
     autoRotate() {
+        this.computeConvex();
         if (this.sourceType !== '3d' || !this.convexGeometry) {
             return;
         }
 
         const revertParent = ThreeUtils.removeObjectParent(this.meshObject);
         this.meshObject.updateMatrixWorld();
-        this.computeBoundingBox();
-        const box3 = this.boundingBox;
+        const geometry = this.mergedGeometry;
+        geometry.computeBoundingBox();
+        const box3 = geometry.boundingBox;
         const x = (box3.max.x + box3.min.x) / 2;
         const y = (box3.max.y + box3.min.y) / 2;
         const z = (box3.max.z + box3.min.z) / 2;
@@ -449,7 +441,7 @@ export default class ThreeGroup extends BaseModel {
         if (!bigPlanes.planes.length) return;
 
         const xyPlaneNormal = new THREE.Vector3(0, 0, -1);
-        const objPlanes = ThreeUtils.computeGeometryPlanes(this.mergeGeometriesInGroup(), this.meshObject.matrixWorld, bigPlanes.planes, center, false);
+        const objPlanes = ThreeUtils.computeGeometryPlanes(this.mergedGeometry, this.meshObject.matrixWorld, bigPlanes.planes, center, false);
 
         let targetPlane;
         const minSupportVolume = Math.min.apply(null, objPlanes.supportVolumes);
@@ -524,11 +516,13 @@ export default class ThreeGroup extends BaseModel {
      * @returns Object
      */
     analyzeRotation() {
+        this.computeConvex();
         if (this.sourceType !== '3d' || !this.convexGeometry) {
             return null;
         }
-        this.computeBoundingBox();
-        const box3 = this.boundingBox;
+        const geometry = this.mergedGeometry;
+        geometry.computeBoundingBox();
+        const box3 = geometry.boundingBox;
         const x = (box3.max.x + box3.min.x) / 2;
         const y = (box3.max.y + box3.min.y) / 2;
         const z = (box3.max.z + box3.min.z) / 2;
@@ -555,7 +549,7 @@ export default class ThreeGroup extends BaseModel {
         });
 
         if (!bigPlanes.planes.length) return null;
-        const objPlanes = ThreeUtils.computeGeometryPlanes(this.mergeGeometriesInGroup(), this.meshObject.matrixWorld, bigPlanes.planes, center, false);
+        const objPlanes = ThreeUtils.computeGeometryPlanes(this.mergedGeometry, this.meshObject.matrixWorld, bigPlanes.planes, center, false);
         revertParent();
 
         const minSupportVolume = Math.min.apply(null, objPlanes.supportVolumes);
@@ -627,5 +621,28 @@ export default class ThreeGroup extends BaseModel {
             children,
             modelName
         };
+    }
+
+    updateGroupExtruder() {
+        this.extruderConfig.shell = null;
+        for (const subModel of this.children) {
+            /**
+             * extruderConfig.shell and extruderConfig.infill corresponding nozzle number
+             * 0 which means the left nozzle is used
+             * 1 which means the right nozzle is used
+             * 2 which means that both the left nozzle and the right nozzle are used
+             */
+            // First cycle assignment
+            if (!this.extruderConfig.shell) {
+                this.extruderConfig.shell = subModel.extruderConfig.shell;
+                this.extruderConfig.infill = subModel.extruderConfig.infill;
+            }
+            if (this.extruderConfig.shell !== subModel.extruderConfig.shell) {
+                this.extruderConfig.shell = BOTH_EXTRUDER_MAP_NUMBER;
+            }
+            if (this.extruderConfig.infill !== subModel.extruderConfig.infill) {
+                this.extruderConfig.infill = BOTH_EXTRUDER_MAP_NUMBER;
+            }
+        }
     }
 }

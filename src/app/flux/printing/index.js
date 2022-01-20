@@ -8,7 +8,6 @@ import {
     ABSENT_OBJECT,
     EPSILON,
     DATA_PREFIX,
-    ALIGN_OPERATION,
     PRINTING_MANAGER_TYPE_MATERIAL,
     PRINTING_MANAGER_TYPE_QUALITY,
     MACHINE_SERIES,
@@ -781,6 +780,7 @@ export const actions = {
             activeDefinition.settings.support_roof_line_width.default_value = extruderDef.settings.support_roof_line_width.default_value;
             activeDefinition.settings.support_bottom_line_width.default_value = extruderDef.settings.support_bottom_line_width.default_value;
             activeDefinition.settings.prime_tower_line_width.default_value = extruderDef.settings.prime_tower_line_width.default_value;
+            activeDefinition.settings.prime_tower_wipe_enabled.default_value = true;
         }
         dispatch(actions.updateDefinitionSettings(activeDefinition, activeDefinition.settings));
 
@@ -1078,6 +1078,7 @@ export const actions = {
     generateGcode: (thumbnail, isGuideTours = false) => async (dispatch, getState) => {
         const { hasModel, activeDefinition, modelGroup, progressStatesManager, helpersExtruderConfig,
             extruderLDefinition, extruderRDefinition, defaultMaterialId, defaultMaterialIdRight, materialDefinitions } = getState().printing;
+        const { size, toolHead: { printingToolhead } } = getState().machine;
         if (!hasModel) {
             return;
         }
@@ -1099,8 +1100,9 @@ export const actions = {
             definitionId: 'snapmaker_extruder_1'
         });
 
-        const models = filter(modelGroup.getModels(), { 'visible': true });
-
+        const models = filter(modelGroup.getModels(), (modelItem) => {
+            return modelItem.visible && modelItem.type !== 'primeTower';
+        });
         if (!models || models.length === 0) {
             return;
         }
@@ -1122,11 +1124,21 @@ export const actions = {
         const { model, support, definition, originalName } = await dispatch(actions.prepareModel());
         const currentModelName = path.basename(models[0]?.modelName, path.extname(models[0]?.modelName));
         const renderGcodeFileName = `${currentModelName}_${new Date().getTime()}`;
+        const hasPrimeTower = (printingToolhead === DUAL_EXTRUDER_TOOLHEAD_FOR_SM2 && activeDefinition.settings.prime_tower_enable.default_value);
         // Prepare definition file
-        const { size } = getState().machine;
         await dispatch(actions.updateActiveDefinitionMachineSize(size));
-
-        const finalDefinition = definitionManager.finalizeActiveDefinition(activeDefinition);
+        if (hasPrimeTower) {
+            const modelGroupBBox = modelGroup._bbox;
+            const primeTowerModel = lodashFind(modelGroup.getModels(), { type: 'primeTower' });
+            const primeTowerWidth = primeTowerModel.boundingBox.max.x - primeTowerModel.boundingBox.min.x;
+            const primeTowerPositionX = modelGroupBBox.max.x - (primeTowerModel.boundingBox.max.x + primeTowerModel.boundingBox.min.x + primeTowerWidth) / 2;
+            const primeTowerPositionY = modelGroupBBox.max.y - (primeTowerModel.boundingBox.max.y + primeTowerModel.boundingBox.min.y - primeTowerWidth) / 2;
+            activeDefinition.settings.prime_tower_position_x.default_value = size.x - primeTowerPositionX;
+            activeDefinition.settings.prime_tower_position_y.default_value = size.y - primeTowerPositionY;
+            activeDefinition.settings.prime_tower_size.default_value = primeTowerWidth;
+            activeDefinition.settings.prime_tower_wipe_enabled.default_value = true;
+        }
+        const finalDefinition = definitionManager.finalizeActiveDefinition(activeDefinition, true);
         const adhesionExtruder = helpersExtruderConfig.adhesion;
         const supportExtruder = helpersExtruderConfig.support;
         finalDefinition.settings.adhesion_extruder_nr.default_value = adhesionExtruder;
@@ -1174,7 +1186,7 @@ export const actions = {
             // Use setTimeout to force export executes in next tick, preventing block of updateState()
 
             setTimeout(async () => {
-                const models = modelGroup.models.filter(i => i.visible).reduce((pre, model) => {
+                const models = modelGroup.models.filter(i => i.visible && i.type !== 'primeTower').reduce((pre, model) => {
                     if (model instanceof ThreeGroup) {
                         pre.push(...model.children);
                     } else {
@@ -1584,10 +1596,26 @@ export const actions = {
                 }
             });
             if (modelItem) {
-                modelItem.extruderConfig = extruderConfig;
+                modelItem.extruderConfig = {
+                    ...extruderConfig
+                };
                 modelItem.children && modelItem.children.length && modelItem.children.forEach(item => {
-                    item.extruderConfig = extruderConfig;
+                    if (extruderConfig.infill !== '2') {
+                        item.extruderConfig = {
+                            ...item.extruderConfig,
+                            infill: extruderConfig.infill
+                        };
+                    }
+                    if (extruderConfig.shell !== '2') {
+                        item.extruderConfig = {
+                            ...item.extruderConfig,
+                            shell: extruderConfig.shell
+                        };
+                    }
                 });
+                if (modelItem.parent && modelItem.parent instanceof ThreeGroup) {
+                    modelItem.parent.updateGroupExtruder();
+                }
             }
         }
         dispatch(actions.destroyGcodeLine());
@@ -1620,12 +1648,15 @@ export const actions = {
     recordModelBeforeTransform: (modelGroup) => (dispatch) => {
         dispatch(operationHistoryActions.clearTargetTmpState(INITIAL_STATE.name));
         for (const model of modelGroup.selectedModelArray) {
+            const { recovery } = modelGroup.unselectAllModels();
+            modelGroup.addModelToSelectedGroup(model);
             if (model.supportTag) {
                 dispatch(actions.onModelTransform());
             }
             dispatch(operationHistoryActions.updateTargetTmpState(INITIAL_STATE.name, model.modelID, {
-                from: { ...model.transformation }
+                from: { ...modelGroup.getSelectedModelTransformationForPrinting() }
             }));
+            recovery();
         }
     },
 
@@ -1646,8 +1677,10 @@ export const actions = {
             dispatch(actions.clearAllManualSupport(operations));
         }
         for (const model of modelGroup.selectedModelArray) {
+            const { recovery } = modelGroup.unselectAllModels();
+            modelGroup.addModelToSelectedGroup(model);
             dispatch(operationHistoryActions.updateTargetTmpState(INITIAL_STATE.name, model.modelID, {
-                to: { ...model.transformation }
+                to: { ...modelGroup.getSelectedModelTransformationForPrinting() }
             }));
             if (stateEqual(model, targetTmpState[model.modelID].from, targetTmpState[model.modelID].to)) {
                 continue;
@@ -1674,6 +1707,7 @@ export const actions = {
                 default: break;
             }
             operations.push(operation);
+            recovery();
         }
         operations.registCallbackAfterAll(() => {
             dispatch(actions.updateState(modelGroup.getState()));
@@ -2132,22 +2166,23 @@ export const actions = {
         const selectedModels = modelGroup.getSelectedModelArray().slice(0);
         const selectedModelsPositionMap = new Map();
         selectedModels.forEach(model => {
+            const { recovery } = modelGroup.unselectAllModels();
+            modelGroup.selectModelById(model.modelID);
             selectedModelsPositionMap.set(model.modelID, {
-                x: model.transformation.positionX,
-                y: model.transformation.positionY,
-                z: model.transformation.positionZ,
+                ...modelGroup.getSelectedModelTransformationForPrinting()
             });
+            recovery();
         });
         // const groups = modelGroup.getSelectedModelArray().filter(model => model instanceof ThreeGroup);
         // const groupChildrenMap = new Map();
         // groups.forEach(group => {
         //     groupChildrenMap.set(group, group.children.slice(0));
         // });
-        const newPosition = modelGroup.updateModelsPositionBaseFirstModel(selectedModels);
+        modelGroup.updateModelsPositionBaseFirstModel(selectedModels);
         const operations = new Operations();
 
         dispatch(actions.clearAllManualSupport(operations));
-        const { modelState } = modelGroup.group(ALIGN_OPERATION);
+        const { newGroup, modelState } = modelGroup.group();
         const modelsafterGroup = modelGroup.getModels().slice(0);
 
         const operation = new GroupAlignOperation3D({
@@ -2156,7 +2191,7 @@ export const actions = {
             modelsbeforeGroup,
             modelsafterGroup,
             selectedModels,
-            newPosition,
+            newPosition: newGroup.transformation,
             target: modelGroup.getSelectedModelArray()[0],
             modelGroup
         });
@@ -2175,58 +2210,35 @@ export const actions = {
 
     group: () => (dispatch, getState) => {
         const { modelGroup } = getState().printing;
-
-        const groups = modelGroup.getSelectedModelArray().filter(model => model instanceof ThreeGroup);
+        // Stores the model structure before the group operation, which is used for undo operation
         const modelsBeforeGroup = modelGroup.getModels().slice(0);
         const selectedModels = modelGroup.getSelectedModelArray().slice(0);
-        const groupChildrenMap = new Map();
-        groups.forEach(group => {
-            groupChildrenMap.set(group, group.children.slice(0));
-        });
         const operations = new Operations();
-
-        const { recovery } = modelGroup.unselectAllModels({ recursive: true });
-
-        const modelsInGroup = selectedModels.reduce((pre, selectd) => {
-            const group = selectd.parent?.clone(modelGroup);
+        const { recovery } = modelGroup.unselectAllModels();
+        // Record the relationship between model and group
+        const modelsRelation = selectedModels.reduce((pre, selectd) => {
+            const groupModelID = selectd.parent?.modelID;
             pre.set(selectd.modelID, {
-                groupModel: group,
-                groupMesh: selectd.parent?.meshObject.clone(),
-                modelTransformation: { ...selectd.transformation },
-                groupTransformation: { ...group?.transformation }
+                groupModelID,
+                children: selectd instanceof ThreeGroup ? selectd.children.slice(0) : null,
+                modelTransformation: { ...selectd.transformation }
             });
-            if (selectd instanceof ThreeGroup) {
-                selectd.children.forEach((subModel) => {
-                    pre.set(subModel.modelID, {
-                        modelTransformation: { ...subModel.transformation }
-                    });
-                });
-            }
             return pre;
         }, new Map());
         recovery();
 
-
         dispatch(actions.clearAllManualSupport(operations));
         const modelState = modelGroup.group();
-
+        // Stores the model structure after the group operation, which is used for redo operation
         const modelsAfterGroup = modelGroup.getModels().slice(0);
         const newGroup = modelGroup.getSelectedModelArray()[0];
         const operation = new GroupOperation3D({
-            groupChildrenMap,
             modelsBeforeGroup,
             modelsAfterGroup,
             selectedModels,
             target: newGroup,
-            targetTransformation: { ...newGroup.transformation },
-            targetChildrenTransformation: newGroup.children.reduce((pre, subModel) => {
-                pre.set(subModel.modelID, {
-                    ...subModel.transformation
-                });
-                return pre;
-            }, new Map()),
             modelGroup,
-            modelsInGroup
+            modelsRelation
         });
         operations.push(operation);
         operations.registCallbackAfterAll(() => {
@@ -2291,17 +2303,6 @@ export const actions = {
         modelGroup.traverseModels(models, (model) => {
             if (model.extruderConfig.shell === (direction === LEFT_EXTRUDER ? '0' : '1')) {
                 model.updateMaterialColor(color);
-            }
-            if (model?.parent && model.parent instanceof ThreeGroup) {
-                const groupShell = model.parent.children.reduce((pre, subModel) => {
-                    pre.add(subModel.extruderConfig.shell);
-                    return pre;
-                }, new Set());
-                if (groupShell.size === 1) {
-                    model.parent.extruderConfig.shell = Array.from(groupShell.values())[0];
-                } else {
-                    model.parent.extruderConfig.shell = '2';
-                }
             }
         });
         modelGroup.models = models.concat();

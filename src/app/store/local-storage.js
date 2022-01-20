@@ -15,7 +15,8 @@ if (isElectron()) {
     userData = {
         path: {
             'widget': path.join(app.getPath('userData'), 'widget.json'),
-            'machine': path.join(app.getPath('userData'), 'machine.json')
+            'machine': path.join(app.getPath('userData'), 'machine.json'),
+            'components': path.join(app.getPath('userData'), 'component.json')
         }
     };
 }
@@ -80,16 +81,19 @@ const getLocalStore = (name) => {
 
 export const widgetStore = getLocalStore('widget');
 export const machineStore = getLocalStore('machine');
+export const componentsStore = getLocalStore('components');
 
 const storeManager = {
     widgetStore,
     machineStore,
+    componentsStore,
     clear: () => {
         machineStore.clear();
         widgetStore.clear();
+        componentsStore.clear();
     },
     get: () => {
-        return _.merge(machineStore.get(), widgetStore.get());
+        return _.merge(machineStore.get(), widgetStore.get(), componentsStore.get());
     }
 };
 export default storeManager;

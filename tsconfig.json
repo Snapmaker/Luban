@@ -3,7 +3,10 @@
         "allowJs": true,
         "sourceMap": true,
         "target": "es5",
-        "noUnusedLocals": true
+        "noUnusedLocals": true,
+        "esModuleInterop": true
     },
-    "include": ["./src/**/*"]
+    "include": [
+        "./src/**/*"
+    ]
 }

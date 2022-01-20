@@ -1,24 +1,13 @@
 import type ModelGroup from '../../models/ModelGroup';
+import { ModelTransformation } from '../../models/ThreeBaseModel';
 import type ThreeGroup from '../../models/ThreeGroup';
 import ThreeModel from '../../models/ThreeModel';
 import Operation from './Operation';
 
-type Positon = {
-    positionX: number,
-    positionY: number,
-    positionZ: number,
-    rotationX: number,
-    rotationY: number,
-    rotationZ: number,
-    scaleX: number,
-    scaleY: number,
-    scaleZ: number
-}
-
 type ScaleOperationProp = {
     target: ThreeGroup | ThreeModel,
-    from: Positon,
-    to: Positon
+    from: ModelTransformation,
+    to: ModelTransformation
 }
 
 type ScaleOperationState = ScaleOperationProp & {
@@ -44,24 +33,25 @@ export default class ScaleOperation3D extends Operation<ScaleOperationState> {
         this.exec(this.state.from);
     }
 
-    private exec({ positionX, positionY, positionZ, rotationX, rotationY, rotationZ, scaleX, scaleY, scaleZ }) {
+    private exec(transform: ModelTransformation) {
         const model = this.state.target;
         const modelGroup = this.state.modelGroup;
-        modelGroup.unselectAllModels({ recursive: !!model.parent });
+        modelGroup.unselectAllModels();
 
         if (model instanceof ThreeModel && model.supportTag) {
             modelGroup.addModelToSelectedGroup(model);
-            model.meshObject.parent.position.set(positionX, positionY, 0);
-            model.meshObject.parent.scale.set(scaleX, scaleY, scaleZ);
-            model.meshObject.parent.updateMatrix();
+            modelGroup.updateSelectedGroupTransformation({ ...transform }, false);
             modelGroup.unselectAllModels();
+            model.onTransform();
             model.computeBoundingBox();
             model.target.stickToPlate();
             model.target.computeBoundingBox();
         } else {
-            model.meshObject.position.set(positionX, positionY, positionZ);
-            model.meshObject.rotation.set(rotationX, rotationY, rotationZ);
-            model.meshObject.scale.set(scaleX, scaleY, scaleZ);
+            modelGroup.addModelToSelectedGroup(model);
+            modelGroup.updateSelectedGroupTransformation({ ...transform }, false);
+            modelGroup.unselectAllModels();
+            model.onTransform();
+
             model.stickToPlate();
             model.computeBoundingBox();
             modelGroup.updatePrimeTowerHeight();

@@ -41,10 +41,13 @@ import { actions as editorActions } from '../../flux/editor';
 import { actions as projectActions } from '../../flux/project';
 import { actions as operationHistoryActions } from '../../flux/operation-history';
 import { actions as settingsActions } from '../../flux/setting';
+import { actions as appGlobalActions } from '../../flux/app-global';
 import styles from './styles/appbar.styl';
 // import HomePage from '../pages/HomePage';
 // import Workspace from '../pages/Workspace';
 import ModelExporter from '../widgets/PrintingVisualizer/ModelExporter';
+import Anchor from '../components/Anchor';
+import SvgIcon from '../components/SvgIcon';
 
 class AppLayout extends PureComponent {
     static propTypes = {
@@ -75,7 +78,11 @@ class AppLayout extends PureComponent {
         restartGuideTours: PropTypes.func.isRequired,
         machineInfo: PropTypes.object.isRequired,
         updateMachineToolHead: PropTypes.func.isRequired,
-        longTermBackupConfig: PropTypes.func.isRequired
+        longTermBackupConfig: PropTypes.func.isRequired,
+        showSavedModal: PropTypes.bool.isRequired,
+        savedModalType: PropTypes.string.isRequired,
+        savedModalFilePath: PropTypes.string.isRequired,
+        updateSavedModal: PropTypes.func.isRequired
     };
 
     state = {
@@ -190,6 +197,96 @@ class AppLayout extends PureComponent {
                 showCheckForUpdatesModal: true
             });
         },
+        renderSavedModal: () => {
+            // TODO, add a component
+            const onClose = () => {
+                this.props.updateSavedModal({ showSavedModal: false });
+            };
+            if (this.props.savedModalType === 'web') {
+                return (
+                    <div className="border-default-black-5 border-radius-4 box-shadow-default width-200">
+                        <div className="sm-flex">
+                            Saved
+                            <div className="sm-flex-auto">
+                                <SvgIcon
+                                    name="Cancel"
+                                    type={['static']}
+                                    size="24"
+                                    onClick={onClose}
+                                />
+                            </div>
+                        </div>
+                    </div>
+                );
+            }
+            if (this.props.savedModalType === 'electron') {
+                const openFolder = () => {
+                    const ipc = window.require('electron').ipcRenderer;
+                    ipc.send('open-saved-path', this.props.savedModalFilePath);
+                };
+                return (
+                    <div
+                        className={classNames('border-default-black-5', 'border-radius-4', 'box-shadow-default', 'position-ab',
+                            'background-color-white', 'padding-horizontal-16', 'padding-vertical-16')}
+                        style={{
+                            zIndex: 9999, // TODO?
+                            left: 'calc((100% - 360px) / 2)',
+                            transform: 'translateX(-50%)',
+                            maxWidth: '428px',
+                            marginTop: '-10%'
+                        }}
+                    >
+                        <div
+                            className="sm-flex justify-space-between"
+                        >
+                            <div
+                                className="sm-flex-auto"
+                                style={{
+                                    fontFamily: 'Roboto',
+                                    fontStyle: 'normal',
+                                    fontSize: '16px',
+                                    fontWeight: '500'
+                                }}
+                            >
+                                <SvgIcon
+                                    className="margin-top-4"
+                                    name="WarningTipsSuccess"
+                                    size="16"
+                                    type={['static']}
+                                    color="#4cb518"
+                                />
+                                <span>
+                                    {'File Saved. '}
+                                </span>
+                                <Anchor
+                                    onClick={openFolder}
+                                >
+                                    Open Folder
+                                </Anchor>
+                            </div>
+                            <div className="sm-flex-auto">
+                                <SvgIcon
+                                    className="margin-top-4"
+                                    name="Cancel"
+                                    type={['static']}
+                                    size="16"
+                                    onClick={onClose}
+                                />
+                            </div>
+                        </div>
+                        <div
+                            className="sm-flex"
+                            style={{
+                                wordBreak: 'break-all'
+                            }}
+                        >
+                            {`Saved to : ${this.props.savedModalFilePath}`}
+                        </div>
+                    </div>
+                );
+            }
+            return null;
+        },
         openProject: async (file) => {
             if (!file) {
                 // this.fileInput.current.value = null;
@@ -281,7 +378,17 @@ class AppLayout extends PureComponent {
                 return;
             }
             const blob = new Blob([output], { type: 'text/plain;charset=utf-8' });
-            UniApi.File.writeBlobToFile(blob, path);
+            UniApi.File.writeBlobToFile(blob, path, (type, filePath = '') => {
+                const pos = filePath.lastIndexOf('/');
+                if (pos > -1) {
+                    filePath = filePath.substr(0, pos + 1);
+                }
+                this.props.updateSavedModal({
+                    showSavedModal: true,
+                    savedModalType: type,
+                    savedModalFilePath: filePath
+                });
+            });
         },
         initUniEvent: () => {
             UniApi.Event.on('message', (event, message) => {
@@ -610,6 +717,7 @@ class AppLayout extends PureComponent {
 
     render() {
         const { showSettingsModal, showDevelopToolsModal, showCheckForUpdatesModal } = this.state;
+        const { showSavedModal } = this.props;
         return (
             <div className={isElectron() ? null : 'appbar'}>
                 <AppBar />
@@ -619,6 +727,7 @@ class AppLayout extends PureComponent {
                 <div className={isElectron() ? null : classNames(styles['app-content'])}>
                     {this.props.children}
                 </div>
+                { showSavedModal ? this.actions.renderSavedModal() : null }
             </div>
         );
     }
@@ -629,13 +738,17 @@ const mapStateToProps = (state) => {
     const { currentModalPath } = state.appbarMenu;
     const { shouldCheckForUpdate } = machineInfo;
     const { modelGroup } = state.printing;
+    const { showSavedModal, savedModalType, savedModalFilePath } = state.appGlobal;
     // const projectState = state.project;
     return {
         currentModalPath: currentModalPath ? currentModalPath.slice(1) : currentModalPath, // exclude hash character `#`
         machineInfo,
         shouldCheckForUpdate,
         store: state,
-        modelGroup
+        modelGroup,
+        showSavedModal,
+        savedModalType,
+        savedModalFilePath
     };
 };
 
@@ -662,7 +775,8 @@ const mapDispatchToProps = (dispatch) => {
         updateIsDownloading: (isDownloading) => dispatch(machineActions.updateIsDownloading(isDownloading)),
         restartGuideTours: (pathname, history) => dispatch(projectActions.startProject(pathname, pathname, history, true)),
         updateMachineToolHead: (toolHead, series, headType) => dispatch(machineActions.updateMachineToolHead(toolHead, series, headType)),
-        longTermBackupConfig: () => dispatch(settingsActions.longTermBackupConfig())
+        longTermBackupConfig: () => dispatch(settingsActions.longTermBackupConfig()),
+        updateSavedModal: (options) => dispatch(appGlobalActions.updateSavedModal(options))
     };
 };
 

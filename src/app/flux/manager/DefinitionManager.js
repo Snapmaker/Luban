@@ -1,7 +1,16 @@
+import { includes } from 'lodash';
 import api from '../../api';
 import i18n from '../../lib/i18n';
 import { HEAD_CNC, RIGHT_EXTRUDER_MAP_NUMBER } from '../../constants';
 
+const primeTowerDefinitionKeys = [
+    'prime_tower_enable',
+    'prime_tower_size',
+    'prime_tower_position_x',
+    'prime_tower_position_y',
+    'prime_tower_brim_enbale',
+    'prime_tower_wipe_enabled'
+];
 class DefinitionManager {
     headType = HEAD_CNC;
 
@@ -18,38 +27,13 @@ class DefinitionManager {
     // series = '';
 
     async init(headType, configPathname) {
-        // if (
-        //     seriesWithToolhead.series === MACHINE_SERIES.ORIGINAL_LZ.value
-        // //    || series === MACHINE_SERIES.CUSTOM.value
-        // ) {
-        //     this.seriesWithToolhead = seriesWithToolhead.seriesWithToolhead;
-        // } else {
-        //     this.seriesWithToolhead = series;
-        // }
         this.configPathname = configPathname;
         this.headType = headType;
         let res;
-        // TODO useless
-        // let definitionId = 'snapmaker2';
-        // if (
-        //     this.series === MACHINE_SERIES.ORIGINAL.value
-        //     || this.series === MACHINE_SERIES.ORIGINAL_LZ.value
-        //     || this.series === MACHINE_SERIES.CUSTOM.value
-        // ) {
-        //     definitionId = 'snapmaker';
-        // } else {
-        //     definitionId = 'snapmaker2';
-        // }
-        //
-        // res = await api.profileDefinitions.getDefinition(headType, definitionId, this.series);
-        // this.snapmakerDefinition = res.body.definition;
-        // End TODO useless
-
         // active definition
         res = await this.getDefinition('active', false);
         this.activeDefinition = res;
         res = await api.profileDefinitions.getDefaultDefinitions(this.headType, this.configPathname);
-        // res = await api.profileDefinitions.getConfigDefinitions(this.headType, this.configPathname);
         this.defaultDefinitions = res.body.definitions.map(item => {
             item.isDefault = true;
             if (item.i18nCategory) {
@@ -265,7 +249,7 @@ class DefinitionManager {
         };
     }
 
-    finalizeActiveDefinition(activeDefinition) {
+    finalizeActiveDefinition(activeDefinition, hasPrimeTower = false) {
         const definition = {
             definitionId: 'active_final',
             name: 'Active Profile',
@@ -297,6 +281,15 @@ class DefinitionManager {
                         default_value: '0'
                     };
                     definition.ownKeys.push(key);
+                }
+                if (hasPrimeTower) {
+                    if (includes(primeTowerDefinitionKeys, key)) {
+                        definition.settings[key] = {
+                            label: setting.label,
+                            default_value: setting.default_value
+                        };
+                        definition.ownKeys.push(key);
+                    }
                 }
             });
 

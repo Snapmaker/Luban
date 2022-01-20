@@ -1,4 +1,4 @@
-import uuid from 'uuid';
+import { v4 as uuid } from 'uuid';
 import { includes } from 'lodash';
 import * as THREE from 'three';
 import { controller } from '../lib/controller';
@@ -42,9 +42,9 @@ class ToolPath {
 
     constructor(options) {
         const { id, name, baseName, headType, type, useLegacyEngine = false, modelMode,
-            visibleModelIDs, gcodeConfig, toolParams = {}, materials = {}, modelGroup } = options;
+            visibleModelIDs, modelIDs, gcodeConfig, toolParams = {}, materials = {}, modelGroup } = options;
 
-        this.id = id || uuid.v4();
+        this.id = id || uuid();
         this.name = name;
         this.baseName = baseName;
         this.headType = headType;
@@ -52,7 +52,7 @@ class ToolPath {
         this.type = type;
         this.status = IDLE;
         this.useLegacyEngine = useLegacyEngine;
-        this.visibleModelIDs = visibleModelIDs.map(v => v);
+        this.visibleModelIDs = (visibleModelIDs || modelIDs).map(v => v);
 
         for (const modelID of this.visibleModelIDs) {
             this.modelMap.set(modelID, {

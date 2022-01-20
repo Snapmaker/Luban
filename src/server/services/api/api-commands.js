@@ -1,7 +1,7 @@
 import find from 'lodash/find';
 import castArray from 'lodash/castArray';
 import isPlainObject from 'lodash/isPlainObject';
-import uuid from 'uuid';
+import { v4 as uuid } from 'uuid';
 import settings from '../../config/settings';
 import logger from '../../lib/logger';
 // import taskRunner from '../services/taskrunner';
@@ -28,7 +28,7 @@ const getSanitizedRecords = () => {
         const record = records[i];
 
         if (!record.id) {
-            record.id = uuid.v4();
+            record.id = uuid();
             shouldUpdate = true;
         }
 
@@ -98,7 +98,7 @@ export const create = (req, res) => {
     try {
         const records = getSanitizedRecords();
         const record = {
-            id: uuid.v4(),
+            id: uuid(),
             mtime: new Date().getTime(),
             enabled: !!enabled,
             title: title,

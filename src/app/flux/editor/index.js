@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import path from 'path';
-import uuid from 'uuid';
+import { v4 as uuid } from 'uuid';
 import _, { includes } from 'lodash';
 
 import ToolpathRendererWorker from '../../workers/ToolpathRenderer.worker';
@@ -286,7 +286,7 @@ export const actions = {
                 }));
             });
 
-            controller.on('taskProgress:cutModel', () => {});
+            controller.on('taskProgress:cutModel', () => { });
 
             // task completed
             controller.on('taskCompleted:processImage', (taskResult) => {
@@ -893,7 +893,7 @@ export const actions = {
         dispatch(actions.resetProcessState(headType));
 
         controller.commitProcessImage({
-            taskId: uuid.v4(),
+            taskId: uuid(),
             headType: headType,
             data: options
         });
@@ -2035,7 +2035,7 @@ export const actions = {
             }
         }));
         controller.commitCutModelTask({
-            taskId: uuid.v4(),
+            taskId: uuid(),
             headType: headType,
             data: options
         });
@@ -2105,7 +2105,7 @@ export const actions = {
                             throw new Error('geometry invalid');
                         }
                     },
-                    () => {}, // onprogress
+                    () => { }, // onprogress
                     (err) => {
                         onError && onError(err);
                         dispatch(actions.updateState(headType, {

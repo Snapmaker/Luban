@@ -1,4 +1,4 @@
-import uuid from 'uuid';
+import { v4 as uuid } from 'uuid';
 import _ from 'lodash';
 import { baseActions } from './actions-base';
 import { controller } from '../../lib/controller';
@@ -50,7 +50,10 @@ export const processActions = {
             }
         });
         if (visibleToolPathsLength > 0) {
-            progressStatesManager.startProgress(PROCESS_STAGE.CNC_LASER_GENERATE_TOOLPATH_AND_PREVIEW, [visibleToolPathsLength, visibleToolPathsLength, visibleToolPathsLength]);
+            progressStatesManager.startProgress(
+                PROCESS_STAGE.CNC_LASER_GENERATE_TOOLPATH_AND_PREVIEW,
+                [visibleToolPathsLength, visibleToolPathsLength, visibleToolPathsLength]
+            );
         }
         toolPathGroup.toolPaths.forEach((toolPath) => {
             toolPath.setWarningStatus();
@@ -329,16 +332,14 @@ export const processActions = {
         toolPaths[0].thumbnail = toolPathGroup.thumbnail;
 
         dispatch(baseActions.updateState(
-            headType, {
-                isGcodeGenerating: true
-            }
+            headType, { isGcodeGenerating: true }
         ));
         dispatch(baseActions.updateState(headType, {
             stage: STEP_STAGE.CNC_LASER_GENERATING_GCODE,
             progress: progressStatesManager.updateProgress(STEP_STAGE.CNC_LASER_GENERATING_GCODE, 0.1)
         }));
         controller.commitGcodeTask({
-            taskId: uuid.v4(),
+            taskId: uuid(),
             headType: headType,
             data: toolPaths
         });
@@ -351,7 +352,9 @@ export const processActions = {
         const models = _.filter(modelGroup.getModels(), { 'visible': true });
         const toolPathsModelIds = toolPaths.reduce((prev, item) => {
             if (item.visible) {
-                prev.add(item.visibleModelIDs);
+                item.visibleModelIDs.map(modelID => {
+                    return prev.add(modelID);
+                });
             }
             return prev;
         }, new Set());
@@ -415,7 +418,7 @@ export const processActions = {
         }
 
         controller.commitViewPathTask({
-            taskId: uuid.v4(),
+            taskId: uuid(),
             headType: headType,
             data: viewPathInfos
         });

@@ -1,4 +1,4 @@
-import uuid from 'uuid';
+import { v4 as uuid } from 'uuid';
 import * as THREE from 'three';
 import Canvg from 'canvg';
 import { coordGmSvgToModel } from '../ui/SVGEditor/element-utils';
@@ -1122,7 +1122,12 @@ class SvgModel extends BaseModel {
         }
         if (Object.keys(others)) {
             for (const key of Object.keys(others)) {
-                this[key] = others[key];
+                // For inner text, have to update 'originalFile' inside resource when 'uploadName' changed
+                if (key === 'uploadName') {
+                    this.resource.originalFile.update(others[key]);
+                } else {
+                    this[key] = others[key];
+                }
             }
         }
 
@@ -1138,7 +1143,7 @@ class SvgModel extends BaseModel {
     clone(modelGroup) {
         const clone = new SvgModel({ ...this }, modelGroup);
         clone.originModelID = this.modelID;
-        clone.modelID = uuid.v4();
+        clone.modelID = uuid();
         clone.generateModelObject3D();
         clone.generateProcessObject3D();
         this.meshObject.updateMatrixWorld();

@@ -11,13 +11,15 @@ import {
     getCurrentHeadType,
     COORDINATE_MODE_CENTER, COORDINATE_MODE_BOTTOM_CENTER, PAGE_EDITOR, DISPLAYED_TYPE_MODEL,
     MAX_RECENT_FILES_LENGTH,
-    LOAD_MODEL_FROM_OUTER
+    LOAD_MODEL_FROM_OUTER,
+    SINGLE_EXTRUDER_TOOLHEAD_FOR_SM2
 } from '../../constants';
 import api from '../../api';
 import { actions as printingActions } from '../printing';
 import { actions as editorActions } from '../editor';
 // import machineAction from '../machine/action-base';
 import { actions as workspaceActions } from '../workspace';
+import { actions as appGlobalActions } from '../app-global';
 import { bubbleSortByAttribute } from '../../lib/numeric-utils';
 import { UniformToolpathConfig } from '../../lib/uniform-toolpath-config';
 import { checkIsSnapmakerProjectFile, checkIsGCodeFile, checkObjectIsEqual } from '../../lib/check-name';
@@ -186,21 +188,30 @@ export const actions = {
     onRecovery: (envHeadType, envObj, backendRecover = true, shouldSetFileName = true) => async (dispatch, getState) => {
         UniApi.Window.setOpenedFile();
         let { content } = getState().project[envHeadType];
+        const { toolHead: { printingToolhead } } = getState().machine;
         if (!envObj) {
             envObj = JSON.parse(content);
         }
+        if (envObj?.machineInfo?.headType === '3dp') envObj.machineInfo.headType = HEAD_PRINTING;
+        const allModels = envObj?.models;
+        allModels.forEach((model) => {
+            if (model.headType === '3dp') {
+                model.headType = HEAD_PRINTING;
+            }
+        });
         // backup project if needed
         if (backendRecover) {
-            if (envObj?.machineInfo?.headType === '3dp') envObj.machineInfo.headType = HEAD_PRINTING;
-            const allModels = envObj?.models;
-            allModels.forEach((model) => {
-                if (model.headType === '3dp') {
-                    model.headType = HEAD_PRINTING;
-                }
-            });
             UniformToolpathConfig(envObj);
             content = JSON.stringify(envObj);
             await api.recoverEnv({ content });
+        }
+        if (envObj?.machineInfo?.headType === HEAD_PRINTING && printingToolhead === SINGLE_EXTRUDER_TOOLHEAD_FOR_SM2) {
+            allModels.forEach((model) => {
+                model.extruderConfig = {
+                    infill: '0',
+                    shell: '0',
+                };
+            });
         }
         let modActions = null;
         const modState = getState()[envHeadType];
@@ -274,19 +285,39 @@ export const actions = {
         await dispatch(actions.updateState(envHeadType, { unSaved: true }));
     },
 
-    exportFile: (targetFile, renderGcodeFileName = null) => async () => {
+    exportFile: (targetFile, renderGcodeFileName = null) => async (dispatch) => {
         const tmpFile = `/Tmp/${targetFile}`;
-        await UniApi.File.exportAs(targetFile, tmpFile, renderGcodeFileName);
+        await UniApi.File.exportAs(targetFile, tmpFile, renderGcodeFileName, (type, filePath = '') => {
+            const pos = filePath.lastIndexOf('/');
+            if (pos > -1) {
+                filePath = filePath.substr(0, pos + 1);
+            }
+            dispatch(appGlobalActions.updateSavedModal({
+                showSavedModal: true,
+                savedModalType: type,
+                savedModalFilePath: filePath
+            }));
+        });
     },
 
-    exportConfigFile: (targetFile, subCategory) => async () => {
+    exportConfigFile: (targetFile, subCategory) => async (dispatch) => {
         let configFile;
         if (subCategory) {
             configFile = `/Config/${subCategory}/${targetFile}`;
         } else {
             configFile = `/Config/${targetFile}`;
         }
-        await UniApi.File.exportAs(targetFile, configFile);
+        await UniApi.File.exportAs(targetFile, configFile, null, (type, filePath = '') => {
+            const pos = filePath.lastIndexOf('/');
+            if (pos > -1) {
+                filePath = filePath.substr(0, pos + 1);
+            }
+            dispatch(appGlobalActions.updateSavedModal({
+                showSavedModal: true,
+                savedModalType: type,
+                savedModalFilePath: filePath
+            }));
+        });
     },
 
     setOpenedFileWithType: (headType, openedFile) => async (dispatch) => {
@@ -298,7 +329,17 @@ export const actions = {
     saveAsFile: (headType) => async (dispatch) => {
         const { body: { targetFile } } = await api.packageEnv({ headType });
         const tmpFile = `/Tmp/${targetFile}`;
-        const openedFile = await UniApi.File.saveAs(targetFile, tmpFile);
+        const openedFile = await UniApi.File.saveAs(targetFile, tmpFile, (type, filePath = '') => {
+            const pos = filePath.lastIndexOf('/');
+            if (pos > -1) {
+                filePath = filePath.substr(0, pos + 1);
+            }
+            dispatch(appGlobalActions.updateSavedModal({
+                showSavedModal: true,
+                savedModalType: type,
+                savedModalFilePath: filePath
+            }));
+        });
         if (openedFile) {
             await dispatch(actions.setOpenedFileWithType(headType, openedFile));
         }

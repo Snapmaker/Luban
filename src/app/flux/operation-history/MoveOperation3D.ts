@@ -1,5 +1,5 @@
 import type ModelGroup from '../../models/ModelGroup';
-import type ThreeGroup from '../../models/ThreeGroup';
+import ThreeGroup from '../../models/ThreeGroup';
 import Operation from './Operation';
 import ThreeModel from '../../models/ThreeModel';
 
@@ -41,17 +41,31 @@ export default class MoveOperation3D extends Operation<MoveOperationState> {
     private exec({ positionX, positionY, positionZ }) {
         const model = this.state.target;
         const modelGroup = this.state.modelGroup;
-        modelGroup.unselectAllModels({ recursive: !!model.parent });
+        modelGroup.unselectAllModels();
         if (model instanceof ThreeModel && model.supportTag) {
             modelGroup.addModelToSelectedGroup(model);
-            model.meshObject.parent.position.set(positionX, positionY, 0);
+            modelGroup.updateSelectedGroupTransformation({
+                positionX, positionY, positionZ: 0
+            });
             model.meshObject.parent.updateMatrix();
             modelGroup.unselectAllModels();
+            model.onTransform();
 
             modelGroup.stickToPlateAndCheckOverstepped(model.target);
         } else {
-            model.meshObject.position.set(positionX, positionY, positionZ);
-            modelGroup.stickToPlateAndCheckOverstepped(model);
+            modelGroup.addModelToSelectedGroup(model);
+            modelGroup.updateSelectedGroupTransformation({
+                positionX, positionY, positionZ
+            });
+
+            modelGroup.unselectAllModels();
+            model.onTransform();
+            if (model instanceof ThreeGroup) {
+                modelGroup.stickToPlateAndCheckOverstepped(model);
+            }
+            if (model.parent && model.parent instanceof ThreeGroup) {
+                model.parent.computeBoundingBox();
+            }
             modelGroup.updatePrimeTowerHeight();
         }
     }

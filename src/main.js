@@ -153,6 +153,9 @@ function updateHandle() {
     ipcMain.on('updateShouldCheckForUpdate', (event, shouldCheckForUpdate) => {
         mainWindow.webContents.send('update-should-check-for-update', shouldCheckForUpdate);
     });
+    ipcMain.on('open-saved-path', (event, savedPath) => {
+        shell.openItem(savedPath);
+    });
 }
 
 // https://github.com/electron/electron/blob/v8.5.1/docs/api/app.md#apprequestsingleinstancelock

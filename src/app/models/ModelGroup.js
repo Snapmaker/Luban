@@ -1,7 +1,7 @@
 import { Vector3, Group, Matrix4, BufferGeometry, MeshPhongMaterial, Mesh, DoubleSide, Float32BufferAttribute, MeshBasicMaterial } from 'three';
 import EventEmitter from 'events';
 // import { EPSILON } from '../../constants';
-import uuid from 'uuid';
+import { v4 as uuid } from 'uuid';
 import _ from 'lodash';
 import i18n from '../lib/i18n';
 
@@ -160,6 +160,7 @@ class ModelGroup extends EventEmitter {
             return {
                 positionX: this.selectedGroup.position.x,
                 positionY: this.selectedGroup.position.y,
+                positionZ: this.selectedGroup.position.z,
                 scaleX: this.selectedGroup.scale.x,
                 scaleY: this.selectedGroup.scale.y,
                 scaleZ: this.selectedGroup.scale.z,
@@ -210,7 +211,7 @@ class ModelGroup extends EventEmitter {
                     subModel.visible = visible;
                     subModel.meshObject.visible = visible;
                 });
-            } else if (model.parent) {
+            } else if (model.parent && model.parent instanceof ThreeGroup) {
                 let parentVisible = false;
                 model.parent.traverse((subModel) => {
                     parentVisible = subModel.visible || parentVisible;
@@ -241,11 +242,11 @@ class ModelGroup extends EventEmitter {
         });
     }
 
-    removeModel(model) {
+    removeModel(model, loop = false) {
         if (model.type === 'primeTower') return;
         if (model instanceof ThreeGroup) {
             model.children.forEach((child) => {
-                this.removeModel(child);
+                this.removeModel(child, true);
             });
         }
         if (!model.supportTag && model instanceof ThreeModel) { // remove support children
@@ -253,7 +254,12 @@ class ModelGroup extends EventEmitter {
                 .filter(i => i.supportTag && i.target === model)
                 .map(m => this.removeModel(m));
         }
-
+        if (model.meshObject && model.parent instanceof ThreeGroup) {
+            // Reset the model to be deleted to the object
+            // Then update the tran of the model to the coordinates based on the world coordinate system
+            ThreeUtils.setObjectParent(model.meshObject, this.object);
+            model.onTransform();
+        }
         if (model.meshObject && model.meshObject.parent) {
             model.meshObject.parent.remove(model.meshObject);
         }
@@ -263,19 +269,23 @@ class ModelGroup extends EventEmitter {
         }
         model.meshObject.removeEventListener('update', this.onModelUpdate);
         if (model.parent instanceof ThreeGroup) {
-            this.models = this.filterModels(this.models, (item) => {
-                if (model === item) {
-                    if (item.parent.children.length === 1) {
-                        this.object.remove(item.parent.meshObject);
-                    }
-                    return false;
+            const groupIndex = this.models.findIndex(m => m.modelID === model.parent.modelID);
+            if (this.models[groupIndex].children.length === 1) {
+                this.models[groupIndex].onTransform();
+                this.models.splice(groupIndex, 1);
+            } else {
+                this.models[groupIndex].children = this.models[groupIndex].children.filter(subModel => subModel !== model);
+                if (!loop) {
+                    // When deleting a group, do not do stickToPlate again. To avoid updating the center point of the group
+                    // Otherwise, the z-axis of the model in the group being deleted will be affected
+                    this.stickToPlateAndCheckOverstepped(this.models[groupIndex]);
                 }
-                return true;
-            });
+                this.models[groupIndex].updateGroupExtruder();
+            }
+            this.models = this.models.concat();
         } else {
             this.models = this.models.filter(item => item !== model);
         }
-        this.stickToPlateAndCheckOverstepped(model);
         this.modelChanged();
         model.sourceType === '3d' && this.updatePrimeTowerHeight();
     }
@@ -306,7 +316,7 @@ class ModelGroup extends EventEmitter {
     // todo, remove mesh obj in 2d
     removeSelectedModel() {
         this._removeSelectedModels();
-        this.unselectAllModels({ recursive: true });
+        this.unselectAllModels();
         return this.getState();
     }
 
@@ -323,7 +333,7 @@ class ModelGroup extends EventEmitter {
      * Remove all models.
      */
     removeAllModels() {
-        this.unselectAllModels({ recursive: true });
+        this.unselectAllModels();
         this._removeAllModels();
 
         this.modelChanged();
@@ -545,7 +555,9 @@ class ModelGroup extends EventEmitter {
         }
     }
 
-    // used only for laser/cnc
+    /**
+     * used only for laser/cnc
+     */
     addSelectedModels(modelArray) {
         this.selectedGroup = new Group();
         for (const model of modelArray) {
@@ -601,11 +613,11 @@ class ModelGroup extends EventEmitter {
                         }
                     }
                     if (isModelAcrossGroup) {
-                        this.unselectAllModels({ recursive: true });
+                        this.unselectAllModels();
                     }
 
                     if (selectModel.parent && this.selectedModelArray.length === selectModel.parent.children.length - 1) {
-                        this.unselectAllModels({ recursive: true });
+                        this.unselectAllModels();
                         this.addModelToSelectedGroup(selectModel.parent);
                     } else {
                         this.addModelToSelectedGroup(selectModel);
@@ -615,7 +627,7 @@ class ModelGroup extends EventEmitter {
                 }
             }
         } else {
-            this.unselectAllModels({ recursive: true });
+            this.unselectAllModels();
             if (selectModel) {
                 if (selectModel?.parent?.children.length === 1) {
                     this.addModelToSelectedGroup(selectModel.parent);
@@ -635,30 +647,6 @@ class ModelGroup extends EventEmitter {
                 this.traverseModels(model.children, callback);
             }
             (typeof callback === 'function') && callback(model);
-        });
-    }
-
-    /**
-     * filter models, If the return value of callback is false, it will filter
-     * @param {Array} models
-     * @param {Function} callback Callback function has a parameter, which is an item of the loop
-     * @returns new models
-     */
-    filterModels(models, callback) {
-        return models.filter((model) => {
-            if (model instanceof ThreeGroup) {
-                return callback(model) !== false && this.filterModels(model.children, callback).length > 0;
-            }
-            if (typeof callback === 'function') {
-                return callback(model);
-            }
-            return true;
-        }).map((model) => {
-            if (model instanceof ThreeGroup) {
-                model.children = this.filterModels(model.children, callback);
-                return model;
-            }
-            return model;
         });
     }
 
@@ -683,7 +671,7 @@ class ModelGroup extends EventEmitter {
         let model;
         switch (selectEvent) {
             case SELECTEVENT.UNSELECT:
-                this.unselectAllModels({ recursive: true });
+                this.unselectAllModels();
                 break;
             case SELECTEVENT.UNSELECT_ADDSELECT:
                 model = this.findModelByMesh(intersect.object);
@@ -697,7 +685,7 @@ class ModelGroup extends EventEmitter {
                     this.unselectAllModelsInGroup(model.parent);
                     this.unselectAllModels();
                 } else {
-                    this.unselectAllModels({ recursive: true });
+                    this.unselectAllModels();
                 }
                 if (model) {
                     this.addModelToSelectedGroup(model);
@@ -715,7 +703,7 @@ class ModelGroup extends EventEmitter {
                         }
                     }
                     if (isModelAcrossGroup) {
-                        this.unselectAllModels({ recursive: true });
+                        this.unselectAllModels();
                     }
                     // cannot select model and support
                     // cannot select multi support
@@ -732,7 +720,7 @@ class ModelGroup extends EventEmitter {
                     }
                     // If all models in the group are selected, select group
                     if (model.parent && this.selectedModelArray.length === model.parent.children.length - 1) {
-                        this.unselectAllModels({ recursive: true });
+                        this.unselectAllModels();
                         this.addModelToSelectedGroup(model.parent);
                     } else {
                         this.addModelToSelectedGroup(model);
@@ -756,7 +744,7 @@ class ModelGroup extends EventEmitter {
     }
 
     addModelToSelectedGroup(model) {
-        if (!(model instanceof Model)) return;
+        if (!(model instanceof Model) || model.isSelected) return;
         if (model.type === 'primeTower' && !model.visible) return;
         model.setSelected(true);
         ThreeUtils.applyObjectMatrix(this.selectedGroup, new Matrix4().copy(this.selectedGroup.matrix).invert());
@@ -824,7 +812,7 @@ class ModelGroup extends EventEmitter {
                 this.addModelToSelectedGroup(model);
             }
         });
-
+        this.prepareSelectedGroup();
         this.modelChanged();
 
         return { // warning: this may not be correct
@@ -841,13 +829,12 @@ class ModelGroup extends EventEmitter {
         });
     }
 
-    // Should the parameter be omitted ?
-    unselectAllModels({ recursive } = { recursive: false }) {
+    unselectAllModels() {
         const cancelSelectedModels = this.selectedModelArray.slice(0);
         this.selectedModelArray = [];
         if (this.headType === 'printing') {
             this.models.forEach((model) => {
-                if (recursive && model instanceof ThreeGroup) {
+                if (model instanceof ThreeGroup) {
                     model.children.forEach((subModel) => {
                         this.removeModelFromSelectedGroup(subModel);
                     });
@@ -897,7 +884,7 @@ class ModelGroup extends EventEmitter {
         if (modelsToCopy.length === 0) return this._getEmptyState();
 
         // Unselect all models
-        this.unselectAllModels({ recursive: true });
+        this.unselectAllModels();
 
         modelsToCopy.forEach((model) => {
             const newModel = model.clone(this);
@@ -915,10 +902,10 @@ class ModelGroup extends EventEmitter {
                 newModel.meshObject.updateMatrix();
                 newModel.computeBoundingBox();
 
-                newModel.modelID = modelID || uuid.v4();
+                newModel.modelID = modelID || uuid();
             } else {
                 newModel.meshObject.addEventListener('update', this.onModelUpdate);
-                newModel.modelID = modelID || uuid.v4();
+                newModel.modelID = modelID || uuid();
                 newModel.computeBoundingBox();
                 newModel.updateTransformation({
                     positionX: 0,
@@ -971,7 +958,7 @@ class ModelGroup extends EventEmitter {
                 newModel.meshObject.updateMatrix();
                 newModel.computeBoundingBox();
 
-                newModel.modelID = uuid.v4();
+                newModel.modelID = uuid();
 
                 this.models.push(newModel);
                 this.object.add(newModel.meshObject);
@@ -1173,6 +1160,8 @@ class ModelGroup extends EventEmitter {
      *
      * TODO: Laser and CNC was moved to somewhere else.
      *
+     * TODO: Is there a need to update the transform of the model?
+     *
      * @param transformation
      */
     updateSelectedGroupTransformation(transformation, newUniformScalingState = this.selectedGroup.uniformScalingState) {
@@ -1289,7 +1278,7 @@ class ModelGroup extends EventEmitter {
     // Note: the function is only useful for 3D object operations on Canvas
     onModelAfterTransform(shouldStickToPlate = true) {
         const selectedModelArray = this.selectedModelArray;
-        const { recovery } = this.unselectAllModels({ recursive: true });
+        const { recovery } = this.unselectAllModels();
         // update model's boundingbox which has supports
         selectedModelArray.forEach((selected) => {
             if (selected.sourceType === '3d' && shouldStickToPlate) {
@@ -1301,7 +1290,10 @@ class ModelGroup extends EventEmitter {
                     this.addModelToSelectedGroup(selected);
                 } else {
                     this.stickToPlateAndCheckOverstepped(selected);
-                    selected.parent && this.stickToPlateAndCheckOverstepped(selected.parent);
+                    if (selected.parent && selected.parent instanceof ThreeGroup) {
+                        this.stickToPlateAndCheckOverstepped(selected.parent);
+                        selected.parent.computeBoundingBox();
+                    }
                 }
             }
             selected.computeBoundingBox();
@@ -1577,11 +1569,11 @@ class ModelGroup extends EventEmitter {
                             group.add(newSubModelIDs);
                             this.groupsChildrenMap.delete(group);
                             this.models = [...this.models, group];
-                            this.addModelToSelectedGroup(group);
-
+                            group.stickToPlate();
                             group.computeBoundingBox();
                             const overstepped = this._checkOverstepped(group);
                             group.setOversteppedAndSelected(overstepped, group.isSelected);
+                            this.addModelToSelectedGroup(group);
                         } else {
                             this.groupsChildrenMap.set(group, newSubModelIDs);
                         }
@@ -1589,6 +1581,7 @@ class ModelGroup extends EventEmitter {
                 });
             } else {
                 // add to group and select
+                model.stickToPlate();
                 this.models.push(model);
                 // todo, use this to refresh obj list
                 this.models = [...this.models];
@@ -1825,20 +1818,19 @@ class ModelGroup extends EventEmitter {
         return new Promise((resolve, reject) => {
             if (this.selectedModelArray.length === 1) {
                 const model = this.selectedModelArray[0];
-                if (!model.convexGeometry) {
-                    if (model instanceof ThreeGroup) {
-                        model.computeConvex();
-                        const result = this.analyzeSelectedModelRotation();
-                        resolve(result);
-                    } else {
+                if (model instanceof ThreeGroup) {
+                    const result = this.analyzeSelectedModelRotation();
+                    resolve(result);
+                } else {
+                    if (!model.convexGeometry) {
                         this.once('set-convex', () => {
                             const result = this.analyzeSelectedModelRotation();
                             resolve(result);
                         });
+                    } else {
+                        const result = this.analyzeSelectedModelRotation();
+                        resolve(result);
                     }
-                } else {
-                    const result = this.analyzeSelectedModelRotation();
-                    resolve(result);
                 }
             } else {
                 reject();
@@ -1898,8 +1890,8 @@ class ModelGroup extends EventEmitter {
                         isRotationFace: true
                     };
                     group.add(mesh);
-                    model.meshObject.add(group);
                 });
+                model.meshObject.add(group);
             }
             return tableResult;
         }
@@ -1958,11 +1950,11 @@ class ModelGroup extends EventEmitter {
         return this.getState();
     }
 
-    group(groupFrom) {
+    group() {
         const selectedModelArray = this.selectedModelArray.slice(0);
-        this.unselectAllModels({ recursive: true });
+        this.unselectAllModels();
 
-        const group = new ThreeGroup({ groupFrom }, this);
+        const group = new ThreeGroup({}, this);
         // check visible models or groups
         if (selectedModelArray.some(model => model.visible)) {
             // insert group to the first model position in selectedModelArray
@@ -1973,10 +1965,6 @@ class ModelGroup extends EventEmitter {
                     this.models.push(model);
                     ThreeUtils.setObjectParent(model.meshObject, model.parent.meshObject.parent);
                     model.parent.computeBoundingBox();
-                    if (model.parent.meshObject.children.length === 0) {
-                        this.object.remove(model.parent.meshObject);
-                        this.models = this.models.filter(m => m.modelID !== model.parent.modelID);
-                    }
                 }
             });
 
@@ -2017,7 +2005,7 @@ class ModelGroup extends EventEmitter {
         return this.selectedModelArray.some(model => model instanceof ThreeGroup && model.visible);
     }
 
-    ungroup() {
+    ungroup({ autoStickToPlate } = { autoStickToPlate: true }) {
         const selectedModelArray = this.selectedModelArray.slice(0);
         this.unselectAllModels();
         // only visible groups can ungroup, others keep selected
@@ -2039,7 +2027,7 @@ class ModelGroup extends EventEmitter {
 
             ungroupedModels.forEach(model => {
                 this.addModelToSelectedGroup(model);
-                model.stickToPlate();
+                autoStickToPlate && model.stickToPlate();
             });
         }
         return this.getState();

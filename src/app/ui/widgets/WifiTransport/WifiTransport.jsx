@@ -171,7 +171,7 @@ const GcodePreviewItem = React.memo(({ gcodeFile, index, selected, onSelectFile,
                 )}
                 >
                     <input
-                        defaultValue={gcodeFile?.renderGcodeFileName.replace(/(\.gcode|\.cnc|\.nc)$/, '')}
+                        defaultValue={gcodeFile?.renderGcodeFileName?.replace(/(\.gcode|\.cnc|\.nc)$/, '')}
                         className={classNames('input-select')}
                         onBlur={() => onRenameEnd(uploadName, index)}
                         onKeyDown={(event) => onKeyDown(event)}
@@ -474,7 +474,7 @@ function WifiTransport({ widgetActions, controlActions }) {
                     target.copy(min).add(max).divideScalar(2);
                     const width = new THREE.Vector3().add(min).distanceTo(new THREE.Vector3().add(max));
                     const position = new THREE.Vector3(target.x, target.y, width * 2);
-                    canvas.current.setCamera(position, target);
+                    canvas.current && canvas.current.setCamera(position, target);
                 }
             }
         }
@@ -618,7 +618,7 @@ function WifiTransport({ widgetActions, controlActions }) {
                                 <div className="sm-flex height-32 margin-top-8">
                                     <Checkbox
                                         className="sm-flex-auto"
-                                        disabled={isRotate}
+                                        disabled={isRotate || connectionType === CONNECTION_TYPE_SERIAL}
                                         checked={isLaserPrintAutoMode}
                                         onChange={actions.onChangeLaserPrintMode}
                                     >
@@ -647,7 +647,10 @@ function WifiTransport({ widgetActions, controlActions }) {
                                         className="sm-flex-auto"
                                         disabled={connectionType === 'serial'}
                                         checked={isLaserAutoFocus}
-                                        onChange={() => setIsLaserAutoFocus(!isLaserAutoFocus)}
+                                        onChange={() => {
+                                            dispatch(machineActions.updateIsLaserPrintAutoMode(!isLaserAutoFocus));
+                                            setIsLaserAutoFocus(!isLaserAutoFocus);
+                                        }}
                                     >
                                         <span>{i18n._('key-Workspace/LaserStartJob-10w_3axis_start_job_auto_mode')}</span>
                                     </Checkbox>

@@ -417,6 +417,18 @@ class Visualizer extends PureComponent {
                 }
             }
         }
+
+        if (enablePrimeTower !== this.props.enablePrimeTower && printingToolhead === DUAL_EXTRUDER_TOOLHEAD_FOR_SM2) {
+            let primeTowerModel = find(modelGroup.models, { type: 'primeTower' });
+            if (!primeTowerModel) {
+                primeTowerModel = modelGroup.initPrimeTower();
+            }
+            if (enablePrimeTower) {
+                this.props.showPrimeTower(primeTowerModel);
+            } else {
+                this.props.hidePrimeTower(primeTowerModel);
+            }
+        }
         if (!Number.isNaN(primeTowerHeight) && !Number.isNaN(this.props.primeTowerHeight) && primeTowerHeight !== this.props.primeTowerHeight) {
             const primeTowerModel = find(modelGroup.models, { type: 'primeTower' });
             if (primeTowerModel) {
@@ -435,16 +447,6 @@ class Visualizer extends PureComponent {
             }
         }
         this.canvas.current.renderScene();
-        if (enablePrimeTower !== this.props.enablePrimeTower && printingToolhead === DUAL_EXTRUDER_TOOLHEAD_FOR_SM2) {
-            const primeTowerModel = find(modelGroup.models, { type: 'primeTower' });
-            if (primeTowerModel) {
-                if (!enablePrimeTower) {
-                    this.props.hidePrimeTower(primeTowerModel);
-                } else {
-                    this.props.showPrimeTower(primeTowerModel);
-                }
-            }
-        }
     }
 
     componentWillUnmount() {
@@ -636,7 +638,6 @@ const mapStateToProps = (state, ownProps) => {
         isActive,
         stage,
         size,
-        allModel: modelGroup.models,
         selectedModelArray: modelGroup.selectedModelArray,
         transformation: modelGroup.getSelectedModelTransformationForPrinting(),
         modelGroup,

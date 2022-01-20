@@ -1,4 +1,4 @@
-import uuid from 'uuid';
+import { v4 as uuid } from 'uuid';
 import * as THREE from 'three';
 import {
     LOAD_MODEL_FROM_INNER
@@ -128,7 +128,7 @@ class ThreeModel extends BaseModel {
         let position, scale, rotation;
         if (this.parent) {
             if (this.modelGroup.isModelSelected(this)) {
-                const { recovery } = this.modelGroup.unselectAllModels({ recursive: true });
+                const { recovery } = this.modelGroup.unselectAllModels();
                 position = this.meshObject.position.clone();
                 scale = this.meshObject.scale.clone();
                 rotation = this.meshObject.rotation.clone();
@@ -267,7 +267,7 @@ class ThreeModel extends BaseModel {
         };
         const clone = new ThreeModel(modelInfo, modelGroup);
         clone.originModelID = this.modelID;
-        clone.modelID = uuid.v4();
+        clone.modelID = uuid();
         this.meshObject.updateMatrixWorld();
 
         clone.setMatrix(this.meshObject.matrixWorld);
