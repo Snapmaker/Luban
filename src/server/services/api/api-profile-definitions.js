@@ -213,8 +213,8 @@ export const uploadDefinition = (req, res) => {
         definitionLoader.loadJSON(headType, definitionId, obj);
         const filePath = path.join(`${DataStorage.configDir}/${headType}/${series}`, `${definitionId}.def.json`);
         const backupPath = path.join(`${DataStorage.activeConfigDir}/${headType}/${series}`, `${definitionId}.def.json`);
+        const data = JSON.stringify(definitionLoader.toJSON(), null, 2);
         const callback = () => {
-            res.send({ status: 'ok', definition: definitionLoader.toObject() });
             fsWriteFile(backupPath, data, res, (err) => {
                 if (err) {
                     return res.send({ status: 'ok', definition: definitionLoader.toObject(), msg: 'Backup failed!' });
