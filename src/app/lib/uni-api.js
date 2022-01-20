@@ -4,6 +4,7 @@ import FileSaver from 'file-saver';
 import { isNil } from 'lodash';
 import events from 'events';
 import path from 'path';
+import { htmlToText } from 'html-to-text';
 import i18n from './i18n';
 import pkg from '../../../package.json';
 
@@ -72,8 +73,9 @@ const Update = {
         if (isElectron()) {
             const { remote, ipcRenderer } = window.require('electron');
             const { dialog } = remote;
-            const { releaseName } = downloadInfo;
-
+            const { releaseName, releaseNotes } = downloadInfo;
+            const text = htmlToText(releaseNotes, {
+            });
             const dialogOpts = {
                 type: 'info',
                 buttons: [i18n._('key-App/Update-Later'), i18n._('key-App/Update-Update Now')],
@@ -81,9 +83,10 @@ const Update = {
                 checkboxLabel: i18n._('key-App/Update-Automatically check for updates'),
                 checkboxChecked: shouldCheckForUpdate,
                 title: i18n._('key-App/Update-Update Snapmaker Luban'),
-                message: `Snapmaker Luban ${releaseName} ${i18n._('key-App/Update-Update')}`,
-                detail: `${i18n._('key-App/Update-Current version')} : ${oldVersion}`
-                // detail: 'A new version has been detected. Should i download it now?'
+                message: `Snapmaker Luban ${releaseName} ${i18n._('key-App/Update-Update')}. ${i18n._('key-App/Update-Current version')} : ${oldVersion}`,
+                textWidth: 600,
+                // detail: i18n._(`key-App/${span.innerText}`)
+                detail: `${text}\nLearn more about release notes please checkout [https://github.com/Snapmaker/Luban/releases]`
             };
             dialog.showMessageBox(remote.getCurrentWindow(), dialogOpts).then((returnValue) => {
                 if (returnValue.response === 1) {
@@ -161,15 +164,17 @@ const Menu = {
  * File control in electron
  */
 const File = {
-    writeBlobToFile(blob, newPath) {
+    writeBlobToFile(blob, newPath, callback = undefined) {
         if (isElectron()) {
             const fileReader = new FileReader();
             fileReader.onload = () => {
                 window.require('fs').writeFileSync(newPath, Buffer.from(new Uint8Array(fileReader.result)));
+                callback && callback('electron', newPath);
             };
             fileReader.readAsArrayBuffer(blob);
         } else {
             FileSaver.saveAs(blob, newPath, true);
+            callback && callback('web');
         }
     },
     save(targetFile, tmpFile) {
@@ -196,7 +201,7 @@ const File = {
      * @param tmpFile - temporary file path, e.g. "/Tmp/xxx.stl"
      */
     // export file for project file
-    async saveAs(targetFile, tmpFile) {
+    async saveAs(targetFile, tmpFile, callback = undefined) {
         if (isElectron()) {
             const fs = window.require('fs');
             const { app } = window.require('electron').remote;
@@ -219,6 +224,7 @@ const File = {
             const { ipcRenderer } = window.require('electron');
             ipcRenderer.send('add-recent-file', file);
 
+            callback && callback('electron', targetFile);
             return file;
         } else {
             request
@@ -226,13 +232,14 @@ const File = {
                 .responseType('blob')
                 .end((err, res) => {
                     FileSaver.saveAs(res.body, targetFile, true);
+                    callback && callback('web');
                 });
             return null;
         }
     },
 
     // export file for 3dp/laser/cnc
-    async exportAs(targetFile, tmpFile, renderGcodeFileName) {
+    async exportAs(targetFile, tmpFile, renderGcodeFileName = null, callback = undefined) {
         if (isNil(renderGcodeFileName)) {
             renderGcodeFileName = targetFile;
         } else {
@@ -260,6 +267,7 @@ const File = {
             const file = { path: targetFile, name: renderGcodeFileName };
             fs.copyFileSync(tmpFile, targetFile);
 
+            callback && callback('electron', targetFile);
             return file;
         } else {
             request
@@ -268,6 +276,7 @@ const File = {
                 .end((err, res) => {
                     // FileSaver.saveAs(res.body, targetFile, true);
                     FileSaver.saveAs(res.body, renderGcodeFileName, true);
+                    callback && callback('web');
                 });
             return null;
         }
@@ -356,7 +365,6 @@ const Dialog = {
         }
     },
     showSaveDialog(options, modal = true) {
-        console.log({ options, modal });
         if (isElectron()) {
             const remote = window.require('electron').remote;
             const { dialog } = remote;

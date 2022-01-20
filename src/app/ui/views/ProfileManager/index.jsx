@@ -3,7 +3,7 @@ import classNames from 'classnames';
 import PropTypes from 'prop-types';
 // import { useSelector, shallowEqual } from 'react-redux';
 import { isUndefined, cloneDeep, uniqWith } from 'lodash';
-import { HEAD_PRINTING } from '../../../constants';
+import { HEAD_PRINTING, PRINTING_MANAGER_TYPE_MATERIAL } from '../../../constants';
 import modal from '../../../lib/modal';
 import DefinitionCreator from '../DefinitionCreator';
 import Anchor from '../../components/Anchor';
@@ -92,7 +92,8 @@ function useGetDefinitions(allDefinitions, definitionState, setDefinitionState, 
     return definitionsRef;
 }
 
-function ProfileManager({ optionConfigGroup, disableCategory = true, managerTitle, selectedId, allDefinitions, outsideActions, isOfficialDefinition, activeDefinition, headType }) {
+function ProfileManager({ optionConfigGroup, disableCategory = true, managerTitle, managerDisplayType,
+    selectedId, allDefinitions, outsideActions, isOfficialDefinition, activeDefinition, headType }) {
     const [definitionState, setDefinitionState] = useSetState({
         definitionForManager: activeDefinition,
         definitionOptions: [],
@@ -479,7 +480,7 @@ function ProfileManager({ optionConfigGroup, disableCategory = true, managerTitl
                                                         {(cate.items.map((currentOption) => {
                                                             const definitionForManager = definitionState?.definitionForManager;
                                                             const materialSettingName = limitStringLength(currentOption.label ?? '', 24);
-                                                            const materialSettingColor = currentOption.color;
+                                                            const materialSettingColor = managerDisplayType === PRINTING_MANAGER_TYPE_MATERIAL ? currentOption.color : '';
                                                             const displayName = (
                                                                 <div className="display-inherit width-180 margin-left-4">
                                                                     <MaterialWithColor name={materialSettingName} color={materialSettingColor} />
@@ -672,7 +673,7 @@ ProfileManager.propTypes = {
     disableCategory: PropTypes.bool,
     optionConfigGroup: PropTypes.array.isRequired,
     allDefinitions: PropTypes.array.isRequired,
-    // isDefinitionEditable: PropTypes.func.isRequired,
+    managerDisplayType: PropTypes.string,
     isOfficialDefinition: PropTypes.func.isRequired,
     headType: PropTypes.string
 };

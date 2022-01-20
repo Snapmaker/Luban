@@ -47,7 +47,7 @@ const ConfigHalftone = ({ disabled }) => {
             dispatch(editorActions.processSelectedModel(HEAD_LASER));
         },
         onChangeAngle: (newNpAngle) => {
-            newNpAngle %= 180;
+            newNpAngle %= 181;
             if (newNpAngle < 0) newNpAngle += 180;
             setNpAngle(newNpAngle);
         },

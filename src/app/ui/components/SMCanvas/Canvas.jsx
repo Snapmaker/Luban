@@ -97,7 +97,10 @@ class Canvas extends PureComponent {
         this.onModelBeforeTransform = this.props.onModelBeforeTransform || noop;
         this.onModelAfterTransform = this.props.onModelAfterTransform || noop;
         this.onRotationPlacementSelect = this.props.onRotationPlacementSelect || noop;
-        this.onModelTransform = this.props.onModelTransform || noop;
+        this.onModelTransform = throttle(this.props.onModelTransform || noop, 300, {
+            leading: false,
+            trailing: true
+        });
 
         // threejs
         this.camera = null;

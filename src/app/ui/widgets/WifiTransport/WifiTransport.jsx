@@ -474,7 +474,7 @@ function WifiTransport({ widgetActions, controlActions }) {
                     target.copy(min).add(max).divideScalar(2);
                     const width = new THREE.Vector3().add(min).distanceTo(new THREE.Vector3().add(max));
                     const position = new THREE.Vector3(target.x, target.y, width * 2);
-                    canvas.current.setCamera(position, target);
+                    canvas.current && canvas.current.setCamera(position, target);
                 }
             }
         }

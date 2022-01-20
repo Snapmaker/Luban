@@ -363,7 +363,7 @@ class Visualizer extends PureComponent {
 
         if (!isEqual(size, prevProps.size)) {
             this.printableArea.updateSize(size, stopArea);
-            const { gcodeLineGroup } = prevProps;
+            const { gcodeLineGroup } = this.props;
 
             modelGroup.updateBoundingBox(new Box3(
                 new Vector3(-size.x / 2 - EPSILON, -size.y / 2 - EPSILON, -EPSILON),
@@ -427,7 +427,18 @@ class Visualizer extends PureComponent {
                 }
             }
         }
-        if (!Number.isNaN(primeTowerHeight) && !Number.isNaN(prevProps.primeTowerHeight) && primeTowerHeight !== prevProps.primeTowerHeight) {
+        if (enablePrimeTower !== prevProps.enablePrimeTower && printingToolhead === DUAL_EXTRUDER_TOOLHEAD_FOR_SM2) {
+            let primeTowerModel = find(modelGroup.models, { type: 'primeTower' });
+            if (!primeTowerModel) {
+                primeTowerModel = modelGroup.initPrimeTower();
+            }
+            if (enablePrimeTower) {
+                this.props.showPrimeTower(primeTowerModel);
+            } else {
+                this.props.hidePrimeTower(primeTowerModel);
+            }
+        }
+        if (!Number.isNaN(primeTowerHeight) && !Number.isNaN(this.props.primeTowerHeight) && primeTowerHeight !== this.props.primeTowerHeight) {
             const primeTowerModel = find(modelGroup.models, { type: 'primeTower' });
             if (primeTowerModel) {
                 const isSelected = primeTowerModel.isSelected;
@@ -445,16 +456,6 @@ class Visualizer extends PureComponent {
             }
         }
         this.canvas.current.renderScene();
-        if (enablePrimeTower !== prevProps.enablePrimeTower && printingToolhead === DUAL_EXTRUDER_TOOLHEAD_FOR_SM2) {
-            const primeTowerModel = find(modelGroup.models, { type: 'primeTower' });
-            if (primeTowerModel) {
-                if (!enablePrimeTower) {
-                    prevProps.hidePrimeTower(primeTowerModel);
-                } else {
-                    prevProps.showPrimeTower(primeTowerModel);
-                }
-            }
-        }
     }
 
     componentWillUnmount() {
@@ -649,7 +650,6 @@ const mapStateToProps = (state, ownProps) => {
         isActive,
         stage,
         size,
-        allModel: modelGroup.models,
         selectedModelArray: modelGroup.selectedModelArray,
         transformation: modelGroup.getSelectedModelTransformationForPrinting(),
         modelGroup,

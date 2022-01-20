@@ -102,27 +102,21 @@ export default class DeleteOperation3D extends Operation<DeleteOperationState> {
             if (model.parent && model.parent instanceof ThreeGroup) {
                 if (modelGroup.models.find(m => m.modelID === model.parent.modelID)) {
                     modelGroup.recoveryGroup(model.parent, model);
-                    model.updateTransformation(this.state.modelTransformation);
                 } else {
                     modelGroup.models = modelGroup.models.concat(model.parent);
                     ThreeUtils.setObjectParent(model.meshObject, model.parent.meshObject);
                     ThreeUtils.setObjectParent(model.parent.meshObject, modelGroup.object);
-                    this.state.groupTransformation && model.parent.updateTransformation(this.state.groupTransformation);
-                    model.updateTransformation(this.state.modelTransformation);
                 }
             } else {
                 modelGroup.models = modelGroup.models.concat(model);
                 modelGroup.object.add(model.meshObject);
-                model.updateTransformation(this.state.modelTransformation.get(model.modelID));
             }
         } else if (model instanceof ThreeGroup) {
             model.children = this.state.childrens;
             modelGroup.models = modelGroup.models.concat(model);
             ThreeUtils.setObjectParent(model.meshObject, modelGroup.object);
-            model.updateTransformation(this.state.groupTransformation);
             model.children.forEach(subModel => {
                 ThreeUtils.setObjectParent(subModel.meshObject, model.meshObject);
-                subModel.updateTransformation(this.state.modelTransformation.get(subModel.modelID));
             });
         }
         if (model.isSelected) {
