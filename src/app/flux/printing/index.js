@@ -388,10 +388,10 @@ export const actions = {
                 if (model.extruderConfig.infill === LEFT_EXTRUDER_MAP_NUMBER || model.extruderConfig.infill === BOTH_EXTRUDER_MAP_NUMBER) {
                     useLeft = true;
                 }
-                if (model.extruderConfig.shell === RIGHT_EXTRUDER_MAP_NUMBER || model.extruderConfig.infill === BOTH_EXTRUDER_MAP_NUMBER) {
+                if (model.extruderConfig.shell === RIGHT_EXTRUDER_MAP_NUMBER || model.extruderConfig.shell === BOTH_EXTRUDER_MAP_NUMBER) {
                     useRight = true;
                 }
-                if (model.extruderConfig.infill === LEFT_EXTRUDER_MAP_NUMBER || model.extruderConfig.infill === BOTH_EXTRUDER_MAP_NUMBER) {
+                if (model.extruderConfig.shell === LEFT_EXTRUDER_MAP_NUMBER || model.extruderConfig.shell === BOTH_EXTRUDER_MAP_NUMBER) {
                     useLeft = true;
                 }
             }
