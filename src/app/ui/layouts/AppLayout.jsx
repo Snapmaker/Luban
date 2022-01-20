@@ -46,6 +46,7 @@ import styles from './styles/appbar.styl';
 // import Workspace from '../pages/Workspace';
 import ModelExporter from '../widgets/PrintingVisualizer/ModelExporter';
 import Anchor from '../components/Anchor';
+import SvgIcon from '../components/SvgIcon';
 
 class AppLayout extends PureComponent {
     static propTypes = {
@@ -196,41 +197,55 @@ class AppLayout extends PureComponent {
                 this.props.updateSavedModal({ showSavedModal: false });
             };
             if (this.props.savedModalType === 'web') {
-                return renderModal({
-                    title: '保存成功了亲',
-                    renderBody: () => {
-                        return (
-                            <div>
-                                Saved
+                return (
+                    <div className="border-default-black-5 border-radius-4 width-200">
+                        <div className="sm-flex">
+                            Saved
+                            <div className="sm-flex-auto">
+                                <SvgIcon
+                                    name="Cancel"
+                                    type={['static']}
+                                    size="24"
+                                    onClick={onClose}
+                                />
                             </div>
-                        );
-                    },
-                    onClose,
-                    actions: []
-                });
+                        </div>
+                    </div>
+                );
             }
             if (this.props.savedModalType === 'electron') {
                 const openFolder = () => {
                     const ipc = window.require('electron').ipcRenderer;
                     ipc.send('open-saved-path', this.props.savedModalFilePath);
                 };
-                return renderModal({
-                    title: '保存成功了亲',
-                    renderBody: () => {
-                        return (
-                            <div>
-                                Saved to:
+                return (
+                    <div
+                        className={classNames('border-default-black-5', 'border-radius-4', 'width-360',
+                            'margin-top-n-40', 'position-re', 'background-color-white', 'margin-left-50')}
+                        style={{
+                            zIndex: 999
+                        }}
+                    >
+                        <div className="sm-flex">
+                            <div className="sm-flex-auto">
+                                Saved to: {this.props.savedModalFilePath}
                                 <Anchor
                                     onClick={openFolder}
                                 >
-                                    Open Folder 开TMD
+                                    Open Folder
                                 </Anchor>
                             </div>
-                        );
-                    },
-                    onClose,
-                    actions: []
-                });
+                            <div className="sm-flex-auto">
+                                <SvgIcon
+                                    name="Cancel"
+                                    type={['static']}
+                                    size="24"
+                                    onClick={onClose}
+                                />
+                            </div>
+                        </div>
+                    </div>
+                );
             }
             return null;
         },
@@ -666,10 +681,10 @@ class AppLayout extends PureComponent {
                 { showSettingsModal ? this.actions.renderSettingModal() : null }
                 { showDevelopToolsModal ? this.actions.renderDevelopToolsModal() : null }
                 { showCheckForUpdatesModal ? this.actions.renderCheckForUpdatesModal() : null }
-                { showSavedModal ? this.actions.renderSavedModal() : null }
                 <div className={isElectron() ? null : classNames(styles['app-content'])}>
                     {this.props.children}
                 </div>
+                { showSavedModal ? this.actions.renderSavedModal() : null }
             </div>
         );
     }

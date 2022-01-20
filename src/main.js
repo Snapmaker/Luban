@@ -153,8 +153,8 @@ function updateHandle() {
     ipcMain.on('updateShouldCheckForUpdate', (event, shouldCheckForUpdate) => {
         mainWindow.webContents.send('update-should-check-for-update', shouldCheckForUpdate);
     });
-    ipcMain.on('open-saved-path', (event, path) => {
-        shell.openItem(path);
+    ipcMain.on('open-saved-path', (event, savedPath) => {
+        shell.openItem(savedPath);
     });
 }
 
