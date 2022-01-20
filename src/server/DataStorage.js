@@ -127,7 +127,10 @@ class DataStorage {
          !isReset && await this.initRecoverActive();
      }
 
-     async copyDirForInitSlicer(srcDir, dstDir, overwriteTag = false, inherit = false, needUpdateVersion = false) {
+     async copyDirForInitSlicer({
+         srcDir, dstDir,
+         overwriteTag = false, inherit = false
+    }) {
          mkdirp.sync(dstDir);
          if (fs.existsSync(srcDir)) {
              const files = fs.readdirSync(srcDir);
@@ -137,24 +140,18 @@ class DataStorage {
                  const dst = path.join(dstDir, file);
                  if (fs.statSync(src).isFile()) {
                      if (fs.existsSync(dst) && !overwriteTag) {
-                         return;
+                        return;
                      }
-                     if (needUpdateVersion) {
-                        const data = fs.readFileSync(src, 'utf8');
-                        json = JSON.parse(data);
-                        json = {
-                            ...json,
-                            version: pkg.version
-                        };
-                        fs.writeFileSync(dst, JSON.stringify(json), 'utf8');
-                     }else {
-                         fs.copyFileSync(src, dst, (err) => {
-                             console.error('err', err);
-                         });
-                     }
-                 } else {
-                     await this.copyDirForInitSlicer(src, dst, inherit ? overwriteTag : false, inherit, needUpdateVersion);
-                 }
+                    fs.copyFileSync(src, dst, (err) => {
+                        console.error('err', err);
+                    });
+                } else {
+                    const overwriteTag = inherit ? overwriteTag : false;
+                    await this.copyDirForInitSlicer({
+                        srcDir: src, dstDir: dst,
+                        overwriteTag, inherit
+                    });
+                }
              }
          }
      }
@@ -290,23 +287,49 @@ class DataStorage {
          mkdirp.sync(`${this.configDir}/${PRINTING_CONFIG_SUBCATEGORY}`);
 
          const CURA_ENGINE_CONFIG_LOCAL = '../resources/CuraEngine/Config';
-         await this.copyDirForInitSlicer(CURA_ENGINE_CONFIG_LOCAL, this.configDir, true, overwriteProfiles, true);
+         await this.copyDirForInitSlicer({
+            srcDir: CURA_ENGINE_CONFIG_LOCAL, 
+            dstDir: this.configDir, 
+            overwriteTag: true,
+            inherit: overwriteProfiles
+        });
          this.upgradeConfigFile(this.configDir);
-         await this.copyDirForInitSlicer(CURA_ENGINE_CONFIG_LOCAL, this.defaultConfigDir, true, true, true);
+         await this.copyDirForInitSlicer({
+            srcDir: CURA_ENGINE_CONFIG_LOCAL,
+            dstDir: this.defaultConfigDir,
+            overwriteTag: true,
+            inherit: true
+        });
          const isNewUser = config.get('isNewUser');
-         isNewUser && !isReset && await this.copyDirForInitSlicer(this.configDir, this.longTermConfigDir, true, true);
+         isNewUser && !isReset && await this.copyDirForInitSlicer({
+            srcDir: this.configDir,
+            dstDir: this.longTermConfigDir,
+            overwriteTag: true,
+            inherit: true
+        });
      }
 
      async initRecoverActive() {
          mkdirp.sync(this.activeConfigDir);
-         await this.copyDirForInitSlicer(this.configDir, this.activeConfigDir, true, true);
-        }
+         await this.copyDirForInitSlicer({
+            srcDir: this.configDir,
+            dstDir: this.activeConfigDir,
+            overwriteTag: true,
+            inherit: true
+        });
+    }
         
      async createLongTermRecover(backupVersion, pkgVersion, isReset) {
         this.longTermConfigDir = `${this.recoverDir}/Config-${new Date().getTime()}`;
         if (isUndefined(backupVersion) || gt(pkgVersion, backupVersion) || isReset) {
             mkdirp.sync(this.longTermConfigDir);
-            await this.copyDirForInitSlicer(isReset ? this.activeConfigDir : this.configDir, this.longTermConfigDir, true, true);
+            const srcDir = isReset ? this.activeConfigDir : this.configDir;
+            await this.copyDirForInitSlicer({
+                srcDir,
+                dstDir: this.longTermConfigDir,
+                overwriteTag: true,
+                inherit: true
+            });
         } else {
             return;
         }
