@@ -7,8 +7,6 @@ export const METRIC_UNITS = 'mm';
 
 export const EPSILON = 1e-6;
 
-export const ALIGN_OPERATION = 'ALIGN_OPERATION';
-export const GROUP_OPERATION = 'GROUP_OPERATION';
 // Controller
 export const MARLIN = 'Marlin';
 

@@ -128,7 +128,7 @@ class ThreeModel extends BaseModel {
         let position, scale, rotation;
         if (this.parent) {
             if (this.modelGroup.isModelSelected(this)) {
-                const { recovery } = this.modelGroup.unselectAllModels({ recursive: true });
+                const { recovery } = this.modelGroup.unselectAllModels();
                 position = this.meshObject.position.clone();
                 scale = this.meshObject.scale.clone();
                 rotation = this.meshObject.rotation.clone();
