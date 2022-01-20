@@ -54,6 +54,7 @@ const ColorSelectorPicker = React.memo(({ onChangeComplete, onClose, colors, val
                                     onClick={() => {
                                         onChangeColor(color, true);
                                     }}
+                                    key={color}
                                 >
                                     <div
                                         className={classNames(colorLines.indexOf(color) > 0 ? 'margin-left-2' : null,
