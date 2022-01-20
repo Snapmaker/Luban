@@ -4,6 +4,9 @@ const DEFAULT_STATE = {
     savedModalType: '', // 'web', 'electron'
     savedModalFilePath: ''
 };
+const SHOW_SAVED_MODAL_TIME = 15000;
+let clearSavedModalTimer = null;
+
 export const actions = {
     updateState: (state) => {
         return {
@@ -12,8 +15,19 @@ export const actions = {
         };
     },
 
+    // TODO: need to add an close function
     // options: { showSavedModal, savedModalType, savedModalFilePath }
     updateSavedModal: (options) => (dispatch) => {
+        if (options.showSavedModal) {
+            clearTimeout(clearSavedModalTimer);
+            clearSavedModalTimer = setTimeout(() => {
+                dispatch(actions.updateSavedModal({
+                    showSavedModal: false
+                }));
+            }, SHOW_SAVED_MODAL_TIME);
+        } else {
+            clearTimeout(clearSavedModalTimer);
+        }
         dispatch(actions.updateState(options));
     }
 };

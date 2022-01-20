@@ -193,12 +193,13 @@ class AppLayout extends PureComponent {
             });
         },
         renderSavedModal: () => {
+            // TODO, add a component
             const onClose = () => {
                 this.props.updateSavedModal({ showSavedModal: false });
             };
             if (this.props.savedModalType === 'web') {
                 return (
-                    <div className="border-default-black-5 border-radius-4 width-200">
+                    <div className="border-default-black-5 border-radius-4 box-shadow-default width-200">
                         <div className="sm-flex">
                             Saved
                             <div className="sm-flex-auto">
@@ -220,15 +221,38 @@ class AppLayout extends PureComponent {
                 };
                 return (
                     <div
-                        className={classNames('border-default-black-5', 'border-radius-4', 'width-360',
-                            'margin-top-n-40', 'position-re', 'background-color-white', 'margin-left-50')}
+                        className={classNames('border-default-black-5', 'border-radius-4', 'box-shadow-default', 'position-ab',
+                            'background-color-white', 'padding-horizontal-16', 'padding-vertical-16')}
                         style={{
-                            zIndex: 999
+                            zIndex: 9999, // TODO?
+                            left: 'calc((100% - 360px) / 2)',
+                            transform: 'translateX(-50%)',
+                            maxWidth: '428px',
+                            marginTop: '-10%'
                         }}
                     >
-                        <div className="sm-flex">
-                            <div className="sm-flex-auto">
-                                Saved to: {this.props.savedModalFilePath}
+                        <div
+                            className="sm-flex justify-space-between"
+                        >
+                            <div
+                                className="sm-flex-auto"
+                                style={{
+                                    fontFamily: 'Roboto',
+                                    fontStyle: 'normal',
+                                    fontSize: '16px',
+                                    fontWeight: '500'
+                                }}
+                            >
+                                <SvgIcon
+                                    className="margin-top-4"
+                                    name="WarningTipsSuccess"
+                                    size="16"
+                                    type={['static']}
+                                    color="#4cb518"
+                                />
+                                <span>
+                                    {'File Saved. '}
+                                </span>
                                 <Anchor
                                     onClick={openFolder}
                                 >
@@ -237,12 +261,21 @@ class AppLayout extends PureComponent {
                             </div>
                             <div className="sm-flex-auto">
                                 <SvgIcon
+                                    className="margin-top-4"
                                     name="Cancel"
                                     type={['static']}
-                                    size="24"
+                                    size="16"
                                     onClick={onClose}
                                 />
                             </div>
+                        </div>
+                        <div
+                            className="sm-flex"
+                            style={{
+                                wordBreak: 'break-all'
+                            }}
+                        >
+                            {`Saved to : ${this.props.savedModalFilePath}`}
                         </div>
                     </div>
                 );
