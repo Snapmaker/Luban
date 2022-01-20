@@ -357,4 +357,4 @@ export const checkNewUser = async (req, res) => {
             isNewUser: true
         });
     }
-}
+};

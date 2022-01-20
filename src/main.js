@@ -299,7 +299,7 @@ const showMainWindow = async () => {
     ipcMain.on('open-recover-folder', () => {
         const userDataDir = app.getPath('userData');
         shell.openItem(`${userDataDir}/snapmaker-recover`);
-    })
+    });
 
     updateHandle();
 };
