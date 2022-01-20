@@ -352,7 +352,9 @@ export const processActions = {
         const models = _.filter(modelGroup.getModels(), { 'visible': true });
         const toolPathsModelIds = toolPaths.reduce((prev, item) => {
             if (item.visible) {
-                prev.add(item.visibleModelIDs);
+                item.visibleModelIDs.map(modelID => {
+                    return prev.add(modelID);
+                });
             }
             return prev;
         }, new Set());
