@@ -18,7 +18,7 @@ type GroupState = {
     selectedModels: Array<ThreeModel | ThreeGroup>,
     target: ThreeGroup,
     modelGroup: ModelGroup,
-    modelsInGroup: Map<string, ModelSnapshot>
+    modelsRelation: Map<string, ModelSnapshot>
 };
 
 // Scenario 1: one or more models outside the group are selected
@@ -34,7 +34,7 @@ export default class GroupOperation3D extends Operation<GroupState> {
             selectedModels: state.selectedModels || [],
             target: state.target,
             modelGroup: state.modelGroup,
-            modelsInGroup: state.modelsInGroup || new Map()
+            modelsRelation: state.modelsRelation || new Map()
         };
     }
 
@@ -51,7 +51,7 @@ export default class GroupOperation3D extends Operation<GroupState> {
             } else {
                 modelsToGroup.push(model);
             }
-            const modelSnapshot = this.state.modelsInGroup.get(model.modelID);
+            const modelSnapshot = this.state.modelsRelation.get(model.modelID);
             // If it is a sunModel, Remove it from the group
             // After removal, there are always other models in the group
             if (model.parent && model.parent instanceof ThreeGroup && modelSnapshot) {
@@ -76,7 +76,7 @@ export default class GroupOperation3D extends Operation<GroupState> {
         modelGroup.object.remove(target.meshObject);
 
         this.state.selectedModels.forEach(model => {
-            const modelSnapshot = this.state.modelsInGroup.get(model.modelID);
+            const modelSnapshot = this.state.modelsRelation.get(model.modelID);
             if (model instanceof ThreeModel && modelSnapshot) {
                 if (modelSnapshot.groupModelID) {
                     // SubModel of the original group

@@ -2196,13 +2196,13 @@ export const actions = {
 
     group: () => (dispatch, getState) => {
         const { modelGroup } = getState().printing;
-        // Stores the model structure before the group operation, which is used to restore the undo operation
+        // Stores the model structure before the group operation, which is used for undo operation
         const modelsBeforeGroup = modelGroup.getModels().slice(0);
         const selectedModels = modelGroup.getSelectedModelArray().slice(0);
         const operations = new Operations();
         const { recovery } = modelGroup.unselectAllModels();
-
-        const modelsInGroup = selectedModels.reduce((pre, selectd) => {
+        // Record the relationship between model and group
+        const modelsRelation = selectedModels.reduce((pre, selectd) => {
             const groupModelID = selectd.parent?.modelID;
             pre.set(selectd.modelID, {
                 groupModelID,
@@ -2215,7 +2215,7 @@ export const actions = {
 
         dispatch(actions.clearAllManualSupport(operations));
         const modelState = modelGroup.group();
-
+        // Stores the model structure after the group operation, which is used for redo operation
         const modelsAfterGroup = modelGroup.getModels().slice(0);
         const newGroup = modelGroup.getSelectedModelArray()[0];
         const operation = new GroupOperation3D({
@@ -2224,7 +2224,7 @@ export const actions = {
             selectedModels,
             target: newGroup,
             modelGroup,
-            modelsInGroup
+            modelsRelation
         });
         operations.push(operation);
         operations.registCallbackAfterAll(() => {
