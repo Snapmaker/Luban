@@ -18,7 +18,9 @@ import {
     RIGHT_EXTRUDER,
     LEFT_EXTRUDER_MAP_NUMBER,
     RIGHT_EXTRUDER_MAP_NUMBER,
-    DUAL_EXTRUDER_TOOLHEAD_FOR_SM2
+    DUAL_EXTRUDER_TOOLHEAD_FOR_SM2,
+    DUAL_EXTRUDER_LIMIT_WIDTH_L,
+    DUAL_EXTRUDER_LIMIT_WIDTH_R, BOTH_EXTRUDER_MAP_NUMBER
 } from '../../constants';
 import { timestamp } from '../../../shared/lib/random-utils';
 import { machineStore } from '../../store/local-storage';
@@ -162,6 +164,13 @@ const INITIAL_STATE = {
     isAnyModelOverstepped: false,
     // model: null, // selected model
     // boundingBox: new THREE.Box3(new THREE.Vector3(), new THREE.Vector3()), // bbox of selected model
+    stopArea: {
+        left: 0,
+        right: 0,
+        front: 0,
+        back: 0
+    },
+
 
     // PrintingManager
     showPrintingManager: false,
@@ -274,7 +283,7 @@ export const actions = {
     switchSize: () => async (dispatch, getState) => {
         // state
         const printingState = getState().printing;
-        const { modelGroup, gcodeLineGroup } = printingState;
+        const { gcodeLineGroup } = printingState;
         // const { seriesWithToolhead, size } = getState().machine;
         // await definitionManager.init(CONFIG_HEADTYPE, seriesWithToolhead.seriesWithToolhead);
 
@@ -291,10 +300,7 @@ export const actions = {
             extruderRDefinition: await definitionManager.getDefinitionsByPrefixName('snapmaker_extruder_1')
         }));
         // model group
-        modelGroup.updateBoundingBox(new THREE.Box3(
-            new THREE.Vector3(-size.x / 2 - EPSILON, -size.y / 2 - EPSILON, -EPSILON),
-            new THREE.Vector3(size.x / 2 + EPSILON, size.y / 2 + EPSILON, size.z + EPSILON)
-        ));
+        dispatch(actions.updateBoundingBox());
         // Re-position model group
         gcodeLineGroup.position.set(-size.x / 2, -size.y / 2, 0);
     },
@@ -349,13 +355,97 @@ export const actions = {
         }));
 
         // model group
-        modelGroup.updateBoundingBox(new THREE.Box3(
-            new THREE.Vector3(-size.x / 2 - EPSILON, -size.y / 2 - EPSILON, -EPSILON),
-            new THREE.Vector3(size.x / 2 + EPSILON, size.y / 2 + EPSILON, size.z + EPSILON)
-        ));
+        dispatch(actions.updateBoundingBox());
 
         // Re-position model group
         gcodeLineGroup.position.set(-size.x / 2, -size.y / 2, 0);
+    },
+
+    updateBoundingBox: () => (dispatch, getState) => {
+        const { modelGroup, activeDefinition, extruderLDefinition, extruderRDefinition, helpersExtruderConfig } = getState().printing;
+        const extruderLDefinitionSettings = extruderLDefinition.settings;
+        const extruderRDefinitionSettings = extruderRDefinition.settings;
+        const { size, toolHead: { printingToolhead } } = getState().machine;
+        // TODO
+        let useLeft = false;
+        let useRight = false;
+        if (helpersExtruderConfig.adhesion === RIGHT_EXTRUDER_MAP_NUMBER) {
+            useRight = true;
+        } else {
+            useLeft = true;
+        }
+        if (helpersExtruderConfig.support === RIGHT_EXTRUDER_MAP_NUMBER) {
+            useRight = true;
+        } else {
+            useLeft = true;
+        }
+        modelGroup.getModels().forEach((model) => {
+            // TODO, use constants
+            if (model.type === 'baseModel' || model.type === 'group') {
+                if (model.extruderConfig.infill === RIGHT_EXTRUDER_MAP_NUMBER || model.extruderConfig.infill === BOTH_EXTRUDER_MAP_NUMBER) {
+                    useRight = true;
+                }
+                if (model.extruderConfig.infill === LEFT_EXTRUDER_MAP_NUMBER || model.extruderConfig.infill === BOTH_EXTRUDER_MAP_NUMBER) {
+                    useLeft = true;
+                }
+                if (model.extruderConfig.shell === RIGHT_EXTRUDER_MAP_NUMBER || model.extruderConfig.shell === BOTH_EXTRUDER_MAP_NUMBER) {
+                    useRight = true;
+                }
+                if (model.extruderConfig.shell === LEFT_EXTRUDER_MAP_NUMBER || model.extruderConfig.shell === BOTH_EXTRUDER_MAP_NUMBER) {
+                    useLeft = true;
+                }
+            }
+        });
+
+        const leftExtruderBorder = ((useRight && printingToolhead === DUAL_EXTRUDER_TOOLHEAD_FOR_SM2) ? DUAL_EXTRUDER_LIMIT_WIDTH_L : 0);
+        const rightExtruderBorder = ((useLeft && printingToolhead === DUAL_EXTRUDER_TOOLHEAD_FOR_SM2) ? DUAL_EXTRUDER_LIMIT_WIDTH_R : 0);
+
+        const adhesionType = activeDefinition?.settings?.adhesion_type?.default_value;
+        let border = 0;
+        let supportLineWidth = 0;
+        switch (adhesionType) {
+            case 'skirt': {
+                const skirtLineCount = activeDefinition?.settings?.skirt_line_count?.default_value;
+                supportLineWidth = extruderLDefinitionSettings?.machine_nozzle_size?.default_value ?? 0;
+                if (helpersExtruderConfig.adhesion === RIGHT_EXTRUDER_MAP_NUMBER) {
+                    supportLineWidth = extruderRDefinitionSettings.machine_nozzle_size.default_value;
+                }
+                border = 7 + (skirtLineCount - 1) * supportLineWidth;
+
+                break;
+            }
+            case 'brim': {
+                const brimLineCount = activeDefinition?.settings?.brim_line_count?.default_value;
+                supportLineWidth = extruderLDefinitionSettings?.machine_nozzle_size?.default_value ?? 0;
+                if (helpersExtruderConfig.adhesion === RIGHT_EXTRUDER_MAP_NUMBER) {
+                    supportLineWidth = extruderRDefinitionSettings.machine_nozzle_size.default_value;
+                }
+                border = brimLineCount * supportLineWidth;
+                break;
+            }
+            case 'raft': {
+                const raftMargin = activeDefinition?.settings?.raft_margin?.default_value;
+                border = raftMargin;
+                break;
+            }
+            default:
+                border = 0;
+                break;
+        }
+        const newStopArea = {
+            left: leftExtruderBorder + border,
+            right: rightExtruderBorder + border,
+            front: border,
+            back: border
+        };
+        dispatch(actions.updateState({
+            stopArea: newStopArea
+        }));
+
+        modelGroup.updateBoundingBox(new THREE.Box3(
+            new THREE.Vector3(-size.x / 2 - EPSILON + newStopArea.left, -size.y / 2 + newStopArea.front - EPSILON, -EPSILON),
+            new THREE.Vector3(size.x / 2 + EPSILON - newStopArea.right, size.y / 2 - newStopArea.back + EPSILON, size.z + EPSILON)
+        ));
     },
 
     updateDefaultConfigId: (type, defaultId, direction = LEFT_EXTRUDER) => (dispatch, getState) => {
@@ -396,7 +486,9 @@ export const actions = {
 
         const printingState = getState().printing;
         const { modelGroup, gcodeLineGroup, initEventFlag, qualityDefinitions, defaultQualityId } = printingState;
-        const printingToolhead = machineStore.get('machine.toolHead.printingToolhead');
+        // TODO
+        const { toolHead: { printingToolhead } } = getState().machine;
+        // const printingToolhead = machineStore.get('machine.toolHead.printingToolhead');
         const activeQualityDefinition = lodashFind(qualityDefinitions, { definitionId: defaultQualityId });
         modelGroup.removeAllModels();
         if (printingToolhead === DUAL_EXTRUDER_TOOLHEAD_FOR_SM2) {
@@ -584,6 +676,8 @@ export const actions = {
                 materialDefinitions: [...materialDefinitions]
             }));
         }
+
+        dispatch(actions.updateBoundingBox());
     },
 
     updateShowPrintingManager: (showPrintingManager, direction = LEFT_EXTRUDER) => (dispatch) => {
@@ -629,6 +723,8 @@ export const actions = {
         dispatch(actions.updateState({
             extruderRDefinition
         }));
+
+        dispatch(actions.updateBoundingBox());
         return definitionManager.updateDefinition({
             definitionId: definition.definitionId,
             settings
@@ -704,6 +800,7 @@ export const actions = {
 
         // Update activeDefinition to force component re-render
         dispatch(actions.updateState({ activeDefinition }));
+        dispatch(actions.updateBoundingBox());
     },
 
     /**
@@ -714,9 +811,8 @@ export const actions = {
      *      }
      * @param direction
      */
-    updateExtuderDefinition: (definition, direction = LEFT_EXTRUDER) => (dispatch, getState) => {
+    updateExtruderDefinition: (definition, direction = LEFT_EXTRUDER) => (dispatch, getState) => {
         const { activeDefinition, extruderLDefinition, extruderRDefinition, helpersExtruderConfig } = getState().printing;
-
 
         if (!definition) {
             return;
@@ -804,6 +900,7 @@ export const actions = {
         dispatch(actions.updateAllModelColors());
         dispatch(actions.destroyGcodeLine());
         dispatch(actions.displayModel());
+        dispatch(actions.updateBoundingBox());
     },
 
     updateDefinitionsForManager: (definitionId, type) => async (dispatch, getState) => {
@@ -1621,6 +1718,7 @@ export const actions = {
         dispatch(actions.destroyGcodeLine());
         dispatch(actions.displayModel());
         dispatch(actions.updateAllModelColors());
+        dispatch(actions.updateBoundingBox());
         modelGroup.models = [...models];
         // dispatch(actions.updateState({
         //     modelGroup
@@ -1631,6 +1729,7 @@ export const actions = {
         dispatch(actions.updateState({ helpersExtruderConfig: extruderConfig }));
         dispatch(actions.destroyGcodeLine());
         dispatch(actions.displayModel());
+        dispatch(actions.updateBoundingBox());
     },
     arrangeAllModels: () => (dispatch, getState) => {
         const { modelGroup } = getState().printing;

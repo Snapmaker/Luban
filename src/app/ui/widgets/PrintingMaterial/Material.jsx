@@ -48,7 +48,7 @@ function Material({ widgetActions }) {
             // update selectedId
             dispatch(printingActions.updateDefaultConfigId(PRINTING_MANAGER_TYPE_MATERIAL, definition.definitionId, direction));
             dispatch(printingActions.updateDefaultMaterialId(definition.definitionId, direction));
-            dispatch(printingActions.updateExtuderDefinition(definition, direction));
+            dispatch(printingActions.updateExtruderDefinition(definition, direction));
             // update active definition
             updateActiveDefinition(definition);
 
@@ -81,7 +81,7 @@ function Material({ widgetActions }) {
     function setDiameter(direction, value) {
         const def = (direction === LEFT_EXTRUDER ? extruderLDefinition : extruderRDefinition);
         def.settings.machine_nozzle_size.default_value = value;
-        dispatch(printingActions.updateExtuderDefinition(def, direction));
+        dispatch(printingActions.updateExtruderDefinition(def, direction));
     }
 
     const [diametersOptions, setDiametersOptions] = useState(NOZZLE_SIZE_DEFAULT_OPTIONS);
