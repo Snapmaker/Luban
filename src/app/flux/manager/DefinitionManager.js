@@ -1,7 +1,16 @@
+import { includes } from 'lodash';
 import api from '../../api';
 import i18n from '../../lib/i18n';
 import { HEAD_CNC, RIGHT_EXTRUDER_MAP_NUMBER } from '../../constants';
 
+const primeTowerDefinitionKeys = [
+    'prime_tower_enable',
+    'prime_tower_size',
+    'prime_tower_position_x',
+    'prime_tower_position_y',
+    'prime_tower_brim_enbale',
+    'prime_tower_wipe_enabled'
+];
 class DefinitionManager {
     headType = HEAD_CNC;
 
@@ -265,7 +274,7 @@ class DefinitionManager {
         };
     }
 
-    finalizeActiveDefinition(activeDefinition) {
+    finalizeActiveDefinition(activeDefinition, hasPrimeTower = false) {
         const definition = {
             definitionId: 'active_final',
             name: 'Active Profile',
@@ -297,6 +306,15 @@ class DefinitionManager {
                         default_value: '0'
                     };
                     definition.ownKeys.push(key);
+                }
+                if (hasPrimeTower) {
+                    if (includes(primeTowerDefinitionKeys, key)) {
+                        definition.settings[key] = {
+                            label: setting.label,
+                            default_value: setting.default_value
+                        };
+                        definition.ownKeys.push(key);
+                    }
                 }
             });
 

@@ -159,7 +159,6 @@ const curaFields = [
     'dual',
     'prime_tower_enable',
     'prime_tower_wipe_enabled',
-    'prime_tower_brim_enable',
     'ooze_shield_enabled',
     'ooze_shield_angle',
     'ooze_shield_dist',

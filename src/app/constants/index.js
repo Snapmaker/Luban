@@ -187,8 +187,6 @@ export const PRINTING_QUALITY_CONFIG_KEYS_DUAL = [
     'support_z_distance',
     // 'dual'
     'prime_tower_enable',
-    'prime_tower_wipe_enabled',
-    'prime_tower_brim_enable',
     'ooze_shield_enabled',
     'ooze_shield_angle',
     'ooze_shield_dist',
@@ -410,8 +408,6 @@ export const PRINTING_QUALITY_CONFIG_GROUP_DUAL = [
         name: 'Dual Extrusion',
         fields: [
             'prime_tower_enable',
-            'prime_tower_wipe_enabled',
-            'prime_tower_brim_enable',
             'ooze_shield_enabled',
             'ooze_shield_angle',
             'ooze_shield_dist',
