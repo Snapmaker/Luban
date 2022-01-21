@@ -1,4 +1,5 @@
 import React, { PureComponent } from 'react';
+import path from 'path';
 import { Group } from 'three';
 import { withRouter } from 'react-router-dom';
 import PropTypes from 'prop-types';
@@ -355,22 +356,22 @@ class AppLayout extends PureComponent {
             // to ensure opened file set before service run
             this.props.initRecoverService();
         },
-        exportModel: (path) => {
+        exportModel: (filePath) => {
             const isBinary = true;
             let format;
-            if (!path) {
+            if (!filePath) {
                 format = 'stl';
-                path = 'export';
+                filePath = 'export';
                 if (format === 'stl') {
                     if (isBinary === true) {
-                        path += '_binary';
+                        filePath += '_binary';
                     } else {
-                        path += '_ascii';
+                        filePath += '_ascii';
                     }
                 }
-                path += `.${format}`;
+                filePath += `.${format}`;
             } else {
-                format = path.split('.').pop();
+                format = filePath.split('.').pop();
             }
             const outputObject = new Group();
             this.props.modelGroup.models.forEach(item => {
@@ -385,15 +386,11 @@ class AppLayout extends PureComponent {
                 return;
             }
             const blob = new Blob([output], { type: 'text/plain;charset=utf-8' });
-            UniApi.File.writeBlobToFile(blob, path, (type, filePath = '') => {
-                const pos = filePath.lastIndexOf('/');
-                if (pos > -1) {
-                    filePath = filePath.substr(0, pos + 1);
-                }
+            UniApi.File.writeBlobToFile(blob, filePath, (type, savedFilePath = '') => {
                 this.props.updateSavedModal({
                     showSavedModal: true,
                     savedModalType: type,
-                    savedModalFilePath: filePath
+                    savedModalFilePath: path.dirname(savedFilePath)
                 });
             });
         },
@@ -772,7 +769,7 @@ const mapDispatchToProps = (dispatch) => {
         changeCoordinateMode: (headType, coordinateMode, coordinateSize) => dispatch(editorActions.changeCoordinateMode(headType, coordinateMode, coordinateSize)),
         updateMaterials: (headType, newMaterials) => dispatch(editorActions.updateMaterials(headType, newMaterials)),
         loadCase: (pathConfig, history) => dispatch(projectActions.openProject(pathConfig, history)),
-        updateCurrentModalPath: (path) => dispatch(menuActions.updateCurrentModalPath(path)),
+        updateCurrentModalPath: (pathName) => dispatch(menuActions.updateCurrentModalPath(pathName)),
         updateMenu: () => dispatch(menuActions.updateMenu()),
         initMenuLanguage: () => dispatch(menuActions.initMenuLanguage()),
         enableMenu: () => dispatch(menuActions.enableMenu()),

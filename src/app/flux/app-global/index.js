@@ -18,6 +18,11 @@ export const actions = {
     // TODO: need to add an close function
     // options: { showSavedModal, savedModalType, savedModalFilePath }
     updateSavedModal: (options) => (dispatch) => {
+        const newState = {
+            showSavedModal: options.showSavedModal,
+            savedModalType: options.savedModalType,
+            savedModalFilePath: options.savedModalFilePath
+        };
         if (options.showSavedModal) {
             clearTimeout(clearSavedModalTimer);
             clearSavedModalTimer = setTimeout(() => {
@@ -28,7 +33,7 @@ export const actions = {
         } else {
             clearTimeout(clearSavedModalTimer);
         }
-        dispatch(actions.updateState(options));
+        dispatch(actions.updateState(newState));
     }
 };
 export default function reducer(state = DEFAULT_STATE, action) {

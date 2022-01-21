@@ -1,5 +1,6 @@
 import cloneDeep from 'lodash/cloneDeep';
 import { find, includes } from 'lodash';
+import path from 'path';
 import pkg from '../../../package.json';
 import {
     HEAD_CNC,
@@ -288,14 +289,10 @@ export const actions = {
     exportFile: (targetFile, renderGcodeFileName = null) => async (dispatch) => {
         const tmpFile = `/Tmp/${targetFile}`;
         await UniApi.File.exportAs(targetFile, tmpFile, renderGcodeFileName, (type, filePath = '') => {
-            const pos = filePath.lastIndexOf('/');
-            if (pos > -1) {
-                filePath = filePath.substr(0, pos + 1);
-            }
             dispatch(appGlobalActions.updateSavedModal({
                 showSavedModal: true,
                 savedModalType: type,
-                savedModalFilePath: filePath
+                savedModalFilePath: path.dirname(filePath)
             }));
         });
     },
@@ -308,14 +305,10 @@ export const actions = {
             configFile = `/Config/${targetFile}`;
         }
         await UniApi.File.exportAs(targetFile, configFile, null, (type, filePath = '') => {
-            const pos = filePath.lastIndexOf('/');
-            if (pos > -1) {
-                filePath = filePath.substr(0, pos + 1);
-            }
             dispatch(appGlobalActions.updateSavedModal({
                 showSavedModal: true,
                 savedModalType: type,
-                savedModalFilePath: filePath
+                savedModalFilePath: path.dirname(filePath)
             }));
         });
     },
@@ -330,14 +323,10 @@ export const actions = {
         const { body: { targetFile } } = await api.packageEnv({ headType });
         const tmpFile = `/Tmp/${targetFile}`;
         const openedFile = await UniApi.File.saveAs(targetFile, tmpFile, (type, filePath = '') => {
-            const pos = filePath.lastIndexOf('/');
-            if (pos > -1) {
-                filePath = filePath.substr(0, pos + 1);
-            }
             dispatch(appGlobalActions.updateSavedModal({
                 showSavedModal: true,
                 savedModalType: type,
-                savedModalFilePath: filePath
+                savedModalFilePath: path.dirname(filePath)
             }));
         });
         if (openedFile) {
