@@ -204,9 +204,28 @@ class AppLayout extends PureComponent {
             };
             if (this.props.savedModalType === 'web') {
                 return (
-                    <div className="border-default-black-5 border-radius-4 box-shadow-default width-200">
-                        <div className="sm-flex">
-                            Saved
+                    <div
+                        className={classNames('border-default-black-5', 'border-radius-4', 'box-shadow-module', 'position-ab',
+                            'background-color-white', 'padding-horizontal-10', 'padding-vertical-10', 'bottom-0', 'margin-bottom-16')}
+                        style={{
+                            zIndex: 9999, // TODO?
+                            left: '50%',
+                            transform: 'translateX(-50%)',
+                            maxWidth: '360px'
+                        }}
+                    >
+                        <div className="sm-flex justify-space-between">
+                            <div className="sm-flex-auto font-roboto font-weight-normal font-size-middle">
+                                <SvgIcon
+                                    name="WarningTipsSuccess"
+                                    size="24"
+                                    type={['static']}
+                                    color="#4cb518"
+                                />
+                                <span>
+                                    {i18n._('key-app_layout-File Saved')}
+                                </span>
+                            </div>
                             <div className="sm-flex-auto">
                                 <SvgIcon
                                     name="Cancel"
@@ -226,50 +245,37 @@ class AppLayout extends PureComponent {
                 };
                 return (
                     <div
-                        className={classNames('border-default-black-5', 'border-radius-4', 'box-shadow-default', 'position-ab',
-                            'background-color-white', 'padding-horizontal-16', 'padding-vertical-16')}
+                        className={classNames('border-default-black-5', 'border-radius-4', 'box-shadow-module', 'position-ab',
+                            'background-color-white', 'padding-horizontal-16', 'padding-vertical-16', 'bottom-0', 'margin-bottom-16')}
                         style={{
                             zIndex: 9999, // TODO?
-                            left: 'calc((100% - 360px) / 2)',
+                            left: '50%',
                             transform: 'translateX(-50%)',
-                            maxWidth: '428px',
-                            marginTop: '-10%'
+                            maxWidth: '360px'
                         }}
                     >
-                        <div
-                            className="sm-flex justify-space-between"
-                        >
-                            <div
-                                className="sm-flex-auto"
-                                style={{
-                                    fontFamily: 'Roboto',
-                                    fontStyle: 'normal',
-                                    fontSize: '16px',
-                                    fontWeight: '500'
-                                }}
-                            >
+                        <div className="sm-flex justify-space-between">
+                            <div className="sm-flex-auto font-roboto font-weight-normal font-size-middle">
                                 <SvgIcon
-                                    className="margin-top-4"
                                     name="WarningTipsSuccess"
-                                    size="16"
+                                    size="24"
                                     type={['static']}
                                     color="#4cb518"
                                 />
                                 <span>
-                                    {'File Saved. '}
+                                    {i18n._('key-app_layout-File Saved')}
                                 </span>
                                 <Anchor
                                     onClick={openFolder}
                                 >
-                                    Open Folder
+                                    <span className="color-blue-2">{i18n._('key-app_layout-Open Folder')}</span>
                                 </Anchor>
                             </div>
                             <div className="sm-flex-auto">
                                 <SvgIcon
-                                    className="margin-top-4"
                                     name="Cancel"
                                     type={['static']}
-                                    size="16"
+                                    size="24"
                                     onClick={onClose}
                                 />
                             </div>
@@ -277,10 +283,11 @@ class AppLayout extends PureComponent {
                         <div
                             className="sm-flex"
                             style={{
-                                wordBreak: 'break-all'
+                                wordBreak: 'break-all',
+                                color: '#545659'
                             }}
                         >
-                            {`Saved to : ${this.props.savedModalFilePath}`}
+                            {i18n._('key-app_layout-Saved to : ')}{this.props.savedModalFilePath}
                         </div>
                     </div>
                 );
@@ -724,10 +731,10 @@ class AppLayout extends PureComponent {
                 { showSettingsModal ? this.actions.renderSettingModal() : null }
                 { showDevelopToolsModal ? this.actions.renderDevelopToolsModal() : null }
                 { showCheckForUpdatesModal ? this.actions.renderCheckForUpdatesModal() : null }
+                { showSavedModal ? this.actions.renderSavedModal() : null }
                 <div className={isElectron() ? null : classNames(styles['app-content'])}>
                     {this.props.children}
                 </div>
-                { showSavedModal ? this.actions.renderSavedModal() : null }
             </div>
         );
     }
