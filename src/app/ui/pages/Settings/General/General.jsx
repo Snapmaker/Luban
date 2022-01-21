@@ -81,9 +81,11 @@ const languageOptions = [
 function General({ state: generalState, actions }) {
     const isDownloading = useSelector(state => state?.machine?.isDownloading, shallowEqual);
     const shouldCheckForUpdate = useSelector(state => state?.machine?.shouldCheckForUpdate, shallowEqual);
+    const shouldAutoPreviewGcode = useSelector(state => state?.machine?.shouldAutoPreviewGcode, shallowEqual);
     const autoupdateMessage = useSelector(state => state?.machine?.autoupdateMessage, shallowEqual);
     const dispatch = useDispatch();
     const updateShouldCheckForUpdate = (shouldAutoUpdate) => dispatch(machineActions.updateShouldCheckForUpdate(shouldAutoUpdate));
+    const updateShouldAutoPreviewGcode = (bool) => dispatch(machineActions.updateShouldAutoPreviewGcode(bool));
 
     const handlers = {
         changeLanguage: (option) => {
@@ -181,6 +183,24 @@ function General({ state: generalState, actions }) {
                         </div>
                         <div className="margin-vertical-4">
                             {autoupdateMessage}
+                        </div>
+                    </div>
+                    <div className="margin-top-16">
+                        <div className="border-bottom-normal padding-bottom-4">
+                            <SvgIcon
+                                name="TitleSetting"
+                                type={['static']}
+                            />
+                            <span className="margin-left-4">{i18n._('key-App/Settings/General-File Preview')}</span>
+                        </div>
+                        <div className="display-block margin-left-8 height-32">
+                            <Checkbox
+                                checked={shouldAutoPreviewGcode}
+                                onChange={(event) => { updateShouldAutoPreviewGcode(event.target.checked); }}
+                            />
+                            <span className="margin-left-4">
+                                {i18n._('key-App/Settings/General-Preview file when import G code to workspace')}
+                            </span>
                         </div>
                     </div>
                 </div>

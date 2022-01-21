@@ -41,7 +41,7 @@ import SecondaryToolbar from '../CanvasToolbar/SecondaryToolbar';
 const changeNameInput = [];
 const suffixLength = 7;
 const cancelRequestEvent = new CustomEvent('cancelReq');
-const GcodePreviewItem = React.memo(({ gcodeFile, index, selected, onSelectFile, gRef, setSelectFileIndex, handleShowPreviewModal }) => {
+const GcodePreviewItem = React.memo(({ gcodeFile, index, selected, onSelectFile, gRef, setSelectFileIndex }) => {
     const dispatch = useDispatch();
     const { prefixName, suffixName } = normalizeNameDisplay(gcodeFile?.renderGcodeFileName || gcodeFile?.name, suffixLength);
 
@@ -150,7 +150,6 @@ const GcodePreviewItem = React.memo(({ gcodeFile, index, selected, onSelectFile,
                     onKeyDown={() => {
                     }}
                     tabIndex={0}
-                    // onClick={(event) => onRenameStart(uploadName, index, event)}
                 >
                     <div
                         className={styles['gcode-file-text-rename']}
@@ -192,9 +191,7 @@ const GcodePreviewItem = React.memo(({ gcodeFile, index, selected, onSelectFile,
                 onClick={e => {
                     e.stopPropagation();
                     onSelectFile(gcodeFile.uploadName, null, null, false);
-                    handleShowPreviewModal(true);
-                    // dispatch.renderPreviewGcodeFile()
-                    dispatch(workspaceActions.renderPreviewGcodeFile(gcodeFile, index));
+                    dispatch(workspaceActions.renderPreviewGcodeFile(gcodeFile));
                 }}
             />
         </div>
@@ -207,7 +204,6 @@ GcodePreviewItem.propTypes = {
     onSelectFile: PropTypes.func.isRequired,
     gRef: PropTypes.object.isRequired,
     setSelectFileIndex: PropTypes.func.isRequired,
-    handleShowPreviewModal: PropTypes.func
 };
 
 const visualizerGroup = {
@@ -215,6 +211,7 @@ const visualizerGroup = {
 };
 let printableArea = null;
 function WifiTransport({ widgetActions, controlActions }) {
+    const dispatch = useDispatch();
     const [isLaserAutoFocus, setIsLaserAutoFocus] = useState(true);
     const isLaserPrintAutoMode = useSelector(state => state?.machine?.isLaserPrintAutoMode);
     const materialThickness = useSelector(state => state?.machine?.materialThickness);
@@ -226,10 +223,24 @@ function WifiTransport({ widgetActions, controlActions }) {
     const [selectFileName, setSelectFileName] = useState('');
     const [selectFileType, setSelectFileType] = useState('');
     const [selectFileIndex, setSelectFileIndex] = useState(-1);
+
     const [showPreviewModal, setShowPreviewModal] = useState(false);
+    useEffect(() => {
+        if (previewStage === WORKSPACE_STAGE.EMPTY) {
+            setShowPreviewModal(false);
+        } else {
+            setShowPreviewModal(true);
+        }
+    }, [previewStage]);
+
+    const closePreviewModal = () => {
+        dispatch(workspaceActions.updateState({
+            previewStage: WORKSPACE_STAGE.EMPTY
+        }));
+    };
+
     const [showStartModal, setShowStartModal] = useState(false);
     const [currentWorkflowStatus, setCurrentWorkflowStatus] = useState('');
-    const dispatch = useDispatch();
     const fileInput = useRef();
     const gcodeItemRef = useRef();
     const canvas = useRef();
@@ -474,7 +485,11 @@ function WifiTransport({ widgetActions, controlActions }) {
                     target.copy(min).add(max).divideScalar(2);
                     const width = new THREE.Vector3().add(min).distanceTo(new THREE.Vector3().add(max));
                     const position = new THREE.Vector3(target.x, target.y, width * 2);
-                    canvas.current && canvas.current.setCamera(position, target);
+                    // Pop up display driven by redux
+                    // Use setTimeout to wait for the canvas pop-up window to load
+                    setTimeout(() => {
+                        canvas.current && canvas.current.setCamera(position, target);
+                    });
                 }
             }
         }
@@ -522,7 +537,6 @@ function WifiTransport({ widgetActions, controlActions }) {
                                     onSelectFile={onSelectFile}
                                     gRef={gcodeItemRef}
                                     setSelectFileIndex={setSelectFileIndex}
-                                    handleShowPreviewModal={setShowPreviewModal}
                                 />
                             </React.Fragment>
                         );
@@ -693,7 +707,7 @@ function WifiTransport({ widgetActions, controlActions }) {
                     centered
                     visible={showPreviewModal}
                     onClose={() => {
-                        setShowPreviewModal(false);
+                        closePreviewModal();
                     }}
                 >
                     <Modal.Header>
@@ -729,7 +743,7 @@ function WifiTransport({ widgetActions, controlActions }) {
                         </div>
                     </Modal.Body>
                     <Modal.Footer>
-                        <Button priority="level-two" type="default" width="88px" onClick={() => setShowPreviewModal(false)} className="margin-right-8">{i18n._('key-unused-Cancel')}</Button>
+                        <Button priority="level-two" type="default" width="88px" onClick={() => closePreviewModal()} className="margin-right-8">{i18n._('key-unused-Cancel')}</Button>
                         {isConnected && (currentWorkflowStatus !== WORKFLOW_STATUS_IDLE && connectionType === CONNECTION_TYPE_WIFI) && <Button priority="level-two" type="primary" width="200px" onClick={actions.sendFile}>{i18n._('key-Workspace/WifiTransport-Sending File')}</Button>}
                         {isConnected && (currentWorkflowStatus === WORKFLOW_STATUS_IDLE && connectionType === CONNECTION_TYPE_WIFI) && (
                             <Dropdown
@@ -739,14 +753,14 @@ function WifiTransport({ widgetActions, controlActions }) {
                                         <Menu.Item
                                             onClick={() => {
                                                 actions.sendFile();
-                                                setShowPreviewModal(false);
+                                                closePreviewModal();
                                             }}
                                         >
                                             <div className="align-c">{i18n._('key-Workspace/WifiTransport-Sending File')}</div>
                                         </Menu.Item>
                                         <Menu.Item onClick={() => {
                                             actions.startPrint();
-                                            setShowPreviewModal(false);
+                                            closePreviewModal();
                                         }}
                                         >
                                             <div className="align-c">{i18n._('key-Workspace/Transport-Luban control print')}</div>
@@ -760,10 +774,6 @@ function WifiTransport({ widgetActions, controlActions }) {
                                     priority="level-two"
                                     type="primary"
                                     width="200px"
-                                    // onClick={() => {
-                                    //     // actions.startPrint();
-                                    //     setShowPreviewModal(false);
-                                    // }}
                                 >
                                     {i18n._('key-Workspace/LaserStartJob-start_job')}
                                 </Button>
@@ -776,7 +786,7 @@ function WifiTransport({ widgetActions, controlActions }) {
                                 width="200px"
                                 onClick={() => {
                                     actions.startPrint();
-                                    setShowPreviewModal(false);
+                                    closePreviewModal();
                                 }}
                             >
                                 <div className="align-c">{i18n._('key-Workspace/Transport-Luban control print')}</div>

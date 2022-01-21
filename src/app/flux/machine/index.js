@@ -190,6 +190,8 @@ const INITIAL_STATE = {
     use4Axis: true,
     // use multiple engine
     multipleEngine: false,
+    // Whether auto preview file when import G code to workspace
+    shouldAutoPreviewGcode: true,
 
     // connect info
     moduleStatusList: {},
@@ -225,6 +227,12 @@ export const actions = {
             const customConfigsArray = printingCustomConfigs.split('-');
             dispatch(baseActions.updateState({
                 printingCustomConfigs: customConfigsArray
+            }));
+        }
+
+        if (machineStore.get('shouldAutoPreviewGcode') === false) {
+            dispatch(baseActions.updateState({
+                shouldAutoPreviewGcode: false
             }));
         }
     },
@@ -1083,6 +1091,10 @@ export const actions = {
     updateMultipleEngine: () => (dispatch, getState) => {
         const { multipleEngine } = getState().machine;
         dispatch(baseActions.updateState({ multipleEngine: !multipleEngine }));
+    },
+    updateShouldAutoPreviewGcode: (shouldAutoPreviewGcode) => (dispatch) => {
+        dispatch(baseActions.updateState({ shouldAutoPreviewGcode: shouldAutoPreviewGcode }));
+        machineStore.set('shouldAutoPreviewGcode', shouldAutoPreviewGcode);
     }
     // endregion
 };
