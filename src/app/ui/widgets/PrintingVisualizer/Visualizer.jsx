@@ -438,7 +438,7 @@ class Visualizer extends PureComponent {
                 this.props.hidePrimeTower(primeTowerModel);
             }
         }
-        if (!Number.isNaN(primeTowerHeight) && !Number.isNaN(this.props.primeTowerHeight) && primeTowerHeight !== this.props.primeTowerHeight) {
+        if (!Number.isNaN(primeTowerHeight) && !Number.isNaN(this.props.primeTowerHeight) && primeTowerHeight !== prevProps.primeTowerHeight) {
             const primeTowerModel = find(modelGroup.models, { type: 'primeTower' });
             if (primeTowerModel) {
                 const isSelected = primeTowerModel.isSelected;
