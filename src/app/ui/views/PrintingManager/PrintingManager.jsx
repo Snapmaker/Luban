@@ -130,7 +130,14 @@ function PrintingManager() {
                 return Promise.reject(i18n._('key-Printing/PrintingManager_rename_error_prompt'));
             }
         },
-
+        updateCategoryName: async (definition, selectedName) => {
+            try {
+                await dispatch(printingActions.updateDefinitionNameByType(managerDisplayType, definition, selectedName, true));
+                return null;
+            } catch (e) {
+                return Promise.reject(i18n._('key-Laser/PresentManager_rename_error_prompt'));
+            }
+        },
         onCreateManagerDefinition: async (definition, name, isCategorySelected, isCreate) => {
             let result = {};
             if (isCategorySelected) {

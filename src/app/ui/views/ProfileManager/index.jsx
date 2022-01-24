@@ -48,21 +48,23 @@ function creatCateArray(optionList) {
     return cates;
 }
 
-function useGetDefinitions(allDefinitions, definitionState, setDefinitionState, selectedId, getDefaultDefinition) {
-    const definitionsRef = useRef([]);
+function useGetDefinitions(activeDefinition, allDefinitions, selectedId, getDefaultDefinition) {
+    const [definitionState, setDefinitionState] = useSetState({
+        definitionForManager: activeDefinition,
+        definitionOptions: [],
+        selectedName: '',
+        isCategorySelected: false,
+        renamingStatus: false,
+        cates: []
+    });
+
     useEffect(() => {
-        const newState = {};
         const lastDefinitionForManager = definitionState?.definitionForManager;
         let definitionForManager = allDefinitions.find(d => d.definitionId === lastDefinitionForManager?.definitionId);
         if (!definitionForManager) {
             definitionForManager = allDefinitions.find(d => d.definitionId === selectedId);
         }
         const selectedSettingDefaultValue = getDefaultDefinition && getDefaultDefinition(definitionForManager?.definitionId);
-        Object.assign(newState, {
-            definitionForManager: definitionForManager,
-            selectedSettingDefaultValue: selectedSettingDefaultValue
-        });
-
         const definitionOptions = allDefinitions.map(d => {
             const checkboxAndSelectGroup = {};
             checkboxAndSelectGroup.label = d.name;
@@ -77,30 +79,19 @@ function useGetDefinitions(allDefinitions, definitionState, setDefinitionState, 
             }
             return checkboxAndSelectGroup;
         });
-        Object.assign(newState, {
-            definitionOptions: definitionOptions
+        setDefinitionState({
+            definitionOptions,
+            definitionForManager,
+            selectedSettingDefaultValue,
+            cates: creatCateArray(definitionOptions)
         });
-        allDefinitions.forEach((item) => {
-            definitionsRef.current.push(item);
-        });
-        setDefinitionState(newState);
+    }, [allDefinitions, definitionState.definitionForManager, selectedId, getDefaultDefinition, setDefinitionState]);
 
-        return () => {
-            definitionsRef.current = [];
-        };
-    }, [allDefinitions, definitionState.definitionForManager, setDefinitionState, selectedId, getDefaultDefinition]);
-    return definitionsRef;
+    return [definitionState, setDefinitionState];
 }
 
 function ProfileManager({ optionConfigGroup, disableCategory = true, managerTitle, managerDisplayType,
     selectedId, allDefinitions, outsideActions, isOfficialDefinition, activeDefinition, headType }) {
-    const [definitionState, setDefinitionState] = useSetState({
-        definitionForManager: activeDefinition,
-        definitionOptions: [],
-        selectedName: '',
-        isCategorySelected: false,
-        renamingStatus: false
-    });
     const [configExpanded, setConfigExpanded] = useState({});
     const [notificationMessage, setNotificationMessage] = useState('');
     const refs = {
@@ -108,7 +99,11 @@ function ProfileManager({ optionConfigGroup, disableCategory = true, managerTitl
         renameInput: useRef(null),
         refCreateModal: useRef(null)
     };
-    const currentDefinitions = useGetDefinitions(allDefinitions, definitionState, setDefinitionState, selectedId, outsideActions.getDefaultDefinition);
+    const [definitionState, setDefinitionState] = useGetDefinitions(activeDefinition, allDefinitions, selectedId, outsideActions.getDefaultDefinition);
+
+    const currentDefinitions = useRef(allDefinitions);
+    currentDefinitions.current = allDefinitions;
+
     const actions = {
         isCategorySelectedNow: (category) => {
             const { definitionForManager, isCategorySelected } = definitionState;
@@ -349,16 +344,10 @@ function ProfileManager({ optionConfigGroup, disableCategory = true, managerTitl
         },
         updateDefinitionName: async () => {
             const definition = definitionState?.definitionForManager;
-            const options = definitionState?.definitionOptions;
             const selectedName = definitionState.selectedName;
             if (selectedName !== definition.name) { // changed
                 try {
                     await outsideActions.updateDefinitionName(definition, selectedName);
-                    const option = options.find(o => o.value === definition.definitionId);
-                    option.label = selectedName;
-                    setDefinitionState({
-                        definitionOptions: [...options]
-                    });
                 } catch (err) {
                     actions.showNotification(err);
                 }
@@ -366,20 +355,10 @@ function ProfileManager({ optionConfigGroup, disableCategory = true, managerTitl
         },
         updateCategoryName: async () => {
             const definition = definitionState?.definitionForManager;
-            let options = definitionState?.definitionOptions;
             const selectedName = definitionState.selectedName;
             if (selectedName !== definition.category) { // changed
                 try {
                     await outsideActions.updateCategoryName(definition, selectedName);
-                    options = options.map(o => {
-                        if (o.category === definition.category) {
-                            o.category = selectedName;
-                        }
-                        return o;
-                    });
-                    setDefinitionState({
-                        definitionOptions: [...options]
-                    });
                 } catch (err) {
                     actions.showNotification(err);
                 }
@@ -407,7 +386,6 @@ function ProfileManager({ optionConfigGroup, disableCategory = true, managerTitl
             outsideActions.onSaveDefinitionForManager(newDefinitionForManager);
         }
     };
-    const cates = creatCateArray(definitionState?.definitionOptions);
 
     return (
         <React.Fragment>
@@ -434,7 +412,7 @@ function ProfileManager({ optionConfigGroup, disableCategory = true, managerTitl
                                     </Notifications>
                                 )}
                                 <ul className={classNames(styles['manager-name-wrapper'])}>
-                                    {(cates.map((cate) => {
+                                    {(definitionState.cates.map((cate) => {
                                         const displayCategory = limitStringLength(cate.category ?? '', 28);
                                         const isDefault = cate.items.some(item => item.isDefault);
                                         const isCategorySelected = cate.category === definitionState?.definitionForManager.category;

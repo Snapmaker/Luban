@@ -956,7 +956,7 @@ export const actions = {
             });
     },
 
-    updateDefinitionNameByType: (type, definition, name) => async (dispatch, getState) => {
+    updateDefinitionNameByType: (type, definition, name, isCategorySelected = false) => async (dispatch, getState) => {
         if (!name || name.trim().length === 0) {
             return Promise.reject(i18n._('key-Printing/Common-Failed to rename. Please enter a new name.'));
         }
@@ -968,18 +968,28 @@ export const actions = {
         if (duplicated && duplicated !== definition) {
             return Promise.reject(i18n._('Failed to rename. "{{name}}" already exists.', { name }));
         }
-
-        await definitionManager.updateDefinition({
-            definitionId: definition.definitionId,
-            name
-        });
-        const index = definitions.findIndex(d => d.definitionId === definition?.definitionId);
-        definitions[index].name = name;
+        if (isCategorySelected) {
+            const oldCategory = definition.category;
+            definitions.forEach((item) => {
+                if (item.category === oldCategory) {
+                    item.category = name;
+                    definitionManager.updateDefinition(item);
+                }
+            });
+        } else {
+            await definitionManager.updateDefinition({
+                definitionId: definition.definitionId,
+                name
+            });
+            const index = definitions.findIndex(d => d.definitionId === definition?.definitionId);
+            definitions[index].name = name;
+        }
         dispatch(actions.updateState({
             [definitionsKey]: [...definitions]
         }));
         return null;
     },
+
     /**
      * @param {*} type 'material'|'quality'
      */

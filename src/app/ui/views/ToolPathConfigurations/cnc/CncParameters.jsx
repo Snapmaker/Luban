@@ -4,7 +4,8 @@ import classNames from 'classnames';
 import { connect } from 'react-redux';
 import { cloneDeep } from 'lodash';
 import Select from '../../../components/Select';
-import { CNC_MESH_SLICE_MODE_LINKAGE, CNC_MESH_SLICE_MODE_ROTATION,
+import {
+    CNC_MESH_SLICE_MODE_LINKAGE, CNC_MESH_SLICE_MODE_ROTATION,
     TOOLPATH_TYPE_IMAGE, TOOLPATH_TYPE_SCULPT, TOOLPATH_TYPE_VECTOR,
     CNC_DEFAULT_GCODE_PARAMETERS_DEFINITION
 } from '../../../../constants';
