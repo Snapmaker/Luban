@@ -6,9 +6,7 @@ import { actions as laserActions } from '../../../flux/laser';
 import { actions as projectActions } from '../../../flux/project';
 import { actions as editorActions } from '../../../flux/editor';
 
-import { getMachineSeriesWithToolhead, LASER_PRESENT_CONFIG_GROUP,
-    HEAD_LASER
-} from '../../../constants';
+import { getMachineSeriesWithToolhead, LASER_PRESENT_CONFIG_GROUP, HEAD_LASER } from '../../../constants';
 import ProfileManager from '../ProfileManager';
 import i18n from '../../../lib/i18n';
 
@@ -94,7 +92,7 @@ function LaserPresentManager({ closeToolManager, shouldSaveToolpath = false, sav
         removeManagerDefinition: async (definition) => {
             await dispatch(laserActions.removeToolListDefinition(definition));
         },
-        removeToolCategoryDefinition: (definition) => {
+        removeCategoryDefinition: (definition) => {
             dispatch(laserActions.removeToolCategoryDefinition(definition.category));
         },
         getDefaultDefinition: (definitionId) => {

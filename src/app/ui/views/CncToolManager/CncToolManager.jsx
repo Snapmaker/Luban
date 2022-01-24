@@ -97,7 +97,7 @@ function CncToolManager({ closeToolManager, shouldSaveToolpath = false, saveTool
         removeManagerDefinition: async (definition) => {
             await dispatch(cncActions.removeToolListDefinition(definition));
         },
-        removeToolCategoryDefinition: (definition) => {
+        removeCategoryDefinition: (definition) => {
             dispatch(cncActions.removeToolCategoryDefinition(definition.category));
         },
         getDefaultDefinition: (definitionId) => {

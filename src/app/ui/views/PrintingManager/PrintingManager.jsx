@@ -131,13 +131,24 @@ function PrintingManager() {
             }
         },
 
-        // TODO
-        onCreateManagerDefinition: async (definition, name) => {
-            const newDefinition = await dispatch(printingActions.duplicateDefinitionByType(managerDisplayType, definition, undefined, name));
-            return newDefinition;
+        onCreateManagerDefinition: async (definition, name, isCategorySelected, isCreate) => {
+            let result = {};
+            if (isCategorySelected) {
+                const oldCategoryName = definition.category;
+                definition.category = name;
+                // 3DP only supports the creation of material classification
+                result = await dispatch(printingActions.duplicateMaterialCategoryDefinition(managerDisplayType, definition, isCreate, oldCategoryName));
+            } else {
+                definition.name = name;
+                result = await dispatch(printingActions.duplicateDefinitionByType(managerDisplayType, definition, undefined, name));
+            }
+            return result;
         },
         removeManagerDefinition: async (definition) => {
             await dispatch(printingActions.removeDefinitionByType(managerDisplayType, definition));
+        },
+        removeCategoryDefinition: async (definition) => {
+            await dispatch(printingActions.removeToolCategoryDefinition(managerDisplayType, definition.category));
         },
         getDefaultDefinition: (definitionId) => {
             return dispatch(printingActions.getDefaultDefinition(definitionId));
@@ -166,6 +177,7 @@ function PrintingManager() {
             optionConfigGroup={optionConfigGroup}
             allDefinitions={allDefinitions}
             managerDisplayType={managerDisplayType}
+            disableCategory={managerDisplayType === PRINTING_MANAGER_TYPE_QUALITY}
             managerTitle={managerDisplayType === PRINTING_MANAGER_TYPE_MATERIAL ? 'key-Printing/PrintingConfigurations-Material Settings' : 'key-Printing/PrintingConfigurations-Printing Settings'}
             selectedId={selectedIds[managerDisplayType].id}
             headType={HEAD_PRINTING}

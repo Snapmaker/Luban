@@ -980,7 +980,9 @@ export const actions = {
         }));
         return null;
     },
-
+    /**
+     * @param {*} type 'material'|'quality'
+     */
     duplicateDefinitionByType: (type, definition, newDefinitionId, newDefinitionName) => async (dispatch, getState) => {
         const state = getState().printing;
         let name = newDefinitionName || definition.name;
@@ -1014,12 +1016,10 @@ export const actions = {
         };
         const definitionsKey = defaultDefinitionKeys[type].definitions;
 
-        // Find a name not being used
-        while (state[definitionsKey].find(d => d.name === newDefinition.name)) {
+        const definitionsWithSameCategory = state.materialDefinitions.filter(d => d.category === definition.category);
+        // make sure name is not repeated
+        while (definitionsWithSameCategory.find(d => d.name === newDefinition.name)) {
             newDefinition.name = `#${newDefinition.name}`;
-        }
-        while (state[definitionsKey].find(d => d.category === newDefinition.category)) {
-            newDefinition.category = `#${newDefinition.category}`;
         }
 
         // Simplify settings
@@ -1040,6 +1040,38 @@ export const actions = {
         return createdDefinition;
     },
 
+    duplicateMaterialCategoryDefinition: (type, activeToolList, isCreate, oldCategory) => async (dispatch, getState) => {
+        const state = getState().printing;
+        const definitionsKey = defaultDefinitionKeys[type].definitions;
+        const definitions = cloneDeep(state[definitionsKey]);
+        let newCategoryName = activeToolList.category;
+        const allDupliateDefinitions = [];
+        // make sure category is not repeated
+        while (definitions.find(d => d.category === newCategoryName)) {
+            newCategoryName = `#${newCategoryName}`;
+        }
+        const definitionsWithSameCategory = isCreate ? [{
+            ...activeToolList,
+            name: `${i18n._('key-default_category-Default Material')}_`,
+            settings: definitions[0]?.settings
+        }]
+            : state[definitionsKey].filter(d => d.category === oldCategory);
+        for (let i = 0; i < definitionsWithSameCategory.length; i++) {
+            const newDefinition = definitionsWithSameCategory[i];
+            newDefinition.category = newCategoryName;
+            const definitionId = `${newDefinition.definitionId}${timestamp()}`;
+            newDefinition.definitionId = definitionId;
+            const createdDefinition = await definitionManager.createDefinition(newDefinition);
+            if (createdDefinition) {
+                allDupliateDefinitions.push(createdDefinition);
+            }
+        }
+        dispatch(actions.updateState({
+            [definitionsKey]: [...definitions, ...allDupliateDefinitions]
+        }));
+        return allDupliateDefinitions[0];
+    },
+
     removeDefinitionByType: (type, definition) => async (dispatch, getState) => {
         const state = getState().printing;
 
@@ -1048,6 +1080,21 @@ export const actions = {
 
         dispatch(actions.updateState({
             [definitionsKey]: state[definitionsKey].filter(d => d.definitionId !== definition.definitionId)
+        }));
+    },
+
+    removeToolCategoryDefinition: (type, category) => async (dispatch, getState) => {
+        const state = getState().printing;
+        const definitionsKey = defaultDefinitionKeys[type].definitions;
+
+        const definitions = state[definitionsKey];
+        const definitionsWithSameCategory = definitions.filter(d => d.category === category);
+        for (let i = 0; i < definitionsWithSameCategory.length; i++) {
+            await definitionManager.removeDefinition(definitionsWithSameCategory[i]);
+        }
+
+        dispatch(actions.updateState({
+            [definitionsKey]: state[definitionsKey].filter(d => d.category !== category)
         }));
     },
 
