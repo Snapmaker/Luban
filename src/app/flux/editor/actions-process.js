@@ -8,7 +8,6 @@ import { getToolPathType } from '../../toolpaths/utils';
 
 import { toast } from '../../ui/components/Toast';
 import { ToastWapper } from '../../ui/components/Toast/toastContainer';
-
 import i18n from '../../lib/i18n';
 import { actions as operationHistoryActions } from '../operation-history';
 import DeleteToolPathOperation from '../operation-history/DeleteToolPathOperation';
@@ -29,8 +28,14 @@ export const processActions = {
         }));
 
         // start generate toolpath
+        const toolPathPromiseArray = [];
         toolPathGroup.toolPaths.forEach((toolPath) => {
-            dispatch(processActions.commitGenerateToolPath(headType, toolPath.id));
+            const { materials } = getState()[headType];
+            toolPathPromiseArray.push(toolPathGroup.commitToolPath(toolPath?.id, { materials }));
+        });
+
+        Promise.all(toolPathPromiseArray).then((taskArray) => {
+            controller.commitToolPathTask(taskArray);
         });
     },
 
@@ -390,7 +395,6 @@ export const processActions = {
             isGcodeGenerating: false,
             progress: progressStatesManager.updateProgress(STEP_STAGE.CNC_LASER_GENERATING_GCODE, 1)
         }));
-        toolPathGroup.renderAllToolPath();
         progressStatesManager.finishProgress(true);
         dispatch(baseActions.render(headType));
     },

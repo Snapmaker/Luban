@@ -9,7 +9,7 @@ import { pathWithRandomSuffix } from '../../shared/lib/random-utils';
 const log = logger('laser-cnc-slice');
 
 function slice(modelInfo, onProgress, onSucceed, onError) {
-    const { headType, data } = modelInfo;
+    const { headType, data, toolPathLength } = modelInfo;
 
     for (const d of data) {
         const uploadPath = `${DataStorage.tmpDir}/${d.uploadName}`;
@@ -39,7 +39,13 @@ function slice(modelInfo, onProgress, onSucceed, onError) {
                     const start = item.search('[0-9.]*%');
                     const end = item.indexOf('%');
                     sliceProgress = Number(item.slice(start, end));
-                    onProgress(sliceProgress);
+                    if (toolPathLength < 10) {
+                        onProgress(sliceProgress);
+                    } else {
+                        if (sliceProgress >= 0.8) {
+                            onProgress(sliceProgress);
+                        }
+                    }
                 }
                 return null;
             });

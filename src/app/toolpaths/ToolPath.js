@@ -1,7 +1,7 @@
 import { v4 as uuid } from 'uuid';
 import { includes } from 'lodash';
 import * as THREE from 'three';
-import { controller } from '../lib/controller';
+// import { controller } from '../lib/controller';
 import { FAILED, getToolPathType, IDLE, RUNNING, SUCCESS, WARNING } from './utils';
 import { MATERIAL_SELECTED, MATERIAL_UNSELECTED } from '../workers/ShaderMaterial/ToolpathRendererMeterial';
 
@@ -200,10 +200,10 @@ class ToolPath {
             data: data
         };
 
-        controller.commitToolPathTask(task);
+        // controller.commitToolPathTask(task);
 
         this.checkoutStatus();
-        return true;
+        return task;
     }
 
     _getModelTaskInfos() {
@@ -263,18 +263,18 @@ class ToolPath {
         this.removeAllNonMeshObj();
     }
 
-    onGenerateToolpathModel(model, filename) {
+    onGenerateToolpathModel(model, filename, renderResult) {
         const modelMapResult = this.modelMap.get(model.modelID);
         if (modelMapResult) {
             modelMapResult.status = SUCCESS;
             modelMapResult.toolPathFile = filename;
-            //
-            // const oldMeshObj = modelMapResult.meshObj;
-            // oldMeshObj && this.object.remove(oldMeshObj);
-            // const toolPathObj3D = this.renderToolpathObj(renderResult);
-            //
-            // modelMapResult.meshObj = toolPathObj3D;
-            // this.object.add(toolPathObj3D);
+
+            const oldMeshObj = modelMapResult.meshObj;
+            oldMeshObj && this.object.remove(oldMeshObj);
+            const toolPathObj3D = this.renderToolpathObj(renderResult);
+
+            modelMapResult.meshObj = toolPathObj3D;
+            this.object.add(toolPathObj3D);
         }
     }
 
