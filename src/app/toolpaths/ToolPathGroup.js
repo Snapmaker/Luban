@@ -375,6 +375,16 @@ class ToolPathGroup {
     }
 
     commitToolPath(toolPathId) {
+        let res = false;
+        const toolPath = this._getToolPath(toolPathId);
+        if (toolPath) {
+            res = toolPath.commitGenerateToolPath();
+        }
+        this._updated();
+        return res;
+    }
+
+    commitToolPathPromise(toolPathId) {
         return new Promise(async (resolve) => {
             let res = false;
             const toolPath = this._getToolPath(toolPathId);

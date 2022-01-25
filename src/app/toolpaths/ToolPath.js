@@ -1,7 +1,6 @@
 import { v4 as uuid } from 'uuid';
 import { includes } from 'lodash';
 import * as THREE from 'three';
-// import { controller } from '../lib/controller';
 import { FAILED, getToolPathType, IDLE, RUNNING, SUCCESS, WARNING } from './utils';
 import { MATERIAL_SELECTED, MATERIAL_UNSELECTED } from '../workers/ShaderMaterial/ToolpathRendererMeterial';
 
@@ -157,7 +156,7 @@ class ToolPath {
     }
 
     /**
-     * Commit generate toolpath task to server
+     * Generate toolpath task to server, need to call `commitToolPathTaskArray`
      */
     commitGenerateToolPath() {
         if (this.status === FAILED) {
@@ -199,8 +198,6 @@ class ToolPath {
             headType: this.headType,
             data: data
         };
-
-        // controller.commitToolPathTask(task);
 
         this.checkoutStatus();
         return task;

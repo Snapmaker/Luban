@@ -297,75 +297,76 @@ export const actions = {
             });
 
             controller.on('taskCompleted:generateToolPath', (toolPathTaskResult) => {
-                if (headType !== toolPathTaskResult.headType) {
+                const { toolPathGroup, progressStatesManager } = getState()[headType];
+                if (headType !== toolPathTaskResult.headType || toolPathTaskResult.taskStatus === 'failed') {
+                    dispatch(baseActions.updateState(headType, {
+                        stage: STEP_STAGE.CNC_LASER_GENERATE_TOOLPATH_FAILED,
+                        progress: 1
+                    }));
+                    progressStatesManager.finishProgress(false);
                     return;
                 }
                 toolPathTaskResult.data.forEach((taskResult) => {
-                    const { toolPathGroup, progressStatesManager } = getState()[headType];
-                    taskResult.filenames = toolPathTaskResult.filenames.find(d => d.taskId === taskResult.taskId)?.filenames;
                     const toolPath = toolPathGroup._getToolPath(taskResult.taskId);
 
                     if (toolPath) {
-                        if (taskResult.taskStatus === 'failed') {
-                            toolPath.onGenerateToolpathFailed(taskResult);
-                        } else {
-                            progressStatesManager.startNextStep();
-                            pool.exec('onmessage', [taskResult], {
-                                on: function (payload) {
-                                    const { status, value } = payload;
-                                    switch (status) {
-                                        case 'succeed': {
-                                            const { shouldGenerateGcodeCounter } = getState()[headType];
-                                            const toolpath = toolPathGroup._getToolPath(taskResult.taskId);
-                                            if (toolpath) {
-                                                toolpath.onGenerateToolpathFinail();
-                                            }
+                        progressStatesManager.startNextStep();
+                        taskResult.filenames = toolPathTaskResult.filenames.find(d => d.taskId === taskResult.taskId)?.filenames;
+                        pool.exec('onmessage', [taskResult], {
+                            on: function (payload) {
+                                const { status, value } = payload;
+                                switch (status) {
+                                    case 'succeed': {
+                                        const { shouldGenerateGcodeCounter } = getState()[headType];
+                                        const toolpath = toolPathGroup._getToolPath(taskResult.taskId);
+                                        if (toolpath) {
+                                            toolpath.onGenerateToolpathFinail();
+                                        }
 
-                                            if (toolPathGroup && toolPathGroup._getCheckAndSuccessToolPaths()) {
-                                                dispatch(baseActions.updateState(headType, {
-                                                    shouldGenerateGcodeCounter: shouldGenerateGcodeCounter + 1
-                                                }));
-                                            }
-                                            break;
-                                        }
-                                        case 'data': {
-                                            const { taskResult: newTaskResult, index, renderResult } = value;
-                                            const toolpath = toolPathGroup._getToolPath(newTaskResult.taskId);
-
-                                            if (toolpath) {
-                                                toolpath.onGenerateToolpathModel(newTaskResult.data[index], newTaskResult.filenames[index], renderResult);
-                                            }
-                                            break;
-                                        }
-                                        case 'progress': {
-                                            const { progress } = value;
-                                            if (progress < 0.1) {
-                                                progressStatesManager.startNextStep();
-                                                dispatch(actions.updateState(headType, {
-                                                    stage: STEP_STAGE.CNC_LASER_RENDER_TOOLPATH,
-                                                    progress: progressStatesManager.updateProgress(STEP_STAGE.CNC_LASER_RENDER_TOOLPATH, progress)
-                                                }));
-                                            } else {
-                                                dispatch(actions.updateState(headType, {
-                                                    progress: progressStatesManager.updateProgress(STEP_STAGE.CNC_LASER_RENDER_TOOLPATH, progress)
-                                                }));
-                                            }
-                                            break;
-                                        }
-                                        case 'err': {
+                                        if (toolPathGroup && toolPathGroup._getCheckAndSuccessToolPaths()) {
                                             dispatch(baseActions.updateState(headType, {
-                                                stage: STEP_STAGE.CNC_LASER_GENERATE_TOOLPATH_FAILED,
-                                                progress: 1
+                                                shouldGenerateGcodeCounter: shouldGenerateGcodeCounter + 1
                                             }));
-                                            progressStatesManager.finishProgress(false);
-                                            break;
                                         }
-                                        default:
-                                            break;
+                                        break;
                                     }
+                                    case 'data': {
+                                        const { taskResult: newTaskResult, index, renderResult } = value;
+                                        const toolpath = toolPathGroup._getToolPath(newTaskResult.taskId);
+
+                                        if (toolpath) {
+                                            toolpath.onGenerateToolpathModel(newTaskResult.data[index], newTaskResult.filenames[index], renderResult);
+                                        }
+                                        break;
+                                    }
+                                    case 'progress': {
+                                        const { progress } = value;
+                                        if (progress < 0.1) {
+                                            progressStatesManager.startNextStep();
+                                            dispatch(actions.updateState(headType, {
+                                                stage: STEP_STAGE.CNC_LASER_RENDER_TOOLPATH,
+                                                progress: progressStatesManager.updateProgress(STEP_STAGE.CNC_LASER_RENDER_TOOLPATH, progress)
+                                            }));
+                                        } else {
+                                            dispatch(actions.updateState(headType, {
+                                                progress: progressStatesManager.updateProgress(STEP_STAGE.CNC_LASER_RENDER_TOOLPATH, progress)
+                                            }));
+                                        }
+                                        break;
+                                    }
+                                    case 'err': {
+                                        dispatch(baseActions.updateState(headType, {
+                                            stage: STEP_STAGE.CNC_LASER_GENERATE_TOOLPATH_FAILED,
+                                            progress: 1
+                                        }));
+                                        progressStatesManager.finishProgress(false);
+                                        break;
+                                    }
+                                    default:
+                                        break;
                                 }
-                            });
-                        }
+                            }
+                        });
                     }
                 });
             });

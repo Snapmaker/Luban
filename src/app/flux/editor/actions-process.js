@@ -31,11 +31,11 @@ export const processActions = {
         const toolPathPromiseArray = [];
         toolPathGroup.toolPaths.forEach((toolPath) => {
             const { materials } = getState()[headType];
-            toolPathPromiseArray.push(toolPathGroup.commitToolPath(toolPath?.id, { materials }));
+            toolPathPromiseArray.push(toolPathGroup.commitToolPathPromise(toolPath?.id, { materials }));
         });
 
         Promise.all(toolPathPromiseArray).then((taskArray) => {
-            controller.commitToolPathTask(taskArray);
+            controller.commitToolPathTaskArray(taskArray);
         });
     },
 

@@ -106,10 +106,13 @@ const generateCncToolPath = async (modelInfo, onProgress) => {
 };
 
 const generateLaserToolPathFromEngine = (allTasks, onProgress) => {
-    const allResultPromise = [];
+    // const allResultPromise = [];
     const toolPathLength = allTasks?.length;
-    allTasks.forEach(async (task) => {
+    const allResultPromise = allTasks.map(async (task) => {
         const modelInfos = task.data;
+        if (!modelInfos || modelInfos?.length === 1) {
+            return Promise.reject(new Error('modelInfo is empty.'));
+        }
         const { taskId } = task;
         for (const modelInfo of modelInfos) {
             const { headType, type, sourceType } = modelInfo;
@@ -145,7 +148,7 @@ const generateLaserToolPathFromEngine = (allTasks, onProgress) => {
             toolPathLength
         };
 
-        allResultPromise.push(new Promise((resolve, reject) => {
+        return new Promise((resolve, reject) => {
             slice(sliceParams, onProgress, (res) => {
                 resolve({
                     taskId,
@@ -154,19 +157,16 @@ const generateLaserToolPathFromEngine = (allTasks, onProgress) => {
             }, () => {
                 reject(new Error('Slice Error'));
             });
-        }));
+        });
     });
     return Promise.all(allResultPromise);
 };
 
 export const generateToolPath = (allTasks, onProgress) => {
-    // if (!modelInfos || modelInfos.length === 0) {
-    //     return Promise.reject(new Error('modelInfo is empty.'));
-    // }
     const { headType, useLegacyEngine } = allTasks[0];
-    // if (!['laser', 'cnc'].includes(headType)) {
-    //     return Promise.reject(new Error(`Unsupported type: ${headType}`));
-    // }
+    if (!['laser', 'cnc'].includes(headType)) {
+        return Promise.reject(new Error(`Unsupported type: ${headType}`));
+    }
     if (useLegacyEngine) {
         return new Promise(async (resolve, reject) => {
             const filenames = [];
