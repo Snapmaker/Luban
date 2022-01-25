@@ -49,12 +49,11 @@ export default class DeleteOperation2D extends Operation {
                 toolPathGroup.toolPaths.push(item);
                 toolPathGroup.toolPathObjects.add(item.object);
             }
-            if (item.modelMap.has(id)) {
+            if (id) {
                 item.modelMap.set(id, model);
             }
         });
         this.state.toolPaths = [];
-        toolPathGroup._updated();
 
         model.setParent(svgActions.svgContentGroup.group);
         modelGroup.object.add(model.meshObject);
@@ -63,5 +62,8 @@ export default class DeleteOperation2D extends Operation {
         modelGroup.models = [...modelGroup.models]; // trigger <ModelItem> component to show the unselected model
         modelGroup.modelChanged();
         svgActions.clearSelection();
+
+        toolPathGroup.addSelectedToolpathColor();
+        toolPathGroup._updated();
     }
 }
