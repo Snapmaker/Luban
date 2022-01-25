@@ -194,6 +194,7 @@ const INITIAL_STATE = {
     rotationAnalysisTable: [],
     rotationAnalysisSelectedRowId: -1,
     leftBarOverlayVisible: false,
+    combinedOperations: [], // used for recording different operations
 
     enableShortcut: true,
 
@@ -256,6 +257,16 @@ const createLoadModelWorker = (() => {
         task.cbOnMessage.push(onMessage);
     };
 })();
+
+
+function stateEqual(model, stateFrom, stateTo) {
+    for (const key of Object.keys(stateFrom)) {
+        if ((model.parent instanceof ThreeGroup || key !== 'positionZ') && Math.abs(stateFrom[key] - stateTo[key]) > EPSILON) {
+            return false;
+        }
+    }
+    return true;
+}
 
 export const actions = {
     updateState: (state) => {
@@ -1759,22 +1770,18 @@ export const actions = {
         }
     },
 
-    recordModelAfterTransform: (transformMode, modelGroup) => (dispatch, getState) => {
+    recordModelAfterTransform: (transformMode, modelGroup, combinedOperations) => (dispatch, getState) => {
         const { targetTmpState } = getState().printing;
-        const operations = new Operations();
-        let operation;
-
-        function stateEqual(model, stateFrom, stateTo) {
-            for (const key of Object.keys(stateFrom)) {
-                if ((model.parent instanceof ThreeGroup || key !== 'positionZ') && Math.abs(stateFrom[key] - stateTo[key]) > EPSILON) {
-                    return false;
-                }
+        let operations, operation;
+        if (combinedOperations) {
+            operations = combinedOperations;
+        } else {
+            operations = new Operations();
+            if (transformMode === 'rotate') {
+                dispatch(actions.clearAllManualSupport(operations));
             }
-            return true;
         }
-        if (transformMode === 'rotate') {
-            dispatch(actions.clearAllManualSupport(operations));
-        }
+
         for (const model of modelGroup.selectedModelArray) {
             const { recovery } = modelGroup.unselectAllModels();
             modelGroup.addModelToSelectedGroup(model);
@@ -2197,6 +2204,28 @@ export const actions = {
         dispatch(actions.updateState({
             stage: STEP_STAGE.PRINTING_ROTATE_ANALYZE,
             progress: progressStatesManager.updateProgress(STEP_STAGE.PRINTING_ROTATE_ANALYZE, 0.25)
+        }));
+    },
+
+    startAnalyzeRotation: () => (dispatch, getState) => {
+        const { modelGroup } = getState().printing;
+        const operations = new Operations();
+        dispatch(actions.clearAllManualSupport(operations));
+        // record current rotation for undo & redo
+        dispatch(actions.recordModelBeforeTransform(modelGroup));
+        dispatch(actions.updateState({
+            combinedOperations: operations
+        }));
+    },
+
+    finishAnalyzeRotation: () => (dispatch, getState) => {
+        const { modelGroup, combinedOperations } = getState().printing;
+        dispatch(actions.clearRotationAnalysisTableData());
+        // record the last rotation to undo & redo
+        dispatch(actions.recordModelAfterTransform('rotate', modelGroup, combinedOperations));
+        dispatch(actions.setTransformMode('rotate'));
+        dispatch(actions.updateState({
+            combinedOperations: []
         }));
     },
 
