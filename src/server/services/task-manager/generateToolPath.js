@@ -110,7 +110,7 @@ const generateLaserToolPathFromEngine = (allTasks, onProgress) => {
     const toolPathLength = allTasks?.length;
     const allResultPromise = allTasks.map(async (task) => {
         const modelInfos = task.data;
-        if (!modelInfos || modelInfos?.length === 1) {
+        if (!modelInfos || modelInfos?.length === 0) {
             return Promise.reject(new Error('modelInfo is empty.'));
         }
         const { taskId } = task;
