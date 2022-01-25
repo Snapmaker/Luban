@@ -108,7 +108,7 @@ const INITIAL_STATE = {
 
     // check to remove models
     removingModelsWarning: false,
-    removingModelsWarningCallback: () => {},
+    removingModelsWarningCallback: () => { },
     emptyToolPaths: [],
 
     // check not to duplicated create event
@@ -354,6 +354,7 @@ export const actions = {
         const { defaultDefinitions } = getState().laser;
         const defaultDefinition = defaultDefinitions.find(d => d.definitionId === definitionId);
         dispatch(actions.updateToolListDefinition(defaultDefinition));
+        return defaultDefinition;
     }
 };
 

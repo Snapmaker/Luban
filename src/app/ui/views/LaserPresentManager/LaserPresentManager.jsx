@@ -10,8 +10,6 @@ import { getMachineSeriesWithToolhead, LASER_PRESENT_CONFIG_GROUP, HEAD_LASER } 
 import ProfileManager from '../ProfileManager';
 import i18n from '../../../lib/i18n';
 
-let selectedId = '';
-
 function isOfficialDefinition(activeToolList) {
     return !!activeToolList.isDefault;
 }
@@ -22,10 +20,6 @@ function LaserPresentManager({ closeToolManager, shouldSaveToolpath = false, sav
     const series = useSelector(state => state?.machine?.series);
     const toolHead = useSelector(state => state?.machine?.toolHead);
     const dispatch = useDispatch();
-
-    if (toolDefinitions && toolDefinitions[0]) {
-        selectedId = toolDefinitions[0].definitionId;
-    }
 
     const actions = {
         closeManager: () => {
@@ -99,20 +93,19 @@ function LaserPresentManager({ closeToolManager, shouldSaveToolpath = false, sav
             return dispatch(laserActions.getDefaultDefinition(definitionId));
         },
         resetDefinitionById: (definitionId) => {
-            dispatch(laserActions.resetDefinitionById(definitionId));
+            return dispatch(laserActions.resetDefinitionById(definitionId));
         }
     };
 
     return (
         <ProfileManager
             outsideActions={actions}
-            activeDefinition={activeToolListDefinition}
             isOfficialDefinition={isOfficialDefinition}
             optionConfigGroup={LASER_PRESENT_CONFIG_GROUP}
             allDefinitions={toolDefinitions}
             disableCategory={false}
             managerTitle="key-Laser/PresetManager-Preset Settings"
-            selectedId={selectedId}
+            activeDefinitionID={activeToolListDefinition.definitionId}
             headType={HEAD_LASER}
         />
     );

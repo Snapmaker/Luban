@@ -25,12 +25,6 @@ import i18n from '../../../lib/i18n';
 //     );
 // };
 
-// Only custom material is editable, changes on diameter is not allowed as well
-function isDefinitionEditable(definition, key) {
-    return !definition?.metadata?.readonly
-        && key !== 'material_diameter';
-}
-
 function isOfficialDefinition(definition) {
     return definition && includes([
         'material.pla', 'material.abs', 'material.petg',
@@ -160,8 +154,8 @@ function PrintingManager() {
         getDefaultDefinition: (definitionId) => {
             return dispatch(printingActions.getDefaultDefinition(definitionId));
         },
-        resetDefinitionById: (id) => {
-            dispatch(printingActions.resetDefinitionById(id));
+        resetDefinitionById: (definitionId) => {
+            return dispatch(printingActions.resetDefinitionById(managerDisplayType, definitionId));
         }
     };
 
@@ -179,14 +173,12 @@ function PrintingManager() {
     return (
         <ProfileManager
             outsideActions={actions}
-            isDefinitionEditable={isDefinitionEditable}
             isOfficialDefinition={isOfficialDefinition}
             optionConfigGroup={optionConfigGroup}
             allDefinitions={allDefinitions}
-            managerDisplayType={managerDisplayType}
             disableCategory={managerDisplayType === PRINTING_MANAGER_TYPE_QUALITY}
             managerTitle={managerDisplayType === PRINTING_MANAGER_TYPE_MATERIAL ? 'key-Printing/PrintingConfigurations-Material Settings' : 'key-Printing/PrintingConfigurations-Printing Settings'}
-            selectedId={selectedIds[managerDisplayType].id}
+            activeDefinitionID={selectedIds[managerDisplayType].id}
             headType={HEAD_PRINTING}
         />
     );

@@ -7,20 +7,16 @@ import { actions as cncActions } from '../../../flux/cnc';
 import { actions as projectActions } from '../../../flux/project';
 import { actions as editorActions } from '../../../flux/editor';
 
-import { getMachineSeriesWithToolhead,
-    CNC_TOOL_CONFIG_GROUP, HEAD_CNC, DEFAULT_CNC_CONFIG_IDS } from '../../../constants';
+import {
+    getMachineSeriesWithToolhead,
+    CNC_TOOL_CONFIG_GROUP, HEAD_CNC, DEFAULT_CNC_CONFIG_IDS
+} from '../../../constants';
 import ProfileManager from '../ProfileManager';
 import i18n from '../../../lib/i18n';
-
-const selectedId = DEFAULT_CNC_CONFIG_IDS[0];
 
 function isOfficialDefinition(activeToolList) {
     return includes(DEFAULT_CNC_CONFIG_IDS,
         activeToolList.definitionId);
-}
-function isDefinitionEditable(activeToolList) {
-    return !(includes(DEFAULT_CNC_CONFIG_IDS,
-        activeToolList.definitionId));
 }
 
 function CncToolManager({ closeToolManager, shouldSaveToolpath = false, saveToolPath, setCurrentToolDefinition }) {
@@ -104,7 +100,7 @@ function CncToolManager({ closeToolManager, shouldSaveToolpath = false, saveTool
             return dispatch(cncActions.getDefaultDefinition(definitionId));
         },
         resetDefinitionById: (definitionId) => {
-            dispatch(cncActions.resetDefinitionById(definitionId));
+            return dispatch(cncActions.resetDefinitionById(definitionId));
         }
     };
     const optionConfigGroup = CNC_TOOL_CONFIG_GROUP;
@@ -113,14 +109,12 @@ function CncToolManager({ closeToolManager, shouldSaveToolpath = false, saveTool
     return (
         <ProfileManager
             outsideActions={actions}
-            activeDefinition={activeToolListDefinition}
-            isDefinitionEditable={isDefinitionEditable}
             isOfficialDefinition={isOfficialDefinition}
             optionConfigGroup={optionConfigGroup}
             allDefinitions={allDefinitions}
             disableCategory={false}
             managerTitle="key-Cnc/ToolManger-Tool Settings"
-            selectedId={selectedId}
+            activeDefinitionID={activeToolListDefinition.definitionId}
             headType={HEAD_CNC}
         />
     );

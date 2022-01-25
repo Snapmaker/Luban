@@ -653,31 +653,23 @@ export const actions = {
         return def?.settings;
     },
 
-    resetDefinitionById: (definitionId) => (dispatch, getState) => {
-        const { defaultDefinitions, qualityDefinitions, materialDefinitions } = getState().printing;
+    resetDefinitionById: (type, definitionId) => (dispatch, getState) => {
+        const definitionsKey = defaultDefinitionKeys[type].definitions;
+        const state = getState().printing;
+        const defaultDefinitions = state.defaultDefinitions;
+        const definitions = getState().printing[definitionsKey];
+
         const newDef = cloneDeep(defaultDefinitions.find(d => d.definitionId === definitionId));
         definitionManager.updateDefinition(newDef);
         dispatch(actions.updateActiveDefinition(newDef));
-        // const definition =
-        if (definitionId.indexOf('quality') !== -1
-            && (definitionId.indexOf('fast_print') !== -1
-                || definitionId.indexOf('high_quality') !== -1
-                || definitionId.indexOf('normal_quality') !== -1
-            )) {
-            const index = qualityDefinitions.findIndex(d => d.definitionId === definitionId);
-            qualityDefinitions[index] = newDef;
-            dispatch(actions.updateState({
-                qualityDefinitions: [...qualityDefinitions]
-            }));
-        } else {
-            const index = materialDefinitions.findIndex(d => d.definitionId === definitionId);
-            materialDefinitions[index] = newDef;
-            dispatch(actions.updateState({
-                materialDefinitions: [...materialDefinitions]
-            }));
-        }
+        const index = definitions.findIndex(d => d.definitionId === definitionId);
+        definitions[index] = newDef;
 
+        dispatch(actions.updateState({
+            [definitionsKey]: [...definitions]
+        }));
         dispatch(actions.updateBoundingBox());
+        return newDef;
     },
 
     updateShowPrintingManager: (showPrintingManager, direction = LEFT_EXTRUDER) => (dispatch) => {

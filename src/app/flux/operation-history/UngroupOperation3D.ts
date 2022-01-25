@@ -37,6 +37,7 @@ export default class UngroupOperation3D extends Operation<UngroupState> {
         modelGroup.addModelToSelectedGroup(target);
         modelGroup.ungroup();
         modelGroup.unselectAllModels();
+        modelGroup.updatePrimeTowerHeight();
     }
 
     public undo() {
@@ -59,5 +60,7 @@ export default class UngroupOperation3D extends Operation<UngroupState> {
         target.updateTransformation(this.state.groupTransformation);
         modelGroup.models = [...this.state.modelsBeforeUngroup];
         target.stickToPlate();
+        modelGroup.updatePrimeTowerHeight();
+        target.updateGroupExtruder();
     }
 }

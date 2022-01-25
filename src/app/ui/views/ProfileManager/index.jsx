@@ -3,7 +3,7 @@ import classNames from 'classnames';
 import PropTypes from 'prop-types';
 // import { useSelector, shallowEqual } from 'react-redux';
 import { isUndefined, cloneDeep, uniqWith } from 'lodash';
-import { HEAD_PRINTING, PRINTING_MANAGER_TYPE_MATERIAL } from '../../../constants';
+import { HEAD_PRINTING } from '../../../constants';
 import modal from '../../../lib/modal';
 import DefinitionCreator from '../DefinitionCreator';
 import Anchor from '../../components/Anchor';
@@ -13,7 +13,6 @@ import Notifications from '../../components/Notifications';
 import Modal from '../../components/Modal';
 import { Button } from '../../components/Buttons';
 import ConfigValueBox from './ConfigValueBox';
-import useSetState from '../../../lib/hooks/set-state';
 import { limitStringLength } from '../../../lib/normalize-range';
 import styles from './styles.styl';
 import { MaterialWithColor } from '../../widgets/PrintingMaterial/MaterialWithColor';
@@ -48,50 +47,55 @@ function creatCateArray(optionList) {
     return cates;
 }
 
-function useGetDefinitions(activeDefinition, allDefinitions, selectedId, getDefaultDefinition) {
-    const [definitionState, setDefinitionState] = useSetState({
-        definitionForManager: activeDefinition,
+function useGetDefinitions(allDefinitions, activeDefinitionID, getDefaultDefinition) {
+    const [definitionState, _setDefinitionState] = useState({
+        definitionForManager: allDefinitions.find(d => d.definitionId === activeDefinitionID),
+        selectedSettingDefaultValue: getDefaultDefinition(activeDefinitionID),
         definitionOptions: [],
         selectedName: '',
         isCategorySelected: false,
         renamingStatus: false,
         cates: []
     });
+    const setDefinitionState = (obj) => {
+        return _setDefinitionState((pre) => {
+            return {
+                ...pre,
+                ...obj
+            };
+        });
+    };
 
     useEffect(() => {
-        const lastDefinitionForManager = definitionState?.definitionForManager;
-        let definitionForManager = allDefinitions.find(d => d.definitionId === lastDefinitionForManager?.definitionId);
-        if (!definitionForManager) {
-            definitionForManager = allDefinitions.find(d => d.definitionId === selectedId);
-        }
-        const selectedSettingDefaultValue = getDefaultDefinition && getDefaultDefinition(definitionForManager?.definitionId);
         const definitionOptions = allDefinitions.map(d => {
-            const checkboxAndSelectGroup = {};
-            checkboxAndSelectGroup.label = d.name;
-            checkboxAndSelectGroup.value = d.definitionId;
-            checkboxAndSelectGroup.isDefault = !!d.isDefault;
-            if (d.ownKeys.find(key => key === 'color') && d.settings.color) checkboxAndSelectGroup.color = d.settings.color.default_value;
-            if (d?.category) {
-                checkboxAndSelectGroup.category = d.category;
-            }
-            if (d.settings && (Object.keys(d.settings).length === 0 || isUndefined(d.settings))) {
-                checkboxAndSelectGroup.isHidden = true;
-            }
-            return checkboxAndSelectGroup;
+            return {
+                label: d.name,
+                value: d.definitionId,
+                category: d.category,
+                isHidden: !d.settings || Object.keys(d.settings).length === 0,
+                isDefault: !!d.isDefault,
+                color: (d.ownKeys.find(key => key === 'color') && d.settings.color) ? d.settings.color.default_value : ''
+            };
         });
         setDefinitionState({
             definitionOptions,
-            definitionForManager,
-            selectedSettingDefaultValue,
             cates: creatCateArray(definitionOptions)
         });
-    }, [allDefinitions, definitionState.definitionForManager, selectedId, getDefaultDefinition, setDefinitionState]);
+    }, [allDefinitions]);
 
     return [definitionState, setDefinitionState];
 }
 
-function ProfileManager({ optionConfigGroup, disableCategory = true, managerTitle, managerDisplayType,
-    selectedId, allDefinitions, outsideActions, isOfficialDefinition, activeDefinition, headType }) {
+function ProfileManager({
+    optionConfigGroup,
+    disableCategory = true,
+    managerTitle,
+    activeDefinitionID,
+    allDefinitions,
+    outsideActions,
+    isOfficialDefinition,
+    headType
+}) {
     const [configExpanded, setConfigExpanded] = useState({});
     const [notificationMessage, setNotificationMessage] = useState('');
     const refs = {
@@ -99,7 +103,7 @@ function ProfileManager({ optionConfigGroup, disableCategory = true, managerTitl
         renameInput: useRef(null),
         refCreateModal: useRef(null)
     };
-    const [definitionState, setDefinitionState] = useGetDefinitions(activeDefinition, allDefinitions, selectedId, outsideActions.getDefaultDefinition);
+    const [definitionState, setDefinitionState] = useGetDefinitions(allDefinitions, activeDefinitionID, outsideActions.getDefaultDefinition);
 
     const currentDefinitions = useRef(allDefinitions);
     currentDefinitions.current = allDefinitions;
@@ -192,12 +196,6 @@ function ProfileManager({ optionConfigGroup, disableCategory = true, managerTitl
             if (isOfficialDefinition(definitionState.definitionForManager)) {
                 return;
             }
-            let newDefinition = {};
-            let shouldSelectDefinition = false;
-            if (allDefinitions.length) {
-                shouldSelectDefinition = true;
-                newDefinition = allDefinitions[0];
-            }
             const deleteName = isCategorySelected ? definition.category : definition.name;
             const popupActions = modal({
                 title: i18n._('key-Printing/ProfileManager-Delete Profile'),
@@ -218,11 +216,9 @@ function ProfileManager({ optionConfigGroup, disableCategory = true, managerTitl
                             } else if (isCategorySelected && outsideActions.removeCategoryDefinition) {
                                 await outsideActions.removeCategoryDefinition(definition);
                             }
-                            // After removal, select the first definition
-                            if (shouldSelectDefinition) {
-                                actions.onSelectDefinition(newDefinition);
-                            }
-                            if (definition?.definitionId === activeDefinition?.definitionId) {
+                            const newDefinition = allDefinitions[0];
+                            actions.onSelectDefinition(newDefinition);
+                            if (definition?.definitionId === activeDefinitionID) {
                                 outsideActions.onUpdateDefaultDefinition(newDefinition);
                             }
                             popupActions.close();
@@ -384,6 +380,12 @@ function ProfileManager({ optionConfigGroup, disableCategory = true, managerTitl
             });
 
             outsideActions.onSaveDefinitionForManager(newDefinitionForManager);
+        },
+        resetDefinition: (definitionId) => {
+            const newDefinitionForManager = outsideActions.resetDefinitionById(definitionId);
+            setDefinitionState({
+                definitionForManager: newDefinitionForManager
+            });
         }
     };
 
@@ -414,7 +416,6 @@ function ProfileManager({ optionConfigGroup, disableCategory = true, managerTitl
                                 <ul className={classNames(styles['manager-name-wrapper'])}>
                                     {(definitionState.cates.map((cate) => {
                                         const displayCategory = limitStringLength(cate.category ?? '', 28);
-                                        const isDefault = cate.items.some(item => item.isDefault);
                                         const isCategorySelected = cate.category === definitionState?.definitionForManager.category;
                                         return !!cate.items.length && (
                                             <li key={`${cate.category}`}>
@@ -458,30 +459,25 @@ function ProfileManager({ optionConfigGroup, disableCategory = true, managerTitl
                                                         {(cate.items.map((currentOption) => {
                                                             const definitionForManager = definitionState?.definitionForManager;
                                                             const materialSettingName = limitStringLength(currentOption.label ?? '', 24);
-                                                            const materialSettingColor = managerDisplayType === PRINTING_MANAGER_TYPE_MATERIAL ? currentOption.color : '';
                                                             const displayName = (
                                                                 <div className="display-inherit width-180 margin-left-4">
-                                                                    <MaterialWithColor name={materialSettingName} color={materialSettingColor} />
+                                                                    <MaterialWithColor name={materialSettingName} color={currentOption.color} />
                                                                 </div>
                                                             );
                                                             const isSelected = (
                                                                 !definitionState.isCategorySelected
                                                                 && currentOption.value === definitionForManager.definitionId
                                                             );
-                                                            let isAllValueDefault = isDefault && isSelected;
-                                                            if (isDefault && isSelected && definitionState?.selectedSettingDefaultValue) {
+                                                            let isAllValueDefault = true;
+                                                            if (isSelected && currentOption.isDefault && definitionState?.selectedSettingDefaultValue) {
                                                                 const selectedSettingDefaultValue = definitionState?.selectedSettingDefaultValue;
-                                                                optionConfigGroup.map((item) => {
-                                                                    item.fields.map((key) => {
-                                                                        if (
+                                                                isAllValueDefault = optionConfigGroup.every((item) => {
+                                                                    return item.fields.every((key) => {
+                                                                        return (
                                                                             definitionForManager.settings[key].default_value
-                                                                            !== selectedSettingDefaultValue[key].default_value
-                                                                        ) {
-                                                                            isAllValueDefault = false;
-                                                                        }
-                                                                        return null;
+                                                                            === selectedSettingDefaultValue[key].default_value
+                                                                        );
                                                                     });
-                                                                    return null;
                                                                 });
                                                             }
                                                             if (isUndefined(currentOption.label) || currentOption.isHidden) {
@@ -499,13 +495,13 @@ function ProfileManager({ optionConfigGroup, disableCategory = true, managerTitl
                                                                             )}
                                                                             onDoubleClick={() => actions.setRenamingStatus(true)}
                                                                         >
-                                                                            {isDefault && isSelected && !isAllValueDefault && (
+                                                                            {!isAllValueDefault && (
                                                                                 <SvgIcon
                                                                                     name="Reset"
                                                                                     size={24}
                                                                                     className="margin-left-n-30"
                                                                                     onClick={() => {
-                                                                                        outsideActions.resetDefinitionById(currentOption.value);
+                                                                                        actions.resetDefinition(currentOption.value);
                                                                                     }}
                                                                                 />
                                                                             )}
@@ -526,7 +522,6 @@ function ProfileManager({ optionConfigGroup, disableCategory = true, managerTitl
                                                                                         actions.setRenamingStatus(false);
                                                                                         actions.updateDefinitionName();
                                                                                     }}
-                                                                                // disabled={!isDefinitionEditable(qualityDefinitionForManager)}
                                                                                 />
                                                                             ) : displayName}
 
@@ -657,13 +652,11 @@ function ProfileManager({ optionConfigGroup, disableCategory = true, managerTitl
 }
 ProfileManager.propTypes = {
     outsideActions: PropTypes.object.isRequired,
-    activeDefinition: PropTypes.object,
-    selectedId: PropTypes.string.isRequired,
+    activeDefinitionID: PropTypes.string.isRequired,
     managerTitle: PropTypes.string.isRequired,
     disableCategory: PropTypes.bool,
     optionConfigGroup: PropTypes.array.isRequired,
     allDefinitions: PropTypes.array.isRequired,
-    managerDisplayType: PropTypes.string,
     isOfficialDefinition: PropTypes.func.isRequired,
     headType: PropTypes.string
 };

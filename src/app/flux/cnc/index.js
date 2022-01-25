@@ -105,7 +105,7 @@ const INITIAL_STATE = {
 
     // check to remove models
     removingModelsWarning: false,
-    removingModelsWarningCallback: () => {},
+    removingModelsWarningCallback: () => { },
     emptyToolPaths: [],
 
     // check not to duplicated create event
@@ -270,6 +270,7 @@ export const actions = {
         const { defaultDefinitions } = getState().cnc;
         const defaultDefinition = defaultDefinitions.find(d => d.definitionId === definitionId);
         dispatch(actions.updateToolListDefinition(defaultDefinition));
+        return defaultDefinition;
     },
     updateStlVisualizer: (obj) => (dispatch, getState) => {
         const { stlVisualizer } = getState().cnc;
