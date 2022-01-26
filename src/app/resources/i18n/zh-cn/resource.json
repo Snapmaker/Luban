@@ -1131,7 +1131,7 @@
     "key-Workspace/Workprogress-Working": "作业状态",
     "key-app_layout-File Saved": "文件保存成功",
     "key-app_layout-Open Folder": "打开文件夹_",
-    "key-app_layout-Saved to : ": "已保存至：_",
+    "key-app_layout-Saved to : ": "已保存至：",
     "key-color_selector-Basic Color": "基本颜色",
     "key-color_selector-Recent Color": "最近使用颜色",
     "key-default_category-ABS": "ABS",

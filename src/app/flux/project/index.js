@@ -30,8 +30,6 @@ import { machineStore } from '../../store/local-storage';
 import i18n from '../../lib/i18n';
 import UniApi from '../../lib/uni-api';
 
-const path = window.require('path');
-
 const INITIAL_STATE = {
     [HEAD_PRINTING]: {
         findLastEnvironment: false,
@@ -293,7 +291,7 @@ export const actions = {
             dispatch(appGlobalActions.updateSavedModal({
                 showSavedModal: true,
                 savedModalType: type,
-                savedModalFilePath: path.dirname(filePath)
+                savedModalFilePath: filePath
             }));
         });
     },
@@ -309,7 +307,7 @@ export const actions = {
             dispatch(appGlobalActions.updateSavedModal({
                 showSavedModal: true,
                 savedModalType: type,
-                savedModalFilePath: path.dirname(filePath)
+                savedModalFilePath: filePath
             }));
         });
     },
@@ -327,7 +325,7 @@ export const actions = {
             dispatch(appGlobalActions.updateSavedModal({
                 showSavedModal: true,
                 savedModalType: type,
-                savedModalFilePath: path.dirname(filePath)
+                savedModalFilePath: filePath
             }));
         });
         if (openedFile) {

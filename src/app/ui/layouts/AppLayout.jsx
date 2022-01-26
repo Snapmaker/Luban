@@ -49,8 +49,6 @@ import ModelExporter from '../widgets/PrintingVisualizer/ModelExporter';
 import Anchor from '../components/Anchor';
 import SvgIcon from '../components/SvgIcon';
 
-const path = window.require('path');
-
 class AppLayout extends PureComponent {
     static propTypes = {
         modelGroup: PropTypes.object.isRequired,
@@ -241,20 +239,16 @@ class AppLayout extends PureComponent {
                 );
             }
             if (this.props.savedModalType === 'electron') {
+                const path = window.require('path');
                 const openFolder = () => {
                     const ipc = window.require('electron').ipcRenderer;
-                    ipc.send('open-saved-path', this.props.savedModalFilePath);
+                    ipc.send('open-saved-path', path.dirname(this.props.savedModalFilePath));
                 };
                 return (
                     <div
                         className={classNames('border-default-black-5', 'border-radius-4', 'box-shadow-module', 'position-ab',
-                            'background-color-white', 'padding-horizontal-16', 'padding-vertical-16', 'bottom-0', 'margin-bottom-16')}
-                        style={{
-                            zIndex: 9999, // TODO?
-                            left: '50%',
-                            transform: 'translateX(-50%)',
-                            maxWidth: '360px'
-                        }}
+                            'background-color-white', 'padding-horizontal-16', 'padding-vertical-16', 'bottom-0', 'margin-bottom-16',
+                            'left-50-percent', 'max-width-360', 'z-index-top-modal')}
                     >
                         <div className="sm-flex justify-space-between">
                             <div className="sm-flex-auto font-roboto font-weight-normal font-size-middle">
@@ -270,7 +264,14 @@ class AppLayout extends PureComponent {
                                 <Anchor
                                     onClick={openFolder}
                                 >
-                                    <span className="color-blue-2">{i18n._('key-app_layout-Open Folder')}</span>
+                                    <span
+                                        className="color-blue-2"
+                                        style={{
+                                            textDecoration: 'underline'
+                                        }}
+                                    >
+                                        {i18n._('key-app_layout-Open Folder')}
+                                    </span>
                                 </Anchor>
                             </div>
                             <div className="sm-flex-auto">
@@ -391,7 +392,7 @@ class AppLayout extends PureComponent {
                 this.props.updateSavedModal({
                     showSavedModal: true,
                     savedModalType: type,
-                    savedModalFilePath: path.dirname(savedFilePath)
+                    savedModalFilePath: savedFilePath
                 });
             });
         },
