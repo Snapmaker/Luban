@@ -1,19 +1,20 @@
 import { isNil, lt } from 'lodash';
 
 const checkIsSnapmakerProjectFile = (file) => {
-    const [, tail] = file.split('.');
-    if (!tail) {
+    const lastIndex = file.lastIndexOf('.');
+    if (lastIndex < 0) {
         return false;
     }
+    const tail = file.slice(lastIndex + 1);
     return tail.substring(0, 4).toLowerCase() === 'snap';
 };
 
 const checkIsGCodeFile = (file) => {
-    let [, tail] = file.split('.');
-    if (!tail) {
+    const lastIndex = file.lastIndexOf('.');
+    if (lastIndex < 0) {
         return false;
     }
-    tail = tail.toLowerCase();
+    const tail = file.slice(lastIndex + 1).toLowerCase();
     return tail === 'gcode' || tail === 'nc' || tail === 'cnc';
 };
 const checkObjectIsEqual = (objOld, objNew) => {

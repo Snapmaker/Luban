@@ -10,3 +10,4 @@ export const SVG_ATTR_HREF = 'href';
 export const SVG_ATTR_TRANSFORM = 'transform';
 
 export const OVERRIDE_STYLE = 'fill: none; stroke: #000; stroke-width: 0.4px; vector-effect: non-scaling-stroke;';
+export const OVERRIDE_STYLE_WITHOUT_STROKEWIDTH = 'fill: none; stroke: #000; vector-effect: non-scaling-stroke;';

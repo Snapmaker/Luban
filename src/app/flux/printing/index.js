@@ -1989,7 +1989,8 @@ export const actions = {
             stage: STEP_STAGE.PRINTING_PREVIEWING,
             progress: progressStatesManager.updateProgress(STEP_STAGE.PRINTING_SLICING, 0)
         }));
-        const extruderColors = { toolColor0: extruderLDefinition.settings.color.default_value, toolColor1: extruderRDefinition.settings.color.default_value };
+        const extruderColors = { toolColor0: extruderLDefinition?.settings?.color?.default_value || '#FFFFFF',
+            toolColor1: extruderRDefinition?.settings?.color?.default_value || '#000000' };
         gcodeRenderingWorker.postMessage({ func: '3DP', gcodeFilename, extruderColors });
     },
     saveSupport: (model) => (dispatch, getState) => {

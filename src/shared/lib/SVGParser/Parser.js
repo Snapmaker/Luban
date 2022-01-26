@@ -22,7 +22,6 @@ const DEFAULT_MILLIMETER_PER_PIXEL = 25.4 / 72;
 // change the default PIXEL to make sure TOLERANCE close to 0.1mm
 const TOLERANCE = 0.3 * DEFAULT_MILLIMETER_PER_PIXEL;
 
-let parentTextAttributes = '';
 
 class SVGParser {
     constructor() {
@@ -225,6 +224,9 @@ class SVGParser {
                         const shadowTag = this.defs[url].shadowTag;
                         shadowNode = this.defs[url].shadowNode;
                         if (transform) {
+                            if (!shadowNode.$) {
+                                shadowNode.$ = {};
+                            }
                             if (shadowNode.$[SVG_ATTR_TRANSFORM]) {
                                 shadowNode.$[
                                     SVG_ATTR_TRANSFORM
@@ -308,10 +310,6 @@ class SVGParser {
                             parent.g = gArray;
                         }
                     }
-                    if (textObject.textAttributes) {
-                        attributes.textAttributes = textObject.textAttributes;
-                        parentTextAttributes = textObject.textAttributes;
-                    }
                     this.previousElementAttributes = attributes;
                     break;
                 }
@@ -329,9 +327,6 @@ class SVGParser {
                             gArray.push(textObject.parsedNode.g);
                             parent.g = gArray;
                         }
-                    }
-                    if (parentTextAttributes) {
-                        attributes.textAttributes = parentTextAttributes;
                     }
                     this.previousElementAttributes = attributes;
                     break;
