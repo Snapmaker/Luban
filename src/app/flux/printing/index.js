@@ -1919,12 +1919,14 @@ export const actions = {
 
     autoRotateSelectedModel: () => (dispatch, getState) => {
         const { modelGroup } = getState().printing;
+        const operations = new Operations();
+        dispatch(actions.clearAllManualSupport(operations));
         dispatch(actions.recordModelBeforeTransform(modelGroup));
 
         const modelState = modelGroup.autoRotateSelectedModel();
         modelGroup.onModelAfterTransform();
 
-        dispatch(actions.recordModelAfterTransform('rotate', modelGroup));
+        dispatch(actions.recordModelAfterTransform('rotate', modelGroup, operations));
         dispatch(actions.updateState(modelState));
         dispatch(actions.destroyGcodeLine());
         dispatch(actions.displayModel());
@@ -2213,6 +2215,7 @@ export const actions = {
         dispatch(actions.clearAllManualSupport(operations));
         // record current rotation for undo & redo
         dispatch(actions.recordModelBeforeTransform(modelGroup));
+        // keep the operation for `finishAnalyzeRotation` action
         dispatch(actions.updateState({
             combinedOperations: operations
         }));
