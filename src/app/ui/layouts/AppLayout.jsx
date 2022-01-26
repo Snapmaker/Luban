@@ -1,5 +1,4 @@
 import React, { PureComponent } from 'react';
-import path from 'path';
 import { Group } from 'three';
 import { withRouter } from 'react-router-dom';
 import PropTypes from 'prop-types';
@@ -49,6 +48,8 @@ import styles from './styles/appbar.styl';
 import ModelExporter from '../widgets/PrintingVisualizer/ModelExporter';
 import Anchor from '../components/Anchor';
 import SvgIcon from '../components/SvgIcon';
+
+const path = window.require('path');
 
 class AppLayout extends PureComponent {
     static propTypes = {

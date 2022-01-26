@@ -1,6 +1,5 @@
 import cloneDeep from 'lodash/cloneDeep';
 import { find, includes } from 'lodash';
-import path from 'path';
 import pkg from '../../../package.json';
 import {
     HEAD_CNC,
@@ -30,6 +29,8 @@ import { machineStore } from '../../store/local-storage';
 
 import i18n from '../../lib/i18n';
 import UniApi from '../../lib/uni-api';
+
+const path = window.require('path');
 
 const INITIAL_STATE = {
     [HEAD_PRINTING]: {
