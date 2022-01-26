@@ -185,7 +185,7 @@ class textParser extends BaseTagParser {
             }
             const fullPath = new opentype.Path();
             // Calculate size and render SVG template
-            const p = fontObj.getPath(text, positionX, positionY, size);
+            const p = fontObj.getPath(text, positionX, positionY, Math.floor(size));
             fullPath.extend(p);
             fullPath.stroke = 'black';
 
