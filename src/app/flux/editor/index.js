@@ -1000,8 +1000,8 @@ export const actions = {
         const toolPaths = toolPathGroup.getToolPaths();
         const emptyToolPaths = [];
         toolPaths.forEach((item) => {
-            if (item.visibleModelIDs && item.visibleModelIDs.length) {
-                for (const id of item.visibleModelIDs) {
+            if (item.modelMap && item.modelMap.size) {
+                for (const [id] of item.modelMap) {
                     if (!selectedModelIDArray.includes(id) && allModelIDs.includes(id)) {
                         return;
                     }
