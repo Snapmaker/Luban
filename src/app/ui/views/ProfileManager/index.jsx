@@ -3,7 +3,7 @@ import classNames from 'classnames';
 import PropTypes from 'prop-types';
 // import { useSelector, shallowEqual } from 'react-redux';
 import { isUndefined, cloneDeep, uniqWith } from 'lodash';
-import { PRINTING_MANAGER_TYPE_MATERIAL, PRINTING_MANAGER_TYPE_QUALITY } from '../../../constants';
+import { HEAD_CNC, HEAD_LASER, PRINTING_MANAGER_TYPE_MATERIAL, PRINTING_MANAGER_TYPE_QUALITY } from '../../../constants';
 import modal from '../../../lib/modal';
 import DefinitionCreator from '../DefinitionCreator';
 import Anchor from '../../components/Anchor';
@@ -15,6 +15,7 @@ import { Button } from '../../components/Buttons';
 import ConfigValueBox from './ConfigValueBox';
 import styles from './styles.styl';
 import { MaterialWithColor } from '../../widgets/PrintingMaterial/MaterialWithColor';
+import useSetState from '../../../lib/hooks/set-state';
 
 function creatCateArray(optionList) {
     const cates = [];
@@ -47,7 +48,8 @@ function creatCateArray(optionList) {
 }
 
 function useGetDefinitions(allDefinitions, activeDefinitionID, getDefaultDefinition) {
-    const [definitionState, _setDefinitionState] = useState({
+    const [definitionState, setDefinitionState] = useSetState({
+        activeDefinitionID,
         definitionForManager: allDefinitions.find(d => d.definitionId === activeDefinitionID),
         selectedSettingDefaultValue: getDefaultDefinition(activeDefinitionID),
         definitionOptions: [],
@@ -56,14 +58,6 @@ function useGetDefinitions(allDefinitions, activeDefinitionID, getDefaultDefinit
         renamingStatus: false,
         cates: []
     });
-    const setDefinitionState = (obj) => {
-        return _setDefinitionState((pre) => {
-            return {
-                ...pre,
-                ...obj
-            };
-        });
-    };
 
     useEffect(() => {
         const definitionOptions = allDefinitions.map(d => {
@@ -76,10 +70,22 @@ function useGetDefinitions(allDefinitions, activeDefinitionID, getDefaultDefinit
                 color: (d.ownKeys.find(key => key === 'color') && d.settings.color) ? d.settings.color.default_value : ''
             };
         });
-        setDefinitionState({
-            definitionOptions,
-            cates: creatCateArray(definitionOptions),
-            definitionForManager: allDefinitions.find(d => d.definitionId === activeDefinitionID) || allDefinitions[0]
+        setDefinitionState((prev) => {
+            let definitionForManager;
+            let selectedSettingDefaultValue;
+            if (prev.activeDefinitionID === activeDefinitionID && prev.definitionForManager) {
+                definitionForManager = prev.definitionForManager;
+                selectedSettingDefaultValue = prev.selectedSettingDefaultValue;
+            } else {
+                definitionForManager = allDefinitions.find(d => d.definitionId === activeDefinitionID) || allDefinitions[0];
+                selectedSettingDefaultValue = getDefaultDefinition(definitionForManager.definitionId);
+            }
+            return {
+                definitionOptions,
+                cates: creatCateArray(definitionOptions),
+                definitionForManager,
+                selectedSettingDefaultValue
+            };
         });
     }, [allDefinitions, activeDefinitionID]);
 
@@ -370,6 +376,12 @@ function ProfileManager({
             const { definitionForManager } = definitionState;
             const newDefinitionForManager = cloneDeep(definitionForManager);
             newDefinitionForManager.settings[key].default_value = value;
+
+            if (managerType === HEAD_CNC || managerType === HEAD_LASER) {
+                if (key === 'path_type' && value === 'path') {
+                    newDefinitionForManager.settings.movement_mode.default_value = 'greyscale-line';
+                }
+            }
             setDefinitionState({
                 definitionForManager: newDefinitionForManager
             });

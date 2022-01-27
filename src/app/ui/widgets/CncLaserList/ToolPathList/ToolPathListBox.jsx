@@ -170,10 +170,10 @@ const ToolPathListBox = (props) => {
                 check: !check
             }));
             if (displayedType === DISPLAYED_TYPE_TOOLPATH) {
-                const allToolPathHide = toolPaths.some((toolPath) => {
-                    return !(toolPath.id === id && !visible) || (toolPath.id !== id && toolPath.visible);
+                const hasToolPathVisible = toolPaths.some((toolPath) => {
+                    return (toolPath.id === id && !visible) || (toolPath.id !== id && toolPath.visible);
                 });
-                if (!allToolPathHide) {
+                if (hasToolPathVisible) {
                     dispatch(editorActions.refreshToolPathPreview(props.headType));
                 }
             } else {

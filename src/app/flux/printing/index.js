@@ -989,7 +989,7 @@ export const actions = {
         const state = getState().printing;
         let name = newDefinitionName || definition.name;
         let definitionId;
-        if (type === 'quality' && isDefaultQualityDefinition(definition.definitionId)) {
+        if (type === PRINTING_MANAGER_TYPE_QUALITY && isDefaultQualityDefinition(definition.definitionId)) {
             const machine = getState().machine;
             name = `${machine.series}-${name}`;
         }
@@ -1018,7 +1018,7 @@ export const actions = {
         };
         const definitionsKey = defaultDefinitionKeys[type].definitions;
 
-        const definitionsWithSameCategory = state.materialDefinitions.filter(d => d.category === definition.category);
+        const definitionsWithSameCategory = state[definitionsKey].filter(d => d.category === definition.category);
         // make sure name is not repeated
         while (definitionsWithSameCategory.find(d => d.name === newDefinition.name)) {
             newDefinition.name = `#${newDefinition.name}`;
@@ -1042,7 +1042,7 @@ export const actions = {
         return createdDefinition;
     },
 
-    duplicateMaterialCategoryDefinition: (type, activeToolList, isCreate, oldCategory) => async (dispatch, getState) => {
+    duplicateMaterialCategoryDefinitionByType: (type, activeToolList, isCreate, oldCategory) => async (dispatch, getState) => {
         const state = getState().printing;
         const definitionsKey = defaultDefinitionKeys[type].definitions;
         const definitions = cloneDeep(state[definitionsKey]);
@@ -1054,7 +1054,7 @@ export const actions = {
         }
         const definitionsWithSameCategory = isCreate ? [{
             ...activeToolList,
-            name: `${i18n._('key-default_category-Default Material')}_`,
+            name: type === PRINTING_MANAGER_TYPE_MATERIAL ? i18n._('key-default_category-Default Material') : i18n._('key-default_category-Default Preset'),
             settings: definitions[0]?.settings
         }]
             : state[definitionsKey].filter(d => d.category === oldCategory);
@@ -1074,7 +1074,7 @@ export const actions = {
         return allDupliateDefinitions[0];
     },
 
-    removeDefinitionByType: (type, definition) => async (dispatch, getState) => {
+    removeDefinitionByType: (type, definition, loop = false) => async (dispatch, getState) => {
         const state = getState().printing;
 
         await definitionManager.removeDefinition(definition);
@@ -1091,7 +1091,7 @@ export const actions = {
                 dispatch(actions.updateDefaultIdByType(type, defintions[0].definitionId, RIGHT_EXTRUDER));
             }
         }
-        dispatch(actions.updateState({
+        !loop && dispatch(actions.updateState({
             [definitionsKey]: defintions
         }));
     },
@@ -1101,11 +1101,23 @@ export const actions = {
         const definitionsKey = defaultDefinitionKeys[type].definitions;
 
         const definitions = state[definitionsKey];
-        const definitionsWithSameCategory = definitions.filter(d => d.category === category);
-        const ps = definitionsWithSameCategory.map((item) => {
-            return dispatch(actions.removeDefinitionByType(type, item));
+        const newDefinitions = [];
+        const definitionsWithSameCategory = definitions.filter(d => {
+            if (d.category === category) {
+                return true;
+            } else {
+                newDefinitions.push(d);
+                return false;
+            }
         });
-        return Promise.all(ps);
+        const ps = definitionsWithSameCategory.map((item) => {
+            return dispatch(actions.removeDefinitionByType(type, item, true));
+        });
+        await Promise.all(ps);
+
+        dispatch(actions.updateState({
+            [definitionsKey]: newDefinitions
+        }));
     },
 
     // removes all non-predefined definitions
@@ -1152,12 +1164,12 @@ export const actions = {
     },
     updateDefaultIdByType: (type, newDefinitionId, direction = LEFT_EXTRUDER) => (dispatch) => {
         let defaultId;
-        if (type === 'material') {
+        if (type === PRINTING_MANAGER_TYPE_MATERIAL) {
             defaultId = direction === LEFT_EXTRUDER ? 'defaultMaterialId' : 'defaultMaterialIdRight';
         } else {
             defaultId = defaultDefinitionKeys[type].id;
         }
-        dispatch(actions.updateDefaultConfigId(type, newDefinitionId));
+        dispatch(actions.updateDefaultConfigId(type, newDefinitionId, direction));
         dispatch(actions.updateState({
             [defaultId]: newDefinitionId
         }));

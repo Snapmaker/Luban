@@ -20,12 +20,11 @@ const describeCreator = (managerType) => {
     let createCategoryDescribe = i18n._('key-Cnc/ToolManger/ProfileCreator-Create Material');
     let createCategorySubDescribe = i18n._('key-Cnc/ToolManger/ProfileCreator-Enter material name');
     let createItemDescribe;
-
-    let createItemSubDescribe = i18n._('key-Cnc/ToolManger/ProfileCreator-Enter Profile Name');
+    let createItemSubDescribe;
     let selectCategory;
     let creatorTitle;
-    let categoryName = i18n._('key-default_category-Default Material');
-    let itemName = i18n._('key-default_category-Default Preset');
+    let categoryName;
+    let itemName;
 
     switch (managerType) {
         case HEAD_LASER:
@@ -33,25 +32,40 @@ const describeCreator = (managerType) => {
             createItemDescribe = i18n._('key-Laser/PresetManager/ProfileCreator-Create Preset');
             categoryName = i18n._('key-default_category-Default Material');
             itemName = i18n._('key-default_category-Default Preset');
+            createItemSubDescribe = i18n._('key-Laser/PresetManager/ProfileCreator-Enter Preset name');
             break;
         case HEAD_CNC:
             selectCategory = i18n._('key-Laser/ToolManger/ProfileCreator-Select material type');
             createItemDescribe = i18n._('key-Cnc/ToolManger/ProfileCreator-Create Carving Tool');
             categoryName = i18n._('key-default_category-Default Material');
             itemName = i18n._('key-default_category-Default Tool');
+            createItemSubDescribe = i18n._('key-Cnc/ToolManger/ProfileCreator-Enter tool name');
             break;
         case PRINTING_MANAGER_TYPE_MATERIAL:
-            // selectCategory = i18n._('key-Laser/ToolManger/ProfileCreator-Select material type');
-            // createItemDescribe = i18n._('key-Cnc/ToolManger/ProfileCreator-Create Carving Tool');
-            createCategoryDescribe = '创建材料类目_';
-            createCategorySubDescribe = '输入材料类目名称_';
-            createItemDescribe = '创建材料配置_';
-            createItemSubDescribe = '输入材料配置名称_';
-            selectCategory = '选择材料类目_';
-            categoryName = '新材料类目名称_';
-            itemName = '新材料配置名称_';
+            createCategoryDescribe = i18n._('key-Printing/ToolManger/ProfileCreatorCategory-Create Material Category'); // '创建材料类目_';
+            createCategorySubDescribe = i18n._('key-Printing/ToolManger/ProfileCreatorCategory-Enter material category name'); // '输入材料类目名称_';
+            createItemDescribe = i18n._('key-Printing/ToolManger/ProfileCreator-Create Material'); // '创建材料配置_'
+            createItemSubDescribe = i18n._('key-Printing/ToolManger/ProfileCreator-Enter material name'); // '输入材料配置名称_'
+            selectCategory = i18n._('key-Printing/ToolManger/ProfileCreator-Select material Category name'); // '选择材料类目_
+            categoryName = i18n._('key-default_category-Default Material Category'); // '新材料类目名称_
+            itemName = i18n._('key-default_category-Default Material'); // '新材料配置名称_
             break;
         case PRINTING_MANAGER_TYPE_QUALITY:
+            createCategoryDescribe = i18n._('key-Printing/ToolManger/ProfileCreatorQualityCategory-Create Quality Category'); // '创建材料类目_';
+            createCategorySubDescribe = i18n._('key-Printing/ToolManger/ProfileCreatorQualityCategory-Enter quality category name'); // '输入材料类目名称_';
+            createItemDescribe = i18n._('key-Printing/ToolManger/ProfileCreator-Create Quality'); // '创建材料配置_'
+            createItemSubDescribe = i18n._('key-Cnc/ToolManger/ProfileCreator-Enter Profile Name'); // '输入材料配置名称_'
+            selectCategory = i18n._('key-Printing/ToolManger/ProfileCreator-Select Quality Category name'); // '选择材料类目_
+            categoryName = i18n._('key-default_category-Default Quality Category'); // '新材料类目名称_
+            itemName = i18n._('key-default_category-Default Quality'); // '新材料配置名称_
+
+            // createCategoryDescribe = '创建打印设置类目_';
+            // createCategorySubDescribe = '输入打印设置类目名称_';
+            // createItemDescribe = '创建打印设置_';
+            // createItemSubDescribe = '输入打印设置名称_';
+            // selectCategory = '选择打印设置类目_';
+            // categoryName = '新打印设置类目名称_';
+            // itemName = '新打印设置名称_';
             break;
         default:
             break;
