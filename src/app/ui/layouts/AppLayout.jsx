@@ -204,9 +204,28 @@ class AppLayout extends PureComponent {
             };
             if (this.props.savedModalType === 'web') {
                 return (
-                    <div className="border-default-black-5 border-radius-4 box-shadow-default width-200">
-                        <div className="sm-flex">
-                            Saved
+                    <div
+                        className={classNames('border-default-black-5', 'border-radius-4', 'box-shadow-module', 'position-ab',
+                            'background-color-white', 'padding-horizontal-10', 'padding-vertical-10', 'bottom-0', 'margin-bottom-16')}
+                        style={{
+                            zIndex: 9999, // TODO?
+                            left: '50%',
+                            transform: 'translateX(-50%)',
+                            maxWidth: '360px'
+                        }}
+                    >
+                        <div className="sm-flex justify-space-between">
+                            <div className="sm-flex-auto font-roboto font-weight-normal font-size-middle">
+                                <SvgIcon
+                                    name="WarningTipsSuccess"
+                                    size="24"
+                                    type={['static']}
+                                    color="#4cb518"
+                                />
+                                <span>
+                                    {i18n._('key-app_layout-File Saved')}
+                                </span>
+                            </div>
                             <div className="sm-flex-auto">
                                 <SvgIcon
                                     name="Cancel"
@@ -220,56 +239,46 @@ class AppLayout extends PureComponent {
                 );
             }
             if (this.props.savedModalType === 'electron') {
+                const path = window.require('path');
                 const openFolder = () => {
                     const ipc = window.require('electron').ipcRenderer;
-                    ipc.send('open-saved-path', this.props.savedModalFilePath);
+                    ipc.send('open-saved-path', path.dirname(this.props.savedModalFilePath));
                 };
                 return (
                     <div
-                        className={classNames('border-default-black-5', 'border-radius-4', 'box-shadow-default', 'position-ab',
-                            'background-color-white', 'padding-horizontal-16', 'padding-vertical-16')}
-                        style={{
-                            zIndex: 9999, // TODO?
-                            left: 'calc((100% - 360px) / 2)',
-                            transform: 'translateX(-50%)',
-                            maxWidth: '428px',
-                            marginTop: '-10%'
-                        }}
+                        className={classNames('border-default-black-5', 'border-radius-4', 'box-shadow-module', 'position-ab',
+                            'background-color-white', 'padding-horizontal-16', 'padding-vertical-16', 'bottom-0', 'margin-bottom-16',
+                            'left-50-percent', 'max-width-360', 'z-index-top-modal')}
                     >
-                        <div
-                            className="sm-flex justify-space-between"
-                        >
-                            <div
-                                className="sm-flex-auto"
-                                style={{
-                                    fontFamily: 'Roboto',
-                                    fontStyle: 'normal',
-                                    fontSize: '16px',
-                                    fontWeight: '500'
-                                }}
-                            >
+                        <div className="sm-flex justify-space-between">
+                            <div className="sm-flex-auto font-roboto font-weight-normal font-size-middle">
                                 <SvgIcon
-                                    className="margin-top-4"
                                     name="WarningTipsSuccess"
-                                    size="16"
+                                    size="24"
                                     type={['static']}
                                     color="#4cb518"
                                 />
                                 <span>
-                                    {'File Saved. '}
+                                    {i18n._('key-app_layout-File Saved')}
                                 </span>
                                 <Anchor
                                     onClick={openFolder}
                                 >
-                                    Open Folder
+                                    <span
+                                        className="color-blue-2"
+                                        style={{
+                                            textDecoration: 'underline'
+                                        }}
+                                    >
+                                        {i18n._('key-app_layout-Open Folder')}
+                                    </span>
                                 </Anchor>
                             </div>
                             <div className="sm-flex-auto">
                                 <SvgIcon
-                                    className="margin-top-4"
                                     name="Cancel"
                                     type={['static']}
-                                    size="16"
+                                    size="24"
                                     onClick={onClose}
                                 />
                             </div>
@@ -277,10 +286,11 @@ class AppLayout extends PureComponent {
                         <div
                             className="sm-flex"
                             style={{
-                                wordBreak: 'break-all'
+                                wordBreak: 'break-all',
+                                color: '#545659'
                             }}
                         >
-                            {`Saved to : ${this.props.savedModalFilePath}`}
+                            {i18n._('key-app_layout-Saved to : ')}{this.props.savedModalFilePath}
                         </div>
                     </div>
                 );
@@ -348,22 +358,22 @@ class AppLayout extends PureComponent {
             // to ensure opened file set before service run
             this.props.initRecoverService();
         },
-        exportModel: (path) => {
+        exportModel: (filePath) => {
             const isBinary = true;
             let format;
-            if (!path) {
+            if (!filePath) {
                 format = 'stl';
-                path = 'export';
+                filePath = 'export';
                 if (format === 'stl') {
                     if (isBinary === true) {
-                        path += '_binary';
+                        filePath += '_binary';
                     } else {
-                        path += '_ascii';
+                        filePath += '_ascii';
                     }
                 }
-                path += `.${format}`;
+                filePath += `.${format}`;
             } else {
-                format = path.split('.').pop();
+                format = filePath.split('.').pop();
             }
             const outputObject = new Group();
             this.props.modelGroup.models.forEach(item => {
@@ -378,15 +388,11 @@ class AppLayout extends PureComponent {
                 return;
             }
             const blob = new Blob([output], { type: 'text/plain;charset=utf-8' });
-            UniApi.File.writeBlobToFile(blob, path, (type, filePath = '') => {
-                const pos = filePath.lastIndexOf('/');
-                if (pos > -1) {
-                    filePath = filePath.substr(0, pos + 1);
-                }
+            UniApi.File.writeBlobToFile(blob, filePath, (type, savedFilePath = '') => {
                 this.props.updateSavedModal({
                     showSavedModal: true,
                     savedModalType: type,
-                    savedModalFilePath: filePath
+                    savedModalFilePath: savedFilePath
                 });
             });
         },
@@ -724,10 +730,10 @@ class AppLayout extends PureComponent {
                 { showSettingsModal ? this.actions.renderSettingModal() : null }
                 { showDevelopToolsModal ? this.actions.renderDevelopToolsModal() : null }
                 { showCheckForUpdatesModal ? this.actions.renderCheckForUpdatesModal() : null }
+                { showSavedModal ? this.actions.renderSavedModal() : null }
                 <div className={isElectron() ? null : classNames(styles['app-content'])}>
                     {this.props.children}
                 </div>
-                { showSavedModal ? this.actions.renderSavedModal() : null }
             </div>
         );
     }
@@ -765,7 +771,7 @@ const mapDispatchToProps = (dispatch) => {
         changeCoordinateMode: (headType, coordinateMode, coordinateSize) => dispatch(editorActions.changeCoordinateMode(headType, coordinateMode, coordinateSize)),
         updateMaterials: (headType, newMaterials) => dispatch(editorActions.updateMaterials(headType, newMaterials)),
         loadCase: (pathConfig, history) => dispatch(projectActions.openProject(pathConfig, history)),
-        updateCurrentModalPath: (path) => dispatch(menuActions.updateCurrentModalPath(path)),
+        updateCurrentModalPath: (pathName) => dispatch(menuActions.updateCurrentModalPath(pathName)),
         updateMenu: () => dispatch(menuActions.updateMenu()),
         initMenuLanguage: () => dispatch(menuActions.initMenuLanguage()),
         enableMenu: () => dispatch(menuActions.enableMenu()),
