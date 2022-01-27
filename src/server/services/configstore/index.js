@@ -85,7 +85,7 @@ class ConfigStore extends events.EventEmitter {
 
         try {
             if (!fs.existsSync(this.file)) {
-                const content = JSON.stringify({});
+                const content = JSON.stringify({ macros: defaultMacros });
                 fs.writeFileSync(this.file, content, 'utf8');
             }
 

@@ -64,6 +64,8 @@ export const STAGES_3DP = {
 };
 // !important: keys in PRINTING_QUALITY_CONFIG_KEYS, PRINTING_QUALITY_CONFIG_GROUP should change togethor
 
+export const WHITE_COLOR = '#ffffff';
+export const BLACK_COLOR = '#000000';
 
 export const PRINTING_MATERIAL_CONFIG_COLORS = [
     ['#ffffff', '#000000'],

@@ -5,6 +5,7 @@ import BaseTagParser from './BaseTagParser';
 import fontManager from '../FontManager';
 import PathTagParser from './PathTagParser';
 import AttributesParser from './AttributesParser';
+import { xformPoint } from './Utils';
 
 
 const DEFAULT_MILLIMETER_PER_PIXEL = 25.4 / 72;
@@ -88,11 +89,7 @@ class textParser extends BaseTagParser {
         // const tag = node['#name'];
         const shapes = [];
         if (node) {
-            let isText = false;
-            if (tag === 'text' || tag === 'tspan') {
-                isText = true;
-            }
-            const attributes = this.attributeParser.parse(node, parentAttributes, isText);
+            const attributes = this.attributeParser.parse(node, parentAttributes);
 
             let shouldParseChildren = true;
             switch (tag) {
@@ -141,7 +138,7 @@ class textParser extends BaseTagParser {
         }
     }
 
-    async parse(node, attributes, previousElementAttributes, isText) {
+    async parse(node, attributes, previousElementAttributes) {
         this.initialize(attributes);
         const font = attributes.fontFamily || 'Arial';
         const size = attributes.fontSize;
@@ -156,14 +153,12 @@ class textParser extends BaseTagParser {
             ? 0 : previousElementAttributes.positionX;
         const baselineY = _.isUndefined(previousElementAttributes.positionY)
             ? 0 : previousElementAttributes.positionY;
-        const previousTextAttributes = _.isUndefined(previousElementAttributes.textAttributes)
-            ? '' : previousElementAttributes.textAttributes;
         let positionX = 0;
         let positionY = 0;
 
         if (_.isUndefined(x)) {
             positionX = baselineX + dx;
-        } else if (!_.isUndefined(x)) {
+        } else {
             positionX = actualX + dx;
         }
 
@@ -173,46 +168,30 @@ class textParser extends BaseTagParser {
             positionY = actualY + dy;
         }
 
+        const arrPoint = [positionX, positionY];
+        xformPoint(attributes.xform, arrPoint);
+        positionX = arrPoint[0];
+        positionY = arrPoint[1];
         const result = {
             positionX,
             positionY
         };
+
         let addResult = {};
-        let textAttributes = '';
-        if (node.$) {
-            Object.keys(node.$).forEach((key) => {
-                let value = node.$[key];
-                if (key === 'transform') {
-                    textAttributes += `transform='${value}' `;
-                } else if (key === 'style') {
-                    value = value.replace(/'/g, '"');
-                    textAttributes += `style='${value}' `;
-                }
-            });
-        }
-        if (isText) {
-            result.textAttributes = textAttributes;
-        }
         if (!_.isUndefined(text)) {
             let fontObj = await fontManager.getFont(font);
             if (!fontObj) {
                 fontObj = await fontManager.getFont('Arial');
             }
-
             const fullPath = new opentype.Path();
             // Calculate size and render SVG template
             const p = fontObj.getPath(text, positionX, positionY, Math.floor(size));
             fullPath.extend(p);
             fullPath.stroke = 'black';
 
-            let pathString = fullPath.toSVG();
-            pathString = pathString.replace(/\/>$/, ` ${textAttributes}/>`);
-            let gString = _.template(TEMPLATE)({
-                path: pathString
+            const gString = _.template(TEMPLATE)({
+                path: fullPath.toSVG()
             });
-            if (!isText) {
-                gString = gString.replace(/^<g/, `<g ${previousTextAttributes}`);
-            }
             addResult = await this.parseString(gString, 'g');
         }
         return {

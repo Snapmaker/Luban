@@ -1,21 +1,15 @@
 import { isNil, lt } from 'lodash';
 
+const projectRegex = /\.snap(lzr|3dp|cnc)$/;
+const gcodeRegex = /\.(gcode|nc|cnc)$/;
 const checkIsSnapmakerProjectFile = (file) => {
-    const [, tail] = file.split('.');
-    if (!tail) {
-        return false;
-    }
-    return tail.substring(0, 4).toLowerCase() === 'snap';
+    return projectRegex.test(file);
 };
 
 const checkIsGCodeFile = (file) => {
-    let [, tail] = file.split('.');
-    if (!tail) {
-        return false;
-    }
-    tail = tail.toLowerCase();
-    return tail === 'gcode' || tail === 'nc' || tail === 'cnc';
+    return gcodeRegex.test(file);
 };
+
 const checkObjectIsEqual = (objOld, objNew) => {
     if (isNil(objOld) && !isNil(objNew)) {
         return false;

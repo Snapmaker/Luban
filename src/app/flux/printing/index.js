@@ -20,7 +20,9 @@ import {
     RIGHT_EXTRUDER_MAP_NUMBER,
     DUAL_EXTRUDER_TOOLHEAD_FOR_SM2,
     DUAL_EXTRUDER_LIMIT_WIDTH_L,
-    DUAL_EXTRUDER_LIMIT_WIDTH_R, BOTH_EXTRUDER_MAP_NUMBER
+    DUAL_EXTRUDER_LIMIT_WIDTH_R, BOTH_EXTRUDER_MAP_NUMBER,
+    WHITE_COLOR,
+    BLACK_COLOR
 } from '../../constants';
 import { timestamp } from '../../../shared/lib/random-utils';
 import { machineStore } from '../../store/local-storage';
@@ -1989,7 +1991,8 @@ export const actions = {
             stage: STEP_STAGE.PRINTING_PREVIEWING,
             progress: progressStatesManager.updateProgress(STEP_STAGE.PRINTING_SLICING, 0)
         }));
-        const extruderColors = { toolColor0: extruderLDefinition.settings.color.default_value, toolColor1: extruderRDefinition.settings.color.default_value };
+        const extruderColors = { toolColor0: extruderLDefinition?.settings?.color?.default_value || WHITE_COLOR,
+            toolColor1: extruderRDefinition?.settings?.color?.default_value || BLACK_COLOR };
         gcodeRenderingWorker.postMessage({ func: '3DP', gcodeFilename, extruderColors });
     },
     saveSupport: (model) => (dispatch, getState) => {

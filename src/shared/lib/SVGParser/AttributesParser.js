@@ -1,7 +1,7 @@
 import logger from 'universal-logger';
 import { isUndefined } from 'lodash';
 import { parseFloats, cssColor2Hex, xformMultiply } from './Utils';
-import { SVG_ATTR_ID, XLINK_HREF, SVG_ATTR_HREF, OVERRIDE_STYLE } from './constants';
+import { SVG_ATTR_ID, XLINK_HREF, SVG_ATTR_HREF, OVERRIDE_STYLE_WITHOUT_STROKEWIDTH } from './constants';
 
 const log = logger();
 
@@ -244,12 +244,14 @@ class AttributesParser {
             const value = node.$[key];
             this.parseAttribute(attributes, parentAttributes, key, value, isTextElement);
         });
-        node.$.stroke = '#000000';
-        node.$['stroke-width'] = 1;
+
         if (!node.$.style) {
-            node.$.style = OVERRIDE_STYLE;
+            node.$.style = OVERRIDE_STYLE_WITHOUT_STROKEWIDTH;
         } else {
-            node.$.style += `;${OVERRIDE_STYLE}`;
+            node.$.style += `;${OVERRIDE_STYLE_WITHOUT_STROKEWIDTH}`;
+        }
+        if (node.$['stroke-width'] !== 0) {
+            node.$['stroke-width'] = 1;
         }
         // make text have the right x
         if (isTextElement) {
