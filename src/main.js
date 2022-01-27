@@ -36,12 +36,12 @@ function getBrowserWindowOptions() {
         show: false,
         useContentSize: true,
         title: `${pkg.name} ${pkg.version}`,
+        // https://www.electronjs.org/docs/latest/breaking-changes#default-changed-enableremotemodule-defaults-to-false
         webPreferences: {
             nodeIntegration: true,
             contextIsolation: false,
             enableRemoteModule: true,
-            nodeIntegrationInWorker: true,
-            webviewTag: true
+            nodeIntegrationInWorker: true
         }
     };
 

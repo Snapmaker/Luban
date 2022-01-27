@@ -216,6 +216,7 @@ function recordScaleActionsToHistory(scaleActionsFn, elements, SVGActions, headT
 const pool = workerpool.pool('ToolpathRenderer.worker.js', {
     minWorkers: 'max',
 });
+// TODO Have to import 'ToolpathRenderer.worker.js' for webpack to package this file
 console.log('onmessage', onmessage);
 
 const scaleExtname = ['.svg', '.dxf'];
