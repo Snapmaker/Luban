@@ -42,30 +42,22 @@ const describeCreator = (managerType) => {
             createItemSubDescribe = i18n._('key-Cnc/ToolManger/ProfileCreator-Enter tool name');
             break;
         case PRINTING_MANAGER_TYPE_MATERIAL:
-            createCategoryDescribe = i18n._('key-Printing/ToolManger/ProfileCreatorCategory-Create Material Category'); // '创建材料类目_';
-            createCategorySubDescribe = i18n._('key-Printing/ToolManger/ProfileCreatorCategory-Enter material category name'); // '输入材料类目名称_';
-            createItemDescribe = i18n._('key-Printing/ToolManger/ProfileCreator-Create Material'); // '创建材料配置_'
-            createItemSubDescribe = i18n._('key-Printing/ToolManger/ProfileCreator-Enter material name'); // '输入材料配置名称_'
-            selectCategory = i18n._('key-Printing/ToolManger/ProfileCreator-Select material Category name'); // '选择材料类目_
-            categoryName = i18n._('key-default_category-Default Material Category'); // '新材料类目名称_
-            itemName = i18n._('key-default_category-Default Material'); // '新材料配置名称_
+            createCategoryDescribe = i18n._('key-Printing/ToolManger/ProfileCreatorCategory-Create Material Category');
+            createCategorySubDescribe = i18n._('key-Printing/ToolManger/ProfileCreatorCategory-Enter material category name');
+            createItemDescribe = i18n._('key-Printing/ToolManger/ProfileCreator-Create Material');
+            createItemSubDescribe = i18n._('key-Printing/ToolManger/ProfileCreator-Enter material name');
+            selectCategory = i18n._('key-Printing/ToolManger/ProfileCreator-Select material Category name');
+            categoryName = i18n._('key-default_category-Default Material Category');
+            itemName = i18n._('key-default_category-Default Material');
             break;
         case PRINTING_MANAGER_TYPE_QUALITY:
-            createCategoryDescribe = i18n._('key-Printing/ToolManger/ProfileCreatorQualityCategory-Create Quality Category'); // '创建材料类目_';
-            createCategorySubDescribe = i18n._('key-Printing/ToolManger/ProfileCreatorQualityCategory-Enter quality category name'); // '输入材料类目名称_';
-            createItemDescribe = i18n._('key-Printing/ToolManger/ProfileCreator-Create Quality'); // '创建材料配置_'
-            createItemSubDescribe = i18n._('key-Cnc/ToolManger/ProfileCreator-Enter Profile Name'); // '输入材料配置名称_'
-            selectCategory = i18n._('key-Printing/ToolManger/ProfileCreator-Select Quality Category name'); // '选择材料类目_
-            categoryName = i18n._('key-default_category-Default Quality Category'); // '新材料类目名称_
-            itemName = i18n._('key-default_category-Default Quality'); // '新材料配置名称_
-
-            // createCategoryDescribe = '创建打印设置类目_';
-            // createCategorySubDescribe = '输入打印设置类目名称_';
-            // createItemDescribe = '创建打印设置_';
-            // createItemSubDescribe = '输入打印设置名称_';
-            // selectCategory = '选择打印设置类目_';
-            // categoryName = '新打印设置类目名称_';
-            // itemName = '新打印设置名称_';
+            createCategoryDescribe = i18n._('key-Printing/ToolManger/ProfileCreatorQualityCategory-Create Quality Category');
+            createCategorySubDescribe = i18n._('key-Printing/ToolManger/ProfileCreatorQualityCategory-Enter quality category name');
+            createItemDescribe = i18n._('key-Printing/ToolManger/ProfileCreator-Create Quality');
+            createItemSubDescribe = i18n._('key-Cnc/ToolManger/ProfileCreator-Enter Profile Name');
+            selectCategory = i18n._('key-Printing/ToolManger/ProfileCreator-Select Quality Category name');
+            categoryName = i18n._('key-default_category-Default Quality Category');
+            itemName = i18n._('key-default_category-Default Quality');
             break;
         default:
             break;
