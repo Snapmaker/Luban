@@ -21,7 +21,8 @@ export const test = (value, min, max, minExclusive, maxExclusive) => {
 export const limitStringLength = (string, maxLength) => {
     const length = string.length;
     if (length > maxLength && maxLength > 4) {
-        string = `${string.slice(0, maxLength - 3)}...`;
+        const prefixLength = maxLength > 10 ? maxLength - 10 : 1;
+        string = `${string.slice(0, prefixLength)}...${string.slice(prefixLength + 3 - maxLength)}`;
     }
     return string;
 };

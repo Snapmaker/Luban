@@ -130,7 +130,7 @@ const Output = ({ headType }) => {
         });
     }
 
-    const disableExport = toolPathGroup.toolPaths.every(toolPath => {
+    const shouldRenderToolPaths = toolPathGroup.toolPaths.every(toolPath => {
         return !toolPath.visible || !toolPath.hasVisibleModels();
     });
 
@@ -141,14 +141,14 @@ const Output = ({ headType }) => {
         <Menu>
             <Menu.Item
                 onClick={actions.onLoadGcode}
-                disabled={disableExport || !hasModel || workflowState === 'running' || isGcodeGenerating || gcodeFile === null}
+                disabled={shouldRenderToolPaths || !hasModel || workflowState === 'running' || isGcodeGenerating || gcodeFile === null}
             >
                 <div className={classNames('align-c', 'padding-vertical-4')}>
                     {i18n._('key-CncLaser/G-codeAction-Load G-code to Workspace')}
                 </div>
             </Menu.Item>
             <Menu.Item
-                disabled={disableExport || !hasModel || workflowState === 'running' || isGcodeGenerating || gcodeFile === null}
+                disabled={shouldRenderToolPaths || !hasModel || workflowState === 'running' || isGcodeGenerating || gcodeFile === null}
                 onClick={actions.onExport}
             >
                 <div className={classNames('align-c', 'padding-vertical-4')}>
@@ -176,7 +176,7 @@ const Output = ({ headType }) => {
                         type="primary"
                         priority="level-one"
                         onClick={actions.preview}
-                        disabled={(!hasToolPathModel ?? false) || disableExport}
+                        disabled={(!hasToolPathModel ?? false) || shouldRenderToolPaths}
                     >
                         {i18n._('key-CncLaser/G-codeAction-Generate G-code and Preview')}
                     </Button>
@@ -220,7 +220,7 @@ const Output = ({ headType }) => {
                             <Button
                                 type="primary"
                                 priority="level-one"
-                                disabled={disableExport || !hasModel || workflowState === 'running' || isGcodeGenerating || gcodeFile === null}
+                                disabled={shouldRenderToolPaths || !hasModel || workflowState === 'running' || isGcodeGenerating || gcodeFile === null}
                                 className={classNames(
                                     'position-ab',
                                     // 'bottom-ne-8',

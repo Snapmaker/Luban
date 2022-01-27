@@ -13,7 +13,6 @@ import {
 import api from '../../../api';
 // import { Button } from '../../components/Buttons';
 // import Space from '../../components/Space';
-import { limitStringLength } from '../../../lib/normalize-range';
 import i18n from '../../../lib/i18n';
 import { actions as machineActions } from '../../../flux/machine';
 import { actions as developToolsActions } from '../../../flux/develop-tools';
@@ -99,6 +98,7 @@ function Macro({ widgetId, updateModal, openModal, macros }) {
                     )}
                 >
                     <TipTrigger
+                        className={classNames('sm-flex')}
                         key={macro.id}
                         title={i18n._('key-Workspace/Macro-Macro')}
                         content={macro.name}
@@ -112,7 +112,7 @@ function Macro({ widgetId, updateModal, openModal, macros }) {
                                 actions.runMacro(macro);
                             }}
                         />
-                        {limitStringLength(macro.name, 30)}
+                        <span className="text-overflow-ellipsis">{macro.name}</span>
                     </TipTrigger>
                     <SvgIcon
                         name="Edit"
