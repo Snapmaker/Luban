@@ -666,31 +666,23 @@ export const actions = {
         return def?.settings;
     },
 
-    resetDefinitionById: (definitionId) => (dispatch, getState) => {
-        const { defaultDefinitions, qualityDefinitions, materialDefinitions } = getState().printing;
+    resetDefinitionById: (type, definitionId) => (dispatch, getState) => {
+        const definitionsKey = defaultDefinitionKeys[type].definitions;
+        const state = getState().printing;
+        const defaultDefinitions = state.defaultDefinitions;
+        const definitions = getState().printing[definitionsKey];
+
         const newDef = cloneDeep(defaultDefinitions.find(d => d.definitionId === definitionId));
         definitionManager.updateDefinition(newDef);
         dispatch(actions.updateActiveDefinition(newDef));
-        // const definition =
-        if (definitionId.indexOf('quality') !== -1
-            && (definitionId.indexOf('fast_print') !== -1
-                || definitionId.indexOf('high_quality') !== -1
-                || definitionId.indexOf('normal_quality') !== -1
-            )) {
-            const index = qualityDefinitions.findIndex(d => d.definitionId === definitionId);
-            qualityDefinitions[index] = newDef;
-            dispatch(actions.updateState({
-                qualityDefinitions: [...qualityDefinitions]
-            }));
-        } else {
-            const index = materialDefinitions.findIndex(d => d.definitionId === definitionId);
-            materialDefinitions[index] = newDef;
-            dispatch(actions.updateState({
-                materialDefinitions: [...materialDefinitions]
-            }));
-        }
+        const index = definitions.findIndex(d => d.definitionId === definitionId);
+        definitions[index] = newDef;
 
+        dispatch(actions.updateState({
+            [definitionsKey]: [...definitions]
+        }));
         dispatch(actions.updateBoundingBox());
+        return newDef;
     },
 
     updateShowPrintingManager: (showPrintingManager, direction = LEFT_EXTRUDER) => (dispatch) => {
@@ -969,7 +961,7 @@ export const actions = {
             });
     },
 
-    updateDefinitionNameByType: (type, definition, name) => async (dispatch, getState) => {
+    updateDefinitionNameByType: (type, definition, name, isCategorySelected = false) => async (dispatch, getState) => {
         if (!name || name.trim().length === 0) {
             return Promise.reject(i18n._('key-Printing/Common-Failed to rename. Please enter a new name.'));
         }
@@ -981,24 +973,36 @@ export const actions = {
         if (duplicated && duplicated !== definition) {
             return Promise.reject(i18n._('Failed to rename. "{{name}}" already exists.', { name }));
         }
-
-        await definitionManager.updateDefinition({
-            definitionId: definition.definitionId,
-            name
-        });
-        const index = definitions.findIndex(d => d.definitionId === definition?.definitionId);
-        definitions[index].name = name;
+        if (isCategorySelected) {
+            const oldCategory = definition.category;
+            definitions.forEach((item) => {
+                if (item.category === oldCategory) {
+                    item.category = name;
+                    definitionManager.updateDefinition(item);
+                }
+            });
+        } else {
+            await definitionManager.updateDefinition({
+                definitionId: definition.definitionId,
+                name
+            });
+            const index = definitions.findIndex(d => d.definitionId === definition?.definitionId);
+            definitions[index].name = name;
+        }
         dispatch(actions.updateState({
             [definitionsKey]: [...definitions]
         }));
         return null;
     },
 
+    /**
+     * @param {*} type 'material'|'quality'
+     */
     duplicateDefinitionByType: (type, definition, newDefinitionId, newDefinitionName) => async (dispatch, getState) => {
         const state = getState().printing;
         let name = newDefinitionName || definition.name;
         let definitionId;
-        if (type === 'quality' && isDefaultQualityDefinition(definition.definitionId)) {
+        if (type === PRINTING_MANAGER_TYPE_QUALITY && isDefaultQualityDefinition(definition.definitionId)) {
             const machine = getState().machine;
             name = `${machine.series}-${name}`;
         }
@@ -1027,12 +1031,10 @@ export const actions = {
         };
         const definitionsKey = defaultDefinitionKeys[type].definitions;
 
-        // Find a name not being used
-        while (state[definitionsKey].find(d => d.name === newDefinition.name)) {
+        const definitionsWithSameCategory = state[definitionsKey].filter(d => d.category === definition.category);
+        // make sure name is not repeated
+        while (definitionsWithSameCategory.find(d => d.name === newDefinition.name)) {
             newDefinition.name = `#${newDefinition.name}`;
-        }
-        while (state[definitionsKey].find(d => d.category === newDefinition.category)) {
-            newDefinition.category = `#${newDefinition.category}`;
         }
 
         // Simplify settings
@@ -1053,14 +1055,81 @@ export const actions = {
         return createdDefinition;
     },
 
-    removeDefinitionByType: (type, definition) => async (dispatch, getState) => {
+    duplicateMaterialCategoryDefinitionByType: (type, activeToolList, isCreate, oldCategory) => async (dispatch, getState) => {
+        const state = getState().printing;
+        const definitionsKey = defaultDefinitionKeys[type].definitions;
+        const definitions = cloneDeep(state[definitionsKey]);
+        let newCategoryName = activeToolList.category;
+        const allDupliateDefinitions = [];
+        // make sure category is not repeated
+        while (definitions.find(d => d.category === newCategoryName)) {
+            newCategoryName = `#${newCategoryName}`;
+        }
+        const definitionsWithSameCategory = isCreate ? [{
+            ...activeToolList,
+            name: type === PRINTING_MANAGER_TYPE_MATERIAL ? i18n._('key-default_category-Default Material') : i18n._('key-default_category-Default Preset'),
+            settings: definitions[0]?.settings
+        }]
+            : state[definitionsKey].filter(d => d.category === oldCategory);
+        for (let i = 0; i < definitionsWithSameCategory.length; i++) {
+            const newDefinition = definitionsWithSameCategory[i];
+            newDefinition.category = newCategoryName;
+            const definitionId = `${newDefinition.definitionId}${timestamp()}`;
+            newDefinition.definitionId = definitionId;
+            const createdDefinition = await definitionManager.createDefinition(newDefinition);
+            if (createdDefinition) {
+                allDupliateDefinitions.push(createdDefinition);
+            }
+        }
+        dispatch(actions.updateState({
+            [definitionsKey]: [...definitions, ...allDupliateDefinitions]
+        }));
+        return allDupliateDefinitions[0];
+    },
+
+    removeDefinitionByType: (type, definition, loop = false) => async (dispatch, getState) => {
         const state = getState().printing;
 
         await definitionManager.removeDefinition(definition);
         const definitionsKey = defaultDefinitionKeys[type].definitions;
+        const defintions = state[definitionsKey].filter(d => d.definitionId !== definition.definitionId);
+
+        if (type === PRINTING_MANAGER_TYPE_MATERIAL) {
+            const defaultMaterialId = state?.defaultMaterialId;
+            const defaultMaterialIdRight = state?.defaultMaterialIdRight;
+            if (defaultMaterialId === definition.definitionId) {
+                dispatch(actions.updateDefaultIdByType(type, defintions[0].definitionId, LEFT_EXTRUDER));
+            }
+            if (defaultMaterialIdRight === definition.definitionId) {
+                dispatch(actions.updateDefaultIdByType(type, defintions[0].definitionId, RIGHT_EXTRUDER));
+            }
+        }
+        !loop && dispatch(actions.updateState({
+            [definitionsKey]: defintions
+        }));
+    },
+
+    removeToolCategoryDefinition: (type, category) => async (dispatch, getState) => {
+        const state = getState().printing;
+        const definitionsKey = defaultDefinitionKeys[type].definitions;
+
+        const definitions = state[definitionsKey];
+        const newDefinitions = [];
+        const definitionsWithSameCategory = definitions.filter(d => {
+            if (d.category === category) {
+                return true;
+            } else {
+                newDefinitions.push(d);
+                return false;
+            }
+        });
+        const ps = definitionsWithSameCategory.map((item) => {
+            return dispatch(actions.removeDefinitionByType(type, item, true));
+        });
+        await Promise.all(ps);
 
         dispatch(actions.updateState({
-            [definitionsKey]: state[definitionsKey].filter(d => d.definitionId !== definition.definitionId)
+            [definitionsKey]: newDefinitions
         }));
     },
 
@@ -1108,12 +1177,12 @@ export const actions = {
     },
     updateDefaultIdByType: (type, newDefinitionId, direction = LEFT_EXTRUDER) => (dispatch) => {
         let defaultId;
-        if (type === 'material') {
+        if (type === PRINTING_MANAGER_TYPE_MATERIAL) {
             defaultId = direction === LEFT_EXTRUDER ? 'defaultMaterialId' : 'defaultMaterialIdRight';
         } else {
             defaultId = defaultDefinitionKeys[type].id;
         }
-        dispatch(actions.updateDefaultConfigId(type, newDefinitionId));
+        dispatch(actions.updateDefaultConfigId(type, newDefinitionId, direction));
         dispatch(actions.updateState({
             [defaultId]: newDefinitionId
         }));

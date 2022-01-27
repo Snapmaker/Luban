@@ -1,175 +1,200 @@
-import React, { PureComponent } from 'react';
+import React, { useEffect, useState, forwardRef, useImperativeHandle } from 'react';
 import PropTypes from 'prop-types';
 import { Radio } from '../components/Radio';
 import Select from '../components/Select';
 import { TextInput as Input } from '../components/Input';
-import { HEAD_LASER, HEAD_CNC } from '../../constants';
+import { PRINTING_MANAGER_TYPE_MATERIAL, PRINTING_MANAGER_TYPE_QUALITY, HEAD_CNC, HEAD_LASER } from '../../constants';
 
 import i18n from '../../lib/i18n';
 
-class DefinitionCreator extends PureComponent {
-    static propTypes = {
-        headType: PropTypes.string.isRequired,
-        isCreate: PropTypes.bool,
-        disableCategory: PropTypes.bool,
-        copyType: PropTypes.string,
-        copyCategoryName: PropTypes.string,
-        copyToolName: PropTypes.string,
-        materialOptions: PropTypes.array
-    };
+/**
+ * relationship between UI and placeholder
+ * @relationship
+<Radio> $createCategoryDescribe
+    <span> $createCategorySubDescribe
+<Radio> $createItemDescribe
+    <span> $createItemSubDescribe
+    <span> $selectCategory
+ */
+const describeCreator = (managerType) => {
+    let createCategoryDescribe = i18n._('key-Cnc/ToolManger/ProfileCreator-Create Material');
+    let createCategorySubDescribe = i18n._('key-Cnc/ToolManger/ProfileCreator-Enter material name');
+    let createItemDescribe;
+    let createItemSubDescribe;
+    let selectCategory;
+    let creatorTitle;
+    let categoryName;
+    let itemName;
 
-    static defaultProps = {
-        disableCategory: true
-    };
-
-    state = {
-        createType: 'Material',
-        materialName: i18n._('key-default_category-Default Material'),
-        toolName: i18n._('key-default_category-Default Tool')
+    switch (managerType) {
+        case HEAD_LASER:
+            selectCategory = i18n._('key-Cnc/ToolManger/ProfileCreator-Select material type');
+            createItemDescribe = i18n._('key-Laser/PresetManager/ProfileCreator-Create Preset');
+            categoryName = i18n._('key-default_category-Default Material');
+            itemName = i18n._('key-default_category-Default Preset');
+            createItemSubDescribe = i18n._('key-Laser/PresetManager/ProfileCreator-Enter Preset name');
+            break;
+        case HEAD_CNC:
+            selectCategory = i18n._('key-Laser/ToolManger/ProfileCreator-Select material type');
+            createItemDescribe = i18n._('key-Cnc/ToolManger/ProfileCreator-Create Carving Tool');
+            categoryName = i18n._('key-default_category-Default Material');
+            itemName = i18n._('key-default_category-Default Tool');
+            createItemSubDescribe = i18n._('key-Cnc/ToolManger/ProfileCreator-Enter tool name');
+            break;
+        case PRINTING_MANAGER_TYPE_MATERIAL:
+            createCategoryDescribe = i18n._('key-Printing/ToolManger/ProfileCreatorCategory-Create Material Category');
+            createCategorySubDescribe = i18n._('key-Printing/ToolManger/ProfileCreatorCategory-Enter material category name');
+            createItemDescribe = i18n._('key-Printing/ToolManger/ProfileCreator-Create Material');
+            createItemSubDescribe = i18n._('key-Printing/ToolManger/ProfileCreator-Enter material name');
+            selectCategory = i18n._('key-Printing/ToolManger/ProfileCreator-Select material Category name');
+            categoryName = i18n._('key-default_category-Default Material Category');
+            itemName = i18n._('key-default_category-Default Material');
+            break;
+        case PRINTING_MANAGER_TYPE_QUALITY:
+            createCategoryDescribe = i18n._('key-Printing/ToolManger/ProfileCreatorQualityCategory-Create Quality Category');
+            createCategorySubDescribe = i18n._('key-Printing/ToolManger/ProfileCreatorQualityCategory-Enter quality category name');
+            createItemDescribe = i18n._('key-Printing/ToolManger/ProfileCreator-Create Quality');
+            createItemSubDescribe = i18n._('key-Cnc/ToolManger/ProfileCreator-Enter Profile Name');
+            selectCategory = i18n._('key-Printing/ToolManger/ProfileCreator-Select Quality Category name');
+            categoryName = i18n._('key-default_category-Default Quality Category');
+            itemName = i18n._('key-default_category-Default Quality');
+            break;
+        default:
+            break;
     }
+    return {
+        createCategoryDescribe,
+        createCategorySubDescribe,
+        createItemDescribe,
+        createItemSubDescribe,
+        creatorTitle,
+        selectCategory,
+        categoryName,
+        itemName
+    };
+};
 
-    componentDidMount() {
-        let materialName, toolName;
-        if (this.props.headType === HEAD_LASER) {
-            materialName = i18n._('key-default_category-Default Material');
-            toolName = i18n._('key-default_category-Default Preset');
-        } else {
-            materialName = i18n._('key-default_category-Default Material');
-            toolName = i18n._('key-default_category-Default Tool');
-        }
+const DefinitionCreator = ({
+    managerType, isCreate, disableCategory = true, copyType, copyCategoryName, copyItemName, materialOptions
+}, ref) => {
+    const [displayDescribe] = useState(describeCreator(managerType));
 
-        if (this.props.copyCategoryName) {
-            materialName = this.props.copyCategoryName;
-        }
-
-        if (this.props.copyToolName) {
-            toolName = this.props.copyToolName;
-        }
-
-        this.setState({
-            toolName,
-            materialName
+    const [state, setState] = useState({
+        createType: 'Category',
+        categoryName: '',
+        itemName: '',
+    });
+    useEffect(() => {
+        setState((pre) => {
+            return {
+                ...pre,
+                itemName: copyItemName || displayDescribe.itemName,
+                categoryName: copyCategoryName || displayDescribe.categoryName
+            };
         });
-    }
+    }, [managerType, copyItemName, copyCategoryName, displayDescribe.categoryName, displayDescribe.itemName]);
 
-    getData() {
-        return this.state;
-    }
+    useImperativeHandle(ref, () => ({
+        getData: () => {
+            return state;
+        }
+    }));
 
-    renderMaterialCreate() {
+    const renderCategoryCreate = () => {
         return (
             <div>
-                <span className="font-size-base display-block margin-bottom-8">{i18n._('key-Cnc/ToolManger/ProfileCreator-Enter material name')}</span>
+                <span className="font-size-base display-block margin-bottom-8">{displayDescribe.createCategorySubDescribe}</span>
                 <Input
                     size="432px"
                     onChange={(event) => {
-                        const materialName = event.target.value;
-                        this.setState({ materialName });
+                        const categoryName = event.target.value;
+                        setState({ ...state, categoryName });
                     }}
-                    value={this.state.materialName}
+                    value={state.categoryName}
                 />
             </div>
         );
-    }
+    };
 
-    renderToolCreate() {
+    const renderItemCreate = () => {
         return (
             <div>
-                {this.props.disableCategory && (
-                    <div>
-                        <span className="font-size-base display-block margin-bottom-8">{i18n._('key-Cnc/ToolManger/ProfileCreator-Enter Profile Name')}</span>
-                        <Input
-                            size="432px"
-                            onChange={(event) => {
-                                const toolName = event.target.value;
-                                this.setState({ toolName });
-                            }}
-                            value={this.state.toolName}
-                        />
-                    </div>
-                )}
-                {!this.props.disableCategory && (
-                    <div>
-                        {this.props.headType === HEAD_CNC && (
-                            <span className="font-size-base display-block margin-bottom-8">{i18n._('key-Cnc/ToolManger/ProfileCreator-Enter tool name')}</span>
-                        )}
-                        {this.props.headType === HEAD_LASER && (
-                            <span className="font-size-base display-block margin-bottom-8">{i18n._('key-Laser/PresetManager/ProfileCreator-Enter Preset name')}</span>
-                        )}
-                        <Input
-                            size="432px"
-                            onChange={(event) => {
-                                const toolName = event.target.value;
-                                this.setState({ toolName });
-                            }}
-                            value={this.state.toolName}
-                        />
-                        {this.props.headType === HEAD_CNC && (
+                <div>
+                    <span className="font-size-base display-block margin-bottom-8">{displayDescribe.createItemSubDescribe}</span>
+                    <Input
+                        size="432px"
+                        onChange={(event) => {
+                            const itemName = event.target.value;
+                            setState({ ...state, itemName });
+                        }}
+                        value={state.itemName}
+                    />
+
+                    {!disableCategory && (
+                        <>
                             <p className="margin-top-16 font-size-base margin-bottom-8">
-                                {i18n._('key-Cnc/ToolManger/ProfileCreator-Select material type')}
+                                {displayDescribe.selectCategory}
                             </p>
-                        )}
-                        {this.props.headType === HEAD_LASER && (
-                            <p className="margin-top-16 font-size-base margin-bottom-8">
-                                {i18n._('key-Laser/ToolManger/ProfileCreator-Select material type')}
-                            </p>
-                        )}
-                        <Select
-                            size="432px"
-                            backspaceRemoves={false}
-                            clearable={false}
-                            options={this.props.materialOptions}
-                            placeholder={i18n._('key-Cnc/ToolManger/ProfileCreator-Choose font')}
-                            value={this.state.materialName}
-                            onChange={(option) => {
-                                const materialName = option.label;
-                                this.setState({ materialName });
-                            }}
-                        />
-                    </div>
-                )}
+
+                            <Select
+                                size="432px"
+                                backspaceRemoves={false}
+                                clearable={false}
+                                options={materialOptions}
+                                placeholder={i18n._('key-Cnc/ToolManger/ProfileCreator-Choose font')}
+                                value={state.categoryName}
+                                onChange={(option) => {
+                                    const categoryName = option.label;
+                                    setState({ ...state, categoryName });
+                                }}
+                            />
+                        </>
+                    )}
+
+                </div>
+
             </div>
         );
-    }
+    };
 
+    if (isCreate) {
+        return (
+            <Radio.Group
+                name="comic"
+                value={state.createType}
+                onChange={(event) => {
+                    const value = event.target.value;
+                    setState({ ...state, createType: value });
+                }}
+            >
+                <div>
+                    <Radio value="Category" className="height-24">{displayDescribe.createCategoryDescribe}</Radio>
+                    {state.createType === 'Category' && renderCategoryCreate()}
+                </div>
 
-    render() {
-        const { isCreate } = this.props;
-        if (isCreate) {
-            return (
-                <Radio.Group
-                    name="comic"
-                    value={this.state.createType}
-                    onChange={(event) => {
-                        const value = event.target.value;
-                        this.setState({ createType: value });
-                    }}
-                >
-                    <div>
-                        <Radio value="Material" className="height-24">{i18n._('key-Cnc/ToolManger/ProfileCreator-Create Material')}</Radio>
-                        {this.state.createType === 'Material' && this.renderMaterialCreate()}
-                    </div>
+                <div className="margin-top-16">
+                    <Radio value="Item" className="height-24">{displayDescribe.createItemDescribe}</Radio>
+                    {state.createType === 'Item' && renderItemCreate()}
+                </div>
 
-                    <div className="margin-top-16">
-                        {this.props.headType === HEAD_CNC && (
-                            <Radio value="Tool" className="height-24">{i18n._('key-Cnc/ToolManger/ProfileCreator-Create Carving Tool')}</Radio>
-                        )}
-                        {this.props.headType === HEAD_LASER && (
-                            <Radio value="Tool" className="height-24">{i18n._('key-Laser/PresetManager/ProfileCreator-Create Preset')}</Radio>
-                        )}
-                        {this.state.createType === 'Tool' && this.renderToolCreate()}
-                    </div>
-
-                </Radio.Group>
-            );
+            </Radio.Group>
+        );
+    } else {
+        if (copyType === 'Category') {
+            return renderCategoryCreate();
         } else {
-            if (this.props.copyType === 'Material') {
-                return this.renderMaterialCreate();
-            } else {
-                return this.renderToolCreate();
-            }
+            return renderItemCreate();
         }
     }
-}
+};
 
-export default DefinitionCreator;
+DefinitionCreator.propTypes = {
+    managerType: PropTypes.string.isRequired,
+    isCreate: PropTypes.bool,
+    disableCategory: PropTypes.bool,
+    copyType: PropTypes.string,
+    copyCategoryName: PropTypes.string,
+    copyItemName: PropTypes.string,
+    materialOptions: PropTypes.array
+};
+export default forwardRef(DefinitionCreator);

@@ -9,7 +9,7 @@ import styles from '../styles.styl';
 import LaserPresentManager from '../../LaserPresentManager';
 import SvgIcon from '../../../components/SvgIcon';
 
-function PresentSelector({ toolDefinitions, setCurrentToolDefinition, setCurrentValueAsProfile, toolDefinition, isModifiedDefinition, shouldSaveToolpath = false, saveToolPath }) {
+function PresentSelector({ toolDefinitions, setCurrentToolDefinition, setCurrentValueAsProfile, toolDefinition, isModifiedDefinition = false, shouldSaveToolpath = false, saveToolPath }) {
     const [showManager, setShowManager] = useState(false);
     // const dispatch = useDispatch();
 

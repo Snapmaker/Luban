@@ -1966,6 +1966,7 @@ class ModelGroup extends EventEmitter {
                     this.models.push(model);
                     ThreeUtils.setObjectParent(model.meshObject, model.parent.meshObject.parent);
                     model.parent.computeBoundingBox();
+                    model.parent.updateGroupExtruder();
                 }
             });
 
@@ -1985,6 +1986,7 @@ class ModelGroup extends EventEmitter {
             group.computeBoundingBox();
             group.onTransform();
             this.addModelToSelectedGroup(group);
+            this.updatePrimeTowerHeight();
         }
         return {
             newGroup: group,
@@ -2031,6 +2033,7 @@ class ModelGroup extends EventEmitter {
                 autoStickToPlate && model.stickToPlate();
             });
         }
+        this.updatePrimeTowerHeight();
         return this.getState();
     }
 

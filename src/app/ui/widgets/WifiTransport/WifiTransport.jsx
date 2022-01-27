@@ -226,10 +226,10 @@ function WifiTransport({ widgetActions, controlActions }) {
 
     const [showPreviewModal, setShowPreviewModal] = useState(false);
     useEffect(() => {
-        if (previewStage === WORKSPACE_STAGE.EMPTY) {
-            setShowPreviewModal(false);
-        } else {
+        if (previewStage === WORKSPACE_STAGE.LOADING_GCODE) {
             setShowPreviewModal(true);
+        } else if (previewStage === WORKSPACE_STAGE.EMPTY) {
+            setShowPreviewModal(false);
         }
     }, [previewStage]);
 

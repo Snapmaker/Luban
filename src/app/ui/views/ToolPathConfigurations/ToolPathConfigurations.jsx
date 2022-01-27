@@ -134,6 +134,7 @@ function ToolPathConfigurations({ toolpath, onClose, headType }) {
                     newDefinition.settings.multi_passes.default_value = 2;
                     newDefinition.settings.multi_pass_depth.default_value = 0.6;
                     newDefinition.settings.fixed_power.default_value = 100;
+                    newDefinition.settings.movement_mode.default_value = 'greyscale-line';
                 }
 
                 // Fiexd Power Enabled

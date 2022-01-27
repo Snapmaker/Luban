@@ -108,7 +108,7 @@ const INITIAL_STATE = {
 
     // check to remove models
     removingModelsWarning: false,
-    removingModelsWarningCallback: () => {},
+    removingModelsWarningCallback: () => { },
     emptyToolPaths: [],
 
     // check not to duplicated create event
@@ -324,15 +324,17 @@ export const actions = {
 
     removeToolCategoryDefinition: (category) => async (dispatch, getState) => {
         const state = getState().laser;
-        const newToolDefinitions = state.toolDefinitions;
-        const definitionsWithSameCategory = newToolDefinitions.filter(d => d.category === category);
+        const toolDefinitions = state.toolDefinitions;
+        const definitionsWithSameCategory = toolDefinitions.filter(d => d.category === category);
         for (let i = 0; i < definitionsWithSameCategory.length; i++) {
             await definitionManager.removeDefinition(definitionsWithSameCategory[i]);
         }
 
+        const newToolDefinitions = toolDefinitions.filter(d => d.category !== category);
         dispatch(editorActions.updateState('laser', {
-            toolDefinitions: newToolDefinitions.filter(d => d.category !== category)
+            toolDefinitions: [...newToolDefinitions]
         }));
+        return newToolDefinitions;
     },
     removeToolListDefinition: (activeToolList) => async (dispatch, getState) => {
         const state = getState().laser;
@@ -344,6 +346,7 @@ export const actions = {
         dispatch(editorActions.updateState('laser', {
             toolDefinitions: [...newToolDefinitions]
         }));
+        return newToolDefinitions;
     },
     getDefaultDefinition: (definitionId) => (dispatch, getState) => {
         const { defaultDefinitions } = getState().laser;
@@ -354,6 +357,7 @@ export const actions = {
         const { defaultDefinitions } = getState().laser;
         const defaultDefinition = defaultDefinitions.find(d => d.definitionId === definitionId);
         dispatch(actions.updateToolListDefinition(defaultDefinition));
+        return defaultDefinition;
     }
 };
 

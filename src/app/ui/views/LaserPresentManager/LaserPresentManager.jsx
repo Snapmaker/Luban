@@ -6,13 +6,9 @@ import { actions as laserActions } from '../../../flux/laser';
 import { actions as projectActions } from '../../../flux/project';
 import { actions as editorActions } from '../../../flux/editor';
 
-import { getMachineSeriesWithToolhead, LASER_PRESENT_CONFIG_GROUP,
-    HEAD_LASER
-} from '../../../constants';
+import { getMachineSeriesWithToolhead, LASER_PRESENT_CONFIG_GROUP, HEAD_LASER } from '../../../constants';
 import ProfileManager from '../ProfileManager';
 import i18n from '../../../lib/i18n';
-
-let selectedId = '';
 
 function isOfficialDefinition(activeToolList) {
     return !!activeToolList.isDefault;
@@ -24,10 +20,6 @@ function LaserPresentManager({ closeToolManager, shouldSaveToolpath = false, sav
     const series = useSelector(state => state?.machine?.series);
     const toolHead = useSelector(state => state?.machine?.toolHead);
     const dispatch = useDispatch();
-
-    if (toolDefinitions && toolDefinitions[0]) {
-        selectedId = toolDefinitions[0].definitionId;
-    }
 
     const actions = {
         closeManager: () => {
@@ -92,30 +84,37 @@ function LaserPresentManager({ closeToolManager, shouldSaveToolpath = false, sav
             return result;
         },
         removeManagerDefinition: async (definition) => {
-            await dispatch(laserActions.removeToolListDefinition(definition));
+            const allDefinitions = await dispatch(laserActions.removeToolListDefinition(definition));
+
+            if (activeToolListDefinition.definitionId === definition.definitionId) {
+                actions.onUpdateDefaultDefinition(allDefinitions[0]);
+            }
         },
-        removeToolCategoryDefinition: (definition) => {
-            dispatch(laserActions.removeToolCategoryDefinition(definition.category));
+        removeCategoryDefinition: async (definition) => {
+            const allDefinitions = await dispatch(laserActions.removeToolCategoryDefinition(definition.category));
+
+            if (activeToolListDefinition.category === definition.category) {
+                actions.onUpdateDefaultDefinition(allDefinitions[0]);
+            }
         },
         getDefaultDefinition: (definitionId) => {
             return dispatch(laserActions.getDefaultDefinition(definitionId));
         },
         resetDefinitionById: (definitionId) => {
-            dispatch(laserActions.resetDefinitionById(definitionId));
+            return dispatch(laserActions.resetDefinitionById(definitionId));
         }
     };
 
     return (
         <ProfileManager
             outsideActions={actions}
-            activeDefinition={activeToolListDefinition}
             isOfficialDefinition={isOfficialDefinition}
             optionConfigGroup={LASER_PRESENT_CONFIG_GROUP}
             allDefinitions={toolDefinitions}
             disableCategory={false}
             managerTitle="key-Laser/PresetManager-Preset Settings"
-            selectedId={selectedId}
-            headType={HEAD_LASER}
+            activeDefinitionID={activeToolListDefinition.definitionId}
+            managerType={HEAD_LASER}
         />
     );
 }

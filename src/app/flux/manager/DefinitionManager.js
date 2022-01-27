@@ -74,6 +74,7 @@ class DefinitionManager {
         if (definition.i18nName) {
             definition.name = i18n._(definition.i18nName);
         }
+        definition.isDefault = this.defaultDefinitions.findIndex(d => d.definitionId === definitionId) !== -1;
         return definition;
     }
 

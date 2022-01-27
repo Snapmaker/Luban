@@ -58,11 +58,13 @@ export default class GroupOperation3D extends Operation<GroupState> {
                 const index = model.parent.children.findIndex(subModel => subModel.modelID === model.modelID);
                 model.parent.children.splice(index, 1);
                 ThreeUtils.setObjectParent(model.meshObject, model.parent.meshObject.parent);
+                model.parent.updateGroupExtruder();
             }
         });
         target.add(modelsToGroup);
         modelGroup.object.add(target.meshObject);
         modelGroup.models = [...this.state.modelsAfterGroup];
+        modelGroup.updatePrimeTowerHeight();
     }
 
     public undo() {
@@ -92,9 +94,11 @@ export default class GroupOperation3D extends Operation<GroupState> {
                 model.add(modelSnapshot.children);
                 modelGroup.object.add(model.meshObject);
                 model.updateTransformation(modelSnapshot.modelTransformation);
+                model.updateGroupExtruder();
             }
         });
 
         modelGroup.models = [...this.state.modelsBeforeGroup];
+        modelGroup.updatePrimeTowerHeight();
     }
 }

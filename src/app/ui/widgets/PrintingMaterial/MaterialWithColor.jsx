@@ -1,10 +1,13 @@
 import React from 'react';
 import PropTypes from 'prop-types';
+import classNames from 'classnames';
+
+import styles from './styles.styl';
 
 export const MaterialWithColor = ({ name, color }) => {
     return (
         <div className="sm-flex align-center justify-space-between">
-            <span>{name}</span>
+            <span className={classNames('text-overflow-ellipsis', styles.text)}>{name}</span>
             {color && (
                 <div
                     className="width-16 height-16"
