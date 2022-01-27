@@ -3,7 +3,7 @@ import PropTypes from 'prop-types';
 import { Radio } from '../components/Radio';
 import Select from '../components/Select';
 import { TextInput as Input } from '../components/Input';
-import { HEAD_LASER, HEAD_CNC, HEAD_PRINTING } from '../../constants';
+import { PRINTING_MANAGER_TYPE_MATERIAL, PRINTING_MANAGER_TYPE_QUALITY, HEAD_CNC, HEAD_LASER } from '../../constants';
 
 import i18n from '../../lib/i18n';
 
@@ -16,7 +16,7 @@ import i18n from '../../lib/i18n';
     <span> $createItemSubDescribe
     <span> $selectCategory
  */
-const describeCreator = (headType) => {
+const describeCreator = (managerType) => {
     let createCategoryDescribe = i18n._('key-Cnc/ToolManger/ProfileCreator-Create Material');
     let createCategorySubDescribe = i18n._('key-Cnc/ToolManger/ProfileCreator-Enter material name');
     let createItemDescribe;
@@ -27,7 +27,7 @@ const describeCreator = (headType) => {
     let categoryName = i18n._('key-default_category-Default Material');
     let itemName = i18n._('key-default_category-Default Preset');
 
-    switch (headType) {
+    switch (managerType) {
         case HEAD_LASER:
             selectCategory = i18n._('key-Cnc/ToolManger/ProfileCreator-Select material type');
             createItemDescribe = i18n._('key-Laser/PresetManager/ProfileCreator-Create Preset');
@@ -40,7 +40,7 @@ const describeCreator = (headType) => {
             categoryName = i18n._('key-default_category-Default Material');
             itemName = i18n._('key-default_category-Default Tool');
             break;
-        case HEAD_PRINTING:
+        case PRINTING_MANAGER_TYPE_MATERIAL:
             // selectCategory = i18n._('key-Laser/ToolManger/ProfileCreator-Select material type');
             // createItemDescribe = i18n._('key-Cnc/ToolManger/ProfileCreator-Create Carving Tool');
             createCategoryDescribe = '创建材料类目_';
@@ -50,6 +50,8 @@ const describeCreator = (headType) => {
             selectCategory = '选择材料类目_';
             categoryName = '新材料类目名称_';
             itemName = '新材料配置名称_';
+            break;
+        case PRINTING_MANAGER_TYPE_QUALITY:
             break;
         default:
             break;
@@ -67,9 +69,9 @@ const describeCreator = (headType) => {
 };
 
 const DefinitionCreator = ({
-    headType, isCreate, disableCategory = true, copyType, copyCategoryName, copyItemName, materialOptions
+    managerType, isCreate, disableCategory = true, copyType, copyCategoryName, copyItemName, materialOptions
 }, ref) => {
-    const [displayDescribe] = useState(describeCreator(headType));
+    const [displayDescribe] = useState(describeCreator(managerType));
 
     const [state, setState] = useState({
         createType: 'Category',
@@ -84,7 +86,7 @@ const DefinitionCreator = ({
                 categoryName: copyCategoryName || displayDescribe.categoryName
             };
         });
-    }, [headType, copyItemName, copyCategoryName, displayDescribe.categoryName, displayDescribe.itemName]);
+    }, [managerType, copyItemName, copyCategoryName, displayDescribe.categoryName, displayDescribe.itemName]);
 
     useImperativeHandle(ref, () => ({
         getData: () => {
@@ -181,7 +183,7 @@ const DefinitionCreator = ({
 };
 
 DefinitionCreator.propTypes = {
-    headType: PropTypes.string.isRequired,
+    managerType: PropTypes.string.isRequired,
     isCreate: PropTypes.bool,
     disableCategory: PropTypes.bool,
     copyType: PropTypes.string,

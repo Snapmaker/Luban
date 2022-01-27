@@ -4,7 +4,7 @@ import PropTypes from 'prop-types';
 export const MaterialWithColor = ({ name, color }) => {
     return (
         <div className="sm-flex align-center justify-space-between">
-            <span>{name}</span>
+            <span className="text-overflow-ellipsis" style={{ maxWidth: 'calc(100% - 16px)' }}>{name}</span>
             {color && (
                 <div
                     className="width-16 height-16"

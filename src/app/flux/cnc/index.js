@@ -240,15 +240,16 @@ export const actions = {
 
     removeToolCategoryDefinition: (category) => async (dispatch, getState) => {
         const state = getState().cnc;
-        const newToolDefinitions = state.toolDefinitions;
-        const definitionsWithSameCategory = newToolDefinitions.filter(d => d.category === category);
+        const toolDefinitions = state.toolDefinitions;
+        const definitionsWithSameCategory = toolDefinitions.filter(d => d.category === category);
         for (let i = 0; i < definitionsWithSameCategory.length; i++) {
             await definitionManager.removeDefinition(definitionsWithSameCategory[i]);
         }
-
+        const newToolDefinitions = toolDefinitions.filter(d => d.category !== category);
         dispatch(editorActions.updateState('cnc', {
-            toolDefinitions: newToolDefinitions.filter(d => d.category !== category)
+            toolDefinitions: [...newToolDefinitions]
         }));
+        return newToolDefinitions;
     },
     removeToolListDefinition: (activeToolList) => async (dispatch, getState) => {
         const state = getState().cnc;
@@ -260,6 +261,7 @@ export const actions = {
         dispatch(editorActions.updateState('cnc', {
             toolDefinitions: [...newToolDefinitions]
         }));
+        return newToolDefinitions;
     },
     getDefaultDefinition: (definitionId) => (dispatch, getState) => {
         const { defaultDefinitions } = getState().cnc;

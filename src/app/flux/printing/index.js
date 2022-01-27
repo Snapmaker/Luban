@@ -1079,9 +1079,20 @@ export const actions = {
 
         await definitionManager.removeDefinition(definition);
         const definitionsKey = defaultDefinitionKeys[type].definitions;
+        const defintions = state[definitionsKey].filter(d => d.definitionId !== definition.definitionId);
 
+        if (type === PRINTING_MANAGER_TYPE_MATERIAL) {
+            const defaultMaterialId = state?.defaultMaterialId;
+            const defaultMaterialIdRight = state?.defaultMaterialIdRight;
+            if (defaultMaterialId === definition.definitionId) {
+                dispatch(actions.updateDefaultIdByType(type, defintions[0].definitionId, LEFT_EXTRUDER));
+            }
+            if (defaultMaterialIdRight === definition.definitionId) {
+                dispatch(actions.updateDefaultIdByType(type, defintions[0].definitionId, RIGHT_EXTRUDER));
+            }
+        }
         dispatch(actions.updateState({
-            [definitionsKey]: state[definitionsKey].filter(d => d.definitionId !== definition.definitionId)
+            [definitionsKey]: defintions
         }));
     },
 
@@ -1091,13 +1102,10 @@ export const actions = {
 
         const definitions = state[definitionsKey];
         const definitionsWithSameCategory = definitions.filter(d => d.category === category);
-        for (let i = 0; i < definitionsWithSameCategory.length; i++) {
-            await definitionManager.removeDefinition(definitionsWithSameCategory[i]);
-        }
-
-        dispatch(actions.updateState({
-            [definitionsKey]: state[definitionsKey].filter(d => d.category !== category)
-        }));
+        const ps = definitionsWithSameCategory.map((item) => {
+            return dispatch(actions.removeDefinitionByType(type, item));
+        });
+        return Promise.all(ps);
     },
 
     // removes all non-predefined definitions

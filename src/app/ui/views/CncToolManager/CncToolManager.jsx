@@ -91,10 +91,18 @@ function CncToolManager({ closeToolManager, shouldSaveToolpath = false, saveTool
             return result;
         },
         removeManagerDefinition: async (definition) => {
-            await dispatch(cncActions.removeToolListDefinition(definition));
+            const allDefinitions = await dispatch(cncActions.removeToolListDefinition(definition));
+
+            if (activeToolListDefinition.definitionId === definition.definitionId) {
+                actions.onUpdateDefaultDefinition(allDefinitions[0]);
+            }
         },
-        removeCategoryDefinition: (definition) => {
-            dispatch(cncActions.removeToolCategoryDefinition(definition.category));
+        removeCategoryDefinition: async (definition) => {
+            const allDefinitions = await dispatch(cncActions.removeToolCategoryDefinition(definition.category));
+
+            if (activeToolListDefinition.category === definition.category) {
+                actions.onUpdateDefaultDefinition(allDefinitions[0]);
+            }
         },
         getDefaultDefinition: (definitionId) => {
             return dispatch(cncActions.getDefaultDefinition(definitionId));
@@ -115,7 +123,7 @@ function CncToolManager({ closeToolManager, shouldSaveToolpath = false, saveTool
             disableCategory={false}
             managerTitle="key-Cnc/ToolManger-Tool Settings"
             activeDefinitionID={activeToolListDefinition.definitionId}
-            headType={HEAD_CNC}
+            managerType={HEAD_CNC}
         />
     );
 }

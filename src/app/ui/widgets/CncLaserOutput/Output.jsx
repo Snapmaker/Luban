@@ -29,7 +29,6 @@ const Output = ({ headType }) => {
     const page = useSelector(state => state[headType]?.page);
     const previewFailed = useSelector(state => state[headType]?.previewFailed);
     const shouldGenerateGcodeCounter = useSelector(state => state[headType]?.shouldGenerateGcodeCounter);
-    const modelGroup = useSelector(state => state[headType]?.modelGroup);
     const hasModel = useSelector(state => state[headType]?.modelGroup.hasModel(), shallowEqual);
     const toolPathGroup = useSelector(state => state[headType]?.toolPathGroup);
     const workflowState = useSelector(state => state.machine?.workflowState);
@@ -132,21 +131,11 @@ const Output = ({ headType }) => {
     }
 
     const disableExport = toolPathGroup.toolPaths.every(toolPath => {
-        if (toolPath.visible === false) {
-            return true;
-        } else {
-            const toolPathRelatedModels = modelGroup.models.filter(model => toolPath.modelMap.has(model.modelID));
-            return toolPathRelatedModels.every(model => model.visible === false);
-        }
+        return !toolPath.visible || !toolPath.hasVisibleModels();
     });
 
     const isEditor = page === PAGE_EDITOR;
     const hasToolPathModel = (toolPathGroup.toolPaths.length > 0);
-    const toolPathRelatedModelInvisible = toolPathGroup.toolPaths.every(toolPath => {
-        const toolPathRelatedModels = modelGroup.models.filter(model => toolPath.modelMap.has(model.modelID));
-        return toolPathRelatedModels.every(model => model.visible === false);
-    });
-    const disablePreview = toolPathGroup.toolPaths.every(item => item.visible === false) || toolPathRelatedModelInvisible;
 
     const menu = (
         <Menu>
@@ -187,7 +176,7 @@ const Output = ({ headType }) => {
                         type="primary"
                         priority="level-one"
                         onClick={actions.preview}
-                        disabled={(!hasToolPathModel ?? false) || disablePreview}
+                        disabled={(!hasToolPathModel ?? false) || disableExport}
                     >
                         {i18n._('key-CncLaser/G-codeAction-Generate G-code and Preview')}
                     </Button>

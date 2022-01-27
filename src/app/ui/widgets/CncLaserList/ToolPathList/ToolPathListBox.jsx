@@ -170,11 +170,8 @@ const ToolPathListBox = (props) => {
                 check: !check
             }));
             if (displayedType === DISPLAYED_TYPE_TOOLPATH) {
-                let allToolPathHide = true;
-                toolPaths.forEach((toolPath) => {
-                    if ((toolPath.id === id && !visible) || (toolPath.id !== id && toolPath.visible)) {
-                        allToolPathHide = false;
-                    }
+                const allToolPathHide = toolPaths.some((toolPath) => {
+                    return !(toolPath.id === id && !visible) || (toolPath.id !== id && toolPath.visible);
                 });
                 if (!allToolPathHide) {
                     dispatch(editorActions.refreshToolPathPreview(props.headType));
@@ -256,7 +253,7 @@ const ToolPathListBox = (props) => {
                     )}
                     tabIndex="-1"
                     role="button"
-                    onKeyDown={() => {}}
+                    onKeyDown={() => { }}
                     onClick={() => {
                         actions.selectToolPathById();
                     }}

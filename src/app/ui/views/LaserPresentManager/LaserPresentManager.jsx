@@ -84,10 +84,18 @@ function LaserPresentManager({ closeToolManager, shouldSaveToolpath = false, sav
             return result;
         },
         removeManagerDefinition: async (definition) => {
-            await dispatch(laserActions.removeToolListDefinition(definition));
+            const allDefinitions = await dispatch(laserActions.removeToolListDefinition(definition));
+
+            if (activeToolListDefinition.definitionId === definition.definitionId) {
+                actions.onUpdateDefaultDefinition(allDefinitions[0]);
+            }
         },
-        removeCategoryDefinition: (definition) => {
-            dispatch(laserActions.removeToolCategoryDefinition(definition.category));
+        removeCategoryDefinition: async (definition) => {
+            const allDefinitions = await dispatch(laserActions.removeToolCategoryDefinition(definition.category));
+
+            if (activeToolListDefinition.category === definition.category) {
+                actions.onUpdateDefaultDefinition(allDefinitions[0]);
+            }
         },
         getDefaultDefinition: (definitionId) => {
             return dispatch(laserActions.getDefaultDefinition(definitionId));
@@ -106,7 +114,7 @@ function LaserPresentManager({ closeToolManager, shouldSaveToolpath = false, sav
             disableCategory={false}
             managerTitle="key-Laser/PresetManager-Preset Settings"
             activeDefinitionID={activeToolListDefinition.definitionId}
-            headType={HEAD_LASER}
+            managerType={HEAD_LASER}
         />
     );
 }
