@@ -1174,7 +1174,7 @@ export const actions = {
 
     generateGcode: (thumbnail, isGuideTours = false) => async (dispatch, getState) => {
         const { hasModel, activeDefinition, modelGroup, progressStatesManager, helpersExtruderConfig,
-            extruderLDefinition, extruderRDefinition, defaultMaterialId, defaultMaterialIdRight, materialDefinitions } = getState().printing;
+            extruderLDefinition, extruderRDefinition, defaultMaterialId, defaultMaterialIdRight, materialDefinitions, stopArea: { left, front } } = getState().printing;
         const { size, toolHead: { printingToolhead } } = getState().machine;
         if (!hasModel) {
             return;
@@ -1230,8 +1230,8 @@ export const actions = {
             const primeTowerWidth = primeTowerModel.boundingBox.max.x - primeTowerModel.boundingBox.min.x;
             const primeTowerPositionX = modelGroupBBox.max.x - (primeTowerModel.boundingBox.max.x + primeTowerModel.boundingBox.min.x + primeTowerWidth) / 2;
             const primeTowerPositionY = modelGroupBBox.max.y - (primeTowerModel.boundingBox.max.y + primeTowerModel.boundingBox.min.y - primeTowerWidth) / 2;
-            activeDefinition.settings.prime_tower_position_x.default_value = size.x - primeTowerPositionX;
-            activeDefinition.settings.prime_tower_position_y.default_value = size.y - primeTowerPositionY;
+            activeDefinition.settings.prime_tower_position_x.default_value = size.x - primeTowerPositionX - left;
+            activeDefinition.settings.prime_tower_position_y.default_value = size.y - primeTowerPositionY - front;
             activeDefinition.settings.prime_tower_size.default_value = primeTowerWidth;
             activeDefinition.settings.prime_tower_wipe_enabled.default_value = true;
         }

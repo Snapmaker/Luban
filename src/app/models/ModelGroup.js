@@ -1435,7 +1435,7 @@ class ModelGroup extends EventEmitter {
     }
 
     hasModel() {
-        return this.getModels().filter(v => v.visible).length > 0;
+        return this.getModels().filter(v => v.visible && v.type !== 'primeTower').length > 0;
     }
 
     // include visible and hidden model
