@@ -1181,14 +1181,14 @@ function VisualizerLeftBar({ defaultSupportSize, setTransformMode, isSupporting,
                         <div className="padding-bottom-16 padding-top-8 padding-left-8">
                             <div className="select-models-container">
                                 {modelExtruderInfoShow && (
-                                    <div className="sm-flex align-center justify-space-between background-color-blue border-default-blue border-radius-8 margin-right-16 margin-left-8">
+                                    <div className="sm-flex align-center justify-space-between margin-right-16">
                                         <div className="sm-flex align-center">
                                             <SvgIcon
                                                 color="#1890FF"
                                                 size={24}
                                                 type={['static']}
                                                 name="WarningTipsTips"
-                                                className="margin-vertical-8 margin-left-8 margin-right-4"
+                                                className="margin-vertical-8 margin-right-4"
                                             />
                                             <span className="display-inline width-200 text-overflow-ellipsis">{i18n._('key-Printing/LeftBar-Selected Models Extruder Info')}</span>
                                         </div>
@@ -1208,7 +1208,7 @@ function VisualizerLeftBar({ defaultSupportSize, setTransformMode, isSupporting,
                                     <SvgIcon
                                         size={24}
                                         hoversize={24}
-                                        name="DropdownOpen"
+                                        name={`${isOpenModels ? 'DropdownOpen' : 'DropdownClose'}`}
                                         color="#545659"
                                         onClick={() => actions.handleOpen('models')}
                                     />
@@ -1245,14 +1245,14 @@ function VisualizerLeftBar({ defaultSupportSize, setTransformMode, isSupporting,
                             <div className="height-1 border-bottom-dashed-grey-1 margin-right-16 margin-left-8 margin-top-16 margin-bottom-8" />
                             <div className="select-models-container">
                                 {helpersExtruderInfoShow && (
-                                    <div className="sm-flex align-center justify-space-between background-color-blue border-default-blue border-radius-8 margin-right-16 margin-left-8">
+                                    <div className="sm-flex align-center justify-space-between margin-right-16">
                                         <div className="sm-flex align-center">
                                             <SvgIcon
                                                 color="#1890FF"
                                                 size={24}
                                                 type={['static']}
                                                 name="WarningTipsTips"
-                                                className="margin-vertical-8 margin-left-8 margin-right-4"
+                                                className="margin-vertical-8 margin-right-4"
                                             />
                                             <span className="display-inline width-200 text-overflow-ellipsis">{i18n._('key-Printing/LeftBar-Helpers Extruder Info')}</span>
                                         </div>
@@ -1272,7 +1272,7 @@ function VisualizerLeftBar({ defaultSupportSize, setTransformMode, isSupporting,
                                     <SvgIcon
                                         size={24}
                                         hoversize={24}
-                                        name="DropdownOpen"
+                                        name={`${isOpenHelpers ? 'DropdownOpen' : 'DropdownClose'}`}
                                         color="#545659"
                                         onClick={() => actions.handleOpen('helpers')}
                                     />

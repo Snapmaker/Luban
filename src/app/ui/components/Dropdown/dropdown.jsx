@@ -9,7 +9,7 @@ const Dropdown = React.memo((props) => {
     return (
         <div className={classNames(className)}>
             <AntDropdown
-                overlayClassName={classNames('border-radius-8')}
+                overlayClassName={classNames('border-radius-8', 'border-default-black-5')}
                 {...rest}
                 overlay={overlay}
                 placement={placement}
