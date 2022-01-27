@@ -176,10 +176,7 @@ function RotationAnalysisOverlay({ onClose }) {
 
     const actions = {
         finish: () => {
-            dispatch(printingActions.clearRotationAnalysisTableData());
-            // record the last rotation to undo & redo
-            dispatch(printingActions.recordModelAfterTransform('rotate', modelGroup));
-            dispatch(printingActions.setTransformMode('rotate'));
+            dispatch(printingActions.finishAnalyzeRotation());
             onClose();
         },
         onRowSelect: (row, scrollIntoView = false) => {
@@ -214,8 +211,7 @@ function RotationAnalysisOverlay({ onClose }) {
         columns = initColumns();
         // Mousetrap doesn't support unbind specific shortcut callback, use native instead
         window.addEventListener('keydown', actions.exitModal, true);
-        // record current rotation for undo & redo
-        dispatch(printingActions.recordModelBeforeTransform(modelGroup));
+        dispatch(printingActions.startAnalyzeRotation());
         initialTransformation = { ...modelGroup.selectedModelArray[0].transformation };
         dispatch(printingActions.analyzeSelectedModelRotation());
         dispatch(printingActions.setShortcutStatus(false));
