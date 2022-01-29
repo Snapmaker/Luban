@@ -539,9 +539,15 @@ export const processActions = {
                     name = `#${name}`;
                 }
                 definition.name = name;
+                definition.category = '';
+                definition.i18nCategory = '';
+                definition.i18nName = '';
                 await definitionManager.updateDefinition({
                     definitionId: definition.definitionId,
-                    name
+                    name,
+                    category: '',
+                    i18nCategory: '',
+                    i18nName: ''
                 });
                 dispatch(baseActions.updateState(headType, {
                     toolDefinitions: [...toolDefinitions, definition]

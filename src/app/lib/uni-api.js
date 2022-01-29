@@ -7,7 +7,7 @@ import path from 'path';
 import i18n from './i18n';
 import pkg from '../../../package.json';
 
-class AppbarMenuEvent extends events.EventEmitter {}
+class AppbarMenuEvent extends events.EventEmitter { }
 
 const menuEvent = new AppbarMenuEvent();
 /**
@@ -235,9 +235,23 @@ const File = {
         }
     },
 
+    resetProfile(profile) {
+        // Rename the exported profile name, which is consistent with the current language
+        profile.name = profile.i18nName ? (
+            i18n._(profile.i18nName) || profile.name || ''
+        ) : profile.name;
+        // Reset category and i18n of the exported profile
+        profile.category = '';
+        profile.i18nCategory = '';
+        profile.i18nName = '';
+        return JSON.stringify(profile, null, 4);
+    },
+
     // export file for 3dp/laser/cnc
     async exportAs(targetFile, tmpFile, renderGcodeFileName = null, callback = undefined) {
+        let isProfileConfig = false;
         if (isNil(renderGcodeFileName)) {
+            isProfileConfig = true;
             renderGcodeFileName = targetFile;
         } else {
             if (renderGcodeFileName.slice(renderGcodeFileName.length - 9) === '.def.json') {
@@ -262,19 +276,35 @@ const File = {
             if (!targetFile) throw new Error('export file canceled');
 
             const file = { path: targetFile, name: renderGcodeFileName };
-            fs.copyFileSync(tmpFile, targetFile);
+            if (isProfileConfig) {
+                const txt = fs.readFileSync(tmpFile, 'utf-8');
+                const newProfile = this.resetProfile(JSON.parse(txt));
+                fs.writeFileSync(targetFile, newProfile, 'utf8');
+            } else {
+                fs.copyFileSync(tmpFile, targetFile);
+            }
 
             callback && callback('electron', targetFile);
             return file;
         } else {
-            request
-                .get(`/data${tmpFile}`)
-                .responseType('blob')
-                .end((err, res) => {
-                    // FileSaver.saveAs(res.body, targetFile, true);
-                    FileSaver.saveAs(res.body, renderGcodeFileName, true);
-                    callback && callback('web');
-                });
+            if (isProfileConfig) {
+                request
+                    .get(`/data${tmpFile}`)
+                    .end((err, res) => {
+                        const json = res.body;
+                        const newProfile = this.resetProfile(json);
+                        FileSaver.saveAs(new Blob([newProfile]), renderGcodeFileName, true);
+                        callback && callback('web');
+                    });
+            } else {
+                request
+                    .get(`/data${tmpFile}`)
+                    .responseType('blob')
+                    .end((err, res) => {
+                        FileSaver.saveAs(res.body, renderGcodeFileName, true);
+                        callback && callback('web');
+                    });
+            }
             return null;
         }
     },

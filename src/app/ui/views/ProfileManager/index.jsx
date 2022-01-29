@@ -19,26 +19,27 @@ import useSetState from '../../../lib/hooks/set-state';
 
 function creatCateArray(optionList) {
     const cates = [];
-    const regex = /^[a-z]+.[0-9]+$/;
     optionList.forEach(option => {
-        if (option.category) {
-            const cateItem = cates.find((cate) => cate.category === option.category);
+        // Make sure that the copied description file is displayed in the correct position after switching the language
+        if (option.i18nCategory) {
+            const cateItem = cates.find((cate) => cate.i18nCategory === option.i18nCategory);
             if (cateItem) {
                 cateItem.items.push(option);
             } else {
                 const eachCate = { items: [] };
                 eachCate.category = option.category;
+                eachCate.i18nCategory = option.i18nCategory;
                 eachCate.items.push(option);
                 cates.push(eachCate);
             }
         } else {
-            const idx = regex.test(option.value) ? i18n._('key-default_category-Custom') : i18n._('key-default_category-Default');
-            const cateItem = cates.find((cate) => cate.category === idx);
+            const defaultCategory = i18n._('key-default_category-Custom');
+            const cateItem = cates.find((cate) => cate.category === defaultCategory);
             if (cateItem) {
                 cateItem.items.push(option);
             } else {
                 const eachCate = { items: [] };
-                eachCate.category = idx;
+                eachCate.category = defaultCategory;
                 eachCate.items.push(option);
                 cates.push(eachCate);
             }
@@ -47,7 +48,7 @@ function creatCateArray(optionList) {
     return cates;
 }
 
-function useGetDefinitions(allDefinitions, activeDefinitionID, getDefaultDefinition) {
+function useGetDefinitions(allDefinitions, activeDefinitionID, getDefaultDefinition, managerType) {
     const [definitionState, setDefinitionState] = useSetState({
         activeDefinitionID,
         definitionForManager: allDefinitions.find(d => d.definitionId === activeDefinitionID),
@@ -65,9 +66,12 @@ function useGetDefinitions(allDefinitions, activeDefinitionID, getDefaultDefinit
                 label: d.name,
                 value: d.definitionId,
                 category: d.category,
+                i18nCategory: d.i18nCategory,
                 isHidden: !d.settings || Object.keys(d.settings).length === 0,
                 isDefault: !!d.isDefault,
-                color: (d.ownKeys.find(key => key === 'color') && d.settings.color) ? d.settings.color.default_value : ''
+                color: (
+                    managerType === PRINTING_MANAGER_TYPE_MATERIAL && d.ownKeys.find(key => key === 'color') && d.settings.color
+                ) ? d.settings.color.default_value : ''
             };
         });
         setDefinitionState((prev) => {
@@ -109,7 +113,7 @@ function ProfileManager({
         renameInput: useRef(null),
         refCreateModal: useRef(null)
     };
-    const [definitionState, setDefinitionState] = useGetDefinitions(allDefinitions, activeDefinitionID, outsideActions.getDefaultDefinition);
+    const [definitionState, setDefinitionState] = useGetDefinitions(allDefinitions, activeDefinitionID, outsideActions.getDefaultDefinition, managerType);
 
     const currentDefinitions = useRef(allDefinitions);
     currentDefinitions.current = allDefinitions;

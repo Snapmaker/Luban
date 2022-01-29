@@ -937,10 +937,14 @@ export const actions = {
                 const response = res.body;
                 const definitionId = `${type}.${timestamp()}`;
                 const definition = await definitionManager.uploadDefinition(definitionId, response.uploadName);
-                definition.category = i18n._('key-default_category-Custom');
+                // definition.category = i18n._('key-default_category-Custom');
+
+                // Compatible processing. Make sure you don't jump to the original directory
+                definition.i18nCategory = '';
+                definition.i18nName = '';
+
                 let name = definition.name;
                 const definitionsKey = defaultDefinitionKeys[type].definitions;
-                const defaultId = defaultDefinitionKeys[type].id;
                 const definitions = getState().printing[definitionsKey];
                 while (definitions.find(e => e.name === name)) {
                     name = `#${name}`;
@@ -949,11 +953,15 @@ export const actions = {
                 await definitionManager.updateDefinition({
                     definitionId: definition.definitionId,
                     name,
-                    category: definition.category
+                    // The classification cannot be modified, otherwise there will be duplicate user-defined directories during language switching
+                    category: '',
+                    i18nCategory: '',
+                    i18nName: ''
                 });
                 dispatch(actions.updateState({
-                    [definitionsKey]: [...definitions, definition],
-                    [defaultId]: definitionId
+                    [definitionsKey]: [...definitions, definition]
+                    // Newly imported profiles should not be automatically applied
+                    // [defaultId]: definitionId
                 }));
             })
             .catch(() => {
@@ -1025,6 +1033,7 @@ export const actions = {
             name,
             inherits: definition.inherits,
             category: definition.category,
+            i18nCategory: definition.i18nCategory,
             ownKeys: definition.ownKeys,
             metadata,
             settings: {}
@@ -2548,7 +2557,9 @@ export const actions = {
 export default function reducer(state = INITIAL_STATE, action) {
     switch (action.type) {
         case ACTION_UPDATE_STATE: {
-            return Object.assign({}, state, action.state);
+            const s = Object.assign({}, state, action.state);
+            window.pp = s;
+            return s;
         }
         case ACTION_UPDATE_TRANSFORMATION: {
             return Object.assign({}, state, {
