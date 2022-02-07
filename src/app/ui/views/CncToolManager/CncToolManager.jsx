@@ -118,7 +118,6 @@ function CncToolManager({ closeToolManager, shouldSaveToolpath = false, saveTool
             isOfficialDefinition={isOfficialDefinition}
             optionConfigGroup={optionConfigGroup}
             allDefinitions={allDefinitions}
-            disableCategory={false}
             managerTitle="key-Cnc/ToolManger-Tool Settings"
             activeDefinitionID={activeToolListDefinition.definitionId}
             managerType={HEAD_CNC}

@@ -107,7 +107,6 @@ function useGetDefinitions(allDefinitions, activeDefinitionID, getDefaultDefinit
 
 function ProfileManager({
     optionConfigGroup,
-    disableCategory = true,
     managerTitle,
     activeDefinitionID,
     allDefinitions,
@@ -191,7 +190,6 @@ function ProfileManager({
             }
         },
         onSelectCategory: (category, i18nCategory) => {
-            if (disableCategory) return;
             const { definitionForManager, isCategorySelected, renamingStatus } = definitionState;
             if (isCategorySelected && category === definitionForManager.category) {
                 return;
@@ -284,15 +282,12 @@ function ProfileManager({
                     copyItemName = definitionForManager.name;
                 }
             } else {
-                copyCategoryName = definitionForManager.category;
-                copyCategoryI18n = definitionForManager.i18nCategory;
-            }
-            if (isCreate && disableCategory) {
                 title = i18n._('key-Printing/ProfileManager-Create Profile');
                 copyType = 'Item';
                 copyItemName = i18n._('key-default_category-New Profile');
+                copyCategoryName = definitionForManager.category;
+                copyCategoryI18n = definitionForManager.i18nCategory;
             }
-            isCreate = isCreate && !disableCategory;
 
             let materialOptions = definitionState?.definitionOptions.map(option => {
                 return {
@@ -312,7 +307,6 @@ function ProfileManager({
                         <DefinitionCreator
                             managerType={managerType}
                             isCreate={isCreate}
-                            disableCategory={disableCategory}
                             ref={refs.refCreateModal}
                             materialOptions={materialOptions}
                             copyType={copyType}
@@ -709,7 +703,6 @@ ProfileManager.propTypes = {
     outsideActions: PropTypes.object.isRequired,
     activeDefinitionID: PropTypes.string.isRequired,
     managerTitle: PropTypes.string.isRequired,
-    disableCategory: PropTypes.bool,
     optionConfigGroup: PropTypes.array.isRequired,
     allDefinitions: PropTypes.array.isRequired,
     isOfficialDefinition: PropTypes.func.isRequired,

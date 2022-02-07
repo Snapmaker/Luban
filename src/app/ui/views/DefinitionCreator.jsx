@@ -75,7 +75,7 @@ const describeCreator = (managerType) => {
 };
 
 const DefinitionCreator = ({
-    managerType, isCreate, disableCategory = true, copyType, copyCategoryName, copyCategoryI18n, copyItemName, materialOptions
+    managerType, isCreate, copyType, copyCategoryName, copyCategoryI18n, copyItemName, materialOptions
 }, ref) => {
     const [displayDescribe] = useState(describeCreator(managerType));
 
@@ -132,29 +132,27 @@ const DefinitionCreator = ({
                         value={state.itemName}
                     />
 
-                    {!disableCategory && (
-                        <>
-                            <p className="margin-top-16 font-size-base margin-bottom-8">
-                                {displayDescribe.selectCategory}
-                            </p>
+                    <>
+                        <p className="margin-top-16 font-size-base margin-bottom-8">
+                            {displayDescribe.selectCategory}
+                        </p>
 
-                            <Select
-                                size="432px"
-                                backspaceRemoves={false}
-                                clearable={false}
-                                options={materialOptions}
-                                placeholder={i18n._('key-Cnc/ToolManger/ProfileCreator-Choose font')}
-                                value={state.categoryName}
-                                onChange={(option) => {
-                                    setState({
-                                        ...state,
-                                        categoryName: option.label,
-                                        categoryI18n: option.i18n
-                                    });
-                                }}
-                            />
-                        </>
-                    )}
+                        <Select
+                            size="432px"
+                            backspaceRemoves={false}
+                            clearable={false}
+                            options={materialOptions}
+                            placeholder={i18n._('key-Cnc/ToolManger/ProfileCreator-Choose font')}
+                            value={state.categoryName}
+                            onChange={(option) => {
+                                setState({
+                                    ...state,
+                                    categoryName: option.label,
+                                    categoryI18n: option.i18n
+                                });
+                            }}
+                        />
+                    </>
 
                 </div>
 
@@ -196,7 +194,6 @@ const DefinitionCreator = ({
 DefinitionCreator.propTypes = {
     managerType: PropTypes.string.isRequired,
     isCreate: PropTypes.bool,
-    disableCategory: PropTypes.bool,
     copyType: PropTypes.string,
     copyCategoryName: PropTypes.string,
     copyCategoryI18n: PropTypes.string,

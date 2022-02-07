@@ -170,8 +170,6 @@ function PrintingManager() {
             isOfficialDefinition={isOfficialDefinition}
             optionConfigGroup={optionConfigGroup}
             allDefinitions={allDefinitions}
-            // disableCategory={managerDisplayType === PRINTING_MANAGER_TYPE_QUALITY}
-            disableCategory={false}
             managerTitle={managerDisplayType === PRINTING_MANAGER_TYPE_MATERIAL ? 'key-Printing/PrintingConfigurations-Material Settings' : 'key-Printing/PrintingConfigurations-Printing Settings'}
             activeDefinitionID={selectedIds[managerDisplayType].id}
             managerType={managerDisplayType}
