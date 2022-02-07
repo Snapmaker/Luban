@@ -2078,8 +2078,10 @@ export const actions = {
             stage: STEP_STAGE.PRINTING_PREVIEWING,
             progress: progressStatesManager.updateProgress(STEP_STAGE.PRINTING_SLICING, 0)
         }));
-        const extruderColors = { toolColor0: extruderLDefinition?.settings?.color?.default_value || WHITE_COLOR,
-            toolColor1: extruderRDefinition?.settings?.color?.default_value || BLACK_COLOR };
+        const extruderColors = {
+            toolColor0: extruderLDefinition?.settings?.color?.default_value || WHITE_COLOR,
+            toolColor1: extruderRDefinition?.settings?.color?.default_value || BLACK_COLOR
+        };
         gcodeRenderingWorker.postMessage({ func: '3DP', gcodeFilename, extruderColors });
     },
     saveSupport: (model) => (dispatch, getState) => {
@@ -2557,9 +2559,7 @@ export const actions = {
 export default function reducer(state = INITIAL_STATE, action) {
     switch (action.type) {
         case ACTION_UPDATE_STATE: {
-            const s = Object.assign({}, state, action.state);
-            window.pp = s;
-            return s;
+            return Object.assign({}, state, action.state);
         }
         case ACTION_UPDATE_TRANSFORMATION: {
             return Object.assign({}, state, {
