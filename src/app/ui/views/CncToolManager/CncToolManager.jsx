@@ -65,14 +65,12 @@ function CncToolManager({ closeToolManager, shouldSaveToolpath = false, saveTool
         updateCategoryName: async (definition, selectedName) => {
             try {
                 const definitionsWithSameCategory = toolDefinitions.filter(d => d.category === definition.category);
-                for (let i = 0; i < definitionsWithSameCategory.length; i++) {
-                    await dispatch(cncActions.updateToolDefinitionName(
-                        true,
-                        definitionsWithSameCategory[i].definitionId,
-                        definitionsWithSameCategory[i].category,
-                        selectedName,
-                    ));
-                }
+                await dispatch(cncActions.updateToolDefinitionName(
+                    true,
+                    definitionsWithSameCategory[0].definitionId,
+                    definitionsWithSameCategory[0].category,
+                    selectedName,
+                ));
                 return null;
             } catch (e) {
                 return Promise.reject(i18n._('key-Cnc/ToolManager-Failed to rename. Name already exists.'));

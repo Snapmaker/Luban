@@ -75,13 +75,14 @@ const describeCreator = (managerType) => {
 };
 
 const DefinitionCreator = ({
-    managerType, isCreate, disableCategory = true, copyType, copyCategoryName, copyItemName, materialOptions
+    managerType, isCreate, disableCategory = true, copyType, copyCategoryName, copyCategoryI18n, copyItemName, materialOptions
 }, ref) => {
     const [displayDescribe] = useState(describeCreator(managerType));
 
     const [state, setState] = useState({
         createType: 'Category',
         categoryName: '',
+        categoryI18n: '',
         itemName: '',
     });
     useEffect(() => {
@@ -89,10 +90,11 @@ const DefinitionCreator = ({
             return {
                 ...pre,
                 itemName: copyItemName || displayDescribe.itemName,
-                categoryName: copyCategoryName || displayDescribe.categoryName
+                categoryName: copyCategoryName || displayDescribe.categoryName,
+                categoryI18n: copyCategoryI18n
             };
         });
-    }, [managerType, copyItemName, copyCategoryName, displayDescribe.categoryName, displayDescribe.itemName]);
+    }, [managerType, copyItemName, copyCategoryName, displayDescribe.categoryName, displayDescribe.itemName, copyCategoryI18n]);
 
     useImperativeHandle(ref, () => ({
         getData: () => {
@@ -144,8 +146,11 @@ const DefinitionCreator = ({
                                 placeholder={i18n._('key-Cnc/ToolManger/ProfileCreator-Choose font')}
                                 value={state.categoryName}
                                 onChange={(option) => {
-                                    const categoryName = option.label;
-                                    setState({ ...state, categoryName });
+                                    setState({
+                                        ...state,
+                                        categoryName: option.label,
+                                        categoryI18n: option.i18n
+                                    });
                                 }}
                             />
                         </>
@@ -194,6 +199,7 @@ DefinitionCreator.propTypes = {
     disableCategory: PropTypes.bool,
     copyType: PropTypes.string,
     copyCategoryName: PropTypes.string,
+    copyCategoryI18n: PropTypes.string,
     copyItemName: PropTypes.string,
     materialOptions: PropTypes.array
 };
