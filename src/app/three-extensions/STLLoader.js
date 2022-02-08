@@ -143,9 +143,12 @@ STLLoader.prototype = {
 			var normals = [];
 			var faceVertexUvs = [[]];
 			var uv = [];
-			console.log('faces', faces);
+            var xyMaxX = Number.MIN_SAFE_INTEGER, xyMinX = Number.MAX_SAFE_INTEGER, xyMaxY = Number.MIN_SAFE_INTEGER, xyMinY = Number.MAX_SAFE_INTEGER;
+            var xzMaxX = Number.MIN_SAFE_INTEGER, xzMinX = Number.MAX_SAFE_INTEGER, xzMaxY = Number.MIN_SAFE_INTEGER, xzMinY = Number.MAX_SAFE_INTEGER;
+            var zyMaxX = Number.MIN_SAFE_INTEGER, zyMinX = Number.MAX_SAFE_INTEGER, zyMaxY = Number.MIN_SAFE_INTEGER, zyMinY = Number.MAX_SAFE_INTEGER;
+            var uvInfos = [];
 
-			for ( var face = 0; face < faces; face ++ ) {
+            for ( var face = 0; face < faces; face ++ ) {
 			    if (face / faces - progress > 0.01) {
                     progress = face / faces;
                     onProgress(progress);
@@ -155,7 +158,6 @@ STLLoader.prototype = {
 				var normalX = reader.getFloat32( start, true );
 				var normalY = reader.getFloat32( start + 4, true );
 				var normalZ = reader.getFloat32( start + 8, true );
-				var maxX = Number.MIN_SAFE_INTEGER, minX = Number.MAX_SAFE_INTEGER, maxY = Number.MIN_SAFE_INTEGER, minY = Number.MAX_SAFE_INTEGER;
 				var currentVertices = [];
 				var currentUv = [];
 
@@ -182,7 +184,6 @@ STLLoader.prototype = {
 				}
 
 				for ( var i = 1; i <= 3; i ++ ) {
-
 					var vertexstart = start + i * 12;
 					var vertice1 = reader.getFloat32( vertexstart, true );
 					var vertice2 = reader.getFloat32( vertexstart+ 4, true );
@@ -191,56 +192,104 @@ STLLoader.prototype = {
 					vertices.push( vertice1 );
 					vertices.push( vertice2 );
 					vertices.push( vertice3 );
-					let currentVertice = new THREE.Vector3(vertice1, vertice2, vertice3);
-					// console.log('vertice1, vertice2, vertice3', vertice1, vertice2, vertice3);
-					const xyVecrtice = new THREE.Vector3(vertice1, vertice2, 0);
-					// console.log('xyVecrtice', currentVertice, xyVecrtice);
-					const angle = currentVertice.angleTo(xyVecrtice);
-					let currentXyVertice = currentVertice;
+					const currentVertice = new THREE.Vector3(vertice1, vertice2, vertice3);
 
-					// if (angle > 5*Math.PI/180 && angle < 175*Math.PI/180 ) {
-						rotateZMatrix.set(
-							Math.cos(angle), -Math.sin(angle), 0, 0,
-							Math.sin(angle),  Math.cos(angle), 0, 0,
-							0,       0,      1,  0,
-							0,       0,      0,  1
-						);
-						currentXyVertice = currentVertice.applyMatrix4(rotateZMatrix);
-					// }
-
-					minX = Math.min(currentXyVertice.x, minX);
-					minY = Math.min(currentXyVertice.y, minY);
-					maxX = Math.max(currentXyVertice.x, maxX);
-					maxY = Math.max(currentXyVertice.y, maxY);
-
-					// if (vertice1 === 109.88607025146484 && vertice2 === -81.95313262939453) {
-						console.log('currentXyVertice',new THREE.Vector3(vertice1, vertice2, vertice3), currentXyVertice, angle);
-					// }
-					currentVertices.push(currentXyVertice)
-
+					currentVertices.push(currentVertice)
 					normals.push( normalX, normalY, normalZ );
-
 					if ( hasColors ) {
-
 						colors.push( r, g, b );
-
 					}
-
 				}
-					let maxLength = Math.max(maxX-minX, maxY - minY);
-					// console.log('maxX',  maxLength, currentVertices);
-					currentUv = currentVertices.map((item, index) => {
-						let newX, newY;
-						newX = (item.x - minX)/maxLength;
-						newY = (item.y - minY)/maxLength;
-						console.log('newX, newY',index, newX, newY);
-						return new THREE.Vector2(newX,newY)
-					});
-					// console.log('currentUv', currentUv);
-				faceVertexUvs[0].push(currentUv);
-				// faceVertexUvs[0].push([new THREE.Vector2(0,1), new THREE.Vector2(1,1), new THREE.Vector2(0,0)]);
 
+				function isNotVertical(vertices) {
+				    const dXY = Math.abs((vertices[0].x - vertices[1].x) * (vertices[1].y - vertices[2].y)
+                        - (vertices[0].y - vertices[1].y) * (vertices[1].x - vertices[2].x));
+                    const dXZ = Math.abs((vertices[0].x - vertices[1].x) * (vertices[1].z - vertices[2].z)
+                        - (vertices[0].z - vertices[1].z) * (vertices[1].x - vertices[2].x));
+                    const dZY = Math.abs((vertices[0].y - vertices[1].y) * (vertices[1].z - vertices[2].z)
+                        - (vertices[0].z - vertices[1].z) * (vertices[1].y - vertices[2].y));
+                    if (dXY > dXZ && dXY > dZY) {
+                        return 'xy';
+                    }
+                    if (dXZ > dZY) {
+                        return 'xz';
+                    }
+				    return 'zy';
+                }
+
+				const useFace = isNotVertical(currentVertices);
+				switch (useFace) {
+                    case 'xy': {
+                        currentVertices.forEach(vertice => {
+                            xyMaxX = Math.max(vertice.x, xyMaxX);
+                            xyMinX = Math.min(vertice.x, xyMinX);
+                            xyMaxY = Math.max(vertice.y, xyMaxY);
+                            xyMinY = Math.min(vertice.y, xyMinY);
+                        });
+                        break;
+                    }
+                    case 'xz': {
+                        currentVertices.forEach(vertice => {
+                            xzMaxX = Math.max(vertice.x, xzMaxX);
+                            xzMinX = Math.min(vertice.x, xzMinX);
+                            xzMaxY = Math.max(vertice.z, xzMaxY);
+                            xzMinY = Math.min(vertice.z, xzMinY);
+                        });
+                        break;
+                    }
+                    case 'zy': {
+                        currentVertices.forEach(vertice => {
+                            zyMaxX = Math.max(vertice.z, zyMaxX);
+                            zyMinX = Math.min(vertice.z, zyMinX);
+                            zyMaxY = Math.max(vertice.y, zyMaxY);
+                            zyMinY = Math.min(vertice.y, zyMinY);
+                        });
+                        break;
+                    }
+                    default: {
+                        break;
+                    }
+                }
+
+                uvInfos.push({
+                    useFace,
+                    vertices: currentVertices
+                });
 			}
+            const xyMaxLength = Math.max(xyMaxX - xyMinX, xyMaxY - xyMinY);
+            const xzMaxLength = Math.max(xzMaxX - xzMinX, xzMaxY - xzMinY);
+            const zyMaxLength = Math.max(zyMaxX - zyMinX, zyMaxY - zyMinY);
+
+            for (let face = 0; face < faces; face ++) {
+                const { useFace, vertices } = uvInfos[face];
+                // console.log('xx', useFace, xzMaxLength, xzMinX, xzMinY);
+                currentUv = vertices.map((item) => {
+                    let newX = 0, newY = 0;
+                    switch (useFace) {
+                        case 'xy': {
+                            newX = (item.x - xyMinX) / xyMaxLength;
+                            newY = (item.y - xyMinY) / xyMaxLength;
+                            break;
+                        }
+                        case 'xz': {
+                            newX = (item.x - xzMinX) / xzMaxLength;
+                            newY = (item.z - xzMinY) / xzMaxLength;
+                            break;
+                        }
+                        case 'zy': {
+                            newX = (item.z - zyMinX) / zyMaxLength;
+                            newY = (item.y - zyMinY) / zyMaxLength;
+                            break;
+                        }
+                        default: {
+                            break;
+                        }
+                    }
+                    // console.log('new x,y', item, newX, newY);
+                    return new THREE.Vector2(newX,newY)
+                });
+                faceVertexUvs[0].push(currentUv);
+            }
 
 			geometry.setAttribute( 'position', new THREE.BufferAttribute( new Float32Array( vertices ), 3 ) );
 			geometry.setAttribute( 'normal', new THREE.BufferAttribute( new Float32Array( normals ), 3 ) );
