@@ -9,6 +9,7 @@ import { PRINTING_MATERIAL_CONFIG_COLORS } from '../../../constants';
 
 import TipTrigger from '../../components/TipTrigger';
 import SvgIcon from '../../components/SvgIcon';
+import Popover from '../../components/Popover';
 
 function SettingItem({ definitionKey, settings, isDefaultDefinition = () => true, onChangeDefinition, defaultValue, styleSize = 'large' }) {
     const [showColor, setShowColor] = useState(false);
@@ -119,6 +120,21 @@ function SettingItem({ definitionKey, settings, isDefaultDefinition = () => true
             });
         });
     }
+    const colorSelectorContent = (
+        <div>
+            <ColorSelector
+                recentColorKey="profile-manager"
+                colors={PRINTING_MATERIAL_CONFIG_COLORS}
+                value={settingDefaultValue}
+                onClose={() => {
+                    setShowColor(false);
+                }}
+                onChangeComplete={(color) => {
+                    onChangeDefinition(definitionKey, color);
+                }}
+            />
+        </div>
+    );
     return (
         <TipTrigger title={i18n._(label)} content={i18n._(description)} key={definitionKey}>
             <div className="position-re sm-flex justify-space-between height-32 margin-vertical-8">
@@ -203,35 +219,32 @@ function SettingItem({ definitionKey, settings, isDefaultDefinition = () => true
                         <span className="sm-parameter-row__input-unit">{unit}</span>
                     )}
                     {type === 'color' && (
-                        <div
-                            className="sm-flex-width align-r height-percent-100 width-96 display-inline border-radius-8"
-                            role="button"
-                            tabIndex="-1"
-                            onKeyPress={() => {}}
-                            style={{
-                                background: settingDefaultValue,
-                                border: '1px solid #B9BCBF'
+                        <Popover
+                            content={colorSelectorContent}
+                            visible={showColor}
+                            trigger="click"
+                            placement="bottomRight"
+                            className="cancel-content-padding"
+                            onVisibleChange={(visible) => {
+                                console.log({ visible });
+                                setShowColor(visible);
                             }}
-                            onClick={() => setShowColor(!showColor)}
-                        />
+                        >
+                            <span
+                                className="sm-flex-width align-r height-percent-100 width-96 display-inline border-radius-8 border-default-black-5"
+                                style={{
+                                    background: settingDefaultValue,
+                                    height: 32
+                                }}
+                                role="button"
+                                tabIndex="-1"
+                                onKeyPress={() => {}}
+                                onClick={() => setShowColor(!showColor)}
+                            />
+                        </Popover>
                     )}
                 </div>
             </div>
-            {showColor && (
-                <div>
-                    <ColorSelector
-                        recentColorKey="profile-manager"
-                        colors={PRINTING_MATERIAL_CONFIG_COLORS}
-                        value={settingDefaultValue}
-                        onClose={() => {
-                            setShowColor(false);
-                        }}
-                        onChangeComplete={(color) => {
-                            onChangeDefinition(definitionKey, color);
-                        }}
-                    />
-                </div>
-            )}
         </TipTrigger>
     );
 }
