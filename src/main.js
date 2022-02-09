@@ -186,12 +186,16 @@ if (process.platform === 'win32') {
 }
 
 const showMainWindow = async () => {
-    try {
-        // TODO: move to server
-        DataStorage.init();
-    } catch (err) {
-        console.error('Error: ', err);
+    const windowOptions = getBrowserWindowOptions();
+    const window = new BrowserWindow(windowOptions);
+    mainWindow = window;
+    if (process.platform === 'win32') {
+        // const outsideX = -999999, outsideY = -999999;
+        window.setSkipTaskbar(true);
+        window.blur();
+        // window.setPosition(outsideX, outsideY, false);
     }
+    window.show();
 
     if (!serverData) {
         // only start server once
@@ -200,17 +204,6 @@ const showMainWindow = async () => {
     }
 
     const { address, port } = { ...serverData };
-    const windowOptions = getBrowserWindowOptions();
-    const window = new BrowserWindow(windowOptions);
-    mainWindow = window;
-    if (process.platform === 'win32') {
-        const outsideX = -999999, outsideY = -999999;
-        window.setSkipTaskbar(true);
-        window.blur();
-        window.setPosition(outsideX, outsideY, false);
-    }
-    window.show();
-
     configureWindow(window);
 
     const loadUrl = `http://${address}:${port}`;
@@ -251,10 +244,18 @@ const showMainWindow = async () => {
     webContentsSession.setProxy({ proxyRules: 'direct://' })
         .then(() => window.loadURL(loadUrl));
 
+    window.loadURL(`${loadUrl}/index.html`);
 
     window.setTitle(`Snapmaker Luban ${pkg.version}`);
 
 
+    try {
+        // TODO: move to server
+        DataStorage.init();
+    } catch (err) {
+        console.error('Error: ', err);
+    }
+    
     window.on('close', (e) => {
         e.preventDefault();
         const bounds = window.getBounds();
@@ -307,44 +308,45 @@ const showMainWindow = async () => {
 
 const createWindow = () => {
     // MenuBuilder.hideMenu();
-    if (process.platform === 'win32') {
-        const windowOptions = getBrowserWindowOptions();
-        const loadingWindow = new BrowserWindow(windowOptions);
-        loadingWindow.setMenuBarVisibility(false);
-        loadingWindow.setResizable(false);
-        loadingWindow.loadURL(path.resolve(__dirname, 'app', 'loading.html'));
-        loadingWindow.once('ready-to-show', () => {
-            ipcMain.once('show-main-window', () => {
-                if (loadingWindow.isMinimized()) {
-                    loadingWindow.restore();
-                } else if (loadingWindow.isMaximized()) {
-                    mainWindow.maximize();
-                }
-                const [x, y] = loadingWindow.getPosition();
-                const outsideX = -999999, outsideY = -999999;
-                mainWindow.setPosition(x, y, false);
-                mainWindow.moveTop();
-                mainWindow.setSkipTaskbar(false);
-                loadingWindow.setSkipTaskbar(true);
-                loadingWindow.setPosition(outsideX, outsideY, false);
-                mainWindow.focus();
-                loadingWindow.close();
-            });
-            loadingWindow.once('show', () => {
-                setTimeout(() => {
-                    showMainWindow();
-                }, 50);
-            });
-            loadingWindow.show();
-        });
-        loadingWindow.once('close', () => {
-            if (!mainWindow || !mainWindow.isFocused()) {
-                process.exit(0);
-            }
-        });
-    } else {
-        showMainWindow();
-    }
+    // if (process.platform === 'win32') {
+    //     const windowOptions = getBrowserWindowOptions();
+    //     const loadingWindow = new BrowserWindow(windowOptions);
+    //     loadingWindow.setMenuBarVisibility(false);
+    //     loadingWindow.setResizable(false);
+    //     loadingWindow.loadURL(path.resolve(__dirname, 'app', 'loading.html'));
+    //     loadingWindow.once('ready-to-show', () => {
+    //         ipcMain.once('show-main-window', () => {
+    //             if (loadingWindow.isMinimized()) {
+    //                 loadingWindow.restore();
+    //             } else if (loadingWindow.isMaximized()) {
+    //                 mainWindow.maximize();
+    //             }
+    //             const [x, y] = loadingWindow.getPosition();
+    //             const outsideX = -999999, outsideY = -999999;
+    //             mainWindow.setPosition(x, y, false);
+    //             mainWindow.moveTop();
+    //             mainWindow.setSkipTaskbar(false);
+    //             loadingWindow.setSkipTaskbar(true);
+    //             loadingWindow.setPosition(outsideX, outsideY, false);
+    //             mainWindow.focus();
+    //             loadingWindow.close();
+    //         });
+    //         loadingWindow.once('show', () => {
+    //             setTimeout(() => {
+    //                 showMainWindow();
+    //             }, 50);
+    //         });
+    //         loadingWindow.show();
+    //     });
+    //     loadingWindow.once('close', () => {
+    //         if (!mainWindow || !mainWindow.isFocused()) {
+    //             process.exit(0);
+    //         }
+    //     });
+    // } else {
+    //     showMainWindow();
+    // }
+    showMainWindow();
 };
 
 // Allow max 4G memory usage
@@ -360,7 +362,8 @@ app.commandLine.appendSwitch('ignore-gpu-blacklist');
  */
 app.on('activate', async () => {
     if (mainWindow === null) {
-        await createWindow();
+        // await createWindow();
+        await showMainWindow();
     }
 });
 
