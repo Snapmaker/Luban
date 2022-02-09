@@ -120,7 +120,6 @@ function updateHandle() {
     // Emitted when there is an available update. The update is downloaded automatically if autoDownload is true.
     autoUpdater.on('update-available', (downloadInfo) => {
         sendUpdateMessage(message.updateAva);
-        console.log('update-available', downloadInfo);
         mainWindow.webContents.send('update-available', { ...downloadInfo, prevVersion: app.getVersion() });
     });
     // Emitted when there is no available update.

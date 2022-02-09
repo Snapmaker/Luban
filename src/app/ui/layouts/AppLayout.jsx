@@ -204,7 +204,6 @@ class AppLayout extends PureComponent {
             const { releaseNotes, prevVersion, version } = this.state;
             const { shouldCheckForUpdate } = this.props;
             const { ipcRenderer } = window.require('electron');
-            console.log('ipcRenderer', ipcRenderer, shouldCheckForUpdate);
             const onClose = () => {
                 this.setState({
                     showDownloadUpdateModal: false
@@ -267,7 +266,6 @@ class AppLayout extends PureComponent {
             });
         },
         showDownloadUpdate: (downloadInfo) => {
-            console.log('downloadInfo', downloadInfo);
             if (downloadInfo) {
                 this.setState({
                     releaseNotes: downloadInfo.releaseNotes,
@@ -487,9 +485,7 @@ class AppLayout extends PureComponent {
                 this.props.updateShouldCheckForUpdate(checkForUpdate);
             });
             UniApi.Event.on('update-available', (event, downloadInfo) => {
-                console.log('Event update-available', event, downloadInfo);
                 UniApi.Event.emit('tile-modal:download-update.show', downloadInfo);
-                // UniApi.Update.downloadUpdate(downloadInfo, oldVersion, this.props.shouldCheckForUpdate);
             });
             UniApi.Event.on('is-replacing-app-now', (event, downloadInfo) => {
                 UniApi.Update.isReplacingAppNow(downloadInfo);

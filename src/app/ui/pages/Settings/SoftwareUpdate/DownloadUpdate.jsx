@@ -1,16 +1,13 @@
 import classNames from 'classnames';
-// import { shallowEqual, useDispatch, useSelector } from 'react-redux';
 import React, { useRef, useEffect } from 'react';
 import PropTypes from 'prop-types';
 import i18n from '../../../../lib/i18n';
 import styles from './index.styl';
 
 function DownloadUpdate({ releaseNotes, prevVersion, version }) {
-    console.log('prevVersion', releaseNotes, prevVersion, version, i18n);
     const notesRef = useRef('');
 
     useEffect(() => {
-        console.log('useEffect');
         if (notesRef.current) {
             notesRef.current.innerHTML = releaseNotes;
         }
