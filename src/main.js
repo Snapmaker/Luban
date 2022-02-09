@@ -190,7 +190,11 @@ const showMainWindow = async () => {
         window.blur();
         // window.setPosition(outsideX, outsideY, false);
     }
-    window.show();
+    window.loadURL(path.resolve(__dirname, 'app', 'loading.html'));
+    // window.show();
+    window.once('ready-to-show', () => {
+        window.show();
+    });
 
     if (!serverData) {
         // only start server once
@@ -244,15 +248,13 @@ const showMainWindow = async () => {
     webContentsSession.setProxy({ proxyRules: 'direct://' })
         .then(() => window.loadURL(loadUrl));
 
-    window.loadURL(`${loadUrl}/index.html`);
-
     try {
         // TODO: move to server
         DataStorage.init();
     } catch (err) {
         console.error('Error: ', err);
     }
-    
+
     window.on('close', (e) => {
         e.preventDefault();
         const bounds = window.getBounds();
