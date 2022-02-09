@@ -193,16 +193,31 @@ const showMainWindow = async () => {
         // const outsideX = -999999, outsideY = -999999;
         window.setSkipTaskbar(true);
         window.setMenuBarVisibility(false);
-        // window.blur();
+        window.focus();
         // window.setPosition(outsideX, outsideY, false);
     }
     // window.loadURL(path.resolve(__dirname, 'app', 'index.html'));
+    // window.on('did-finish-load', () => {
+    //     console.log('finishLoad');
+    //     window.show();
+    // });
+    // window.on('did-fail-load', () => {
+    //     console.log('failLoad');
+    // })
     console.log('beginLoadFile', __dirname);
-    window.loadFile(path.resolve(__dirname, 'app', 'loading.html')), ({ err }) => {
-        console.log('loadingErr', err);
-    };
-    window.show();
-    console.log('showWindow');
+    window.loadFile(path.resolve(__dirname, 'app', 'loading.html'));
+    window.once('ready-to-show', () => {
+        window.show();
+    });
+    // window.once('did-finish-load', () => {
+    //     console.log('finishLoad');
+    //     window.show();
+    // })
+    // // window.show();
+    // window.once('did-fail-load', () => {
+    //     console.log('failLoad');
+    // })
+    
 
     if (!serverData) {
         // only start server once
