@@ -60,6 +60,8 @@ class DataStorage {
 
      fontDir;
 
+     scenesDir;
+
      userCaseDir;
 
      envDir;
@@ -79,6 +81,7 @@ class DataStorage {
          this.defaultConfigDir = `${this.userDataDir}/Default`;
          this.fontDir = `${this.userDataDir}/Fonts`;
          this.envDir = `${this.userDataDir}/env`;
+         this.scenesDir = `${this.userDataDir}/scenes`;
          this.recoverDir = `${this.userDataDir}/snapmaker-recover`;
          this.activeConfigDir = `${this.recoverDir}/Config-active`;
          this.longTermConfigDir = '';
@@ -110,6 +113,7 @@ class DataStorage {
          mkdirp.sync(this.tmpDir);
          mkdirp.sync(this.sessionDir);
          mkdirp.sync(this.userCaseDir);
+         mkdirp.sync(this.scenesDir);
          !isReset && mkdirp.sync(this.recoverDir);
          rmDir(this.tmpDir, false);
          rmDir(this.sessionDir, false);
@@ -120,8 +124,8 @@ class DataStorage {
          await this.initEnv();
 
          await this.initFonts();
+         await this.initScenes();
          await this.initUserCase();
-         //  await this.versionAdaptation();
 
          // if alt+shift+r, cannot init recover config
          !isReset && await this.initRecoverActive();
@@ -348,11 +352,6 @@ class DataStorage {
          mkdirp.sync(this.fontDir);
 
          const FONTS_LOCAL = '../resources/fonts';
-         // const SCENE_LOCAL = '../resources/scene.json';
-         // console.log('SCENE_LOCAL', SCENE_LOCAL, path.join(this.userDataDir, 'scene.json'));
-         // fs.copyFileSync(SCENE_LOCAL, path.join(this.userDataDir, 'scene.json'), (err) => {
-         //     console.log('SCENE_LOCAL', err);
-         // });
          if (fs.existsSync(FONTS_LOCAL)) {
              const files = fs.readdirSync(FONTS_LOCAL);
              for (const file of files) {
@@ -367,6 +366,25 @@ class DataStorage {
          }
          await initFonts(this.fontDir);
      }
+
+     async initScenes() {
+         mkdirp.sync(this.scenesDir);
+
+         const SCENES_LOCAL = '../resources/scenes';
+         if (fs.existsSync(SCENES_LOCAL)) {
+             const files = fs.readdirSync(SCENES_LOCAL);
+             for (const file of files) {
+                 const src = path.join(SCENES_LOCAL, file);
+                 const dst = path.join(this.scenesDir, file);
+                 if (fs.statSync(src)
+                     .isFile()) {
+                     fs.copyFileSync(src, dst, () => {
+                     });
+                 }
+             }
+         }
+     }
+
 
      async initUserCase() {
          mkdirp.sync(this.userCaseDir);
