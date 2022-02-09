@@ -1,5 +1,7 @@
 import { baseActions as editorBaseActions } from '../editor/actions-base';
 import { baseActions as printingBaseActions } from '../printing/actions-base';
+/* eslint-disable-next-line import/no-cycle */
+import { actions as projectActions } from '../project';
 
 const updateState = (headType, state) => {
     if (headType === 'printing') {
@@ -34,6 +36,7 @@ export const actions = {
                 history
             }));
         }
+        dispatch(projectActions.autoSaveEnvironment(headType));
     },
     clear: (headType) => (dispatch, getState) => {
         const history = getState()[headType]?.history;
@@ -45,6 +48,7 @@ export const actions = {
     undo: (headType) => (dispatch, getState) => {
         const { history } = getState()[headType];
         history.undo();
+        dispatch(projectActions.autoSaveEnvironment(headType));
         dispatch(updateState(headType, {
             history
         }));
@@ -52,6 +56,7 @@ export const actions = {
     redo: (headType) => (dispatch, getState) => {
         const { history } = getState()[headType];
         history.redo();
+        dispatch(projectActions.autoSaveEnvironment(headType));
         dispatch(updateState(headType, {
             history
         }));

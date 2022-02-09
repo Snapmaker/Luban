@@ -37,6 +37,7 @@ import ModelGroup from '../../models/ModelGroup';
 import gcodeBufferGeometryToObj3d from '../../workers/GcodeToBufferGeometry/gcodeBufferGeometryToObj3d';
 import ModelExporter from '../../ui/widgets/PrintingVisualizer/ModelExporter';
 import { controller } from '../../lib/controller';
+/* eslint-disable-next-line import/no-cycle */
 import { actions as operationHistoryActions } from '../operation-history';
 import Operations from '../operation-history/Operations';
 import MoveOperation3D from '../operation-history/MoveOperation3D';

@@ -4,6 +4,8 @@ import { v4 as uuid } from 'uuid';
 import _, { includes } from 'lodash';
 import workerpool from 'workerpool';
 import onmessage from '../../workers/ToolpathRenderer.worker';
+/* eslint-disable-next-line import/no-cycle */
+import { actions as projectActions } from '../project';
 import api from '../../api';
 import {
     checkParams,
@@ -25,6 +27,7 @@ import {
     MIN_LASER_CNC_CANVAS_SCALE, MAX_LASER_CNC_CANVAS_SCALE
 } from '../../constants';
 import { baseActions } from './actions-base';
+/* eslint-disable-next-line import/no-cycle */
 import { processActions } from './actions-process';
 
 import LoadModelWorker from '../../workers/LoadModel.worker';
@@ -35,6 +38,7 @@ import { PROCESS_STAGE, STEP_STAGE } from '../../lib/manager/ProgressManager';
 import VisibleOperation2D from '../operation-history/VisibleOperation2D';
 import AddOperation2D from '../operation-history/AddOperation2D';
 import DeleteOperation2D from '../operation-history/DeleteOperation2D';
+/* eslint-disable-next-line import/no-cycle */
 import { actions as operationHistoryActions } from '../operation-history';
 import Operations from '../operation-history/Operations';
 import MoveOperation2D from '../operation-history/MoveOperation2D';
@@ -883,6 +887,8 @@ export const actions = {
         }));
 
         dispatch(actions.resetProcessState(headType));
+        dispatch(projectActions.autoSaveEnvironment(headType));
+
         controller.commitProcessImage({
             taskId: uuid(),
             headType: headType,
@@ -1773,6 +1779,7 @@ export const actions = {
         const { SVGActions } = getState()[headType];
 
         SVGActions.modifyText(element, options);
+        dispatch(projectActions.autoSaveEnvironment(headType));
         dispatch(actions.resetProcessState(headType));
     },
 

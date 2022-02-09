@@ -22,7 +22,6 @@ const TEMPLATE = `<?xml version="1.0" encoding="utf-8"?>
 </svg>
 `;
 
-
 /**
  * @param options
  *      - uploadName
@@ -95,9 +94,10 @@ const convertTextToSvg = async (options) => {
     const fontObj = await fontManager.getFont(fontFamily, null, style);
     const unitsPerEm = fontObj.unitsPerEm;
     const descender = _.isNil(fontObj?.tables?.os2?.sTypoDescender) ? fontObj?.descender : (fontObj?.tables?.os2?.sTypoDescender || 0);
-
+    const ascender = _.isNil(fontObj?.tables?.os2?.sTypoAscender) ? fontObj?.ascender : (fontObj?.tables?.os2?.sTypoAscender || 0);
     // Big enough to being rendered clearly on canvas (still has space for improvements)
-    const estimatedFontSize = Math.round(fontSize / 72 * 25.4 * 10);
+    const realUnitsPerEm = (ascender - descender) > unitsPerEm ? (ascender - descender) : unitsPerEm;
+    const estimatedFontSize = (fontSize / 72 * 25.4 * 10) * (realUnitsPerEm) / unitsPerEm;
 
     const lines = text.split('\n');
     const numberOfLines = lines.length;
@@ -112,7 +112,8 @@ const convertTextToSvg = async (options) => {
     }
 
     // We use descender line as the bottom of a line, first line with lineHeight = 1
-    let y = (unitsPerEm + descender) * estimatedFontSize / unitsPerEm, x = 0;
+    let y = (ascender - descender) > unitsPerEm ? estimatedFontSize
+            : (realUnitsPerEm + descender) / realUnitsPerEm * estimatedFontSize, x = 0;
     const fullPath = new opentype.Path();
     for (let i = 0; i < numberOfLines; i++) {
         const line = lines[i];
@@ -133,7 +134,9 @@ const convertTextToSvg = async (options) => {
     // Calculate size and render SVG template
     const boundingBox = fullPath.getBoundingBox();
     const width = boundingBox.x2 - boundingBox.x1;
+    console.log('estimatedFontSize', estimatedFontSize, boundingBox.y2 - boundingBox.y1);
     const height = estimatedFontSize + estimatedFontSize * lineHeight * (numberOfLines - 1);
+    // const height = boundingBox.y2 - boundingBox.y1;
 
     const svgString = _.template(TEMPLATE)({
         path: fullPath.toSVG(),
@@ -201,6 +204,5 @@ const convertOneLineTextToSvg = async (options) => {
         });
     });
 };
-
 
 export { convertRasterToSvg, convertTextToSvg, convertOneLineTextToSvg };

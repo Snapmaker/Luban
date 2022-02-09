@@ -125,7 +125,7 @@ class ThreeModel extends BaseModel {
     }
 
     onTransform() {
-        const geometrySize = ThreeUtils.getGeometrySize(this.meshObject.geometry, true);
+        // const geometrySize = ThreeUtils.getGeometrySize(this.meshObject.geometry, true);
         const { uniformScalingState } = this.meshObject;
 
         let position, scale, rotation;
@@ -161,8 +161,8 @@ class ThreeModel extends BaseModel {
             scaleX: scale.x,
             scaleY: scale.y,
             scaleZ: scale.z,
-            width: geometrySize.x * scale.x,
-            height: geometrySize.y * scale.y,
+            // width: geometrySize.x * scale.x,
+            // height: geometrySize.y * scale.y,
             uniformScalingState
         };
 

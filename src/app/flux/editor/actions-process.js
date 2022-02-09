@@ -9,7 +9,10 @@ import { getToolPathType } from '../../toolpaths/utils';
 import { toast } from '../../ui/components/Toast';
 import { ToastWapper } from '../../ui/components/Toast/toastContainer';
 import i18n from '../../lib/i18n';
+/* eslint-disable-next-line import/no-cycle */
 import { actions as operationHistoryActions } from '../operation-history';
+/* eslint-disable-next-line import/no-cycle */
+import { actions as projectActions } from '../project';
 import DeleteToolPathOperation from '../operation-history/DeleteToolPathOperation';
 import Operations from '../operation-history/Operations';
 import { timestamp } from '../../../shared/lib/random-utils';
@@ -230,6 +233,7 @@ export const processActions = {
                 isChangedAfterGcodeGenerating: true
             }));
         }
+        dispatch(projectActions.autoSaveEnvironment(headType));
     },
 
     updateToolPath: (headType, toolPathId, newState) => (dispatch, getState) => {
