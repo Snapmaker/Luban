@@ -192,12 +192,17 @@ const showMainWindow = async () => {
     if (process.platform === 'win32') {
         // const outsideX = -999999, outsideY = -999999;
         window.setSkipTaskbar(true);
-        window.blur();
+        window.setMenuBarVisibility(false);
+        // window.blur();
         // window.setPosition(outsideX, outsideY, false);
     }
     // window.loadURL(path.resolve(__dirname, 'app', 'index.html'));
-    window.loadFile(path.resolve(__dirname, 'app', 'index.html'));
+    console.log('beginLoadFile', __dirname);
+    window.loadFile(path.resolve(__dirname, 'app', 'loading.html')), ({ err }) => {
+        console.log('loadingErr', err);
+    };
     window.show();
+    console.log('showWindow');
 
     if (!serverData) {
         // only start server once
@@ -245,6 +250,7 @@ const showMainWindow = async () => {
     const webContentsSession = window.webContents.session;
     webContentsSession.setProxy({ proxyRules: 'direct://' })
         .then(() => window.loadURL(loadUrl));
+    window.setMenuBarVisibility(true);
 
 
     window.setTitle(`Snapmaker Luban ${pkg.version}`);
