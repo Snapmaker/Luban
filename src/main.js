@@ -195,11 +195,9 @@ const showMainWindow = async () => {
         window.blur();
         // window.setPosition(outsideX, outsideY, false);
     }
-    window.loadURL(path.resolve(__dirname, 'app', 'loading.html'));
-    // window.show();
-    window.once('ready-to-show', () => {
-        window.show();
-    });
+    // window.loadURL(path.resolve(__dirname, 'app', 'index.html'));
+    window.loadFile(path.resolve(__dirname, 'app', 'index.html'));
+    window.show();
 
     if (!serverData) {
         // only start server once
