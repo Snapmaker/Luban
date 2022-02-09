@@ -246,7 +246,7 @@ class AppLayout extends PureComponent {
                                 <Button
                                     priority="level-two"
                                     className="margin-left-8"
-                                    width="96px"
+                                    width="auto"
                                     type="primary"
                                     onClick={() => ipcRenderer.send('startingDownloadUpdate')}
                                 >
