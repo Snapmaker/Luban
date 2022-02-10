@@ -44,15 +44,11 @@ class ThreeModel extends BaseModel {
         try {
             const objectLoader = new ObjectLoader();
             const json = JSON.parse(machineStore.get('scene'));
-            const object = objectLoader.parse(json);
-            const shapes = objectLoader.parseShapes(json.shapes);
-            const geometries = objectLoader.parseGeometries(json.geometries, shapes);
             const images = objectLoader.parseImages(json.images);
             const textures = objectLoader.parseTextures(json.textures, images);
             const materials = objectLoader.parseMaterials(json.materials, textures);
             const newMaterial = materials['720E037C-55F1-4569-94A2-A03F6BD38BE0'];
             newMaterial.color = new THREE.Color(0xff0000);
-            console.log('object', geometries, object, newMaterial);
             material = newMaterial;
         } catch (e) {
             console.error('error', e);

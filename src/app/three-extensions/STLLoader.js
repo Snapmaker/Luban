@@ -143,9 +143,9 @@ STLLoader.prototype = {
 			var normals = [];
 			var faceVertexUvs = [[]];
 			var uv = [];
-            var xyMaxX = Number.MIN_SAFE_INTEGER, xyMinX = Number.MAX_SAFE_INTEGER, xyMaxY = Number.MIN_SAFE_INTEGER, xyMinY = Number.MAX_SAFE_INTEGER;
-            var xzMaxX = Number.MIN_SAFE_INTEGER, xzMinX = Number.MAX_SAFE_INTEGER, xzMaxY = Number.MIN_SAFE_INTEGER, xzMinY = Number.MAX_SAFE_INTEGER;
-            var zyMaxX = Number.MIN_SAFE_INTEGER, zyMinX = Number.MAX_SAFE_INTEGER, zyMaxY = Number.MIN_SAFE_INTEGER, zyMinY = Number.MAX_SAFE_INTEGER;
+            var xyMaxX = 200, xyMinX = -200, xyMaxY = 200, xyMinY = -200;
+            var xzMaxX = 200, xzMinX = -200, xzMaxY = 200, xzMinY = -200;
+            var zyMaxX = 200, zyMinX = -200, zyMaxY = 200, zyMinY = -200;
             var uvInfos = [];
 
             for ( var face = 0; face < faces; face ++ ) {
@@ -218,38 +218,38 @@ STLLoader.prototype = {
                 }
 
 				const useFace = isNotVertical(currentVertices);
-				switch (useFace) {
-                    case 'xy': {
-                        currentVertices.forEach(vertice => {
-                            xyMaxX = Math.max(vertice.x, xyMaxX);
-                            xyMinX = Math.min(vertice.x, xyMinX);
-                            xyMaxY = Math.max(vertice.y, xyMaxY);
-                            xyMinY = Math.min(vertice.y, xyMinY);
-                        });
-                        break;
-                    }
-                    case 'xz': {
-                        currentVertices.forEach(vertice => {
-                            xzMaxX = Math.max(vertice.x, xzMaxX);
-                            xzMinX = Math.min(vertice.x, xzMinX);
-                            xzMaxY = Math.max(vertice.z, xzMaxY);
-                            xzMinY = Math.min(vertice.z, xzMinY);
-                        });
-                        break;
-                    }
-                    case 'zy': {
-                        currentVertices.forEach(vertice => {
-                            zyMaxX = Math.max(vertice.z, zyMaxX);
-                            zyMinX = Math.min(vertice.z, zyMinX);
-                            zyMaxY = Math.max(vertice.y, zyMaxY);
-                            zyMinY = Math.min(vertice.y, zyMinY);
-                        });
-                        break;
-                    }
-                    default: {
-                        break;
-                    }
-                }
+				// switch (useFace) {
+                //     case 'xy': {
+                //         currentVertices.forEach(vertice => {
+                //             xyMaxX = Math.max(vertice.x, xyMaxX);
+                //             xyMinX = Math.min(vertice.x, xyMinX);
+                //             xyMaxY = Math.max(vertice.y, xyMaxY);
+                //             xyMinY = Math.min(vertice.y, xyMinY);
+                //         });
+                //         break;
+                //     }
+                //     case 'xz': {
+                //         currentVertices.forEach(vertice => {
+                //             xzMaxX = Math.max(vertice.x, xzMaxX);
+                //             xzMinX = Math.min(vertice.x, xzMinX);
+                //             xzMaxY = Math.max(vertice.z, xzMaxY);
+                //             xzMinY = Math.min(vertice.z, xzMinY);
+                //         });
+                //         break;
+                //     }
+                //     case 'zy': {
+                //         currentVertices.forEach(vertice => {
+                //             zyMaxX = Math.max(vertice.z, zyMaxX);
+                //             zyMinX = Math.min(vertice.z, zyMinX);
+                //             zyMaxY = Math.max(vertice.y, zyMaxY);
+                //             zyMinY = Math.min(vertice.y, zyMinY);
+                //         });
+                //         break;
+                //     }
+                //     default: {
+                //         break;
+                //     }
+                // }
 
                 uvInfos.push({
                     useFace,
@@ -262,7 +262,6 @@ STLLoader.prototype = {
 
             for (let face = 0; face < faces; face ++) {
                 const { useFace, vertices } = uvInfos[face];
-                // console.log('xx', useFace, xzMaxLength, xzMinX, xzMinY);
                 currentUv = vertices.map((item) => {
                     let newX = 0, newY = 0;
                     switch (useFace) {
@@ -285,8 +284,7 @@ STLLoader.prototype = {
                             break;
                         }
                     }
-                    // console.log('new x,y', item, newX, newY);
-                    return new THREE.Vector2(newX,newY)
+                    return new THREE.Vector2(newX, newY);
                 });
                 faceVertexUvs[0].push(currentUv);
             }
@@ -294,10 +292,10 @@ STLLoader.prototype = {
 			geometry.setAttribute( 'position', new THREE.BufferAttribute( new Float32Array( vertices ), 3 ) );
 			geometry.setAttribute( 'normal', new THREE.BufferAttribute( new Float32Array( normals ), 3 ) );
 		    // https://stackoverflow.com/questions/55472178/how-to-add-texture-to-buffergeometry-faces
-			faceVertexUvs[0].forEach( function ( faceUvs ) {
-	          for (let i = 0; i < 3; ++i) {
-	              uv.push( ...faceUvs[i].toArray() );
-	          }
+			faceVertexUvs[0].forEach((faceUvs) => {
+                for (let i = 0; i < 3; ++i) {
+                  uv.push(...faceUvs[i].toArray());
+                }
 	        });
 			geometry.setAttribute( 'uv', new THREE.BufferAttribute( new Float32Array( uv ), 2 ));
 

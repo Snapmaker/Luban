@@ -244,9 +244,9 @@ class Canvas extends PureComponent {
             this.light.position.copy(this.cameraInitialPosition);
         }
         if (this.transformSourceType === '3D') {
-            const pLight = new PointLight(0xffffff, 0.70, 0, 0.65);
+            const pLight = new PointLight(0xffffff, 0.60, 0, 0.60);
             this.camera.add(pLight);
-            pLight.position.copy(new Vector3(40000, -70000, 50000));
+            pLight.position.copy(new Vector3(-4000, 7000, 50000));
             // this.light.position.copy(new Vector3(40000, -70000, 50000));
         }
 
@@ -281,7 +281,6 @@ class Canvas extends PureComponent {
         if (this.transformSourceType === '2D') {
             this.scene.add(new HemisphereLight(0x000000, 0xcecece));
         }
-        // console.log('this.cameraInitialPosition', this.light, this.scene);
 
         this.node.current.appendChild(this.renderer.domElement);
     }

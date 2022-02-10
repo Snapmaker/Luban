@@ -1569,6 +1569,9 @@ export const actions = {
         dispatch(actions.recordModelBeforeTransform(modelGroup));
         // TODO
         modelGroup.updateSelectedGroupTransformation(transformation, newUniformScalingState);
+        if (transformMode === 'scale') {
+            modelGroup.updateSelectedGroupModelsVectorUv();
+        }
         modelGroup.onModelAfterTransform();
 
         dispatch(actions.recordModelAfterTransform(transformMode, modelGroup));
