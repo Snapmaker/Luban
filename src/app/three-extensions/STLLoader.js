@@ -218,38 +218,6 @@ STLLoader.prototype = {
                 }
 
 				const useFace = isNotVertical(currentVertices);
-				// switch (useFace) {
-                //     case 'xy': {
-                //         currentVertices.forEach(vertice => {
-                //             xyMaxX = Math.max(vertice.x, xyMaxX);
-                //             xyMinX = Math.min(vertice.x, xyMinX);
-                //             xyMaxY = Math.max(vertice.y, xyMaxY);
-                //             xyMinY = Math.min(vertice.y, xyMinY);
-                //         });
-                //         break;
-                //     }
-                //     case 'xz': {
-                //         currentVertices.forEach(vertice => {
-                //             xzMaxX = Math.max(vertice.x, xzMaxX);
-                //             xzMinX = Math.min(vertice.x, xzMinX);
-                //             xzMaxY = Math.max(vertice.z, xzMaxY);
-                //             xzMinY = Math.min(vertice.z, xzMinY);
-                //         });
-                //         break;
-                //     }
-                //     case 'zy': {
-                //         currentVertices.forEach(vertice => {
-                //             zyMaxX = Math.max(vertice.z, zyMaxX);
-                //             zyMinX = Math.min(vertice.z, zyMinX);
-                //             zyMaxY = Math.max(vertice.y, zyMaxY);
-                //             zyMinY = Math.min(vertice.y, zyMinY);
-                //         });
-                //         break;
-                //     }
-                //     default: {
-                //         break;
-                //     }
-                // }
 
                 uvInfos.push({
                     useFace,

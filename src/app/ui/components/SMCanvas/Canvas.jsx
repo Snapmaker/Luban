@@ -9,12 +9,10 @@ import noop from 'lodash/noop';
 import React, { PureComponent } from 'react';
 import { isNil, throttle } from 'lodash';
 import { Vector3, PerspectiveCamera, Scene, Group,
-    // AmbientLight, PointLight, ObjectLoader,
     AmbientLight, PointLight,
     HemisphereLight, DirectionalLight } from 'three';
 import PropTypes from 'prop-types';
 import TWEEN from '@tweenjs/tween.js';
-// import { machineStore } from '../../../store/local-storage';
 
 import Controls, { EVENTS } from './Controls';
 import log from '../../../lib/log';
@@ -247,7 +245,6 @@ class Canvas extends PureComponent {
             const pLight = new PointLight(0xffffff, 0.60, 0, 0.60);
             this.camera.add(pLight);
             pLight.position.copy(new Vector3(-4000, 7000, 50000));
-            // this.light.position.copy(new Vector3(40000, -70000, 50000));
         }
 
         // We need to change the default up vector if we use camera to respect XY plane
@@ -259,10 +256,6 @@ class Canvas extends PureComponent {
         this.renderer.setSize(width, height);
 
         this.scene = new Scene();
-        // const objectLoader = new ObjectLoader();
-        // const json = JSON.parse(machineStore.get('scene'));
-        // const newObject = objectLoader.parse(json);
-        // this.scene.add(newObject);
         this.scene.add(this.camera);
         this.scene.add(this.light);
 
@@ -272,7 +265,6 @@ class Canvas extends PureComponent {
         if (this.transformSourceType === '3D') {
             const lightTop = new HemisphereLight(0xA3A3A3, 0x545454, 0.5);
             const lightInside = new AmbientLight(0x666666);
-            // const lightInside = new AmbientLight(0x222222);
             lightTop.position.copy(new Vector3(0, 0, -49000));
             lightInside.position.copy(new Vector3(0, 0, 0));
             this.scene.add(lightTop);

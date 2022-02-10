@@ -1,5 +1,12 @@
 import * as THREE from 'three';
 
+const xyMaxX = 200, xyMinX = -200, xyMaxY = 200, xyMinY = -200;
+const xzMaxX = 200, xzMinX = -200, xzMaxY = 200, xzMinY = -200;
+const zyMaxX = 200, zyMinX = -200, zyMaxY = 200, zyMinY = -200;
+const xyMaxLength = Math.max(xyMaxX - xyMinX, xyMaxY - xyMinY);
+const xzMaxLength = Math.max(xzMaxX - xzMinX, xzMaxY - xzMinY);
+const zyMaxLength = Math.max(zyMaxX - zyMinX, zyMaxY - zyMinY);
+
 function calculateUvVector(scaleGroup, mesh) {
     const faceVertexUvs = [[]];
     const { array, count } = mesh.geometry.getAttribute('position');
@@ -40,18 +47,18 @@ function calculateUvVector(scaleGroup, mesh) {
             let newX = 0, newY = 0;
             switch (useFace) {
                 case 'xy': {
-                    newX = (item.x * scaleGroup.x * scaleMesh.x - -200) / 400;
-                    newY = (item.y * scaleGroup.y * scaleMesh.y - -200) / 400;
+                    newX = (item.x * scaleGroup.x * scaleMesh.x - xyMinX) / xyMaxLength;
+                    newY = (item.y * scaleGroup.y * scaleMesh.y - xyMinX) / xyMaxLength;
                     break;
                 }
                 case 'xz': {
-                    newX = (item.x * scaleGroup.x * scaleMesh.x - -200) / 400;
-                    newY = (item.z * scaleGroup.z * scaleMesh.z - -200) / 400;
+                    newX = (item.x * scaleGroup.x * scaleMesh.x - xzMinX) / xzMaxLength;
+                    newY = (item.z * scaleGroup.z * scaleMesh.z - xzMinX) / xzMaxLength;
                     break;
                 }
                 case 'zy': {
-                    newX = (item.z * scaleGroup.z * scaleMesh.z - -200) / 400;
-                    newY = (item.y * scaleGroup.y * scaleMesh.y - -200) / 400;
+                    newX = (item.z * scaleGroup.z * scaleMesh.z - zyMinX) / zyMaxLength;
+                    newY = (item.y * scaleGroup.y * scaleMesh.y - zyMinX) / zyMaxLength;
                     break;
                 }
                 default: {

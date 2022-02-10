@@ -48,7 +48,6 @@ class ThreeModel extends BaseModel {
             const textures = objectLoader.parseTextures(json.textures, images);
             const materials = objectLoader.parseMaterials(json.materials, textures);
             const newMaterial = materials['720E037C-55F1-4569-94A2-A03F6BD38BE0'];
-            newMaterial.color = new THREE.Color(0xff0000);
             material = newMaterial;
         } catch (e) {
             console.error('error', e);
