@@ -1,5 +1,5 @@
 import { Vector3 } from './Vector3';
-import { isZero } from '../utils';
+import { isEqual, isZero } from '../utils';
 import { Vector2 } from './Vector2';
 
 export const TYPE_LINE = 'line';
@@ -22,9 +22,23 @@ export class Line {
         return (-this.C - this.A * x) / this.B;
     }
 
+    static lineParallel(l1, l2) {
+        if (l1.B === 0 && l2.B === 0) {
+            return true;
+        }
+        if (l1.B === 0 || l2.B === 0) {
+            return false;
+        }
+        return isEqual(l1.A * l2.B, l2.A * l1.B);
+    }
+
     static pointInLine(v, l) {
-        const v0 = Vector2.sub(v, l.v0);
-        const v1 = Vector2.sub(l.v1, l.v0);
+        return this.pointInLine2(v, l.v0, l.v1, l.type);
+    }
+
+    static pointInLine2(v, p0, p1, type = TYPE_LINE) {
+        const v0 = Vector2.sub(v, p0);
+        const v1 = Vector2.sub(p1, p0);
 
         if (Vector2.isZero(v0)) {
             return true;
@@ -33,12 +47,12 @@ export class Line {
         const vn0 = Vector2.normalize(v0);
         const vn1 = Vector2.normalize(v1);
 
-        if (l.type === TYPE_LINE) {
+        if (type === TYPE_LINE) {
             return Vector2.isEqual(vn0, vn1) || Vector2.isEqual(vn0, { x: -vn1.x, y: -vn1.y });
-        } else if (l.type === TYPE_RAY) {
+        } else if (type === TYPE_RAY) {
             return Vector2.isEqual(vn0, vn1);
         } else {
-            return Vector2.length2(v0) <= Vector2.length2(v1);
+            return Vector2.isEqual(vn0, vn1) && Vector2.length2(v0) <= Vector2.length2(v1);
         }
     }
 
