@@ -196,33 +196,12 @@ const showMainWindow = async () => {
         window.focus();
         // window.setPosition(outsideX, outsideY, false);
     }
-    // window.loadURL(path.resolve(__dirname, 'app', 'index.html'));
-    // window.on('did-finish-load', () => {
-    //     console.log('finishLoad');
-    //     window.show();
-    // });
-    // window.on('did-fail-load', () => {
-    //     console.log('failLoad');
-    // })
     console.log('beginLoadFile', __dirname);
+    window.show();
     window.loadFile(path.resolve(__dirname, 'app', 'loading.html'));
-    window.once('ready-to-show', () => {
-        window.show();
-    });
-    // window.once('did-finish-load', () => {
-    //     console.log('finishLoad');
-    //     window.show();
-    // })
-    // // window.show();
-    // window.once('did-fail-load', () => {
-    //     console.log('failLoad');
-    // })
-    
-
-    if (!serverData) {
-        // only start server once
-        // TODO: start server on the outermost
-        serverData = await launchServer();
+    console.log('finishShow');
+    if (timer) {
+        clearTimeout(timer)
     }
 
     const { address, port } = { ...serverData };
@@ -246,6 +225,11 @@ const showMainWindow = async () => {
             const { pathname } = url.parse(request.url);
             const p = pathname === '/' ? 'index.html' : pathname.substr(1);
             callback(fs.createReadStream(path.normalize(`${__dirname}/app/${p}`)));
+        },
+        (error) => {
+            if (error) {
+                console.error('error', error);
+            }
         }
     );
     // https://github.com/electron/electron/issues/21675
@@ -258,6 +242,21 @@ const showMainWindow = async () => {
             callback({ redirectURL });
         }
     );
+
+    // Ignore proxy settings
+    // https://electronjs.org/docs/api/session#sessetproxyconfig-callback
+
+    const webContentsSession = window.webContents.session;
+    webContentsSession.setProxy({ proxyRules: 'direct://' })
+        .then(() => window.loadURL(loadUrl));
+    window.setMenuBarVisibility(true);
+
+    try {
+        // TODO: move to server
+        DataStorage.init();
+    } catch (err) {
+        console.error('Error: ', err);
+    }
 
     // Ignore proxy settings
     // https://electronjs.org/docs/api/session#sessetproxyconfig-callback
