@@ -370,7 +370,7 @@ class DataStorage {
      async initScenes() {
          mkdirp.sync(this.scenesDir);
 
-         const SCENES_LOCAL = '../resources/scenes';
+         const SCENES_LOCAL = '../../resources/scenes';
          if (fs.existsSync(SCENES_LOCAL)) {
              const files = fs.readdirSync(SCENES_LOCAL);
              for (const file of files) {
