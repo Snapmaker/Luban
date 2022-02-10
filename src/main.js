@@ -183,7 +183,11 @@ if (process.platform === 'win32') {
 }
 
 const showMainWindow = async () => {
-    const windowOptions = getBrowserWindowOptions();
+    let windowOptions = getBrowserWindowOptions();
+    windowOptions = {...windowOptions, webPreferences: {
+        ...windowOptions.webPreferences,
+        preload: path.resolve(__dirname, 'electron-app', 'preload.js')
+    }}
     const window = new BrowserWindow(windowOptions);
     mainWindow = window;
     if (process.platform === 'win32') {
@@ -195,7 +199,7 @@ const showMainWindow = async () => {
     }
     console.log('beginLoadFile', __dirname);
     window.show();
-    window.loadFile(path.resolve(__dirname, 'app', 'loading.html'));
+    window.setBackgroundColor('#f5f5f7');
     console.log('finishShow');
     if (timer) {
         clearTimeout(timer)
@@ -207,7 +211,7 @@ const showMainWindow = async () => {
             // TODO: start server on the outermost
             serverData = await launchServer();
         }
-    
+        console.log('finishServer');
         const { address, port } = { ...serverData };
         configureWindow(window);
     
@@ -261,7 +265,7 @@ const showMainWindow = async () => {
         } catch (err) {
             console.error('Error: ', err);
         }
-    }, 50);
+    }, 500);
 
     window.on('close', (e) => {
         e.preventDefault();
