@@ -105,4 +105,12 @@ export class Vector3 {
         const z = (p.x - center.x) * Math.sin(pi) + (p.z - center.z) * Math.cos(pi) + center.z;
         return { x, y, z };
     }
+
+    static rotateZ(p, angle, center = { x: 0, y: 0 }) {
+        const pi = angleToPi(angle);
+        const x = (p.x - center.x) * Math.cos(pi) - (p.y - center.y) * Math.sin(pi) + center.x;
+        const y = (p.x - center.x) * Math.sin(pi) + (p.y - center.y) * Math.cos(pi) + center.y;
+        const z = p.z;
+        return { x, y, z };
+    }
 }
