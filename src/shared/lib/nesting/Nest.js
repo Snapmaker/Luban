@@ -56,7 +56,7 @@ export class Plate {
     }
 }
 
-export class Nesting {
+export class Nest {
     currentPlate = null;
 
     interval = 2;
@@ -77,8 +77,8 @@ export class Nesting {
         const {
             plates = [],
             parts = [],
-            rotate,
-            interval
+            rotate = 360,
+            interval = 2
         } = options;
 
         this.plates = plates.map(v => v);
@@ -920,7 +920,7 @@ export class Nesting {
             center: null
         };
 
-        for (let i = 0; i < 180; i += this.rotate) {
+        for (let i = 0; i < 360; i += this.rotate) {
             let rotatePolygon = i === 0 ? part.outlinePolygon : PolygonUtils.rotate(part.outlinePolygon, i);
             rotatePolygon = this.standardizedPolygon(rotatePolygon);
 
