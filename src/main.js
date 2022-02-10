@@ -186,7 +186,11 @@ if (process.platform === 'win32') {
 }
 
 const showMainWindow = async () => {
-    const windowOptions = getBrowserWindowOptions();
+    let windowOptions = getBrowserWindowOptions();
+    windowOptions = {...windowOptions, webPreferences: {
+        ...windowOptions.webPreferences,
+        preload: path.resolve(__dirname, 'electron-app', 'preload.js')
+    }}
     const window = new BrowserWindow(windowOptions);
     mainWindow = window;
     if (process.platform === 'win32') {
@@ -198,7 +202,7 @@ const showMainWindow = async () => {
     }
     console.log('beginLoadFile', __dirname);
     window.show();
-    window.loadFile(path.resolve(__dirname, 'app', 'loading.html'));
+    window.setBackgroundColor('#f5f5f7');
     console.log('finishShow');
     if (timer) {
         clearTimeout(timer)
