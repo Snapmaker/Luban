@@ -10,8 +10,7 @@ export function appCopyDevelopment() {
     const files = [
         'src/app/*.{ico,png, html}',
         'src/app/resources/{images,textures}/**/*',
-        'src/app/resources/i18n/**/*',
-        'src/electron-app/preload.js'
+        'src/app/resources/i18n/**/*'
     ];
 
     return gulp.src(files, { base: 'src/app' })
@@ -25,8 +24,7 @@ export function appCopyProduction() {
     const files = [
         'src/app/*.{ico,png,html}',
         'src/app/resources/{images,textures}/**/*',
-        'src/app/resources/i18n/**/*',
-        'src/electron-app/preload.js'
+        'src/app/resources/i18n/**/*'
     ];
 
     return gulp.src(files, { base: 'src/app' })
