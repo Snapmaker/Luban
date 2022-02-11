@@ -47,7 +47,7 @@ class ThreeModel extends BaseModel {
             const images = objectLoader.parseImages(json.images);
             const textures = objectLoader.parseTextures(json.textures, images);
             const materials = objectLoader.parseMaterials(json.materials, textures);
-            const newMaterial = materials['720E037C-55F1-4569-94A2-A03F6BD38BE0'];
+            const newMaterial = Object.values(materials)[0];
             material = newMaterial;
         } catch (e) {
             console.error('error', e);
