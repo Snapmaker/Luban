@@ -315,7 +315,6 @@ class Visualizer extends Component {
 
     componentWillReceiveProps(nextProps) {
         const { renderingTimestamp, isOverSize } = nextProps;
-        console.log(nextProps.materials, this.props.materials);
 
         if (!isEqual(nextProps.size, this.props.size)) {
             const { size, materials } = nextProps;
