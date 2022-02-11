@@ -114,8 +114,6 @@ const createServer = (options, callback) => {
         server: () => createApplication()
     });
 
-    console.log('beforePort', host, port);
-
     webappengine({ port, host, backlog, routes })
         .on('ready', (server) => {
             // Start socket service
@@ -124,8 +122,6 @@ const createServer = (options, callback) => {
             // Deal with address bindings
             const realAddress = server.address().address;
             const realPort = server.address().port;
-            console.log('realAddPort', realAddress, realPort);
-
             callback && callback(null, {
                 address: realAddress,
                 port: realPort
