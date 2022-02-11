@@ -41,11 +41,15 @@ function slice(modelInfo, onProgress, onSucceed, onError) {
                     sliceProgress = Number(item.slice(start, end));
                     onProgress(sliceProgress);
                 }
+                if (item.indexOf('ERROR') !== -1) {
+                    log.error(item);
+                }
                 return null;
             });
         })
         .end((err, res) => {
             if (err) {
+                log.error(`LubanEngine slice error, Code: ${err.code} | Msg: ${err.msg}`);
                 onError();
             } else {
                 onSucceed({
