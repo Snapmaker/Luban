@@ -14,6 +14,7 @@ import ThreeUtils from '../three-extensions/ThreeUtils';
 import ThreeGroup from './ThreeGroup';
 import PrimeTowerModel from './PrimeTowerModel';
 import { HEAD_PRINTING } from '../../server/constants';
+import { calculateUvVector } from '../lib/threejs/ThreeStlCalculation';
 
 const EVENTS = {
     UPDATE: { type: 'update' }
@@ -1273,6 +1274,14 @@ class ModelGroup extends EventEmitter {
         }
         this.modelChanged();
         return this.getState();
+    }
+
+    // on 3dp scale
+    updateSelectedGroupModelsVectorUv() {
+        this.selectedGroup.children.forEach((mesh) => {
+            const newUv = calculateUvVector(this.selectedGroup.scale, mesh);
+            mesh.geometry.setAttribute('uv', newUv);
+        });
     }
 
     // model transformation triggered by controls

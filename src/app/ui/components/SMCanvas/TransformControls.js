@@ -22,6 +22,8 @@ import {
 
 import ThreeUtils from '../../../three-extensions/ThreeUtils';
 
+import { calculateUvVector } from '../../../lib/threejs/ThreeStlCalculation';
+
 import { ArcBufferGeometry } from './ArcGeometry';
 
 const EVENTS = {
@@ -918,6 +920,13 @@ class TransformControls extends Object3D {
     onMouseUp() {
         this.updateBoundingBox();
         this.dragging = false;
+
+        if (this.mode === 'scale') {
+            this.object.children.forEach((mesh) => {
+                const newUv = calculateUvVector(this.object.scale, mesh);
+                mesh.geometry.setAttribute('uv', newUv);
+            });
+        }
 
         this.dispatchEvent(EVENTS.UPDATE);
     }

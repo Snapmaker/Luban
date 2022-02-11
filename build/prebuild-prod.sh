@@ -51,3 +51,4 @@ cp -r resources/CuraEngine/Config "$CURA_DIR"
 #
 cp -r resources/fonts "$RESOURCES_DIR"
 cp -r resources/luban-case-library "$RESOURCES_DIR"
+cp -r resources/scenes "$RESOURCES_DIR"

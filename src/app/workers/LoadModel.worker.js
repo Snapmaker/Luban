@@ -23,8 +23,8 @@ onmessage = (e) => {
 
             // Send positions back to caller
             const positions = geometry.getAttribute('position').array;
-            postMessage({ type: 'LOAD_MODEL_POSITIONS', positions, originalPosition });
-
+            const uvs = geometry.getAttribute('uv').array;
+            postMessage({ type: 'LOAD_MODEL_POSITIONS', positions, originalPosition, uvs });
             // Calculate convex of model
             const vertices = [];
             for (let i = 0; i < positions.length; i += 3) {

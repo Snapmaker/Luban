@@ -252,6 +252,7 @@ const showMainWindow = async () => {
         .then(() => window.loadURL(loadUrl));
 
 
+    window.setTitle(`Snapmaker Luban ${pkg.version}`);
 
 
     window.on('close', (e) => {
