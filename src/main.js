@@ -335,9 +335,9 @@ const showMainWindow = async () => {
     updateHandle();
 };
 
-const createWindow = () => {
-    showMainWindow();
-};
+// const createWindow = () => {
+//     showMainWindow();
+// };
 
 // Allow max 4G memory usage
 if (process.arch === 'x64') {
@@ -352,7 +352,6 @@ app.commandLine.appendSwitch('ignore-gpu-blacklist');
  */
 app.on('activate', async () => {
     if (mainWindow === null) {
-        // await createWindow();
         await showMainWindow();
     }
 });
@@ -421,4 +420,4 @@ protocol.registerSchemesAsPrivileged([{ scheme: 'luban', privileges: { standard:
 /**
  * when ready
  */
-app.whenReady().then(createWindow);
+app.whenReady().then(showMainWindow);
