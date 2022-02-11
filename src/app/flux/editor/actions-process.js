@@ -3,7 +3,7 @@ import _ from 'lodash';
 import { baseActions } from './actions-base';
 import { controller } from '../../lib/controller';
 import { STEP_STAGE, PROCESS_STAGE } from '../../lib/manager/ProgressManager';
-import { DISPLAYED_TYPE_MODEL, DISPLAYED_TYPE_TOOLPATH, HEAD_LASER, SELECTEVENT } from '../../constants';
+import { DISPLAYED_TYPE_MODEL, DISPLAYED_TYPE_TOOLPATH, HEAD_LASER, KEY_DEFAULT_CATEGORY_CUSTOM, KEY_DEFAULT_CATEGORY_DEFAULT, SELECTEVENT } from '../../constants';
 import { getToolPathType } from '../../toolpaths/utils';
 
 import { toast } from '../../ui/components/Toast';
@@ -524,37 +524,55 @@ export const processActions = {
         return createdDefinition;
     },
     onUploadToolDefinition: (headType, file) => async (dispatch, getState) => {
-        const { toolDefinitions } = getState()[headType];
-        const formData = new FormData();
-        formData.append('file', file);
-        // set a new name that cannot be repeated
-        formData.append('uploadName', `${file.name.substr(0, file.name.length - 9)}${timestamp()}.def.json`);
-        api.uploadFile(formData)
-            .then(async (res) => {
-                const response = res.body;
-                const definitionId = `New.${timestamp()}`;
-                const definition = await definitionManager.uploadDefinition(definitionId, response.uploadName);
-                let name = definition.name;
-                while (toolDefinitions.find(e => e.name === name)) {
-                    name = `#${name}`;
-                }
-                definition.name = name;
-                definition.category = '';
-                definition.i18nCategory = '';
-                definition.i18nName = '';
-                await definitionManager.updateDefinition({
-                    definitionId: definition.definitionId,
-                    name,
-                    category: '',
-                    i18nCategory: '',
-                    i18nName: ''
+        return new Promise((resolve) => {
+            const { toolDefinitions } = getState()[headType];
+            const formData = new FormData();
+            formData.append('file', file);
+            // set a new name that cannot be repeated
+            formData.append('uploadName', `${file.name.substr(0, file.name.length - 9)}${timestamp()}.def.json`);
+            api.uploadFile(formData)
+                .then(async (res) => {
+                    const response = res.body;
+                    const definitionId = `New.${timestamp()}`;
+                    const definition = await definitionManager.uploadDefinition(definitionId, response.uploadName);
+
+                    let name = definition.i18nName ? (
+                        i18n._(definition.i18nName) || definition.name
+                    ) : definition.name;
+                    while (toolDefinitions.find(e => e.name === name)) {
+                        name = `#${name}`;
+                    }
+                    definition.name = name;
+
+                    // Compatible with profiles exported from older versions
+                    definition.category = (
+                        definition.i18nCategory
+                        && definition.i18nCategory !== KEY_DEFAULT_CATEGORY_CUSTOM
+                        && definition.i18nCategory !== KEY_DEFAULT_CATEGORY_DEFAULT
+                    ) ? (i18n._(definition.i18nCategory) || definition.category) : '';
+
+                    definition.i18nCategory = (
+                        definition.i18nCategory
+                        && definition.i18nCategory !== KEY_DEFAULT_CATEGORY_CUSTOM
+                        && definition.i18nCategory !== KEY_DEFAULT_CATEGORY_DEFAULT
+                    ) ? definition.i18nCategory : '';
+
+                    definition.i18nName = '';
+                    await definitionManager.updateDefinition({
+                        definitionId: definition.definitionId,
+                        name,
+                        category: definition.category,
+                        i18nCategory: definition.i18nCategory,
+                        i18nName: definition.i18nName
+                    });
+                    dispatch(baseActions.updateState(headType, {
+                        toolDefinitions: [...toolDefinitions, definition]
+                    }));
+                    resolve(definition);
+                })
+                .catch(() => {
+                    // Ignore error
                 });
-                dispatch(baseActions.updateState(headType, {
-                    toolDefinitions: [...toolDefinitions, definition]
-                }));
-            })
-            .catch(() => {
-                // Ignore error
-            });
+        });
     }
 };

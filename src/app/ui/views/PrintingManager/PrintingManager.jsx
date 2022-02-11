@@ -69,7 +69,7 @@ function PrintingManager() {
         },
         onChangeFileForManager: (event) => {
             const file = event.target.files[0];
-            dispatch(printingActions.onUploadManagerDefinition(file, managerDisplayType));
+            return dispatch(printingActions.onUploadManagerDefinition(file, managerDisplayType));
         },
         exportConfigFile: (definitionForManager) => {
             const definitionId = definitionForManager.definitionId;

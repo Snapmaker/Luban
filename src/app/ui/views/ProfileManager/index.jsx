@@ -3,7 +3,7 @@ import classNames from 'classnames';
 import PropTypes from 'prop-types';
 // import { useSelector, shallowEqual } from 'react-redux';
 import { isUndefined, cloneDeep, uniqWith } from 'lodash';
-import { HEAD_CNC, HEAD_LASER, PRINTING_MANAGER_TYPE_MATERIAL, PRINTING_MANAGER_TYPE_QUALITY } from '../../../constants';
+import { HEAD_CNC, HEAD_LASER, PRINTING_MANAGER_TYPE_MATERIAL, PRINTING_MANAGER_TYPE_QUALITY, KEY_DEFAULT_CATEGORY_CUSTOM } from '../../../constants';
 import modal from '../../../lib/modal';
 import DefinitionCreator from '../DefinitionCreator';
 import Anchor from '../../components/Anchor';
@@ -70,11 +70,11 @@ function useGetDefinitions(allDefinitions, activeDefinitionID, getDefaultDefinit
                 label: d.name,
                 value: d.definitionId,
                 category: d.i18nCategory ? i18n._(d.i18nCategory) : (
-                    d.category || i18n._('key-default_category-Custom')
+                    d.category || i18n._(KEY_DEFAULT_CATEGORY_CUSTOM)
                 ),
                 i18nCategory: d.i18nCategory || (
                     // If it is a custom type, set i18nCategory to null
-                    d.category ? '' : 'key-default_category-Custom'
+                    d.category ? '' : KEY_DEFAULT_CATEGORY_CUSTOM
                 ),
                 isHidden: !d.settings || Object.keys(d.settings).length === 0,
                 isDefault: !!d.isDefault,
@@ -132,7 +132,7 @@ function ProfileManager({
             if (!isCategorySelected) {
                 return false;
             }
-            if (i18nCategory === 'key-default_category-Custom') {
+            if (i18nCategory === KEY_DEFAULT_CATEGORY_CUSTOM) {
                 return definitionForManager.category === '';
             } else {
                 return definitionForManager.category === category;
@@ -151,7 +151,7 @@ function ProfileManager({
             if (status) {
                 const title = definitionState.isCategorySelected ? (
                     // Assign default values to import type
-                    currentDefinition.category || i18n._('key-default_category-Custom')
+                    currentDefinition.category || i18n._(KEY_DEFAULT_CATEGORY_CUSTOM)
                 ) : currentDefinition.name;
                 setDefinitionState({
                     selectedName: title,
@@ -198,7 +198,7 @@ function ProfileManager({
                 actions.setRenamingStatus(false);
             }
             const activeToolCategory = currentDefinitions.current.find(d => {
-                if (i18nCategory === 'key-default_category-Custom') {
+                if (i18nCategory === KEY_DEFAULT_CATEGORY_CUSTOM) {
                     return d.category === '';
                 } else {
                     return d.category === category;
@@ -207,7 +207,7 @@ function ProfileManager({
             const selectedSettingDefaultValue = outsideActions.getDefaultDefinition(activeToolCategory.definitionId);
             setDefinitionState({
                 definitionForManager: activeToolCategory,
-                selectedName: activeToolCategory.category || i18n._('key-default_category-Custom'),
+                selectedName: activeToolCategory.category || i18n._(KEY_DEFAULT_CATEGORY_CUSTOM),
                 isCategorySelected: true,
                 selectedSettingDefaultValue: selectedSettingDefaultValue
             });
@@ -215,15 +215,6 @@ function ProfileManager({
         foldCategory: (category) => {
             configExpanded[category] = !configExpanded[category];
             setConfigExpanded(JSON.parse(JSON.stringify(configExpanded)));
-        },
-        onSelectDefinition: (definitionForManager) => {
-            const selectedSettingDefaultValue = outsideActions.getDefaultDefinition(definitionForManager.definitionId);
-            setDefinitionState({
-                definitionForManager: definitionForManager,
-                isCategorySelected: false,
-                selectedName: definitionForManager.name,
-                selectedSettingDefaultValue: selectedSettingDefaultValue
-            });
         },
         onRemoveManagerDefinition: async (definition, isCategorySelected) => {
             if (isOfficialDefinition(definitionState.definitionForManager)) {
@@ -384,7 +375,7 @@ function ProfileManager({
             const definition = definitionState?.definitionForManager;
             const selectedName = definitionState.selectedName;
             // If it is of import type and the default value is not modified
-            if (definition.category === '' && selectedName === i18n._('key-default_category-Custom')) {
+            if (definition.category === '' && selectedName === i18n._(KEY_DEFAULT_CATEGORY_CUSTOM)) {
                 return;
             }
             if (selectedName !== definition.category) { // changed
@@ -457,7 +448,7 @@ function ProfileManager({
                                 <ul className={classNames(styles['manager-name-wrapper'])}>
                                     {(definitionState.cates.map((cate) => {
                                         const isCategorySelected = (() => {
-                                            if (cate.i18nCategory === 'key-default_category-Custom') {
+                                            if (cate.i18nCategory === KEY_DEFAULT_CATEGORY_CUSTOM) {
                                                 return definitionState?.definitionForManager.category === '';
                                             } else {
                                                 return cate.category === definitionState?.definitionForManager.category;
@@ -603,7 +594,13 @@ function ProfileManager({
                                             accept=".json"
                                             style={{ display: 'none' }}
                                             multiple={false}
-                                            onChange={outsideActions.onChangeFileForManager}
+                                            onChange={async (e) => {
+                                                const definition = await outsideActions.onChangeFileForManager(e);
+                                                actions.onSelectDefinitionById(
+                                                    definition.definitionId,
+                                                    definition.name
+                                                );
+                                            }}
                                         />
                                         <SvgIcon
                                             name="Import"

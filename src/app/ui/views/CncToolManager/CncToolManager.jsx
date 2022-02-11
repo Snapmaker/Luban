@@ -32,7 +32,7 @@ function CncToolManager({ closeToolManager, shouldSaveToolpath = false, saveTool
         },
         onChangeFileForManager: (event) => {
             const toolFile = event.target.files[0];
-            dispatch(editorActions.onUploadToolDefinition(HEAD_CNC, toolFile));
+            return dispatch(editorActions.onUploadToolDefinition(HEAD_CNC, toolFile));
         },
         exportConfigFile: (definitionForManager) => {
             const definitionId = definitionForManager.definitionId;

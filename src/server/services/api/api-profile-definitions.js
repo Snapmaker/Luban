@@ -212,11 +212,6 @@ export const uploadDefinition = (req, res) => {
         obj.inherits = 'snapmaker2';
     }
 
-    // There is no need to set category equal to custom, which can be left blank. The front end will handle the display compatibility in multiple languages
-    // if (!obj.category) {
-    //     obj.category = 'Custom';
-    // }
-
     if (!obj.metadata) {
         obj.metadata = {};
     }

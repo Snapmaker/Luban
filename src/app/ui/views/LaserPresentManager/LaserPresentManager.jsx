@@ -27,7 +27,7 @@ function LaserPresentManager({ closeToolManager, shouldSaveToolpath = false, sav
         },
         onChangeFileForManager: (event) => {
             const toolFile = event.target.files[0];
-            dispatch(editorActions.onUploadToolDefinition(HEAD_LASER, toolFile));
+            return dispatch(editorActions.onUploadToolDefinition(HEAD_LASER, toolFile));
         },
         exportConfigFile: (definitionForManager) => {
             const definitionId = definitionForManager.definitionId;
