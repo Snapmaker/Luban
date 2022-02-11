@@ -1,16 +1,16 @@
 import isEmpty from 'lodash/isEmpty';
+import workerpool from 'workerpool';
 import ToolpathToBufferGeometry from './GcodeToBufferGeometry/ToolpathToBufferGeometry';
 // import api from '../api';
 
-onmessage = async (message) => {
-    if (isEmpty(message.data)) {
-        postMessage({
+const onmessage = async (taskResult) => {
+    if (isEmpty(taskResult.data)) {
+        workerpool.workerEmit({
             status: 'err',
             value: 'Data is empty'
         });
         return;
     }
-    const { taskResult } = message.data;
     const { headType } = taskResult;
 
     try {
@@ -19,7 +19,7 @@ onmessage = async (message) => {
             const renderResult = await new ToolpathToBufferGeometry().parse(
                 filename,
                 (progress) => {
-                    postMessage({
+                    workerpool.workerEmit({
                         status: 'progress',
                         headType: headType,
                         value: {
@@ -39,7 +39,7 @@ onmessage = async (message) => {
                 }
             };
 
-            postMessage(
+            workerpool.workerEmit(
                 data,
                 [
                     renderResult.positions.buffer,
@@ -56,14 +56,18 @@ onmessage = async (message) => {
             }
         };
 
-        postMessage(
+        workerpool.workerEmit(
             data
         );
     } catch (err) {
-        postMessage({
+        workerpool.workerEmit({
             status: 'err',
             headType: headType,
             value: err
         });
     }
 };
+
+workerpool.worker({
+    onmessage: onmessage
+});

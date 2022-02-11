@@ -213,13 +213,6 @@ const ToolPathListBox = (props) => {
             const toolpath = dispatch(editorActions.createToolPath(props.headType));
             setEditingToolpath(toolpath);
         },
-        recalculateAllToolPath: () => {
-            toolPaths.forEach((toolPath) => {
-                if (toolPath.status === 'warning') {
-                    actions.commitGenerateToolPath(toolPath.id);
-                }
-            });
-        },
         showContextMenu: (event) => {
             setTimeout(() => {
                 contextMenuRef.current.show(event);

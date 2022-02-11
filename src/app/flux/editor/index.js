@@ -2,9 +2,8 @@ import * as THREE from 'three';
 import path from 'path';
 import { v4 as uuid } from 'uuid';
 import _, { includes } from 'lodash';
-
-import ToolpathRendererWorker from '../../workers/ToolpathRenderer.worker';
-
+import workerpool from 'workerpool';
+import onmessage from '../../workers/ToolpathRenderer.worker';
 import api from '../../api';
 import {
     checkParams,
@@ -214,8 +213,12 @@ function recordScaleActionsToHistory(scaleActionsFn, elements, SVGActions, headT
         });
     }
 }
+const pool = workerpool.pool('ToolpathRenderer.worker.js', {
+    minWorkers: 'max',
+});
+// TODO Have to import 'ToolpathRenderer.worker.js' for webpack to package this file
+console.log('onmessage', onmessage);
 
-const toolpathRendererWorker = new ToolpathRendererWorker();
 const scaleExtname = ['.svg', '.dxf'];
 
 export const actions = {
@@ -239,8 +242,6 @@ export const actions = {
                 initFlag: true
             }));
         }
-
-        dispatch(actions.__initToolpathWorker());
     },
 
     __initOnControllerEvents: (headType) => {
@@ -296,25 +297,79 @@ export const actions = {
                 dispatch(actions.onReceiveProcessImageTaskResult(headType, taskResult));
             });
 
-            controller.on('taskCompleted:generateToolPath', (taskResult) => {
-                if (headType !== taskResult.headType) {
+            controller.on('taskCompleted:generateToolPath', (toolPathTaskResult) => {
+                const { toolPathGroup, progressStatesManager } = getState()[headType];
+                if (headType !== toolPathTaskResult.headType || toolPathTaskResult.taskStatus === 'failed') {
+                    dispatch(baseActions.updateState(headType, {
+                        stage: STEP_STAGE.CNC_LASER_GENERATE_TOOLPATH_FAILED,
+                        progress: 1
+                    }));
+                    progressStatesManager.finishProgress(false);
                     return;
                 }
+                toolPathTaskResult.data.forEach((taskResult) => {
+                    const toolPath = toolPathGroup._getToolPath(taskResult.taskId);
 
-                const { toolPathGroup, progressStatesManager } = getState()[headType];
-                const toolPath = toolPathGroup._getToolPath(taskResult.taskId);
-
-                if (toolPath) {
-                    if (taskResult.taskStatus === 'failed') {
-                        toolPath.onGenerateToolpathFailed(taskResult);
-                    } else {
+                    if (toolPath) {
                         progressStatesManager.startNextStep();
+                        taskResult.filenames = toolPathTaskResult.filenames.find(d => d.taskId === taskResult.taskId)?.filenames;
+                        pool.exec('onmessage', [taskResult], {
+                            on: function (payload) {
+                                const { status, value } = payload;
+                                switch (status) {
+                                    case 'succeed': {
+                                        const { shouldGenerateGcodeCounter } = getState()[headType];
+                                        const toolpath = toolPathGroup._getToolPath(taskResult.taskId);
+                                        if (toolpath) {
+                                            toolpath.onGenerateToolpathFinail();
+                                        }
 
-                        toolpathRendererWorker.postMessage({
-                            taskResult: taskResult
+                                        if (toolPathGroup && toolPathGroup._getCheckAndSuccessToolPaths()) {
+                                            dispatch(baseActions.updateState(headType, {
+                                                shouldGenerateGcodeCounter: shouldGenerateGcodeCounter + 1
+                                            }));
+                                        }
+                                        break;
+                                    }
+                                    case 'data': {
+                                        const { taskResult: newTaskResult, index, renderResult } = value;
+                                        const toolpath = toolPathGroup._getToolPath(newTaskResult.taskId);
+
+                                        if (toolpath) {
+                                            toolpath.onGenerateToolpathModel(newTaskResult.data[index], newTaskResult.filenames[index], renderResult);
+                                        }
+                                        break;
+                                    }
+                                    case 'progress': {
+                                        const { progress } = value;
+                                        if (progress < 0.1) {
+                                            progressStatesManager.startNextStep();
+                                            dispatch(actions.updateState(headType, {
+                                                stage: STEP_STAGE.CNC_LASER_RENDER_TOOLPATH,
+                                                progress: progressStatesManager.updateProgress(STEP_STAGE.CNC_LASER_RENDER_TOOLPATH, progress)
+                                            }));
+                                        } else {
+                                            dispatch(actions.updateState(headType, {
+                                                progress: progressStatesManager.updateProgress(STEP_STAGE.CNC_LASER_RENDER_TOOLPATH, progress)
+                                            }));
+                                        }
+                                        break;
+                                    }
+                                    case 'err': {
+                                        dispatch(baseActions.updateState(headType, {
+                                            stage: STEP_STAGE.CNC_LASER_GENERATE_TOOLPATH_FAILED,
+                                            progress: 1
+                                        }));
+                                        progressStatesManager.finishProgress(false);
+                                        break;
+                                    }
+                                    default:
+                                        break;
+                                }
+                            }
                         });
                     }
-                }
+                });
             });
 
             controller.on('taskCompleted:generateGcode', (taskResult) => {
@@ -351,70 +406,6 @@ export const actions = {
                     }
                 }));
             });
-        };
-    },
-
-    __initToolpathWorker: () => (dispatch, getState) => {
-        toolpathRendererWorker.onmessage = (e) => {
-            const data = e.data;
-            const { status, headType, value } = data;
-            switch (status) {
-                case 'succeed': {
-                    const { taskResult } = value;
-                    const { toolPathGroup, shouldGenerateGcodeCounter } = getState()[headType];
-                    const toolpath = toolPathGroup._getToolPath(taskResult.taskId);
-                    if (toolpath) {
-                        toolpath.onGenerateToolpathFinail();
-                    }
-
-                    if (toolPathGroup && toolPathGroup._getCheckAndSuccessToolPaths()) {
-                        dispatch(baseActions.updateState(headType, {
-                            shouldGenerateGcodeCounter: shouldGenerateGcodeCounter + 1
-                        }));
-                    }
-                    break;
-                }
-                case 'data': {
-                    const { taskResult, index, renderResult } = value;
-
-                    const { toolPathGroup } = getState()[headType];
-
-                    const toolpath = toolPathGroup._getToolPath(taskResult.taskId);
-
-                    if (toolpath) {
-                        toolpath.onGenerateToolpathModel(taskResult.data[index], taskResult.filenames[index], renderResult);
-                    }
-
-                    break;
-                }
-                case 'progress': {
-                    const { progressStatesManager } = getState()[headType];
-                    const { progress } = value;
-                    if (progress < 0.1) {
-                        progressStatesManager.startNextStep();
-                        dispatch(actions.updateState(headType, {
-                            stage: STEP_STAGE.CNC_LASER_RENDER_TOOLPATH,
-                            progress: progressStatesManager.updateProgress(STEP_STAGE.CNC_LASER_RENDER_TOOLPATH, progress)
-                        }));
-                    } else {
-                        dispatch(actions.updateState(headType, {
-                            progress: progressStatesManager.updateProgress(STEP_STAGE.CNC_LASER_RENDER_TOOLPATH, progress)
-                        }));
-                    }
-                    break;
-                }
-                case 'err': {
-                    const { progressStatesManager } = getState()[headType];
-                    dispatch(baseActions.updateState(headType, {
-                        stage: STEP_STAGE.CNC_LASER_GENERATE_TOOLPATH_FAILED,
-                        progress: 1
-                    }));
-                    progressStatesManager.finishProgress(false);
-                    break;
-                }
-                default:
-                    break;
-            }
         };
     },
 
@@ -723,6 +714,7 @@ export const actions = {
         }
 
         // Process image right after created
+        // TODO processImage
         dispatch(actions.processSelectedModel(headType));
         dispatch(actions.updateState(headType, {
             isOverSize: null
@@ -891,52 +883,11 @@ export const actions = {
         }));
 
         dispatch(actions.resetProcessState(headType));
-
         controller.commitProcessImage({
             taskId: uuid(),
             headType: headType,
             data: options
         });
-        // =======
-        //         api.processImage(options)
-        //             .then((res) => {
-        //                 const processImageName = res.body.filename;
-        //                 if (!processImageName) {
-        //                     return;
-        //                 }
-        //
-        //                 const svgModel = selectedModel.relatedModels.svgModel;
-        //
-        //                 if (selectedModel.sourceType === 'image3d') {
-        //                     const modelOptions = {
-        //                         sourceWidth: res.body.width * DEFAULT_SCALE,
-        //                         sourceHeight: res.body.height * DEFAULT_SCALE,
-        //                         width: res.body.width,
-        //                         height: res.body.height,
-        //                         transformation: {
-        //                             width: Math.abs(res.body.width * selectedModel.transformation.scaleX),
-        //                             height: Math.abs(res.body.height * selectedModel.transformation.scaleY)
-        //                         }
-        //                     };
-        //                     selectedModel.updateAndRefresh(modelOptions);
-        //                     SVGActions.resetSelection();
-        //                 }
-        //
-        //                 // modelGroup.updateSelectedModelProcessImage(processImageName);
-        //                 selectedModel.updateProcessImageName(processImageName);
-        //
-        //                 // SVGActions.updateElementImage(processImageName);
-        //                 SVGActions.updateSvgModelImage(svgModel, processImageName);
-        //
-        //                 // dispatch(baseActions.recordSnapshot(headType));
-        //                 dispatch(baseActions.resetCalculatedState(headType));
-        //                 dispatch(baseActions.render(headType));
-        //             })
-        //             .catch((e) => {
-        //                 // TODO: use log
-        //                 console.error(e);
-        //             });
-        // >>>>>>> Feature: Add 4 axis module
     },
 
 

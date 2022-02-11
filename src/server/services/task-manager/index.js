@@ -26,8 +26,8 @@ const stop = () => {
     // Keep empty currently
 };
 
-const addGenerateToolPathTask = (socket, task) => {
-    instance.addTask(new Task(task.taskId, socket, task.data, TASK_TYPE_GENERATE_TOOLPATH, task.headType, task.modelId));
+const addGenerateToolPathTask = (socket, taskArray) => {
+    instance.addTask(new Task(taskArray[0].taskId, socket, taskArray, TASK_TYPE_GENERATE_TOOLPATH, taskArray[0].headType));
 };
 
 const addGenerateGcodeTask = (socket, task) => {

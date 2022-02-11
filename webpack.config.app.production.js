@@ -100,7 +100,10 @@ module.exports = {
         rules: [
             {
                 test: /\.worker\.(j|t)s$/,
-                use: { loader: 'worker-loader' }
+                loader: 'worker-loader',
+                options: {
+                    filename: '[name].js',
+                },
             },
             {
                 test: /\.ts$/,

@@ -19,10 +19,11 @@ const config = new Store();
 
 let serverData = null;
 let mainWindow = null;
-
+// https://www.electronjs.org/docs/latest/breaking-changes#planned-breaking-api-changes-100
+// console.log('getCrashesDirectory', app.getPath('crashDumps'));
 // crashReporter.start({
 //     productName: 'Snapmaker',
-//     companyName: 'Snapmaker',
+//     globalExtra: { _companyName: 'Snapmaker' },
 //     submitURL: 'https://api.snapmaker.com',
 //     uploadToServer: true
 // });
@@ -36,8 +37,12 @@ function getBrowserWindowOptions() {
         show: false,
         useContentSize: true,
         title: `${pkg.name} ${pkg.version}`,
+        // https://www.electronjs.org/docs/latest/breaking-changes#default-changed-enableremotemodule-defaults-to-false
         webPreferences: {
-            nodeIntegration: true
+            nodeIntegration: true,
+            contextIsolation: false,
+            enableRemoteModule: true,
+            nodeIntegrationInWorker: true
         }
     };
 
@@ -226,11 +231,6 @@ const showMainWindow = async () => {
             const { pathname } = url.parse(request.url);
             const p = pathname === '/' ? 'index.html' : pathname.substr(1);
             callback(fs.createReadStream(path.normalize(`${__dirname}/app/${p}`)));
-        },
-        (error) => {
-            if (error) {
-                console.error('error', error);
-            }
         }
     );
     // https://github.com/electron/electron/issues/21675

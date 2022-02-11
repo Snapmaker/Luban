@@ -105,69 +105,78 @@ const generateCncToolPath = async (modelInfo, onProgress) => {
     }
 };
 
-const generateLaserToolPathFromEngine = async (modelInfos, onProgress) => {
-    for (const modelInfo of modelInfos) {
-        const { headType, type, sourceType } = modelInfo;
-        if ([TOOLPATH_TYPE_VECTOR + SOURCE_TYPE_RASTER].includes(type + sourceType)) {
-            const result = await editorProcess(modelInfo);
-            modelInfo.uploadName = result.filename;
+const generateLaserToolPathFromEngine = (allTasks, onProgress) => {
+    // const allResultPromise = [];
+    const toolPathLength = allTasks?.length;
+    const allResultPromise = allTasks.map(async (task) => {
+        const modelInfos = task.data;
+        if (!modelInfos || modelInfos?.length === 0) {
+            return Promise.reject(new Error('modelInfo is empty.'));
         }
-        if (!(/parsed\.svg$/i.test(modelInfo.uploadName))) {
-            const newUploadName = modelInfo.uploadName.replace(/\.svg$/i, 'parsed.svg');
-            const uploadPath = `${DataStorage.tmpDir}/${newUploadName}`;
-            if (fs.existsSync(uploadPath)) {
-                modelInfo.uploadName = newUploadName;
+        const { taskId } = task;
+        for (const modelInfo of modelInfos) {
+            const { headType, type, sourceType } = modelInfo;
+            if ([TOOLPATH_TYPE_VECTOR + SOURCE_TYPE_RASTER].includes(type + sourceType)) {
+                const result = await editorProcess(modelInfo);
+                modelInfo.uploadName = result.filename;
             }
-        }
-        const gcodeConfig = modelInfo?.gcodeConfig;
-        if (headType === 'laser') {
-            gcodeConfig.fillDensity = 1 / gcodeConfig.fillInterval;
-            gcodeConfig.stepOver = gcodeConfig.fillInterval;
-            if (gcodeConfig?.pathType === 'path') {
-                gcodeConfig.movementMode = 'greyscale-line';
+            if (!(/parsed\.svg$/i.test(modelInfo.uploadName))) {
+                const newUploadName = modelInfo.uploadName.replace(/\.svg$/i, 'parsed.svg');
+                const uploadPath = `${DataStorage.tmpDir}/${newUploadName}`;
+                if (fs.existsSync(uploadPath)) {
+                    modelInfo.uploadName = newUploadName;
+                }
             }
-        } else {
-            gcodeConfig.fillDensity = 1 / gcodeConfig.stepOver;
-            gcodeConfig.tabHeight -= gcodeConfig.targetDepth;
+            const gcodeConfig = modelInfo?.gcodeConfig;
+            if (headType === 'laser') {
+                gcodeConfig.fillDensity = 1 / gcodeConfig.fillInterval;
+                gcodeConfig.stepOver = gcodeConfig.fillInterval;
+                if (gcodeConfig?.pathType === 'path') {
+                    gcodeConfig.movementMode = 'greyscale-line';
+                }
+            } else {
+                gcodeConfig.fillDensity = 1 / gcodeConfig.stepOver;
+                gcodeConfig.tabHeight -= gcodeConfig.targetDepth;
+            }
+            modelInfo.toolpathFileName = generateRandomPathName('json');
         }
-        modelInfo.toolpathFileName = generateRandomPathName('json');
-    }
 
-    const sliceParams = {
-        headType: modelInfos[0].headType,
-        type: modelInfos[0].type,
-        data: modelInfos
-    };
+        const sliceParams = {
+            headType: modelInfos[0].headType,
+            type: modelInfos[0].type,
+            data: modelInfos,
+            toolPathLength
+        };
 
-    return new Promise((resolve, reject) => {
-        slice(sliceParams, onProgress, (res) => {
-            resolve({
-                filenames: res.filenames
+        return new Promise((resolve, reject) => {
+            slice(sliceParams, onProgress, (res) => {
+                resolve({
+                    taskId,
+                    filenames: res.filenames
+                });
+            }, () => {
+                reject(new Error('Slice Error'));
             });
-        }, () => {
-            reject(new Error('Slice Error'));
         });
     });
+    return Promise.all(allResultPromise);
 };
 
-export const generateToolPath = (modelInfos, onProgress) => {
-    if (!modelInfos || modelInfos.length === 0) {
-        return Promise.reject(new Error('modelInfo is empty.'));
-    }
-    const { headType, useLegacyEngine } = modelInfos[0];
+export const generateToolPath = (allTasks, onProgress) => {
+    const { headType, useLegacyEngine } = allTasks[0];
     if (!['laser', 'cnc'].includes(headType)) {
         return Promise.reject(new Error(`Unsupported type: ${headType}`));
     }
     if (useLegacyEngine) {
         return new Promise(async (resolve, reject) => {
             const filenames = [];
-            for (let i = 0; i < modelInfos.length; i++) {
+            for (let i = 0; i < allTasks.length; i++) {
                 let res;
                 if (headType === 'laser') {
-                    res = await generateLaserToolPath(modelInfos[i], onProgress);
+                    res = await generateLaserToolPath(allTasks[i], onProgress);
                 } else {
-                    modelInfos[i].taskAsyncFor = modelInfos.taskAsyncFor;
-                    res = await generateCncToolPath(modelInfos[i], onProgress);
+                    allTasks[i].taskAsyncFor = allTasks.taskAsyncFor;
+                    res = await generateCncToolPath(allTasks[i], onProgress);
                 }
                 if (!res) {
                     reject();
@@ -179,6 +188,6 @@ export const generateToolPath = (modelInfos, onProgress) => {
             });
         });
     } else {
-        return generateLaserToolPathFromEngine(modelInfos, onProgress);
+        return generateLaserToolPathFromEngine(allTasks, onProgress);
     }
 };

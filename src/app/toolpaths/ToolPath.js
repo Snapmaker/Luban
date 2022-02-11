@@ -1,7 +1,6 @@
 import { v4 as uuid } from 'uuid';
 import { includes } from 'lodash';
 import * as THREE from 'three';
-import { controller } from '../lib/controller';
 import { FAILED, getToolPathType, IDLE, RUNNING, SUCCESS, WARNING } from './utils';
 import { MATERIAL_SELECTED, MATERIAL_UNSELECTED } from '../workers/ShaderMaterial/ToolpathRendererMeterial';
 
@@ -157,7 +156,7 @@ class ToolPath {
     }
 
     /**
-     * Commit generate toolpath task to server
+     * Generate toolpath task to server, need to call `commitToolPathTaskArray`
      */
     commitGenerateToolPath() {
         if (this.status === FAILED) {
@@ -200,10 +199,8 @@ class ToolPath {
             data: data
         };
 
-        controller.commitToolPathTask(task);
-
         this.checkoutStatus();
-        return true;
+        return task;
     }
 
     _getModelTaskInfos() {
@@ -271,7 +268,6 @@ class ToolPath {
 
             const oldMeshObj = modelMapResult.meshObj;
             oldMeshObj && this.object.remove(oldMeshObj);
-
             const toolPathObj3D = this.renderToolpathObj(renderResult);
 
             modelMapResult.meshObj = toolPathObj3D;

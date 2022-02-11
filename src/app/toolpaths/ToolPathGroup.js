@@ -82,15 +82,6 @@ class ToolPathGroup {
         this.simulationObject && (this.simulationObject.visible = show);
     }
 
-    async onGenerateToolPath(taskResult, renderResult) {
-        const toolPath = this.toolPaths.find(v => v.id === taskResult.taskId);
-
-        if (toolPath) {
-            await toolPath.onGenerateToolPath(taskResult, renderResult, () => { this._updated(); });
-            this.addSelectedToolpathColor(true);
-            this._updated();
-        }
-    }
 
     setUpdatedCallBack(updatedCallback) {
         this.updatedCallback = updatedCallback;
@@ -391,6 +382,18 @@ class ToolPathGroup {
         }
         this._updated();
         return res;
+    }
+
+    commitToolPathPromise(toolPathId) {
+        return new Promise(async (resolve) => {
+            let res = false;
+            const toolPath = this._getToolPath(toolPathId);
+            if (toolPath) {
+                res = toolPath.commitGenerateToolPath();
+            }
+            this._updated();
+            resolve(res);
+        });
     }
 
     updateToolPath(toolPathId, newState, options) {
