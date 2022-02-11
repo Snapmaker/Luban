@@ -260,7 +260,7 @@ const showMainWindow = async () => {
         } catch (err) {
             console.error('Error: ', err);
         }
-    }, 500);
+    }, 100); // Need to make sure the server start after window.show();
 
     window.on('close', (e) => {
         e.preventDefault();
