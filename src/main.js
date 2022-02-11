@@ -1,6 +1,6 @@
 import 'core-js/stable';
 import 'regenerator-runtime/runtime';
-import { app, BrowserWindow, protocol, screen, session, ipcMain, shell } from 'electron';
+import { app, BrowserWindow, protocol, screen, session, ipcMain, shell, Menu } from 'electron';
 import { autoUpdater } from 'electron-updater';
 import Store from 'electron-store';
 import url from 'url';
@@ -19,8 +19,17 @@ const config = new Store();
 
 let serverData = null;
 let mainWindow = null;
+<<<<<<< HEAD
 // https://www.electronjs.org/docs/latest/breaking-changes#planned-breaking-api-changes-100
 // console.log('getCrashesDirectory', app.getPath('crashDumps'));
+=======
+let timer = null;
+let loadUrl = '';
+const loadingMenu = [{
+    id: 'file',
+    label: '',
+}];
+>>>>>>> baf3ce607 (Fix: Delete preload.js & set null menubar begin window show)
 // crashReporter.start({
 //     productName: 'Snapmaker',
 //     globalExtra: { _companyName: 'Snapmaker' },
@@ -187,23 +196,20 @@ if (process.platform === 'win32') {
 
 const showMainWindow = async () => {
     let windowOptions = getBrowserWindowOptions();
-    windowOptions = {...windowOptions, webPreferences: {
-        ...windowOptions.webPreferences,
-        preload: path.resolve(__dirname, 'electron-app', 'preload.js')
-    }}
     const window = new BrowserWindow(windowOptions);
     mainWindow = window;
     if (process.platform === 'win32') {
         // const outsideX = -999999, outsideY = -999999;
         window.setSkipTaskbar(true);
-        window.setMenuBarVisibility(false);
-        window.focus();
+        const menu = Menu.buildFromTemplate(loadingMenu);
+        Menu.setApplicationMenu(menu);
+        window.setMenuBarVisibility(true);
+        window.blur();
         // window.setPosition(outsideX, outsideY, false);
     }
-    console.log('beginLoadFile', __dirname);
-    window.show();
+    window.loadURL(path.resolve(__dirname, 'app', 'loading.html'));
     window.setBackgroundColor('#f5f5f7');
-    console.log('finishShow');
+    window.show();
     if (timer) {
         clearTimeout(timer)
     }
