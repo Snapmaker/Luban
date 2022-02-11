@@ -226,7 +226,6 @@ function SettingItem({ definitionKey, settings, isDefaultDefinition = () => true
                             placement="bottomRight"
                             className="cancel-content-padding"
                             onVisibleChange={(visible) => {
-                                console.log({ visible });
                                 setShowColor(visible);
                             }}
                         >
