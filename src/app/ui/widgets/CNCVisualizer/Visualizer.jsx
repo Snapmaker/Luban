@@ -14,6 +14,8 @@ import { humanReadableTime } from '../../../lib/time-utils';
 import ProgressBar from '../../components/ProgressBar';
 import ContextMenu from '../../components/ContextMenu';
 import Space from '../../components/Space';
+import Modal from '../../components/Modal';
+import { Button } from '../../components/Buttons';
 
 import Canvas from '../../components/SMCanvas';
 import PrintablePlate from '../CncLaserShared/PrintablePlate';
@@ -60,7 +62,7 @@ class Visualizer extends Component {
 
         renderingTimestamp: PropTypes.number.isRequired,
         enableShortcut: PropTypes.bool.isRequired,
-
+        isOverSize: PropTypes.bool,
         // func
         selectAllElements: PropTypes.func.isRequired,
         cut: PropTypes.func.isRequired,
@@ -97,7 +99,7 @@ class Visualizer extends Component {
         createText: PropTypes.func.isRequired,
         updateTextTransformationAfterEdit: PropTypes.func.isRequired,
         getSelectedElementsUniformScalingState: PropTypes.func.isRequired,
-
+        checkIsOversizeImage: PropTypes.func.isRequired,
         uploadImage: PropTypes.func.isRequired,
         switchToPage: PropTypes.func.isRequired,
 
@@ -165,16 +167,39 @@ class Visualizer extends Component {
                 uploadMode = PROCESS_MODE_GREYSCALE;
             }
 
+            this.setState({
+                file,
+                uploadMode
+            });
             // Switch to PAGE_EDITOR page if new image being uploaded
             this.props.switchToPage(PAGE_EDITOR);
 
-            this.props.uploadImage(file, uploadMode, () => {
+            if (extname === '.dxf' || extname === '.svg') {
+                this.props.checkIsOversizeImage(file, () => {
+                    modal({
+                        cancelTitle: i18n._('key-Laser/Edit/ContextMenu-Close'),
+                        title: i18n._('key-Laser/Edit/ContextMenu-Import Error'),
+                        body: i18n._('Failed to import this object. \nPlease select a supported file format.')
+                    });
+                });
+            } else {
+                this.props.uploadImage(file, uploadMode, () => {
+                    modal({
+                        cancelTitle: i18n._('key-Cnc/Edit/ContextMenu-Close'),
+                        title: i18n._('key-Cnc/Edit/ContextMenu-Import Error'),
+                        body: i18n._('Failed to import this object. \nPlease select a supported file format.')
+                    });
+                });
+            }
+        },
+        onClickLimitImage: (isLimit) => {
+            this.props.uploadImage(this.state.file, this.state.uploadMode, () => {
                 modal({
-                    cancelTitle: i18n._('key-Cnc/Edit/ContextMenu-Close'),
-                    title: i18n._('key-Cnc/Edit/ContextMenu-Import Error'),
+                    cancelTitle: i18n._('key-Laser/Edit/ContextMenu-Close'),
+                    title: i18n._('key-Laser/Edit/ContextMenu-Import Error'),
                     body: i18n._('Failed to import this object. \nPlease select a supported file format.')
                 });
-            });
+            }, isLimit);
         },
         onClickToUpload: () => {
             this.fileInput.current.value = null;
@@ -274,6 +299,11 @@ class Visualizer extends Component {
 
         const { size, materials, coordinateMode } = props;
         this.printableArea = new PrintablePlate(size, materials, coordinateMode);
+        this.state = {
+            limitPicModalShow: false,
+            file: null,
+            uploadMode: ''
+        };
     }
 
     componentDidMount() {
@@ -284,9 +314,10 @@ class Visualizer extends Component {
     }
 
     componentWillReceiveProps(nextProps) {
-        const { renderingTimestamp } = nextProps;
+        const { renderingTimestamp, isOverSize } = nextProps;
+        console.log(nextProps.materials, this.props.materials);
 
-        if (!isEqual(nextProps.size, this.props.size) || !isEqual(nextProps.materials, this.props.materials)) {
+        if (!isEqual(nextProps.size, this.props.size)) {
             const { size, materials } = nextProps;
             this.printableArea.updateSize(size, materials);
             this.canvas.current.setCamera(new THREE.Vector3(0, 0, Math.min(size.z, VISUALIZER_CAMERA_HEIGHT)), new THREE.Vector3());
@@ -323,7 +354,7 @@ class Visualizer extends Component {
             }
         }
 
-        if (nextProps.coordinateMode !== this.props.coordinateMode) {
+        if (nextProps.coordinateMode !== this.props.coordinateMode || !isEqual(nextProps.materials, this.props.materials)) {
             const { size, materials, coordinateMode } = nextProps;
             this.printableArea = new PrintablePlate(size, materials, coordinateMode);
             this.actions.autoFocus();
@@ -332,6 +363,14 @@ class Visualizer extends Component {
         if (nextProps.coordinateSize !== this.props.coordinateSize) {
             this.printableArea = new PrintablePlate(nextProps.coordinateSize, nextProps.materials, nextProps.coordinateMode);
             this.actions.autoFocus();
+        }
+        if (isOverSize !== this.props.isOverSize) {
+            this.setState({
+                limitPicModalShow: isOverSize
+            });
+            if (isOverSize === false) {
+                this.actions.onClickLimitImage(false);
+            }
         }
         this.printableArea.changeCoordinateVisibility(!nextProps.showSimulation);
     }
@@ -373,36 +412,7 @@ class Visualizer extends Component {
     }
 
     render() {
-        // const actions = this.actions;
-        // const isModelSelected = !!this.props.model;
-        // const isModelSelected = !!this.props.selectedModelID;
         const isOnlySelectedOneModel = (this.props.selectedModelArray && this.props.selectedModelArray.length === 1);
-        // eslint-disable-next-line no-unused-vars
-        // const hasModel = this.props.hasModel;
-
-        // const { model, modelGroup } = this.props;
-
-        /*
-        let estimatedTime = 0;
-        if (hasModel) {
-            if (model && model.toolPath) {
-                estimatedTime = model.toolPath.estimatedTime;
-                if (model.modelInfo.gcodeConfig.multiPassEnabled) {
-                    estimatedTime *= model.modelInfo.gcodeConfig.multiPasses;
-                }
-            } else {
-                for (const model2 of modelGroup.children) {
-                    if (model2.toolPath) {
-                        let t = model2.toolPath.estimatedTime;
-                        if (model2.modelInfo.gcodeConfig.multiPassEnabled) {
-                            t *= model2.modelInfo.gcodeConfig.multiPasses;
-                        }
-                        estimatedTime += t;
-                    }
-                }
-            }
-        }
-        */
 
         const estimatedTime = this.props.displayedType === DISPLAYED_TYPE_TOOLPATH && !this.props.isChangedAfterGcodeGenerating ? this.props.getEstimatedTime('selected') : '';
         const notice = this.getNotice();
@@ -599,6 +609,49 @@ class Visualizer extends Component {
                         ]
                     }
                 />
+                {this.state.limitPicModalShow && (
+                    <Modal
+                        visible={this.state.limitPicModalShow}
+                        onClose={() => {
+                            this.setState({ limitPicModalShow: false });
+                            this.actions.onClickLimitImage(false);
+                        }}
+                    >
+                        <Modal.Header>
+                            {i18n._('Key-Laser/ImportScale-Scale To Fit')}
+                        </Modal.Header>
+                        <Modal.Body>
+                            <div className={styles['width-480']}>
+                                {i18n._('Key-Laser/ImportScale-Object size has exceeded the work size. Scale it to the maximum work size?')}
+                            </div>
+                        </Modal.Body>
+                        <Modal.Footer>
+                            <Button
+                                priority="level-two"
+                                type="default"
+                                className="align-r margin-right-8"
+                                width="96px"
+                                onClick={() => {
+                                    this.setState({ limitPicModalShow: false });
+                                    this.actions.onClickLimitImage(false);
+                                }}
+                            >
+                                {i18n._('key-Printing/ImportScale--Cancel')}
+                            </Button>
+                            <Button
+                                priority="level-two"
+                                className="align-r"
+                                width="96px"
+                                onClick={() => {
+                                    this.setState({ limitPicModalShow: false });
+                                    this.actions.onClickLimitImage(true);
+                                }}
+                            >
+                                {i18n._('key-Printing/ImportScale--Scale')}
+                            </Button>
+                        </Modal.Footer>
+                    </Modal>
+                )}
             </div>
         );
     }
@@ -609,7 +662,7 @@ const mapStateToProps = (state, ownProps) => {
     const { size } = state.machine;
     const { currentModalPath, menuDisabledCount } = state.appbarMenu;
     const { page, materials, modelGroup, toolPathGroup, displayedType, hasModel, isChangedAfterGcodeGenerating,
-        renderingTimestamp, stage, progress, SVGActions, scale, target, coordinateMode, coordinateSize, showSimulation, progressStatesManager, enableShortcut } = state.cnc;
+        renderingTimestamp, stage, progress, SVGActions, scale, target, coordinateMode, coordinateSize, showSimulation, progressStatesManager, enableShortcut, isOverSize } = state.cnc;
     const selectedModelArray = modelGroup.getSelectedModelArray();
     const selectedModelID = modelGroup.getSelectedModel().modelID;
     const selectedToolPathModels = modelGroup.getSelectedToolPathModels();
@@ -641,7 +694,8 @@ const mapStateToProps = (state, ownProps) => {
         renderingTimestamp,
         isChangedAfterGcodeGenerating,
         stage,
-        progress
+        progress,
+        isOverSize
     };
 };
 
@@ -681,7 +735,7 @@ const mapDispatchToProps = (dispatch) => {
 
         uploadImage: (file, mode, onFailure) => dispatch(editorActions.uploadImage('cnc', file, mode, onFailure)),
         switchToPage: (page) => dispatch(editorActions.switchToPage('cnc', page)),
-
+        checkIsOversizeImage: (file, onFailure) => dispatch(editorActions.checkIsOversizeImage('cnc', file, onFailure)),
         elementActions: {
             moveElementsStart: (elements, options) => dispatch(editorActions.moveElementsStart('cnc', elements, options)),
             moveElements: (elements, options) => dispatch(editorActions.moveElements('cnc', elements, options)),
