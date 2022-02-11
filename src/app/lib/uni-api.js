@@ -68,6 +68,7 @@ const Update = {
             ipcRenderer.send('checkForUpdate');
         }
     },
+    // TODO: useless
     downloadUpdate(downloadInfo, oldVersion, shouldCheckForUpdate) {
         if (isElectron()) {
             const { remote, ipcRenderer } = window.require('electron');

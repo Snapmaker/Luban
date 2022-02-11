@@ -8,6 +8,8 @@ import Mousetrap from 'mousetrap';
 import i18next from 'i18next';
 import classNames from 'classnames';
 import { cloneDeep } from 'lodash';
+import Checkbox from '../components/Checkbox';
+import { Button } from '../components/Buttons';
 import { renderModal } from '../utils';
 import AppBar from '../views/AppBar';
 import i18n from '../../lib/i18n';
@@ -16,6 +18,8 @@ import { checkIsSnapmakerProjectFile, checkIsGCodeFile } from '../../lib/check-n
 import Settings from '../pages/Settings/Settings';
 import FirmwareTool from '../pages/Settings/FirmwareTool';
 import SoftwareUpdate from '../pages/Settings/SoftwareUpdate';
+import DownloadUpdate from '../pages/Settings/SoftwareUpdate/DownloadUpdate';
+
 import {
     // HEAD_PRINTING,
     HEAD_LASER,
@@ -88,7 +92,11 @@ class AppLayout extends PureComponent {
     state = {
         showSettingsModal: false,
         showDevelopToolsModal: false,
-        showCheckForUpdatesModal: false
+        showDownloadUpdateModal: false,
+        showCheckForUpdatesModal: false,
+        releaseNotes: '',
+        prevVersion: '',
+        version: ''
     }
 
     activeTab = ''
@@ -192,10 +200,80 @@ class AppLayout extends PureComponent {
                 actions: []
             });
         },
+        renderDownloadUpdateModal: () => {
+            const { releaseNotes, prevVersion, version } = this.state;
+            const { shouldCheckForUpdate } = this.props;
+            const { ipcRenderer } = window.require('electron');
+            const onClose = () => {
+                this.setState({
+                    showDownloadUpdateModal: false
+                });
+            };
+            return renderModal({
+                title: i18n._('key-App/Update-Update Snapmaker Luban'),
+                renderBody: () => {
+                    return (
+                        <DownloadUpdate
+                            releaseNotes={releaseNotes}
+                            prevVersion={prevVersion}
+                            version={version}
+                        />
+                    );
+                },
+                renderFooter: () => {
+                    return (
+                        <div className="sm-flex justify-space-between">
+                            <div className="display-inline height-32">
+                                <Checkbox
+                                    checked={shouldCheckForUpdate}
+                                    onChange={(event) => { this.props.updateShouldCheckForUpdate(event.target.checked); }}
+
+                                />
+                                <span className="margin-left-4">
+                                    {i18n._('key-App/Settings/SoftwareUpdate-Automatically check for updates')}
+                                </span>
+                            </div>
+                            <div className="display-inline">
+                                <Button
+                                    priority="level-two"
+                                    className="margin-left-8"
+                                    width="96px"
+                                    type="default"
+                                    onClick={onClose}
+                                >
+                                    {i18n._('key-App/Update-Later')}
+                                </Button>
+                                <Button
+                                    priority="level-two"
+                                    className="margin-left-8"
+                                    width="auto"
+                                    type="primary"
+                                    onClick={() => ipcRenderer.send('startingDownloadUpdate')}
+                                >
+                                    {i18n._('key-App/Update-Update Now')}
+                                </Button>
+                            </div>
+                        </div>
+                    );
+                },
+                onClose,
+                actions: []
+            });
+        },
         showCheckForUpdates: () => {
             this.setState({
                 showCheckForUpdatesModal: true
             });
+        },
+        showDownloadUpdate: (downloadInfo) => {
+            if (downloadInfo) {
+                this.setState({
+                    releaseNotes: downloadInfo.releaseNotes,
+                    prevVersion: downloadInfo.prevVersion,
+                    version: downloadInfo.version,
+                    showDownloadUpdateModal: true
+                });
+            }
         },
         renderSavedModal: () => {
             // TODO, add a component
@@ -406,8 +484,8 @@ class AppLayout extends PureComponent {
             UniApi.Event.on('update-should-check-for-update', (event, checkForUpdate) => {
                 this.props.updateShouldCheckForUpdate(checkForUpdate);
             });
-            UniApi.Event.on('update-available', (event, downloadInfo, oldVersion) => {
-                UniApi.Update.downloadUpdate(downloadInfo, oldVersion, this.props.shouldCheckForUpdate);
+            UniApi.Event.on('update-available', (event, downloadInfo) => {
+                UniApi.Event.emit('tile-modal:download-update.show', downloadInfo);
             });
             UniApi.Event.on('is-replacing-app-now', (event, downloadInfo) => {
                 UniApi.Update.isReplacingAppNow(downloadInfo);
@@ -701,17 +779,18 @@ class AppLayout extends PureComponent {
         }
     }
 
-    componentWillMount() {
+    // componentWillMount() {
+    // }
+
+    componentDidMount() {
         this.props.initMenuLanguage();
         this.actions.initUniEvent();
         this.actions.initFileOpen();
-    }
-
-    componentDidMount() {
         UniApi.Event.on('appbar-menu:preferences.show', this.actions.showPreferences);
         UniApi.Event.on('appbar-menu:developer-tools.show', this.actions.showDevelopTools);
         UniApi.Event.on('appbar-menu:check-for-updates.show', this.actions.showCheckForUpdates);
         UniApi.Event.on('appbar-menu:longterm-backup-config', this.actions.longTermBackupConfig);
+        UniApi.Event.on('tile-modal:download-update.show', this.actions.showDownloadUpdate);
     }
 
     componentWillUnmount() {
@@ -719,10 +798,11 @@ class AppLayout extends PureComponent {
         UniApi.Event.off('appbar-menu:developer-tools.show', this.actions.showDevelopTools);
         UniApi.Event.off('appbar-menu:check-for-updates.show', this.actions.showCheckForUpdates);
         UniApi.Event.off('appbar-menu:longterm-backup-config', this.actions.longTermBackupConfig);
+        UniApi.Event.off('tile-modal:download-update.show', this.actions.showDownloadUpdate);
     }
 
     render() {
-        const { showSettingsModal, showDevelopToolsModal, showCheckForUpdatesModal } = this.state;
+        const { showSettingsModal, showDevelopToolsModal, showCheckForUpdatesModal, showDownloadUpdateModal } = this.state;
         const { showSavedModal } = this.props;
         return (
             <div className={isElectron() ? null : 'appbar'}>
@@ -730,6 +810,7 @@ class AppLayout extends PureComponent {
                 { showSettingsModal ? this.actions.renderSettingModal() : null }
                 { showDevelopToolsModal ? this.actions.renderDevelopToolsModal() : null }
                 { showCheckForUpdatesModal ? this.actions.renderCheckForUpdatesModal() : null }
+                { showDownloadUpdateModal ? this.actions.renderDownloadUpdateModal() : null }
                 { showSavedModal ? this.actions.renderSavedModal() : null }
                 <div className={isElectron() ? null : classNames(styles['app-content'])}>
                     {this.props.children}
