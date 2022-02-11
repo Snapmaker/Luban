@@ -199,13 +199,11 @@ const showMainWindow = async () => {
     const window = new BrowserWindow(windowOptions);
     mainWindow = window;
     if (process.platform === 'win32') {
-        // const outsideX = -999999, outsideY = -999999;
         window.setSkipTaskbar(true);
         const menu = Menu.buildFromTemplate(loadingMenu);
         Menu.setApplicationMenu(menu);
         window.setMenuBarVisibility(true);
         window.blur();
-        // window.setPosition(outsideX, outsideY, false);
     }
     window.loadURL(path.resolve(__dirname, 'app', 'loading.html'));
     window.setBackgroundColor('#f5f5f7');
@@ -338,45 +336,6 @@ const showMainWindow = async () => {
 };
 
 const createWindow = () => {
-    // MenuBuilder.hideMenu();
-    // if (process.platform === 'win32') {
-    //     const windowOptions = getBrowserWindowOptions();
-    //     const loadingWindow = new BrowserWindow(windowOptions);
-    //     loadingWindow.setMenuBarVisibility(false);
-    //     loadingWindow.setResizable(false);
-    //     loadingWindow.loadURL(path.resolve(__dirname, 'app', 'loading.html'));
-    //     loadingWindow.once('ready-to-show', () => {
-    //         ipcMain.once('show-main-window', () => {
-    //             if (loadingWindow.isMinimized()) {
-    //                 loadingWindow.restore();
-    //             } else if (loadingWindow.isMaximized()) {
-    //                 mainWindow.maximize();
-    //             }
-    //             const [x, y] = loadingWindow.getPosition();
-    //             const outsideX = -999999, outsideY = -999999;
-    //             mainWindow.setPosition(x, y, false);
-    //             mainWindow.moveTop();
-    //             mainWindow.setSkipTaskbar(false);
-    //             loadingWindow.setSkipTaskbar(true);
-    //             loadingWindow.setPosition(outsideX, outsideY, false);
-    //             mainWindow.focus();
-    //             loadingWindow.close();
-    //         });
-    //         loadingWindow.once('show', () => {
-    //             setTimeout(() => {
-    //                 showMainWindow();
-    //             }, 50);
-    //         });
-    //         loadingWindow.show();
-    //     });
-    //     loadingWindow.once('close', () => {
-    //         if (!mainWindow || !mainWindow.isFocused()) {
-    //             process.exit(0);
-    //         }
-    //     });
-    // } else {
-    //     showMainWindow();
-    // }
     showMainWindow();
 };
 
