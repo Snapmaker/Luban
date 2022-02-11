@@ -917,7 +917,7 @@ class ScreenController {
                             break;
                         case 'start print file\n':
                             if (this.controller.gcodeFile) {
-                                gcode = fs.readFileSync(this.controller.gcodeFile, 'utf-8');
+                                gcode = fs.readFileSync(this.controller.gcodeFile, 'utf8');
                                 this.sender.load(this.controller.gcodeFile, gcode);
                                 outputData = this.packetManager.statusRequestMachineStartPrint();
                                 this.command(port, 'gcode:start');

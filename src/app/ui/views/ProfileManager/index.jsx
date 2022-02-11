@@ -19,14 +19,15 @@ import useSetState from '../../../lib/hooks/set-state';
 
 /**
  * Do category fields in different types of profiles have values, and multilingual support
- * @fields      category | i18nCategory
+ * @fields                  category | i18nCategory
  *
- * @DefaultType     √    |     √
- * @CopyType        √    |     √
- * @CustomType      √    |     ×
- * @ImportType      ×    |     ×
+ * @DefaultType                 √    |     √
+ * @CopyType from default       √    |     √
+ * @CustomType                  √    |     ×
+ * @CopyType from custom        √    |     x
+ * @ImportType                  ×    |     ×
  *
- * @ExportType      ×    |     ×
+ * @ExportType                  ×    |     ×
  */
 
 function creatCateArray(optionList) {

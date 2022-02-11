@@ -11,8 +11,8 @@ const log = logger('service:TaskManager');
 
 const addHeaderToFile = (header, name, tmpFilePath, filePath, thumbnail, estimatedTime, boundingBox) => {
     return new Promise((resolve, reject) => {
-        const rs = fs.createReadStream(tmpFilePath, 'utf-8');
-        const ws = fs.createWriteStream(filePath, 'utf-8');
+        const rs = fs.createReadStream(tmpFilePath, 'utf8');
+        const ws = fs.createWriteStream(filePath, 'utf8');
         rs.on('close', () => {
             fs.unlinkSync(tmpFilePath);
         });
@@ -99,7 +99,7 @@ export const generateGcode = (toolPaths, onProgress) => {
     const outputFilePath = `${DataStorage.tmpDir}/${outputFilename}`;
     const outputFilePathTmp = `${outputFilePath}.tmp`;
 
-    const writeStream = fs.createWriteStream(outputFilePathTmp, 'utf-8');
+    const writeStream = fs.createWriteStream(outputFilePathTmp, 'utf8');
 
     let isRotate;
     let diameter;

@@ -536,9 +536,7 @@ export const processActions = {
                     const definitionId = `New.${timestamp()}`;
                     const definition = await definitionManager.uploadDefinition(definitionId, response.uploadName);
 
-                    let name = definition.i18nName ? (
-                        i18n._(definition.i18nName) || definition.name
-                    ) : definition.name;
+                    let name = definition.name;
                     while (toolDefinitions.find(e => e.name === name)) {
                         name = `#${name}`;
                     }
@@ -549,7 +547,7 @@ export const processActions = {
                         definition.i18nCategory
                         && definition.i18nCategory !== KEY_DEFAULT_CATEGORY_CUSTOM
                         && definition.i18nCategory !== KEY_DEFAULT_CATEGORY_DEFAULT
-                    ) ? (i18n._(definition.i18nCategory) || definition.category) : '';
+                    ) ? definition.category : '';
 
                     definition.i18nCategory = (
                         definition.i18nCategory

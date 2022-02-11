@@ -946,7 +946,7 @@ export const actions = {
                         definition.i18nCategory
                         && definition.i18nCategory !== KEY_DEFAULT_CATEGORY_CUSTOM
                         && definition.i18nCategory !== KEY_DEFAULT_CATEGORY_DEFAULT
-                    ) ? (i18n._(definition.i18nCategory) || definition.category) : '';
+                    ) ? definition.category : '';
 
                     definition.i18nCategory = (
                         definition.i18nCategory
@@ -955,9 +955,7 @@ export const actions = {
                     ) ? definition.i18nCategory : '';
 
 
-                    let name = definition.i18nName ? (
-                        i18n._(definition.i18nName) || definition.name
-                    ) : definition.name;
+                    let name = definition.name;
                     const definitionsKey = defaultDefinitionKeys[type].definitions;
                     const definitions = getState().printing[definitionsKey];
                     while (definitions.find(e => e.name === name)) {

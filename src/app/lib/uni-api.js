@@ -6,6 +6,7 @@ import events from 'events';
 import path from 'path';
 import i18n from './i18n';
 import pkg from '../../../package.json';
+import { DATA_PATH } from '../constants';
 
 class AppbarMenuEvent extends events.EventEmitter { }
 
@@ -225,7 +226,7 @@ const File = {
             return file;
         } else {
             request
-                .get(`/data${tmpFile}`)
+                .get(`/${DATA_PATH}${tmpFile}`)
                 .responseType('blob')
                 .end((err, res) => {
                     FileSaver.saveAs(res.body, targetFile, true);
@@ -237,9 +238,7 @@ const File = {
 
     resetProfile(profile) {
         // Rename the exported profile name, which is consistent with the current language
-        profile.name = profile.i18nName ? (
-            i18n._(profile.i18nName) || profile.name || ''
-        ) : profile.name;
+        profile.name = profile.i18nName ? i18n._(profile.i18nName) : profile.name;
         // Reset category and i18n of the exported profile
         profile.category = '';
         profile.i18nCategory = '';
@@ -277,7 +276,7 @@ const File = {
 
             const file = { path: targetFile, name: renderGcodeFileName };
             if (isProfileConfig) {
-                const txt = fs.readFileSync(tmpFile, 'utf-8');
+                const txt = fs.readFileSync(tmpFile, 'utf8');
                 const newProfile = this.resetProfile(JSON.parse(txt));
                 fs.writeFileSync(targetFile, newProfile, 'utf8');
             } else {
@@ -289,7 +288,7 @@ const File = {
         } else {
             if (isProfileConfig) {
                 request
-                    .get(`/data${tmpFile}`)
+                    .get(`/${DATA_PATH}${tmpFile}`)
                     .end((err, res) => {
                         const json = res.body;
                         const newProfile = this.resetProfile(json);
@@ -298,7 +297,7 @@ const File = {
                     });
             } else {
                 request
-                    .get(`/data${tmpFile}`)
+                    .get(`/${DATA_PATH}${tmpFile}`)
                     .responseType('blob')
                     .end((err, res) => {
                         FileSaver.saveAs(res.body, renderGcodeFileName, true);
