@@ -81,7 +81,7 @@ class DataStorage {
          this.defaultConfigDir = `${this.userDataDir}/Default`;
          this.fontDir = `${this.userDataDir}/Fonts`;
          this.envDir = `${this.userDataDir}/env`;
-         this.scenesDir = `${this.userDataDir}/scenes`;
+         this.scenesDir = `${this.userDataDir}/Scenes`;
          this.recoverDir = `${this.userDataDir}/snapmaker-recover`;
          this.activeConfigDir = `${this.recoverDir}/Config-active`;
          this.longTermConfigDir = '';
@@ -370,7 +370,7 @@ class DataStorage {
      async initScenes() {
          mkdirp.sync(this.scenesDir);
 
-         const SCENES_LOCAL = '../../resources/scenes';
+         const SCENES_LOCAL = '../resources/scenes/';
          if (fs.existsSync(SCENES_LOCAL)) {
              const files = fs.readdirSync(SCENES_LOCAL);
              for (const file of files) {
