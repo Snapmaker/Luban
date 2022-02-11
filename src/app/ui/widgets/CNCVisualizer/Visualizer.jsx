@@ -732,7 +732,7 @@ const mapDispatchToProps = (dispatch) => {
         createText: (text) => dispatch(editorActions.createText('cnc', text)),
         updateTextTransformationAfterEdit: (element, transformation) => dispatch(editorActions.updateModelTransformationByElement('cnc', element, transformation)),
 
-        uploadImage: (file, mode, onFailure) => dispatch(editorActions.uploadImage('cnc', file, mode, onFailure)),
+        uploadImage: (file, mode, onFailure, isLimit) => dispatch(editorActions.uploadImage('cnc', file, mode, onFailure, isLimit)),
         switchToPage: (page) => dispatch(editorActions.switchToPage('cnc', page)),
         checkIsOversizeImage: (file, onFailure) => dispatch(editorActions.checkIsOversizeImage('cnc', file, onFailure)),
         elementActions: {
