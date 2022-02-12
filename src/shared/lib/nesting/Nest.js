@@ -1,5 +1,5 @@
 import { Vector2 } from '../math/Vector2';
-import { PolygonUtils } from '../math/PolygonsUtils';
+import { PolygonUtils, PolygonsUtils } from '../math/PolygonsUtils';
 import AngleRange from './AngleRange';
 import { Line, TYPE_SEGMENT } from '../math/Line';
 import { isEqual } from '../utils';
@@ -17,14 +17,16 @@ const roundPolygon = (polygon) => {
     }
 };
 
+const roundPolygons = (polygons) => {
+    polygons.forEach(polygon => {
+        roundPolygon(polygon);
+    });
+};
+
 export class Part {
     position;
 
     polygons;
-
-    outlinePolygon;
-
-    interPolygon;
 
     area;
 
@@ -37,7 +39,10 @@ export class Part {
     rotatePolygon;
 
     constructor(polygons) {
-        this.polygons = polygons;
+        this.polygons = polygons.slice(0, 2);
+        PolygonsUtils.sort(this.polygons, false);
+        this.area = Vector2.area(this.polygons[0]);
+        this.absArea = Math.abs(this.area);
     }
 }
 
@@ -109,20 +114,7 @@ export class Nest {
         };
     }
 
-    initializeParts() {
-        for (let i = 0; i < this.parts.length; i++) {
-            const part = this.parts[i];
-            part.outlinePolygon = part.polygons[0];
-            if (part.polygons.length > 1) {
-                part.interPolygon = part.polygons[1];
-            }
-
-            PolygonUtils.sort(part.outlinePolygon, false);
-
-            part.area = Vector2.area(part.outlinePolygon);
-            part.absArea = Math.abs(part.area);
-        }
-
+    sortParts() {
         this.parts.sort((part1, part2) => {
             return part2.absArea - part1.absArea;
         });
@@ -150,7 +142,7 @@ export class Nest {
         return vectors;
     }
 
-    calculateTraceLines(anglePolygon, linesPolygon) {
+    calculateTraceLines(anglePolygon, linesPolygon, isPart) {
         const linesVectors = this.polygon2Vectors(linesPolygon);
 
         const traceLines = [];
@@ -168,6 +160,7 @@ export class Nest {
             const range = new AngleRange(angleStart, angleEnd);
 
             if (range.getRange() >= 180) {
+                console.log(isPart, i, p1, p2, p3);
                 continue;
             }
 
@@ -180,6 +173,7 @@ export class Nest {
                         point: p2,
                         vector: vector
                     });
+                    console.log('traceLines', vector);
                 }
             }
         }
@@ -189,7 +183,7 @@ export class Nest {
     generateTraceLine(platePolygon, partPolygon, center) {
         const traceLines = [];
 
-        const traceLines1 = this.calculateTraceLines(partPolygon, platePolygon);
+        const traceLines1 = this.calculateTraceLines(partPolygon, platePolygon, true);
 
         // 1. part-angle is in contact with plate-edge
         for (let i = 0; i < traceLines1.length; i++) {
@@ -204,7 +198,7 @@ export class Nest {
             });
         }
 
-        const traceLines2 = this.calculateTraceLines(platePolygon, partPolygon);
+        const traceLines2 = this.calculateTraceLines(platePolygon, partPolygon, false);
 
         // 2. part-edge is in contact with plate-angle
         for (let i = 0; i < traceLines2.length; i++) {
@@ -621,7 +615,7 @@ export class Nest {
                     const nextAngle = Vector2.anglePoint(traceLines[index].sp, traceLines[index].ep);
                     let diffAngle = nextAngle - currentAngle;
 
-                    if (diffAngle === 180 || diffAngle === -180) {
+                    if (diffAngle === -180) {
                         nextPointIndex = -1;
                         break;
                     }
@@ -703,7 +697,8 @@ export class Nest {
         return newTraceLines;
     }
 
-    mergeTraceLines2Polygon(traceLines, platePolygon, center, i) {
+    // eslint-disable-next-line no-unused-vars
+    mergeTraceLines2Polygon(traceLines, platePolygon, center) {
         // traceLines = this.processCollinear(traceLines);
         traceLines = this.processCollinearOnlyHVLines(traceLines);
 
@@ -711,7 +706,11 @@ export class Nest {
 
         // traceLines = this.deleteNoRingSegments(traceLines);
 
-        traceLines = this.traverTraceLines(traceLines, i);
+        // PolygonUtils.printTraceLines(traceLines);
+
+        traceLines = this.traverTraceLines(traceLines);
+
+        // PolygonUtils.printTraceLines(traceLines);
 
         return traceLines;
     }
@@ -842,102 +841,111 @@ export class Nest {
         return point;
     }
 
-    standardizedPolygon(rotatePolygon) {
-        roundPolygon(rotatePolygon);
-        const box = PolygonUtils.getBox(rotatePolygon);
-        const movePolygon = PolygonUtils.move(rotatePolygon, {
+    standardizedPolygons(rotatePolygons) {
+        roundPolygons(rotatePolygons);
+        const box = PolygonUtils.getBox(rotatePolygons[0]);
+        const movePolygons = PolygonsUtils.move(rotatePolygons, {
             x: -box.min.x,
             y: -box.min.y
         });
 
-        const resPolygon = [movePolygon[0]];
+        const standardizedPolygon = (standardPolygon, outer = true) => {
+            const resPolygon = [standardPolygon[0]];
 
-        for (let i = 1; i < movePolygon.length; i++) {
-            const prePoint = movePolygon[i - 1];
-            const curPoint = movePolygon[i];
+            for (let i = 1; i < standardPolygon.length; i++) {
+                const prePoint = standardPolygon[i - 1];
+                const curPoint = standardPolygon[i];
 
-            if (prePoint.x === curPoint.x || prePoint.y === curPoint.y) {
-                resPolygon.push(curPoint);
-                continue;
-            }
+                if (prePoint.x === curPoint.x || prePoint.y === curPoint.y) {
+                    resPolygon.push(curPoint);
+                    continue;
+                }
 
-            const dx = curPoint.x - prePoint.x;
-            const dy = curPoint.y - prePoint.y;
+                const dx = curPoint.x - prePoint.x;
+                const dy = curPoint.y - prePoint.y;
 
-            const t = Math.max(Math.abs(dx), Math.abs(dy));
-            const firstX = (dx > 0 && dy > 0) || (dx < 0 && dy < 0);
+                const t = Math.max(Math.abs(dx), Math.abs(dy));
+                let firstX = (dx > 0 && dy > 0) || (dx < 0 && dy < 0);
+                if (!outer) {
+                    firstX = !firstX;
+                }
 
-            let lastX = 0;
-            let lastY = 0;
-            const interval = this.interval;
-            for (let j = interval; j < t + interval; j += interval) {
-                const k = Math.min(j / t, 1);
-                const curX = Math.ceil(Math.round(k * dx * 1000) / 1000);
-                const curY = Math.ceil(Math.round(k * dy * 1000) / 1000);
+                let lastX = 0;
+                let lastY = 0;
+                const interval = this.interval;
+                for (let j = interval; j < t + interval; j += interval) {
+                    const k = Math.min(j / t, 1);
+                    const curX = Math.ceil(Math.round(k * dx * 1000) / 1000);
+                    const curY = Math.ceil(Math.round(k * dy * 1000) / 1000);
 
-                if (firstX) {
-                    if (curX !== lastX) {
-                        resPolygon.push({
-                            x: prePoint.x + curX,
-                            y: prePoint.y + lastY
-                        });
-                        lastX = curX;
-                    }
-                    if (curY !== lastY) {
-                        resPolygon.push({
-                            x: prePoint.x + lastX,
-                            y: prePoint.y + curY
-                        });
-                        lastY = curY;
-                    }
-                } else {
-                    if (curY !== lastY) {
-                        resPolygon.push({
-                            x: prePoint.x + lastX,
-                            y: prePoint.y + curY
-                        });
-                        lastY = curY;
-                    }
-                    if (curX !== lastX) {
-                        resPolygon.push({
-                            x: prePoint.x + curX,
-                            y: prePoint.y + lastY
-                        });
-                        lastX = curX;
+                    if (firstX) {
+                        if (curX !== lastX) {
+                            resPolygon.push({
+                                x: prePoint.x + curX,
+                                y: prePoint.y + lastY
+                            });
+                            lastX = curX;
+                        }
+                        if (curY !== lastY) {
+                            resPolygon.push({
+                                x: prePoint.x + lastX,
+                                y: prePoint.y + curY
+                            });
+                            lastY = curY;
+                        }
+                    } else {
+                        if (curY !== lastY) {
+                            resPolygon.push({
+                                x: prePoint.x + lastX,
+                                y: prePoint.y + curY
+                            });
+                            lastY = curY;
+                        }
+                        if (curX !== lastX) {
+                            resPolygon.push({
+                                x: prePoint.x + curX,
+                                y: prePoint.y + lastY
+                            });
+                            lastX = curX;
+                        }
                     }
                 }
             }
+            return simplifyPolygons([resPolygon])[0];
+        };
+
+        const resPolygons = [];
+        for (let i = 0; i < movePolygons.length; i++) {
+            resPolygons.push(standardizedPolygon(movePolygons[i], i % 2 === 0));
         }
 
-        return simplifyPolygons([resPolygon])[0];
+        return resPolygons;
     }
 
     generateNFP(plate, part) {
         const result = {
             position: null,
             angle: 0,
-            rotatePolygon: null,
+            rotatePolygons: null,
             center: null
         };
 
         for (let i = 0; i < 360; i += this.rotate) {
-            let rotatePolygon = i === 0 ? part.outlinePolygon : PolygonUtils.rotate(part.outlinePolygon, i);
-            rotatePolygon = this.standardizedPolygon(rotatePolygon);
+            let rotatePolygons = i === 0 ? part.polygons : PolygonsUtils.rotate(part.polygons, i);
+            rotatePolygons = this.standardizedPolygons(rotatePolygons);
 
-            const platePolygon = plate.polygon;
-            const center = PolygonUtils.center(rotatePolygon);
+            const center = PolygonUtils.center(rotatePolygons[0]);
             roundPoint(center);
 
-            const traceLines = this.generateTraceLine(plate.polygon, rotatePolygon, center);
+            console.log(i, center);
 
-            for (let j = 0; j < traceLines.length; j++) {
-                const traceLine = traceLines[j];
-                if (traceLine.sp.x !== traceLine.ep.x && traceLine.sp.y !== traceLine.ep.y) {
-                    console.error('error');
-                }
-            }
+            console.log('generateNFP');
+            PolygonUtils.printArrows([rotatePolygons[0]]);
+            PolygonUtils.printArrows([plate.polygon]);
 
-            const nfpLines = this.mergeTraceLines2Polygon(traceLines, platePolygon, center, i);
+            const traceLines = this.generateTraceLine(plate.polygon, rotatePolygons[0], center);
+
+            const nfpLines = this.mergeTraceLines2Polygon(traceLines, plate.polygon, center);
 
             if (!nfpLines || nfpLines.length === 0) {
                 console.log('this polygon cant be put in');
@@ -949,12 +957,12 @@ export class Nest {
             if (result.position === null) {
                 result.position = lowerPoint;
                 result.angle = i;
-                result.rotatePolygon = rotatePolygon;
+                result.rotatePolygons = rotatePolygons;
                 result.center = center;
             } else {
                 if (this.setMinPoint(result.position, lowerPoint)) {
                     result.angle = i;
-                    result.rotatePolygon = rotatePolygon;
+                    result.rotatePolygons = rotatePolygons;
                     result.center = center;
                 }
             }
@@ -1010,15 +1018,14 @@ export class Nest {
             return null;
         }
 
-        res.rotatePolygon = PolygonUtils.move(res.rotatePolygon, Vector2.sub(res.position, res.center));
+        res.rotatePolygons = PolygonsUtils.move(res.rotatePolygons, Vector2.sub(res.position, res.center));
 
-        const diffPlatePolygons = polyDiff([plate.polygon], [res.rotatePolygon]);
+        const diffPlatePolygons = polyDiff([plate.polygon], [res.rotatePolygons[0]]);
 
         this.updateCurrentPlate(diffPlatePolygons);
 
-        if (part.interPolygon) {
-            const innerPlate = new Plate(part.interPolygon);
-            this.plates.push(innerPlate);
+        if (res.rotatePolygons.length > 1) {
+            this.plates.push(new Plate(res.rotatePolygons[1]));
         }
 
         return res;
@@ -1035,11 +1042,13 @@ export class Nest {
                     continue;
                 }
 
+                console.log(this.currentPlate, part);
+                PolygonUtils.printArrows([this.currentPlate.polygon]);
                 const res = this.partPlacement(this.currentPlate, part);
 
                 if (res) {
                     part.position = res.position;
-                    part.rotatePolygon = res.rotatePolygon;
+                    part.rotatePolygons = res.rotatePolygons;
                     part.angle = res.angle;
                     part.center = res.center;
 
@@ -1056,7 +1065,7 @@ export class Nest {
     }
 
     start() {
-        this.initializeParts();
+        this.sortParts();
 
         this.startNFP();
     }

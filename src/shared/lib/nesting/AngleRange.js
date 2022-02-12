@@ -23,7 +23,7 @@ export default class AngleRange {
     }
 
     between(angle) {
-        if (this.getRange() > 180) {
+        if (this.getRange() >= 180) {
             return false;
         }
         angle = this.normalize(angle);
