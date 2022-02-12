@@ -2,10 +2,7 @@ import { Vector2 } from './Vector2';
 import { Line, TYPE_SEGMENT } from './Line';
 
 export class PolygonUtils {
-    static rotate(polygon, angle, center = {
-        x: 0,
-        y: 0
-    }) {
+    static rotate(polygon, angle, center = { x: 0, y: 0 }) {
         const resPolygon = [];
         for (let i = 0; i < polygon.length; i++) {
             const p = Vector2.rotate(polygon[i], angle, center);
@@ -14,10 +11,7 @@ export class PolygonUtils {
         return resPolygon;
     }
 
-    static move(polygon, offset = {
-        x: 0,
-        y: 0
-    }) {
+    static move(polygon, offset = { x: 0, y: 0 }) {
         const resPolygon = [];
         for (let i = 0; i < polygon.length; i++) {
             const p = Vector2.add(polygon[i], offset);
@@ -30,7 +24,7 @@ export class PolygonUtils {
         let x = 0;
         let y = 0;
         const count = Vector2.isEqual(polygon[0], polygon[polygon.length - 1]) ? polygon.length - 1 : polygon.length;
-        for (let i = 0; i < polygon.length; i++) {
+        for (let i = 0; i < count; i++) {
             x += polygon[i].x;
             y += polygon[i].y;
         }
@@ -141,5 +135,22 @@ export class PolygonUtils {
         s += ']';
 
         console.log(s);
+    }
+}
+
+export class PolygonsUtils {
+    static rotate(polygons, angle, center = { x: 0, y: 0 }) {
+        return polygons.map(polygon => PolygonUtils.rotate(polygon, angle, center));
+    }
+
+    static move(polygons, offset = { x: 0, y: 0 }) {
+        return polygons.map(polygon => PolygonUtils.move(polygon, offset));
+    }
+
+    static sort(polygons, clockwise) {
+        for (let i = 0; i < polygons.length; i++) {
+            PolygonUtils.sort(polygons[i], clockwise);
+            clockwise = !clockwise;
+        }
     }
 }
