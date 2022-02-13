@@ -236,6 +236,12 @@ function ProfileManager({
                         className="margin-left-8"
                         width="96px"
                         onClick={async () => {
+                            // After deletion, the first item is selected by default
+                            setDefinitionState({
+                                activeDefinitionID: '',
+                                isCategorySelected: false
+                            });
+
                             if (!isCategorySelected) {
                                 await outsideActions.removeManagerDefinition(definition);
                             } else if (isCategorySelected && outsideActions.removeCategoryDefinition) {
@@ -623,10 +629,7 @@ function ProfileManager({
                                             size={24}
                                             className="padding-vertical-2 padding-horizontal-2"
                                             title={i18n._('key-Printing/ProfileManager-Delete')}
-                                            onClick={() => actions.onRemoveManagerDefinition(
-                                                definitionState.definitionForManager,
-                                                definitionState.isCategorySelected
-                                            )}
+                                            onClick={() => actions.onRemoveManagerDefinition(definitionState.definitionForManager, definitionState.isCategorySelected)}
                                             disabled={isOfficialDefinition(definitionState.definitionForManager)}
                                         />
                                     </div>
