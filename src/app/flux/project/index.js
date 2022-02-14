@@ -170,7 +170,7 @@ export const actions = {
         }
         let modActions = null;
         const modState = getState()[envHeadType];
-        // dispatch(operationHistoryActions.clear(envHeadType));
+        dispatch(operationHistoryActions.clear(envHeadType));
         if (envHeadType === HEAD_CNC || envHeadType === HEAD_LASER) {
             modActions = editorActions;
         }
@@ -488,7 +488,7 @@ export const actions = {
         });
         dispatch(printingActions.displayModel());
         // clear operation history
-        // dispatch(operationHistoryActions.clear(newHeadType));
+        dispatch(operationHistoryActions.clear(newHeadType));
     },
 
     saveAndClose: (headType, opts) => async (dispatch, getState) => {
