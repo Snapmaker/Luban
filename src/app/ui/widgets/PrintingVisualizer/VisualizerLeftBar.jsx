@@ -8,9 +8,11 @@ import i18n from '../../../lib/i18n';
 import { toFixed } from '../../../lib/numeric-utils';
 import UniApi from '../../../lib/uni-api';
 import { NumberInput as Input } from '../../components/Input';
+import Select from '../../components/Select';
 import styles from './styles.styl';
 import { actions as printingActions } from '../../../flux/printing';
 import { actions as projectActions } from '../../../flux/project';
+import { actions as machineActions } from '../../../flux/machine';
 import modal from '../../../lib/modal';
 import SvgIcon from '../../components/SvgIcon';
 import { Button } from '../../components/Buttons';
@@ -23,6 +25,7 @@ import SupportOverlay from './Overlay/SupportOverlay';
 import { DUAL_EXTRUDER_TOOLHEAD_FOR_SM2, HEAD_PRINTING,
     EPSILON, BOTH_EXTRUDER_MAP_NUMBER, LEFT_EXTRUDER_MAP_NUMBER } from '../../../constants';
 import { machineStore } from '../../../store/local-storage';
+import TipTrigger from '../../components/TipTrigger';
 
 const extruderLabelMap = {
     '0': 'Extruder L',
@@ -66,8 +69,22 @@ export const renderExtruderIcon = (leftExtruderColor, rightExtruderColor) => (
         )}
     </div>
 );
-function VisualizerLeftBar({ setTransformMode, supportActions, updateBoundingBox, autoRotateSelectedModel }) {
+function CancelButton({ onClick }) {
+    return (
+        <SvgIcon
+            size={24}
+            name="Cancel"
+            type={['static']}
+            onClick={onClick}
+        />
+    );
+}
+CancelButton.propTypes = {
+    onClick: PropTypes.func.isRequired,
+};
+function VisualizerLeftBar({ setTransformMode, supportActions, updateBoundingBox, autoRotateSelectedModel, arrangeAllModels }) {
     const size = useSelector(state => state?.machine?.size, shallowEqual);
+    const printingArrangeSettings = useSelector(state => state?.machine?.printingArrangeSettings, shallowEqual);
     const selectedGroup = useSelector(state => state?.printing?.modelGroup?.selectedGroup, shallowEqual);
     const selectedModelArray = useSelector(state => state?.printing?.modelGroup?.selectedModelArray);
     const modelGroup = useSelector(state => state?.printing?.modelGroup);
@@ -95,6 +112,7 @@ function VisualizerLeftBar({ setTransformMode, supportActions, updateBoundingBox
     const materialDefinitions = useSelector(state => state?.printing?.materialDefinitions, shallowEqual);
     const defaultMaterialId = useSelector(state => state?.printing?.defaultMaterialId, shallowEqual);
     const defaultMaterialIdRight = useSelector(state => state?.printing?.defaultMaterialIdRight, shallowEqual);
+    const [arragneSettings, setArragneSettings] = useState(printingArrangeSettings);
     let modelSize = {};
     if (isSupportSelected || isPrimeTowerSelected) {
         const model = selectedModelArray[0];
@@ -112,6 +130,10 @@ function VisualizerLeftBar({ setTransformMode, supportActions, updateBoundingBox
     const fileInput = useRef(null);
 
     const actions = {
+        handleArragneSettingsChange: (settings) => {
+            setArragneSettings(settings);
+            dispatch(machineActions.updateArrangeSettings(settings));
+        },
         onClickToUpload: () => {
             fileInput.current.value = null;
             fileInput.current.click();
@@ -590,16 +612,16 @@ function VisualizerLeftBar({ setTransformMode, supportActions, updateBoundingBox
                                     <SvgIcon
                                         color="#545659"
                                         className={classNames(
-                                            { [styles.selected]: (!transformDisabled && transformMode === 'translate') },
+                                            { [styles.selected]: (!showRotationAnalyzeModal && transformMode === 'translate') },
                                             'padding-horizontal-4'
                                         )}
-                                        type={[`${!transformDisabled && transformMode === 'translate' ? 'hoverNoBackground' : 'hoverSpecial'}`, 'pressSpecial']}
+                                        type={[`${!showRotationAnalyzeModal && transformMode === 'translate' ? 'hoverNoBackground' : 'hoverSpecial'}`, 'pressSpecial']}
                                         name="ToolbarMove"
                                         size={48}
                                         onClick={() => {
                                             setTransformMode('translate');
                                         }}
-                                        disabled={!!transformDisabled}
+                                        disabled={showRotationAnalyzeModal || models.length === 0}
                                     />
                                 </li>
                                 <li
@@ -699,23 +721,27 @@ function VisualizerLeftBar({ setTransformMode, supportActions, updateBoundingBox
                         </span>
                     </nav>
                 </div>
-                {!transformDisabled && transformMode === 'translate' && (
+                {!showRotationAnalyzeModal && transformMode === 'translate' && (
                     <div
                         className="position-ab width-280 margin-left-72 border-default-grey-1 border-radius-8 background-color-white"
                         style={{
                             marginTop: '60px'
                         }}
                     >
-                        <div className="border-bottom-normal padding-vertical-10 padding-horizontal-16 height-40 font-size-middle">
+                        <div className="sm-flex justify-space-between border-bottom-normal padding-vertical-10 padding-horizontal-16 height-40">
                             {i18n._('key-Printing/LeftBar-Move')}
+                            <CancelButton
+                                onClick={() => setTransformMode('')}
+                            />
                         </div>
                         <div className="padding-vertical-16 padding-horizontal-16">
-                            <div className="sm-flex height-32 margin-bottom-8">
-                                <span className="sm-flex-auto width-16 color-red-1">X</span>
-                                <div className="position-ab sm-flex-auto margin-horizontal-24">
+                            <div className="sm-flex justify-space-between height-32 margin-bottom-8">
+                                <span className="sm-flex-auto color-red-1">X</span>
+                                <div className="sm-flex-auto">
                                     <Input
                                         suffix="mm"
                                         size="small"
+                                        disabled={transformDisabled}
                                         min={-size.x / 2}
                                         max={size.x / 2}
                                         value={moveX}
@@ -725,13 +751,12 @@ function VisualizerLeftBar({ setTransformMode, supportActions, updateBoundingBox
                                         }}
                                     />
                                 </div>
-                            </div>
-                            <div className="sm-flex height-32 margin-bottom-8">
-                                <span className="sm-flex-auto width-16 color-green-1">Y</span>
-                                <div className="position-ab sm-flex-auto margin-horizontal-24">
+                                <span className="sm-flex-auto color-green-1">Y</span>
+                                <div className="sm-flex-auto">
                                     <Input
                                         suffix="mm"
                                         size="small"
+                                        disabled={transformDisabled}
                                         min={-size.y / 2}
                                         max={size.y / 2}
                                         value={moveY}
@@ -749,12 +774,139 @@ function VisualizerLeftBar({ setTransformMode, supportActions, updateBoundingBox
                                         type="primary"
                                         priority="level-three"
                                         width="100%"
+                                        disabled={transformDisabled}
                                         onClick={() => actions.resetPosition(isPrimeTowerSelected)}
                                     >
-                                        <span>{i18n._('key-Printing/LeftBar-Reset')}</span>
+                                        <span>{i18n._('key-Printing/LeftBar-Move to Center')}</span>
                                     </Button>
                                 </div>
                             )}
+                            <div className="border-bottom-normal padding-vertical-10 padding-horizontal-16 height-40">
+                                {i18n._('key-Printing/LeftBar-Arrange Options')}
+                            </div>
+                            <div className="padding-vertical-16 padding-horizontal-16">
+                                <TipTrigger
+                                    title={i18n._('key-Printing/LeftBar-Rotation Step Around Z Axis')}
+                                    content={i18n._('key-Printing/LeftBar-Rotation Step Around Z Axis Content')}
+                                    placement="right"
+                                >
+                                    <div className="sm-flex justify-space-between height-32 margin-bottom-8">
+                                        <span>
+                                            {i18n._('key-Printing/LeftBar-Rotation Step Around Z Axis')}
+                                        </span>
+                                        <div>
+                                            <Select
+                                                size="middle"
+                                                options={[
+                                                    {
+                                                        value: 360,
+                                                        label: '不旋转'
+                                                    },
+                                                    {
+                                                        value: 20,
+                                                        label: '20°'
+                                                    },
+                                                    {
+                                                        value: 30,
+                                                        label: '30°'
+                                                    },
+                                                    {
+                                                        value: 36,
+                                                        label: '36°'
+                                                    },
+                                                    {
+                                                        value: 45,
+                                                        label: '45°'
+                                                    },
+                                                    {
+                                                        value: 60,
+                                                        label: '60°'
+                                                    },
+                                                    {
+                                                        value: 90,
+                                                        label: '90°'
+                                                    },
+                                                    {
+                                                        value: 180,
+                                                        label: '180°'
+                                                    }
+                                                ]}
+                                                value={arragneSettings.angle}
+                                                onChange={(option) => {
+                                                    actions.handleArragneSettingsChange({
+                                                        ...arragneSettings,
+                                                        angle: option.value
+                                                    });
+                                                }}
+                                            />
+                                        </div>
+                                    </div>
+                                </TipTrigger>
+                                <TipTrigger
+                                    title={i18n._('key-Printing/LeftBar-Min Model Distance')}
+                                    content={i18n._('key-Printing/LeftBar-Min Model Distance Content')}
+                                    placement="right"
+                                >
+                                    <div className="sm-flex justify-space-between height-32 margin-bottom-8">
+                                        <span>
+                                            {i18n._('key-Printing/LeftBar-Min Model Distance')}
+                                        </span>
+                                        <div>
+                                            <Input
+                                                suffix="mm"
+                                                size="small"
+                                                min={1}
+                                                value={arragneSettings.offset}
+                                                onChange={(offset) => {
+                                                    actions.handleArragneSettingsChange({
+                                                        ...arragneSettings,
+                                                        offset
+                                                    });
+                                                }}
+                                            />
+                                        </div>
+                                    </div>
+                                </TipTrigger>
+                                <TipTrigger
+                                    title={i18n._('key-Printing/LeftBar-X & Y Margins')}
+                                    content={i18n._('key-Printing/LeftBar-X & Y Margins Content')}
+                                    placement="right"
+                                >
+                                    <div className="sm-flex justify-space-between height-32 margin-bottom-8">
+                                        <span>
+                                            {i18n._('key-Printing/LeftBar-X & Y Margins')}
+                                        </span>
+                                        <div>
+                                            <Input
+                                                suffix="mm"
+                                                size="small"
+                                                min={0}
+                                                value={arragneSettings.padding}
+                                                onChange={(padding) => {
+                                                    actions.handleArragneSettingsChange({
+                                                        ...arragneSettings,
+                                                        padding
+                                                    });
+                                                }}
+                                            />
+                                        </div>
+                                    </div>
+                                </TipTrigger>
+                                <div className="sm-flex">
+                                    <Button
+                                        className="margin-top-32"
+                                        type="primary"
+                                        priority="level-three"
+                                        width="100%"
+                                        onClick={() => {
+                                            const { angle, offset, padding } = arragneSettings;
+                                            arrangeAllModels(angle, offset, padding);
+                                        }}
+                                    >
+                                        <span>{i18n._('key-Printing/LeftBar-Auto Arrange')}</span>
+                                    </Button>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 )}
@@ -767,6 +919,9 @@ function VisualizerLeftBar({ setTransformMode, supportActions, updateBoundingBox
                     >
                         <div className="border-bottom-normal padding-vertical-10 padding-horizontal-16 height-40 font-size-middle">
                             {i18n._('key-Printing/LeftBar-Scale')}
+                            <CancelButton
+                                onClick={() => setTransformMode('')}
+                            />
                         </div>
                         <div className="padding-vertical-16 padding-horizontal-16">
                             <div className="sm-flex height-32 margin-bottom-8">
@@ -890,8 +1045,11 @@ function VisualizerLeftBar({ setTransformMode, supportActions, updateBoundingBox
                             marginTop: '112px'
                         }}
                     >
-                        <div className="border-bottom-normal padding-vertical-10 padding-horizontal-16 height-40 font-size-middle">
+                        <div className="sm-flex justify-space-between border-bottom-normal padding-vertical-10 padding-horizontal-16 height-40">
                             {i18n._('key-Printing/LeftBar-Scale')}
+                            <CancelButton
+                                onClick={() => setTransformMode('')}
+                            />
                         </div>
                         <div className="padding-vertical-16 padding-horizontal-16">
                             <div className="sm-flex height-32 margin-bottom-8">
@@ -973,8 +1131,11 @@ function VisualizerLeftBar({ setTransformMode, supportActions, updateBoundingBox
                             marginTop: '164px'
                         }}
                     >
-                        <div className="border-bottom-normal padding-vertical-10 padding-horizontal-16 height-40 font-size-middle">
+                        <div className="sm-flex justify-space-between border-bottom-normal padding-vertical-10 padding-horizontal-16 height-40">
                             {i18n._('key-Printing/LeftBar-Rotate')}
+                            <CancelButton
+                                onClick={() => setTransformMode('')}
+                            />
                         </div>
                         <div className="padding-vertical-16 padding-horizontal-16">
                             <div className="sm-flex height-32 margin-bottom-8">
@@ -1069,8 +1230,11 @@ function VisualizerLeftBar({ setTransformMode, supportActions, updateBoundingBox
                             marginTop: '216px'
                         }}
                     >
-                        <div className="border-bottom-normal padding-vertical-10 padding-horizontal-16 height-40 font-size-middle">
+                        <div className="sm-flex justify-space-between border-bottom-normal padding-vertical-10 padding-horizontal-16 height-40">
                             {i18n._('key-Printing/LeftBar-Mirror')}
+                            <CancelButton
+                                onClick={() => setTransformMode('')}
+                            />
                         </div>
                         <div className="padding-vertical-16 padding-horizontal-16">
                             <div className="sm-flex">
@@ -1118,8 +1282,11 @@ function VisualizerLeftBar({ setTransformMode, supportActions, updateBoundingBox
                             marginTop: '320px'
                         }}
                     >
-                        <div className="border-bottom-normal padding-vertical-10 padding-horizontal-16 height-40 font-size-middle">
+                        <div className="border-bottom-normal padding-vertical-10 padding-horizontal-16 height-40 sm-flex justify-space-between">
                             {i18n._('key-Printing/LeftBar-Extruder')}
+                            <CancelButton
+                                onClick={() => setTransformMode('')}
+                            />
                         </div>
                         <div className="padding-bottom-16 padding-top-8 padding-left-8">
                             <div className="select-models-container">
@@ -1263,8 +1430,8 @@ VisualizerLeftBar.propTypes = {
     // scaleToFitSelectedModel: PropTypes.func.isRequired,
     autoRotateSelectedModel: PropTypes.func.isRequired,
     setTransformMode: PropTypes.func.isRequired,
-    updateBoundingBox: PropTypes.func.isRequired
-
+    updateBoundingBox: PropTypes.func.isRequired,
+    arrangeAllModels: PropTypes.func.isRequired
 };
 
 export default React.memo(VisualizerLeftBar);

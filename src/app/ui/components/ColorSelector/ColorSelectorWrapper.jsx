@@ -5,10 +5,10 @@ import { CustomPicker } from 'react-color';
 import Anchor from '../Anchor';
 import SvgIcon from '../SvgIcon';
 import i18n from '../../../lib/i18n';
-import { componentsStore } from '../../../store/local-storage';
+import { printingStore } from '../../../store/local-storage';
 
 const ColorSelectorPicker = React.memo(({ onChangeComplete, onClose, colors, value, recentColorKey }) => {
-    const recentColors = (componentsStore.get(`color-selector-${recentColorKey}`) ?? []);
+    const recentColors = (printingStore.get(`color-selector-${recentColorKey}`) ?? []);
     for (let i = 0; i < 10; i++) {
         if (recentColors[i] === undefined) {
             recentColors.push('');
@@ -25,7 +25,7 @@ const ColorSelectorPicker = React.memo(({ onChangeComplete, onClose, colors, val
             }
             newRecentColors = [color, ...recentColors];
             newRecentColors.splice(10, 1);
-            componentsStore.set(`color-selector-${recentColorKey}`, newRecentColors);
+            printingStore.set(`color-selector-${recentColorKey}`, newRecentColors);
         }
     };
     return (

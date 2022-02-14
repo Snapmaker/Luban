@@ -289,7 +289,9 @@ i18n._('key-Progress/3DP-Failed to calculate Rotation.');
 i18n._('key-Progress/3DP-Generating support... {{progress}}%');
 i18n._('key-Progress/3DP-Generated support successfully.');
 i18n._('key-Progress/3DP-Failed to generate support.');
-
+i18n._('key-Progress/3DP-Arranging models...{{progress}}%');
+i18n._('key-Progress/3DP-Arrange models successfully.');
+i18n._('key-Progress/3DP-Arrange models failed.');
 
 // Machine Settings
 i18n._('key-App/Settings/MachineSettings-Single Extruder Toolhead');

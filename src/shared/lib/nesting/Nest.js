@@ -40,11 +40,14 @@ export class Part {
 
     isPlace = false;
 
-    constructor(polygons) {
+    modelID;
+
+    constructor(polygons, modelID) {
         this.polygons = polygons.slice(0, 2);
         PolygonsUtils.sort(this.polygons, false);
         this.area = Vector2.area(this.polygons[0]);
         this.absArea = Math.abs(this.area);
+        this.modelID = modelID;
     }
 }
 
@@ -87,7 +90,7 @@ export class Nest {
             rotate = 360,
             limitEdge = 2,
             accuracy = 10,
-            offset = 0,
+            offset = 1
         } = options;
 
         this.rotate = rotate;
@@ -104,7 +107,7 @@ export class Nest {
             }
 
             roundAndMulPolygons(simplyPolygons, this.accuracy);
-            this.parts.push(new Part(simplyPolygons));
+            this.parts.push(new Part(simplyPolygons, parts[i].modelID));
         }
 
         this.sortParts();
@@ -985,7 +988,6 @@ export class Nest {
             const nfpRings = this.mergeTraceLines2Polygon(traceLines, plate.polygon, center);
 
             if (!nfpRings || nfpRings.length === 0) {
-                // console.log('this polygon cant be put in');
                 continue;
             }
 
@@ -1090,8 +1092,9 @@ export class Nest {
         return res;
     }
 
-    startNFP() {
+    startNFP(onProgress) {
         for (let i = 0; i < this.parts.length; i++) {
+            onProgress && onProgress(i / this.parts.length);
             const part = this.parts[i];
 
             if (part.isPlace) {
@@ -1126,8 +1129,8 @@ export class Nest {
                 continue;
             }
             roundAndMulPolygons(part.rotatePolygons, 1 / this.accuracy);
-            roundAndMulPolygon(part.center, 1 / this.accuracy);
-            roundAndMulPolygon(part.position, 1 / this.accuracy);
+            roundAndMulPoint(part.center, 1 / this.accuracy);
+            roundAndMulPoint(part.position, 1 / this.accuracy);
             part.area /= this.accuracy;
             part.absArea /= this.accuracy;
         }
@@ -1135,7 +1138,7 @@ export class Nest {
         return this.resultParts;
     }
 
-    start() {
-        return this.startNFP();
+    start(onProgress) {
+        return this.startNFP(onProgress);
     }
 }

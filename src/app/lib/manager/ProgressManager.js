@@ -44,9 +44,12 @@ export const STEP_STAGE = {
     PRINTING_PREVIEW_SUCCEED: 31,
     PRINTING_PREVIEW_FAILED: 32,
     PRINTING_ROTATE_ANALYZE: 33,
-    PRINTING_GENERATE_SUPPORT_AREA: 37,
-    PRINTING_GENERATE_SUPPORT_MODEL: 38,
-    PRINTING_GENERATE_SUPPORT_FAILED: 39
+    PRINTING_GENERAtE_SUPPORT_AREA: 37,
+    PRINTING_GENERAtE_SUPPORT_MODEL: 38,
+    PRINTING_GENERAtE_SUPPORT_FAILED: 39,
+    PRINTING_ARRANGE_MODELS_SUCCESS: 40,
+    PRINTING_ARRANGE_MODELS_FAILED: 41,
+    PRINTING_ARRANGING_MODELS: 42
 };
 
 export const PROCESS_STAGE = {
@@ -65,7 +68,8 @@ export const PROCESS_STAGE = {
     PRINTING_LOAD_MODEL: 5,
     PRINTING_SLICE_AND_PREVIEW: 6,
     PRINTING_ROTATE_ANALYZE: 7,
-    PRINTING_GENERATE_SUPPORT: 9
+    PRINTING_GENERAtE_SUPPORT: 9,
+    PRINTING_ARRANGE_MODELS: 10
 };
 
 const _STATE = {
@@ -235,6 +239,16 @@ class ProgressStatesManager {
             'key-Progress/3DP-Generating support... {{progress}}%',
             'key-Progress/3DP-Generated support successfully.',
             'key-Progress/3DP-Failed to generate support.');
+        this.push(PROCESS_STAGE.PRINTING_ARRANGE_MODELS,
+            [
+                {
+                    stageID: STEP_STAGE.PRINTING_ARRANGING_MODELS,
+                    percent: 1
+                }
+            ],
+            'key-Progress/3DP-Arranging models...{{progress}}%',
+            'key-Progress/3DP-Arrange models successfully.',
+            'key-Progress/3DP-Arrange models failed.');
     }
 
     push(processStageID, stages, notice, successNotice, failedNotice) {

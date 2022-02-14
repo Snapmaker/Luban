@@ -9,13 +9,15 @@ import { Nest, Part, Plate } from './Nest';
  */
 const generateSTLToPolygon = (faces, options) => {
     const {
-        interval = 2,
-        min
+        interval,
+        boundingBox,
     } = options;
 
     const gridProjection = new GridProjection({
+
         interval: interval,
-        min
+        min: boundingBox.min,
+        max: boundingBox.max
     });
 
     for (let i = 0; i < faces.length; i++) {
@@ -26,20 +28,22 @@ const generateSTLToPolygon = (faces, options) => {
     return gridProjection.getOutlinePolygons();
 };
 
-export const nesting = (stls, size) => {
+export const nesting = (stls, options, onProgress) => {
+    const { size, angle, offset } = options;
     const globalOptions = {
         interval: 2,
-        rotate: 45
+        rotate: angle,
+        offset
     };
 
     const parts = [];
     const plates = [];
 
     for (let i = 0; i < stls.length; i++) {
-        const part = new Part(generateSTLToPolygon(stls[i].faces), {
+        const part = new Part(generateSTLToPolygon(stls[i].faces, {
             interval: globalOptions.interval,
-            min: stls[i].boundingBox.min
-        });
+            boundingBox: stls[i].boundingBox
+        }), stls[i].modelID);
         parts.push(part);
     }
 
@@ -65,10 +69,10 @@ export const nesting = (stls, size) => {
     const nest = new Nest({
         parts,
         plates,
-        rotate: globalOptions.rotate,
-        interval: globalOptions.interval
+        limitEdge: globalOptions.interval,
+        accuracy: globalOptions.accuracy,
+        offset: globalOptions.offset,
+        rotate: globalOptions.rotate
     });
-    nest.start();
-
-    return parts;
+    return nest.start(onProgress);
 };

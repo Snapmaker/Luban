@@ -26,7 +26,7 @@ import {
 
 import i18n from '../../lib/i18n';
 import { valueOf } from '../../lib/contants-utils';
-import { machineStore } from '../../store/local-storage';
+import { machineStore, printingStore } from '../../store/local-storage';
 import { actions as printingActions } from '../printing';
 import { actions as editorActions } from '../editor';
 import { actions as widgetActions } from '../widget';
@@ -59,6 +59,11 @@ const INITIAL_STATE = {
     connectionType: CONNECTION_TYPE_WIFI,
     connectionStatus: CONNECTION_STATUS_IDLE,
     connectionTimeout: 3000,
+    printingArrangeSettings: {
+        angle: 30,
+        offset: 5,
+        padding: 5
+    },
 
     server: ABSENT_OBJECT,
     savedServerAddress: '',
@@ -221,6 +226,17 @@ export const actions = {
             dispatch(baseActions.updateState({
                 shouldCheckForUpdate: shouldCheckForUpdate
             }));
+        }
+        const printingArrangeSettings = printingStore.get('printingArrangeSettings');
+        if (printingArrangeSettings) {
+            try {
+                const newArrangeSettings = JSON.parse(printingArrangeSettings);
+                dispatch(baseActions.updateState({
+                    printingArrangeSettings: newArrangeSettings
+                }));
+            } catch (e) {
+                console.error(e);
+            }
         }
         const printingCustomConfigs = machineStore.get('printingCustomConfigs');
         if (printingCustomConfigs && Object.prototype.toString.call(printingCustomConfigs) === '[object String]') {
@@ -1082,6 +1098,10 @@ export const actions = {
     updateShouldCheckForUpdate: (shouldCheckForUpdate) => (dispatch) => {
         dispatch(baseActions.updateState({ shouldCheckForUpdate: shouldCheckForUpdate }));
         machineStore.set('shouldCheckForUpdate', shouldCheckForUpdate);
+    },
+    updateArrangeSettings: (printingArrangeSettings) => (dispatch) => {
+        dispatch(baseActions.updateState({ printingArrangeSettings }));
+        printingStore.set('printingArrangeSettings', JSON.stringify(printingArrangeSettings));
     },
     updatePrintingCustomConfigs: (printingCustomConfigs) => (dispatch) => {
         dispatch(baseActions.updateState({ printingCustomConfigs }));
