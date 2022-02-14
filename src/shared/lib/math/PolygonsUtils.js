@@ -120,6 +120,16 @@ export class PolygonUtils {
         console.log(s);
     }
 
+    static printTraceRings(traceRings) {
+        const resTraceLines = [];
+        for (let i = 0; i < traceRings.length; i++) {
+            for (let j = 0; j < traceRings[i].length; j++) {
+                resTraceLines.push(traceRings[i][j]);
+            }
+        }
+        this.printTraceLines(resTraceLines);
+    }
+
     static printTraceLines(traceLines) {
         let s = '[';
         for (let i = 0; i < traceLines.length; i++) {
@@ -136,6 +146,55 @@ export class PolygonUtils {
 
         console.log(s);
     }
+
+    // algorithm: douglasPeucker
+    static simplify = (polygon, limit) => {
+        if (!polygon || polygon.length < 3) {
+            return polygon;
+        }
+
+        // polygon = polygon.map((v, i) => {
+        //     v.i = i;
+        //     return v;
+        // });
+
+        const compressLine = (poly, start, end) => {
+            const res = [];
+            if (start < end) {
+                let maxDist = 0;
+                let idx = 0;
+                const startPoint = poly[start];
+                const endPoint = poly[end];
+
+                for (let i = start + 1; i < end; i++) {
+                    const currentDist = Line.pointDistance(poly[i], startPoint, endPoint);
+                    if (currentDist > maxDist) {
+                        maxDist = currentDist;
+                        idx = i;
+                    }
+                }
+                if (maxDist >= limit) {
+                    const res1 = compressLine(poly, start, idx);
+                    const res2 = compressLine(poly, idx, end);
+                    for (let i = 0; i < res1.length - 1; i++) {
+                        res.push(res1[i]);
+                    }
+                    for (let i = 0; i < res2.length; i++) {
+                        res.push(res2[i]);
+                    }
+                } else {
+                    res.push(poly[start]);
+                    res.push(poly[end]);
+                }
+            }
+            return res;
+        };
+
+        const result = compressLine(polygon, 0, polygon.length - 2);
+        result.push(polygon[polygon.length - 1]);
+
+        return result;
+    };
 }
 
 export class PolygonsUtils {
@@ -152,5 +211,9 @@ export class PolygonsUtils {
             PolygonUtils.sort(polygons[i], clockwise);
             clockwise = !clockwise;
         }
+    }
+
+    static simplify(polygons, limit) {
+        return polygons.map(polygon => PolygonUtils.simplify(polygon, limit));
     }
 }
