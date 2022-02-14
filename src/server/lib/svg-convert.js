@@ -135,8 +135,8 @@ const convertTextToSvg = async (options) => {
     const boundingBox = fullPath.getBoundingBox();
     const width = boundingBox.x2 - boundingBox.x1;
     console.log('estimatedFontSize', estimatedFontSize, boundingBox.y2 - boundingBox.y1);
-    const height = estimatedFontSize + estimatedFontSize * lineHeight * (numberOfLines - 1);
-    // const height = boundingBox.y2 - boundingBox.y1;
+    // const height = estimatedFontSize + estimatedFontSize * lineHeight * (numberOfLines - 1);
+    const height = boundingBox.y2 - boundingBox.y1;
 
     const svgString = _.template(TEMPLATE)({
         path: fullPath.toSVG(),

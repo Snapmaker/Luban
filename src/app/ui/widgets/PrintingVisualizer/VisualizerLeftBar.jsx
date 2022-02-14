@@ -10,6 +10,7 @@ import UniApi from '../../../lib/uni-api';
 import { NumberInput as Input } from '../../components/Input';
 import styles from './styles.styl';
 import { actions as printingActions } from '../../../flux/printing';
+import { actions as projectActions } from '../../../flux/project';
 import modal from '../../../lib/modal';
 import SvgIcon from '../../components/SvgIcon';
 import { Button } from '../../components/Buttons';
@@ -17,7 +18,8 @@ import Checkbox from '../../components/Checkbox';
 import Dropdown from '../../components/Dropdown';
 import Menu from '../../components/Menu';
 import RotationAnalysisOverlay from './Overlay/RotationAnalysisOverlay';
-import { DUAL_EXTRUDER_TOOLHEAD_FOR_SM2, EPSILON, BOTH_EXTRUDER_MAP_NUMBER, LEFT_EXTRUDER_MAP_NUMBER } from '../../../constants';
+import { DUAL_EXTRUDER_TOOLHEAD_FOR_SM2, EPSILON,
+    HEAD_PRINTING, BOTH_EXTRUDER_MAP_NUMBER, LEFT_EXTRUDER_MAP_NUMBER } from '../../../constants';
 import { machineStore } from '../../../store/local-storage';
 
 const extruderLabelMap = {
@@ -354,6 +356,7 @@ function VisualizerLeftBar({ defaultSupportSize, setTransformMode, isSupporting,
                 default:
                     break;
             }
+            dispatch(projectActions.autoSaveEnvironment(HEAD_PRINTING));
         },
         handleOpen: (type) => {
             let temp = null;

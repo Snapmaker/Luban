@@ -252,6 +252,7 @@ export const processActions = {
         dispatch(baseActions.updateState(headType, {
             isChangedAfterGcodeGenerating: true
         }));
+        dispatch(projectActions.autoSaveEnvironment(headType));
     },
 
     toolPathToDown: (headType, toolPathId) => (dispatch, getState) => {
@@ -260,6 +261,7 @@ export const processActions = {
         dispatch(baseActions.updateState(headType, {
             isChangedAfterGcodeGenerating: true
         }));
+        dispatch(projectActions.autoSaveEnvironment(headType));
     },
 
     toolPathToTop: (headType, toolPathId) => (dispatch, getState) => {
