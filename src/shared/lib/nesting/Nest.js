@@ -3,23 +3,23 @@ import { PolygonUtils, PolygonsUtils } from '../math/PolygonsUtils';
 import AngleRange from './AngleRange';
 import { Line, TYPE_SEGMENT } from '../math/Line';
 import { isEqual } from '../utils';
-import { polyDiff, polyOffset, simplifyPolygons } from '../../../server/lib/clipper/cLipper-adapter';
+import { polyDiff, polyIntersection, polyOffset, simplifyPolygons } from '../../../server/lib/clipper/cLipper-adapter';
 import * as ClipperLib from '../../../server/lib/clipper/clipper';
 
-const roundPoint = (point) => {
-    point.x = Math.round(point.x);
-    point.y = Math.round(point.y);
+const roundAndMulPoint = (point, n = 1) => {
+    point.x = Math.round(point.x * n);
+    point.y = Math.round(point.y * n);
 };
 
-const roundPolygon = (polygon) => {
+const roundAndMulPolygon = (polygon, n = 1) => {
     for (let i = 0; i < polygon.length; i++) {
-        roundPoint(polygon[i]);
+        roundAndMulPoint(polygon[i], n);
     }
 };
 
-const roundPolygons = (polygons) => {
+const roundAndMulPolygons = (polygons, n) => {
     polygons.forEach(polygon => {
-        roundPolygon(polygon);
+        roundAndMulPolygon(polygon, n);
     });
 };
 
@@ -37,6 +37,8 @@ export class Part {
     angle;
 
     rotatePolygon;
+
+    isPlace = false;
 
     constructor(polygons) {
         this.polygons = polygons.slice(0, 2);
@@ -62,8 +64,6 @@ export class Plate {
 }
 
 export class Nest {
-    currentPlate = null;
-
     interval = 2;
 
     plates = [];
@@ -83,13 +83,32 @@ export class Nest {
             plates = [],
             parts = [],
             rotate = 360,
-            interval = 2
+            interval = 2,
+            accuracy = 10
         } = options;
 
-        this.plates = plates.map(v => v);
         this.rotate = rotate;
         this.interval = interval;
-        this.parts = parts.map(v => v);
+        this.accuracy = accuracy;
+
+        for (let i = 0; i < parts.length; i++) {
+            const polygons = parts[i].polygons;
+            const simplyPolygons = PolygonsUtils.simplify(polygons, this.interval);
+            roundAndMulPolygons(simplyPolygons, this.accuracy);
+            this.parts.push(new Part(simplyPolygons));
+        }
+
+        this.sortParts();
+
+        // TODO import
+        // this.parts = this.parts.slice(0, 20);
+
+        for (let i = 0; i < plates.length; i++) {
+            const polygon = plates[i].polygon;
+            const simplyPolygon = PolygonUtils.simplify(polygon, this.interval);
+            roundAndMulPolygon(simplyPolygon, this.accuracy);
+            this.plates.push(new Plate(polygon));
+        }
     }
 
     sortPolygon(polygon, clockwise) {
@@ -142,7 +161,7 @@ export class Nest {
         return vectors;
     }
 
-    calculateTraceLines(anglePolygon, linesPolygon, isPart) {
+    calculateTraceLines(anglePolygon, linesPolygon) {
         const linesVectors = this.polygon2Vectors(linesPolygon);
 
         const traceLines = [];
@@ -160,7 +179,6 @@ export class Nest {
             const range = new AngleRange(angleStart, angleEnd);
 
             if (range.getRange() >= 180) {
-                console.log(isPart, i, p1, p2, p3);
                 continue;
             }
 
@@ -173,7 +191,6 @@ export class Nest {
                         point: p2,
                         vector: vector
                     });
-                    console.log('traceLines', vector);
                 }
             }
         }
@@ -183,7 +200,7 @@ export class Nest {
     generateTraceLine(platePolygon, partPolygon, center) {
         const traceLines = [];
 
-        const traceLines1 = this.calculateTraceLines(partPolygon, platePolygon, true);
+        const traceLines1 = this.calculateTraceLines(partPolygon, platePolygon);
 
         // 1. part-angle is in contact with plate-edge
         for (let i = 0; i < traceLines1.length; i++) {
@@ -198,7 +215,7 @@ export class Nest {
             });
         }
 
-        const traceLines2 = this.calculateTraceLines(platePolygon, partPolygon, false);
+        const traceLines2 = this.calculateTraceLines(platePolygon, partPolygon);
 
         // 2. part-edge is in contact with plate-angle
         for (let i = 0; i < traceLines2.length; i++) {
@@ -237,8 +254,9 @@ export class Nest {
                         traceLine1.interPoints.push(l2.v1);
                     }
                 } else {
-                    const point = Line.intersectionPoint(l1, l2);
+                    const point = Line.intersectionPoint(l1.v0, l1.v1, l2.v0, l2.v1);
                     if (point !== null) {
+                        // roundAndMulPoint(point);
                         traceLine1.interPoints.push(point);
                     }
                 }
@@ -553,6 +571,16 @@ export class Nest {
             const traceLine = traceLines[i];
             const sp = traceLine.sp;
             const ep = traceLine.ep;
+
+            if (sp.x === 26 && sp.y === 495) {
+                PolygonUtils.printArrows([platePolygon]);
+                PolygonUtils.printTraceLines([traceLine]);
+                console.log('error point', !PolygonUtils.isPointInPolygon(sp, platePolygon), !PolygonUtils.isPointInPolygon(ep, platePolygon));
+            }
+            if (sp.x === 495 && sp.y === 26) {
+                console.log('error point', !PolygonUtils.isPointInPolygon(sp, platePolygon), !PolygonUtils.isPointInPolygon(ep, platePolygon));
+            }
+
             if (Vector2.isEqual(sp, ep)) {
                 continue;
             }
@@ -615,10 +643,10 @@ export class Nest {
                     const nextAngle = Vector2.anglePoint(traceLines[index].sp, traceLines[index].ep);
                     let diffAngle = nextAngle - currentAngle;
 
-                    if (diffAngle === -180) {
-                        nextPointIndex = -1;
-                        break;
-                    }
+                    // if (diffAngle === -180) {
+                    //     nextPointIndex = -1;
+                    //     break;
+                    // }
 
                     if (diffAngle > 180) {
                         diffAngle -= 360;
@@ -671,7 +699,7 @@ export class Nest {
                     }
                 }
 
-                return newTraceLines;
+                // return newTraceLines;
             }
 
             const deleteSet = new Set();
@@ -692,27 +720,52 @@ export class Nest {
                 }
             }
             traceLines = traceLines.filter((v, i) => !deleteSet.has(i));
+
+            if (newTraceLines.length > 0) {
+                return [newTraceLines, traceLines];
+            }
         }
 
-        return newTraceLines;
+        // console.log('traverTraceLines');
+        // PolygonUtils.printTraceLines(nt);
+        // PolygonUtils.printTraceLines(newTraceLines);
+
+        return [newTraceLines, traceLines];
     }
 
     // eslint-disable-next-line no-unused-vars
     mergeTraceLines2Polygon(traceLines, platePolygon, center) {
-        // traceLines = this.processCollinear(traceLines);
-        traceLines = this.processCollinearOnlyHVLines(traceLines);
+        console.log('mergeTraceLines2Polygon');
+        // PolygonUtils.printTraceLines(traceLines);
+        traceLines = this.processCollinear(traceLines);
+        PolygonUtils.printTraceLines(traceLines);
+        // traceLines = this.processCollinearOnlyHVLines(traceLines);
 
-        // traceLines = this.deleteOutTraceLine(traceLines, platePolygon, center);
+        traceLines = this.deleteOutTraceLine(traceLines, platePolygon, center);
+        console.log('error');
+        PolygonUtils.printTraceLines(traceLines);
 
         // traceLines = this.deleteNoRingSegments(traceLines);
 
+        const traceRings = [];
+        let newTraceLines;
+
+        while (true) {
+            [newTraceLines, traceLines] = this.traverTraceLines(traceLines);
+            if (newTraceLines.length > 0) {
+                traceRings.push(newTraceLines.map(v => v));
+            } else {
+                break;
+            }
+        }
+
+        PolygonUtils.printTraceRings(traceRings);
+        // PolygonUtils.printTraceLines(traceLines);
+        console.log('mergeTraceLines2Polygon down');
+
         // PolygonUtils.printTraceLines(traceLines);
 
-        traceLines = this.traverTraceLines(traceLines);
-
-        // PolygonUtils.printTraceLines(traceLines);
-
-        return traceLines;
+        return traceRings;
     }
 
     toPointHash(point) {
@@ -777,6 +830,12 @@ export class Nest {
         return traceLines.filter((v, i) => !deleteIndex.has(i));
     }
 
+    lessThanLowerPoint(point1, point2) {
+        const len1 = Vector2.length2(point1);
+        const len2 = Vector2.length2(point2);
+        return len1 < len2;
+    }
+
     setMinPoint(lowerPoint, point) {
         const lowerLen2 = lowerPoint.x * lowerPoint.x + lowerPoint.y * lowerPoint.y;
         const pointLen2 = point.x * point.x + point.y * point.y;
@@ -809,16 +868,14 @@ export class Nest {
     }
 
     searchLowerStartPointIndex(nfpLines) {
-        const point = {
-            x: nfpLines[0].sp.x,
-            y: nfpLines[0].sp.y
-        };
+        let point = nfpLines[0].sp;
         let index = 0;
 
         for (let i = 0; i < nfpLines.length; i++) {
             const nfpLine = nfpLines[i];
 
-            if (this.setMinPoint(point, nfpLine.sp)) {
+            if (this.lessThanLowerPoint(nfpLine.sp, point)) {
+                point = nfpLine.sp;
                 index = i;
             }
         }
@@ -826,23 +883,27 @@ export class Nest {
     }
 
     searchLowerPosition(nfpLines) {
-        const point = {
-            x: nfpLines[0].sp.x,
-            y: nfpLines[0].sp.y
-        };
+        let point = nfpLines[0].sp;
 
         for (let i = 0; i < nfpLines.length; i++) {
             const nfpLine = nfpLines[i];
 
-            this.setMinPoint(point, nfpLine.sp);
-            this.setMinPoint(point, nfpLine.ep);
+            if (this.lessThanLowerPoint(nfpLine.sp, point)) {
+                point = nfpLine.sp;
+            }
+            if (this.lessThanLowerPoint(nfpLine.ep, point)) {
+                point = nfpLine.ep;
+            }
         }
 
-        return point;
+        return {
+            x: point.x,
+            y: point.y
+        };
     }
 
     standardizedPolygons(rotatePolygons) {
-        roundPolygons(rotatePolygons);
+        roundAndMulPolygons(rotatePolygons);
         const box = PolygonUtils.getBox(rotatePolygons[0]);
         const movePolygons = PolygonsUtils.move(rotatePolygons, {
             x: -box.min.x,
@@ -922,89 +983,161 @@ export class Nest {
         return resPolygons;
     }
 
+    getRotatePolygons(polygons, i) {
+        const rotatePolygons = PolygonsUtils.rotate(polygons, i);
+        roundAndMulPolygons(rotatePolygons);
+
+        const box = PolygonUtils.getBox(rotatePolygons[0]);
+        const movePolygons = PolygonsUtils.move(rotatePolygons, {
+            x: -box.min.x,
+            y: -box.min.y
+        });
+        return movePolygons;
+    }
+
+    getCenter(polygon) {
+        const center = PolygonUtils.center(polygon);
+        roundAndMulPoint(center);
+        return center;
+    }
+
     generateNFP(plate, part) {
-        const result = {
-            position: null,
-            angle: 0,
-            rotatePolygons: null,
-            center: null
-        };
+        let finalResult = null;
 
         for (let i = 0; i < 360; i += this.rotate) {
-            let rotatePolygons = i === 0 ? part.polygons : PolygonsUtils.rotate(part.polygons, i);
-            rotatePolygons = this.standardizedPolygons(rotatePolygons);
+            const rotatePolygons = this.getRotatePolygons(part.polygons, i);
 
-            const center = PolygonUtils.center(rotatePolygons[0]);
-            roundPoint(center);
+            const center = this.getCenter(rotatePolygons[0]);
 
-            console.log(i, center);
+            console.log('rotate generateNFP');
 
-            console.log('generateNFP');
-            PolygonUtils.printArrows([rotatePolygons[0]]);
-            PolygonUtils.printArrows([plate.polygon]);
+            PolygonUtils.printArrows(rotatePolygons);
 
             const traceLines = this.generateTraceLine(plate.polygon, rotatePolygons[0], center);
 
-            const nfpLines = this.mergeTraceLines2Polygon(traceLines, plate.polygon, center);
+            console.log('generateTraceLine');
+            PolygonUtils.printTraceLines(traceLines);
+            console.log('polygon');
+            PolygonUtils.printArrows([plate.polygon]);
 
-            if (!nfpLines || nfpLines.length === 0) {
+            const nfpRings = this.mergeTraceLines2Polygon(traceLines, plate.polygon, center);
+
+            if (!nfpRings || nfpRings.length === 0) {
                 console.log('this polygon cant be put in');
                 continue;
             }
 
-            const lowerPoint = this.searchLowerPosition(nfpLines);
+            let lowerPoint = null;
 
-            if (result.position === null) {
-                result.position = lowerPoint;
-                result.angle = i;
-                result.rotatePolygons = rotatePolygons;
-                result.center = center;
-            } else {
-                if (this.setMinPoint(result.position, lowerPoint)) {
-                    result.angle = i;
-                    result.rotatePolygons = rotatePolygons;
-                    result.center = center;
+            console.log('nfpLines', nfpRings.length);
+
+            for (let j = 0; j < nfpRings.length; j++) {
+                const nfpLines = nfpRings[j];
+                console.log('nfpLinesTmp', nfpLines);
+                const lowerPointTmp = this.searchLowerPosition(nfpLines);
+                // roundAndMulPoint(lowerPointTmp);
+
+                const movePolygons = PolygonsUtils.move(rotatePolygons, Vector2.sub(lowerPointTmp, center));
+                const diffPolygons = polyDiff([movePolygons[0]], [plate.polygon]);
+                console.log('nfpLines', j);
+                PolygonUtils.printArrows([movePolygons[0]]);
+                PolygonUtils.printArrows([plate.polygon]);
+                PolygonUtils.printArrows(diffPolygons);
+
+                if (diffPolygons && diffPolygons[0] && diffPolygons[0].length > 0) {
+                    continue;
                 }
+
+                lowerPoint = lowerPointTmp;
+            }
+
+            if (lowerPoint === null) {
+                console.log('this lower point is null');
+                continue;
+            }
+
+            const result = {
+                position: lowerPoint,
+                angle: i,
+                center: center,
+                rotatePolygons: rotatePolygons
+            };
+
+            if (finalResult === null) {
+                finalResult = result;
+            } else if (this.lessThanLowerPoint(result.position, finalResult.position)) {
+                finalResult = result;
+            }
+
+            console.log('lowerPoint', i, lowerPoint, result.angle);
+            if (i === result.angle) {
+                console.log('is the last');
             }
         }
 
-        return result.position === null ? null : result;
+        return finalResult;
     }
 
-    resetCurrentPlate() {
-        this.currentPlate = null;
-        if (!this.plates || this.plates.length === 0) {
-            return;
-        }
-        let maxIndex = -1;
-        let maxArea = -1;
+    // resetCurrentPlate() {
+    //     this.currentPlate = null;
+    //     if (!this.plates || this.plates.length === 0) {
+    //         return;
+    //     }
+    //     let maxIndex = -1;
+    //     let maxArea = -1;
+    //
+    //     for (let i = 0; i < this.plates.length; i++) {
+    //         if (this.plates[i].absArea > maxArea) {
+    //             maxArea = this.plates[i].absArea;
+    //             maxIndex = i;
+    //         }
+    //     }
+    //
+    //     this.currentPlate = this.plates.splice(maxIndex, 1)[0];
+    // }
 
-        for (let i = 0; i < this.plates.length; i++) {
-            if (this.plates[i].absArea > maxArea) {
-                maxArea = this.plates[i].absArea;
-                maxIndex = i;
-            }
-        }
-
-        this.currentPlate = this.plates.splice(maxIndex, 1)[0];
+    sortPlates() {
+        this.plates.sort((a, b) => {
+            return b.absArea - a.absArea;
+        });
     }
 
-    updateCurrentPlate(diffPlatePolygons) {
-        const innerPolys = polyOffset(diffPlatePolygons, -this.plateOffset, ClipperLib.JoinType.jtMiter);
+    updateCurrentPlate(currentPlate, diffPlatePolygons) {
+        // const innerPolys = polyOffset(diffPlatePolygons, -this.plateOffset, ClipperLib.JoinType.jtMiter);
+        const offsetPolys = polyOffset(diffPlatePolygons, -this.plateOffset, ClipperLib.JoinType.jtMiter);
+
+        console.log('updateCurrentPlate');
+        PolygonUtils.printArrows(offsetPolys);
+
+        const innerPolys = [];
+
+        for (let i = 0; i < offsetPolys.length; i++) {
+            const offsetPoly = offsetPolys[i];
+            const outerPoly = polyOffset([offsetPoly], this.plateOffset, ClipperLib.JoinType.jtMiter)[0];
+            console.log(i);
+            roundAndMulPolygon(outerPoly);
+            PolygonUtils.printArrows([outerPoly]);
+            const unionPolys = polyIntersection(diffPlatePolygons, [outerPoly]);
+            PolygonUtils.printArrows(unionPolys);
+            innerPolys.push(unionPolys[0]);
+        }
+        console.log('down');
+
         const plates = [];
 
         if (!innerPolys || innerPolys.length === 0) {
-            this.currentPlate.absArea = 0;
+            currentPlate.absArea = 0;
         } else {
             for (let i = 0; i < innerPolys.length; i++) {
-                const outerPoly = polyOffset([innerPolys[i]], this.plateOffset, ClipperLib.JoinType.jtMiter)[0];
+                const outerPoly = innerPolys[i];
                 const plate = new Plate(outerPoly);
                 plates.push(plate);
             }
 
-            plates.sort((a, b) => b.absArea - a.absArea);
+            currentPlate.polygon = plates[0].polygon;
+            currentPlate.area = plates[0].area;
+            currentPlate.asbArea = plates[0].absArea;
 
-            this.currentPlate = plates[0];
             for (let i = 1; i < plates.length; i++) {
                 this.plates.push(plates[i]);
             }
@@ -1012,17 +1145,25 @@ export class Nest {
     }
 
     partPlacement(plate, part) {
+        console.log('partPlacement');
+        PolygonUtils.printArrows([plate.polygon]);
+        PolygonUtils.printArrows([part.polygons[0]]);
         const res = this.generateNFP(plate, part);
 
         if (res === null) {
+            console.log('partPlacement', 'null');
             return null;
         }
 
+        roundAndMulPoint(res.position);
+
         res.rotatePolygons = PolygonsUtils.move(res.rotatePolygons, Vector2.sub(res.position, res.center));
+        console.log('partPlacement 2', res.rotatePolygons);
+        PolygonUtils.printArrows(res.rotatePolygons);
 
         const diffPlatePolygons = polyDiff([plate.polygon], [res.rotatePolygons[0]]);
 
-        this.updateCurrentPlate(diffPlatePolygons);
+        this.updateCurrentPlate(plate, diffPlatePolygons);
 
         if (res.rotatePolygons.length > 1) {
             this.plates.push(new Plate(res.rotatePolygons[1]));
@@ -1032,41 +1173,53 @@ export class Nest {
     }
 
     startNFP() {
-        while (true) {
-            this.resetCurrentPlate();
+        for (let i = 0; i < this.parts.length; i++) {
+            const part = this.parts[i];
 
-            for (let i = 0; i < this.parts.length; i++) {
-                const part = this.parts[i];
+            if (part.isPlace) {
+                continue;
+            }
 
-                if (this.currentPlate.absArea < part.absArea) {
+            this.sortPlates();
+            for (let j = 0; j < this.plates.length; j++) {
+                const plate = this.plates[j];
+
+                if (plate.absArea < part.absArea) {
                     continue;
                 }
 
-                console.log(this.currentPlate, part);
-                PolygonUtils.printArrows([this.currentPlate.polygon]);
-                const res = this.partPlacement(this.currentPlate, part);
+                const res = this.partPlacement(plate, part);
 
                 if (res) {
                     part.position = res.position;
                     part.rotatePolygons = res.rotatePolygons;
                     part.angle = res.angle;
                     part.center = res.center;
-
-                    this.resultParts.push(part);
-                    this.parts.splice(i, 1);
-                    i--;
+                    break;
                 }
             }
 
-            if (this.parts.length === 0 || this.plates.length === 0) {
-                break;
-            }
+            this.resultParts.push(part);
+            // console.log(this.currentPlate, part);
+            // PolygonUtils.printArrows([this.currentPlate.polygon]);
         }
+
+        for (let i = 0; i < this.resultParts.length; i++) {
+            const part = this.resultParts[i];
+            if (!part.rotatePolygons) {
+                continue;
+            }
+            roundAndMulPolygons(part.rotatePolygons, 1 / this.accuracy);
+            roundAndMulPolygon(part.center, 1 / this.accuracy);
+            roundAndMulPolygon(part.position, 1 / this.accuracy);
+            part.area /= this.accuracy;
+            part.absArea /= this.accuracy;
+        }
+
+        return this.resultParts;
     }
 
     start() {
-        this.sortParts();
-
-        this.startNFP();
+        return this.startNFP();
     }
 }
