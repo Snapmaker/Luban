@@ -76,6 +76,8 @@ export class Nest {
 
     plateOffset = 10;
 
+    offset = 0;
+
     minPartArea;
 
     constructor(options) {
@@ -83,29 +85,33 @@ export class Nest {
             plates = [],
             parts = [],
             rotate = 360,
-            interval = 2,
-            accuracy = 10
+            limitEdge = 2,
+            accuracy = 10,
+            offset = 0,
         } = options;
 
         this.rotate = rotate;
-        this.interval = interval;
+        this.limitEdge = limitEdge;
         this.accuracy = accuracy;
+        this.offset = offset;
 
         for (let i = 0; i < parts.length; i++) {
             const polygons = parts[i].polygons;
-            const simplyPolygons = PolygonsUtils.simplify(polygons, this.interval);
+            let simplyPolygons = PolygonsUtils.simplify(polygons, this.limitEdge);
+
+            if (this.offset > 0) {
+                simplyPolygons = polyOffset(simplyPolygons, this.offset);
+            }
+
             roundAndMulPolygons(simplyPolygons, this.accuracy);
             this.parts.push(new Part(simplyPolygons));
         }
 
         this.sortParts();
 
-        // TODO import
-        // this.parts = this.parts.slice(0, 20);
-
         for (let i = 0; i < plates.length; i++) {
             const polygon = plates[i].polygon;
-            const simplyPolygon = PolygonUtils.simplify(polygon, this.interval);
+            const simplyPolygon = PolygonUtils.simplify(polygon, this.limitEdge);
             roundAndMulPolygon(simplyPolygon, this.accuracy);
             this.plates.push(new Plate(polygon));
         }
@@ -563,31 +569,14 @@ export class Nest {
     deleteOutTraceLine(traceLines, platePolygon, center) {
         const newTraceLines = [];
 
-        // const isLess = (a, b) => {
-        //     return a - b < -EPSILON;
-        // };
-
         for (let i = 0; i < traceLines.length; i++) {
             const traceLine = traceLines[i];
             const sp = traceLine.sp;
             const ep = traceLine.ep;
 
-            if (sp.x === 26 && sp.y === 495) {
-                PolygonUtils.printArrows([platePolygon]);
-                PolygonUtils.printTraceLines([traceLine]);
-                console.log('error point', !PolygonUtils.isPointInPolygon(sp, platePolygon), !PolygonUtils.isPointInPolygon(ep, platePolygon));
-            }
-            if (sp.x === 495 && sp.y === 26) {
-                console.log('error point', !PolygonUtils.isPointInPolygon(sp, platePolygon), !PolygonUtils.isPointInPolygon(ep, platePolygon));
-            }
-
             if (Vector2.isEqual(sp, ep)) {
                 continue;
             }
-
-            // if (isLess(sp.x, center.x) || isLess(ep.x, center.x) || isLess(sp.y, center.y) || isLess(ep.y, center.y)) {
-            //     continue;
-            // }
 
             if (!PolygonUtils.isPointInPolygon(sp, platePolygon) || !PolygonUtils.isPointInPolygon(ep, platePolygon)) {
                 continue;
@@ -726,26 +715,14 @@ export class Nest {
             }
         }
 
-        // console.log('traverTraceLines');
-        // PolygonUtils.printTraceLines(nt);
-        // PolygonUtils.printTraceLines(newTraceLines);
-
         return [newTraceLines, traceLines];
     }
 
     // eslint-disable-next-line no-unused-vars
     mergeTraceLines2Polygon(traceLines, platePolygon, center) {
-        console.log('mergeTraceLines2Polygon');
-        // PolygonUtils.printTraceLines(traceLines);
         traceLines = this.processCollinear(traceLines);
-        PolygonUtils.printTraceLines(traceLines);
-        // traceLines = this.processCollinearOnlyHVLines(traceLines);
 
         traceLines = this.deleteOutTraceLine(traceLines, platePolygon, center);
-        console.log('error');
-        PolygonUtils.printTraceLines(traceLines);
-
-        // traceLines = this.deleteNoRingSegments(traceLines);
 
         const traceRings = [];
         let newTraceLines;
@@ -758,12 +735,6 @@ export class Nest {
                 break;
             }
         }
-
-        PolygonUtils.printTraceRings(traceRings);
-        // PolygonUtils.printTraceLines(traceLines);
-        console.log('mergeTraceLines2Polygon down');
-
-        // PolygonUtils.printTraceLines(traceLines);
 
         return traceRings;
     }
@@ -933,7 +904,7 @@ export class Nest {
 
                 let lastX = 0;
                 let lastY = 0;
-                const interval = this.interval;
+                const interval = this.limitEdge;
                 for (let j = interval; j < t + interval; j += interval) {
                     const k = Math.min(j / t, 1);
                     const curX = Math.ceil(Math.round(k * dx * 1000) / 1000);
@@ -1009,40 +980,24 @@ export class Nest {
 
             const center = this.getCenter(rotatePolygons[0]);
 
-            console.log('rotate generateNFP');
-
-            PolygonUtils.printArrows(rotatePolygons);
-
             const traceLines = this.generateTraceLine(plate.polygon, rotatePolygons[0], center);
-
-            console.log('generateTraceLine');
-            PolygonUtils.printTraceLines(traceLines);
-            console.log('polygon');
-            PolygonUtils.printArrows([plate.polygon]);
 
             const nfpRings = this.mergeTraceLines2Polygon(traceLines, plate.polygon, center);
 
             if (!nfpRings || nfpRings.length === 0) {
-                console.log('this polygon cant be put in');
+                // console.log('this polygon cant be put in');
                 continue;
             }
 
             let lowerPoint = null;
 
-            console.log('nfpLines', nfpRings.length);
-
             for (let j = 0; j < nfpRings.length; j++) {
                 const nfpLines = nfpRings[j];
-                console.log('nfpLinesTmp', nfpLines);
+
                 const lowerPointTmp = this.searchLowerPosition(nfpLines);
-                // roundAndMulPoint(lowerPointTmp);
 
                 const movePolygons = PolygonsUtils.move(rotatePolygons, Vector2.sub(lowerPointTmp, center));
                 const diffPolygons = polyDiff([movePolygons[0]], [plate.polygon]);
-                console.log('nfpLines', j);
-                PolygonUtils.printArrows([movePolygons[0]]);
-                PolygonUtils.printArrows([plate.polygon]);
-                PolygonUtils.printArrows(diffPolygons);
 
                 if (diffPolygons && diffPolygons[0] && diffPolygons[0].length > 0) {
                     continue;
@@ -1052,7 +1007,6 @@ export class Nest {
             }
 
             if (lowerPoint === null) {
-                console.log('this lower point is null');
                 continue;
             }
 
@@ -1068,33 +1022,10 @@ export class Nest {
             } else if (this.lessThanLowerPoint(result.position, finalResult.position)) {
                 finalResult = result;
             }
-
-            console.log('lowerPoint', i, lowerPoint, result.angle);
-            if (i === result.angle) {
-                console.log('is the last');
-            }
         }
 
         return finalResult;
     }
-
-    // resetCurrentPlate() {
-    //     this.currentPlate = null;
-    //     if (!this.plates || this.plates.length === 0) {
-    //         return;
-    //     }
-    //     let maxIndex = -1;
-    //     let maxArea = -1;
-    //
-    //     for (let i = 0; i < this.plates.length; i++) {
-    //         if (this.plates[i].absArea > maxArea) {
-    //             maxArea = this.plates[i].absArea;
-    //             maxIndex = i;
-    //         }
-    //     }
-    //
-    //     this.currentPlate = this.plates.splice(maxIndex, 1)[0];
-    // }
 
     sortPlates() {
         this.plates.sort((a, b) => {
@@ -1106,22 +1037,15 @@ export class Nest {
         // const innerPolys = polyOffset(diffPlatePolygons, -this.plateOffset, ClipperLib.JoinType.jtMiter);
         const offsetPolys = polyOffset(diffPlatePolygons, -this.plateOffset, ClipperLib.JoinType.jtMiter);
 
-        console.log('updateCurrentPlate');
-        PolygonUtils.printArrows(offsetPolys);
-
         const innerPolys = [];
 
         for (let i = 0; i < offsetPolys.length; i++) {
             const offsetPoly = offsetPolys[i];
             const outerPoly = polyOffset([offsetPoly], this.plateOffset, ClipperLib.JoinType.jtMiter)[0];
-            console.log(i);
             roundAndMulPolygon(outerPoly);
-            PolygonUtils.printArrows([outerPoly]);
             const unionPolys = polyIntersection(diffPlatePolygons, [outerPoly]);
-            PolygonUtils.printArrows(unionPolys);
             innerPolys.push(unionPolys[0]);
         }
-        console.log('down');
 
         const plates = [];
 
@@ -1145,21 +1069,15 @@ export class Nest {
     }
 
     partPlacement(plate, part) {
-        console.log('partPlacement');
-        PolygonUtils.printArrows([plate.polygon]);
-        PolygonUtils.printArrows([part.polygons[0]]);
         const res = this.generateNFP(plate, part);
 
         if (res === null) {
-            console.log('partPlacement', 'null');
             return null;
         }
 
         roundAndMulPoint(res.position);
 
         res.rotatePolygons = PolygonsUtils.move(res.rotatePolygons, Vector2.sub(res.position, res.center));
-        console.log('partPlacement 2', res.rotatePolygons);
-        PolygonUtils.printArrows(res.rotatePolygons);
 
         const diffPlatePolygons = polyDiff([plate.polygon], [res.rotatePolygons[0]]);
 
@@ -1200,8 +1118,6 @@ export class Nest {
             }
 
             this.resultParts.push(part);
-            // console.log(this.currentPlate, part);
-            // PolygonUtils.printArrows([this.currentPlate.polygon]);
         }
 
         for (let i = 0; i < this.resultParts.length; i++) {
