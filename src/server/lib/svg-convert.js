@@ -112,8 +112,10 @@ const convertTextToSvg = async (options) => {
     }
 
     // We use descender line as the bottom of a line, first line with lineHeight = 1
-    let y = (ascender - descender) > unitsPerEm ? estimatedFontSize
+    let y = (ascender - descender) > estimatedFontSize ? estimatedFontSize
             : (realUnitsPerEm + descender) / realUnitsPerEm * estimatedFontSize, x = 0;
+    console.log('fontObj', fontObj);
+    console.log('estimatedFontSize', ascender, descender, unitsPerEm, estimatedFontSize, realUnitsPerEm, y);
     const fullPath = new opentype.Path();
     for (let i = 0; i < numberOfLines; i++) {
         const line = lines[i];
@@ -134,8 +136,8 @@ const convertTextToSvg = async (options) => {
     // Calculate size and render SVG template
     const boundingBox = fullPath.getBoundingBox();
     const width = boundingBox.x2 - boundingBox.x1;
-    console.log('estimatedFontSize', estimatedFontSize, boundingBox.y2 - boundingBox.y1);
     // const height = estimatedFontSize + estimatedFontSize * lineHeight * (numberOfLines - 1);
+    console.log('estimatedFontSize', estimatedFontSize, boundingBox.y2 - boundingBox.y1);
     const height = boundingBox.y2 - boundingBox.y1;
 
     const svgString = _.template(TEMPLATE)({

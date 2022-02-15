@@ -62,6 +62,7 @@ class AppLayout extends PureComponent {
         startProject: PropTypes.func.isRequired,
         changeCoordinateMode: PropTypes.func.isRequired,
         updateMaterials: PropTypes.func.isRequired,
+        initRecoverService: PropTypes.func.isRequired,
         save: PropTypes.func.isRequired,
         saveAndClose: PropTypes.func.isRequired,
         saveAsFile: PropTypes.func.isRequired,
@@ -433,7 +434,7 @@ class AppLayout extends PureComponent {
             }
             // start recover service after file opened on startup
             // to ensure opened file set before service run
-            // this.props.initRecoverService();
+            this.props.initRecoverService();
         },
         exportModel: (filePath) => {
             const isBinary = true;
@@ -841,7 +842,7 @@ const mapStateToProps = (state) => {
 const mapDispatchToProps = (dispatch) => {
     return {
         clearOperationHistory: (headType) => dispatch(operationHistoryActions.clear(headType)),
-        // initRecoverService: () => dispatch(projectActions.initRecoverService()),
+        initRecoverService: () => dispatch(projectActions.initRecoverService()),
         saveAsFile: (headType) => dispatch(projectActions.saveAsFile(headType)),
         save: (headType, dialogOptions) => dispatch(projectActions.save(headType, dialogOptions)),
         saveAndClose: (headType, opts) => dispatch(projectActions.saveAndClose(headType, opts)),

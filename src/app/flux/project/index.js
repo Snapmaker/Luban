@@ -34,18 +34,21 @@ import UniApi from '../../lib/uni-api';
 
 const INITIAL_STATE = {
     [HEAD_PRINTING]: {
+        findLastEnvironment: false,
         openedFile: null,
         unSaved: false,
         content: null,
         initState: true
     },
     [HEAD_CNC]: {
+        findLastEnvironment: false,
         openedFile: null,
         unSaved: false,
         content: null,
         initState: true
     },
     [HEAD_LASER]: {
+        findLastEnvironment: false,
         openedFile: null,
         unSaved: false,
         content: null,
@@ -65,6 +68,19 @@ export const actions = {
             headType,
             state
         };
+    },
+
+    initRecoverService: () => (dispatch, getState) => {
+        const startService = async (envHeadType) => {
+            // disable auto recovery if openedFile set
+            const { openedFile } = getState().project[envHeadType];
+            if (!openedFile) {
+                await dispatch(actions.getLastEnvironment(envHeadType));
+            }
+        };
+        startService(HEAD_LASER);
+        startService(HEAD_CNC);
+        startService(HEAD_PRINTING);
     },
 
     autoSaveEnvironment: (headType) => async (dispatch, getState) => {
@@ -105,6 +121,18 @@ export const actions = {
         const content = JSON.stringify(envObj);
         dispatch(actions.updateState(headType, { content, unSaved: true, initState: false }));
         await api.saveEnv({ content });
+    },
+
+    getLastEnvironment: (headType) => async (dispatch) => {
+        const { body: { content } } = await api.getEnv({ headType });
+        try {
+            const envObj = JSON.parse(content);
+            if (!envObj.models.length) return;
+        } catch (e) {
+            console.info('Error content JSON');
+        }
+
+        content && dispatch(actions.updateState(headType, { findLastEnvironment: true, content }));
     },
 
     clearSavedEnvironment: (headType) => async (dispatch) => {
@@ -269,7 +297,7 @@ export const actions = {
 
     setOpenedFileWithType: (headType, openedFile) => async (dispatch) => {
         openedFile && UniApi.Window.setOpenedFile(openedFile?.name);
-        await dispatch(actions.updateState(headType, { openedFile, unSaved: false }));
+        await dispatch(actions.updateState(headType, { findLastEnvironment: false, openedFile, unSaved: false }));
         UniApi.Menu.setItemEnabled('save', !!openedFile);
     },
 
@@ -388,7 +416,7 @@ export const actions = {
                 message: i18n._('key-Project/Save-Save the changes you made in the {{headType}} G-code Generator? Your changes will be lost if you don’t save them.', { headType: i18n._(HEAD_TYPE_ENV_NAME[oldHeadType]) })
             }));
             await dispatch(actions.closeProject(oldHeadType));
-            content && dispatch(actions.updateState(headType, { content, unSaved: false }));
+            content && dispatch(actions.updateState(headType, { findLastEnvironment: false, content, unSaved: false }));
             if (oldHeadType === headType && !unReload) {
                 history.push('/');
             }
