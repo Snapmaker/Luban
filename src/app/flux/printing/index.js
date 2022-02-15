@@ -22,7 +22,9 @@ import {
     DUAL_EXTRUDER_LIMIT_WIDTH_L,
     DUAL_EXTRUDER_LIMIT_WIDTH_R, BOTH_EXTRUDER_MAP_NUMBER,
     WHITE_COLOR,
-    BLACK_COLOR
+    BLACK_COLOR,
+    KEY_DEFAULT_CATEGORY_CUSTOM,
+    KEY_DEFAULT_CATEGORY_DEFAULT
 } from '../../constants';
 import { timestamp } from '../../../shared/lib/random-utils';
 import { machineStore } from '../../store/local-storage';
@@ -930,35 +932,55 @@ export const actions = {
     },
 
     onUploadManagerDefinition: (file, type) => (dispatch, getState) => {
-        const formData = new FormData();
-        formData.append('file', file);
-        api.uploadFile(formData)
-            .then(async (res) => {
-                const response = res.body;
-                const definitionId = `${type}.${timestamp()}`;
-                const definition = await definitionManager.uploadDefinition(definitionId, response.uploadName);
-                definition.category = i18n._('key-default_category-Custom');
-                let name = definition.name;
-                const definitionsKey = defaultDefinitionKeys[type].definitions;
-                const defaultId = defaultDefinitionKeys[type].id;
-                const definitions = getState().printing[definitionsKey];
-                while (definitions.find(e => e.name === name)) {
-                    name = `#${name}`;
-                }
-                definition.name = name;
-                await definitionManager.updateDefinition({
-                    definitionId: definition.definitionId,
-                    name,
-                    category: definition.category
+        return new Promise((resolve) => {
+            const formData = new FormData();
+            formData.append('file', file);
+            api.uploadFile(formData)
+                .then(async (res) => {
+                    const response = res.body;
+                    const definitionId = `${type}.${timestamp()}`;
+                    const definition = await definitionManager.uploadDefinition(definitionId, response.uploadName);
+
+                    // Compatible with profiles exported from older versions
+                    definition.category = (
+                        definition.i18nCategory
+                        && definition.i18nCategory !== KEY_DEFAULT_CATEGORY_CUSTOM
+                        && definition.i18nCategory !== KEY_DEFAULT_CATEGORY_DEFAULT
+                    ) ? definition.category : '';
+
+                    definition.i18nCategory = (
+                        definition.i18nCategory
+                        && definition.i18nCategory !== KEY_DEFAULT_CATEGORY_CUSTOM
+                        && definition.i18nCategory !== KEY_DEFAULT_CATEGORY_DEFAULT
+                    ) ? definition.i18nCategory : '';
+
+
+                    let name = definition.name;
+                    const definitionsKey = defaultDefinitionKeys[type].definitions;
+                    const definitions = getState().printing[definitionsKey];
+                    while (definitions.find(e => e.name === name)) {
+                        name = `#${name}`;
+                    }
+                    definition.i18nName = '';
+                    await definitionManager.updateDefinition({
+                        definitionId: definition.definitionId,
+                        name,
+                        // The classification cannot be modified, otherwise there will be duplicate user-defined directories during language switching
+                        category: definition.category,
+                        i18nCategory: definition.i18nCategory,
+                        i18nName: definition.i18nName
+                    });
+                    dispatch(actions.updateState({
+                        [definitionsKey]: [...definitions, definition]
+                        // Newly imported profiles should not be automatically applied
+                        // [defaultId]: definitionId
+                    }));
+                    resolve(definition);
+                })
+                .catch(() => {
+                    // Ignore error
                 });
-                dispatch(actions.updateState({
-                    [definitionsKey]: [...definitions, definition],
-                    [defaultId]: definitionId
-                }));
-            })
-            .catch(() => {
-                // Ignore error
-            });
+        });
     },
 
     updateDefinitionNameByType: (type, definition, name, isCategorySelected = false) => async (dispatch, getState) => {
@@ -1025,6 +1047,7 @@ export const actions = {
             name,
             inherits: definition.inherits,
             category: definition.category,
+            i18nCategory: definition.i18nCategory,
             ownKeys: definition.ownKeys,
             metadata,
             settings: {}
@@ -1074,6 +1097,7 @@ export const actions = {
         for (let i = 0; i < definitionsWithSameCategory.length; i++) {
             const newDefinition = definitionsWithSameCategory[i];
             newDefinition.category = newCategoryName;
+            newDefinition.i18nCategory = '';
             const definitionId = `${newDefinition.definitionId}${timestamp()}`;
             newDefinition.definitionId = definitionId;
             const createdDefinition = await definitionManager.createDefinition(newDefinition);
@@ -2072,8 +2096,10 @@ export const actions = {
             stage: STEP_STAGE.PRINTING_PREVIEWING,
             progress: progressStatesManager.updateProgress(STEP_STAGE.PRINTING_SLICING, 0)
         }));
-        const extruderColors = { toolColor0: extruderLDefinition?.settings?.color?.default_value || WHITE_COLOR,
-            toolColor1: extruderRDefinition?.settings?.color?.default_value || BLACK_COLOR };
+        const extruderColors = {
+            toolColor0: extruderLDefinition?.settings?.color?.default_value || WHITE_COLOR,
+            toolColor1: extruderRDefinition?.settings?.color?.default_value || BLACK_COLOR
+        };
         gcodeRenderingWorker.postMessage({ func: '3DP', gcodeFilename, extruderColors });
     },
     saveSupport: (model) => (dispatch, getState) => {

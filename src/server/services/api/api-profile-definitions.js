@@ -156,8 +156,19 @@ export const updateDefinition = async (req, res) => {
     if (definition.name) {
         definitionLoader.updateName(definition.name);
     }
-    if (definition.category) {
+
+    // Because importing a custom profile does not need to support multiple languages. Therefore, relevant reset should be supported
+
+    if (definition.category !== undefined) {
         definitionLoader.updateCategory(definition.category);
+    }
+
+    if (definition.i18nCategory !== undefined) {
+        definitionLoader.updateI18nCategory(definition.i18nCategory);
+    }
+
+    if (definition.i18nName !== undefined) {
+        definitionLoader.updateI18nName(definition.i18nName);
     }
 
     if (definition.settings) {
@@ -199,9 +210,6 @@ export const uploadDefinition = (req, res) => {
 
     if (!obj.inherits || !fs.existsSync(`${DataStorage.configDir}/${headType}/${obj.inherits}.json`)) {
         obj.inherits = 'snapmaker2';
-    }
-    if (!obj.category) {
-        obj.category = 'Custom';
     }
 
     if (!obj.metadata) {

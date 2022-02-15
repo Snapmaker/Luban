@@ -27,7 +27,7 @@ function LaserPresentManager({ closeToolManager, shouldSaveToolpath = false, sav
         },
         onChangeFileForManager: (event) => {
             const toolFile = event.target.files[0];
-            dispatch(editorActions.onUploadToolDefinition(HEAD_LASER, toolFile));
+            return dispatch(editorActions.onUploadToolDefinition(HEAD_LASER, toolFile));
         },
         exportConfigFile: (definitionForManager) => {
             const definitionId = definitionForManager.definitionId;
@@ -111,7 +111,6 @@ function LaserPresentManager({ closeToolManager, shouldSaveToolpath = false, sav
             isOfficialDefinition={isOfficialDefinition}
             optionConfigGroup={LASER_PRESENT_CONFIG_GROUP}
             allDefinitions={toolDefinitions}
-            disableCategory={false}
             managerTitle="key-Laser/PresetManager-Preset Settings"
             activeDefinitionID={activeToolListDefinition.definitionId}
             managerType={HEAD_LASER}

@@ -268,6 +268,7 @@ export class DefinitionLoader {
         this.definitionId = object.definitionId;
         this.name = object.name;
         this.category = object.category;
+        this.i18nCategory = object.i18nCategory;
         this.inherits = object.inherits;
         this.ownKeys = new Set(object.ownKeys);
         this.settings = object.settings;
@@ -280,6 +281,14 @@ export class DefinitionLoader {
 
     updateCategory(category) {
         this.category = category;
+    }
+
+    updateI18nName(i18nName) {
+        this.i18nName = i18nName;
+    }
+
+    updateI18nCategory(i18nCategory) {
+        this.i18nCategory = i18nCategory;
     }
 
     updateSettings(settings) {
