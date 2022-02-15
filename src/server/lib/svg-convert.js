@@ -7,9 +7,9 @@ import { pathWithRandomSuffix } from './random-utils';
 import logger from './logger';
 import SVGParser from '../../shared/lib/SVGParser';
 import fontManager from '../../shared/lib/FontManager';
-import DataStorage from '../DataStorage';
 import { svgToString } from '../../shared/lib/SVGParser/SvgToString';
 import { unionShapes } from '../../shared/lib/union-shapes';
+import global from './global';
 
 const log = logger('svg-convert');
 
@@ -38,7 +38,7 @@ const convertRasterToSvg = (options) => {
     if (/\.svg$/i.test(uploadName)) {
         if (!(/parsed\.svg$/i.test(uploadName))) {
             const newUploadName = uploadName.replace(/\.svg$/i, 'parsed.svg');
-            const uploadPath = `${DataStorage.tmpDir}/${newUploadName}`;
+            const uploadPath = `${global.tmpDir}/${newUploadName}`;
             if (fs.existsSync(uploadPath)) {
                 return Promise.resolve({
                     filename: newUploadName
@@ -54,7 +54,7 @@ const convertRasterToSvg = (options) => {
         }
     }
     const outputFilename = pathWithRandomSuffix(`${uploadName}.svg`);
-    const modelPath = `${DataStorage.tmpDir}/${uploadName}`;
+    const modelPath = `${global.tmpDir}/${uploadName}`;
     const params = {
         threshold: vectorThreshold,
         color: 'black',
@@ -69,7 +69,7 @@ const convertRasterToSvg = (options) => {
                 reject(err);
                 return;
             }
-            const targetPath = `${DataStorage.tmpDir}/${outputFilename}`;
+            const targetPath = `${global.tmpDir}/${outputFilename}`;
             const svgParser = new SVGParser();
 
             const result = await svgParser.parse(svgStr);
@@ -144,13 +144,13 @@ const convertTextToSvg = async (options) => {
     });
     const svgParser = new SVGParser();
     // Don't delete, for debugging
-    // const targetPath1 = `${DataStorage.tmpDir}/${uploadName}_new.svg`;
+    // const targetPath1 = `${global.tmpDir}/${uploadName}_new.svg`;
     // fs.writeFileSync(targetPath1, svgString);
     const result = await svgParser.parse(svgString);
     unionShapes(result.shapes);
 
     return new Promise((resolve, reject) => {
-        const targetPath = `${DataStorage.tmpDir}/${uploadName}`;
+        const targetPath = `${global.tmpDir}/${uploadName}`;
         fs.writeFile(targetPath, svgToString(result), (err) => {
             if (err) {
                 log.error(err);
@@ -185,7 +185,7 @@ const convertOneLineTextToSvg = async (options) => {
         height: bbox.height
     });
     return new Promise((resolve, reject) => {
-        const targetPath = `${DataStorage.tmpDir}/${uploadName}`;
+        const targetPath = `${global.tmpDir}/${uploadName}`;
         fs.writeFile(targetPath, svgString, (err) => {
             if (err) {
                 log.error(err);

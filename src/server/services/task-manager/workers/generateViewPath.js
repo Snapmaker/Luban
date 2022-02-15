@@ -1,23 +1,24 @@
 import fs from 'fs';
 import _ from 'lodash';
-import { pathWithRandomSuffix } from '../../../shared/lib/random-utils';
-import DataStorage from '../../DataStorage';
-import SVGParser from '../../../shared/lib/SVGParser';
-import CncToolPathGenerator from '../../lib/ToolPathGenerator/CncToolPathGenerator';
-import CncReliefToolPathGenerator from '../../lib/ToolPathGenerator/CncReliefToolPathGenerator';
-import logger from '../../lib/logger';
-import { PROCESS_MODE_MESH } from '../../constants';
-import { polyUnion } from '../../lib/clipper/cLipper-adapter';
-import CncMeshToolPathGenerator from '../../lib/ToolPathGenerator/MeshToolPath/CncMeshToolPathGenerator';
+import { pathWithRandomSuffix } from '../../../../shared/lib/random-utils';
+import global from '../../../lib/global';
+import SVGParser from '../../../../shared/lib/SVGParser';
+import CncToolPathGenerator from '../../../lib/ToolPathGenerator/CncToolPathGenerator';
+import CncReliefToolPathGenerator from '../../../lib/ToolPathGenerator/CncReliefToolPathGenerator';
+import logger from '../../../lib/logger';
+import { PROCESS_MODE_MESH } from '../../../constants';
+import { polyUnion } from '../../../lib/clipper/cLipper-adapter';
+import CncMeshToolPathGenerator from '../../../lib/ToolPathGenerator/MeshToolPath/CncMeshToolPathGenerator';
+import sendMessage from '../utils/sendMessage';
 
 const log = logger('service:TaskManager');
 
 const generateCncViewPath = async (modelInfo, onProgress) => {
     const { sourceType, mode, uploadName } = modelInfo;
-    const modelPath = `${DataStorage.tmpDir}/${uploadName}`;
+    const modelPath = `${global.tmpDir}/${uploadName}`;
     // if (config.svgNodeName === 'text') {
     //     const result = await editorProcess(modelInfo);
-    //     modelPath = `${DataStorage.tmpDir}/${result.filename}`;
+    //     modelPath = `${global.tmpDir}/${result.filename}`;
     // }
 
     if (((sourceType === 'svg') && (mode === 'vector' || mode === 'trace')) || (sourceType === 'raster' && mode === 'vector')) {
@@ -102,7 +103,12 @@ const generateBoxPointsByRotate = (results) => {
     return boxes;
 };
 
-export const generateViewPath = (modelInfos, onProgress) => {
+const generateViewPath = (modelInfos, tmpDir) => {
+    global.tmpDir = tmpDir;
+    const onProgress = (num) => {
+        sendMessage({ status: 'progress', value: num });
+    };
+
     if (!modelInfos && !_.isArray(modelInfos) && modelInfos.length === 0) {
         return Promise.reject(new Error('modelInfo is empty.'));
     }
@@ -110,7 +116,7 @@ export const generateViewPath = (modelInfos, onProgress) => {
     const suffix = '.json';
     const { uploadName, materials } = modelInfos[0];
     const outputFilename = pathWithRandomSuffix(`${uploadName}.${suffix}`);
-    const outputFilePath = `${DataStorage.tmpDir}/${outputFilename}`;
+    const outputFilePath = `${global.tmpDir}/${outputFilename}`;
 
     const reps = [];
 
@@ -140,15 +146,26 @@ export const generateViewPath = (modelInfos, onProgress) => {
             fs.writeFile(outputFilePath, JSON.stringify(viewPath), 'utf8', (err) => {
                 if (err) {
                     log.error(err);
-                    reject(err);
+                    reject(
+                        sendMessage({ status: 'fail', value: err })
+                    );
                 } else {
-                    resolve({
-                        viewPathFile: outputFilename
-                    });
+                    resolve(
+                        sendMessage({
+                            status: 'complete',
+                            value: {
+                                viewPathFile: outputFilename
+                            }
+                        })
+                    );
                 }
             });
         }).catch(e => {
-            reject(e);
+            reject(
+                sendMessage({ status: 'fail', value: e })
+            );
         });
     });
 };
+
+export default generateViewPath;

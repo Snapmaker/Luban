@@ -1,4 +1,5 @@
 import { Vector3 } from 'three';
+import sendMessage from './utils/sendMessage';
 
 const supportAvailColor = [1, 0.2, 0.2];
 const supportUnavailColor = [0.9, 0.9, 0.9];
@@ -8,8 +9,8 @@ type TransferData = {
     normals: Array<number>
 };
 
-onmessage = (event) => {
-    const { positions, normals } = event.data as TransferData;
+const evaluateSupportArea = (data) => {
+    const { positions, normals } = data as TransferData;
 
     const colors = [];
     for (let i = 0; i < normals.length; i += 9) {
@@ -27,7 +28,7 @@ onmessage = (event) => {
             colors.push(...supportUnavailColor);
         }
     }
-    postMessage({ colors });
+    sendMessage({ colors });
 };
 
-export default {};
+export default evaluateSupportArea;
