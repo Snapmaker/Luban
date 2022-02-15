@@ -9,7 +9,7 @@ import { isUndefined, isNull } from 'lodash';
 import path from 'path';
 import { configureWindow } from './electron-app/window';
 import MenuBuilder, { addRecentFile, cleanAllRecentFiles } from './electron-app/Menu';
-import launchServer from './server-cli';
+// import launchServer from './server-cli';
 import DataStorage from './DataStorage';
 import pkg from './package.json';
 // const { crashReporter } = require('electron');
@@ -19,17 +19,15 @@ const config = new Store();
 
 let serverData = null;
 let mainWindow = null;
-<<<<<<< HEAD
 // https://www.electronjs.org/docs/latest/breaking-changes#planned-breaking-api-changes-100
 // console.log('getCrashesDirectory', app.getPath('crashDumps'));
-=======
 let timer = null;
 let loadUrl = '';
 const loadingMenu = [{
     id: 'file',
     label: '',
 }];
->>>>>>> baf3ce607 (Fix: Delete preload.js & set null menubar begin window show)
+const childProcess = require('child_process');
 // crashReporter.start({
 //     productName: 'Snapmaker',
 //     globalExtra: { _companyName: 'Snapmaker' },
@@ -208,82 +206,82 @@ const showMainWindow = async () => {
     window.loadURL(path.resolve(__dirname, 'app', 'loading.html'));
     window.setBackgroundColor('#f5f5f7');
     window.show();
-    if (timer) {
-        clearTimeout(timer)
+    if (!serverData) {
+        // only start server once
+        // TODO: start server on the outermost
+        console.log('main.js.path', path.resolve(__dirname, '../dist/Luban/server-cli.js'));
+        const child = childProcess.fork(path.resolve(__dirname, 'server-cli.js'));
+        child.on('message', (data) => {
+            console.log('child_process', data);
+        })
+        // serverData = await launchServer();
     }
-
-    const { address, port } = { ...serverData };
-    configureWindow(window);
-
-    const loadUrl = `http://${address}:${port}`;
-    const filter = {
-        urls: [
-            // 'http://*/',
-            'http://*/resources/images/*',
-            'http://*/app.css',
-            'http://*/polyfill.*.*',
-            'http://*/vendor.*.*',
-            'http://*/app.*.*',
-            'http://*/*/*.worker.js',
-        ]
-    };
-    protocol.registerFileProtocol(
-        'luban',
-        (request, callback) => {
-            const { pathname } = url.parse(request.url);
-            const p = pathname === '/' ? 'index.html' : pathname.substr(1);
-            callback(fs.createReadStream(path.normalize(`${__dirname}/app/${p}`)));
-        },
-        (error) => {
-            if (error) {
-                console.error('error', error);
-            }
-        }
-    );
-    // https://github.com/electron/electron/issues/21675
-    // If needed, resolve CORS. https://stackoverflow.com/questions/51254618/how-do-you-handle-cors-in-an-electron-app
-
-    session.defaultSession.webRequest.onBeforeRequest(
-        filter,
-        (request, callback) => {
-            const redirectURL = request.url.replace(/^http/, 'luban');
-            callback({ redirectURL });
-        }
-    );
-
-    // Ignore proxy settings
-    // https://electronjs.org/docs/api/session#sessetproxyconfig-callback
-
-    const webContentsSession = window.webContents.session;
-    webContentsSession.setProxy({ proxyRules: 'direct://' })
-        .then(() => window.loadURL(loadUrl));
-    window.setMenuBarVisibility(true);
-
-    try {
-        // TODO: move to server
-        DataStorage.init();
-    } catch (err) {
-        console.error('Error: ', err);
+    if (serverData) {
+        console.log('serverData-main.js', serverData);
     }
-
-    // Ignore proxy settings
-    // https://electronjs.org/docs/api/session#sessetproxyconfig-callback
-
-    const webContentsSession = window.webContents.session;
-    webContentsSession.setProxy({ proxyRules: 'direct://' })
-        .then(() => window.loadURL(loadUrl));
-    window.setMenuBarVisibility(true);
-
-
-    window.setTitle(`Snapmaker Luban ${pkg.version}`);
-
-
-    try {
-        // TODO: move to server
-        DataStorage.init();
-    } catch (err) {
-        console.error('Error: ', err);
-    }
+    // if (timer) {
+    //     clearTimeout(timer)
+    // }
+    // timer = setTimeout(async () => {
+    //     if (!serverData) {
+    //         // only start server once
+    //         // TODO: start server on the outermost
+    //         // serverData = await launchServer();
+    //         childProcess.fork(path.resolve(__dirname, 'app', 'server-cli.js'));
+    //     }
+    //     const { address, port } = { ...serverData };
+    //     configureWindow(window);
+    
+    //     loadUrl = `http://${address}:${port}`;
+    //     const filter = {
+    //         urls: [
+    //             // 'http://*/',
+    //             'http://*/resources/images/*',
+    //             'http://*/app.css',
+    //             'http://*/polyfill.*.*',
+    //             'http://*/vendor.*.*',
+    //             'http://*/app.*.*',
+    //             'http://*/*/*.worker.js',
+    //         ]
+    //     };
+    //     protocol.registerFileProtocol(
+    //         'luban',
+    //         (request, callback) => {
+    //             const { pathname } = url.parse(request.url);
+    //             const p = pathname === '/' ? 'index.html' : pathname.substr(1);
+    //             callback(fs.createReadStream(path.normalize(`${__dirname}/app/${p}`)));
+    //         },
+    //         (error) => {
+    //             if (error) {
+    //                 console.error('error', error);
+    //             }
+    //         }
+    //     );
+    //     // https://github.com/electron/electron/issues/21675
+    //     // If needed, resolve CORS. https://stackoverflow.com/questions/51254618/how-do-you-handle-cors-in-an-electron-app
+    
+    //     session.defaultSession.webRequest.onBeforeRequest(
+    //         filter,
+    //         (request, callback) => {
+    //             const redirectURL = request.url.replace(/^http/, 'luban');
+    //             callback({ redirectURL });
+    //         }
+    //     );
+    
+    //     // Ignore proxy settings
+    //     // https://electronjs.org/docs/api/session#sessetproxyconfig-callback
+    
+    //     const webContentsSession = window.webContents.session;
+    //     webContentsSession.setProxy({ proxyRules: 'direct://' })
+    //         .then(() => window.loadURL(loadUrl));
+    
+    //     try {
+    //         // TODO: move to server
+    //         DataStorage.init();
+    //     } catch (err) {
+    //         console.error('Error: ', err);
+    //     }
+    // }, 100); // Need to make sure the server start after window.show();
 
     window.on('close', (e) => {
         e.preventDefault();

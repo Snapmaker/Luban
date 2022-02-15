@@ -1,5 +1,5 @@
-/* eslint max-len: 0 */
-/* eslint no-console: 0 */
+// /* eslint max-len: 0 */
+// /* eslint no-console: 0 */
 import path from 'path';
 import program from 'commander';
 import isElectron from 'is-electron';
@@ -37,6 +37,7 @@ if (normalizedArgv.length > 1) {
 
 const launchServer = () => new Promise((resolve, reject) => {
     // Change working directory to 'server' before require('./server')
+    console.log('childProcessServer-cli');
     process.chdir(path.resolve(__dirname, 'server'));
 
     require('./server').createServer({
@@ -49,12 +50,16 @@ const launchServer = () => new Promise((resolve, reject) => {
         allowRemoteAccess: !!program.allowRemoteAccess,
         controller: program.controller
     }, (err, data) => {
+        console.log('serverData', data, err, process);
         if (err) {
             reject(err);
             return;
         }
+        process.send(data);
         resolve(data);
     });
 });
 
+launchServer();
+console.log('process_child-server-cli');
 export default launchServer;
