@@ -2,7 +2,7 @@
 import dns from 'dns';
 import fs from 'fs';
 import os from 'os';
-// import path from 'path';
+import path from 'path';
 import _ from 'lodash';
 import bcrypt from 'bcrypt-nodejs';
 import chalk from 'chalk';
@@ -21,7 +21,6 @@ import DataStorage from './DataStorage';
 const log = logger('init');
 
 const EPS = 1e-6;
-const path = require('path');
 
 const createServer = (options, callback) => {
     options = { ...options };
