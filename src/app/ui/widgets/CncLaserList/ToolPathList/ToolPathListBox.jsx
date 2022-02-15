@@ -144,15 +144,15 @@ const ToolPathListBox = (props) => {
     const toolPaths = useSelector(state => state[props.headType]?.toolPathGroup?.getToolPaths(), shallowEqual);
     const selectedToolPathIDArray = useSelector(state => state[props.headType]?.toolPathGroup?.selectedToolPathArray, shallowEqual);
     const inProgress = useSelector(state => state[props.headType]?.inProgress);
-    const firstSelectedToolpath = useSelector(state => state[props.headType]?.toolPathGroup?.isSingleSelected && state[props.headType]?.toolPathGroup?.firstSelectedToolpath, shallowEqual);
     const displayedType = useSelector(state => state[props.headType]?.displayedType);
     const selectedModelArray = useSelector(state => state[props.headType]?.modelGroup?.getSelectedModelArray());
     const dispatch = useDispatch();
 
-    const selectedToolPathId = firstSelectedToolpath.id;
+    const contextMenuDisabled = (selectedToolPathIDArray.length !== 1);
+    const selectedFirstToolPathId = selectedToolPathIDArray.length === 1 ? selectedToolPathIDArray[0] : null;
+    const selectedFirstToolPath = toolPaths.find(d => d.id === selectedFirstToolPathId);
     const [editingToolpath, setEditingToolpath] = useState(null);
     const contextMenuRef = useRef(null);
-    const contextMenuDisabled = (!firstSelectedToolpath);
     const contextMenuArrangementDisabled = (toolPaths.length === 1);
     const actions = {
         selectOneToolPathId: (id) => {
@@ -186,26 +186,26 @@ const ToolPathListBox = (props) => {
         },
         commitGenerateToolPath: (toolPathId) => dispatch(editorActions.commitGenerateToolPath(props.headType, toolPathId)),
         toolPathToUp: () => {
-            if (selectedToolPathIDArray.length === 1 && toolPaths[0].id !== selectedToolPathIDArray[0]) {
-                dispatch(editorActions.toolPathToUp(props.headType, selectedToolPathIDArray[0]));
+            if (selectedFirstToolPathId && toolPaths[0].id !== selectedFirstToolPathId) {
+                dispatch(editorActions.toolPathToUp(props.headType, selectedFirstToolPathId));
                 dispatch(editorActions.refreshToolPathPreview(props.headType));
             }
         },
         toolPathToDown: () => {
-            if (selectedToolPathIDArray.length === 1 && toolPaths[toolPaths.length - 1].id !== selectedToolPathIDArray[0]) {
-                dispatch(editorActions.toolPathToDown(props.headType, selectedToolPathIDArray[0]));
+            if (selectedFirstToolPathId && toolPaths[toolPaths.length - 1].id !== selectedFirstToolPathId) {
+                dispatch(editorActions.toolPathToDown(props.headType, selectedFirstToolPathId));
                 dispatch(editorActions.refreshToolPathPreview(props.headType));
             }
         },
         toolPathToTop: () => {
-            if (selectedToolPathIDArray.length === 1 && toolPaths[0].id !== selectedToolPathIDArray[0]) {
-                dispatch(editorActions.toolPathToTop(props.headType, selectedToolPathIDArray[0]));
+            if (selectedFirstToolPathId && toolPaths[0].id !== selectedFirstToolPathId) {
+                dispatch(editorActions.toolPathToTop(props.headType, selectedFirstToolPathId));
                 dispatch(editorActions.refreshToolPathPreview(props.headType));
             }
         },
         toolPathToBottom: () => {
-            if (selectedToolPathIDArray.length === 1 && toolPaths[toolPaths.length - 1].id !== selectedToolPathIDArray[0]) {
-                dispatch(editorActions.toolPathToBottom(props.headType, selectedToolPathIDArray[0]));
+            if (selectedFirstToolPathId && toolPaths[toolPaths.length - 1].id !== selectedFirstToolPathId) {
+                dispatch(editorActions.toolPathToBottom(props.headType, selectedFirstToolPathId));
                 dispatch(editorActions.refreshToolPathPreview(props.headType));
             }
         },
@@ -309,7 +309,7 @@ const ToolPathListBox = (props) => {
                             disabled={selectedToolPathIDArray.length < 1}
                             size={24}
                             title={i18n._('key-CncLaser/ToolPathList/Button/-Delete')}
-                            onClick={() => actions.deleteToolPath(selectedToolPathId)}
+                            onClick={() => actions.deleteToolPath(selectedFirstToolPathId)}
                         />
                     </div>
                     <div className={classNames(
@@ -356,14 +356,14 @@ const ToolPathListBox = (props) => {
                             label: i18n._('key-CncLaser/ToolPathList/Button/-Edit'),
                             disabled: contextMenuDisabled,
                             onClick: () => {
-                                setEditingToolpath(firstSelectedToolpath);
+                                setEditingToolpath(selectedFirstToolPath);
                             }
                         },
                         {
                             type: 'item',
                             label: i18n._('key-CncLaser/ToolPathList/Button/-Delete'),
                             disabled: contextMenuDisabled,
-                            onClick: () => actions.deleteToolPath(selectedToolPathId)
+                            onClick: () => actions.deleteToolPath(selectedFirstToolPathId)
                         },
                         {
                             type: 'subMenu',
@@ -406,11 +406,11 @@ const ToolPathListBox = (props) => {
                     onClose={() => setEditingToolpath(null)}
                 />
             )}
-            {firstSelectedToolpath && (
+            {selectedFirstToolPath && (
                 <ToolPathFastConfigurations
                     headType={props.headType}
                     setEditingToolpath={setEditingToolpath}
-                    toolpath={firstSelectedToolpath}
+                    toolpath={selectedFirstToolPath}
                 />
             )}
         </div>
