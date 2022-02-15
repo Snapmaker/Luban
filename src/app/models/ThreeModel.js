@@ -15,6 +15,7 @@ const materialInSupport = new THREE.MeshPhysicalMaterial({
     color: 0xffffff,
     side: THREE.DoubleSide
 });
+let tmpMaterial;
 class ThreeModel extends BaseModel {
     loadFrom = LOAD_MODEL_FROM_INNER;
 
@@ -259,12 +260,17 @@ class ThreeModel extends BaseModel {
             this.isSelected = isSelected;
         }
         if (this.isEditingSupport) {
+            // TODO: uniform material for setting triangle color and textures
+            tmpMaterial = this.meshObject.material;
             this.meshObject.material = materialInSupport;
         } else if (this.overstepped === true) {
+            this.meshObject.material = tmpMaterial || this.meshObject.material;
             this.meshObject.material.color.set(materialOverstepped);
         } else if (this.isSelected === true) {
+            this.meshObject.material = tmpMaterial || this.meshObject.material;
             this.meshObject.material.color.set(this._materialSelected.clone());
         } else {
+            this.meshObject.material = tmpMaterial || this.meshObject.material;
             this.meshObject.material.color.set(this._materialNormal.clone());
         }
 
