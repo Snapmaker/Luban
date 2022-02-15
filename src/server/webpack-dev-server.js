@@ -23,9 +23,7 @@ const webpackDevServer = (app) => {
         }
     });
     devMiddleware.waitUntilValid(() => {
-        electron.BrowserWindow.getAllWindows().forEach(window => {
-            window.webContents.reload();
-        });
+        process.send({ type: 'uploadWindows' });
     });
     app.use(devMiddleware);
 

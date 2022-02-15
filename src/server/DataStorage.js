@@ -2,7 +2,7 @@ import path from 'path';
 import fs from 'fs';
 import mkdirp from 'mkdirp';
 import { includes, isUndefined, gt } from 'lodash';
-// import { app } from 'electron';
+import { app } from 'electron';
 import isElectron from 'is-electron';
 import semver from 'semver';
 import { CNC_CONFIG_SUBCATEGORY, LASER_CONFIG_SUBCATEGORY, PRINTING_CONFIG_SUBCATEGORY } from './constants';
@@ -15,9 +15,7 @@ import pkg from '../../package.json';
 
 
 const log = logger('server:DataStorage');
-const { app } = require('electron');
-console.log('DataStorage', app.getPath);
-
+let tempUserDataDir = '.';
 export const rmDir = (dirPath, removeSelf) => {
     log.info(`Clearing folder ${dirPath}`);
     if (removeSelf === undefined) {
@@ -69,8 +67,12 @@ class DataStorage {
 
      constructor() {
          if (isElectron()) {
-             console.log('app.getPath', app.getPath);
-             this.userDataDir = app.getPath('userData');
+             this.userDataDir = app ? app.getPath('userData') : tempUserDataDir;
+             process.on('message', (data) => {
+                 console.log({ data });
+                 this.userDataDir = data.userDataDir;
+                 console.log('this.userDataDir', this.userDataDir);
+             })
          } else {
              this.userDataDir = '.';
          }

@@ -50,12 +50,12 @@ const launchServer = () => new Promise((resolve, reject) => {
         allowRemoteAccess: !!program.allowRemoteAccess,
         controller: program.controller
     }, (err, data) => {
-        console.log('serverData', data, err, process);
+        console.log('serverData', data, err);
         if (err) {
             reject(err);
             return;
         }
-        process.send(data);
+        process.send({ type: 'serverData', ...data });
         resolve(data);
     });
 });
