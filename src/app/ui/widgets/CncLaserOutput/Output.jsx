@@ -71,9 +71,6 @@ const Output = ({ headType }) => {
         onProcess: () => {
             dispatch(editorActions.createToolPath(headType));
         },
-        onSimulation: () => {
-            dispatch(editorActions.commitGenerateViewPath(headType));
-        },
         showToolPathObject: () => {
             dispatch(editorActions.showToolPathGroupObject(headType));
         },

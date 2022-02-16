@@ -1,8 +1,9 @@
-import SocketIO from 'socket.io';
+import { Server, Socket } from 'socket.io';
 import socketioJwt from 'socketio-jwt';
 import rangeCheck from 'range_check';
 import EventEmitter from 'events';
 
+import { DefaultEventsMap } from 'socket.io/dist/typed-events';
 import settings from '../../config/settings';
 import { IP_WHITELIST } from '../../constants';
 import logger from '../logger';
@@ -13,9 +14,9 @@ const log = logger('service:socket-server');
 class SocketServer extends EventEmitter {
     server = null;
 
-    io = null;
+    io: Server<DefaultEventsMap, DefaultEventsMap> = null;
 
-    sockets = [];
+    sockets: Socket[] = [];
 
     events = [];
 
@@ -23,7 +24,7 @@ class SocketServer extends EventEmitter {
         this.stop();
 
         this.server = server;
-        this.io = SocketIO(this.server, {
+        this.io = new Server(this.server, {
             serveClient: true,
             allowEIO3: true,
             pingTimeout: 60000, // 60s without pong to consider the connection closed

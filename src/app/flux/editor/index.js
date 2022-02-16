@@ -4,7 +4,6 @@ import { v4 as uuid } from 'uuid';
 import _, { includes } from 'lodash';
 import workerpool from 'workerpool';
 import onmessage from '../../workers/ToolpathRenderer.worker';
-/* eslint-disable-next-line import/no-cycle */
 import { actions as projectActions } from '../project';
 import api from '../../api';
 import {
@@ -30,7 +29,8 @@ import { baseActions } from './actions-base';
 /* eslint-disable-next-line import/no-cycle */
 import { processActions } from './actions-process';
 
-import LoadModelWorker from '../../workers/LoadModel.worker';
+import workerManager from '../../lib/manager/workerManager';
+
 import { controller } from '../../lib/controller';
 import { isEqual, round } from '../../../shared/lib/utils';
 
@@ -217,11 +217,6 @@ function recordScaleActionsToHistory(scaleActionsFn, elements, SVGActions, headT
         });
     }
 }
-const pool = workerpool.pool('ToolpathRenderer.worker.js', {
-    minWorkers: 'max',
-});
-// TODO Have to import 'ToolpathRenderer.worker.js' for webpack to package this file
-console.log('onmessage', onmessage);
 
 const scaleExtname = ['.svg', '.dxf'];
 
@@ -317,59 +312,57 @@ export const actions = {
                     if (toolPath) {
                         progressStatesManager.startNextStep();
                         taskResult.filenames = toolPathTaskResult.filenames.find(d => d.taskId === taskResult.taskId)?.filenames;
-                        pool.exec('onmessage', [taskResult], {
-                            on: function (payload) {
-                                const { status, value } = payload;
-                                switch (status) {
-                                    case 'succeed': {
-                                        const { shouldGenerateGcodeCounter } = getState()[headType];
-                                        const toolpath = toolPathGroup._getToolPath(taskResult.taskId);
-                                        if (toolpath) {
-                                            toolpath.onGenerateToolpathFinail();
-                                        }
+                        workerManager.toolpathRenderer([taskResult], (payload) => {
+                            const { status, value } = payload;
+                            switch (status) {
+                                case 'succeed': {
+                                    const { shouldGenerateGcodeCounter } = getState()[headType];
+                                    const toolpath = toolPathGroup._getToolPath(taskResult.taskId);
+                                    if (toolpath) {
+                                        toolpath.onGenerateToolpathFinail();
+                                    }
 
-                                        if (toolPathGroup && toolPathGroup._getCheckAndSuccessToolPaths()) {
-                                            dispatch(baseActions.updateState(headType, {
-                                                shouldGenerateGcodeCounter: shouldGenerateGcodeCounter + 1
-                                            }));
-                                        }
-                                        break;
-                                    }
-                                    case 'data': {
-                                        const { taskResult: newTaskResult, index, renderResult } = value;
-                                        const toolpath = toolPathGroup._getToolPath(newTaskResult.taskId);
-
-                                        if (toolpath) {
-                                            toolpath.onGenerateToolpathModel(newTaskResult.data[index], newTaskResult.filenames[index], renderResult);
-                                        }
-                                        break;
-                                    }
-                                    case 'progress': {
-                                        const { progress } = value;
-                                        if (progress < 0.1) {
-                                            progressStatesManager.startNextStep();
-                                            dispatch(actions.updateState(headType, {
-                                                stage: STEP_STAGE.CNC_LASER_RENDER_TOOLPATH,
-                                                progress: progressStatesManager.updateProgress(STEP_STAGE.CNC_LASER_RENDER_TOOLPATH, progress)
-                                            }));
-                                        } else {
-                                            dispatch(actions.updateState(headType, {
-                                                progress: progressStatesManager.updateProgress(STEP_STAGE.CNC_LASER_RENDER_TOOLPATH, progress)
-                                            }));
-                                        }
-                                        break;
-                                    }
-                                    case 'err': {
+                                    if (toolPathGroup && toolPathGroup._getCheckAndSuccessToolPaths()) {
                                         dispatch(baseActions.updateState(headType, {
-                                            stage: STEP_STAGE.CNC_LASER_GENERATE_TOOLPATH_FAILED,
-                                            progress: 1
+                                            shouldGenerateGcodeCounter: shouldGenerateGcodeCounter + 1
                                         }));
-                                        progressStatesManager.finishProgress(false);
-                                        break;
                                     }
-                                    default:
-                                        break;
+                                    break;
                                 }
+                                case 'data': {
+                                    const { taskResult: newTaskResult, index, renderResult } = value;
+                                    const toolpath = toolPathGroup._getToolPath(newTaskResult.taskId);
+
+                                    if (toolpath) {
+                                        toolpath.onGenerateToolpathModel(newTaskResult.data[index], newTaskResult.filenames[index], renderResult);
+                                    }
+                                    break;
+                                }
+                                case 'progress': {
+                                    const { progress } = value;
+                                    if (progress < 0.1) {
+                                        progressStatesManager.startNextStep();
+                                        dispatch(actions.updateState(headType, {
+                                            stage: STEP_STAGE.CNC_LASER_RENDER_TOOLPATH,
+                                            progress: progressStatesManager.updateProgress(STEP_STAGE.CNC_LASER_RENDER_TOOLPATH, progress)
+                                        }));
+                                    } else {
+                                        dispatch(actions.updateState(headType, {
+                                            progress: progressStatesManager.updateProgress(STEP_STAGE.CNC_LASER_RENDER_TOOLPATH, progress)
+                                        }));
+                                    }
+                                    break;
+                                }
+                                case 'err': {
+                                    dispatch(baseActions.updateState(headType, {
+                                        stage: STEP_STAGE.CNC_LASER_GENERATE_TOOLPATH_FAILED,
+                                        progress: 1
+                                    }));
+                                    progressStatesManager.finishProgress(false);
+                                    break;
+                                }
+                                default:
+                                    break;
                             }
                         });
                     }
@@ -524,11 +517,7 @@ export const actions = {
 
     prepareStlVisualizer: (headType, model) => (dispatch) => {
         const uploadPath = model.resource.originalFile.path;
-        const worker = new LoadModelWorker();
-        worker.postMessage({ uploadPath });
-        worker.onmessage = async (e) => {
-            const data = e.data;
-
+        const worker = workerManager.loadModel([{ uploadPath }], async (data) => {
             const { type } = data;
 
             switch (type) {
@@ -574,7 +563,7 @@ export const actions = {
                 default:
                     break;
             }
-        };
+        });
     },
 
     /**

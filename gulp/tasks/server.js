@@ -3,6 +3,7 @@ import nodemon from 'gulp-nodemon';
 import log from 'fancy-log';
 import PluginError from 'plugin-error';
 import webpack from 'webpack';
+import fs from 'fs';
 
 //
 // Development Copy
@@ -67,6 +68,44 @@ export function serverStartDevelopment(cb) {
     }).on('readable', function () {
         this.stdout.pipe(process.stdout);
         this.stderr.pipe(process.stderr);
+    });
+}
+
+function replace(path, flag, str) {
+    const content = fs.readFileSync(path, 'utf-8');
+    const eol = '\n';
+    const data = content.replace(
+        new RegExp(`(// LUBAN ${flag} BEGIN)[\\s\\S]*\\n(\\s*// LUBAN ${flag} END)`), `$1${eol}${str}$2`
+    );
+    fs.writeFile(path, data, { encoding: 'utf-8' }, () => { });
+}
+
+function generateWorkerMethods(path) {
+    const dir = fs.readdirSync(path, { encoding: 'utf-8' });
+    const workerFiles = dir.filter((name) => {
+        const stat = fs.statSync(`${path}/${name}`);
+        return stat.isFile();
+    }).map((file) => {
+        const [name] = file.split('.');
+        return name;
+    });
+    const workerMethods = workerFiles.reduce((prev, file, index) => {
+        prev += `    ${file} = '${file}'${index !== workerFiles.length - 1 ? ',' : ''}\n`;
+        return prev;
+    }, '');
+    return workerMethods;
+}
+
+export function serverWatchDevelopment(cb) {
+    const watch = require('gulp-watch');
+    return watch(['./src/app/workers/*', './src/server/services/task-manager/workers/*'], () => {
+        const workerMethods = generateWorkerMethods('./src/app/workers');
+        replace('./src/app/lib/manager/workerManager.ts', 'worker methods', workerMethods);
+
+        const ServerWorkerMethods = generateWorkerMethods('./src/server/services/task-manager/workers');
+        replace('./src/server/services/task-manager/workerManager.ts', 'worker methods', ServerWorkerMethods);
+
+        cb();
     });
 }
 

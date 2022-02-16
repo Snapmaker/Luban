@@ -1,18 +1,20 @@
 import fs from 'fs';
 import _ from 'lodash';
 import path from 'path';
-import DataStorage from '../../DataStorage';
-import { GcodeGenerator } from '../../lib/GcodeGenerator';
-import logger from '../../lib/logger';
-import { pathWithRandomSuffix } from '../../../shared/lib/random-utils';
-import { isNull } from '../../../shared/lib/utils';
+import global from '../../../lib/global';
+import { GcodeGenerator } from '../../../lib/GcodeGenerator';
+import logger from '../../../lib/logger';
+import { pathWithRandomSuffix } from '../../../../shared/lib/random-utils';
+import { isNull } from '../../../../shared/lib/utils';
+import sendMessage from '../utils/sendMessage';
+
 
 const log = logger('service:TaskManager');
 
 const addHeaderToFile = (header, name, tmpFilePath, filePath, thumbnail, estimatedTime, boundingBox) => {
     return new Promise((resolve, reject) => {
-        const rs = fs.createReadStream(tmpFilePath, 'utf8');
-        const ws = fs.createWriteStream(filePath, 'utf8');
+        const rs = fs.createReadStream(tmpFilePath, 'utf-8');
+        const ws = fs.createWriteStream(filePath, 'utf-8');
         rs.on('close', () => {
             fs.unlinkSync(tmpFilePath);
         });
@@ -76,15 +78,17 @@ const checkoutBoundingBoxIsNull = (boundingBox) => {
     }
 };
 
-export const generateGcode = (toolPaths, onProgress) => {
+// eslint-disable-next-line consistent-return
+const generateGcode = (toolPaths, tmpDir) => {
+    global.tmpDir = tmpDir;
     if (!toolPaths && !_.isArray(toolPaths) && toolPaths.length === 0) {
-        return Promise.reject(new Error('modelInfo is empty.'));
+        return sendMessage({ status: 'fail', value: 'modelInfo is empty.' });
     }
-    onProgress(0.05);
+    sendMessage({ status: 'progress', value: 0.05 });
 
     const { headType } = toolPaths[0];
     if (!_.includes(['laser', 'cnc'], headType)) {
-        return Promise.reject(new Error(`Unsupported type: ${headType}`));
+        return sendMessage({ status: 'fail', value: `Unsupported type: ${headType}` });
     }
 
     const suffix = headType === 'laser' ? '.nc' : '.cnc';
@@ -96,10 +100,10 @@ export const generateGcode = (toolPaths, onProgress) => {
 
     const { baseName } = toolPaths[0];
     const outputFilename = pathWithRandomSuffix(path.parse(baseName).name + suffix);
-    const outputFilePath = `${DataStorage.tmpDir}/${outputFilename}`;
+    const outputFilePath = `${global.tmpDir}/${outputFilename}`;
     const outputFilePathTmp = `${outputFilePath}.tmp`;
 
-    const writeStream = fs.createWriteStream(outputFilePathTmp, 'utf8');
+    const writeStream = fs.createWriteStream(outputFilePathTmp, 'utf-8');
 
     let isRotate;
     let diameter;
@@ -109,7 +113,7 @@ export const generateGcode = (toolPaths, onProgress) => {
         const { toolPathFiles, gcodeConfig } = toolPath;
 
         for (let j = 0; j < toolPathFiles.length; j++) {
-            const toolPathFilePath = `${DataStorage.tmpDir}/${toolPathFiles[j]}`;
+            const toolPathFilePath = `${global.tmpDir}/${toolPathFiles[j]}`;
             const data = fs.readFileSync(toolPathFilePath, 'utf8');
             const toolPathObj = JSON.parse(data);
 
@@ -171,7 +175,7 @@ export const generateGcode = (toolPaths, onProgress) => {
             checkoutBoundingBoxIsNull(boundingBox);
         }
 
-        onProgress((i + 1) / toolPathFiles.length);
+        sendMessage({ status: 'progress', value: (i + 1) / toolPathFiles.length });
     }
 
     const { gcodeConfig, thumbnail } = toolPaths[0];
@@ -207,14 +211,20 @@ export const generateGcode = (toolPaths, onProgress) => {
 
     writeStream.end();
 
-    // eslint-disable-next-line no-unused-vars
     return new Promise((resolve, reject) => {
         writeStream.on('close', async () => {
-            const res = await addHeaderToFile(headerStart, outputFilename, outputFilePathTmp, outputFilePath, thumbnail, estimatedTime, boundingBox);
-            resolve(res);
+            addHeaderToFile(headerStart, outputFilename, outputFilePathTmp, outputFilePath, thumbnail, estimatedTime, boundingBox).then((res) => {
+                resolve(
+                    sendMessage({ status: 'complete', value: res })
+                );
+            });
         });
         writeStream.on('error', (err) => {
-            reject(err);
+            reject(
+                sendMessage({ status: 'fail', value: err })
+            );
         });
     });
 };
+
+export default generateGcode;

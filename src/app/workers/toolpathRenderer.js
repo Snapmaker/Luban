@@ -1,11 +1,10 @@
 import isEmpty from 'lodash/isEmpty';
-import workerpool from 'workerpool';
 import ToolpathToBufferGeometry from './GcodeToBufferGeometry/ToolpathToBufferGeometry';
-// import api from '../api';
+import sendMessage from './utils/sendMessage';
 
-const onmessage = async (taskResult) => {
+const toolpathRenderer = async (taskResult) => {
     if (isEmpty(taskResult.data)) {
-        workerpool.workerEmit({
+        sendMessage({
             status: 'err',
             value: 'Data is empty'
         });
@@ -19,7 +18,7 @@ const onmessage = async (taskResult) => {
             const renderResult = await new ToolpathToBufferGeometry().parse(
                 filename,
                 (progress) => {
-                    workerpool.workerEmit({
+                    sendMessage({
                         status: 'progress',
                         headType: headType,
                         value: {
@@ -39,7 +38,7 @@ const onmessage = async (taskResult) => {
                 }
             };
 
-            workerpool.workerEmit(
+            sendMessage(
                 data,
                 [
                     renderResult.positions.buffer,
@@ -56,11 +55,11 @@ const onmessage = async (taskResult) => {
             }
         };
 
-        workerpool.workerEmit(
+        sendMessage(
             data
         );
     } catch (err) {
-        workerpool.workerEmit({
+        sendMessage({
             status: 'err',
             headType: headType,
             value: err
@@ -68,6 +67,4 @@ const onmessage = async (taskResult) => {
     }
 };
 
-workerpool.worker({
-    onmessage: onmessage
-});
+export default toolpathRenderer;

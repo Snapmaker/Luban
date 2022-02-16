@@ -2,8 +2,7 @@ import * as THREE from 'three';
 import path from 'path';
 import { cloneDeep, isNil, filter, find as lodashFind } from 'lodash';
 // import FileSaver from 'file-saver';
-import LoadModelWorker from '../../workers/LoadModel.worker';
-import GcodeToBufferGeometryWorker from '../../workers/GcodeToBufferGeometry.worker';
+import workerManager from '../../lib/manager/workerManager';
 import {
     ABSENT_OBJECT,
     EPSILON,
@@ -21,10 +20,10 @@ import {
     DUAL_EXTRUDER_TOOLHEAD_FOR_SM2,
     DUAL_EXTRUDER_LIMIT_WIDTH_L,
     DUAL_EXTRUDER_LIMIT_WIDTH_R, BOTH_EXTRUDER_MAP_NUMBER,
-    WHITE_COLOR,
-    BLACK_COLOR,
     KEY_DEFAULT_CATEGORY_CUSTOM,
-    KEY_DEFAULT_CATEGORY_DEFAULT
+    KEY_DEFAULT_CATEGORY_DEFAULT,
+    WHITE_COLOR,
+    BLACK_COLOR
 } from '../../constants';
 import { timestamp } from '../../../shared/lib/random-utils';
 import { machineStore } from '../../store/local-storage';
@@ -223,9 +222,6 @@ const INITIAL_STATE = {
 const ACTION_UPDATE_STATE = 'printing/ACTION_UPDATE_STATE';
 const ACTION_UPDATE_TRANSFORMATION = 'printing/ACTION_UPDATE_TRANSFORMATION';
 
-// TODO: invest worker thread memory costs
-const gcodeRenderingWorker = new GcodeToBufferGeometryWorker();
-
 // avoid parallel loading of same file
 const createLoadModelWorker = (() => {
     const runningTasks = {};
@@ -233,28 +229,25 @@ const createLoadModelWorker = (() => {
         let task = runningTasks[uploadPath];
         if (!task) {
             task = {
-                worker: new LoadModelWorker(),
-                cbOnMessage: []
-            };
-            task.worker.postMessage({ uploadPath });
-            task.worker.onmessage = async (e) => {
-                const data = e.data;
-                const { type } = data;
+                worker: workerManager.loadModel([{ uploadPath }], async (data) => {
+                    const { type } = data;
 
-                switch (type) {
-                    case 'LOAD_MODEL_CONVEX':
-                    case 'LOAD_MODEL_FAILED':
-                        task.worker.terminate();
-                        delete runningTasks[uploadPath];
-                        break;
-                    default:
-                        break;
-                }
-                for (const fn of task.cbOnMessage) {
-                    if (typeof fn === 'function') {
-                        fn(e);
+                    switch (type) {
+                        case 'LOAD_MODEL_CONVEX':
+                        case 'LOAD_MODEL_FAILED':
+                            task.worker.terminate();
+                            delete runningTasks[uploadPath];
+                            break;
+                        default:
+                            break;
                     }
-                }
+                    for (const fn of task.cbOnMessage) {
+                        if (typeof fn === 'function') {
+                            fn(data);
+                        }
+                    }
+                }),
+                cbOnMessage: []
             };
             runningTasks[uploadPath] = task;
         }
@@ -501,7 +494,7 @@ export const actions = {
         await dispatch(actions.initSize());
 
         const printingState = getState().printing;
-        const { modelGroup, gcodeLineGroup, initEventFlag, qualityDefinitions, defaultQualityId } = printingState;
+        const { modelGroup, initEventFlag, qualityDefinitions, defaultQualityId } = printingState;
         // TODO
         const { toolHead: { printingToolhead } } = getState().machine;
         // const printingToolhead = machineStore.get('machine.toolHead.printingToolhead');
@@ -567,100 +560,100 @@ export const actions = {
                 }));
             });
         }
+    },
+    gcodeRenderingCallback: (data) => (dispatch, getState) => {
+        const { gcodeLineGroup } = getState().printing;
 
-        gcodeRenderingWorker.onmessage = (e) => {
-            const data = e.data;
-            const { status, value } = data;
-            switch (status) {
-                case 'succeed': {
-                    const { positions, colors, colors1, layerIndices, typeCodes, toolCodes, layerCount, bounds } = value;
-                    const bufferGeometry = new THREE.BufferGeometry();
-                    const positionAttribute = new THREE.Float32BufferAttribute(positions, 3);
-                    const colorAttribute = new THREE.Uint8BufferAttribute(colors, 3);
-                    // this will map the buffer values to 0.0f - +1.0f in the shader
-                    colorAttribute.normalized = true;
-                    const color1Attribute = new THREE.Uint8BufferAttribute(colors1, 3);
-                    color1Attribute.normalized = true;
-                    const layerIndexAttribute = new THREE.Float32BufferAttribute(layerIndices, 1);
-                    const typeCodeAttribute = new THREE.Float32BufferAttribute(typeCodes, 1);
-                    const toolCodeAttribute = new THREE.Float32BufferAttribute(toolCodes, 1);
+        const { status, value } = data;
+        switch (status) {
+            case 'succeed': {
+                const { positions, colors, colors1, layerIndices, typeCodes, toolCodes, layerCount, bounds } = value;
+                const bufferGeometry = new THREE.BufferGeometry();
+                const positionAttribute = new THREE.Float32BufferAttribute(positions, 3);
+                const colorAttribute = new THREE.Uint8BufferAttribute(colors, 3);
+                // this will map the buffer values to 0.0f - +1.0f in the shader
+                colorAttribute.normalized = true;
+                const color1Attribute = new THREE.Uint8BufferAttribute(colors1, 3);
+                color1Attribute.normalized = true;
+                const layerIndexAttribute = new THREE.Float32BufferAttribute(layerIndices, 1);
+                const typeCodeAttribute = new THREE.Float32BufferAttribute(typeCodes, 1);
+                const toolCodeAttribute = new THREE.Float32BufferAttribute(toolCodes, 1);
 
-                    bufferGeometry.setAttribute('position', positionAttribute);
-                    bufferGeometry.setAttribute('a_color', colorAttribute);
-                    bufferGeometry.setAttribute('a_color1', color1Attribute);
-                    bufferGeometry.setAttribute('a_layer_index', layerIndexAttribute);
-                    bufferGeometry.setAttribute('a_type_code', typeCodeAttribute);
-                    bufferGeometry.setAttribute('a_tool_code', toolCodeAttribute);
+                bufferGeometry.setAttribute('position', positionAttribute);
+                bufferGeometry.setAttribute('a_color', colorAttribute);
+                bufferGeometry.setAttribute('a_color1', color1Attribute);
+                bufferGeometry.setAttribute('a_layer_index', layerIndexAttribute);
+                bufferGeometry.setAttribute('a_type_code', typeCodeAttribute);
+                bufferGeometry.setAttribute('a_tool_code', toolCodeAttribute);
 
-                    const object3D = gcodeBufferGeometryToObj3d('3DP', bufferGeometry);
+                const object3D = gcodeBufferGeometryToObj3d('3DP', bufferGeometry);
 
-                    dispatch(actions.destroyGcodeLine());
-                    gcodeLineGroup.add(object3D);
-                    object3D.position.copy(new THREE.Vector3());
-                    const gcodeTypeInitialVisibility = {
-                        'WALL-INNER': true,
-                        'WALL-OUTER': true,
-                        SKIN: true,
-                        SKIRT: true,
-                        SUPPORT: true,
-                        FILL: true,
-                        TRAVEL: false,
-                        UNKNOWN: true,
-                        TOOL0: true,
-                        TOOL1: true
-                    };
-                    dispatch(actions.updateState({
-                        layerCount,
-                        layerCountDisplayed: layerCount - 1,
-                        gcodeTypeInitialVisibility: {
-                            ...gcodeTypeInitialVisibility
-                        },
-                        renderLineType: false,
-                        gcodeLine: object3D
-                    }));
+                dispatch(actions.destroyGcodeLine());
+                gcodeLineGroup.add(object3D);
+                object3D.position.copy(new THREE.Vector3());
+                const gcodeTypeInitialVisibility = {
+                    'WALL-INNER': true,
+                    'WALL-OUTER': true,
+                    SKIN: true,
+                    SKIRT: true,
+                    SUPPORT: true,
+                    FILL: true,
+                    TRAVEL: false,
+                    UNKNOWN: true,
+                    TOOL0: true,
+                    TOOL1: true
+                };
+                dispatch(actions.updateState({
+                    layerCount,
+                    layerCountDisplayed: layerCount - 1,
+                    gcodeTypeInitialVisibility: {
+                        ...gcodeTypeInitialVisibility
+                    },
+                    renderLineType: false,
+                    gcodeLine: object3D
+                }));
 
-                    Object.keys(gcodeTypeInitialVisibility).forEach((type) => {
-                        const visible = gcodeTypeInitialVisibility[type];
-                        dispatch(actions.setGcodeVisibilityByTypeAndDirection(type, LEFT_EXTRUDER, visible ? 1 : 0));
-                        dispatch(actions.setGcodeVisibilityByTypeAndDirection(type, RIGHT_EXTRUDER, visible ? 1 : 0));
-                    });
-                    dispatch(actions.setGcodeColorByRenderLineType());
+                Object.keys(gcodeTypeInitialVisibility).forEach((type) => {
+                    const visible = gcodeTypeInitialVisibility[type];
+                    dispatch(actions.setGcodeVisibilityByTypeAndDirection(type, LEFT_EXTRUDER, visible ? 1 : 0));
+                    dispatch(actions.setGcodeVisibilityByTypeAndDirection(type, RIGHT_EXTRUDER, visible ? 1 : 0));
+                });
+                dispatch(actions.setGcodeColorByRenderLineType());
 
-                    const { minX, minY, minZ, maxX, maxY, maxZ } = bounds;
-                    dispatch(actions.checkGcodeBoundary(minX, minY, minZ, maxX, maxY, maxZ));
-                    dispatch(actions.showGcodeLayers(layerCount - 1));
-                    dispatch(actions.displayGcode());
+                const { minX, minY, minZ, maxX, maxY, maxZ } = bounds;
+                dispatch(actions.checkGcodeBoundary(minX, minY, minZ, maxX, maxY, maxZ));
+                dispatch(actions.showGcodeLayers(layerCount - 1));
+                dispatch(actions.displayGcode());
 
-                    const { progressStatesManager } = getState().printing;
-                    progressStatesManager.startNextStep();
-                    dispatch(actions.updateState({
-                        stage: STEP_STAGE.PRINTING_PREVIEWING
-                    }));
-                    break;
-                }
-                case 'progress': {
-                    const state = getState().printing;
-                    const { progressStatesManager } = state;
-                    if (Math.abs(value - state.progress) > 0.01 || value > 1 - EPSILON) {
-                        dispatch(actions.updateState({
-                            progress: progressStatesManager.updateProgress(STEP_STAGE.PRINTING_PREVIEWING, value)
-                        }));
-                    }
-                    break;
-                }
-                case 'err': {
-                    const { progressStatesManager } = getState().printing;
-                    progressStatesManager.finishProgress(false);
-                    dispatch(actions.updateState({
-                        stage: STEP_STAGE.PRINTING_PREVIEW_FAILED,
-                        progress: 0
-                    }));
-                    break;
-                }
-                default:
-                    break;
+                const { progressStatesManager } = getState().printing;
+                progressStatesManager.startNextStep();
+                dispatch(actions.updateState({
+                    stage: STEP_STAGE.PRINTING_PREVIEWING
+                }));
+                break;
             }
-        };
+            case 'progress': {
+                const state = getState().printing;
+                const { progressStatesManager } = state;
+                if (Math.abs(value - state.progress) > 0.01 || value > 1 - EPSILON) {
+                    dispatch(actions.updateState({
+                        progress: progressStatesManager.updateProgress(STEP_STAGE.PRINTING_PREVIEWING, value)
+                    }));
+                }
+                break;
+            }
+            case 'err': {
+                const { progressStatesManager } = getState().printing;
+                progressStatesManager.finishProgress(false);
+                dispatch(actions.updateState({
+                    stage: STEP_STAGE.PRINTING_PREVIEW_FAILED,
+                    progress: 0
+                }));
+                break;
+            }
+            default:
+                break;
+        }
     },
 
     getDefaultDefinition: (id) => (dispatch, getState) => {
@@ -2101,7 +2094,9 @@ export const actions = {
             toolColor0: extruderLDefinition?.settings?.color?.default_value || WHITE_COLOR,
             toolColor1: extruderRDefinition?.settings?.color?.default_value || BLACK_COLOR
         };
-        gcodeRenderingWorker.postMessage({ func: '3DP', gcodeFilename, extruderColors });
+        workerManager.gcodeToBufferGeometry([{ func: '3DP', gcodeFilename, extruderColors }], (data) => {
+            dispatch(actions.gcodeRenderingCallback(data));
+        });
     },
     saveSupport: (model) => (dispatch, getState) => {
         const { modelGroup } = getState().printing;
@@ -2193,9 +2188,7 @@ export const actions = {
             const primeTowerModel = lodashFind(modelGroup.models, { type: 'primeTower' });
             !enabledPrimeTower && dispatch(actions.hideSelectedModel(primeTowerModel));
         } else {
-            const onMessage = async (e) => {
-                const data = e.data;
-
+            const onMessage = async (data) => {
                 const { type } = data;
                 switch (type) {
                     case 'LOAD_MODEL_POSITIONS': {
