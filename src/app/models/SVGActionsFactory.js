@@ -1599,6 +1599,9 @@ class SVGActionsFactory {
                     ...baseUpdateData,
                     config: newConfig
                 });
+                const elements = this.svgContentGroup.selectedElements;
+                const t = SVGActionsFactory.calculateElementsTransformation(elements);
+                this._setSelectedElementsTransformation(t);
 
                 this.resetSelection();
             });

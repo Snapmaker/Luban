@@ -93,10 +93,14 @@ const convertTextToSvg = async (options) => {
 
     const fontObj = await fontManager.getFont(fontFamily, null, style);
     const unitsPerEm = fontObj.unitsPerEm;
+    // https://docs.microsoft.com/en-us/typography/opentype/spec/os2#stypoascender
+    // TODO: The USE_TYPO_METRICS flag (bit 7) of the fsSelection field is used to choose between using sTypo* values or usWin* values for default line metrics.
+    // See fsSelection for additional details.
     const descender = _.isNil(fontObj?.tables?.os2?.sTypoDescender) ? fontObj?.descender : (fontObj?.tables?.os2?.sTypoDescender || 0);
     const ascender = _.isNil(fontObj?.tables?.os2?.sTypoAscender) ? fontObj?.ascender : (fontObj?.tables?.os2?.sTypoAscender || 0);
+    const sTypoLineGap = fontObj?.tables?.os2?.sTypoLineGap || 0;
     // Big enough to being rendered clearly on canvas (still has space for improvements)
-    const realUnitsPerEm = (ascender - descender) > unitsPerEm ? (ascender - descender) : unitsPerEm;
+    const realUnitsPerEm = (ascender - descender + sTypoLineGap) > unitsPerEm ? (ascender - descender + sTypoLineGap) : unitsPerEm;
     const estimatedFontSize = (fontSize / 72 * 25.4 * 10) * (realUnitsPerEm) / unitsPerEm;
 
     const lines = text.split('\n');
@@ -112,10 +116,8 @@ const convertTextToSvg = async (options) => {
     }
 
     // We use descender line as the bottom of a line, first line with lineHeight = 1
-    let y = (ascender - descender) > estimatedFontSize ? estimatedFontSize
+    let y = (ascender - descender + sTypoLineGap) > unitsPerEm ? estimatedFontSize
             : (realUnitsPerEm + descender) / realUnitsPerEm * estimatedFontSize, x = 0;
-    console.log('fontObj', fontObj);
-    console.log('estimatedFontSize', ascender, descender, unitsPerEm, estimatedFontSize, realUnitsPerEm, y);
     const fullPath = new opentype.Path();
     for (let i = 0; i < numberOfLines; i++) {
         const line = lines[i];
@@ -137,13 +139,12 @@ const convertTextToSvg = async (options) => {
     const boundingBox = fullPath.getBoundingBox();
     const width = boundingBox.x2 - boundingBox.x1;
     // const height = estimatedFontSize + estimatedFontSize * lineHeight * (numberOfLines - 1);
-    console.log('estimatedFontSize', estimatedFontSize, boundingBox.y2 - boundingBox.y1);
     const height = boundingBox.y2 - boundingBox.y1;
 
     const svgString = _.template(TEMPLATE)({
         path: fullPath.toSVG(),
         x0: boundingBox.x1,
-        y0: 0,
+        y0: boundingBox.y1,
         width: width,
         height: height
     });
