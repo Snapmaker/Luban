@@ -203,14 +203,20 @@ const showMainWindow = async () => {
         Menu.setApplicationMenu(menu);
         window.setMenuBarVisibility(true);
     }
-    window.loadURL(path.resolve(__dirname, 'app', 'loading.html'));
-    window.setBackgroundColor('#f5f5f7');
-    window.show();
     if (!serverData) {
         // only start server once
         // TODO: start server on the outermost
         console.log('main.js.path', path.resolve(__dirname, '../dist/Luban/server-cli.js'));
         const child = childProcess.fork(path.resolve(__dirname, 'server-cli.js'));
+        window.loadURL(path.resolve(__dirname, 'app', 'loading.html'));
+        window.setBackgroundColor('#f5f5f7');
+        if (process.platform === 'win32') {
+            window.show();
+        } else {
+            window.on('ready-to-show', () => {
+                window.show();
+            })
+        }
         child.send({
             type: 'userDataDir',
             userDataDir
@@ -281,6 +287,14 @@ const showMainWindow = async () => {
             }
         })
         // serverData = await launchServer();
+    } else {
+        if (process.platform === 'win32') {
+            window.show();
+        } else {
+            window.on('ready-to-show', () => {
+                window.show();
+            })
+        }
     }
     
     // if (serverData) {
