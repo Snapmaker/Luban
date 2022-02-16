@@ -144,8 +144,8 @@ STLLoader.prototype = {
 			var faceVertexUvs = [[]];
 			var uv = [];
             var xyMaxX = 200, xyMinX = -200, xyMaxY = 200, xyMinY = -200;
-            var xzMaxX = 200, xzMinX = -200, xzMaxY = 200, xzMinY = -200;
-            var zyMaxX = 200, zyMinX = -200, zyMaxY = 200, zyMinY = -200;
+            var xzMaxX = 200, xzMinX = -200, xzMaxY = 400, xzMinY = 0;
+            var zyMaxX = 400, zyMinX = 0, zyMaxY = 200, zyMinY = -200;
             var uvInfos = [];
 
             for ( var face = 0; face < faces; face ++ ) {
