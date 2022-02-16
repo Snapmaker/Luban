@@ -340,6 +340,10 @@ export default class ThreeGroup extends BaseModel {
         }
     }
 
+    isModelInGroup() {
+        return this.parent && this.parent instanceof ThreeGroup;
+    }
+
     stickToPlate() {
         if (this.sourceType !== '3d') {
             return;
