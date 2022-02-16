@@ -2479,7 +2479,6 @@ export const actions = {
         modelGroup.updateModelsPositionBaseFirstModel(selectedModels);
         const operations = new Operations();
 
-        dispatch(actions.clearAllManualSupport(operations));
         const { newGroup, modelState } = modelGroup.group();
         const modelsafterGroup = modelGroup.getModels().slice(0);
 
@@ -2525,7 +2524,6 @@ export const actions = {
         }, new Map());
         recovery();
 
-        dispatch(actions.clearAllManualSupport(operations));
         const modelState = modelGroup.group();
         // Stores the model structure after the group operation, which is used for redo operation
         const modelsAfterGroup = modelGroup.getModels().slice(0);
