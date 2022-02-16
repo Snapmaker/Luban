@@ -60,6 +60,11 @@ const launchServer = () => new Promise((resolve, reject) => {
     });
 });
 
-launchServer();
+process.on('message', (data) => {
+    global.luban = {
+        userDataDir: data.userDataDir
+    };
+    launchServer();
+});
 console.log('process_child-server-cli');
 export default launchServer;

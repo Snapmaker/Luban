@@ -16,7 +16,7 @@ import pkg from './package.json';
 
 
 const config = new Store();
-
+const userDataDir = app.getAppPath('userData');
 let serverData = null;
 let mainWindow = null;
 // https://www.electronjs.org/docs/latest/breaking-changes#planned-breaking-api-changes-100
@@ -44,7 +44,7 @@ function getBrowserWindowOptions() {
         show: false,
         useContentSize: true,
         title: `${pkg.name} ${pkg.version}`,
-        skipTaskbar: true,
+        // skipTaskbar: true,
         // https://www.electronjs.org/docs/latest/breaking-changes#default-changed-enableremotemodule-defaults-to-false
         webPreferences: {
             nodeIntegration: true,
@@ -198,11 +198,10 @@ const showMainWindow = async () => {
     const window = new BrowserWindow(windowOptions);
     mainWindow = window;
     if (process.platform === 'win32') {
-        window.setSkipTaskbar(true);
+        // window.setSkipTaskbar(true);
         const menu = Menu.buildFromTemplate(loadingMenu);
         Menu.setApplicationMenu(menu);
         window.setMenuBarVisibility(true);
-        window.blur();
     }
     window.loadURL(path.resolve(__dirname, 'app', 'loading.html'));
     window.setBackgroundColor('#f5f5f7');
@@ -212,11 +211,9 @@ const showMainWindow = async () => {
         // TODO: start server on the outermost
         console.log('main.js.path', path.resolve(__dirname, '../dist/Luban/server-cli.js'));
         const child = childProcess.fork(path.resolve(__dirname, 'server-cli.js'));
-        const tempUserDataDir = app.getAppPath('userData');
-        console.log('main.js-tempUserDataDir', tempUserDataDir)
         child.send({
             type: 'userDataDir',
-            userDataDir: tempUserDataDir
+            userDataDir
         });
         child.on('message', (data) => {
             if (data.type === 'serverData') {
@@ -278,9 +275,9 @@ const showMainWindow = async () => {
                 }
             } else {
                 console.log('main.js-data', data);
-                // BrowserWindow.getAllWindows().forEach(window => {
-                //     window.webContents.reload();
-                // });
+                BrowserWindow.getAllWindows().forEach(window => {
+                    window.webContents.reload();
+                });
             }
         })
         // serverData = await launchServer();

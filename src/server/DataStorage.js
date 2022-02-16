@@ -66,15 +66,12 @@ class DataStorage {
      envDir;
 
      constructor() {
-         if (isElectron()) {
-             this.userDataDir = tempUserDataDir;
-             process.on('message', (data) => {
-                 console.log({ data });
-                 this.userDataDir = data.userDataDir;
-                 console.log('this.userDataDir', this.userDataDir);
-             })
-         } else {
+         if (!isElectron()) {
              this.userDataDir = '.';
+         } else {
+             console.log('dataStorage.js-userDatadir', global.luban.userDataDir);
+            this.userDataDir = global.luban.userDataDir;
+
          }
          mkdirp.sync(this.userDataDir);
 
