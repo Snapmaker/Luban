@@ -44,6 +44,7 @@ function getBrowserWindowOptions() {
         show: false,
         useContentSize: true,
         title: `${pkg.name} ${pkg.version}`,
+        skipTaskbar: true,
         // https://www.electronjs.org/docs/latest/breaking-changes#default-changed-enableremotemodule-defaults-to-false
         webPreferences: {
             nodeIntegration: true,
@@ -264,7 +265,10 @@ const showMainWindow = async () => {
             
                 const webContentsSession = window.webContents.session;
                 webContentsSession.setProxy({ proxyRules: 'direct://' })
-                    .then(() => window.loadURL(loadUrl));
+                    .then(() => {
+                        console.log('main.js-show-index-testtest', loadUrl);
+                        window.loadURL(loadUrl);
+                    });
             
                 try {
                     // TODO: move to server
@@ -273,9 +277,10 @@ const showMainWindow = async () => {
                     console.error('Error: ', err);
                 }
             } else {
-                BrowserWindow.getAllWindows().forEach(window => {
-                    window.webContents.reload();
-                });
+                console.log('main.js-data', data);
+                // BrowserWindow.getAllWindows().forEach(window => {
+                //     window.webContents.reload();
+                // });
             }
         })
         // serverData = await launchServer();

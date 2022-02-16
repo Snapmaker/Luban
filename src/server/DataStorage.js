@@ -2,7 +2,7 @@ import path from 'path';
 import fs from 'fs';
 import mkdirp from 'mkdirp';
 import { includes, isUndefined, gt } from 'lodash';
-import { app } from 'electron';
+// import { app } from 'electron';
 import isElectron from 'is-electron';
 import semver from 'semver';
 import { CNC_CONFIG_SUBCATEGORY, LASER_CONFIG_SUBCATEGORY, PRINTING_CONFIG_SUBCATEGORY } from './constants';
@@ -67,7 +67,7 @@ class DataStorage {
 
      constructor() {
          if (isElectron()) {
-             this.userDataDir = app ? app.getPath('userData') : tempUserDataDir;
+             this.userDataDir = tempUserDataDir;
              process.on('message', (data) => {
                  console.log({ data });
                  this.userDataDir = data.userDataDir;
@@ -94,7 +94,7 @@ class DataStorage {
      resolveRelativePath(pathString) {
          const regex = new RegExp(/^\.\//);
          if (isElectron() && regex.test(pathString)) {
-             pathString = path.resolve(app.getPath('userData'), pathString);
+             pathString = path.resolve(this.userDataDir, pathString);
          }
          return pathString;
      }
