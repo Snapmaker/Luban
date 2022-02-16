@@ -10,6 +10,7 @@ import UniApi from '../../../lib/uni-api';
 import { NumberInput as Input } from '../../components/Input';
 import styles from './styles.styl';
 import { actions as printingActions } from '../../../flux/printing';
+import { actions as projectActions } from '../../../flux/project';
 import modal from '../../../lib/modal';
 import SvgIcon from '../../components/SvgIcon';
 import { Button } from '../../components/Buttons';
@@ -355,6 +356,7 @@ function VisualizerLeftBar({ setTransformMode, supportActions, updateBoundingBox
                 default:
                     break;
             }
+            dispatch(projectActions.autoSaveEnvironment(HEAD_PRINTING));
         },
         handleOpen: (type) => {
             let temp = null;

@@ -84,8 +84,8 @@ class AppLayout extends PureComponent {
         updateMachineToolHead: PropTypes.func.isRequired,
         longTermBackupConfig: PropTypes.func.isRequired,
         showSavedModal: PropTypes.bool.isRequired,
-        savedModalType: PropTypes.string.isRequired,
-        savedModalFilePath: PropTypes.string.isRequired,
+        savedModalType: PropTypes.string,
+        savedModalFilePath: PropTypes.string,
         updateSavedModal: PropTypes.func.isRequired
     };
 

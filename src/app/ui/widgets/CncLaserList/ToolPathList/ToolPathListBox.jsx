@@ -47,6 +47,10 @@ const ToolpathItem = ({
             selectOneToolPathId(toolPath.id);
         }
     }
+    function handleOnClickVisible(e) {
+        e.stopPropagation();
+        onClickVisible(toolPath.id, toolPath.visible, toolPath.check);
+    }
     const suffixLength = 6;
     const { prefixName, suffixName } = normalizeNameDisplay(toolPath.name, suffixLength);
 
@@ -106,7 +110,7 @@ const ToolpathItem = ({
                             name="HideNormal"
                             type={['static']}
                             title={i18n._('key-CncLaser/ToolPathList/Button/-Hide')}
-                            onClick={() => onClickVisible(toolPath.id, toolPath.visible, toolPath.check)}
+                            onClick={handleOnClickVisible}
                             disabled={disabled}
                         />
                     )}
@@ -116,7 +120,7 @@ const ToolpathItem = ({
                             size={24}
                             name="ShowNormal"
                             title={i18n._('key-CncLaser/ToolPathList/Button/-Show')}
-                            onClick={() => onClickVisible(toolPath.id, toolPath.visible, toolPath.check)}
+                            onClick={handleOnClickVisible}
                             disabled={disabled}
                         />
                     )}

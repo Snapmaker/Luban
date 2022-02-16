@@ -232,6 +232,7 @@ class ToolPathGroup {
         if (shouldCommitGenerate) {
             toolPath.commitGenerateToolPath();
         }
+        return toolPath;
     }
 
     addSelectedToolpathColor(withoutSelection = false) {
@@ -405,6 +406,7 @@ class ToolPathGroup {
         }
 
         this._updated();
+        return toolPath;
     }
 
     getThumbnailObject() {
