@@ -1971,6 +1971,16 @@ export const actions = {
             operations.push(operation);
             recovery();
         }
+
+        if (transformMode === 'scale') {
+            const isMirror = modelGroup.selectedModelArray.some(model => {
+                return targetTmpState[model.modelID].to.scaleX === -1 || targetTmpState[model.modelID].to.scaleY === -1 || targetTmpState[model.modelID].to.scaleZ === -1;
+            });
+            if (isMirror) {
+                dispatch(actions.clearAllManualSupport(operations));
+            }
+        }
+
         operations.registCallbackAfterAll(() => {
             dispatch(actions.updateState(modelGroup.getState()));
             dispatch(actions.destroyGcodeLine());
