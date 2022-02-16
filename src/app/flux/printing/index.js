@@ -225,6 +225,7 @@ const INITIAL_STATE = {
     primeTowerHeight: 0.1,
     isNewUser: true,
 
+    tmpSupportFaceMarks: {},
     supportOverhangAngle: 50,
     supportBrushStatus: 'add' // add | remove
 };
@@ -2728,19 +2729,20 @@ export const actions = {
     },
 
     loadSupports: (supportFilePaths) => (dispatch, getState) => {
-        const { modelGroup } = getState().printing;
+        const { modelGroup, tmpSupportFaceMarks } = getState().printing;
         // use worker to load supports
         const operations = new Operations();
         const promises = supportFilePaths.map(info => {
             return new Promise((resolve, reject) => {
                 const model = modelGroup.findModelByID(info.modelID);
+                const previousFaceMarks = tmpSupportFaceMarks[info.modelID];
                 if (model) {
                     const operation = new AddSupportsOperation3D({
                         target: model,
-                        currentFaceMarks: [],
+                        currentFaceMarks: model.supportFaceMarks.slice(0),
                         currentSupport: null,
-                        previousSupport: model.meshObject.children[0],
-                        previousFaceMarks: model.supportFaceMarks.slice(0)
+                        previousSupport: model.meshObject.children[0] || model.tmpSupportMesh,
+                        previousFaceMarks
                     });
                     model.meshObject.clear();
                     operations.push(operation);
@@ -2766,6 +2768,9 @@ export const actions = {
         Promise.all(promises).then(() => {
             dispatch(operationHistoryActions.setOperations(INITIAL_STATE.name, operations));
             dispatch(actions.render());
+            dispatch(actions.updateState({
+                tmpSupportFaceMarks: {}
+            }));
         }).catch(console.error);
     },
 
@@ -2785,6 +2790,16 @@ export const actions = {
             dispatch(actions.updateState({
                 stage: STEP_STAGE.PRINTING_GENERAtE_SUPPORT_AREA,
                 progress: progressStatesManager.updateProgress(STEP_STAGE.PRINTING_GENERAtE_SUPPORT_AREA, 0.25)
+            }));
+
+            // record previous support face marks for undo&redo
+            const tmpSupportFaceMarks = {};
+            const availModels = modelGroup.getModelsAttachedSupport();
+            availModels.forEach(model => {
+                tmpSupportFaceMarks[model.modelID] = model.supportFaceMarks;
+            });
+            dispatch(actions.updateState({
+                tmpSupportFaceMarks
             }));
 
             const models = modelGroup.finishEditSupportArea(shouldApplyChanges);
@@ -2864,6 +2879,16 @@ export const actions = {
         dispatch(actions.updateState({
             stage: STEP_STAGE.PRINTING_GENERAtE_SUPPORT_AREA,
             progress: progressStatesManager.updateProgress(STEP_STAGE.PRINTING_GENERAtE_SUPPORT_AREA, 0.25)
+        }));
+
+        // record previous support face marks for undo&redo
+        const tmpSupportFaceMarks = {};
+        const availModels = modelGroup.getModelsAttachedSupport();
+        availModels.forEach(model => {
+            tmpSupportFaceMarks[model.modelID] = model.supportFaceMarks;
+        });
+        dispatch(actions.updateState({
+            tmpSupportFaceMarks
         }));
 
         const models = modelGroup.computeSupportArea(angle);
