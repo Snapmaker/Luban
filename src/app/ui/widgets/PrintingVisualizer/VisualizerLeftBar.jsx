@@ -1029,7 +1029,7 @@ function VisualizerLeftBar({ setTransformMode, supportActions, updateBoundingBox
                                     priority="level-three"
                                     width="100%"
                                     onClick={actions.autoRotate}
-                                    disabled={selectedModelArray.length > 1}
+                                    disabled={!rotationAnalysisEnable}
                                 >
                                     <span>{i18n._('key-Printing/LeftBar-Auto Rotate')}</span>
                                 </Button>
