@@ -72,7 +72,11 @@ class SerialPortClient {
         'taskProgress:generateViewPath': [],
         'taskCompleted:generateViewPath': [],
         'taskProgress:cutModel': [],
-        'taskCompleted:cutModel': []
+        'taskCompleted:cutModel': [],
+        'generate-support:started': [],
+        'generate-support:completed': [],
+        'generate-support:progress': [],
+        'generate-support:error': []
     };
 
     dataSource = '';
@@ -240,6 +244,10 @@ class SerialPortClient {
 
     commitToolPathTaskArray(taskArray) {
         socketController.emit('taskCommit:generateToolPath', taskArray);
+    }
+
+    generateSupport(params) {
+        socketController.emit('generate-support', params);
     }
 
 

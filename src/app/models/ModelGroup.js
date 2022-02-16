@@ -1,5 +1,6 @@
-import { Vector3, Group, Matrix4, BufferGeometry, MeshPhongMaterial, Mesh, DoubleSide, Float32BufferAttribute, MeshBasicMaterial } from 'three';
+import { Sphere, SphereBufferGeometry, MeshStandardMaterial, Vector3, Group, Matrix4, BufferGeometry, MeshPhongMaterial, Mesh, DoubleSide, Float32BufferAttribute, MeshBasicMaterial } from 'three';
 import EventEmitter from 'events';
+import { CONTAINED, INTERSECTED, NOT_INTERSECTED } from 'three-mesh-bvh';
 // import { EPSILON } from '../../constants';
 import { v4 as uuid } from 'uuid';
 import _ from 'lodash';
@@ -8,7 +9,7 @@ import i18n from '../lib/i18n';
 import Model from './ThreeBaseModel';
 import ThreeModel from './ThreeModel';
 import SvgModel from './SvgModel';
-import { SELECTEVENT } from '../constants';
+import { EPSILON, SELECTEVENT } from '../constants';
 
 import ThreeUtils from '../three-extensions/ThreeUtils';
 import ThreeGroup from './ThreeGroup';
@@ -20,9 +21,15 @@ const EVENTS = {
     UPDATE: { type: 'update' }
 };
 const INDEXMARGIN = 0.02;
+const SUPPORT_AVAIL_AREA_COLOR = [0.5725490196078431, 0.32941176470588235, 0.8705882352941177];
+const SUPPORT_ADD_AREA_COLOR = [0.2980392156862745, 0, 0.5098039215686274];
+const SUPPORT_UNAVAIL_AREA_COLOR = [0.9, 0.9, 0.9];
+const AVAIL = -1, NONE = 0, FACE = 1/* , POINT = 2, LINE = 3 */;
 
 class ModelGroup extends EventEmitter {
     groupsChildrenMap = new Map();
+
+    brushMesh = null;
 
     constructor(headType) {
         super();
@@ -290,6 +297,9 @@ class ModelGroup extends EventEmitter {
 
     // remove selected models' supports
     // remove all support if no model selected
+    /**
+     * deprecated
+     */
     removeAllManualSupport() {
         if (this.selectedModelArray.length) {
             this.traverseModels(this.selectedModelArray, target => {
@@ -499,35 +509,6 @@ class ModelGroup extends EventEmitter {
         return totalEstimatedTime_;
     }
 
-    undoRedo(models) {
-        const newModels = models.map(d => d.clone(this));
-
-        this.unselectAllModels();
-        for (const model of this.models) {
-            model.meshObject.removeEventListener('update', this.onModelUpdate);
-            ThreeUtils.removeObjectParent(model.meshObject);
-        }
-        this.models.splice(0);
-        for (const model of newModels) {
-            if (model.supportTag) {
-                if (!model.target) continue;
-                model.target = newModels.find(i => i.originModelID === model.target.modelID);
-                if (!model.target) continue;
-            }
-            model.meshObject.addEventListener('update', this.onModelUpdate);
-            model.computeBoundingBox();
-            model.stickToPlate();
-            this.models.push(model);
-            let parent = this.object;
-            if (model.supportTag) { // support parent should be the target model
-                parent = model.target.meshObject;
-            }
-            ThreeUtils.setObjectParent(model.meshObject, parent);
-        }
-
-        return this.getState();
-    }
-
     getModels() {
         const models = [];
         for (const model of this.models) {
@@ -649,10 +630,44 @@ class ModelGroup extends EventEmitter {
         });
     }
 
+    /**
+     * filter models, If the return value of callback is false, it will filter
+     * @param {Array} models
+     * @param {Function} callback Callback function has a parameter, which is an item of the loop
+     * @returns new models
+     */
+    filterModels(models, callback) {
+        return models.filter((model) => {
+            if (model instanceof ThreeGroup) {
+                return callback(model) !== false && this.filterModels(model.children, callback).length > 0;
+            }
+            if (typeof callback === 'function') {
+                return callback(model);
+            }
+            return true;
+        }).map((model) => {
+            if (model instanceof ThreeGroup) {
+                model.children = this.filterModels(model.children, callback);
+                return model;
+            }
+            return model;
+        });
+    }
+
+    findModelByID(modelID) {
+        let model = null;
+        this.traverseModels(this.models, (subModel) => {
+            if (subModel.modelID === modelID) {
+                model = subModel;
+            }
+        });
+        return model;
+    }
+
     findModelByMesh(meshObject) {
         for (const model of this.models) {
             if (model instanceof ThreeModel) {
-                if (model.meshObject === meshObject) {
+                if (model.meshObject === meshObject || model.meshObject.children.indexOf(meshObject) > -1) {
                     return model;
                 }
             } else if (model instanceof ThreeGroup) {
@@ -674,7 +689,7 @@ class ModelGroup extends EventEmitter {
                 break;
             case SELECTEVENT.UNSELECT_ADDSELECT:
                 model = this.findModelByMesh(intersect.object);
-                if (model.parent) {
+                if (model?.parent) {
                     // Unselect if there is only one model in the group
                     if (model.parent.children.length === 1 && model.parent.isSelected) {
                         this.unselectAllModelsInGroup(model.parent);
@@ -728,9 +743,9 @@ class ModelGroup extends EventEmitter {
                 break;
             case SELECTEVENT.REMOVESELECT:
                 model = this.findModelByMesh(intersect.object);
-                if (model.parent?.isSelected) {
+                if (model?.parent?.isSelected) {
                     this.removeModelFromSelectedGroup(model.parent);
-                } else if (model.isSelected) {
+                } else if (model?.isSelected) {
                     this.removeModelFromSelectedGroup(model);
                 }
                 break;
@@ -1608,6 +1623,9 @@ class ModelGroup extends EventEmitter {
         return !!this.models.find(i => i.supportTag === true);
     }
 
+    /**
+     * deprecated
+     */
     isSupportSelected() {
         return this.selectedModelArray.length === 1 && this.selectedModelArray.every((model) => {
             return model.supportTag;
@@ -1618,6 +1636,9 @@ class ModelGroup extends EventEmitter {
         return this.selectedModelArray.length === 1 && this.selectedModelArray[0].type === 'primeTower';
     }
 
+    /**
+     * deprecated
+     */
     addSupportOnSelectedModel(defaultSupportSize) {
         if (this.selectedModelArray.length !== 1) {
             return null;
@@ -1688,6 +1709,9 @@ class ModelGroup extends EventEmitter {
         }
     }
 
+    /**
+     * deprecated
+     */
     getSupports() {
         const supports = [];
         this.traverseModels(this.models, (model) => {
@@ -2054,6 +2078,369 @@ class ModelGroup extends EventEmitter {
         if (typeof this.primeTowerHeightCallback === 'function') {
             this.primeTowerHeightCallback(Math.min(maxHeight, maxBoundingBoxHeight));
         }
+    }
+
+    // model support
+    generateSupportMesh(geometry, parentMesh) {
+        const material = new MeshBasicMaterial({
+            side: DoubleSide,
+            transparent: true,
+            opacity: 0.5,
+            color: 0x6485AB,
+            depthWrite: false,
+            polygonOffset: true,
+            polygonOffsetFactor: -1,
+            polygonOffsetUnits: -5
+        });
+        const mesh = new Mesh(geometry, material);
+        mesh.renderOrder = 99999;
+        mesh.applyMatrix4(parentMesh.matrixWorld.clone().invert());
+        return mesh;
+    }
+
+    filterModelsCanAttachSupport(models = this.models) {
+        const modelsToAddSupport = [];
+        this.traverseModels(models, (subModel) => {
+            if (subModel instanceof ThreeModel && subModel.canAttachSupport && subModel.visible) {
+                modelsToAddSupport.push(subModel);
+            }
+        });
+        return modelsToAddSupport;
+    }
+
+    getModelsAttachedSupport(defaultSelectAllModels = true) {
+        let models = [];
+        if (this.selectedModelArray.length === 0) {
+            if (defaultSelectAllModels) {
+                this.selectAllModels();
+                models = this.selectedModelArray;
+            } else {
+                models = this.models;
+            }
+        } else {
+            models = this.selectedModelArray;
+        }
+        if (models.length > 0) {
+            return this.filterModelsCanAttachSupport(models);
+        }
+        return [];
+    }
+
+    clearAllSupport() {
+        const availModels = this.getModelsAttachedSupport(false);
+        availModels.forEach(model => {
+            model.meshObject.clear();
+            model.supportFaceMarks = [];
+            model.stickToPlate();
+        });
+    }
+
+    startEditSupportArea() {
+        const models = this.getModelsAttachedSupport();
+        models.forEach((model) => {
+            model.tmpSupportMesh = model.meshObject.children[0];
+            model.meshObject.clear();
+            // change color
+            model.isEditingSupport = true;
+            const colors = [];
+            if (!model.supportFaceMarks || model.supportFaceMarks.length === 0) {
+                const count = model.meshObject.geometry.getAttribute('position').count;
+                model.supportFaceMarks = new Array(count / 3).fill(0);
+            }
+
+            const bufferGeometry = model.meshObject.geometry;
+            const clone = bufferGeometry.clone();
+            clone.applyMatrix4(model.meshObject.matrixWorld.clone());
+            const normals = clone.getAttribute('normal').array;
+            const positions = clone.getAttribute('position').array;
+            const zUp = new Vector3(0, 0, 1);
+            for (let i = 0, j = 0; i < normals.length; i += 9, j++) {
+                const normal = new Vector3(normals[i], normals[i + 1], normals[i + 2]);
+                const angleN = normal.angleTo(zUp) / Math.PI * 180;
+                const averageZOfFace = (positions[i + 2] + positions[i + 5] + positions[i + 8]) / 3;
+                // prevent to add marks to the faces attached to XOY plane
+                if (angleN > 91 && averageZOfFace > 0.01) {
+                    model.supportFaceMarks[j] = model.supportFaceMarks[j] || AVAIL;
+                }
+            }
+            model.supportFaceMarks.forEach((mark) => {
+                switch (mark) {
+                    case NONE: colors.push(...SUPPORT_UNAVAIL_AREA_COLOR, ...SUPPORT_UNAVAIL_AREA_COLOR, ...SUPPORT_UNAVAIL_AREA_COLOR); break;
+                    case FACE: colors.push(...SUPPORT_ADD_AREA_COLOR, ...SUPPORT_ADD_AREA_COLOR, ...SUPPORT_ADD_AREA_COLOR); break;
+                    case AVAIL: colors.push(...SUPPORT_AVAIL_AREA_COLOR, ...SUPPORT_AVAIL_AREA_COLOR, ...SUPPORT_AVAIL_AREA_COLOR); break;
+                    default: break;
+                }
+            });
+            model.meshObject.geometry.setAttribute('color', new Float32BufferAttribute(colors, 3));
+            model.originalGeometry = model.meshObject.geometry.clone();
+            // this function call produce side effects on geometry, need to reset geometry, otherwise support will be incorrect
+            model.meshObject.geometry.computeBoundsTree();
+            model.meshObject.userData = {
+                ...model.meshObject.userData,
+                canSupport: true
+            };
+            model.setSelected();
+        });
+        this.modelChanged();
+
+        if (this.brushMesh) {
+            this.object.parent.add(this.brushMesh);
+        }
+    }
+
+    finishEditSupportArea(shouldApplyChanges) {
+        const models = this.getModelsAttachedSupport();
+        this.object.parent.remove(this.brushMesh);
+        models.forEach(model => {
+            if (shouldApplyChanges) {
+                const colors = model.meshObject.geometry.getAttribute('color').array;
+                const supportFaceMarks = [];
+                for (let i = 0, j = 0; i < colors.length; i += 9, j++) {
+                    // determine the support face by checking RGB value
+                    const isSupportArea = colors.slice(i, i + 9).some(color => {
+                        return Math.abs(color - SUPPORT_ADD_AREA_COLOR[0]) < EPSILON;
+                    });
+                    supportFaceMarks[j] = isSupportArea ? FACE : NONE;
+                }
+                model.supportFaceMarks = supportFaceMarks;
+            } else {
+                // show original support mesh
+                model.meshObject.add(model.tmpSupportMesh);
+                model.tmpSupportMesh = null;
+            }
+            model.meshObject.geometry.disposeBoundsTree();
+            model.meshObject.geometry.copy(model.originalGeometry);
+            model.meshObject.geometry.deleteAttribute('color');
+            model.isEditingSupport = false;
+            model.setSelected();
+        });
+        this.modelChanged();
+        return models;
+    }
+
+    setSupportBrushRadius(radius) {
+        let position = new Vector3(0, 0, 0);
+        if (this.brushMesh) {
+            position = this.brushMesh.position.clone();
+            this.object.parent.remove(this.brushMesh);
+        }
+        const brushGeometry = new SphereBufferGeometry(radius, 40, 40);
+        const brushMaterial = new MeshStandardMaterial({
+            color: 0xEC407A,
+            roughness: 0.75,
+            metalness: 0,
+            transparent: true,
+            opacity: 0.5,
+            premultipliedAlpha: true,
+            emissive: 0xEC407A,
+            emissiveIntensity: 0.5,
+        });
+        this.brushMesh = new Mesh(brushGeometry, brushMaterial);
+        this.brushMesh.name = 'brushMesh';
+        this.brushMesh.position.copy(position);
+        this.object.parent.add(this.brushMesh);
+    }
+
+    moveSupportBrush(raycastResult) {
+        this.brushMesh.position.copy(raycastResult[0].point);
+    }
+
+    applySupportBrush(raycastResult, applySupportBrush) {
+        this.moveSupportBrush(raycastResult);
+        const target = raycastResult.find(result => result.object.userData.canSupport);
+        if (target) {
+            const targetMesh = target.object;
+            const geometry = targetMesh.geometry;
+            const bvh = geometry.boundsTree;
+            if (bvh) {
+                const inverseMatrix = new Matrix4();
+                inverseMatrix.copy(targetMesh.matrixWorld).invert();
+
+                const sphere = new Sphere();
+                sphere.center.copy(this.brushMesh.position).applyMatrix4(inverseMatrix);
+                sphere.radius = this.brushMesh.geometry.parameters.radius;
+
+                const indices = [];
+                const tempVec = new Vector3();
+                bvh.shapecast({
+                    intersectsBounds: box => {
+                        const intersects = sphere.intersectsBox(box);
+                        const { min, max } = box;
+                        if (intersects) {
+                            for (let x = 0; x <= 1; x++) {
+                                for (let y = 0; y <= 1; y++) {
+                                    for (let z = 0; z <= 1; z++) {
+                                        tempVec.set(
+                                            x === 0 ? min.x : max.x,
+                                            y === 0 ? min.y : max.y,
+                                            z === 0 ? min.z : max.z
+                                        );
+                                        if (!sphere.containsPoint(tempVec)) {
+                                            return INTERSECTED;
+                                        }
+                                    }
+                                }
+                            }
+                            return CONTAINED;
+                        }
+                        return intersects ? INTERSECTED : NOT_INTERSECTED;
+                    },
+                    intersectsTriangle: (tri, i, contained) => {
+                        if (contained || tri.intersectsSphere(sphere)) {
+                            const i3 = 3 * i;
+                            indices.push(i3, i3 + 1, i3 + 2);
+                        }
+                        return false;
+                    }
+                });
+                const colorAttr = geometry.getAttribute('color');
+                const indexAttr = geometry.index;
+                let color;
+                if (applySupportBrush === 'add') {
+                    color = SUPPORT_ADD_AREA_COLOR;
+                } else if (applySupportBrush === 'remove') {
+                    color = SUPPORT_AVAIL_AREA_COLOR;
+                }
+                for (let i = 0, l = indices.length; i < l; i++) {
+                    const i2 = indexAttr.getX(indices[i]);
+                    if (Math.abs(colorAttr.getX(i2) - SUPPORT_AVAIL_AREA_COLOR[0]) < EPSILON || Math.abs(colorAttr.getX(i2) - SUPPORT_ADD_AREA_COLOR[0]) < EPSILON) {
+                        colorAttr.setX(i2, color[0]);
+                        colorAttr.setY(i2, color[1]);
+                        colorAttr.setZ(i2, color[2]);
+                    }
+                }
+                colorAttr.needsUpdate = true;
+            }
+        }
+    }
+
+    checkIfOverrideSupport() {
+        const availModels = this.getModelsAttachedSupport();
+        return availModels.some(model => {
+            if (model.supportFaceMarks) {
+                return model.supportFaceMarks.indexOf(1) > -1;
+            }
+            return false;
+        });
+    }
+
+    computeSupportArea(angle) {
+        // group is not considered
+        const availModels = this.getModelsAttachedSupport();
+        availModels.forEach(model => {
+            model.meshObject.updateMatrixWorld();
+            const bufferGeometry = model.meshObject.geometry;
+            const clone = bufferGeometry.clone();
+            clone.applyMatrix4(model.meshObject.matrixWorld.clone());
+
+            const positions = clone.getAttribute('position').array;
+            const normals = clone.getAttribute('normal').array;
+
+            // this will cause main thread stucked for a long time
+            const supportFaceMarks = new Array(positions.length / 9).fill(NONE);
+            // const downFaces = new Array(supportFaceMarks.length).fill(false);
+            const normalVectors = new Array(supportFaceMarks.length).fill(false);
+            // calculate faces
+            const zUp = new Vector3(0, 0, -1);
+            for (let i = 0, index = 0; i < normals.length; i += 9, index++) {
+                const normal = new Vector3(normals[i], normals[i + 1], normals[i + 2]);
+                normalVectors[index] = normal;
+
+                const angleN = normal.angleTo(zUp) / Math.PI * 180;
+                // make sure marks added to downward faces
+                // if (angleN < 90) {
+                //     downFaces[index] = true;
+                // }
+                const averageZOfFace = (positions[i + 2] + positions[i + 5] + positions[i + 8]) / 3;
+                // prevent to add marks to the faces attached to XOY plane
+                if ((90 - angleN) >= angle && averageZOfFace > 0.01) {
+                    supportFaceMarks[index] = FACE;
+                }
+            }
+            // for (let i = 0; i < normalVectors.length; i++) {
+            //     const normal = normalVectors[i];
+            //     const angleN = normal.angleTo(zUp) / Math.PI * 180;
+            //     console.log(angleN);
+            //     if (angleN < 90) {
+            //         downFaces[i] = true;
+            //         if (angleN <= angle) {
+            //             supportFaceMarks[i] = FACE;
+            //         }
+            //     }
+            // }
+
+            // calculate points
+            // const points = new Map();
+            // for (let i = 0, index = 0; i < positions.length; i += 3) {
+            //     index = Math.floor(i / 9);
+            //     const key = `${positions[i]}-${positions[i + 1]}-${positions[i + 2]}`;
+            //     if (points.has(key)) {
+            //         const value = points.get(key);
+            //         value.faceIds.push(index);
+            //     } else {
+            //         points.set(key, {
+            //             faceIds: [index],
+            //             isSupport: true,
+            //             normal: new Vector3(0, 0, 0)
+            //         });
+            //     }
+            // }
+            // for (let i = 0, index = 0; i < positions.length; i += 9, index++) {
+            //     if (downFaces[index] && supportFaceMarks[index] === NONE) {
+            //         const p1 = new Vector3(positions[i], positions[i + 1], positions[i + 2]);
+            //         const p2 = new Vector3(positions[i + 3], positions[i + 4], positions[i + 5]);
+            //         const p3 = new Vector3(positions[i + 6], positions[i + 7], positions[i + 8]);
+
+            //         const orderedPoints = ([p1, p2, p3].sort((a, b) => a.z - b.z));
+            //         orderedPoints.forEach((point, j) => {
+            //             const value = points.get(`${point.x}-${point.y}-${point.z}`);
+            //             if (j === 0) {
+            //                 value.normal.add(normalVectors[index]);
+            //             } else {
+            //                 value.isSupport = false;
+            //             }
+            //         });
+            //     }
+            // }
+            // points.forEach((value) => {
+            //     if (value.isSupport && ((value.normal.angleTo(zUp) / Math.PI * 180) > 90)) {
+            //         value.faceIds.forEach(faceId => {
+            //             supportFaceMarks[faceId] = POINT;
+            //         });
+            //     }
+            // });
+
+            // calculate lines
+            // const lines = new Map<string, PointInfo>();
+            // for (let i = 0, index = 0; i < positions.length; i += 9, index++) {
+            //     const keyP1 = `${positions[i]}-${positions[i + 1]}-${positions[i + 2]}`;
+            //     const keyP2 = `${positions[i + 3]}-${positions[i + 4]}-${positions[i + 5]}`;
+            //     const keyP3 = `${positions[i + 6]}-${positions[i + 7]}-${positions[i + 8]}`;
+
+            //     const line12 = [keyP1, keyP2];
+            //     const line13 = [keyP1, keyP3];
+            //     const line23 = [keyP2, keyP3];
+
+            //     const edges = [line12, line13, line23];
+            //     edges.forEach(line => {
+            //         if (lines.has(line.join())) {
+            //             const value = lines.get(key);
+            //             value.faceIds.push(index);
+            //         } else if (lines.has(line.reverse().join())) {
+
+            //         } else {
+            //             lines.set(key, {
+            //                 faceIds: [index],
+            //                 isSupport: true,
+            //                 normal: new Vector3(0, 0, 0)
+            //             });
+            //         }
+            //     });
+            // }
+
+            model.supportFaceMarks = supportFaceMarks;
+        });
+        return availModels;
     }
 }
 

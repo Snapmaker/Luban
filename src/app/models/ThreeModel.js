@@ -6,13 +6,16 @@ import {
 } from '../constants';
 
 import ThreeUtils from '../three-extensions/ThreeUtils';
-import workerManager from '../lib/manager/workerManager';
 import ThreeGroup from './ThreeGroup';
 import BaseModel from './ThreeBaseModel';
 import { machineStore } from '../store/local-storage';
 
 const materialOverstepped = new THREE.Color(0xff0000);
-
+const materialInSupport = new THREE.MeshPhysicalMaterial({
+    color: 0xffffff,
+    side: THREE.DoubleSide
+});
+let tmpMaterial;
 class ThreeModel extends BaseModel {
     loadFrom = LOAD_MODEL_FROM_INNER;
 
@@ -29,9 +32,17 @@ class ThreeModel extends BaseModel {
 
     isSelected = false;
 
+    isEditingSupport = false;
+
     target = null;
 
     supportTag = false;
+
+    tmpSupportMesh = null; // store support mesh when editing support, and restore it after editing support finished
+
+    supportFaceMarks = [];
+
+    originalGeometry = null;
 
     constructor(modelInfo, modelGroup) {
         super(modelInfo, modelGroup);
@@ -50,6 +61,17 @@ class ThreeModel extends BaseModel {
             material = newMaterial;
         } catch (e) {
             console.error('error', e);
+        }
+        if (modelInfo.geometry) {
+            const clonedGeometry = modelInfo.geometry.clone();
+            // share positions, normals, uvs, not geometry, so we can define colors for each geometry
+            const position = modelInfo.geometry.getAttribute('position');
+            const normal = modelInfo.geometry.getAttribute('normal');
+            position && clonedGeometry.setAttribute('position', position);
+            normal && clonedGeometry.setAttribute('normal', normal);
+            this.geometry = clonedGeometry;
+        } else {
+            this.geometry = new THREE.PlaneGeometry(width, height);
         }
 
         this.meshObject = new THREE.Mesh(this.geometry, material);
@@ -237,16 +259,23 @@ class ThreeModel extends BaseModel {
         if (typeof isSelected === 'boolean') {
             this.isSelected = isSelected;
         }
-        if (this.overstepped === true) {
+        if (this.isEditingSupport) {
+            // TODO: uniform material for setting triangle color and textures
+            tmpMaterial = this.meshObject.material;
+            this.meshObject.material = materialInSupport;
+        } else if (this.overstepped === true) {
+            this.meshObject.material = tmpMaterial || this.meshObject.material;
             this.meshObject.material.color.set(materialOverstepped);
         } else if (this.isSelected === true) {
+            this.meshObject.material = tmpMaterial || this.meshObject.material;
             this.meshObject.material.color.set(this._materialSelected.clone());
         } else {
+            this.meshObject.material = tmpMaterial || this.meshObject.material;
             this.meshObject.material.color.set(this._materialNormal.clone());
         }
 
         // for indexed geometry
-        if (isSelected && this.type !== 'primeTower' && this.meshObject.geometry.getAttribute('color')) {
+        if (this.type !== 'primeTower' && this.meshObject.geometry.getAttribute('color')) {
             this.meshObject.material.vertexColors = true;
         }
         // for support geometry
@@ -485,72 +514,67 @@ class ThreeModel extends BaseModel {
         revertParent();
     }
 
-    setSupportPosition(position) {
-        const object = this.meshObject;
-        object.position.copy(position);
-        object.updateMatrix();
-        this.generateSupportGeometry();
-    }
+    // setSupportPosition(position) {
+    //     const object = this.meshObject;
+    //     object.position.copy(position);
+    //     object.updateMatrix();
+    //     this.generateSupportGeometry();
+    // }
 
-    generateSupportGeometry() {
-        const target = this.target;
-        const center = new THREE.Vector3();
-        this.meshObject.getWorldPosition(center);
-        center.setZ(0);
+    // generateSupportGeometry() {
+    //     const target = this.target;
+    //     const center = new THREE.Vector3();
+    //     this.meshObject.getWorldPosition(center);
+    //     center.setZ(0);
 
-        const rayDirection = new THREE.Vector3(0, 0, 1);
-        const size = this.supportSize;
-        const raycaster = new THREE.Raycaster(center, rayDirection);
-        const intersects = raycaster.intersectObject(target.meshObject, true);
+    //     const rayDirection = new THREE.Vector3(0, 0, 1);
+    //     const size = this.supportSize;
+    //     const raycaster = new THREE.Raycaster(center, rayDirection);
+    //     const intersects = raycaster.intersectObject(target.meshObject, true);
 
-        let intersect = intersects[0];
-        if (intersects.length >= 2) {
-            intersect = intersects[intersects.length - 2];
-        }
-        this.isInitSupport = true;
-        let height = 100;
-        if (intersect && intersect.distance > 0) {
-            this.isInitSupport = false;
-            height = intersect.point.z;
-        }
+    //     let intersect = intersects[0];
+    //     if (intersects.length >= 2) {
+    //         intersect = intersects[intersects.length - 2];
+    //     }
+    //     this.isInitSupport = true;
+    //     let height = 100;
+    //     if (intersect && intersect.distance > 0) {
+    //         this.isInitSupport = false;
+    //         height = intersect.point.z;
+    //     }
 
-        const geometry = ThreeUtils.generateSupportBoxGeometry(size.x, size.y, height);
+    //     const geometry = ThreeUtils.generateSupportBoxGeometry(size.x, size.y, height);
 
-        geometry.computeVertexNormals();
+    //     geometry.computeVertexNormals();
 
-        this.meshObject.geometry = geometry;
-        this.geometry = geometry;
-        this.computeBoundingBox();
-    }
+    //     this.meshObject.geometry = geometry;
+    //     this.geometry = geometry;
+    //     this.computeBoundingBox();
+    // }
 
-    setVertexColors() {
-        this.meshObject.updateMatrixWorld();
-        const bufferGeometry = this.meshObject.geometry;
-        const clone = bufferGeometry.clone();
-        clone.applyMatrix4(this.meshObject.matrixWorld.clone());
+    // setVertexColors() {
+    //     this.meshObject.updateMatrixWorld();
+    //     const bufferGeometry = this.meshObject.geometry;
+    //     const clone = bufferGeometry.clone();
+    //     clone.applyMatrix4(this.meshObject.matrixWorld.clone());
 
-        const positions = clone.getAttribute('position').array;
-        const normals = clone.getAttribute('normal').array;
+    //     const positions = clone.getAttribute('position').array;
+    //     const normals = clone.getAttribute('normal').array;
 
-        workerManager.evaluateSupportArea([{ positions, normals }], (data) => {
-            const { colors } = data;
-            bufferGeometry.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3));
-            this.setSelected(true);
-            this.modelGroup.modelChanged();
-        });
-    }
+    //     WorkerManager.evaluateSupportArea({ positions, normals }, (e) => {
+    //         const { colors } = e.data;
+    //         bufferGeometry.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3));
+    //         this.setSelected(true);
+    //         this.modelGroup.modelChanged();
+    //     });
+    // }
 
-    removeVertexColors() {
-        const bufferGeometry = this.meshObject.geometry;
-        bufferGeometry.deleteAttribute('color');
-        this.setSelected();
-        this.modelGroup && this.modelGroup.modelChanged();
-    }
-
-    cloneMeshWithoutSupports() {
-        const clonedMesh = this.meshObject.clone(false);
-        return clonedMesh;
-    }
+    // removeVertexColors() {
+    //     const bufferGeometry = this.meshObject.geometry;
+    //     bufferGeometry.deleteAttribute('color');
+    //     this.setSelected();
+    //     this.modelGroup && this.modelGroup.modelChanged();
+    // }
 
     getSerializableConfig() {
         const {

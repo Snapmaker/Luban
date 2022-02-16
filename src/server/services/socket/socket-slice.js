@@ -1,4 +1,4 @@
-import slice from '../../slicer/slice';
+import slice, { generateSupport } from '../../slicer/slice';
 
 const handleSlice = (socket, params) => {
     socket.emit('slice:started');
@@ -25,6 +25,25 @@ const handleSlice = (socket, params) => {
     );
 };
 
+const handleGenerateSupport = (socket, params) => {
+    socket.emit('generate-support:started');
+    generateSupport(
+        params,
+        (progress) => {
+            socket.emit('generate-support:progress', progress);
+        },
+        (result) => {
+            socket.emit('generate-support:completed', {
+                supportFilePaths: result.files
+            });
+        },
+        (err) => {
+            socket.emit('generate-support:error', err);
+        }
+    );
+};
+
 export default {
-    handleSlice
+    handleSlice,
+    handleGenerateSupport
 };

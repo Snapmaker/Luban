@@ -486,7 +486,17 @@ class TransformControls extends Object3D {
             // camera
             this.camera.updateMatrixWorld();
             this.camera.matrixWorld.decompose(cameraPosition, cameraQuaternion, cameraScale);
-            const multiObjectPosition = this.object.position;
+
+            const boundingBox = ThreeUtils.computeBoundingBox(this.object);
+            const maxObjectBoundingBox = boundingBox.max;
+            const minObjectBoundingBox = boundingBox.min;
+
+            const multiObjectPosition = new Vector3(
+                (maxObjectBoundingBox.x + minObjectBoundingBox.x) / 2,
+                (maxObjectBoundingBox.y + minObjectBoundingBox.y) / 2,
+                (maxObjectBoundingBox.z + minObjectBoundingBox.z) / 2
+            );
+            // const multiObjectPosition = this.object.position;
 
             const objectPosition = new Vector3();
             const objectScale = new Vector3();
@@ -517,9 +527,6 @@ class TransformControls extends Object3D {
                 this.allSelectedPeripherals.forEach((peripheral) => {
                     peripheral.visible = selectedPeripheralsVisible;
                 });
-                const boundingBox = ThreeUtils.computeBoundingBox(this.object);
-                const maxObjectBoundingBox = boundingBox.max;
-                const minObjectBoundingBox = boundingBox.min;
                 const multiObjectWidth = new Vector3();
                 multiObjectWidth.x = (maxObjectBoundingBox.x - minObjectBoundingBox.x);
                 multiObjectWidth.y = (maxObjectBoundingBox.y - minObjectBoundingBox.y);

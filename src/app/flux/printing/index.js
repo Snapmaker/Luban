@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { acceleratedRaycast, computeBoundsTree, disposeBoundsTree } from 'three-mesh-bvh';
 import path from 'path';
 import { cloneDeep, isNil, filter, find as lodashFind } from 'lodash';
 // import FileSaver from 'file-saver';
@@ -35,6 +36,7 @@ import api from '../../api';
 import ModelGroup from '../../models/ModelGroup';
 import gcodeBufferGeometryToObj3d from '../../workers/GcodeToBufferGeometry/gcodeBufferGeometryToObj3d';
 import ModelExporter from '../../ui/widgets/PrintingVisualizer/ModelExporter';
+import ModelLoader from '../../ui/widgets/PrintingVisualizer/ModelLoader';
 import { controller } from '../../lib/controller';
 /* eslint-disable-next-line import/no-cycle */
 import { actions as operationHistoryActions } from '../operation-history';
@@ -50,6 +52,13 @@ import GroupOperation3D from '../operation-history/GroupOperation3D';
 import GroupAlignOperation3D from '../operation-history/GroupAlignOperation3D';
 import ThreeGroup from '../../models/ThreeGroup';
 import UngroupOperation3D from '../operation-history/UngroupOperation3D';
+import DeleteSupportsOperation3D from '../operation-history/DeleteSupportsOperation3D';
+import AddSupportsOperation3D from '../operation-history/AddSupportsOperation3D';
+
+// register methods for three-mesh-bvh
+THREE.Mesh.prototype.raycast = acceleratedRaycast;
+THREE.BufferGeometry.prototype.computeBoundsTree = computeBoundsTree;
+THREE.BufferGeometry.prototype.disposeBoundsTree = disposeBoundsTree;
 
 const operationHistory = new OperationHistory();
 
@@ -216,6 +225,10 @@ const INITIAL_STATE = {
     enabledPrimeTower: true,
     primeTowerHeight: 0.1,
     isNewUser: true,
+
+    tmpSupportFaceMarks: {},
+    supportOverhangAngle: 50,
+    supportBrushStatus: 'add' // add | remove
 };
 
 
@@ -264,6 +277,17 @@ function stateEqual(model, stateFrom, stateTo) {
         }
     }
     return true;
+}
+
+async function uploadMesh(mesh, stlFileName) {
+    const stl = new ModelExporter().parse(mesh, 'stl', true);
+    const blob = new Blob([stl], { type: 'text/plain' });
+    const fileOfBlob = new File([blob], stlFileName);
+
+    const formData = new FormData();
+    formData.append('file', fileOfBlob);
+    const uploadResult = await api.uploadFile(formData);
+    return uploadResult;
 }
 
 export const actions = {
@@ -557,6 +581,42 @@ export const actions = {
                 progressStatesManager.finishProgress(false);
                 dispatch(actions.updateState({
                     stage: STEP_STAGE.PRINTING_SLICE_FAILED
+                }));
+            });
+
+            // generate supports
+            controller.on('generate-support:started', () => {
+                const { progressStatesManager } = getState().printing;
+                dispatch(actions.updateState({
+                    stage: STEP_STAGE.PRINTING_GENERAtE_SUPPORT_MODEL,
+                    progress: progressStatesManager.updateProgress(STEP_STAGE.PRINTING_GENERAtE_SUPPORT_MODEL, 0.01)
+                }));
+            });
+            controller.on('generate-support:completed', (args) => {
+                const { supportFilePaths } = args;
+                const { progressStatesManager } = getState().printing;
+                dispatch(actions.updateState({
+                    stage: STEP_STAGE.PRINTING_GENERAtE_SUPPORT_MODEL,
+                    progress: progressStatesManager.updateProgress(STEP_STAGE.PRINTING_GENERAtE_SUPPORT_MODEL, 1)
+                }));
+
+                dispatch(actions.loadSupports(supportFilePaths));
+            });
+            controller.on('generate-support:progress', (progress) => {
+                const state = getState().printing;
+                const { progressStatesManager } = state;
+                if (progress - state.progress > 0.01 || progress > 1 - EPSILON) {
+                    dispatch(actions.updateState({
+                        progress: progressStatesManager.updateProgress(STEP_STAGE.PRINTING_GENERAtE_SUPPORT_MODEL, progress)
+                    }));
+                }
+            });
+            controller.on('generate-support:error', () => {
+                const state = getState().printing;
+                const { progressStatesManager } = state;
+                progressStatesManager.finishProgress(false);
+                dispatch(actions.updateState({
+                    stage: STEP_STAGE.PRINTING_GENERAtE_SUPPORT_FAILED
                 }));
             });
         }
@@ -1395,31 +1455,32 @@ export const actions = {
                 for (const item of models) {
                     const modelDefinition = definitionManager.finalizeModelDefinition(activeDefinition, item, extruderLDefinition, extruderRDefinition);
 
-                    const mesh = item.cloneMeshWithoutSupports();
-                    // mesh.children = []; // remove support children
-                    mesh.applyMatrix4(item.meshObject.parent.matrix);
-                    const stl = new ModelExporter().parse(mesh, 'stl', true);
-                    const blob = new Blob([stl], { type: 'text/plain' });
-
                     const originalName = item.originalName;
                     const uploadPath = `${DATA_PREFIX}/${originalName}`;
                     const basenameWithoutExt = path.basename(uploadPath, path.extname(uploadPath));
                     const stlFileName = `${basenameWithoutExt}.stl`;
-                    const fileOfBlob = new File([blob], stlFileName);
 
-                    const formData = new FormData();
-                    formData.append('file', fileOfBlob);
-                    const uploadResult = await api.uploadFile(formData);
-                    if (item.supportTag === true) {
-                        ret.support.push(uploadResult.body.uploadName);
-                    } else {
-                        ret.model.push(uploadResult.body.uploadName);
-                        if (!ret.originalName) {
-                            ret.originalName = uploadResult.body.originalName;
-                        }
-                        const definitionName = uploadResult.body.uploadName.replace(/\.stl$/, '');
-                        const definitionRes = await api.profileDefinitions.createTmpDefinition(modelDefinition, definitionName);
-                        ret.definition.push(definitionRes.body.uploadName);
+                    const mesh = item.meshObject.clone(false);
+                    const supportMesh = mesh.children[0];
+                    mesh.clear();
+
+                    mesh.applyMatrix4(item.meshObject.parent.matrix);
+                    const uploadResult = await uploadMesh(mesh, stlFileName);
+
+                    ret.model.push(uploadResult.body.uploadName);
+                    if (!ret.originalName) {
+                        ret.originalName = uploadResult.body.originalName;
+                    }
+                    const definitionName = uploadResult.body.uploadName.replace(/\.stl$/, '');
+                    const definitionRes = await api.profileDefinitions.createTmpDefinition(modelDefinition, definitionName);
+                    ret.definition.push(definitionRes.body.uploadName);
+
+                    // upload support of model
+                    if (supportMesh) {
+                        supportMesh.applyMatrix4(mesh.matrix);
+                        const supportName = stlFileName.replace(/(\.stl)$/, '_support$1');
+                        const supportUploadResult = await uploadMesh(supportMesh, supportName);
+                        ret.support.push(supportUploadResult.body.uploadName);
                     }
                 }
 
@@ -1883,6 +1944,10 @@ export const actions = {
             if (stateEqual(model, targetTmpState[model.modelID].from, targetTmpState[model.modelID].to)) {
                 continue;
             }
+            // model in group translate on Z-axis should clear supports in its group
+            if (transformMode === 'translate' && model.isModelInGroup() && Math.abs(targetTmpState[model.modelID].from.positionZ - targetTmpState[model.modelID].to.positionZ) > EPSILON) {
+                dispatch(actions.clearSupportInGroup(operations, model));
+            }
             switch (transformMode) {
                 case 'translate':
                     operation = new MoveOperation3D({
@@ -1907,6 +1972,16 @@ export const actions = {
             operations.push(operation);
             recovery();
         }
+
+        if (transformMode === 'scale') {
+            const isMirror = modelGroup.selectedModelArray.some(model => {
+                return targetTmpState[model.modelID].to.scaleX === -1 || targetTmpState[model.modelID].to.scaleY === -1 || targetTmpState[model.modelID].to.scaleZ === -1;
+            });
+            if (isMirror) {
+                dispatch(actions.clearAllManualSupport(operations));
+            }
+        }
+
         operations.registCallbackAfterAll(() => {
             dispatch(actions.updateState(modelGroup.getState()));
             dispatch(actions.destroyGcodeLine());
@@ -2098,32 +2173,37 @@ export const actions = {
             dispatch(actions.gcodeRenderingCallback(data));
         });
     },
-    saveSupport: (model) => (dispatch, getState) => {
-        const { modelGroup } = getState().printing;
-        modelGroup.saveSupportModel(model);
-        if (!model.isInitSupport) {
-            // save generated support into operation history
-            const operation = new AddOperation3D({
-                target: model,
-                parent: model.target
-            });
-            operation.description = 'AddSupport';
-            const operations = new Operations();
-            operations.push(operation);
-            dispatch(operationHistoryActions.setOperations(INITIAL_STATE.name, operations));
-        }
-    },
+    /**
+     * deprecated
+     */
+    // saveSupport: (model) => (dispatch, getState) => {
+    //     const { modelGroup } = getState().printing;
+    //     modelGroup.saveSupportModel(model);
+    //     if (!model.isInitSupport) {
+    //         // save generated support into operation history
+    //         const operation = new AddOperation3D({
+    //             target: model,
+    //             parent: model.target
+    //         });
+    //         operation.description = 'AddSupport';
+    //         const operations = new Operations();
+    //         operations.push(operation);
+    //         dispatch(operationHistoryActions.setOperations(INITIAL_STATE.name, operations));
+    //     }
+    // },
     clearAllManualSupport: (combinedOperations) => (dispatch, getState) => {
         const { modelGroup } = getState().printing;
-        const supports = modelGroup.getSupports();
-        if (supports && supports.length > 0) {
+        const modelsWithSupport = modelGroup.getModelsAttachedSupport(false);
+        if (modelsWithSupport.length > 0) {
             let operations = new Operations();
             if (combinedOperations) {
                 operations = combinedOperations;
             }
-            for (const model of supports) {
-                const operation = new DeleteOperation3D({
-                    target: model
+            for (const model of modelsWithSupport) {
+                const operation = new DeleteSupportsOperation3D({
+                    target: model,
+                    support: model.meshObject.children[0],
+                    faceMarks: model.supportFaceMarks.slice(0)
                 });
                 operations.push(operation);
             }
@@ -2131,7 +2211,7 @@ export const actions = {
                 dispatch(operationHistoryActions.setOperations(INITIAL_STATE.name, operations));
             }
 
-            modelGroup.removeAllManualSupport();
+            modelGroup.clearAllSupport();
         }
     },
     setDefaultSupportSize: (size) => (dispatch, getState) => {
@@ -2410,7 +2490,6 @@ export const actions = {
         modelGroup.updateModelsPositionBaseFirstModel(selectedModels);
         const operations = new Operations();
 
-        dispatch(actions.clearAllManualSupport(operations));
         const { newGroup, modelState } = modelGroup.group();
         const modelsafterGroup = modelGroup.getModels().slice(0);
 
@@ -2456,7 +2535,6 @@ export const actions = {
         }, new Map());
         recovery();
 
-        dispatch(actions.clearAllManualSupport(operations));
         const modelState = modelGroup.group();
         // Stores the model structure after the group operation, which is used for redo operation
         const modelsAfterGroup = modelGroup.getModels().slice(0);
@@ -2501,7 +2579,6 @@ export const actions = {
         });
         const operations = new Operations();
 
-        dispatch(actions.clearAllManualSupport(operations));
         const modelState = modelGroup.ungroup();
 
         groups.forEach(group => {
@@ -2568,6 +2645,272 @@ export const actions = {
                 isNewUser: true
             }));
         });
+    },
+
+    updateSupportOverhangAngle: (angle) => (dispatch) => {
+        dispatch(actions.updateState({
+            supportOverhangAngle: angle
+        }));
+    },
+
+    generateSupports: (models, angle) => async (dispatch, getState) => {
+        const { progressStatesManager } = getState().printing;
+
+        if (!models || models.length === 0) {
+            return;
+        }
+
+        if (!progressStatesManager.inProgress()) {
+            progressStatesManager.startProgress(PROCESS_STAGE.PRINTING_GENERAtE_SUPPORT, [1]);
+        } else {
+            progressStatesManager.startNextStep();
+        }
+        dispatch(actions.updateState({
+            stage: STEP_STAGE.PRINTING_GENERAtE_SUPPORT_MODEL,
+            progress: progressStatesManager.updateProgress(STEP_STAGE.PRINTING_GENERAtE_SUPPORT_MODEL, 0)
+        }));
+
+        const params = await dispatch(actions.uploadModelsForSupport(models, angle));
+        controller.generateSupport(params);
+    },
+
+    uploadModelsForSupport: (models, angle) => (dispatch, getState) => {
+        const { activeDefinition } = getState().printing;
+        return new Promise((resolve) => {
+            // upload model stl
+            setTimeout(async () => {
+                const params = {
+                    data: []
+                };
+                for (const model of models) {
+                    const mesh = model.meshObject.clone(false);
+                    mesh.clear();
+                    model.meshObject.parent.updateMatrixWorld();
+                    mesh.applyMatrix4(model.meshObject.parent.matrixWorld);
+
+                    // negative scale flips normals, just flip them back by changing the winding order of faces
+                    // https://stackoverflow.com/questions/16469270/transforming-vertex-normals-in-three-js/16469913#16469913
+                    if (model.transformation.scaleX * model.transformation.scaleY * model.transformation.scaleZ < 0) {
+                        mesh.geometry = mesh.geometry.clone();
+                        const positions = mesh.geometry.getAttribute('position').array;
+
+                        for (let i = 0; i < positions.length; i += 9) {
+                            const tempX = positions[i + 0];
+                            const tempY = positions[i + 1];
+                            const tempZ = positions[i + 2];
+
+                            positions[i + 0] = positions[i + 6];
+                            positions[i + 1] = positions[i + 7];
+                            positions[i + 2] = positions[i + 8];
+
+                            positions[i + 6] = tempX;
+                            positions[i + 7] = tempY;
+                            positions[i + 8] = tempZ;
+                        }
+                        mesh.geometry.computeFaceNormals();
+                        mesh.geometry.computeVertexNormals();
+                    }
+                    // add support_mark attribute for STL binary exporter
+                    mesh.geometry.setAttribute('support_mark', new THREE.Float32BufferAttribute(model.supportFaceMarks.slice(0), 1));
+
+                    const originalName = model.originalName;
+                    const uploadPath = `${DATA_PREFIX}/${originalName}`;
+                    const basenameWithoutExt = path.basename(uploadPath, path.extname(uploadPath));
+                    const stlFileName = `${basenameWithoutExt}.stl`;
+                    const uploadResult = await uploadMesh(mesh, stlFileName);
+                    mesh.geometry.deleteAttribute('support_mark');
+
+                    params.data.push({
+                        modelID: model.modelID,
+                        uploadName: uploadResult.body.uploadName,
+                        // specify generated support name
+                        supportStlFilename: uploadResult.body.uploadName.replace(/\.stl$/, `_support_${Date.now()}.stl`),
+                        config: {
+                            support_angle: angle,
+                            layer_height_0: activeDefinition.settings.layer_height_0.default_value,
+                            support_mark_area: false // tell engine to use marks in binary STL file
+                        }
+                    });
+                }
+                resolve(params);
+            }, 50);
+        });
+    },
+
+    loadSupports: (supportFilePaths) => (dispatch, getState) => {
+        const { modelGroup, tmpSupportFaceMarks } = getState().printing;
+        // use worker to load supports
+        const operations = new Operations();
+        const promises = supportFilePaths.map(info => {
+            return new Promise((resolve, reject) => {
+                const model = modelGroup.findModelByID(info.modelID);
+                const previousFaceMarks = tmpSupportFaceMarks[info.modelID];
+                if (model) {
+                    const operation = new AddSupportsOperation3D({
+                        target: model,
+                        currentFaceMarks: model.supportFaceMarks.slice(0),
+                        currentSupport: null,
+                        previousSupport: model.meshObject.children[0] || model.tmpSupportMesh,
+                        previousFaceMarks
+                    });
+                    model.meshObject.clear();
+                    operations.push(operation);
+
+                    if (info.supportStlFilename) {
+                        new ModelLoader().load(`${DATA_PREFIX}/${info.supportStlFilename}`, (geometry) => {
+                            const mesh = modelGroup.generateSupportMesh(geometry, model.meshObject);
+
+                            operation.state.currentSupport = mesh;
+                            model.meshObject.add(mesh);
+                            resolve();
+                        }, () => {}, (err) => {
+                            reject(err);
+                        });
+                    } else {
+                        resolve();
+                    }
+                } else {
+                    resolve();
+                }
+            });
+        });
+        Promise.all(promises).then(() => {
+            dispatch(operationHistoryActions.setOperations(INITIAL_STATE.name, operations));
+            dispatch(actions.render());
+            dispatch(actions.updateState({
+                tmpSupportFaceMarks: {}
+            }));
+        }).catch(console.error);
+    },
+
+    startEditSupportArea: () => (dispatch, getState) => {
+        const { modelGroup } = getState().printing;
+        modelGroup.startEditSupportArea();
+        dispatch(actions.setTransformMode('support-edit'));
+        dispatch(actions.destroyGcodeLine());
+        dispatch(actions.render());
+    },
+
+    finishEditSupportArea: (shouldApplyChanges = false) => (dispatch, getState) => {
+        const { modelGroup, progressStatesManager } = getState().printing;
+        dispatch(actions.setTransformMode('support'));
+        if (shouldApplyChanges) {
+            progressStatesManager.startProgress(PROCESS_STAGE.PRINTING_GENERAtE_SUPPORT, [1, 1]);
+            dispatch(actions.updateState({
+                stage: STEP_STAGE.PRINTING_GENERAtE_SUPPORT_AREA,
+                progress: progressStatesManager.updateProgress(STEP_STAGE.PRINTING_GENERAtE_SUPPORT_AREA, 0.25)
+            }));
+
+            // record previous support face marks for undo&redo
+            const tmpSupportFaceMarks = {};
+            const availModels = modelGroup.getModelsAttachedSupport();
+            availModels.forEach(model => {
+                tmpSupportFaceMarks[model.modelID] = model.supportFaceMarks;
+            });
+            dispatch(actions.updateState({
+                tmpSupportFaceMarks
+            }));
+
+            const models = modelGroup.finishEditSupportArea(shouldApplyChanges);
+
+            dispatch(actions.updateState({
+                stage: STEP_STAGE.PRINTING_GENERAtE_SUPPORT_AREA,
+                progress: progressStatesManager.updateProgress(STEP_STAGE.PRINTING_GENERAtE_SUPPORT_AREA, 1)
+            }));
+
+            dispatch(actions.generateSupports(models, 0));
+        } else {
+            modelGroup.finishEditSupportArea(shouldApplyChanges);
+        }
+        dispatch(actions.destroyGcodeLine());
+        dispatch(actions.displayModel());
+        dispatch(actions.render());
+    },
+
+    clearSupportInGroup: (combinedOperations, modelInGroup) => (dispatch, getState) => {
+        const { modelGroup } = getState().printing;
+        const modelsWithSupport = modelGroup.filterModelsCanAttachSupport(modelInGroup.parent.children);
+        if (modelsWithSupport.length > 0) {
+            let operations = new Operations();
+            if (combinedOperations) {
+                operations = combinedOperations;
+            }
+            for (const model of modelsWithSupport) {
+                const operation = new DeleteSupportsOperation3D({
+                    target: model,
+                    support: model.meshObject.children[0],
+                    faceMarks: model.supportFaceMarks.slice(0)
+                });
+                operations.push(operation);
+                model.meshObject.clear();
+            }
+            if (!combinedOperations) {
+                dispatch(operationHistoryActions.setOperations(INITIAL_STATE.name, operations));
+            }
+        }
+    },
+
+    setSupportBrushRadius: (radius) => (dispatch, getState) => {
+        const { modelGroup } = getState().printing;
+        modelGroup.setSupportBrushRadius(radius);
+        dispatch(actions.render());
+    },
+
+    // status: add | remove
+    setSupportBrushStatus: (status) => (dispatch) => {
+        dispatch(actions.updateState({
+            supportBrushStatus: status
+        }));
+    },
+
+    moveSupportBrush: (raycastResult) => (dispatch, getState) => {
+        const { modelGroup } = getState().printing;
+        modelGroup.moveSupportBrush(raycastResult);
+        dispatch(actions.render());
+    },
+
+    applySupportBrush: (raycastResult) => (dispatch, getState) => {
+        const { modelGroup, supportBrushStatus } = getState().printing;
+        modelGroup.applySupportBrush(raycastResult, supportBrushStatus);
+        dispatch(actions.render());
+    },
+
+    clearAllSupport: () => (dispatch, getState) => {
+        const { modelGroup } = getState().printing;
+        modelGroup.clearAllSupport();
+        dispatch(actions.render());
+    },
+
+    computeAutoSupports: (angle) => (dispatch, getState) => {
+        const { modelGroup, progressStatesManager } = getState().printing;
+
+        progressStatesManager.startProgress(PROCESS_STAGE.PRINTING_GENERAtE_SUPPORT, [1, 1]);
+        dispatch(actions.updateState({
+            stage: STEP_STAGE.PRINTING_GENERAtE_SUPPORT_AREA,
+            progress: progressStatesManager.updateProgress(STEP_STAGE.PRINTING_GENERAtE_SUPPORT_AREA, 0.25)
+        }));
+
+        // record previous support face marks for undo&redo
+        const tmpSupportFaceMarks = {};
+        const availModels = modelGroup.getModelsAttachedSupport();
+        availModels.forEach(model => {
+            tmpSupportFaceMarks[model.modelID] = model.supportFaceMarks;
+        });
+        dispatch(actions.updateState({
+            tmpSupportFaceMarks
+        }));
+
+        const models = modelGroup.computeSupportArea(angle);
+
+        dispatch(actions.updateState({
+            stage: STEP_STAGE.PRINTING_GENERAtE_SUPPORT_AREA,
+            progress: progressStatesManager.updateProgress(STEP_STAGE.PRINTING_GENERAtE_SUPPORT_AREA, 1)
+        }));
+        if (models.length > 0) {
+            dispatch(actions.generateSupports(models, angle));
+        }
+        dispatch(actions.destroyGcodeLine());
+        dispatch(actions.displayModel());
     }
 };
 

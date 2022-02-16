@@ -1,4 +1,4 @@
-import React, { useRef, useEffect, useState } from 'react';
+import React, { useRef, useEffect, useState, useCallback } from 'react';
 import { useDispatch, useSelector, shallowEqual } from 'react-redux';
 import PropTypes from 'prop-types';
 import classNames from 'classnames';
@@ -18,8 +18,9 @@ import Checkbox from '../../components/Checkbox';
 import Dropdown from '../../components/Dropdown';
 import Menu from '../../components/Menu';
 import RotationAnalysisOverlay from './Overlay/RotationAnalysisOverlay';
-import { DUAL_EXTRUDER_TOOLHEAD_FOR_SM2, EPSILON,
-    HEAD_PRINTING, BOTH_EXTRUDER_MAP_NUMBER, LEFT_EXTRUDER_MAP_NUMBER } from '../../../constants';
+import EditSupportOverlay from './Overlay/EditSupportOverlay';
+import SupportOverlay from './Overlay/SupportOverlay';
+import { DUAL_EXTRUDER_TOOLHEAD_FOR_SM2, EPSILON, BOTH_EXTRUDER_MAP_NUMBER, LEFT_EXTRUDER_MAP_NUMBER } from '../../../constants';
 import { machineStore } from '../../../store/local-storage';
 
 const extruderLabelMap = {
@@ -64,7 +65,7 @@ export const renderExtruderIcon = (leftExtruderColor, rightExtruderColor) => (
         )}
     </div>
 );
-function VisualizerLeftBar({ defaultSupportSize, setTransformMode, isSupporting, supportActions, updateBoundingBox, autoRotateSelectedModel }) {
+function VisualizerLeftBar({ setTransformMode, supportActions, updateBoundingBox, autoRotateSelectedModel }) {
     const size = useSelector(state => state?.machine?.size, shallowEqual);
     const selectedGroup = useSelector(state => state?.printing?.modelGroup?.selectedGroup, shallowEqual);
     const selectedModelArray = useSelector(state => state?.printing?.modelGroup?.selectedModelArray);
@@ -79,11 +80,13 @@ function VisualizerLeftBar({ defaultSupportSize, setTransformMode, isSupporting,
     const transformation = useSelector(state => state?.printing?.modelGroup?.getSelectedModelTransformationForPrinting(), shallowEqual);
     const enableShortcut = useSelector(state => state?.printing?.enableShortcut, shallowEqual);
     const [showRotationAnalyzeModal, setShowRotationAnalyzeModal] = useState(false);
+    const [showEditSupportModal, setShowEditSupportModal] = useState(false);
     const [modelsExtruder, setModelsExtruder] = useState(originalModelsExtruder);
     const [helpersExtrurder, setHelpersExtruder] = useState(helpersExtruderConfig || originalHelpersExtruder);
     const [isOpenModels, setIsOpenModels] = useState(isOpenSelectModals);
     const [isOpenHelpers, setIsOpenHelpers] = useState(_isOpenHelpers);
     const selectedModelBBoxDes = useSelector(state => state?.printing?.modelGroup?.getSelectedModelBBoxWHD(), shallowEqual);
+    const displayedType = useSelector(state => state?.printing?.displayedType, shallowEqual);
     // const colorL = '#FF8B00';
     // const colorR = '#0053AA';
     const [colorL, setColorL] = useState(whiteHex);
@@ -106,12 +109,6 @@ function VisualizerLeftBar({ defaultSupportSize, setTransformMode, isSupporting,
     }
     const dispatch = useDispatch();
     const fileInput = useRef(null);
-
-    const renderRotationAnalyzeModal = () => {
-        return (
-            <RotationAnalysisOverlay onClose={() => { setShowRotationAnalyzeModal(false); }} />
-        );
-    };
 
     const actions = {
         onClickToUpload: () => {
@@ -295,6 +292,9 @@ function VisualizerLeftBar({ defaultSupportSize, setTransformMode, isSupporting,
                 rotateFn && rotateFn();
             }
         },
+        editSupport: useCallback(() => {
+            setShowEditSupportModal(true);
+        }, [setShowEditSupportModal]),
         isNonUniformScaled: () => {
             const { scaleX, scaleY, scaleZ } = selectedModelArray[0].transformation;
             return Math.abs(Math.abs(scaleX) - Math.abs(scaleY)) > EPSILON
@@ -436,6 +436,21 @@ function VisualizerLeftBar({ defaultSupportSize, setTransformMode, isSupporting,
             </div>
         );
     };
+    const renderRotationAnalyzeModal = () => {
+        return (
+            <RotationAnalysisOverlay onClose={() => { setShowRotationAnalyzeModal(false); }} />
+        );
+    };
+    const renderEditSupportModal = () => {
+        return (
+            <EditSupportOverlay onClose={() => { setShowEditSupportModal(false); }} />
+        );
+    };
+    const renderSupportOverlay = () => {
+        return (
+            <SupportOverlay editSupport={() => { actions.editSupport(); }} />
+        );
+    };
     let moveX = 0;
     let moveY = 0;
     let scaleXPercent = 100;
@@ -446,12 +461,10 @@ function VisualizerLeftBar({ defaultSupportSize, setTransformMode, isSupporting,
     let rotateZ = 0;
     let uniformScalingState = true;
     // TODO: refactor these flags
-    const transformDisabled = showRotationAnalyzeModal || !(selectedModelArray.length > 0 && selectedModelArray.every((model) => {
+    const transformDisabled = showRotationAnalyzeModal || showEditSupportModal || !(selectedModelArray.length > 0 && selectedModelArray.every((model) => {
         return model.visible === true;
     }));
-    const supportDisabled = showRotationAnalyzeModal || !(selectedModelArray.length === 1 && selectedModelArray.every((model) => {
-        return model.visible === true && !model.supportTag;
-    }));
+    const supportDisabled = (displayedType !== 'model' || modelGroup.getModelsAttachedSupport(false).length === 0);
     const rotationAnalysisEnable = (selectedModelArray.length === 1 && selectedModelArray[0].visible && !selectedModelArray[0].parent);
     const isDualExtruder = machineStore.get('machine.toolHead.printingToolhead') === DUAL_EXTRUDER_TOOLHEAD_FOR_SM2;
     const [dualExtruderDisabled, setDualExtruderDisabled] = useState(!models.length);
@@ -650,16 +663,16 @@ function VisualizerLeftBar({ defaultSupportSize, setTransformMode, isSupporting,
                                     <SvgIcon
                                         color="#545659"
                                         className={classNames(
-                                            { [styles.selected]: (!transformDisabled && transformMode === 'support') },
+                                            { [styles.selected]: (!supportDisabled && transformMode === 'support') },
                                             'padding-horizontal-4'
                                         )}
-                                        type={[`${!transformDisabled && transformMode === 'support' ? 'hoverNoBackground' : 'hoverSpecial'}`, 'pressSpecial']}
+                                        type={[`${transformMode === 'support' ? 'hoverNoBackground' : 'hoverSpecial'}`, 'pressSpecial']}
                                         name="ToolbarSupport"
                                         size={48}
                                         onClick={() => {
                                             setTransformMode('support');
                                         }}
-                                        disabled={!!(supportDisabled || isPrimeTowerSelected)}
+                                        disabled={!!(transformDisabled || supportDisabled || isPrimeTowerSelected)}
                                     />
                                 </li>
                                 {isDualExtruder && (
@@ -692,7 +705,7 @@ function VisualizerLeftBar({ defaultSupportSize, setTransformMode, isSupporting,
                             marginTop: '60px'
                         }}
                     >
-                        <div className="border-bottom-normal padding-vertical-10 padding-horizontal-16 height-40">
+                        <div className="border-bottom-normal padding-vertical-10 padding-horizontal-16 height-40 font-size-middle">
                             {i18n._('key-Printing/LeftBar-Move')}
                         </div>
                         <div className="padding-vertical-16 padding-horizontal-16">
@@ -751,7 +764,7 @@ function VisualizerLeftBar({ defaultSupportSize, setTransformMode, isSupporting,
                             marginTop: '112px'
                         }}
                     >
-                        <div className="border-bottom-normal padding-vertical-10 padding-horizontal-16 height-40">
+                        <div className="border-bottom-normal padding-vertical-10 padding-horizontal-16 height-40 font-size-middle">
                             {i18n._('key-Printing/LeftBar-Scale')}
                         </div>
                         <div className="padding-vertical-16 padding-horizontal-16">
@@ -876,7 +889,7 @@ function VisualizerLeftBar({ defaultSupportSize, setTransformMode, isSupporting,
                             marginTop: '112px'
                         }}
                     >
-                        <div className="border-bottom-normal padding-vertical-10 padding-horizontal-16 height-40">
+                        <div className="border-bottom-normal padding-vertical-10 padding-horizontal-16 height-40 font-size-middle">
                             {i18n._('key-Printing/LeftBar-Scale')}
                         </div>
                         <div className="padding-vertical-16 padding-horizontal-16">
@@ -959,7 +972,7 @@ function VisualizerLeftBar({ defaultSupportSize, setTransformMode, isSupporting,
                             marginTop: '164px'
                         }}
                     >
-                        <div className="border-bottom-normal padding-vertical-10 padding-horizontal-16 height-40">
+                        <div className="border-bottom-normal padding-vertical-10 padding-horizontal-16 height-40 font-size-middle">
                             {i18n._('key-Printing/LeftBar-Rotate')}
                         </div>
                         <div className="padding-vertical-16 padding-horizontal-16">
@@ -1018,7 +1031,7 @@ function VisualizerLeftBar({ defaultSupportSize, setTransformMode, isSupporting,
                                     priority="level-three"
                                     width="100%"
                                     onClick={actions.autoRotate}
-                                    disabled={selectedModelArray.length > 1}
+                                    disabled={!rotationAnalysisEnable}
                                 >
                                     <span>{i18n._('key-Printing/LeftBar-Auto Rotate')}</span>
                                 </Button>
@@ -1055,7 +1068,7 @@ function VisualizerLeftBar({ defaultSupportSize, setTransformMode, isSupporting,
                             marginTop: '216px'
                         }}
                     >
-                        <div className="border-bottom-normal padding-vertical-10 padding-horizontal-16 height-40">
+                        <div className="border-bottom-normal padding-vertical-10 padding-horizontal-16 height-40 font-size-middle">
                             {i18n._('key-Printing/LeftBar-Mirror')}
                         </div>
                         <div className="padding-vertical-16 padding-horizontal-16">
@@ -1095,82 +1108,8 @@ function VisualizerLeftBar({ defaultSupportSize, setTransformMode, isSupporting,
                     </div>
                 )}
 
-                {!supportDisabled && transformMode === 'support' && !isPrimeTowerSelected && (
-                    <div
-                        className="position-ab width-280 margin-left-72 border-default-grey-1 border-radius-8 background-color-white"
-                        style={{
-                            marginTop: '268px'
-                        }}
-                    >
-                        <div className="border-bottom-normal padding-vertical-10 padding-horizontal-16 height-40">
-                            {i18n._('key-Printing/LeftBar-Manual Support')}
-                        </div>
-                        <div className="padding-vertical-16 padding-horizontal-16">
-                            <div className="sm-flex">{i18n._('key-Printing/LeftBar-Support Size')}</div>
-                            <div className="sm-flex height-32 margin-bottom-8 margin-top-16">
-                                <span className="sm-flex-auto width-16 color-red-1">X</span>
-                                <div className="position-ab sm-flex-auto margin-horizontal-24">
-                                    <Input
-                                        suffix="mm"
-                                        size="small"
-                                        disabled={isSupporting}
-                                        min={1}
-                                        max={size.x / 2}
-                                        value={defaultSupportSize.x}
-                                        onChange={(value) => {
-                                            supportActions.setDefaultSupportSize({ x: value });
-                                        }}
-                                    />
-                                </div>
-                            </div>
-                            <div className="sm-flex height-32">
-                                <span className="sm-flex-auto width-16 color-green-1">Y</span>
-                                <div className="position-ab sm-flex-auto margin-horizontal-24">
-                                    <Input
-                                        suffix="mm"
-                                        disabled={isSupporting}
-                                        size="small"
-                                        min={1}
-                                        max={size.y / 2}
-                                        value={defaultSupportSize.y}
-                                        onChange={(value) => {
-                                            supportActions.setDefaultSupportSize({ y: value });
-                                        }}
-                                    />
-                                </div>
-                            </div>
-                            <div className="sm-flex margin-top-32">
-                                <Button
-                                    type="primary"
-                                    priority="level-three"
-                                    width="100%"
-                                    disabled={isSupporting}
-                                    onClick={supportActions.startSupportMode}
-                                >
-                                    <span>{i18n._('key-Printing/LeftBar-Add Support')}</span>
-                                </Button>
-                                <Button
-                                    className="margin-left-8"
-                                    type="primary"
-                                    priority="level-three"
-                                    width="100%"
-                                    onClick={supportActions.stopSupportMode}
-                                >
-                                    <span>{i18n._('key-Printing/LeftBar-Done')}</span>
-                                </Button>
-                            </div>
-                            <Button
-                                className="margin-top-16"
-                                type="primary"
-                                priority="level-three"
-                                width="100%"
-                                onClick={supportActions.clearAllManualSupport}
-                            >
-                                <span>{i18n._('key-Printing/LeftBar-Clear All Support')}</span>
-                            </Button>
-                        </div>
-                    </div>
-                )}
+                {showEditSupportModal && renderEditSupportModal()}
+                {!supportDisabled && !showEditSupportModal && transformMode === 'support' && renderSupportOverlay()}
                 {!transformDisabled && transformMode === 'extruder' && isDualExtruder && (
                     <div
                         className="position-ab width-328 margin-left-72 border-default-grey-1 border-radius-8 background-color-white"
@@ -1178,7 +1117,7 @@ function VisualizerLeftBar({ defaultSupportSize, setTransformMode, isSupporting,
                             marginTop: '320px'
                         }}
                     >
-                        <div className="border-bottom-normal padding-vertical-10 padding-horizontal-16 height-40">
+                        <div className="border-bottom-normal padding-vertical-10 padding-horizontal-16 height-40 font-size-middle">
                             {i18n._('key-Printing/LeftBar-Extruder')}
                         </div>
                         <div className="padding-bottom-16 padding-top-8 padding-left-8">
@@ -1317,16 +1256,11 @@ function VisualizerLeftBar({ defaultSupportSize, setTransformMode, isSupporting,
     );
 }
 VisualizerLeftBar.propTypes = {
-    defaultSupportSize: PropTypes.shape({
-        x: PropTypes.number,
-        y: PropTypes.number
-    }),
     supportActions: PropTypes.object,
     // scaleToFitSelectedModel: PropTypes.func.isRequired,
     autoRotateSelectedModel: PropTypes.func.isRequired,
     setTransformMode: PropTypes.func.isRequired,
-    updateBoundingBox: PropTypes.func.isRequired,
-    isSupporting: PropTypes.bool.isRequired
+    updateBoundingBox: PropTypes.func.isRequired
 
 };
 

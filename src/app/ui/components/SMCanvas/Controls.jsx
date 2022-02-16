@@ -110,6 +110,8 @@ class Controls extends EventEmitter {
 
     clickEnabled = true;
 
+    isMouseDown = false;
+
     constructor(sourceType, displayedType, camera, group, domElement, onScale, onPan, supportActions, minScale = undefined, maxScale = undefined, scaleSize = undefined) {
         super();
 
@@ -258,6 +260,7 @@ class Controls extends EventEmitter {
     }
 
     onMouseDown = (event) => {
+        this.isMouseDown = true;
         // Prevent the browser from scrolling.
         // event.preventDefault();
         this.mouseDownPosition = this.getMouseCoord(event);
@@ -276,6 +279,17 @@ class Controls extends EventEmitter {
 
         switch (event.button) {
             case THREE.MOUSE.LEFT: {
+                if (this.state === STATE.SUPPORT) {
+                    const coord = this.getMouseCoord(event);
+                    this.ray.setFromCamera(coord, this.camera);
+                    this.ray.firstHitOnly = true;
+                    const res = this.ray.intersectObject(this.selectedGroup, true);
+                    if (res.length) {
+                        this.state = STATE.SUPPORT;
+                        this.supportActions.applyBrush(res);
+                        break;
+                    }
+                }
                 // Transform on selected object
                 if (this.selectedGroup && this.selectedGroup.children.length > 0) {
                     const coord = this.getMouseCoord(event);
@@ -325,9 +339,14 @@ class Controls extends EventEmitter {
         if (this.state === STATE.SUPPORT) {
             const coord = this.getMouseCoord(event);
             this.ray.setFromCamera(coord, this.camera);
-            const mousePosition = new THREE.Vector3();
-            this.ray.ray.intersectPlane(this.horizontalPlane, mousePosition);
-            this.supportActions.moveSupport(mousePosition);
+            this.ray.firstHitOnly = true;
+            const res = this.ray.intersectObject(this.selectedGroup, true);
+            if (res.length) {
+                // console.log(this.selectedGroup, res);
+                this.supportActions.moveSupport(res);
+            }
+            // const mousePosition = new THREE.Vector3();
+            // this.ray.ray.intersectPlane(this.horizontalPlane, mousePosition);
             this.emit(EVENTS.UPDATE);
         }
         if (this.state === STATE.ROTATE_PLACEMENT) {
@@ -361,6 +380,19 @@ class Controls extends EventEmitter {
                     this.transformControl.onMouseMove(this.getMouseCoord(event), this.isPrimeTower);
                 }
                 this.emit(EVENTS.TRANSFORM_OBJECT);
+                break;
+            case STATE.SUPPORT:
+                if (this.isMouseDown) {
+                    const coord = this.getMouseCoord(event);
+                    this.ray.setFromCamera(coord, this.camera);
+                    this.ray.firstHitOnly = true;
+                    const res = this.ray.intersectObject(this.selectedGroup, true);
+                    if (res.length) {
+                        this.supportActions.applyBrush(res);
+                    }
+                    this.emit(EVENTS.UPDATE);
+                    event.stopPropagation();
+                }
                 break;
             default:
                 break;
@@ -397,15 +429,18 @@ class Controls extends EventEmitter {
             case STATE.ROTATE_PLACEMENT:
                 this.prevState = STATE.ROTATE_PLACEMENT;
                 break;
+            case STATE.SUPPORT:
+                this.prevState = STATE.SUPPORT;
+                break;
             default:
                 break;
         }
-
         this.state = this.prevState || STATE.NONE;
 
         document.removeEventListener('mousemove', this.onDocumentMouseMove, false);
         // mouse up needed no matter mousedowm on support mode
         document.removeEventListener('mouseup', this.onDocumentMouseUp, false);
+        this.isMouseDown = false;
     };
 
     disableClick() {
@@ -426,7 +461,6 @@ class Controls extends EventEmitter {
      */
     onClick = (event, isRightClick = false) => {
         if (this.state === STATE.SUPPORT) {
-            this.supportActions.saveSupport();
             return;
         }
         if (!this.clickEnabled) {
@@ -542,7 +576,7 @@ class Controls extends EventEmitter {
     }
 
     onMouseWheel = (event) => {
-        if (this.state === STATE.NONE || this.state === STATE.ROTATE_PLACEMENT) {
+        if (this.state === STATE.NONE || this.state === STATE.ROTATE_PLACEMENT || this.state === STATE.SUPPORT) {
             event.preventDefault();
             event.stopPropagation();
 
