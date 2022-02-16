@@ -2111,7 +2111,7 @@ class ModelGroup extends EventEmitter {
     filterModelsCanAttachSupport(models = this.models) {
         const modelsToAddSupport = [];
         this.traverseModels(models, (subModel) => {
-            if (subModel instanceof ThreeModel && subModel.canAttachSupport) {
+            if (subModel instanceof ThreeModel && subModel.canAttachSupport && subModel.visible) {
                 modelsToAddSupport.push(subModel);
             }
         });
@@ -2141,6 +2141,7 @@ class ModelGroup extends EventEmitter {
         availModels.forEach(model => {
             model.meshObject.clear();
             model.supportFaceMarks = [];
+            model.stickToPlate();
         });
     }
 

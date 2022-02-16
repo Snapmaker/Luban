@@ -462,7 +462,7 @@ function VisualizerLeftBar({ setTransformMode, supportActions, updateBoundingBox
     const transformDisabled = showRotationAnalyzeModal || showEditSupportModal || !(selectedModelArray.length > 0 && selectedModelArray.every((model) => {
         return model.visible === true;
     }));
-    const supportDisabled = (displayedType !== 'model' || modelGroup.filterModelsCanAttachSupport().length === 0);
+    const supportDisabled = (displayedType !== 'model' || modelGroup.getModelsAttachedSupport(false).length === 0);
     const rotationAnalysisEnable = (selectedModelArray.length === 1 && selectedModelArray[0].visible && !selectedModelArray[0].parent);
     const isDualExtruder = machineStore.get('machine.toolHead.printingToolhead') === DUAL_EXTRUDER_TOOLHEAD_FOR_SM2;
     const [dualExtruderDisabled, setDualExtruderDisabled] = useState(!models.length);
