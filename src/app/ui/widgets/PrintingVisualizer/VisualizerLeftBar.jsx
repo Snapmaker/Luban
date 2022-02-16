@@ -20,7 +20,8 @@ import Menu from '../../components/Menu';
 import RotationAnalysisOverlay from './Overlay/RotationAnalysisOverlay';
 import EditSupportOverlay from './Overlay/EditSupportOverlay';
 import SupportOverlay from './Overlay/SupportOverlay';
-import { DUAL_EXTRUDER_TOOLHEAD_FOR_SM2, EPSILON, BOTH_EXTRUDER_MAP_NUMBER, LEFT_EXTRUDER_MAP_NUMBER } from '../../../constants';
+import { DUAL_EXTRUDER_TOOLHEAD_FOR_SM2, HEAD_PRINTING,
+    EPSILON, BOTH_EXTRUDER_MAP_NUMBER, LEFT_EXTRUDER_MAP_NUMBER } from '../../../constants';
 import { machineStore } from '../../../store/local-storage';
 
 const extruderLabelMap = {
