@@ -1599,9 +1599,10 @@ class SVGActionsFactory {
                     ...baseUpdateData,
                     config: newConfig
                 });
-                const elements = this.svgContentGroup.selectedElements;
-                const t = SVGActionsFactory.calculateElementsTransformation(elements);
-                this._setSelectedElementsTransformation(t);
+                // TODO: change width and height of elements but not apply the scale
+                // const elements = this.svgContentGroup.selectedElements;
+                // const t = SVGActionsFactory.calculateElementsTransformation(elements);
+                // this._setSelectedElementsTransformation(t);
 
                 this.resetSelection();
             });
