@@ -2169,7 +2169,7 @@ class ModelGroup extends EventEmitter {
                 const angleN = normal.angleTo(zUp) / Math.PI * 180;
                 const averageZOfFace = (positions[i + 2] + positions[i + 5] + positions[i + 8]) / 3;
                 // prevent to add marks to the faces attached to XOY plane
-                if (angleN > 90 && averageZOfFace > 0.01) {
+                if (angleN > 91 && averageZOfFace > 0.01) {
                     model.supportFaceMarks[j] = model.supportFaceMarks[j] || AVAIL;
                 }
             }
