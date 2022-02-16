@@ -52,9 +52,6 @@ function startServices(server) {
     socketServer.registerEvent('taskCommit:cutModel', TaskManager.addCutModelTask);
 
     socketServer.start(server);
-
-    // Start task manager
-    TaskManager.start();
 }
 
 function registerApis(app) {

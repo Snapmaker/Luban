@@ -5,7 +5,7 @@ import settings from '../config/settings';
 
 // https://code.google.com/p/v8/wiki/JavaScriptStackTraceApi
 const getStackTrace = () => {
-    const obj = {};
+    const obj: { stack?: string } = {};
     Error.captureStackTrace(obj, getStackTrace);
     return (obj.stack || '').split('\n');
 };
@@ -42,6 +42,9 @@ const levels = [
     'silly' // 5
 ];
 
+
+type Level = 'error' | 'warn' | 'info' | 'verbose' | 'debug' | 'silly';
+
 export default (namespace = '') => {
     namespace = String(namespace);
 
@@ -55,5 +58,5 @@ export default (namespace = '') => {
                 : logger[level](util.format(...args));
         };
         return acc;
-    }, {});
+    }, {}) as { [key in Level]: (log: string) => void };
 };

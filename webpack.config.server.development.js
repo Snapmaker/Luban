@@ -50,6 +50,13 @@ module.exports = {
     module: {
         rules: [
             {
+                test: /\.worker\.(j|t)s$/,
+                loader: 'worker-loader',
+                options: {
+                    filename: '[name].js',
+                },
+            },
+            {
                 test: /\.ts$/,
                 loader: 'ts-loader'
             },

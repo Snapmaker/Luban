@@ -6,8 +6,7 @@ import {
 } from '../constants';
 
 import ThreeUtils from '../three-extensions/ThreeUtils';
-
-import WorkerManager from '../lib/manager/WorkerManager';
+import workerManager from '../lib/manager/workerManager';
 import ThreeGroup from './ThreeGroup';
 import BaseModel from './ThreeBaseModel';
 import { machineStore } from '../store/local-storage';
@@ -533,8 +532,8 @@ class ThreeModel extends BaseModel {
         const positions = clone.getAttribute('position').array;
         const normals = clone.getAttribute('normal').array;
 
-        WorkerManager.evaluateSupportArea({ positions, normals }, (e) => {
-            const { colors } = e.data;
+        workerManager.evaluateSupportArea([{ positions, normals }], (data) => {
+            const { colors } = data;
             bufferGeometry.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3));
             this.setSelected(true);
             this.modelGroup.modelChanged();
