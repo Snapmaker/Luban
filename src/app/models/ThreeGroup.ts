@@ -188,7 +188,7 @@ export default class ThreeGroup extends BaseModel {
     findModelInGroupByMesh(mesh: THREE.Mesh) {
         let modelFound = null, hasSelectedModel = false;
         this.traverse((model) => {
-            if (model.meshObject === mesh) {
+            if (model.meshObject === mesh || model.meshObject.children.indexOf(mesh) > -1) {
                 modelFound = model;
             }
         });
