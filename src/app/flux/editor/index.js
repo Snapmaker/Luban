@@ -2,8 +2,6 @@ import * as THREE from 'three';
 import path from 'path';
 import { v4 as uuid } from 'uuid';
 import _, { includes } from 'lodash';
-import workerpool from 'workerpool';
-import onmessage from '../../workers/ToolpathRenderer.worker';
 /* eslint-disable-next-line import/no-cycle */
 import { actions as projectActions } from '../project';
 import api from '../../api';
