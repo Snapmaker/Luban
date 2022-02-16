@@ -2,7 +2,6 @@ import path from 'path';
 import fs from 'fs';
 import mkdirp from 'mkdirp';
 import { includes, isUndefined, gt } from 'lodash';
-// import { app } from 'electron';
 import isElectron from 'is-electron';
 import semver from 'semver';
 import { CNC_CONFIG_SUBCATEGORY, LASER_CONFIG_SUBCATEGORY, PRINTING_CONFIG_SUBCATEGORY } from './constants';
@@ -15,7 +14,6 @@ import pkg from '../../package.json';
 
 
 const log = logger('server:DataStorage');
-let tempUserDataDir = '.';
 export const rmDir = (dirPath, removeSelf) => {
     log.info(`Clearing folder ${dirPath}`);
     if (removeSelf === undefined) {

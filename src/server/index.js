@@ -24,7 +24,6 @@ const EPS = 1e-6;
 
 const createServer = (options, callback) => {
     options = { ...options };
-    console.log('comingCreateServer');
     { // verbosity
         const verbosity = options.verbosity;
 
