@@ -292,8 +292,6 @@ export default class ThreeGroup extends BaseModel {
             ...transformation
         };
 
-        this.children.forEach(model => model.onTransform());
-
         return this.transformation;
     }
 

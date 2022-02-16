@@ -82,6 +82,7 @@ function Material({ widgetActions }) {
         const def = (direction === LEFT_EXTRUDER ? extruderLDefinition : extruderRDefinition);
         def.settings.machine_nozzle_size.default_value = value;
         dispatch(printingActions.updateExtruderDefinition(def, direction));
+        dispatch(projectActions.autoSaveEnvironment(HEAD_PRINTING));
     }
 
     const [diametersOptions, setDiametersOptions] = useState(NOZZLE_SIZE_DEFAULT_OPTIONS);

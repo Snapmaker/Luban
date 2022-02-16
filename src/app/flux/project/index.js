@@ -15,15 +15,17 @@ import {
     SINGLE_EXTRUDER_TOOLHEAD_FOR_SM2
 } from '../../constants';
 import api from '../../api';
+/* eslint-disable-next-line import/no-cycle */
 import { actions as printingActions } from '../printing';
+/* eslint-disable-next-line import/no-cycle */
 import { actions as editorActions } from '../editor';
 // import machineAction from '../machine/action-base';
 import { actions as workspaceActions } from '../workspace';
 import { actions as appGlobalActions } from '../app-global';
 import { bubbleSortByAttribute } from '../../lib/numeric-utils';
 import { UniformToolpathConfig } from '../../lib/uniform-toolpath-config';
-import { checkIsSnapmakerProjectFile, checkIsGCodeFile, checkObjectIsEqual } from '../../lib/check-name';
-
+import { checkIsSnapmakerProjectFile, checkIsGCodeFile } from '../../lib/check-name';
+/* eslint-disable-next-line import/no-cycle */
 import { actions as operationHistoryActions } from '../operation-history';
 import { machineStore } from '../../store/local-storage';
 
@@ -58,11 +60,6 @@ const INITIAL_STATE = {
     }
 };
 const ACTION_UPDATE_STATE = 'EDITOR_ACTION_UPDATE_STATE';
-const interval = {
-    HEAD_LASER: null,
-    HEAD_CNC: null,
-    HEAD_PRINTING: null
-};
 
 export const actions = {
     updateState: (headType, state) => {
@@ -80,27 +77,15 @@ export const actions = {
             if (!openedFile) {
                 await dispatch(actions.getLastEnvironment(envHeadType));
             }
-
-            const action = await actions.autoSaveEnvironment(envHeadType);
-            interval[envHeadType] && clearInterval(interval[envHeadType]);
-            interval[envHeadType] = setInterval(() => dispatch(action), 1000);
         };
-
         startService(HEAD_LASER);
         startService(HEAD_CNC);
         startService(HEAD_PRINTING);
     },
 
-    exitRecoverService: () => () => {
-        for (const envHeadType of [HEAD_LASER, HEAD_CNC, HEAD_PRINTING]) {
-            interval[envHeadType] && clearInterval(interval[envHeadType]);
-            interval[envHeadType] = null;
-        }
-    },
-
-    autoSaveEnvironment: (headType, force = false) => async (dispatch, getState) => {
+    autoSaveEnvironment: (headType) => async (dispatch, getState) => {
         const editorState = getState()[headType];
-        const { initState, content: lastString } = getState().project[headType];
+        const { initState } = getState().project[headType];
         const models = editorState.modelGroup.getModels();
         if (!models.length && initState) return;
         if (models.length === 1 && models[0].type === 'primeTower') return;
@@ -133,11 +118,9 @@ export const actions = {
             const toolPaths = editorState.toolPathGroup.getToolPaths();
             envObj.toolpaths = toolPaths;
         }
-        if (force || !checkObjectIsEqual(JSON.parse(lastString), envObj)) {
-            const content = JSON.stringify(envObj);
-            dispatch(actions.updateState(headType, { content, unSaved: true, initState: false }));
-            await api.saveEnv({ content });
-        }
+        const content = JSON.stringify(envObj);
+        dispatch(actions.updateState(headType, { content, unSaved: true, initState: false }));
+        await api.saveEnv({ content });
     },
 
     getLastEnvironment: (headType) => async (dispatch) => {
@@ -159,7 +142,7 @@ export const actions = {
             console.log(e);
         }
 
-        dispatch(actions.updateState(headType, { findLastEnvironment: false, unSaved: false }));
+        dispatch(actions.updateState(headType, { unSaved: false }));
     },
 
     recoverModels: (modActions, models, envHeadType) => async (dispatch) => {

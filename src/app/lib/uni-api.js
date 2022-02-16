@@ -458,9 +458,11 @@ const Window = {
     },
     reload() {
         window.location.href = '/';
+        Window.setOpenedFile('');
     },
     forceReload() {
         window.location.href = '/';
+        Window.setOpenedFile('');
     },
     viewInBrowser() {
         if (isElectron()) {

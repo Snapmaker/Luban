@@ -19,7 +19,7 @@ class SvgIcon extends PureComponent {
         color: PropTypes.string,
         spanText: PropTypes.string,
         spanClassName: PropTypes.string,
-        size: PropTypes.number,
+        size: PropTypes.number || PropTypes.string,
         inputInfo: PropTypes.object,
         hoversize: PropTypes.number, // hover background size
         borderRadius: PropTypes.number,
