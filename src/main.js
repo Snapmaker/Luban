@@ -205,6 +205,7 @@ const showMainWindow = async () => {
         // only start server once
         // TODO: start server on the outermost
         const child = childProcess.fork(path.resolve(__dirname, 'server-cli.js'));
+        // window.webContents.openDevTools();
         window.loadURL(path.resolve(__dirname, 'app', 'loading.html'));
         window.setBackgroundColor('#f5f5f7');
         if (process.platform === 'win32') {
@@ -265,9 +266,7 @@ const showMainWindow = async () => {
             
                 const webContentsSession = window.webContents.session;
                 webContentsSession.setProxy({ proxyRules: 'direct://' })
-                    .then(() => {
-                        window.loadURL(loadUrl);
-                    });
+                    .then(() => window.loadURL(loadUrl));
             
                 try {
                     // TODO: move to server
@@ -276,9 +275,8 @@ const showMainWindow = async () => {
                     console.error('Error: ', err);
                 }
             } else {
-                BrowserWindow.getAllWindows().forEach(window => {
-                    window.webContents.reload();
-                });
+                console.log('main.js-upload', data.type, BrowserWindow.getAllWindows() || ['1']);
+                window.loadURL(loadUrl);
             }
         })
         // serverData = await launchServer();

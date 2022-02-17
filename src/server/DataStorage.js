@@ -67,7 +67,6 @@ class DataStorage {
          if (!isElectron()) {
              this.userDataDir = '.';
          } else {
-             console.log('dataStorage.js-userDatadir', global.luban.userDataDir);
             this.userDataDir = global.luban.userDataDir;
 
          }
