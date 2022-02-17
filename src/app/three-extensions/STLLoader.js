@@ -265,7 +265,7 @@ STLLoader.prototype = {
                   uv.push(...faceUvs[i].toArray());
                 }
 	        });
-			geometry.setAttribute( 'uv', new THREE.BufferAttribute( new Float32Array( uv ), 2 ));
+			// geometry.setAttribute( 'uv', new THREE.BufferAttribute( new Float32Array( uv ), 2 ));
 
 			if ( hasColors ) {
 

@@ -22,8 +22,9 @@ const loadModel = ({ uploadPath }) => {
                 geometry.translate(-originalPosition.x, -originalPosition.y, -originalPosition.z);
                 // Send positions back to caller
                 const positions = geometry.getAttribute('position').array;
-                const uvs = geometry.getAttribute('uv').array;
-                sendMessage({ type: 'LOAD_MODEL_POSITIONS', positions, originalPosition, uvs });
+                // const uvs = geometry.getAttribute('uv')?.array || [];
+                // sendMessage({ type: 'LOAD_MODEL_POSITIONS', positions, originalPosition, uvs });
+                sendMessage({ type: 'LOAD_MODEL_POSITIONS', positions, originalPosition });
 
                 // Calculate convex of model
                 const vertices = [];

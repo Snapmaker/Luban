@@ -2,7 +2,8 @@ import { v4 as uuid } from 'uuid';
 import * as THREE from 'three';
 import { ObjectLoader } from 'three';
 import {
-    LOAD_MODEL_FROM_INNER
+    LOAD_MODEL_FROM_INNER,
+    DEFAULT_LUBAN_HOST
 } from '../constants';
 
 import ThreeUtils from '../three-extensions/ThreeUtils';
@@ -57,7 +58,11 @@ class ThreeModel extends BaseModel {
             const images = objectLoader.parseImages(json.images);
             const textures = objectLoader.parseTextures(json.textures, images);
             const materials = objectLoader.parseMaterials(json.materials, textures);
-            const newMaterial = Object.values(materials)[0];
+            // const newMaterial = Object.values(materials)[0];
+            const newMaterial = new THREE.MeshMatcapMaterial();
+            const matcapTexture = new THREE.TextureLoader().load(`${DEFAULT_LUBAN_HOST}/resources/images/texture.jpg`);
+            newMaterial.matcap = matcapTexture;
+            console.log('newMaterial', newMaterial, matcapTexture, materials, Object.values(textures)[0]);
             material = newMaterial;
         } catch (e) {
             console.error('error', e);
