@@ -27,6 +27,9 @@ const loadingMenu = [{
     label: '',
 }];
 const childProcess = require('child_process');
+const USER_DATA_DIR = 'userDataDir';
+const SERVER_DATA = 'serverData';
+const UPLOAD_WINDOWS = 'uploadWindows';
 // crashReporter.start({
 //     productName: 'Snapmaker',
 //     globalExtra: { _companyName: 'Snapmaker' },
@@ -196,17 +199,17 @@ const showMainWindow = async () => {
     const window = new BrowserWindow(windowOptions);
     mainWindow = window;
     if (process.platform === 'win32') {
-        // window.setSkipTaskbar(true);
         const menu = Menu.buildFromTemplate(loadingMenu);
         Menu.setApplicationMenu(menu);
-        window.setMenuBarVisibility(true);
     }
     if (!serverData) {
         // only start server once
         // TODO: start server on the outermost
         const child = childProcess.fork(path.resolve(__dirname, 'server-cli.js'));
         // window.webContents.openDevTools();
-        window.loadURL(path.resolve(__dirname, 'app', 'loading.html'));
+        window.loadURL(path.resolve(__dirname, 'app', 'loading.html')).catch(err => {
+            console.log('err', err.message);
+        });
         window.setBackgroundColor('#f5f5f7');
         if (process.platform === 'win32') {
             window.show();
@@ -216,11 +219,11 @@ const showMainWindow = async () => {
             })
         }
         child.send({
-            type: 'userDataDir',
+            type: USER_DATA_DIR,
             userDataDir
         });
         child.on('message', (data) => {
-            if (data.type === 'serverData') {
+            if (data.type === SERVER_DATA) {
                 serverData = data;
                 const { address, port } = { ...serverData };
                 configureWindow(window);
@@ -266,7 +269,9 @@ const showMainWindow = async () => {
             
                 const webContentsSession = window.webContents.session;
                 webContentsSession.setProxy({ proxyRules: 'direct://' })
-                    .then(() => window.loadURL(loadUrl));
+                    .then(() => window.loadURL(loadUrl).catch(err => {
+                        console.log('err', err.message);
+                    }));
             
                 try {
                     // TODO: move to server
@@ -274,9 +279,10 @@ const showMainWindow = async () => {
                 } catch (err) {
                     console.error('Error: ', err);
                 }
-            } else {
-                console.log('main.js-upload', data.type, BrowserWindow.getAllWindows() || ['1']);
-                window.loadURL(loadUrl);
+            } else if (data.type === UPLOAD_WINDOWS) {
+                window.loadURL(loadUrl).catch(err => {
+                    console.log('err', err.message);
+                });
             }
         })
         // serverData = await launchServer();

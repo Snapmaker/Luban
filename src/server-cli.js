@@ -1,10 +1,11 @@
-// /* eslint max-len: 0 */
-// /* eslint no-console: 0 */
+/* eslint max-len: 0 */
+/* eslint no-console: 0 */
 import path from 'path';
 import program from 'commander';
 import isElectron from 'is-electron';
 import pkg from './package.json';
 
+const SERVER_DATA = 'serverData'
 // Defaults to 'production'
 process.env.NODE_ENV = process.env.NODE_ENV || 'production';
 
@@ -53,7 +54,7 @@ const launchServer = () => new Promise((resolve, reject) => {
             reject(err);
             return;
         }
-        process.send({ type: 'serverData', ...data });
+        process.send({ type: SERVER_DATA, ...data });
         resolve(data);
     });
 });

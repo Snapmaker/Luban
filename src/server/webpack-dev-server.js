@@ -3,6 +3,7 @@ import webpackDevMiddleware from 'webpack-dev-middleware';
 import webpackHotMiddleware from 'webpack-hot-middleware';
 import config from '../../webpack.config.app.development';
 
+const UPLOAD_WINDOWS = 'uploadWindows';
 const webpackDevServer = (app) => {
     // https://github.com/webpack/webpack-dev-middleware
     const compiler = webpack(config);
@@ -22,7 +23,7 @@ const webpackDevServer = (app) => {
         }
     });
     devMiddleware.waitUntilValid(() => {
-        process.send({ type: 'uploadWindows' });
+        process.send({ type: UPLOAD_WINDOWS });
     });
     app.use(devMiddleware);
 
