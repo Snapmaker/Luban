@@ -114,7 +114,8 @@ class DefinitionManager {
     // Update definition
     // Only name & settings are configurable
     async updateDefinition(definition) {
-        await api.profileDefinitions.updateDefinition(this.headType, definition.definitionId, definition, this.configPathname);
+        await api.profileDefinitions.updateDefinition(this.headType, definition.definitionId, definition,
+            definition.definitionId === 'active' ? '' : this.configPathname);
     }
 
     async markDefaultDefinitions(remoteDefinitions) {

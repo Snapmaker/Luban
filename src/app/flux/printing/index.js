@@ -762,6 +762,15 @@ export const actions = {
         dispatch(actions.updateActiveDefinition(definition));
     },
 
+    updateActiveDefinitionById: (type, definitionId) => (dispatch, getState) => {
+        const state = getState().printing;
+        const definitionsKey = defaultDefinitionKeys[type].definitions;
+        const definition = state[definitionsKey].find((item) => {
+            return item.definitionId === definitionId;
+        });
+        dispatch(actions.updateActiveDefinition(definition, true));
+    },
+
     updateActiveDefinition: (definition, shouldSave = false) => (dispatch, getState) => {
         const state = getState().printing;
 
@@ -2582,7 +2591,9 @@ export const actions = {
 export default function reducer(state = INITIAL_STATE, action) {
     switch (action.type) {
         case ACTION_UPDATE_STATE: {
-            return Object.assign({}, state, action.state);
+            const s = Object.assign({}, state, action.state);
+            window.pp = s;
+            return s;
         }
         case ACTION_UPDATE_TRANSFORMATION: {
             return Object.assign({}, state, {
