@@ -1,9 +1,7 @@
 import STLToSvgStack from '../../../lib/MeshProcess/STLToSvgStack';
-import global from '../../../lib/global';
 import sendMessage from '../utils/sendMessage';
 
-const cutModel = (modelInfo, tmpDir) => {
-    global.tmpDir = tmpDir;
+const cutModel = (modelInfo) => {
     if (!modelInfo) {
         return sendMessage({ status: 'fail', value: 'modelInfo is empty.' });
     }

@@ -96,6 +96,8 @@ const createServer = (options, callback) => {
     // Data storage initialize
     DataStorage.init();
 
+    process.env.Tmpdir = DataStorage.tmpDir;
+
     // // Bugfix on Jimp's greyscale. ...moved to server/lib/jimp
 
     const { port = 0, host, backlog } = options;

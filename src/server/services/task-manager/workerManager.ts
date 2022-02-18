@@ -1,4 +1,5 @@
 import workerpool, { WorkerPool } from 'workerpool';
+import DataStorage from '../../DataStorage';
 import './Pool.worker';
 
 export enum WorkerMethods {
@@ -27,9 +28,15 @@ Object.entries(WorkerMethods).forEach(([, method]) => {
     WorkerManager.prototype[method] = function (data: any, onmessage?: (payload: unknown) => void) {
         const pool = (
             this.pool || (
+                // https://github.com/josdejong/workerpool/blob/cba4d37ec3fcb9a7c49c4675e6607a77fe126876/test/Pool.test.js#L107
                 this.pool = workerpool.pool('./Pool.worker.js', {
                     minWorkers: 'max',
-                    workerType: 'process'
+                    workerType: 'process',
+                    forkOpts: {
+                        env: {
+                            Tmpdir: DataStorage.tmpDir,
+                        }
+                    }
                 }))
         ) as WorkerPool;
 

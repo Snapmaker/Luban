@@ -2,7 +2,6 @@ import logger from '../../lib/logger';
 import { EPS } from '../../constants';
 import Task from './Task';
 import { asyncFor } from '../../../shared/lib/array-async';
-import DataStorage from '../../DataStorage';
 import workerManager from './workerManager';
 
 // const TASK_STATUS_IDLE = 'idle';
@@ -24,8 +23,7 @@ class TaskManager {
     private tasks: Task[] = []
 
     private exec(runnerName: string, task) {
-        const tmpDir = DataStorage.tmpDir;
-        this.workerManager[runnerName]([task.data, tmpDir], (payload) => {
+        this.workerManager[runnerName]([task.data], (payload) => {
             if (payload.status === 'progress') {
                 this.onProgress(task, payload.value);
             } else if (payload.status === 'complete') {

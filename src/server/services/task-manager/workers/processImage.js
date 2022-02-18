@@ -1,13 +1,11 @@
 import { editorProcess } from '../../../lib/editor/process';
-import global from '../../../lib/global';
 import sendMessage from '../utils/sendMessage';
 
 const _processImage = async (modelInfo, onProgress) => {
     return editorProcess(modelInfo, onProgress);
 };
 
-const processImage = (modelInfo, tmpDir) => {
-    global.tmpDir = tmpDir;
+const processImage = (modelInfo) => {
     const onProgress = (num) => {
         sendMessage({ status: 'progress', value: num });
     };
