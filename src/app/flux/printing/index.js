@@ -2482,11 +2482,6 @@ export const actions = {
             });
             recovery();
         });
-        // const groups = modelGroup.getSelectedModelArray().filter(model => model instanceof ThreeGroup);
-        // const groupChildrenMap = new Map();
-        // groups.forEach(group => {
-        //     groupChildrenMap.set(group, group.children.slice(0));
-        // });
         modelGroup.updateModelsPositionBaseFirstModel(selectedModels);
         const operations = new Operations();
 
@@ -2503,6 +2498,7 @@ export const actions = {
             target: modelGroup.getSelectedModelArray()[0],
             modelGroup
         });
+        console.log('modelGroup.', modelGroup.models);
         operations.push(operation);
         operations.registCallbackAfterAll(() => {
             dispatch(actions.updateState(modelGroup.getState()));
