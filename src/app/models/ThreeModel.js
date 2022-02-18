@@ -58,10 +58,11 @@ class ThreeModel extends BaseModel {
             const images = objectLoader.parseImages(json.images);
             const textures = objectLoader.parseTextures(json.textures, images);
             const materials = objectLoader.parseMaterials(json.materials, textures);
-            // const newMaterial = Object.values(materials)[0];
-            const newMaterial = new THREE.MeshMatcapMaterial();
+            const newMaterial = Object.values(materials)[0];
+            // const newMaterial = new THREE.MeshMatcapMaterial();
             const matcapTexture = new THREE.TextureLoader().load(`${DEFAULT_LUBAN_HOST}/resources/images/texture.jpg`);
-            newMaterial.matcap = matcapTexture;
+            // newMaterial.bumpMap = null;
+            // newMaterial.matcap = matcapTexture;
             console.log('newMaterial', newMaterial, matcapTexture, materials, Object.values(textures)[0]);
             material = newMaterial;
         } catch (e) {

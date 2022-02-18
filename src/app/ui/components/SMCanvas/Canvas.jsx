@@ -9,7 +9,7 @@ import noop from 'lodash/noop';
 import React, { PureComponent } from 'react';
 import { isNil, throttle } from 'lodash';
 import { Vector3, PerspectiveCamera, Scene, Group,
-    AmbientLight, PointLight,
+    // PointLight,
     HemisphereLight, DirectionalLight } from 'three';
 import PropTypes from 'prop-types';
 import TWEEN from '@tweenjs/tween.js';
@@ -242,10 +242,12 @@ class Canvas extends PureComponent {
             this.light.position.copy(this.cameraInitialPosition);
         }
         if (this.transformSourceType === '3D') {
-            const pLight = new PointLight(0xffffff, 0.60, 0, 0.60);
-            this.camera.add(pLight);
-            pLight.position.copy(new Vector3(-4000, 7000, 50000));
+            // this.light = new DirectionalLight(0x666666, 0.4);
+            // const pLight = new PointLight(0xffffff, 0.60, 0, 0.60);
+            // this.camera.add(pLight);
+            // pLight.position.copy(new Vector3(-4000, 7000, 50000));
         }
+        // this.light.position.copy(this.cameraInitialPosition);
 
         // We need to change the default up vector if we use camera to respect XY plane
         if (this.props.cameraUp) {
@@ -263,12 +265,16 @@ class Canvas extends PureComponent {
         this.group.position.copy(DEFAULT_MODEL_POSITION);
         this.scene.add(this.group);
         if (this.transformSourceType === '3D') {
-            const lightTop = new HemisphereLight(0xA3A3A3, 0x545454, 0.5);
-            const lightInside = new AmbientLight(0x666666);
-            lightTop.position.copy(new Vector3(0, 0, -49000));
-            lightInside.position.copy(new Vector3(0, 0, 0));
-            this.scene.add(lightTop);
-            this.scene.add(lightInside);
+            // const lightTop = new HemisphereLight(0xdddddd, 0x666666);
+            // lightTop.position.copy(new Vector3(0, 0, 1000));
+            // this.scene.add(lightTop);
+
+            // const lightTop = new HemisphereLight(0xA3A3A3, 0x545454, 0.5);
+            // const lightInside = new AmbientLight(0x666666);
+            // lightTop.position.copy(new Vector3(0, 0, -49000));
+            // lightInside.position.copy(new Vector3(0, 0, 0));
+            // this.scene.add(lightInside);
+            console.log('this.scene', this.scene);
         }
         if (this.transformSourceType === '2D') {
             this.scene.add(new HemisphereLight(0x000000, 0xcecece));
