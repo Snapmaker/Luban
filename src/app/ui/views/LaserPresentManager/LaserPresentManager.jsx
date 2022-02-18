@@ -48,7 +48,6 @@ function LaserPresentManager({ closeToolManager, shouldSaveToolpath = false, sav
         },
         onSaveDefinitionForManager: async (definition) => {
             dispatch(laserActions.updateToolListDefinition(definition));
-            // TODO is active, update
         },
         updateDefinitionName: async (definition, selectedName) => {
             try {

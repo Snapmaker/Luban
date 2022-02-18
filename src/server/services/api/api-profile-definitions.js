@@ -36,8 +36,11 @@ export const getDefinition = (req, res) => {
 
     const definitionLoader = new DefinitionLoader();
 
-    definitionLoader.loadDefinition(headType, definitionId, series);
-
+    if (definitionId === 'snapmaker_extruder_0' || definitionId === 'snapmaker_extruder_1' || definitionId === 'active' || definitionId === 'active_final') {
+        definitionLoader.loadDefinition(headType, definitionId);
+    } else {
+        definitionLoader.loadDefinition(headType, definitionId, series);
+    }
     res.send({ definition: definitionLoader.toObject() });
 };
 
@@ -145,7 +148,7 @@ export const updateDefinition = async (req, res) => {
     const series = req.body.series;
 
     const definitionLoader = new DefinitionLoader();
-    if (definitionId === 'snapmaker_extruder_0' || definitionId === 'snapmaker_extruder_1') {
+    if (definitionId === 'snapmaker_extruder_0' || definitionId === 'snapmaker_extruder_1' || definitionId === 'active' || definitionId === 'active_final') {
         definitionLoader.loadDefinition(headType, definitionId);
     } else {
         definitionLoader.loadDefinition(headType, definitionId, series);
@@ -177,7 +180,7 @@ export const updateDefinition = async (req, res) => {
 
     let filePath = '';
     let activeRecoverPath = '';
-    if (definitionId === 'snapmaker_extruder_0' || definitionId === 'snapmaker_extruder_1') {
+    if (definitionId === 'snapmaker_extruder_0' || definitionId === 'snapmaker_extruder_1' || definitionId === 'active' || definitionId === 'active_final') {
         filePath = path.join(`${DataStorage.configDir}/${headType}`, `${definitionId}.def.json`);
         activeRecoverPath = path.join(`${DataStorage.activeConfigDir}/${headType}`, `${definitionId}.def.json`);
     } else {
