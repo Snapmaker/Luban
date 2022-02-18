@@ -3,7 +3,7 @@ import { Socket } from 'socket.io-client';
 const TASK_STATUS_IDLE = 'idle';
 
 class Task {
-    private taskId: string;
+    public taskId: string;
 
     private modelId: string;
 
@@ -38,6 +38,8 @@ class Task {
     public stlInfo = ''
 
     public svgInfo = ''
+
+    public terminateFn: Function = () => {};
 
     constructor(taskId, socket, data, taskType, headType, modelId = '') {
         this.taskId = taskId;

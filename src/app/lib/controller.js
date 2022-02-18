@@ -267,6 +267,10 @@ class SerialPortClient {
         socketController.emit('taskCommit:cutModel', task);
     }
 
+    cancelCutModelTask(taskId) {
+        socketController.emit('taskCancel:cutModel', taskId);
+    }
+
     // command(cmd, ...args) {
     command(cmd, ...args) {
         // const { port } = this;

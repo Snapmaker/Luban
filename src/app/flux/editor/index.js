@@ -1987,6 +1987,10 @@ export const actions = {
         });
     },
 
+    cancelCutModel: () => () => {
+        controller.cancelCutModelTask();
+    },
+
     cutModel: (headType, file, onError) => (dispatch, getState) => {
         const { progressStatesManager, coordinateSize } = getState()[headType];
         progressStatesManager.startProgress(PROCESS_STAGE.LASER_CUT_STL);
