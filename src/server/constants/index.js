@@ -86,7 +86,7 @@ export const TOOLPATH_TYPE_VECTOR = 'vector';
 export const TOOLPATH_TYPE_SCULPT = 'sculpt';
 export const EPS = 1e-6;
 
-export const DEFINITION_SNAPMAKER_EXTRUDER_0 = 'snapmaker_extruder_0'
-export const DEFINITION_SNAPMAKER_EXTRUDER_1 = 'snapmaker_extruder_1'
-export const DEFINITION_ACTIVE = 'active'
-export const DEFINITION_ACTIVE_FINAL = 'active_final'
+export const DEFINITION_SNAPMAKER_EXTRUDER_0 = 'snapmaker_extruder_0';
+export const DEFINITION_SNAPMAKER_EXTRUDER_1 = 'snapmaker_extruder_1';
+export const DEFINITION_ACTIVE = 'active';
+export const DEFINITION_ACTIVE_FINAL = 'active_final';
