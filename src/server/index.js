@@ -22,10 +22,8 @@ const log = logger('init');
 
 const EPS = 1e-6;
 
-
 const createServer = (options, callback) => {
     options = { ...options };
-
     { // verbosity
         const verbosity = options.verbosity;
 
@@ -124,7 +122,6 @@ const createServer = (options, callback) => {
             // Deal with address bindings
             const realAddress = server.address().address;
             const realPort = server.address().port;
-
             callback && callback(null, {
                 address: realAddress,
                 port: realPort

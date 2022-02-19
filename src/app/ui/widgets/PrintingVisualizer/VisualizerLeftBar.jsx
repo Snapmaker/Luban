@@ -1151,6 +1151,7 @@ function VisualizerLeftBar({ setTransformMode, supportActions, updateBoundingBox
                                     <SvgIcon
                                         size={24}
                                         hoversize={24}
+                                        type={['static']}
                                         name={`${isOpenModels ? 'DropdownOpen' : 'DropdownClose'}`}
                                         color="#545659"
                                         onClick={() => actions.handleOpen('models')}
@@ -1215,6 +1216,7 @@ function VisualizerLeftBar({ setTransformMode, supportActions, updateBoundingBox
                                     <SvgIcon
                                         size={24}
                                         hoversize={24}
+                                        type={['static']}
                                         name={`${isOpenHelpers ? 'DropdownOpen' : 'DropdownClose'}`}
                                         color="#545659"
                                         onClick={() => actions.handleOpen('helpers')}

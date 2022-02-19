@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { BufferGeometryUtils } from 'three/examples/jsm/utils/BufferGeometryUtils';
 import BaseModel, { ModelTransformation, ModelInfo } from './ThreeBaseModel';
 import type ModelGroup from './ModelGroup';
 import type ThreeModel from './ThreeModel';
@@ -6,8 +7,6 @@ import ThreeUtils from '../three-extensions/ThreeUtils';
 import { HEAD_PRINTING, BOTH_EXTRUDER_MAP_NUMBER } from '../constants';
 import ConvexGeometry from '../three-extensions/ConvexGeometry';
 
-window.THREE = THREE;
-require('three/examples/js/utils/BufferGeometryUtils');
 
 type ExtruderConfig = {
     infill: string,
@@ -157,7 +156,7 @@ export default class ThreeGroup extends BaseModel {
     mergeGeometriesInGroup(): THREE.BufferGeometry {
         let geometry = new THREE.BufferGeometry();
         if (this.children.length > 0) {
-            geometry = THREE.BufferGeometryUtils.mergeBufferGeometries(this.children.map(model => {
+            geometry = BufferGeometryUtils.mergeBufferGeometries(this.children.map(model => {
                 if (model.meshObject instanceof THREE.Group) {
                     return (model as ThreeGroup).mergeGeometriesInGroup();
                 } else {

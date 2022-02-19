@@ -30,6 +30,8 @@ const newKeys = cloneDeep(PRINTING_QUALITY_CONFIG_INDEX);
 const ALL_DEFAULT_DEFINITION_ID_ARRAY = [
     'material.pla', 'material.abs', 'material.petg',
     'material.pla.black', 'material.abs.black', 'material.petg.black',
+    'material.pla.blue', 'material.pla.grey', 'material.pla.red', 'material.pla.yellow',
+    'material.petg.blue', 'material.petg.red',
     'quality.fast_print', 'quality.normal_quality', 'quality.high_quality'
 ];
 function isOfficialDefinition(key) {

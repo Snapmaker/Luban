@@ -23,7 +23,7 @@ class TaskManager {
     private tasks: Task[] = []
 
     private exec(runnerName: string, task) {
-        this.workerManager[runnerName]([task.data], (payload) => {
+        const { terminate } = this.workerManager[runnerName]([task.data], (payload) => {
             if (payload.status === 'progress') {
                 this.onProgress(task, payload.value);
             } else if (payload.status === 'complete') {
@@ -32,6 +32,7 @@ class TaskManager {
                 this.onFail(task, payload.value);
             }
         });
+        task.terminateFn = terminate;
     }
 
     private onProgress(task, p) {
@@ -62,6 +63,7 @@ class TaskManager {
             task.finishTime = new Date().getTime();
             task.socket.emit(`taskCompleted:${task.taskType}`, task.getData());
         }
+        this.tasks.splice(this.tasks.indexOf(task), 1);
     }
 
     private onFail(task: Task, res: string) {
@@ -73,6 +75,7 @@ class TaskManager {
 
             task.socket.emit(`taskCompleted:${task.taskType}`, task.getData());
         }
+        this.tasks.splice(this.tasks.indexOf(task), 1);
     }
 
     async taskHandle(task: Task) {
@@ -113,13 +116,25 @@ class TaskManager {
     }
 
     public async addTask(task: Task) {
+        let exists = false;
         this.tasks.forEach(t => {
             if (t.equal(task)) {
                 t.taskStatus = TASK_STATUS_DEPRECATED;
+                exists = true;
             }
         });
+        if (!exists) {
+            this.tasks.push(task);
+        }
 
         this.taskHandle(task);
+    }
+
+    public cancelTask(taskId: string) {
+        const res = this.tasks.find(task => task.taskId === taskId);
+        if (res) {
+            res.terminateFn();
+        }
     }
 }
 
@@ -145,10 +160,15 @@ const addCutModelTask = (socket, task) => {
     manager.addTask(new Task(task.taskId, socket, task.data, TASK_TYPE_CUT_MODEL, task.headType));
 };
 
+const cancelTask = (socket, taskId) => {
+    manager.cancelTask(taskId);
+};
+
 export default {
     addGenerateToolPathTask,
     addGenerateGcodeTask,
     addProcessImageTask,
     addCutModelTask,
-    addGenerateViewPathTask
+    addGenerateViewPathTask,
+    cancelTask
 };
