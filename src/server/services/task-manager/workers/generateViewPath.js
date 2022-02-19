@@ -1,7 +1,6 @@
 import fs from 'fs';
 import _ from 'lodash';
 import { pathWithRandomSuffix } from '../../../../shared/lib/random-utils';
-import global from '../../../lib/global';
 import SVGParser from '../../../../shared/lib/SVGParser';
 import CncToolPathGenerator from '../../../lib/ToolPathGenerator/CncToolPathGenerator';
 import CncReliefToolPathGenerator from '../../../lib/ToolPathGenerator/CncReliefToolPathGenerator';
@@ -15,10 +14,10 @@ const log = logger('service:TaskManager');
 
 const generateCncViewPath = async (modelInfo, onProgress) => {
     const { sourceType, mode, uploadName } = modelInfo;
-    const modelPath = `${global.tmpDir}/${uploadName}`;
+    const modelPath = `${process.env.Tmpdir}/${uploadName}`;
     // if (config.svgNodeName === 'text') {
     //     const result = await editorProcess(modelInfo);
-    //     modelPath = `${global.tmpDir}/${result.filename}`;
+    //     modelPath = `${process.env.Tmpdir}/${result.filename}`;
     // }
 
     if (((sourceType === 'svg') && (mode === 'vector' || mode === 'trace')) || (sourceType === 'raster' && mode === 'vector')) {
@@ -103,8 +102,7 @@ const generateBoxPointsByRotate = (results) => {
     return boxes;
 };
 
-const generateViewPath = (modelInfos, tmpDir) => {
-    global.tmpDir = tmpDir;
+const generateViewPath = (modelInfos) => {
     const onProgress = (num) => {
         sendMessage({ status: 'progress', value: num });
     };
@@ -116,7 +114,7 @@ const generateViewPath = (modelInfos, tmpDir) => {
     const suffix = '.json';
     const { uploadName, materials } = modelInfos[0];
     const outputFilename = pathWithRandomSuffix(`${uploadName}.${suffix}`);
-    const outputFilePath = `${global.tmpDir}/${outputFilename}`;
+    const outputFilePath = `${process.env.Tmpdir}/${outputFilename}`;
 
     const reps = [];
 

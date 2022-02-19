@@ -2,7 +2,6 @@ import fs from 'fs';
 
 import lubanEngine from 'snapmaker-luban-engine';
 import logger from '../lib/logger';
-import global from '../lib/global';
 import { pathWithRandomSuffix } from '../../shared/lib/random-utils';
 
 
@@ -12,7 +11,7 @@ function slice(modelInfo, onProgress, onSucceed, onError) {
     const { headType, data, toolPathLength } = modelInfo;
 
     for (const d of data) {
-        const uploadPath = `${global.tmpDir}/${d.uploadName}`;
+        const uploadPath = `${process.env.Tmpdir}/${d.uploadName}`;
 
         if (!fs.existsSync(uploadPath)) {
             log.error(`Slice Error: 3d model file does not exist -> ${uploadPath}`);
@@ -21,13 +20,13 @@ function slice(modelInfo, onProgress, onSucceed, onError) {
         }
     }
 
-    const settingsFilePath = `${global.tmpDir}/${pathWithRandomSuffix('settings')}.json`;
+    const settingsFilePath = `${process.env.Tmpdir}/${pathWithRandomSuffix('settings')}.json`;
 
     fs.writeFileSync(settingsFilePath, JSON.stringify(modelInfo));
 
     let sliceProgress;
 
-    lubanEngine.slice(headType, global.tmpDir, global.tmpDir, settingsFilePath)
+    lubanEngine.slice(headType, process.env.Tmpdir, process.env.Tmpdir, settingsFilePath)
         .onStderr('data', (res) => {
             const array = res.toString()
                 .split('\n');

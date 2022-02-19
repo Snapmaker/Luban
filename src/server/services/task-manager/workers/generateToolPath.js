@@ -6,10 +6,9 @@ import {
     TOOLPATH_TYPE_VECTOR
 } from '../../../constants';
 import slice from '../../../slicer/call-engine';
-import global from '../../../lib/global';
 import sendMessage from '../utils/sendMessage';
 
-const generateLaserToolPathFromEngine = (allTasks, tmpDir, onProgress) => {
+const generateLaserToolPathFromEngine = (allTasks, onProgress) => {
     // const allResultPromise = [];
     const toolPathLength = allTasks?.length;
     const allResultPromise = allTasks.map(async (task) => {
@@ -26,7 +25,7 @@ const generateLaserToolPathFromEngine = (allTasks, tmpDir, onProgress) => {
             }
             if (!(/parsed\.svg$/i.test(modelInfo.uploadName))) {
                 const newUploadName = modelInfo.uploadName.replace(/\.svg$/i, 'parsed.svg');
-                const uploadPath = `${tmpDir}/${newUploadName}`;
+                const uploadPath = `${process.env.Tmpdir}/${newUploadName}`;
                 if (fs.existsSync(uploadPath)) {
                     modelInfo.uploadName = newUploadName;
                 }
@@ -66,8 +65,7 @@ const generateLaserToolPathFromEngine = (allTasks, tmpDir, onProgress) => {
     return Promise.all(allResultPromise);
 };
 
-const generateToolPath = (allTasks, tmpDir) => {
-    global.tmpDir = tmpDir;
+const generateToolPath = (allTasks) => {
     const { headType } = allTasks[0];
     if (!['laser', 'cnc'].includes(headType)) {
         return sendMessage({ status: 'fail', value: `Unsupported type: ${headType}` });
@@ -78,7 +76,7 @@ const generateToolPath = (allTasks, tmpDir) => {
     };
 
     return new Promise((resolve, reject) => {
-        generateLaserToolPathFromEngine(allTasks, tmpDir, onProgress).then((ret) => {
+        generateLaserToolPathFromEngine(allTasks, onProgress).then((ret) => {
             resolve(
                 sendMessage({ status: 'complete', value: ret })
             );

@@ -6,7 +6,6 @@ import earcut from 'earcut';
 import * as THREE from 'three';
 import { MeshProcess } from './MeshProcess';
 import { pathWithRandomSuffix } from '../../../shared/lib/random-utils';
-import global from '../global';
 import { svgToStringForCut } from '../../../shared/lib/SVGParser/SvgToString';
 import STLExporter from '../../../shared/lib/STL/STLExporter';
 
@@ -133,7 +132,7 @@ class STLToSvgStack {
 
             if (isWrite) {
                 const svgStr = svgToStringForCut(svgFileState.svg);
-                fs.writeFileSync(`${global.tmpDir}/${this.outputFilename}_${svgFileState.index}.svg`, svgStr, 'utf8');
+                fs.writeFileSync(`${process.env.Tmpdir}/${this.outputFilename}_${svgFileState.index}.svg`, svgStr, 'utf8');
 
                 result.push({
                     width: width,
@@ -276,7 +275,7 @@ class STLToSvgStack {
 
         const mesh = new THREE.Mesh(bufferGeometry, new THREE.MeshBasicMaterial());
 
-        fs.writeFileSync(`${global.tmpDir}/${this.outputFilename}`, new STLExporter().parse(mesh, { binary: true }), 'utf8');
+        fs.writeFileSync(`${process.env.Tmpdir}/${this.outputFilename}`, new STLExporter().parse(mesh, { binary: true }), 'utf8');
 
         return {
             width: aabb.length.x,

@@ -1,7 +1,6 @@
 import fs from 'fs';
 import _ from 'lodash';
 import path from 'path';
-import global from '../../../lib/global';
 import { GcodeGenerator } from '../../../lib/GcodeGenerator';
 import logger from '../../../lib/logger';
 import { pathWithRandomSuffix } from '../../../../shared/lib/random-utils';
@@ -79,8 +78,7 @@ const checkoutBoundingBoxIsNull = (boundingBox) => {
 };
 
 // eslint-disable-next-line consistent-return
-const generateGcode = (toolPaths, tmpDir) => {
-    global.tmpDir = tmpDir;
+const generateGcode = (toolPaths) => {
     if (!toolPaths && !_.isArray(toolPaths) && toolPaths.length === 0) {
         return sendMessage({ status: 'fail', value: 'modelInfo is empty.' });
     }
@@ -100,7 +98,7 @@ const generateGcode = (toolPaths, tmpDir) => {
 
     const { baseName } = toolPaths[0];
     const outputFilename = pathWithRandomSuffix(path.parse(baseName).name + suffix);
-    const outputFilePath = `${global.tmpDir}/${outputFilename}`;
+    const outputFilePath = `${process.env.Tmpdir}/${outputFilename}`;
     const outputFilePathTmp = `${outputFilePath}.tmp`;
 
     const writeStream = fs.createWriteStream(outputFilePathTmp, 'utf-8');
@@ -113,7 +111,7 @@ const generateGcode = (toolPaths, tmpDir) => {
         const { toolPathFiles, gcodeConfig } = toolPath;
 
         for (let j = 0; j < toolPathFiles.length; j++) {
-            const toolPathFilePath = `${global.tmpDir}/${toolPathFiles[j]}`;
+            const toolPathFilePath = `${process.env.Tmpdir}/${toolPathFiles[j]}`;
             const data = fs.readFileSync(toolPathFilePath, 'utf8');
             const toolPathObj = JSON.parse(data);
 
