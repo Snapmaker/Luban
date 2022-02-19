@@ -1,6 +1,6 @@
 import fs from 'fs';
 import mkdirp from 'mkdirp';
-import { app } from 'electron';
+import electron from 'electron'
 
 const rmDir = (dirPath, removeSelf) => {
     console.info(`Clearing folder ${dirPath}`);
@@ -42,7 +42,7 @@ class DataStorage {
 
     static init() {
         // Create the user data directory if it does not exist
-        this.userDataDir = app.getPath('userData');
+        this.userDataDir = electron.app.getPath('userData');
         mkdirp.sync(this.userDataDir);
 
         this.tmpDir = `${this.userDataDir}/Tmp`;
