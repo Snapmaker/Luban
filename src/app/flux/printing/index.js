@@ -1975,7 +1975,10 @@ export const actions = {
 
         if (transformMode === 'scale') {
             const isMirror = modelGroup.selectedModelArray.some(model => {
-                return targetTmpState[model.modelID].to.scaleX === -1 || targetTmpState[model.modelID].to.scaleY === -1 || targetTmpState[model.modelID].to.scaleZ === -1;
+                const x = targetTmpState[model.modelID].from.scaleX * targetTmpState[model.modelID].to.scaleX;
+                const y = targetTmpState[model.modelID].from.scaleY * targetTmpState[model.modelID].to.scaleY;
+                const z = targetTmpState[model.modelID].from.scaleZ * targetTmpState[model.modelID].to.scaleZ;
+                return x / Math.abs(x) === -1 || y / Math.abs(y) === -1 || z / Math.abs(z) === -1;
             });
             if (isMirror) {
                 dispatch(actions.clearAllManualSupport(operations));
