@@ -877,7 +877,7 @@ export const actions = {
 
     executeGcode: (gcode, context) => (dispatch, getState) => {
         const machine = getState().machine;
-        const { homingModal, workflowState } = machine;
+        const { homingModal } = machine;
         const { isConnected, connectionType, server } = machine;
         if (!isConnected) {
             if (homingModal) {
@@ -890,9 +890,9 @@ export const actions = {
         // if (port && workflowState === WORKFLOW_STATE_IDLE) {
         if (connectionType === CONNECTION_TYPE_SERIAL) {
             // controller.command('gcode', gcode, context);
-            if (workflowState !== WORKFLOW_STATE_IDLE) {
-                return;
-            }
+            // if (workflowState !== WORKFLOW_STATE_IDLE) {
+            //     return;
+            // }
             controller.command('gcode', gcode, context);
             // } else if (server && workflowStatus === STATUS_IDLE) {
         } else {
