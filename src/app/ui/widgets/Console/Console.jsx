@@ -254,6 +254,7 @@ function Console({ widgetId, widgetActions, minimized, isDefault, clearRenderSta
             terminal.write(data.join(''));
         }
         addControllerEvents();
+        resizeTerminal();
         subscribe();
 
         return () => {

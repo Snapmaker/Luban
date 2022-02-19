@@ -1284,8 +1284,10 @@ class ModelGroup extends EventEmitter {
     // on 3dp scale
     updateSelectedGroupModelsVectorUv() {
         this.selectedGroup.children.forEach((mesh) => {
-            const newUv = calculateUvVector(this.selectedGroup.scale, mesh);
-            mesh.geometry.setAttribute('uv', newUv);
+            if (mesh.geometry) {
+                const newUv = calculateUvVector(this.selectedGroup.scale, mesh);
+                mesh.geometry.setAttribute('uv', newUv);
+            }
         });
     }
 

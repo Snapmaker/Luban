@@ -52,6 +52,8 @@ function startServices(server) {
     socketServer.registerEvent('taskCommit:processImage', TaskManager.addProcessImageTask);
     socketServer.registerEvent('taskCommit:cutModel', TaskManager.addCutModelTask);
 
+    socketServer.registerEvent('taskCancel:cutModel', TaskManager.cancelTask);
+
     socketServer.start(server);
 }
 

@@ -193,7 +193,10 @@ function Laser({ location }) {
             actions: [
                 {
                     name: i18n._('key-StackedModel/Import-Cancel'),
-                    onClick: () => { onClose(); }
+                    onClick: () => {
+                        dispatch(editorActions.cancelCutModel());
+                        onClose();
+                    }
                 },
                 {
                     name: i18n._('key-StackedModel/Import-Import'),

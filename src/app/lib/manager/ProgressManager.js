@@ -44,9 +44,9 @@ export const STEP_STAGE = {
     PRINTING_PREVIEW_SUCCEED: 31,
     PRINTING_PREVIEW_FAILED: 32,
     PRINTING_ROTATE_ANALYZE: 33,
-    PRINTING_GENERAtE_SUPPORT_AREA: 34,
-    PRINTING_GENERAtE_SUPPORT_MODEL: 35,
-    PRINTING_GENERAtE_SUPPORT_FAILED: 36
+    PRINTING_GENERATE_SUPPORT_AREA: 37,
+    PRINTING_GENERATE_SUPPORT_MODEL: 38,
+    PRINTING_GENERATE_SUPPORT_FAILED: 39
 };
 
 export const PROCESS_STAGE = {
@@ -65,7 +65,7 @@ export const PROCESS_STAGE = {
     PRINTING_LOAD_MODEL: 5,
     PRINTING_SLICE_AND_PREVIEW: 6,
     PRINTING_ROTATE_ANALYZE: 7,
-    PRINTING_GENERAtE_SUPPORT: 8
+    PRINTING_GENERATE_SUPPORT: 9
 };
 
 const _STATE = {
@@ -221,14 +221,14 @@ class ProgressStatesManager {
             'key-Progress/3DP-Calculating Rotation',
             'key-Progress/3DP-Calculated Rotation successfully.',
             'key-Progress/3DP-Failed to calculate Rotation.');
-        this.push(PROCESS_STAGE.PRINTING_GENERAtE_SUPPORT,
+        this.push(PROCESS_STAGE.PRINTING_GENERATE_SUPPORT,
             [
                 {
-                    stageID: STEP_STAGE.PRINTING_GENERAtE_SUPPORT_AREA,
+                    stageID: STEP_STAGE.PRINTING_GENERATE_SUPPORT_AREA,
                     percent: 0.5
                 },
                 {
-                    stageID: STEP_STAGE.PRINTING_GENERAtE_SUPPORT_MODEL,
+                    stageID: STEP_STAGE.PRINTING_GENERATE_SUPPORT_MODEL,
                     percent: 1
                 }
             ],

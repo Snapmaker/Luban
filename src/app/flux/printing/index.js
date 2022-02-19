@@ -588,16 +588,16 @@ export const actions = {
             controller.on('generate-support:started', () => {
                 const { progressStatesManager } = getState().printing;
                 dispatch(actions.updateState({
-                    stage: STEP_STAGE.PRINTING_GENERAtE_SUPPORT_MODEL,
-                    progress: progressStatesManager.updateProgress(STEP_STAGE.PRINTING_GENERAtE_SUPPORT_MODEL, 0.01)
+                    stage: STEP_STAGE.PRINTING_GENERATE_SUPPORT_MODEL,
+                    progress: progressStatesManager.updateProgress(STEP_STAGE.PRINTING_GENERATE_SUPPORT_MODEL, 0.01)
                 }));
             });
             controller.on('generate-support:completed', (args) => {
                 const { supportFilePaths } = args;
                 const { progressStatesManager } = getState().printing;
                 dispatch(actions.updateState({
-                    stage: STEP_STAGE.PRINTING_GENERAtE_SUPPORT_MODEL,
-                    progress: progressStatesManager.updateProgress(STEP_STAGE.PRINTING_GENERAtE_SUPPORT_MODEL, 1)
+                    stage: STEP_STAGE.PRINTING_GENERATE_SUPPORT_MODEL,
+                    progress: progressStatesManager.updateProgress(STEP_STAGE.PRINTING_GENERATE_SUPPORT_MODEL, 1)
                 }));
 
                 dispatch(actions.loadSupports(supportFilePaths));
@@ -607,7 +607,7 @@ export const actions = {
                 const { progressStatesManager } = state;
                 if (progress - state.progress > 0.01 || progress > 1 - EPSILON) {
                     dispatch(actions.updateState({
-                        progress: progressStatesManager.updateProgress(STEP_STAGE.PRINTING_GENERAtE_SUPPORT_MODEL, progress)
+                        progress: progressStatesManager.updateProgress(STEP_STAGE.PRINTING_GENERATE_SUPPORT_MODEL, progress)
                     }));
                 }
             });
@@ -616,7 +616,7 @@ export const actions = {
                 const { progressStatesManager } = state;
                 progressStatesManager.finishProgress(false);
                 dispatch(actions.updateState({
-                    stage: STEP_STAGE.PRINTING_GENERAtE_SUPPORT_FAILED
+                    stage: STEP_STAGE.PRINTING_GENERATE_SUPPORT_FAILED
                 }));
             });
         }
@@ -1978,7 +1978,10 @@ export const actions = {
 
         if (transformMode === 'scale') {
             const isMirror = modelGroup.selectedModelArray.some(model => {
-                return targetTmpState[model.modelID].to.scaleX === -1 || targetTmpState[model.modelID].to.scaleY === -1 || targetTmpState[model.modelID].to.scaleZ === -1;
+                const x = targetTmpState[model.modelID].from.scaleX * targetTmpState[model.modelID].to.scaleX;
+                const y = targetTmpState[model.modelID].from.scaleY * targetTmpState[model.modelID].to.scaleY;
+                const z = targetTmpState[model.modelID].from.scaleZ * targetTmpState[model.modelID].to.scaleZ;
+                return x / Math.abs(x) === -1 || y / Math.abs(y) === -1 || z / Math.abs(z) === -1;
             });
             if (isMirror) {
                 dispatch(actions.clearAllManualSupport(operations));
@@ -2657,13 +2660,13 @@ export const actions = {
         }
 
         if (!progressStatesManager.inProgress()) {
-            progressStatesManager.startProgress(PROCESS_STAGE.PRINTING_GENERAtE_SUPPORT, [1]);
+            progressStatesManager.startProgress(PROCESS_STAGE.PRINTING_GENERATE_SUPPORT, [1]);
         } else {
             progressStatesManager.startNextStep();
         }
         dispatch(actions.updateState({
-            stage: STEP_STAGE.PRINTING_GENERAtE_SUPPORT_MODEL,
-            progress: progressStatesManager.updateProgress(STEP_STAGE.PRINTING_GENERAtE_SUPPORT_MODEL, 0)
+            stage: STEP_STAGE.PRINTING_GENERATE_SUPPORT_MODEL,
+            progress: progressStatesManager.updateProgress(STEP_STAGE.PRINTING_GENERATE_SUPPORT_MODEL, 0)
         }));
 
         const params = await dispatch(actions.uploadModelsForSupport(models, angle));
@@ -2791,10 +2794,10 @@ export const actions = {
         const { modelGroup, progressStatesManager } = getState().printing;
         dispatch(actions.setTransformMode('support'));
         if (shouldApplyChanges) {
-            progressStatesManager.startProgress(PROCESS_STAGE.PRINTING_GENERAtE_SUPPORT, [1, 1]);
+            progressStatesManager.startProgress(PROCESS_STAGE.PRINTING_GENERATE_SUPPORT, [1, 1]);
             dispatch(actions.updateState({
-                stage: STEP_STAGE.PRINTING_GENERAtE_SUPPORT_AREA,
-                progress: progressStatesManager.updateProgress(STEP_STAGE.PRINTING_GENERAtE_SUPPORT_AREA, 0.25)
+                stage: STEP_STAGE.PRINTING_GENERATE_SUPPORT_AREA,
+                progress: progressStatesManager.updateProgress(STEP_STAGE.PRINTING_GENERATE_SUPPORT_AREA, 0.25)
             }));
 
             // record previous support face marks for undo&redo
@@ -2810,8 +2813,8 @@ export const actions = {
             const models = modelGroup.finishEditSupportArea(shouldApplyChanges);
 
             dispatch(actions.updateState({
-                stage: STEP_STAGE.PRINTING_GENERAtE_SUPPORT_AREA,
-                progress: progressStatesManager.updateProgress(STEP_STAGE.PRINTING_GENERAtE_SUPPORT_AREA, 1)
+                stage: STEP_STAGE.PRINTING_GENERATE_SUPPORT_AREA,
+                progress: progressStatesManager.updateProgress(STEP_STAGE.PRINTING_GENERATE_SUPPORT_AREA, 1)
             }));
 
             dispatch(actions.generateSupports(models, 0));
@@ -2880,10 +2883,10 @@ export const actions = {
     computeAutoSupports: (angle) => (dispatch, getState) => {
         const { modelGroup, progressStatesManager } = getState().printing;
 
-        progressStatesManager.startProgress(PROCESS_STAGE.PRINTING_GENERAtE_SUPPORT, [1, 1]);
+        progressStatesManager.startProgress(PROCESS_STAGE.PRINTING_GENERATE_SUPPORT, [1, 1]);
         dispatch(actions.updateState({
-            stage: STEP_STAGE.PRINTING_GENERAtE_SUPPORT_AREA,
-            progress: progressStatesManager.updateProgress(STEP_STAGE.PRINTING_GENERAtE_SUPPORT_AREA, 0.25)
+            stage: STEP_STAGE.PRINTING_GENERATE_SUPPORT_AREA,
+            progress: progressStatesManager.updateProgress(STEP_STAGE.PRINTING_GENERATE_SUPPORT_AREA, 0.25)
         }));
 
         // record previous support face marks for undo&redo
@@ -2899,8 +2902,8 @@ export const actions = {
         const models = modelGroup.computeSupportArea(angle);
 
         dispatch(actions.updateState({
-            stage: STEP_STAGE.PRINTING_GENERAtE_SUPPORT_AREA,
-            progress: progressStatesManager.updateProgress(STEP_STAGE.PRINTING_GENERAtE_SUPPORT_AREA, 1)
+            stage: STEP_STAGE.PRINTING_GENERATE_SUPPORT_AREA,
+            progress: progressStatesManager.updateProgress(STEP_STAGE.PRINTING_GENERATE_SUPPORT_AREA, 1)
         }));
         if (models.length > 0) {
             dispatch(actions.generateSupports(models, angle));
