@@ -40,6 +40,7 @@ import ModelLoader from '../../ui/widgets/PrintingVisualizer/ModelLoader';
 import { controller } from '../../lib/controller';
 /* eslint-disable-next-line import/no-cycle */
 import { actions as operationHistoryActions } from '../operation-history';
+import { actions as appGlobalActions } from '../app-global';
 import Operations from '../operation-history/Operations';
 import MoveOperation3D from '../operation-history/MoveOperation3D';
 import RotateOperation3D from '../operation-history/RotateOperation3D';
@@ -54,6 +55,7 @@ import ThreeGroup from '../../models/ThreeGroup';
 import UngroupOperation3D from '../operation-history/UngroupOperation3D';
 import DeleteSupportsOperation3D from '../operation-history/DeleteSupportsOperation3D';
 import AddSupportsOperation3D from '../operation-history/AddSupportsOperation3D';
+import ArrangeOperation3D from '../operation-history/ArrangeOperation3D';
 
 // register methods for three-mesh-bvh
 THREE.Mesh.prototype.raycast = acceleratedRaycast;
@@ -191,7 +193,7 @@ const INITIAL_STATE = {
     materialManagerDirection: LEFT_EXTRUDER,
 
     // others
-    transformMode: 'translate', // translate/scale/rotate
+    transformMode: '', // translate/scale/rotate
     isGcodeOverstepped: false,
     displayedType: 'model', // model/gcode
 
@@ -1630,20 +1632,6 @@ export const actions = {
         dispatch(actions.render());
     },
 
-    selectModel: (modelMeshObject) => (dispatch, getState) => {
-        const { modelGroup } = getState().printing;
-        let modelState;
-        if (modelMeshObject) {
-            const find = modelGroup.getModels().find(v => v.meshObject === modelMeshObject);
-            modelState = modelGroup.selectModelById(find.modelID);
-        } else {
-            modelState = modelGroup.selectModelById(modelMeshObject);
-        }
-
-        dispatch(actions.updateState(modelState));
-        dispatch(actions.displayModel());
-    },
-
     updateSelectedModelTransformation: (transformation, newUniformScalingState) => (dispatch, getState) => {
         const { modelGroup } = getState().printing;
         let transformMode;
@@ -1907,17 +1895,146 @@ export const actions = {
         dispatch(actions.displayModel());
         dispatch(actions.updateBoundingBox());
     },
-    arrangeAllModels: () => (dispatch, getState) => {
-        const { modelGroup } = getState().printing;
-        dispatch(actions.recordModelBeforeTransform(modelGroup));
+    arrangeAllModels: (angle = 45, offset = 1, padding = 0) => (dispatch, getState) => {
+        const operations = new Operations();
+        let operation;
+        const froms = {};
 
-        const modelState = modelGroup.arrangeAllModels();
-        modelGroup.onModelAfterTransform();
+        dispatch(actions.unselectAllModels());
+        const { modelGroup, progressStatesManager } = getState().printing;
 
-        dispatch(actions.recordModelAfterTransform('translate', modelGroup));
-        dispatch(actions.updateState(modelState));
-        dispatch(actions.destroyGcodeLine());
-        dispatch(actions.render());
+        progressStatesManager.startProgress(PROCESS_STAGE.PRINTING_ARRANGE_MODELS);
+        dispatch(actions.updateState({
+            stage: STEP_STAGE.PRINTING_ARRANGING_MODELS,
+            progress: progressStatesManager.updateProgress(STEP_STAGE.PRINTING_ARRANGING_MODELS, 0.01)
+        }));
+
+        const models = [];
+        modelGroup.getModels().forEach((model) => {
+            const modelInfo = {
+                modelID: model.modelID,
+                isGroup: (model instanceof ThreeGroup)
+            };
+            if (modelInfo.isGroup) {
+                const children = [];
+                model.children.forEach((child) => {
+                    children.push({
+                        count: child.geometry.getAttribute('position').count,
+                        array: child.geometry.getAttribute('position').array,
+                        matrix: child.meshObject.matrix
+                    });
+                });
+                modelInfo.children = children;
+            } else {
+                modelInfo.children = [{
+                    count: model.geometry.getAttribute('position').count,
+                    array: model.geometry.getAttribute('position').array,
+                    matrix: model.meshObject.matrix
+                }];
+            }
+            models.push(modelInfo);
+        });
+
+        workerManager.arrangeModels([{
+            models,
+            validArea: modelGroup.getValidArea(),
+            angle,
+            offset: offset + 2, // TODO, just for floating pointer error
+            padding
+        }], (payload) => {
+            const { status, value } = payload;
+            switch (status) {
+                case 'succeed': {
+                    const { parts } = value;
+
+                    parts.forEach((part) => {
+                        const model = modelGroup.getModel(part.modelID);
+
+                        const from = cloneDeep(model.transformation);
+                        froms[part.modelID] = from;
+
+                        if (part.angle !== undefined && part.position !== undefined) {
+                            model.updateTransformation({
+                                positionX: part.position.x,
+                                positionY: part.position.y,
+                                rotationZ: part.angle * Math.PI / 180 + model.transformation.rotationZ
+                            });
+                            modelGroup.selectModelById(part.modelID, true);
+                        }
+                    });
+                    modelGroup.updateSelectedGroupTransformation({
+                        positionX: 0, // TODO bounding box center
+                        positionY: 0
+                    });
+
+                    parts.forEach((part) => {
+                        const model = modelGroup.getModel(part.modelID);
+                        if (part.angle === undefined || part.position === undefined) {
+                            model.updateTransformation({
+                                positionX: 0,
+                                positionY: 0
+                            });
+                        }
+                    });
+                    parts.forEach((part) => {
+                        const model = modelGroup.getModel(part.modelID);
+                        if (part.angle === undefined || part.position === undefined) {
+                            const position = modelGroup.arrangeOutsidePlate(model);
+                            model.updateTransformation({
+                                positionX: position.x,
+                                positionY: position.y
+                            });
+                        }
+                    });
+
+                    modelGroup.onModelAfterTransform();
+
+                    // record for undo|redo
+                    modelGroup.getModels().forEach((model) => {
+                        operation = new ArrangeOperation3D({
+                            target: model,
+                            from: froms[model.modelID],
+                            to: cloneDeep(model.transformation)
+                        });
+                        operations.push(operation);
+                    });
+                    operations.registCallbackAfterAll(() => {
+                        dispatch(actions.updateState(modelGroup.getState()));
+                        dispatch(actions.destroyGcodeLine());
+                        dispatch(actions.updateAllModelColors());
+                        dispatch(actions.displayModel());
+                        dispatch(actions.render());
+                    });
+                    dispatch(operationHistoryActions.setOperations(INITIAL_STATE.name, operations));
+
+                    dispatch(actions.updateState({
+                        stage: STEP_STAGE.PRINTING_ARRANGING_MODELS,
+                        progress: progressStatesManager.updateProgress(STEP_STAGE.PRINTING_ARRANGING_MODELS, 1)
+                    }));
+                    dispatch(actions.updateAllModelColors());
+                    progressStatesManager.finishProgress(true);
+                    break;
+                }
+                case 'progress': {
+                    const { progress } = value;
+                    dispatch(actions.updateState({
+                        stage: STEP_STAGE.PRINTING_ARRANGING_MODELS,
+                        progress: progressStatesManager.updateProgress(STEP_STAGE.PRINTING_ARRANGING_MODELS, progress)
+                    }));
+                    break;
+                }
+                case 'err': {
+                    // TODO: STOP AND MODAL
+                    progressStatesManager.finishProgress(false);
+                    dispatch(appGlobalActions.updateShowArrangeModelsError({
+                        showArrangeModelsError: true
+                    }));
+                    break;
+                }
+                default:
+                    break;
+            }
+        });
     },
 
     recordModelBeforeTransform: (modelGroup) => (dispatch) => {

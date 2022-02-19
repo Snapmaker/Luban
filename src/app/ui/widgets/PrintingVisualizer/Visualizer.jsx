@@ -463,6 +463,7 @@ class Visualizer extends PureComponent {
                     supportActions={this.supportActions}
                     scaleToFitSelectedModel={this.actions.scaleToFitSelectedModel}
                     autoRotateSelectedModel={this.actions.autoRotateSelectedModel}
+                    arrangeAllModels={this.props.arrangeAllModels}
                 />
                 <div className={styles['visualizer-bottom-left']}>
                     <VisualizerBottomLeft actions={this.actions} />
@@ -655,7 +656,7 @@ const mapDispatchToProps = (dispatch) => ({
     redo: () => dispatch(printingActions.redo(HEAD_PRINTING)),
     removeSelectedModel: () => dispatch(printingActions.removeSelectedModel()),
     removeAllModels: () => dispatch(printingActions.removeAllModels()),
-    arrangeAllModels: () => dispatch(printingActions.arrangeAllModels()),
+    arrangeAllModels: (angle = 45, offset = 1, padding = 0) => dispatch(printingActions.arrangeAllModels(angle, offset, padding)),
     onModelTransform: () => dispatch(printingActions.onModelTransform()),
     onModelAfterTransform: () => dispatch(printingActions.onModelAfterTransform()),
     updateSelectedModelTransformation: (transformation, newUniformScalingState) => {

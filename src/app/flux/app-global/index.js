@@ -2,10 +2,13 @@ const ACTION_UPDATE_STATE = 'app-global/ACTION_UPDATE_STATE';
 const DEFAULT_STATE = {
     showSavedModal: false,
     savedModalType: '', // 'web', 'electron'
-    savedModalFilePath: ''
+    savedModalFilePath: '',
+
+    showArrangeModelsError: false
 };
-const SHOW_SAVED_MODAL_TIME = 15000;
+const SHOW_MODAL_TIME = 15000;
 let clearSavedModalTimer = null;
+let clearArrangeModelsModalTimer = null;
 
 export const actions = {
     updateState: (state) => {
@@ -29,9 +32,26 @@ export const actions = {
                 dispatch(actions.updateSavedModal({
                     showSavedModal: false
                 }));
-            }, SHOW_SAVED_MODAL_TIME);
+            }, SHOW_MODAL_TIME);
         } else {
             clearTimeout(clearSavedModalTimer);
+        }
+        dispatch(actions.updateState(newState));
+    },
+
+    updateShowArrangeModelsError: (options) => (dispatch) => {
+        const newState = {
+            showArrangeModelsError: options.showArrangeModelsError
+        };
+        if (options.showArrangeModelsError) {
+            clearTimeout(clearArrangeModelsModalTimer);
+            clearArrangeModelsModalTimer = setTimeout(() => {
+                dispatch(actions.updateShowArrangeModelsError({
+                    showArrangeModelsError: false
+                }));
+            });
+        } else {
+            clearTimeout(clearArrangeModelsModalTimer);
         }
         dispatch(actions.updateState(newState));
     }

@@ -84,9 +84,11 @@ class AppLayout extends PureComponent {
         updateMachineToolHead: PropTypes.func.isRequired,
         longTermBackupConfig: PropTypes.func.isRequired,
         showSavedModal: PropTypes.bool.isRequired,
-        savedModalType: PropTypes.string,
-        savedModalFilePath: PropTypes.string,
-        updateSavedModal: PropTypes.func.isRequired
+        savedModalType: PropTypes.string.isRequired,
+        savedModalFilePath: PropTypes.string.isRequired,
+        updateSavedModal: PropTypes.func.isRequired,
+        showArrangeModelsError: PropTypes.bool.isRequired,
+        updateShowArrangeModelsError: PropTypes.func.isRequired
     };
 
     state = {
@@ -374,6 +376,49 @@ class AppLayout extends PureComponent {
                 );
             }
             return null;
+        },
+        renderArrangeModelsError: () => {
+            const onClose = () => {
+                this.props.updateShowArrangeModelsError({ showArrangeModelsError: false });
+            };
+            return (
+                <div
+                    className={classNames('border-default-black-5', 'border-radius-4', 'box-shadow-module', 'position-ab',
+                        'background-color-white', 'padding-horizontal-16', 'padding-vertical-16', 'bottom-0', 'margin-bottom-16',
+                        'left-50-percent', 'max-width-360', 'z-index-top-modal')}
+                >
+                    <div className="sm-flex justify-space-between">
+                        <div className="sm-flex-auto font-roboto font-weight-normal font-size-middle">
+                            <SvgIcon
+                                name="WarningTipsSuccess"
+                                size="24"
+                                type={['static']}
+                                color="#4cb518"
+                            />
+                            <span>
+                                {i18n._('key-app_layout-Print Area Exceeded')}
+                            </span>
+                        </div>
+                        <div className="sm-flex-auto">
+                            <SvgIcon
+                                name="Cancel"
+                                type={['static']}
+                                size="24"
+                                onClick={onClose}
+                            />
+                        </div>
+                    </div>
+                    <div
+                        className="sm-flex"
+                        style={{
+                            wordBreak: 'break-all',
+                            color: '#545659'
+                        }}
+                    >
+                        {i18n._('key-app_layout-Unable to place all models inside the print area.')}
+                    </div>
+                </div>
+            );
         },
         openProject: async (file) => {
             if (!file) {
@@ -803,7 +848,7 @@ class AppLayout extends PureComponent {
 
     render() {
         const { showSettingsModal, showDevelopToolsModal, showCheckForUpdatesModal, showDownloadUpdateModal } = this.state;
-        const { showSavedModal } = this.props;
+        const { showSavedModal, showArrangeModelsError } = this.props;
         return (
             <div className={isElectron() ? null : 'appbar'}>
                 <AppBar />
@@ -812,6 +857,7 @@ class AppLayout extends PureComponent {
                 { showCheckForUpdatesModal ? this.actions.renderCheckForUpdatesModal() : null }
                 { showDownloadUpdateModal ? this.actions.renderDownloadUpdateModal() : null }
                 { showSavedModal ? this.actions.renderSavedModal() : null }
+                { showArrangeModelsError ? this.actions.renderArrangeModelsError() : null }
                 <div className={isElectron() ? null : classNames(styles['app-content'])}>
                     {this.props.children}
                 </div>
@@ -825,7 +871,9 @@ const mapStateToProps = (state) => {
     const { currentModalPath } = state.appbarMenu;
     const { shouldCheckForUpdate } = machineInfo;
     const { modelGroup } = state.printing;
-    const { showSavedModal, savedModalType, savedModalFilePath } = state.appGlobal;
+    const { showSavedModal, savedModalType, savedModalFilePath,
+        showArrangeModelsError
+    } = state.appGlobal;
     // const projectState = state.project;
     return {
         currentModalPath: currentModalPath ? currentModalPath.slice(1) : currentModalPath, // exclude hash character `#`
@@ -835,7 +883,8 @@ const mapStateToProps = (state) => {
         modelGroup,
         showSavedModal,
         savedModalType,
-        savedModalFilePath
+        savedModalFilePath,
+        showArrangeModelsError
     };
 };
 
@@ -863,7 +912,8 @@ const mapDispatchToProps = (dispatch) => {
         restartGuideTours: (pathname, history) => dispatch(projectActions.startProject(pathname, pathname, history, true)),
         updateMachineToolHead: (toolHead, series, headType) => dispatch(machineActions.updateMachineToolHead(toolHead, series, headType)),
         longTermBackupConfig: () => dispatch(settingsActions.longTermBackupConfig()),
-        updateSavedModal: (options) => dispatch(appGlobalActions.updateSavedModal(options))
+        updateSavedModal: (options) => dispatch(appGlobalActions.updateSavedModal(options)),
+        updateShowArrangeModelsError: (options) => dispatch(appGlobalActions.updateShowArrangeModelsError(options))
     };
 };
 

@@ -122,6 +122,13 @@ class ModelGroup extends EventEmitter {
         return ThreeUtils.computeBoundingBox(this.object);
     }
 
+    /**
+     * Note: get valid area
+     */
+    getValidArea() {
+        return this._bbox;
+    }
+
     getModel(modelID) {
         return this.models.find(d => d.modelID === modelID);
     }
@@ -1347,6 +1354,29 @@ class ModelGroup extends EventEmitter {
 
     showAllModelsObj3D() {
         this.object.visible = true;
+    }
+
+    arrangeOutsidePlate(model) {
+        model.computeBoundingBox();
+        const x = this._bbox.max.x + (model.boundingBox.max.x - model.boundingBox.min.x) / 2;
+        let y = (this._bbox.max.y + this._bbox.min.y) / 2;
+        const stepCount = 1;
+
+        const modelBox3Clone = model.boundingBox.clone();
+        modelBox3Clone.translate(new Vector3(x, y, 0));
+        const box3Arr = [];
+        for (const m of this.getModels()) {
+            m.stickToPlate();
+            m.computeBoundingBox();
+            box3Arr.push(m.boundingBox);
+        }
+        while (1) {
+            if (!this._isBox3IntersectOthers(modelBox3Clone, box3Arr)) {
+                return { x, y };
+            }
+            y += stepCount;
+            modelBox3Clone.translate(new Vector3(0, 1, 0));
+        }
     }
 
     _computeAvailableXY(model, arrangedModels) {

@@ -222,9 +222,6 @@ i18n._('key-default_name-PETG_Black');
 i18n._('key-default_name-PETG_White');
 i18n._('key-default_name-PETG_Blue');
 i18n._('key-default_name-PETG_Red');
-
-
-
 i18n._('key-default_category-Default Material');
 i18n._('key-default_category-Acrylic');
 i18n._('key-default_category-Epoxy Tooling Board');
@@ -289,7 +286,9 @@ i18n._('key-Progress/3DP-Failed to calculate Rotation.');
 i18n._('key-Progress/3DP-Generating support... {{progress}}%');
 i18n._('key-Progress/3DP-Generated support successfully.');
 i18n._('key-Progress/3DP-Failed to generate support.');
-
+i18n._('key-Progress/3DP-Arranging models...{{progress}}%');
+i18n._('key-Progress/3DP-Arrange models successfully.');
+i18n._('key-Progress/3DP-Arrange models failed.');
 
 // Machine Settings
 i18n._('key-App/Settings/MachineSettings-Single Extruder Toolhead');
