@@ -1937,7 +1937,6 @@ export const actions = {
             switch (status) {
                 case 'succeed': {
                     const { parts } = value;
-                    console.log('parts', parts);
 
                     parts.forEach((part) => {
                         const model = modelGroup.getModel(part.modelID);

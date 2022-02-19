@@ -378,7 +378,6 @@ class AppLayout extends PureComponent {
             return null;
         },
         renderArrangeModelsError: () => {
-            console.log('render');
             const onClose = () => {
                 this.props.updateShowArrangeModelsError({ showArrangeModelsError: false });
             };
