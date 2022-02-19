@@ -20,13 +20,14 @@ let serverData = null;
 let mainWindow = null;
 // https://www.electronjs.org/docs/latest/breaking-changes#planned-breaking-api-changes-100
 // console.log('getCrashesDirectory', app.getPath('crashDumps'));
-let timer = null;
 let loadUrl = '';
 const loadingMenu = [{
     id: 'file',
     label: '',
 }];
+
 const childProcess = require('child_process');
+
 const USER_DATA_DIR = 'userDataDir';
 const SERVER_DATA = 'serverData';
 const UPLOAD_WINDOWS = 'uploadWindows';
@@ -195,7 +196,7 @@ if (process.platform === 'win32') {
 }
 
 const showMainWindow = async () => {
-    let windowOptions = getBrowserWindowOptions();
+    const windowOptions = getBrowserWindowOptions();
     const window = new BrowserWindow(windowOptions);
     mainWindow = window;
     if (process.platform === 'win32') {
@@ -216,7 +217,7 @@ const showMainWindow = async () => {
         } else {
             window.on('ready-to-show', () => {
                 window.show();
-            })
+            });
         }
         child.send({
             type: USER_DATA_DIR,
@@ -227,7 +228,6 @@ const showMainWindow = async () => {
                 serverData = data;
                 const { address, port } = { ...serverData };
                 configureWindow(window);
-            
                 loadUrl = `http://${address}:${port}`;
                 const filter = {
                     urls: [
@@ -255,7 +255,7 @@ const showMainWindow = async () => {
                 );
                 // https://github.com/electron/electron/issues/21675
                 // If needed, resolve CORS. https://stackoverflow.com/questions/51254618/how-do-you-handle-cors-in-an-electron-app
-            
+
                 session.defaultSession.webRequest.onBeforeRequest(
                     filter,
                     (request, callback) => {
@@ -263,16 +263,16 @@ const showMainWindow = async () => {
                         callback({ redirectURL });
                     }
                 );
-            
+
                 // Ignore proxy settings
                 // https://electronjs.org/docs/api/session#sessetproxyconfig-callback
-            
+
                 const webContentsSession = window.webContents.session;
                 webContentsSession.setProxy({ proxyRules: 'direct://' })
                     .then(() => window.loadURL(loadUrl).catch(err => {
                         console.log('err', err.message);
                     }));
-            
+
                 try {
                     // TODO: move to server
                     DataStorage.init();
@@ -284,7 +284,7 @@ const showMainWindow = async () => {
                     console.log('err', err.message);
                 });
             }
-        })
+        });
         // serverData = await launchServer();
     } else {
         if (process.platform === 'win32') {
@@ -292,10 +292,10 @@ const showMainWindow = async () => {
         } else {
             window.on('ready-to-show', () => {
                 window.show();
-            })
+            });
         }
     }
-    
+
     window.on('close', (e) => {
         e.preventDefault();
         const bounds = window.getBounds();
@@ -339,7 +339,6 @@ const showMainWindow = async () => {
     });
 
     ipcMain.on('open-recover-folder', () => {
-        const userDataDir = app.getPath('userData');
         shell.openItem(`${userDataDir}/snapmaker-recover`);
     });
 
@@ -403,7 +402,7 @@ app.on('window-all-closed', () => {
  * Final chance to cleanup before app quit.
  */
 app.on('will-quit', () => {
-    DataStorageCase.clear();
+    DataStorage.clear();
 });
 
 // Open the project file when the app is started on the windows platform
