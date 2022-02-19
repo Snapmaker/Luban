@@ -84,7 +84,7 @@ const SupportOverlay = ({ editSupport }) => {
                         onClick={() => actions.checkIfOverrideSupport()}
                     >
                         {
-                            selectedModelArray.length > 0 ? <span>{i18n._('key-Printing/LeftBar/Support-Auto Support For Selected')}</span> : <span>{i18n._('key-Printing/LeftBar/Support-Auto Support For All')}</span>
+                            selectedModelArray.length > 0 ? <span>{i18n._('key-Printing/LeftBar/Support-Generate Auto Support')}</span> : <span>{i18n._('key-Printing/LeftBar/Support-Generate Auto Support (For All)')}</span>
                         }
                     </Button>
                     <div className="sm-flex justify-space-between height-32 margin-top-8">
