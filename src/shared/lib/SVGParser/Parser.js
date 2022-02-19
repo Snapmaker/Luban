@@ -334,7 +334,6 @@ class SVGParser {
                 // container elements
                 case SVG_TAG_SVG: {
                     const tagParser = new SVGTagParser(this);
-                    console.log('attributes', attributes);
                     if (attributes.viewBox) {
                         node.$.viewBox = attributes.viewBox.join(' ');
                     } else {

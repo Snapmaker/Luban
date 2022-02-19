@@ -77,7 +77,7 @@ export const signin = (req, res) => {
     });
     let sceneJson = '';
     try {
-        sceneJson = fs.readFileSync(`${DataStorage.scenesDir}/scene3.json`, 'utf8');
+        sceneJson = fs.readFileSync(`${DataStorage.scenesDir}/scene.json`, 'utf8');
     } catch (e) {
         console.log('e', e);
     }

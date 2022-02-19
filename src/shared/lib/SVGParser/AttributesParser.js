@@ -250,7 +250,9 @@ class AttributesParser {
         } else {
             node.$.style += `;${OVERRIDE_STYLE_WITHOUT_STROKEWIDTH}`;
         }
-        node.$['stroke-width'] = 1;
+        if (node.$['stroke-width'] !== 0) {
+            node.$['stroke-width'] = 1;
+        }
         // make text have the right x
         if (isTextElement) {
             if ((isUndefined(attributes.x))) {
@@ -305,10 +307,10 @@ class AttributesParser {
                 }
                 break;
             }
-            case 'stroke-width': {
-                attributes.strokeWidth = parseCoordinate(value);
-                break;
-            }
+            // case 'stroke-width': {
+            //     attributes.strokeWidth = parseCoordinate(value);
+            //     break;
+            // }
             case 'd': {
                 attributes.d = parseDAttribute(value);
                 break;
