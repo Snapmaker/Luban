@@ -222,7 +222,6 @@ i18n._('key-default_name-PETG_Black');
 i18n._('key-default_name-PETG_White');
 i18n._('key-default_name-PETG_Blue');
 i18n._('key-default_name-PETG_Red');
-
 i18n._('key-default_category-Default Material');
 i18n._('key-default_category-Acrylic');
 i18n._('key-default_category-Epoxy Tooling Board');

@@ -3,13 +3,57 @@ import includes from 'lodash/includes';
 import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
 import classNames from 'classnames';
-import { Dropdown, DropdownButton } from 'react-bootstrap';
+import Dropdown from '../../components/Dropdown';
+import { Button } from '../../components/Buttons';
+import SvgIcon from '../../components/SvgIcon'
+import Menu from '../../components/Menu';
 import i18n from '../../../lib/i18n';
 import {
     HEAD_PRINTING,
     METRIC_UNITS
 } from '../../../constants';
 import styles from './index.styl';
+
+const OperationDropdown = ({
+    menus,
+    title,
+    onClick,
+    disabled
+}) => {
+    return <Dropdown
+        overlay={(
+            <Menu>
+                {
+                    menus.map((menu) => {
+                        return <Menu.Item
+                            onClick={onClick}
+                            key={menu.key}
+                            disabled={disabled || menu.disabled}
+                        >
+                            <div className={classNames('align-c', 'padding-vertical-4')}>
+                                {menu.title}
+                            </div>
+                        </Menu.Item>
+                    })
+                }
+            </Menu>
+        )}
+        placement="bottomLeft"
+        trigger="click"
+        disabled={disabled}
+    >
+        <Button>
+            <div className={classNames(styles['operation-dropdown-icon'])}>
+                {title}
+                <SvgIcon
+                    name="DropdownLine"
+                    size={16}
+                    type={['static']}
+                />
+            </div>
+        </Button>
+    </Dropdown>
+}
 
 class DisplayPanel extends PureComponent {
     static propTypes = {
@@ -21,8 +65,8 @@ class DisplayPanel extends PureComponent {
     };
 
     actions = {
-        onSelect: (eventKey) => {
-            const data = eventKey;
+        onClick: (event) => {
+            const data = event.key;
             if (data) {
                 this.props.executeGcode(data);
             }
@@ -37,7 +81,7 @@ class DisplayPanel extends PureComponent {
         let machinePositionX = (Math.round((parseFloat(workPosition.x) - x) * 1000) / 1000).toFixed(3);
         let machinePositionY = (Math.round((parseFloat(workPosition.y) - y) * 1000) / 1000).toFixed(3);
         let machinePositionZ = (Math.round((parseFloat(workPosition.z) - z) * 1000) / 1000).toFixed(3);
-        let machinePositionB = (Math.round(parseFloat(workPosition.b)* 1000) / 1000).toFixed(3);
+        let machinePositionB = (Math.round(parseFloat(workPosition.b) * 1000) / 1000).toFixed(3);
         if (headType === HEAD_PRINTING) {
             machinePositionX = workPosition.x;
             machinePositionY = workPosition.y;
@@ -46,8 +90,10 @@ class DisplayPanel extends PureComponent {
 
         return (
             <div className={classNames(styles['coordinate-panel'], 'margin-bottom-16')}>
-                <table className="table table-bordered " style={{borderCollapse: 'separate', borderRadius: '8px',
-                borderSpacing: 0}}>
+                <table className="table table-bordered " style={{
+                    borderCollapse: 'separate', borderRadius: '8px',
+                    borderSpacing: 0
+                }}>
                     <thead>
                         <tr>
                             <th>{i18n._('key-Workspace/Control/DisplayPanel-Axis')}</th>
@@ -75,28 +121,14 @@ class DisplayPanel extends PureComponent {
                                     <span className={styles.unit}>{lengthUnits}</span>
                                 </td>
                                 <td className={styles.action}>
-                                    <DropdownButton
-                                        id="axis-x-dropdown"
-                                        title="X"
-                                        variant="outline-secondary"
-                                        alignRight
+                                    <OperationDropdown
+                                        onClick={this.actions.onClick}
+                                        title={'X'}
                                         disabled={!canClick}
-                                    >
-                                        <Dropdown.Item
-                                            eventKey="G0 X0"
-                                            onSelect={this.actions.onSelect}
-                                            disabled={!canClick}
-                                        >
-                                            {i18n._('key-Workspace/Control/DisplayPanel-Go To Work Zero On X Axis (G0 X0)')}
-                                        </Dropdown.Item>
-                                        <Dropdown.Item
-                                            eventKey="G92 X0"
-                                            onSelect={this.actions.onSelect}
-                                            disabled={!canClick}
-                                        >
-                                            {i18n._('key-Workspace/Control/DisplayPanel-Zero Out Temporary X Axis (G92 X0)')}
-                                        </Dropdown.Item>
-                                    </DropdownButton>
+                                        menus={[
+                                            { key: "G0 X0", title: i18n._('key-Workspace/Control/DisplayPanel-Go To Work Zero On X Axis (G0 X0)') },
+                                            { key: "G92 X0", title: i18n._('key-Workspace/Control/DisplayPanel-Zero Out Temporary X Axis (G92 X0)') }
+                                        ]} />
                                 </td>
                             </tr>
                         )}
@@ -118,28 +150,14 @@ class DisplayPanel extends PureComponent {
                                     </div>
                                 </td>
                                 <td className={styles.action}>
-                                    <DropdownButton
-                                        id="axis-y-dropdown"
-                                        title="Y"
-                                        variant="outline-secondary"
-                                        alignRight
+                                    <OperationDropdown
+                                        onClick={this.actions.onClick}
+                                        title={'Y'}
                                         disabled={!canClick}
-                                    >
-                                        <Dropdown.Item
-                                            eventKey="G0 Y0"
-                                            onSelect={this.actions.onSelect}
-                                            disabled={!canClick}
-                                        >
-                                            {i18n._('key-Workspace/Control/DisplayPanel-Go To Work Zero On Y Axis (G0 Y0)')}
-                                        </Dropdown.Item>
-                                        <Dropdown.Item
-                                            eventKey="G92 Y0"
-                                            onSelect={this.actions.onSelect}
-                                            disabled={!canClick}
-                                        >
-                                            {i18n._('key-Workspace/Control/DisplayPanel-Zero Out Temporary Y Axis (G92 Y0)')}
-                                        </Dropdown.Item>
-                                    </DropdownButton>
+                                        menus={[
+                                            { key: "G0 Y0", title: i18n._('key-Workspace/Control/DisplayPanel-Go To Work Zero On Y Axis (G0 Y0)') },
+                                            { key: "G92 Y0", title: i18n._('key-Workspace/Control/DisplayPanel-Zero Out Temporary Y Axis (G92 Y0)') }
+                                        ]} />
                                 </td>
                             </tr>
                         )}
@@ -161,28 +179,14 @@ class DisplayPanel extends PureComponent {
                                     <span className={styles.unit}>{lengthUnits}</span>
                                 </td>
                                 <td className={styles.action}>
-                                    <DropdownButton
-                                        id="axis-z-dropdown"
-                                        title="Z"
-                                        variant="outline-secondary"
-                                        alignRight
+                                    <OperationDropdown
+                                        onClick={this.actions.onClick}
+                                        title={'Z'}
                                         disabled={!canClick}
-                                    >
-                                        <Dropdown.Item
-                                            eventKey="G0 Z0"
-                                            onSelect={this.actions.onSelect}
-                                            disabled={!canClick}
-                                        >
-                                            {i18n._('key-Workspace/Control/DisplayPanel-Go To Work Zero On Z Axis (G0 Z0)')}
-                                        </Dropdown.Item>
-                                        <Dropdown.Item
-                                            eventKey="G92 Z0"
-                                            onSelect={this.actions.onSelect}
-                                            disabled={!canClick}
-                                        >
-                                            {i18n._('key-Workspace/Control/DisplayPanel-Zero Out Temporary Z Axis (G92 Z0)')}
-                                        </Dropdown.Item>
-                                    </DropdownButton>
+                                        menus={[
+                                            { key: "G0 Z0", title: i18n._('key-Workspace/Control/DisplayPanel-Go To Work Zero On Z Axis (G0 Z0)') },
+                                            { key: "G92 Z0", title: i18n._('key-Workspace/Control/DisplayPanel-Zero Out Temporary Z Axis (G92 Z0)') }
+                                        ]} />
                                 </td>
                             </tr>
                         )}
@@ -204,28 +208,14 @@ class DisplayPanel extends PureComponent {
                                     <span className={styles.unit}>°</span>
                                 </td>
                                 <td className={styles.action}>
-                                    <DropdownButton
-                                        id="axis-z-dropdown"
-                                        title="B"
-                                        variant="outline-secondary"
-                                        alignRight
+                                    <OperationDropdown
+                                        onClick={this.actions.onClick}
+                                        title={'B'}
                                         disabled={!canClick}
-                                    >
-                                        <Dropdown.Item
-                                            eventKey="G0 B0"
-                                            onSelect={this.actions.onSelect}
-                                            disabled={!canClick}
-                                        >
-                                            {i18n._('key-Workspace/Control/DisplayPanel-Go To Work Zero On B Axis (G0 B0)')}
-                                        </Dropdown.Item>
-                                        <Dropdown.Item
-                                            eventKey="G92 B0"
-                                            onSelect={this.actions.onSelect}
-                                            disabled={!canClick}
-                                        >
-                                            {i18n._('key-Workspace/Control/DisplayPanel-Zero Out Temporary B Axis (G92 B0)')}
-                                        </Dropdown.Item>
-                                    </DropdownButton>
+                                        menus={[
+                                            { key: "G0 B0", title: i18n._('key-Workspace/Control/DisplayPanel-Go To Work Zero On B Axis (G0 B0)') },
+                                            { key: "G92 B0", title: i18n._('key-Workspace/Control/DisplayPanel-Zero Out Temporary B Axis (G92 B0)') }
+                                        ]} />
                                 </td>
                             </tr>
                         )}

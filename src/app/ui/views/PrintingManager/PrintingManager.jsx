@@ -83,12 +83,15 @@ function PrintingManager() {
             const definitionId = definitionForManager.definitionId;
             dispatch(printingActions.updateDefaultIdByType(managerDisplayType, definitionId, materialManagerDirection));
         },
-        onSaveDefinitionForManager: (newDefinition) => {
+        onSaveDefinitionForManager: async (newDefinition, shouldUpdateActive) => {
             // now setDefinitionState is synchronize, so remove setTimeout
             if (managerDisplayType === PRINTING_MANAGER_TYPE_MATERIAL) {
-                actions.onSaveMaterialForManager(managerDisplayType, newDefinition);
+                await actions.onSaveMaterialForManager(managerDisplayType, newDefinition);
             } else {
-                actions.onSaveQualityForManager(managerDisplayType, newDefinition);
+                await actions.onSaveQualityForManager(managerDisplayType, newDefinition);
+            }
+            if (shouldUpdateActive) {
+                actions.updateActiveDefinition(newDefinition.definitionId);
             }
         },
         onSaveQualityForManager: async (type, newDefinition) => {
@@ -100,7 +103,7 @@ function PrintingManager() {
             }
 
             await dispatch(printingActions.updateDefinitionSettings(newDefinition, newDefinitionSettings));
-            dispatch(printingActions.updateDefinitionsForManager(newDefinition.definitionId, type));
+            return dispatch(printingActions.updateDefinitionsForManager(newDefinition.definitionId, type));
         },
         onSaveMaterialForManager: async (type, newDefinition) => {
             const newDefinitionSettings = {};
@@ -110,7 +113,7 @@ function PrintingManager() {
                 }
             }
             await dispatch(printingActions.updateDefinitionSettings(newDefinition, newDefinitionSettings));
-            dispatch(printingActions.updateDefinitionsForManager(newDefinition.definitionId, type));
+            return dispatch(printingActions.updateDefinitionsForManager(newDefinition.definitionId, type));
         },
 
         updateDefinitionName: async (definition, selectedName) => {
@@ -152,6 +155,9 @@ function PrintingManager() {
         },
         resetDefinitionById: (definitionId) => {
             return dispatch(printingActions.resetDefinitionById(managerDisplayType, definitionId));
+        },
+        updateActiveDefinition: (definitionId) => {
+            dispatch(printingActions.updateActiveDefinitionById(managerDisplayType, definitionId));
         }
     };
 

@@ -417,8 +417,7 @@ function ProfileManager({
             setDefinitionState({
                 definitionForManager: newDefinitionForManager
             });
-
-            outsideActions.onSaveDefinitionForManager(newDefinitionForManager);
+            outsideActions.onSaveDefinitionForManager(newDefinitionForManager, definitionForManager.definitionId === activeDefinitionID);
         },
         resetDefinition: (definitionId) => {
             const newDefinitionForManager = outsideActions.resetDefinitionById(definitionId);

@@ -819,6 +819,15 @@ export const actions = {
         dispatch(actions.updateActiveDefinition(definition));
     },
 
+    updateActiveDefinitionById: (type, definitionId) => (dispatch, getState) => {
+        const state = getState().printing;
+        const definitionsKey = defaultDefinitionKeys[type].definitions;
+        const definition = state[definitionsKey].find((item) => {
+            return item.definitionId === definitionId;
+        });
+        dispatch(actions.updateActiveDefinition(definition, true));
+    },
+
     updateActiveDefinition: (definition, shouldSave = false) => (dispatch, getState) => {
         const state = getState().printing;
 
@@ -2030,8 +2039,9 @@ export const actions = {
 
     recordModelBeforeTransform: (modelGroup) => (dispatch) => {
         dispatch(operationHistoryActions.clearTargetTmpState(INITIAL_STATE.name));
+        const { recovery } = modelGroup.unselectAllModels();
         for (const model of modelGroup.selectedModelArray) {
-            const { recovery } = modelGroup.unselectAllModels();
+            modelGroup.unselectAllModels();
             modelGroup.addModelToSelectedGroup(model);
             if (model.supportTag) {
                 dispatch(actions.onModelTransform());
@@ -2039,8 +2049,8 @@ export const actions = {
             dispatch(operationHistoryActions.updateTargetTmpState(INITIAL_STATE.name, model.modelID, {
                 from: { ...modelGroup.getSelectedModelTransformationForPrinting() }
             }));
-            recovery();
         }
+        recovery();
     },
 
     recordModelAfterTransform: (transformMode, modelGroup, combinedOperations) => (dispatch, getState) => {
@@ -2055,8 +2065,9 @@ export const actions = {
             }
         }
 
+        const { recovery } = modelGroup.unselectAllModels();
         for (const model of modelGroup.selectedModelArray) {
-            const { recovery } = modelGroup.unselectAllModels();
+            modelGroup.unselectAllModels();
             modelGroup.addModelToSelectedGroup(model);
             dispatch(operationHistoryActions.updateTargetTmpState(INITIAL_STATE.name, model.modelID, {
                 to: { ...modelGroup.getSelectedModelTransformationForPrinting() }
@@ -2090,7 +2101,6 @@ export const actions = {
                 default: break;
             }
             operations.push(operation);
-            recovery();
         }
 
         if (transformMode === 'scale') {
@@ -2111,6 +2121,7 @@ export const actions = {
             dispatch(actions.displayModel());
             dispatch(actions.render());
         });
+        recovery();
         dispatch(operationHistoryActions.setOperations(INITIAL_STATE.name, operations));
     },
 
