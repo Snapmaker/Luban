@@ -55,12 +55,12 @@ import ThreeGroup from '../../models/ThreeGroup';
 import UngroupOperation3D from '../operation-history/UngroupOperation3D';
 import DeleteSupportsOperation3D from '../operation-history/DeleteSupportsOperation3D';
 import AddSupportsOperation3D from '../operation-history/AddSupportsOperation3D';
+import ArrangeOperation3D from '../operation-history/ArrangeOperation3D';
 
 // register methods for three-mesh-bvh
 THREE.Mesh.prototype.raycast = acceleratedRaycast;
 THREE.BufferGeometry.prototype.computeBoundsTree = computeBoundsTree;
 THREE.BufferGeometry.prototype.disposeBoundsTree = disposeBoundsTree;
-import ArrangeOperation3D from '../operation-history/ArrangeOperation3D';
 
 const operationHistory = new OperationHistory();
 
