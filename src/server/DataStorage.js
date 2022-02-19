@@ -67,8 +67,7 @@ class DataStorage {
          if (!isElectron()) {
              this.userDataDir = '.';
          } else {
-            this.userDataDir = global.luban.userDataDir;
-
+             this.userDataDir = global.luban.userDataDir;
          }
          mkdirp.sync(this.userDataDir);
 
