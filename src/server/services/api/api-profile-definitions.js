@@ -177,7 +177,6 @@ export const updateDefinition = async (req, res) => {
 
     let filePath = '';
     let activeRecoverPath = '';
-    console.log('definition-profile', definitionId);
     if (definitionId === 'snapmaker_extruder_0' || definitionId === 'snapmaker_extruder_1') {
         filePath = path.join(`${DataStorage.configDir}/${headType}`, `${definitionId}.def.json`);
         activeRecoverPath = path.join(`${DataStorage.activeConfigDir}/${headType}`, `${definitionId}.def.json`);
@@ -195,9 +194,7 @@ export const updateDefinition = async (req, res) => {
             }
         });
     };
-    console.log('beforeWrite', filePath, definitionLoader.toJSON());
     fsWriteFile(filePath, data, res, callback);
-    console.log('afterWrite', definitionId);
 };
 
 export const uploadDefinition = (req, res) => {

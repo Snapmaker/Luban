@@ -18,10 +18,16 @@ const SETTING_FIELDS = [
 const DEFAULT_PRINTING_MATERIAL = [
     'material.pla.def.json',
     'material.pla.black.def.json',
+    'material.pla.blue.def.json',
+    'material.pla.grey.def.json',
+    'material.pla.red.def.json',
+    'material.pla.yellow.def.json',
     'material.abs.def.json',
     'material.abs.black.def.json',
     'material.petg.def.json',
-    'material.petg.black.def.json'
+    'material.petg.black.def.json',
+    'material.petg.red.def.json',
+    'material.petg.blue.def.json',
 ];
 
 const DEFAULT_PREDEFINED = {
@@ -30,11 +36,17 @@ const DEFAULT_PREDEFINED = {
         'quality.normal_quality.def.json',
         'quality.high_quality.def.json',
         'material.pla.def.json',
-        'material.abs.def.json',
-        'material.petg.def.json',
         'material.pla.black.def.json',
+        'material.pla.blue.def.json',
+        'material.pla.grey.def.json',
+        'material.pla.red.def.json',
+        'material.pla.yellow.def.json',
+        'material.abs.def.json',
         'material.abs.black.def.json',
-        'material.petg.black.def.json'
+        'material.petg.def.json',
+        'material.petg.black.def.json',
+        'material.petg.red.def.json',
+        'material.petg.blue.def.json',
     ],
     'cnc': [
         'tool.default_CVbit.def.json',

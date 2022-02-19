@@ -1,6 +1,6 @@
 {
   "name": "PETG-Blue",
-  "version": 2,
+  "version": "4.2.0",
   "inherits": "snapmaker",
   "category": "PETG",
   "i18nName": "key-default_name-PETG_Blue",

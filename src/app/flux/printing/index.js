@@ -1218,7 +1218,12 @@ export const actions = {
         const state = getState().printing;
 
         const newMaterialDefinitions = [];
-        const defaultDefinitionIds = ['material.pla', 'material.abs', 'material.petg', 'material.pla.black', 'material.abs.black', 'material.petg.black'];
+        const defaultDefinitionIds = [
+            'material.pla', 'material.abs', 'material.petg',
+            'material.pla.black', 'material.abs.black', 'material.petg.black',
+            'material.pla.blue', 'material.pla.grey', 'material.pla.red', 'material.pla.yellow',
+            'material.petg.blue', 'material.petg.red'
+        ];
         for (const definition of state.materialDefinitions) {
             if (defaultDefinitionIds.includes(definition.definitionId)) {
                 newMaterialDefinitions.push(definition);
