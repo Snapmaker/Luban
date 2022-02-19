@@ -61,8 +61,9 @@ class ThreeModel extends BaseModel {
             const newMaterial = Object.values(materials)[0];
             // const newMaterial = new THREE.MeshMatcapMaterial();
             const matcapTexture = new THREE.TextureLoader().load(`${DEFAULT_LUBAN_HOST}/resources/images/texture.jpg`);
+
             // newMaterial.bumpMap = null;
-            // newMaterial.matcap = matcapTexture;
+            newMaterial.matcap = matcapTexture;
             console.log('newMaterial', newMaterial, matcapTexture, materials, Object.values(textures)[0]);
             material = newMaterial;
         } catch (e) {
@@ -265,6 +266,7 @@ class ThreeModel extends BaseModel {
         if (typeof isSelected === 'boolean') {
             this.isSelected = isSelected;
         }
+        console.log('this.isSelected', this.isSelected);
         if (this.isEditingSupport) {
             // TODO: uniform material for setting triangle color and textures
             tmpMaterial = this.meshObject.material;
