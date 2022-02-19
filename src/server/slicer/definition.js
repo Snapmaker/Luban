@@ -163,7 +163,7 @@ export class DefinitionLoader {
             json = JSON.parse(data);
             this.loadJSON(headType, definitionId, json);
         } catch (e) {
-            console.error(`JSON Syntax error of: ${definitionId}`);
+            console.error(`Default JSON Syntax error of: ${definitionId}`);
         }
     }
 

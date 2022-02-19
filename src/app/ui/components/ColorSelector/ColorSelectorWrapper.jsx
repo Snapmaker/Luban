@@ -38,7 +38,7 @@ const ColorSelectorPicker = React.memo(({ onChangeComplete, onClose, colors, val
                     <SvgIcon
                         name="Cancel"
                         type={['static']}
-                        size="24"
+                        size={24}
                         onClick={onClose}
                     />
                 </div>

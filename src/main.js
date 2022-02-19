@@ -159,7 +159,7 @@ function updateHandle() {
         mainWindow.webContents.send('update-should-check-for-update', shouldCheckForUpdate);
     });
     ipcMain.on('open-saved-path', (event, savedPath) => {
-        shell.openItem(savedPath);
+        shell.openPath(savedPath);
     });
 }
 
@@ -299,7 +299,7 @@ const showMainWindow = async () => {
 
     ipcMain.on('open-recover-folder', () => {
         const userDataDir = app.getPath('userData');
-        shell.openItem(`${userDataDir}/snapmaker-recover`);
+        shell.openPath(`${userDataDir}/snapmaker-recover`);
     });
 
     updateHandle();

@@ -125,7 +125,7 @@ function SettingItem({ definitionKey, settings, isDefaultDefinition = () => true
             <ColorSelector
                 recentColorKey="profile-manager"
                 colors={PRINTING_MATERIAL_CONFIG_COLORS}
-                value={settingDefaultValue}
+                value={settingDefaultValue.toString()}
                 onClose={() => {
                     setShowColor(false);
                 }}

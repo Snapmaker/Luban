@@ -873,6 +873,7 @@ export const actions = {
      * @param direction
      */
     updateExtruderDefinition: (definition, direction = LEFT_EXTRUDER) => (dispatch, getState) => {
+        console.log('updateExtruderDefinition', definition);
         const { activeDefinition, extruderLDefinition, extruderRDefinition, helpersExtruderConfig } = getState().printing;
 
         if (!definition) {
@@ -939,7 +940,7 @@ export const actions = {
             activeDefinition.settings.prime_tower_line_width.default_value = extruderDef.settings.prime_tower_line_width.default_value;
             activeDefinition.settings.prime_tower_wipe_enabled.default_value = true;
         }
-        dispatch(actions.updateDefinitionSettings(activeDefinition, activeDefinition.settings));
+        // dispatch(actions.updateDefinitionSettings(activeDefinition, activeDefinition.settings));
 
         if (direction === LEFT_EXTRUDER) {
             dispatch(actions.updateState({
@@ -1793,9 +1794,9 @@ export const actions = {
             dispatch(actions.destroyGcodeLine());
             dispatch(actions.displayModel());
         });
+        const modelState = modelGroup.removeSelectedModel();
         dispatch(operationHistoryActions.setOperations(INITIAL_STATE.name, operations));
 
-        const modelState = modelGroup.removeSelectedModel();
         if (!modelState.hasModel) {
             dispatch(actions.updateState({
                 stage: STEP_STAGE.EMPTY,
