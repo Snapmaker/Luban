@@ -1579,7 +1579,6 @@ class ModelGroup extends EventEmitter {
                             }
                             return id;
                         });
-                        console.log('newSubModelIDs', newSubModelIDs, this.models);
                         if (newSubModelIDs.every(id => id instanceof ThreeModel)) {
                             this.updateModelsPositionBaseFirstModel(this.models);
                             this.unselectAllModels();

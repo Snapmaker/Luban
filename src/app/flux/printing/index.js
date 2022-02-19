@@ -2498,7 +2498,6 @@ export const actions = {
             target: modelGroup.getSelectedModelArray()[0],
             modelGroup
         });
-        console.log('modelGroup.', modelGroup.models);
         operations.push(operation);
         operations.registCallbackAfterAll(() => {
             dispatch(actions.updateState(modelGroup.getState()));
