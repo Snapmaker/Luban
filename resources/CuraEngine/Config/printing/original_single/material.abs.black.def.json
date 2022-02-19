@@ -1,13 +1,13 @@
 {
-    "name": "ABS-White",
+    "name": "ABS-Black",
     "version": 2,
     "inherits": "snapmaker",
     "category": "ABS",
-    "i18nName": "key-default_name-ABS_White",
+    "i18nName": "key-default_name-ABS_Black",
     "i18nCategory": "key-default_category-ABS",
     "overrides": {
         "color": {
-            "default_value": "#ffffff"
+            "default_value": "#000000"
         },
         "material_flow": {
             "default_value": 100

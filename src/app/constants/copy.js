@@ -214,8 +214,15 @@ i18n._('key-default_name-ABS_Black');
 i18n._('key-default_name-ABS_White');
 i18n._('key-default_name-PLA_Black');
 i18n._('key-default_name-PLA_White');
+i18n._("key-default_name-PLA_Blue");
+i18n._("key-default_name-PLA_Grey");
+i18n._("key-default_name-PLA_Red");
+i18n._("key-default_name-PLA_Yellow");
 i18n._('key-default_name-PETG_Black');
 i18n._('key-default_name-PETG_White');
+i18n._("key-default_name-PETG_Blue");
+i18n._("key-default_name-PETG_Red");
+
 
 
 i18n._('key-default_category-Default Material');
