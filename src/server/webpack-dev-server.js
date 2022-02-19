@@ -1,9 +1,9 @@
 import webpack from 'webpack';
-import electron from 'electron';
 import webpackDevMiddleware from 'webpack-dev-middleware';
 import webpackHotMiddleware from 'webpack-hot-middleware';
 import config from '../../webpack.config.app.development';
 
+const UPLOAD_WINDOWS = 'uploadWindows';
 const webpackDevServer = (app) => {
     // https://github.com/webpack/webpack-dev-middleware
     const compiler = webpack(config);
@@ -23,9 +23,7 @@ const webpackDevServer = (app) => {
         }
     });
     devMiddleware.waitUntilValid(() => {
-        electron.BrowserWindow.getAllWindows().forEach(window => {
-            window.webContents.reload();
-        });
+        process.send({ type: UPLOAD_WINDOWS });
     });
     app.use(devMiddleware);
 

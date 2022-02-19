@@ -41,7 +41,6 @@ export default class ScaleOperation3D extends Operation<ScaleOperationState> {
         if (model instanceof ThreeModel && model.supportTag) {
             modelGroup.addModelToSelectedGroup(model);
             modelGroup.updateSelectedGroupTransformation({ ...transform }, false);
-            modelGroup.updateSelectedGroupModelsVectorUv(); // scale only
             modelGroup.unselectAllModels();
             model.onTransform();
             model.computeBoundingBox();
@@ -50,7 +49,6 @@ export default class ScaleOperation3D extends Operation<ScaleOperationState> {
         } else {
             modelGroup.addModelToSelectedGroup(model);
             modelGroup.updateSelectedGroupTransformation({ ...transform }, false);
-            modelGroup.updateSelectedGroupModelsVectorUv(); // scale only
             modelGroup.unselectAllModels();
             model.onTransform();
 

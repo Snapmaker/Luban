@@ -5,6 +5,7 @@ import program from 'commander';
 import isElectron from 'is-electron';
 import pkg from './package.json';
 
+const SERVER_DATA = 'serverData';
 // Defaults to 'production'
 process.env.NODE_ENV = process.env.NODE_ENV || 'production';
 
@@ -53,8 +54,15 @@ const launchServer = () => new Promise((resolve, reject) => {
             reject(err);
             return;
         }
+        process.send({ type: SERVER_DATA, ...data });
         resolve(data);
     });
 });
 
+process.on('message', (data) => {
+    global.luban = {
+        userDataDir: data.userDataDir
+    };
+    launchServer();
+});
 export default launchServer;
