@@ -9,17 +9,14 @@ import noop from 'lodash/noop';
 import React, { PureComponent } from 'react';
 import { isNil, throttle } from 'lodash';
 import { Vector3, PerspectiveCamera, Scene, Group,
-    Mesh, MeshMatcapMaterial, SphereGeometry, LoadingManager,
     HemisphereLight, DirectionalLight } from 'three';
 import PropTypes from 'prop-types';
 import TWEEN from '@tweenjs/tween.js';
 
-import { EXRLoader } from 'three/examples/jsm/loaders/EXRLoader';
 import Controls, { EVENTS } from './Controls';
 import log from '../../../lib/log';
 import Detector from '../../../three-extensions/Detector';
 import WebGLRendererWrapper from '../../../three-extensions/WebGLRendererWrapper';
-import { DEFAULT_LUBAN_HOST } from '../../../constants';
 
 const ANIMATION_DURATION = 500;
 const DEFAULT_MODEL_POSITION = new Vector3(0, 0, 0);
@@ -126,23 +123,6 @@ class Canvas extends PureComponent {
         this.props.printableArea.addEventListener('update', () => this.renderScene()); // TODO: another way to trigger re-render
 
 
-        // manager
-        const manager = new LoadingManager(this.renderer);
-        // matcap
-
-        const loaderEXR = new EXRLoader(manager);
-        const matcap = loaderEXR.load(`${DEFAULT_LUBAN_HOST}/resources/images/clay_studio.exr`);
-        // const newMaterial = new MeshMatcapMaterial();
-        const newMaterial = new MeshMatcapMaterial({ matcap });
-        // matcap.needsUpdate = true;
-        newMaterial.needsUpdate = true;
-        newMaterial.color.set(0xff0000);
-        // const boxGeometry = new SphereGeometry(100, 100, 100);
-        const boxGeometry = new SphereGeometry(100, 100, 100);
-        const cube = new Mesh(boxGeometry, newMaterial);
-        // cube.scale.set(new Vector3(100, 100, 100));
-        console.log('this.scene', this.renderer, this.scene, loaderEXR, cube, DEFAULT_LUBAN_HOST);
-        // this.modelGroup.object.add(cube);
         this.group.add(this.modelGroup.object);
         this.toolPathGroupObject && this.group.add(this.toolPathGroupObject);
         this.gcodeLineGroup && this.group.add(this.gcodeLineGroup);
@@ -260,20 +240,19 @@ class Canvas extends PureComponent {
             this.light = new DirectionalLight(0xffffff, 0.6);
             this.light.position.copy(this.cameraInitialPosition);
         }
-        if (this.transformSourceType === '3D') {
-            // this.light = new DirectionalLight(0x666666, 0.4);
-            // const pLight = new PointLight(0xffffff, 0.60, 0, 0.60);
-            // this.camera.add(pLight);
-            // pLight.position.copy(new Vector3(-4000, 7000, 50000));
-        }
-        // this.light.position.copy(this.cameraInitialPosition);
+        // if (this.transformSourceType === '3D') {
+        //     this.light = new DirectionalLight(0x666666, 0.4);
+        //     const pLight = new PointLight(0xffffff, 0.60, 0, 0.60);
+        //     this.camera.add(pLight);
+        //     pLight.position.copy(new Vector3(-4000, 7000, 50000));
+        // }
 
         // We need to change the default up vector if we use camera to respect XY plane
         if (this.props.cameraUp) {
             this.camera.up = this.props.cameraUp;
         }
 
-        this.renderer = new WebGLRendererWrapper({ antialias: true, autoClearDepth: false });
+        this.renderer = new WebGLRendererWrapper({ antialias: true });
         this.renderer.setSize(width, height);
 
         this.scene = new Scene();
@@ -284,17 +263,14 @@ class Canvas extends PureComponent {
         this.group.position.copy(DEFAULT_MODEL_POSITION);
         this.scene.add(this.group);
 
-        if (this.transformSourceType === '3D') {
-            // const lightTop = new HemisphereLight(0xdddddd, 0x666666);
-            // lightTop.position.copy(new Vector3(0, 0, 1000));
-            // this.scene.add(lightTop);
-
-            // const lightTop = new HemisphereLight(0xA3A3A3, 0x545454, 0.5);
-            // const lightInside = new AmbientLight(0x666666);
-            // lightTop.position.copy(new Vector3(0, 0, -49000));
-            // lightInside.position.copy(new Vector3(0, 0, 0));
-            // this.scene.add(lightInside);
-        }
+        // if (this.transformSourceType === '3D') {
+        //     const lightTop = new HemisphereLight(0xA3A3A3, 0x545454, 0.5);
+        //     const lightInside = new AmbientLight(0x666666);
+        //     lightTop.position.copy(new Vector3(0, 0, -49000));
+        //     lightInside.position.copy(new Vector3(0, 0, 0));
+        //     this.scene.add(lightTop);
+        //     this.scene.add(lightInside);
+        // }
         if (this.transformSourceType === '2D') {
             this.scene.add(new HemisphereLight(0x000000, 0xcecece));
         }

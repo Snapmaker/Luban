@@ -2,7 +2,7 @@ import { v4 as uuid } from 'uuid';
 import * as THREE from 'three';
 import { ObjectLoader } from 'three';
 import {
-    LOAD_MODEL_FROM_INNER,
+    LOAD_MODEL_FROM_INNER
 } from '../constants';
 
 import ThreeUtils from '../three-extensions/ThreeUtils';
