@@ -286,8 +286,8 @@ i18n._('key-Progress/3DP-Failed to preview G-code.');
 i18n._('key-Progress/3DP-Calculating Rotation');
 i18n._('key-Progress/3DP-Calculated Rotation successfully.');
 i18n._('key-Progress/3DP-Failed to calculate Rotation.');
-i18n._('key-Progress/3DP-Generating support {{progress}}%');
-i18n._('key-Progress/3DP-Generate support successfully.');
+i18n._('key-Progress/3DP-Generating support... {{progress}}%');
+i18n._('key-Progress/3DP-Generated support successfully.');
 i18n._('key-Progress/3DP-Failed to generate support.');
 
 

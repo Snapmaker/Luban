@@ -232,8 +232,8 @@ class ProgressStatesManager {
                     percent: 1
                 }
             ],
-            'key-Progress/3DP-Generating support {{progress}}%',
-            'key-Progress/3DP-Generate support successfully.',
+            'key-Progress/3DP-Generating support... {{progress}}%',
+            'key-Progress/3DP-Generated support successfully.',
             'key-Progress/3DP-Failed to generate support.');
     }
 

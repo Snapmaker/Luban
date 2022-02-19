@@ -38,6 +38,7 @@ export const processActions = {
         });
 
         Promise.all(toolPathPromiseArray).then((taskArray) => {
+            taskArray = taskArray.filter(d => !!d);
             controller.commitToolPathTaskArray(taskArray);
         });
     },
@@ -281,12 +282,13 @@ export const processActions = {
     },
 
     deleteToolPath: (headType, selectedToolPathIDArray) => (dispatch, getState) => {
-        const { toolPathGroup, displayedType } = getState()[headType];
+        const { toolPathGroup, displayedType, modelGroup } = getState()[headType];
 
         const operations = new Operations();
         selectedToolPathIDArray.forEach((id) => {
             const operation = new DeleteToolPathOperation({
                 target: toolPathGroup._getToolPath(id),
+                models: modelGroup?.models,
                 toolPathGroup
             });
             operations.push(operation);
