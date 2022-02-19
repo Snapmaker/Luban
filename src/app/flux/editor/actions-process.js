@@ -38,6 +38,7 @@ export const processActions = {
         });
 
         Promise.all(toolPathPromiseArray).then((taskArray) => {
+            taskArray = taskArray.filter(d => !!d);
             controller.commitToolPathTaskArray(taskArray);
         });
     },
