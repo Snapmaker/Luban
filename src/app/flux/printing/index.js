@@ -1654,9 +1654,6 @@ export const actions = {
         dispatch(actions.recordModelBeforeTransform(modelGroup));
         // TODO
         modelGroup.updateSelectedGroupTransformation(transformation, newUniformScalingState);
-        if (transformMode === 'scale') {
-            modelGroup.updateSelectedGroupModelsVectorUv();
-        }
         modelGroup.onModelAfterTransform();
 
         dispatch(actions.recordModelAfterTransform(transformMode, modelGroup));
@@ -2278,15 +2275,13 @@ export const actions = {
                 const { type } = data;
                 switch (type) {
                     case 'LOAD_MODEL_POSITIONS': {
-                        const { positions, originalPosition, uvs } = data;
+                        const { positions, originalPosition } = data;
 
                         const bufferGeometry = new THREE.BufferGeometry();
                         const modelPositionAttribute = new THREE.BufferAttribute(positions, 3);
-                        const uvAttribute = new THREE.BufferAttribute(uvs, 2);
                         const material = new THREE.MeshPhongMaterial({ color: 0xa0a0a0, specular: 0xb0b0b0, shininess: 0 });
 
                         bufferGeometry.setAttribute('position', modelPositionAttribute);
-                        bufferGeometry.setAttribute('uv', uvAttribute);
 
                         bufferGeometry.computeVertexNormals();
                         // Create model
@@ -2488,11 +2483,6 @@ export const actions = {
             });
             recovery();
         });
-        // const groups = modelGroup.getSelectedModelArray().filter(model => model instanceof ThreeGroup);
-        // const groupChildrenMap = new Map();
-        // groups.forEach(group => {
-        //     groupChildrenMap.set(group, group.children.slice(0));
-        // });
         modelGroup.updateModelsPositionBaseFirstModel(selectedModels);
         const operations = new Operations();
 

@@ -113,7 +113,7 @@ export default {
                 }
             },
             {
-                test: /\.jsx?$/,
+                test: /\.js(x)?$/,
                 loader: 'babel-loader',
                 exclude: /node_modules/,
                 options: babelConfig

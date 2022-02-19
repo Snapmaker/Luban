@@ -37,7 +37,6 @@ import * as THREE from "three";
 const STLLoader = function ( manager ) {
 	this.manager = ( manager !== undefined ) ? manager : THREE.DefaultLoadingManager;
 };
-const rotateZMatrix = new THREE.Matrix4();
 
 STLLoader.prototype = {
 
@@ -141,12 +140,6 @@ STLLoader.prototype = {
 
 			var vertices = [];
 			var normals = [];
-			var faceVertexUvs = [[]];
-			var uv = [];
-            var xyMaxX = 200, xyMinX = -200, xyMaxY = 200, xyMinY = -200;
-            var xzMaxX = 200, xzMinX = -200, xzMaxY = 400, xzMinY = 0;
-            var zyMaxX = 400, zyMinX = 0, zyMaxY = 200, zyMinY = -200;
-            var uvInfos = [];
 
             for ( var face = 0; face < faces; face ++ ) {
 			    if (face / faces - progress > 0.01) {
@@ -158,8 +151,6 @@ STLLoader.prototype = {
 				var normalX = reader.getFloat32( start, true );
 				var normalY = reader.getFloat32( start + 4, true );
 				var normalZ = reader.getFloat32( start + 8, true );
-				var currentVertices = [];
-				var currentUv = [];
 
 				if ( hasColors ) {
 
@@ -185,87 +176,19 @@ STLLoader.prototype = {
 
 				for ( var i = 1; i <= 3; i ++ ) {
 					var vertexstart = start + i * 12;
-					var vertice1 = reader.getFloat32( vertexstart, true );
-					var vertice2 = reader.getFloat32( vertexstart+ 4, true );
-					var vertice3 = reader.getFloat32( vertexstart+ 8, true );
+					vertices.push( reader.getFloat32( vertexstart, true ) );
+					vertices.push( reader.getFloat32( vertexstart + 4, true ) );
+					vertices.push( reader.getFloat32( vertexstart + 8, true ) );
 
-					vertices.push( vertice1 );
-					vertices.push( vertice2 );
-					vertices.push( vertice3 );
-					const currentVertice = new THREE.Vector3(vertice1, vertice2, vertice3);
-
-					currentVertices.push(currentVertice)
 					normals.push( normalX, normalY, normalZ );
 					if ( hasColors ) {
 						colors.push( r, g, b );
 					}
 				}
-
-				function isNotVertical(vertices) {
-				    const dXY = Math.abs((vertices[0].x - vertices[1].x) * (vertices[1].y - vertices[2].y)
-                        - (vertices[0].y - vertices[1].y) * (vertices[1].x - vertices[2].x));
-                    const dXZ = Math.abs((vertices[0].x - vertices[1].x) * (vertices[1].z - vertices[2].z)
-                        - (vertices[0].z - vertices[1].z) * (vertices[1].x - vertices[2].x));
-                    const dZY = Math.abs((vertices[0].y - vertices[1].y) * (vertices[1].z - vertices[2].z)
-                        - (vertices[0].z - vertices[1].z) * (vertices[1].y - vertices[2].y));
-                    if (dXY > dXZ && dXY > dZY) {
-                        return 'xy';
-                    }
-                    if (dXZ > dZY) {
-                        return 'xz';
-                    }
-				    return 'zy';
-                }
-
-				const useFace = isNotVertical(currentVertices);
-
-                uvInfos.push({
-                    useFace,
-                    vertices: currentVertices
-                });
 			}
-            const xyMaxLength = Math.max(xyMaxX - xyMinX, xyMaxY - xyMinY);
-            const xzMaxLength = Math.max(xzMaxX - xzMinX, xzMaxY - xzMinY);
-            const zyMaxLength = Math.max(zyMaxX - zyMinX, zyMaxY - zyMinY);
-
-            for (let face = 0; face < faces; face ++) {
-                const { useFace, vertices } = uvInfos[face];
-                currentUv = vertices.map((item) => {
-                    let newX = 0, newY = 0;
-                    switch (useFace) {
-                        case 'xy': {
-                            newX = (item.x - xyMinX) / xyMaxLength;
-                            newY = (item.y - xyMinY) / xyMaxLength;
-                            break;
-                        }
-                        case 'xz': {
-                            newX = (item.x - xzMinX) / xzMaxLength;
-                            newY = (item.z - xzMinY) / xzMaxLength;
-                            break;
-                        }
-                        case 'zy': {
-                            newX = (item.z - zyMinX) / zyMaxLength;
-                            newY = (item.y - zyMinY) / zyMaxLength;
-                            break;
-                        }
-                        default: {
-                            break;
-                        }
-                    }
-                    return new THREE.Vector2(newX, newY);
-                });
-                faceVertexUvs[0].push(currentUv);
-            }
 
 			geometry.setAttribute( 'position', new THREE.BufferAttribute( new Float32Array( vertices ), 3 ) );
 			geometry.setAttribute( 'normal', new THREE.BufferAttribute( new Float32Array( normals ), 3 ) );
-		    // https://stackoverflow.com/questions/55472178/how-to-add-texture-to-buffergeometry-faces
-			faceVertexUvs[0].forEach((faceUvs) => {
-                for (let i = 0; i < 3; ++i) {
-                  uv.push(...faceUvs[i].toArray());
-                }
-	        });
-			geometry.setAttribute( 'uv', new THREE.BufferAttribute( new Float32Array( uv ), 2 ));
 
 			if ( hasColors ) {
 

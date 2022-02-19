@@ -9,7 +9,6 @@ import noop from 'lodash/noop';
 import React, { PureComponent } from 'react';
 import { isNil, throttle } from 'lodash';
 import { Vector3, PerspectiveCamera, Scene, Group,
-    AmbientLight, PointLight,
     HemisphereLight, DirectionalLight } from 'three';
 import PropTypes from 'prop-types';
 import TWEEN from '@tweenjs/tween.js';
@@ -18,7 +17,6 @@ import Controls, { EVENTS } from './Controls';
 import log from '../../../lib/log';
 import Detector from '../../../three-extensions/Detector';
 import WebGLRendererWrapper from '../../../three-extensions/WebGLRendererWrapper';
-
 
 const ANIMATION_DURATION = 500;
 const DEFAULT_MODEL_POSITION = new Vector3(0, 0, 0);
@@ -123,11 +121,12 @@ class Canvas extends PureComponent {
 
         this.group.add(this.props.printableArea);
         this.props.printableArea.addEventListener('update', () => this.renderScene()); // TODO: another way to trigger re-render
+
+
         this.group.add(this.modelGroup.object);
         this.toolPathGroupObject && this.group.add(this.toolPathGroupObject);
         this.gcodeLineGroup && this.group.add(this.gcodeLineGroup);
         this.backgroundGroup && this.group.add(this.backgroundGroup);
-
 
         if (this.controls && this.props.inProgress) {
             this.controls.setInProgress(this.props.inProgress);
@@ -241,11 +240,12 @@ class Canvas extends PureComponent {
             this.light = new DirectionalLight(0xffffff, 0.6);
             this.light.position.copy(this.cameraInitialPosition);
         }
-        if (this.transformSourceType === '3D') {
-            const pLight = new PointLight(0xffffff, 0.60, 0, 0.60);
-            this.camera.add(pLight);
-            pLight.position.copy(new Vector3(-4000, 7000, 50000));
-        }
+        // if (this.transformSourceType === '3D') {
+        //     this.light = new DirectionalLight(0x666666, 0.4);
+        //     const pLight = new PointLight(0xffffff, 0.60, 0, 0.60);
+        //     this.camera.add(pLight);
+        //     pLight.position.copy(new Vector3(-4000, 7000, 50000));
+        // }
 
         // We need to change the default up vector if we use camera to respect XY plane
         if (this.props.cameraUp) {
@@ -262,14 +262,15 @@ class Canvas extends PureComponent {
         this.group = new Group();
         this.group.position.copy(DEFAULT_MODEL_POSITION);
         this.scene.add(this.group);
-        if (this.transformSourceType === '3D') {
-            const lightTop = new HemisphereLight(0xA3A3A3, 0x545454, 0.5);
-            const lightInside = new AmbientLight(0x666666);
-            lightTop.position.copy(new Vector3(0, 0, -49000));
-            lightInside.position.copy(new Vector3(0, 0, 0));
-            this.scene.add(lightTop);
-            this.scene.add(lightInside);
-        }
+
+        // if (this.transformSourceType === '3D') {
+        //     const lightTop = new HemisphereLight(0xA3A3A3, 0x545454, 0.5);
+        //     const lightInside = new AmbientLight(0x666666);
+        //     lightTop.position.copy(new Vector3(0, 0, -49000));
+        //     lightInside.position.copy(new Vector3(0, 0, 0));
+        //     this.scene.add(lightTop);
+        //     this.scene.add(lightInside);
+        // }
         if (this.transformSourceType === '2D') {
             this.scene.add(new HemisphereLight(0x000000, 0xcecece));
         }

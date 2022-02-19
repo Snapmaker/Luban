@@ -1,6 +1,6 @@
 import 'core-js/stable';
 import 'regenerator-runtime/runtime';
-import { app, BrowserWindow, protocol, screen, session, ipcMain, shell } from 'electron';
+import { app, BrowserWindow, protocol, screen, session, ipcMain, shell, Menu } from 'electron';
 import { autoUpdater } from 'electron-updater';
 import Store from 'electron-store';
 import url from 'url';
@@ -9,18 +9,28 @@ import { isUndefined, isNull } from 'lodash';
 import path from 'path';
 import { configureWindow } from './electron-app/window';
 import MenuBuilder, { addRecentFile, cleanAllRecentFiles } from './electron-app/Menu';
-import launchServer from './server-cli';
 import DataStorage from './DataStorage';
 import pkg from './package.json';
 // const { crashReporter } = require('electron');
 
 
 const config = new Store();
-
+const userDataDir = app.getPath('userData');
 let serverData = null;
 let mainWindow = null;
 // https://www.electronjs.org/docs/latest/breaking-changes#planned-breaking-api-changes-100
 // console.log('getCrashesDirectory', app.getPath('crashDumps'));
+let loadUrl = '';
+const loadingMenu = [{
+    id: 'file',
+    label: '',
+}];
+
+const childProcess = require('child_process');
+
+const USER_DATA_DIR = 'userDataDir';
+const SERVER_DATA = 'serverData';
+const UPLOAD_WINDOWS = 'uploadWindows';
 // crashReporter.start({
 //     productName: 'Snapmaker',
 //     globalExtra: { _companyName: 'Snapmaker' },
@@ -186,74 +196,105 @@ if (process.platform === 'win32') {
 }
 
 const showMainWindow = async () => {
-    try {
-        // TODO: move to server
-        DataStorage.init();
-    } catch (err) {
-        console.error('Error: ', err);
-    }
-
-    if (!serverData) {
-        // only start server once
-        // TODO: start server on the outermost
-        serverData = await launchServer();
-    }
-
-    const { address, port } = { ...serverData };
     const windowOptions = getBrowserWindowOptions();
     const window = new BrowserWindow(windowOptions);
     mainWindow = window;
     if (process.platform === 'win32') {
-        const outsideX = -999999, outsideY = -999999;
-        window.setSkipTaskbar(true);
-        window.blur();
-        window.setPosition(outsideX, outsideY, false);
+        const menu = Menu.buildFromTemplate(loadingMenu);
+        Menu.setApplicationMenu(menu);
     }
-    window.show();
-
-    configureWindow(window);
-
-    const loadUrl = `http://${address}:${port}`;
-    const filter = {
-        urls: [
-            // 'http://*/',
-            'http://*/resources/images/*',
-            'http://*/app.css',
-            'http://*/polyfill.*.*',
-            'http://*/vendor.*.*',
-            'http://*/app.*.*',
-            'http://*/*/*.worker.js',
-        ]
-    };
-    protocol.registerFileProtocol(
-        'luban',
-        (request, callback) => {
-            const { pathname } = url.parse(request.url);
-            const p = pathname === '/' ? 'index.html' : pathname.substr(1);
-            callback(fs.createReadStream(path.normalize(`${__dirname}/app/${p}`)));
+    if (!serverData) {
+        // only start server once
+        // TODO: start server on the outermost
+        const child = childProcess.fork(path.resolve(__dirname, 'server-cli.js'));
+        // window.webContents.openDevTools();
+        window.loadURL(path.resolve(__dirname, 'app', 'loading.html')).catch(err => {
+            console.log('err', err.message);
+        });
+        window.setBackgroundColor('#f5f5f7');
+        if (process.platform === 'win32') {
+            window.show();
+        } else {
+            window.on('ready-to-show', () => {
+                window.show();
+            });
         }
-    );
-    // https://github.com/electron/electron/issues/21675
-    // If needed, resolve CORS. https://stackoverflow.com/questions/51254618/how-do-you-handle-cors-in-an-electron-app
+        child.send({
+            type: USER_DATA_DIR,
+            userDataDir
+        });
+        child.on('message', (data) => {
+            if (data.type === SERVER_DATA) {
+                serverData = data;
+                const { address, port } = { ...serverData };
+                configureWindow(window);
+                loadUrl = `http://${address}:${port}`;
+                const filter = {
+                    urls: [
+                        // 'http://*/',
+                        'http://*/resources/images/*',
+                        'http://*/app.css',
+                        'http://*/polyfill.*.*',
+                        'http://*/vendor.*.*',
+                        'http://*/app.*.*',
+                        'http://*/*/*.worker.js',
+                    ]
+                };
+                protocol.registerFileProtocol(
+                    'luban',
+                    (request, callback) => {
+                        const { pathname } = url.parse(request.url);
+                        const p = pathname === '/' ? 'index.html' : pathname.substr(1);
+                        callback(fs.createReadStream(path.normalize(`${__dirname}/app/${p}`)));
+                    },
+                    (error) => {
+                        if (error) {
+                            console.error('error', error);
+                        }
+                    }
+                );
+                // https://github.com/electron/electron/issues/21675
+                // If needed, resolve CORS. https://stackoverflow.com/questions/51254618/how-do-you-handle-cors-in-an-electron-app
 
-    session.defaultSession.webRequest.onBeforeRequest(
-        filter,
-        (request, callback) => {
-            const redirectURL = request.url.replace(/^http/, 'luban');
-            callback({ redirectURL });
+                session.defaultSession.webRequest.onBeforeRequest(
+                    filter,
+                    (request, callback) => {
+                        const redirectURL = request.url.replace(/^http/, 'luban');
+                        callback({ redirectURL });
+                    }
+                );
+
+                // Ignore proxy settings
+                // https://electronjs.org/docs/api/session#sessetproxyconfig-callback
+
+                const webContentsSession = window.webContents.session;
+                webContentsSession.setProxy({ proxyRules: 'direct://' })
+                    .then(() => window.loadURL(loadUrl).catch(err => {
+                        console.log('err', err.message);
+                    }));
+
+                try {
+                    // TODO: move to server
+                    DataStorage.init();
+                } catch (err) {
+                    console.error('Error: ', err);
+                }
+            } else if (data.type === UPLOAD_WINDOWS) {
+                window.loadURL(loadUrl).catch(err => {
+                    console.log('err', err.message);
+                });
+            }
+        });
+        // serverData = await launchServer();
+    } else {
+        if (process.platform === 'win32') {
+            window.show();
+        } else {
+            window.on('ready-to-show', () => {
+                window.show();
+            });
         }
-    );
-
-    // Ignore proxy settings
-    // https://electronjs.org/docs/api/session#sessetproxyconfig-callback
-
-    const webContentsSession = window.webContents.session;
-    webContentsSession.setProxy({ proxyRules: 'direct://' })
-        .then(() => window.loadURL(loadUrl));
-
-
-    window.setTitle(`Snapmaker Luban ${pkg.version}`);
-
+    }
 
     window.on('close', (e) => {
         e.preventDefault();
@@ -305,48 +346,6 @@ const showMainWindow = async () => {
     updateHandle();
 };
 
-const createWindow = () => {
-    // MenuBuilder.hideMenu();
-    if (process.platform === 'win32') {
-        const windowOptions = getBrowserWindowOptions();
-        const loadingWindow = new BrowserWindow(windowOptions);
-        loadingWindow.setMenuBarVisibility(false);
-        loadingWindow.setResizable(false);
-        loadingWindow.loadURL(path.resolve(__dirname, 'app', 'loading.html'));
-        loadingWindow.once('ready-to-show', () => {
-            ipcMain.once('show-main-window', () => {
-                if (loadingWindow.isMinimized()) {
-                    loadingWindow.restore();
-                } else if (loadingWindow.isMaximized()) {
-                    mainWindow.maximize();
-                }
-                const [x, y] = loadingWindow.getPosition();
-                const outsideX = -999999, outsideY = -999999;
-                mainWindow.setPosition(x, y, false);
-                mainWindow.moveTop();
-                mainWindow.setSkipTaskbar(false);
-                loadingWindow.setSkipTaskbar(true);
-                loadingWindow.setPosition(outsideX, outsideY, false);
-                mainWindow.focus();
-                loadingWindow.close();
-            });
-            loadingWindow.once('show', () => {
-                setTimeout(() => {
-                    showMainWindow();
-                }, 50);
-            });
-            loadingWindow.show();
-        });
-        loadingWindow.once('close', () => {
-            if (!mainWindow || !mainWindow.isFocused()) {
-                process.exit(0);
-            }
-        });
-    } else {
-        showMainWindow();
-    }
-};
-
 // Allow max 4G memory usage
 if (process.arch === 'x64') {
     app.commandLine.appendSwitch('--js-flags', '--max-old-space-size=4096');
@@ -360,7 +359,7 @@ app.commandLine.appendSwitch('ignore-gpu-blacklist');
  */
 app.on('activate', async () => {
     if (mainWindow === null) {
-        await createWindow();
+        await showMainWindow();
     }
 });
 
@@ -428,4 +427,4 @@ protocol.registerSchemesAsPrivileged([{ scheme: 'luban', privileges: { standard:
 /**
  * when ready
  */
-app.whenReady().then(createWindow);
+app.whenReady().then(showMainWindow);
