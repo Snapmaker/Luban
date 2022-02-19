@@ -38,15 +38,17 @@ const ColorSelectorPicker = React.memo(({ onChangeComplete, onClose, colors, val
                     <SvgIcon
                         name="Cancel"
                         type={['static']}
-                        size="24"
+                        size={24}
                         onClick={onClose}
                     />
                 </div>
             </div>
-            {colors.map((colorLines) => {
+            {colors.map((colorLines, index) => {
+                const key = `colorLines-${index}`;
                 return (
                     <div
                         className="sm-flex position-re"
+                        key={key}
                     >
                         {colorLines.map((color) => {
                             return (
@@ -85,10 +87,12 @@ const ColorSelectorPicker = React.memo(({ onChangeComplete, onClose, colors, val
             <div
                 className="sm-flex position-re"
             >
-                {recentColors.map((color) => {
+                {recentColors.map((color, index) => {
+                    const key = `recentColor-${index}`;
                     if (color === '') {
                         return (
                             <div
+                                key={key}
                                 className={classNames('margin-left-2', 'margin-top-2', 'width-32', 'height-32',
                                     'padding-vertical-3', 'padding-horizontal-3')}
                             >
@@ -104,6 +108,7 @@ const ColorSelectorPicker = React.memo(({ onChangeComplete, onClose, colors, val
                             onClick={() => {
                                 onChangeColor(color, false);
                             }}
+                            key={key}
                         >
                             <div
                                 className={classNames(recentColors.indexOf(color) > 0 ? 'margin-left-2' : null,

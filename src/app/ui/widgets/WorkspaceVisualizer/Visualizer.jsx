@@ -270,7 +270,7 @@ class Visualizer extends PureComponent {
             if (connectionType === CONNECTION_TYPE_SERIAL) {
                 const { workflowState } = this.state;
                 const { isLaserPrintAutoMode, materialThickness } = this.props;
-                if (this.actions.isLaser()) {
+                if (this.actions.isLaser() && workflowState !== WORKFLOW_STATE_PAUSED) {
                     this.props.executeGcode('G0 X0 Y0 F1000');
                     if (!isRotate) {
                         if (toolHead === LEVEL_TWO_POWER_LASER_FOR_SM2) {

@@ -1,6 +1,6 @@
 {
     "name": "FDM Printer Base Description",
-    "version": 2,
+    "version": "4.2.0",
     "metadata":
     {
         "type": "machine",

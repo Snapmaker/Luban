@@ -753,7 +753,7 @@ export const actions = {
     },
 
     // Update definition settings and save.
-    updateDefinitionSettings: (definition, settings) => (dispatch, getState) => {
+    updateDefinitionSettings: (definition, settings, updateExtruderDefinition = true) => (dispatch, getState) => {
         const { modelGroup, extruderLDefinition, extruderRDefinition, helpersExtruderConfig } = getState().printing;
         const {
             settings: newSettings,
@@ -768,23 +768,24 @@ export const actions = {
             helpersExtruderConfig
         );
         settings = newSettings;
-        definitionManager.updateDefinition({
-            definitionId: 'snapmaker_extruder_0',
-            settings: extruderLDefinitionSettings
-        });
-        extruderLDefinition.settings = extruderLDefinitionSettings;
-        dispatch(actions.updateState({
-            extruderLDefinition
-        }));
-        definitionManager.updateDefinition({
-            definitionId: 'snapmaker_extruder_1',
-            settings: extruderRDefinitionSettings
-        });
-        extruderRDefinition.settings = extruderRDefinitionSettings;
-        dispatch(actions.updateState({
-            extruderRDefinition
-        }));
-
+        if (updateExtruderDefinition) {
+            definitionManager.updateDefinition({
+                definitionId: 'snapmaker_extruder_0',
+                settings: extruderLDefinitionSettings
+            });
+            extruderLDefinition.settings = extruderLDefinitionSettings;
+            dispatch(actions.updateState({
+                extruderLDefinition
+            }));
+            definitionManager.updateDefinition({
+                definitionId: 'snapmaker_extruder_1',
+                settings: extruderRDefinitionSettings
+            });
+            extruderRDefinition.settings = extruderRDefinitionSettings;
+            dispatch(actions.updateState({
+                extruderRDefinition
+            }));
+        }
         dispatch(actions.updateBoundingBox());
         return definitionManager.updateDefinition({
             definitionId: definition.definitionId,
@@ -939,7 +940,7 @@ export const actions = {
             activeDefinition.settings.prime_tower_line_width.default_value = extruderDef.settings.prime_tower_line_width.default_value;
             activeDefinition.settings.prime_tower_wipe_enabled.default_value = true;
         }
-        dispatch(actions.updateDefinitionSettings(activeDefinition, activeDefinition.settings));
+        dispatch(actions.updateDefinitionSettings(activeDefinition, activeDefinition.settings, false));
 
         if (direction === LEFT_EXTRUDER) {
             dispatch(actions.updateState({
@@ -1217,7 +1218,12 @@ export const actions = {
         const state = getState().printing;
 
         const newMaterialDefinitions = [];
-        const defaultDefinitionIds = ['material.pla', 'material.abs', 'material.petg', 'material.pla.black', 'material.abs.black', 'material.petg.black'];
+        const defaultDefinitionIds = [
+            'material.pla', 'material.abs', 'material.petg',
+            'material.pla.black', 'material.abs.black', 'material.petg.black',
+            'material.pla.blue', 'material.pla.grey', 'material.pla.red', 'material.pla.yellow',
+            'material.petg.blue', 'material.petg.red'
+        ];
         for (const definition of state.materialDefinitions) {
             if (defaultDefinitionIds.includes(definition.definitionId)) {
                 newMaterialDefinitions.push(definition);
@@ -1790,9 +1796,9 @@ export const actions = {
             dispatch(actions.destroyGcodeLine());
             dispatch(actions.displayModel());
         });
+        const modelState = modelGroup.removeSelectedModel();
         dispatch(operationHistoryActions.setOperations(INITIAL_STATE.name, operations));
 
-        const modelState = modelGroup.removeSelectedModel();
         if (!modelState.hasModel) {
             dispatch(actions.updateState({
                 stage: STEP_STAGE.EMPTY,

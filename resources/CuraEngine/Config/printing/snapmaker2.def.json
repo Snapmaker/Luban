@@ -1,6 +1,6 @@
 {
     "id": "snapmaker2",
-    "version": 2,
+    "version": "4.2.0",
     "name": "Snapmaker2",
     "inherits": "snapmaker",
     "metadata": {
