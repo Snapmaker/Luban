@@ -1,6 +1,6 @@
 import fs from 'fs';
 import path from 'path';
-import { ERR_BAD_REQUEST, ERR_INTERNAL_SERVER_ERROR } from '../../constants';
+import { ERR_BAD_REQUEST, ERR_INTERNAL_SERVER_ERROR, DEFINITION_SNAPMAKER_EXTRUDER_0, DEFINITION_SNAPMAKER_EXTRUDER_1, DEFINITION_ACTIVE, DEFINITION_ACTIVE_FINAL } from '../../constants';
 import { loadDefinitionsByPrefixName, loadAllSeriesDefinitions, DefinitionLoader } from '../../slicer';
 import DataStorage from '../../DataStorage';
 
@@ -36,8 +36,11 @@ export const getDefinition = (req, res) => {
 
     const definitionLoader = new DefinitionLoader();
 
-    definitionLoader.loadDefinition(headType, definitionId, series);
-
+    if (definitionId === DEFINITION_SNAPMAKER_EXTRUDER_0 || definitionId === DEFINITION_SNAPMAKER_EXTRUDER_1 || definitionId === DEFINITION_ACTIVE || definitionId === DEFINITION_ACTIVE_FINAL) {
+        definitionLoader.loadDefinition(headType, definitionId);
+    } else {
+        definitionLoader.loadDefinition(headType, definitionId, series);
+    }
     res.send({ definition: definitionLoader.toObject() });
 };
 
@@ -145,7 +148,7 @@ export const updateDefinition = async (req, res) => {
     const series = req.body.series;
 
     const definitionLoader = new DefinitionLoader();
-    if (definitionId === 'snapmaker_extruder_0' || definitionId === 'snapmaker_extruder_1') {
+    if (definitionId === DEFINITION_SNAPMAKER_EXTRUDER_0 || definitionId === DEFINITION_SNAPMAKER_EXTRUDER_1 || definitionId === DEFINITION_ACTIVE || definitionId === DEFINITION_ACTIVE_FINAL) {
         definitionLoader.loadDefinition(headType, definitionId);
     } else {
         definitionLoader.loadDefinition(headType, definitionId, series);
@@ -177,7 +180,7 @@ export const updateDefinition = async (req, res) => {
 
     let filePath = '';
     let activeRecoverPath = '';
-    if (definitionId === 'snapmaker_extruder_0' || definitionId === 'snapmaker_extruder_1') {
+    if (definitionId === DEFINITION_SNAPMAKER_EXTRUDER_0 || definitionId === DEFINITION_SNAPMAKER_EXTRUDER_1 || definitionId === DEFINITION_ACTIVE || definitionId === DEFINITION_ACTIVE_FINAL) {
         filePath = path.join(`${DataStorage.configDir}/${headType}`, `${definitionId}.def.json`);
         activeRecoverPath = path.join(`${DataStorage.activeConfigDir}/${headType}`, `${definitionId}.def.json`);
     } else {

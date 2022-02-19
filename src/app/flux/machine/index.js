@@ -890,6 +890,9 @@ export const actions = {
         // if (port && workflowState === WORKFLOW_STATE_IDLE) {
         if (connectionType === CONNECTION_TYPE_SERIAL) {
             // controller.command('gcode', gcode, context);
+            // if (workflowState !== WORKFLOW_STATE_IDLE) {
+            //     return;
+            // }
             controller.command('gcode', gcode, context);
             // } else if (server && workflowStatus === STATUS_IDLE) {
         } else {
