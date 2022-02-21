@@ -723,7 +723,7 @@ function VisualizerLeftBar({ setTransformMode, supportActions, updateBoundingBox
                 </div>
                 {!showRotationAnalyzeModal && transformMode === 'translate' && (
                     <div
-                        className="position-ab width-280 margin-left-72 border-default-grey-1 border-radius-8 background-color-white"
+                        className="position-ab width-360 margin-left-72 border-default-grey-1 border-radius-8 background-color-white"
                         style={{
                             marginTop: '60px'
                         }}
@@ -917,7 +917,7 @@ function VisualizerLeftBar({ setTransformMode, supportActions, updateBoundingBox
                             marginTop: '112px'
                         }}
                     >
-                        <div className="border-bottom-normal padding-vertical-10 padding-horizontal-16 height-40 font-size-middle">
+                        <div className="sm-flex justify-space-between border-bottom-normal padding-vertical-10 padding-horizontal-16 height-40">
                             {i18n._('key-Printing/LeftBar-Scale')}
                             <CancelButton
                                 onClick={() => setTransformMode('')}
