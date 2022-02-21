@@ -50,6 +50,7 @@ class DefinitionManager {
 
         res = await this.getDefinition('snapmaker_extruder_1', false);
         this.extruderRDefinition = res;
+        console.log('dd', this.extruderLDefinition);
     }
 
     /**

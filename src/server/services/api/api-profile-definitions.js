@@ -36,8 +36,11 @@ export const getDefinition = (req, res) => {
 
     const definitionLoader = new DefinitionLoader();
 
-    if (definitionId === DEFINITION_SNAPMAKER_EXTRUDER_0 || definitionId === DEFINITION_SNAPMAKER_EXTRUDER_1 || definitionId === DEFINITION_ACTIVE || definitionId === DEFINITION_ACTIVE_FINAL) {
+    if (definitionId === DEFINITION_ACTIVE || definitionId === DEFINITION_ACTIVE_FINAL) {
         definitionLoader.loadDefinition(headType, definitionId);
+    } else if (definitionId === DEFINITION_SNAPMAKER_EXTRUDER_0 || definitionId === DEFINITION_SNAPMAKER_EXTRUDER_1) {
+        definitionLoader.loadDefinition(headType, definitionId);
+        console.log('definitionLoader', definitionLoader.settings?.bottom_layers, definitionLoader.toObject());
     } else {
         definitionLoader.loadDefinition(headType, definitionId, series);
     }
