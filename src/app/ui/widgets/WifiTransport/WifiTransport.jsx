@@ -238,7 +238,7 @@ function WifiTransport({ widgetActions, controlActions }) {
             previewStage: WORKSPACE_STAGE.EMPTY
         }));
     };
-
+    console.log({ selectFileName });
     const [showStartModal, setShowStartModal] = useState(false);
     const [currentWorkflowStatus, setCurrentWorkflowStatus] = useState('');
     const fileInput = useRef();
@@ -267,6 +267,7 @@ function WifiTransport({ widgetActions, controlActions }) {
         // select and unselect
         if (selectFileName === _selectFileName && needToUnselect) {
             setSelectFileName('');
+            type = '';
         } else {
             setSelectFileName(_selectFileName);
         }
