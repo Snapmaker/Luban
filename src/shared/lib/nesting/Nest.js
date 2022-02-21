@@ -42,11 +42,12 @@ export class Part {
 
     modelID;
 
-    constructor(polygons, modelID) {
+    constructor(polygons, center, modelID) {
         this.polygons = polygons.slice(0, 2);
         PolygonsUtils.sort(this.polygons, false);
         this.area = Vector2.area(this.polygons[0]);
         this.absArea = Math.abs(this.area);
+        this.center = center;
         this.modelID = modelID;
     }
 }
@@ -107,7 +108,8 @@ export class Nest {
             }
 
             roundAndMulPolygons(simplyPolygons, this.accuracy);
-            this.parts.push(new Part(simplyPolygons, parts[i].modelID));
+            roundAndMulPoint(parts[i].center, this.accuracy);
+            this.parts.push(new Part(simplyPolygons, parts[i].center, parts[i].modelID));
         }
 
         this.sortParts();
@@ -957,21 +959,28 @@ export class Nest {
         return resPolygons;
     }
 
-    getRotatePolygons(polygons, i) {
-        const rotatePolygons = PolygonsUtils.rotate(polygons, i);
+    getRotatePolygons(polygons, i, center) {
+        const rotatePolygons = PolygonsUtils.rotate(polygons, i, center);
         roundAndMulPolygons(rotatePolygons);
 
         const box = PolygonUtils.getBox(rotatePolygons[0]);
-        const movePolygons = PolygonsUtils.move(rotatePolygons, {
+        const offset = {
             x: -box.min.x,
             y: -box.min.y
-        });
-        return movePolygons;
+        };
+        // const movePolygons = PolygonsUtils.move(rotatePolygons, {
+        //     x: -box.min.x,
+        //     y: -box.min.y
+        // });
+        return {
+            rotatePolygons: PolygonsUtils.move(rotatePolygons, offset),
+            rotateCenter: Vector2.add(center, offset)
+        };
     }
 
     getCenter(polygon) {
         const center = PolygonUtils.center(polygon);
-        roundAndMulPoint(center);
+        // roundAndMulPoint(center);
         return center;
     }
 
@@ -979,13 +988,11 @@ export class Nest {
         let finalResult = null;
 
         for (let i = 0; i < 360; i += this.rotate) {
-            const rotatePolygons = this.getRotatePolygons(part.polygons, i);
+            const { rotatePolygons, rotateCenter } = this.getRotatePolygons(part.polygons, i, part.center);
 
-            const center = this.getCenter(rotatePolygons[0]);
+            const traceLines = this.generateTraceLine(plate.polygon, rotatePolygons[0], rotateCenter);
 
-            const traceLines = this.generateTraceLine(plate.polygon, rotatePolygons[0], center);
-
-            const nfpRings = this.mergeTraceLines2Polygon(traceLines, plate.polygon, center);
+            const nfpRings = this.mergeTraceLines2Polygon(traceLines, plate.polygon, rotateCenter);
 
             if (!nfpRings || nfpRings.length === 0) {
                 continue;
@@ -998,7 +1005,7 @@ export class Nest {
 
                 const lowerPointTmp = this.searchLowerPosition(nfpLines);
 
-                const movePolygons = PolygonsUtils.move(rotatePolygons, Vector2.sub(lowerPointTmp, center));
+                const movePolygons = PolygonsUtils.move(rotatePolygons, Vector2.sub(lowerPointTmp, rotateCenter));
                 const diffPolygons = polyDiff([movePolygons[0]], [plate.polygon]);
 
                 if (diffPolygons && diffPolygons[0] && diffPolygons[0].length > 0) {
@@ -1015,7 +1022,7 @@ export class Nest {
             const result = {
                 position: lowerPoint,
                 angle: i,
-                center: center,
+                center: rotateCenter,
                 rotatePolygons: rotatePolygons
             };
 

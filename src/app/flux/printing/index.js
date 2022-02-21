@@ -1929,12 +1929,20 @@ export const actions = {
                     });
                 });
                 modelInfo.children = children;
+                modelInfo.center = {
+                    x: model.transformation.positionX,
+                    y: model.transformation.positionY
+                };
             } else {
                 modelInfo.children = [{
                     count: model.geometry.getAttribute('position').count,
                     array: model.geometry.getAttribute('position').array,
                     matrix: model.meshObject.matrix
                 }];
+                modelInfo.center = {
+                    x: model.transformation.positionX,
+                    y: model.transformation.positionY
+                };
             }
             models.push(modelInfo);
         });

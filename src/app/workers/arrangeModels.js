@@ -87,6 +87,7 @@ const arrangeModels = async (data) => {
                 faces,
                 modelID: model.modelID,
                 boundingBox: stlBoundingBox,
+                center: model.center
             });
         });
 
