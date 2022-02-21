@@ -372,7 +372,7 @@ function SerialConnection() {
                         className={classNames(styles['connection-state'], 'padding-bottom-8', 'border-bottom-dashed-default')}
                     >
                         <span className={styles['connection-state-name']}>
-                            {seriesInfo}
+                            {i18n._(MACHINE_SERIES[seriesInfo.toUpperCase()].label)}
                         </span>
                         <span className={styles['connection-state-icon']}>
                             {workflowState === WORKFLOW_STATE_IDLE
