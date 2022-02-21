@@ -182,13 +182,13 @@ class DefinitionManager {
 
             // "0 if infill_sparse_density == 100 else math.ceil(round(top_thickness / resolveOrValue('layer_height'), 4))"
             const topThickness = definition.settings.top_thickness.default_value;
-            const topLayers = infillSparseDensity === 100 ? 0 : Math.ceil(Math.round(topThickness / layerHeight));
+            const topLayers = infillSparseDensity === 100 ? 0 : Math.ceil(topThickness / layerHeight);
             definition.settings.top_layers.default_value = topLayers;
             settings.top_layers = { default_value: topLayers };
 
             // "999999 if infill_sparse_density == 100 else math.ceil(round(bottom_thickness / resolveOrValue('layer_height'), 4))"
             const bottomThickness = definition.settings.bottom_thickness.default_value;
-            const bottomLayers = infillSparseDensity === 100 ? 999999 : Math.ceil(Math.round(bottomThickness / layerHeight));
+            const bottomLayers = infillSparseDensity === 100 ? 999999 : Math.ceil(bottomThickness / layerHeight);
             definition.settings.bottom_layers.default_value = bottomLayers;
             settings.bottom_layers = { default_value: bottomLayers };
         }

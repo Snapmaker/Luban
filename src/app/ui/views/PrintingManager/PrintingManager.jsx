@@ -92,6 +92,8 @@ function PrintingManager() {
             }
             if (shouldUpdateActive) {
                 actions.updateActiveDefinition(newDefinition.definitionId);
+                dispatch(printingActions.destroyGcodeLine());
+                dispatch(printingActions.displayModel());
             }
         },
         onSaveQualityForManager: async (type, newDefinition) => {
