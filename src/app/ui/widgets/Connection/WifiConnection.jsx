@@ -12,6 +12,7 @@ import i18n from '../../../lib/i18n';
 import usePrevious from '../../../lib/hooks/previous';
 import { actions as machineActions } from '../../../flux/machine';
 import {
+    MACHINE_SERIES,
     ABSENT_OBJECT,
     CONNECTION_STATUS_CONNECTED,
     CONNECTION_STATUS_CONNECTING,
@@ -439,7 +440,7 @@ function WifiConnection() {
                         className={classNames(styles['connection-state'], 'padding-bottom-8', 'border-bottom-dashed-default')}
                     >
                         <span className="main-text-normal">
-                            {`${serverState?.name} (${series.toUpperCase()})`}
+                            {`${serverState?.name} (${i18n._(MACHINE_SERIES[series.toUpperCase()].label)})`}
                         </span>
                         <span className={styles['connection-state-icon']}>
                             {workflowStatus === WORKFLOW_STATUS_UNKNOWN
