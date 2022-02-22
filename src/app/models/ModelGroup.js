@@ -1359,7 +1359,7 @@ class ModelGroup extends EventEmitter {
     arrangeOutsidePlate(model) {
         model.computeBoundingBox();
         const x = this._bbox.max.x + (model.boundingBox.max.x - model.boundingBox.min.x) / 2;
-        let y = (this._bbox.max.y + this._bbox.min.y) / 2;
+        let y = this._bbox.min.y;
         const stepCount = 1;
 
         const modelBox3Clone = model.boundingBox.clone();

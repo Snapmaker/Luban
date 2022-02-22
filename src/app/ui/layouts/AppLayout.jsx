@@ -390,10 +390,10 @@ class AppLayout extends PureComponent {
                     <div className="sm-flex justify-space-between">
                         <div className="sm-flex-auto font-roboto font-weight-normal font-size-middle">
                             <SvgIcon
-                                name="WarningTipsSuccess"
+                                name="WarningTipsError"
                                 size="24"
                                 type={['static']}
-                                color="#4cb518"
+                                color="red" // TODO
                             />
                             <span>
                                 {i18n._('key-app_layout-Print Area Exceeded')}

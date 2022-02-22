@@ -26,6 +26,7 @@ import { DUAL_EXTRUDER_TOOLHEAD_FOR_SM2, HEAD_PRINTING,
     EPSILON, BOTH_EXTRUDER_MAP_NUMBER, LEFT_EXTRUDER_MAP_NUMBER } from '../../../constants';
 import { machineStore } from '../../../store/local-storage';
 import TipTrigger from '../../components/TipTrigger';
+import PrimeTowerModel from '../../../models/PrimeTowerModel';
 
 const extruderLabelMap = {
     '0': 'Extruder L',
@@ -487,6 +488,8 @@ function VisualizerLeftBar({ setTransformMode, supportActions, updateBoundingBox
     const transformDisabled = showRotationAnalyzeModal || showEditSupportModal || !(selectedModelArray.length > 0 && selectedModelArray.every((model) => {
         return model.visible === true;
     }));
+    // TODO
+    const hasModels = modelGroup.getModels().some(model => model.visible && !(model instanceof PrimeTowerModel));
     const supportDisabled = (displayedType !== 'model' || modelGroup.getModelsAttachedSupport(false).length === 0);
     const rotationAnalysisEnable = (selectedModelArray.length === 1 && selectedModelArray[0].visible && !selectedModelArray[0].parent);
     const isDualExtruder = machineStore.get('machine.toolHead.printingToolhead') === DUAL_EXTRUDER_TOOLHEAD_FOR_SM2;
@@ -621,7 +624,7 @@ function VisualizerLeftBar({ setTransformMode, supportActions, updateBoundingBox
                                         onClick={() => {
                                             setTransformMode('translate');
                                         }}
-                                        disabled={showRotationAnalyzeModal || models.length === 0}
+                                        disabled={showRotationAnalyzeModal || !hasModels}
                                     />
                                 </li>
                                 <li
@@ -723,7 +726,7 @@ function VisualizerLeftBar({ setTransformMode, supportActions, updateBoundingBox
                 </div>
                 {!showRotationAnalyzeModal && transformMode === 'translate' && (
                     <div
-                        className="position-ab width-280 margin-left-72 border-default-grey-1 border-radius-8 background-color-white"
+                        className="position-ab width-360 margin-left-72 border-default-grey-1 border-radius-8 background-color-white"
                         style={{
                             marginTop: '60px'
                         }}
@@ -734,7 +737,10 @@ function VisualizerLeftBar({ setTransformMode, supportActions, updateBoundingBox
                                 onClick={() => setTransformMode('')}
                             />
                         </div>
-                        <div className="padding-vertical-16 padding-horizontal-16">
+                        <div className="padding-vertical-10 padding-horizontal-16 height-40">
+                            {i18n._('key-Printing/LeftBar-Model position')}
+                        </div>
+                        <div className="padding-vertical-16 padding-horizontal-16 ">
                             <div className="sm-flex justify-space-between height-32 margin-bottom-8">
                                 <span className="sm-flex-auto color-red-1">X</span>
                                 <div className="sm-flex-auto">
@@ -770,7 +776,7 @@ function VisualizerLeftBar({ setTransformMode, supportActions, updateBoundingBox
                             {!isSupportSelected && (
                                 <div className="sm-flex">
                                     <Button
-                                        className="margin-top-32"
+                                        className="margin-vertical-16"
                                         type="primary"
                                         priority="level-three"
                                         width="100%"
@@ -781,10 +787,10 @@ function VisualizerLeftBar({ setTransformMode, supportActions, updateBoundingBox
                                     </Button>
                                 </div>
                             )}
-                            <div className="border-bottom-normal padding-vertical-10 padding-horizontal-16 height-40">
+                            <div className="border-top-normal padding-vertical-10 padding-horizontal-16 height-40">
                                 {i18n._('key-Printing/LeftBar-Arrange Options')}
                             </div>
-                            <div className="padding-vertical-16 padding-horizontal-16">
+                            <div className="padding-top-16 padding-horizontal-16">
                                 <TipTrigger
                                     title={i18n._('key-Printing/LeftBar-Rotation Step Around Z Axis')}
                                     content={i18n._('key-Printing/LeftBar-Rotation Step Around Z Axis Content')}
@@ -902,6 +908,7 @@ function VisualizerLeftBar({ setTransformMode, supportActions, updateBoundingBox
                                             const { angle, offset, padding } = arragneSettings;
                                             arrangeAllModels(angle, offset, padding);
                                         }}
+                                        disabled={!hasModels}
                                     >
                                         <span>{i18n._('key-Printing/LeftBar-Auto Arrange')}</span>
                                     </Button>
@@ -917,7 +924,7 @@ function VisualizerLeftBar({ setTransformMode, supportActions, updateBoundingBox
                             marginTop: '112px'
                         }}
                     >
-                        <div className="border-bottom-normal padding-vertical-10 padding-horizontal-16 height-40 font-size-middle">
+                        <div className="sm-flex justify-space-between border-bottom-normal padding-vertical-10 padding-horizontal-16 height-40">
                             {i18n._('key-Printing/LeftBar-Scale')}
                             <CancelButton
                                 onClick={() => setTransformMode('')}

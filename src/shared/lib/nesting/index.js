@@ -43,7 +43,7 @@ export const nesting = (stls, options, onProgress) => {
         const part = new Part(generateSTLToPolygon(stls[i].faces, {
             interval: globalOptions.interval,
             boundingBox: stls[i].boundingBox
-        }), stls[i].modelID);
+        }), stls[i].center, stls[i].modelID);
         parts.push(part);
     }
 

@@ -56,6 +56,7 @@ import UngroupOperation3D from '../operation-history/UngroupOperation3D';
 import DeleteSupportsOperation3D from '../operation-history/DeleteSupportsOperation3D';
 import AddSupportsOperation3D from '../operation-history/AddSupportsOperation3D';
 import ArrangeOperation3D from '../operation-history/ArrangeOperation3D';
+import PrimeTowerModel from '../../models/PrimeTowerModel';
 
 // register methods for three-mesh-bvh
 THREE.Mesh.prototype.raycast = acceleratedRaycast;
@@ -567,6 +568,7 @@ export const actions = {
 
                 modelGroup.unselectAllModels();
                 dispatch(actions.loadGcode(gcodeFilename));
+                dispatch(actions.setTransformMode(''));
             });
             controller.on('slice:progress', (progress) => {
                 const state = getState().printing;
@@ -1915,6 +1917,9 @@ export const actions = {
 
         const models = [];
         modelGroup.getModels().forEach((model) => {
+            if (model instanceof PrimeTowerModel) {
+                return;
+            }
             const modelInfo = {
                 modelID: model.modelID,
                 isGroup: (model instanceof ThreeGroup)
@@ -1929,12 +1934,20 @@ export const actions = {
                     });
                 });
                 modelInfo.children = children;
+                modelInfo.center = {
+                    x: model.transformation.positionX,
+                    y: model.transformation.positionY
+                };
             } else {
                 modelInfo.children = [{
                     count: model.geometry.getAttribute('position').count,
                     array: model.geometry.getAttribute('position').array,
                     matrix: model.meshObject.matrix
                 }];
+                modelInfo.center = {
+                    x: model.transformation.positionX,
+                    y: model.transformation.positionY
+                };
             }
             models.push(modelInfo);
         });
@@ -1943,13 +1956,14 @@ export const actions = {
             models,
             validArea: modelGroup.getValidArea(),
             angle,
-            offset: offset + 2, // TODO, just for floating pointer error
+            offset: offset / 2,
             padding
         }], (payload) => {
             const { status, value } = payload;
             switch (status) {
                 case 'succeed': {
                     const { parts } = value;
+                    let allArranged = true;
 
                     parts.forEach((part) => {
                         const model = modelGroup.getModel(part.modelID);
@@ -1960,9 +1974,11 @@ export const actions = {
                         if (part.angle !== undefined && part.position !== undefined) {
                             model.updateTransformation({
                                 positionX: part.position.x,
-                                positionY: part.position.y,
-                                rotationZ: part.angle * Math.PI / 180 + model.transformation.rotationZ
+                                positionY: part.position.y
                             });
+                            model.rotateModelByZaxis(part.angle);
+                            model.stickToPlate();
+                            model.onTransform();
                             modelGroup.selectModelById(part.modelID, true);
                         }
                     });
@@ -1974,6 +1990,7 @@ export const actions = {
                     parts.forEach((part) => {
                         const model = modelGroup.getModel(part.modelID);
                         if (part.angle === undefined || part.position === undefined) {
+                            allArranged = false;
                             model.updateTransformation({
                                 positionX: 0,
                                 positionY: 0
@@ -1988,10 +2005,9 @@ export const actions = {
                                 positionX: position.x,
                                 positionY: position.y
                             });
+                            modelGroup.stickToPlateAndCheckOverstepped(model);
                         }
                     });
-
-                    modelGroup.onModelAfterTransform();
 
                     // record for undo|redo
                     modelGroup.getModels().forEach((model) => {
@@ -2003,11 +2019,7 @@ export const actions = {
                         operations.push(operation);
                     });
                     operations.registCallbackAfterAll(() => {
-                        dispatch(actions.updateState(modelGroup.getState()));
-                        dispatch(actions.destroyGcodeLine());
-                        dispatch(actions.updateAllModelColors());
-                        dispatch(actions.displayModel());
-                        dispatch(actions.render());
+                        dispatch(actions.onModelAfterTransform());
                     });
                     dispatch(operationHistoryActions.setOperations(INITIAL_STATE.name, operations));
 
@@ -2015,8 +2027,13 @@ export const actions = {
                         stage: STEP_STAGE.PRINTING_ARRANGING_MODELS,
                         progress: progressStatesManager.updateProgress(STEP_STAGE.PRINTING_ARRANGING_MODELS, 1)
                     }));
-                    dispatch(actions.updateAllModelColors());
+                    dispatch(actions.onModelAfterTransform());
                     progressStatesManager.finishProgress(true);
+                    if (!allArranged) {
+                        dispatch(appGlobalActions.updateShowArrangeModelsError({
+                            showArrangeModelsError: true
+                        }));
+                    }
                     break;
                 }
                 case 'progress': {
@@ -2029,7 +2046,15 @@ export const actions = {
                 }
                 case 'err': {
                     // TODO: STOP AND MODAL
+                    dispatch(actions.updateState({
+                        stage: STEP_STAGE.PRINTING_ARRANGING_MODELS,
+                        progress: progressStatesManager.updateProgress(STEP_STAGE.PRINTING_ARRANGING_MODELS, 1)
+                    }));
                     progressStatesManager.finishProgress(false);
+                    dispatch(actions.updateState({
+                        stage: STEP_STAGE.PRINTING_ARRANGING_MODELS,
+                        progress: progressStatesManager.updateProgress(STEP_STAGE.PRINTING_ARRANGING_MODELS, 1)
+                    }));
                     dispatch(appGlobalActions.updateShowArrangeModelsError({
                         showArrangeModelsError: true
                     }));

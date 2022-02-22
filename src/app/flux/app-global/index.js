@@ -49,7 +49,7 @@ export const actions = {
                 dispatch(actions.updateShowArrangeModelsError({
                     showArrangeModelsError: false
                 }));
-            });
+            }, SHOW_MODAL_TIME);
         } else {
             clearTimeout(clearArrangeModelsModalTimer);
         }

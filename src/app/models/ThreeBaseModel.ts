@@ -135,4 +135,10 @@ export default class BaseModel {
         this.transformation = { ...this.transformation };
         return this.transformation;
     }
+
+    rotateModelByZaxis(angle = 0) {
+        const unitZ = new THREE.Vector3(0, 0, 1);
+        const quaternion = new THREE.Quaternion().setFromAxisAngle(unitZ, angle * Math.PI / 180);
+        this.meshObject.applyQuaternion(quaternion);
+    }
 }
