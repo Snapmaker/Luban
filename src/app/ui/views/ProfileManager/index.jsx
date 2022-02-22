@@ -420,7 +420,7 @@ function ProfileManager({
             outsideActions.onSaveDefinitionForManager(newDefinitionForManager, definitionForManager.definitionId === activeDefinitionID);
         },
         resetDefinition: (definitionId) => {
-            const newDefinitionForManager = outsideActions.resetDefinitionById(definitionId);
+            const newDefinitionForManager = outsideActions.resetDefinitionById(definitionId, definitionId === activeDefinitionID);
             setDefinitionState({
                 definitionForManager: newDefinitionForManager
             });

@@ -171,8 +171,6 @@ class SVGParser {
             newSvg.g = gArray;
         }
         if (element === SVG_TAG_SVG) {
-            newSvg.$.width = null;
-            newSvg.$.height = null;
             newSvg.$.preserveAspectRatio = 'none';
         }
         parsedNode.svg = newSvg;
