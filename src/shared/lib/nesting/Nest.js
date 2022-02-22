@@ -699,19 +699,19 @@ export class Nest {
             const deleteSet = new Set();
             for (let i = 0; i < traceIndex.length; i++) {
                 const index = traceIndex[i];
-                const indexs1 = traceIndexMap.get(this.toPointHash(traceLines[index].sp));
-                const indexs2 = traceIndexMap.get(this.toPointHash(traceLines[index].ep));
+                // const indexs1 = traceIndexMap.get(this.toPointHash(traceLines[index].sp));
+                // const indexs2 = traceIndexMap.get(this.toPointHash(traceLines[index].ep));
                 deleteSet.add(index);
-                if (indexs1) {
-                    for (let j = 0; j < indexs1.length; j++) {
-                        deleteSet.add(indexs1[j]);
-                    }
-                }
-                if (indexs2) {
-                    for (let j = 0; j < indexs2.length; j++) {
-                        deleteSet.add(indexs2[j]);
-                    }
-                }
+                // if (indexs1) {
+                //     for (let j = 0; j < indexs1.length; j++) {
+                //         deleteSet.add(indexs1[j]);
+                //     }
+                // }
+                // if (indexs2) {
+                //     for (let j = 0; j < indexs2.length; j++) {
+                //         deleteSet.add(indexs2[j]);
+                //     }
+                // }
             }
             traceLines = traceLines.filter((v, i) => !deleteSet.has(i));
 
