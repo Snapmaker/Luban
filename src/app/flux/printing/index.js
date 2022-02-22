@@ -56,6 +56,7 @@ import UngroupOperation3D from '../operation-history/UngroupOperation3D';
 import DeleteSupportsOperation3D from '../operation-history/DeleteSupportsOperation3D';
 import AddSupportsOperation3D from '../operation-history/AddSupportsOperation3D';
 import ArrangeOperation3D from '../operation-history/ArrangeOperation3D';
+import PrimeTowerModel from '../../models/PrimeTowerModel';
 
 // register methods for three-mesh-bvh
 THREE.Mesh.prototype.raycast = acceleratedRaycast;
@@ -1916,6 +1917,9 @@ export const actions = {
 
         const models = [];
         modelGroup.getModels().forEach((model) => {
+            if (model instanceof PrimeTowerModel) {
+                return;
+            }
             const modelInfo = {
                 modelID: model.modelID,
                 isGroup: (model instanceof ThreeGroup)
@@ -1959,6 +1963,7 @@ export const actions = {
             switch (status) {
                 case 'succeed': {
                     const { parts } = value;
+                    let allArranged = true;
 
                     parts.forEach((part) => {
                         const model = modelGroup.getModel(part.modelID);
@@ -1985,6 +1990,7 @@ export const actions = {
                     parts.forEach((part) => {
                         const model = modelGroup.getModel(part.modelID);
                         if (part.angle === undefined || part.position === undefined) {
+                            allArranged = false;
                             model.updateTransformation({
                                 positionX: 0,
                                 positionY: 0
@@ -2023,6 +2029,11 @@ export const actions = {
                     }));
                     dispatch(actions.onModelAfterTransform());
                     progressStatesManager.finishProgress(true);
+                    if (!allArranged) {
+                        dispatch(appGlobalActions.updateShowArrangeModelsError({
+                            showArrangeModelsError: true
+                        }));
+                    }
                     break;
                 }
                 case 'progress': {
@@ -2040,6 +2051,10 @@ export const actions = {
                         progress: progressStatesManager.updateProgress(STEP_STAGE.PRINTING_ARRANGING_MODELS, 1)
                     }));
                     progressStatesManager.finishProgress(false);
+                    dispatch(actions.updateState({
+                        stage: STEP_STAGE.PRINTING_ARRANGING_MODELS,
+                        progress: progressStatesManager.updateProgress(STEP_STAGE.PRINTING_ARRANGING_MODELS, 1)
+                    }));
                     dispatch(appGlobalActions.updateShowArrangeModelsError({
                         showArrangeModelsError: true
                     }));
