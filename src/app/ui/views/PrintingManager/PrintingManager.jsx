@@ -155,8 +155,9 @@ function PrintingManager() {
         getDefaultDefinition: (definitionId) => {
             return dispatch(printingActions.getDefaultDefinition(definitionId));
         },
-        resetDefinitionById: (definitionId) => {
-            return dispatch(printingActions.resetDefinitionById(managerDisplayType, definitionId));
+        resetDefinitionById: (definitionId, shouldDestroyGcodeLine) => {
+            console.log('resetDefinitionById', definitionId, shouldDestroyGcodeLine);
+            return dispatch(printingActions.resetDefinitionById(managerDisplayType, definitionId, shouldDestroyGcodeLine));
         },
         updateActiveDefinition: (definitionId) => {
             dispatch(printingActions.updateActiveDefinitionById(managerDisplayType, definitionId));

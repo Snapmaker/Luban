@@ -724,7 +724,7 @@ export const actions = {
         return def?.settings;
     },
 
-    resetDefinitionById: (type, definitionId) => (dispatch, getState) => {
+    resetDefinitionById: (type, definitionId, shouldDestroyGcodeLine) => (dispatch, getState) => {
         const definitionsKey = defaultDefinitionKeys[type].definitions;
         const state = getState().printing;
         const defaultDefinitions = state.defaultDefinitions;
@@ -740,6 +740,10 @@ export const actions = {
             [definitionsKey]: [...definitions]
         }));
         dispatch(actions.updateBoundingBox());
+        if (shouldDestroyGcodeLine) {
+            dispatch(actions.destroyGcodeLine());
+            dispatch(actions.displayModel());
+        }
         return newDef;
     },
 
