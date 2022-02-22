@@ -1098,9 +1098,9 @@ class ModelGroup extends EventEmitter {
     onModelTransform() {
         try {
             // this.selectedModelIDArray.splice(0);
-            this.selectedModelArray.forEach((item) => {
+            this.selectedModelArray.forEach((model) => {
+                model.onTransform();
                 // this.selectedModelIDArray.push(item.modelID);
-                item.onTransform();
             });
             const { sourceType, mode, transformation, boundingBox, originalName } = this.selectedModelArray[0];
             return {
@@ -1612,7 +1612,6 @@ class ModelGroup extends EventEmitter {
                             return id;
                         });
                         if (newSubModelIDs.every(id => id instanceof ThreeModel)) {
-                            this.updateModelsPositionBaseFirstModel(this.models);
                             this.unselectAllModels();
                             group.add(newSubModelIDs);
                             this.groupsChildrenMap.delete(group);

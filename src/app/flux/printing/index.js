@@ -1778,7 +1778,9 @@ export const actions = {
     removeSelectedModel: () => (dispatch, getState) => {
         const { modelGroup } = getState().printing;
         const operations = new Operations();
-        for (const model of modelGroup.selectedModelArray) {
+        const selectedModelArray = modelGroup.selectedModelArray.concat();
+        const { recovery } = modelGroup.unselectAllModels();
+        for (const model of selectedModelArray) {
             if (model.type === 'primeTower') {
                 continue;
             }
@@ -1787,6 +1789,7 @@ export const actions = {
             });
             operations.push(operation);
         }
+        recovery();
         operations.registCallbackAfterAll(() => {
             const modelState = modelGroup.getState();
             if (!modelState.hasModel) {
@@ -2068,8 +2071,9 @@ export const actions = {
 
     recordModelBeforeTransform: (modelGroup) => (dispatch) => {
         dispatch(operationHistoryActions.clearTargetTmpState(INITIAL_STATE.name));
+        const selectedModelArray = modelGroup.selectedModelArray.concat();
         const { recovery } = modelGroup.unselectAllModels();
-        for (const model of modelGroup.selectedModelArray) {
+        for (const model of selectedModelArray) {
             modelGroup.unselectAllModels();
             modelGroup.addModelToSelectedGroup(model);
             if (model.supportTag) {
@@ -2094,8 +2098,9 @@ export const actions = {
             }
         }
 
+        const selectedModelArray = modelGroup.selectedModelArray.concat();
         const { recovery } = modelGroup.unselectAllModels();
-        for (const model of modelGroup.selectedModelArray) {
+        for (const model of selectedModelArray) {
             modelGroup.unselectAllModels();
             modelGroup.addModelToSelectedGroup(model);
             dispatch(operationHistoryActions.updateTargetTmpState(INITIAL_STATE.name, model.modelID, {

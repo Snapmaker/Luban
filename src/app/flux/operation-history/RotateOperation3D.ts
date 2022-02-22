@@ -50,5 +50,6 @@ export default class RotateOperation3D extends Operation<RotateOperationState> {
         model.computeBoundingBox();
         const overstepped = modelGroup._checkOverstepped(model);
         model.setOversteppedAndSelected(overstepped, model.isSelected);
+        modelGroup.updatePrimeTowerHeight();
     }
 }

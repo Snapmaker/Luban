@@ -1,4 +1,4 @@
-import { Color, WebGLRenderer, ACESFilmicToneMapping } from 'three';
+import { Color, WebGLRenderer } from 'three';
 
 import Detector from './Detector';
 
@@ -13,8 +13,6 @@ class WebGLRendererWrapper {
             this.renderer = new WebGLRenderer(options);
             this.renderer.setClearColor(new Color(0xF5F5F7), 1);
             this.renderer.shadowMap.enabled = true;
-            this.renderer.toneMapping = ACESFilmicToneMapping;
-            this.renderer.toneMappingExposure = 2;
         } else {
             this.renderer = null;
         }
