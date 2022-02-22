@@ -238,7 +238,6 @@ function WifiTransport({ widgetActions, controlActions }) {
             previewStage: WORKSPACE_STAGE.EMPTY
         }));
     };
-
     const [showStartModal, setShowStartModal] = useState(false);
     const [currentWorkflowStatus, setCurrentWorkflowStatus] = useState('');
     const fileInput = useRef();
@@ -267,6 +266,7 @@ function WifiTransport({ widgetActions, controlActions }) {
         // select and unselect
         if (selectFileName === _selectFileName && needToUnselect) {
             setSelectFileName('');
+            type = '';
         } else {
             setSelectFileName(_selectFileName);
         }
@@ -498,11 +498,11 @@ function WifiTransport({ widgetActions, controlActions }) {
     const isHeadType = selectFileType === headType;
     const hasFile = gcodeFiles.length > 0;
     const selectedFile = _.find(gcodeFiles, { uploadName: selectFileName });
-
     const isWifi = connectionType && connectionType === CONNECTION_TYPE_WIFI;
     // TODO: what is isSendedOnWifi?
     const isSended = isWifi ? isSendedOnWifi : true;
     const canPlay = hasFile && isConnected && isSended && _.includes([WORKFLOW_STATE_IDLE, WORKFLOW_STATUS_IDLE], currentWorkflowStatus);
+    const canSend = hasFile && isConnected && isHeadType && isWifi && isSendedOnWifi;
     return (
         <div className="border-default-grey-1 border-radius-8">
             <input
@@ -578,7 +578,7 @@ function WifiTransport({ widgetActions, controlActions }) {
                         type="primary"
                         priority="level-three"
                         width="144px"
-                        disabled={!(hasFile && isConnected && isHeadType && isWifi && isSendedOnWifi)}
+                        disabled={!canSend}
                         onClick={actions.sendFile}
                     >
                         {i18n._('key-Workspace/WifiTransport-Sending File')}
@@ -750,14 +750,16 @@ function WifiTransport({ widgetActions, controlActions }) {
                                 className="display-inline"
                                 overlay={() => (
                                     <Menu>
-                                        <Menu.Item
-                                            onClick={() => {
-                                                actions.sendFile();
-                                                closePreviewModal();
-                                            }}
-                                        >
-                                            <div className="align-c">{i18n._('key-Workspace/WifiTransport-Sending File')}</div>
-                                        </Menu.Item>
+                                        {canSend && (
+                                            <Menu.Item
+                                                onClick={() => {
+                                                    actions.sendFile();
+                                                    closePreviewModal();
+                                                }}
+                                            >
+                                                <div className="align-c">{i18n._('key-Workspace/WifiTransport-Sending File')}</div>
+                                            </Menu.Item>
+                                        )}
                                         <Menu.Item onClick={() => {
                                             actions.startPrint();
                                             closePreviewModal();

@@ -58,7 +58,7 @@ function Material({ widgetActions }) {
         }
     }
     useEffect(() => {
-        widgetActions.setTitle(i18n._('key-Printing/PrintingConfigurations-Material Settings'));
+        widgetActions.setTitle(i18n._('key-Printing/PrintingConfigurations-Extruder'));
     }, [widgetActions]);
     useEffect(() => {
         const definition = materialDefinitions.find(d => d.definitionId === defaultMaterialId);
@@ -197,7 +197,7 @@ function Material({ widgetActions }) {
                 </div>
                 <div className="sm-flex align-center color-black-3 justify-space-between margin-top-8">
                     <span className="display-inline width-88 text-overflow-ellipsis">
-                        {printingToolhead === DUAL_EXTRUDER_TOOLHEAD_FOR_SM2 ? i18n._('key-Printing/PrintingConfigurations-Extruder L') : i18n._('key-Printing/PrintingConfigurations-Extruder')}
+                        {printingToolhead === DUAL_EXTRUDER_TOOLHEAD_FOR_SM2 ? i18n._('key-Printing/PrintingConfigurations-Extruder L') : i18n._('key-Laser/ToolpathParameters-Material')}
                     </span>
                     <div>
                         <Select
