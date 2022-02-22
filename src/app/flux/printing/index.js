@@ -1969,9 +1969,11 @@ export const actions = {
                         if (part.angle !== undefined && part.position !== undefined) {
                             model.updateTransformation({
                                 positionX: part.position.x,
-                                positionY: part.position.y,
-                                rotationZ: part.angle * Math.PI / 180 + model.transformation.rotationZ
+                                positionY: part.position.y
                             });
+                            model.rotateModelByZaxis(part.angle);
+                            model.stickToPlate();
+                            model.onTransform();
                             modelGroup.selectModelById(part.modelID, true);
                         }
                     });

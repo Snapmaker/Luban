@@ -91,8 +91,8 @@ const arrangeModels = async (data) => {
             });
         });
 
-        const x = validArea.max.x - validArea.min.x - padding * 2 - offset;
-        const y = validArea.max.y - validArea.min.y - padding * 2 - offset;
+        const x = validArea.max.x - validArea.min.x - padding * 2 + offset;
+        const y = validArea.max.y - validArea.min.y - padding * 2 + offset;
         const parts = nesting(stls, {
             size: {
                 x: x < 0 ? 0 : x,
