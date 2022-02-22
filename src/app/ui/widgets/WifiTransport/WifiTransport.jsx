@@ -238,7 +238,6 @@ function WifiTransport({ widgetActions, controlActions }) {
             previewStage: WORKSPACE_STAGE.EMPTY
         }));
     };
-    console.log({ selectFileName });
     const [showStartModal, setShowStartModal] = useState(false);
     const [currentWorkflowStatus, setCurrentWorkflowStatus] = useState('');
     const fileInput = useRef();
