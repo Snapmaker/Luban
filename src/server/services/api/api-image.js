@@ -114,6 +114,8 @@ export const set = (req, res) => {
                             height: height
                         });
                         next();
+                    }).catch((err) => {
+                        next(err);
                     });
                 } else {
                     jimp.read(tempPath).then((image) => {

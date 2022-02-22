@@ -61,23 +61,37 @@ class ModelLoader {
             // https://stackoverflow.com/questions/36450612/how-to-merge-two-buffergeometries-in-one-buffergeometry-in-three-js
             // so implement merge via Geometry
             (container) => {
-                const geometry = new THREE.Geometry();
-                container.traverse((child) => {
-                    if (child instanceof THREE.Mesh) {
-                        if (child.geometry && child.geometry instanceof THREE.BufferGeometry) {
-                            const ge = new THREE.Geometry();
-                            ge.fromBufferGeometry(child.geometry);
-                            geometry.merge(ge);
+                // let geometry = new THREE.Geometry();
+                let geometry = null;
+                if (container.children.length) {
+                    container.traverse((child) => {
+                        if (child instanceof THREE.Mesh) {
+                            if (!geometry) {
+                                geometry = new THREE.Geometry();
+                            }
+                            if (child.geometry && child.geometry instanceof THREE.BufferGeometry && geometry) {
+                                const ge = new THREE.Geometry();
+                                ge.fromBufferGeometry(child.geometry);
+                                geometry.merge(ge);
+                            }
                         }
+                    });
+                    // BufferGeometry is an efficient alternative to Geometry
+                    // const bufferGeometry = new THREE.BufferGeometry();
+                    let bufferGeometry = null;
+                    if (geometry) {
+                        bufferGeometry = new THREE.BufferGeometry();
+                        bufferGeometry.fromGeometry(geometry);
                     }
-                });
-                // BufferGeometry is an efficient alternative to Geometry
-                const bufferGeometry = new THREE.BufferGeometry();
-                bufferGeometry.fromGeometry(geometry);
-                // call the following if lost reflection
-                // bufferGeometry.computeVertexNormals();
-                // bufferGeometry.normalizeNormals();
-                onLoad(bufferGeometry);
+                    // call the following if lost reflection
+                    // bufferGeometry.computeVertexNormals();
+                    // bufferGeometry.normalizeNormals();
+                    onLoad(bufferGeometry);
+                } else {
+                    onError({
+                        msg: 'Failed to import this object. Please select a supported file format.'
+                    });
+                }
             },
             (progress) => {
                 onProgress(progress);
