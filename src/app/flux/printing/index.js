@@ -2035,6 +2035,10 @@ export const actions = {
                 }
                 case 'err': {
                     // TODO: STOP AND MODAL
+                    dispatch(actions.updateState({
+                        stage: STEP_STAGE.PRINTING_ARRANGING_MODELS,
+                        progress: progressStatesManager.updateProgress(STEP_STAGE.PRINTING_ARRANGING_MODELS, 1)
+                    }));
                     progressStatesManager.finishProgress(false);
                     dispatch(appGlobalActions.updateShowArrangeModelsError({
                         showArrangeModelsError: true

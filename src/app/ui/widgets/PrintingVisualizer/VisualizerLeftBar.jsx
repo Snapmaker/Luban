@@ -734,7 +734,10 @@ function VisualizerLeftBar({ setTransformMode, supportActions, updateBoundingBox
                                 onClick={() => setTransformMode('')}
                             />
                         </div>
-                        <div className="padding-vertical-16 padding-horizontal-16">
+                        <div className="padding-vertical-10 padding-horizontal-16 height-40">
+                            {i18n._('key-Printing/LeftBar-Model position')}
+                        </div>
+                        <div className="padding-vertical-16 padding-horizontal-16 ">
                             <div className="sm-flex justify-space-between height-32 margin-bottom-8">
                                 <span className="sm-flex-auto color-red-1">X</span>
                                 <div className="sm-flex-auto">
@@ -770,7 +773,7 @@ function VisualizerLeftBar({ setTransformMode, supportActions, updateBoundingBox
                             {!isSupportSelected && (
                                 <div className="sm-flex">
                                     <Button
-                                        className="margin-top-32"
+                                        className="margin-vertical-16"
                                         type="primary"
                                         priority="level-three"
                                         width="100%"
@@ -781,10 +784,10 @@ function VisualizerLeftBar({ setTransformMode, supportActions, updateBoundingBox
                                     </Button>
                                 </div>
                             )}
-                            <div className="border-bottom-normal padding-vertical-10 padding-horizontal-16 height-40">
+                            <div className="border-top-normal padding-vertical-10 padding-horizontal-16 height-40">
                                 {i18n._('key-Printing/LeftBar-Arrange Options')}
                             </div>
-                            <div className="padding-vertical-16 padding-horizontal-16">
+                            <div className="padding-top-16 padding-horizontal-16">
                                 <TipTrigger
                                     title={i18n._('key-Printing/LeftBar-Rotation Step Around Z Axis')}
                                     content={i18n._('key-Printing/LeftBar-Rotation Step Around Z Axis Content')}
