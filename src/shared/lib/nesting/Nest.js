@@ -1009,7 +1009,14 @@ export class Nest {
                 const diffPolygons = polyDiff([movePolygons[0]], [plate.polygon]);
 
                 if (diffPolygons && diffPolygons[0] && diffPolygons[0].length > 0) {
-                    continue;
+                    let area = 0;
+                    for (let k = 0; k < diffPolygons.length; k++) {
+                        area += Math.abs(PolygonUtils.area(diffPolygons[k]));
+                    }
+
+                    if (area > this.accuracy * this.accuracy) {
+                        continue;
+                    }
                 }
 
                 lowerPoint = lowerPointTmp;
