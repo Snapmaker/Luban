@@ -1098,9 +1098,15 @@ class ModelGroup extends EventEmitter {
     onModelTransform() {
         try {
             // this.selectedModelIDArray.splice(0);
-            this.selectedModelArray.forEach((item) => {
+            this.selectedModelArray.forEach((model) => {
+                if (model.parent && model.parent instanceof ThreeGroup) {
+                    model.parent.children.forEach(subModel => {
+                        subModel.onTransform();
+                    });
+                } else {
+                    model.onTransform();
+                }
                 // this.selectedModelIDArray.push(item.modelID);
-                item.onTransform();
             });
             const { sourceType, mode, transformation, boundingBox, originalName } = this.selectedModelArray[0];
             return {
