@@ -2043,8 +2043,9 @@ export const actions = {
 
     recordModelBeforeTransform: (modelGroup) => (dispatch) => {
         dispatch(operationHistoryActions.clearTargetTmpState(INITIAL_STATE.name));
+        const selectedModelArray = modelGroup.selectedModelArray.concat();
         const { recovery } = modelGroup.unselectAllModels();
-        for (const model of modelGroup.selectedModelArray) {
+        for (const model of selectedModelArray) {
             modelGroup.unselectAllModels();
             modelGroup.addModelToSelectedGroup(model);
             if (model.supportTag) {
@@ -2069,8 +2070,9 @@ export const actions = {
             }
         }
 
+        const selectedModelArray = modelGroup.selectedModelArray.concat();
         const { recovery } = modelGroup.unselectAllModels();
-        for (const model of modelGroup.selectedModelArray) {
+        for (const model of selectedModelArray) {
             modelGroup.unselectAllModels();
             modelGroup.addModelToSelectedGroup(model);
             dispatch(operationHistoryActions.updateTargetTmpState(INITIAL_STATE.name, model.modelID, {
