@@ -26,6 +26,7 @@ import { DUAL_EXTRUDER_TOOLHEAD_FOR_SM2, HEAD_PRINTING,
     EPSILON, BOTH_EXTRUDER_MAP_NUMBER, LEFT_EXTRUDER_MAP_NUMBER } from '../../../constants';
 import { machineStore } from '../../../store/local-storage';
 import TipTrigger from '../../components/TipTrigger';
+import PrimeTowerModel from '../../../models/PrimeTowerModel';
 
 const extruderLabelMap = {
     '0': 'Extruder L',
@@ -487,6 +488,8 @@ function VisualizerLeftBar({ setTransformMode, supportActions, updateBoundingBox
     const transformDisabled = showRotationAnalyzeModal || showEditSupportModal || !(selectedModelArray.length > 0 && selectedModelArray.every((model) => {
         return model.visible === true;
     }));
+    // TODO
+    const hasModels = modelGroup.getModels().some(model => model.visible && !(model instanceof PrimeTowerModel));
     const supportDisabled = (displayedType !== 'model' || modelGroup.getModelsAttachedSupport(false).length === 0);
     const rotationAnalysisEnable = (selectedModelArray.length === 1 && selectedModelArray[0].visible && !selectedModelArray[0].parent);
     const isDualExtruder = machineStore.get('machine.toolHead.printingToolhead') === DUAL_EXTRUDER_TOOLHEAD_FOR_SM2;
@@ -621,7 +624,7 @@ function VisualizerLeftBar({ setTransformMode, supportActions, updateBoundingBox
                                         onClick={() => {
                                             setTransformMode('translate');
                                         }}
-                                        disabled={showRotationAnalyzeModal || models.length === 0}
+                                        disabled={showRotationAnalyzeModal || !hasModels}
                                     />
                                 </li>
                                 <li
@@ -905,6 +908,7 @@ function VisualizerLeftBar({ setTransformMode, supportActions, updateBoundingBox
                                             const { angle, offset, padding } = arragneSettings;
                                             arrangeAllModels(angle, offset, padding);
                                         }}
+                                        disabled={!hasModels}
                                     >
                                         <span>{i18n._('key-Printing/LeftBar-Auto Arrange')}</span>
                                     </Button>
