@@ -1618,6 +1618,7 @@ class ModelGroup extends EventEmitter {
                             return id;
                         });
                         if (newSubModelIDs.every(id => id instanceof ThreeModel)) {
+                            this.updateModelsPositionBaseFirstModel(this.models.filter(m => m.type !== 'primeTower'));
                             this.unselectAllModels();
                             group.add(newSubModelIDs);
                             this.groupsChildrenMap.delete(group);
