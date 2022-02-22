@@ -1,7 +1,9 @@
 import { includes } from 'lodash';
 import api from '../../api';
 import i18n from '../../lib/i18n';
-import { HEAD_CNC, RIGHT_EXTRUDER_MAP_NUMBER } from '../../constants';
+import { HEAD_CNC, RIGHT_EXTRUDER_MAP_NUMBER,
+    PRINTING_MATERIAL_CONFIG_KEYS_SINGLE
+} from '../../constants';
 
 const primeTowerDefinitionKeys = [
     'prime_tower_enable',
@@ -11,6 +13,7 @@ const primeTowerDefinitionKeys = [
     'prime_tower_brim_enbale',
     'prime_tower_wipe_enabled'
 ];
+
 class DefinitionManager {
     headType = HEAD_CNC;
 
@@ -50,7 +53,6 @@ class DefinitionManager {
 
         res = await this.getDefinition('snapmaker_extruder_1', false);
         this.extruderRDefinition = res;
-        console.log('dd', this.extruderLDefinition);
     }
 
     /**
@@ -366,9 +368,8 @@ class DefinitionManager {
         const definition = {
             ...extruderDefinition
         };
-        Object.keys(materialDefinition.ownKeys)
-            .forEach(index => {
-                const key = materialDefinition.ownKeys[index];
+        PRINTING_MATERIAL_CONFIG_KEYS_SINGLE
+            .forEach(key => {
                 const setting = materialDefinition.settings[key];
                 if (setting) {
                     definition.settings[key] = {

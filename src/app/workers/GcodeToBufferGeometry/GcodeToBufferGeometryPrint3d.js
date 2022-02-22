@@ -75,7 +75,6 @@ class GcodeToBufferGeometryPrint3d {
                 const typeSetting = this.getTypeSetting(typeCode);
 
                 layerIndex = modal.layer;
-
                 const rgb = [
                     typeSetting.rgb[0],
                     typeSetting.rgb[1],
@@ -191,7 +190,7 @@ class GcodeToBufferGeometryPrint3d {
             }
         });
 
-        const layerCount = layerIndex;
+        const layerCount = layerIndex + 1;
         onProgress(1);
 
         const bufferGeometry = new THREE.BufferGeometry();
