@@ -352,6 +352,9 @@ export default class ThreeGroup extends BaseModel {
             return;
         }
 
+        if (this.meshObject.children.length !== this.children.length) {
+            return;
+        }
         const revert = ThreeUtils.removeObjectParent(this.meshObject);
 
         this.computeBoundingBox();

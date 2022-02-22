@@ -1789,7 +1789,6 @@ export const actions = {
             });
             operations.push(operation);
         }
-        recovery();
         operations.registCallbackAfterAll(() => {
             const modelState = modelGroup.getState();
             if (!modelState.hasModel) {
@@ -1802,6 +1801,7 @@ export const actions = {
             dispatch(actions.destroyGcodeLine());
             dispatch(actions.displayModel());
         });
+        recovery();
         const modelState = modelGroup.removeSelectedModel();
         dispatch(operationHistoryActions.setOperations(INITIAL_STATE.name, operations));
 

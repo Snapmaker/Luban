@@ -121,11 +121,6 @@ export default class DeleteOperation3D extends Operation<DeleteOperationState> {
             model.children.forEach(subModel => {
                 setGlobalTransform(modelGroup, subModel, this.state.modelTransformation.get(subModel.modelID));
             });
-
-            // setTimeout(() => {
-            //     console.log(this.state.groupTransformation);
-            //     setGlobalTransform(modelGroup, model, this.state.groupTransformation);
-            // }, 1000);
         }
         if (model.isSelected) {
             model.setSelected(false);
