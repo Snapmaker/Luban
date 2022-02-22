@@ -74,22 +74,12 @@ export default class DeleteOperation3D extends Operation<DeleteOperationState> {
             }
         }
         this.state.modelGroup.unselectAllModels();
-        this.state.modelGroup.addModelToSelectedGroup(model);
     }
 
     public redo() {
         const model = this.state.target;
         const modelGroup = this.state.modelGroup;
 
-        if (model instanceof ThreeModel && model.supportTag) {
-            ThreeUtils.setObjectParent(model.meshObject, model.target.meshObject);
-        } else {
-            if (model.parent) {
-                ThreeUtils.setObjectParent(model.meshObject, model.parent.meshObject);
-            } else {
-                ThreeUtils.setObjectParent(model.meshObject, modelGroup.object);
-            }
-        }
         modelGroup.removeModel(model);
         if (model.isSelected) {
             model.setSelected(false);
