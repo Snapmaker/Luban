@@ -989,7 +989,7 @@ export const actions = {
         toolPaths.forEach((item) => {
             for (const id of selectedModelIDArray) {
                 if (item.modelMap.has(id)) {
-                    item.modelMap.deldete(id);
+                    item.modelMap.delete(id);
                 }
             }
         });

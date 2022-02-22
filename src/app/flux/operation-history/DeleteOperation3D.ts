@@ -42,6 +42,17 @@ export default class DeleteOperation3D extends Operation<DeleteOperationState> {
 
         if (model instanceof ThreeModel) {
             this.state.modelTransformation.set(model.modelID, model.transformation);
+            if (model.parent && model.parent instanceof ThreeGroup) {
+                model.parent.children.forEach(subModel => {
+                    this.state.modelGroup.unselectAllModels();
+                    this.state.modelGroup.addModelToSelectedGroup(subModel);
+                    this.state.modelTransformation.set(subModel.modelID, {
+                        ...this.state.modelGroup.getSelectedModelTransformationForPrinting()
+                    });
+                });
+            } else {
+                this.state.modelTransformation.set(model.modelID, model.transformation);
+            }
         } else if (model instanceof ThreeGroup) {
             model.children.forEach(subModel => {
                 this.state.childrens.push(subModel);
@@ -62,22 +73,21 @@ export default class DeleteOperation3D extends Operation<DeleteOperationState> {
                 }
             }
         }
+        this.state.modelGroup.unselectAllModels();
+        this.state.modelGroup.addModelToSelectedGroup(model);
     }
 
     public redo() {
         const model = this.state.target;
         const modelGroup = this.state.modelGroup;
 
-        if (model.isSelected) {
-            ThreeUtils.removeObjectParent(model.meshObject);
-            if (model instanceof ThreeModel && model.supportTag) {
-                ThreeUtils.setObjectParent(model.meshObject, model.target.meshObject);
+        if (model instanceof ThreeModel && model.supportTag) {
+            ThreeUtils.setObjectParent(model.meshObject, model.target.meshObject);
+        } else {
+            if (model.parent) {
+                ThreeUtils.setObjectParent(model.meshObject, model.parent.meshObject);
             } else {
-                if (model.parent) {
-                    ThreeUtils.setObjectParent(model.meshObject, model.parent.meshObject);
-                } else {
-                    ThreeUtils.setObjectParent(model.meshObject, modelGroup.object);
-                }
+                ThreeUtils.setObjectParent(model.meshObject, modelGroup.object);
             }
         }
         modelGroup.removeModel(model);
@@ -102,6 +112,13 @@ export default class DeleteOperation3D extends Operation<DeleteOperationState> {
             if (model.parent && model.parent instanceof ThreeGroup) {
                 if (modelGroup.models.find(m => m.modelID === model.parent.modelID)) {
                     modelGroup.recoveryGroup(model.parent, model);
+                    model.parent.children.forEach((subModel) => {
+                        modelGroup.unselectAllModels();
+                        modelGroup.addModelToSelectedGroup(subModel);
+                        modelGroup.updateSelectedGroupTransformation({
+                            ...this.state.modelTransformation.get(subModel.modelID)
+                        });
+                    });
                 } else {
                     modelGroup.models = modelGroup.models.concat(model.parent);
                     ThreeUtils.setObjectParent(model.meshObject, model.parent.meshObject);
@@ -127,5 +144,6 @@ export default class DeleteOperation3D extends Operation<DeleteOperationState> {
         model.meshObject.addEventListener('update', modelGroup.onModelUpdate);
         modelGroup.updatePrimeTowerHeight();
         modelGroup.modelChanged();
+        this.state.modelGroup.unselectAllModels();
     }
 }
