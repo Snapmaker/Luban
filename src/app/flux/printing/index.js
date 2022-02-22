@@ -1952,7 +1952,7 @@ export const actions = {
             models,
             validArea: modelGroup.getValidArea(),
             angle,
-            offset,
+            offset: offset / 2,
             padding
         }], (payload) => {
             const { status, value } = payload;

@@ -91,10 +91,12 @@ const arrangeModels = async (data) => {
             });
         });
 
+        const x = validArea.max.x - validArea.min.x - padding * 2 - offset;
+        const y = validArea.max.y - validArea.min.y - padding * 2 - offset;
         const parts = nesting(stls, {
             size: {
-                x: validArea.max.x - validArea.min.x - padding * 2,
-                y: validArea.max.y - validArea.min.y - padding * 2
+                x: x < 0 ? 0 : x,
+                y: y < 0 ? 0 : y
             },
             angle,
             offset
