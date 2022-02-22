@@ -1099,13 +1099,7 @@ class ModelGroup extends EventEmitter {
         try {
             // this.selectedModelIDArray.splice(0);
             this.selectedModelArray.forEach((model) => {
-                if (model.parent && model.parent instanceof ThreeGroup) {
-                    model.parent.children.forEach(subModel => {
-                        subModel.onTransform();
-                    });
-                } else {
-                    model.onTransform();
-                }
+                model.onTransform();
                 // this.selectedModelIDArray.push(item.modelID);
             });
             const { sourceType, mode, transformation, boundingBox, originalName } = this.selectedModelArray[0];
@@ -1618,7 +1612,6 @@ class ModelGroup extends EventEmitter {
                             return id;
                         });
                         if (newSubModelIDs.every(id => id instanceof ThreeModel)) {
-                            this.updateModelsPositionBaseFirstModel(this.models.filter(m => m.type !== 'primeTower'));
                             this.unselectAllModels();
                             group.add(newSubModelIDs);
                             this.groupsChildrenMap.delete(group);

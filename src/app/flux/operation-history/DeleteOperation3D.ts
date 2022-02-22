@@ -61,18 +61,18 @@ export default class DeleteOperation3D extends Operation<DeleteOperationState> {
         }
 
         // an object to be deleted will be selected at first, unwrapped from parent group
-        if (model.isSelected) {
-            ThreeUtils.removeObjectParent(model.meshObject);
-            if (model instanceof ThreeModel && model.supportTag) {
-                ThreeUtils.setObjectParent(model.meshObject, model.target.meshObject);
-            } else {
-                if (model.parent) {
-                    ThreeUtils.setObjectParent(model.meshObject, model.parent.meshObject);
-                } else {
-                    ThreeUtils.setObjectParent(model.meshObject, props.target.modelGroup.object);
-                }
-            }
-        }
+        // if (model.isSelected) {
+        //     ThreeUtils.removeObjectParent(model.meshObject);
+        //     if (model instanceof ThreeModel && model.supportTag) {
+        //         ThreeUtils.setObjectParent(model.meshObject, model.target.meshObject);
+        //     } else {
+        //         if (model.parent) {
+        //             ThreeUtils.setObjectParent(model.meshObject, model.parent.meshObject);
+        //         } else {
+        //             ThreeUtils.setObjectParent(model.meshObject, props.target.modelGroup.object);
+        //         }
+        //     }
+        // }
         this.state.modelGroup.unselectAllModels();
     }
 

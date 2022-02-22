@@ -119,9 +119,6 @@ export default class ThreeGroup extends BaseModel {
             (this.meshObject as any).uniformScalingState = true;
         }
         this.onTransform();
-        this.children.forEach(subModel => {
-            subModel.onTransform();
-        });
         this.updateGroupExtruder();
     }
 
@@ -294,6 +291,9 @@ export default class ThreeGroup extends BaseModel {
             ...transformation
         };
 
+        this.children.forEach(subModel => {
+            subModel.onTransform();
+        });
         return this.transformation;
     }
 
