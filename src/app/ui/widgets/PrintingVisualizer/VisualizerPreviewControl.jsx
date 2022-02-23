@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 // import PropTypes from 'prop-types';
 import { useDispatch, useSelector, shallowEqual } from 'react-redux';
 import classNames from 'classnames';
-import { find } from 'lodash';
+import { find, throttle } from 'lodash';
 import Slider from '../../components/Slider';
 import PreviewType from '../../components/PreviewType';
 import Anchor from '../../components/Anchor';
@@ -39,15 +39,15 @@ function useShowToggleBtn() {
 
 function GcodeLayout() {
     const layerCount = useSelector(state => state?.printing?.layerCount, shallowEqual);
-    const layerCountDisplayed = useSelector(state => state?.printing?.layerCountDisplayed, shallowEqual);
+    const layerRangeDisplayed = useSelector(state => state?.printing?.layerRangeDisplayed, shallowEqual);
     const dispatch = useDispatch();
 
-    function onChangeShowLayer(value) {
+    const onChangeShowLayer = throttle((value) => {
         dispatch(printingActions.showGcodeLayers(value));
-    }
+    }, 300);
     return (
         <div className={styles['layer-wrapper']}>
-            <span className={styles['layer-label']}>{layerCountDisplayed}</span>
+            <span className={styles['layer-label']}>{layerRangeDisplayed[1]}</span>
             <div
                 style={{
                     position: 'relative',
@@ -60,12 +60,14 @@ function GcodeLayout() {
                     min={0}
                     max={layerCount - 1}
                     step={1}
-                    value={layerCountDisplayed}
+                    value={layerRangeDisplayed}
                     onChange={(value) => {
                         onChangeShowLayer(value);
                     }}
                 />
             </div>
+            <span className={styles['layer-label']}>{layerRangeDisplayed[0]}</span>
+
         </div>
     );
 }
@@ -116,6 +118,9 @@ function VisualizerPreviewControl() {
         return (event) => {
             allShowTypes[direction][option] = event.target.checked;
             setAllShowTypes(allShowTypes);
+            dispatch(printingActions.render({
+                gcodeTypeInitialVisibility: allShowTypes
+            }));
             dispatch(printingActions.setGcodeVisibilityByTypeAndDirection(type, direction, event.target.checked));
         };
     }
@@ -135,25 +140,25 @@ function VisualizerPreviewControl() {
         setAllShowTypes({
             [LEFT_EXTRUDER]: {
                 showPreviewPanel: true,
-                showWallInner: gcodeTypeInitialVisibility['WALL-INNER'],
-                showWallOuter: gcodeTypeInitialVisibility['WALL-OUTER'],
-                showSkin: gcodeTypeInitialVisibility.SKIN,
-                showSkirt: gcodeTypeInitialVisibility.SKIRT,
-                showSupport: gcodeTypeInitialVisibility.SUPPORT,
-                showFill: gcodeTypeInitialVisibility.FILL,
-                showTravel: gcodeTypeInitialVisibility.TRAVEL,
-                showUnknown: gcodeTypeInitialVisibility.UNKNOWN
+                showWallInner: gcodeTypeInitialVisibility[LEFT_EXTRUDER]['WALL-INNER'],
+                showWallOuter: gcodeTypeInitialVisibility[LEFT_EXTRUDER]['WALL-OUTER'],
+                showSkin: gcodeTypeInitialVisibility[LEFT_EXTRUDER].SKIN,
+                showSkirt: gcodeTypeInitialVisibility[LEFT_EXTRUDER].SKIRT,
+                showSupport: gcodeTypeInitialVisibility[LEFT_EXTRUDER].SUPPORT,
+                showFill: gcodeTypeInitialVisibility[LEFT_EXTRUDER].FILL,
+                showTravel: gcodeTypeInitialVisibility[LEFT_EXTRUDER].TRAVEL,
+                showUnknown: gcodeTypeInitialVisibility[LEFT_EXTRUDER].UNKNOWN
             },
             [RIGHT_EXTRUDER]: {
                 showPreviewPanel: true,
-                showWallInner: gcodeTypeInitialVisibility['WALL-INNER'],
-                showWallOuter: gcodeTypeInitialVisibility['WALL-OUTER'],
-                showSkin: gcodeTypeInitialVisibility.SKIN,
-                showSkirt: gcodeTypeInitialVisibility.SKIRT,
-                showSupport: gcodeTypeInitialVisibility.SUPPORT,
-                showFill: gcodeTypeInitialVisibility.FILL,
-                showTravel: gcodeTypeInitialVisibility.TRAVEL,
-                showUnknown: gcodeTypeInitialVisibility.UNKNOWN
+                showWallInner: gcodeTypeInitialVisibility[RIGHT_EXTRUDER]['WALL-INNER'],
+                showWallOuter: gcodeTypeInitialVisibility[RIGHT_EXTRUDER]['WALL-OUTER'],
+                showSkin: gcodeTypeInitialVisibility[RIGHT_EXTRUDER].SKIN,
+                showSkirt: gcodeTypeInitialVisibility[RIGHT_EXTRUDER].SKIRT,
+                showSupport: gcodeTypeInitialVisibility[RIGHT_EXTRUDER].SUPPORT,
+                showFill: gcodeTypeInitialVisibility[RIGHT_EXTRUDER].FILL,
+                showTravel: gcodeTypeInitialVisibility[RIGHT_EXTRUDER].TRAVEL,
+                showUnknown: gcodeTypeInitialVisibility[RIGHT_EXTRUDER].UNKNOWN
             }
         });
     }, [gcodeLine, gcodeTypeInitialVisibility]);

@@ -1,5 +1,6 @@
 export const PRINT3D_UNIFORMS = {
-    u_visible_layer_count: { value: 0.0 },
+    u_visible_layer_range_start: { value: 0.0 },
+    u_visible_layer_range_end: { value: 0.0 },
 
     u_color_type: { value: 0 },
     u_l_wall_inner_visible: { value: 1 },
@@ -30,7 +31,8 @@ export const PRINT3D_VERT_SHADER = [
     'const float c_travel_code = 7.0;',
     'const float c_unknown_code = 8.0;',
 
-    'uniform float u_visible_layer_count;',
+    'uniform float u_visible_layer_range_start;',
+    'uniform float u_visible_layer_range_end;',
 
     'uniform int u_color_type;',
     'uniform int u_l_wall_inner_visible;',
@@ -68,20 +70,15 @@ export const PRINT3D_VERT_SHADER = [
     '    v_tool_code = a_tool_code;',
     '    v_color0 = a_color;',
     '    v_color1 = a_color1;',
+    // '    gl_PointSize = 5.0;',
+
     '    gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);',
     '}'
 ].join('');
 export const PRINT3D_FRAG_SHADER = [
-    // 'const float c_wall_inner_code = 1.0;',
-    // 'const float c_wall_outer_code = 2.0;',
-    // 'const float c_skin_code = 3.0;',
-    // 'const float c_skirt_code = 4.0;',
-    // 'const float c_support_code = 5.0;',
-    // 'const float c_fill_code = 6.0;',
-    // 'const float c_travel_code = 7.0;',
-    // 'const float c_unknown_code = 8.0;',
 
-    'uniform float u_visible_layer_count;',
+    'uniform float u_visible_layer_range_start;',
+    'uniform float u_visible_layer_range_end;',
 
     'uniform int u_color_type;',
     'uniform int u_l_wall_inner_visible;',
@@ -108,8 +105,14 @@ export const PRINT3D_FRAG_SHADER = [
     'varying float v_tool_code;',
 
     'void main(){',
-    '    if(v_layer_index > u_visible_layer_count){',
-    '        discard;',
+    '    if(v_layer_index > u_visible_layer_range_end){',
+    '        gl_FragColor = vec4(105,105,105,1);',
+    '        return;',
+    '    }',
+
+    '    if(v_layer_index < u_visible_layer_range_start){',
+    '        gl_FragColor = vec4(105,105,105,1);',
+    '        return;',
     '    }',
 
     '    if(u_l_wall_inner_visible == 0 && 0.5 < v_type_code && v_type_code < 1.5 && v_tool_code < 0.5){',

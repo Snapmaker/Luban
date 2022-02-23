@@ -22,7 +22,9 @@ import {
     DUAL_EXTRUDER_LIMIT_WIDTH_L,
     DUAL_EXTRUDER_LIMIT_WIDTH_R, BOTH_EXTRUDER_MAP_NUMBER,
     WHITE_COLOR,
-    BLACK_COLOR
+    BLACK_COLOR,
+    VISIBLE_LAYER_MIN_RANGE,
+    GCODE_VISIBILITY_TYPE
 } from '../../constants';
 import { timestamp } from '../../../shared/lib/random-utils';
 import { machineStore } from '../../store/local-storage';
@@ -145,8 +147,15 @@ const INITIAL_STATE = {
     gcodeLineGroup: new THREE.Group(),
     gcodeLine: null,
     layerCount: 0,
-    layerCountDisplayed: 0,
-    gcodeTypeInitialVisibility: {},
+    layerRangeDisplayed: [0, Infinity],
+    gcodeTypeInitialVisibility: {
+        [LEFT_EXTRUDER]: {
+            ...GCODE_VISIBILITY_TYPE
+        },
+        [RIGHT_EXTRUDER]: {
+            ...GCODE_VISIBILITY_TYPE
+        }
+    },
     renderLineType: false,
 
     // progress bar
@@ -624,7 +633,7 @@ export const actions = {
         }
     },
     gcodeRenderingCallback: (data) => (dispatch, getState) => {
-        const { gcodeLineGroup } = getState().printing;
+        const { gcodeLineGroup, gcodeTypeInitialVisibility } = getState().printing;
 
         const { status, value } = data;
         switch (status) {
@@ -653,38 +662,22 @@ export const actions = {
                 dispatch(actions.destroyGcodeLine());
                 gcodeLineGroup.add(object3D);
                 object3D.position.copy(new THREE.Vector3());
-                const gcodeTypeInitialVisibility = {
-                    'WALL-INNER': true,
-                    'WALL-OUTER': true,
-                    SKIN: true,
-                    SKIRT: true,
-                    SUPPORT: true,
-                    FILL: true,
-                    TRAVEL: false,
-                    UNKNOWN: true,
-                    TOOL0: true,
-                    TOOL1: true
-                };
                 dispatch(actions.updateState({
                     layerCount,
-                    layerCountDisplayed: layerCount - 1,
-                    gcodeTypeInitialVisibility: {
-                        ...gcodeTypeInitialVisibility
-                    },
+                    layerRangeDisplayed: [0, layerCount - 1],
                     renderLineType: false,
                     gcodeLine: object3D
                 }));
 
-                Object.keys(gcodeTypeInitialVisibility).forEach((type) => {
-                    const visible = gcodeTypeInitialVisibility[type];
-                    dispatch(actions.setGcodeVisibilityByTypeAndDirection(type, LEFT_EXTRUDER, visible ? 1 : 0));
-                    dispatch(actions.setGcodeVisibilityByTypeAndDirection(type, RIGHT_EXTRUDER, visible ? 1 : 0));
+                Object.keys(GCODE_VISIBILITY_TYPE).forEach((type) => {
+                    dispatch(actions.setGcodeVisibilityByTypeAndDirection(type, LEFT_EXTRUDER, gcodeTypeInitialVisibility[LEFT_EXTRUDER][type] ? 1 : 0));
+                    dispatch(actions.setGcodeVisibilityByTypeAndDirection(type, RIGHT_EXTRUDER, gcodeTypeInitialVisibility[RIGHT_EXTRUDER][type] ? 1 : 0));
                 });
                 dispatch(actions.setGcodeColorByRenderLineType());
 
                 const { minX, minY, minZ, maxX, maxY, maxZ } = bounds;
                 dispatch(actions.checkGcodeBoundary(minX, minY, minZ, maxX, maxY, maxZ));
-                dispatch(actions.showGcodeLayers(layerCount - 1));
+                dispatch(actions.showGcodeLayers([0, layerCount - 1]));
                 dispatch(actions.displayGcode());
 
                 const { progressStatesManager } = getState().printing;
@@ -1583,23 +1576,26 @@ export const actions = {
         dispatch(actions.render());
     },
 
-    showGcodeLayers: (count) => (dispatch, getState) => {
+    showGcodeLayers: (range) => (dispatch, getState) => {
         const { layerCount, gcodeLine } = getState().printing;
         if (!gcodeLine) {
             return;
         }
 
-        if (count >= layerCount) {
+        if (range >= layerCount) {
             dispatch(actions.displayModel());
         } else {
             dispatch(actions.displayGcode());
         }
 
-        count = (count > layerCount) ? layerCount : count;
-        count = (count < 0) ? 0 : count;
-        gcodeLine.material.uniforms.u_visible_layer_count.value = count;
+        range[1] = (range[1] > layerCount) ? layerCount : range[1];
+        range[1] = (range[1] < VISIBLE_LAYER_MIN_RANGE) ? VISIBLE_LAYER_MIN_RANGE : range[1];
+        range[0] = (range[1] === VISIBLE_LAYER_MIN_RANGE) ? 0 : range[0];
+        range[0] = (range[1] - range[0] < VISIBLE_LAYER_MIN_RANGE) ? (range[1] - VISIBLE_LAYER_MIN_RANGE) : range[0];
+        gcodeLine.material.uniforms.u_visible_layer_range_start.value = range[0];
+        gcodeLine.material.uniforms.u_visible_layer_range_end.value = range[1];
         dispatch(actions.updateState({
-            layerCountDisplayed: count
+            layerRangeDisplayed: range
         }));
         dispatch(actions.render());
     },
@@ -1607,8 +1603,8 @@ export const actions = {
     // make an offset of gcode layer count
     // offset can be negative
     offsetGcodeLayers: (offset) => (dispatch, getState) => {
-        const { layerCountDisplayed } = getState().printing;
-        dispatch(actions.showGcodeLayers(layerCountDisplayed + offset));
+        const { layerRangeDisplayed } = getState().printing;
+        dispatch(actions.showGcodeLayers([layerRangeDisplayed[0] + offset, layerRangeDisplayed[1] + offset]));
     },
 
     checkGcodeBoundary: (minX, minY, minZ, maxX, maxY, maxZ) => (dispatch, getState) => {
@@ -3083,7 +3079,9 @@ export const actions = {
 export default function reducer(state = INITIAL_STATE, action) {
     switch (action.type) {
         case ACTION_UPDATE_STATE: {
-            return Object.assign({}, state, action.state);
+            const s = Object.assign({}, state, action.state);
+            window.pp = s;
+            return s;
         }
         case ACTION_UPDATE_TRANSFORMATION: {
             return Object.assign({}, state, {
