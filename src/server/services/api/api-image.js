@@ -106,16 +106,19 @@ export const set = (req, res) => {
                     }
                     workerManager.loadSize([
                         { tempName, isRotate }, DataStorage.tmpDir
-                    ], ({ width, height }) => {
-                        res.send({
-                            originalName: originalName,
-                            uploadName: tempName,
-                            width: width,
-                            height: height
-                        });
-                        next();
-                    }).catch((err) => {
-                        next(err);
+                    ], (payload) => {
+                        if (payload.status === 'complete') {
+                            const { width, height } = payload;
+                            res.send({
+                                originalName: originalName,
+                                uploadName: tempName,
+                                width: width,
+                                height: height
+                            });
+                            next();
+                        } else if (payload.status === 'fail') {
+                            next(payload.error);
+                        }
                     });
                 } else {
                     jimp.read(tempPath).then((image) => {
