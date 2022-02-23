@@ -28,13 +28,11 @@ class SliderWrapper extends PureComponent {
             >
                 <Slider
                     {...rest}
-                    range={{ draggableTrack: true }}
-                    // defaultValue={[]}
                     disabled={disabled}
                     marks={marks}
                     vertical={vertical}
                     className={classNames(styles.slider)}
-                    defaultValue={value}
+                    value={value}
                 />
             </div>
         );
