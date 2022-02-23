@@ -947,6 +947,23 @@ export const MACHINE_SERIES = {
         },
         alias: ['SM2-L', 'Snapmaker 2.0 A350']
     },
+    A400: {
+        value: 'A400',
+        label: 'key-Luban/Machine/MachineSeries-Snapmaker 2.0 A400',
+        setting: {
+            size: {
+                x: 400,
+                y: 400,
+                z: 400
+            },
+            laserSize: {
+                x: 400,
+                y: 400,
+                z: 400
+            }
+        },
+        alias: ['SM2-XL', 'Snapmaker 2.0 400']
+    },
     CUSTOM: {
         value: 'Custom',
         label: 'key-Luban/Machine/MachineSeries-Custom',
@@ -1034,11 +1051,14 @@ export const MACHINE_TOOL_HEADS = {
         }
     },
     [SINGLE_EXTRUDER_TOOLHEAD_FOR_SM2]: {
-        platform: [MACHINE_SERIES.A150.value, MACHINE_SERIES.A250.value, MACHINE_SERIES.A350.value],
+        platform: [MACHINE_SERIES.A150.value, MACHINE_SERIES.A250.value, MACHINE_SERIES.A350.value, MACHINE_SERIES.A400.value],
         value: SINGLE_EXTRUDER_TOOLHEAD_FOR_SM2,
         key: 'singleExtruderToolheadForSM2',
         pathname: 'single',
-        // label: SINGLE_EXTRUDER_TOOLHEAD,
+        // label: SINGL
+        //
+        //
+        // E_EXTRUDER_TOOLHEAD,
         label: 'key-App/Settings/MachineSettings-Single Extruder Toolhead',
         // mock offset data
         offset: {
@@ -1048,7 +1068,7 @@ export const MACHINE_TOOL_HEADS = {
         }
     },
     [DUAL_EXTRUDER_TOOLHEAD_FOR_SM2]: {
-        platform: [MACHINE_SERIES.A150.value, MACHINE_SERIES.A250.value, MACHINE_SERIES.A350.value],
+        platform: [MACHINE_SERIES.A150.value, MACHINE_SERIES.A250.value, MACHINE_SERIES.A350.value, MACHINE_SERIES.A400.value],
         value: DUAL_EXTRUDER_TOOLHEAD_FOR_SM2,
         pathname: 'dual',
         key: 'dualExtruderToolheadForSM2',
@@ -1061,7 +1081,7 @@ export const MACHINE_TOOL_HEADS = {
         }
     },
     [LEVEL_ONE_POWER_LASER_FOR_SM2]: {
-        platform: [MACHINE_SERIES.A150.value, MACHINE_SERIES.A250.value, MACHINE_SERIES.A350.value],
+        platform: [MACHINE_SERIES.A150.value, MACHINE_SERIES.A250.value, MACHINE_SERIES.A350.value, MACHINE_SERIES.A400.value],
         value: LEVEL_ONE_POWER_LASER_FOR_SM2,
         pathname: '1600mw',
         key: 'levelOneLaserToolheadForSM2',
@@ -1074,7 +1094,7 @@ export const MACHINE_TOOL_HEADS = {
         }
     },
     [LEVEL_TWO_POWER_LASER_FOR_SM2]: {
-        platform: [MACHINE_SERIES.A150.value, MACHINE_SERIES.A250.value, MACHINE_SERIES.A350.value],
+        platform: [MACHINE_SERIES.A150.value, MACHINE_SERIES.A250.value, MACHINE_SERIES.A350.value, MACHINE_SERIES.A400.value],
         value: LEVEL_TWO_POWER_LASER_FOR_SM2,
         pathname: '10w',
         label: 'key-App/Settings/MachineSettings-10W Laser',
@@ -1087,7 +1107,7 @@ export const MACHINE_TOOL_HEADS = {
         }
     },
     [STANDARD_CNC_TOOLHEAD_FOR_SM2]: {
-        platform: [MACHINE_SERIES.A150.value, MACHINE_SERIES.A250.value, MACHINE_SERIES.A350.value],
+        platform: [MACHINE_SERIES.A150.value, MACHINE_SERIES.A250.value, MACHINE_SERIES.A350.value, MACHINE_SERIES.A400.value],
         value: STANDARD_CNC_TOOLHEAD_FOR_SM2,
         key: 'standardCNCToolheadForSM2',
         pathname: 'standard',
@@ -1315,6 +1335,11 @@ export const INITIAL_TOOL_HEAD_FOR_SM2 = {
 
 
 export const LASER_10W_TAKE_PHOTO_POSITION = {
+    A400: { // TODO: need to test
+        x: 290,
+        y: 210,
+        z: 350
+    },
     A350: {
         x: 232,
         y: 178,
