@@ -34,6 +34,7 @@ function SerialConnection() {
     const {
         toolHead, headType, series: seriesInfo
     } = useSelector(state => state?.workspace);
+    console.log('seriesInfo', seriesInfo);
     // Available serial ports
     const [ports, setPorts] = useState([]);
     // Selected port
