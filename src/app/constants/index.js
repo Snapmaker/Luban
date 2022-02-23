@@ -70,6 +70,21 @@ export const BLACK_COLOR = '#000000';
 export const KEY_DEFAULT_CATEGORY_CUSTOM = 'key-default_category-Custom';
 export const KEY_DEFAULT_CATEGORY_DEFAULT = 'key-default_category-Default';
 
+export const VISIBLE_LAYER_MIN_RANGE = 20;
+
+export const GCODE_VISIBILITY_TYPE = {
+    'WALL-INNER': true,
+    'WALL-OUTER': true,
+    SKIN: true,
+    SKIRT: true,
+    SUPPORT: true,
+    FILL: true,
+    TRAVEL: false,
+    UNKNOWN: true,
+    TOOL0: true,
+    TOOL1: true
+};
+
 export const PRINTING_MATERIAL_CONFIG_COLORS = [
     ['#ffffff', '#000000'],
     ['#B30006', '#b36100', '#d4cc00', '#35a000', '#00685a', '#006a99', '#003c7c', '#4c2868', '#b3196f', '#464646'],
