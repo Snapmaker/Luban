@@ -33,6 +33,7 @@ import { loadModelFailPopup, scaletoFitPopup } from './VisualizerPopup';
 
 import { STEP_STAGE } from '../../../lib/manager/ProgressManager';
 import { updateControlInputEvent } from '../../components/SMCanvas/TransformControls';
+import ModeToggleBtn from './ModeToggleBtn';
 
 const initQuaternion = new Quaternion();
 const modeSuffix = {
@@ -521,6 +522,8 @@ class Visualizer extends PureComponent {
                 <div className={styles['visualizer-preview-control']}>
                     <VisualizerPreviewControl />
                 </div>
+
+                <ModeToggleBtn />
 
                 <div className={styles['visualizer-info']}>
                     <VisualizerInfo />

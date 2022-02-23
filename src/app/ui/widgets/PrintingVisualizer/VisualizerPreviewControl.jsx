@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 // import PropTypes from 'prop-types';
 import { useDispatch, useSelector, shallowEqual } from 'react-redux';
 import classNames from 'classnames';
-import { find } from 'lodash';
+import { find, throttle } from 'lodash';
+import isElectron from 'is-electron';
 import Slider from '../../components/Slider';
 import PreviewType from '../../components/PreviewType';
 import Anchor from '../../components/Anchor';
@@ -11,8 +12,9 @@ import { actions as printingActions } from '../../../flux/printing';
 import i18n from '../../../lib/i18n';
 import useSetState from '../../../lib/hooks/set-state';
 import Select from '../../components/Select';
-import { DUAL_EXTRUDER_TOOLHEAD_FOR_SM2, LEFT_EXTRUDER, RIGHT_EXTRUDER } from '../../../constants';
+import { DUAL_EXTRUDER_TOOLHEAD_FOR_SM2, GCODEPREVIEWMODES, GCODEPREVIEWMODES_ICONS, LEFT_EXTRUDER, RIGHT_EXTRUDER } from '../../../constants';
 import { machineStore } from '../../../store/local-storage';
+import SvgIcon from '../../components/SvgIcon';
 
 // TODO
 function useShowToggleBtn() {
@@ -37,17 +39,38 @@ function useShowToggleBtn() {
     };
 }
 
+const MIN = 30;
+const MAX = 288;
+
 function GcodeLayout() {
     const layerCount = useSelector(state => state?.printing?.layerCount, shallowEqual);
-    const layerCountDisplayed = useSelector(state => state?.printing?.layerCountDisplayed, shallowEqual);
+    // const gcodePreviewMode = useSelector(state => state?.printing?.gcodePreviewMode, shallowEqual);
+    const layerRangeDisplayed = useSelector(state => state?.printing?.layerRangeDisplayed, shallowEqual);
     const dispatch = useDispatch();
 
-    function onChangeShowLayer(value) {
-        dispatch(printingActions.showGcodeLayers(value));
-    }
+    const [x, setX] = useState(layerCount / (MAX - MIN));
+    useEffect(() => {
+        setX(layerCount / (MAX - MIN));
+    }, [layerCount]);
+
+    const [value, setValue] = useState([]);
+    useEffect(() => {
+        setValue([
+            layerRangeDisplayed[0] / x,
+            layerRangeDisplayed[1] / x + MIN
+        ]);
+    }, [layerRangeDisplayed, x]);
+
+
+    const onChangeShowLayer = throttle((v) => {
+        dispatch(printingActions.showGcodeLayers([
+            v[0] * x,
+            (v[1] - MIN) * x
+        ]));
+    }, 300);
     return (
         <div className={styles['layer-wrapper']}>
-            <span className={styles['layer-label']}>{layerCountDisplayed}</span>
+            <span className={styles['layer-label']}>{Math.round(layerRangeDisplayed[1], 10)}</span>
             <div
                 style={{
                     position: 'relative',
@@ -55,51 +78,36 @@ function GcodeLayout() {
                 }}
             >
                 <Slider
+                    tooltipVisible={false}
                     className={styles['vertical-slider']}
                     vertical
                     min={0}
-                    max={layerCount - 1}
+                    max={MAX}
                     step={1}
-                    value={layerCountDisplayed}
-                    onChange={(value) => {
-                        onChangeShowLayer(value);
+                    range={{ draggableTrack: true }}
+                    value={value}
+                    onChange={(v) => {
+                        onChangeShowLayer(v);
                     }}
                 />
             </div>
+            <span className={styles['layer-label']}>{Math.round(layerRangeDisplayed[0], 10)}</span>
+
         </div>
     );
 }
 
 function VisualizerPreviewControl() {
     const [showPreviewPanel, setShowPreviewPanel] = useState(true);
-    const [allShowTypes, setAllShowTypes] = useSetState({
-        [LEFT_EXTRUDER]: {
-            showWallInner: false,
-            showWallOuter: false,
-            showSkin: false,
-            showSkirt: false,
-            showSupport: false,
-            showFill: false,
-            showTravel: false,
-            showUnknown: false,
-        },
-        [RIGHT_EXTRUDER]: {
-            showWallInner: false,
-            showWallOuter: false,
-            showSkin: false,
-            showSkirt: false,
-            showSupport: false,
-            showFill: false,
-            showTravel: false,
-            showUnknown: false,
-        }
-    });
+    const [allShowTypes, setAllShowTypes] = useSetState({});
     const isDualExtruder = (machineStore.get('machine.toolHead.printingToolhead') === DUAL_EXTRUDER_TOOLHEAD_FOR_SM2);
     const gcodeLine = useSelector(state => state?.printing?.gcodeLine, shallowEqual);
     const displayedType = useSelector(state => state?.printing?.displayedType, shallowEqual);
     // TODO, change init
     const gcodeTypeInitialVisibility = useSelector(state => state?.printing?.gcodeTypeInitialVisibility, shallowEqual);
     const renderLineType = useSelector(state => state?.printing?.renderLineType, shallowEqual);
+    const gcodePreviewMode = useSelector(state => state?.printing?.gcodePreviewMode);
+    const gcodePreviewModeToogleVisible = useSelector(state => state?.printing?.gcodePreviewModeToogleVisible);
 
     const materialDefinitions = useSelector(state => state?.printing?.materialDefinitions, shallowEqual);
     const defaultMaterialId = useSelector(state => state?.printing?.defaultMaterialId, shallowEqual);
@@ -109,14 +117,18 @@ function VisualizerPreviewControl() {
     const colorL = leftExtrualMaterial?.settings?.color?.default_value;
     const colorR = rightExtrualMaterial?.settings?.color?.default_value;
 
+
     const dispatch = useDispatch();
     const { showToggleBtn, renderToggleBtn } = useShowToggleBtn();
 
-    function togglePreviewOptionFactoryByTypeAndDirection(option, type, direction) {
+    function togglePreviewOptionFactoryByTypeAndDirection(showType, direction) {
         return (event) => {
-            allShowTypes[direction][option] = event.target.checked;
+            allShowTypes[direction][showType] = event.target.checked;
             setAllShowTypes(allShowTypes);
-            dispatch(printingActions.setGcodeVisibilityByTypeAndDirection(type, direction, event.target.checked));
+            dispatch(printingActions.render({
+                gcodeTypeInitialVisibility: allShowTypes
+            }));
+            dispatch(printingActions.setGcodeVisibilityByTypeAndDirection(showType, direction, event.target.checked));
         };
     }
 
@@ -132,31 +144,8 @@ function VisualizerPreviewControl() {
     }, [displayedType]);
 
     useEffect(() => {
-        setAllShowTypes({
-            [LEFT_EXTRUDER]: {
-                showPreviewPanel: true,
-                showWallInner: gcodeTypeInitialVisibility['WALL-INNER'],
-                showWallOuter: gcodeTypeInitialVisibility['WALL-OUTER'],
-                showSkin: gcodeTypeInitialVisibility.SKIN,
-                showSkirt: gcodeTypeInitialVisibility.SKIRT,
-                showSupport: gcodeTypeInitialVisibility.SUPPORT,
-                showFill: gcodeTypeInitialVisibility.FILL,
-                showTravel: gcodeTypeInitialVisibility.TRAVEL,
-                showUnknown: gcodeTypeInitialVisibility.UNKNOWN
-            },
-            [RIGHT_EXTRUDER]: {
-                showPreviewPanel: true,
-                showWallInner: gcodeTypeInitialVisibility['WALL-INNER'],
-                showWallOuter: gcodeTypeInitialVisibility['WALL-OUTER'],
-                showSkin: gcodeTypeInitialVisibility.SKIN,
-                showSkirt: gcodeTypeInitialVisibility.SKIRT,
-                showSupport: gcodeTypeInitialVisibility.SUPPORT,
-                showFill: gcodeTypeInitialVisibility.FILL,
-                showTravel: gcodeTypeInitialVisibility.TRAVEL,
-                showUnknown: gcodeTypeInitialVisibility.UNKNOWN
-            }
-        });
-    }, [gcodeLine, gcodeTypeInitialVisibility]);
+        setAllShowTypes(gcodeTypeInitialVisibility);
+    }, [gcodeTypeInitialVisibility]);
 
     if (!gcodeLine) {
         return null;
@@ -167,44 +156,37 @@ function VisualizerPreviewControl() {
         {
             fatherContent: i18n._('key-Printing/Preview-Inner Wall'),
             fatherColor: '#00ff00',
-            showType: 'showWallInner',
-            showTypeName: 'WALL-INNER'
+            showType: 'WALL-INNER'
         },
         {
             fatherContent: i18n._('key-Printing/Preview-Outer Wall'),
             fatherColor: '#ff2121',
-            showType: 'showWallOuter',
-            showTypeName: 'WALL-OUTER'
+            showType: 'WALL-OUTER'
         },
         {
             fatherContent: i18n._('key-Printing/Preview-Skin'),
             fatherColor: '#ffff00',
-            showType: 'showSkin',
-            showTypeName: 'SKIN'
+            showType: 'SKIN'
         },
         {
             fatherContent: i18n._('key-Printing/Preview-Helper'),
             fatherColor: '#4b0082',
-            showType: 'showSupport',
-            showTypeName: 'SUPPORT'
+            showType: 'SUPPORT'
         },
         {
             fatherContent: i18n._('key-Printing/Preview-Fill'),
             fatherColor: '#8d4bbb',
-            showType: 'showFill',
-            showTypeName: 'FILL'
+            showType: 'FILL'
         },
         {
             fatherContent: i18n._('key-Printing/Preview-Travel'),
             fatherColor: '#44cef6',
-            showType: 'showTravel',
-            showTypeName: 'TRAVEL'
+            showType: 'TRAVEL'
         },
         {
             fatherContent: i18n._('key-Printing/Preview-Unknown'),
             fatherColor: '#4b0082',
-            showType: 'showUnknown',
-            showTypeName: 'UNKNOWN'
+            showType: 'UNKNOWN'
         },
     ];
     const lineTypeExtruderObjects = [
@@ -213,39 +195,39 @@ function VisualizerPreviewControl() {
             fatherColor: colorL,
             childrenObjects: [
                 {
-                    value: allShowTypes[LEFT_EXTRUDER].showWallInner,
+                    value: allShowTypes[LEFT_EXTRUDER]['WALL-INNER'],
                     content: i18n._('key-Printing/Preview-Inner Wall'),
-                    onChangeValue: togglePreviewOptionFactoryByTypeAndDirection('showWallInner', 'WALL-INNER', LEFT_EXTRUDER)
+                    onChangeValue: togglePreviewOptionFactoryByTypeAndDirection('WALL-INNER', LEFT_EXTRUDER)
                 },
                 {
-                    value: allShowTypes[LEFT_EXTRUDER].showWallOuter,
+                    value: allShowTypes[LEFT_EXTRUDER]['WALL-OUTER'],
                     content: i18n._('key-Printing/Preview-Outer Wall'),
-                    onChangeValue: togglePreviewOptionFactoryByTypeAndDirection('showWallOuter', 'WALL-OUTER', LEFT_EXTRUDER)
+                    onChangeValue: togglePreviewOptionFactoryByTypeAndDirection('WALL-OUTER', LEFT_EXTRUDER)
                 },
                 {
-                    value: allShowTypes[LEFT_EXTRUDER].showSkin,
+                    value: allShowTypes[LEFT_EXTRUDER].SKIN,
                     content: i18n._('key-Printing/Preview-Skin'),
-                    onChangeValue: togglePreviewOptionFactoryByTypeAndDirection('showSkin', 'SKIN', LEFT_EXTRUDER)
+                    onChangeValue: togglePreviewOptionFactoryByTypeAndDirection('SKIN', LEFT_EXTRUDER)
                 },
                 {
-                    value: allShowTypes[LEFT_EXTRUDER].showSupport,
+                    value: allShowTypes[LEFT_EXTRUDER].SUPPORT,
                     content: i18n._('key-Printing/Preview-Helper'),
-                    onChangeValue: togglePreviewOptionFactoryByTypeAndDirection('showSupport', 'SUPPORT', LEFT_EXTRUDER)
+                    onChangeValue: togglePreviewOptionFactoryByTypeAndDirection('SUPPORT', LEFT_EXTRUDER)
                 },
                 {
-                    value: allShowTypes[LEFT_EXTRUDER].showFill,
+                    value: allShowTypes[LEFT_EXTRUDER].FILL,
                     content: i18n._('key-Printing/Preview-Fill'),
-                    onChangeValue: togglePreviewOptionFactoryByTypeAndDirection('showFill', 'FILL', LEFT_EXTRUDER)
+                    onChangeValue: togglePreviewOptionFactoryByTypeAndDirection('FILL', LEFT_EXTRUDER)
                 },
                 {
-                    value: allShowTypes[LEFT_EXTRUDER].showTravel,
+                    value: allShowTypes[LEFT_EXTRUDER].TRAVEL,
                     content: i18n._('key-Printing/Preview-Travel'),
-                    onChangeValue: togglePreviewOptionFactoryByTypeAndDirection('showTravel', 'TRAVEL', LEFT_EXTRUDER)
+                    onChangeValue: togglePreviewOptionFactoryByTypeAndDirection('TRAVEL', LEFT_EXTRUDER)
                 },
                 {
-                    value: allShowTypes[LEFT_EXTRUDER].showUnknown,
+                    value: allShowTypes[LEFT_EXTRUDER].UNKNOWN,
                     content: i18n._('key-Printing/Preview-Unknown'),
-                    onChangeValue: togglePreviewOptionFactoryByTypeAndDirection('showUnknown', 'UNKNOWN', LEFT_EXTRUDER)
+                    onChangeValue: togglePreviewOptionFactoryByTypeAndDirection('UNKNOWN', LEFT_EXTRUDER)
                 }
             ]
         },
@@ -254,39 +236,39 @@ function VisualizerPreviewControl() {
             fatherColor: colorR,
             childrenObjects: [
                 {
-                    value: allShowTypes[RIGHT_EXTRUDER].showWallInner,
+                    value: allShowTypes[RIGHT_EXTRUDER]['WALL-INNER'],
                     content: i18n._('key-Printing/Preview-Inner Wall'),
-                    onChangeValue: togglePreviewOptionFactoryByTypeAndDirection('showWallInner', 'WALL-INNER', RIGHT_EXTRUDER)
+                    onChangeValue: togglePreviewOptionFactoryByTypeAndDirection('WALL-INNER', RIGHT_EXTRUDER)
                 },
                 {
-                    value: allShowTypes[RIGHT_EXTRUDER].showWallOuter,
+                    value: allShowTypes[RIGHT_EXTRUDER]['WALL-OUTER'],
                     content: i18n._('key-Printing/Preview-Outer Wall'),
-                    onChangeValue: togglePreviewOptionFactoryByTypeAndDirection('showWallOuter', 'WALL-OUTER', RIGHT_EXTRUDER)
+                    onChangeValue: togglePreviewOptionFactoryByTypeAndDirection('WALL-OUTER', RIGHT_EXTRUDER)
                 },
                 {
-                    value: allShowTypes[RIGHT_EXTRUDER].showSkin,
+                    value: allShowTypes[RIGHT_EXTRUDER].SKIN,
                     content: i18n._('key-Printing/Preview-Skin'),
-                    onChangeValue: togglePreviewOptionFactoryByTypeAndDirection('showSkin', 'SKIN', RIGHT_EXTRUDER)
+                    onChangeValue: togglePreviewOptionFactoryByTypeAndDirection('SKIN', RIGHT_EXTRUDER)
                 },
                 {
-                    value: allShowTypes[RIGHT_EXTRUDER].showSupport,
+                    value: allShowTypes[RIGHT_EXTRUDER].SUPPORT,
                     content: i18n._('key-Printing/Preview-Helper'),
-                    onChangeValue: togglePreviewOptionFactoryByTypeAndDirection('showSupport', 'SUPPORT', RIGHT_EXTRUDER)
+                    onChangeValue: togglePreviewOptionFactoryByTypeAndDirection('SUPPORT', RIGHT_EXTRUDER)
                 },
                 {
-                    value: allShowTypes[RIGHT_EXTRUDER].showFill,
+                    value: allShowTypes[RIGHT_EXTRUDER].FILL,
                     content: i18n._('key-Printing/Preview-Fill'),
-                    onChangeValue: togglePreviewOptionFactoryByTypeAndDirection('showFill', 'FILL', RIGHT_EXTRUDER)
+                    onChangeValue: togglePreviewOptionFactoryByTypeAndDirection('FILL', RIGHT_EXTRUDER)
                 },
                 {
-                    value: allShowTypes[RIGHT_EXTRUDER].showTravel,
+                    value: allShowTypes[RIGHT_EXTRUDER].TRAVEL,
                     content: i18n._('key-Printing/Preview-Travel'),
-                    onChangeValue: togglePreviewOptionFactoryByTypeAndDirection('showTravel', 'TRAVEL', RIGHT_EXTRUDER)
+                    onChangeValue: togglePreviewOptionFactoryByTypeAndDirection('TRAVEL', RIGHT_EXTRUDER)
                 },
                 {
-                    value: allShowTypes[RIGHT_EXTRUDER].showUnknown,
+                    value: allShowTypes[RIGHT_EXTRUDER].UNKNOWN,
                     content: i18n._('key-Printing/Preview-Unknown'),
-                    onChangeValue: togglePreviewOptionFactoryByTypeAndDirection('showUnknown', 'UNKNOWN', RIGHT_EXTRUDER)
+                    onChangeValue: togglePreviewOptionFactoryByTypeAndDirection('UNKNOWN', RIGHT_EXTRUDER)
                 }
             ]
         }
@@ -313,7 +295,7 @@ function VisualizerPreviewControl() {
                                     {i18n._('key-Printing/Preview-Line Type')}
                                 </div>
                                 <div className="padding-vertical-16 padding-left-16">
-                                    { isDualExtruder && (
+                                    {isDualExtruder && (
                                         <div className="sm-flex justify-space-between height-24 margin-bottom-10">
                                             <div>
                                                 <span className="v-align-m">
@@ -322,7 +304,7 @@ function VisualizerPreviewControl() {
                                             </div>
                                         </div>
                                     )}
-                                    { isDualExtruder && (
+                                    {isDualExtruder && (
                                         <div className="sm-flex justify-space-between margin-top-10">
                                             <Select
                                                 size="large"
@@ -348,7 +330,7 @@ function VisualizerPreviewControl() {
                                         }}
                                     >
                                         {!renderLineType && (lineTypeStructureObjects.map((obj) => {
-                                            const { fatherContent, fatherColor, showType, showTypeName } = obj;
+                                            const { fatherContent, fatherColor, showType } = obj;
                                             return (
                                                 <PreviewType
                                                     fatherContent={fatherContent}
@@ -359,18 +341,18 @@ function VisualizerPreviewControl() {
                                                             {
                                                                 value: allShowTypes[LEFT_EXTRUDER][showType],
                                                                 content: i18n._('key-Printing/Preview-Tool0'),
-                                                                onChangeValue: togglePreviewOptionFactoryByTypeAndDirection(showType, showTypeName, LEFT_EXTRUDER)
+                                                                onChangeValue: togglePreviewOptionFactoryByTypeAndDirection(showType, LEFT_EXTRUDER)
                                                             },
                                                             {
                                                                 value: allShowTypes[RIGHT_EXTRUDER][showType],
                                                                 content: i18n._('key-Printing/Preview-Tool1'),
-                                                                onChangeValue: togglePreviewOptionFactoryByTypeAndDirection(showType, showTypeName, RIGHT_EXTRUDER)
+                                                                onChangeValue: togglePreviewOptionFactoryByTypeAndDirection(showType, RIGHT_EXTRUDER)
                                                             }
                                                         ] : [
                                                             {
                                                                 value: allShowTypes[LEFT_EXTRUDER][showType],
                                                                 content: i18n._('key-Printing/Preview-Tool0'),
-                                                                onChangeValue: togglePreviewOptionFactoryByTypeAndDirection(showType, showTypeName, LEFT_EXTRUDER)
+                                                                onChangeValue: togglePreviewOptionFactoryByTypeAndDirection(showType, LEFT_EXTRUDER)
                                                             }
                                                         ]
                                                     }
@@ -381,6 +363,7 @@ function VisualizerPreviewControl() {
                                             const { fatherContent, fatherColor, childrenObjects } = obj;
                                             return (
                                                 <PreviewType
+                                                    key={fatherContent}
                                                     fatherContent={fatherContent}
                                                     fatherColor={fatherColor}
                                                     isDropdown
@@ -392,6 +375,32 @@ function VisualizerPreviewControl() {
                                 </div>
                             </div>
                         )}
+                        <div>
+                            <SvgIcon
+                                className={classNames(
+                                    'fa',
+                                    styles['toggle-btn']
+                                )}
+                                name={GCODEPREVIEWMODES_ICONS[GCODEPREVIEWMODES.findIndex(i => i === gcodePreviewMode)]}
+                                size={24}
+                                type={['static']}
+                                onClick={(e) => {
+                                    if (gcodePreviewModeToogleVisible) {
+                                        dispatch(printingActions.updateState({
+                                            gcodePreviewModeToogleVisible: 0
+                                        }));
+                                    } else {
+                                        let modalHeight = e.pageY - 58 - 24;
+                                        if (!isElectron()) {
+                                            modalHeight -= 26;
+                                        }
+                                        dispatch(printingActions.updateState({
+                                            gcodePreviewModeToogleVisible: modalHeight
+                                        }));
+                                    }
+                                }}
+                            />
+                        </div>
                     </div>
                 )}
             </div>
