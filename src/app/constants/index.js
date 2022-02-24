@@ -72,8 +72,8 @@ export const KEY_DEFAULT_CATEGORY_DEFAULT = 'key-default_category-Default';
 
 export const PRINTING_MATERIAL_CONFIG_COLORS = [
     [WHITE_COLOR, BLACK_COLOR],
-    ['#B30006', '#b36100', '#d4cc00', '#35a000', '#00685a', '#006a99', '#003c7c', '#4c2868', '#b3196f', '#767676'],
-    ['#ff0008', '#ff8b00', '#fff500', '#7bf93c', '#00bea6', '#0092d3', '#0053aa', '#753fa0', '#f9239b', '#a6a6a6'],
+    ['#E70008', '#b36100', '#d4cc00', '#35a000', '#00685a', '#006a99', '#003c7c', '#4c2868', '#b3196f', '#767676'],
+    ['#ff5257', '#ff8b00', '#fff500', '#7bf93c', '#00bea6', '#0092d3', '#0053aa', '#753fa0', '#f9239b', '#a6a6a6'],
     ['#ffd2d3', '#ffca8a', '#fbfb74', '#baff79', '#68d7c9', '#71cdec', '#7eadd8', '#bba4d3', '#ef9fd0', '#cccccc']
 ];
 
