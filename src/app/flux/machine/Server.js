@@ -115,61 +115,63 @@ export class Server extends events.EventEmitter {
         return false;
     }
 
-    open = (callback) => {
-        const api = `${this.host}/api/v1/connect`;
-        request
-            .post(api)
-            .timeout(3000)
-            .send(this.token ? `token=${this.token}` : '')
-            .end((err, res) => {
-                const { msg, data, code, text } = this._getResult(err, res);
+    open = (err, res, callback) => {
+        const { msg, data, code, text } = this._getResult(err, res);
+        console.log('msg, data, code, text', this.token, msg, data, code, text);
+        if (this.token && code === 403) {
+            this.token = '';
+            this.open(callback);
+        }
+        if (msg) {
+            callback({ message: msg, status: code }, data, text);
+            return;
+        }
+        if (data) {
+            const { series } = data;
+            const seriesValue = valueOf(MACHINE_SERIES, 'alias', series);
+            data.series = seriesValue ? seriesValue.value : null;
 
-                if (this.token && code === 403) {
-                    this.token = '';
-                    this.open(callback);
-                }
-                if (msg) {
-                    callback({ message: msg, status: code }, data, text);
-                    return;
-                }
-                if (data) {
-                    const { series } = data;
-                    const seriesValue = valueOf(MACHINE_SERIES, 'alias', series);
-                    data.series = seriesValue ? seriesValue.value : null;
+            let headType = data.headType;
+            let toolHead;
+            switch (data.headType) {
+                case 1:
+                    headType = HEAD_PRINTING;
+                    toolHead = SINGLE_EXTRUDER_TOOLHEAD_FOR_SM2;
+                    break;
+                case 2:
+                    headType = HEAD_CNC;
+                    toolHead = STANDARD_CNC_TOOLHEAD_FOR_SM2;
+                    break;
+                case 3:
+                    headType = HEAD_LASER;
+                    toolHead = LEVEL_ONE_POWER_LASER_FOR_SM2;
+                    break;
+                case 4:
+                    headType = HEAD_LASER;
+                    toolHead = LEVEL_TWO_POWER_LASER_FOR_SM2;
+                    break;
+                default:
+                    headType = data.headType;
+                    toolHead = undefined;
+            }
+            this.state.series = data.series;
+            this.state.headType = headType;
+            this.state.toolHead = toolHead;
+        }
 
-                    let headType = data.headType;
-                    let toolHead;
-                    switch (data.headType) {
-                        case 1:
-                            headType = HEAD_PRINTING;
-                            toolHead = SINGLE_EXTRUDER_TOOLHEAD_FOR_SM2;
-                            break;
-                        case 2:
-                            headType = HEAD_CNC;
-                            toolHead = STANDARD_CNC_TOOLHEAD_FOR_SM2;
-                            break;
-                        case 3:
-                            headType = HEAD_LASER;
-                            toolHead = LEVEL_ONE_POWER_LASER_FOR_SM2;
-                            break;
-                        case 4:
-                            headType = HEAD_LASER;
-                            toolHead = LEVEL_TWO_POWER_LASER_FOR_SM2;
-                            break;
-                        default:
-                            headType = data.headType;
-                            toolHead = undefined;
-                    }
-                    this.state.series = data.series;
-                    this.state.headType = headType;
-                    this.state.toolHead = toolHead;
-                }
+        // this.token = data.token;
+        this.waitConfirm = true;
+        this.startHeartbeat();
+        callback(null, data);
 
-                this.token = data.token;
-                this.waitConfirm = true;
-                this.startHeartbeat();
-                callback(null, data);
-            });
+        // const api = `${this.host}/api/v1/connect`;
+        // request
+        //     .post(api)
+        //     .timeout(3000)
+        //     .send(this.token ? `token=${this.token}` : '')
+        //     .end((err, res) => {
+        //
+        //     });
     };
 
     close = (callback) => {

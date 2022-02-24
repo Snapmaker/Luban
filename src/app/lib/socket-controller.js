@@ -53,6 +53,9 @@ class SocketController {
             callbacks.push(callback);
         }
         this.socket && this.socket.on(eventName, (...args) => {
+            if (eventName === 'serialport:open' || eventName === 'http:open') {
+                console.log('serialport:open', args, callback, callbacks);
+            }
             for (const callback1 of callbacks) {
                 callback1(...args);
             }

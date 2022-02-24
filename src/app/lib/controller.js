@@ -47,6 +47,7 @@ class SerialPortClient {
 
         // HTTP events
         'http:discover': [],
+        'connection:open': [],
 
         // Controller events
         'feeder:status': [],
@@ -145,6 +146,7 @@ class SerialPortClient {
                 log.debug(`socket.on('${eventName}'):`, options);
 
                 if (eventName === 'serialport:open') {
+                    console.log('eventName', eventName);
                     const { controllerType = 'Marlin', port } = options;
                     if (this.ports.indexOf(port) === -1) {
                         this.ports.push(port);
@@ -189,6 +191,9 @@ class SerialPortClient {
                 this.callbacks[eventName].forEach((callback) => {
                     // callback.apply(callback, args);
                     // callback.apply(callback, options);
+                    if (eventName === 'serialport:open') {
+                        console.log('controller', callback, options);
+                    }
                     callback.apply(callback, [options]);
                 });
             });
@@ -225,9 +230,17 @@ class SerialPortClient {
         socketController.emit('serialport:list', { dataSource: this.dataSource });
     }
 
-    openPort(port, connectionTimeout) {
-        socketController.emit('serialport:open', { port, dataSource: this.dataSource, connectionTimeout: connectionTimeout });
+    openPort(port, connectionTimeout, type = 'serialport') {
+        socketController.emit('serialport:open', { port, type, dataSource: this.dataSource, connectionTimeout: connectionTimeout });
+        return this;
     }
+
+    openWifiPort(options) {
+        console.log('openWifiPort', options);
+        socketController.emit('connection:open', options);
+        return this;
+    }
+
 
     closePort(port) {
         socketController.emit('serialport:close', { port, dataSource: this.dataSource });

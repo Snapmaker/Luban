@@ -2,6 +2,7 @@ import SocketServer from '../lib/SocketManager';
 import TaskManager from './task-manager';
 
 import socketSerial from './socket/socket-serial';
+import socketHttp from './socket/socket-http';
 import socketSlice from './socket/socket-slice';
 import wifiServerManager from './socket/WifiServerManager';
 
@@ -37,10 +38,12 @@ function startServices(server) {
 
     // communication: http
     socketServer.registerEvent('http:discover', wifiServerManager.refreshDevices);
+    socketServer.registerEvent('http:connect', socketHttp.connect);
 
     // communication: serial port
     socketServer.registerEvent('serialport:list', socketSerial.serialportList);
     socketServer.registerEvent('serialport:open', socketSerial.serialportOpen);
+    socketServer.registerEvent('connection:open', socketHttp.serialportOpen);
     socketServer.registerEvent('serialport:close', socketSerial.serialportClose);
     socketServer.registerEvent('command', socketSerial.command);
     socketServer.registerEvent('writeln', socketSerial.writeln);

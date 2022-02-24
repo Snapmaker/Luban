@@ -385,25 +385,30 @@ export const actions = {
                 }));
             },
             'serialport:open': (options) => {
-                const { port, err } = options;
-                if (err && err !== 'inuse') {
-                    return;
+                const { type, err } = options;
+                if (type === 'wifi') {
+                    console.log('inside wifi', options);
+                } else {
+                    const { port } = options;
+                    if (err && err !== 'inuse') {
+                        return;
+                    }
+                    const state = getState().machine;
+                    // For Warning Don't initialize
+                    const ports = [...state.ports];
+                    if (ports.indexOf(port) === -1) {
+                        ports.push(port);
+                    }
+                    dispatch(baseActions.updateState({
+                        port,
+                        ports,
+                        isOpen: true,
+                        connectionStatus: CONNECTION_STATUS_CONNECTING,
+                        connectionType: CONNECTION_TYPE_SERIAL,
+                        isEmergencyStopped: false
+                    }));
+                    machineStore.set('port', port);
                 }
-                const state = getState().machine;
-                // For Warning Don't initialize
-                const ports = [...state.ports];
-                if (ports.indexOf(port) === -1) {
-                    ports.push(port);
-                }
-                dispatch(baseActions.updateState({
-                    port,
-                    ports,
-                    isOpen: true,
-                    connectionStatus: CONNECTION_STATUS_CONNECTING,
-                    connectionType: CONNECTION_TYPE_SERIAL,
-                    isEmergencyStopped: false
-                }));
-                machineStore.set('port', port);
             },
             'serialport:connected': (data) => {
                 const { err } = data;
@@ -588,214 +593,220 @@ export const actions = {
         if (server.address === savedServerAddress) {
             server.setToken(savedServerToken);
         }
-
-        server.open((err, data, text) => {
-            if (err) {
-                callback && callback(err, data, text);
-                return;
-            }
-
-            dispatch(connectActions.setServerAddress(server.address));
-            dispatch(connectActions.setServerToken(server.token));
-
-            dispatch(baseActions.updateState({
-                isOpen: true,
-                connectionStatus: CONNECTION_STATUS_CONNECTING
-            }));
-
-            server.removeAllListeners('http:confirm');
-            server.removeAllListeners('http:status');
-            server.removeAllListeners('http:close');
-
-            server.once('http:confirm', (result) => {
-                const { toolHead, series, headType, status, isHomed, isEmergencyStopped, moduleStatusList } = result.data;
-                // TODO: update orther data
-                const _isRotate = moduleStatusList?.rotaryModule;
-
-                // emergency stop event
-                if (isEmergencyStopped) {
-                    dispatch(baseActions.updateState({
-                        isEmergencyStopped
-                    }));
+        // TODO: add emit socket event
+        const socket = controller.openWifiPort({ host: server.host, token: server.token });
+        socket.on('connection:open', (options) => {
+            const { res, err, body } = options;
+            res.body = body;
+            console.log('frontend22', options, body);
+            server.open(err, res, (insideErr, data, text) => {
+                if (insideErr) {
+                    callback && callback(insideErr, data, text);
                     return;
                 }
 
-                // confirm connected
+                dispatch(connectActions.setServerAddress(server.address));
+                dispatch(connectActions.setServerToken(server.token));
+
                 dispatch(baseActions.updateState({
-                    workflowStatus: status,
-                    isConnected: true,
-                    isSendedOnWifi: true,
-                    connectionStatus: CONNECTION_STATUS_CONNECTED,
-                    isHomed: isHomed
+                    isOpen: true,
+                    connectionStatus: CONNECTION_STATUS_CONNECTING
                 }));
 
-                // get series & headType
-                dispatch(workspaceActions.updateMachineState({
-                    isRotate: _isRotate
-                }));
-                if (series && headType) {
-                    // TODO: set isRotate here
-                    dispatch(workspaceActions.updateMachineState({
-                        series,
-                        headType,
-                        toolHead
+                server.removeAllListeners('http:confirm');
+                server.removeAllListeners('http:status');
+                server.removeAllListeners('http:close');
+
+                server.once('http:confirm', (result) => {
+                    const { toolHead, series, headType, status, isHomed, isEmergencyStopped, moduleStatusList } = result.data;
+                    // TODO: update orther data
+                    const _isRotate = moduleStatusList?.rotaryModule;
+
+                    // emergency stop event
+                    if (isEmergencyStopped) {
+                        dispatch(baseActions.updateState({
+                            isEmergencyStopped
+                        }));
+                        return;
+                    }
+
+                    // confirm connected
+                    dispatch(baseActions.updateState({
+                        workflowStatus: status,
+                        isConnected: true,
+                        isSendedOnWifi: true,
+                        connectionStatus: CONNECTION_STATUS_CONNECTED,
+                        isHomed: isHomed
                     }));
-                    dispatch(actions.executeGcodeG54(series, headType));
-                    if (_.includes([WORKFLOW_STATUS_PAUSED, WORKFLOW_STATUS_RUNNING], status)) {
-                        server.getGcodeFile((msg, gcode) => {
-                            if (msg) {
-                                return;
+
+                    // get series & headType
+                    dispatch(workspaceActions.updateMachineState({
+                        isRotate: _isRotate
+                    }));
+                    if (series && headType) {
+                        // TODO: set isRotate here
+                        dispatch(workspaceActions.updateMachineState({
+                            series,
+                            headType,
+                            toolHead
+                        }));
+                        dispatch(actions.executeGcodeG54(series, headType));
+                        if (_.includes([WORKFLOW_STATUS_PAUSED, WORKFLOW_STATUS_RUNNING], status)) {
+                            server.getGcodeFile((msg, gcode) => {
+                                if (msg) {
+                                    return;
+                                }
+                                dispatch(workspaceActions.clearGcode());
+                                let suffix = 'gcode';
+                                if (headType === HEAD_LASER) {
+                                    suffix = 'nc';
+                                } else if (headType === HEAD_CNC) {
+                                    suffix = 'cnc';
+                                }
+                                dispatch(workspaceActions.clearGcode());
+                                dispatch(workspaceActions.renderGcode(`print.${suffix}`, gcode, true, true));
+                            });
+                        }
+                    } else {
+                        // TODO: Why is modal code here???
+                        MachineSelectModal({
+                            series: series,
+                            headType: headType,
+
+                            onConfirm: (seriesT, headTypeT, toolHeadT) => {
+                                dispatch(workspaceActions.updateMachineState({
+                                    series: seriesT,
+                                    headType: headTypeT,
+                                    toolHead: toolHeadT,
+                                    canReselectMachine: true
+                                }));
+                                dispatch(actions.executeGcodeG54(seriesT, headTypeT));
                             }
-                            dispatch(workspaceActions.clearGcode());
-                            let suffix = 'gcode';
-                            if (headType === HEAD_LASER) {
-                                suffix = 'nc';
-                            } else if (headType === HEAD_CNC) {
-                                suffix = 'cnc';
-                            }
-                            dispatch(workspaceActions.clearGcode());
-                            dispatch(workspaceActions.renderGcode(`print.${suffix}`, gcode, true, true));
                         });
                     }
-                } else {
-                    // TODO: Why is modal code here???
-                    MachineSelectModal({
-                        series: series,
-                        headType: headType,
+                });
 
-                        onConfirm: (seriesT, headTypeT, toolHeadT) => {
-                            dispatch(workspaceActions.updateMachineState({
-                                series: seriesT,
-                                headType: headTypeT,
-                                toolHead: toolHeadT,
-                                canReselectMachine: true
-                            }));
-                            dispatch(actions.executeGcodeG54(seriesT, headTypeT));
-                        }
-                    });
-                }
-            });
-
-            server.on('http:status', (result) => {
-                const { workPosition, originOffset, gcodePrintingInfo } = getState().machine;
-                const {
-                    status, isHomed, x, y, z, b, offsetX, offsetY, offsetZ,
-                    laserFocalLength,
-                    laserPower,
-                    nozzleTemperature,
-                    nozzleTargetTemperature,
-                    heatedBedTemperature,
-                    doorSwitchCount,
-                    isEnclosureDoorOpen,
-                    headType,
-                    heatedBedTargetTemperature,
-                    airPurifier,
-                    airPurifierSwitch,
-                    airPurifierFanSpeed,
-                    airPurifierFilterHealth,
-                    isEmergencyStopped,
-                    laser10WErrorState,
-                    moduleStatusList,
-                    laserCamera
-                } = result.data;
-                if (isEmergencyStopped) {
-                    dispatch(baseActions.updateState({
-                        isEmergencyStopped
-                    }));
-                    server.close(() => {
-                        dispatch(actions.resetMachineState());
-                    });
-                    return;
-                }
-                dispatch(baseActions.updateState({
-                    workflowStatus: status,
-                    laserFocalLength: laserFocalLength,
-                    laserPower: laserPower,
-                    isHomed: isHomed,
-                    nozzleTemperature: nozzleTemperature,
-                    nozzleTargetTemperature: nozzleTargetTemperature,
-                    heatedBedTemperature: heatedBedTemperature,
-                    isEnclosureDoorOpen: isEnclosureDoorOpen,
-                    doorSwitchCount: doorSwitchCount,
-                    heatedBedTargetTemperature: heatedBedTargetTemperature,
-                    isEmergencyStopped: isEmergencyStopped,
-                    laser10WErrorState: laser10WErrorState,
-                    airPurifier: airPurifier,
-                    airPurifierSwitch: airPurifierSwitch,
-                    airPurifierFanSpeed: airPurifierFanSpeed,
-                    airPurifierFilterHealth: airPurifierFilterHealth,
-                    moduleStatusList,
-                    laserCamera
-                }));
-                // make 'workPosition' value as Number
-                if (!(_.isUndefined(b))) {
-                    if (Number(workPosition.x) !== x
-                        || Number(workPosition.y) !== y
-                        || Number(workPosition.z) !== z
-                        || Number(workPosition.b) !== b) {
-                        // TODO: Set `isRotate` only once.
-                        if (headType === HEAD_LASER || headType === HEAD_CNC) {
-                            dispatch(workspaceActions.updateMachineState({
-                                isRotate: true
-                            }));
-                        }
+                server.on('http:status', (result) => {
+                    const { workPosition, originOffset, gcodePrintingInfo } = getState().machine;
+                    const {
+                        status, isHomed, x, y, z, b, offsetX, offsetY, offsetZ,
+                        laserFocalLength,
+                        laserPower,
+                        nozzleTemperature,
+                        nozzleTargetTemperature,
+                        heatedBedTemperature,
+                        doorSwitchCount,
+                        isEnclosureDoorOpen,
+                        headType,
+                        heatedBedTargetTemperature,
+                        airPurifier,
+                        airPurifierSwitch,
+                        airPurifierFanSpeed,
+                        airPurifierFilterHealth,
+                        isEmergencyStopped,
+                        laser10WErrorState,
+                        moduleStatusList,
+                        laserCamera
+                    } = result.data;
+                    if (isEmergencyStopped) {
                         dispatch(baseActions.updateState({
-                            workPosition: {
-                                x: `${x.toFixed(3)}`,
-                                y: `${y.toFixed(3)}`,
-                                z: `${z.toFixed(3)}`,
-                                b: `${b.toFixed(3)}`,
-                                isFourAxis: true,
+                            isEmergencyStopped
+                        }));
+                        server.close(() => {
+                            dispatch(actions.resetMachineState());
+                        });
+                        return;
+                    }
+                    dispatch(baseActions.updateState({
+                        workflowStatus: status,
+                        laserFocalLength: laserFocalLength,
+                        laserPower: laserPower,
+                        isHomed: isHomed,
+                        nozzleTemperature: nozzleTemperature,
+                        nozzleTargetTemperature: nozzleTargetTemperature,
+                        heatedBedTemperature: heatedBedTemperature,
+                        isEnclosureDoorOpen: isEnclosureDoorOpen,
+                        doorSwitchCount: doorSwitchCount,
+                        heatedBedTargetTemperature: heatedBedTargetTemperature,
+                        isEmergencyStopped: isEmergencyStopped,
+                        laser10WErrorState: laser10WErrorState,
+                        airPurifier: airPurifier,
+                        airPurifierSwitch: airPurifierSwitch,
+                        airPurifierFanSpeed: airPurifierFanSpeed,
+                        airPurifierFilterHealth: airPurifierFilterHealth,
+                        moduleStatusList,
+                        laserCamera
+                    }));
+                    // make 'workPosition' value as Number
+                    if (!(_.isUndefined(b))) {
+                        if (Number(workPosition.x) !== x
+                                        || Number(workPosition.y) !== y
+                                        || Number(workPosition.z) !== z
+                                        || Number(workPosition.b) !== b) {
+                            // TODO: Set `isRotate` only once.
+                            if (headType === HEAD_LASER || headType === HEAD_CNC) {
+                                dispatch(workspaceActions.updateMachineState({
+                                    isRotate: true
+                                }));
+                            }
+                            dispatch(baseActions.updateState({
+                                workPosition: {
+                                    x: `${x.toFixed(3)}`,
+                                    y: `${y.toFixed(3)}`,
+                                    z: `${z.toFixed(3)}`,
+                                    b: `${b.toFixed(3)}`,
+                                    isFourAxis: true,
+                                    a: '0.000'
+                                }
+                            }));
+                        }
+                    } else {
+                        if (Number(workPosition.x) !== x
+                                        || Number(workPosition.y) !== y
+                                        || Number(workPosition.z) !== z) {
+                            // TODO: Set `isRotate` only once.
+                            if (headType === HEAD_LASER || headType === HEAD_CNC) {
+                                dispatch(workspaceActions.updateMachineState({
+                                    isRotate: false
+                                }));
+                            }
+                            dispatch(baseActions.updateState({
+                                workPosition: {
+                                    x: `${x.toFixed(3)}`,
+                                    y: `${y.toFixed(3)}`,
+                                    z: `${z.toFixed(3)}`,
+                                    isFourAxis: false,
+                                    a: '0.000'
+                                }
+                            }));
+                        }
+                    }
+
+                    if (Number(originOffset.x) !== offsetX
+                                    || Number(originOffset.y) !== offsetY
+                                    || Number(originOffset.z) !== offsetZ) {
+                        dispatch(baseActions.updateState({
+                            originOffset: {
+                                x: `${offsetX.toFixed(3)}`,
+                                y: `${offsetY.toFixed(3)}`,
+                                z: `${offsetZ.toFixed(3)}`,
                                 a: '0.000'
                             }
                         }));
                     }
-                } else {
-                    if (Number(workPosition.x) !== x
-                        || Number(workPosition.y) !== y
-                        || Number(workPosition.z) !== z) {
-                        // TODO: Set `isRotate` only once.
-                        if (headType === HEAD_LASER || headType === HEAD_CNC) {
-                            dispatch(workspaceActions.updateMachineState({
-                                isRotate: false
-                            }));
-                        }
-                        dispatch(baseActions.updateState({
-                            workPosition: {
-                                x: `${x.toFixed(3)}`,
-                                y: `${y.toFixed(3)}`,
-                                z: `${z.toFixed(3)}`,
-                                isFourAxis: false,
-                                a: '0.000'
-                            }
-                        }));
-                    }
-                }
 
-                if (Number(originOffset.x) !== offsetX
-                    || Number(originOffset.y) !== offsetY
-                    || Number(originOffset.z) !== offsetZ) {
                     dispatch(baseActions.updateState({
-                        originOffset: {
-                            x: `${offsetX.toFixed(3)}`,
-                            y: `${offsetY.toFixed(3)}`,
-                            z: `${offsetZ.toFixed(3)}`,
-                            a: '0.000'
+                        gcodePrintingInfo: {
+                            ...gcodePrintingInfo,
+                            ...result.data.gcodePrintingInfo
                         }
                     }));
-                }
-
-                dispatch(baseActions.updateState({
-                    gcodePrintingInfo: {
-                        ...gcodePrintingInfo,
-                        ...result.data.gcodePrintingInfo
-                    }
-                }));
+                });
+                server.once('http:close', () => {
+                    dispatch(actions.resetMachineState());
+                });
+                callback && callback(null, data);
             });
-            server.once('http:close', () => {
-                dispatch(actions.resetMachineState());
-            });
-            callback && callback(null, data);
         });
     },
 
