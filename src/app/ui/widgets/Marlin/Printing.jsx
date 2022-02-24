@@ -10,19 +10,25 @@ import { NumberInput as Input } from '../../components/Input';
 import { actions as machineActions } from '../../../flux/machine';
 import JogDistance from './JogDistance';
 import WorkSpeed from './WorkSpeed';
-import { CONNECTION_TYPE_WIFI, WORKFLOW_STATUS_PAUSED, WORKFLOW_STATUS_RUNNING } from '../../../constants';
-
+import { CONNECTION_TYPE_WIFI,
+    WORKFLOW_STATUS_PAUSED,
+    WORKFLOW_STATUS_RUNNING,
+    CONNECTION_BED_TEMPERATURE,
+    CONNECTION_NOZZLE_TEMPERATURE,
+    CONNECTION_Z_OFFSET,
+    CONNECTION_LOAD_FILAMENT,
+    CONNECTION_UNLOAD_FILAMENT
+} from '../../../constants';
+import { controller } from '../../../lib/controller';
 
 class Printing extends PureComponent {
     static propTypes = {
         isConnected: PropTypes.bool,
         connectionType: PropTypes.string,
-        server: PropTypes.object,
         nozzleTargetTemperature: PropTypes.number.isRequired,
         heatedBedTargetTemperature: PropTypes.number.isRequired,
         workflowStatus: PropTypes.string.isRequired,
         nozzleTemperature: PropTypes.number.isRequired,
-        executeGcode: PropTypes.func.isRequired,
         addConsoleLogs: PropTypes.func.isRequired,
         heatedBedTemperature: PropTypes.number.isRequired
     };
@@ -46,11 +52,9 @@ class Printing extends PureComponent {
             });
         },
         onClickNozzleTemperature: () => {
-            if (this.actions.isWifiPrinting()) {
-                this.props.server.updateNozzleTemperature(this.state.nozzleTemperatureValue);
-            } else {
-                this.props.executeGcode(`M104 S${this.state.nozzleTemperatureValue}`);
-            }
+            controller.emitEvent(CONNECTION_NOZZLE_TEMPERATURE, {
+                nozzleTemperatureValue: this.state.nozzleTemperatureValue
+            });
         },
         onChangeHeatedBedTemperatureValue: (value) => {
             this.setState({
@@ -58,11 +62,9 @@ class Printing extends PureComponent {
             });
         },
         onClickHeatedBedTemperature: () => {
-            if (this.actions.isWifiPrinting()) {
-                this.props.server.updateBedTemperature(this.state.heatedBedTemperatureValue);
-            } else {
-                this.props.executeGcode(`M140 S${this.state.heatedBedTemperatureValue}`);
-            }
+            controller.emitEvent(CONNECTION_BED_TEMPERATURE, {
+                heatedBedTemperatureValue: this.state.heatedBedTemperatureValue
+            });
         },
         onChangeZOffset: (value) => {
             this.setState({
@@ -70,40 +72,32 @@ class Printing extends PureComponent {
             });
         },
         onClickPlusZOffset: () => {
-            const value = this.state.zOffsetValue;
-            if (this.actions.isWifiPrinting()) {
-                this.props.server.updateZOffset(value, (err) => {
-                    if (err) {
-                        return;
-                    }
-                    this.props.addConsoleLogs([`Z Offset ${value} ok`]);
-                });
-            }
+            const zOffset = this.state.zOffsetValue;
+            controller.emitEvent(CONNECTION_Z_OFFSET, {
+                zOffset
+            }).once(CONNECTION_Z_OFFSET, ({ msg }) => {
+                if (msg) {
+                    return;
+                }
+                this.props.addConsoleLogs([`Z Offset ${zOffset} ok`]);
+            });
         },
         onClickMinusZOffset: () => {
-            const value = this.state.zOffsetValue;
-            if (this.actions.isWifiPrinting()) {
-                this.props.server.updateZOffset(-value, (err) => {
-                    if (err) {
-                        return;
-                    }
-                    this.props.addConsoleLogs([`Z Offset ${-value} ok`]);
-                });
-            }
+            const zOffset = 0 - this.state.zOffsetValue;
+            controller.emitEvent(CONNECTION_Z_OFFSET, {
+                zOffset
+            }).once(CONNECTION_Z_OFFSET, ({ msg }) => {
+                if (msg) {
+                    return;
+                }
+                this.props.addConsoleLogs([`Z Offset ${zOffset} ok`]);
+            });
         },
         onClickLoad: () => {
-            if (this.actions.isWifiPrinting()) {
-                this.props.server.loadFilament();
-            } else {
-                this.props.executeGcode('G91;\nG0 E60 F200;\nG90;');
-            }
+            controller.emitEvent(CONNECTION_LOAD_FILAMENT);
         },
         onClickUnload: () => {
-            if (this.actions.isWifiPrinting()) {
-                this.props.server.unloadFilament();
-            } else {
-                this.props.executeGcode('G91;\nG0 E6 F200;\nG0 E-60 F150;\nG90;');
-            }
+            controller.emitEvent(CONNECTION_UNLOAD_FILAMENT);
         }
     };
 
@@ -222,7 +216,6 @@ const mapStateToProps = (state) => {
     const { isConnected,
         connectionType,
         nozzleTemperature,
-        server,
         nozzleTargetTemperature,
         heatedBedTemperature,
         heatedBedTargetTemperature,
@@ -231,7 +224,6 @@ const mapStateToProps = (state) => {
     return {
         isConnected,
         connectionType,
-        server,
         nozzleTemperature,
         nozzleTargetTemperature,
         heatedBedTemperature,
@@ -242,7 +234,6 @@ const mapStateToProps = (state) => {
 
 const mapDispatchToProps = (dispatch) => {
     return {
-        executeGcode: (gcode, context) => dispatch(machineActions.executeGcode(gcode, context)),
         addConsoleLogs: (gcode, context) => dispatch(machineActions.addConsoleLogs(gcode, context))
     };
 };

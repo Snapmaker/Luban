@@ -39,6 +39,31 @@ export const CURA_ENGINE_MACOS = `${RESOURCES_DIR}/CuraEngine/3.6/macOS/CuraEngi
 export const CURA_ENGINE_LINUX = `${RESOURCES_DIR}/CuraEngine/3.6/Linux/CuraEngine`;
 export const CURA_ENGINE_WIN64 = `${RESOURCES_DIR}/CuraEngine/3.6/Windows-x64/CuraEngine.exe`;
 
+export const LEVEL_TWO_POWER_LASER_FOR_SM2 = 'levelTwoLaserToolheadForSM2';
+
+export const WORKFLOW_STATE_PAUSED = 'paused';
+export const MACHINE_SERIES = {
+    ORIGINAL: {
+        value: 'Original'
+    },
+    ORIGINAL_LZ: {
+        value: 'Original Long Z-axis'
+    },
+    A150: {
+        value: 'A150'
+    },
+    A250: {
+        value: 'A250'
+
+    },
+    A350: {
+        value: 'A350',
+    },
+    CUSTOM: {
+        value: 'Custom'
+    }
+};
+
 // 3D Mesh Convert 2D Image
 export const FRONT = 'front';
 export const BACK = 'back';
@@ -46,6 +71,10 @@ export const LEFT = 'left';
 export const RIGHT = 'right';
 export const TOP = 'top';
 export const BOTTOM = 'bottom';
+
+// Connection Type
+export const CONNECTION_TYPE_SERIAL = 'serial';
+export const CONNECTION_TYPE_WIFI = 'wifi';
 
 // Head Type
 export const HEAD_CNC = 'cnc';

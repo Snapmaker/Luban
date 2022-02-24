@@ -37,18 +37,15 @@ class SerialPortClient {
         // 'task:error': [],
 
         // Serial Port events
-        'serialport:list': [],
-        'serialport:open': [],
         'serialport:connected': [],
-        'serialport:close': [],
         'serialport:emergencyStop': [],
         'serialport:read': [],
         'serialport:write': [],
 
         // HTTP events
-        'http:discover': [],
+        'machine:discover': [],
         'connection:open': [],
-
+        'connection:close': [],
         // Controller events
         'feeder:status': [],
         'sender:status': [],
@@ -145,33 +142,36 @@ class SerialPortClient {
                 // log.debug(`socket.on('${eventName}'):`, args);
                 log.debug(`socket.on('${eventName}'):`, options);
 
-                if (eventName === 'serialport:open') {
-                    console.log('eventName', eventName);
+                if (eventName === 'connection:open') {
                     const { controllerType = 'Marlin', port } = options;
-                    if (this.ports.indexOf(port) === -1) {
-                        this.ports.push(port);
-                    }
-                    this.port = port;
-                    this.workspacePort = port;
+                    if (port) {
+                        if (this.ports.indexOf(port) === -1) {
+                            this.ports.push(port);
+                        }
+                        this.port = port;
+                        this.workspacePort = port;
 
-                    this.type = controllerType;
-                }
-                if (eventName === 'serialport:close') {
-                    const { port } = options;
-                    const portIndex = this.ports.indexOf(port);
-                    if (portIndex !== -1) {
-                        this.ports.splice(portIndex, 1);
+                        this.type = controllerType;
                     }
-                    if (!isEmpty(this.ports)) {
-                        this.port = this.ports[0];
-                        this.workspacePort = this.ports[0];
-                    } else {
-                        this.workspacePort = '';
-                        this.port = '';
-                        this.type = '';
-                        this.state = {};
-                        this.settings = {};
-                        this.workflowState = WORKFLOW_STATE_IDLE;
+                }
+                if (eventName === 'connection:close') {
+                    const { port } = options;
+                    if (port) {
+                        const portIndex = this.ports.indexOf(port);
+                        if (portIndex !== -1) {
+                            this.ports.splice(portIndex, 1);
+                        }
+                        if (!isEmpty(this.ports)) {
+                            this.port = this.ports[0];
+                            this.workspacePort = this.ports[0];
+                        } else {
+                            this.workspacePort = '';
+                            this.port = '';
+                            this.type = '';
+                            this.state = {};
+                            this.settings = {};
+                            this.workflowState = WORKFLOW_STATE_IDLE;
+                        }
                     }
                 }
                 if (eventName === 'workflow:state') {
@@ -189,11 +189,6 @@ class SerialPortClient {
                     this.settings = options.settings;
                 }
                 this.callbacks[eventName].forEach((callback) => {
-                    // callback.apply(callback, args);
-                    // callback.apply(callback, options);
-                    if (eventName === 'serialport:open') {
-                        console.log('controller', callback, options);
-                    }
                     callback.apply(callback, [options]);
                 });
             });
@@ -204,6 +199,7 @@ class SerialPortClient {
         socketController.disconnect();
     }
 
+    // Note: 'on' and 'off' function must be registered during initialization
     on(eventName, callback) {
         const callbacks = this.callbacks[eventName];
         if (!callbacks) {
@@ -227,28 +223,17 @@ class SerialPortClient {
     }
 
     listPorts() {
-        socketController.emit('serialport:list', { dataSource: this.dataSource });
+        socketController.emit('machine:discover', { dataSource: this.dataSource });
     }
 
-    openPort(port, connectionTimeout, type = 'serialport') {
-        socketController.emit('serialport:open', { port, type, dataSource: this.dataSource, connectionTimeout: connectionTimeout });
-        return this;
-    }
-
-    openWifiPort(options) {
-        console.log('openWifiPort', options);
-        socketController.emit('connection:open', options);
-        return this;
-    }
-
-
-    closePort(port) {
-        socketController.emit('serialport:close', { port, dataSource: this.dataSource });
+    emitEvent(eventName, options = {}) {
+        socketController.emit(eventName, { ...options, eventName });
+        return socketController;
     }
 
     // Discover Wi-Fi enabled Snapmakers
     listHTTPServers() {
-        socketController.emit('http:discover');
+        socketController.emit('machine:discover');
     }
 
     slice(params) {

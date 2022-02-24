@@ -7,19 +7,19 @@ import baseActions from './action-base';
 const init = () => (dispatch, getState) => {
     const controllerEvents = {
         // Receive when new servers discovered
-        'http:discover': (objects) => {
+        'machine:discover': ({ devices, type }) => {
             // Note that we may receive this event many times.
-            const { servers } = getState().machine;
-
-            for (const object of objects) {
-                const find = servers.find(v => v.address === object.address && v.name === object.name);
+            const { servers, connectionType } = getState().machine;
+            const resultServers = connectionType === type ? servers : [];
+            for (const object of devices) {
+                const find = servers.find(v => v.address === object.address && v.port === object.port);
                 if (!find) {
-                    const server = new Server(object.name, object.address, object.model);
+                    const server = new Server(object.name, object.address, object.port);
                     servers.unshift(server);
                 }
             }
 
-            dispatch(baseActions.updateState({ servers: [...servers] }));
+            dispatch(baseActions.updateState({ servers: resultServers }));
         }
     };
 

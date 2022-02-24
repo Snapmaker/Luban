@@ -6,6 +6,31 @@ export const IMPERIAL_UNITS = 'in';
 export const METRIC_UNITS = 'mm';
 
 export const EPSILON = 1e-6;
+export const CONNECTION_OPEN = 'connection:open';
+export const CONNECTION_CLOSE = 'connection:close';
+export const CONNECTION_EXECUTE_GCODE = 'connection:executeGcode';
+export const CONNECTION_START_GCODE = 'connection:startGcode';
+export const CONNECTION_RESUME_GCODE = 'connection:resumeGcode';
+export const CONNECTION_PAUSE_GCODE = 'connection:pauseGcode';
+export const CONNECTION_STOP_GCODE = 'connection:stopGcode';
+export const CONNECTION_HEARTBEAT = 'connection:startHeartbeat';
+export const CONNECTION_MATERIALTHICKNESS = 'connection:materialThickness';
+export const CONNECTION_GET_GCODEFILE = 'connection:getGcodeFile';
+export const CONNECTION_UPLOAD_FILE = 'connection:uploadFile';
+export const CONNECTION_Z_OFFSET = 'connection:updateZOffset';
+export const CONNECTION_NOZZLE_TEMPERATURE = 'connection:updateNozzleTemperature';
+export const CONNECTION_BED_TEMPERATURE = 'connection:updateBedTemperature';
+export const CONNECTION_LOAD_FILAMENT = 'connection:loadFilament';
+export const CONNECTION_UNLOAD_FILAMENT = 'connection:unloadFilament';
+export const CONNECTION_WORKSPEED_FACTOR = 'connection:updateWorkSpeedFactor';
+export const CONNECTION_LASER_POWER = 'connection:updateLaserPower';
+export const CONNECTION_SWITCH_LASER_POWER = 'connection:switchLaserPower';
+export const CONNECTION_ENCLOSURE_LIGHT = 'connection:setEnclosureLight';
+export const CONNECTION_ENCLOSURE_FAN = 'connection:setEnclosureFan';
+export const CONNECTION_DOOR_DETECTION = 'connection:setDoorDetection';
+export const CONNECTION_FILTER_SWITCH = 'connection:setFilterSwitch';
+export const CONNECTION_FILTER_WORKSPEED = 'connection:setFilterWorkSpeed';
+
 
 // Controller
 export const MARLIN = 'Marlin';

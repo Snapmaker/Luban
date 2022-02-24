@@ -4,9 +4,7 @@ import moment from 'moment';
 import React from 'react';
 import ReactDOM from 'react-dom';
 import { ConfigProvider } from 'antd';
-import { createStore, applyMiddleware } from 'redux';
 import { Provider } from 'react-redux';
-import thunk from 'redux-thunk';
 import i18next from 'i18next';
 import { initReactI18next } from 'react-i18next';
 import ReactGA from 'react-ga';
@@ -19,11 +17,10 @@ import log from './lib/log';
 import { toQueryObject } from './lib/query';
 import user from './lib/user';
 import { machineStore } from './store/local-storage';
-import reducer from './flux';
+import reduxStore from './store';
 import App from './ui/App';
 import './styles/vendor.styl';
 import './styles/app.styl';
-import { appbarMenuMiddleware } from './lib/redux-middleware';
 import 'antd/dist/antd.css';
 
 series([
@@ -108,8 +105,6 @@ series([
     document.body.appendChild(container);
 
     ReactGA.initialize('UA-106828154-1');
-
-    const reduxStore = createStore(reducer, applyMiddleware(thunk, appbarMenuMiddleware));
 
     ReactDOM.render(
         <ConfigProvider autoInsertSpaceInButton={false}>

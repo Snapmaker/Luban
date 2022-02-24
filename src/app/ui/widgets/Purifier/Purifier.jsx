@@ -1,6 +1,6 @@
 import PropTypes from 'prop-types';
 import React, { useEffect, useState } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
+import { useSelector } from 'react-redux';
 import classNames from 'classnames';
 import Switch from '../../components/Switch';
 import styles from './index.styl';
@@ -8,53 +8,33 @@ import {
     SPEED_HIGH,
     SPEED_MEDIUM,
     SPEED_LOW,
+    CONNECTION_FILTER_SWITCH,
+    CONNECTION_FILTER_WORKSPEED,
     MACHINE_SERIES
 } from '../../../constants';
 import i18n from '../../../lib/i18n';
-import log from '../../../lib/log';
-import { actions as machineActions } from '../../../flux/machine';
+// import log from '../../../lib/log';
+import { controller } from '../../../lib/controller';
 
 function Purifier({ widgetActions }) {
-    const { isConnected, server, connectionType, airPurifier, airPurifierSwitch, airPurifierFanSpeed, airPurifierFilterHealth } = useSelector(state => state.machine);
+    const { isConnected, airPurifier, airPurifierSwitch, airPurifierFanSpeed, airPurifierFilterHealth } = useSelector(state => state.machine);
     const series = useSelector(state => state.machine.series);
     const [isFilterEnable, setIsFilterEnable] = useState(true);
     const [workSpeed, setWorkSpeed] = useState(SPEED_HIGH);
     const [filterLife, setFilterLife] = useState(2);
-    const dispatch = useDispatch();
 
     const actions = {
         onHandleFilterEnabled: () => {
-            if (connectionType === 'wifi') {
-                server.setFilterSwitch(!isFilterEnable, (errMsg, res) => {
-                    if (errMsg) {
-                        log.error(errMsg);
-                        return;
-                    }
-                    if (res) {
-                        setIsFilterEnable(res.airPurifierSwitch);
-                    }
-                });
-            } else {
-                dispatch(machineActions.executeGcode(`M1011 F${isFilterEnable ? 0 : workSpeed};`));
-            }
+            controller.emitEvent(CONNECTION_FILTER_SWITCH, {
+                enable: !isFilterEnable,
+                value: workSpeed
+            });
             setIsFilterEnable(!isFilterEnable);
         },
         onChangeFilterSpeed: (_workSpeed) => {
-            if (connectionType === 'wifi') {
-                server.setFilterWorkSpeed(_workSpeed, (errMsg, res) => {
-                    if (errMsg) {
-                        log.error(errMsg);
-                        return;
-                    }
-                    if (res) {
-                        setWorkSpeed(res.airPurifierFanSpeed);
-                    }
-                });
-            } else {
-                if (isFilterEnable) {
-                    dispatch(machineActions.executeGcode(`M1011 F${_workSpeed};`));
-                }
-            }
+            controller.emitEvent(CONNECTION_FILTER_WORKSPEED, {
+                value: _workSpeed
+            });
             setWorkSpeed(_workSpeed);
         }
     };

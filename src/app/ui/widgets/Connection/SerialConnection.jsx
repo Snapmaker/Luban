@@ -157,11 +157,11 @@ function SerialConnection() {
     }
 
     function openPort(_port) {
-        controller.openPort(_port, connectionTimeout);
+        dispatch(machineActions.openServer({ port: _port, connectionTimeout }));
     }
 
     function closePort(_port) {
-        controller.closePort(_port);
+        dispatch(machineActions.closeServer({ port: _port }));
     }
 
     const renderPortOption = (option) => {
@@ -231,10 +231,10 @@ function SerialConnection() {
     };
 
     const controllerEvents = {
-        'serialport:list': (options) => onListPorts(options),
-        'serialport:open': (options) => onPortOpened(options),
+        'machine:discover': (options) => onListPorts(options),
+        'connection:open': (options) => onPortOpened(options),
         'serialport:connected': (options) => onPortReady(options),
-        'serialport:close': (options) => onPortClosed(options)
+        'connection:close': (options) => onPortClosed(options)
     };
 
     function addControllerEvents() {

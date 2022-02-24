@@ -1,17 +1,29 @@
-import request from 'superagent';
 import events from 'events';
 import {
     HEAD_CNC,
     HEAD_LASER,
     HEAD_PRINTING,
     MACHINE_SERIES,
-    WORKFLOW_STATUS_IDLE,
     WORKFLOW_STATUS_UNKNOWN,
+    CONNECTION_HEARTBEAT,
     LEVEL_TWO_POWER_LASER_FOR_SM2, STANDARD_CNC_TOOLHEAD_FOR_SM2,
-    LEVEL_ONE_POWER_LASER_FOR_SM2, SINGLE_EXTRUDER_TOOLHEAD_FOR_SM2
+    LEVEL_ONE_POWER_LASER_FOR_SM2, SINGLE_EXTRUDER_TOOLHEAD_FOR_SM2,
+    WORKFLOW_STATUS_RUNNING,
+    WORKFLOW_STATUS_IDLE,
+    // CONNECTION_OPEN,
+    CONNECTION_CLOSE,
+    CONNECTION_EXECUTE_GCODE,
+    CONNECTION_START_GCODE,
+    CONNECTION_RESUME_GCODE,
+    CONNECTION_PAUSE_GCODE,
+    CONNECTION_STOP_GCODE,
+    // CONNECTION_GET_GCODEFILE
 } from '../../constants';
 import { valueOf } from '../../lib/contants-utils';
-import workerManager from '../../lib/manager/workerManager';
+import { controller } from '../../lib/controller';
+import { actions as workspaceActions } from '../workspace';
+import { actions as machineActions } from './index.js';
+import { dispatch } from '../../store';
 
 /**
  * Server represents HTTP Server on Snapmaker 2.
@@ -30,15 +42,93 @@ export class Server extends events.EventEmitter {
 
     isGcodeExecuting = false;
 
-    constructor(name, address, model, port) {
+    constructor(name = '', address = '', port = '') {
         super();
         this.name = name;
         this.address = address;
         this.token = '';
         this.port = port || 8080;
-        this.model = model || 'Unknown Model';
+        // this.model = model || 'Unknown Model';
         this.selected = false;
         this._stateInit();
+    }
+
+    get isWifi() {
+        return Boolean(this.address);
+    }
+
+    closeServer() {
+        controller.emitEvent(CONNECTION_CLOSE)
+            .once(CONNECTION_CLOSE, (options) => {
+                console.log('options', options);
+                this._closeServer();
+                dispatch(machineActions.resetMachineState());
+                dispatch(workspaceActions.updateMachineState({
+                    headType: '',
+                    toolHead: ''
+                }));
+            });
+    }
+
+    executeGcode(gcode, context, cmd) {
+        controller
+            .emitEvent(CONNECTION_EXECUTE_GCODE, { gcode, context, cmd })
+            .once(CONNECTION_EXECUTE_GCODE, (gcodeArray) => {
+                if (gcodeArray) {
+                    dispatch(machineActions.addConsoleLogs(gcodeArray));
+                }
+            });
+    }
+
+    startServerGcode(args, callback) {
+        controller.emitEvent(CONNECTION_START_GCODE, args)
+            .once(CONNECTION_START_GCODE, ({ msg, code }) => {
+                dispatch(machineActions.updateState({
+                    isSendedOnWifi: true
+                }));
+                if (msg) {
+                    callback && callback({ msg, code });
+                    return;
+                }
+                if (this.isWifi) {
+                    this.state.gcodePrintingInfo.startTime = new Date().getTime();
+                    dispatch(machineActions.updateState({
+                        workflowStatus: WORKFLOW_STATUS_RUNNING
+                    }));
+                }
+            });
+
+        dispatch(machineActions.updateState({
+            isSendedOnWifi: false
+        }));
+    }
+
+    resumeServerGcode(args, callback) {
+        controller.emitEvent(CONNECTION_RESUME_GCODE, args)
+            .once(CONNECTION_RESUME_GCODE, (options) => {
+                callback && callback(options);
+            });
+    }
+
+    pauseServerGcode(callback) {
+        controller.emitEvent(CONNECTION_PAUSE_GCODE)
+            .once(CONNECTION_PAUSE_GCODE, (options) => {
+                callback && callback(options);
+            });
+    }
+
+    stopServerGcode(callback) {
+        controller.emitEvent(CONNECTION_STOP_GCODE)
+            .once(CONNECTION_STOP_GCODE, (options) => {
+                const { msg, code, data } = options;
+                if (msg) {
+                    callback && callback({ msg, code, data });
+                    return;
+                }
+                dispatch(machineActions.updateState({
+                    workflowStatus: WORKFLOW_STATUS_IDLE
+                }));
+            });
     }
 
     setToken(token) {
@@ -98,9 +188,6 @@ export class Server extends events.EventEmitter {
 
     _closeServer() {
         this._stateInit();
-        this.heartBeatWorker && this.heartBeatWorker.terminate();
-        this.gcodeInfos = [];
-        this.isGcodeExecuting = false;
     }
 
     get host() {
@@ -108,22 +195,18 @@ export class Server extends events.EventEmitter {
     }
 
     equals(server) {
-        const { name, address, model } = server;
-        if (name && name === this.name && address && address === this.address) {
-            return !(model && model !== this.model);
-        }
-        return false;
+        const { name, address } = server;
+        return (name && name === this.name && address && address === this.address);
     }
 
-    open = (err, res, callback) => {
-        const { msg, data, code, text } = this._getResult(err, res);
-        console.log('msg, data, code, text', this.token, msg, data, code, text);
+    open = (options, callback) => {
+        const { msg, data, code, text } = options;
         if (this.token && code === 403) {
             this.token = '';
             this.open(callback);
         }
         if (msg) {
-            callback({ message: msg, status: code }, data, text);
+            callback({ msg, status: code }, data, text);
             return;
         }
         if (data) {
@@ -159,67 +242,24 @@ export class Server extends events.EventEmitter {
             this.state.toolHead = toolHead;
         }
 
-        // this.token = data.token;
         this.waitConfirm = true;
         this.startHeartbeat();
-        callback(null, data);
-
-        // const api = `${this.host}/api/v1/connect`;
-        // request
-        //     .post(api)
-        //     .timeout(3000)
-        //     .send(this.token ? `token=${this.token}` : '')
-        //     .end((err, res) => {
-        //
-        //     });
-    };
-
-    close = (callback) => {
-        const api = `${this.host}/api/v1/disconnect`;
-        request
-            .post(api)
-            .timeout(3000)
-            .send(`token=${this.token}`)
-            .end((err, res) => {
-                this._closeServer();
-                const { msg, data } = this._getResult(err, res);
-                callback && callback(msg, data);
-            });
+        callback({ data });
     };
 
     startHeartbeat = () => {
-        this.heartBeatWorker = workerManager.heartBeat([{
-            host: this.host,
-            token: this.token
-        }], (e) => {
-            const { status, msg, res } = e;
-
-            if (status === 'offline') {
-                this.emit('http:close', { err: msg });
-            } else {
-                const { data, code } = this._getResult(null, res);
-                this.receiveHeartbeat(data, code);
-            }
-        });
+        // NOTE: For heartbeat, must keep listening to the change event
+        controller.emitEvent(CONNECTION_HEARTBEAT)
+            .on(CONNECTION_HEARTBEAT, (result) => {
+                const { status, msg, res } = result;
+                if (status === 'offline') {
+                    this.emit('http:close', { err: msg });
+                } else {
+                    const { data, code } = this._getResult(null, res);
+                    this.receiveHeartbeat(data, code);
+                }
+            });
     }
-
-    uploadFile = (filename, file, callback) => {
-        if (!this.token) {
-            callback && callback({
-                msg: 'this token is null'
-            });
-            return;
-        }
-        const api = `${this.host}/api/v1/upload`;
-        request
-            .post(api)
-            .send(`token=${this.token}`)
-            .attach('file', file, filename)
-            .end((err, res) => {
-                const { msg, data } = this._getResult(err, res);
-                callback && callback({ msg, data });
-            });
-    };
 
     receiveHeartbeat = (data, code) => {
         if (code === 204) { // No Content
@@ -271,243 +311,6 @@ export class Server extends events.EventEmitter {
         }
     };
 
-    uploadGcodeFile = (filename, file, type, callback) => {
-        if (!this.token) {
-            callback && callback({
-                msg: 'this token is null'
-            });
-            return;
-        }
-        const api = `${this.host}/api/v1/prepare_print`;
-        if (type === HEAD_PRINTING) {
-            type = '3DP';
-        } else if (type === HEAD_LASER) {
-            type = 'Laser';
-        } else if (type === HEAD_CNC) {
-            type = 'CNC';
-        }
-        request
-            .post(api)
-            .field('token', this.token)
-            .field('type', type)
-            .attach('file', file, filename)
-            .end((err, res) => {
-                const { msg, data } = this._getResult(err, res);
-                if (callback) {
-                    callback(msg, data);
-                }
-            });
-    };
-
-    getLaserMaterialThickness = (options, callback) => {
-        if (!this.token) {
-            callback && callback({
-                msg: 'this token is null'
-            });
-            return;
-        }
-        const { x, y, feedRate } = options;
-        const api = `${this.host}/api/request_Laser_Material_Thickness?token=${this.token}&x=${x}&y=${y}&feedRate=${feedRate}`;
-        const req = request.get(api);
-        req.end((err, res) => {
-            const { data } = this._getResult(err, res);
-            const { status, thickness } = data;
-            if (callback) {
-                callback({
-                    status,
-                    thickness
-                });
-            }
-        });
-        window.addEventListener('cancelReq', () => {
-            req.abort();
-        });
-    }
-
-    getGcodeFile = (callback) => {
-        if (!this.token) {
-            callback && callback({
-                msg: 'this token is null'
-            });
-            return;
-        }
-        const api = `${this.host}/api/v1/print_file?token=${this.token}`;
-        request
-            .get(api)
-            .end((err, res) => {
-                const { msg } = this._getResult(err, res);
-                if (callback) {
-                    callback(msg, res.text);
-                }
-            });
-    };
-
-
-    uploadFile = (filename, file, callback) => {
-        if (!this.token) {
-            callback && callback({
-                msg: 'this token is null'
-            });
-            return;
-        }
-        const api = `${this.host}/api/v1/upload`;
-        request
-            .post(api)
-            .timeout(300000)
-            .field('token', this.token)
-            .attach('file', file, filename)
-            .end((err, res) => {
-                const { msg, data, text } = this._getResult(err, res);
-                if (callback) {
-                    callback(msg, data, text);
-                }
-            });
-    };
-
-    startGcode = (callback) => {
-        if (!this.token) {
-            callback && callback({
-                msg: 'this token is null'
-            });
-            return;
-        }
-        const api = `${this.host}/api/v1/start_print`;
-        request
-            .post(api)
-            .timeout(120000)
-            .send(`token=${this.token}`)
-            .end((err, res) => {
-                const { msg, code, data } = this._getResult(err, res);
-                if (msg) {
-                    callback && callback({ message: msg, status: code });
-                    return;
-                }
-                this.state.gcodePrintingInfo.startTime = new Date().getTime();
-                callback && callback(null, data);
-            });
-    };
-
-    pauseGcode = (callback) => {
-        if (!this.token) {
-            callback && callback({
-                msg: 'this token is null'
-            });
-            return;
-        }
-        const api = `${this.host}/api/v1/pause_print`;
-        request
-            .post(api)
-            .timeout(120000)
-            .send(`token=${this.token}`)
-            .end((err, res) => {
-                const { msg, data } = this._getResult(err, res);
-                if (msg) {
-                    callback && callback(msg);
-                    return;
-                }
-                callback && callback(msg, data);
-            });
-    };
-
-    resumeGcode = (callback) => {
-        if (!this.token) {
-            callback && callback({
-                msg: 'this token is null'
-            });
-            return;
-        }
-        const api = `${this.host}/api/v1/resume_print`;
-        request
-            .post(api)
-            .timeout(120000)
-            .send(`token=${this.token}`)
-            .end((err, res) => {
-                const { msg, code, data } = this._getResult(err, res);
-                if (msg) {
-                    callback && callback({ status: code, message: msg });
-                    return;
-                }
-                callback && callback(null, data);
-            });
-    };
-
-    stopGcode = (callback) => {
-        if (!this.token) {
-            callback && callback({ msg: 'this token is null' });
-            return;
-        }
-        const api = `${this.host}/api/v1/stop_print`;
-        request
-            .post(api)
-            .timeout(120000)
-            .send(`token=${this.token}`)
-            .end((err, res) => {
-                const { msg, data } = this._getResult(err, res);
-                if (msg) {
-                    callback && callback(msg);
-                    return;
-                }
-                callback && callback(msg, data);
-            });
-    };
-
-    executeGcode = (gcode, callback) => {
-        if (!this.token) {
-            return Promise.resolve();
-        }
-        if (this.isConnected && this.status !== WORKFLOW_STATUS_IDLE) {
-            return Promise.resolve();
-        }
-        return new Promise(resolve => {
-            const split = gcode.split('\n');
-            this.gcodeInfos.push({
-                gcodes: split,
-                callback: (result) => {
-                    callback && callback(result);
-                    resolve(result);
-                }
-            });
-            this.startExecuteGcode();
-        });
-    };
-
-    _executeGcode = (gcode) => {
-        const api = `${this.host}/api/v1/execute_code`;
-        return new Promise((resolve) => {
-            const req = request.post(api);
-            req.timeout(300000)
-                .send(`token=${this.token}`)
-                .send(`code=${gcode}`)
-                // .send(formData)
-                .end((err, res) => {
-                    const { data, text } = this._getResult(err, res);
-                    resolve({ data, text });
-                });
-            window.addEventListener('cancelReq', () => {
-                req.abort();
-            });
-        });
-    };
-
-    startExecuteGcode = async () => {
-        if (this.isGcodeExecuting) {
-            return;
-        }
-        this.isGcodeExecuting = true;
-        while (this.gcodeInfos.length > 0) {
-            const splice = this.gcodeInfos.splice(0, 1)[0];
-            const result = [];
-            for (const gcode of splice.gcodes) {
-                const { text } = await this._executeGcode(gcode);
-                result.push(gcode);
-                if (text) {
-                    result.push(text);
-                }
-            }
-            splice.callback && splice.callback(result);
-        }
-        this.isGcodeExecuting = false;
-    };
 
     _getStatus = () => {
         return {
@@ -545,166 +348,7 @@ export class Server extends events.EventEmitter {
         };
     };
 
-    updateNozzleTemperature = (nozzleTemp, callback) => {
-        const api = `${this.host}/api/v1/override_nozzle_temperature`;
-        request
-            .post(api)
-            .send(`token=${this.token}`)
-            .send(`nozzleTemp=${nozzleTemp}`)
-            .end((err, res) => {
-                const { msg, data } = this._getResult(err, res);
-                callback && callback(msg, data);
-            });
-    };
-
-    updateBedTemperature = (bedTemperature, callback) => {
-        const api = `${this.host}/api/v1/override_bed_temperature`;
-        request
-            .post(api)
-            .send(`token=${this.token}`)
-            .send(`heatedBedTemp=${bedTemperature}`)
-            .end((err, res) => {
-                const { msg, data } = this._getResult(err, res);
-                callback && callback(msg, data);
-            });
-    };
-
-    updateZOffset = (zOffset, callback) => {
-        const api = `${this.host}/api/v1/override_z_offset`;
-        request
-            .post(api)
-            .send(`token=${this.token}`)
-            .send(`zOffset=${zOffset}`)
-            .end((err, res) => {
-                const { msg, data } = this._getResult(err, res);
-                callback && callback(msg, data);
-            });
-    };
-
-    updateWorkSpeedFactor = (workSpeedFactor, callback) => {
-        const api = `${this.host}/api/v1/override_work_speed`;
-        request
-            .post(api)
-            .send(`token=${this.token}`)
-            .send(`workSpeed=${workSpeedFactor}`)
-            .end((err, res) => {
-                const { msg, data } = this._getResult(err, res);
-                callback && callback(msg, data);
-            });
-    };
-
-    updateLaserPower = (laserPower, callback) => {
-        const api = `${this.host}/api/v1/override_laser_power`;
-        request
-            .post(api)
-            .send(`token=${this.token}`)
-            .send(`laserPower=${laserPower}`)
-            .end((err, res) => {
-                const { msg, data } = this._getResult(err, res);
-                callback && callback(msg, data);
-            });
-    };
-
-    loadFilament = (callback) => {
-        const api = `${this.host}/api/v1/filament_load`;
-        request
-            .post(api)
-            .send(`token=${this.token}`)
-            .end((err, res) => {
-                const { msg, data } = this._getResult(err, res);
-                callback && callback(msg, data);
-            });
-    };
-
-    unloadFilament = (callback) => {
-        const api = `${this.host}/api/v1/filament_unload`;
-        request
-            .post(api)
-            .send(`token=${this.token}`)
-            .end((err, res) => {
-                const { msg, data } = this._getResult(err, res);
-                callback && callback(msg, data);
-            });
-    };
-
-    getEnclosureStatus = (callback) => {
-        if (!this.token) {
-            callback && callback({
-                msg: 'this token is null'
-            });
-            return;
-        }
-        const api = `${this.host}/api/v1/enclosure?token=${this.token}`;
-        request
-            .get(api)
-            .end((err, res) => {
-                const { msg } = this._getResult(err, res);
-
-                if (callback) {
-                    callback(msg, JSON.parse(res.text));
-                }
-            });
-    };
-
-    setEnclosureLight = (value, callback) => {
-        const api = `${this.host}/api/v1/enclosure`;
-        request
-            .post(api)
-            .send(`token=${this.token}`)
-            .send(`led=${value}`)
-            .end((err, res) => {
-                const { msg, data } = this._getResult(err, res);
-                callback && callback(msg, data);
-            });
-    };
-
-    setEnclosureFan = (value, callback) => {
-        const api = `${this.host}/api/v1/enclosure`;
-        request
-            .post(api)
-            .send(`token=${this.token}`)
-            .send(`fan=${value}`)
-            .end((err, res) => {
-                const { msg, data } = this._getResult(err, res);
-                callback && callback(msg, data);
-            });
-    };
-
-    setDoorDetection = (enabled, callback) => {
-        const api = `${this.host}/api/v1/enclosure`;
-        request
-            .post(api)
-            .send(`token=${this.token}`)
-            .send(`isDoorEnabled=${enabled}`)
-            .end((err, res) => {
-                const { msg, data } = this._getResult(err, res);
-                callback && callback(msg, data);
-            });
-    };
-
-    setFilterSwitch = (enable, callback) => {
-        const api = `${this.host}/api/v1/air_purifier_switch`;
-        request
-            .post(api)
-            .send(`token=${this.token}`)
-            .send(`switch=${enable}`)
-            .end((err, res) => {
-                const { msg, data } = this._getResult(err, res);
-                callback && callback(msg, data);
-            });
-    }
-
-    setFilterWorkSpeed = (workSpeed, callback) => {
-        const api = `${this.host}/api/v1/air_purifier_fan_speed`;
-        request
-            .post(api)
-            .send(`token=${this.token}`)
-            .send(`fan_speed=${workSpeed}`)
-            .end((err, res) => {
-                const { msg, data } = this._getResult(err, res);
-                callback && callback(msg, data);
-            });
-    };
+    // TODO: to refactor
 
     isJSON = (str) => {
         if (typeof str === 'string') {
@@ -756,6 +400,7 @@ export class Server extends events.EventEmitter {
         }
         return {
             code,
+            msg: '',
             data: res.body,
             text: res.text
         };

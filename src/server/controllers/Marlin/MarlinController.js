@@ -798,12 +798,9 @@ class MarlinController {
         this.serialport.open((err) => {
             if (err || !this.serialport.isOpen) {
                 log.error(`Error opening serial port "${port}/${dataSource}":`, err);
-                this.emitAll('serialport:open', { port, err });
                 callback(err); // notify error
                 return;
             }
-
-            this.emitAll('serialport:open', { port });
 
             callback(); // register controller
 
@@ -870,9 +867,7 @@ class MarlinController {
         // Stop status query
         this.ready = false;
 
-        // this.emitAll('serialport:close', { port });
         // store.unset(`controllers["${port}"]`);
-        this.emitAll('serialport:close', { port });
         store.unset(`controllers["${port}/${dataSource}"]`);
 
         if (this.isOpen()) {

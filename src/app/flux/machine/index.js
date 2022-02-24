@@ -1,13 +1,11 @@
 import isEmpty from 'lodash/isEmpty';
 import _ from 'lodash';
-import request from 'superagent';
 import {
     ABSENT_OBJECT,
     CONNECTION_STATUS_CONNECTED,
     CONNECTION_STATUS_CONNECTING,
     CONNECTION_STATUS_IDLE,
     CONNECTION_TYPE_SERIAL, CONNECTION_TYPE_WIFI,
-    DATA_PREFIX,
     LASER_MOCK_PLATE_HEIGHT,
     MACHINE_SERIES,
     HEAD_CNC,
@@ -18,10 +16,17 @@ import {
     WORKFLOW_STATUS_RUNNING,
     WORKFLOW_STATUS_UNKNOWN,
     MACHINE_TOOL_HEADS,
-    LEVEL_TWO_POWER_LASER_FOR_SM2,
     SINGLE_EXTRUDER_TOOLHEAD_FOR_ORIGINAL,
     LEVEL_ONE_POWER_LASER_FOR_ORIGINAL,
-    STANDARD_CNC_TOOLHEAD_FOR_ORIGINAL
+    STANDARD_CNC_TOOLHEAD_FOR_ORIGINAL,
+    CONNECTION_OPEN,
+    CONNECTION_CLOSE,
+    CONNECTION_EXECUTE_GCODE,
+    CONNECTION_START_GCODE,
+    CONNECTION_RESUME_GCODE,
+    CONNECTION_PAUSE_GCODE,
+    CONNECTION_STOP_GCODE,
+    CONNECTION_GET_GCODEFILE
 } from '../../constants';
 
 import i18n from '../../lib/i18n';
@@ -371,43 +376,26 @@ export const actions = {
             'Marlin:settings': (options) => {
                 const { enclosureDoorDetection, enclosureOnline, enclosureFan = 0, enclosureLight = 0,
                     airPurifierHasPower, airPurifier, airPurifierSwitch, airPurifierFanSpeed, airPurifierFilterHealth, emergencyStopOnline } = options.settings;
-                dispatch(baseActions.updateState({
-                    enclosureDoorDetection,
-                    enclosureOnline,
-                    enclosureFan,
-                    enclosureLight,
-                    airPurifier,
-                    airPurifierSwitch,
-                    airPurifierFanSpeed,
-                    airPurifierFilterHealth,
-                    airPurifierHasPower,
-                    emergencyStopOnline
-                }));
-            },
-            'serialport:open': (options) => {
-                const { type, err } = options;
-                if (type === 'wifi') {
-                    console.log('inside wifi', options);
-                } else {
-                    const { port } = options;
-                    if (err && err !== 'inuse') {
-                        return;
-                    }
-                    const state = getState().machine;
-                    // For Warning Don't initialize
-                    const ports = [...state.ports];
-                    if (ports.indexOf(port) === -1) {
-                        ports.push(port);
-                    }
+                if (!_.isNil(airPurifier)) {
                     dispatch(baseActions.updateState({
-                        port,
-                        ports,
-                        isOpen: true,
-                        connectionStatus: CONNECTION_STATUS_CONNECTING,
-                        connectionType: CONNECTION_TYPE_SERIAL,
-                        isEmergencyStopped: false
+                        enclosureDoorDetection,
+                        enclosureOnline,
+                        enclosureFan,
+                        enclosureLight,
+                        airPurifier,
+                        airPurifierSwitch,
+                        airPurifierFanSpeed,
+                        airPurifierFilterHealth,
+                        airPurifierHasPower,
+                        emergencyStopOnline
                     }));
-                    machineStore.set('port', port);
+                } else {
+                    dispatch(baseActions.updateState({
+                        enclosureDoorDetection,
+                        enclosureOnline,
+                        enclosureFan,
+                        enclosureLight
+                    }));
                 }
             },
             'serialport:connected': (data) => {
@@ -420,9 +408,6 @@ export const actions = {
                     connectionStatus: CONNECTION_STATUS_CONNECTED
                 }));
                 dispatch(workspaceActions.loadGcode());
-            },
-            'serialport:close': (options) => {
-                dispatch(actions.close(options));
             },
             'serialport:emergencyStop': (options) => {
                 dispatch(actions.close(options, true));
@@ -577,243 +562,270 @@ export const actions = {
         dispatch(baseActions.updateState({ pause3dpStatus }));
     },
     /**
-     * Open HTTP server.
+     * Open server.
      */
-    openServer: (callback) => (dispatch, getState) => {
-        const { server, isOpen, savedServerAddress, savedServerToken } = getState().machine;
+    openServer: (args, callback) => (dispatch, getState) => {
+        const { server, isOpen, connectionType, savedServerAddress, savedServerToken } = getState().machine;
         if (isOpen) {
             return;
         }
-
         dispatch(baseActions.updateState({
             isEmergencyStopped: false
         }));
-
-        // Use saved token when connecting
-        if (server.address === savedServerAddress) {
-            server.setToken(savedServerToken);
+        if (connectionType === CONNECTION_TYPE_WIFI) {
+            // Use saved token when connecting
+            if (server.address === savedServerAddress) {
+                server.setToken(savedServerToken);
+            }
         }
-        // TODO: add emit socket event
-        const socket = controller.openWifiPort({ host: server.host, token: server.token });
-        socket.on('connection:open', (options) => {
-            const { res, err, body } = options;
-            res.body = body;
-            console.log('frontend22', options, body);
-            server.open(err, res, (insideErr, data, text) => {
-                if (insideErr) {
-                    callback && callback(insideErr, data, text);
-                    return;
-                }
-
-                dispatch(connectActions.setServerAddress(server.address));
-                dispatch(connectActions.setServerToken(server.token));
-
-                dispatch(baseActions.updateState({
-                    isOpen: true,
-                    connectionStatus: CONNECTION_STATUS_CONNECTING
-                }));
-
-                server.removeAllListeners('http:confirm');
-                server.removeAllListeners('http:status');
-                server.removeAllListeners('http:close');
-
-                server.once('http:confirm', (result) => {
-                    const { toolHead, series, headType, status, isHomed, isEmergencyStopped, moduleStatusList } = result.data;
-                    // TODO: update orther data
-                    const _isRotate = moduleStatusList?.rotaryModule;
-
-                    // emergency stop event
-                    if (isEmergencyStopped) {
-                        dispatch(baseActions.updateState({
-                            isEmergencyStopped
-                        }));
-                        return;
-                    }
-
-                    // confirm connected
-                    dispatch(baseActions.updateState({
-                        workflowStatus: status,
-                        isConnected: true,
-                        isSendedOnWifi: true,
-                        connectionStatus: CONNECTION_STATUS_CONNECTED,
-                        isHomed: isHomed
-                    }));
-
-                    // get series & headType
-                    dispatch(workspaceActions.updateMachineState({
-                        isRotate: _isRotate
-                    }));
-                    if (series && headType) {
-                        // TODO: set isRotate here
-                        dispatch(workspaceActions.updateMachineState({
-                            series,
-                            headType,
-                            toolHead
-                        }));
-                        dispatch(actions.executeGcodeG54(series, headType));
-                        if (_.includes([WORKFLOW_STATUS_PAUSED, WORKFLOW_STATUS_RUNNING], status)) {
-                            server.getGcodeFile((msg, gcode) => {
-                                if (msg) {
-                                    return;
-                                }
-                                dispatch(workspaceActions.clearGcode());
-                                let suffix = 'gcode';
-                                if (headType === HEAD_LASER) {
-                                    suffix = 'nc';
-                                } else if (headType === HEAD_CNC) {
-                                    suffix = 'cnc';
-                                }
-                                dispatch(workspaceActions.clearGcode());
-                                dispatch(workspaceActions.renderGcode(`print.${suffix}`, gcode, true, true));
-                            });
+        controller.emitEvent(CONNECTION_OPEN, {
+            host: server?.host,
+            token: server?.token,
+            connectionType,
+            ...args
+        })
+            .once(CONNECTION_OPEN, (options) => {
+                if (connectionType === CONNECTION_TYPE_WIFI) {
+                    server.open(options, ({ msg, data, text }) => {
+                        if (msg) {
+                            callback && callback({ msg, data, text });
+                            return;
                         }
-                    } else {
-                        // TODO: Why is modal code here???
-                        MachineSelectModal({
-                            series: series,
-                            headType: headType,
+                        dispatch(connectActions.setServerAddress(server.address));
+                        dispatch(connectActions.setServerToken(server.token));
 
-                            onConfirm: (seriesT, headTypeT, toolHeadT) => {
-                                dispatch(workspaceActions.updateMachineState({
-                                    series: seriesT,
-                                    headType: headTypeT,
-                                    toolHead: toolHeadT,
-                                    canReselectMachine: true
+                        dispatch(baseActions.updateState({
+                            isOpen: true,
+                            connectionStatus: CONNECTION_STATUS_CONNECTING
+                        }));
+
+                        server.removeAllListeners('http:confirm');
+                        server.removeAllListeners('http:status');
+                        server.removeAllListeners('http:close');
+
+                        server.once('http:confirm', (result) => {
+                            const { toolHead, series, headType, status, isHomed, isEmergencyStopped, moduleStatusList } = result.data;
+                            // TODO: update orther data
+                            const _isRotate = moduleStatusList?.rotaryModule;
+
+                            // emergency stop event
+                            if (isEmergencyStopped) {
+                                dispatch(baseActions.updateState({
+                                    isEmergencyStopped
                                 }));
-                                dispatch(actions.executeGcodeG54(seriesT, headTypeT));
+                                return;
+                            }
+
+                            // confirm connected
+                            dispatch(baseActions.updateState({
+                                workflowStatus: status,
+                                isConnected: true,
+                                isSendedOnWifi: true,
+                                connectionStatus: CONNECTION_STATUS_CONNECTED,
+                                isHomed: isHomed
+                            }));
+
+                            // get series & headType
+                            dispatch(workspaceActions.updateMachineState({
+                                isRotate: _isRotate
+                            }));
+                            if (series && headType) {
+                            // TODO: set isRotate here
+                                dispatch(workspaceActions.updateMachineState({
+                                    series,
+                                    headType,
+                                    toolHead
+                                }));
+                                dispatch(actions.executeGcodeG54(series, headType));
+                                if (_.includes([WORKFLOW_STATUS_PAUSED, WORKFLOW_STATUS_RUNNING], status)) {
+                                    controller.emitEvent(CONNECTION_GET_GCODEFILE, args)
+                                        .once(CONNECTION_GET_GCODEFILE, ({ msg: error, text: gcode }) => {
+                                            if (error) {
+                                                return;
+                                            }
+                                            dispatch(workspaceActions.clearGcode());
+                                            let suffix = 'gcode';
+                                            if (headType === HEAD_LASER) {
+                                                suffix = 'nc';
+                                            } else if (headType === HEAD_CNC) {
+                                                suffix = 'cnc';
+                                            }
+                                            dispatch(workspaceActions.clearGcode());
+                                            dispatch(workspaceActions.renderGcode(`print.${suffix}`, gcode, true, true));
+                                        });
+                                }
+                            } else {
+                            // TODO: Why is modal code here???
+                                MachineSelectModal({
+                                    series: series,
+                                    headType: headType,
+
+                                    onConfirm: (seriesT, headTypeT, toolHeadT) => {
+                                        dispatch(workspaceActions.updateMachineState({
+                                            series: seriesT,
+                                            headType: headTypeT,
+                                            toolHead: toolHeadT,
+                                            canReselectMachine: true
+                                        }));
+                                        dispatch(actions.executeGcodeG54(seriesT, headTypeT));
+                                    }
+                                });
                             }
                         });
-                    }
-                });
 
-                server.on('http:status', (result) => {
-                    const { workPosition, originOffset, gcodePrintingInfo } = getState().machine;
-                    const {
-                        status, isHomed, x, y, z, b, offsetX, offsetY, offsetZ,
-                        laserFocalLength,
-                        laserPower,
-                        nozzleTemperature,
-                        nozzleTargetTemperature,
-                        heatedBedTemperature,
-                        doorSwitchCount,
-                        isEnclosureDoorOpen,
-                        headType,
-                        heatedBedTargetTemperature,
-                        airPurifier,
-                        airPurifierSwitch,
-                        airPurifierFanSpeed,
-                        airPurifierFilterHealth,
-                        isEmergencyStopped,
-                        laser10WErrorState,
-                        moduleStatusList,
-                        laserCamera
-                    } = result.data;
-                    if (isEmergencyStopped) {
-                        dispatch(baseActions.updateState({
-                            isEmergencyStopped
-                        }));
-                        server.close(() => {
+                        server.on('http:status', (result) => {
+                            const { workPosition, originOffset, gcodePrintingInfo } = getState().machine;
+                            const {
+                                status, isHomed, x, y, z, b, offsetX, offsetY, offsetZ,
+                                laserFocalLength,
+                                laserPower,
+                                nozzleTemperature,
+                                nozzleTargetTemperature,
+                                heatedBedTemperature,
+                                doorSwitchCount,
+                                isEnclosureDoorOpen,
+                                headType,
+                                heatedBedTargetTemperature,
+                                airPurifier,
+                                airPurifierSwitch,
+                                airPurifierFanSpeed,
+                                airPurifierFilterHealth,
+                                isEmergencyStopped,
+                                laser10WErrorState,
+                                moduleStatusList,
+                                laserCamera
+                            } = result.data;
+                            if (isEmergencyStopped) {
+                                dispatch(baseActions.updateState({
+                                    isEmergencyStopped
+                                }));
+                                dispatch(actions.closeServer());
+                                return;
+                            }
+                            dispatch(baseActions.updateState({
+                                workflowStatus: status,
+                                laserFocalLength: laserFocalLength,
+                                laserPower: laserPower,
+                                isHomed: isHomed,
+                                nozzleTemperature: nozzleTemperature,
+                                nozzleTargetTemperature: nozzleTargetTemperature,
+                                heatedBedTemperature: heatedBedTemperature,
+                                isEnclosureDoorOpen: isEnclosureDoorOpen,
+                                doorSwitchCount: doorSwitchCount,
+                                heatedBedTargetTemperature: heatedBedTargetTemperature,
+                                isEmergencyStopped: isEmergencyStopped,
+                                laser10WErrorState: laser10WErrorState,
+                                airPurifier: airPurifier,
+                                airPurifierSwitch: airPurifierSwitch,
+                                airPurifierFanSpeed: airPurifierFanSpeed,
+                                airPurifierFilterHealth: airPurifierFilterHealth,
+                                moduleStatusList,
+                                laserCamera
+                            }));
+                            // make 'workPosition' value as Number
+                            if (!(_.isUndefined(b))) {
+                                if (Number(workPosition.x) !== x
+                                            || Number(workPosition.y) !== y
+                                            || Number(workPosition.z) !== z
+                                            || Number(workPosition.b) !== b) {
+                                // TODO: Set `isRotate` only once.
+                                    if (headType === HEAD_LASER || headType === HEAD_CNC) {
+                                        dispatch(workspaceActions.updateMachineState({
+                                            isRotate: true
+                                        }));
+                                    }
+                                    dispatch(baseActions.updateState({
+                                        workPosition: {
+                                            x: `${x.toFixed(3)}`,
+                                            y: `${y.toFixed(3)}`,
+                                            z: `${z.toFixed(3)}`,
+                                            b: `${b.toFixed(3)}`,
+                                            isFourAxis: true,
+                                            a: '0.000'
+                                        }
+                                    }));
+                                }
+                            } else {
+                                if (Number(workPosition.x) !== x
+                                            || Number(workPosition.y) !== y
+                                            || Number(workPosition.z) !== z) {
+                                // TODO: Set `isRotate` only once.
+                                    if (headType === HEAD_LASER || headType === HEAD_CNC) {
+                                        dispatch(workspaceActions.updateMachineState({
+                                            isRotate: false
+                                        }));
+                                    }
+                                    dispatch(baseActions.updateState({
+                                        workPosition: {
+                                            x: `${x.toFixed(3)}`,
+                                            y: `${y.toFixed(3)}`,
+                                            z: `${z.toFixed(3)}`,
+                                            isFourAxis: false,
+                                            a: '0.000'
+                                        }
+                                    }));
+                                }
+                            }
+
+                            if (Number(originOffset.x) !== offsetX
+                                        || Number(originOffset.y) !== offsetY
+                                        || Number(originOffset.z) !== offsetZ) {
+                                dispatch(baseActions.updateState({
+                                    originOffset: {
+                                        x: `${offsetX.toFixed(3)}`,
+                                        y: `${offsetY.toFixed(3)}`,
+                                        z: `${offsetZ.toFixed(3)}`,
+                                        a: '0.000'
+                                    }
+                                }));
+                            }
+
+                            dispatch(baseActions.updateState({
+                                gcodePrintingInfo: {
+                                    ...gcodePrintingInfo,
+                                    ...result.data.gcodePrintingInfo
+                                }
+                            }));
+                        });
+                        server.once('http:close', () => {
                             dispatch(actions.resetMachineState());
                         });
+
+                        callback && callback({ data });
+                    });
+                } else {
+                    const { port, err } = options;
+                    if (err && err !== 'inuse') {
                         return;
                     }
-                    dispatch(baseActions.updateState({
-                        workflowStatus: status,
-                        laserFocalLength: laserFocalLength,
-                        laserPower: laserPower,
-                        isHomed: isHomed,
-                        nozzleTemperature: nozzleTemperature,
-                        nozzleTargetTemperature: nozzleTargetTemperature,
-                        heatedBedTemperature: heatedBedTemperature,
-                        isEnclosureDoorOpen: isEnclosureDoorOpen,
-                        doorSwitchCount: doorSwitchCount,
-                        heatedBedTargetTemperature: heatedBedTargetTemperature,
-                        isEmergencyStopped: isEmergencyStopped,
-                        laser10WErrorState: laser10WErrorState,
-                        airPurifier: airPurifier,
-                        airPurifierSwitch: airPurifierSwitch,
-                        airPurifierFanSpeed: airPurifierFanSpeed,
-                        airPurifierFilterHealth: airPurifierFilterHealth,
-                        moduleStatusList,
-                        laserCamera
-                    }));
-                    // make 'workPosition' value as Number
-                    if (!(_.isUndefined(b))) {
-                        if (Number(workPosition.x) !== x
-                                        || Number(workPosition.y) !== y
-                                        || Number(workPosition.z) !== z
-                                        || Number(workPosition.b) !== b) {
-                            // TODO: Set `isRotate` only once.
-                            if (headType === HEAD_LASER || headType === HEAD_CNC) {
-                                dispatch(workspaceActions.updateMachineState({
-                                    isRotate: true
-                                }));
-                            }
-                            dispatch(baseActions.updateState({
-                                workPosition: {
-                                    x: `${x.toFixed(3)}`,
-                                    y: `${y.toFixed(3)}`,
-                                    z: `${z.toFixed(3)}`,
-                                    b: `${b.toFixed(3)}`,
-                                    isFourAxis: true,
-                                    a: '0.000'
-                                }
-                            }));
-                        }
-                    } else {
-                        if (Number(workPosition.x) !== x
-                                        || Number(workPosition.y) !== y
-                                        || Number(workPosition.z) !== z) {
-                            // TODO: Set `isRotate` only once.
-                            if (headType === HEAD_LASER || headType === HEAD_CNC) {
-                                dispatch(workspaceActions.updateMachineState({
-                                    isRotate: false
-                                }));
-                            }
-                            dispatch(baseActions.updateState({
-                                workPosition: {
-                                    x: `${x.toFixed(3)}`,
-                                    y: `${y.toFixed(3)}`,
-                                    z: `${z.toFixed(3)}`,
-                                    isFourAxis: false,
-                                    a: '0.000'
-                                }
-                            }));
-                        }
+                    const state = getState().machine;
+                    // For Warning Don't initialize
+                    const ports = [...state.ports];
+                    if (ports.indexOf(port) === -1) {
+                        ports.push(port);
                     }
-
-                    if (Number(originOffset.x) !== offsetX
-                                    || Number(originOffset.y) !== offsetY
-                                    || Number(originOffset.z) !== offsetZ) {
-                        dispatch(baseActions.updateState({
-                            originOffset: {
-                                x: `${offsetX.toFixed(3)}`,
-                                y: `${offsetY.toFixed(3)}`,
-                                z: `${offsetZ.toFixed(3)}`,
-                                a: '0.000'
-                            }
-                        }));
-                    }
-
                     dispatch(baseActions.updateState({
-                        gcodePrintingInfo: {
-                            ...gcodePrintingInfo,
-                            ...result.data.gcodePrintingInfo
-                        }
+                        port,
+                        ports,
+                        isOpen: true,
+                        connectionStatus: CONNECTION_STATUS_CONNECTING,
+                        connectionType: CONNECTION_TYPE_SERIAL,
+                        isEmergencyStopped: false
                     }));
-                });
-                server.once('http:close', () => {
-                    dispatch(actions.resetMachineState());
-                });
-                callback && callback(null, data);
+                    machineStore.set('port', port);
+                }
             });
-        });
     },
 
     closeServer: () => (dispatch, getState) => {
-        const { server } = getState().machine;
-        server.close(() => {
-            dispatch(actions.resetMachineState());
+        const { server, connectionType } = getState().machine;
+        server.closeServer((options) => {
+            if (connectionType === CONNECTION_TYPE_WIFI) {
+                server._closeServer();
+                dispatch(actions.resetMachineState());
+            } else {
+                dispatch(actions.close(options));
+            }
         });
     },
 
@@ -902,10 +914,10 @@ export const actions = {
         }
     },
 
-    executeGcode: (gcode, context) => (dispatch, getState) => {
+    executeGcode: (gcode, context, cmd) => (dispatch, getState) => {
         const machine = getState().machine;
         const { homingModal } = machine;
-        const { isConnected, connectionType, server } = machine;
+        const { isConnected, connectionType } = machine;
         if (!isConnected) {
             if (homingModal) {
                 dispatch(baseActions.updateState({
@@ -914,26 +926,20 @@ export const actions = {
             }
             return;
         }
-        // if (port && workflowState === WORKFLOW_STATE_IDLE) {
-        if (connectionType === CONNECTION_TYPE_SERIAL) {
-            // controller.command('gcode', gcode, context);
-            // if (workflowState !== WORKFLOW_STATE_IDLE) {
-            //     return;
-            // }
-            controller.command('gcode', gcode, context);
-            // } else if (server && workflowStatus === STATUS_IDLE) {
-        } else {
-            server.executeGcode(gcode, (result) => {
-                if (result) {
-                    dispatch(actions.addConsoleLogs(result));
-                    if (homingModal) {
-                        dispatch(baseActions.updateState({
-                            homingModal: false
-                        }));
+        controller
+            .emitEvent(CONNECTION_EXECUTE_GCODE, { gcode, context, cmd })
+            .once(CONNECTION_EXECUTE_GCODE, (gcodeArray) => {
+                if (connectionType === CONNECTION_TYPE_WIFI) {
+                    if (gcodeArray) {
+                        dispatch(actions.addConsoleLogs(gcodeArray));
+                        if (homingModal) {
+                            dispatch(baseActions.updateState({
+                                homingModal: false
+                            }));
+                        }
                     }
                 }
             });
-        }
     },
 
     executeGcodeAutoHome: (homingModal = false) => (dispatch, getState) => {
@@ -949,122 +955,77 @@ export const actions = {
         dispatch(actions.executeGcodeG54(series, headType));
     },
 
-    startServerGcode: (callback) => (dispatch, getState) => {
-        const { server, size, workflowStatus, isLaserPrintAutoMode, laserFocalLength, materialThickness } = getState().machine;
+    // TODO:
+    startServerGcode: (args, callback) => (dispatch, getState) => {
+        const { connectionType, size, workflowStatus, workPosition, originOffset, server,
+            isLaserPrintAutoMode, laserFocalLength, materialThickness } = getState().machine;
         const { gcodeFile, headType, series, isRotate, toolHead } = getState().workspace;
         const { background } = getState().laser;
-        if (workflowStatus !== WORKFLOW_STATUS_IDLE || gcodeFile === null) {
-            return;
-        }
+        controller.emitEvent(CONNECTION_START_GCODE, {
+            headType,
+            workflowStatus,
+            isLaserPrintAutoMode,
+            materialThickness,
+            isRotate,
+            toolHead,
+            // for wifi indiviual
+            gcodeFile,
+            series,
+            laserFocalLength,
+            background,
+            size,
+            workPosition,
+            originOffset,
+            // for serialport indiviual
+            ...args
+        })
+            .once(CONNECTION_START_GCODE, (options) => {
+                dispatch(baseActions.updateState({
+                    isSendedOnWifi: true
+                }));
+                if (options) {
+                    callback && callback(options);
+                    return;
+                }
+                if (connectionType === CONNECTION_TYPE_WIFI) {
+                    server.state.gcodePrintingInfo.startTime = new Date().getTime();
+                    dispatch(baseActions.updateState({
+                        workflowStatus: WORKFLOW_STATUS_RUNNING
+                    }));
+                }
+            });
+
         dispatch(baseActions.updateState({
             isSendedOnWifi: false
         }));
+    },
 
-        const gcodeFilePath = `${DATA_PREFIX}/${gcodeFile.uploadName}`;
-
-        request.get(gcodeFilePath)
-            .end((err, res) => {
-                if (err) {
-                    return;
-                }
-                const gcode = res.text;
-
-                const blob = new Blob([gcode], { type: 'text/plain' });
-                const file = new File([blob], gcodeFile.name);
-                const promises = [];
-                if (series !== MACHINE_SERIES.ORIGINAL.value && series !== MACHINE_SERIES.CUSTOM.value && headType === HEAD_LASER && !isRotate) {
-                    if (laserFocalLength) {
-                        const promise = new Promise((resolve) => {
-                            if (isLaserPrintAutoMode) {
-                                server.executeGcode(`G53;\nG0 Z${laserFocalLength + materialThickness} F1500;\nG54;`, () => {
-                                    resolve();
-                                });
-                            } else {
-                                if (toolHead === LEVEL_TWO_POWER_LASER_FOR_SM2) {
-                                    server.executeGcode(`G53;\nG0 Z${laserFocalLength + materialThickness} F1500;\nG54`, () => {
-                                        resolve();
-                                    });
-                                } else {
-                                    server.executeGcode('G0 Z0 F1500;', () => {
-                                        resolve();
-                                    });
-                                }
-                            }
-                        });
-                        promises.push(promise);
-                    }
-
-                    // Camera Aid Background mode, force machine to work on machine coordinates (Origin = 0,0)
-                    if (background.enabled) {
-                        const { workPosition, originOffset } = getState().machine;
-                        let x = parseFloat(workPosition.x) - parseFloat(originOffset.x);
-                        let y = parseFloat(workPosition.y) - parseFloat(originOffset.y);
-
-                        // Fix bug for x or y out of range
-                        x = Math.max(0, Math.min(x, size.x - 20));
-                        y = Math.max(0, Math.min(y, size.y - 20));
-
-                        const promise = new Promise((resolve) => {
-                            server.executeGcode(`G53;\nG0 X${x} Y${y};\nG54;\nG92 X${x} Y${y};`, () => {
-                                resolve();
-                            });
-                        });
-                        promises.push(promise);
-                    }
-                }
-                Promise.all(promises)
-                    .then(() => {
-                        server.uploadGcodeFile(gcodeFile.name, file, headType, (msg) => {
-                            if (msg) {
-                                return;
-                            }
-                            server.startGcode((err2) => {
-                                dispatch(baseActions.updateState({
-                                    isSendedOnWifi: true
-                                }));
-                                if (err2) {
-                                    callback && callback(err2);
-                                    return;
-                                }
-                                dispatch(baseActions.updateState({
-                                    workflowStatus: WORKFLOW_STATUS_RUNNING
-                                }));
-                            });
-                        });
-                    });
+    resumeServerGcode: (args, callback) => () => {
+        controller.emitEvent(CONNECTION_RESUME_GCODE, args)
+            .once(CONNECTION_RESUME_GCODE, (options) => {
+                callback && callback(options);
             });
     },
 
-    resumeServerGcode: (callback) => (dispatch, getState) => {
-        const { server } = getState().machine;
-        server.resumeGcode((err) => {
-            if (err) {
-                callback && callback(err);
-            }
-        });
+    pauseServerGcode: (callback) => () => {
+        controller.emitEvent(CONNECTION_PAUSE_GCODE)
+            .once(CONNECTION_PAUSE_GCODE, (options) => {
+                callback && callback(options);
+            });
     },
 
-    pauseServerGcode: () => (dispatch, getState) => {
-        const { server, workflowStatus } = getState().machine;
-        if (workflowStatus !== WORKFLOW_STATUS_RUNNING) {
-            return;
-        }
-        server.pauseGcode();
-    },
-
-    stopServerGcode: () => (dispatch, getState) => {
-        const { server, workflowStatus } = getState().machine;
-        if (workflowStatus === WORKFLOW_STATUS_IDLE || workflowStatus === WORKFLOW_STATUS_UNKNOWN) {
-            return;
-        }
-        server.stopGcode((msg) => {
-            if (msg) {
-                return;
-            }
-            dispatch(baseActions.updateState({
-                workflowStatus: WORKFLOW_STATUS_IDLE
-            }));
-        });
+    stopServerGcode: (callback) => (dispatch) => {
+        controller.emitEvent(CONNECTION_STOP_GCODE)
+            .once(CONNECTION_STOP_GCODE, (options) => {
+                const { msg, code, data } = options;
+                if (msg) {
+                    callback && callback({ msg, code, data });
+                    return;
+                }
+                dispatch(baseActions.updateState({
+                    workflowStatus: WORKFLOW_STATUS_IDLE
+                }));
+            });
     },
 
     // region Enclosure

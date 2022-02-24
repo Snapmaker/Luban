@@ -115,9 +115,9 @@ function WifiConnection() {
         },
         openServer: () => {
             dispatch(machineActions.connect.setSelectedServer(serverState));
-            dispatch(machineActions.openServer((err, data, text) => {
-                if (err) {
-                    actions.showWifiError(err, text);
+            dispatch(machineActions.openServer(({ msg, data, text }) => {
+                if (msg) {
+                    actions.showWifiError(msg, text);
                 }
                 setserverOpenState(null);
                 if (data?.toolHead && data.toolHead === LEVEL_TWO_POWER_LASER_FOR_SM2) {

@@ -7,7 +7,6 @@ import Switch from '../../components/Switch';
 import i18n from '../../../lib/i18n';
 import { NumberInput as Input } from '../../components/Input';
 import SvgIcon from '../../components/SvgIcon';
-import { actions as machineActions } from '../../../flux/machine';
 import WorkSpeed from './WorkSpeed';
 import {
     CONNECTION_TYPE_WIFI,
@@ -15,8 +14,10 @@ import {
     WORKFLOW_STATUS_PAUSED,
     WORKFLOW_STATUS_RUNNING,
     WORKFLOW_STATE_PAUSED,
-    WORKFLOW_STATE_RUNNING, CONNECTION_TYPE_SERIAL
+    WORKFLOW_STATE_RUNNING, CONNECTION_TYPE_SERIAL, CONNECTION_LASER_POWER,
+    CONNECTION_SWITCH_LASER_POWER,
 } from '../../../constants';
+import { controller } from '../../../lib/controller';
 
 class Laser extends PureComponent {
     static propTypes = {
@@ -25,11 +26,8 @@ class Laser extends PureComponent {
         workflowStatus: PropTypes.string,
         workflowState: PropTypes.string,
         connectionType: PropTypes.string,
-        server: PropTypes.object,
         isConnected: PropTypes.bool,
         toolHead: PropTypes.string,
-
-        executeGcode: PropTypes.func.isRequired
     };
 
     state = {
@@ -61,32 +59,21 @@ class Laser extends PureComponent {
             if (this.actions.isPrinting()) {
                 return;
             }
-            if (this.state.laserPowerOpen) {
-                this.props.executeGcode('M3 P0 S0');
-            } else {
-                if (this.props.toolHead === LEVEL_TWO_POWER_LASER_FOR_SM2) {
-                    this.props.executeGcode('M3 P1 S2.55');
-                } else {
-                    this.props.executeGcode(`M3 P${this.state.laserPower} S${this.state.laserPower * 255 / 100}`);
-                }
-            }
+            controller.emitEvent(CONNECTION_SWITCH_LASER_POWER, {
+                isSM2: this.props.toolHead === LEVEL_TWO_POWER_LASER_FOR_SM2,
+                laserPower: this.state.laserPower,
+                laserPowerOpen: this.state.laserPowerOpen
+            });
             this.setState({
                 laserPowerOpen: !this.state.laserPowerOpen
             });
         },
         onSaveLaserPower: () => {
-            if (this.actions.isPrinting()) {
-                if (this.props.connectionType === CONNECTION_TYPE_WIFI) {
-                    this.props.server.updateLaserPower(this.state.laserPower);
-                } else {
-                    this.props.executeGcode(`M3 P${this.state.laserPower} S${this.state.laserPower * 255 / 100}`);
-                }
-            } else {
-                if (this.state.laserPowerOpen) {
-                    this.props.executeGcode(`M3 P${this.state.laserPower} S${this.state.laserPower * 255 / 100}`);
-                }
-                this.props.executeGcode('M500');
-            }
+            controller.emitEvent(CONNECTION_LASER_POWER, {
+                isPrinting: this.actions.isPrinting(),
+                laserPower: this.state.laserPower,
+                laserPowerOpen: this.state.laserPowerOpen
+            });
         }
     };
 
@@ -175,14 +162,13 @@ class Laser extends PureComponent {
 
 const mapStateToProps = (state) => {
     const machine = state.machine;
-    const { workflowStatus, workflowState, connectionType, server, laserPower, headStatus, isConnected } = machine;
+    const { workflowStatus, workflowState, connectionType, laserPower, headStatus, isConnected } = machine;
     const { toolHead } = state.workspace;
 
     return {
         workflowStatus,
         workflowState,
         connectionType,
-        server,
         laserPower,
         headStatus,
         isConnected,
@@ -190,10 +176,5 @@ const mapStateToProps = (state) => {
     };
 };
 
-const mapDispatchToProps = (dispatch) => {
-    return {
-        executeGcode: (gcode, context) => dispatch(machineActions.executeGcode(gcode, context))
-    };
-};
 
-export default connect(mapStateToProps, mapDispatchToProps)(Laser);
+export default connect(mapStateToProps, null)(Laser);
