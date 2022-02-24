@@ -10,7 +10,7 @@ import ThreeGroup from './ThreeGroup';
 import BaseModel from './ThreeBaseModel';
 import { machineStore } from '../store/local-storage';
 
-const materialOverstepped = new THREE.Color(0xff0000);
+const materialOverstepped = new THREE.Color(0xa80006);
 const materialInSupport = new THREE.MeshPhysicalMaterial({
     color: 0xffffff,
     side: THREE.DoubleSide
