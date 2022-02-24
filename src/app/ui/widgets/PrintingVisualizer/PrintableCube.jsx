@@ -148,7 +148,7 @@ class PrintableCube extends Object3D {
             transparent: true
         });
         const mesh = new Mesh(geometry, material);
-        mesh.position.set(0, -this.size.y / 4, 0.2);
+        mesh.position.set(0, -this.size.y / 4, 0.1);
         this.add(mesh);
     }
 }
