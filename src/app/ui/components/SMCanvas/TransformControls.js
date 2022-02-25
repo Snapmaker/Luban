@@ -16,10 +16,11 @@ import {
     OctahedronBufferGeometry,
     TorusBufferGeometry,
     MeshBasicMaterial,
-    LineBasicMaterial
+    LineBasicMaterial,
+    Euler
 } from 'three';
 // import * as THREE from 'three';
-
+import { throttle } from 'lodash';
 import ThreeUtils from '../../../three-extensions/ThreeUtils';
 
 
@@ -30,7 +31,16 @@ const EVENTS = {
 };
 
 const OUTLINE = 'OUTLINE';
-
+// let objectCase = null;
+const updatePositionEvent = (transformData) => new CustomEvent('update-position', {
+    detail: transformData
+});
+const updateScaleEvent = (transformData) => new CustomEvent('update-scale', {
+    detail: transformData
+});
+const updateRotateEvent = (transformData) => new CustomEvent('update-rotate', {
+    detail: transformData
+});
 /**
  * TransformControls
  *
@@ -854,7 +864,11 @@ class TransformControls extends Object3D {
                 // Dive in to object local offset
                 offset.applyQuaternion(this.parentQuaternionInv).divide(this.parentScale);
                 this.object.position.copy(this.positionStart).add(offset);
-
+                throttle(() => {
+                    window.dispatchEvent(updatePositionEvent({
+                        position: this.object.position
+                    }));
+                }, 1000)();
                 break;
             }
             case 'rotate': {
@@ -870,8 +884,15 @@ class TransformControls extends Object3D {
 
                 rotationAxis.applyQuaternion(this.parentQuaternionInv);
                 const quaternion = new Quaternion().setFromAxisAngle(rotationAxis, rotationAngle);
-
+                const worldQuaternion = new Quaternion();
                 this.object.quaternion.copy(quaternion).multiply(this.quaternionStart).normalize();
+                this.object.getWorldQuaternion(worldQuaternion);
+                const rotation = new Euler().setFromQuaternion(worldQuaternion, undefined, false);
+                throttle(() => {
+                    window.dispatchEvent(updateRotateEvent({
+                        rotate: rotation
+                    }));
+                }, 1000)();
                 break;
             }
             case 'scale': {
@@ -904,7 +925,12 @@ class TransformControls extends Object3D {
                 if (this.shouldApplyScaleToObjects(parentEVec)) {
                     this.object.scale.copy(this.scaleStart).multiply(parentEVec);
                 }
-
+                throttle(() => {
+                    window.dispatchEvent(updateScaleEvent({
+                        scale: this.object.scale,
+                        isPrimeTower
+                    }));
+                }, 1000)();
                 break;
             }
             default:

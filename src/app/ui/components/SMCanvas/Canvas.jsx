@@ -305,11 +305,12 @@ class Canvas extends PureComponent {
         this.controls.on(EVENTS.BEFORE_TRANSFORM_OBJECT, () => {
             this.onModelBeforeTransform(this.controls.transformControl.mode);
         });
-        this.controls.on(EVENTS.TRANSFORM_OBJECT, () => {
-            if (this.props.canOperateModel) {
-                this.onModelTransform();
-            }
-        });
+        // this.controls.on(EVENTS.TRANSFORM_OBJECT, () => {
+        //     console.log('transform');
+        //     if (this.props.canOperateModel) {
+        //         this.onModelTransform();
+        //     }
+        // });
         this.controls.on(EVENTS.AFTER_TRANSFORM_OBJECT, () => {
             this.onModelAfterTransform(this.controls.transformControl.mode);
         });
