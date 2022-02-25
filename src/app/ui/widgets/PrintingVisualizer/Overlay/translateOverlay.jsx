@@ -15,7 +15,7 @@ import { CancelButton } from '../VisualizerLeftBar';
 const angleOptions = [
     {
         value: 360,
-        label: '不旋转'
+        label: i18n._('key-Printing/LeftBar-No Rotation')
     },
     {
         value: 20,
