@@ -806,7 +806,7 @@ function VisualizerLeftBar({ setTransformMode, supportActions, updateBoundingBox
                                                 options={[
                                                     {
                                                         value: 360,
-                                                        label: '不旋转'
+                                                        label: i18n._('key-Printing/LeftBar-No Rotation')
                                                     },
                                                     {
                                                         value: 20,
