@@ -13,6 +13,7 @@ import useSetState from '../../../lib/hooks/set-state';
 import Select from '../../components/Select';
 import { DUAL_EXTRUDER_TOOLHEAD_FOR_SM2, LEFT_EXTRUDER, RIGHT_EXTRUDER } from '../../../constants';
 import { machineStore } from '../../../store/local-storage';
+import ModeToggleBtn from './ModeToggleBtn';
 
 // TODO
 function useShowToggleBtn() {
@@ -39,6 +40,7 @@ function useShowToggleBtn() {
 
 function GcodeLayout() {
     const layerCount = useSelector(state => state?.printing?.layerCount, shallowEqual);
+    // const gcodePreviewMode = useSelector(state => state?.printing?.gcodePreviewMode, shallowEqual);
     const layerRangeDisplayed = useSelector(state => state?.printing?.layerRangeDisplayed, shallowEqual);
     const dispatch = useDispatch();
 
@@ -336,6 +338,7 @@ function VisualizerPreviewControl() {
                                             const { fatherContent, fatherColor, childrenObjects } = obj;
                                             return (
                                                 <PreviewType
+                                                    key={fatherContent}
                                                     fatherContent={fatherContent}
                                                     fatherColor={fatherColor}
                                                     isDropdown
@@ -347,6 +350,7 @@ function VisualizerPreviewControl() {
                                 </div>
                             </div>
                         )}
+                        <ModeToggleBtn />
                     </div>
                 )}
             </div>

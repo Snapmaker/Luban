@@ -25,8 +25,8 @@ import {
     KEY_DEFAULT_CATEGORY_DEFAULT,
     WHITE_COLOR,
     BLACK_COLOR,
-    VISIBLE_LAYER_MIN_RANGE,
-    GCODE_VISIBILITY_TYPE
+    GCODE_VISIBILITY_TYPE,
+    GCODEPREVIEWMODES
 } from '../../constants';
 import { timestamp } from '../../../shared/lib/random-utils';
 import { machineStore } from '../../store/local-storage';
@@ -158,6 +158,7 @@ const INITIAL_STATE = {
             ...GCODE_VISIBILITY_TYPE
         }
     },
+    gcodePreviewMode: GCODEPREVIEWMODES[0],
     renderLineType: false,
 
     // progress bar
@@ -635,7 +636,7 @@ export const actions = {
         }
     },
     gcodeRenderingCallback: (data) => (dispatch, getState) => {
-        const { gcodeLineGroup, gcodeTypeInitialVisibility } = getState().printing;
+        const { gcodeLineGroup, gcodeTypeInitialVisibility, gcodePreviewMode } = getState().printing;
 
         const { status, value } = data;
         switch (status) {
@@ -670,6 +671,8 @@ export const actions = {
                     renderLineType: false,
                     gcodeLine: object3D
                 }));
+
+                dispatch(actions.updateGcodePreviewMode(gcodePreviewMode));
 
                 Object.keys(GCODE_VISIBILITY_TYPE).forEach((type) => {
                     dispatch(actions.setGcodeVisibilityByTypeAndDirection(type, LEFT_EXTRUDER, gcodeTypeInitialVisibility[LEFT_EXTRUDER][type] ? 1 : 0));
@@ -1572,6 +1575,32 @@ export const actions = {
         dispatch(actions.render());
     },
 
+    updateGcodePreviewMode: (mode) => (dispatch, getState) => {
+        const { gcodeLine, layerRangeDisplayed, layerCount } = getState().printing;
+        const uniforms = gcodeLine.material.uniforms;
+
+        if (mode === 'grayUnderTheTopFloor') {
+            uniforms.u_middle_layer_set_gray.value = 1;
+        } else {
+            uniforms.u_middle_layer_set_gray.value = 0;
+        }
+        dispatch(actions.updateState({
+            gcodePreviewMode: mode
+        }));
+
+        if (mode === 'singleLayer') {
+            dispatch(actions.showGcodeLayers([
+                layerRangeDisplayed[1], layerRangeDisplayed[1]
+            ]));
+        } else if (mode === 'ordinary' || mode === 'grayUnderTheTopFloor') {
+            if (layerRangeDisplayed[0] === layerRangeDisplayed[1]) {
+                dispatch(actions.showGcodeLayers([0, layerCount - 1]));
+            } else {
+                dispatch(actions.render());
+            }
+        }
+    },
+
     setGcodeColorByRenderLineType: () => (dispatch, getState) => {
         const { gcodeLine, renderLineType } = getState().printing;
         const uniforms = gcodeLine.material.uniforms;
@@ -1580,7 +1609,7 @@ export const actions = {
     },
 
     showGcodeLayers: (range) => (dispatch, getState) => {
-        const { layerCount, gcodeLine } = getState().printing;
+        const { layerCount, gcodeLine, gcodePreviewMode, layerRangeDisplayed } = getState().printing;
         if (!gcodeLine) {
             return;
         }
@@ -1590,11 +1619,20 @@ export const actions = {
         } else {
             dispatch(actions.displayGcode());
         }
-
-        range[1] = (range[1] > layerCount) ? layerCount : range[1];
-        range[1] = (range[1] < VISIBLE_LAYER_MIN_RANGE) ? VISIBLE_LAYER_MIN_RANGE : range[1];
-        range[0] = (range[1] === VISIBLE_LAYER_MIN_RANGE) ? 0 : range[0];
-        range[0] = (range[1] - range[0] < VISIBLE_LAYER_MIN_RANGE) ? (range[1] - VISIBLE_LAYER_MIN_RANGE) : range[0];
+        if (gcodePreviewMode === 'singleLayer') {
+            // The moving direction is down
+            if (layerRangeDisplayed[0] > range[0]) {
+                range = [
+                    range[0] || 0,
+                    range[0] || 0
+                ];
+            } else {
+                range = [
+                    Math.min(layerCount, range[1]),
+                    Math.min(layerCount, range[1])
+                ];
+            }
+        }
         gcodeLine.material.uniforms.u_visible_layer_range_start.value = range[0];
         gcodeLine.material.uniforms.u_visible_layer_range_end.value = range[1];
         dispatch(actions.updateState({
@@ -2920,7 +2958,7 @@ export const actions = {
                             operation.state.currentSupport = mesh;
                             model.meshObject.add(mesh);
                             resolve();
-                        }, () => {}, (err) => {
+                        }, () => { }, (err) => {
                             reject(err);
                         });
                     } else {

@@ -70,8 +70,6 @@ export const BLACK_COLOR = '#000000';
 export const KEY_DEFAULT_CATEGORY_CUSTOM = 'key-default_category-Custom';
 export const KEY_DEFAULT_CATEGORY_DEFAULT = 'key-default_category-Default';
 
-export const VISIBLE_LAYER_MIN_RANGE = 20;
-
 export const GCODE_VISIBILITY_TYPE = {
     'WALL-INNER': true,
     'WALL-OUTER': true,
@@ -84,6 +82,12 @@ export const GCODE_VISIBILITY_TYPE = {
     TOOL0: true,
     TOOL1: true
 };
+
+export const GCODEPREVIEWMODES = [
+    'ordinary',
+    'singleLayer',
+    'grayUnderTheTopFloor'
+];
 
 export const PRINTING_MATERIAL_CONFIG_COLORS = [
     ['#ffffff', '#000000'],
