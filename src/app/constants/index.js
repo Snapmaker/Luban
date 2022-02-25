@@ -196,6 +196,8 @@ export const PRINTING_QUALITY_CONFIG_KEYS_DUAL = [
     'switch_extruder_retraction_amount',
     'switch_extruder_retraction_speeds'
 ];
+export const MACHINE_EXTRUDER_X = ['machine_extruder_start_pos_x', 'machine_extruder_end_pos_x'];
+export const MACHINE_EXTRUDER_Y = ['machine_extruder_start_pos_y', 'machine_extruder_end_pos_y'];
 export const PRINTING_MATERIAL_CONFIG_GROUP_SINGLE = [
     {
         name: 'Color',

@@ -2,7 +2,9 @@ import { includes } from 'lodash';
 import api from '../../api';
 import i18n from '../../lib/i18n';
 import { HEAD_CNC, RIGHT_EXTRUDER_MAP_NUMBER,
-    PRINTING_MATERIAL_CONFIG_KEYS_SINGLE
+    PRINTING_MATERIAL_CONFIG_KEYS_SINGLE,
+    MACHINE_EXTRUDER_X,
+    MACHINE_EXTRUDER_Y
 } from '../../constants';
 
 const primeTowerDefinitionKeys = [
@@ -364,7 +366,7 @@ class DefinitionManager {
         return definition;
     }
 
-    finalizeExtruderDefinition(extruderDefinition, materialDefinition) {
+    finalizeExtruderDefinition({ extruderDefinition, materialDefinition, hasPrimeTower, primeTowerXDefinition, primeTowerYDefinition }) {
         const definition = {
             ...extruderDefinition
         };
@@ -377,6 +379,14 @@ class DefinitionManager {
                     };
                 }
             });
+        if (hasPrimeTower) {
+            MACHINE_EXTRUDER_X.forEach((keyItem) => {
+                definition.settings[keyItem].default_value = primeTowerXDefinition;
+            });
+            MACHINE_EXTRUDER_Y.forEach((keyItem) => {
+                definition.settings[keyItem].default_value = primeTowerYDefinition;
+            });
+        }
         return definition;
     }
 
