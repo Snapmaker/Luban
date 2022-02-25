@@ -9,7 +9,7 @@ import { actions as printingActions } from '../../../../flux/printing';
 import styles from './styles.styl';
 import { renderModal } from '../../../utils';
 
-const SupportOverlay = ({ editSupport }) => {
+const SupportOverlay = ({ editSupport, CancelButton, setTransformMode }) => {
     const selectedModelArray = useSelector(state => state?.printing?.modelGroup?.selectedModelArray, shallowEqual);
     const modelGroup = useSelector(state => state?.printing?.modelGroup, shallowEqual);
     const supportOverhangAngle = useSelector(state => state?.printing.supportOverhangAngle, shallowEqual);
@@ -71,6 +71,12 @@ const SupportOverlay = ({ editSupport }) => {
                     marginTop: '268px'
                 }}
             >
+                <div className="sm-flex justify-space-between border-bottom-normal padding-vertical-10 padding-horizontal-16 height-40">
+                    {i18n._('key-Printing/LeftBar-Move')}
+                    <CancelButton
+                        onClick={() => setTransformMode('')}
+                    />
+                </div>
                 <div className="border-bottom-normal padding-vertical-10 padding-horizontal-16 height-40 font-size-middle">
                     {i18n._('key-Printing/LeftBar/Support-Support')}
                 </div>
@@ -135,7 +141,9 @@ const SupportOverlay = ({ editSupport }) => {
     );
 };
 SupportOverlay.propTypes = {
-    editSupport: PropTypes.func.isRequired
+    editSupport: PropTypes.func.isRequired,
+    setTransformMode: PropTypes.func.isRequired,
+    CancelButton: PropTypes.func.isRequired
 };
 
 export default SupportOverlay;
