@@ -95,8 +95,6 @@ export const BLACK_COLOR = '#464646';
 
 export const KEY_DEFAULT_CATEGORY_CUSTOM = 'key-default_category-Custom';
 
-export const VISIBLE_LAYER_MIN_RANGE = 20;
-
 export const GCODE_VISIBILITY_TYPE = {
     'WALL-INNER': true,
     'WALL-OUTER': true,
@@ -109,6 +107,12 @@ export const GCODE_VISIBILITY_TYPE = {
     TOOL0: true,
     TOOL1: true
 };
+
+export const GCODEPREVIEWMODES = [
+    'ordinary',
+    'singleLayer',
+    'grayUnderTheTopFloor'
+];
 
 export const PRINTING_MATERIAL_CONFIG_COLORS = [
     [WHITE_COLOR, BLACK_COLOR],

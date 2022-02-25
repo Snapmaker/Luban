@@ -2,6 +2,8 @@ export const PRINT3D_UNIFORMS = {
     u_visible_layer_range_start: { value: 0.0 },
     u_visible_layer_range_end: { value: 0.0 },
 
+    u_middle_layer_set_gray: { value: 0 },
+
     u_color_type: { value: 0 },
     u_l_wall_inner_visible: { value: 1 },
     u_l_wall_outer_visible: { value: 1 },
@@ -33,6 +35,8 @@ export const PRINT3D_VERT_SHADER = [
 
     'uniform float u_visible_layer_range_start;',
     'uniform float u_visible_layer_range_end;',
+
+    'uniform int u_middle_layer_set_gray;',
 
     'uniform int u_color_type;',
     'uniform int u_l_wall_inner_visible;',
@@ -80,6 +84,8 @@ export const PRINT3D_FRAG_SHADER = [
     'uniform float u_visible_layer_range_start;',
     'uniform float u_visible_layer_range_end;',
 
+    'uniform int u_middle_layer_set_gray;',
+
     'uniform int u_color_type;',
     'uniform int u_l_wall_inner_visible;',
     'uniform int u_l_wall_outer_visible;',
@@ -106,12 +112,12 @@ export const PRINT3D_FRAG_SHADER = [
 
     'void main(){',
     '    if(v_layer_index > u_visible_layer_range_end){',
-    '        gl_FragColor = vec4(105,105,105,1);',
+    '        gl_FragColor = vec4(0.87, 0.87, 0.87, 0.75);',
     '        return;',
     '    }',
 
     '    if(v_layer_index < u_visible_layer_range_start){',
-    '        gl_FragColor = vec4(105,105,105,1);',
+    '        gl_FragColor = vec4(0.87, 0.87, 0.87, 0.75);',
     '        return;',
     '    }',
 
@@ -178,9 +184,16 @@ export const PRINT3D_FRAG_SHADER = [
     '    if(u_r_unknown_visible == 0 && 7.5 < v_type_code && v_type_code < 8.5 && v_tool_code > 0.5){',
     '        discard;',
     '    }',
-
+    '    if(u_middle_layer_set_gray == 1){',
+    '        if(v_layer_index == u_visible_layer_range_end){',
+    '           gl_FragColor = vec4(v_color0.xyz, 1.0);',
+    '        } else {',
+    '           gl_FragColor = vec4(0.6, 0.6, 0.6, 0.75);',
+    '        }',
+    '        return;',
+    '    }',
     '    gl_FragColor = vec4(v_color0.xyz, 1.0);',
-    '    if(u_color_type == 1){',
+    '    if(u_color_type == 1 && !(6.5 < v_type_code && v_type_code < 7.5)){',
     '        gl_FragColor = vec4(v_color1.xyz, 1.0);',
     '    }',
     '}'
