@@ -2029,7 +2029,11 @@ export const actions = {
                     });
 
                     // record for undo|redo
+                    dispatch(actions.onModelAfterTransform());
                     modelGroup.getModels().forEach((model) => {
+                        if (model instanceof PrimeTowerModel) {
+                            return;
+                        }
                         operation = new ArrangeOperation3D({
                             target: model,
                             from: froms[model.modelID],
@@ -2046,7 +2050,6 @@ export const actions = {
                         stage: STEP_STAGE.PRINTING_ARRANGING_MODELS,
                         progress: progressStatesManager.updateProgress(STEP_STAGE.PRINTING_ARRANGING_MODELS, 1)
                     }));
-                    dispatch(actions.onModelAfterTransform());
                     progressStatesManager.finishProgress(true);
                     if (!allArranged) {
                         dispatch(appGlobalActions.updateShowArrangeModelsError({
