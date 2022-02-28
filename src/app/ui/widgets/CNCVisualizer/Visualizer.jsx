@@ -488,7 +488,6 @@ class Visualizer extends Component {
                         cameraInitialTarget={new THREE.Vector3(0, 0, 0)}
                         onSelectModels={this.actions.onSelectModels}
                         onModelAfterTransform={noop}
-                        onModelTransform={noop}
                         showContextMenu={this.showContextMenu}
                         scale={this.props.scale}
                         minScale={MIN_LASER_CNC_CANVAS_SCALE}

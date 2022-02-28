@@ -125,12 +125,9 @@ class Visualizer extends PureComponent {
             this.props.recordModelBeforeTransform(this.props.modelGroup);
         },
         onModelAfterTransform: (transformMode) => {
-            this.actions.onModelTransform();
+            this.props.onModelTransform();
             this.props.recordModelAfterTransform(transformMode, this.props.modelGroup);
             this.props.onModelAfterTransform();
-        },
-        onModelTransform: () => {
-            this.props.onModelTransform();
         },
         // context menu
         centerSelectedModel: () => {
@@ -495,7 +492,6 @@ class Visualizer extends PureComponent {
                         onModelAfterTransform={this.actions.onModelAfterTransform}
                         onRotationPlacementSelect={this.actions.onRotationPlacementSelect}
                         onModelBeforeTransform={this.actions.onModelBeforeTransform}
-                        onModelTransform={this.actions.onModelTransform}
                         showContextMenu={this.showContextMenu}
                         primeTowerSelected={primeTowerSelected}
                         transformMode={transformMode}

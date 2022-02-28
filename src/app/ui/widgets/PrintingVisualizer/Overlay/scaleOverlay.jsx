@@ -10,7 +10,7 @@ import { NumberInput as Input } from '../../../components/Input';
 import Checkbox from '../../../components/Checkbox';
 import { Button } from '../../../components/Buttons';
 
-const ScaleOverlay = ({
+const ScaleOverlay = React.memo(({
     setTransformMode,
     onModelAfterTransform,
     size
@@ -21,9 +21,11 @@ const ScaleOverlay = ({
     const primeTowerHeight = useSelector(state => state?.printing?.primeTowerHeight, shallowEqual);
     const selectedModelBBoxDes = useSelector(state => state?.printing?.modelGroup?.getSelectedModelBBoxWHD(), shallowEqual);
     const selectedGroup = useSelector(state => state?.printing?.modelGroup?.selectedGroup, shallowEqual);
-    const [scaleXPercent, setScaleXPercent] = useState(100);
-    const [scaleYPercent, setScaleYPercent] = useState(100);
-    const [scaleZPercent, setScaleZPercent] = useState(100);
+    const [scalePercentObj, setScalePercentObj] = useState({
+        x: 100,
+        y: 100,
+        z: 100
+    });
     const [modelX, setModelX] = useState(0);
     const [modelY, setModelY] = useState(0);
     // const [modelZ, setModelZ] = useState(0);
@@ -32,9 +34,12 @@ const ScaleOverlay = ({
     const [modelSize, setModelSize] = useState({});
     const updateScale = (detail) => {
         throttle(() => {
-            setScaleXPercent(Math.round(Math.abs(detail.scale.x) * 1000) / 10);
-            setScaleYPercent(Math.round(Math.abs(detail.scale.y) * 1000) / 10);
-            setScaleZPercent(Math.round(Math.abs(detail.scale.z) * 1000) / 10);
+            const newScalePercentObj = {
+                x: Math.round(Math.abs(detail.scale.x) * 1000) / 10,
+                y: Math.round(Math.abs(detail.scale.y) * 1000) / 10,
+                z: Math.round(Math.abs(detail.scale.z) * 1000) / 10
+            };
+            setScalePercentObj(newScalePercentObj);
             if (detail.isPrimeTower) {
                 setModelX(Math.round(Math.abs(detail.scale.x) * 200) / 10);
                 setModelY(Math.round(Math.abs(detail.scale.y) * 200) / 10);
@@ -64,9 +69,12 @@ const ScaleOverlay = ({
             setModelY(Number((max.y - min.y).toFixed(1)));
             setModelSize(newModelSize);
         }
-        setScaleXPercent(Math.round(Math.abs(transformation.scaleX) * 1000) / 10);
-        setScaleYPercent(Math.round(Math.abs(transformation.scaleY) * 1000) / 10);
-        setScaleZPercent(Math.round(Math.abs(transformation.scaleZ) * 1000) / 10);
+        const newScalePercentObj = {
+            x: Math.round(Math.abs(transformation.scaleX) * 1000) / 10,
+            y: Math.round(Math.abs(transformation.scaleY) * 1000) / 10,
+            z: Math.round(Math.abs(transformation.scaleZ) * 1000) / 10
+        };
+        setScalePercentObj(newScalePercentObj);
         setUniformScalingState(transformation.uniformScalingState);
     }, [selectedModelArray]);
 
@@ -164,7 +172,7 @@ const ScaleOverlay = ({
                             suffix="%"
                             size="small"
                             min={1}
-                            value={scaleXPercent}
+                            value={scalePercentObj.x}
                             onChange={(value) => {
                                 onModelTransform({ 'scaleX': value / 100 }, false, isPrimeTowerSelected);
                                 onModelAfterTransform();
@@ -192,7 +200,7 @@ const ScaleOverlay = ({
                             suffix="%"
                             size="small"
                             min={1}
-                            value={scaleYPercent}
+                            value={scalePercentObj.y}
                             onChange={(value) => {
                                 onModelTransform({ 'scaleY': value / 100 }, false, isPrimeTowerSelected);
                                 onModelAfterTransform();
@@ -208,7 +216,7 @@ const ScaleOverlay = ({
                                 suffix="%"
                                 size="small"
                                 min={1}
-                                value={scaleZPercent}
+                                value={scalePercentObj.z}
                                 onChange={(value) => {
                                     onModelTransform({ 'scaleZ': value / 100 });
                                     onModelAfterTransform();
@@ -257,7 +265,7 @@ const ScaleOverlay = ({
             </div>
         </div>
     );
-};
+});
 
 ScaleOverlay.propTypes = {
     setTransformMode: PropTypes.func.isRequired,

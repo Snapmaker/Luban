@@ -12,7 +12,26 @@ import { NumberInput as Input } from '../../../components/Input';
 import { Button } from '../../../components/Buttons';
 import { EPSILON } from '../../../../constants';
 
-const RotateOverlay = ({
+const isNonUniformScaled = (selectedModelArray) => {
+    const { scaleX, scaleY, scaleZ } = selectedModelArray[0].transformation;
+    return Math.abs(Math.abs(scaleX) - Math.abs(scaleY)) > EPSILON
+        || Math.abs(Math.abs(scaleX) - Math.abs(scaleZ)) > EPSILON
+        || Math.abs(Math.abs(scaleY) - Math.abs(scaleZ)) > EPSILON;
+};
+
+const rotateOnlyForUniformScale = (rotateFn, selectedModelArray) => {
+    if (isNonUniformScaled(selectedModelArray)) {
+        modal({
+            cancelTitle: i18n._('key-Modal/Common-OK'),
+            title: i18n._('key-Printing/Rotation-error title'),
+            body: i18n._('key-Printing/Rotation-error tips')
+        });
+    } else {
+        rotateFn && rotateFn();
+    }
+};
+
+const RotateOverlay = React.memo(({
     setTransformMode,
     onModelAfterTransform,
     rotateWithAnalysis,
@@ -70,29 +89,10 @@ const RotateOverlay = ({
         dispatch(printingActions.updateSelectedModelTransformation(newTransformation));
     };
 
-    const isNonUniformScaled = () => {
-        const { scaleX, scaleY, scaleZ } = selectedModelArray[0].transformation;
-        return Math.abs(Math.abs(scaleX) - Math.abs(scaleY)) > EPSILON
-            || Math.abs(Math.abs(scaleX) - Math.abs(scaleZ)) > EPSILON
-            || Math.abs(Math.abs(scaleY) - Math.abs(scaleZ)) > EPSILON;
-    };
-
-    const rotateOnlyForUniformScale = (rotateFn) => {
-        if (isNonUniformScaled()) {
-            modal({
-                cancelTitle: i18n._('key-Modal/Common-OK'),
-                title: i18n._('key-Printing/Rotation-error title'),
-                body: i18n._('key-Printing/Rotation-error tips')
-            });
-        } else {
-            rotateFn && rotateFn();
-        }
-    };
-
     const autoRotate = () => {
         rotateOnlyForUniformScale(() => {
             autoRotateSelectedModel();
-        });
+        }, selectedModelArray);
     };
 
     const resetRotation = () => {
@@ -202,7 +202,7 @@ const RotateOverlay = ({
             </div>
         </div>
     );
-};
+});
 
 RotateOverlay.propTypes = {
     setTransformMode: PropTypes.func.isRequired,

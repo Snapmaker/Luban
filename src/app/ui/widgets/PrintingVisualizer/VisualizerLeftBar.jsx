@@ -146,39 +146,6 @@ function VisualizerLeftBar({ setTransformMode, supportActions, updateBoundingBox
                 || Math.abs(Math.abs(scaleY) - Math.abs(scaleZ)) > EPSILON;
         },
     };
-
-    const renderRotationAnalyzeModal = () => {
-        return (
-            <RotationAnalysisOverlay onClose={() => { setShowRotationAnalyzeModal(false); }} />
-        );
-    };
-    const renderEditSupportModal = () => {
-        return (
-            <EditSupportOverlay onClose={() => { setShowEditSupportModal(false); }} />
-        );
-    };
-    const renderSupportOverlay = () => {
-        return (
-            <SupportOverlay
-                editSupport={() => { actions.editSupport(); }}
-                CancelButton={CancelButton}
-                setTransformMode={setTransformMode}
-            />
-        );
-    };
-    const renderTranslateOverlay = () => {
-        return (
-            <TranslateOverlay
-                actions={actions}
-                setTransformMode={setTransformMode}
-                transformDisabled={transformDisabled}
-                moveX={moveX}
-                moveY={moveY}
-                CancelButton={CancelButton}
-                hasModels={hasModels}
-            />
-        );
-    };
     // TODO: refactor these flags
     const transformDisabled = showRotationAnalyzeModal || showEditSupportModal || !(selectedModelArray.length > 0 && selectedModelArray.every((model) => {
         return model.visible === true;
@@ -371,7 +338,7 @@ function VisualizerLeftBar({ setTransformMode, supportActions, updateBoundingBox
                         size={size}
                     />
                 )}
-                {showRotationAnalyzeModal && renderRotationAnalyzeModal()}
+                {showRotationAnalyzeModal && <RotationAnalysisOverlay onClose={() => { setShowRotationAnalyzeModal(false); }} />}
                 {!transformDisabled && transformMode === 'rotate' && !isPrimeTowerSelected && (
                     <RotateOverlay
                         setTransformMode={setTransformMode}
@@ -388,8 +355,8 @@ function VisualizerLeftBar({ setTransformMode, supportActions, updateBoundingBox
                     />
                 )}
 
-                {showEditSupportModal && renderEditSupportModal()}
-                {!supportDisabled && !showEditSupportModal && transformMode === 'support' && renderSupportOverlay()}
+                {showEditSupportModal && <EditSupportOverlay onClose={() => { setShowEditSupportModal(false); }} />}
+                {!supportDisabled && !showEditSupportModal && transformMode === 'support' && <SupportOverlay editSupport={() => { actions.editSupport(); }} />}
                 {!transformDisabled && transformMode === 'extruder' && isDualExtruder && (
                     <ExtruderOverlay setTransformMode={setTransformMode} setDualExtruderDisabled={setDualExtruderDisabled} />
                 )}

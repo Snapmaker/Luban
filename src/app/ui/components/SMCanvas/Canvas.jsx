@@ -53,7 +53,6 @@ class Canvas extends PureComponent {
         updateScale: PropTypes.func,
         onModelAfterTransform: PropTypes.func,
         onModelBeforeTransform: PropTypes.func,
-        onModelTransform: PropTypes.func,
         onRotationPlacementSelect: PropTypes.func,
 
         // tmp
@@ -97,10 +96,6 @@ class Canvas extends PureComponent {
         this.onModelBeforeTransform = this.props.onModelBeforeTransform || noop;
         this.onModelAfterTransform = this.props.onModelAfterTransform || noop;
         this.onRotationPlacementSelect = this.props.onRotationPlacementSelect || noop;
-        this.onModelTransform = throttle(this.props.onModelTransform || noop, 300, {
-            leading: false,
-            trailing: true
-        });
 
         // threejs
         this.camera = null;
@@ -305,12 +300,6 @@ class Canvas extends PureComponent {
         this.controls.on(EVENTS.BEFORE_TRANSFORM_OBJECT, () => {
             this.onModelBeforeTransform(this.controls.transformControl.mode);
         });
-        // this.controls.on(EVENTS.TRANSFORM_OBJECT, () => {
-        //     console.log('transform');
-        //     if (this.props.canOperateModel) {
-        //         this.onModelTransform();
-        //     }
-        // });
         this.controls.on(EVENTS.AFTER_TRANSFORM_OBJECT, () => {
             this.onModelAfterTransform(this.controls.transformControl.mode);
         });

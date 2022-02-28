@@ -46,7 +46,7 @@ const angleOptions = [
         label: '180°'
     }
 ];
-const TranslateOverlay = ({
+const TranslateOverlay = React.memo(({
     setTransformMode,
     onModelAfterTransform,
     arrangeAllModels,
@@ -281,7 +281,7 @@ const TranslateOverlay = ({
             </div>
         </div>
     );
-};
+});
 
 TranslateOverlay.propTypes = {
     setTransformMode: PropTypes.func.isRequired,

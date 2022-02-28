@@ -27,7 +27,7 @@ const originalHelpersExtruder = {
     support: LEFT_EXTRUDER_MAP_NUMBER,
     adhesion: LEFT_EXTRUDER_MAP_NUMBER
 };
-const ExtruderOverlay = ({
+const ExtruderOverlay = React.memo(({
     setTransformMode,
     setDualExtruderDisabled
 }) => {
@@ -376,7 +376,7 @@ const ExtruderOverlay = ({
             </div>
         </div>
     );
-};
+});
 
 ExtruderOverlay.propTypes = {
     setTransformMode: PropTypes.func.isRequired,

@@ -7,7 +7,7 @@ import { CancelButton } from '../VisualizerLeftBar';
 import { actions as printingActions } from '../../../../flux/printing';
 import { Button } from '../../../components/Buttons';
 
-const MirrorOverlay = ({
+const MirrorOverlay = React.memo(({
     setTransformMode,
     updateBoundingBox
 }) => {
@@ -91,7 +91,7 @@ const MirrorOverlay = ({
             </div>
         </div>
     );
-};
+});
 
 MirrorOverlay.propTypes = {
     setTransformMode: PropTypes.func.isRequired,
