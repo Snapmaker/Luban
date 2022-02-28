@@ -256,6 +256,7 @@ class ModelGroup extends EventEmitter {
 
     removeModel(model, loop = false) {
         if (model.type === 'primeTower') return;
+        model.setSelected(false);
         if (model instanceof ThreeGroup) {
             model.children.forEach((child) => {
                 this.removeModel(child, true);
@@ -1099,7 +1100,13 @@ class ModelGroup extends EventEmitter {
         try {
             // this.selectedModelIDArray.splice(0);
             this.selectedModelArray.forEach((model) => {
-                model.onTransform();
+                if (model.parent && model.parent instanceof ThreeGroup) {
+                    model.parent.children.forEach(subModel => {
+                        subModel.onTransform();
+                    });
+                } else {
+                    model.onTransform();
+                }
                 // this.selectedModelIDArray.push(item.modelID);
             });
             const { sourceType, mode, transformation, boundingBox, originalName } = this.selectedModelArray[0];
