@@ -210,7 +210,7 @@ const TranslationOverlay = ({ actions, setTransformMode, transformDisabled, move
                                 } = arragneSettings;
                                 dispatch(printingActions.arrangeAllModels(angle, offset, padding));
                             }}
-                            disabled={!hasModels}
+                            disabled={!hasModels || transformDisabled}
                         >
                             <span>{i18n._('key-Printing/LeftBar-Auto Arrange')}</span>
                         </Button>

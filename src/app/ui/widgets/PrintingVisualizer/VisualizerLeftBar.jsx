@@ -634,7 +634,7 @@ function VisualizerLeftBar({ setTransformMode, supportActions, updateBoundingBox
                                         onClick={() => {
                                             setTransformMode('translate');
                                         }}
-                                        disabled={showRotationAnalyzeModal || !hasModels}
+                                        disabled={showRotationAnalyzeModal || !hasModels || transformDisabled}
                                     />
                                 </li>
                                 <li
@@ -734,7 +734,7 @@ function VisualizerLeftBar({ setTransformMode, supportActions, updateBoundingBox
                         </span>
                     </nav>
                 </div>
-                {!showRotationAnalyzeModal && transformMode === 'translate' && renderTranslateOverlay()}
+                {!transformDisabled && !showRotationAnalyzeModal && transformMode === 'translate' && renderTranslateOverlay()}
                 {!transformDisabled && !isSupportSelected && transformMode === 'scale' && (
                     <div
                         className="position-ab width-280 margin-left-72 border-default-grey-1 border-radius-8 background-color-white"
