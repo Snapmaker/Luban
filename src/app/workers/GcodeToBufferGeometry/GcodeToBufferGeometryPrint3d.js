@@ -63,6 +63,29 @@ class GcodeToBufferGeometryPrint3d {
             maxZ: Number.MIN_VALUE
         };
 
+        const { toolColor0, toolColor1 } = extruderColors;
+        let r0, b0, g0, r1, b1, g1;
+        if (toolColor0.length === 7) {
+            r0 = parseInt(toolColor0.substring(1, 3), 16);
+            g0 = parseInt(toolColor0.substring(3, 5), 16);
+            b0 = parseInt(toolColor0.substring(5), 16);
+        } else {
+            r0 = 255;
+            b0 = 255;
+            g0 = 255;
+        }
+        if (toolColor1.length === 7) {
+            r1 = parseInt(toolColor1.substring(1, 3), 16);
+            g1 = parseInt(toolColor1.substring(3, 5), 16);
+            b1 = parseInt(toolColor1.substring(5), 16);
+        } else {
+            r1 = 0;
+            b1 = 0;
+            g1 = 0;
+        }
+        const toolColorRGB0 = [r0, g0, b0];
+        const toolColorRGB1 = [r1, g1, b1];
+
         let layerIndex = 0;
         let lastTypeCode = null;
 
@@ -73,37 +96,12 @@ class GcodeToBufferGeometryPrint3d {
                 const typeCode = v2.type;
                 const toolCode = modal.tool;
                 const typeSetting = this.getTypeSetting(typeCode);
-
                 layerIndex = modal.layer;
                 const rgb = [
                     typeSetting.rgb[0],
                     typeSetting.rgb[1],
                     typeSetting.rgb[2]
                 ];
-
-                // console.log('toolCode', toolCode);
-                const { toolColor0, toolColor1 } = extruderColors;
-                let r0, b0, g0, r1, b1, g1;
-                if (toolColor0.length === 7) {
-                    r0 = parseInt(toolColor0.substring(1, 3), 16);
-                    g0 = parseInt(toolColor0.substring(3, 5), 16);
-                    b0 = parseInt(toolColor0.substring(5), 16);
-                } else {
-                    r0 = 255;
-                    b0 = 255;
-                    g0 = 255;
-                }
-                if (toolColor1.length === 7) {
-                    r1 = parseInt(toolColor1.substring(1, 3), 16);
-                    g1 = parseInt(toolColor1.substring(3, 5), 16);
-                    b1 = parseInt(toolColor1.substring(5), 16);
-                } else {
-                    r1 = 0;
-                    b1 = 0;
-                    g1 = 0;
-                }
-                const toolColorRGB0 = [r0, g0, b0];
-                const toolColorRGB1 = [r1, g1, b1];
 
                 // duplicate one point to display without interpolation
                 // color of end point decides line color
