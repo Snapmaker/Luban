@@ -45,6 +45,7 @@ const arrangeModels = async (data) => {
 
         const stls = [];
         models.forEach((model) => {
+            sendMessage({ status: 'progress', value: { progress: (models.indexOf(model) / models.length / 2) } });
             let faces = [];
             let stlBoundingBox = {
                 min: {

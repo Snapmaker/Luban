@@ -1108,7 +1108,7 @@ export class Nest {
 
     startNFP(onProgress) {
         for (let i = 0; i < this.parts.length; i++) {
-            onProgress && onProgress(i / this.parts.length);
+            onProgress && onProgress(0.5 + i / this.parts.length / 2);
             const part = this.parts[i];
 
             if (part.isPlace) {

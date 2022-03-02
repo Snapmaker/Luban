@@ -1985,9 +1985,10 @@ export const actions = {
                             modelGroup.selectModelById(part.modelID, true);
                         }
                     });
+                    const validArea = modelGroup.getValidArea();
                     modelGroup.updateSelectedGroupTransformation({
-                        positionX: 0, // TODO bounding box center
-                        positionY: 0
+                        positionX: (validArea.max.x + validArea.min.x) / 2,
+                        positionY: (validArea.max.y + validArea.min.y) / 2
                     });
 
                     parts.forEach((part) => {
