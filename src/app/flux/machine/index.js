@@ -970,7 +970,7 @@ export const actions = {
                                 });
                             } else {
                                 if (toolHead === LEVEL_TWO_POWER_LASER_FOR_SM2) {
-                                    server.executeGcode(`G0 Z${materialThickness} F1500;`, () => {
+                                    server.executeGcode(`G53;\nG0 Z${laserFocalLength + materialThickness} F1500;\nG54`, () => {
                                         resolve();
                                     });
                                 } else {
