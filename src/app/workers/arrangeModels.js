@@ -72,6 +72,7 @@ const arrangeModels = async (data) => {
                 if (memoryCount > memory) {
                     stls.forEach(stl => {
                         stl.faces = [];
+                        stl = null;
                     });
                     throw new Error('MLE');
                 }
@@ -111,6 +112,11 @@ const arrangeModels = async (data) => {
             offset
         }, (progress) => {
             sendMessage({ status: 'progress', value: { progress } });
+        });
+
+        stls.forEach(stl => {
+            stl.faces = [];
+            stl = null;
         });
         sendMessage({ status: 'succeed', value: { parts } });
     } catch (err) {
