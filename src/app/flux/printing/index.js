@@ -1955,12 +1955,14 @@ export const actions = {
             models.push(modelInfo);
         });
 
+        console.log('memory', performance.memory);
         workerManager.arrangeModels([{
             models,
             validArea: modelGroup.getValidArea(),
             angle,
             offset: offset / 2,
-            padding
+            padding,
+            memory: performance.memory.jsHeapSizeLimit
         }], (payload) => {
             const { status, value } = payload;
             switch (status) {
