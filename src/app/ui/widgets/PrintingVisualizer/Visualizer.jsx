@@ -28,6 +28,7 @@ import VisualizerInfo from './VisualizerInfo';
 import PrintableCube from './PrintableCube';
 import styles from './styles.styl';
 import { STEP_STAGE } from '../../../lib/manager/ProgressManager';
+import ModeToggleBtn from './ModeToggleBtn';
 
 class Visualizer extends PureComponent {
     static propTypes = {
@@ -471,6 +472,8 @@ class Visualizer extends PureComponent {
                 <div className={styles['visualizer-preview-control']}>
                     <VisualizerPreviewControl />
                 </div>
+
+                <ModeToggleBtn />
 
                 <div className={styles['visualizer-info']}>
                     <VisualizerInfo />

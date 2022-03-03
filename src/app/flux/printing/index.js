@@ -157,6 +157,7 @@ const INITIAL_STATE = {
         }
     },
     gcodePreviewMode: GCODEPREVIEWMODES[0],
+    gcodePreviewModeToogleVisible: false,
     renderLineType: false,
 
     // progress bar
@@ -1576,20 +1577,21 @@ export const actions = {
         const { gcodeLine, layerRangeDisplayed, layerCount } = getState().printing;
         const uniforms = gcodeLine.material.uniforms;
 
-        if (mode === 'grayUnderTheTopFloor') {
+        if (mode === 'GrayUnderTheTopFloor') {
             uniforms.u_middle_layer_set_gray.value = 1;
         } else {
             uniforms.u_middle_layer_set_gray.value = 0;
         }
         dispatch(actions.updateState({
+            gcodePreviewModeToogleVisible: 0,
             gcodePreviewMode: mode
         }));
 
-        if (mode === 'singleLayer') {
+        if (mode === 'SingleLayer') {
             dispatch(actions.showGcodeLayers([
                 layerRangeDisplayed[1], layerRangeDisplayed[1]
             ]));
-        } else if (mode === 'ordinary' || mode === 'grayUnderTheTopFloor') {
+        } else if (mode === 'Ordinary' || mode === 'GrayUnderTheTopFloor') {
             if (layerRangeDisplayed[0] === layerRangeDisplayed[1]) {
                 dispatch(actions.showGcodeLayers([0, layerCount - 1]));
             } else {
@@ -1616,7 +1618,7 @@ export const actions = {
         } else {
             dispatch(actions.displayGcode());
         }
-        if (gcodePreviewMode === 'singleLayer') {
+        if (gcodePreviewMode === 'SingleLayer') {
             // The moving direction is down
             if (layerRangeDisplayed[0] > range[0]) {
                 range = [
@@ -1629,9 +1631,29 @@ export const actions = {
                     Math.min(layerCount, range[1])
                 ];
             }
+        } else {
+            if ((range[0] > layerRangeDisplayed[0] || range[1] > layerRangeDisplayed[1])) {
+                if (range[0] > layerRangeDisplayed[0] && range[0] > range[1]) {
+                    const tmp = range[1];
+                    range[1] = range[0];
+                    range[0] = tmp;
+                }
+                range[1] = Math.min(layerCount, range[1]);
+                range[0] = Math.min(layerCount, range[0]);
+            }
+
+            if ((range[0] < layerRangeDisplayed[0] || range[1] < layerRangeDisplayed[1])) {
+                if (range[1] < layerRangeDisplayed[0] && range[0] > range[1]) {
+                    const tmp = range[1];
+                    range[1] = range[0];
+                    range[0] = tmp;
+                }
+                range[1] = range[1] || 0;
+                range[0] = range[0] || 0;
+            }
         }
-        gcodeLine.material.uniforms.u_visible_layer_range_start.value = range[0];
-        gcodeLine.material.uniforms.u_visible_layer_range_end.value = range[1];
+        gcodeLine.material.uniforms.u_visible_layer_range_start.value = Math.round(range[0], 10);
+        gcodeLine.material.uniforms.u_visible_layer_range_end.value = Math.round(range[1], 10);
         dispatch(actions.updateState({
             layerRangeDisplayed: range
         }));
