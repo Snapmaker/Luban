@@ -84,9 +84,16 @@ export const GCODE_VISIBILITY_TYPE = {
 };
 
 export const GCODEPREVIEWMODES = [
-    'ordinary',
-    'singleLayer',
-    'grayUnderTheTopFloor'
+    'Ordinary',
+    'SingleLayer',
+    'GrayUnderTheTopFloor'
+];
+
+// UI暂时没有提供，先用来测试
+export const GCODEPREVIEWMODES_ICONS = [
+    'MainToolbarJobSetup',
+    'MainToolbarTop',
+    'MainToolbarBottom',
 ];
 
 export const PRINTING_MATERIAL_CONFIG_COLORS = [

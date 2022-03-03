@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { useDispatch, useSelector, shallowEqual } from 'react-redux';
 import classNames from 'classnames';
 import { find, throttle } from 'lodash';
+import isElectron from 'is-electron';
 import Slider from '../../components/Slider';
 import PreviewType from '../../components/PreviewType';
 import Anchor from '../../components/Anchor';
@@ -11,9 +12,9 @@ import { actions as printingActions } from '../../../flux/printing';
 import i18n from '../../../lib/i18n';
 import useSetState from '../../../lib/hooks/set-state';
 import Select from '../../components/Select';
-import { DUAL_EXTRUDER_TOOLHEAD_FOR_SM2, LEFT_EXTRUDER, RIGHT_EXTRUDER } from '../../../constants';
+import { DUAL_EXTRUDER_TOOLHEAD_FOR_SM2, GCODEPREVIEWMODES, GCODEPREVIEWMODES_ICONS, LEFT_EXTRUDER, RIGHT_EXTRUDER } from '../../../constants';
 import { machineStore } from '../../../store/local-storage';
-import ModeToggleBtn from './ModeToggleBtn';
+import SvgIcon from '../../components/SvgIcon';
 
 // TODO
 function useShowToggleBtn() {
@@ -38,18 +39,38 @@ function useShowToggleBtn() {
     };
 }
 
+const MIN = 30;
+const MAX = 288;
+
 function GcodeLayout() {
     const layerCount = useSelector(state => state?.printing?.layerCount, shallowEqual);
     // const gcodePreviewMode = useSelector(state => state?.printing?.gcodePreviewMode, shallowEqual);
     const layerRangeDisplayed = useSelector(state => state?.printing?.layerRangeDisplayed, shallowEqual);
     const dispatch = useDispatch();
 
-    const onChangeShowLayer = throttle((value) => {
-        dispatch(printingActions.showGcodeLayers(value));
+    const [x, setX] = useState(layerCount / (MAX - MIN));
+    useEffect(() => {
+        setX(layerCount / (MAX - MIN));
+    }, [layerCount]);
+
+    const [value, setValue] = useState([]);
+    useEffect(() => {
+        setValue([
+            layerRangeDisplayed[0] / x,
+            layerRangeDisplayed[1] / x + MIN
+        ]);
+    }, [layerRangeDisplayed, x]);
+
+
+    const onChangeShowLayer = throttle((v) => {
+        dispatch(printingActions.showGcodeLayers([
+            v[0] * x,
+            (v[1] - MIN) * x
+        ]));
     }, 300);
     return (
         <div className={styles['layer-wrapper']}>
-            <span className={styles['layer-label']}>{layerRangeDisplayed[1]}</span>
+            <span className={styles['layer-label']}>{Math.round(layerRangeDisplayed[1], 10)}</span>
             <div
                 style={{
                     position: 'relative',
@@ -57,19 +78,20 @@ function GcodeLayout() {
                 }}
             >
                 <Slider
+                    tooltipVisible={false}
                     className={styles['vertical-slider']}
                     vertical
                     min={0}
-                    max={layerCount - 1}
+                    max={MAX}
                     step={1}
                     range={{ draggableTrack: true }}
-                    value={layerRangeDisplayed}
-                    onChange={(value) => {
-                        onChangeShowLayer(value);
+                    value={value}
+                    onChange={(v) => {
+                        onChangeShowLayer(v);
                     }}
                 />
             </div>
-            <span className={styles['layer-label']}>{layerRangeDisplayed[0]}</span>
+            <span className={styles['layer-label']}>{Math.round(layerRangeDisplayed[0], 10)}</span>
 
         </div>
     );
@@ -84,6 +106,8 @@ function VisualizerPreviewControl() {
     // TODO, change init
     const gcodeTypeInitialVisibility = useSelector(state => state?.printing?.gcodeTypeInitialVisibility, shallowEqual);
     const renderLineType = useSelector(state => state?.printing?.renderLineType, shallowEqual);
+    const gcodePreviewMode = useSelector(state => state?.printing?.gcodePreviewMode);
+    const gcodePreviewModeToogleVisible = useSelector(state => state?.printing?.gcodePreviewModeToogleVisible);
 
     const materialDefinitions = useSelector(state => state?.printing?.materialDefinitions, shallowEqual);
     const defaultMaterialId = useSelector(state => state?.printing?.defaultMaterialId, shallowEqual);
@@ -92,6 +116,7 @@ function VisualizerPreviewControl() {
     const rightExtrualMaterial = find(materialDefinitions, { definitionId: defaultMaterialIdRight });
     const colorL = leftExtrualMaterial?.settings?.color?.default_value;
     const colorR = rightExtrualMaterial?.settings?.color?.default_value;
+
 
     const dispatch = useDispatch();
     const { showToggleBtn, renderToggleBtn } = useShowToggleBtn();
@@ -350,7 +375,32 @@ function VisualizerPreviewControl() {
                                 </div>
                             </div>
                         )}
-                        <ModeToggleBtn />
+                        <div>
+                            <SvgIcon
+                                className={classNames(
+                                    'fa',
+                                    styles['toggle-btn']
+                                )}
+                                name={GCODEPREVIEWMODES_ICONS[GCODEPREVIEWMODES.findIndex(i => i === gcodePreviewMode)]}
+                                size={24}
+                                type={['static']}
+                                onClick={(e) => {
+                                    if (gcodePreviewModeToogleVisible) {
+                                        dispatch(printingActions.updateState({
+                                            gcodePreviewModeToogleVisible: 0
+                                        }));
+                                    } else {
+                                        let modalHeight = e.pageY - 58 - 24;
+                                        if (!isElectron()) {
+                                            modalHeight -= 26;
+                                        }
+                                        dispatch(printingActions.updateState({
+                                            gcodePreviewModeToogleVisible: modalHeight
+                                        }));
+                                    }
+                                }}
+                            />
+                        </div>
                     </div>
                 )}
             </div>
