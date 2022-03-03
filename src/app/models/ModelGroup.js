@@ -1658,6 +1658,9 @@ class ModelGroup extends EventEmitter {
         return model;
     }
 
+    /**
+     * deprecated
+     */
     hasSupportModel() {
         return !!this.models.find(i => i.supportTag === true);
     }
@@ -1733,6 +1736,9 @@ class ModelGroup extends EventEmitter {
         return model;
     }
 
+    /**
+     * deprecated
+     */
     saveSupportModel(model) {
         model.generateSupportGeometry();
         if (model.isInitSupport) {
@@ -2198,7 +2204,7 @@ class ModelGroup extends EventEmitter {
                 const angleN = normal.angleTo(zUp) / Math.PI * 180;
                 const averageZOfFace = (positions[i + 2] + positions[i + 5] + positions[i + 8]) / 3;
                 // prevent to add marks to the faces attached to XOY plane
-                if (angleN > 91 && averageZOfFace > 0.01) {
+                if (angleN > (90 + EPSILON) && averageZOfFace > 0.01) {
                     model.supportFaceMarks[j] = model.supportFaceMarks[j] || AVAIL;
                 }
             }
@@ -2380,19 +2386,19 @@ class ModelGroup extends EventEmitter {
             // const downFaces = new Array(supportFaceMarks.length).fill(false);
             const normalVectors = new Array(supportFaceMarks.length).fill(false);
             // calculate faces
-            const zUp = new Vector3(0, 0, -1);
+            const zDown = new Vector3(0, 0, -1);
             for (let i = 0, index = 0; i < normals.length; i += 9, index++) {
                 const normal = new Vector3(normals[i], normals[i + 1], normals[i + 2]);
                 normalVectors[index] = normal;
 
-                const angleN = normal.angleTo(zUp) / Math.PI * 180;
+                const angleN = normal.angleTo(zDown) / Math.PI * 180;
                 // make sure marks added to downward faces
                 // if (angleN < 90) {
                 //     downFaces[index] = true;
                 // }
                 const averageZOfFace = (positions[i + 2] + positions[i + 5] + positions[i + 8]) / 3;
                 // prevent to add marks to the faces attached to XOY plane
-                if ((90 - angleN) >= angle && averageZOfFace > 0.01) {
+                if ((90 - angleN) > (angle + EPSILON) && averageZOfFace > 0.01) {
                     supportFaceMarks[index] = FACE;
                 }
             }
