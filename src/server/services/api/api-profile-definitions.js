@@ -1,5 +1,6 @@
-import fs from 'fs';
+import fs, { mkdir } from 'fs';
 import path from 'path';
+import mkdirp from 'mkdirp';
 import { ERR_BAD_REQUEST, ERR_INTERNAL_SERVER_ERROR, DEFINITION_SNAPMAKER_EXTRUDER_0, DEFINITION_SNAPMAKER_EXTRUDER_1, DEFINITION_ACTIVE, DEFINITION_ACTIVE_FINAL } from '../../constants';
 import { loadDefinitionsByPrefixName, loadAllSeriesDefinitions, DefinitionLoader } from '../../slicer';
 import DataStorage from '../../DataStorage';
@@ -76,7 +77,7 @@ const fsWriteFile = (filePath, data, res, callback) => {
         }
     });
 };
-export const createDefinition = (req, res) => {
+export const createDefinition = async (req, res) => {
     const { headType } = req.params;
     const { definition } = req.body;
 
@@ -87,6 +88,14 @@ export const createDefinition = (req, res) => {
     const filePath = path.join(`${DataStorage.configDir}/${headType}/${series}`, `${definitionLoader.definitionId}.def.json`);
     const backupPath = path.join(`${DataStorage.activeConfigDir}/${headType}/${series}`, `${definitionLoader.definitionId}.def.json`);
     const data = JSON.stringify(definitionLoader.toJSON(), null, 2);
+    if (!fs.existsSync(backupPath)) {
+        await DataStorage.copyDirForInitSlicer({
+            srcDir: DataStorage.configDir,
+            dstDir: DataStorage.activeConfigDir,
+            overwriteTag: true,
+            inherit: true
+        });
+    }
     const callback = () => {
         const loader = new DefinitionLoader();
         loader.loadDefinition(headType, definitionLoader.definitionId, series);
@@ -187,6 +196,14 @@ export const updateDefinition = async (req, res) => {
     } else {
         filePath = path.join(`${DataStorage.configDir}/${headType}/${series}`, `${definitionId}.def.json`);
         activeRecoverPath = path.join(`${DataStorage.activeConfigDir}/${headType}/${series}`, `${definitionId}.def.json`);
+    }
+    if (!fs.existsSync(DataStorage.activeConfigDir)) {
+        await DataStorage.copyDirForInitSlicer({
+            srcDir: DataStorage.configDir,
+            dstDir: DataStorage.activeConfigDir,
+            overwriteTag: true,
+            inherit: true
+        });
     }
     const data = JSON.stringify(definitionLoader.toJSON(), null, 2);
     const callback = () => {
