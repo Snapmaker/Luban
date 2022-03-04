@@ -834,7 +834,7 @@ class ToolPath {
     }
 
     translateType(e) {
-        const type = e === undefined || e < this.position.e ? TYPE_CODES.TRAVEL : this.position.type;
+        const type = (e === undefined || e < this.position.e || e <= 0) ? TYPE_CODES.TRAVEL : this.position.type;
         return type;
     }
 
