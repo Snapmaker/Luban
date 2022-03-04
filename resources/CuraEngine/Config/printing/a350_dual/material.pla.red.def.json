@@ -40,10 +40,10 @@
       "default_value": true
     },
     "retraction_speed": {
-      "default_value": 25
+      "default_value": 60
     },
     "retraction_amount": {
-      "default_value": 6.5
+      "default_value": 5
     },
     "retract_at_layer_change": {
       "default_value": false
