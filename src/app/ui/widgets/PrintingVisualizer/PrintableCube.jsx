@@ -1,11 +1,11 @@
 import {
-    Object3D, DoubleSide,
+    Object3D, FrontSide,
     PlaneGeometry, MeshBasicMaterial, Mesh,
     TextureLoader, LinearFilter
 } from 'three';
 import { DEFAULT_LUBAN_HOST } from '../../../constants';
 import Rectangle from '../../../three-extensions/objects/Rectangle';
-import Grid from '../../../three-extensions/objects/Grid';
+// import Grid from '../../../three-extensions/objects/Grid';
 // import RectangleHelper from '../../components/three-extensions/RectangleHelper';
 // import RectangleGridHelper from '../../components/three-extensions/RectangleGridHelper';
 
@@ -64,12 +64,12 @@ class PrintableCube extends Object3D {
         const geometry1 = new PlaneGeometry(x, front);
         const material1 = new MeshBasicMaterial({
             color: '#B9BCBF',
-            side: DoubleSide,
+            side: FrontSide,
             opacity: 0.5,
             transparent: true
         });
         const mesh1 = new Mesh(geometry1, material1);
-        mesh1.position.set(0, -y / 2 + front / 2, 0);
+        mesh1.position.set(0, -y / 2 + front / 2, -0.1);
         this.add(mesh1);
         this.stopAreaObjects.push(mesh1);
 
@@ -77,12 +77,12 @@ class PrintableCube extends Object3D {
         const geometry2 = new PlaneGeometry(x, back);
         const material2 = new MeshBasicMaterial({
             color: '#B9BCBF',
-            side: DoubleSide,
+            side: FrontSide,
             opacity: 0.5,
             transparent: true
         });
         const mesh2 = new Mesh(geometry2, material2);
-        mesh2.position.set(0, y / 2 - back / 2, 0);
+        mesh2.position.set(0, y / 2 - back / 2, -0.1);
         this.add(mesh2);
         this.stopAreaObjects.push(mesh2);
 
@@ -90,12 +90,12 @@ class PrintableCube extends Object3D {
         const geometry3 = new PlaneGeometry(left, y - back - front);
         const material3 = new MeshBasicMaterial({
             color: '#B9BCBF',
-            side: DoubleSide,
+            side: FrontSide,
             opacity: 0.5,
             transparent: true
         });
         const mesh3 = new Mesh(geometry3, material3);
-        mesh3.position.set(-x / 2 + left / 2, (front - back) / 2, 0);
+        mesh3.position.set(-x / 2 + left / 2, (front - back) / 2, -0.1);
         this.add(mesh3);
         this.stopAreaObjects.push(mesh3);
 
@@ -103,21 +103,43 @@ class PrintableCube extends Object3D {
         const geometry4 = new PlaneGeometry(right, y - back - front);
         const material4 = new MeshBasicMaterial({
             color: '#B9BCBF',
-            side: DoubleSide,
+            side: FrontSide,
             opacity: 0.5,
             transparent: true
         });
         const mesh4 = new Mesh(geometry4, material4);
-        mesh4.position.set(x / 2 - right / 2, (front - back) / 2, 0);
+        mesh4.position.set(x / 2 - right / 2, (front - back) / 2, -0.1);
         this.add(mesh4);
         this.stopAreaObjects.push(mesh4);
     }
 
     _setup() {
         // Faces
-        const bottom = Grid.createGrid(this.size.x, this.size.y, 10, '#D5D6D9');
-        bottom.position.set(0, 0, 0);
-        this.add(bottom);
+        // const bottom = Grid.createGrid(this.size.x, this.size.y, 10, '#D5D6D9');
+        // bottom.position.set(0, 0, 0);
+        // this.add(bottom);
+        for (let x = -this.size.x / 2 + 10; x < this.size.x / 2; x += 10) {
+            const g = new PlaneGeometry(0.5, this.size.y);
+            const m = new MeshBasicMaterial({
+                side: FrontSide,
+                color: '#D5D6D9',
+                transparent: true
+            });
+            const b = new Mesh(g, m);
+            b.position.set(x, 0, 0);
+            this.add(b);
+        }
+        for (let y = -this.size.y / 2 + 10; y < this.size.y / 2; y += 10) {
+            const g = new PlaneGeometry(this.size.x, 0.5);
+            const m = new MeshBasicMaterial({
+                side: FrontSide,
+                color: '#D5D6D9',
+                transparent: true
+            });
+            const b = new Mesh(g, m);
+            b.position.set(0, y, 0);
+            this.add(b);
+        }
 
         const top = Rectangle.createRectangle(this.size.x, this.size.y, '#85888C');
         top.position.set(0, 0, this.size.z);
@@ -143,12 +165,12 @@ class PrintableCube extends Object3D {
         texture.minFilter = LinearFilter;
         const material = new MeshBasicMaterial({
             map: texture,
-            side: DoubleSide,
+            side: FrontSide,
             opacity: 0.75,
             transparent: true
         });
         const mesh = new Mesh(geometry, material);
-        mesh.position.set(0, -this.size.y / 4, 0.2);
+        mesh.position.set(0, -this.size.y / 4, 0.01);
         this.add(mesh);
     }
 }
