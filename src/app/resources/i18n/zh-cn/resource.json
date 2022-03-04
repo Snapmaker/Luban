@@ -862,6 +862,7 @@
     "key-Printing/PrintingConfigurations-Extruder L": "左挤出机",
     "key-Printing/PrintingConfigurations-Extruder R": "右挤出机",
     "key-Printing/PrintingConfigurations-General Parameters": "常用参数",
+    "key-Printing/PrintingConfigurations-Material Settings": "材料设置",
     "key-Printing/PrintingConfigurations-Printing Settings": "打印设置",
     "key-Printing/PrintingManager_rename_error_prompt": "重命名失败，名称已存在。",
     "key-Printing/ProfileManager-Close": "关闭",

@@ -862,6 +862,7 @@
     "key-Printing/PrintingConfigurations-Extruder L": "Extruder L",
     "key-Printing/PrintingConfigurations-Extruder R": "Extruder R",
     "key-Printing/PrintingConfigurations-General Parameters": "Allgemeine Parameter",
+    "key-Printing/PrintingConfigurations-Material Settings": "Material-Einstellungen",
     "key-Printing/PrintingConfigurations-Printing Settings": "Druckeinstellungen",
     "key-Printing/PrintingManager_rename_error_prompt": "Umbenennung fehlgeschlagen. Der Name existiert bereits.",
     "key-Printing/ProfileManager-Close": "Schließen",

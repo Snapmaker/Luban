@@ -862,6 +862,7 @@
     "key-Printing/PrintingConfigurations-Extruder L": "Extruder L",
     "key-Printing/PrintingConfigurations-Extruder R": "Extruder R",
     "key-Printing/PrintingConfigurations-General Parameters": "일반 파라미터",
+    "key-Printing/PrintingConfigurations-Material Settings": "재료 설정",
     "key-Printing/PrintingConfigurations-Printing Settings": "인쇄 설정",
     "key-Printing/PrintingManager_rename_error_prompt": "이름을 변경하지 못했습니다. 이름이 이미 존재합니다.",
     "key-Printing/ProfileManager-Close": "닫기",
