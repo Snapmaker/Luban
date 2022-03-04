@@ -1082,7 +1082,7 @@
     "key-Workspace/GcodeInspect-mm": "毫米",
     "key-Workspace/Laser-high_power_tips": "开启激光后，激光功率将设为最小值。",
     "key-Workspace/LaserStartJob-10w_3axis_start_job_auto_mode": "自动模式",
-    "key-Workspace/LaserStartJob-10w_3axis_start_job_prompt": "自动模式下，机器将依据输入的材料厚度完成自动对焦，并开始作业。<1></1>非自动模式下，机器将使用现有原点开始作业。请确保在开始前已设定工作原点。<3></3>安全提示：使用前，请确保机器已安装外罩，操作者和旁观者均已佩戴激光护目镜。",
+    "key-Workspace/LaserStartJob-10w_3axis_start_job_prompt": "自动模式下，机器将测量材料厚度并自动对焦，随后开始作业。<1></1>非自动模式下，机器将依据输入的材料厚度完成对焦，随后开始作业。<3></3>安全提示：使用前，请确保机器已安装外罩，操作者和旁观者均已佩戴激光护目镜。",
     "key-Workspace/LaserStartJob-3axis_start_job_auto_mode": "自动模式",
     "key-Workspace/LaserStartJob-3axis_start_job_material_thickness": "材料厚度",
     "key-Workspace/LaserStartJob-3axis_start_job_prompt": "自动模式下，机器将依据输入的材料厚度完成自动对焦，并开始作业。<1></1>非自动模式下，机器将使用现有原点开始作业。请确保在开始前已设定工作原点。<3></3>安全提示：使用前，请确保机器已安装外罩，操作者和旁观者均已佩戴激光护目镜。",
