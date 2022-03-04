@@ -176,6 +176,7 @@ i18n._('Parameters');
 i18n._('key-printing/material_settings-Temperature');
 i18n._('key-printing/material_settings-Extrusion');
 i18n._('key-Printing/LeftBar-Extruder Both');
+i18n._('key-Printing/PrintingConfigurations-Material Settings');
 
 // Profile Default name and category
 i18n._('key-default_name-Carving V-bit');

@@ -1363,10 +1363,38 @@ export const actions = {
             return;
         }
         // update extruder definitions
+        const hasPrimeTower = (printingToolhead === DUAL_EXTRUDER_TOOLHEAD_FOR_SM2 && activeDefinition.settings.prime_tower_enable.default_value);
+        let primeTowerXDefinition = 0;
+        let primeTowerYDefinition = 0;
+        if (hasPrimeTower) {
+            const modelGroupBBox = modelGroup._bbox;
+            const primeTowerModel = lodashFind(modelGroup.getModels(), { type: 'primeTower' });
+            const primeTowerWidth = primeTowerModel.boundingBox.max.x - primeTowerModel.boundingBox.min.x;
+            const primeTowerPositionX = modelGroupBBox.max.x - (primeTowerModel.boundingBox.max.x + primeTowerModel.boundingBox.min.x + primeTowerWidth) / 2;
+            const primeTowerPositionY = modelGroupBBox.max.y - (primeTowerModel.boundingBox.max.y + primeTowerModel.boundingBox.min.y - primeTowerWidth) / 2;
+            primeTowerXDefinition = size.x - primeTowerPositionX - left;
+            primeTowerYDefinition = size.y - primeTowerPositionY - front;
+            activeDefinition.settings.prime_tower_position_x.default_value = primeTowerXDefinition;
+            activeDefinition.settings.prime_tower_position_y.default_value = primeTowerYDefinition;
+            activeDefinition.settings.prime_tower_size.default_value = primeTowerWidth;
+            activeDefinition.settings.prime_tower_wipe_enabled.default_value = true;
+        }
         const indexL = materialDefinitions.findIndex(d => d.definitionId === defaultMaterialId);
         const indexR = materialDefinitions.findIndex(d => d.definitionId === defaultMaterialIdRight);
-        const newExtruderLDefinition = definitionManager.finalizeExtruderDefinition(extruderLDefinition, materialDefinitions[indexL]);
-        const newExtruderRDefinition = definitionManager.finalizeExtruderDefinition(extruderRDefinition, materialDefinitions[indexR]);
+        const newExtruderLDefinition = definitionManager.finalizeExtruderDefinition({
+            extruderDefinition: extruderLDefinition,
+            materialDefinition: materialDefinitions[indexL],
+            hasPrimeTower,
+            primeTowerXDefinition,
+            primeTowerYDefinition
+        });
+        const newExtruderRDefinition = definitionManager.finalizeExtruderDefinition({
+            extruderDefinition: extruderRDefinition,
+            materialDefinition: materialDefinitions[indexR],
+            hasPrimeTower,
+            primeTowerXDefinition,
+            primeTowerYDefinition
+        });
         dispatch(actions.updateState({
             extruderLDefinition: newExtruderLDefinition,
             extruderRDefinition: newExtruderRDefinition
@@ -1404,20 +1432,8 @@ export const actions = {
         const { model, support, definition, originalName } = await dispatch(actions.prepareModel());
         const currentModelName = path.basename(models[0]?.modelName, path.extname(models[0]?.modelName));
         const renderGcodeFileName = `${currentModelName}_${new Date().getTime()}`;
-        const hasPrimeTower = (printingToolhead === DUAL_EXTRUDER_TOOLHEAD_FOR_SM2 && activeDefinition.settings.prime_tower_enable.default_value);
         // Prepare definition file
         await dispatch(actions.updateActiveDefinitionMachineSize(size));
-        if (hasPrimeTower) {
-            const modelGroupBBox = modelGroup._bbox;
-            const primeTowerModel = lodashFind(modelGroup.getModels(), { type: 'primeTower' });
-            const primeTowerWidth = primeTowerModel.boundingBox.max.x - primeTowerModel.boundingBox.min.x;
-            const primeTowerPositionX = modelGroupBBox.max.x - (primeTowerModel.boundingBox.max.x + primeTowerModel.boundingBox.min.x + primeTowerWidth) / 2;
-            const primeTowerPositionY = modelGroupBBox.max.y - (primeTowerModel.boundingBox.max.y + primeTowerModel.boundingBox.min.y - primeTowerWidth) / 2;
-            activeDefinition.settings.prime_tower_position_x.default_value = size.x - primeTowerPositionX - left;
-            activeDefinition.settings.prime_tower_position_y.default_value = size.y - primeTowerPositionY - front;
-            activeDefinition.settings.prime_tower_size.default_value = primeTowerWidth;
-            activeDefinition.settings.prime_tower_wipe_enabled.default_value = true;
-        }
         const finalDefinition = definitionManager.finalizeActiveDefinition(activeDefinition, true);
         const adhesionExtruder = helpersExtruderConfig.adhesion;
         const supportExtruder = helpersExtruderConfig.support;
@@ -2013,7 +2029,11 @@ export const actions = {
                     });
 
                     // record for undo|redo
+                    dispatch(actions.onModelAfterTransform());
                     modelGroup.getModels().forEach((model) => {
+                        if (model instanceof PrimeTowerModel) {
+                            return;
+                        }
                         operation = new ArrangeOperation3D({
                             target: model,
                             from: froms[model.modelID],
@@ -2030,7 +2050,6 @@ export const actions = {
                         stage: STEP_STAGE.PRINTING_ARRANGING_MODELS,
                         progress: progressStatesManager.updateProgress(STEP_STAGE.PRINTING_ARRANGING_MODELS, 1)
                     }));
-                    dispatch(actions.onModelAfterTransform());
                     progressStatesManager.finishProgress(true);
                     if (!allArranged) {
                         dispatch(appGlobalActions.updateShowArrangeModelsError({

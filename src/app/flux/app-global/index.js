@@ -1,10 +1,13 @@
 const ACTION_UPDATE_STATE = 'app-global/ACTION_UPDATE_STATE';
+const DEFAULT_MODAL_ZINDEX = 9999;
 const DEFAULT_STATE = {
     showSavedModal: false,
     savedModalType: '', // 'web', 'electron'
     savedModalFilePath: '',
+    savedModalZIndex: DEFAULT_MODAL_ZINDEX,
 
-    showArrangeModelsError: false
+    showArrangeModelsError: false,
+    arrangeModelZIndex: DEFAULT_MODAL_ZINDEX
 };
 const SHOW_MODAL_TIME = 15000;
 let clearSavedModalTimer = null;
@@ -20,11 +23,13 @@ export const actions = {
 
     // TODO: need to add an close function
     // options: { showSavedModal, savedModalType, savedModalFilePath }
-    updateSavedModal: (options) => (dispatch) => {
+    updateSavedModal: (options) => (dispatch, getState) => {
         const newState = {
             showSavedModal: options.showSavedModal,
             savedModalType: options.savedModalType,
-            savedModalFilePath: options.savedModalFilePath
+            savedModalFilePath: options.savedModalFilePath,
+            savedModalZIndex: DEFAULT_MODAL_ZINDEX,
+            arrangeModelZIndex: getState().appGlobal.arrangeModelZIndex - 1
         };
         if (options.showSavedModal) {
             clearTimeout(clearSavedModalTimer);
@@ -39,9 +44,11 @@ export const actions = {
         dispatch(actions.updateState(newState));
     },
 
-    updateShowArrangeModelsError: (options) => (dispatch) => {
+    updateShowArrangeModelsError: (options) => (dispatch, getState) => {
         const newState = {
-            showArrangeModelsError: options.showArrangeModelsError
+            showArrangeModelsError: options.showArrangeModelsError,
+            arrangeModelZIndex: DEFAULT_MODAL_ZINDEX,
+            savedModalZIndex: getState().appGlobal.savedModalZIndex - 1
         };
         if (options.showArrangeModelsError) {
             clearTimeout(clearArrangeModelsModalTimer);

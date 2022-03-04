@@ -65,15 +65,15 @@ export const STAGES_3DP = {
 // !important: keys in PRINTING_QUALITY_CONFIG_KEYS, PRINTING_QUALITY_CONFIG_GROUP should change togethor
 
 export const WHITE_COLOR = '#ffffff';
-export const BLACK_COLOR = '#000000';
+export const BLACK_COLOR = '#464646';
 
 export const KEY_DEFAULT_CATEGORY_CUSTOM = 'key-default_category-Custom';
 export const KEY_DEFAULT_CATEGORY_DEFAULT = 'key-default_category-Default';
 
 export const PRINTING_MATERIAL_CONFIG_COLORS = [
-    ['#ffffff', '#000000'],
-    ['#B30006', '#b36100', '#d4cc00', '#35a000', '#00685a', '#006a99', '#003c7c', '#4c2868', '#b3196f', '#464646'],
-    ['#ff0008', '#ff8b00', '#fff500', '#7bf93c', '#00bea6', '#0092d3', '#0053aa', '#753fa0', '#f9239b', '#7f7f7f'],
+    [WHITE_COLOR, BLACK_COLOR],
+    ['#E70008', '#b36100', '#d4cc00', '#35a000', '#00685a', '#006a99', '#003c7c', '#4c2868', '#b3196f', '#767676'],
+    ['#ff5257', '#ff8b00', '#fff500', '#7bf93c', '#00bea6', '#0092d3', '#0053aa', '#753fa0', '#f9239b', '#a6a6a6'],
     ['#ffd2d3', '#ffca8a', '#fbfb74', '#baff79', '#68d7c9', '#71cdec', '#7eadd8', '#bba4d3', '#ef9fd0', '#cccccc']
 ];
 
@@ -196,6 +196,8 @@ export const PRINTING_QUALITY_CONFIG_KEYS_DUAL = [
     'switch_extruder_retraction_amount',
     'switch_extruder_retraction_speeds'
 ];
+export const MACHINE_EXTRUDER_X = ['machine_extruder_start_pos_x', 'machine_extruder_end_pos_x'];
+export const MACHINE_EXTRUDER_Y = ['machine_extruder_start_pos_y', 'machine_extruder_end_pos_y'];
 export const PRINTING_MATERIAL_CONFIG_GROUP_SINGLE = [
     {
         name: 'Color',

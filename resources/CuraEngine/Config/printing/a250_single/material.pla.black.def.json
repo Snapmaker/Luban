@@ -7,7 +7,7 @@
     "i18nCategory": "key-default_category-PLA",
     "overrides": {
         "color": {
-            "default_value": "#000000"
+            "default_value": "#464646"
         },
         "material_flow": {
             "default_value": 100

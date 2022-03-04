@@ -434,7 +434,7 @@ function WifiConnection() {
                     </div>
                 </div>
             )}
-            {isConnected && (
+            {isConnected && series && (
                 <div className="margin-bottom-16 margin-top-12">
                     <div
                         className={classNames(styles['connection-state'], 'padding-bottom-8', 'border-bottom-dashed-default')}

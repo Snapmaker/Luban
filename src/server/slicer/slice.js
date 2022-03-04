@@ -86,7 +86,7 @@ function processGcodeHeaderAfterCuraEngine(gcodeFilePath, boundingBox, thumbnail
         + `;thumbnail: ${thumbnail}\n`
         + `;file_total_lines: ${readFileSync.split('\n').length + 20}\n`
         + `;estimated_time(s): ${printTime}\n`
-        + `;nozzle_0_temperature(°C): ${extruderL.settings.material_print_temperature_layer_0.default_value}\n`
+        + `;nozzle_temperature(°C): ${extruderL.settings.material_print_temperature_layer_0.default_value}\n`
         + `;nozzle_1_temperature(°C): ${isTwoExtruder === 2 ? extruderR?.settings?.material_print_temperature_layer_0?.default_value : 'null'}\n`
         + `;nozzle_0_diameter(mm): ${extruderL.settings.machine_nozzle_size.default_value}\n`
         + `;nozzle_1_diameter(mm): ${isTwoExtruder === 2 ? extruderR?.settings?.machine_nozzle_size?.default_value : 'null'}\n`

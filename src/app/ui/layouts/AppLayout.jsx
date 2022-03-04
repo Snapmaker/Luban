@@ -86,8 +86,10 @@ class AppLayout extends PureComponent {
         showSavedModal: PropTypes.bool.isRequired,
         savedModalType: PropTypes.string.isRequired,
         savedModalFilePath: PropTypes.string.isRequired,
+        savedModalZIndex: PropTypes.number.isRequired,
         updateSavedModal: PropTypes.func.isRequired,
         showArrangeModelsError: PropTypes.bool.isRequired,
+        arrangeModelZIndex: PropTypes.number.isRequired,
         updateShowArrangeModelsError: PropTypes.func.isRequired
     };
 
@@ -288,7 +290,7 @@ class AppLayout extends PureComponent {
                         className={classNames('border-default-black-5', 'border-radius-4', 'box-shadow-module', 'position-ab',
                             'background-color-white', 'padding-horizontal-10', 'padding-vertical-10', 'bottom-0', 'margin-bottom-16')}
                         style={{
-                            zIndex: 9999, // TODO?
+                            zIndex: this.props.savedModalZIndex,
                             left: '50%',
                             transform: 'translateX(-50%)',
                             maxWidth: '360px'
@@ -328,7 +330,10 @@ class AppLayout extends PureComponent {
                     <div
                         className={classNames('border-default-black-5', 'border-radius-4', 'box-shadow-module', 'position-ab',
                             'background-color-white', 'padding-horizontal-16', 'padding-vertical-16', 'bottom-0', 'margin-bottom-16',
-                            'left-50-percent', 'max-width-360', 'z-index-top-modal')}
+                            'left-50-percent', 'max-width-360')}
+                        style={{
+                            zIndex: this.props.savedModalZIndex
+                        }}
                     >
                         <div className="sm-flex justify-space-between">
                             <div className="sm-flex-auto font-roboto font-weight-normal font-size-middle">
@@ -385,7 +390,10 @@ class AppLayout extends PureComponent {
                 <div
                     className={classNames('border-default-black-5', 'border-radius-4', 'box-shadow-module', 'position-ab',
                         'background-color-white', 'padding-horizontal-16', 'padding-vertical-16', 'bottom-0', 'margin-bottom-16',
-                        'left-50-percent', 'max-width-360', 'z-index-top-modal')}
+                        'left-50-percent', 'max-width-360')}
+                    style={{
+                        zIndex: this.props.arrangeModelZIndex
+                    }}
                 >
                     <div className="sm-flex justify-space-between">
                         <div className="sm-flex-auto font-roboto font-weight-normal font-size-middle">
@@ -871,8 +879,8 @@ const mapStateToProps = (state) => {
     const { currentModalPath } = state.appbarMenu;
     const { shouldCheckForUpdate } = machineInfo;
     const { modelGroup } = state.printing;
-    const { showSavedModal, savedModalType, savedModalFilePath,
-        showArrangeModelsError
+    const { showSavedModal, savedModalType, savedModalFilePath, savedModalZIndex,
+        showArrangeModelsError, arrangeModelZIndex
     } = state.appGlobal;
     // const projectState = state.project;
     return {
@@ -884,7 +892,9 @@ const mapStateToProps = (state) => {
         showSavedModal,
         savedModalType,
         savedModalFilePath,
-        showArrangeModelsError
+        savedModalZIndex,
+        showArrangeModelsError,
+        arrangeModelZIndex
     };
 };
 
