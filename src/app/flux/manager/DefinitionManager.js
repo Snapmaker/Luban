@@ -396,7 +396,7 @@ class DefinitionManager {
         const machineHeatedBed = settings.machine_heated_bed.default_value;
         const printTemp = settings.material_print_temperature.default_value;
         const printTempLayer0 = settings.material_print_temperature_layer_0.default_value || printTemp;
-        const bedTempLayer0 = settings.material_bed_temperature_layer_0.default_value;
+        const bedTempLayer0 = settings.material_bed_temperature_layer_0.default_value || machineHeatedBed;
 
         /**
          * 1.set bed temperature and not wait to reach the target temperature
