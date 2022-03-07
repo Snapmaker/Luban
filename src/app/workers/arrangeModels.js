@@ -4,7 +4,6 @@ import sendMessage from './utils/sendMessage';
 import { nesting } from '../../shared/lib/nesting';
 
 const getModelFaces = (model) => { // TODO, move to util
-    const faces = [];
     const min = {
         x: Number.MAX_SAFE_INTEGER,
         y: Number.MAX_SAFE_INTEGER
@@ -18,6 +17,7 @@ const getModelFaces = (model) => { // TODO, move to util
         array,
         count
     } = model;
+    const faces = new Array(count / 3);
     for (let i = 0; i < count / 3; i++) {
         const v0 = (new THREE.Vector3(array[i * 9 + 0], array[i * 9 + 1], array[i * 9 + 2])).applyMatrix4(matrix);
         const v1 = (new THREE.Vector3(array[i * 9 + 3], array[i * 9 + 4], array[i * 9 + 5])).applyMatrix4(matrix);
@@ -26,11 +26,11 @@ const getModelFaces = (model) => { // TODO, move to util
         min.y = Math.min(min.y, v0.y, v1.y, v2.y);
         max.x = Math.max(max.x, v0.x, v1.x, v2.x);
         max.y = Math.max(max.y, v0.y, v1.y, v2.y);
-        faces.push([
+        faces[i] = [
             { x: v0.x, y: v0.y },
             { x: v1.x, y: v1.y },
             { x: v2.x, y: v2.y }
-        ]);
+        ];
     }
     return { faces, min, max };
 };
@@ -40,11 +40,13 @@ const arrangeModels = async (data) => {
         const {
             models = [],
             // modelsNotArranged = [],
-            validArea, angle, offset, padding
+            validArea, angle, offset, padding, memory
         } = data;
 
+        let memoryCount = 0;
         const stls = [];
         models.forEach((model) => {
+            sendMessage({ status: 'progress', value: { progress: (models.indexOf(model) / models.length / 2) } });
             let faces = [];
             let stlBoundingBox = {
                 min: {
@@ -66,6 +68,14 @@ const arrangeModels = async (data) => {
             });
             faces = new Array(length);
             model.children.forEach((child) => {
+                memoryCount += child.count * 8 * 8;
+                if (memoryCount > memory) {
+                    stls.forEach(stl => {
+                        stl.faces = [];
+                        stl = null;
+                    });
+                    throw new Error('MLE');
+                }
                 const { faces: modelFaces, min, max } = getModelFaces(child);
                 modelFaces.forEach((face) => {
                     faces[indexFaces] = face;
@@ -103,8 +113,14 @@ const arrangeModels = async (data) => {
         }, (progress) => {
             sendMessage({ status: 'progress', value: { progress } });
         });
+
+        stls.forEach(stl => {
+            stl.faces = [];
+            stl = null;
+        });
         sendMessage({ status: 'succeed', value: { parts } });
     } catch (err) {
+        console.log('err', err);
         sendMessage({ status: 'err', value: err });
     }
 };
