@@ -1,3 +1,5 @@
+import { isEqual } from '../utils';
+
 class GridProjection {
     data = [];
 
@@ -61,6 +63,20 @@ class GridProjection {
         return Math.min(Math.min(v1, v2), v3);
     }
 
+    getYByX(p1, p2, x) {
+        if (isEqual(p1.x, p2.x)) {
+            return null;
+        }
+        return (-(p2.x * p1.y - p1.x * p2.y) - (p2.y - p1.y) * x) / (p1.x - p2.x);
+    }
+
+    getXByY(p1, p2, y) {
+        if (isEqual(p1.x, p2.x)) {
+            return null;
+        }
+        return (-(p2.x * p1.y - p1.x * p2.y) - (p1.x - p2.x) * y) / (p2.y - p1.y);
+    }
+
     addTriangle(points) {
         points = points.map(v => {
             return {
@@ -70,19 +86,62 @@ class GridProjection {
         });
 
         const startX = Math.floor(this.getMin(points[0].x, points[1].x, points[2].x));
-        const endX = Math.ceil(this.getMax(points[0].x, points[1].x, points[2].x));
 
-        const startY = Math.floor(this.getMin(points[0].y, points[1].y, points[2].y));
-        const endY = Math.ceil(this.getMax(points[0].y, points[1].y, points[2].y));
+        const yRangeByX = [];
+
+        const setYRangeByX = (x, y) => {
+            const xs = [Math.floor(x) - startX, Math.ceil(x) - startX];
+            const fy = Math.floor(y);
+            const cy = Math.ceil(y);
+
+            for (const x1 of xs) {
+                if (yRangeByX[x1] === undefined) {
+                    yRangeByX[x1] = [fy, cy];
+                }
+                yRangeByX[x1][0] = Math.min(yRangeByX[x1][0], fy);
+                yRangeByX[x1][1] = Math.max(yRangeByX[x1][1], cy);
+            }
+        };
+
+        const setLineRangeWithPoint = (p1, p2) => {
+            const dx = Math.abs(p1.x - p2.x);
+            const dy = Math.abs(p1.y - p2.y);
+
+            if (dx > dy) {
+                const lStartX = Math.ceil(Math.min(p1.x, p2.x));
+                const lEndX = Math.floor(Math.max(p1.x, p2.x));
+
+                for (let i = lStartX; i <= lEndX; i++) {
+                    const y = this.getYByX(p1, p2, i);
+                    setYRangeByX(i, y);
+                }
+            } else {
+                const lStartY = Math.ceil(Math.min(p1.y, p2.y));
+                const lEndY = Math.floor(Math.max(p1.y, p2.y));
+
+                for (let j = lStartY; j < lEndY; j++) {
+                    const x = this.getXByY(p1, p2, j);
+                    setYRangeByX(x, j);
+                }
+            }
+        };
+
+        for (let i = 0; i < points.length; i++) {
+            const p1 = points[i];
+            const p2 = points[(i + 1) % points.length];
+            setYRangeByX(p1.x, p1.y);
+            setLineRangeWithPoint(p1, p2);
+        }
 
         const direction = [[0, 0], [0, 1], [-1, 0], [1, 0], [0, -1], [1, 1], [1, -1], [-1, 1], [-1, -1]];
 
-        for (let i = startX; i <= endX; i++) {
+        for (let i = 0; i < yRangeByX.length; i++) {
+            const x = i + startX;
+            const startY = yRangeByX[i][0];
+            const endY = yRangeByX[i][1];
             for (let j = startY; j <= endY; j++) {
-                if (this.isPointInPoints(i, j, points)) {
-                    for (let k = 0; k < direction.length; k++) {
-                        this.setData(i + direction[k][0], j + direction[k][1], 1);
-                    }
+                for (let k = 0; k < direction.length; k++) {
+                    this.setData(x + direction[k][0], j + direction[k][1], 1);
                 }
             }
         }
