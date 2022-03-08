@@ -742,7 +742,7 @@ function VisualizerLeftBar({ setTransformMode, supportActions, updateBoundingBox
                             marginTop: '112px'
                         }}
                     >
-                        <div className="sm-flex justify-space-between border-bottom-normal padding-vertical-10 padding-horizontal-16 height-40">
+                        <div className="sm-flex justify-space-between border-bottom-normal padding-vertical-10 padding-horizontal-16 height-40 font-size-middle">
                             {i18n._('key-Printing/LeftBar-Scale')}
                             <CancelButton
                                 onClick={() => setTransformMode('')}
@@ -870,7 +870,7 @@ function VisualizerLeftBar({ setTransformMode, supportActions, updateBoundingBox
                             marginTop: '112px'
                         }}
                     >
-                        <div className="sm-flex justify-space-between border-bottom-normal padding-vertical-10 padding-horizontal-16 height-40">
+                        <div className="sm-flex justify-space-between border-bottom-normal padding-vertical-10 padding-horizontal-16 height-40 font-size-middle">
                             {i18n._('key-Printing/LeftBar-Scale')}
                             <CancelButton
                                 onClick={() => setTransformMode('')}
@@ -956,7 +956,7 @@ function VisualizerLeftBar({ setTransformMode, supportActions, updateBoundingBox
                             marginTop: '164px'
                         }}
                     >
-                        <div className="sm-flex justify-space-between border-bottom-normal padding-vertical-10 padding-horizontal-16 height-40">
+                        <div className="sm-flex justify-space-between border-bottom-normal padding-vertical-10 padding-horizontal-16 height-40 font-size-middle">
                             {i18n._('key-Printing/LeftBar-Rotate')}
                             <CancelButton
                                 onClick={() => setTransformMode('')}
@@ -1055,7 +1055,7 @@ function VisualizerLeftBar({ setTransformMode, supportActions, updateBoundingBox
                             marginTop: '216px'
                         }}
                     >
-                        <div className="sm-flex justify-space-between border-bottom-normal padding-vertical-10 padding-horizontal-16 height-40">
+                        <div className="sm-flex justify-space-between border-bottom-normal padding-vertical-10 padding-horizontal-16 height-40 font-size-middle">
                             {i18n._('key-Printing/LeftBar-Mirror')}
                             <CancelButton
                                 onClick={() => setTransformMode('')}
@@ -1107,7 +1107,7 @@ function VisualizerLeftBar({ setTransformMode, supportActions, updateBoundingBox
                             marginTop: '320px'
                         }}
                     >
-                        <div className="border-bottom-normal padding-vertical-10 padding-horizontal-16 height-40 sm-flex justify-space-between">
+                        <div className="border-bottom-normal padding-vertical-10 padding-horizontal-16 height-40 sm-flex justify-space-between font-size-middle">
                             {i18n._('key-Printing/LeftBar-Extruder')}
                             <CancelButton
                                 onClick={() => setTransformMode('')}

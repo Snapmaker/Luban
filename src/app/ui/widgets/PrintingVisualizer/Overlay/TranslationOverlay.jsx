@@ -29,7 +29,7 @@ const TranslationOverlay = ({ actions, setTransformMode, transformDisabled, move
                 marginTop: '60px'
             }}
         >
-            <div className="sm-flex justify-space-between border-bottom-normal padding-vertical-10 padding-horizontal-16 height-40">
+            <div className="sm-flex justify-space-between border-bottom-normal padding-vertical-10 padding-horizontal-16 height-40 font-size-middle">
                 {i18n._('key-Printing/LeftBar-Move')}
                 <CancelButton
                     onClick={() => setTransformMode('')}
