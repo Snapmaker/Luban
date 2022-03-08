@@ -17,7 +17,8 @@ import {
     TorusBufferGeometry,
     MeshBasicMaterial,
     LineBasicMaterial,
-    Euler
+    // Euler,
+    Math as ThreeMath
 } from 'three';
 // import * as THREE from 'three';
 import { throttle } from 'lodash';
@@ -508,7 +509,6 @@ class TransformControls extends Object3D {
                 this.scalePeripheral.visible = (this.mode === 'scale' && child.visible);
                 this.mirrorPeripheral.visible = (this.mode === 'mirror' && child.visible && !this.isPrimeTower);
             });
-
             this.object.matrixWorld.decompose(objectPosition, objectQuaternion, objectScale);
             // parent
             this.object.parent.matrixWorld.decompose(this.parentPosition, this.parentQuaternion, this.parentScale);
@@ -887,10 +887,13 @@ class TransformControls extends Object3D {
                 const worldQuaternion = new Quaternion();
                 this.object.quaternion.copy(quaternion).multiply(this.quaternionStart).normalize();
                 this.object.getWorldQuaternion(worldQuaternion);
-                const rotation = new Euler().setFromQuaternion(worldQuaternion, undefined, false);
+                // const rotation = new Euler().setFromQuaternion(worldQuaternion, undefined, false);
                 throttle(() => {
                     window.dispatchEvent(updateRotateEvent({
-                        rotate: rotation
+                        rotate: {
+                            [this.axis.toLowerCase()]: ThreeMath.radToDeg(rotationAngle),
+                            rotateAxis: this.axis.toLowerCase()
+                        }
                     }));
                 }, 1000)();
                 break;
@@ -946,7 +949,16 @@ class TransformControls extends Object3D {
     onMouseUp() {
         this.updateBoundingBox();
         this.dragging = false;
-
+        if (this.mode === 'rotate') {
+            window.dispatchEvent(updateRotateEvent({
+                rotate: {
+                    x: null,
+                    y: null,
+                    z: null,
+                    rotateAxis: null
+                }
+            }));
+        }
         this.dispatchEvent(EVENTS.UPDATE);
     }
 

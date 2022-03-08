@@ -49,7 +49,9 @@ export const STEP_STAGE = {
     PRINTING_GENERATE_SUPPORT_FAILED: 39,
     PRINTING_ARRANGE_MODELS_SUCCESS: 40,
     PRINTING_ARRANGE_MODELS_FAILED: 41,
-    PRINTING_ARRANGING_MODELS: 42
+    PRINTING_ARRANGING_MODELS: 42,
+    PRINTING_AUTO_ROTATING_MODELS: 43,
+    PRINTING_AUTO_ROTATE_SUCCESSED: 44
 };
 
 export const PROCESS_STAGE = {
@@ -69,7 +71,8 @@ export const PROCESS_STAGE = {
     PRINTING_SLICE_AND_PREVIEW: 6,
     PRINTING_ROTATE_ANALYZE: 7,
     PRINTING_GENERATE_SUPPORT: 9,
-    PRINTING_ARRANGE_MODELS: 10
+    PRINTING_ARRANGE_MODELS: 10,
+    PRINTING_AUTO_ROTATE: 11
 };
 
 const _STATE = {
@@ -243,6 +246,16 @@ class ProgressStatesManager {
             [
                 {
                     stageID: STEP_STAGE.PRINTING_ARRANGING_MODELS,
+                    percent: 1
+                }
+            ],
+            'key-Progress/3DP-Arranging models...{{progress}}%',
+            'key-Progress/3DP-Arrange models successfully.',
+            'key-Progress/3DP-Arrange models failed.');
+        this.push(PROCESS_STAGE.PRINTING_AUTO_ROTATE,
+            [
+                {
+                    stageID: STEP_STAGE.PRINTING_AUTO_ROTATING_MODELS,
                     percent: 1
                 }
             ],

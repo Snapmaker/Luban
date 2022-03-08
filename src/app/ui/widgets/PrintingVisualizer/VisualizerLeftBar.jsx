@@ -257,7 +257,8 @@ function VisualizerLeftBar({ setTransformMode, supportActions, updateBoundingBox
                                         onClick={() => {
                                             setTransformMode('rotate');
                                         }}
-                                        disabled={!!(transformDisabled || isPrimeTowerSelected)}
+                                        // disabled={!!(transformDisabled || isPrimeTowerSelected)}
+                                        disabled={!hasModels}
                                     />
                                 </li>
                                 <li
@@ -339,12 +340,14 @@ function VisualizerLeftBar({ setTransformMode, supportActions, updateBoundingBox
                     />
                 )}
                 {showRotationAnalyzeModal && <RotationAnalysisOverlay onClose={() => { setShowRotationAnalyzeModal(false); }} />}
-                {!transformDisabled && transformMode === 'rotate' && !isPrimeTowerSelected && (
+                {hasModels && transformMode === 'rotate' && !isPrimeTowerSelected && (
                     <RotateOverlay
                         setTransformMode={setTransformMode}
                         onModelAfterTransform={actions.onModelAfterTransform}
                         rotateWithAnalysis={actions.rotateWithAnalysis}
                         autoRotateSelectedModel={autoRotateSelectedModel}
+                        modelGroup={modelGroup}
+                        hasModels={hasModels}
                     />
                 )}
 
@@ -368,7 +371,8 @@ VisualizerLeftBar.propTypes = {
     supportActions: PropTypes.object,
     autoRotateSelectedModel: PropTypes.func.isRequired,
     setTransformMode: PropTypes.func.isRequired,
-    updateBoundingBox: PropTypes.func.isRequired
+    updateBoundingBox: PropTypes.func.isRequired,
+    arrangeAllModels: PropTypes.func.isRequired,
 };
 
 export default React.memo(VisualizerLeftBar);

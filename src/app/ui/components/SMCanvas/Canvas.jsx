@@ -23,7 +23,8 @@ const DEFAULT_MODEL_POSITION = new Vector3(0, 0, 0);
 const EPS = 0.000001;
 const FPS = 60;
 const renderT = 1 / FPS;
-
+let parentDOM = null;
+let inputDOM = null;
 class Canvas extends PureComponent {
     node = React.createRef();
 
@@ -103,6 +104,12 @@ class Canvas extends PureComponent {
         this.scene = null;
         this.group = null;
         this.light = null;
+        this.rotateFontLeftTop = new Vector3();
+        this.rotateFontRightTop = new Vector3();
+        this.canvasWidthHalf = null;
+        this.canvasHeightHalf = null;
+        this.inputPositionTop = 0;
+        this.inputPositionLeft = 0;
     }
 
     componentDidMount() {
@@ -594,9 +601,28 @@ class Canvas extends PureComponent {
             if (this.transformSourceType === '2D') {
                 this.light.position.copy(this.camera.position);
             }
-
+            if (this.controls.transformControl.mode === 'rotate') {
+                // this.controls.transformControl
+                this.controls.transformControl.allSelectedPeripherals[4].updateMatrixWorld();
+                this.controls.transformControl.allSelectedPeripherals[5].updateMatrixWorld();
+                this.rotateFontLeftTop.setFromMatrixPosition(this.controls.transformControl.allSelectedPeripherals[4].matrixWorld);
+                this.rotateFontRightTop.setFromMatrixPosition(this.controls.transformControl.allSelectedPeripherals[5].matrixWorld);
+                this.rotateFontLeftTop.project(this.camera);
+                this.rotateFontRightTop.project(this.camera);
+                inputDOM = document.getElementById('rotate-input-control');
+                parentDOM = document.getElementById('smcanvas');
+                this.canvasWidthHalf = parentDOM.clientWidth * 0.5;
+                this.canvasHeightHalf = parentDOM.clientHeight * 0.5;
+                this.inputPositionLeft = `${(this.rotateFontLeftTop.x + this.rotateFontRightTop.x) * this.canvasWidthHalf / 2 + this.canvasWidthHalf - 48}px`;
+                this.inputPositionTop = `${-(this.rotateFontLeftTop.y * this.canvasHeightHalf) + this.canvasHeightHalf - 40}px`;
+                inputDOM.style.top = this.inputPositionTop;
+                inputDOM.style.left = this.inputPositionLeft;
+                this.controls.transformControl.dragging && (inputDOM.style.display = 'block');
+            }
+            if (this.controls.transformControl.mode !== 'rotate' || !this.modelGroup.selectedModelArray.length) {
+                inputDOM && (inputDOM.style.display = 'none');
+            }
             this.renderer.render(this.scene, this.camera);
-
             TWEEN.update();
         }, renderT)();
     }
@@ -607,6 +633,7 @@ class Canvas extends PureComponent {
         }
         return (
             <div
+                id="smcanvas"
                 ref={this.node}
                 style={{
                     backgroundColor: '#F5F5F7'
