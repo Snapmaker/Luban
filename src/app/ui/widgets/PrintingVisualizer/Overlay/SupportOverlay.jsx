@@ -71,14 +71,11 @@ const SupportOverlay = ({ editSupport, CancelButton, setTransformMode }) => {
                     marginTop: '268px'
                 }}
             >
-                <div className="sm-flex justify-space-between border-bottom-normal padding-vertical-10 padding-horizontal-16 height-40">
-                    {i18n._('key-Printing/LeftBar-Move')}
+                <div className="sm-flex justify-space-between border-bottom-normal padding-vertical-10 padding-horizontal-16 height-40 font-size-middle">
+                    {i18n._('key-Printing/LeftBar/Support-Support')}
                     <CancelButton
                         onClick={() => setTransformMode('')}
                     />
-                </div>
-                <div className="border-bottom-normal padding-vertical-10 padding-horizontal-16 height-40 font-size-middle">
-                    {i18n._('key-Printing/LeftBar/Support-Support')}
                 </div>
                 <div className="padding-bottom-16 padding-top-12 padding-horizontal-16">
                     <div className="sm-flex font-size-middle">{i18n._('key-Printing/LeftBar/Support-Auto Support')}</div>

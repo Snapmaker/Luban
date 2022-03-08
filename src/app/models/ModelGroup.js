@@ -256,7 +256,9 @@ class ModelGroup extends EventEmitter {
 
     removeModel(model, loop = false) {
         if (model.type === 'primeTower') return;
-        model.setSelected(false);
+        if (!(model instanceof SvgModel)) {
+            model.setSelected(false);
+        }
         if (model instanceof ThreeGroup) {
             model.children.forEach((child) => {
                 this.removeModel(child, true);
