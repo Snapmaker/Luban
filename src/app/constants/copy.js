@@ -240,6 +240,7 @@ i18n._('key-default_category-Pinewood');
 i18n._('key-default_category-Vegetable Tanned Leather');
 
 i18n._('key-default_category-Default');
+i18n._('key-default_category-Custom');
 i18n._('key-default_category-PLA');
 i18n._('key-default_category-PETG');
 i18n._('key-default_category-ABS');
