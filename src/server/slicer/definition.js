@@ -201,10 +201,16 @@ export class DefinitionLoader {
         }
         if (json.category) {
             this.category = json.category;
+        } else {
+            this.category = 'Custom';
         }
         if (json.i18nCategory) {
             this.i18nCategory = json.i18nCategory;
+        } else {
+            this.i18nCategory = 'key-default_category-Custom';
         }
+        console.log('this.category', definitionId, json.category, this.category, json.i18nCategory, this.i18nCategory);
+
 
         // settings
         if (json.settings) {
@@ -279,8 +285,17 @@ export class DefinitionLoader {
     fromObject(object) {
         this.definitionId = object.definitionId;
         this.name = object.name;
-        this.category = object.category;
-        this.i18nCategory = object.i18nCategory;
+        if (object.category) {
+            this.category = object.category;
+        } else {
+            this.category = 'Custom';
+        }
+        console.log('fromObject', this.category, object.category);
+        if (object.i18nCategory) {
+            this.i18nCategory = object.i18nCategory;
+        } else {
+            this.i18nCategory = 'key-default_category-Custom';
+        }
         this.inherits = object.inherits;
         this.ownKeys = new Set(object.ownKeys);
         this.settings = object.settings;

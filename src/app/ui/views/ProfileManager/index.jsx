@@ -199,11 +199,13 @@ function ProfileManager({
                 actions.setRenamingStatus(false);
             }
             const activeToolCategory = currentDefinitions.current.find(d => {
-                if (i18nCategory === KEY_DEFAULT_CATEGORY_CUSTOM) {
-                    return d.category === '';
-                } else {
-                    return d.category === category;
-                }
+                // TODO ???
+                console.log('i18nCategory', i18nCategory);
+                // if (i18nCategory === KEY_DEFAULT_CATEGORY_CUSTOM) {
+                //     return d.category === '';
+                // } else {
+                return d.category === category;
+                // }
             });
             const selectedSettingDefaultValue = outsideActions.getDefaultDefinition(activeToolCategory.definitionId);
             setDefinitionState({

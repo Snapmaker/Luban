@@ -1,14 +1,13 @@
 import React from 'react';
-import { isNil } from 'lodash';
 import { MaterialWithColor } from '../widgets/PrintingMaterial/MaterialWithColor';
 import i18n from '../../lib/i18n';
-import { KEY_DEFAULT_CATEGORY_CUSTOM } from '../../constants';
 
 function getSelectOptions(printingDefinitions) {
     const toolDefinitionOptionsObj = {};
     const toolDefinitionOptions = [];
     printingDefinitions.forEach(tool => {
-        let category = tool.category;
+        console.log('tool.category', tool.category, tool.definitionId);
+        const category = i18n._(tool.category);
         const definitionId = tool.definitionId;
         if (Object.keys(tool?.settings).length > 0) {
             const checkboxAndSelectGroup = {};
@@ -20,9 +19,6 @@ function getSelectOptions(printingDefinitions) {
             if (toolDefinitionOptionsObj[category]) {
                 toolDefinitionOptionsObj[category].options.push(checkboxAndSelectGroup);
             } else {
-                if (category === '' || isNil(category)) {
-                    category = i18n._(KEY_DEFAULT_CATEGORY_CUSTOM);
-                }
                 const groupOptions = {
                     label: category,
                     definitionId: definitionId,

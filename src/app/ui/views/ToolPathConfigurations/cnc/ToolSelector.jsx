@@ -5,7 +5,6 @@ import classNames from 'classnames';
 import Select from '../../../components/Select';
 import i18n from '../../../../lib/i18n';
 import styles from '../styles.styl';
-// import { actions as cncActions } from '../../../../flux/cnc';
 import CncToolManager from '../../CncToolManager';
 import SvgIcon from '../../../components/SvgIcon';
 
@@ -52,7 +51,7 @@ function ToolSelector({ toolDefinitions, setCurrentToolDefinition, setCurrentVal
     }
 
     toolDefinitions.forEach(tool => {
-        const category = tool.category;
+        const category = i18n._(tool.category);
         const definitionId = tool.definitionId;
         if (Object.keys(tool?.settings).length > 0) {
             const checkboxAndSelectGroup = {};

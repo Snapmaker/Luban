@@ -5,7 +5,6 @@ import classNames from 'classnames';
 import Select from '../../../components/Select';
 import i18n from '../../../../lib/i18n';
 import styles from '../styles.styl';
-// import { actions as cncActions } from '../../../../flux/cnc';
 import LaserPresentManager from '../../LaserPresentManager';
 import SvgIcon from '../../../components/SvgIcon';
 
@@ -52,18 +51,14 @@ function PresentSelector({ toolDefinitions, setCurrentToolDefinition, setCurrent
     }
 
     toolDefinitions.forEach(tool => {
-        const category = tool.category;
+        const category = i18n._(tool.category);
         const definitionId = tool.definitionId;
+        console.log('laser', tool.category, category, definitionId);
 
         if (Object.keys(tool?.settings).length > 0) {
             const checkboxAndSelectGroup = {};
             const name = tool.name;
             const detailName = '';
-            // if (tool.settings.angle.default_value !== '180') {
-            //     detailName = `${tool.name} (${tool.settings.angle.default_value}${tool.settings.angle.unit} ${tool.settings.shaft_diameter.default_value}${tool.settings.shaft_diameter.unit})`;
-            // } else {
-            //     detailName = `${tool.name} (${tool.settings.shaft_diameter.default_value}${tool.settings.shaft_diameter.unit})`;
-            // }
             checkboxAndSelectGroup.name = name;
             checkboxAndSelectGroup.definitionId = definitionId;
             checkboxAndSelectGroup.label = `${detailName}`;

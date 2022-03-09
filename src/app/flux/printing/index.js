@@ -21,8 +21,8 @@ import {
     DUAL_EXTRUDER_TOOLHEAD_FOR_SM2,
     DUAL_EXTRUDER_LIMIT_WIDTH_L,
     DUAL_EXTRUDER_LIMIT_WIDTH_R, BOTH_EXTRUDER_MAP_NUMBER,
-    KEY_DEFAULT_CATEGORY_CUSTOM,
-    KEY_DEFAULT_CATEGORY_DEFAULT,
+    // KEY_DEFAULT_CATEGORY_CUSTOM,
+    // KEY_DEFAULT_CATEGORY_DEFAULT,
     WHITE_COLOR,
     BLACK_COLOR
 } from '../../constants';
@@ -1012,19 +1012,7 @@ export const actions = {
                     const response = res.body;
                     const definitionId = `${type}.${timestamp()}`;
                     const definition = await definitionManager.uploadDefinition(definitionId, response.uploadName);
-
-                    // Compatible with profiles exported from older versions
-                    definition.category = (
-                        definition.i18nCategory
-                        && definition.i18nCategory !== KEY_DEFAULT_CATEGORY_CUSTOM
-                        && definition.i18nCategory !== KEY_DEFAULT_CATEGORY_DEFAULT
-                    ) ? definition.category : '';
-
-                    definition.i18nCategory = (
-                        definition.i18nCategory
-                        && definition.i18nCategory !== KEY_DEFAULT_CATEGORY_CUSTOM
-                        && definition.i18nCategory !== KEY_DEFAULT_CATEGORY_DEFAULT
-                    ) ? definition.i18nCategory : '';
+                    console.log('onUploadManagerDefinition', definition);
 
 
                     let name = definition.name;
