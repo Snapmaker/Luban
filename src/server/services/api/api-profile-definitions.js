@@ -24,6 +24,14 @@ export const getRawDefinition = (req, res) => {
     res.send({ filename: filename, definition: parse });
 };
 
+const isPublicProfile = (definitionId) => {
+    return [
+        DEFINITION_ACTIVE,
+        DEFINITION_ACTIVE_FINAL,
+        DEFINITION_SNAPMAKER_EXTRUDER_0, DEFINITION_SNAPMAKER_EXTRUDER_1
+    ].includes(definitionId);
+};
+
 export const getDefinition = (req, res) => {
     const { definitionId, headType } = req.params;
     const series = req.query.series;
@@ -36,8 +44,7 @@ export const getDefinition = (req, res) => {
 
     const definitionLoader = new DefinitionLoader();
 
-    if (definitionId === DEFINITION_ACTIVE || definitionId === DEFINITION_ACTIVE_FINAL
-        || definitionId === DEFINITION_SNAPMAKER_EXTRUDER_0 || definitionId === DEFINITION_SNAPMAKER_EXTRUDER_1) {
+    if (isPublicProfile(definitionId)) {
         definitionLoader.loadDefinition(headType, definitionId);
     } else {
         definitionLoader.loadDefinition(headType, definitionId, series);
@@ -82,7 +89,7 @@ export const createDefinition = async (req, res) => {
 
     const definitionLoader = new DefinitionLoader();
     definitionLoader.fromObject(definition);
-    const series = req.body.series ?? '';
+    const series = isPublicProfile(definitionLoader.definitionId) ? '' : (req.body.series ?? '');
 
     const filePath = path.join(`${DataStorage.configDir}/${headType}/${series}`, `${definitionLoader.definitionId}.def.json`);
     const backupPath = path.join(`${DataStorage.activeConfigDir}/${headType}/${series}`, `${definitionLoader.definitionId}.def.json`);
@@ -157,7 +164,7 @@ export const updateDefinition = async (req, res) => {
     const series = req.body.series;
 
     const definitionLoader = new DefinitionLoader();
-    if (definitionId === DEFINITION_SNAPMAKER_EXTRUDER_0 || definitionId === DEFINITION_SNAPMAKER_EXTRUDER_1 || definitionId === DEFINITION_ACTIVE || definitionId === DEFINITION_ACTIVE_FINAL) {
+    if (isPublicProfile(definitionId)) {
         definitionLoader.loadDefinition(headType, definitionId);
     } else {
         definitionLoader.loadDefinition(headType, definitionId, series);
@@ -189,7 +196,7 @@ export const updateDefinition = async (req, res) => {
 
     let filePath = '';
     let activeRecoverPath = '';
-    if (definitionId === DEFINITION_SNAPMAKER_EXTRUDER_0 || definitionId === DEFINITION_SNAPMAKER_EXTRUDER_1 || definitionId === DEFINITION_ACTIVE || definitionId === DEFINITION_ACTIVE_FINAL) {
+    if (isPublicProfile(definitionId)) {
         filePath = path.join(`${DataStorage.configDir}/${headType}`, `${definitionId}.def.json`);
         activeRecoverPath = path.join(`${DataStorage.activeConfigDir}/${headType}`, `${definitionId}.def.json`);
     } else {
