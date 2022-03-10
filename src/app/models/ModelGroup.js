@@ -779,7 +779,7 @@ class ModelGroup extends EventEmitter {
         this.selectedModelArray = [...this.selectedModelArray, model];
 
         ThreeUtils.setObjectParent(model.meshObject, this.selectedGroup);
-        this.prepareSelectedGroup('1');
+        this.prepareSelectedGroup();
     }
 
     removeModelFromSelectedGroup(model) {
@@ -807,7 +807,7 @@ class ModelGroup extends EventEmitter {
             this.selectedModelArray.push(selectedModel);
         });
 
-        this.prepareSelectedGroup('2');
+        this.prepareSelectedGroup();
     }
 
     // refresh selected group matrix
@@ -829,17 +829,6 @@ class ModelGroup extends EventEmitter {
             ThreeUtils.applyObjectMatrix(this.selectedGroup, matrix);
             children.map(obj => ThreeUtils.setObjectParent(obj, this.selectedGroup));
         }
-        // this.selectedGroup.uniformScalingState = true;
-        // const p = this.calculateSelectedGroupPosition(this.selectedGroup);
-        // // set selected group position need to remove children temporarily
-        // const children = [...this.selectedGroup.children];
-        // children.map(obj => ThreeUtils.removeObjectParent(obj));
-        // // only make the diff translation
-        // const oldPosition = new Vector3();
-        // this.selectedGroup.getWorldPosition(oldPosition);
-        // const matrix = new Matrix4().makeTranslation(p.x - oldPosition.x, p.y - oldPosition.y, p.z - oldPosition.z);
-        // ThreeUtils.applyObjectMatrix(this.selectedGroup, matrix);
-        // children.map(obj => ThreeUtils.setObjectParent(obj, this.selectedGroup));
     }
 
     selectAllModels() {
@@ -851,7 +840,7 @@ class ModelGroup extends EventEmitter {
                 this.addModelToSelectedGroup(model);
             }
         });
-        this.prepareSelectedGroup('3');
+        this.prepareSelectedGroup();
         this.modelChanged();
 
         return { // warning: this may not be correct
@@ -913,7 +902,7 @@ class ModelGroup extends EventEmitter {
                 ThreeUtils.setObjectParent(model.meshObject, this.selectedGroup);
             }
         }
-        this.prepareSelectedGroup('4');
+        this.prepareSelectedGroup();
 
         return this.getState();
     }
@@ -1079,7 +1068,7 @@ class ModelGroup extends EventEmitter {
             item.autoRotate();
             item.computeBoundingBox();
         });
-        this.prepareSelectedGroup('5');
+        this.prepareSelectedGroup();
         return this.getState();
     }
 
@@ -1092,7 +1081,7 @@ class ModelGroup extends EventEmitter {
             item.scaleToFit(size);
             item.computeBoundingBox();
         });
-        this.prepareSelectedGroup('6');
+        this.prepareSelectedGroup();
         return this.getState();
     }
 
@@ -1114,7 +1103,7 @@ class ModelGroup extends EventEmitter {
             });
             item instanceof ThreeGroup && item.stickToPlate();
         });
-        this.prepareSelectedGroup('7');
+        this.prepareSelectedGroup();
 
         return this.getState();
     }
@@ -1330,7 +1319,7 @@ class ModelGroup extends EventEmitter {
 
     // model transformation triggered by controls
     // Note: the function is only useful for 3D object operations on Canvas
-    onModelAfterTransform(shouldStickToPlate = true, isRotate = false) {
+    onModelAfterTransform(shouldStickToPlate = true) {
         const selectedModelArray = this.selectedModelArray;
         const { recovery } = this.unselectAllModels();
         // update model's boundingbox which has supports
@@ -1354,7 +1343,7 @@ class ModelGroup extends EventEmitter {
         });
         this.selectedGroup.shouldUpdateBoundingbox = false;
 
-        this.prepareSelectedGroup(isRotate ? 'rotate' : '8');
+        this.prepareSelectedGroup();
         this.updatePrimeTowerHeight();
         recovery();
 

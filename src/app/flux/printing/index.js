@@ -1675,7 +1675,7 @@ export const actions = {
         dispatch(actions.recordModelBeforeTransform(modelGroup));
         // TODO
         modelGroup.updateSelectedGroupTransformation(transformation, newUniformScalingState);
-        modelGroup.onModelAfterTransform(true, transformMode === 'rotate');
+        modelGroup.onModelAfterTransform();
 
         dispatch(actions.recordModelAfterTransform(transformMode, modelGroup));
         dispatch(actions.destroyGcodeLine());

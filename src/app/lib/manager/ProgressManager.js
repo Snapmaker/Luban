@@ -259,9 +259,9 @@ class ProgressStatesManager {
                     percent: 1
                 }
             ],
-            'key-Progress/3DP-Arranging models...{{progress}}%',
-            'key-Progress/3DP-Arrange models successfully.',
-            'key-Progress/3DP-Arrange models failed.');
+            'key-Progress/3DP-Auto Rotate models...{{progress}}%',
+            'key-Progress/3DP-Auto Rotate models successfully.',
+            'key-Progress/3DP-Auto Rotate models failed.');
     }
 
     push(processStageID, stages, notice, successNotice, failedNotice) {
