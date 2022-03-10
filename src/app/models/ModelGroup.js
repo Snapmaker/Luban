@@ -359,9 +359,9 @@ class ModelGroup extends EventEmitter {
         return this._getEmptyState();
     }
 
-    bringSelectedModelToFront() {
-        const selected = this.getSelectedModel();
-        const sorted = this.getSortedModelsByPositionZ().filter(model => model !== selected);
+    bringSelectedModelToFront(model) {
+        const selected = model || this.getSelectedModel();
+        const sorted = this.getSortedModelsByPositionZ().filter(item => item !== selected);
         for (let i = 0; i < sorted.length; i++) {
             sorted[i].updateTransformation({ 'positionZ': (i + 1) * INDEXMARGIN });
         }

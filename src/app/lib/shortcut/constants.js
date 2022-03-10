@@ -20,7 +20,9 @@ export const shortcutActions = {
 
     'IMPORT': Symbol('IMPORT'),
     'EXPORT_MODELS': Symbol('EXPORT_MODELS'),
-    'EXPORT_GCODE': Symbol('EXPORT_GCODE')
+    'EXPORT_GCODE': Symbol('EXPORT_GCODE'),
+
+    'ENTER': Symbol('ENTER')
 };
 
 export const actionKeys = {
@@ -42,7 +44,9 @@ export const actionKeys = {
 
     [shortcutActions.IMPORT]: ['mod+i'],
     [shortcutActions.EXPORT_MODELS]: ['mod+e'],
-    [shortcutActions.EXPORT_GCODE]: ['mod+p']
+    [shortcutActions.EXPORT_GCODE]: ['mod+p'],
+
+    [shortcutActions.ENTER]: ['enter']
 };
 
 export const priorities = {

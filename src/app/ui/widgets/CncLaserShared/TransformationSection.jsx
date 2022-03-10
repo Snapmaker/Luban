@@ -53,9 +53,10 @@ const TransformationSection = ({ headType, updateSelectedModelUniformScalingStat
     const logicalWidth = width * Math.abs(scaleX);
     const logicalHeight = height * Math.abs(scaleY);
     const logicalAngle = -angle;
-    const canResize = ((isTextVector ? config?.text?.length > 0 : true) && selectedModelArray.length === 1);
-    const canRotate = (selectedModelArray.length === 1);
+    const canResize = ((isTextVector ? config?.text?.length > 0 : true) && selectedModelArray.length === 1 && !selectedModelArray[0].isStraightLine());
+    const canRotate = selectedModelArray.length === 1;
     const selectedNotHide = (selectedModelArray.length === 1) && selectedModelArray[0].visible || selectedModelArray.length > 1;
+    const canFlip = (selectedModelArray.length === 1 && !selectedModelArray[0].isStraightLine());
 
     const dispatch = useDispatch();
     useEffect(() => {
@@ -142,7 +143,7 @@ const TransformationSection = ({ headType, updateSelectedModelUniformScalingStat
                         <span className="sm-flex-width sm-flex justify-space-between">
                             <div className="position-re sm-flex align-flex-start">
                                 <span className="width-16 height-32 display-inline unit-text align-c">
-                                        X
+                                    X
                                 </span>
                                 <span>
                                     <Input
@@ -161,7 +162,7 @@ const TransformationSection = ({ headType, updateSelectedModelUniformScalingStat
                             </div>
                             <div className="position-re sm-flex align-flex-start">
                                 <span className="width-16 height-32 display-inline unit-text align-c">
-                                        Y
+                                    Y
                                 </span>
                                 <span>
                                     <Input
@@ -190,7 +191,7 @@ const TransformationSection = ({ headType, updateSelectedModelUniformScalingStat
                         <div className="sm-flex-width sm-flex justify-space-between">
                             <div className="position-re sm-flex align-flex-start">
                                 <span className="width-16 height-32 display-inline unit-text align-c">
-                                       W
+                                    W
                                 </span>
                                 <span>
                                     <Input
@@ -223,7 +224,7 @@ const TransformationSection = ({ headType, updateSelectedModelUniformScalingStat
                             />
                             <div className="position-re sm-flex align-flex-start">
                                 <span className="width-16 height-32 display-inline unit-text align-c">
-                                       H
+                                    H
                                 </span>
                                 <span>
                                     <Input
@@ -265,7 +266,7 @@ const TransformationSection = ({ headType, updateSelectedModelUniformScalingStat
                                 />
                             </div>
                             <div className="sm-flex width-96 justify-space-between">
-                                {selectedModelArray.length === 1 && (
+                                {canFlip && (
                                     <SvgIcon
                                         name="FlipLevel"
                                         className="padding-horizontal-8 border-radius-8 border-default-grey-1"
@@ -276,7 +277,7 @@ const TransformationSection = ({ headType, updateSelectedModelUniformScalingStat
                                         borderRadius={8}
                                     />
                                 )}
-                                {selectedModelArray.length === 1 && (
+                                {canFlip && (
                                     <SvgIcon
                                         name="FlipVertical"
                                         className="padding-horizontal-8 border-radius-8 border-default-grey-1"

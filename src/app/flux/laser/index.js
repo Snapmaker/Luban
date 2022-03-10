@@ -53,6 +53,12 @@ const INITIAL_STATE = {
 
     modelGroup: initModelGroup,
     SVGActions: new SVGActionsFactory(initModelGroup),
+    SVGCanvasMode: 'select',
+    SVGCanvasExt: {
+        extShape: '',
+        showExtShape: false,
+        elem: null
+    },
 
     displayedType: DISPLAYED_TYPE_MODEL,
     toolPathGroup: new ToolPathGroup(initModelGroup, 'laser'),
@@ -367,7 +373,9 @@ export default function reducer(state = INITIAL_STATE, action) {
     if (headType === 'laser') {
         switch (type) {
             case ACTION_UPDATE_STATE: {
-                return Object.assign({}, state, { ...action.state });
+                const ll = Object.assign({}, state, { ...action.state });
+                window.ll = ll;
+                return ll;
             }
             case ACTION_UPDATE_TRANSFORMATION: {
                 return Object.assign({}, state, {

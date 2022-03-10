@@ -1,3 +1,6 @@
+import { isInside } from 'overlap-area';
+import svgPath from 'svgpath';
+import { cloneDeep } from 'lodash';
 import { DATA_PREFIX } from '../constants';
 import { coordGmSvgToModel, getBBox } from '../ui/SVGEditor/element-utils';
 
@@ -50,17 +53,27 @@ function genModelConfig(elem, size, materials = {}) {
         }
         coord.positionX = 0;
     }
+
+    const isDraw = elem.getAttribute('id')?.includes('graph');
     if (elem.nodeName === 'path') {
-        coord.positionX = +elem.getAttribute('x') + coord.width / 2 * coord.scaleX - size.x;
-        coord.positionY = size.y - (+elem.getAttribute('y')) - coord.height / 2 * coord.scaleY;
-        deltaLeftX = 0.5;
-        deltaRightX = 1;
-        deltaTopY = 0.5;
-        deltaBottomY = 1;
+        if (!isDraw) {
+            coord.positionX = +elem.getAttribute('x') + coord.width / 2 * coord.scaleX - size.x;
+            coord.positionY = size.y - (+elem.getAttribute('y')) - coord.height / 2 * coord.scaleY;
+            deltaLeftX = 0.5;
+            deltaRightX = 1;
+            deltaTopY = 0.5;
+            deltaBottomY = 1;
+        }
     }
 
     // eslint-disable-next-line prefer-const
     let { x, y, width, height, positionX, positionY, scaleX, scaleY } = coord;
+    if (!width) {
+        width = 1;
+    }
+    if (!height) {
+        height = 1;
+    }
     // leave a little space for line width
     let vx = (x - deltaLeftX) * scaleX;
     let vy = (y - deltaTopY) * scaleY;
@@ -70,9 +83,41 @@ function genModelConfig(elem, size, materials = {}) {
     width *= scaleX;
     height *= scaleY;
 
-    const clone = elem.cloneNode(true);
-    clone.setAttribute('transform', `scale(${scaleX} ${scaleY})`);
-    clone.setAttribute('font-size', clone.getAttribute('font-size'));
+    let modelContent = '';
+    if (elem instanceof SVGPathElement && isDraw) {
+        const path = elem.getAttribute('d');
+        const paths = [];
+        svgPath(path).iterate((segment) => {
+            const arr = cloneDeep(segment);
+            const mark = arr.shift();
+            const latestPath = paths[paths.length - 1];
+            const str = arr.join(' ');
+            if (!latestPath) {
+                paths.push(`M ${str}`);
+                return;
+            }
+            if (mark === 'M') {
+                if (latestPath.lastIndexOf(str) === -1) {
+                    paths.push(`M ${str}`);
+                }
+            } else if (mark !== 'Z') {
+                paths[paths.length - 1] = `${latestPath} ${mark} ${str}`;
+            }
+        });
+        const segments = paths.map(item => {
+            const clone = elem.cloneNode(true);
+            clone.setAttribute('d', item);
+            clone.setAttribute('transform', 'scale(1 1)');
+            clone.setAttribute('font-size', clone.getAttribute('font-size'));
+            return new XMLSerializer().serializeToString(clone);
+        });
+        modelContent = segments.join('');
+    } else {
+        const clone = elem.cloneNode(true);
+        clone.setAttribute('transform', `scale(${scaleX} ${scaleY})`);
+        clone.setAttribute('font-size', clone.getAttribute('font-size'));
+        modelContent = new XMLSerializer().serializeToString(clone);
+    }
 
     if (scaleX < 0) {
         vx += vwidth;
@@ -85,7 +130,7 @@ function genModelConfig(elem, size, materials = {}) {
     // Todo: need to optimize
     const content = `<svg x="0" y="0" width="${vwidth}mm" height="${vheight}mm" `
         + `viewBox="${vx} ${vy} ${vwidth} ${vheight}" `
-        + `xmlns="http://www.w3.org/2000/svg">${new XMLSerializer().serializeToString(clone)}</svg>`;
+        + `xmlns="http://www.w3.org/2000/svg">${modelContent}</svg>`;
     const model = {
         modelID: elem.getAttribute('id'),
         content: content,
@@ -136,6 +181,8 @@ function transformBox(x, y, w, h, m) {
 
 class SVGActionsFactory {
     selectedSvgModels = [];
+
+    drawModel = null;
 
     selectedElementsTransformation = {
         x: 0,
@@ -231,8 +278,8 @@ class SVGActionsFactory {
         this.svgContentGroup.deleteElements(selectedElements);
     }
 
-    bringElementToFront() {
-        const selected = this.svgContentGroup.getSelected();
+    bringElementToFront(model) {
+        const selected = model || this.svgContentGroup.getSelected();
         if (!selected) {
             return;
         }
@@ -594,6 +641,13 @@ class SVGActionsFactory {
         this._setSelectedElementsTransformation(t);
     }
 
+    setSelectedSvgModelsByModels(models) {
+        this.modelGroup.selectedModelArray = models;
+        this.selectedSvgModels = models;
+        const elems = models.map(model => model.elem);
+        this.svgContentGroup.setSelection(elems);
+    }
+
     resetSelection() {
         const transformation = this.modelGroup.getSelectedModelTransformation();
 
@@ -636,6 +690,7 @@ class SVGActionsFactory {
             const INDEXMARGIN = 0.02;
             svgModel.elem.id = svgModel.modelID;
             svgModel.setParent(this.svgContentGroup.group);
+            svgModel.setPreSelection(this.svgContentGroup.preSelectionGroup);
             svgModel.modelName = this.modelGroup._createNewModelName(svgModel);
             this.modelGroup.resetModelsPositionZByOrder();
             svgModel.transformation.positionZ = (this.modelGroup.models.length + 1) * INDEXMARGIN;
@@ -725,6 +780,7 @@ class SVGActionsFactory {
 
             const svgModel = this.modelGroup.addModel(options);
             svgModel.setParent(this.svgContentGroup.group);
+            svgModel.setPreSelection(this.svgContentGroup.preSelectionGroup);
             return svgModel;
         } catch (e) {
             console.error(e);
@@ -836,6 +892,15 @@ class SVGActionsFactory {
             };
         }
         return this.selectedElementsTransformation;
+    }
+
+    isPointInSelectArea(point) {
+        if (this.selectedSvgModels.length === 0) {
+            return false;
+        }
+        return this.selectedSvgModels.some((model) => {
+            return isInside(point, model.vertexPoints);
+        });
     }
 
     /**

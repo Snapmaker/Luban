@@ -1,3 +1,8 @@
+import DrawDelete from './DrawDelete';
+import DrawLine from './DrawLine';
+import DrawStart from './DrawStart';
+import DrawTransform from './DrawTransform';
+
 export default class OperationHistory {
     history;
 
@@ -56,6 +61,15 @@ export default class OperationHistory {
         this.history = this.history.slice(-this.MAX_LENGTH);
         this.index = this.history.length - 1;
         this._updateUndoRedo();
+    }
+
+    clearDrawOperations(keeyDrawStart) {
+        this.history = this.history.filter((item) => {
+            return !item.operations.some(i => {
+                return i instanceof DrawLine || i instanceof DrawDelete || i instanceof DrawTransform || (!keeyDrawStart && i instanceof DrawStart);
+            });
+        });
+        this.index = this.history.length - 1;
     }
 }
 

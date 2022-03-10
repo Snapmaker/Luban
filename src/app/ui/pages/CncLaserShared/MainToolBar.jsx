@@ -127,7 +127,8 @@ function useRenderMainToolBar({ headType, setShowHomePage, setShowJobType, setSh
             title: i18n._('key-CncLaser/MainToolBar-Home'),
             type: 'button',
             name: 'MainToolbarHome',
-            action: () => {
+            action: async () => {
+                await dispatch(editorActions.onRouterWillLeave(headType));
                 setShowHomePage(true);
             }
         },
@@ -135,7 +136,8 @@ function useRenderMainToolBar({ headType, setShowHomePage, setShowJobType, setSh
             title: i18n._('key-CncLaser/MainToolBar-Workspace'),
             type: 'button',
             name: 'MainToolbarWorkspace',
-            action: () => {
+            action: async () => {
+                await dispatch(editorActions.onRouterWillLeave(headType));
                 setShowWorkspace(true);
             }
         },
@@ -261,7 +263,6 @@ function useRenderMainToolBar({ headType, setShowHomePage, setShowJobType, setSh
                                             type={['static']}
                                             name="DropdownOpen"
                                             size={20}
-                                            // className="margin-top-4"
                                         />
                                     </div>
                                 </SvgIcon>
@@ -329,11 +330,11 @@ function useRenderMainToolBar({ headType, setShowHomePage, setShowJobType, setSh
         }
     };
 }
-
 useRenderMainToolBar.propTypes = {
     headType: PropTypes.string.isRequired,
     setShowHomePage: PropTypes.func,
     setShowJobType: PropTypes.func,
     setShowWorkspace: PropTypes.func
 };
+
 export default useRenderMainToolBar;
