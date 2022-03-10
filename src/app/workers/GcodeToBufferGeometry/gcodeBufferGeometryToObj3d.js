@@ -15,8 +15,8 @@ const gcodeBufferGeometryToObj3d = (func, bufferGeometry, renderMethod) => {
                     fragmentShader: PRINT3D_FRAG_SHADER,
                     side: THREE.DoubleSide,
                     transparent: true,
-                    linewidth: 5,
-                    wireframeLinewidth: 5,
+                    linewidth: 30,
+                    wireframeLinewidth: 30
                     // wireframe: true
                 })
             );

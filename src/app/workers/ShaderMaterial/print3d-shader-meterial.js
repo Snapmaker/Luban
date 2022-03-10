@@ -112,12 +112,12 @@ export const PRINT3D_FRAG_SHADER = [
 
     'void main(){',
     '    if(v_layer_index > u_visible_layer_range_end){',
-    '        gl_FragColor = vec4(0.87, 0.87, 0.87, 0.75);',
+    // '        gl_FragColor = vec4(0.87, 0.87, 0.87, 0.75);',
     '        return;',
     '    }',
 
     '    if(v_layer_index < u_visible_layer_range_start){',
-    '        gl_FragColor = vec4(0.87, 0.87, 0.87, 0.75);',
+    // '        gl_FragColor = vec4(0.87, 0.87, 0.87, 0.75);',
     '        return;',
     '    }',
 

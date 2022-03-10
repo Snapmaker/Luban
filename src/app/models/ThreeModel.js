@@ -1,6 +1,6 @@
 import { v4 as uuid } from 'uuid';
 import * as THREE from 'three';
-import { ObjectLoader } from 'three';
+import { MeshLambertMaterial, ObjectLoader, DoubleSide } from 'three';
 import {
     LOAD_MODEL_FROM_INNER
 } from '../constants';
@@ -41,6 +41,10 @@ class ThreeModel extends BaseModel {
 
     tmpMaterial = null; // store previous material for support editing
 
+    modelModeMaterial = null;
+
+    gcodeModeMaterial = null;
+
     supportFaceMarks = [];
 
     originalGeometry = null;
@@ -75,6 +79,7 @@ class ThreeModel extends BaseModel {
             this.geometry = new THREE.PlaneGeometry(width, height);
         }
 
+        this.modelModeMaterial = material;
         this.meshObject = new THREE.Mesh(this.geometry, material);
 
         this.processImageName = processImageName;
@@ -277,6 +282,24 @@ class ThreeModel extends BaseModel {
             this.meshObject.material.color.set(this._materialNormal.clone());
             this.tmpMaterial = null;
         }
+
+        // TODO
+        if (this.isSelected === true) {
+            this.meshObject.material = new MeshLambertMaterial({
+                color: this._materialSelected.clone(),
+                // opacity: 0.2,
+                // transparent: true,
+                // shininess: 1,
+                side: DoubleSide,
+                depthWrite: false,
+                transparent: true,
+                opacity: 0.3,
+                polygonOffset: true,
+                polygonOffsetFactor: -1,
+                polygonOffsetUnits: -5
+            });
+        }
+        // console.log('xx', this.meshObject.material);
 
         // for indexed geometry
         if (this.type !== 'primeTower' && this.meshObject.geometry.getAttribute('color')) {
