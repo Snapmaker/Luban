@@ -1,6 +1,6 @@
 import fs from 'fs';
 import path from 'path';
-import { ERR_BAD_REQUEST, ERR_INTERNAL_SERVER_ERROR, DEFINITION_SNAPMAKER_EXTRUDER_0, DEFINITION_SNAPMAKER_EXTRUDER_1, DEFINITION_ACTIVE, DEFINITION_ACTIVE_FINAL } from '../../constants';
+import { ERR_BAD_REQUEST, ERR_INTERNAL_SERVER_ERROR, DEFINITION_SNAPMAKER_EXTRUDER_0, DEFINITION_SNAPMAKER_EXTRUDER_1, DEFINITION_ACTIVE, DEFINITION_ACTIVE_FINAL, KEY_DEFAULT_CATEGORY_CUSTOM, KEY_DEFAULT_CATEGORY_DEFAULT } from '../../constants';
 import { loadDefinitionsByPrefixName, loadAllSeriesDefinitions, DefinitionLoader } from '../../slicer';
 import DataStorage from '../../DataStorage';
 
@@ -217,6 +217,13 @@ export const updateDefinition = async (req, res) => {
     fsWriteFile(filePath, data, res, callback);
 };
 
+
+const isSourceFormDefault = (obj) => {
+    return obj.i18nCategory
+        && obj.i18nCategory !== KEY_DEFAULT_CATEGORY_CUSTOM
+        && obj.i18nCategory !== KEY_DEFAULT_CATEGORY_DEFAULT;
+};
+
 export const uploadDefinition = (req, res) => {
     const { headType } = req.params;
     const { definitionId, uploadName, series } = req.body;
@@ -224,6 +231,12 @@ export const uploadDefinition = (req, res) => {
     let obj;
     try {
         obj = JSON.parse(readFileSync);
+        // Compatible with profiles exported from older versions
+        if (!isSourceFormDefault(obj)) {
+            obj.category = '';
+            obj.i18nCategory = '';
+            obj.i18nName = '';
+        }
     } catch (e) {
         obj = {};
     }

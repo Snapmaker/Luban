@@ -68,7 +68,6 @@ export const WHITE_COLOR = '#ffffff';
 export const BLACK_COLOR = '#464646';
 
 export const KEY_DEFAULT_CATEGORY_CUSTOM = 'key-default_category-Custom';
-export const KEY_DEFAULT_CATEGORY_DEFAULT = 'key-default_category-Default';
 
 export const PRINTING_MATERIAL_CONFIG_COLORS = [
     [WHITE_COLOR, BLACK_COLOR],

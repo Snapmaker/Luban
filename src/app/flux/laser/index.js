@@ -264,6 +264,7 @@ export const actions = {
             definitionsWithSameCategory = toolDefinitions.filter(d => d.category === oldName);
             for (const definition of definitionsWithSameCategory) {
                 definition.category = newName;
+                definition.i18nCategory = '';
                 await definitionManager.updateDefinition(definition);
                 // find the old tool category definition and replace it
                 const isReplacedDefinition = (d) => d.definitionId === definition.definitionId;

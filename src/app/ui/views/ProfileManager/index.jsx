@@ -3,7 +3,7 @@ import classNames from 'classnames';
 import PropTypes from 'prop-types';
 // import { useSelector, shallowEqual } from 'react-redux';
 import { isUndefined, cloneDeep, uniqWith } from 'lodash';
-import { HEAD_CNC, HEAD_LASER, PRINTING_MANAGER_TYPE_MATERIAL, PRINTING_MANAGER_TYPE_QUALITY, KEY_DEFAULT_CATEGORY_CUSTOM } from '../../../constants';
+import { HEAD_CNC, HEAD_LASER, PRINTING_MANAGER_TYPE_MATERIAL, PRINTING_MANAGER_TYPE_QUALITY } from '../../../constants';
 import modal from '../../../lib/modal';
 import DefinitionCreator from '../DefinitionCreator';
 import Anchor from '../../components/Anchor';
@@ -70,13 +70,8 @@ function useGetDefinitions(allDefinitions, activeDefinitionID, getDefaultDefinit
             return {
                 label: d.name,
                 value: d.definitionId,
-                category: d.i18nCategory ? i18n._(d.i18nCategory) : (
-                    d.category || i18n._(KEY_DEFAULT_CATEGORY_CUSTOM)
-                ),
-                i18nCategory: d.i18nCategory || (
-                    // If it is a custom type, set i18nCategory to null
-                    d.category ? '' : KEY_DEFAULT_CATEGORY_CUSTOM
-                ),
+                category: d.category,
+                i18nCategory: d.i18nCategory,
                 isHidden: !d.settings || Object.keys(d.settings).length === 0,
                 isDefault: !!d.isDefault,
                 color: (
@@ -128,16 +123,13 @@ function ProfileManager({
     currentDefinitions.current = allDefinitions;
 
     const actions = {
-        isCategorySelectedNow: (category, i18nCategory) => {
+        isCategorySelectedNow: (category) => {
             const { definitionForManager, isCategorySelected } = definitionState;
             if (!isCategorySelected) {
                 return false;
             }
-            if (i18nCategory === KEY_DEFAULT_CATEGORY_CUSTOM) {
-                return definitionForManager.category === '';
-            } else {
-                return definitionForManager.category === category;
-            }
+
+            return definitionForManager.category === category;
         },
         setRenamingStatus: (status) => {
             const currentDefinition = definitionState?.definitionForManager;
@@ -150,10 +142,7 @@ function ProfileManager({
                 return;
             }
             if (status) {
-                const title = definitionState.isCategorySelected ? (
-                    // Assign default values to import type
-                    currentDefinition.category || i18n._(KEY_DEFAULT_CATEGORY_CUSTOM)
-                ) : currentDefinition.name;
+                const title = definitionState.isCategorySelected ? currentDefinition.category : currentDefinition.name;
                 setDefinitionState({
                     selectedName: title,
                     renamingStatus: status
@@ -190,7 +179,7 @@ function ProfileManager({
                 });
             }
         },
-        onSelectCategory: (category, i18nCategory) => {
+        onSelectCategory: (category) => {
             const { definitionForManager, isCategorySelected, renamingStatus } = definitionState;
             if (isCategorySelected && category === definitionForManager.category) {
                 return;
@@ -199,16 +188,12 @@ function ProfileManager({
                 actions.setRenamingStatus(false);
             }
             const activeToolCategory = currentDefinitions.current.find(d => {
-                if (i18nCategory === KEY_DEFAULT_CATEGORY_CUSTOM) {
-                    return d.category === '';
-                } else {
-                    return d.category === category;
-                }
+                return d.category === category;
             });
             const selectedSettingDefaultValue = outsideActions.getDefaultDefinition(activeToolCategory.definitionId);
             setDefinitionState({
                 definitionForManager: activeToolCategory,
-                selectedName: activeToolCategory.category || i18n._(KEY_DEFAULT_CATEGORY_CUSTOM),
+                selectedName: activeToolCategory.category,
                 isCategorySelected: true,
                 selectedSettingDefaultValue: selectedSettingDefaultValue
             });
@@ -328,7 +313,7 @@ function ProfileManager({
                                 if (isCategorySelected) {
                                     newName = data.categoryName;
                                     const newDefinition = await outsideActions.onCreateManagerDefinition(newDefinitionForManager, newName, isCategorySelected);
-                                    actions.onSelectCategory(newDefinition.category, newDefinition.i18nCategory);
+                                    actions.onSelectCategory(newDefinition.category);
                                 } else {
                                     newDefinitionForManager.category = data.categoryName;
                                     newDefinitionForManager.i18nCategory = data.categoryI18n;
@@ -343,7 +328,7 @@ function ProfileManager({
                                     newName = data.categoryName;
                                     newDefinitionForManager.settings = {};
                                     const newDefinition = await outsideActions.onCreateManagerDefinition(newDefinitionForManager, newName, data.createType === 'Category', isCreate);
-                                    actions.onSelectCategory(newDefinition.category, newDefinition.i18nCategory);
+                                    actions.onSelectCategory(newDefinition.category);
                                 } else {
                                     newDefinitionForManager.category = data.categoryName;
                                     newDefinitionForManager.i18nCategory = data.categoryI18n;
@@ -381,10 +366,6 @@ function ProfileManager({
         updateCategoryName: async () => {
             const definition = definitionState?.definitionForManager;
             const selectedName = definitionState.selectedName;
-            // If it is of import type and the default value is not modified
-            if (definition.category === '' && selectedName === i18n._(KEY_DEFAULT_CATEGORY_CUSTOM)) {
-                return;
-            }
             if (selectedName !== definition.category) { // changed
                 try {
                     await outsideActions.updateCategoryName(definition, selectedName);
@@ -453,18 +434,12 @@ function ProfileManager({
                                 )}
                                 <ul className={classNames(styles['manager-name-wrapper'])}>
                                     {(definitionState.cates.map((cate) => {
-                                        const isCategorySelected = (() => {
-                                            if (cate.i18nCategory === KEY_DEFAULT_CATEGORY_CUSTOM) {
-                                                return definitionState?.definitionForManager.category === '';
-                                            } else {
-                                                return cate.category === definitionState?.definitionForManager.category;
-                                            }
-                                        })();
+                                        const isCategorySelected = cate.category === definitionState?.definitionForManager.category;
                                         return !!cate.items.length && (
                                             <li key={`${cate.category}`}>
                                                 <Anchor
-                                                    className={classNames(styles['manager-btn'], { [styles.selected]: actions.isCategorySelectedNow(cate.category, cate.i18nCategory) })}
-                                                    onClick={() => actions.onSelectCategory(cate.category, cate.i18nCategory)}
+                                                    className={classNames(styles['manager-btn'], { [styles.selected]: actions.isCategorySelectedNow(cate.category) })}
+                                                    onClick={() => actions.onSelectCategory(cate.category)}
                                                     onDoubleClick={() => actions.setRenamingStatus(true)}
                                                 >
                                                     <div className="sm-flex align-center" style={{ paddingRight: '10px' }}>

@@ -3,7 +3,7 @@ import _ from 'lodash';
 import { baseActions } from './actions-base';
 import { controller } from '../../lib/controller';
 import { STEP_STAGE, PROCESS_STAGE } from '../../lib/manager/ProgressManager';
-import { DISPLAYED_TYPE_MODEL, DISPLAYED_TYPE_TOOLPATH, HEAD_LASER, KEY_DEFAULT_CATEGORY_CUSTOM, KEY_DEFAULT_CATEGORY_DEFAULT, SELECTEVENT } from '../../constants';
+import { DISPLAYED_TYPE_MODEL, DISPLAYED_TYPE_TOOLPATH, HEAD_LASER, SELECTEVENT } from '../../constants';
 import { getToolPathType } from '../../toolpaths/utils';
 
 import { toast } from '../../ui/components/Toast';
@@ -554,27 +554,9 @@ export const processActions = {
                         name = `#${name}`;
                     }
                     definition.name = name;
-
-                    // Compatible with profiles exported from older versions
-                    definition.category = (
-                        definition.i18nCategory
-                        && definition.i18nCategory !== KEY_DEFAULT_CATEGORY_CUSTOM
-                        && definition.i18nCategory !== KEY_DEFAULT_CATEGORY_DEFAULT
-                    ) ? definition.category : '';
-
-                    definition.i18nCategory = (
-                        definition.i18nCategory
-                        && definition.i18nCategory !== KEY_DEFAULT_CATEGORY_CUSTOM
-                        && definition.i18nCategory !== KEY_DEFAULT_CATEGORY_DEFAULT
-                    ) ? definition.i18nCategory : '';
-
-                    definition.i18nName = '';
                     await definitionManager.updateDefinition({
                         definitionId: definition.definitionId,
-                        name,
-                        category: definition.category,
-                        i18nCategory: definition.i18nCategory,
-                        i18nName: definition.i18nName
+                        name
                     });
                     dispatch(baseActions.updateState(headType, {
                         toolDefinitions: [...toolDefinitions, definition]
