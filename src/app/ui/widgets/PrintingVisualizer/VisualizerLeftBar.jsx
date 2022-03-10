@@ -11,21 +11,20 @@ import SvgIcon from '../../components/SvgIcon';
 import RotationAnalysisOverlay from './Overlay/RotationAnalysisOverlay';
 import EditSupportOverlay from './Overlay/EditSupportOverlay';
 import SupportOverlay from './Overlay/SupportOverlay';
-import { DUAL_EXTRUDER_TOOLHEAD_FOR_SM2, HEAD_PRINTING,
-    EPSILON, BOTH_EXTRUDER_MAP_NUMBER, LEFT_EXTRUDER_MAP_NUMBER } from '../../../constants';
+import { DUAL_EXTRUDER_TOOLHEAD_FOR_SM2, EPSILON } from '../../../constants';
 import { machineStore } from '../../../store/local-storage';
 // import TipTrigger from '../../components/TipTrigger';
 import PrimeTowerModel from '../../../models/PrimeTowerModel';
 /* eslint-disable-next-line import/no-cycle */
-import TranslateOverlay from './Overlay/translateOverlay';
+import TranslateOverlay from './Overlay/TranslateOverlay';
 /* eslint-disable-next-line import/no-cycle */
-import ScaleOverlay from './Overlay/scaleOverlay';
+import ScaleOverlay from './Overlay/ScaleOverlay';
 /* eslint-disable-next-line import/no-cycle */
-import RotateOverlay from './Overlay/rotateOverlay';
+import RotateOverlay from './Overlay/RotateOverlay';
 /* eslint-disable-next-line import/no-cycle */
-import ExtruderOverlay from './Overlay/extruderOverlay';
+import ExtruderOverlay from './Overlay/ExtruderOverlay';
 /* eslint-disable-next-line import/no-cycle */
-import MirrorOverlay from './Overlay/mirrorOverlay';
+import MirrorOverlay from './Overlay/MirrorOverlay';
 
 export const whiteHex = '#ffffff';
 export const renderExtruderIcon = (leftExtruderColor, rightExtruderColor) => (
@@ -67,7 +66,7 @@ export const CancelButton = ({ onClick }) => {
 CancelButton.propTypes = {
     onClick: PropTypes.func.isRequired,
 };
-function VisualizerLeftBar({ setTransformMode, supportActions, updateBoundingBox, autoRotateSelectedModel }) {
+function VisualizerLeftBar({ setTransformMode, supportActions, updateBoundingBox, autoRotateSelectedModel, arrangeAllModels }) {
     const size = useSelector(state => state?.machine?.size, shallowEqual);
     const selectedModelArray = useSelector(state => state?.printing?.modelGroup?.selectedModelArray);
     const modelGroup = useSelector(state => state?.printing?.modelGroup);
