@@ -21,8 +21,6 @@ import {
     DUAL_EXTRUDER_TOOLHEAD_FOR_SM2,
     DUAL_EXTRUDER_LIMIT_WIDTH_L,
     DUAL_EXTRUDER_LIMIT_WIDTH_R, BOTH_EXTRUDER_MAP_NUMBER,
-    KEY_DEFAULT_CATEGORY_CUSTOM,
-    KEY_DEFAULT_CATEGORY_DEFAULT,
     WHITE_COLOR,
     BLACK_COLOR
 } from '../../constants';
@@ -1013,34 +1011,15 @@ export const actions = {
                     const definitionId = `${type}.${timestamp()}`;
                     const definition = await definitionManager.uploadDefinition(definitionId, response.uploadName);
 
-                    // Compatible with profiles exported from older versions
-                    definition.category = (
-                        definition.i18nCategory
-                        && definition.i18nCategory !== KEY_DEFAULT_CATEGORY_CUSTOM
-                        && definition.i18nCategory !== KEY_DEFAULT_CATEGORY_DEFAULT
-                    ) ? definition.category : '';
-
-                    definition.i18nCategory = (
-                        definition.i18nCategory
-                        && definition.i18nCategory !== KEY_DEFAULT_CATEGORY_CUSTOM
-                        && definition.i18nCategory !== KEY_DEFAULT_CATEGORY_DEFAULT
-                    ) ? definition.i18nCategory : '';
-
-
                     let name = definition.name;
                     const definitionsKey = defaultDefinitionKeys[type].definitions;
                     const definitions = getState().printing[definitionsKey];
                     while (definitions.find(e => e.name === name)) {
                         name = `#${name}`;
                     }
-                    definition.i18nName = '';
                     await definitionManager.updateDefinition({
                         definitionId: definition.definitionId,
-                        name,
-                        // The classification cannot be modified, otherwise there will be duplicate user-defined directories during language switching
-                        category: definition.category,
-                        i18nCategory: definition.i18nCategory,
-                        i18nName: definition.i18nName
+                        name
                     });
                     dispatch(actions.updateState({
                         [definitionsKey]: [...definitions, definition]
@@ -1072,6 +1051,7 @@ export const actions = {
             definitions.forEach((item) => {
                 if (item.category === oldCategory) {
                     item.category = name;
+                    item.i18nCategory = '';
                     definitionManager.updateDefinition(item);
                 }
             });
@@ -1450,7 +1430,7 @@ export const actions = {
         finalDefinition.settings.support_roof_extruder_nr.default_value = supportExtruder;
         finalDefinition.settings.support_bottom_extruder_nr.default_value = supportExtruder;
 
-        await api.profileDefinitions.createDefinition(CONFIG_HEADTYPE, finalDefinition);
+        await definitionManager.createDefinition(finalDefinition);
 
         // slice
         /*
@@ -1512,8 +1492,8 @@ export const actions = {
                         ret.originalName = uploadResult.body.originalName;
                     }
                     const definitionName = uploadResult.body.uploadName.replace(/\.stl$/, '');
-                    const definitionRes = await api.profileDefinitions.createTmpDefinition(modelDefinition, definitionName);
-                    ret.definition.push(definitionRes.body.uploadName);
+                    const uploadName = await definitionManager.createTmpDefinition(modelDefinition, definitionName);
+                    ret.definition.push(uploadName);
 
                     // upload support of model
                     if (supportMesh) {
@@ -2949,7 +2929,7 @@ export const actions = {
                             operation.state.currentSupport = mesh;
                             model.meshObject.add(mesh);
                             resolve();
-                        }, () => {}, (err) => {
+                        }, () => { }, (err) => {
                             reject(err);
                         });
                     } else {

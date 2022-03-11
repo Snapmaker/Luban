@@ -90,3 +90,6 @@ export const DEFINITION_SNAPMAKER_EXTRUDER_0 = 'snapmaker_extruder_0';
 export const DEFINITION_SNAPMAKER_EXTRUDER_1 = 'snapmaker_extruder_1';
 export const DEFINITION_ACTIVE = 'active';
 export const DEFINITION_ACTIVE_FINAL = 'active_final';
+
+export const KEY_DEFAULT_CATEGORY_CUSTOM = 'key-default_category-Custom';
+export const KEY_DEFAULT_CATEGORY_DEFAULT = 'key-default_category-Default';

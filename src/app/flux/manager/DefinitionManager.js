@@ -1,10 +1,12 @@
 import { includes } from 'lodash';
 import api from '../../api';
 import i18n from '../../lib/i18n';
-import { HEAD_CNC, RIGHT_EXTRUDER_MAP_NUMBER,
+import {
+    HEAD_CNC, RIGHT_EXTRUDER_MAP_NUMBER,
     PRINTING_MATERIAL_CONFIG_KEYS_SINGLE,
     MACHINE_EXTRUDER_X,
-    MACHINE_EXTRUDER_Y
+    MACHINE_EXTRUDER_Y,
+    KEY_DEFAULT_CATEGORY_CUSTOM
 } from '../../constants';
 
 const primeTowerDefinitionKeys = [
@@ -83,22 +85,41 @@ class DefinitionManager {
         return definition;
     }
 
+    fillCustomCategory(definition) {
+        const isCustom = ({ metadata }) => {
+            if (metadata?.readonly) {
+                return false;
+            }
+            return true;
+        };
+        const category = definition.category || i18n._(KEY_DEFAULT_CATEGORY_CUSTOM);
+        const categoryApplyI18n = definition.i18nCategory ? i18n._(definition.i18nCategory) : category;
+
+        definition.category = isCustom(definition) ? category : categoryApplyI18n;
+        definition.i18nCategory = definition.i18nCategory || '';
+        return definition;
+    }
+
     async getConfigDefinitions() {
         const res = await api.profileDefinitions.getConfigDefinitions(this.headType, this.configPathname);
         const definitions = await this.markDefaultDefinitions(res.body.definitions);
-        return definitions;
+        return definitions.map(this.fillCustomCategory);
     }
 
     async getDefinitionsByPrefixName(prefix) {
         const res = await api.profileDefinitions.getDefinitionsByPrefixName(this.headType, prefix, this.configPathname);
         const definitions = await this.markDefaultDefinitions(res.body.definitions);
-        return definitions;
+        return definitions.map(this.fillCustomCategory);
     }
-
 
     async createDefinition(definition) {
         const res = await api.profileDefinitions.createDefinition(this.headType, definition, this.configPathname);
         return res.body.definition;
+    }
+
+    async createTmpDefinition(definition, definitionName) {
+        const res = await api.profileDefinitions.createTmpDefinition(definition, definitionName);
+        return res.body.uploadName;
     }
 
     async removeDefinition(definition) {
@@ -112,7 +133,7 @@ class DefinitionManager {
             console.error(err);
             return null;
         } else {
-            return definition;
+            return this.fillCustomCategory(definition);
         }
     }
 
