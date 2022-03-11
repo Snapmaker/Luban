@@ -86,10 +86,17 @@ class DefinitionManager {
     }
 
     fillCustomCategory(definition) {
-        if (definition.category === '') {
-            definition.category = i18n._(KEY_DEFAULT_CATEGORY_CUSTOM);
-            definition.i18nCategory = KEY_DEFAULT_CATEGORY_CUSTOM;
-        }
+        const isCustom = ({ metadata }) => {
+            if (metadata?.readonly) {
+                return false;
+            }
+            return true;
+        };
+        const category = definition.category || i18n._(KEY_DEFAULT_CATEGORY_CUSTOM);
+        const categoryApplyI18n = definition.i18nCategory ? i18n._(definition.i18nCategory) : category;
+
+        definition.category = isCustom(definition) ? category : categoryApplyI18n;
+        definition.i18nCategory = definition.i18nCategory || '';
         return definition;
     }
 

@@ -35,9 +35,6 @@ function creatCateArray(optionList) {
     optionList.forEach(option => {
         // Make sure that the copied description file is displayed in the correct position after switching the language
         const cateItem = cates.find((cate) => {
-            if (option.i18nCategory) {
-                return cate.i18nCategory === option.i18nCategory;
-            }
             return cate.category === option.category;
         });
         if (cateItem) {
