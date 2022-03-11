@@ -214,12 +214,6 @@
                 },
                 "ooze_shield_dist": {
                     "default_value": 2
-                },
-                "switch_extruder_retraction_amount": {
-                    "default_value": 5
-                },
-                "switch_extruder_retraction_speeds": {
-                    "default_value": 60
                 }
             }
         }

@@ -37,7 +37,7 @@
             "default_value": 1.75
         },
         "material_final_print_temperature": {
-            "default_value": 235
+            "default_value": 100
         },
         "cool_fan_speed_min": {
             "default_value": 100

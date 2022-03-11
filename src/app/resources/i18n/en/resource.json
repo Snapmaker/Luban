@@ -101,6 +101,7 @@
     "Printing Speed": "Printing Speed",
     "Printing Temperature": "Printing Temperature",
     "Printing Temperature Initial Layer": "Initial Layer Printing Temperature",
+    "Final Printing Temperature": "Final Printing Temperature",
     "Prints walls in order of outside to inside when enabled. This can help improve dimensional accuracy in X and Y when using a high viscosity plastic like ABS; however it can decrease outer surface print quality, especially on overhangs.": "When enabled, prints walls in order of outside to inside. This helps improve dimensional accuracy in X and Y when using a high viscosity plastic like ABS; however it can decrease outer surface print quality, especially on overhangs.",
     "Quality": "Quality",
     "Quarter Cubic": "Quarter Cubic",

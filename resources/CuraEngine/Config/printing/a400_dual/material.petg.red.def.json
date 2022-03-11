@@ -62,6 +62,12 @@
     },
     "retraction_hop_enabled": {
       "default_value": false
+    },
+    "switch_extruder_retraction_amount": {
+        "default_value": 6.5
+    },
+    "switch_extruder_retraction_speeds": {
+        "default_value": 60
     }
   }
 }

@@ -151,6 +151,12 @@
         },
         "prime_tower_line_width": {
             "default_value": 0.4
+        },
+        "material_final_print_temperature": {
+            "default_value": 100
+        },
+        "material_standby_temperature": {
+            "default_value": 100
         }
     }
 }

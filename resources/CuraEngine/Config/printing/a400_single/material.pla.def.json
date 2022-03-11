@@ -580,7 +580,7 @@
       "default_value": 200
     },
     "material_final_print_temperature": {
-      "default_value": 195
+      "default_value": 100
     },
     "material_extrusion_cool_down_speed": {
       "default_value": 0.7
