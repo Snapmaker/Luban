@@ -113,10 +113,11 @@ const createServer = (options, callback) => {
         route: '/',
         server: () => createApplication()
     });
-
+    console.log('before startServices');
     webappengine({ port, host, backlog, routes })
         .on('ready', (server) => {
             // Start socket service
+            console.log('start startServices');
             startServices(server);
 
             // Deal with address bindings

@@ -1,28 +1,32 @@
+/* eslint-disable import/no-cycle */
 import events from 'events';
+import { machineStore } from '../../store/local-storage';
 import {
-    HEAD_CNC,
-    HEAD_LASER,
-    HEAD_PRINTING,
-    MACHINE_SERIES,
-    WORKFLOW_STATUS_UNKNOWN,
-    CONNECTION_HEARTBEAT,
-    LEVEL_TWO_POWER_LASER_FOR_SM2, STANDARD_CNC_TOOLHEAD_FOR_SM2,
-    LEVEL_ONE_POWER_LASER_FOR_SM2, SINGLE_EXTRUDER_TOOLHEAD_FOR_SM2,
+    // HEAD_CNC,
+    // HEAD_LASER,
+    // HEAD_PRINTING,
+    // MACHINE_SERIES,
+    // LEVEL_TWO_POWER_LASER_FOR_SM2, STANDARD_CNC_TOOLHEAD_FOR_SM2,
+    // LEVEL_ONE_POWER_LASER_FOR_SM2, SINGLE_EXTRUDER_TOOLHEAD_FOR_SM2,
+    CONNECTION_STATUS_CONNECTING,
     WORKFLOW_STATUS_RUNNING,
     WORKFLOW_STATUS_IDLE,
-    // CONNECTION_OPEN,
+    CONNECTION_OPEN,
     CONNECTION_CLOSE,
     CONNECTION_EXECUTE_GCODE,
     CONNECTION_START_GCODE,
     CONNECTION_RESUME_GCODE,
     CONNECTION_PAUSE_GCODE,
     CONNECTION_STOP_GCODE,
-    // CONNECTION_GET_GCODEFILE
+    CONNECTION_TYPE_SERIAL,
+    CONNECTION_TYPE_WIFI,
 } from '../../constants';
-import { valueOf } from '../../lib/contants-utils';
 import { controller } from '../../lib/controller';
 import { actions as workspaceActions } from '../workspace';
-import { actions as machineActions } from './index.js';
+
+import machineActions from './index';
+import connectActions from './action-connect';
+import baseActions from './action-base';
 import { dispatch } from '../../store';
 
 /**
@@ -48,20 +52,47 @@ export class Server extends events.EventEmitter {
         this.address = address;
         this.token = '';
         this.port = port || 8080;
-        // this.model = model || 'Unknown Model';
+        // this.model = model || 'Unknown Model'
         this.selected = false;
-        this._stateInit();
     }
 
     get isWifi() {
         return Boolean(this.address);
     }
 
+    openServer(callback) {
+        console.log('this.isWifi', this.isWifi);
+        controller.emitEvent(CONNECTION_OPEN, {
+            host: this.host,
+            token: this.token,
+            connectionType: this.isWifi ? CONNECTION_TYPE_WIFI : CONNECTION_TYPE_SERIAL,
+            port: this.port
+        })
+            .once(CONNECTION_OPEN, ({ msg, data, text }) => {
+                console.log('msg, data, text', msg, data);
+                if (this.isWifi) {
+                    dispatch(baseActions.updateState({
+                        isOpen: true,
+                        connectionStatus: CONNECTION_STATUS_CONNECTING
+                    }));
+                    if (msg) {
+                        callback && callback({ msg, data, text });
+                        return;
+                    }
+                    dispatch(connectActions.setServerAddress(this.address));
+                    dispatch(connectActions.setServerToken(this.token));
+                    callback && callback({ data });
+                } else {
+                    // dispatch(baseActions.resetMachineState());
+                    machineStore.set('port', this.port);
+                }
+            });
+    }
+
     closeServer() {
         controller.emitEvent(CONNECTION_CLOSE)
             .once(CONNECTION_CLOSE, (options) => {
                 console.log('options', options);
-                this._closeServer();
                 dispatch(machineActions.resetMachineState());
                 dispatch(workspaceActions.updateMachineState({
                     headType: '',
@@ -75,7 +106,7 @@ export class Server extends events.EventEmitter {
             .emitEvent(CONNECTION_EXECUTE_GCODE, { gcode, context, cmd })
             .once(CONNECTION_EXECUTE_GCODE, (gcodeArray) => {
                 if (gcodeArray) {
-                    dispatch(machineActions.addConsoleLogs(gcodeArray));
+                    dispatch(baseActions.addConsoleLogs(gcodeArray));
                 }
             });
     }
@@ -83,7 +114,7 @@ export class Server extends events.EventEmitter {
     startServerGcode(args, callback) {
         controller.emitEvent(CONNECTION_START_GCODE, args)
             .once(CONNECTION_START_GCODE, ({ msg, code }) => {
-                dispatch(machineActions.updateState({
+                dispatch(baseActions.updateState({
                     isSendedOnWifi: true
                 }));
                 if (msg) {
@@ -92,13 +123,13 @@ export class Server extends events.EventEmitter {
                 }
                 if (this.isWifi) {
                     this.state.gcodePrintingInfo.startTime = new Date().getTime();
-                    dispatch(machineActions.updateState({
+                    dispatch(baseActions.updateState({
                         workflowStatus: WORKFLOW_STATUS_RUNNING
                     }));
                 }
             });
 
-        dispatch(machineActions.updateState({
+        dispatch(baseActions.updateState({
             isSendedOnWifi: false
         }));
     }
@@ -125,7 +156,7 @@ export class Server extends events.EventEmitter {
                     callback && callback({ msg, code, data });
                     return;
                 }
-                dispatch(machineActions.updateState({
+                dispatch(baseActions.updateState({
                     workflowStatus: WORKFLOW_STATUS_IDLE
                 }));
             });
@@ -135,61 +166,6 @@ export class Server extends events.EventEmitter {
         this.token = token;
     }
 
-    _stateInit() {
-        this.token = '';
-        this.isConnected = false;
-        this.waitConfirm = false;
-        this.status = WORKFLOW_STATUS_UNKNOWN;
-        this.state = {
-            series: '',
-            pattern: '',
-            isHomed: null,
-            enclosure: false,
-            laserFocalLength: null,
-            laserPower: null,
-            laserCamera: null,
-            workSpeed: null,
-            nozzleTemperature: 0,
-            nozzleTargetTemperature: 0,
-            heatedBedTemperature: 0,
-            heatedBedTargetTemperature: 0,
-            isEnclosureDoorOpen: false,
-            doorSwitchCount: 0,
-            workPosition: {
-                x: 0,
-                y: 0,
-                z: 0
-            },
-            originOffset: {
-                x: 0,
-                y: 0,
-                z: 0
-            },
-            gcodePrintingInfo: {
-                sent: 0,
-                received: 0,
-                total: 0,
-                startTime: 0,
-                finishTime: 0,
-                elapsedTime: 0,
-                remainingTime: 0
-            },
-            isEmergencyStopped: false,
-            laser10WErrorState: 0,
-            airPurifier: false,
-            airPurifierSwitch: false,
-            airPurifierFanSpeed: 1,
-            airPurifierFilterHealth: 0,
-            headType: '',
-            toolHead: '',
-            moduleStatusList: {}
-        };
-    }
-
-    _closeServer() {
-        this._stateInit();
-    }
-
     get host() {
         return `http://${this.address}:${this.port}`;
     }
@@ -197,68 +173,6 @@ export class Server extends events.EventEmitter {
     equals(server) {
         const { name, address } = server;
         return (name && name === this.name && address && address === this.address);
-    }
-
-    open = (options, callback) => {
-        const { msg, data, code, text } = options;
-        if (this.token && code === 403) {
-            this.token = '';
-            this.open(callback);
-        }
-        if (msg) {
-            callback({ msg, status: code }, data, text);
-            return;
-        }
-        if (data) {
-            const { series } = data;
-            const seriesValue = valueOf(MACHINE_SERIES, 'alias', series);
-            data.series = seriesValue ? seriesValue.value : null;
-
-            let headType = data.headType;
-            let toolHead;
-            switch (data.headType) {
-                case 1:
-                    headType = HEAD_PRINTING;
-                    toolHead = SINGLE_EXTRUDER_TOOLHEAD_FOR_SM2;
-                    break;
-                case 2:
-                    headType = HEAD_CNC;
-                    toolHead = STANDARD_CNC_TOOLHEAD_FOR_SM2;
-                    break;
-                case 3:
-                    headType = HEAD_LASER;
-                    toolHead = LEVEL_ONE_POWER_LASER_FOR_SM2;
-                    break;
-                case 4:
-                    headType = HEAD_LASER;
-                    toolHead = LEVEL_TWO_POWER_LASER_FOR_SM2;
-                    break;
-                default:
-                    headType = data.headType;
-                    toolHead = undefined;
-            }
-            this.state.series = data.series;
-            this.state.headType = headType;
-            this.state.toolHead = toolHead;
-        }
-
-        this.waitConfirm = true;
-        this.startHeartbeat();
-        callback({ data });
-    };
-
-    startHeartbeat = () => {
-        // NOTE: For heartbeat, must keep listening to the change event
-        controller.emitEvent(CONNECTION_HEARTBEAT)
-            .on(CONNECTION_HEARTBEAT, (result) => {
-                const { status, msg, res } = result;
-                if (status === 'offline') {
-                    this.emit('http:close', { err: msg });
-                } else {
-                    const { data, code } = this._getResult(null, res);
-                    this.receiveHeartbeat(data, code);
-                }
-            });
     }
 
     receiveHeartbeat = (data, code) => {

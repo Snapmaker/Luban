@@ -43,6 +43,7 @@ class SerialPortClient {
         'serialport:write': [],
 
         // HTTP events
+        'http:discover': [],
         'machine:discover': [],
         'connection:open': [],
         'connection:close': [],
@@ -133,12 +134,6 @@ class SerialPortClient {
 
         Object.keys(this.callbacks).forEach((eventName) => {
             socketController.on(eventName, (options = {}) => {
-                const { dataSource } = options;
-
-                if (dataSource && dataSource !== this.dataSource) {
-                    return;
-                }
-
                 // log.debug(`socket.on('${eventName}'):`, args);
                 log.debug(`socket.on('${eventName}'):`, options);
 
@@ -223,7 +218,7 @@ class SerialPortClient {
     }
 
     listPorts() {
-        socketController.emit('machine:discover', { dataSource: this.dataSource });
+        socketController.emit('machine:discover', { dataSource: this.dataSource, connectionType: 'serial' });
     }
 
     emitEvent(eventName, options = {}) {
@@ -233,7 +228,7 @@ class SerialPortClient {
 
     // Discover Wi-Fi enabled Snapmakers
     listHTTPServers() {
-        socketController.emit('machine:discover');
+        socketController.emit('machine:discover', { connectionType: 'wifi' });
     }
 
     slice(params) {

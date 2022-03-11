@@ -4,7 +4,8 @@ import logger from '../../lib/logger';
 import { MarlinController } from '../../controllers';
 import ensureArray from '../../lib/ensure-array';
 import config from '../configstore';
-import { PROTOCOL_TEXT, WRITE_SOURCE_CLIENT, CONNECTION_TYPE_SERIAL } from '../../controllers/constants';
+import { PROTOCOL_TEXT, WRITE_SOURCE_CLIENT } from '../../controllers/constants';
+import { CONNECTION_TYPE_SERIAL } from '../../constants';
 
 const log = logger('service:socket-server');
 let intervalHandle = null;
@@ -17,7 +18,9 @@ class SocketSerial {
     socket = null;
 
     onConnection = (socket) => {
-        intervalHandle = setInterval(this.serialportList(socket), 1000);
+        intervalHandle = setInterval(() => {
+            this.serialportList(socket);
+        }, 1000);
     }
 
     onDisconnection = (socket) => {
@@ -34,7 +37,6 @@ class SocketSerial {
 
     serialportList = (socket) => {
         // const { dataSource = 'text' } = options;
-        log.debug(`machine:discover(): id=${socket.id}`);
 
         serialport.list()
             .then(ports => {
@@ -54,7 +56,7 @@ class SocketSerial {
                         inuse: portsInUse.indexOf(port.path) >= 0
                     };
                 });
-                socket.emit('machine:discover', { devices: availablePorts, type: CONNECTION_TYPE_SERIAL });
+                socket.emit('machine:serial-discover', { devices: availablePorts, type: CONNECTION_TYPE_SERIAL });
             })
             .catch(err => {
                 log.error(err);

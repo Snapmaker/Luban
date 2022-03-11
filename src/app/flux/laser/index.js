@@ -1,5 +1,5 @@
+/* eslint-disable import/no-cycle */
 import * as THREE from 'three';
-// import { DATA_PREFIX, EPSILON } from '../../constants';
 import { cloneDeep } from 'lodash';
 import {
     COORDINATE_MODE_BOTTOM_CENTER,
@@ -28,7 +28,6 @@ import definitionManager from '../manager/DefinitionManager';
 import i18n from '../../lib/i18n';
 import { timestamp } from '../../../shared/lib/random-utils';
 import ProgressStatesManager, { STEP_STAGE } from '../../lib/manager/ProgressManager';
-// import { valueOf } from '../../lib/contants-utils';
 
 const initModelGroup = new ModelGroup('laser');
 const operationHistory = new OperationHistory();

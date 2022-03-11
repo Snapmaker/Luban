@@ -1,6 +1,5 @@
 import request from 'superagent';
 import sendMessage from '../utils/sendMessage';
-
 type IParam = { token: string, host: string, stop?: boolean }
 
 let errorCount = 0;
@@ -16,6 +15,7 @@ const stopBeat = (msg?: string) => {
 const heartBeat = (param: IParam) => {
     return new Promise((resolve) => {
         const { token, host, stop } = param;
+        console.log('intervalHandle', intervalHandle, stop)
         if (stop && intervalHandle) {
             resolve(stopBeat());
             return;
@@ -29,6 +29,7 @@ const heartBeat = (param: IParam) => {
                 .timeout(3000)
                 .end((err: Error, res) => {
                     if (err) {
+                        console.log('err.message', err.message)
                         if (err.message.includes('Timeout')) {
                             timeoutHandle = setTimeout(() => {
                                 resolve(stopBeat(err.message));
@@ -45,11 +46,7 @@ const heartBeat = (param: IParam) => {
                         sendMessage({
                             status: 'online',
                             err,
-                            res: {
-                                text: res.text,
-                                body: res.body,
-                                status: res.status,
-                            }
+                            state: res.body,
                         });
                     }
                 });

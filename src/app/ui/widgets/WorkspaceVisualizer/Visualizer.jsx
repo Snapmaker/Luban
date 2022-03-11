@@ -75,17 +75,17 @@ class Visualizer extends PureComponent {
         updatePause3dpStatus: PropTypes.func.isRequired,
         pause3dpStatus: PropTypes.object,
 
-        isRotate: PropTypes.string.isRequired,
+        isRotate: PropTypes.bool.isRequired,
         toolHead: PropTypes.string.isRequired,
         gcodeFile: PropTypes.object,
         series: PropTypes.string.isRequired,
         headType: PropTypes.string,
         size: PropTypes.object.isRequired,
 
-        isLaserPrintAutoMode: PropTypes.string.isRequired,
-        materialThickness: PropTypes.string.isRequired,
-        laserFocalLength: PropTypes.string.isRequired,
-        background: PropTypes.string.isRequired,
+        isLaserPrintAutoMode: PropTypes.bool.isRequired,
+        materialThickness: PropTypes.number.isRequired,
+        laserFocalLength: PropTypes.string,
+        background: PropTypes.object.isRequired,
         workPosition: PropTypes.object.isRequired,
         originOffset: PropTypes.object.isRequired,
 
@@ -804,6 +804,8 @@ class Visualizer extends PureComponent {
 const mapStateToProps = (state) => {
     const machine = state.machine;
     const workspace = state.workspace;
+    const laser = state.laser;
+
     return {
         size: workspace.size,
         server: machine.server,
@@ -813,24 +815,32 @@ const mapStateToProps = (state) => {
         isEnclosureDoorOpen: machine.isEnclosureDoorOpen,
         laser10WErrorState: machine.laser10WErrorState,
         headType: workspace.headType,
-        // toolHead: workspace.toolHead,
+        toolHead: workspace.toolHead,
         workflowStatus: machine.workflowStatus,
         isConnected: machine.isConnected,
         connectionType: machine.connectionType,
         uploadState: workspace.uploadState,
         gcodeList: workspace.gcodeList,
         gcodeFile: workspace.gcodeFile,
+
         gcodePrintingInfo: machine.gcodePrintingInfo,
         workPosition: machine.workPosition,
+        isLaserPrintAutoMode: machine.isLaserPrintAutoMode,
+        // type
+        materialThickness: machine.materialThickness,
+        background: laser.background,
+        isRotate: workspace.isRotate,
+        // type
+        laserFocalLength: machine.laserFocalLength,
+        originOffset: machine.originOffset,
+
         modelGroup: workspace.modelGroup,
+        series: workspace.series,
         renderState: workspace.renderState,
         boundingBox: workspace.boundingBox,
         renderingTimestamp: workspace.renderingTimestamp,
         stage: workspace.stage,
         progress: workspace.progress,
-        materialThickness: machine.materialThickness,
-        isLaserPrintAutoMode: machine.isLaserPrintAutoMode,
-        isRotate: workspace.isRotate
     };
 };
 

@@ -39,7 +39,7 @@ import styles from './index.styl';
 import ModalSmall from '../../components/Modal/ModalSmall';
 import ModalSmallInput from '../../components/Modal/ModalSmallInput';
 import { Server } from '../../../flux/machine/Server';
-import { actions as workspaceActions } from '../../../flux/workspace';
+// import { actions as workspaceActions } from '../../../flux/workspace';
 // import { machineStore } from '../../../store/local-storage';
 
 export const ModuleStatus = ({ moduleName, status }) => {
@@ -104,6 +104,7 @@ function WifiConnection() {
 
     const actions = {
         onRefreshServers: () => {
+            console.log('onRefreshServers');
             dispatch(machineActions.discover.discoverSnapmakerServers());
         },
         onChangeServerOption: (option) => {
@@ -115,22 +116,24 @@ function WifiConnection() {
         },
         openServer: () => {
             dispatch(machineActions.connect.setSelectedServer(serverState));
-            dispatch(machineActions.openServer(({ msg, data, text }) => {
+            console.log('serverState', serverState);
+            serverState.openServer(({ msg, text }) => {
                 if (msg) {
                     actions.showWifiError(msg, text);
                 }
                 setserverOpenState(null);
-                if (data?.toolHead && data.toolHead === LEVEL_TWO_POWER_LASER_FOR_SM2) {
-                    dispatch(workspaceActions.updateMachineState({
-                        headType: data.headType,
-                        toolHead: data.toolHead,
-                        series: series
-                    }));
-                }
-            }));
+                // has tigger in 'server'
+                // if (data?.toolHead && data.toolHead === LEVEL_TWO_POWER_LASER_FOR_SM2) {
+                //     dispatch(workspaceActions.updateMachineState({
+                //         headType: data.headType,
+                //         toolHead: data.toolHead,
+                //         series: series
+                //     }));
+                // }
+            });
         },
         closeServer: () => {
-            dispatch(machineActions.closeServer());
+            server.closeServer();
             setSavedServerAddressState('');
         },
         hideWifiConnectionMessage: () => {
@@ -191,7 +194,7 @@ function WifiConnection() {
         },
         onCloseWifiConnectionMessage: () => {
             actions.hideWifiConnectionMessage();
-            actions.closeServer();
+            server.closeServer();
         },
 
         /**

@@ -3,7 +3,13 @@ import request from 'superagent';
 import { isEqual } from 'lodash';
 import logger from '../../lib/logger';
 import workerManager from '../task-manager/workerManager';
-import { HEAD_PRINTING, HEAD_LASER, HEAD_CNC } from '../../constants';
+import { HEAD_PRINTING, HEAD_LASER, HEAD_CNC, MACHINE_SERIES,
+    SINGLE_EXTRUDER_TOOLHEAD_FOR_SM2,
+    STANDARD_CNC_TOOLHEAD_FOR_SM2,
+    LEVEL_ONE_POWER_LASER_FOR_SM2,
+    LEVEL_TWO_POWER_LASER_FOR_SM2
+} from '../../constants';
+import { valueOf } from '../../lib/contants-utils';
 import wifiServerManager from './WifiServerManager';
 
 const log = logger('lib:SocketHttp');
@@ -84,12 +90,16 @@ class SocketHttp {
 
     moduleSettings=null;
 
-    connection = (socket) => {
+    onConnection = (socket) => {
         wifiServerManager.onConnection(socket);
     }
 
-    disconnection = (socket) => {
+    onDisconnection = (socket) => {
         wifiServerManager.onDisconnection(socket);
+    }
+
+    refreshDevices = () => {
+        wifiServerManager.refreshDevices();
     }
 
     connectionOpen = (socket, options) => {
@@ -108,7 +118,41 @@ class SocketHttp {
                 if (res?.body?.token) {
                     this.token = res.body.token;
                 }
-                this.socket && this.socket.emit('connection:open', _getResult(err, res));
+                this.startHeartbeat();
+                const result = _getResult(err, res);
+                const { data } = result;
+                if (data) {
+                    const { series } = data;
+                    const seriesValue = valueOf(MACHINE_SERIES, 'alias', series);
+                    data.series = seriesValue ? seriesValue.value : null;
+
+                    let headType = data.headType;
+                    let toolHead;
+                    switch (data.headType) {
+                        case 1:
+                            headType = HEAD_PRINTING;
+                            toolHead = SINGLE_EXTRUDER_TOOLHEAD_FOR_SM2;
+                            break;
+                        case 2:
+                            headType = HEAD_CNC;
+                            toolHead = STANDARD_CNC_TOOLHEAD_FOR_SM2;
+                            break;
+                        case 3:
+                            headType = HEAD_LASER;
+                            toolHead = LEVEL_ONE_POWER_LASER_FOR_SM2;
+                            break;
+                        case 4:
+                            headType = HEAD_LASER;
+                            toolHead = LEVEL_TWO_POWER_LASER_FOR_SM2;
+                            break;
+                        default:
+                            headType = data.headType;
+                            toolHead = undefined;
+                    }
+                    data.headType = headType;
+                    data.toolHead = toolHead;
+                }
+                this.socket && this.socket.emit('connection:open', result);
             });
     };
 
@@ -221,13 +265,53 @@ class SocketHttp {
         });
     };
 
-    startHeartbeat = (options) => {
-        const { eventName } = options;
+    startHeartbeat = () => {
+        let waitConfirm = true;
+        console.log('startHeartbeat', this.host, this.token);
         this.heartBeatWorker = workerManager.heartBeat([{
             host: this.host,
             token: this.token
         }], (result) => {
-            this.socket && this.socket.emit(eventName, result);
+            if (result.status === 'offline') {
+                console.log('result.status', result.status);
+                this.socket && this.socket.emit('serialport:close');
+                return;
+            }
+            let state = result.state;
+            if (state.isEmergencyStopped) {
+                console.log('state.isEmergencyStopped', state.isEmergencyStopped);
+                this.socket && this.socket.emit('serialport:emergencyStop');
+                return;
+            }
+            state = {
+                ...state,
+                isFourAxis: Boolean(state.b),
+                pos: {
+                    x: state.x,
+                    y: state.y,
+                    z: state.z,
+                    b: state.b,
+                },
+                originOffset: {
+                    x: state.offsetX,
+                    y: state.offsetY,
+                    z: state.offsetZ,
+                }
+            };
+            if (waitConfirm) {
+                console.log('serialport:connected');
+                waitConfirm = false;
+                this.socket && this.socket.emit('serialport:connected', {
+                    state,
+                    connectionType: this.connectionType
+                });
+            } else {
+                console.log('Marlin:state');
+                this.socket && this.socket.emit('Marlin:state', {
+                    state,
+                    connectionType: this.connectionType
+                });
+            }
         });
     }
 

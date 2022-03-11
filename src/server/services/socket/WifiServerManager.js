@@ -55,8 +55,6 @@ class WifiServerManager extends EventEmitter {
             }
 
             this.devices.push(device);
-            console.log('this.devices', this.devices);
-
             for (const socket of this.sockets) {
                 socket.emit('machine:discover', {
                     devices: this.devices,
@@ -81,7 +79,6 @@ class WifiServerManager extends EventEmitter {
         const ifaces = os.networkInterfaces();
         for (const key of Object.keys(ifaces)) {
             const iface = ifaces[key];
-
             for (const address of iface) {
                 if (address.family === 'IPv4' && !address.internal) {
                     const broadcastAddress = zipWith(

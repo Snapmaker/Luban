@@ -27,7 +27,7 @@ import styles from './index.styl';
 let loadingTimer = null;
 function SerialConnection() {
     const {
-        port, isOpen, enclosureOnline, isConnected,
+        port, isOpen, enclosureOnline, isConnected, server,
         connectionTimeout, airPurifier, airPurifierHasPower,
         heatedBedTemperature, laserCamera, workflowState, emergencyStopOnline
     } = useSelector(state => state.machine);
@@ -46,6 +46,7 @@ function SerialConnection() {
     const dispatch = useDispatch();
 
     function onListPorts(options) {
+        // // TODO:  change 'ports' to 'servers'
         const { ports: _ports } = options;
         // Update loading state
         if (loadingTimer) {
@@ -160,8 +161,8 @@ function SerialConnection() {
         dispatch(machineActions.openServer({ port: _port, connectionTimeout }));
     }
 
-    function closePort(_port) {
-        dispatch(machineActions.closeServer({ port: _port }));
+    function closePort() {
+        server.closeServer();
     }
 
     const renderPortOption = (option) => {
@@ -231,7 +232,7 @@ function SerialConnection() {
     };
 
     const controllerEvents = {
-        'machine:discover': (options) => onListPorts(options),
+        'machine:serial-discover': (options) => onListPorts(options),
         'connection:open': (options) => onPortOpened(options),
         'serialport:connected': (options) => onPortReady(options),
         'connection:close': (options) => onPortClosed(options)

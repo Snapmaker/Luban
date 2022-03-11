@@ -1,3 +1,4 @@
+/* eslint-disable import/no-cycle */
 import { combineReducers } from 'redux';
 import machine from './machine';
 import printing from './printing';

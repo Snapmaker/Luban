@@ -4,7 +4,6 @@ import TaskManager from './task-manager';
 import socketSerial from './socket/socket-serial';
 import socketSlice from './socket/socket-slice';
 import connectionManager from './socket/ConnectionManager';
-import wifiServerManager from './socket/WifiServerManager';
 
 import urljoin from '../lib/urljoin';
 import settings from '../config/settings';
@@ -58,13 +57,12 @@ function startServices(server) {
     socketServer.registerEvent('generate-support', socketSlice.handleGenerateSupport);
 
     // communication: http & serial port
-    socketServer.registerEvent('machine:discover', connectionManager.refreshDevices);
+    // socketServer.registerEvent('machine:discover', connectionManager.refreshDevices);
 
 
     // socketServer.registerEvent('serialport:close', socketSerial.serialportClose);
     socketServer.registerEvent('command', socketSerial.command);
     socketServer.registerEvent('writeln', socketSerial.writeln);
-
     Object.entries(connectionEventsObject).forEach(([key, value]) => {
         socketServer.registerEvent(key, value);
     });

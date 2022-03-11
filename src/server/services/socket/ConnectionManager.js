@@ -22,20 +22,21 @@ class ConnectionManager {
 
     protocol = '';
 
-    connection = (socket) => {
+    onConnection = (socket) => {
         socketHttp.onConnection(socket);
         socketSerial.onConnection(socket);
     }
 
-    disconnection = (socket) => {
+    onDisconnection = (socket) => {
         socketHttp.onDisconnection(socket);
         socketSerial.onDisconnection(socket);
     }
 
-    refreshDevices = (socket) => {
-        if (this.connectionType === CONNECTION_TYPE_WIFI) {
+    refreshDevices = (socket, options) => {
+        const { connectionType } = options;
+        if (connectionType === CONNECTION_TYPE_WIFI) {
             this.socket.refreshDevices(socket);
-        } else if (this.connectionType === CONNECTION_TYPE_SERIAL) {
+        } else if (connectionType === CONNECTION_TYPE_SERIAL) {
             this.socket.serialportList(socket);
         }
     }
