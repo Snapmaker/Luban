@@ -188,9 +188,9 @@ const createApplication = () => {
     if (settings.verbosity > 0) {
         // https://github.com/expressjs/morgan#use-custom-token-formats
         // Add an ID to all requests and displays it using the :id token
-        morgan.token('id', (req) => {
-            return req.session.id;
-        });
+        // morgan.token('id', (req) => {
+        //     return req.session.id;
+        // });
         app.use(morgan(settings.middleware.morgan.format));
     }
     app.use(compress(settings.middleware.compression));
