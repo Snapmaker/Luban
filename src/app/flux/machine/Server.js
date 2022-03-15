@@ -8,6 +8,7 @@ import {
     // MACHINE_SERIES,
     // LEVEL_TWO_POWER_LASER_FOR_SM2, STANDARD_CNC_TOOLHEAD_FOR_SM2,
     // LEVEL_ONE_POWER_LASER_FOR_SM2, SINGLE_EXTRUDER_TOOLHEAD_FOR_SM2,
+    CONNECTION_HEARTBEAT,
     CONNECTION_STATUS_CONNECTING,
     WORKFLOW_STATUS_RUNNING,
     WORKFLOW_STATUS_IDLE,
@@ -24,7 +25,7 @@ import {
 import { controller } from '../../lib/controller';
 import { actions as workspaceActions } from '../workspace';
 
-import machineActions from './index';
+import { actions as machineActions } from '.';
 import connectActions from './action-connect';
 import baseActions from './action-base';
 import { dispatch } from '../../store';
@@ -38,21 +39,15 @@ const isNotNull = (value) => {
 };
 
 export class Server extends events.EventEmitter {
-    statusTimer = null;
+    gcodePrintingInfo = {};
 
-    errorCount = 0;
-
-    gcodeInfos = [];
-
-    isGcodeExecuting = false;
-
-    constructor(name = '', address = '', port = '') {
+    constructor(name = '', address = '', model, port = '') {
         super();
         this.name = name;
         this.address = address;
         this.token = '';
         this.port = port || 8080;
-        // this.model = model || 'Unknown Model'
+        this.model = model || 'Unknown Model';
         this.selected = false;
     }
 
@@ -61,7 +56,6 @@ export class Server extends events.EventEmitter {
     }
 
     openServer(callback) {
-        console.log('this.isWifi', this.isWifi);
         controller.emitEvent(CONNECTION_OPEN, {
             host: this.host,
             token: this.token,
@@ -69,7 +63,6 @@ export class Server extends events.EventEmitter {
             port: this.port
         })
             .once(CONNECTION_OPEN, ({ msg, data, text }) => {
-                console.log('msg, data, text', msg, data);
                 if (this.isWifi) {
                     dispatch(baseActions.updateState({
                         isOpen: true,
@@ -79,11 +72,13 @@ export class Server extends events.EventEmitter {
                         callback && callback({ msg, data, text });
                         return;
                     }
+                    this.token = data.token;
                     dispatch(connectActions.setServerAddress(this.address));
                     dispatch(connectActions.setServerToken(this.token));
-                    callback && callback({ data });
+                    controller.emitEvent(CONNECTION_HEARTBEAT);
+                    callback && callback({ msg, text });
                 } else {
-                    // dispatch(baseActions.resetMachineState());
+                    dispatch(machineActions.resetMachineState());
                     machineStore.set('port', this.port);
                 }
             });
@@ -91,8 +86,7 @@ export class Server extends events.EventEmitter {
 
     closeServer() {
         controller.emitEvent(CONNECTION_CLOSE)
-            .once(CONNECTION_CLOSE, (options) => {
-                console.log('options', options);
+            .once(CONNECTION_CLOSE, () => {
                 dispatch(machineActions.resetMachineState());
                 dispatch(workspaceActions.updateMachineState({
                     headType: '',
@@ -122,7 +116,7 @@ export class Server extends events.EventEmitter {
                     return;
                 }
                 if (this.isWifi) {
-                    this.state.gcodePrintingInfo.startTime = new Date().getTime();
+                    this.gcodePrintingInfo.startTime = new Date().getTime();
                     dispatch(baseActions.updateState({
                         workflowStatus: WORKFLOW_STATUS_RUNNING
                     }));
@@ -214,7 +208,7 @@ export class Server extends events.EventEmitter {
         isNotNull(data.airPurifierFanSpeed) && (this.state.airPurifierFanSpeed = data.airPurifierFanSpeed);
         isNotNull(data.airPurifierFilterHealth) && (this.state.airPurifierFilterHealth = data.airPurifierFilterHealth);
         isNotNull(data.moduleList) && (this.state.moduleStatusList = data.moduleList);
-        this._updateGcodePrintingInfo(data);
+        // this._updateGcodePrintingInfo(data);
 
         if (this.waitConfirm) {
             this.waitConfirm = false;
@@ -320,13 +314,13 @@ export class Server extends events.EventEmitter {
         };
     }
 
-    _updateGcodePrintingInfo(data) {
+    getGcodePrintingInfo(data) {
         if (!data) {
-            return;
+            return {};
         }
         const { currentLine, estimatedTime, totalLines, fileName = '', progress, elapsedTime, remainingTime, printStatus } = data;
         if (!currentLine || !estimatedTime || !totalLines) {
-            return;
+            return {};
         }
         const sent = currentLine || 0;
         const received = currentLine || 0;
@@ -335,8 +329,8 @@ export class Server extends events.EventEmitter {
         if (received > 0 && received >= totalLines) {
             finishTime = new Date().getTime();
         }
-        this.state.gcodePrintingInfo = {
-            ...this.state.gcodePrintingInfo,
+        this.gcodePrintingInfo = {
+            ...this.gcodePrintingInfo,
             sent,
             received,
             total,
@@ -348,5 +342,6 @@ export class Server extends events.EventEmitter {
             progress,
             printStatus
         };
+        return this.gcodePrintingInfo;
     }
 }

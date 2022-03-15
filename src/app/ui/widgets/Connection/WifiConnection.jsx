@@ -104,7 +104,6 @@ function WifiConnection() {
 
     const actions = {
         onRefreshServers: () => {
-            console.log('onRefreshServers');
             dispatch(machineActions.discover.discoverSnapmakerServers());
         },
         onChangeServerOption: (option) => {
@@ -116,20 +115,11 @@ function WifiConnection() {
         },
         openServer: () => {
             dispatch(machineActions.connect.setSelectedServer(serverState));
-            console.log('serverState', serverState);
             serverState.openServer(({ msg, text }) => {
                 if (msg) {
                     actions.showWifiError(msg, text);
                 }
                 setserverOpenState(null);
-                // has tigger in 'server'
-                // if (data?.toolHead && data.toolHead === LEVEL_TWO_POWER_LASER_FOR_SM2) {
-                //     dispatch(workspaceActions.updateMachineState({
-                //         headType: data.headType,
-                //         toolHead: data.toolHead,
-                //         series: series
-                //     }));
-                // }
             });
         },
         closeServer: () => {
@@ -260,11 +250,6 @@ function WifiConnection() {
             setServerState(firstServer);
         }
     }
-
-    useEffect(() => {
-        // Discover servers on mounted
-        actions.onRefreshServers();
-    }, []);
 
     useEffect(() => {
         if (isConnected) {

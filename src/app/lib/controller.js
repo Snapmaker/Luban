@@ -37,13 +37,13 @@ class SerialPortClient {
         // 'task:error': [],
 
         // Serial Port events
-        'serialport:connected': [],
+        'connection:connected': [],
         'serialport:emergencyStop': [],
         'serialport:read': [],
         'serialport:write': [],
 
         // HTTP events
-        'http:discover': [],
+        'machine:serial-discover': [],
         'machine:discover': [],
         'connection:open': [],
         'connection:close': [],

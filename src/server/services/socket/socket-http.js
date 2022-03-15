@@ -1,17 +1,19 @@
 // import store from '../../store';
 import request from 'superagent';
-import { isEqual } from 'lodash';
+import { isEqual, isNil } from 'lodash';
 import logger from '../../lib/logger';
 import workerManager from '../task-manager/workerManager';
 import { HEAD_PRINTING, HEAD_LASER, HEAD_CNC, MACHINE_SERIES,
     SINGLE_EXTRUDER_TOOLHEAD_FOR_SM2,
     STANDARD_CNC_TOOLHEAD_FOR_SM2,
     LEVEL_ONE_POWER_LASER_FOR_SM2,
-    LEVEL_TWO_POWER_LASER_FOR_SM2
+    LEVEL_TWO_POWER_LASER_FOR_SM2,
+    CONNECTION_TYPE_WIFI
 } from '../../constants';
 import { valueOf } from '../../lib/contants-utils';
 import wifiServerManager from './WifiServerManager';
 
+let waitConfirm;
 const log = logger('lib:SocketHttp');
 
 
@@ -86,12 +88,16 @@ class SocketHttp {
 
     token='';
 
+    state = {};
+
     heartBeatWorker= null;
 
     moduleSettings=null;
 
     onConnection = (socket) => {
         wifiServerManager.onConnection(socket);
+        console.log('intervalHandle', intervalHandle, this.heartBeatWorker);
+        this.heartBeatWorker && this.heartBeatWorker.terminate();
     }
 
     onDisconnection = (socket) => {
@@ -118,13 +124,12 @@ class SocketHttp {
                 if (res?.body?.token) {
                     this.token = res.body.token;
                 }
-                this.startHeartbeat();
                 const result = _getResult(err, res);
                 const { data } = result;
                 if (data) {
                     const { series } = data;
                     const seriesValue = valueOf(MACHINE_SERIES, 'alias', series);
-                    data.series = seriesValue ? seriesValue.value : null;
+                    this.state.series = seriesValue ? seriesValue.value : null;
 
                     let headType = data.headType;
                     let toolHead;
@@ -149,8 +154,8 @@ class SocketHttp {
                             headType = data.headType;
                             toolHead = undefined;
                     }
-                    data.headType = headType;
-                    data.toolHead = toolHead;
+                    this.state.headType = headType;
+                    this.state.toolHead = toolHead;
                 }
                 this.socket && this.socket.emit('connection:open', result);
             });
@@ -169,7 +174,9 @@ class SocketHttp {
         this.host = '';
         this.token = '';
         this.heartBeatWorker && this.heartBeatWorker.terminate();
+        this.heartBeatWorker = null;
         clearInterval(intervalHandle);
+        console.log('this.heartBeatWorker', this.heartBeatWorker, intervalHandle);
     };
 
     startGcode = (options) => {
@@ -266,50 +273,52 @@ class SocketHttp {
     };
 
     startHeartbeat = () => {
-        let waitConfirm = true;
-        console.log('startHeartbeat', this.host, this.token);
+        waitConfirm = true;
         this.heartBeatWorker = workerManager.heartBeat([{
             host: this.host,
             token: this.token
         }], (result) => {
-            if (result.status === 'offline') {
-                console.log('result.status', result.status);
-                this.socket && this.socket.emit('serialport:close');
-                return;
-            }
             let state = result.state;
-            if (state.isEmergencyStopped) {
-                console.log('state.isEmergencyStopped', state.isEmergencyStopped);
-                this.socket && this.socket.emit('serialport:emergencyStop');
+            console.log('waitConfirm', waitConfirm, result.status);
+            if (result.status === 'offline') {
+                console.log('offline', result.status === 'offline');
+                this.socket && this.socket.emit('connection:close');
                 return;
             }
-            state = {
-                ...state,
-                isFourAxis: Boolean(state.b),
-                pos: {
-                    x: state.x,
-                    y: state.y,
-                    z: state.z,
-                    b: state.b,
-                },
-                originOffset: {
-                    x: state.offsetX,
-                    y: state.offsetY,
-                    z: state.offsetZ,
-                }
-            };
+            if (Object.keys(state).length === 0) {
+                return;
+            } else {
+                state = {
+                    ...state,
+                    ...this.state,
+                    isFourAxis: Boolean(state.b),
+                    isHomed: state?.homed,
+                    status: state.status.toLowerCase(),
+                    airPurifier: !isNil(state.airPurifierSwitch),
+                    pos: {
+                        x: state.x,
+                        y: state.y,
+                        z: state.z,
+                        b: state.b,
+                    },
+                    originOffset: {
+                        x: state.offsetX,
+                        y: state.offsetY,
+                        z: state.offsetZ,
+                    }
+                };
+            }
+
             if (waitConfirm) {
-                console.log('serialport:connected');
                 waitConfirm = false;
-                this.socket && this.socket.emit('serialport:connected', {
+                this.socket && this.socket.emit('connection:connected', {
                     state,
-                    connectionType: this.connectionType
+                    type: CONNECTION_TYPE_WIFI
                 });
             } else {
-                console.log('Marlin:state');
                 this.socket && this.socket.emit('Marlin:state', {
                     state,
-                    connectionType: this.connectionType
+                    type: CONNECTION_TYPE_WIFI
                 });
             }
         });
@@ -359,7 +368,6 @@ class SocketHttp {
 
     uploadFile = (options) => {
         const { filename, file, eventName } = options;
-        console.log('uploadFile', filename, file);
         const api = `${this.host}/api/v1/upload`;
         request
             .post(api)

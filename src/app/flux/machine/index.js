@@ -302,17 +302,16 @@ export const actions = {
         // Register event listeners
         const controllerEvents = {
             'Marlin:state': (options) => {
-                // TODO: serialPort & Wifi
-                const { state, connectionType } = options;
+                // Note: serialPort & Wifi
+                const { state } = options;
                 const { headType, pos, originOffset, headStatus, headPower, temperature, zFocus, isHomed, zAxisModule, laser10WErrorState } = state;
                 const machineState = getState().machine;
-                console.log('connectionType', connectionType);
+                const { connectionType } = machineState;
                 if ((machineState.isRotate !== pos.isFourAxis) && (headType === HEAD_LASER || headType === HEAD_CNC)) {
                     dispatch(workspaceActions.updateMachineState({
                         isRotate: pos.isFourAxis
                     }));
                 }
-                // { status, isHomed, x, y, z, b, offsetX, offsetY, offsetZ }
                 if (pos.isFourAxis) {
                     if (machineState.workPosition.x !== pos.x
                         || machineState.workPosition.y !== pos.y
@@ -372,38 +371,41 @@ export const actions = {
                         airPurifierFanSpeed,
                         airPurifierFilterHealth,
                         isEmergencyStopped,
-                        moduleStatusList,
+                        moduleList: moduleStatusList,
                         laserCamera,
                     } = state;
                     dispatch(baseActions.updateState({
-                        workflowStatus: status,
+                        laser10WErrorState,
                         laserFocalLength: laserFocalLength,
                         laserPower: laserPower,
                         isHomed: isHomed,
                         nozzleTemperature: nozzleTemperature,
                         nozzleTargetTemperature: nozzleTargetTemperature,
                         heatedBedTemperature: heatedBedTemperature,
-                        isEnclosureDoorOpen: isEnclosureDoorOpen,
                         doorSwitchCount: doorSwitchCount,
                         heatedBedTargetTemperature: heatedBedTargetTemperature,
-                        isEmergencyStopped: isEmergencyStopped,
-                        laser10WErrorState: laser10WErrorState,
+                        moduleStatusList,
+                        // Note: Wifi indiviual
                         airPurifier: airPurifier,
                         airPurifierSwitch: airPurifierSwitch,
                         airPurifierFanSpeed: airPurifierFanSpeed,
                         airPurifierFilterHealth: airPurifierFilterHealth,
-                        moduleStatusList,
+                        isEmergencyStopped: isEmergencyStopped,
+                        isEnclosureDoorOpen: isEnclosureDoorOpen,
+                        workflowStatus: status,
                         laserCamera
                     }));
+                    // TODO: wifi emergencyStop goes there
                     if (isEmergencyStopped) {
                         dispatch(baseActions.updateState({
                             isEmergencyStopped
                         }));
                         machineState.server.closeServer();
+                        return;
                     }
-                    machineState.server._updateGcodePrintingInfo(state);
-                    dispatch(actions.updateState({
-                        gcodePrintingInfo: machineState.server.gcodePrintingInfo
+
+                    dispatch(baseActions.updateState({
+                        gcodePrintingInfo: machineState.server.getGcodePrintingInfo(state)
                     }));
                 } else {
                     dispatch(baseActions.updateState({
@@ -445,20 +447,31 @@ export const actions = {
                     }));
                 }
             },
-            'serialport:connected': (data) => {
-                const { err } = data;
+            'connection:connected': ({ state, type }) => {
+                const { err } = state;
                 if (err) {
                     return;
                 }
-                const { connectionType, server } = getState().machine;
-                console.log('serialport:connected', data);
-                if (connectionType === CONNECTION_TYPE_WIFI) {
-                    const { series, status, headType, moduleStatusList } = data;
+                // const { server } = getState().machine;
+                if (type === CONNECTION_TYPE_WIFI) {
+                    const { toolHead, series, headType, status, isHomed, moduleStatusList } = state;
                     const _isRotate = moduleStatusList?.rotaryModule;
+                    dispatch(baseActions.updateState({
+                        workflowStatus: status,
+                        isConnected: true,
+                        isSendedOnWifi: true,
+                        connectionStatus: CONNECTION_STATUS_CONNECTED,
+                        isHomed: isHomed
+                    }));
                     dispatch(workspaceActions.updateMachineState({
                         isRotate: _isRotate
                     }));
                     if (series && headType) {
+                        dispatch(workspaceActions.updateMachineState({
+                            series,
+                            headType,
+                            toolHead,
+                        }));
                         dispatch(actions.executeGcodeG54(series, headType));
                         if (_.includes([WORKFLOW_STATUS_PAUSED, WORKFLOW_STATUS_RUNNING], status)) {
                             controller.emitEvent(CONNECTION_GET_GCODEFILE)
@@ -493,11 +506,6 @@ export const actions = {
                             }
                         });
                     }
-                    dispatch(workspaceActions.updateMachineState({
-                        series: server.series,
-                        headType: server.headType,
-                        toolHead: server.toolHead
-                    }));
                 } else {
                     dispatch(workspaceActions.loadGcode());
                 }
@@ -507,9 +515,10 @@ export const actions = {
                     connectionStatus: CONNECTION_STATUS_CONNECTED
                 }));
             },
-            'serialport:close': () => {
-                console.log('wifi offline');
+            'connection:close': () => {
+                dispatch(actions.resetMachineState());
             },
+            // TODO: serialport emergencyStop goes there
             'serialport:emergencyStop': (options) => {
                 dispatch(actions.close(options, true));
             },

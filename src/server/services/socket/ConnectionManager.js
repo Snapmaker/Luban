@@ -35,9 +35,9 @@ class ConnectionManager {
     refreshDevices = (socket, options) => {
         const { connectionType } = options;
         if (connectionType === CONNECTION_TYPE_WIFI) {
-            this.socket.refreshDevices(socket);
+            socketHttp.refreshDevices(socket);
         } else if (connectionType === CONNECTION_TYPE_SERIAL) {
-            this.socket.serialportList(socket);
+            socketSerial.serialportList(socket);
         }
     }
 

@@ -75,10 +75,10 @@ class Visualizer extends PureComponent {
         updatePause3dpStatus: PropTypes.func.isRequired,
         pause3dpStatus: PropTypes.object,
 
-        isRotate: PropTypes.bool.isRequired,
-        toolHead: PropTypes.string.isRequired,
+        isRotate: PropTypes.bool,
+        toolHead: PropTypes.string,
         gcodeFile: PropTypes.object,
-        series: PropTypes.string.isRequired,
+        series: PropTypes.string,
         headType: PropTypes.string,
         size: PropTypes.object.isRequired,
 
@@ -224,6 +224,7 @@ class Visualizer extends PureComponent {
         },
         // FIXME
         'Marlin:state': (options) => {
+            console.log('visualizer Marlin:state', options);
             const { state, dataSource } = options;
             if (dataSource !== PROTOCOL_TEXT) {
                 return;
@@ -538,7 +539,7 @@ class Visualizer extends PureComponent {
         if (this.props.workflowStatus !== WORKFLOW_STATUS_PAUSED && nextProps.workflowStatus === WORKFLOW_STATUS_PAUSED) {
             this.stopToolheadRotationAnimation();
         }
-        if (nextProps.gcodePrintingInfo.sent > 0 && nextProps.gcodePrintingInfo.sent !== this.props.gcodePrintingInfo.sent) {
+        if (nextProps.gcodePrintingInfo && nextProps.gcodePrintingInfo.sent > 0 && nextProps.gcodePrintingInfo.sent !== this.props.gcodePrintingInfo.sent) {
             this.updateWorkPosition(this.props.workPosition);
             this.props.setGcodePrintingIndex(nextProps.gcodePrintingInfo.sent);
             this.renderScene();

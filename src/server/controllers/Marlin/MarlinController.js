@@ -420,7 +420,7 @@ class MarlinController {
         this.controller.on('temperature', (res) => {
             if (!this.ready) {
                 this.ready = true;
-                this.emitAll('serialport:connected', { state: this.controller.state });
+                this.emitAll('connection:connected', { state: this.controller.state, dataSource, type: 'serial' });
             }
             log.silly(`controller.on('temperature'): source=${this.history.writeSource},
                 line=${JSON.stringify(this.history.writeLine)}, res=${JSON.stringify(res)}`);
@@ -585,7 +585,6 @@ class MarlinController {
             // Marlin state
             if (this.controller.state) {
                 this.state = this.controller.state;
-                // this.emitAll('Marlin:state', this.state);
                 this.emitAll('Marlin:state', { state: this.state });
             }
 
@@ -831,7 +830,7 @@ class MarlinController {
                     if (this.handler && !this.ready) {
                         log.error('this machine is not ready');
                         clearInterval(this.handler);
-                        this.emitAll('serialport:connected', { err: 'this machine is not ready' });
+                        this.emitAll('connection:connected', { err: 'this machine is not ready' });
                         this.close();
                     }
                 }, connectionTimeout - 1000);

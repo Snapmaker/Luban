@@ -8,6 +8,7 @@ let timeoutHandle = null;
 let intervalHandle = null;
 
 const stopBeat = (msg?: string) => {
+    console.log('msg', msg)
     clearInterval(intervalHandle);
     sendMessage({ status: 'offline', msg });
 };
@@ -15,7 +16,6 @@ const stopBeat = (msg?: string) => {
 const heartBeat = (param: IParam) => {
     return new Promise((resolve) => {
         const { token, host, stop } = param;
-        console.log('intervalHandle', intervalHandle, stop)
         if (stop && intervalHandle) {
             resolve(stopBeat());
             return;
@@ -28,8 +28,8 @@ const heartBeat = (param: IParam) => {
                 .get(api)
                 .timeout(3000)
                 .end((err: Error, res) => {
+                    console.log("err", err)
                     if (err) {
-                        console.log('err.message', err.message)
                         if (err.message.includes('Timeout')) {
                             timeoutHandle = setTimeout(() => {
                                 resolve(stopBeat(err.message));

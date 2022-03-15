@@ -47,7 +47,7 @@ function SerialConnection() {
 
     function onListPorts(options) {
         // // TODO:  change 'ports' to 'servers'
-        const { ports: _ports } = options;
+        const { devices: _ports } = options;
         // Update loading state
         if (loadingTimer) {
             clearTimeout(loadingTimer);
@@ -234,7 +234,7 @@ function SerialConnection() {
     const controllerEvents = {
         'machine:serial-discover': (options) => onListPorts(options),
         'connection:open': (options) => onPortOpened(options),
-        'serialport:connected': (options) => onPortReady(options),
+        'connection:connected': (options) => onPortReady(options),
         'connection:close': (options) => onPortClosed(options)
     };
 
