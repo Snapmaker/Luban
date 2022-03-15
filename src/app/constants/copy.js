@@ -291,6 +291,11 @@ i18n._('key-Progress/3DP-Failed to generate support.');
 i18n._('key-Progress/3DP-Arranging models...{{progress}}%');
 i18n._('key-Progress/3DP-Arrange models successfully.');
 i18n._('key-Progress/3DP-Arrange models failed.');
+i18n._('key-Progress/3DP-Auto Rotate models...{{progress}}%');
+i18n._('key-Progress/3DP-Auto Rotate models successfully.');
+i18n._('key-Progress/3DP-Auto Rotate models failed.');
+i18n._('key-Printing/LeftBar-Auto Rotate Selected Models');
+i18n._('key-Printing/LeftBar-Auto Rotate All Models');
 
 // Machine Settings
 i18n._('key-App/Settings/MachineSettings-Single Extruder Toolhead');
