@@ -194,6 +194,10 @@ class Visualizer extends PureComponent {
             this.props.setTransformMode(value);
             this.canvas.current.setTransformMode(value);
         },
+        setHoverFace: (value) => {
+            this.canvas.current.setHoverFace(value);
+            this.canvas.current.renderScene();
+        },
         onRotationPlacementSelect: (userData) => {
             this.props.setRotationPlacementFace(userData);
         },
@@ -477,6 +481,7 @@ class Visualizer extends PureComponent {
                     supportActions={this.supportActions}
                     scaleToFitSelectedModel={this.actions.scaleToFitSelectedModel}
                     autoRotateSelectedModel={this.actions.autoRotateSelectedModel}
+                    setHoverFace={this.actions.setHoverFace}
                 />
                 <div className={styles['visualizer-bottom-left']}>
                     <VisualizerBottomLeft actions={this.actions} />

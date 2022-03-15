@@ -19,7 +19,6 @@ const autoRotateModels = async (data) => {
             const z = (box3.max.z + box3.min.z) / 2;
             const center = new THREE.Vector3(x, y, z);
             center.applyMatrix4(matrixWorld);
-
             const { planes, areas } = ThreeUtils.computeGeometryPlanes(convexGeometry, matrixWorld, [], center, inverseNormal);
             const maxArea = Math.max.apply(null, areas);
             const bigPlanes = { planes: null, areas: [] };
@@ -29,9 +28,8 @@ const autoRotateModels = async (data) => {
                 isBig && bigPlanes.areas.push(areas[idx]);
                 return isBig;
             });
-
             if (!bigPlanes.planes.length) {
-                sendMessage({ status: 'progress', value: { progress: (index + 1) / (selectedModelLength + 1) } });
+                sendMessage({ status: 'PROGRESS', value: { progress: (index + 1) / (selectedModelLength + 1) } });
                 return;
             }
             const xyPlaneNormal = new THREE.Vector3(0, 0, -1);
@@ -63,7 +61,7 @@ const autoRotateModels = async (data) => {
             sendMessage({
                 status: 'PARTIAL_SUCCESS',
                 value: {
-                    progress: (index + 1) / (selectedModelLength + 1),
+                    progress: selectedModelLength === 1 ? 0.8 : (index + 1) / (selectedModelLength + 1),
                     targetPlane: targetPlane.normal,
                     xyPlaneNormal,
                     index,

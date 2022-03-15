@@ -23,6 +23,8 @@ class SvgIcon extends PureComponent {
         inputInfo: PropTypes.object,
         hoversize: PropTypes.number, // hover background size
         borderRadius: PropTypes.number,
+        onMouseEnter: PropTypes.func,
+        onMouseLeave: PropTypes.func,
         /** type value:
          * 1. hoverNormal: isHovered background: #EEEFF0, color: the same as this.props.color;
          * 2. hoverNoBackground: isHovered background: transparent, color: #2A2C2E;
@@ -82,6 +84,8 @@ class SvgIcon extends PureComponent {
             type,
             children,
             borderRadius = 4,
+            onMouseEnter,
+            onMouseLeave,
             ...props
         } = this.props;
         let {
@@ -162,8 +166,8 @@ class SvgIcon extends PureComponent {
                     }}
                     onFocus={() => 0}
                     onBlur={() => 0}
-                    onMouseEnter={this.actions.handleMouseOver}
-                    onMouseLeave={this.actions.handleMouseOut}
+                    onMouseEnter={this.props.onMouseEnter || this.actions.handleMouseOver}
+                    onMouseLeave={this.props.onMouseLeave || this.actions.handleMouseOut}
                     onMouseDown={this.actions.handleMouseDown}
                     onMouseUp={this.actions.handleMouseUp}
                 >

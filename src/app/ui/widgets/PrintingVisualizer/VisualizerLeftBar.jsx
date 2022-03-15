@@ -66,7 +66,7 @@ export const CancelButton = ({ onClick }) => {
 CancelButton.propTypes = {
     onClick: PropTypes.func.isRequired,
 };
-function VisualizerLeftBar({ setTransformMode, supportActions, updateBoundingBox, autoRotateSelectedModel, arrangeAllModels }) {
+function VisualizerLeftBar({ setTransformMode, supportActions, updateBoundingBox, autoRotateSelectedModel, arrangeAllModels, setHoverFace }) {
     const size = useSelector(state => state?.machine?.size, shallowEqual);
     const selectedModelArray = useSelector(state => state?.printing?.modelGroup?.selectedModelArray);
     const modelGroup = useSelector(state => state?.printing?.modelGroup);
@@ -257,7 +257,7 @@ function VisualizerLeftBar({ setTransformMode, supportActions, updateBoundingBox
                                             setTransformMode('rotate');
                                         }}
                                         // disabled={!!(transformDisabled || isPrimeTowerSelected)}
-                                        disabled={!hasModels}
+                                        disabled={!(hasModels && !isPrimeTowerSelected) || showRotationAnalyzeModal}
                                     />
                                 </li>
                                 <li
@@ -347,6 +347,7 @@ function VisualizerLeftBar({ setTransformMode, supportActions, updateBoundingBox
                         autoRotateSelectedModel={autoRotateSelectedModel}
                         modelGroup={modelGroup}
                         hasModels={hasModels}
+                        setHoverFace={setHoverFace}
                     />
                 )}
 
@@ -372,6 +373,7 @@ VisualizerLeftBar.propTypes = {
     setTransformMode: PropTypes.func.isRequired,
     updateBoundingBox: PropTypes.func.isRequired,
     arrangeAllModels: PropTypes.func.isRequired,
+    setHoverFace: PropTypes.func.isRequired
 };
 
 export default React.memo(VisualizerLeftBar);

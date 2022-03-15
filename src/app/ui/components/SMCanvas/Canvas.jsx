@@ -323,6 +323,10 @@ class Canvas extends PureComponent {
         }
     }
 
+    setHoverFace(face) {
+        this.controls && this.controls.transformControl.setHoverFace(face);
+    }
+
     animation = () => {
         this.frameId = window.requestAnimationFrame(this.animation);
         this.renderScene();
@@ -601,7 +605,7 @@ class Canvas extends PureComponent {
             if (this.transformSourceType === '2D') {
                 this.light.position.copy(this.camera.position);
             }
-            if (this.controls.transformControl.mode === 'rotate') {
+            if (this.controls.transformControl.mode === 'rotate' && this.modelGroup.selectedModelArray[0]?.type !== 'primeTower') {
                 // this.controls.transformControl
                 this.controls.transformControl.allSelectedPeripherals[4].updateMatrixWorld();
                 this.controls.transformControl.allSelectedPeripherals[5].updateMatrixWorld();

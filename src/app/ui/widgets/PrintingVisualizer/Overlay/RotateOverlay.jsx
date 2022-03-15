@@ -14,6 +14,7 @@ import SvgIcon from '../../../components/SvgIcon';
 import { EPSILON } from '../../../../constants';
 import ThreeGroup from '../../../../models/ThreeGroup';
 import ThreeModel from '../../../../models/ThreeModel';
+import ThreeUtils from '../../../../three-extensions/ThreeUtils';
 
 const isNonUniformScaled = (autoRotateModelArray) => {
     const result = autoRotateModelArray.every(modelItem => {
@@ -37,7 +38,7 @@ const rotateOnlyForUniformScale = (rotateFn, autoRotateModelArray) => {
     }
 };
 
-const initQuaternion = new THREE.Quaternion();
+// const initQuaternion = new THREE.Quaternion();
 
 const RotateOverlay = React.memo(({
     setTransformMode,
@@ -45,13 +46,20 @@ const RotateOverlay = React.memo(({
     rotateWithAnalysis,
     modelGroup,
     hasModels,
-    autoRotateSelectedModel
+    autoRotateSelectedModel,
+    setHoverFace
 }) => {
     const [rotateX, setRotateX] = useState(null);
     const [rotateY, setRotateY] = useState(null);
     const [rotateZ, setRotateZ] = useState(null);
     const selectedModelArray = useSelector(state => state?.printing?.modelGroup?.selectedModelArray);
-    const [hasSelectedModel, setHasSelectedModel] = useState(false);
+    const modelExcludePrimeTower = filter(selectedModelArray, (item) => {
+        return item.type !== 'primeTower';
+    });
+    const hasSelectedModel = modelExcludePrimeTower.length;
+    const isSingleSelected = (modelExcludePrimeTower.length === 1);
+    // const [hasSelectedModel, setHasSelectedModel] = useState(false);
+    // const [isSingleSelected, setIsSingleSelected] = useState(false);
     const rotationAnalysisEnableForSelected = hasModels && selectedModelArray.length && selectedModelArray.every((modelItem) => {
         return modelItem instanceof ThreeGroup || (modelItem instanceof ThreeModel && !modelItem.parent);
     });
@@ -74,13 +82,6 @@ const RotateOverlay = React.memo(({
             });
         };
     }, []);
-
-    useEffect(() => {
-        const modelExcludePrimeTower = filter(selectedModelArray, (item) => {
-            return item.type !== 'primeTower';
-        });
-        setHasSelectedModel(modelExcludePrimeTower.length);
-    }, [selectedModelArray]);
 
     const onModelTransform = (transformations) => {
         const newTransformation = {};
@@ -125,12 +126,18 @@ const RotateOverlay = React.memo(({
         const quaternion = new THREE.Quaternion().setFromAxisAngle(_rotateAxis, THREE.Math.degToRad(rotateAngle));
         if (type === 'freeRotate') {
             selectedModelArray.forEach(modelItem => {
-                initQuaternion.copy(modelItem.meshObject.quaternion);
-                modelItem.meshObject.quaternion.copy(quaternion).multiply(initQuaternion).normalize();
+                const revertParent = ThreeUtils.removeObjectParent(modelItem.meshObject);
+                // initQuaternion.copy(modelItem.meshObject.quaternion);
+                modelItem.meshObject.applyQuaternion(quaternion);
+                modelItem.meshObject.updateMatrix();
+                revertParent();
             });
         } else if (type === 'direction') {
-            initQuaternion.copy(selectedModelArray[0].meshObject.quaternion);
-            selectedModelArray[0].meshObject.quaternion.copy(quaternion).multiply(initQuaternion).normalize();
+            const meshObject = selectedModelArray[0].meshObject;
+            const revertParent = ThreeUtils.removeObjectParent(meshObject);
+            selectedModelArray[0].meshObject.applyQuaternion(quaternion);
+            selectedModelArray[0].meshObject.updateMatrix();
+            revertParent();
         }
         modelGroup.onModelAfterTransform();
         dispatch(printingActions.recordModelAfterTransform('rotate', modelGroup));
@@ -173,40 +180,70 @@ const RotateOverlay = React.memo(({
                             name="ViewLeft"
                             size={24}
                             type={['static']}
-                            disabled={!hasSelectedModel}
+                            disabled={!isSingleSelected}
                             onClick={() => rotateByDirection('Y', -90, 'direction')}
+                            onMouseEnter={() => {
+                                setHoverFace('left');
+                            }}
+                            onMouseLeave={() => {
+                                setHoverFace('null');
+                            }}
                         />
                         <SvgIcon
                             className="margin-left-8"
                             name="ViewFront"
                             size={24}
                             type={['static']}
-                            disabled={!hasSelectedModel}
+                            disabled={!isSingleSelected}
                             onClick={() => rotateByDirection('X', 90, 'direction')}
+                            onMouseEnter={() => {
+                                setHoverFace('front');
+                            }}
+                            onMouseLeave={() => {
+                                setHoverFace('null');
+                            }}
                         />
                         <SvgIcon
                             className="margin-left-8"
                             name="ViewRight"
                             size={24}
                             type={['static']}
-                            disabled={!hasSelectedModel}
+                            disabled={!isSingleSelected}
                             onClick={() => rotateByDirection('Y', 90, 'direction')}
+                            onMouseEnter={() => {
+                                setHoverFace('right');
+                            }}
+                            onMouseLeave={() => {
+                                setHoverFace('null');
+                            }}
                         />
                         <SvgIcon
                             className="margin-left-8"
                             name="ViewFront"
                             size={24}
                             type={['static']}
-                            disabled={!hasSelectedModel}
+                            disabled={!isSingleSelected}
                             onClick={() => rotateByDirection('X', -90, 'direction')}
+                            onMouseEnter={() => {
+                                setHoverFace('back');
+                            }}
+                            onMouseLeave={() => {
+                                setHoverFace('null');
+                            }}
                         />
                         <SvgIcon
                             className="margin-left-8"
                             name="ViewTop"
                             size={24}
                             type={['static']}
-                            disabled={!hasSelectedModel}
+                            disabled={!isSingleSelected}
                             onClick={() => rotateByDirection('X', 180, 'direction')}
+                            onMouseEnter={() => {
+                                setHoverFace('top');
+                            }}
+                            onMouseLeave={() => {
+                                setHoverFace('null');
+                            }}
                         />
                     </div>
                     <Button
@@ -214,7 +251,7 @@ const RotateOverlay = React.memo(({
                         type="primary"
                         priority="level-three"
                         width="100%"
-                        disabled={!hasSelectedModel}
+                        disabled={!isSingleSelected}
                         onClick={rotateWithAnalysis}
                     >
                         <span>{i18n._('key-Printing/LeftBar-Rotate on Face')}</span>
@@ -294,6 +331,7 @@ RotateOverlay.propTypes = {
     rotateWithAnalysis: PropTypes.func.isRequired,
     modelGroup: PropTypes.object.isRequired,
     hasModels: PropTypes.bool.isRequired,
-    autoRotateSelectedModel: PropTypes.func.isRequired
+    autoRotateSelectedModel: PropTypes.func.isRequired,
+    setHoverFace: PropTypes.func.isRequired
 };
 export default RotateOverlay;
