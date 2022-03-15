@@ -11,7 +11,7 @@ import { generateRandomPathName, pathWithRandomSuffix } from '../../shared/lib/r
 import { HEAD_PRINTING, PRINTING_CONFIG_SUBCATEGORY } from '../constants';
 import { convertObjectKeyNameToUnderScoreCase } from '../lib/utils';
 
-const log = logger('print3d-slice');
+const log = logger('service:print3d-slice');
 
 const enginePath = getPath();
 
@@ -47,7 +47,6 @@ function callCuraEngine(modelConfig, supportConfig, outputPath) {
             args.push('-j', supportConfig.configFilePath);
         }
     }
-    console.log(args.join(' '));
     // log.info(`${enginePath} ${args.join(' ')}`);
     return childProcess.spawn(
         enginePath,
@@ -245,7 +244,13 @@ export function generateSupport(modelInfo, onProgress, onSucceed, onError) {
 
     const settingsFilePath = `${DataStorage.tmpDir}/${pathWithRandomSuffix('settings')}.json`;
 
-    fs.writeFileSync(settingsFilePath, JSON.stringify(settingsForSupport));
+    try {
+        fs.writeFileSync(settingsFilePath, JSON.stringify(settingsForSupport));
+    } catch (e) {
+        log.error(`Fail to generate support settings: ${e}`);
+        onError(`Fail to generate support settings: ${e}`);
+        return;
+    }
 
     lubanEngine.modelSupport(DataStorage.tmpDir, DataStorage.tmpDir, settingsFilePath)
         .onStderr('data', (res) => {
@@ -266,6 +271,7 @@ export function generateSupport(modelInfo, onProgress, onSucceed, onError) {
         })
         .end((err, res) => {
             if (err) {
+                log.error(`fail to generate support: ${err}`);
                 onError(err);
             } else {
                 const files = [];

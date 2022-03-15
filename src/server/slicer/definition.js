@@ -6,7 +6,7 @@ import pkg from '../../package.json';
 import logger from '../lib/logger';
 import { ConfigV1Regex, ConfigV1Suffix } from '../constants';
 
-const log = logger('definition');
+const log = logger('service:definition');
 
 const SETTING_FIELDS = [
     'label', 'description', 'type', 'options', 'unit', 'enabled', 'default_value', 'value', 'enabled',
@@ -151,7 +151,7 @@ export class DefinitionLoader {
             json = JSON.parse(data);
             this.loadJSON(headType, definitionId, json);
         } catch (e) {
-            console.error(`JSON Syntax error of: ${definitionId}`);
+            log.error(`JSON Syntax error of: ${definitionId}`);
         }
     }
 
@@ -175,7 +175,7 @@ export class DefinitionLoader {
             json = JSON.parse(data);
             this.loadJSON(headType, definitionId, json);
         } catch (e) {
-            console.error(`Default JSON Syntax error of: ${definitionId}`);
+            log.error(`Default JSON Syntax error of: ${definitionId}`);
         }
     }
 
@@ -349,7 +349,12 @@ export function loadMaterialDefinitions(headType, configPath) {
     // predefined.push('material.petg.def.json');
 
     const configDir = `${DataStorage.configDir}/${headType}`;
-    const defaultFilenames = fs.readdirSync(`${configDir}/${configPath}`);
+    let defaultFilenames = [];
+    try {
+        defaultFilenames = fs.readdirSync(`${configDir}/${configPath}`);
+    } catch (e) {
+        log.error(e);
+    }
     // Load pre-defined definitions first
     const definitions = [];
     for (const filename of predefined) {
@@ -387,7 +392,12 @@ export function loadQualityDefinitions(headType, configPath) {
     predefined.push('quality.high_quality.def.json');
 
     const configDir = `${DataStorage.configDir}/${headType}`;
-    const defaultFilenames = fs.readdirSync(`${configDir}/${configPath}`);
+    let defaultFilenames = [];
+    try {
+        defaultFilenames = fs.readdirSync(`${configDir}/${configPath}`);
+    } catch (e) {
+        log.error(e);
+    }
     // Load pre-defined definitions first
     const definitions = [];
     for (const filename of predefined) {
@@ -434,7 +444,12 @@ export function loadAllSeriesDefinitions(isDefault = false, headType, series = '
 
     const configDir = isDefault ? `${DataStorage.defaultConfigDir}/${headType}`
         : `${DataStorage.configDir}/${headType}`;
-    const defaultFilenames = fs.readdirSync(`${configDir}/${series}`);
+    let defaultFilenames = [];
+    try {
+        defaultFilenames = fs.readdirSync(`${configDir}/${series}`);
+    } catch (e) {
+        log.error(e);
+    }
 
     if (isDefault) {
         for (const filename of predefined) {
@@ -460,7 +475,7 @@ export function loadAllSeriesDefinitions(isDefault = false, headType, series = '
                     }
                     definitions.push(definitionLoader.toObject());
                 } catch (e) {
-                    console.log('e', e);
+                    log.error(e);
                 }
             }
         }

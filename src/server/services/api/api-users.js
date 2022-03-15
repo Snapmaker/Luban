@@ -1,21 +1,21 @@
 import jwt from 'jsonwebtoken';
 import fs from 'fs';
-import bcrypt from 'bcrypt-nodejs';
+// import bcrypt from 'bcrypt-nodejs';
 import castArray from 'lodash/castArray';
 import isPlainObject from 'lodash/isPlainObject';
 import find from 'lodash/find';
-import some from 'lodash/some';
+// import some from 'lodash/some';
 import { v4 as uuid } from 'uuid';
 import settings from '../../config/settings';
 import logger from '../../lib/logger';
 import config from '../configstore';
-import { getPagingRange } from './paging';
+// import { getPagingRange } from './paging';
 import {
-    ERR_BAD_REQUEST,
+    // ERR_BAD_REQUEST,
     ERR_UNAUTHORIZED,
-    ERR_NOT_FOUND,
-    ERR_CONFLICT,
-    ERR_PRECONDITION_FAILED,
+    // ERR_NOT_FOUND,
+    // ERR_CONFLICT,
+    // ERR_PRECONDITION_FAILED,
     ERR_INTERNAL_SERVER_ERROR
 } from '../../constants';
 import DataStorage from '../../DataStorage';
@@ -79,7 +79,7 @@ export const signin = (req, res) => {
     try {
         sceneJson = fs.readFileSync(`${DataStorage.scenesDir}/scene.json`, 'utf8');
     } catch (e) {
-        console.log('e', e);
+        log.error(e);
     }
     if (enabledUsers.length === 0) {
         const user = { id: '', name: '' };
@@ -124,6 +124,7 @@ export const signin = (req, res) => {
 
     jwt.verify(token, settings.secret, (err, user) => {
         if (err) {
+            log.error(err);
             res.status(ERR_INTERNAL_SERVER_ERROR).send({
                 msg: 'Internal server error'
             });
@@ -150,153 +151,153 @@ export const signin = (req, res) => {
     });
 };
 
-export const fetch = (req, res) => {
-    const records = getSanitizedRecords();
-    const { paging = true, page = 1, pageLength = 10 } = req.query;
-    const totalRecords = records.length;
-    const [begin, end] = getPagingRange({ page, pageLength, totalRecords });
-    const pagedRecords = paging ? records.slice(begin, end) : records;
+// export const fetch = (req, res) => {
+//     const records = getSanitizedRecords();
+//     const { paging = true, page = 1, pageLength = 10 } = req.query;
+//     const totalRecords = records.length;
+//     const [begin, end] = getPagingRange({ page, pageLength, totalRecords });
+//     const pagedRecords = paging ? records.slice(begin, end) : records;
 
-    res.send({
-        pagination: {
-            page: Number(page),
-            pageLength: Number(pageLength),
-            totalRecords: Number(totalRecords)
-        },
-        records: pagedRecords.map(record => {
-            const { id, mtime, enabled, name } = { ...record };
-            return { id, mtime, enabled, name };
-        })
-    });
-};
+//     res.send({
+//         pagination: {
+//             page: Number(page),
+//             pageLength: Number(pageLength),
+//             totalRecords: Number(totalRecords)
+//         },
+//         records: pagedRecords.map(record => {
+//             const { id, mtime, enabled, name } = { ...record };
+//             return { id, mtime, enabled, name };
+//         })
+//     });
+// };
 
-export const create = (req, res) => {
-    const {
-        enabled = true,
-        name = '',
-        password = ''
-    } = { ...req.body };
+// // export const create = (req, res) => {
+// //     const {
+// //         enabled = true,
+// //         name = '',
+// //         password = ''
+// //     } = { ...req.body };
 
-    if (!name) {
-        res.status(ERR_BAD_REQUEST).send({
-            msg: 'The "name" parameter must not be empty'
-        });
-        return;
-    }
+// //     if (!name) {
+// //         res.status(ERR_BAD_REQUEST).send({
+// //             msg: 'The "name" parameter must not be empty'
+// //         });
+// //         return;
+// //     }
 
-    if (!password) {
-        res.status(ERR_BAD_REQUEST).send({
-            msg: 'The "password" parameter must not be empty'
-        });
-        return;
-    }
+// //     if (!password) {
+// //         res.status(ERR_BAD_REQUEST).send({
+// //             msg: 'The "password" parameter must not be empty'
+// //         });
+// //         return;
+// //     }
 
-    const records = getSanitizedRecords();
-    if (find(records, { name: name })) {
-        res.status(ERR_CONFLICT).send({
-            msg: 'The specified user already exists'
-        });
-        return;
-    }
+// //     const records = getSanitizedRecords();
+// //     if (find(records, { name: name })) {
+// //         res.status(ERR_CONFLICT).send({
+// //             msg: 'The specified user already exists'
+// //         });
+// //         return;
+// //     }
 
-    try {
-        const salt = bcrypt.genSaltSync();
-        const hash = bcrypt.hashSync(password.trim(), salt);
-        const records2 = getSanitizedRecords();
-        const record = {
-            id: uuid(),
-            mtime: new Date().getTime(),
-            enabled: enabled,
-            name: name,
-            password: hash
-        };
+// //     try {
+// //         const salt = bcrypt.genSaltSync();
+// //         const hash = bcrypt.hashSync(password.trim(), salt);
+// //         const records2 = getSanitizedRecords();
+// //         const record = {
+// //             id: uuid(),
+// //             mtime: new Date().getTime(),
+// //             enabled: enabled,
+// //             name: name,
+// //             password: hash
+// //         };
 
-        records2.push(record);
-        config.set(CONFIG_KEY, records2);
+// //         records2.push(record);
+// //         config.set(CONFIG_KEY, records2);
 
-        res.send({ id: record.id, mtime: record.mtime });
-    } catch (err) {
-        res.status(ERR_INTERNAL_SERVER_ERROR).send({
-            msg: `Failed to save ${JSON.stringify(settings.rcfile)}`
-        });
-    }
-};
+// //         res.send({ id: record.id, mtime: record.mtime });
+// //     } catch (err) {
+// //         res.status(ERR_INTERNAL_SERVER_ERROR).send({
+// //             msg: `Failed to save ${JSON.stringify(settings.rcfile)}`
+// //         });
+// //     }
+// // };
 
-export const read = (req, res) => {
-    const id = req.params.id;
-    const records = getSanitizedRecords();
-    const record = find(records, { id: id });
+// // export const read = (req, res) => {
+// //     const id = req.params.id;
+// //     const records = getSanitizedRecords();
+// //     const record = find(records, { id: id });
 
-    if (!record) {
-        res.status(ERR_NOT_FOUND).send({
-            msg: 'Not found'
-        });
-        return;
-    }
+// //     if (!record) {
+// //         res.status(ERR_NOT_FOUND).send({
+// //             msg: 'Not found'
+// //         });
+// //         return;
+// //     }
 
-    const { mtime, enabled, name } = { ...record };
-    res.send({ id, mtime, enabled, name });
-};
+// //     const { mtime, enabled, name } = { ...record };
+// //     res.send({ id, mtime, enabled, name });
+// // };
 
-export const update = (req, res) => {
-    const id = req.params.id;
-    const records = getSanitizedRecords();
-    const record = find(records, { id: id });
+// // export const update = (req, res) => {
+// //     const id = req.params.id;
+// //     const records = getSanitizedRecords();
+// //     const record = find(records, { id: id });
 
-    if (!record) {
-        res.status(ERR_NOT_FOUND).send({
-            msg: 'Not found'
-        });
-        return;
-    }
+// //     if (!record) {
+// //         res.status(ERR_NOT_FOUND).send({
+// //             msg: 'Not found'
+// //         });
+// //         return;
+// //     }
 
-    const {
-        enabled = record.enabled,
-        name = record.name,
-        oldPassword = '',
-        newPassword = ''
-    } = { ...req.body };
-    const willChangePassword = oldPassword && newPassword;
+// //     const {
+// //         enabled = record.enabled,
+// //         name = record.name,
+// //         oldPassword = '',
+// //         newPassword = ''
+// //     } = { ...req.body };
+// //     const willChangePassword = oldPassword && newPassword;
 
-    // Skip validation for "enabled" and "name"
+// //     // Skip validation for "enabled" and "name"
 
-    if (willChangePassword && !bcrypt.compareSync(oldPassword, record.password)) {
-        res.status(ERR_PRECONDITION_FAILED).send({
-            msg: 'Incorrect password'
-        });
-        return;
-    }
+// //     if (willChangePassword && !bcrypt.compareSync(oldPassword, record.password)) {
+// //         res.status(ERR_PRECONDITION_FAILED).send({
+// //             msg: 'Incorrect password'
+// //         });
+// //         return;
+// //     }
 
-    const inuse = (r) => {
-        return r.id !== id && r.name === name;
-    };
-    if (some(records, inuse)) {
-        res.status(ERR_CONFLICT).send({
-            msg: 'The specified user already exists'
-        });
-        return;
-    }
+// //     const inuse = (r) => {
+// //         return r.id !== id && r.name === name;
+// //     };
+// //     if (some(records, inuse)) {
+// //         res.status(ERR_CONFLICT).send({
+// //             msg: 'The specified user already exists'
+// //         });
+// //         return;
+// //     }
 
-    try {
-        record.mtime = new Date().getTime();
-        record.enabled = Boolean(enabled);
-        record.name = String(name || '');
+// //     try {
+// //         record.mtime = new Date().getTime();
+// //         record.enabled = Boolean(enabled);
+// //         record.name = String(name || '');
 
-        if (willChangePassword) {
-            const salt = bcrypt.genSaltSync();
-            const hash = bcrypt.hashSync(newPassword.trim(), salt);
-            record.password = hash;
-        }
+// //         if (willChangePassword) {
+// //             const salt = bcrypt.genSaltSync();
+// //             const hash = bcrypt.hashSync(newPassword.trim(), salt);
+// //             record.password = hash;
+// //         }
 
-        config.set(CONFIG_KEY, records);
+// //         config.set(CONFIG_KEY, records);
 
-        res.send({ id: record.id, mtime: record.mtime });
-    } catch (err) {
-        res.status(ERR_INTERNAL_SERVER_ERROR).send({
-            msg: `Failed to save ${JSON.stringify(settings.rcfile)}`
-        });
-    }
-};
+// //         res.send({ id: record.id, mtime: record.mtime });
+// //     } catch (err) {
+// //         res.status(ERR_INTERNAL_SERVER_ERROR).send({
+// //             msg: `Failed to save ${JSON.stringify(settings.rcfile)}`
+// //         });
+// //     }
+// // };
 
 /*
 export const __delete = (req, res) => {
@@ -334,6 +335,7 @@ export const resetConfig = async (req, res) => {
             msg: 'Reset user config successfully'
         });
     } catch (e) {
+        log.error(e);
         res.status(500).send({
             msg: 'Failed to reset user config'
         });
@@ -348,6 +350,7 @@ export const longTermBackupConfig = async (req, res) => {
             msg: 'Backup config successfully'
         });
     } catch (e) {
+        log.error(e);
         res.status(500).send({
             msg: 'Backup config failed'
         });
@@ -361,6 +364,7 @@ export const checkNewUser = async (req, res) => {
             isNewUser
         });
     } catch (e) {
+        log.error(e);
         res.status(500).send({
             isNewUser: true
         });

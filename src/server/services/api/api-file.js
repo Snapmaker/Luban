@@ -11,7 +11,7 @@ import { parseLubanGcodeHeader } from '../../lib/parseGcodeHeader';
 import { zipFolder, unzipFile } from '../../lib/archive';
 import { packFirmware } from '../../lib/firmware-build';
 import {
-    ERR_INTERNAL_SERVER_ERROR, HEAD_PRINTING
+    ERR_INTERNAL_SERVER_ERROR, HEAD_PRINTING, ERR_BAD_REQUEST
 } from '../../constants';
 import { DUAL_EXTRUDER_TOOLHEAD_FOR_SM2, getMachineSeriesWithToolhead, INITIAL_TOOL_HEAD_FOR_ORIGINAL, INITIAL_TOOL_HEAD_FOR_SM2 } from '../../../app/constants';
 import { removeSpecialChars } from '../../../shared/lib/utils';
@@ -80,6 +80,9 @@ export const set = async (req, res) => {
         mv(file.path, uploadPath, (err) => {
             if (err) {
                 log.error(`Failed to upload file ${originalName}`);
+                res.status(ERR_INTERNAL_SERVER_ERROR).send({
+                    msg: `Failed to upload file ${originalName}: ${err}`
+                });
             } else {
                 res.send({
                     originalName,
@@ -89,9 +92,15 @@ export const set = async (req, res) => {
             }
         });
     } else { // post file pathname in electron
-        const ret = await cpFileToTmp(JSON.parse(req.body.file));
-        res.send(ret);
-        res.end();
+        try {
+            const ret = await cpFileToTmp(JSON.parse(req.body.file));
+            res.send(ret);
+            res.end();
+        } catch (err) {
+            res.status(ERR_INTERNAL_SERVER_ERROR).send({
+                msg: `Failed to upload file: ${err}`
+            });
+        }
     }
 };
 /**
@@ -117,11 +126,17 @@ export const buildFirmwareFile = (req, res) => {
                 res.end();
             })
             .catch((err) => {
+                log.error(`Unable to build package: ${err}`);
                 res.status(ERR_INTERNAL_SERVER_ERROR).send({
                     msg: 'Unable to build package',
                     error: String(err)
                 });
             });
+    } else {
+        log.warn('files.mainFile or files.moduleFile is required');
+        res.status(ERR_BAD_REQUEST).send({
+            msg: 'files.mainFile or files.moduleFile is required'
+        });
     }
 };
 
@@ -135,6 +150,9 @@ export const uploadCaseFile = (req, res) => {
     fs.copyFile(originalPath, uploadPath, async (err) => {
         if (err) {
             log.error(`Failed to upload file ${originalName}`);
+            res.status(ERR_INTERNAL_SERVER_ERROR).send({
+                msg: `Failed to upload file ${originalName}: ${err}`
+            });
         } else {
             if (path.extname(originalName) === '.zip') {
                 await unzipFile(`${uploadName}`, `${DataStorage.tmpDir}`);
@@ -167,7 +185,10 @@ export const uploadGcodeFile = async (req, res) => {
         uploadPath = `${DataStorage.tmpDir}/${uploadName}`;
         mv(originalPath, uploadPath, (err) => {
             if (err) {
-                log.error(`Failed to upload file ${originalName} ${err}`);
+                log.error(`Failed to upload file ${originalName}: ${err}`);
+                res.status(ERR_INTERNAL_SERVER_ERROR).send({
+                    msg: `Failed to upload file ${originalName}: ${err}`
+                });
             } else {
                 const gcodeHeader = parseLubanGcodeHeader(uploadPath);
                 res.send({
@@ -189,18 +210,25 @@ export const uploadGcodeFile = async (req, res) => {
             name: originalName,
             path: originalPath
         };
-        await cpFileToTmp(gcodeFile);
-        await unzipFile(`${originalName}`, `${DataStorage.tmpDir}`);
-        const stats = fs.statSync(uploadPath);
-        const size = stats.size;
-        const gcodeHeader = parseLubanGcodeHeader(uploadPath);
-        res.send({
-            originalName,
-            uploadName,
-            size,
-            gcodeHeader
-        });
-        res.end();
+        try {
+            await cpFileToTmp(gcodeFile);
+            await unzipFile(`${originalName}`, `${DataStorage.tmpDir}`);
+            const stats = fs.statSync(uploadPath);
+            const size = stats.size;
+            const gcodeHeader = parseLubanGcodeHeader(uploadPath);
+            res.send({
+                originalName,
+                uploadName,
+                size,
+                gcodeHeader
+            });
+            res.end();
+        } catch (err) {
+            log.error(`Failed to upload file ${originalName}: ${err}`);
+            res.status(ERR_INTERNAL_SERVER_ERROR).send({
+                msg: `Failed to upload file ${originalName}: ${err}`
+            });
+        }
     }
 
     /*
@@ -216,6 +244,9 @@ export const uploadGcodeFile = async (req, res) => {
     */
 };
 
+/**
+ * deprecated
+ */
 export const uploadUpdateFile = (req, res) => {
     const file = req.files.file;
     const port = req.body.port;
@@ -262,49 +293,56 @@ export const removeEnv = async (req, res) => {
  */
 export const saveEnv = async (req, res) => {
     const { content } = req.body;
-    const config = JSON.parse(content);
-    const machineInfo = config?.machineInfo;
-    const headType = machineInfo?.headType;
-    const envDir = `${DataStorage.envDir}/${headType}`;
-    // TODO: not just remove the category but only change the file when model changed
-    rmDir(envDir, false);
-    const currentSeriesPath = getSeriesPathFromMachineInfo(machineInfo);
-    const result = await new Promise((resolve, reject) => {
-        const targetPath = `${envDir}/config.json`;
-        fs.writeFile(targetPath, content, (err) => {
-            if (err) {
-                log.error(err);
-                reject(err);
-            } else {
-                resolve({
-                    targetPath
-                });
+    try {
+        const config = JSON.parse(content);
+        const machineInfo = config?.machineInfo;
+        const headType = machineInfo?.headType;
+        const envDir = `${DataStorage.envDir}/${headType}`;
+        // TODO: not just remove the category but only change the file when model changed
+        rmDir(envDir, false);
+        const currentSeriesPath = getSeriesPathFromMachineInfo(machineInfo);
+        const result = await new Promise((resolve, reject) => {
+            const targetPath = `${envDir}/config.json`;
+            fs.writeFile(targetPath, content, (err) => {
+                if (err) {
+                    log.error(err);
+                    reject(err);
+                } else {
+                    resolve({
+                        targetPath
+                    });
+                }
+            });
+        });
+        traverse(config.models, (model) => {
+            // why copy all not just 'uploadName'
+            const { uploadName } = model;
+            if (uploadName) {
+                if (/\.svg$/.test(uploadName) && !(/parsed\.svg$/.test(uploadName))) {
+                    const parseName = uploadName.replace(/\.svg$/, 'parsed.svg');
+                    copyFileSync(`${DataStorage.tmpDir}/${parseName}`, `${envDir}/${parseName}`);
+                }
+                copyFileSync(`${DataStorage.tmpDir}/${uploadName}`, `${envDir}/${uploadName}`);
             }
         });
-    });
-    traverse(config.models, (model) => {
-        // why copy all not just 'uploadName'
-        const { uploadName } = model;
-        if (uploadName) {
-            if (/\.svg$/.test(uploadName) && !(/parsed\.svg$/.test(uploadName))) {
-                const parseName = uploadName.replace(/\.svg$/, 'parsed.svg');
-                copyFileSync(`${DataStorage.tmpDir}/${parseName}`, `${envDir}/${parseName}`);
-            }
-            copyFileSync(`${DataStorage.tmpDir}/${uploadName}`, `${envDir}/${uploadName}`);
-        }
-    });
 
-    if (config.defaultMaterialId && /^material.([0-9_]+)$/.test(config.defaultMaterialId)) {
-        copyFileSync(`${DataStorage.configDir}/${headType}/${currentSeriesPath}/${config.defaultMaterialId}.def.json`, `${envDir}/${config.defaultMaterialId}.def.json`);
+        if (config.defaultMaterialId && /^material.([0-9_]+)$/.test(config.defaultMaterialId)) {
+            copyFileSync(`${DataStorage.configDir}/${headType}/${currentSeriesPath}/${config.defaultMaterialId}.def.json`, `${envDir}/${config.defaultMaterialId}.def.json`);
+        }
+        if (machineInfo?.toolHead?.printingToolhead === DUAL_EXTRUDER_TOOLHEAD_FOR_SM2 && config.defaultMaterialIdRight && /^material.([0-9_]+)$/.test(config.defaultMaterialIdRight)) {
+            copyFileSync(`${DataStorage.configDir}/${headType}/${currentSeriesPath}/${config.defaultMaterialIdRight}.def.json`, `${envDir}/${config.defaultMaterialIdRight}.def.json`);
+        }
+        if (config.defaultQualityId && /^quality.([0-9_]+)$/.test(config.defaultQualityId)) {
+            copyFileSync(`${DataStorage.configDir}/${headType}/${currentSeriesPath}/${config.defaultQualityId}.def.json`, `${envDir}/${config.defaultQualityId}.def.json`);
+        }
+        res.send(result);
+        res.end();
+    } catch (e) {
+        log.error(`Failed to save environment: ${e}`);
+        res.status(ERR_INTERNAL_SERVER_ERROR).send({
+            msg: `Failed to save environment: ${e}`
+        });
     }
-    if (machineInfo?.toolHead?.printingToolhead === DUAL_EXTRUDER_TOOLHEAD_FOR_SM2 && config.defaultMaterialIdRight && /^material.([0-9_]+)$/.test(config.defaultMaterialIdRight)) {
-        copyFileSync(`${DataStorage.configDir}/${headType}/${currentSeriesPath}/${config.defaultMaterialIdRight}.def.json`, `${envDir}/${config.defaultMaterialIdRight}.def.json`);
-    }
-    if (config.defaultQualityId && /^quality.([0-9_]+)$/.test(config.defaultQualityId)) {
-        copyFileSync(`${DataStorage.configDir}/${headType}/${currentSeriesPath}/${config.defaultQualityId}.def.json`, `${envDir}/${config.defaultQualityId}.def.json`);
-    }
-    res.send(result);
-    res.end();
 };
 
 /**
@@ -314,45 +352,58 @@ export const getEnv = async (req, res) => {
     const { headType } = req.body;
     const envDir = `${DataStorage.envDir}/${headType}`;
     const targetPath = `${envDir}/config.json`;
-    const exists = fs.existsSync(targetPath);
-    if (exists) {
-        const content = fs.readFileSync(targetPath).toString();
-        res.send({ result: 1, content });
-    } else {
-        res.send({ result: 0 });
+    try {
+        const exists = fs.existsSync(targetPath);
+        if (exists) {
+            const content = fs.readFileSync(targetPath).toString();
+            res.send({ result: 1, content });
+        } else {
+            res.send({ result: 0 });
+        }
+        res.end();
+    } catch (e) {
+        log.error(`Failed to get environment: ${e}`);
+        res.status(ERR_INTERNAL_SERVER_ERROR).send({
+            msg: `Failed to get environment: ${e}`
+        });
     }
-    res.end();
 };
 /**
  * recover environment saved resource files to tmp dir.
  */
 export const recoverEnv = async (req, res) => {
-    const { content } = req.body;
-    const config = JSON.parse(content);
-    const headType = config?.machineInfo?.headType;
-    const envDir = `${DataStorage.envDir}/${headType}`;
+    try {
+        const { content } = req.body;
+        const config = JSON.parse(content);
+        const headType = config?.machineInfo?.headType;
+        const envDir = `${DataStorage.envDir}/${headType}`;
 
-    const currentSeriesPath = getSeriesPathFromMachineInfo(config?.machineInfo);
+        const currentSeriesPath = getSeriesPathFromMachineInfo(config?.machineInfo);
 
+        traverse(config.models, (model) => {
+            const { originalName, uploadName } = model;
 
-    traverse(config.models, (model) => {
-        const { originalName, uploadName } = model;
+            copyFileSync(`${envDir}/${originalName}`, `${DataStorage.tmpDir}/${originalName}`);
+            copyFileSync(`${envDir}/${uploadName}`, `${DataStorage.tmpDir}/${uploadName}`);
+        });
 
-        copyFileSync(`${envDir}/${originalName}`, `${DataStorage.tmpDir}/${originalName}`);
-        copyFileSync(`${envDir}/${uploadName}`, `${DataStorage.tmpDir}/${uploadName}`);
-    });
-
-    if (config.defaultMaterialId && /^material.([0-9_]+)$/.test(config.defaultMaterialId)) {
-        copyFileSync(`${envDir}/${config.defaultMaterialId}.def.json`, `${DataStorage.configDir}/${headType}/${currentSeriesPath}/${config.defaultMaterialId}.def.json`);
+        if (config.defaultMaterialId && /^material.([0-9_]+)$/.test(config.defaultMaterialId)) {
+            copyFileSync(`${envDir}/${config.defaultMaterialId}.def.json`, `${DataStorage.configDir}/${headType}/${currentSeriesPath}/${config.defaultMaterialId}.def.json`);
+        }
+        if (config.machineInfo?.toolHead?.printingToolhead === DUAL_EXTRUDER_TOOLHEAD_FOR_SM2 && config.defaultMaterialIdRight && /^material.([0-9_]+)$/.test(config.defaultMaterialIdRight)) {
+            copyFileSync(`${envDir}/${config.defaultMaterialIdRight}.def.json`, `${DataStorage.configDir}/${headType}/${currentSeriesPath}/${config.defaultMaterialIdRight}.def.json`);
+        }
+        if (config.defaultQualityId && /^quality.([0-9_]+)$/.test(config.defaultQualityId)) {
+            copyFileSync(`${envDir}/${config.defaultQualityId}.def.json`, `${DataStorage.configDir}/${headType}/${currentSeriesPath}/${config.defaultQualityId}.def.json`);
+        }
+        res.send({ result: 1 });
+        res.end();
+    } catch (e) {
+        log.error(`Failed to recover environment: ${e}`);
+        res.status(ERR_INTERNAL_SERVER_ERROR).send({
+            msg: `Failed to recover environment: ${e}`
+        });
     }
-    if (config.machineInfo?.toolHead?.printingToolhead === DUAL_EXTRUDER_TOOLHEAD_FOR_SM2 && config.defaultMaterialIdRight && /^material.([0-9_]+)$/.test(config.defaultMaterialIdRight)) {
-        copyFileSync(`${envDir}/${config.defaultMaterialIdRight}.def.json`, `${DataStorage.configDir}/${headType}/${currentSeriesPath}/${config.defaultMaterialIdRight}.def.json`);
-    }
-    if (config.defaultQualityId && /^quality.([0-9_]+)$/.test(config.defaultQualityId)) {
-        copyFileSync(`${envDir}/${config.defaultQualityId}.def.json`, `${DataStorage.configDir}/${headType}/${currentSeriesPath}/${config.defaultQualityId}.def.json`);
-    }
-    res.send({ result: 1 });
-    res.end();
 };
 
 
@@ -406,43 +457,46 @@ export const uploadFileToTmp = (req, res) => {
 };
 
 export const recoverProjectFile = async (req, res) => {
-    const file = req.files.file || JSON.parse(req.body.file);
-    // const toolHead = JSON.parse(req.body.toolHead);
-    file.path = DataStorage.resolveRelativePath(file.path);
-    const { uploadName } = await cpFileToTmp(file);
-    let content;
     try {
+        const file = req.files.file || JSON.parse(req.body.file);
+        // const toolHead = JSON.parse(req.body.toolHead);
+        file.path = DataStorage.resolveRelativePath(file.path);
+        const { uploadName } = await cpFileToTmp(file);
+        let content;
         await unzipFile(`${uploadName}`, `${DataStorage.tmpDir}`);
         content = fs.readFileSync(`${DataStorage.tmpDir}/config.json`);
+
+        content = content.toString();
+        const config = JSON.parse(content);
+        // const currentMachine = getMachineSeriesWithToolhead(config?.machineInfo?.series, toolHead);
+        const machineInfo = config?.machineInfo;
+        let headType = machineInfo?.headType;
+        // TODO: for project file of "< version 4.1"
+        if (headType === '3dp') {
+            headType = HEAD_PRINTING;
+            machineInfo.headType = HEAD_PRINTING;
+        }
+        const currentSeriesPath = getSeriesPathFromMachineInfo(machineInfo);
+
+        if (config.defaultMaterialId && /^material.([0-9_]+)$/.test(config.defaultMaterialId)) {
+            const fname = `${DataStorage.tmpDir}/${config.defaultMaterialId}.def.json`;
+            if (fs.existsSync(fname)) {
+                fs.copyFileSync(fname, `${DataStorage.configDir}/${headType}/${currentSeriesPath}/${config.defaultMaterialId}.def.json`);
+            }
+        }
+        if (config.defaultQualityId && /^quality.([0-9_]+)$/.test(config.defaultQualityId)) {
+            const fname = `${DataStorage.tmpDir}/${config.defaultQualityId}.def.json`;
+            if (fs.existsSync(fname)) {
+                fs.copyFileSync(fname, `${DataStorage.configDir}/${headType}/${currentSeriesPath}/${config.defaultQualityId}.def.json`);
+            }
+        }
+
+        res.send({ content, projectPath: file.path });
+        res.end();
     } catch (e) {
-        log.error(`Failed to read file ${uploadName} and ${e}`);
+        log.error(`Failed to recover file: ${e}`);
+        res.status(ERR_INTERNAL_SERVER_ERROR).send({
+            msg: `Failed to recover file: ${e}`
+        });
     }
-
-    content = content.toString();
-    const config = JSON.parse(content);
-    // const currentMachine = getMachineSeriesWithToolhead(config?.machineInfo?.series, toolHead);
-    const machineInfo = config?.machineInfo;
-    let headType = machineInfo?.headType;
-    // TODO: for project file of "< version 4.1"
-    if (headType === '3dp') {
-        headType = HEAD_PRINTING;
-        machineInfo.headType = HEAD_PRINTING;
-    }
-    const currentSeriesPath = getSeriesPathFromMachineInfo(machineInfo);
-
-    if (config.defaultMaterialId && /^material.([0-9_]+)$/.test(config.defaultMaterialId)) {
-        const fname = `${DataStorage.tmpDir}/${config.defaultMaterialId}.def.json`;
-        if (fs.existsSync(fname)) {
-            fs.copyFileSync(fname, `${DataStorage.configDir}/${headType}/${currentSeriesPath}/${config.defaultMaterialId}.def.json`);
-        }
-    }
-    if (config.defaultQualityId && /^quality.([0-9_]+)$/.test(config.defaultQualityId)) {
-        const fname = `${DataStorage.tmpDir}/${config.defaultQualityId}.def.json`;
-        if (fs.existsSync(fname)) {
-            fs.copyFileSync(fname, `${DataStorage.configDir}/${headType}/${currentSeriesPath}/${config.defaultQualityId}.def.json`);
-        }
-    }
-
-    res.send({ content, projectPath: file.path });
-    res.end();
 };

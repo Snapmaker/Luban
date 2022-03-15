@@ -53,22 +53,38 @@ export const set = (req, res) => {
                     // according to EXIF data, rotate image to a correct orientation
                     try {
                         const { buffer: imageBuffer } = await jpegAutoRotate.rotate(originalPath);
-                        fs.writeFile(tempPath, imageBuffer, () => {
-                            next();
+                        fs.writeFile(tempPath, imageBuffer, (err) => {
+                            if (err) {
+                                next(err);
+                            } else {
+                                next();
+                            }
                         });
                     } catch (e) {
-                        mv(originalPath, tempPath, () => {
-                            next();
+                        mv(originalPath, tempPath, (err) => {
+                            if (err) {
+                                next(err);
+                            } else {
+                                next();
+                            }
                         });
                     }
                 } else {
-                    mv(originalPath, tempPath, () => {
-                        next();
+                    mv(originalPath, tempPath, (err) => {
+                        if (err) {
+                            next(err);
+                        } else {
+                            next();
+                        }
                     });
                 }
             } else {
-                fs.copyFile(originalPath, tempPath, () => {
-                    next();
+                fs.copyFile(originalPath, tempPath, (err) => {
+                    if (err) {
+                        next(err);
+                    } else {
+                        next();
+                    }
                 });
             }
         },

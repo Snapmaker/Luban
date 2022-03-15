@@ -25,6 +25,7 @@ export const rmDir = (dirPath, removeSelf) => {
         files = fs.readdirSync(dirPath);
         log.info(`Removing files: ${files}`);
     } catch (e) {
+        log.error(`Read directory fail ${dirPath}`);
         return;
     }
 
