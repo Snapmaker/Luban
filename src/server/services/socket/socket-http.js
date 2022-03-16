@@ -174,7 +174,6 @@ class SocketHttp {
         this.host = '';
         this.token = '';
         this.heartBeatWorker && this.heartBeatWorker.terminate();
-        this.heartBeatWorker = null;
         clearInterval(intervalHandle);
         console.log('this.heartBeatWorker', this.heartBeatWorker, intervalHandle);
     };
@@ -279,9 +278,7 @@ class SocketHttp {
             token: this.token
         }], (result) => {
             let state = result.state;
-            console.log('waitConfirm', waitConfirm, result.status);
             if (result.status === 'offline') {
-                console.log('offline', result.status === 'offline');
                 this.socket && this.socket.emit('connection:close');
                 return;
             }
