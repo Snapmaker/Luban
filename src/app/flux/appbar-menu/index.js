@@ -175,6 +175,7 @@ export const actions = {
                     // clipboard
                 }
             } = getState()[stateName];
+            const { unSaved } = getState().project[stateName];
             const {
                 canUndo,
                 canRedo
@@ -182,6 +183,13 @@ export const actions = {
 
             fileMenu.submenu.forEach(item => {
                 switch (item.id) {
+                    case 'save':
+                        if (unSaved) {
+                            item.enabled = true;
+                        } else {
+                            item.enabled = false;
+                        }
+                        break;
                     case 'export-models':
                         if (currentPath === '#/printing' && hasModel) {
                             item.enabled = true;

@@ -49,7 +49,15 @@ class Menu extends PureComponent {
                         } else {
                             return (
                                 <li key={item.label ? item.label : item.id} className={classNames(styles['menu-item'])}>
-                                    <span role="button" tabIndex="0" onKeyPress={() => {}} className={styles.label} onClick={(e) => { e.stopPropagation(); this.actions.activateMenu(index); }}>{item.label}{item.active}</span>
+                                    <span
+                                        role="button"
+                                        tabIndex="0"
+                                        onKeyPress={() => {}}
+                                        className={styles.label}
+                                        onClick={(e) => { e.stopPropagation(); this.actions.activateMenu(index); }}
+                                    >
+                                        {item.label}{item.active}
+                                    </span>
                                     { item.accelerator ? <span className={styles.accelerator}>{item.accelerator.replace(/CommandOrControl|CmdOrCtrl/ig, 'Ctrl')}</span> : ''}
                                     { item.active ? <Submenu className={classNames(styles['menu-submenu'], styles['sub-2'])} items={item.submenu} /> : '' }
                                 </li>
