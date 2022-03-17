@@ -1,6 +1,8 @@
 import { shallowEqual, useDispatch, useSelector } from 'react-redux';
 import PropTypes from 'prop-types';
 import React, { useState } from 'react';
+import i18next from 'i18next';
+import { includes } from 'lodash';
 import Menu from '../../components/Menu';
 import SvgIcon from '../../components/SvgIcon';
 import i18n from '../../../lib/i18n';
@@ -9,7 +11,7 @@ import { actions as editorActions } from '../../../flux/editor';
 import Dropdown from '../../components/Dropdown';
 import Cnc3DVisualizer from '../../views/Cnc3DVisualizer';
 import MainToolBar from '../../layouts/MainToolBar';
-import { HEAD_CNC, HEAD_LASER, MACHINE_SERIES, CONNECTION_TYPE_WIFI } from '../../../constants';
+import { HEAD_CNC, HEAD_LASER, MACHINE_SERIES, CONNECTION_TYPE_WIFI, longLang } from '../../../constants';
 import { actions as laserActions } from '../../../flux/laser';
 import { renderModal } from '../../utils';
 import LaserSetBackground from '../../widgets/LaserSetBackground';
@@ -218,7 +220,7 @@ function useRenderMainToolBar({ headType, setShowHomePage, setShowJobType, setSh
                                     name="MainToolbarStl3dView"
                                     type={['static']}
                                 >
-                                    <div className="font-size-base color-black-3 height-16 margin-top-4">
+                                    <div className={`${includes(longLang, i18next.language) ? 'font-size-small' : 'font-size-base margin-top-4'} "color-black-3 height-16"`}>
                                         {i18n._('key-CncLaser/MainToolBar-STL 3D View')}
                                         <SvgIcon
                                             type={['static']}
@@ -255,7 +257,7 @@ function useRenderMainToolBar({ headType, setShowHomePage, setShowJobType, setSh
                                     name="MainToolbarCameraCapture"
                                     type={['static']}
                                 >
-                                    <div className="font-size-base color-black-3 height-16 margin-top-4">
+                                    <div className={`${includes(longLang, i18next.language) ? 'font-size-small' : 'font-size-base margin-top-4'} color-black-3 height-16`}>
                                         {i18n._('key-CncLaser/MainToolBar-Camera Capture')}
                                         <SvgIcon
                                             type={['static']}
@@ -324,6 +326,7 @@ function useRenderMainToolBar({ headType, setShowHomePage, setShowJobType, setSh
             return (
                 <MainToolBar
                     leftItems={leftItems}
+                    lang={i18next.language}
                 />
             );
         }

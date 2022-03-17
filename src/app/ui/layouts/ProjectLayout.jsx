@@ -2,6 +2,9 @@ import React, { PureComponent } from 'react';
 // import Sortable from 'react-sortablejs';
 import PropTypes from 'prop-types';
 import classNames from 'classnames';
+import i18next from 'i18next';
+import { includes } from 'lodash';
+import { longLang } from '../../constants';
 import styles from './styles/project.styl';
 
 class ProjectLayout extends PureComponent {
@@ -53,7 +56,7 @@ class ProjectLayout extends PureComponent {
                         renderMainToolBar()
                     )}
                 </div>
-                <div className={styles['content-flex']}>
+                <div className={classNames(styles['content-flex'], includes(longLang, i18next.language) && styles['long-lang-content-height'])}>
                     <div
                         ref={this.rightView}
                         className={classNames(

@@ -10,7 +10,8 @@ class MainToolBar extends PureComponent {
         leftItems: PropTypes.array,
         centerItems: PropTypes.array,
         rightItems: PropTypes.array,
-        mainBarClassName: PropTypes.string
+        mainBarClassName: PropTypes.string,
+        lang: PropTypes.string
     };
 
 
@@ -30,7 +31,7 @@ class MainToolBar extends PureComponent {
 
     render() {
         const actions = this.actions;
-        const { leftItems, centerItems, rightItems, mainBarClassName } = this.props;
+        const { leftItems, centerItems, rightItems, mainBarClassName, lang } = this.props;
         let key = 0;
         return (
             <div
@@ -47,12 +48,12 @@ class MainToolBar extends PureComponent {
                     )}
                 >
                     {leftItems && (leftItems.map((menuItem) => {
-                        return <MenuItem key={key++} menuItem={menuItem} actions={actions} />;
+                        return <MenuItem key={key++} menuItem={menuItem} actions={actions} lang={lang} />;
                     }))}
                 </div>
                 <div className={styles['bar-item']}>
                     {centerItems && (centerItems.map((menuItem) => {
-                        return <MenuItem key={key++} menuItem={menuItem} actions={actions} />;
+                        return <MenuItem key={key++} menuItem={menuItem} actions={actions} lang={lang} />;
                     }))}
                 </div>
                 <div
@@ -62,7 +63,7 @@ class MainToolBar extends PureComponent {
                     )}
                 >
                     {rightItems && (rightItems.map((menuItem) => {
-                        return <MenuItem key={key++} menuItem={menuItem} actions={actions} />;
+                        return <MenuItem key={key++} menuItem={menuItem} actions={actions} lang={lang} />;
                     }))}
                 </div>
             </div>

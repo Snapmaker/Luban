@@ -476,7 +476,7 @@ function ProfileManager({
                                                         {(cate.items.map((currentOption) => {
                                                             const definitionForManager = definitionState?.definitionForManager;
                                                             const displayName = (
-                                                                <div className="display-inherit width-180 margin-left-4">
+                                                                <div className="display-inherit width-196 margin-left-4">
                                                                     <MaterialWithColor name={currentOption.label} color={currentOption.color} />
                                                                 </div>
                                                             );

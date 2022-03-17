@@ -6,12 +6,12 @@ import styles from './styles.styl';
 import '../../../styles/global.styl';
 
 const Button = React.memo((props) => {
-    const { priority = 'level-three', className, suffixIcon, width = '100%', ...rest } = props;
+    const { priority = 'level-three', className, suffixIcon, width = '100%', minWidth, ...rest } = props;
     const ref = useRef();
     const type = priority === 'level-three' ? 'default' : (props.type || 'primary');
     return (
         <div
-            style={{ width: width }}
+            style={{ width: width, minWidth: minWidth }}
             className={classNames(
                 'display-inline',
                 className
@@ -28,7 +28,7 @@ const Button = React.memo((props) => {
                 )}
             >
                 <div className={classNames('position-re', styles['inside-button'])}>
-                    {props.children}
+                    <div className={classNames(!!suffixIcon && styles['width-with-suffix-icon'])}>{props.children}</div>
                     {
                         !!suffixIcon && (priority === 'level-one' || priority === 'level-two') && (
                             <div className={classNames(styles['suffix-container'], 'position-ab')}>
@@ -48,6 +48,7 @@ Button.propTypes = {
     priority: PropTypes.string,
     className: PropTypes.string,
     suffixIcon: PropTypes.element,
+    minWidth: PropTypes.string,
     children: PropTypes.oneOfType([
         PropTypes.number,
         PropTypes.element,

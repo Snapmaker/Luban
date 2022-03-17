@@ -9,7 +9,7 @@ import styles from '../styles.styl';
 import LaserPresentManager from '../../LaserPresentManager';
 import SvgIcon from '../../../components/SvgIcon';
 
-function PresentSelector({ toolDefinitions, setCurrentToolDefinition, setCurrentValueAsProfile, toolDefinition, isModifiedDefinition = false, shouldSaveToolpath = false, saveToolPath }) {
+function PresentSelector({ toolDefinitions, setCurrentToolDefinition, setCurrentValueAsProfile, toolDefinition, isModifiedDefinition = false, shouldSaveToolpath = false, saveToolPath, isModel }) {
     const [showManager, setShowManager] = useState(false);
     // const dispatch = useDispatch();
 
@@ -99,10 +99,10 @@ function PresentSelector({ toolDefinitions, setCurrentToolDefinition, setCurrent
     return (
         <div>
             <React.Fragment>
-                <div className="position-re sm-flex justify-space-between margin-vertical-8">
-                    <span className="sm-flex-auto sm-flex-order-negative height-32">
+                <div className={`margin-vertical-8 ${isModel ? 'position-re sm-flex justify-space-between' : null}`}>
+                    <div className="sm-flex-auto sm-flex-order-negative height-32">
                         {i18n._('Preset')}
-                    </span>
+                    </div>
                     <div className="sm-flex position-re padding-bottom-24">
                         {(isModifiedDefinition
                             && (
@@ -118,7 +118,7 @@ function PresentSelector({ toolDefinitions, setCurrentToolDefinition, setCurrent
                             className="sm-flex align-r"
                             clearable={false}
                             isGroup
-                            size="super-large"
+                            size={isModel ? 'super-large' : 'higher-larger'}
                             valueObj={valueObj}
                             options={toolDefinitionOptions}
                             placeholder={i18n._('key-Laser/ToolpathParameters-Choose profile')}
@@ -151,7 +151,8 @@ PresentSelector.propTypes = {
     isModifiedDefinition: PropTypes.bool.isRequired,
     shouldSaveToolpath: PropTypes.bool,
     saveToolPath: PropTypes.func,
-    setCurrentValueAsProfile: PropTypes.func.isRequired
+    setCurrentValueAsProfile: PropTypes.func.isRequired,
+    isModel: PropTypes.bool
 };
 
 export default PresentSelector;

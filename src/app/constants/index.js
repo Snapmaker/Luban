@@ -1365,3 +1365,5 @@ export const NOZZLE_SIZE_DEFAULT_OPTIONS = [
 
 export const LOAD_MODEL_FROM_INNER = 0;
 export const LOAD_MODEL_FROM_OUTER = 1;
+
+export const longLang = ['de', 'es', 'fr', 'it', 'ru', 'uk', 'ja'];

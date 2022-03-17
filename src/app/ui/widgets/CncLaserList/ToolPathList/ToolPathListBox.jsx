@@ -84,8 +84,11 @@ const ToolpathItem = ({
                 <Anchor
                     className={classNames(
                         'height-24',
+                        'width-254',
+                        'align-l',
                         'sm-flex',
-                        'sm-flex-width'
+                        'sm-flex-width',
+                        'margin-right-16'
                     )}
                     onDoubleClick={handleOnDoubleClick}
                     onClick={handleOnClick}
