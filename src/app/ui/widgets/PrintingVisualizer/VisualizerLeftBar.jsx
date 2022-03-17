@@ -10,11 +10,12 @@ import modal from '../../../lib/modal';
 import SvgIcon from '../../components/SvgIcon';
 import RotationAnalysisOverlay from './Overlay/RotationAnalysisOverlay';
 import EditSupportOverlay from './Overlay/EditSupportOverlay';
-import SupportOverlay from './Overlay/SupportOverlay';
 import { DUAL_EXTRUDER_TOOLHEAD_FOR_SM2, EPSILON } from '../../../constants';
 import { machineStore } from '../../../store/local-storage';
 // import TipTrigger from '../../components/TipTrigger';
 import PrimeTowerModel from '../../../models/PrimeTowerModel';
+/* eslint-disable-next-line import/no-cycle */
+import SupportOverlay from './Overlay/SupportOverlay';
 /* eslint-disable-next-line import/no-cycle */
 import TranslateOverlay from './Overlay/TranslateOverlay';
 /* eslint-disable-next-line import/no-cycle */
@@ -78,7 +79,7 @@ function VisualizerLeftBar({ setTransformMode, supportActions, updateBoundingBox
     const [showEditSupportModal, setShowEditSupportModal] = useState(false);
     const displayedType = useSelector(state => state?.printing?.displayedType, shallowEqual);
     const hasModels = modelGroup.getModels().some(model => model.visible && !(model instanceof PrimeTowerModel));
-    const supportDisabled = (displayedType !== 'model' || modelGroup.getModelsAttachedSupport(false).length === 0);
+    const supportDisabled = (displayedType !== 'model' || modelGroup.getModelsAttachedSupport(false).length === 0 || showRotationAnalyzeModal);
     const isDualExtruder = machineStore.get('machine.toolHead.printingToolhead') === DUAL_EXTRUDER_TOOLHEAD_FOR_SM2;
     const [dualExtruderDisabled, setDualExtruderDisabled] = useState(!models.length);
     const dispatch = useDispatch();
@@ -348,6 +349,7 @@ function VisualizerLeftBar({ setTransformMode, supportActions, updateBoundingBox
                         modelGroup={modelGroup}
                         hasModels={hasModels}
                         setHoverFace={setHoverFace}
+                        transformDisabled={transformDisabled}
                     />
                 )}
 

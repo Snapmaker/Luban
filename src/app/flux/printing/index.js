@@ -2299,9 +2299,9 @@ export const actions = {
         progressStatesManager.startProgress(PROCESS_STAGE.PRINTING_AUTO_ROTATE);
         let selected = [];
         if (modelGroup.getSelectedModelArray().length > 0) {
-            selected = modelGroup.getSelectedModelArray();
+            selected = modelGroup.getSelectedModelArray().filter(item => item.visible);
         } else {
-            selected = modelGroup.getModels('primeTower');
+            selected = modelGroup.getModels('primeTower').filter(item => item.visible);
         }
         dispatch(actions.updateState({
             stage: STEP_STAGE.PRINTING_AUTO_ROTATING_MODELS,

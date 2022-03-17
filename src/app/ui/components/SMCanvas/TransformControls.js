@@ -21,7 +21,7 @@ import {
     Math as ThreeMath,
 } from 'three';
 // import * as THREE from 'three';
-import { throttle } from 'lodash';
+import { throttle, some } from 'lodash';
 import ThreeUtils from '../../../three-extensions/ThreeUtils';
 
 
@@ -614,13 +614,11 @@ class TransformControls extends Object3D {
             const objectPosition = new Vector3();
             const objectScale = new Vector3();
             const objectQuaternion = new Quaternion();
-            this.object.children.forEach((child) => {
-                // Update peripherals
-                this.translatePeripheral.visible = (this.mode === 'translate' && child.visible);
-                this.rotatePeripheral.visible = (this.mode === 'rotate' && child.visible && !this.isPrimeTower);
-                this.scalePeripheral.visible = (this.mode === 'scale' && child.visible);
-                this.mirrorPeripheral.visible = (this.mode === 'mirror' && child.visible && !this.isPrimeTower);
-            });
+            const hasHideModel = some(this.object.children, { visible: false });
+            this.translatePeripheral.visible = (this.mode === 'translate' && !hasHideModel);
+            this.rotatePeripheral.visible = (this.mode === 'rotate' && !hasHideModel && !this.isPrimeTower);
+            this.scalePeripheral.visible = (this.mode === 'scale' && !hasHideModel);
+            this.mirrorPeripheral.visible = (this.mode === 'mirror' && !hasHideModel && !this.isPrimeTower);
             this.object.matrixWorld.decompose(objectPosition, objectQuaternion, objectScale);
             // parent
             this.object.parent.matrixWorld.decompose(this.parentPosition, this.parentQuaternion, this.parentScale);

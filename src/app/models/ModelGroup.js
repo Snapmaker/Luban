@@ -1207,7 +1207,7 @@ class ModelGroup extends EventEmitter {
     updateSelectedGroupTransformation(transformation, newUniformScalingState = this.selectedGroup.uniformScalingState) {
         const { positionX, positionY, positionZ, rotationX, rotationY, rotationZ, scaleX, scaleY, scaleZ, uniformScalingState } = transformation;
         const shouldUniformScale = newUniformScalingState ?? this.selectedGroup.uniformScalingState;
-
+        console.log('this.selected', this.selectedGroup);
         if (positionX !== undefined) {
             this.selectedGroup.position.setX(positionX);
         }
@@ -1287,13 +1287,31 @@ class ModelGroup extends EventEmitter {
             }
         }
         if (rotationX !== undefined) {
-            this.selectedGroup.rotation.x = rotationX;
+            if (this.selectedModelArray.length > 1) {
+                this.selectedGroup.children.forEach((meshItem) => {
+                    meshItem.rotation.x = rotationX;
+                });
+            } else {
+                this.selectedGroup.rotation.x = rotationX;
+            }
         }
         if (rotationY !== undefined) {
-            this.selectedGroup.rotation.y = rotationY;
+            if (this.selectedModelArray.length > 1) {
+                this.selectedGroup.children.forEach((meshItem) => {
+                    meshItem.rotation.y = rotationY;
+                });
+            } else {
+                this.selectedGroup.rotation.y = rotationY;
+            }
         }
         if (rotationZ !== undefined) {
-            this.selectedGroup.rotation.z = rotationZ;
+            if (this.selectedModelArray.length > 1) {
+                this.selectedGroup.children.forEach((meshItem) => {
+                    meshItem.rotation.z = rotationZ;
+                });
+            } else {
+                this.selectedGroup.rotation.z = rotationZ;
+            }
         }
         this.selectedGroup.updateMatrix();
         this.selectedGroup.shouldUpdateBoundingbox = false;

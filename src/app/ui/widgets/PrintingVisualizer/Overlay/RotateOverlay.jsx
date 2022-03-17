@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import * as THREE from 'three';
 import PropTypes from 'prop-types';
-import { throttle, filter, isUndefined, isNull } from 'lodash';
+import { throttle, filter, isUndefined, isNull, every } from 'lodash';
 import i18n from '../../../../lib/i18n';
 import { actions as printingActions } from '../../../../flux/printing';
 /* eslint-disable-next-line import/no-cycle */
@@ -47,23 +47,24 @@ const RotateOverlay = React.memo(({
     modelGroup,
     hasModels,
     autoRotateSelectedModel,
-    setHoverFace
+    setHoverFace,
+    transformDisabled
 }) => {
     const [rotateX, setRotateX] = useState(null);
     const [rotateY, setRotateY] = useState(null);
     const [rotateZ, setRotateZ] = useState(null);
     const selectedModelArray = useSelector(state => state?.printing?.modelGroup?.selectedModelArray);
     const modelExcludePrimeTower = filter(selectedModelArray, (item) => {
-        return item.type !== 'primeTower';
+        return item.type !== 'primeTower' && item.visible;
     });
     const hasSelectedModel = modelExcludePrimeTower.length;
     const isSingleSelected = (modelExcludePrimeTower.length === 1);
     // const [hasSelectedModel, setHasSelectedModel] = useState(false);
     // const [isSingleSelected, setIsSingleSelected] = useState(false);
     const rotationAnalysisEnableForSelected = hasModels && selectedModelArray.length && selectedModelArray.every((modelItem) => {
-        return modelItem instanceof ThreeGroup || (modelItem instanceof ThreeModel && !modelItem.parent);
+        return modelItem instanceof ThreeGroup || modelItem instanceof ThreeModel;
     });
-    // const rotationAnalysisEnableForAll = hasModels && !selectedModelArray.length;
+    const hasHideModel = every(selectedModelArray, { visible: false });
     const dispatch = useDispatch();
     const updateRotate = (detail) => {
         throttle(() => {
@@ -126,6 +127,7 @@ const RotateOverlay = React.memo(({
         const quaternion = new THREE.Quaternion().setFromAxisAngle(_rotateAxis, THREE.Math.degToRad(rotateAngle));
         if (type === 'freeRotate') {
             selectedModelArray.forEach(modelItem => {
+                if (!modelItem.visible) return;
                 const revertParent = ThreeUtils.removeObjectParent(modelItem.meshObject);
                 // initQuaternion.copy(modelItem.meshObject.quaternion);
                 modelItem.meshObject.applyQuaternion(quaternion);
@@ -167,6 +169,7 @@ const RotateOverlay = React.memo(({
                         priority="level-three"
                         width="100%"
                         onClick={autoRotate}
+                        disabled={hasHideModel}
                     >
                         {i18n._(`${rotationAnalysisEnableForSelected ? 'key-Printing/LeftBar-Auto Rotate Selected Models' : 'key-Printing/LeftBar-Auto Rotate All Models'}`)}
                     </Button>
@@ -180,7 +183,7 @@ const RotateOverlay = React.memo(({
                             name="ViewLeft"
                             size={24}
                             type={['static']}
-                            disabled={!isSingleSelected}
+                            disabled={!isSingleSelected || !!transformDisabled}
                             onClick={() => rotateByDirection('Y', -90, 'direction')}
                             onMouseEnter={() => {
                                 setHoverFace('left');
@@ -194,7 +197,7 @@ const RotateOverlay = React.memo(({
                             name="ViewFront"
                             size={24}
                             type={['static']}
-                            disabled={!isSingleSelected}
+                            disabled={!isSingleSelected || !!transformDisabled}
                             onClick={() => rotateByDirection('X', 90, 'direction')}
                             onMouseEnter={() => {
                                 setHoverFace('front');
@@ -208,7 +211,7 @@ const RotateOverlay = React.memo(({
                             name="ViewRight"
                             size={24}
                             type={['static']}
-                            disabled={!isSingleSelected}
+                            disabled={!isSingleSelected || !!transformDisabled}
                             onClick={() => rotateByDirection('Y', 90, 'direction')}
                             onMouseEnter={() => {
                                 setHoverFace('right');
@@ -222,7 +225,7 @@ const RotateOverlay = React.memo(({
                             name="ViewFront"
                             size={24}
                             type={['static']}
-                            disabled={!isSingleSelected}
+                            disabled={!isSingleSelected || !!transformDisabled}
                             onClick={() => rotateByDirection('X', -90, 'direction')}
                             onMouseEnter={() => {
                                 setHoverFace('back');
@@ -236,7 +239,7 @@ const RotateOverlay = React.memo(({
                             name="ViewTop"
                             size={24}
                             type={['static']}
-                            disabled={!isSingleSelected}
+                            disabled={!isSingleSelected || !!transformDisabled}
                             onClick={() => rotateByDirection('X', 180, 'direction')}
                             onMouseEnter={() => {
                                 setHoverFace('top');
@@ -251,7 +254,7 @@ const RotateOverlay = React.memo(({
                         type="primary"
                         priority="level-three"
                         width="100%"
-                        disabled={!isSingleSelected}
+                        disabled={!isSingleSelected || !!transformDisabled}
                         onClick={rotateWithAnalysis}
                     >
                         <span>{i18n._('key-Printing/LeftBar-Rotate on Face')}</span>
@@ -270,7 +273,7 @@ const RotateOverlay = React.memo(({
                                 value={rotateX}
                                 suffix="°"
                                 allowUndefined
-                                disabled={!hasSelectedModel}
+                                disabled={!hasSelectedModel || !!transformDisabled}
                                 onPressEnter={(e) => {
                                     rotateByDirection('X', e.target.value, 'freeRotate');
                                 }}
@@ -286,7 +289,7 @@ const RotateOverlay = React.memo(({
                                 suffix="°"
                                 value={rotateY}
                                 allowUndefined
-                                disabled={!hasSelectedModel}
+                                disabled={!hasSelectedModel || !!transformDisabled}
                                 onPressEnter={(e) => {
                                     rotateByDirection('Y', e.target.value, 'freeRotate');
                                 }}
@@ -301,7 +304,7 @@ const RotateOverlay = React.memo(({
                                 placeholder={i18n._('key-Printing/LeftBar-Enter an degree')}
                                 suffix="°"
                                 value={rotateZ}
-                                disabled={!hasSelectedModel}
+                                disabled={!hasSelectedModel || !!transformDisabled}
                                 allowUndefined
                                 onPressEnter={(e) => {
                                     rotateByDirection('Z', e.target.value, 'freeRotate');
@@ -315,7 +318,7 @@ const RotateOverlay = React.memo(({
                         priority="level-three"
                         width="100%"
                         onClick={resetRotation}
-                        disabled={!hasSelectedModel}
+                        disabled={!hasSelectedModel || !!transformDisabled}
                     >
                         <span>{i18n._('key-Printing/LeftBar-Reset')}</span>
                     </Button>
@@ -332,6 +335,7 @@ RotateOverlay.propTypes = {
     modelGroup: PropTypes.object.isRequired,
     hasModels: PropTypes.bool.isRequired,
     autoRotateSelectedModel: PropTypes.func.isRequired,
-    setHoverFace: PropTypes.func.isRequired
+    setHoverFace: PropTypes.func.isRequired,
+    transformDisabled: PropTypes.bool.isRequired
 };
 export default RotateOverlay;
