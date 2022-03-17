@@ -45,6 +45,8 @@ class ThreeModel extends BaseModel {
 
     gcodeModeMaterial = null;
 
+    displayedType = 'model';
+
     supportFaceMarks = [];
 
     originalGeometry = null;
@@ -64,6 +66,20 @@ class ThreeModel extends BaseModel {
             const materials = objectLoader.parseMaterials(json.materials, textures);
             const newMaterial = Object.values(materials)[0];
             material = newMaterial;
+
+            this.modelModeMaterial = material;
+            this.gcodeModeMaterial = new MeshLambertMaterial({
+                // opacity: 0.2,
+                // transparent: true,
+                // shininess: 1,
+                side: DoubleSide,
+                depthWrite: false,
+                transparent: true,
+                opacity: 0.3,
+                polygonOffset: true,
+                polygonOffsetFactor: -1,
+                polygonOffsetUnits: -5
+            });
         } catch (e) {
             console.error('error', e);
         }
@@ -79,7 +95,6 @@ class ThreeModel extends BaseModel {
             this.geometry = new THREE.PlaneGeometry(width, height);
         }
 
-        this.modelModeMaterial = material;
         this.meshObject = new THREE.Mesh(this.geometry, material);
 
         this.processImageName = processImageName;
@@ -139,6 +154,11 @@ class ThreeModel extends BaseModel {
 
     set visible(value) {
         this.meshObject.visible = value;
+    }
+
+    updateDisplayedType(value) {
+        this.displayedType = value;
+        this.setSelected(false);
     }
 
     updateModelName(newName) {
@@ -265,41 +285,28 @@ class ThreeModel extends BaseModel {
         if (typeof isSelected === 'boolean') {
             this.isSelected = isSelected;
         }
-        if (this.isEditingSupport) {
-            // TODO: uniform material for setting triangle color and textures
-            this.tmpMaterial = this.meshObject.material;
-            this.meshObject.material = materialInSupport;
-        } else if (this.overstepped === true) {
-            this.meshObject.material = this.tmpMaterial || this.meshObject.material;
-            this.meshObject.material.color.set(materialOverstepped);
-            this.tmpMaterial = null;
-        } else if (this.isSelected === true) {
-            this.meshObject.material = this.tmpMaterial || this.meshObject.material;
-            this.meshObject.material.color.set(this._materialSelected.clone());
-            this.tmpMaterial = null;
+        if (this.displayedType !== 'model') {
+            this.meshObject.material = this.gcodeModeMaterial;
         } else {
-            this.meshObject.material = this.tmpMaterial || this.meshObject.material;
-            this.meshObject.material.color.set(this._materialNormal.clone());
-            this.tmpMaterial = null;
+            this.meshObject.material = this.modelModeMaterial;
+            if (this.isEditingSupport) {
+                // TODO: uniform material for setting triangle color and textures
+                this.tmpMaterial = this.meshObject.material;
+                this.meshObject.material = materialInSupport;
+            } else if (this.overstepped === true) {
+                this.meshObject.material = this.tmpMaterial || this.meshObject.material;
+                this.meshObject.material.color.set(materialOverstepped);
+                this.tmpMaterial = null;
+            } else if (this.isSelected === true) {
+                this.meshObject.material = this.tmpMaterial || this.meshObject.material;
+                this.meshObject.material.color.set(this._materialSelected.clone());
+                this.tmpMaterial = null;
+            } else {
+                this.meshObject.material = this.tmpMaterial || this.meshObject.material;
+                this.meshObject.material.color.set(this._materialNormal.clone());
+                this.tmpMaterial = null;
+            }
         }
-
-        // TODO
-        if (this.isSelected === true) {
-            this.meshObject.material = new MeshLambertMaterial({
-                color: this._materialSelected.clone(),
-                // opacity: 0.2,
-                // transparent: true,
-                // shininess: 1,
-                side: DoubleSide,
-                depthWrite: false,
-                transparent: true,
-                opacity: 0.3,
-                polygonOffset: true,
-                polygonOffsetFactor: -1,
-                polygonOffsetUnits: -5
-            });
-        }
-        // console.log('xx', this.meshObject.material);
 
         // for indexed geometry
         if (this.type !== 'primeTower' && this.meshObject.geometry.getAttribute('color')) {
