@@ -1587,6 +1587,7 @@ class ModelGroup extends EventEmitter {
             const group = new ThreeGroup(modelInfo, this);
             group.updateTransformation(modelInfo.transformation);
             this.groupsChildrenMap.set(group, modelInfo.children.map(item => item.modelID));
+            this.emit('add', group);
             return group;
         }
         if (!modelInfo.modelName) {

@@ -176,13 +176,14 @@ const File = {
             callback && callback('web');
         }
     },
-    save(targetFile, tmpFile) {
+    save(targetFile, tmpFile, callback) {
         if (isElectron()) {
             const fs = window.require('fs');
             const app = window.require('electron').remote.app;
             tmpFile = app.getPath('userData') + tmpFile;
 
             fs.copyFileSync(tmpFile, targetFile);
+            callback && callback();
         }
     },
     popFile() {
