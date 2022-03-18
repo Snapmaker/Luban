@@ -2391,137 +2391,143 @@ export const actions = {
         const { modelGroup } = getState().printing;
         modelGroup.defaultSupportSize = size;
     },
-    generateModel: (headType, { loadFrom = LOAD_MODEL_FROM_INNER, originalName, uploadName, sourceWidth, sourceHeight, mode, sourceType, transformation, modelID, extruderConfig, isGroup = false, parentModelID = '', modelName, children, primeTowerTag }) => async (dispatch, getState) => {
-        const { progressStatesManager, defaultQualityId, qualityDefinitions } = getState().printing;
-        const { toolHead: { printingToolhead } } = getState().machine;
-        progressStatesManager.startProgress(PROCESS_STAGE.PRINTING_LOAD_MODEL);
-        dispatch(actions.updateState({
-            stage: STEP_STAGE.PRINTING_LOADING_MODEL,
-            progress: progressStatesManager.updateProgress(STEP_STAGE.PRINTING_LOADING_MODEL, 0.25)
-        }));
-
-        const { size } = getState().machine;
-        const uploadPath = `${DATA_PREFIX}/${uploadName}`;
-        const { modelGroup } = getState().printing;
-
-        if (isGroup) {
-            const modelState = await modelGroup.generateModel({
-                loadFrom,
-                limitSize: size,
-                headType,
-                sourceType,
-                originalName,
-                uploadName,
-                modelName,
-                mode: mode,
-                sourceWidth,
-                width: sourceWidth,
-                sourceHeight,
-                height: sourceHeight,
-                geometry: null,
-                material: null,
-                transformation,
-                modelID,
-                extruderConfig,
-                isGroup,
-                children
-            });
-            dispatch(actions.updateState(modelState));
-            dispatch(actions.displayModel());
-            dispatch(actions.destroyGcodeLine());
+    generateModel: (headType, { loadFrom = LOAD_MODEL_FROM_INNER, originalName, uploadName, sourceWidth, sourceHeight, mode, sourceType, transformation, modelID, extruderConfig, isGroup = false, parentModelID = '', modelName, children, primeTowerTag }) => (dispatch, getState) => {
+        return new Promise(async (resolve, reject) => {
+            const { progressStatesManager, defaultQualityId, qualityDefinitions } = getState().printing;
+            const { toolHead: { printingToolhead } } = getState().machine;
+            progressStatesManager.startProgress(PROCESS_STAGE.PRINTING_LOAD_MODEL);
             dispatch(actions.updateState({
-                stage: STEP_STAGE.PRINTING_LOAD_MODEL_SUCCEED,
-                progress: progressStatesManager.updateProgress(STEP_STAGE.PRINTING_LOADING_MODEL, 1)
+                stage: STEP_STAGE.PRINTING_LOADING_MODEL,
+                progress: progressStatesManager.updateProgress(STEP_STAGE.PRINTING_LOADING_MODEL, 0.25)
             }));
-        } else if (primeTowerTag && printingToolhead === DUAL_EXTRUDER_TOOLHEAD_FOR_SM2) {
-            const activeActiveQualityDefinition = lodashFind(qualityDefinitions, { definitionId: defaultQualityId });
-            const initHeight = transformation?.scaleZ || 0.1;
-            modelGroup.initPrimeTower(initHeight, transformation);
-            const enabledPrimeTower = activeActiveQualityDefinition.settings.prime_tower_enable.default_value;
-            const primeTowerModel = lodashFind(modelGroup.models, { type: 'primeTower' });
-            !enabledPrimeTower && dispatch(actions.hideSelectedModel(primeTowerModel));
-        } else {
-            const onMessage = async (data) => {
-                const { type } = data;
-                switch (type) {
-                    case 'LOAD_MODEL_POSITIONS': {
-                        const { positions, originalPosition } = data;
 
-                        const bufferGeometry = new THREE.BufferGeometry();
-                        const modelPositionAttribute = new THREE.BufferAttribute(positions, 3);
-                        const material = new THREE.MeshPhongMaterial({ color: 0xa0a0a0, specular: 0xb0b0b0, shininess: 0 });
+            const { size } = getState().machine;
+            const uploadPath = `${DATA_PREFIX}/${uploadName}`;
+            const { modelGroup } = getState().printing;
 
-                        bufferGeometry.setAttribute('position', modelPositionAttribute);
+            if (isGroup) {
+                const modelState = await modelGroup.generateModel({
+                    loadFrom,
+                    limitSize: size,
+                    headType,
+                    sourceType,
+                    originalName,
+                    uploadName,
+                    modelName,
+                    mode: mode,
+                    sourceWidth,
+                    width: sourceWidth,
+                    sourceHeight,
+                    height: sourceHeight,
+                    geometry: null,
+                    material: null,
+                    transformation,
+                    modelID,
+                    extruderConfig,
+                    isGroup,
+                    children
+                });
+                dispatch(actions.updateState(modelState));
+                dispatch(actions.displayModel());
+                dispatch(actions.destroyGcodeLine());
+                dispatch(actions.updateState({
+                    stage: STEP_STAGE.PRINTING_LOAD_MODEL_SUCCEED,
+                    progress: progressStatesManager.updateProgress(STEP_STAGE.PRINTING_LOADING_MODEL, 1)
+                }));
+                resolve();
+            } else if (primeTowerTag && printingToolhead === DUAL_EXTRUDER_TOOLHEAD_FOR_SM2) {
+                const activeActiveQualityDefinition = lodashFind(qualityDefinitions, { definitionId: defaultQualityId });
+                const initHeight = transformation?.scaleZ || 0.1;
+                modelGroup.initPrimeTower(initHeight, transformation);
+                const enabledPrimeTower = activeActiveQualityDefinition.settings.prime_tower_enable.default_value;
+                const primeTowerModel = lodashFind(modelGroup.models, { type: 'primeTower' });
+                !enabledPrimeTower && dispatch(actions.hideSelectedModel(primeTowerModel));
+                resolve();
+            } else {
+                const onMessage = async (data) => {
+                    const { type } = data;
+                    switch (type) {
+                        case 'LOAD_MODEL_POSITIONS': {
+                            const { positions, originalPosition } = data;
 
-                        bufferGeometry.computeVertexNormals();
-                        // Create model
-                        // modelGroup.generateModel(modelInfo);
+                            const bufferGeometry = new THREE.BufferGeometry();
+                            const modelPositionAttribute = new THREE.BufferAttribute(positions, 3);
+                            const material = new THREE.MeshPhongMaterial({ color: 0xa0a0a0, specular: 0xb0b0b0, shininess: 0 });
 
-                        const modelState = await modelGroup.generateModel({
-                            loadFrom,
-                            limitSize: size,
-                            headType,
-                            sourceType,
-                            originalName,
-                            modelName,
-                            uploadName,
-                            mode: mode,
-                            sourceWidth,
-                            width: sourceWidth,
-                            sourceHeight,
-                            height: sourceHeight,
-                            geometry: bufferGeometry,
-                            material: material,
-                            transformation,
-                            originalPosition,
-                            modelID,
-                            extruderConfig,
-                            parentModelID
-                        });
-                        dispatch(actions.updateState(modelState));
-                        dispatch(actions.updateAllModelColors());
-                        dispatch(actions.displayModel());
-                        dispatch(actions.destroyGcodeLine());
-                        dispatch(actions.updateState({
-                            stage: STEP_STAGE.PRINTING_LOAD_MODEL_SUCCEED,
-                            progress: progressStatesManager.updateProgress(STEP_STAGE.PRINTING_LOADING_MODEL, 1)
-                        }));
-                        break;
-                    }
-                    case 'LOAD_MODEL_CONVEX': {
-                        const { positions } = data;
+                            bufferGeometry.setAttribute('position', modelPositionAttribute);
 
-                        const convexGeometry = new THREE.BufferGeometry();
-                        const positionAttribute = new THREE.BufferAttribute(positions, 3);
-                        convexGeometry.setAttribute('position', positionAttribute);
+                            bufferGeometry.computeVertexNormals();
+                            // Create model
+                            // modelGroup.generateModel(modelInfo);
 
-                        // const model = modelGroup.children.find(m => m.uploadName === uploadName);
-                        modelGroup.setConvexGeometry(uploadName, convexGeometry);
-
-                        break;
-                    }
-                    case 'LOAD_MODEL_PROGRESS': {
-                        const state = getState().printing;
-                        const progress = 0.25 + data.progress * 0.5;
-                        if (progress - state.progress > 0.01 || progress > 0.75 - EPSILON) {
-                            dispatch(actions.updateState({ progress }));
+                            const modelState = await modelGroup.generateModel({
+                                loadFrom,
+                                limitSize: size,
+                                headType,
+                                sourceType,
+                                originalName,
+                                modelName,
+                                uploadName,
+                                mode: mode,
+                                sourceWidth,
+                                width: sourceWidth,
+                                sourceHeight,
+                                height: sourceHeight,
+                                geometry: bufferGeometry,
+                                material: material,
+                                transformation,
+                                originalPosition,
+                                modelID,
+                                extruderConfig,
+                                parentModelID
+                            });
+                            dispatch(actions.updateState(modelState));
+                            dispatch(actions.updateAllModelColors());
+                            dispatch(actions.displayModel());
+                            dispatch(actions.destroyGcodeLine());
+                            dispatch(actions.updateState({
+                                stage: STEP_STAGE.PRINTING_LOAD_MODEL_SUCCEED,
+                                progress: progressStatesManager.updateProgress(STEP_STAGE.PRINTING_LOADING_MODEL, 1)
+                            }));
+                            resolve();
+                            break;
                         }
-                        break;
+                        case 'LOAD_MODEL_CONVEX': {
+                            const { positions } = data;
+
+                            const convexGeometry = new THREE.BufferGeometry();
+                            const positionAttribute = new THREE.BufferAttribute(positions, 3);
+                            convexGeometry.setAttribute('position', positionAttribute);
+
+                            // const model = modelGroup.children.find(m => m.uploadName === uploadName);
+                            modelGroup.setConvexGeometry(uploadName, convexGeometry);
+
+                            break;
+                        }
+                        case 'LOAD_MODEL_PROGRESS': {
+                            const state = getState().printing;
+                            const progress = 0.25 + data.progress * 0.5;
+                            if (progress - state.progress > 0.01 || progress > 0.75 - EPSILON) {
+                                dispatch(actions.updateState({ progress }));
+                            }
+                            break;
+                        }
+                        case 'LOAD_MODEL_FAILED': {
+                            progressStatesManager.finishProgress(false);
+                            dispatch(actions.updateState({
+                                stage: STEP_STAGE.PRINTING_LOAD_MODEL_FAILED,
+                                progress: 0
+                            }));
+                            reject();
+                            break;
+                        }
+                        default:
+                            break;
                     }
-                    case 'LOAD_MODEL_FAILED': {
-                        progressStatesManager.finishProgress(false);
-                        dispatch(actions.updateState({
-                            stage: STEP_STAGE.PRINTING_LOAD_MODEL_FAILED,
-                            progress: 0
-                        }));
-                        break;
-                    }
-                    default:
-                        break;
-                }
-            };
-            createLoadModelWorker(uploadPath, onMessage);
-        }
+                };
+                createLoadModelWorker(uploadPath, onMessage);
+            }
+        });
     },
     recordAddOperation: (model) => (dispatch, getState) => {
         const { modelGroup } = getState().printing;

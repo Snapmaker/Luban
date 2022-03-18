@@ -28,6 +28,7 @@ import { checkIsSnapmakerProjectFile, checkIsGCodeFile } from '../../lib/check-n
 /* eslint-disable-next-line import/no-cycle */
 import { actions as operationHistoryActions } from '../operation-history';
 import { machineStore } from '../../store/local-storage';
+import ThreeModel from '../../models/ThreeModel';
 
 import i18n from '../../lib/i18n';
 import UniApi from '../../lib/uni-api';
@@ -145,7 +146,7 @@ export const actions = {
         dispatch(actions.updateState(headType, { unSaved: false }));
     },
 
-    recoverModels: (modActions, models, envHeadType) => async (dispatch) => {
+    recoverModels: (promiseArray = [], modActions, models, envHeadType) => (dispatch) => {
         for (let k = 0; k < models.length; k++) {
             const { headType, originalName, uploadName, modelName, config, sourceType, gcodeConfig,
                 sourceWidth, sourceHeight, mode, transformation, modelID, supportTag, extruderConfig, children, parentModelID } = models[k];
@@ -159,11 +160,14 @@ export const actions = {
                 dispatch(operationHistoryActions.excludeModelById(envHeadType, modelID));
             }
 
-            await dispatch(modActions.generateModel(headType, {
-                loadFrom: LOAD_MODEL_FROM_OUTER, originalName, uploadName, modelName, sourceWidth, sourceHeight, mode, sourceType, config, gcodeConfig, transformation, modelID, extruderConfig, isGroup: !!children, parentModelID, children, primeTowerTag
-            }));
+            promiseArray.push(
+                dispatch(modActions.generateModel(headType, {
+                    loadFrom: LOAD_MODEL_FROM_OUTER, originalName, uploadName, modelName, sourceWidth, sourceHeight, mode, sourceType, config, gcodeConfig, transformation, modelID, extruderConfig, isGroup: !!children, parentModelID, children, primeTowerTag
+                }))
+            );
+            console.log('recoverModels promiseArray, children', children);
             if (children && children.length > 0) {
-                await dispatch(actions.recoverModels(modActions, children, envHeadType));
+                dispatch(actions.recoverModels(promiseArray, modActions, children, envHeadType));
             }
         }
     },
@@ -238,8 +242,8 @@ export const actions = {
                 model.mode = PROCESS_MODE_MESH;
             }
         }
-
-        await dispatch(actions.recoverModels(modActions, models, envHeadType));
+        const promiseArray = [];
+        dispatch(actions.recoverModels(promiseArray, modActions, models, envHeadType));
 
         const { toolPathGroup } = modState;
         if (toolPathGroup && toolPathGroup.toolPaths && toolPathGroup.toolPaths.length) {
@@ -266,6 +270,11 @@ export const actions = {
             }
         }
         await dispatch(actions.updateState(envHeadType, { unSaved: true }));
+
+        Promise.all(promiseArray).then(() => {
+            console.log('promiseArray', promiseArray);
+            dispatch(actions.afterOpened(envHeadType));
+        }).catch(console.error);
     },
 
     exportFile: (targetFile, renderGcodeFileName = null) => async (dispatch) => {
@@ -301,18 +310,27 @@ export const actions = {
         UniApi.Menu.setItemEnabled('save', !!openedFile);
     },
 
-    saveAsFile: (headType) => async (dispatch) => {
-        const { body: { targetFile } } = await api.packageEnv({ headType });
-        const tmpFile = `/Tmp/${targetFile}`;
-        const openedFile = await UniApi.File.saveAs(targetFile, tmpFile, (type, filePath = '') => {
+    saveAsFile: (headType) => async (dispatch, getState) => {
+        const { unSaved, openedFile } = getState().project[headType];
+        let tmpFile, targetFile;
+        if (unSaved || !openedFile) {
+            const { body: { targetFile: newTargetFile } } = await api.packageEnv({ headType });
+            targetFile = newTargetFile;
+            tmpFile = `/Tmp/${targetFile}`;
+        } else {
+            const { name } = openedFile;
+            targetFile = name;
+            tmpFile = `/Tmp/${name}`;
+        }
+        const newOpenedFile = await UniApi.File.saveAs(targetFile, tmpFile, (type, filePath = '') => {
             dispatch(appGlobalActions.updateSavedModal({
                 showSavedModal: true,
                 savedModalType: type,
                 savedModalFilePath: filePath
             }));
         });
-        if (openedFile) {
-            await dispatch(actions.setOpenedFileWithType(headType, openedFile));
+        if (newOpenedFile) {
+            await dispatch(actions.setOpenedFileWithType(headType, newOpenedFile));
         }
         await dispatch(actions.clearSavedEnvironment(headType));
     },
@@ -369,6 +387,27 @@ export const actions = {
         const tmpFile = `/Tmp/${targetFile}`;
         UniApi.File.save(openedFile.path, tmpFile);
         await dispatch(actions.clearSavedEnvironment(headType));
+    },
+
+    afterOpened: (headType) => (dispatch, getState) => {
+        const { modelGroup } = getState().printing;
+        if (headType === HEAD_PRINTING) {
+            // when recovering project, add model to its group
+            modelGroup.groupsChildrenMap.forEach((subModels, group) => {
+                console.log('modelGroup.groupsChildrenMap', modelGroup.groupsChildrenMap, subModels, group);
+                if (subModels.every(id => id instanceof ThreeModel)) {
+                    modelGroup.unselectAllModels();
+                    group.add(subModels);
+                    modelGroup.groupsChildrenMap.delete(group);
+                    modelGroup.models = [...modelGroup.models, group];
+                    group.stickToPlate();
+                    group.computeBoundingBox();
+                    const overstepped = modelGroup._checkOverstepped(group);
+                    group.setOversteppedAndSelected(overstepped, group.isSelected);
+                    modelGroup.addModelToSelectedGroup(group);
+                }
+            });
+        }
     },
 
     openProject: (file, history, unReload = false, isGuideTours = false) => async (dispatch, getState) => {
@@ -437,6 +476,7 @@ export const actions = {
             } else {
                 await dispatch(actions.updateState(headType, { unSaved: true, openedFile: null }));
             }
+            console.log('openProject', headType);
         } else if (checkIsGCodeFile(file.name)) {
             dispatch(workspaceActions.uploadGcodeFile(file));
             history.push('/workspace');

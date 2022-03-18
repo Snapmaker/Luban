@@ -1611,7 +1611,7 @@ class ModelGroup extends EventEmitter {
 
         if (model.sourceType === '3d') {
             if (modelInfo.parentModelID) {
-                // when recovering project, add model to its group
+                // Updating groupsChildrenMap value to 'model'
                 this.groupsChildrenMap.forEach((subModelIDs, group) => {
                     if (modelInfo.parentModelID === group.modelID) {
                         const newSubModelIDs = subModelIDs.map(id => {
@@ -1620,21 +1620,10 @@ class ModelGroup extends EventEmitter {
                             }
                             return id;
                         });
-                        if (newSubModelIDs.every(id => id instanceof ThreeModel)) {
-                            this.unselectAllModels();
-                            group.add(newSubModelIDs);
-                            this.groupsChildrenMap.delete(group);
-                            this.models = [...this.models, group];
-                            group.stickToPlate();
-                            group.computeBoundingBox();
-                            const overstepped = this._checkOverstepped(group);
-                            group.setOversteppedAndSelected(overstepped, group.isSelected);
-                            this.addModelToSelectedGroup(group);
-                        } else {
-                            this.groupsChildrenMap.set(group, newSubModelIDs);
-                        }
+                        this.groupsChildrenMap.set(group, newSubModelIDs);
                     }
                 });
+                console.log('Updating groupsChildrenMap value');
             } else {
                 // add to group and select
                 model.stickToPlate();
