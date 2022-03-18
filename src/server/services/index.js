@@ -75,7 +75,7 @@ function registerApis(app) {
     // Utils
     app.get(urljoin(settings.route, 'api/utils/platform'), api.utils.getPlatform); // deprecated?
     app.get(urljoin(settings.route, 'api/utils/fonts'), api.utils.getFonts);
-    app.post(urljoin(settings.route, 'api/utils/font'), api.utils.uploadFont); // deprecated?
+    app.post(urljoin(settings.route, 'api/utils/font'), api.utils.uploadFont);
 
     // State
     // depecated?
