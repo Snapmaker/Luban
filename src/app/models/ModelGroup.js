@@ -1624,7 +1624,6 @@ class ModelGroup extends EventEmitter {
                         this.groupsChildrenMap.set(group, newSubModelIDs);
                     }
                 });
-                console.log('Updating groupsChildrenMap value');
             } else {
                 // add to group and select
                 model.stickToPlate();
