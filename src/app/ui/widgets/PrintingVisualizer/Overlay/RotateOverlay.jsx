@@ -64,7 +64,7 @@ const RotateOverlay = React.memo(({
     const rotationAnalysisEnableForSelected = hasModels && selectedModelArray.length && selectedModelArray.every((modelItem) => {
         return modelItem instanceof ThreeGroup || modelItem instanceof ThreeModel;
     });
-    const hasHideModel = every(selectedModelArray, { visible: false });
+    const hasHideModel = every(selectedModelArray, { visible: false }) && selectedModelArray.length;
     const dispatch = useDispatch();
     const updateRotate = (detail) => {
         throttle(() => {

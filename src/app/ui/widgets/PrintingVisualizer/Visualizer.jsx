@@ -195,6 +195,7 @@ class Visualizer extends PureComponent {
             this.canvas.current.setTransformMode(value);
         },
         setHoverFace: (value) => {
+            if (!this.props.selectedModelArray.length) return;
             this.canvas.current.setHoverFace(value);
             this.canvas.current.renderScene();
         },

@@ -7,7 +7,7 @@
 
 import noop from 'lodash/noop';
 import React, { PureComponent } from 'react';
-import { isNil, throttle } from 'lodash';
+import { isNil, throttle, some } from 'lodash';
 import { Vector3, PerspectiveCamera, Scene, Group, AmbientLight, PointLight,
     HemisphereLight, DirectionalLight } from 'three';
 import PropTypes from 'prop-types';
@@ -623,7 +623,7 @@ class Canvas extends PureComponent {
                 inputDOM.style.left = this.inputPositionLeft;
                 this.controls.transformControl.dragging && (inputDOM.style.display = 'block');
             }
-            if (this.controls.transformControl.mode !== 'rotate' || !this.modelGroup.selectedModelArray.length) {
+            if (this.controls.transformControl.mode !== 'rotate' || !this.modelGroup.selectedModelArray.length || (this.modelGroup.selectedModelArray.length && some(this.modelGroup.selectedModelArray, { visible: false }))) {
                 inputDOM && (inputDOM.style.display = 'none');
             }
             this.renderer.render(this.scene, this.camera);
