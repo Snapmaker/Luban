@@ -100,10 +100,6 @@ const gcodeToBufferGeometry = async (func, filename, extruderColors, onProgress 
     let result = null;
     try {
         const gcode = await readFile(gcodeFilepath);
-        // console.log('renderer', gcode);
-        // const renderer = new GCodeRenderer(gcode, 800, 800, new Color(0x808080));
-        // console.log('xx');
-        // console.log(renderer);
         switch (func) {
             case '3DP': {
                 const { bufferGeometry, layerCount, bounds } = await gcodeToBufferGeometryPrint3d(
@@ -116,7 +112,8 @@ const gcodeToBufferGeometry = async (func, filename, extruderColors, onProgress 
                 result = {
                     bufferGeometry,
                     layerCount,
-                    bounds
+                    bounds,
+                    gcode
                 };
                 break;
             }

@@ -83,7 +83,7 @@ function GcodeLayout() {
                     vertical
                     min={0}
                     max={MAX}
-                    step={1}
+                    step={1 * MAX / layerCount}
                     range={{ draggableTrack: true }}
                     value={value}
                     onChange={(v) => {

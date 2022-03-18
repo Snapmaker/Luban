@@ -1,12 +1,13 @@
 import * as THREE from 'three';
+// import { Line2 } from 'three/examples/jsm/lines/Line2';
 import { PRINT3D_UNIFORMS, PRINT3D_VERT_SHADER, PRINT3D_FRAG_SHADER } from '../ShaderMaterial/print3d-shader-meterial';
 import { WORKSPACE_UNIFORMS, WORKSPACE_FRAG_SHADER, WORKSPACE_VERT_SHADER } from '../ShaderMaterial/workspace-shader-meterial';
-
 
 const gcodeBufferGeometryToObj3d = (func, bufferGeometry, renderMethod) => {
     let obj3d = null;
     switch (func) {
         case '3DP':
+            console.log('gcodeBufferGeometryToObj3d');
             obj3d = new THREE.Line(
                 bufferGeometry,
                 new THREE.ShaderMaterial({
@@ -15,8 +16,8 @@ const gcodeBufferGeometryToObj3d = (func, bufferGeometry, renderMethod) => {
                     fragmentShader: PRINT3D_FRAG_SHADER,
                     side: THREE.DoubleSide,
                     transparent: true,
-                    linewidth: 30,
-                    wireframeLinewidth: 30
+                    linewidth: 10,
+                    wireframeLinewidth: 5
                     // wireframe: true
                 })
             );

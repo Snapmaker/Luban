@@ -1,9 +1,10 @@
 import * as THREE from 'three';
 import { acceleratedRaycast, computeBoundsTree, disposeBoundsTree } from 'three-mesh-bvh';
 import path from 'path';
-import { cloneDeep, isNil, filter, find as lodashFind } from 'lodash';
+import { throttle, cloneDeep, isNil, filter, find as lodashFind } from 'lodash';
 // import FileSaver from 'file-saver';
 import { Vector3 } from 'three';
+import { GCodeParser } from '../../lib/gcode-viewer/parser';
 import workerManager from '../../lib/manager/workerManager';
 import {
     ABSENT_OBJECT,
@@ -60,6 +61,7 @@ import ArrangeOperation3D from '../operation-history/ArrangeOperation3D';
 import ScaleToFitWithRotateOperation3D from '../operation-history/ScaleToFitWithRotateOperation3D';
 import PrimeTowerModel from '../../models/PrimeTowerModel';
 import ThreeUtils from '../../three-extensions/ThreeUtils';
+import { TYPE_SETTINGS } from '../../lib/gcode-viewer/constants';
 
 // register methods for three-mesh-bvh
 THREE.Mesh.prototype.raycast = acceleratedRaycast;
@@ -149,6 +151,8 @@ const INITIAL_STATE = {
     filamentLength: 0,
     filamentWeight: 0,
     gcodeLineGroup: new THREE.Group(),
+    gcodeLineObjects: [],
+    gcodeParser: null,
     gcodeLine: null,
     layerCount: 0,
     layerRangeDisplayed: [0, Infinity],
@@ -638,7 +642,7 @@ export const actions = {
         }
     },
     gcodeRenderingCallback: (data) => (dispatch, getState) => {
-        const { gcodeLineGroup, gcodeTypeInitialVisibility, gcodePreviewMode } = getState().printing;
+        const { gcodeLineGroup, gcodeTypeInitialVisibility, gcodePreviewMode, gcodeLineObjects, gcodeParser } = getState().printing;
 
         const { status, value } = data;
         switch (status) {
@@ -665,14 +669,57 @@ export const actions = {
                 const object3D = gcodeBufferGeometryToObj3d('3DP', bufferGeometry);
 
                 dispatch(actions.destroyGcodeLine());
-                gcodeLineGroup.add(object3D);
+                // gcodeLineGroup.add(object3D);
+                console.log('object3D', object3D);
+                // const testObj = new LineTubeGeometry(8);
+                // const p1 = new LinePoint(new THREE.Vector3(100, 100, 0), 20, new THREE.Color('29BEB0'));
+                // const p2 = new LinePoint(new THREE.Vector3(50, 50, 0), 20, new THREE.Color('29BEB0'));
+                // testObj.add(p1);
+                // testObj.add(p2);
+                // testObj.finish();
+                // testObj.slice(0, 1);
+                // gcodeLineGroup.add(testObj);
+
+                gcodeLineObjects.forEach(object => {
+                    gcodeLineGroup.remove(object);
+                });
+                gcodeParser && gcodeParser.dispose();
+
+                const gcode = value.gcode;
+                const parser = new GCodeParser(gcode);
+                parser.travelWidth = 0.1;
+                parser.radialSegments = 3;
+                parser.parse();
+                parser.slice();
+                console.log('geometries', parser.getGeometries());
+
+                const json = JSON.parse(machineStore.get('scene'));
+                const objectLoader = new THREE.ObjectLoader();
+                const images = objectLoader.parseImages(json.images);
+                const textures = objectLoader.parseTextures(json.textures, images);
+                const materials = objectLoader.parseMaterials(json.materials, textures);
+                const newMaterial = Object.values(materials)[0];
+                const material = newMaterial.clone();
+                material.vertexColors = true;
+
+                const newGcodeLineObjects = [];
+                parser.getGeometries().forEach(geometry => {
+                    const newGcodeLineObject = new THREE.Mesh(geometry, material);
+                    // console.log('geometry', geometry);
+                    gcodeLineGroup.add(newGcodeLineObject);
+                    newGcodeLineObjects.push(newGcodeLineObject);
+                });
+
                 object3D.position.copy(new THREE.Vector3());
                 dispatch(actions.updateState({
                     layerCount,
                     layerRangeDisplayed: [0, layerCount - 1],
                     renderLineType: false,
-                    gcodeLine: object3D
+                    gcodeLine: object3D,
+                    gcodeLineObjects: newGcodeLineObjects,
+                    gcodeParser: parser
                 }));
+                dispatch(actions.renderShowGcodeLines());
 
                 dispatch(actions.updateGcodePreviewMode(gcodePreviewMode));
 
@@ -1517,7 +1564,27 @@ export const actions = {
 
     // preview
     setGcodeVisibilityByTypeAndDirection: (type, direction = LEFT_EXTRUDER, visible) => (dispatch, getState) => {
-        const { gcodeLine } = getState().printing;
+        const { gcodeLine, gcodeParser } = getState().printing;
+        console.log('set type', type, direction, visible, TYPE_SETTINGS[type]);
+        const { showTypes } = gcodeParser;
+        if (type === 'TOOL0') {
+            for (let i = 0; i < 8; i++) {
+                showTypes[i] = visible;
+            }
+        } else if (type === 'TOOL1') {
+            for (let i = 8; i < 16; i++) {
+                showTypes[i] = visible;
+            }
+        } else {
+            let i = 0;
+            if (direction === RIGHT_EXTRUDER) {
+                i = 8;
+            }
+            i += TYPE_SETTINGS[type].typeCode - 1;
+            showTypes[i] = visible;
+        }
+        dispatch(actions.renderShowGcodeLines());
+
         const uniforms = gcodeLine.material.uniforms;
         const value = visible ? 1 : 0;
         if (direction === LEFT_EXTRUDER) {
@@ -1583,7 +1650,9 @@ export const actions = {
     },
 
     updateGcodePreviewMode: (mode) => (dispatch, getState) => {
-        const { gcodeLine, layerRangeDisplayed, layerCount } = getState().printing;
+        const { gcodeLine, layerRangeDisplayed, layerCount, gcodeParser } = getState().printing;
+        gcodeParser.setColortypes(mode === 'GrayUnderTheTopFloor');
+
         const uniforms = gcodeLine.material.uniforms;
 
         if (mode === 'GrayUnderTheTopFloor') {
@@ -1610,63 +1679,96 @@ export const actions = {
     },
 
     setGcodeColorByRenderLineType: () => (dispatch, getState) => {
-        const { gcodeLine, renderLineType } = getState().printing;
+        const { gcodeLine, renderLineType, gcodeParser, extruderLDefinition, extruderRDefinition } = getState().printing;
+        if (renderLineType) {
+            gcodeParser.extruderColors = [
+                extruderLDefinition?.settings?.color?.default_value || WHITE_COLOR,
+                extruderRDefinition?.settings?.color?.default_value || BLACK_COLOR
+            ];
+        }
+        gcodeParser.setColortypes(undefined, renderLineType);
+
         const uniforms = gcodeLine.material.uniforms;
         uniforms.u_color_type.value = renderLineType ? 1 : 0;
         dispatch(actions.render());
     },
 
-    showGcodeLayers: (range) => (dispatch, getState) => {
-        const { layerCount, gcodeLine, gcodePreviewMode, layerRangeDisplayed } = getState().printing;
-        if (!gcodeLine) {
-            return;
-        }
-
-        if (range >= layerCount) {
-            dispatch(actions.displayModel());
-        } else {
-            dispatch(actions.displayGcode());
-        }
-        if (gcodePreviewMode === 'SingleLayer') {
-            // The moving direction is down
-            if (layerRangeDisplayed[0] > range[0]) {
-                range = [
-                    range[0] || 0,
-                    range[0] || 0
-                ];
+    renderShowGcodeLines: () => (dispatch, getState) => {
+        const { gcodeParser, gcodeLineObjects } = getState().printing;
+        const { startLayer, endLayer, showTypes } = gcodeParser;
+        gcodeLineObjects.forEach((mesh, i) => {
+            if (i < (startLayer ?? 0) * 16 || i > (endLayer ?? 0) * 16 + 15 || !showTypes[i & 15]) {
+                mesh.visible = false;
             } else {
-                range = [
-                    Math.min(layerCount, range[1]),
-                    Math.min(layerCount, range[1])
-                ];
+                mesh.visible = true;
             }
-        } else {
-            if ((range[0] > layerRangeDisplayed[0] || range[1] > layerRangeDisplayed[1])) {
-                if (range[0] > layerRangeDisplayed[0] && range[0] > range[1]) {
-                    const tmp = range[1];
-                    range[1] = range[0];
-                    range[0] = tmp;
-                }
-                range[1] = Math.min(layerCount, range[1]);
-                range[0] = Math.min(layerCount, range[0]);
+        });
+    },
+
+    showGcodeLayers: (range) => (dispatch, getState) => {
+        throttle(() => {
+            const {
+                layerCount,
+                gcodeLine,
+                gcodePreviewMode,
+                layerRangeDisplayed,
+                gcodeParser
+            } = getState().printing;
+            gcodeParser.startLayer = Math.floor(range[0]);
+            gcodeParser.endLayer = Math.floor(range[1]);
+            dispatch(actions.renderShowGcodeLines());
+
+            if (!gcodeLine) {
+                return;
             }
 
-            if ((range[0] < layerRangeDisplayed[0] || range[1] < layerRangeDisplayed[1])) {
-                if (range[1] < layerRangeDisplayed[0] && range[0] > range[1]) {
-                    const tmp = range[1];
-                    range[1] = range[0];
-                    range[0] = tmp;
-                }
-                range[1] = range[1] || 0;
-                range[0] = range[0] || 0;
+            if (range >= layerCount) {
+                dispatch(actions.displayModel());
+            } else {
+                dispatch(actions.displayGcode());
             }
-        }
-        gcodeLine.material.uniforms.u_visible_layer_range_start.value = Math.round(range[0], 10);
-        gcodeLine.material.uniforms.u_visible_layer_range_end.value = Math.round(range[1], 10);
-        dispatch(actions.updateState({
-            layerRangeDisplayed: range
-        }));
-        dispatch(actions.render());
+            if (gcodePreviewMode === 'SingleLayer') {
+                // The moving direction is down
+                if (layerRangeDisplayed[0] > range[0]) {
+                    range = [
+                        range[0] || 0,
+                        range[0] || 0
+                    ];
+                } else {
+                    range = [
+                        Math.min(layerCount, range[1]),
+                        Math.min(layerCount, range[1])
+                    ];
+                }
+            } else {
+                if ((range[0] > layerRangeDisplayed[0] || range[1] > layerRangeDisplayed[1])) {
+                    if (range[0] > layerRangeDisplayed[0] && range[0] > range[1]) {
+                        const tmp = range[1];
+                        range[1] = range[0];
+                        range[0] = tmp;
+                    }
+                    range[1] = Math.min(layerCount, range[1]);
+                    range[0] = Math.min(layerCount, range[0]);
+                }
+
+                if ((range[0] < layerRangeDisplayed[0] || range[1] < layerRangeDisplayed[1])) {
+                    if (range[1] < layerRangeDisplayed[0] && range[0] > range[1]) {
+                        const tmp = range[1];
+                        range[1] = range[0];
+                        range[0] = tmp;
+                    }
+                    range[1] = range[1] || 0;
+                    range[0] = range[0] || 0;
+                }
+            }
+            range[0] = range[0] < 0 ? 0 : range[0];
+            gcodeLine.material.uniforms.u_visible_layer_range_start.value = Math.round(range[0], 10);
+            gcodeLine.material.uniforms.u_visible_layer_range_end.value = Math.round(range[1], 10);
+            dispatch(actions.updateState({
+                layerRangeDisplayed: range
+            }));
+            dispatch(actions.render());
+        }, 1000)();
     },
 
     // make an offset of gcode layer count

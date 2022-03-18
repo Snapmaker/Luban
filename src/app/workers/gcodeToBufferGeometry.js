@@ -28,7 +28,7 @@ const gcodeToBufferGeometry = async (message) => {
             sendMessage({ status: 'err', value: err });
         }
     );
-    const { bufferGeometry, layerCount, bounds } = result;
+    const { bufferGeometry, layerCount, bounds, gcode } = result;
     const positions = bufferGeometry.getAttribute('position').array;
     const colors = bufferGeometry.getAttribute('a_color').array;
     const colors1 = bufferGeometry.getAttribute('a_color1').array;
@@ -45,7 +45,8 @@ const gcodeToBufferGeometry = async (message) => {
             typeCodes,
             toolCodes,
             layerCount,
-            bounds
+            bounds,
+            gcode
         }
     };
     sendMessage(
