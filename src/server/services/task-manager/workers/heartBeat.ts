@@ -8,7 +8,6 @@ let timeoutHandle = null;
 let intervalHandle = null;
 
 const stopBeat = (msg?: string) => {
-    console.log('msg', msg)
     clearInterval(intervalHandle);
     sendMessage({ status: 'offline', msg });
 };
