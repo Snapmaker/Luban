@@ -2278,17 +2278,17 @@ export const actions = {
         dispatch(actions.displayModel());
     },
 
-    startAutoRotateSelectedModelProgess: () => (dispatch, getState) => {
-        const { progressStatesManager } = getState().printing;
-        progressStatesManager.startProgress(PROCESS_STAGE.PRINTING_AUTO_ROTATE);
-        dispatch(actions.updateState({
-            stage: STEP_STAGE.PRINTING_AUTO_ROTATING_MODELS,
-            progress: progressStatesManager.updateProgress(STEP_STAGE.PRINTING_AUTO_ROTATING_MODELS, 0.01)
-        }));
-        setTimeout(() => {
-            dispatch(actions.autoRotateSelectedModel());
-        }, 300);
-    },
+    // startAutoRotateSelectedModelProgess: () => (dispatch, getState) => {
+    //     const { progressStatesManager } = getState().printing;
+    //     progressStatesManager.startProgress(PROCESS_STAGE.PRINTING_AUTO_ROTATE);
+    //     dispatch(actions.updateState({
+    //         stage: STEP_STAGE.PRINTING_AUTO_ROTATING_MODELS,
+    //         progress: progressStatesManager.updateProgress(STEP_STAGE.PRINTING_AUTO_ROTATING_MODELS, 0.01)
+    //     }));
+    //     setTimeout(() => {
+    //         dispatch(actions.autoRotateSelectedModel());
+    //     }, 300);
+    // },
 
     autoRotateSelectedModel: () => (dispatch, getState) => {
         const { modelGroup, progressStatesManager } = getState().printing;
@@ -2367,19 +2367,16 @@ export const actions = {
                             progress: progressStatesManager.updateProgress(STEP_STAGE.PRINTING_AUTO_ROTATING_MODELS, progress)
                         }));
                         if (isFinish) {
-                            setTimeout(() => {
-                                // const modelState = modelGroup.autoRotateSelectedModel();
-                                const modelState = modelGroup.getState();
-                                modelGroup.onModelAfterTransform();
-                                dispatch(actions.recordModelAfterTransform('rotate', modelGroup, operations));
-                                dispatch(actions.updateState(modelState));
-                                dispatch(actions.destroyGcodeLine());
-                                dispatch(actions.displayModel());
-                                dispatch(actions.updateState({
-                                    stage: STEP_STAGE.PRINTING_AUTO_ROTATE_SUCCESSED,
-                                    progress: progressStatesManager.updateProgress(STEP_STAGE.PRINTING_AUTO_ROTATING_MODELS, 1)
-                                }));
-                            }, 100);
+                            const modelState = modelGroup.getState();
+                            modelGroup.onModelAfterTransform();
+                            dispatch(actions.recordModelAfterTransform('rotate', modelGroup, operations));
+                            dispatch(actions.updateState(modelState));
+                            dispatch(actions.destroyGcodeLine());
+                            dispatch(actions.displayModel());
+                            dispatch(actions.updateState({
+                                stage: STEP_STAGE.PRINTING_AUTO_ROTATE_SUCCESSED,
+                                progress: progressStatesManager.updateProgress(STEP_STAGE.PRINTING_AUTO_ROTATING_MODELS, 1)
+                            }));
                         }
                         break;
                     }

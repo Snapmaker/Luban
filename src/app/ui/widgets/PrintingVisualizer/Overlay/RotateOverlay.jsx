@@ -66,7 +66,8 @@ const RotateOverlay = React.memo(({
     });
     const hasHideModel = every(selectedModelArray, { visible: false }) && selectedModelArray.length;
     const dispatch = useDispatch();
-    const updateRotate = (detail) => {
+    const updateRotate = (event) => {
+        const { detail } = event;
         throttle(() => {
             !isUndefined(detail.rotate.x) && setRotateX(isNull(detail.rotate.x) ? null : Math.round(detail.rotate.x * 10) / 10);
             !isUndefined(detail.rotate.y) && setRotateY(isNull(detail.rotate.y) ? null : Math.round(detail.rotate.y * 10) / 10);
@@ -74,13 +75,9 @@ const RotateOverlay = React.memo(({
         }, 1000)();
     };
     useEffect(() => {
-        window.addEventListener('update-rotate', ({ detail }) => {
-            updateRotate(detail);
-        });
+        window.addEventListener('update-rotate', updateRotate);
         return () => {
-            window.removeEventListener('update-rotate', ({ detail }) => {
-                updateRotate(detail);
-            });
+            window.removeEventListener('update-rotate', updateRotate);
         };
     }, []);
 

@@ -607,10 +607,10 @@ class Canvas extends PureComponent {
             }
             if (this.controls.transformControl.mode === 'rotate' && this.modelGroup.selectedModelArray[0]?.type !== 'primeTower') {
                 // this.controls.transformControl
-                this.controls.transformControl.allSelectedPeripherals[4].updateMatrixWorld();
-                this.controls.transformControl.allSelectedPeripherals[5].updateMatrixWorld();
-                this.rotateFontLeftTop.setFromMatrixPosition(this.controls.transformControl.allSelectedPeripherals[4].matrixWorld);
-                this.rotateFontRightTop.setFromMatrixPosition(this.controls.transformControl.allSelectedPeripherals[5].matrixWorld);
+                this.controls.transformControl.selectedFrontLeftTop.updateMatrixWorld();
+                this.controls.transformControl.selectedFrontRightTop.updateMatrixWorld();
+                this.rotateFontLeftTop.setFromMatrixPosition(this.controls.transformControl.selectedFrontLeftTop.matrixWorld);
+                this.rotateFontRightTop.setFromMatrixPosition(this.controls.transformControl.selectedFrontRightTop.matrixWorld);
                 this.rotateFontLeftTop.project(this.camera);
                 this.rotateFontRightTop.project(this.camera);
                 inputDOM = document.getElementById('rotate-input-control');

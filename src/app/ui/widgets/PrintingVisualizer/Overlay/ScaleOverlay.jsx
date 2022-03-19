@@ -32,7 +32,8 @@ const ScaleOverlay = React.memo(({
     const [uniformScalingState, setUniformScalingState] = useState(true);
     const dispatch = useDispatch();
     const [modelSize, setModelSize] = useState({});
-    const updateScale = (detail) => {
+    const updateScale = (event) => {
+        const { detail } = event;
         throttle(() => {
             const newScalePercentObj = {
                 x: Math.round(Math.abs(detail.scale.x) * 1000) / 10,
@@ -47,13 +48,9 @@ const ScaleOverlay = React.memo(({
         }, 1000)();
     };
     useEffect(() => {
-        window.addEventListener('update-scale', ({ detail }) => {
-            updateScale(detail);
-        });
+        window.addEventListener('update-scale', updateScale);
         return () => {
-            window.removeEventListener('update-scale', ({ detail }) => {
-                updateScale(detail);
-            });
+            window.removeEventListener('update-scale', updateScale);
         };
     }, []);
     useEffect(() => {

@@ -17,7 +17,6 @@ import {
     TorusBufferGeometry,
     MeshBasicMaterial,
     LineBasicMaterial,
-    // Euler,
     Math as ThreeMath,
 } from 'three';
 // import * as THREE from 'three';
@@ -349,10 +348,6 @@ class TransformControls extends Object3D {
             [OUTLINE, new Line(defaults.LINE.clone(), defaults.LINE_MATERIAL_DARKGRAY.clone()), null, [0, 0, Math.PI / 2], [-0.2, 0.2, 0.2]],
             [OUTLINE, new Line(defaults.LINE.clone(), defaults.LINE_MATERIAL_DARKGRAY.clone()), null, [0, -Math.PI / 2, 0], [-0.2, 0.2, 0.2]]
         ]);
-        // this.leftPlane = this.createPeripheral([
-        //     ['LEFTPLANE', new Mesh(defaults.PLANE.clone(), defaults.MESH_MATERIAL_BLUE2.clone()), null, [0, -Math.PI / 2, 0], null]
-        // ]);
-        // this.leftPlane = new PlaneBufferGeometry(1, 1);
         this.allSelectedPeripherals = [
             this.selectedFrontLeftBottom,
             this.selectedFrontRightBottom,
@@ -362,7 +357,6 @@ class TransformControls extends Object3D {
             this.selectedFrontRightTop,
             this.selectedBackLeftTop,
             this.selectedBackRightTop,
-            // this.leftPlane
         ];
         this.allSelectedPeripherals.forEach((peripheral) => {
             this.add(peripheral);
@@ -506,8 +500,6 @@ class TransformControls extends Object3D {
             item.visible = false;
             this.add(item);
         });
-        // this.leftPlane.visible = true;
-        // this.add(this.leftPlane);
     }
 
     initScalePeripherals() {
@@ -684,15 +676,7 @@ class TransformControls extends Object3D {
                     maxObjectBoundingBox.y,
                     maxObjectBoundingBox.z
                 );
-                // const boundingBoxWidth = maxObjectBoundingBox.y - minObjectBoundingBox.y;
-                // const boundingBoxHeight = maxObjectBoundingBox.z - minObjectBoundingBox.z;
-                // this.leftPlane = new PlaneBufferGeometry(boundingBoxWidth, boundingBoxHeight);
-                // this.leftPlane.setAttribute('width', boundingBoxWidth);
-                // this.leftPlane.setAttribute('height', boundingBoxHeight);
                 this.leftPlane.position.copy(new Vector3(minObjectBoundingBox.x, (maxObjectBoundingBox.y + minObjectBoundingBox.y) / 2, (minObjectBoundingBox.z + maxObjectBoundingBox.z) / 2));
-                // this.leftPlane.scale.set(1, 1, 1).multiplyScalar(boundingBoxWidth / 0.2);
-                // this.leftPlane = this.createPeripheral([['LEFTPLANE', new Mesh(new PlaneBufferGeometry(boundingBoxWidth, boundingBoxHeight), null, [0, -Math.PI / 2, 0], null)]]);
-                // this.add(this.leftPlane);
                 this.leftPlane.scale.set(1, 1, 1).multiply(new Vector3(1, maxObjectBoundingBox.y - minObjectBoundingBox.y, maxObjectBoundingBox.z - minObjectBoundingBox.z));
 
                 this.rightPlane.position.copy(new Vector3(maxObjectBoundingBox.x, (maxObjectBoundingBox.y + minObjectBoundingBox.y) / 2, (minObjectBoundingBox.z + maxObjectBoundingBox.z) / 2));
@@ -726,9 +710,6 @@ class TransformControls extends Object3D {
                     handles.push(...peripheral.children);
                 });
             }
-            // if (this.hoverFace === 'left') {
-            //     handles.push(...this.leftPlane.children);
-            // }
             if (this.mode === 'translate') {
                 this.translatePeripheral.position.copy(multiObjectPosition);
                 this.translatePeripheral.scale.set(1, 1, 1).multiplyScalar(eyeDistance / 8);
@@ -790,10 +771,6 @@ class TransformControls extends Object3D {
 
                 if (this.axis) {
                     if (handle.label === this.axis || handle.label === OUTLINE) {
-                        // handle.material.opacity = 1;
-                        // const RED2 = 0xb32426;
-                        // const GREEN2 = 0x287303;
-                        // const BLUE2 = 0x0064c2;
                         if (handle.label === 'X') {
                             handle.material.color.set(RED2);
                         } else if (handle.label === 'Y') {
@@ -804,10 +781,6 @@ class TransformControls extends Object3D {
                             handle.material.color.set(BLUE2);
                         }
                     } else {
-                        // handle.material.opacity = 1;
-                        // const RED = 0xff5759;
-                        // const GREEN = 0x4cb518;
-                        // const BLUE = 0x1890ff;
                         if (handle.label === 'X') {
                             handle.material.color.set(RED);
                         } else if (handle.label === 'Y') {
@@ -819,12 +792,6 @@ class TransformControls extends Object3D {
                         }
                     }
                 }
-
-                // if (this.hoverFace) {
-                //     if (this.hoverFace === 'left' && handle.label === 'LEFTPLANE') {
-                //         handle.material.color.set(BLUE);
-                //     }
-                // }
             }
 
             // Place plane according to axis selected
@@ -1029,7 +996,6 @@ class TransformControls extends Object3D {
                 const worldQuaternion = new Quaternion();
                 this.object.quaternion.copy(quaternion).multiply(this.quaternionStart).normalize();
                 this.object.getWorldQuaternion(worldQuaternion);
-                // const rotation = new Euler().setFromQuaternion(worldQuaternion, undefined, false);
                 throttle(() => {
                     window.dispatchEvent(updateRotateEvent({
                         rotate: {

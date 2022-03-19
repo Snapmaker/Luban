@@ -233,10 +233,10 @@ function Printing({ location }) {
     const stepRef = useRef();
     useUnsavedTitle(pageHeadType);
     const [showTipModal, setShowTipModal] = useState(!isNewUser);
-    const updateRotate = (detail) => {
+    const updateRotate = (event) => {
+        const { detail } = event;
         throttle(() => {
             if (detail.rotate.rotateAxis === null) {
-                // setRotateAxis(null);
                 setRotateInputValue(null);
             } else {
                 setRotateAxis(detail.rotate.rotateAxis);
@@ -250,13 +250,9 @@ function Printing({ location }) {
         logPageView({
             pathname: '/printing'
         });
-        window.addEventListener('update-rotate', ({ detail }) => {
-            updateRotate(detail);
-        });
+        window.addEventListener('update-rotate', updateRotate);
         return () => {
-            window.removeEventListener('update-rotate', ({ detail }) => {
-                updateRotate(detail);
-            });
+            window.removeEventListener('update-rotate', updateRotate);
         };
     }, []);
     useEffect(() => {

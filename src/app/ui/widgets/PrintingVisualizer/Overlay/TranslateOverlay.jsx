@@ -98,20 +98,17 @@ const TranslateOverlay = React.memo(({
         dispatch(machineActions.updateArrangeSettings(settings));
     };
 
-    const updatePosition = (detail) => {
+    const updatePosition = (event) => {
+        const { detail } = event;
         throttle(() => {
             setMoveX(Math.round(detail.position.x * 10) / 10);
             setMoveY(Math.round(detail.position.y * 10) / 10);
         }, 1000)();
     };
     useEffect(() => {
-        window.addEventListener('update-position', ({ detail }) => {
-            updatePosition(detail);
-        });
+        window.addEventListener('update-position', updatePosition);
         return () => {
-            window.removeEventListener('update-position', ({ detail }) => {
-                updatePosition(detail);
-            });
+            window.removeEventListener('update-position', updatePosition);
         };
     }, []);
     useEffect(() => {
