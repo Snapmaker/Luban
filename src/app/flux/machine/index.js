@@ -1,5 +1,4 @@
-import isEmpty from 'lodash/isEmpty';
-import _ from 'lodash';
+import _, { isEmpty, isNil } from 'lodash';
 import {
     ABSENT_OBJECT,
     CONNECTION_STATUS_CONNECTED,
@@ -306,7 +305,6 @@ export const actions = {
                 const { state } = options;
                 const { headType, pos, originOffset, headStatus, headPower, temperature, zFocus, isHomed, zAxisModule, laser10WErrorState } = state;
                 const machineState = getState().machine;
-                const { connectionType } = machineState;
                 if ((machineState.isRotate !== pos.isFourAxis) && (headType === HEAD_LASER || headType === HEAD_CNC)) {
                     dispatch(workspaceActions.updateMachineState({
                         isRotate: pos.isFourAxis
@@ -355,37 +353,38 @@ export const actions = {
                         }
                     }));
                 }
-                // TODO add toolHead updated
-                if (connectionType === CONNECTION_TYPE_WIFI) {
-                    const { status,
-                        laserFocalLength,
-                        laserPower,
-                        nozzleTemperature,
-                        nozzleTargetTemperature,
-                        heatedBedTemperature,
-                        doorSwitchCount,
-                        isEnclosureDoorOpen,
-                        heatedBedTargetTemperature,
-                        airPurifier,
-                        airPurifierSwitch,
-                        airPurifierFanSpeed,
-                        airPurifierFilterHealth,
-                        isEmergencyStopped,
-                        moduleList: moduleStatusList,
-                        laserCamera,
-                    } = state;
+                const { status,
+                    laserFocalLength,
+                    laserPower,
+                    nozzleTemperature,
+                    nozzleTargetTemperature,
+                    heatedBedTemperature,
+                    doorSwitchCount,
+                    isEnclosureDoorOpen,
+                    heatedBedTargetTemperature,
+                    airPurifier,
+                    airPurifierSwitch,
+                    airPurifierFanSpeed,
+                    airPurifierFilterHealth,
+                    isEmergencyStopped,
+                    moduleList: moduleStatusList,
+                    laserCamera,
+                } = state;
+                dispatch(baseActions.updateState({
+                    laser10WErrorState,
+                    isHomed
+                }));
+                if (!isNil(airPurifier)) {
                     dispatch(baseActions.updateState({
-                        laser10WErrorState,
                         laserFocalLength: laserFocalLength,
                         laserPower: laserPower,
-                        isHomed: isHomed,
                         nozzleTemperature: nozzleTemperature,
                         nozzleTargetTemperature: nozzleTargetTemperature,
                         heatedBedTemperature: heatedBedTemperature,
                         doorSwitchCount: doorSwitchCount,
                         heatedBedTargetTemperature: heatedBedTargetTemperature,
-                        moduleStatusList,
                         // Note: Wifi indiviual
+                        moduleStatusList,
                         airPurifier: airPurifier,
                         airPurifierSwitch: airPurifierSwitch,
                         airPurifierFanSpeed: airPurifierFanSpeed,
@@ -395,37 +394,35 @@ export const actions = {
                         workflowStatus: status,
                         laserCamera
                     }));
-                    // TODO: wifi emergencyStop goes there
-                    if (isEmergencyStopped) {
-                        dispatch(baseActions.updateState({
-                            isEmergencyStopped
-                        }));
-                        machineState.server.closeServer();
-                        return;
-                    }
-
-                    dispatch(baseActions.updateState({
-                        gcodePrintingInfo: machineState.server.getGcodePrintingInfo(state)
-                    }));
                 } else {
                     dispatch(baseActions.updateState({
-                        laser10WErrorState,
                         headStatus: headStatus,
-                        laserPower: headPower,
                         laserFocalLength: zFocus + LASER_MOCK_PLATE_HEIGHT,
+                        laserPower: headPower,
                         nozzleTemperature: parseFloat(temperature.t),
                         nozzleTargetTemperature: parseFloat(temperature.tTarget),
                         heatedBedTemperature: parseFloat(temperature.b),
                         heatedBedTargetTemperature: parseFloat(temperature.bTarget),
-                        isHomed: isHomed,
                         zAxisModule: zAxisModule
                     }));
                 }
+                // TODO: wifi emergencyStop goes there
+                if (isEmergencyStopped) {
+                    dispatch(baseActions.updateState({
+                        isEmergencyStopped
+                    }));
+                    machineState.server.closeServer();
+                    return;
+                }
+
+                dispatch(baseActions.updateState({
+                    gcodePrintingInfo: machineState.server.getGcodePrintingInfo(state)
+                }));
             },
             'Marlin:settings': (options) => {
                 const { enclosureDoorDetection, enclosureOnline, enclosureFan = 0, enclosureLight = 0,
                     airPurifierHasPower, airPurifier, airPurifierSwitch, airPurifierFanSpeed, airPurifierFilterHealth, emergencyStopOnline } = options.settings;
-                if (!_.isNil(airPurifier)) {
+                if (!isNil(airPurifier)) {
                     dispatch(baseActions.updateState({
                         enclosureDoorDetection,
                         enclosureOnline,
@@ -759,8 +756,7 @@ export const actions = {
 
     executeGcode: (gcode, context, cmd) => (dispatch, getState) => {
         const machine = getState().machine;
-        const { homingModal } = machine;
-        const { isConnected, connectionType } = machine;
+        const { homingModal, isConnected } = machine;
         if (!isConnected) {
             if (homingModal) {
                 dispatch(baseActions.updateState({
@@ -772,14 +768,12 @@ export const actions = {
         controller
             .emitEvent(CONNECTION_EXECUTE_GCODE, { gcode, context, cmd })
             .once(CONNECTION_EXECUTE_GCODE, (gcodeArray) => {
-                if (connectionType === CONNECTION_TYPE_WIFI) {
-                    if (gcodeArray) {
-                        dispatch(actions.addConsoleLogs(gcodeArray));
-                        if (homingModal) {
-                            dispatch(baseActions.updateState({
-                                homingModal: false
-                            }));
-                        }
+                if (gcodeArray) {
+                    dispatch(actions.addConsoleLogs(gcodeArray));
+                    if (homingModal) {
+                        dispatch(baseActions.updateState({
+                            homingModal: false
+                        }));
                     }
                 }
             });
@@ -787,9 +781,8 @@ export const actions = {
 
     executeGcodeAutoHome: (homingModal = false) => (dispatch, getState) => {
         const { series, headType } = getState().workspace;
-        const { connectionType } = getState().machine;
         dispatch(actions.executeGcode('G53'));
-        if (homingModal && connectionType === CONNECTION_TYPE_WIFI) {
+        if (homingModal) {
             dispatch(baseActions.updateState({
                 homingModal
             }));

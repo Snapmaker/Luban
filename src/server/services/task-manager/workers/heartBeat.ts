@@ -28,7 +28,6 @@ const heartBeat = (param: IParam) => {
                 .get(api)
                 .timeout(3000)
                 .end((err: Error, res) => {
-                    console.log("err", err)
                     if (err) {
                         if (err.message.includes('Timeout')) {
                             timeoutHandle = setTimeout(() => {

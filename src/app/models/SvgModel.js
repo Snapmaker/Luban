@@ -496,7 +496,6 @@ class SvgModel extends BaseModel {
                 break;
             }
             case 'rect': {
-                console.log('width', width, height);
                 elem.setAttribute('x', x - width / 2);
                 elem.setAttribute('y', y - height / 2);
                 elem.setAttribute('width', width);

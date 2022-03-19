@@ -59,13 +59,16 @@ class ConnectionManager {
     };
 
     startGcode = (socket, options) => {
-        const { headType, isRotate, toolHead, isLaserPrintAutoMode, materialThickness } = options;
+        const { headType, isRotate, toolHead, isLaserPrintAutoMode, materialThickness, eventName } = options;
         if (this.connectionType === CONNECTION_TYPE_WIFI) {
             const { gcodeFile, series, laserFocalLength, background, size, workPosition, originOffset } = options;
             const gcodeFilePath = `${DataStorage.tmpDir}/${gcodeFile.uploadName}`;
             readFile(gcodeFilePath, (err, res) => {
                 if (err) {
-                    log.error(`get file err, err=${err}`);
+                    log.error(`Read gcode file err, err=${err}`);
+                    this.socket && this.socket.emit(eventName, {
+                        msg: err
+                    });
                     return;
                 }
                 const file = res;
