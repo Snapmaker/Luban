@@ -290,6 +290,7 @@ function ToolPathConfigurations({ toolpath, onClose, headType }) {
                             updateToolConfig={actions.updateToolConfig}
                             setCurrentValueAsProfile={actions.setCurrentValueAsProfile}
                             updateGcodeConfig={actions.updateGcodeConfig}
+                            isModel
                         />
                     )}
                     {headType === HEAD_LASER && (

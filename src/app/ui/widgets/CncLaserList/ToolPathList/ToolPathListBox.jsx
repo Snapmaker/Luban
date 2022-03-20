@@ -248,8 +248,9 @@ const ToolPathListBox = (props) => {
                 <div
                     className={classNames(
                         'height-184',
-                        'align-c',
-                        'padding-vertical-4'
+                        'position-re'
+                        // // 'align-c',
+                        // 'padding-vertical-4'
                     )}
                     tabIndex="-1"
                     role="button"
@@ -260,11 +261,13 @@ const ToolPathListBox = (props) => {
                 >
                     {toolPaths.length === 0 && (
                         <div className={classNames(
-                            'font-roboto',
-                            'border-radius-8',
-                            'display-inline',
-                            'height-40',
+                            // 'font-roboto',
                             'padding-horizontal-16',
+                            'sm-flex',
+                            'position-ab',
+                            'top-50-percent',
+                            'width-percent-100',
+                            'justify-center'
                         )}
                         >
                             <SvgIcon
@@ -272,7 +275,12 @@ const ToolPathListBox = (props) => {
                                 type={['static']}
                                 color="#1890ff"
                             />
-                            <span className={classNames('display-inline', 'height-40')}>{i18n._('key-CncLaser/ToolPathList/Button/-Select object to create toolpath')}</span>
+                            {/* <SvgIcon
+                                name="WarningTipsTips"
+                                type={['static']}
+                                color="#1890ff"
+                            /> */}
+                            <span className={classNames('display-inline')}>{i18n._('key-CncLaser/ToolPathList/Button/-Select object to create toolpath')}</span>
                         </div>
                     )}
 

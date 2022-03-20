@@ -186,7 +186,7 @@ const TransformationSection = ({ headType, updateSelectedModelUniformScalingStat
                     content={i18n._('key-CncLaser/TransformationSection-Set the size of the selected object. You can also resize the object directly. The object should not exceed the work size.')}
                 >
                     <div className="sm-flex height-32 margin-vertical-8">
-                        <span className="sm-flex-auto sm-flex-order-negative width-64">{i18n._('key-CncLaser/TransformationSection-Size')}</span>
+                        <span className="sm-flex-auto sm-flex-order-negative width-64 text-overflow-ellipsis">{i18n._('key-CncLaser/TransformationSection-Size')}</span>
                         <div className="sm-flex-width sm-flex justify-space-between">
                             <div className="position-re sm-flex align-flex-start">
                                 <span className="width-16 height-32 display-inline unit-text align-c">
@@ -248,7 +248,7 @@ const TransformationSection = ({ headType, updateSelectedModelUniformScalingStat
                     content={i18n._('key-CncLaser/TransformationSection-Rotate the selected object to the angle you need.')}
                 >
                     <div className="sm-flex height-32 margin-vertical-8">
-                        <span className="sm-flex-auto sm-flex-order-negative width-56">{i18n._('key-CncLaser/TransformationSection-Rotate')}</span>
+                        <span className="sm-flex-auto sm-flex-order-negative width-56 text-overflow-ellipsis">{i18n._('key-CncLaser/TransformationSection-Rotate')}</span>
                         <div className="sm-flex-width sm-flex justify-space-between">
                             <div className="display-inline">
                                 <SvgIcon
