@@ -1,4 +1,5 @@
 import fontManager from '../../../shared/lib/FontManager';
+import { ERR_INTERNAL_SERVER_ERROR } from '../../constants';
 
 
 // Get Host OS platform
@@ -54,6 +55,11 @@ export const uploadFont = (req, res) => {
                     fullName: font.names.fullName.en,
                     displayName: font.names.displayName.en
                 }
+            });
+        })
+        .catch(e => {
+            res.status(ERR_INTERNAL_SERVER_ERROR).send({
+                msg: e.message
             });
         });
 };

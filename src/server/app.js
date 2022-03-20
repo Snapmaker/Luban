@@ -30,10 +30,10 @@ import urljoin from './lib/urljoin';
 import logger from './lib/logger';
 import { registerApis } from './services';
 import settings from './config/settings';
-import errclient from './lib/middleware/errclient';
-import errlog from './lib/middleware/errlog';
-import errnotfound from './lib/middleware/errnotfound';
-import errserver from './lib/middleware/errserver';
+// import errclient from './lib/middleware/errclient';
+// import errlog from './lib/middleware/errlog';
+// import errnotfound from './lib/middleware/errnotfound';
+// import errserver from './lib/middleware/errserver';
 import config from './services/configstore';
 import {
     IP_WHITELIST,
@@ -188,9 +188,9 @@ const createApplication = () => {
     if (settings.verbosity > 0) {
         // https://github.com/expressjs/morgan#use-custom-token-formats
         // Add an ID to all requests and displays it using the :id token
-        morgan.token('id', (req) => {
-            return req.session.id;
-        });
+        // morgan.token('id', (req) => {
+        //     return req.session.id;
+        // });
         app.use(morgan(settings.middleware.morgan.format));
     }
     app.use(compress(settings.middleware.compression));
@@ -276,19 +276,35 @@ const createApplication = () => {
     }));
 
     // Error handling
-    app.use(errlog());
-    app.use(errclient({
-        error: 'XHR error'
-    }));
-    app.use(errnotfound({
-        view: path.join('common', '404.hogan'),
-        error: 'Not found'
-    }));
-    app.use(errserver({
-        view: path.join('common', '500.hogan'),
-        error: 'Internal server error'
-    }));
+    app.use((err, req, res) => {
+        if (err) {
+            log.error(err);
+            res.status(500).send({ error: err.message });
+        } else {
+            res.status(404).send({ msg: 'Not found' });
+        }
+    });
+    // app.use(errlog());
+    // app.use(errclient({
+    //     error: 'XHR error'
+    // }));
+    // app.use(errnotfound({
+    //     view: path.join('common', '404.hogan'),
+    //     error: 'Not found'
+    // }));
+    // app.use(errserver({
+    //     view: path.join('common', '500.hogan'),
+    //     error: 'Internal server error'
+    // }));
     return app;
 };
+
+process.on('uncaughtException', (err) => {
+    log.error('uncaught exception', err);
+});
+
+process.on('unhandledRejection', (reason, promise) => {
+    log.error('unhandled rejection', promise, 'reason', reason);
+});
 
 export default createApplication;

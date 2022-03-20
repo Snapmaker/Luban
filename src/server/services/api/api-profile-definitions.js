@@ -3,6 +3,9 @@ import path from 'path';
 import { ERR_BAD_REQUEST, ERR_INTERNAL_SERVER_ERROR, DEFINITION_SNAPMAKER_EXTRUDER_0, DEFINITION_SNAPMAKER_EXTRUDER_1, DEFINITION_ACTIVE, DEFINITION_ACTIVE_FINAL, KEY_DEFAULT_CATEGORY_CUSTOM, KEY_DEFAULT_CATEGORY_DEFAULT } from '../../constants';
 import { loadDefinitionsByPrefixName, loadAllSeriesDefinitions, DefinitionLoader } from '../../slicer';
 import DataStorage from '../../DataStorage';
+import logger from '../../lib/logger';
+
+const log = logger('service:profile-definitions');
 
 /**
  * Get raw definition which is unparsed and override.
@@ -19,9 +22,14 @@ export const getRawDefinition = (req, res) => {
 
     const filename = `${definitionId}.def.json`;
     const configDir = `${DataStorage.configDir}/${headType}/${series}/${filename}`;
-    const readFileSync = fs.readFileSync(configDir);
-    const parse = JSON.parse(readFileSync);
-    res.send({ filename: filename, definition: parse });
+    try {
+        const readFileSync = fs.readFileSync(configDir);
+        const parse = JSON.parse(readFileSync);
+        res.send({ filename: filename, definition: parse });
+    } catch (e) {
+        log.error(e);
+        res.status(ERR_INTERNAL_SERVER_ERROR).send({ msg: e.message });
+    }
 };
 
 const isPublicProfile = (definitionId) => {
@@ -77,6 +85,7 @@ export const getConfigDefinitions = (req, res) => {
 const fsWriteFile = (filePath, data, res, callback) => {
     fs.writeFile(filePath, data, 'utf8', (err) => {
         if (err) {
+            log.error(err);
             res.status(ERR_INTERNAL_SERVER_ERROR).send({ err });
         } else {
             callback();
@@ -95,12 +104,16 @@ export const createDefinition = async (req, res) => {
     const backupPath = path.join(`${DataStorage.activeConfigDir}/${headType}/${series}`, `${definitionLoader.definitionId}.def.json`);
     const data = JSON.stringify(definitionLoader.toJSON(), null, 2);
     if (!fs.existsSync(backupPath)) {
-        await DataStorage.copyDirForInitSlicer({
-            srcDir: DataStorage.configDir,
-            dstDir: DataStorage.activeConfigDir,
-            overwriteTag: true,
-            inherit: true
-        });
+        try {
+            await DataStorage.copyDirForInitSlicer({
+                srcDir: DataStorage.configDir,
+                dstDir: DataStorage.activeConfigDir,
+                overwriteTag: true,
+                inherit: true
+            });
+        } catch (e) {
+            log.error('copyDirForInitSlicer', e.message);
+        }
     }
     const callback = () => {
         const loader = new DefinitionLoader();
@@ -127,6 +140,7 @@ export const createTmpDefinition = (req, res) => {
     const filePath = path.join(`${DataStorage.tmpDir}`, uploadName);
     fs.writeFile(filePath, JSON.stringify(definitionLoader.toJSON(), null, 2), 'utf8', (err) => {
         if (err) {
+            log.error(err);
             res.status(ERR_INTERNAL_SERVER_ERROR).send({ err });
         } else {
             // load definition using new loader to avoid potential settings override issues
@@ -145,10 +159,12 @@ export const removeDefinition = (req, res) => {
     const backupPath = path.join(`${DataStorage.activeConfigDir}/${headType}/${series}`, `${definitionId}.def.json`);
     fs.unlink(filePath, (err) => {
         if (err) {
+            log.error(err);
             return res.status(ERR_INTERNAL_SERVER_ERROR).send({ err });
         } else {
             fs.unlink(backupPath, (unlinkErr) => {
                 if (unlinkErr) {
+                    log.error(unlinkErr);
                     return res.send({ status: 'ok', msg: 'Back up Remove failed!' });
                 } else {
                     return res.send({ status: 'ok', msg: 'Back up Remove success!' });
@@ -204,12 +220,16 @@ export const updateDefinition = async (req, res) => {
         activeRecoverPath = path.join(`${DataStorage.activeConfigDir}/${headType}/${series}`, `${definitionId}.def.json`);
     }
     if (!fs.existsSync(DataStorage.activeConfigDir)) {
-        await DataStorage.copyDirForInitSlicer({
-            srcDir: DataStorage.configDir,
-            dstDir: DataStorage.activeConfigDir,
-            overwriteTag: true,
-            inherit: true
-        });
+        try {
+            await DataStorage.copyDirForInitSlicer({
+                srcDir: DataStorage.configDir,
+                dstDir: DataStorage.activeConfigDir,
+                overwriteTag: true,
+                inherit: true
+            });
+        } catch (e) {
+            log.error(e);
+        }
     }
     const data = JSON.stringify(definitionLoader.toJSON(), null, 2);
     const callback = () => {

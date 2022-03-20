@@ -69,25 +69,27 @@ function registerApis(app) {
 
     // Register API routes with authorized access
     // Version
+    // deprecated?
     app.get(urljoin(settings.route, 'api/version/latest'), api.version.getLatestVersion);
 
     // Utils
-    app.get(urljoin(settings.route, 'api/utils/platform'), api.utils.getPlatform);
+    app.get(urljoin(settings.route, 'api/utils/platform'), api.utils.getPlatform); // deprecated?
     app.get(urljoin(settings.route, 'api/utils/fonts'), api.utils.getFonts);
     app.post(urljoin(settings.route, 'api/utils/font'), api.utils.uploadFont);
 
     // State
+    // depecated?
     app.get(urljoin(settings.route, 'api/state'), api.state.get);
     app.post(urljoin(settings.route, 'api/state'), api.state.set);
     app.delete(urljoin(settings.route, 'api/state'), api.state.unset);
 
     // G-code
-    app.get(urljoin(settings.route, 'api/gcode'), api.gcode.get);
+    app.get(urljoin(settings.route, 'api/gcode'), api.gcode.get); // deprecated?
     app.post(urljoin(settings.route, 'api/gcode'), api.gcode.set);
-    app.get(urljoin(settings.route, 'api/gcode/download'), api.gcode.download);
+    app.get(urljoin(settings.route, 'api/gcode/download'), api.gcode.download); // deprecated?
 
     // Controllers
-    app.get(urljoin(settings.route, 'api/controllers'), api.controllers.get);
+    app.get(urljoin(settings.route, 'api/controllers'), api.controllers.get); // deprecated?
 
     // Image
     app.post(urljoin(settings.route, 'api/image'), api.image.set);
@@ -104,12 +106,12 @@ function registerApis(app) {
 
 
     // Svg
-    app.post(urljoin(settings.route, 'api/svg/convertRasterToSvg'), api.svg.convertRasterToSvg);
+    app.post(urljoin(settings.route, 'api/svg/convertRasterToSvg'), api.svg.convertRasterToSvg); // deprecated?
     app.post(urljoin(settings.route, 'api/svg/convertTextToSvg'), api.svg.convertTextToSvg);
-    app.post(urljoin(settings.route, 'api/svg/convertOneLineTextToSvg'), api.svg.convertOneLineTextToSvg);
+    app.post(urljoin(settings.route, 'api/svg/convertOneLineTextToSvg'), api.svg.convertOneLineTextToSvg); // deprecated?
 
     // ToolPath
-    app.post(urljoin(settings.route, 'api/toolpath/generate'), api.toolpath.generate);
+    app.post(urljoin(settings.route, 'api/toolpath/generate'), api.toolpath.generate); // deprecated?
 
     // Commands
     // app.get(urljoin(settings.route, 'api/commands'), api.commands.fetch);
@@ -141,6 +143,7 @@ function registerApis(app) {
     app.delete(urljoin(settings.route, 'api/macros/:id'), api.macros.remove);
 
     // Watch
+    // deprecated?
     app.get(urljoin(settings.route, 'api/watch/files'), api.watch.getFiles);
     app.post(urljoin(settings.route, 'api/watch/files'), api.watch.getFiles);
     app.get(urljoin(settings.route, 'api/watch/file'), api.watch.readFile);

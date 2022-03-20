@@ -134,6 +134,7 @@ class TaskManager {
         const res = this.tasks.find(task => task.taskId === taskId);
         if (res) {
             res.terminateFn();
+            log.info(`task: ${taskId} has been cancelled`);
         }
     }
 }
