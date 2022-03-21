@@ -90,7 +90,6 @@ const allWidgets = {
 const pageHeadType = HEAD_PRINTING;
 function useRenderMainToolBar() {
     const unSaved = useSelector(state => state?.project[pageHeadType]?.unSaved, shallowEqual);
-    const models = useSelector(state => state?.printing?.modelGroup?.getModels(), shallowEqual);
     const inProgress = useSelector(state => state?.printing?.inProgress, shallowEqual);
     const enableShortcut = useSelector(state => state?.printing?.enableShortcut, shallowEqual);
     const canRedo = useSelector(state => state?.printing?.history?.canRedo, shallowEqual);
@@ -152,7 +151,7 @@ function useRenderMainToolBar() {
             },
             {
                 title: i18n._('key-Printing/Page-Save'),
-                disabled: !unSaved || !models?.length || !enableShortcut,
+                disabled: !unSaved || !enableShortcut,
                 type: 'button',
                 name: 'MainToolbarSave',
                 iconClassName: 'printing-save-icon',

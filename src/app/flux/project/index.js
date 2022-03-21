@@ -36,6 +36,7 @@ import UniApi from '../../lib/uni-api';
 const INITIAL_STATE = {
     [HEAD_PRINTING]: {
         findLastEnvironment: false,
+        targetFile: null,
         openedFile: null,
         unSaved: false,
         content: null,
@@ -43,6 +44,7 @@ const INITIAL_STATE = {
     },
     [HEAD_CNC]: {
         findLastEnvironment: false,
+        targetFile: null,
         openedFile: null,
         unSaved: false,
         content: null,
@@ -50,6 +52,7 @@ const INITIAL_STATE = {
     },
     [HEAD_LASER]: {
         findLastEnvironment: false,
+        targetFile: null,
         openedFile: null,
         unSaved: false,
         content: null,
@@ -308,18 +311,19 @@ export const actions = {
     },
 
     saveAsFile: (headType) => async (dispatch, getState) => {
-        const { unSaved, openedFile } = getState().project[headType];
-        let tmpFile, targetFile;
+        const { unSaved, openedFile, targetFile } = getState().project[headType];
+        let tmpFile, newTargetFile;
         if (unSaved || !openedFile) {
-            const { body: { targetFile: newTargetFile } } = await api.packageEnv({ headType });
-            targetFile = newTargetFile;
-            tmpFile = `/Tmp/${targetFile}`;
+            const { body: { targetFile: insideTargetFile } } = await api.packageEnv({ headType });
+            newTargetFile = insideTargetFile;
+            tmpFile = `/Tmp/${newTargetFile}`;
+            dispatch(actions.updateState(headType, { targetFile: newTargetFile }));
         } else {
             const { name } = openedFile;
-            targetFile = name;
-            tmpFile = `/Tmp/${name}`;
+            newTargetFile = name;
+            tmpFile = `/Tmp/${targetFile}`;
         }
-        const newOpenedFile = await UniApi.File.saveAs(targetFile, tmpFile, (type, filePath = '') => {
+        const newOpenedFile = await UniApi.File.saveAs(newTargetFile, tmpFile, (type, filePath = '') => {
             dispatch(appGlobalActions.updateSavedModal({
                 showSavedModal: true,
                 savedModalType: type,
@@ -382,6 +386,7 @@ export const actions = {
         }
 
         const { body: { targetFile } } = await api.packageEnv({ headType });
+        dispatch(actions.updateState(headType, { targetFile }));
         const tmpFile = `/Tmp/${targetFile}`;
         UniApi.File.save(openedFile.path, tmpFile, () => {
             dispatch(actions.afterSaved());
