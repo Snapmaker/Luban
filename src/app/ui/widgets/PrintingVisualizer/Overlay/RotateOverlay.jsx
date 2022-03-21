@@ -158,7 +158,7 @@ const RotateOverlay = React.memo(({
                 />
             </div>
             <div className="padding-vertical-16 padding-horizontal-16">
-                <div className="padding-bottom-16 border-bottom-normal">
+                <div className="padding-bottom-16 border-bottom-dashed">
                     <div className="heading-3-normal">{i18n._('key-Printing/LeftBar-Auto Rotate')}</div>
                     <Button
                         className="margin-top-8"
@@ -171,7 +171,7 @@ const RotateOverlay = React.memo(({
                         {i18n._(`${rotationAnalysisEnableForSelected ? 'key-Printing/LeftBar-Auto Rotate Selected Models' : 'key-Printing/LeftBar-Auto Rotate All Models'}`)}
                     </Button>
                 </div>
-                <div className="padding-vertical-16 border-bottom-normal">
+                <div className="padding-vertical-16 border-bottom-dashed">
                     <div className="heading-3-normal">
                         {i18n._('key-Printing/LeftBar-Rotate By Direction')}
                     </div>
@@ -265,7 +265,7 @@ const RotateOverlay = React.memo(({
                         <span className="sm-flex-auto width-16 color-red-1">X</span>
                         <div className="position-ab sm-flex-auto margin-horizontal-24">
                             <Input
-                                size="small"
+                                size="large"
                                 placeholder={i18n._('key-Printing/LeftBar-Enter an degree')}
                                 value={rotateX}
                                 suffix="°"
@@ -281,7 +281,7 @@ const RotateOverlay = React.memo(({
                         <span className="sm-flex-auto width-16 color-green-1">Y</span>
                         <div className="position-ab sm-flex-auto margin-horizontal-24">
                             <Input
-                                size="small"
+                                size="large"
                                 placeholder={i18n._('key-Printing/LeftBar-Enter an degree')}
                                 suffix="°"
                                 value={rotateY}
@@ -297,7 +297,7 @@ const RotateOverlay = React.memo(({
                         <span className="sm-flex-auto width-16 color-blue-2">Z</span>
                         <div className="position-ab sm-flex-auto margin-horizontal-24">
                             <Input
-                                size="small"
+                                size="large"
                                 placeholder={i18n._('key-Printing/LeftBar-Enter an degree')}
                                 suffix="°"
                                 value={rotateZ}
