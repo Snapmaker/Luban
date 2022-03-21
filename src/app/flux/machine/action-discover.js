@@ -27,25 +27,25 @@ const init = () => (dispatch, getState) => {
                 }
             }
         },
-        // 'machine:serial-discover': ({ devices, type }) => {
-        //     // Note that we may receive this event many times.
-        //     const { servers, connectionType } = getState().machine;
-        //     if (connectionType === type) {
-        //         const resultServers = servers.filter(v => v.port);
-        //         for (const object of devices) {
-        //             const find = servers.find(v => {
-        //                 return v.port === object.port;
-        //             });
-        //             if (!find) {
-        //                 const server = new Server(object.name, object.address, object.port);
-        //                 servers.unshift(server);
-        //             }
-        //         }
-        //         if (!isEqual(resultServers, servers)) {
-        //             dispatch(baseActions.updateState({ servers: resultServers }));
-        //         }
-        //     }
-        // }
+        'machine:serial-discover': ({ devices, type }) => {
+            // Note that we may receive this event many times.
+            const { servers, connectionType } = getState().machine;
+            if (connectionType === type) {
+                const resultServers = cloneDeep(servers);
+                for (const object of devices) {
+                    const find = servers.find(v => {
+                        return v.port === object.port;
+                    });
+                    if (!find) {
+                        const server = new Server({ port: object.port });
+                        servers.unshift(server);
+                    }
+                }
+                if (!isEqual(resultServers, servers)) {
+                    dispatch(baseActions.updateState({ servers: resultServers }));
+                }
+            }
+        }
     };
 
     Object.keys(controllerEvents).forEach(event => {

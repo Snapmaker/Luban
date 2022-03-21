@@ -27,8 +27,9 @@ import styles from './index.styl';
 let loadingTimer = null;
 function SerialConnection() {
     const {
-        port, isOpen, enclosureOnline, isConnected, server,
-        connectionTimeout, airPurifier, airPurifierHasPower,
+        port, isOpen, enclosureOnline, isConnected, server, servers,
+        // connectionTimeout, airPurifier, airPurifierHasPower,
+        airPurifier, airPurifierHasPower,
         heatedBedTemperature, laserCamera, workflowState, emergencyStopOnline
     } = useSelector(state => state.machine);
     const {
@@ -73,18 +74,18 @@ function SerialConnection() {
         }
     }
 
-    function onPortOpened(options) {
-        const { port: _port, err: _err } = options;
-        if (_err && _err !== 'inuse') {
-            setErr(i18n._('key-workspace_open_port-Can not open this port'));
-            log.error(`Error opening serial port '${_port}'`, _err);
-
-            return;
-        }
-
-        setPortState(_port);
-        setErr(null);
-    }
+    // function onPortOpened(options) {
+    //     const { port: _port, err: _err } = options;
+    //     if (_err && _err !== 'inuse') {
+    //         setErr(i18n._('key-workspace_open_port-Can not open this port'));
+    //         log.error(`Error opening serial port '${_port}'`, _err);
+    //
+    //         return;
+    //     }
+    //
+    //     setPortState(_port);
+    //     setErr(null);
+    // }
 
     function onPortReady(data) {
         const { state, err: _err } = data;
@@ -143,22 +144,15 @@ function SerialConnection() {
         controller.listPorts();
     }
 
-    function onPortClosed(options) {
-        const { port: _port, err: _err } = options;
-        if (_err) {
-            setErr(i18n._('key-workspace_open_port-Can not close this port'));
-            log.error(_err);
-            return;
-        }
-
-        log.debug(`Disconnected from '${_port}'.`);
-
-        // Refresh ports
-        listPorts();
-    }
-
-    function openPort(_port) {
-        dispatch(machineActions.openServer({ port: _port, connectionTimeout }));
+    function openPort() {
+        server.openServer(({ msg }) => {
+            if (msg && msg !== 'inuse') {
+                setErr(i18n._('key-workspace_open_port-Can not open this port'));
+                log.error('Error opening serial port', msg);
+                return;
+            }
+            setErr(null);
+        });
     }
 
     function closePort() {
@@ -217,7 +211,11 @@ function SerialConnection() {
 
     const actions = {
         onChangePortOption: (option) => {
-            setPortState(option.value);
+            const serverFound = servers.find(v => v.port === option.value);
+            if (serverFound) {
+                dispatch(machineActions.connect.setSelectedServer(serverFound));
+                setPortState(serverFound);
+            }
         },
         onRefreshPorts: () => {
             listPorts();
@@ -232,10 +230,7 @@ function SerialConnection() {
     };
 
     const controllerEvents = {
-        'machine:serial-discover': (options) => onListPorts(options),
-        'connection:open': (options) => onPortOpened(options),
         'connection:connected': (options) => onPortReady(options),
-        'connection:close': (options) => onPortClosed(options)
     };
 
     function addControllerEvents() {
