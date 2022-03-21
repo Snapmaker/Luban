@@ -687,7 +687,7 @@ export const actions = {
                 const parser = new GCodeParser(gcode);
                 parser.travelWidth = 0.5;
                 parser.parse();
-                parser.sliceLayer(100);
+                // parser.sliceLayer();
                 // parser.slice();
                 const material = modelGroup.models[0].modelModeMaterial;
                 const newGcodeLineObjects = [];
@@ -696,7 +696,6 @@ export const actions = {
                     gcodeLineGroup.add(newGcodeLineObject);
                     newGcodeLineObjects.push(newGcodeLineObject);
                 });
-                console.log('ps', parser);
 
                 object3D.position.copy(new THREE.Vector3());
                 dispatch(actions.updateState({
@@ -1691,6 +1690,7 @@ export const actions = {
                 range[0] = range[0] || 0;
             }
         }
+        range[0] = range[0] < 0 ? 0 : range[0];
         gcodeLine.material.uniforms.u_visible_layer_range_start.value = Math.round(range[0], 10);
         gcodeLine.material.uniforms.u_visible_layer_range_end.value = Math.round(range[1], 10);
         dispatch(actions.updateState({
