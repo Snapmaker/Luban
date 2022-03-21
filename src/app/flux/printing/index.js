@@ -687,12 +687,17 @@ export const actions = {
                 const parser = new GCodeParser(gcode);
                 parser.travelWidth = 0.5;
                 parser.parse();
-                // parser.sliceLayer();
-                // parser.slice();
+                parser.sliceLayer();
                 const material = modelGroup.models[0].modelModeMaterial;
+                console.log('test', material);
                 const newGcodeLineObjects = [];
+                const material2 = new THREE.MeshBasicMaterial({
+                    color: 0xffffff
+                });
+                material2.vertexColors = true;
                 parser.getGeometries().forEach(geometry => {
-                    const newGcodeLineObject = new THREE.Mesh(geometry, material);
+                    // const newGcodeLineObject = new THREE.Mesh(geometry, material);
+                    const newGcodeLineObject = new THREE.Mesh(geometry, material2);
                     gcodeLineGroup.add(newGcodeLineObject);
                     newGcodeLineObjects.push(newGcodeLineObject);
                 });
@@ -1646,7 +1651,7 @@ export const actions = {
 
     showGcodeLayers: (range) => (dispatch, getState) => {
         const { layerCount, gcodeLine, gcodePreviewMode, layerRangeDisplayed, gcodeParser } = getState().printing;
-        gcodeParser && gcodeParser.sliceLayer(Math.round(range[0]), Math.round(range[1]));
+        gcodeParser && gcodeParser.sliceLayer(Math.floor(range[0]), Math.floor(range[1]));
         if (!gcodeLine) {
             return;
         }
