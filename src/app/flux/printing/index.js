@@ -1,6 +1,5 @@
 import * as THREE from 'three';
 import { GCodeParser } from 'gcode-viewer/dist/parser';
-import { SimpleColorizer } from 'gcode-viewer';
 // import { LineTubeGeometry } from 'gcode-viewer/dist/LineTubeGeometry';
 // import { LinePoint } from 'gcode-viewer/dist/LinePoint';
 import { acceleratedRaycast, computeBoundsTree, disposeBoundsTree } from 'three-mesh-bvh';
@@ -149,7 +148,8 @@ const INITIAL_STATE = {
     filamentLength: 0,
     filamentWeight: 0,
     gcodeLineGroup: new THREE.Group(),
-    gcodeLineObject: null,
+    gcodeLineObjects: [],
+    gcodeParser: null,
     gcodeLine: null,
     layerCount: 0,
     layerRangeDisplayed: [0, Infinity],
@@ -640,7 +640,7 @@ export const actions = {
         }
     },
     gcodeRenderingCallback: (data) => (dispatch, getState) => {
-        const { gcodeLineGroup, gcodeTypeInitialVisibility, gcodePreviewMode, gcodeLineObject } = getState().printing;
+        const { gcodeLineGroup, gcodeTypeInitialVisibility, gcodePreviewMode, gcodeLineObjects, gcodeParser, modelGroup } = getState().printing;
 
         const { status, value } = data;
         switch (status) {
@@ -678,16 +678,25 @@ export const actions = {
                 // testObj.slice(0, 1);
                 // gcodeLineGroup.add(testObj);
 
+                gcodeLineObjects.forEach(object => {
+                    gcodeLineGroup.remove(object);
+                });
+                gcodeParser && gcodeParser.dispose();
+
                 const gcode = value.gcode;
-                const ps = new GCodeParser(gcode);
-                ps.travelWidth = 0.5;
-                ps.colorizer = new SimpleColorizer(new THREE.Color('#29BEB0'));
-                ps.parse();
-                ps.sliceLayer();
-                gcodeLineGroup.remove(gcodeLineObject);
-                const newGcodeLineObject = new THREE.Mesh(ps.getGeometries()[0]);
-                gcodeLineGroup.add(newGcodeLineObject);
-                console.log('ps', ps.getGeometries(), newGcodeLineObject);
+                const parser = new GCodeParser(gcode);
+                parser.travelWidth = 0.5;
+                parser.parse();
+                parser.sliceLayer(100);
+                // parser.slice();
+                const material = modelGroup.models[0].modelModeMaterial;
+                const newGcodeLineObjects = [];
+                parser.getGeometries().forEach(geometry => {
+                    const newGcodeLineObject = new THREE.Mesh(geometry, material);
+                    gcodeLineGroup.add(newGcodeLineObject);
+                    newGcodeLineObjects.push(newGcodeLineObject);
+                });
+                console.log('ps', parser);
 
                 object3D.position.copy(new THREE.Vector3());
                 dispatch(actions.updateState({
@@ -695,7 +704,8 @@ export const actions = {
                     layerRangeDisplayed: [0, layerCount - 1],
                     renderLineType: false,
                     gcodeLine: object3D,
-                    gcodeLineObject: newGcodeLineObject
+                    gcodeLineObjects: newGcodeLineObjects,
+                    gcodeParser: parser
                 }));
 
                 dispatch(actions.updateGcodePreviewMode(gcodePreviewMode));
@@ -1636,7 +1646,8 @@ export const actions = {
     },
 
     showGcodeLayers: (range) => (dispatch, getState) => {
-        const { layerCount, gcodeLine, gcodePreviewMode, layerRangeDisplayed } = getState().printing;
+        const { layerCount, gcodeLine, gcodePreviewMode, layerRangeDisplayed, gcodeParser } = getState().printing;
+        gcodeParser && gcodeParser.sliceLayer(Math.round(range[0]), Math.round(range[1]));
         if (!gcodeLine) {
             return;
         }
