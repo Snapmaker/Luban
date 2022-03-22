@@ -795,6 +795,7 @@ class MarlinController {
         this.serialport.on('error', this.serialportListener.error);
         this.serialport.on('data', this.serialportListener.data);
         this.serialport.open((err) => {
+            console.log('serialport.open', err, this.serialport.isOpen);
             if (err || !this.serialport.isOpen) {
                 log.error(`Error opening serial port "${port}/${dataSource}":`, err);
                 callback(err); // notify error

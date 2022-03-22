@@ -88,7 +88,7 @@ class SocketSerial {
         } else {
             controller.open((err = null) => {
                 if (err) {
-                    socket.emit('connection:open', { port, err, dataSource });
+                    socket.emit('connection:open', { port, msg: err, dataSource });
                     return;
                 }
 

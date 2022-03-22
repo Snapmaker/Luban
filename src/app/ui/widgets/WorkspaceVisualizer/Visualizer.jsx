@@ -62,7 +62,7 @@ class Visualizer extends PureComponent {
         boundingBox: PropTypes.object,
         server: PropTypes.object.isRequired,
         connectionType: PropTypes.string.isRequired,
-        workflowStatus: PropTypes.string.isRequired,
+        workflowStatus: PropTypes.string,
         renderState: PropTypes.string.isRequired,
         renderingTimestamp: PropTypes.number.isRequired,
         stage: PropTypes.number.isRequired,
@@ -84,7 +84,7 @@ class Visualizer extends PureComponent {
 
         isLaserPrintAutoMode: PropTypes.bool.isRequired,
         materialThickness: PropTypes.number.isRequired,
-        laserFocalLength: PropTypes.string,
+        laserFocalLength: PropTypes.number,
         background: PropTypes.object.isRequired,
         workPosition: PropTypes.object.isRequired,
         originOffset: PropTypes.object.isRequired,
@@ -299,27 +299,30 @@ class Visualizer extends PureComponent {
                     originOffset,
                     // for serialport indiviual
                     workflowState,
-                }, ({ msg, code }) => {
-                    if (msg) {
-                        if (code === 202) {
-                            modalSmallHOC({
-                                title: i18n._('key-Workspace/Page-Filament Runout Recovery'),
-                                text: i18n._('key-Workspace/Page-Filament has run out. Please load new filament to continue printing.'),
-                                img: IMAGE_WIFI_ERROR
-                            });
-                        } else if (code === 203) {
-                            modalSmallHOC({
-                                title: i18n._('key-Workspace/Page-Enclosure Door Open'),
-                                text: i18n._('key-Workspace/Page-One or both of the enclosure panels is/are opened. Please close the panel(s) to continue printing.'),
-                                subtext: i18n._('key-Workspace/Page-Please wait one second after you close the panel(s) to continue printing.'),
-                                img: IMAGE_WIFI_WARNING
-                            });
-                        } else {
-                            modalSmallHOC({
-                                title: i18n._(`Error ${code}`),
-                                text: i18n._('key-Workspace/Page-Unable to start the job.'),
-                                img: IMAGE_WIFI_ERROR
-                            });
+                }, (res) => {
+                    if (res) {
+                        const { msg, code } = res;
+                        if (msg) {
+                            if (code === 202) {
+                                modalSmallHOC({
+                                    title: i18n._('key-Workspace/Page-Filament Runout Recovery'),
+                                    text: i18n._('key-Workspace/Page-Filament has run out. Please load new filament to continue printing.'),
+                                    img: IMAGE_WIFI_ERROR
+                                });
+                            } else if (code === 203) {
+                                modalSmallHOC({
+                                    title: i18n._('key-Workspace/Page-Enclosure Door Open'),
+                                    text: i18n._('key-Workspace/Page-One or both of the enclosure panels is/are opened. Please close the panel(s) to continue printing.'),
+                                    subtext: i18n._('key-Workspace/Page-Please wait one second after you close the panel(s) to continue printing.'),
+                                    img: IMAGE_WIFI_WARNING
+                                });
+                            } else {
+                                modalSmallHOC({
+                                    title: i18n._(`Error ${code}`),
+                                    text: i18n._('key-Workspace/Page-Unable to start the job.'),
+                                    img: IMAGE_WIFI_ERROR
+                                });
+                            }
                         }
                     }
                 });
@@ -407,8 +410,8 @@ class Visualizer extends PureComponent {
                     pos: null
                 });
             }
-
-            if (workflowStatus === WORKFLOW_STATUS_RUNNING || workflowState === WORKFLOW_STATE_RUNNING) {
+            if (connectionType === CONNECTION_TYPE_WIFI && workflowStatus === WORKFLOW_STATUS_RUNNING
+                || connectionType === CONNECTION_TYPE_SERIAL && workflowState === WORKFLOW_STATE_RUNNING) {
                 server.pauseServerGcode(() => {
                     if (connectionType === CONNECTION_TYPE_SERIAL) {
                         this.actions.tryPause();
@@ -418,8 +421,9 @@ class Visualizer extends PureComponent {
         },
         handleStop: () => {
             const { workflowState } = this.state;
-            const { workflowStatus, server } = this.props;
-            if (workflowStatus !== WORKFLOW_STATUS_IDLE || workflowState !== WORKFLOW_STATE_IDLE) {
+            const { workflowStatus, server, connectionType } = this.props;
+            if (connectionType === CONNECTION_TYPE_WIFI && workflowStatus !== WORKFLOW_STATUS_IDLE
+                || connectionType === CONNECTION_TYPE_SERIAL && workflowState !== WORKFLOW_STATE_IDLE) {
                 this.actions.handlePause();
                 server.stopServerGcode();
             }

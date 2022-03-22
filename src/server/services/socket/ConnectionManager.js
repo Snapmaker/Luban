@@ -143,6 +143,7 @@ class ConnectionManager {
             this.socket.command(this.socket, {
                 cmd: 'gcode:start',
             });
+            socket && socket.emit(eventName);
         }
     }
 
@@ -197,6 +198,8 @@ class ConnectionManager {
                     });
                 }
             }
+            const { eventName } = options;
+            socket && socket.emit(eventName);
         }
     };
 
@@ -204,9 +207,11 @@ class ConnectionManager {
         if (this.connectionType === CONNECTION_TYPE_WIFI) {
             this.socket.pauseGcode(options);
         } else {
+            const { eventName } = options;
             this.socket.command(this.socket, {
                 cmd: 'gcode:pause',
             });
+            socket && socket.emit(eventName);
         }
     };
 
@@ -217,6 +222,8 @@ class ConnectionManager {
             this.socket.command(this.socket, {
                 cmd: 'gcode:stop',
             });
+            const { eventName } = options;
+            socket && socket.emit(eventName);
         }
     };
 

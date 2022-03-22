@@ -1,8 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import classNames from 'classnames';
-// import { InputGroup } from 'react-bootstrap';
-import { includes, map } from 'lodash';
+import { map } from 'lodash';
 import Select from '../../components/Select';
 import SvgIcon from '../../components/SvgIcon';
 import { Button } from '../../components/Buttons';
@@ -18,16 +17,13 @@ import {
     WORKFLOW_STATE_RUNNING, LEVEL_TWO_POWER_LASER_FOR_SM2,
     HEAD_LASER, HEAD_CNC, HEAD_PRINTING
 } from '../../../constants';
-import { valueOf } from '../../../lib/contants-utils';
 import { actions as machineActions } from '../../../flux/machine';
-import { actions as workspaceActions } from '../../../flux/workspace';
-import MachineSelectModal from '../../modals/modal-machine-select';
 import styles from './index.styl';
 
 let loadingTimer = null;
 function SerialConnection() {
     const {
-        port, isOpen, enclosureOnline, isConnected, server, servers,
+        isOpen, enclosureOnline, isConnected, server, servers,
         // connectionTimeout, airPurifier, airPurifierHasPower,
         airPurifier, airPurifierHasPower,
         heatedBedTemperature, laserCamera, workflowState, emergencyStopOnline
@@ -35,10 +31,8 @@ function SerialConnection() {
     const {
         toolHead, headType, series: seriesInfo
     } = useSelector(state => state?.workspace);
-    // Available serial ports
-    const [ports, setPorts] = useState([]);
     // Selected port
-    const [portState, setPortState] = useState(port);
+    const [portState, setPortState] = useState(server);
     // connect status: 'idle', 'connecting', 'connected'
     const [err, setErr] = useState(null);
     // UI state
@@ -46,90 +40,14 @@ function SerialConnection() {
     const [moduleStatusList, setModuleStatusList] = useState(null);
     const dispatch = useDispatch();
 
-    function onListPorts(options) {
-        // // TODO:  change 'ports' to 'servers'
-        const { devices: _ports } = options;
-        // Update loading state
-        if (loadingTimer) {
-            clearTimeout(loadingTimer);
-            loadingTimer = null;
-        }
-        // Hold on spinning for 600ms so that user can recognize the refresh has done.
-        loadingTimer = setTimeout(() => {
-            if (loadingTimer) {
-                setLoadingPorts(false);
-                loadingTimer = null;
-            }
-        }, 600);
-
-        log.debug('Received serial ports:', _ports);
-
-        const _port = port || '';
-
-        if (includes(map(_ports, 'port'), _port)) {
-            setPorts(_ports);
-            setPortState(_port);
-        } else {
-            setPorts(_ports);
-        }
-    }
-
-    // function onPortOpened(options) {
-    //     const { port: _port, err: _err } = options;
-    //     if (_err && _err !== 'inuse') {
-    //         setErr(i18n._('key-workspace_open_port-Can not open this port'));
-    //         log.error(`Error opening serial port '${_port}'`, _err);
-    //
-    //         return;
-    //     }
-    //
-    //     setPortState(_port);
-    //     setErr(null);
-    // }
-
     function onPortReady(data) {
-        const { state, err: _err } = data;
+        const { err: _err } = data;
         if (_err) {
             setErr(i18n._('key-workspace_open_port-The machine is not ready'));
             return;
         }
 
         log.debug(`Connected to ${portState}.`);
-
-        // save serial port on connection succeeded
-
-        const { series, seriesSize, headType: machineHeadType, toolHead: machineToolHead } = state;
-        const machineSeries = valueOf(MACHINE_SERIES, 'alias', `${series}-${seriesSize}`)
-            ? valueOf(MACHINE_SERIES, 'alias', `${series}-${seriesSize}`).value : null;
-        dispatch(workspaceActions.updateMachineState({
-            headType: machineHeadType,
-            toolHead: machineToolHead,
-            series: machineSeries
-        }));
-
-        // TODO
-        if (machineSeries && (machineHeadType !== 'UNKNOWN' && machineHeadType !== undefined)) {
-            dispatch(machineActions.executeGcodeG54(machineSeries, machineHeadType));
-        } else {
-            MachineSelectModal({
-                series: machineSeries,
-                headType: machineHeadType,
-                toolHead: machineToolHead,
-
-                onConfirm: (seriesT, headTypeT, toolHeadT) => {
-                    dispatch(workspaceActions.updateMachineState({
-                        series: seriesT,
-                        headType: headTypeT,
-                        toolHead: toolHeadT
-                    }));
-                    dispatch(machineActions.updateMachineState({
-                        canReselectMachine: true
-                    }));
-                    dispatch(machineActions.executeGcodeG54(seriesT, headTypeT));
-                }
-
-            });
-        }
     }
 
     function listPorts() {
@@ -139,7 +57,7 @@ function SerialConnection() {
             if (loadingTimer) {
                 setLoadingPorts(false);
             }
-        }, 5000);
+        }, 500);
 
         controller.listPorts();
     }
@@ -167,7 +85,7 @@ function SerialConnection() {
             overflow: 'hidden'
         };
 
-        const inuse = value === portState && isConnected;
+        const inuse = value === portState.port && isConnected;
 
         return (
             <div style={style} title={label}>
@@ -194,7 +112,7 @@ function SerialConnection() {
             textOverflow: 'ellipsis',
             overflow: 'hidden'
         };
-        const inuse = value === portState && isConnected;
+        const inuse = value === portState.port && isConnected;
 
         return (
             <div style={style} title={label}>
@@ -221,10 +139,10 @@ function SerialConnection() {
             listPorts();
         },
         onOpenPort: () => {
-            openPort(portState);
+            openPort();
         },
         onClosePort: () => {
-            closePort(portState);
+            closePort();
         }
 
     };
@@ -342,13 +260,13 @@ function SerialConnection() {
                         noResultsText={i18n._('key-Workspace/Connection-No ports available.')}
                         onChange={actions.onChangePortOption}
                         optionRenderer={renderPortOption}
-                        options={map(ports, (o) => ({
+                        options={map(servers, (o) => ({
                             value: o.port,
                             label: o.port,
                             manufacturer: o.manufacturer
                         }))}
                         placeholder={i18n._('key-Workspace/Connection-Choose a port')}
-                        value={portState}
+                        value={portState.port}
                         valueRenderer={renderPortValue}
                     />
                     <SvgIcon

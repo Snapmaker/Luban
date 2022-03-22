@@ -96,7 +96,6 @@ class SocketHttp {
 
     onConnection = (socket) => {
         wifiServerManager.onConnection(socket);
-        console.log('intervalHandle', intervalHandle, this.heartBeatWorker);
         this.heartBeatWorker && this.heartBeatWorker.terminate();
     }
 
@@ -310,6 +309,7 @@ class SocketHttp {
                 waitConfirm = false;
                 this.socket && this.socket.emit('connection:connected', {
                     state,
+                    err: state?.err,
                     type: CONNECTION_TYPE_WIFI
                 });
             } else {

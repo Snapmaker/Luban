@@ -41,12 +41,12 @@ const isNotNull = (value) => {
 export class Server extends events.EventEmitter {
     gcodePrintingInfo = {};
 
-    constructor(name = '', address = '', model, port = '') {
+    constructor({ name = '', address = '', model, port = '' }) {
         super();
         this.name = name;
         this.address = address;
         this.token = '';
-        this.port = port || 8080;
+        this.port = port;
         this.model = model || 'Unknown Model';
         this.selected = false;
     }
@@ -63,15 +63,15 @@ export class Server extends events.EventEmitter {
             port: this.port
         })
             .once(CONNECTION_OPEN, ({ msg, data, text }) => {
+                if (msg) {
+                    callback && callback({ msg, data, text });
+                    return;
+                }
                 if (this.isWifi) {
                     dispatch(baseActions.updateState({
                         isOpen: true,
                         connectionStatus: CONNECTION_STATUS_CONNECTING
                     }));
-                    if (msg) {
-                        callback && callback({ msg, data, text });
-                        return;
-                    }
                     this.token = data.token;
                     dispatch(connectActions.setServerAddress(this.address));
                     dispatch(connectActions.setServerToken(this.token));
@@ -161,7 +161,7 @@ export class Server extends events.EventEmitter {
     }
 
     get host() {
-        return `http://${this.address}:${this.port}`;
+        return `http://${this.address}:8080`;
     }
 
     equals(server) {

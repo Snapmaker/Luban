@@ -201,7 +201,10 @@ function WifiConnection() {
                 onCancel: actions.onCloseManualWiFi,
                 onConfirm: (text) => {
                     dispatch(machineActions.connect.setManualIP(text));
-                    const newServer = new Server('Manual', text);
+                    const newServer = new Server({
+                        name: 'Manual',
+                        address: text
+                    });
 
                     // Try add new server
                     const _server = dispatch(machineActions.connect.addServer(newServer));

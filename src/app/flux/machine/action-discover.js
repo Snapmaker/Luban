@@ -12,13 +12,13 @@ const init = () => (dispatch, getState) => {
             // Note that we may receive this event many times.
             const { servers, connectionType } = getState().machine;
             if (connectionType === type) {
-                const resultServers = cloneDeep(servers);
+                const resultServers = cloneDeep(servers.filter(v => v.address));
                 for (const object of devices) {
                     const find = servers.find(v => {
                         return v.address === object.address && v.name === object.name;
                     });
                     if (!find) {
-                        const server = new Server(object.name, object.address);
+                        const server = new Server({ name: object.name, address: object.address });
                         resultServers.unshift(server);
                     }
                 }
@@ -31,14 +31,14 @@ const init = () => (dispatch, getState) => {
             // Note that we may receive this event many times.
             const { servers, connectionType } = getState().machine;
             if (connectionType === type) {
-                const resultServers = cloneDeep(servers);
+                const resultServers = cloneDeep(servers.filter(v => v.port));
                 for (const object of devices) {
                     const find = servers.find(v => {
                         return v.port === object.port;
                     });
                     if (!find) {
                         const server = new Server({ port: object.port });
-                        servers.unshift(server);
+                        resultServers.unshift(server);
                     }
                 }
                 if (!isEqual(resultServers, servers)) {
