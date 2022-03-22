@@ -10,10 +10,13 @@ jobs:
   build-windows:
     name: Build Windows Packages
 
-    # windows-2019
-    runs-on: windows-2016
+    runs-on: windows-2019
+    # runs-on: windows-2016
 
     steps:
+      - name: Prepare VC++ Runtime
+        run: choco install -y vcredist2017
+
       - name: Checkout Code
         uses: actions/checkout@v2
 
