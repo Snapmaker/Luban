@@ -1,11 +1,10 @@
 import * as THREE from 'three';
-import { GCodeParser } from 'gcode-viewer/dist/parser';
-// import { LineTubeGeometry } from 'gcode-viewer/dist/LineTubeGeometry';
-// import { LinePoint } from 'gcode-viewer/dist/LinePoint';
+// import { GCodeParser } from 'gcode-viewer/dist/parser';
 import { acceleratedRaycast, computeBoundsTree, disposeBoundsTree } from 'three-mesh-bvh';
 import path from 'path';
 import { cloneDeep, isNil, filter, find as lodashFind } from 'lodash';
 // import FileSaver from 'file-saver';
+import { GCodeParser } from '../../lib/gcode-viewer/parser';
 import workerManager from '../../lib/manager/workerManager';
 import {
     ABSENT_OBJECT,
@@ -689,15 +688,15 @@ export const actions = {
                 parser.parse();
                 parser.sliceLayer();
                 const material = modelGroup.models[0].modelModeMaterial;
-                console.log('test', material);
                 const newGcodeLineObjects = [];
                 const material2 = new THREE.MeshBasicMaterial({
                     color: 0xffffff
                 });
                 material2.vertexColors = true;
+                console.log('test', material2);
                 parser.getGeometries().forEach(geometry => {
-                    // const newGcodeLineObject = new THREE.Mesh(geometry, material);
-                    const newGcodeLineObject = new THREE.Mesh(geometry, material2);
+                    const newGcodeLineObject = new THREE.Mesh(geometry, material);
+                    // const newGcodeLineObject = new THREE.Mesh(geometry, material2);
                     gcodeLineGroup.add(newGcodeLineObject);
                     newGcodeLineObjects.push(newGcodeLineObject);
                 });
