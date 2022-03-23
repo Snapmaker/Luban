@@ -1638,7 +1638,7 @@ export const actions = {
         dispatch(actions.render());
     },
 
-    updateSelectedModelTransformation: (transformation, newUniformScalingState) => (dispatch, getState) => {
+    updateSelectedModelTransformation: (transformation, newUniformScalingState, isAllRotate) => (dispatch, getState) => {
         const { modelGroup } = getState().printing;
         let transformMode;
         switch (true) {
@@ -1656,7 +1656,7 @@ export const actions = {
         }
         dispatch(actions.recordModelBeforeTransform(modelGroup));
         // TODO
-        modelGroup.updateSelectedGroupTransformation(transformation, newUniformScalingState);
+        modelGroup.updateSelectedGroupTransformation(transformation, newUniformScalingState, isAllRotate);
         modelGroup.onModelAfterTransform();
 
         dispatch(actions.recordModelAfterTransform(transformMode, modelGroup));
@@ -2333,7 +2333,7 @@ export const actions = {
                         revertParentFunc();
                         // rotateModel.computeBoundingBox();
                         dispatch(actions.updateState({
-                            stage: STEP_STAGE.PRINTING_AUTO_ROTATE_SUCCESSED,
+                            stage: STEP_STAGE.PRINTING_AUTO_ROTATING_MODELS,
                             progress: progressStatesManager.updateProgress(STEP_STAGE.PRINTING_AUTO_ROTATING_MODELS, progress)
                         }));
                         if (isFinish) {
@@ -2344,7 +2344,7 @@ export const actions = {
                             dispatch(actions.destroyGcodeLine());
                             dispatch(actions.displayModel());
                             dispatch(actions.updateState({
-                                stage: STEP_STAGE.PRINTING_AUTO_ROTATE_SUCCESSED,
+                                stage: STEP_STAGE.PRINTING_AUTO_ROTATING_MODELS,
                                 progress: progressStatesManager.updateProgress(STEP_STAGE.PRINTING_AUTO_ROTATING_MODELS, 1)
                             }));
                         }
@@ -2353,13 +2353,14 @@ export const actions = {
                     case 'PROGRESS': {
                         const { progress } = value;
                         dispatch(actions.updateState({
-                            progress
+                            stage: STEP_STAGE.PRINTING_AUTO_ROTATING_MODELS,
+                            progress: progressStatesManager.updateProgress(STEP_STAGE.PRINTING_AUTO_ROTATING_MODELS, progress)
                         }));
                         break;
                     }
                     case 'ERROR': {
                         dispatch(actions.updateState({
-                            stage: STEP_STAGE.PRINTING_AUTO_ROTATE_SUCCESSED,
+                            stage: STEP_STAGE.PRINTING_AUTO_ROTATE_FAILED,
                             progress: progressStatesManager.updateProgress(STEP_STAGE.PRINTING_AUTO_ROTATING_MODELS, 1)
                         }));
                         break;
@@ -2385,6 +2386,72 @@ export const actions = {
         dispatch(actions.displayModel());
     },
 
+    scaleToFitSelectedModelWithRotate: () => (dispatch, getState) => {
+        const { modelGroup, stopArea: { left, right, front, back }, progressStatesManager } = getState().printing;
+        const { size } = getState().machine;
+        progressStatesManager.startProgress(PROCESS_STAGE.PRINTING_SCALE_TO_FIT_WITH_ROTATE);
+        dispatch(actions.updateState({
+            stage: STEP_STAGE.PRINTING_SCALE_TO_FIT_WITH_ROTATE,
+            progress: progressStatesManager.updateProgress(STEP_STAGE.PRINTING_SCALE_TO_FIT_WITH_ROTATE, 0.15)
+        }));
+        setTimeout(() => {
+            const meshObjectJSON = [];
+            modelGroup.selectedModelArray.forEach(modelItem => {
+                meshObjectJSON.push({ ...modelItem.meshObject.geometry.toJSON(), modelItemMatrix: modelItem.meshObject.matrix.clone() });
+            });
+            dispatch(actions.recordModelBeforeTransform(modelGroup));
+            const data = {
+                size,
+                meshObjectJSON,
+                left,
+                right,
+                front,
+                back,
+                selectedGroupMatrix: modelGroup.selectedGroup.matrix.clone()
+            };
+            workerManager.scaleToFitWithRotate([{
+                data
+            }], (payload) => {
+                const { status, value } = payload;
+                switch (status) {
+                    case 'FINISH': {
+                        const { rotateAngel, maxScale, offsetX } = value;
+                        const newTransformation = {
+                            rotationZ: THREE.Math.degToRad(rotateAngel),
+                            scaleX: maxScale,
+                            scaleY: maxScale,
+                            scaleZ: maxScale,
+                            positionX: offsetX,
+                            positionY: 0
+                        };
+                        dispatch(actions.updateSelectedModelTransformation(newTransformation, undefined, true));
+                        dispatch(actions.updateState({
+                            stage: STEP_STAGE.PRINTING_SCALE_TO_FIT_WITH_ROTATE,
+                            progress: progressStatesManager.updateProgress(STEP_STAGE.PRINTING_SCALE_TO_FIT_WITH_ROTATE, 1)
+                        }));
+                        break;
+                    }
+                    case 'UPDATE_PROGRESS': {
+                        const { progress } = value;
+                        dispatch(actions.updateState({
+                            stage: STEP_STAGE.PRINTING_SCALE_TO_FIT_WITH_ROTATE,
+                            progress: progressStatesManager.updateProgress(STEP_STAGE.PRINTING_SCALE_TO_FIT_WITH_ROTATE, progress)
+                        }));
+                        break;
+                    }
+                    case 'ERR': {
+                        dispatch(actions.updateState({
+                            stage: STEP_STAGE.PRINTING_SCALE_TO_FIT_WITH_ROTATE_FAILED,
+                            progress: progressStatesManager.updateProgress(STEP_STAGE.PRINTING_SCALE_TO_FIT_WITH_ROTATE, 1)
+                        }));
+                        break;
+                    }
+                    default:
+                        break;
+                }
+            });
+        }, 150);
+    },
     resetSelectedModelTransformation: () => (dispatch, getState) => {
         const { modelGroup } = getState().printing;
         dispatch(actions.recordModelBeforeTransform(modelGroup));

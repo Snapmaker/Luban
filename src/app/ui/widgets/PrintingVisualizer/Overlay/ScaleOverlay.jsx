@@ -12,14 +12,12 @@ import { Button } from '../../../components/Buttons';
 
 const ScaleOverlay = React.memo(({
     setTransformMode,
-    onModelAfterTransform,
-    size
+    onModelAfterTransform
 }) => {
     const isPrimeTowerSelected = useSelector(state => state?.printing?.modelGroup?.isPrimeTowerSelected());
     const selectedModelArray = useSelector(state => state?.printing?.modelGroup?.selectedModelArray);
     const transformation = useSelector(state => state?.printing?.modelGroup?.getSelectedModelTransformationForPrinting(), shallowEqual);
     const primeTowerHeight = useSelector(state => state?.printing?.primeTowerHeight, shallowEqual);
-    const selectedModelBBoxDes = useSelector(state => state?.printing?.modelGroup?.getSelectedModelBBoxWHD(), shallowEqual);
     const selectedGroup = useSelector(state => state?.printing?.modelGroup?.selectedGroup, shallowEqual);
     const [scalePercentObj, setScalePercentObj] = useState({
         x: 100,
@@ -123,16 +121,7 @@ const ScaleOverlay = React.memo(({
     };
 
     const scaleToFitSelectedModel = () => {
-        const scalar = ['x', 'y', 'z'].reduce((prev, key) => Math.min((size[key] - 5) / selectedModelBBoxDes[key], prev), Number.POSITIVE_INFINITY);
-        const newTransformation = {
-            scaleX: scalar * transformation.scaleX,
-            scaleY: scalar * transformation.scaleY,
-            scaleZ: scalar * transformation.scaleZ,
-            positionX: 0,
-            positionY: 0
-        };
-        dispatch(printingActions.updateSelectedModelTransformation(newTransformation));
-        onModelAfterTransform();
+        dispatch(printingActions.scaleToFitSelectedModelWithRotate());
     };
 
     return (
@@ -267,6 +256,5 @@ const ScaleOverlay = React.memo(({
 ScaleOverlay.propTypes = {
     setTransformMode: PropTypes.func.isRequired,
     onModelAfterTransform: PropTypes.func.isRequired,
-    size: PropTypes.object.isRequired
 };
 export default ScaleOverlay;

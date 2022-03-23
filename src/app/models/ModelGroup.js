@@ -833,7 +833,6 @@ class ModelGroup extends EventEmitter {
 
     selectAllModels() {
         this.selectedModelArray = [];
-
         this.models.forEach((model) => {
             if (model.supportTag || model.type === 'primeTower') return;
             if (model.visible) {
@@ -1204,7 +1203,7 @@ class ModelGroup extends EventEmitter {
      *
      * @param transformation
      */
-    updateSelectedGroupTransformation(transformation, newUniformScalingState = this.selectedGroup.uniformScalingState) {
+    updateSelectedGroupTransformation(transformation, newUniformScalingState = this.selectedGroup.uniformScalingState, isAllRotate = false) {
         const { positionX, positionY, positionZ, rotationX, rotationY, rotationZ, scaleX, scaleY, scaleZ, uniformScalingState } = transformation;
         const shouldUniformScale = newUniformScalingState ?? this.selectedGroup.uniformScalingState;
         if (positionX !== undefined) {
@@ -1286,30 +1285,42 @@ class ModelGroup extends EventEmitter {
             }
         }
         if (rotationX !== undefined) {
-            if (this.selectedModelArray.length > 1) {
-                this.selectedGroup.children.forEach((meshItem) => {
-                    meshItem.rotation.x = rotationX;
-                });
-            } else {
+            if (isAllRotate) {
                 this.selectedGroup.rotation.x = rotationX;
+            } else {
+                if (this.selectedModelArray.length > 1) {
+                    this.selectedGroup.children.forEach((meshItem) => {
+                        meshItem.rotation.x = rotationX;
+                    });
+                } else {
+                    this.selectedGroup.rotation.x = rotationX;
+                }
             }
         }
         if (rotationY !== undefined) {
-            if (this.selectedModelArray.length > 1) {
-                this.selectedGroup.children.forEach((meshItem) => {
-                    meshItem.rotation.y = rotationY;
-                });
-            } else {
+            if (isAllRotate) {
                 this.selectedGroup.rotation.y = rotationY;
+            } else {
+                if (this.selectedModelArray.length > 1) {
+                    this.selectedGroup.children.forEach((meshItem) => {
+                        meshItem.rotation.y = rotationY;
+                    });
+                } else {
+                    this.selectedGroup.rotation.y = rotationY;
+                }
             }
         }
         if (rotationZ !== undefined) {
-            if (this.selectedModelArray.length > 1) {
-                this.selectedGroup.children.forEach((meshItem) => {
-                    meshItem.rotation.z = rotationZ;
-                });
-            } else {
+            if (isAllRotate) {
                 this.selectedGroup.rotation.z = rotationZ;
+            } else {
+                if (this.selectedModelArray.length > 1) {
+                    this.selectedGroup.children.forEach((meshItem) => {
+                        meshItem.rotation.z = rotationZ;
+                    });
+                } else {
+                    this.selectedGroup.rotation.z = rotationZ;
+                }
             }
         }
         this.selectedGroup.updateMatrix();
