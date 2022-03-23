@@ -2397,7 +2397,16 @@ export const actions = {
         setTimeout(() => {
             const meshObjectJSON = [];
             modelGroup.selectedModelArray.forEach(modelItem => {
-                meshObjectJSON.push({ ...modelItem.meshObject.geometry.toJSON(), modelItemMatrix: modelItem.meshObject.matrix.clone() });
+                if (modelItem instanceof ThreeGroup) {
+                    modelItem.children.forEach(child => {
+                        meshObjectJSON.push({
+                            ...child.meshObject.geometry.toJSON(),
+                            modelItemMatrix: child.meshObject.matrix.clone()
+                        });
+                    });
+                } else {
+                    meshObjectJSON.push({ ...modelItem.meshObject.geometry.toJSON(), modelItemMatrix: modelItem.meshObject.matrix.clone() });
+                }
             });
             dispatch(actions.recordModelBeforeTransform(modelGroup));
             const data = {

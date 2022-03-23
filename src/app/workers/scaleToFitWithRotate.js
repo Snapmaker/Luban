@@ -15,6 +15,8 @@ const scaleToFitWithRotate = ({ data }) => {
             const originCenter = size.x / 2;
             const currentCenter = (size.x - right) / 2 + left / 2;
             offsetX = (currentCenter - originCenter) / 2 - 5;
+        } else {
+            offsetX = 0;
         }
         size = {
             x: size.x - left - right,
