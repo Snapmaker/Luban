@@ -18,6 +18,8 @@ class SocketServer extends EventEmitter {
 
     sockets: Socket[] = [];
 
+    id: string = '';
+
     events = [];
 
     start(server) {

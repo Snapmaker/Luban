@@ -397,9 +397,7 @@ export const actions = {
                     dispatch(baseActions.updateState({
                         gcodePrintingInfo: machineState.server.getGcodePrintingInfo(state)
                     }));
-                    console.log('wifi laserFocalLength', status, laserFocalLength);
                 } else {
-                    console.log('serial laserFocalLength', machineState.workflowStatus, zFocus + LASER_MOCK_PLATE_HEIGHT);
                     dispatch(baseActions.updateState({
                         headStatus: headStatus,
                         laserFocalLength: zFocus + LASER_MOCK_PLATE_HEIGHT,
@@ -449,9 +447,8 @@ export const actions = {
                     return;
                 }
                 let machineSeries = '';
-                const { toolHead, series, headType, status, isHomed, moduleStatusList, isConnected } = state;
+                const { toolHead, series, headType, status, isHomed, moduleStatusList } = state;
                 const { seriesSize } = state;
-                console.log('connected isHomed', isHomed, status);
                 dispatch(baseActions.updateState({
                     isHomed: isHomed
                 }));
@@ -515,7 +512,6 @@ export const actions = {
                     isOpen: true,
                     connectionStatus: CONNECTION_STATUS_CONNECTED
                 }));
-                console.log('isConnected', isConnected);
             },
             'connection:close': () => {
                 dispatch(actions.resetMachineState());

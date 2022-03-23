@@ -1,6 +1,7 @@
 import serialport from 'serialport';
 import store from '../../store';
 import logger from '../../lib/logger';
+import type SocketServer from '../../lib/SocketManager';
 import { MarlinController } from '../../controllers';
 import ensureArray from '../../lib/ensure-array';
 import config from '../configstore';
@@ -11,19 +12,17 @@ const log = logger('service:socket-server');
 let intervalHandle = null;
 
 class SocketSerial {
-    port = '';
+    private port: string = '';
 
-    dataSource = '';
+    private dataSource: string = '';
 
-    socket = null;
-
-    onConnection = (socket) => {
+    public onConnection = (socket: SocketServer) => {
         intervalHandle = setInterval(() => {
             this.serialportList(socket);
         }, 1000);
     }
 
-    onDisconnection = (socket) => {
+    public onDisconnection = (socket: SocketServer) => {
         clearInterval(intervalHandle);
         const controllers = store.get('controllers', {});
         Object.keys(controllers).forEach((port) => {
@@ -35,7 +34,7 @@ class SocketSerial {
         });
     };
 
-    serialportList = (socket) => {
+    public serialportList = (socket: SocketServer) => {
         // const { dataSource = 'text' } = options;
 
         serialport.list()
@@ -63,12 +62,11 @@ class SocketSerial {
             });
     };
 
-    serialportOpen = (socket, options) => {
+    public serialportOpen = (socket: SocketServer, options) => {
         const { port, dataSource = PROTOCOL_TEXT, connectionTimeout } = options;
         log.debug(`socket.open("${port}"): socket=${socket.id}`);
         this.port = port;
         this.dataSource = dataSource;
-        this.socket = socket;
         let controller = store.get(`controllers["${port}/${dataSource}"]`);
         if (!controller) {
             if (dataSource === PROTOCOL_TEXT) {
@@ -81,7 +79,7 @@ class SocketSerial {
         if (controller.isOpen()) {
             log.debug('controller.isOpen() already');
             // Join the room
-            socket.join(port);
+            // socket.join(port);
 
             socket.emit('connection:open', { port, dataSource });
             socket.emit('connection:connected', { state: controller.controller.state, dataSource });
@@ -91,6 +89,7 @@ class SocketSerial {
                     socket.emit('connection:open', { port, msg: err, dataSource });
                     return;
                 }
+                log.debug(`controller.isOpen() already ${socket}`);
 
                 if (store.get(`controllers["${port}/${dataSource}"]`)) {
                     log.error(`Serial port "${port}" was not properly closed`);
@@ -98,14 +97,14 @@ class SocketSerial {
                 store.set(`controllers["${port}/${dataSource}"]`, controller);
 
                 // Join the room
-                socket.join(port);
+                // socket.join(port);
 
                 socket.emit('connection:open', { port, dataSource });
             }, connectionTimeout);
         }
     };
 
-    connectionClose = (socket) => {
+    public connectionClose = (socket: SocketServer) => {
         const port = this.port;
         const dataSource = this.dataSource;
         log.debug(`socket.close("${port}"): id=${socket.id}`);
@@ -119,8 +118,7 @@ class SocketSerial {
         }
 
         // Leave the room
-        socket.leave(port);
-        this.socket = null;
+        // socket.leave(port);
         controller.close(() => {
         // Remove controller from store
             store.unset(`controllers["${port}/${dataSource}"]`);
@@ -140,7 +138,7 @@ class SocketSerial {
      *      }
      */
 
-    command = (socket, options) => {
+    public command = (socket: SocketServer, options) => {
         const { cmd = 'gcode', args = [] } = options;
         const port = this.port;
         const dataSource = this.dataSource;
@@ -155,7 +153,7 @@ class SocketSerial {
         controller.command(socket, cmd, ...args);
     };
 
-    writeln = (socket, options) => {
+    public writeln = (socket: SocketServer, options) => {
         const port = this.port;
         const dataSource = this.dataSource;
         const { data, context = {} } = options;

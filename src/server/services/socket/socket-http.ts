@@ -1,6 +1,7 @@
 // import store from '../../store';
 import request from 'superagent';
 import { isEqual, isNil } from 'lodash';
+import type SocketServer from '../../lib/SocketManager';
 import logger from '../../lib/logger';
 import workerManager from '../task-manager/workerManager';
 import { HEAD_PRINTING, HEAD_LASER, HEAD_CNC, MACHINE_SERIES,
@@ -13,11 +14,11 @@ import { HEAD_PRINTING, HEAD_LASER, HEAD_CNC, MACHINE_SERIES,
 import { valueOf } from '../../lib/contants-utils';
 import wifiServerManager from './WifiServerManager';
 
-let waitConfirm;
+let waitConfirm: boolean;
 const log = logger('lib:SocketHttp');
 
 
-const isJSON = (str) => {
+const isJSON = (str: string) => {
     if (typeof str === 'string') {
         try {
             const obj = JSON.parse(str);
@@ -74,40 +75,71 @@ const _getResult = (err, res) => {
 };
 // let timeoutHandle = null;
 let intervalHandle = null;
+
+export type EventOptions = {
+    eventName: string,
+    host?: string,
+    token?: string,
+    gcode?: string,
+    x?: number,
+    y?: number,
+    feedRate?: number,
+    filename?: string,
+    file?: any,
+    value?: number,
+    enable?: boolean,
+    workSpeedFactor?: number,
+    laserPower?: number,
+    nozzleTemperatureValue?: number,
+    heatedBedTemperatureValue?: number,
+    zOffset?: number,
+};
+export type StateOptions = {
+    headType?: string,
+    toolHead?: string,
+    series?: string
+};
+
+export type GcodeResult = {
+    text?: string,
+    data?: any,
+    msg?: string,
+    code?: number
+};
 /**
  * A singleton to manage devices connection.
  */
 class SocketHttp {
-    isGcodeExecuting = false;
+    private isGcodeExecuting: boolean = false;
 
-    gcodeInfos = [];
+    private gcodeInfos = [];
 
-    socket = null;
+    private socket: SocketServer = null;
 
-    host='';
+    private host: string = '';
 
-    token='';
+    private token: string = '';
 
-    state = {};
+    private state: StateOptions = {};
 
-    heartBeatWorker= null;
+    private heartBeatWorker= null;
 
-    moduleSettings=null;
+    private moduleSettings=null;
 
-    onConnection = (socket) => {
+    public onConnection = (socket: SocketServer) => {
         wifiServerManager.onConnection(socket);
         this.heartBeatWorker && this.heartBeatWorker.terminate();
     }
 
-    onDisconnection = (socket) => {
+    public onDisconnection = (socket: SocketServer) => {
         wifiServerManager.onDisconnection(socket);
     }
 
-    refreshDevices = () => {
+    public refreshDevices = () => {
         wifiServerManager.refreshDevices();
     }
 
-    connectionOpen = (socket, options) => {
+    public connectionOpen = (socket: SocketServer, options: EventOptions) => {
         const { host, token } = options;
         this.host = host;
         this.token = token;
@@ -131,7 +163,7 @@ class SocketHttp {
                     this.state.series = seriesValue ? seriesValue.value : null;
 
                     let headType = data.headType;
-                    let toolHead;
+                    let toolHead: string;
                     switch (data.headType) {
                         case 1:
                             headType = HEAD_PRINTING;
@@ -160,7 +192,7 @@ class SocketHttp {
             });
     };
 
-    connectionClose = (socket, options) => {
+    public connectionClose = (socket: SocketServer, options: EventOptions) => {
         const { eventName } = options;
         const api = `${this.host}/api/v1/disconnect`;
         request
@@ -168,16 +200,15 @@ class SocketHttp {
             .timeout(3000)
             .send(`token=${this.token}`)
             .end((err, res) => {
-                this.socket && this.socket.emit(eventName, _getResult(err, res));
+                socket && socket.emit(eventName, _getResult(err, res));
             });
         this.host = '';
         this.token = '';
         this.heartBeatWorker && this.heartBeatWorker.terminate();
         clearInterval(intervalHandle);
-        console.log('this.heartBeatWorker', this.heartBeatWorker, intervalHandle);
     };
 
-    startGcode = (options) => {
+    public startGcode = (options: EventOptions) => {
         const { eventName } = options;
         const api = `${this.host}/api/v1/start_print`;
         request
@@ -189,7 +220,7 @@ class SocketHttp {
             });
     }
 
-    resumeGcode = (options) => {
+    public resumeGcode = (options: EventOptions) => {
         const { eventName } = options;
         const api = `${this.host}/api/v1/resume_print`;
         request
@@ -201,7 +232,7 @@ class SocketHttp {
             });
     };
 
-    pauseGcode = (options) => {
+    public pauseGcode = (options: EventOptions) => {
         const { eventName } = options;
         const api = `${this.host}/api/v1/pause_print`;
         request
@@ -213,7 +244,7 @@ class SocketHttp {
             });
     };
 
-    stopGcode = (options) => {
+    public stopGcode = (options: EventOptions) => {
         const { eventName } = options;
         const api = `${this.host}/api/v1/stop_print`;
         request
@@ -225,7 +256,7 @@ class SocketHttp {
             });
     };
 
-    executeGcode = (options, callback) => {
+    public executeGcode = (options: EventOptions, callback) => {
         const { gcode } = options;
         const split = gcode.split('\n');
         this.gcodeInfos.push({
@@ -234,7 +265,7 @@ class SocketHttp {
         this.startExecuteGcode(callback);
     };
 
-    startExecuteGcode = async (callback) => {
+    public startExecuteGcode = async (callback) => {
         if (this.isGcodeExecuting) {
             return;
         }
@@ -243,7 +274,7 @@ class SocketHttp {
             const splice = this.gcodeInfos.splice(0, 1)[0];
             const result = [];
             for (const gcode of splice.gcodes) {
-                const { text } = await this._executeGcode(gcode);
+                const { text } = await this._executeGcode(gcode) as GcodeResult;
                 result.push(gcode);
                 if (text) {
                     result.push(text);
@@ -255,7 +286,7 @@ class SocketHttp {
         this.isGcodeExecuting = false;
     };
 
-    _executeGcode = (gcode) => {
+    public _executeGcode = (gcode: string) => {
         const api = `${this.host}/api/v1/execute_code`;
         return new Promise((resolve) => {
             const req = request.post(api);
@@ -270,12 +301,12 @@ class SocketHttp {
         });
     };
 
-    startHeartbeat = () => {
+    public startHeartbeat = () => {
         waitConfirm = true;
         this.heartBeatWorker = workerManager.heartBeat([{
             host: this.host,
             token: this.token
-        }], (result) => {
+        }], (result: any) => {
             let state = result.state;
             if (result.status === 'offline') {
                 this.socket && this.socket.emit('connection:close');
@@ -321,7 +352,7 @@ class SocketHttp {
         });
     }
 
-    uploadGcodeFile = (filename, file, type, callback) => {
+    public uploadGcodeFile = (filename:string, file:string, type:string, callback) => {
         const api = `${this.host}/api/v1/prepare_print`;
         if (type === HEAD_PRINTING) {
             type = '3DP';
@@ -343,7 +374,7 @@ class SocketHttp {
             });
     };
 
-    getLaserMaterialThickness = (options) => {
+    public getLaserMaterialThickness = (options: EventOptions) => {
         const { x, y, feedRate, eventName } = options;
         const api = `${this.host}/api/request_Laser_Material_Thickness?token=${this.token}&x=${x}&y=${y}&feedRate=${feedRate}`;
         request
@@ -353,7 +384,7 @@ class SocketHttp {
             });
     };
 
-    getGcodeFile = (options) => {
+    public getGcodeFile = (options: EventOptions) => {
         const { eventName } = options;
         const api = `${this.host}/api/v1/print_file?token=${this.token}`;
         request
@@ -363,7 +394,7 @@ class SocketHttp {
             });
     };
 
-    uploadFile = (options) => {
+    public uploadFile = (options: EventOptions) => {
         const { filename, file, eventName } = options;
         const api = `${this.host}/api/v1/upload`;
         request
@@ -376,7 +407,7 @@ class SocketHttp {
             });
     };
 
-    updateNozzleTemperature = (options) => {
+    public updateNozzleTemperature = (options: EventOptions) => {
         const { nozzleTemperatureValue, eventName } = options;
         const api = `${this.host}/api/v1/override_nozzle_temperature`;
         request
@@ -388,7 +419,7 @@ class SocketHttp {
             });
     };
 
-    updateBedTemperature = (options) => {
+    public updateBedTemperature = (options: EventOptions) => {
         const { heatedBedTemperatureValue, eventName } = options;
         const api = `${this.host}/api/v1/override_bed_temperature`;
         request
@@ -400,7 +431,7 @@ class SocketHttp {
             });
     };
 
-    updateZOffset = (options) => {
+    public updateZOffset = (options: EventOptions) => {
         const { zOffset, eventName } = options;
         const api = `${this.host}/api/v1/override_z_offset`;
         request
@@ -412,7 +443,7 @@ class SocketHttp {
             });
     };
 
-    loadFilament = (options) => {
+    public loadFilament = (options: EventOptions) => {
         const { eventName } = options;
         const api = `${this.host}/api/v1/filament_load`;
         request
@@ -423,7 +454,7 @@ class SocketHttp {
             });
     };
 
-    unloadFilament = (options) => {
+    public unloadFilament = (options: EventOptions) => {
         const { eventName } = options;
         const api = `${this.host}/api/v1/filament_unload`;
         request
@@ -434,7 +465,7 @@ class SocketHttp {
             });
     };
 
-    updateWorkSpeedFactor = (options) => {
+    public updateWorkSpeedFactor = (options: EventOptions) => {
         const { eventName, workSpeedFactor } = options;
         const api = `${this.host}/api/v1/override_work_speed`;
         request
@@ -446,7 +477,7 @@ class SocketHttp {
             });
     };
 
-    updateLaserPower = (options) => {
+    public updateLaserPower = (options: EventOptions) => {
         const { eventName, laserPower } = options;
         const api = `${this.host}/api/v1/override_laser_power`;
         request
@@ -458,7 +489,7 @@ class SocketHttp {
             });
     };
 
-    getEnclosureStatus = () => {
+    public getEnclosureStatus = () => {
         const api = `${this.host}/api/v1/enclosure?token=${this.token}`;
         request
             .get(api)
@@ -478,7 +509,7 @@ class SocketHttp {
             });
     };
 
-    setEnclosureLight = (options) => {
+    public setEnclosureLight = (options: EventOptions) => {
         const { eventName, value } = options;
         const api = `${this.host}/api/v1/enclosure`;
         request
@@ -490,7 +521,7 @@ class SocketHttp {
             });
     };
 
-    setEnclosureFan = (options) => {
+    public setEnclosureFan = (options: EventOptions) => {
         const { eventName, value } = options;
         const api = `${this.host}/api/v1/enclosure`;
         request
@@ -502,7 +533,7 @@ class SocketHttp {
             });
     };
 
-   setDoorDetection = (options) => {
+   public setDoorDetection = (options: EventOptions) => {
        const { eventName, enable } = options;
        const api = `${this.host}/api/v1/enclosure`;
        request
@@ -514,7 +545,7 @@ class SocketHttp {
            });
    };
 
-   setFilterSwitch = (options) => {
+   public setFilterSwitch = (options: EventOptions) => {
        const { eventName, enable } = options;
        const api = `${this.host}/api/v1/air_purifier_switch`;
        request
@@ -526,31 +557,7 @@ class SocketHttp {
            });
    };
 
-   setFilterWorkSpeed = (options) => {
-       const { eventName, value } = options;
-       const api = `${this.host}/api/v1/air_purifier_fan_speed`;
-       request
-           .post(api)
-           .send(`token=${this.token}`)
-           .send(`fan_speed=${value}`)
-           .end((err, res) => {
-               this.socket && this.socket.emit(eventName, _getResult(err, res));
-           });
-   };
-
-   setFilterSwitch = (options) => {
-       const { eventName, enable } = options;
-       const api = `${this.host}/api/v1/air_purifier_switch`;
-       request
-           .post(api)
-           .send(`token=${this.token}`)
-           .send(`switch=${enable}`)
-           .end((err, res) => {
-               this.socket && this.socket.emit(eventName, _getResult(err, res));
-           });
-   };
-
-   setFilterWorkSpeed = (options) => {
+   public setFilterWorkSpeed = (options: EventOptions) => {
        const { eventName, value } = options;
        const api = `${this.host}/api/v1/air_purifier_fan_speed`;
        request
