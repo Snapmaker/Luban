@@ -21,8 +21,6 @@ const NumberInput = React.memo(({
             return defaultValue;
         } else if (min !== undefined) {
             return min;
-        } else if (allowUndefined) {
-            return null;
         } else {
             return 0;
         }
@@ -33,7 +31,7 @@ const NumberInput = React.memo(({
         let useEdgeValue = false;
 
         // If changedValue is invalid, use defaultValue
-        if (Number.isNaN(numericValue)) {
+        if (Number.isNaN(numericValue) && !allowUndefined) {
             const absentValue = getAbsentValue();
             onChange && onChange(absentValue);
             onInsideChange({ target: { value: absentValue } });

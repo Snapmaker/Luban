@@ -483,6 +483,7 @@ class Visualizer extends PureComponent {
                     scaleToFitSelectedModel={this.actions.scaleToFitSelectedModel}
                     autoRotateSelectedModel={this.actions.autoRotateSelectedModel}
                     setHoverFace={this.actions.setHoverFace}
+                    arrangeAllModels={this.actions.arrangeAllModels}
                 />
                 <div className={styles['visualizer-bottom-left']}>
                     <VisualizerBottomLeft actions={this.actions} />

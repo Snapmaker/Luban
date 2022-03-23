@@ -219,7 +219,7 @@ const RotateOverlay = React.memo(({
                         />
                         <SvgIcon
                             className="margin-left-8"
-                            name="ViewFront"
+                            name="ViewBack"
                             size={24}
                             type={['static']}
                             disabled={!isSingleSelected || !!transformDisabled}
