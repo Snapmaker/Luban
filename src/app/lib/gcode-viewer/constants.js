@@ -40,3 +40,5 @@ export const TYPE_SETTINGS = {
         typeCode: 8
     }
 };
+
+export const GRAY_MODE_COLOR = '#D5D6D9';

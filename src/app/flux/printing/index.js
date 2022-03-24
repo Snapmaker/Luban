@@ -1549,12 +1549,9 @@ export const actions = {
         });
     },
 
-    // preview
-    setGcodeVisibilityByTypeAndDirection: (type, direction = LEFT_EXTRUDER, visible) => (dispatch, getState) => {
-        const { gcodeLine, gcodeParser, gcodeLineObjects, gcodeLineGroup } = getState().printing;
+    reparseGcodeParser: () => (dispatch, getState) => {
+        const { gcodeParser, gcodeLineObjects, gcodeLineGroup } = getState().printing;
         // gcodeParser && gcodeParser.dispose();
-
-        gcodeParser.setVisbleTypes(type, visible);
         gcodeLineObjects.forEach(object => {
             gcodeLineGroup.remove(object);
         });
@@ -1579,6 +1576,13 @@ export const actions = {
             gcodeLineObjects: newGcodeLineObjects,
             gcodeParser
         }));
+    },
+
+    // preview
+    setGcodeVisibilityByTypeAndDirection: (type, direction = LEFT_EXTRUDER, visible) => (dispatch, getState) => {
+        const { gcodeLine, gcodeParser } = getState().printing;
+        gcodeParser.setVisbleTypes(type, visible);
+        dispatch(actions.reparseGcodeParser());
 
         const uniforms = gcodeLine.material.uniforms;
         const value = visible ? 1 : 0;
@@ -1645,9 +1649,11 @@ export const actions = {
     },
 
     updateGcodePreviewMode: (mode) => (dispatch, getState) => {
-        const { gcodeLine, layerRangeDisplayed, layerCount } = getState().printing;
+        const { gcodeLine, layerRangeDisplayed, layerCount, gcodeParser } = getState().printing;
+        gcodeParser.setColortypes(mode === 'GrayUnderTheTopFloor');
+        dispatch(actions.reparseGcodeParser());
+
         const uniforms = gcodeLine.material.uniforms;
-        console.log('uniforms', uniforms, gcodeLine.material);
 
         if (mode === 'GrayUnderTheTopFloor') {
             uniforms.u_middle_layer_set_gray.value = 1;
@@ -1673,7 +1679,16 @@ export const actions = {
     },
 
     setGcodeColorByRenderLineType: () => (dispatch, getState) => {
-        const { gcodeLine, renderLineType } = getState().printing;
+        const { gcodeLine, renderLineType, gcodeParser, extruderLDefinition, extruderRDefinition } = getState().printing;
+        if (renderLineType) {
+            gcodeParser.extruderColors = [
+                extruderLDefinition?.settings?.color?.default_value || WHITE_COLOR,
+                extruderRDefinition?.settings?.color?.default_value || BLACK_COLOR
+            ];
+        }
+        gcodeParser.setColortypes(undefined, renderLineType);
+        dispatch(actions.reparseGcodeParser());
+
         const uniforms = gcodeLine.material.uniforms;
         uniforms.u_color_type.value = renderLineType ? 1 : 0;
         dispatch(actions.render());

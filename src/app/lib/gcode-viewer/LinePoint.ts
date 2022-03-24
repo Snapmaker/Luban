@@ -1,5 +1,5 @@
 import { Color, Vector3 } from 'three';
-import { TYPE_SETTINGS } from './constants';
+import { GRAY_MODE_COLOR, TYPE_SETTINGS } from './constants';
 import { VisibleType } from './parser';
 
 export class LinePoint {
@@ -13,19 +13,29 @@ export class LinePoint {
 
     public readonly type: string
 
-    constructor(point: Vector3, radius: number, color: Color = new Color('#29BEB0'), extruder: number = 0, type: string = 'TRAVEL', visibleTypes: VisibleType) {
+    constructor(point: Vector3, radius: number, color: Color = new Color('#29BEB0'), extruder: number = 0, type: string = 'TRAVEL', visibleTypes: VisibleType,
+        isGrayMode: boolean = false, isDual: boolean = false, extruderColors: string[] | undefined = undefined) {
         this.point = point;
         this.radius = radius;
         this.color = color;
 
         // const typeSetting = TYPE_SETTINGS[type];
+        if (type === 'SKIRT') {
+            type = 'SUPPORT';
+        }
         if (type === 'TRAVEL') {
             this.radius /= 5;
         }
         if (!visibleTypes[type]) {
             this.radius = 0;
         }
-        this.color = new Color(TYPE_SETTINGS[type].color);
+        if (isGrayMode) {
+            this.color = new Color(GRAY_MODE_COLOR);
+        } else if (isDual && extruderColors !== undefined) {
+            this.color = new Color(extruderColors[1 - extruder]); // TODO: debug
+        } else {
+            this.color = new Color(TYPE_SETTINGS[type].color);
+        }
 
         this.extruder = extruder;
         this.type = type;

@@ -14,7 +14,7 @@ export type VisibleType = {
     'WALL-INNER': boolean;
     'WALL-OUTER': boolean;
     'SKIN': boolean;
-    'SKIRT': boolean;
+    'SUPPORT': boolean;
     'FILL': boolean;
     'TRAVEL': boolean;
     'UNKNOWN': boolean;
@@ -33,6 +33,8 @@ export class GCodeParser {
 
     public max?: Vector3
 
+    public extruderColors: string[] = ['#FFFFFF', '#404040']
+
     private minTemp: number | undefined = undefined
 
     private maxTemp = 0
@@ -47,11 +49,15 @@ export class GCodeParser {
         'WALL-INNER': true,
         'WALL-OUTER': true,
         'SKIN': true,
-        'SKIRT': true,
+        'SUPPORT': true,
         'FILL': true,
         'TRAVEL': true,
         'UNKNOWN': true
     };
+
+    private isGrayMode: boolean = false;
+
+    private isDual: boolean = false;
 
     // Public configurations:
 
@@ -208,21 +214,40 @@ export class GCodeParser {
     }
 
     /**
+     * Recalculate geometries
+     */
+    public async reparse() {
+        await this.parse();
+        this.sliceLayer(this.startLayer, this.endLayer);
+    }
+
+    /**
      * Set the lines visible by types
      */
     public async setVisbleTypes(type: string, visible: boolean) {
         if (this.visibleTypes[type] !== undefined && this.visibleTypes[type] !== visible) {
             this.visibleTypes[type] = visible;
-            console.log('set visible', type, visible, this.visibleTypes);
-            await this.parse();
-            this.sliceLayer(this.startLayer, this.endLayer);
+            this.reparse();
         }
     }
 
     /**
      * Set the lines colors type
      */
-    // public async setColortypes(colorTypes)
+    public async setColortypes(isGrayMode: boolean | undefined = undefined, isDual: boolean | undefined = undefined) {
+        if (isGrayMode === undefined) {
+            isGrayMode = this.isGrayMode;
+        }
+        if (isDual === undefined) {
+            isDual = this.isDual;
+        }
+        if (this.isGrayMode === isGrayMode && this.isDual === isDual) {
+            return;
+        }
+        this.isGrayMode = isGrayMode;
+        this.isDual = isDual;
+        this.reparse();
+    }
 
     /**
      * Reads the GCode and crates a mesh of it.
@@ -296,6 +321,8 @@ export class GCodeParser {
         //this.combinedLines[oNr] = new LineTubeGeometry(this.radialSegments)
 
         let type = 'TRAVEL';
+        let extruder = 0;
+        // let layer = 0;
         lines.forEach((line, i) => {
             if (line === undefined) {
                 return;
@@ -311,11 +338,20 @@ export class GCodeParser {
                 if (notes[0] === 'TYPE') {
                     type = notes[1];
                 }
+                // if (notes[0] === 'LAYER') {
+                //     layer = Number(notes[1]);
+                // }
             }
 
             const cmd = line.split(' ');
             // A move command.
-            if (cmd[0] === 'G0' || cmd[0] === 'G1') {
+            if (cmd[0] === 'M104') {
+                // M104 T0|1, change extruder
+                const t = this.parseValue(cmd.find((v) => v[0] === 'T'));
+                if (t !== undefined) {
+                    extruder = t;
+                }
+            } else if (cmd[0] === 'G0' || cmd[0] === 'G1') {
                 const x = getValue(cmd, 'X', lastPoint.x, relative.x);
                 const y = getValue(cmd, 'Y', lastPoint.y, relative.y);
                 const z = getValue(cmd, 'Z', lastPoint.z, relative.z);
@@ -347,10 +383,10 @@ export class GCodeParser {
                     // });
                     const color = new Color('#FFFFFF');
                     if (cmd[0] === 'G0') {
-                        addLine(new LinePoint(lastPoint.clone(), radius, color, 0, 'TRAVEL', this.visibleTypes));
+                        addLine(new LinePoint(lastPoint.clone(), radius, color, extruder, 'TRAVEL', this.visibleTypes, this.isGrayMode, this.isDual, this.extruderColors));
                     }
                     if (cmd[0] === 'G1') {
-                        addLine(new LinePoint(lastPoint.clone(), radius, color, 0, type, this.visibleTypes));
+                        addLine(new LinePoint(lastPoint.clone(), radius, color, extruder, type, this.visibleTypes, this.isGrayMode, this.isDual, this.extruderColors));
                     }
 
                     // Insert the last point with the current radius.
@@ -419,10 +455,6 @@ export class GCodeParser {
                 }
                 lastE = e;
                 // Hot end temperature.
-            } else if (cmd[0] === 'M104' || cmd[0] === 'M109') {
-                // M104 S205 ; start heating hot end
-                // M109 S205 ; wait for hot end temperature
-                // hotendTemp = this.parseValue(cmd.find((v) => v[0] === 'S')) || 0;
             }
 
             lines[i] = undefined;
