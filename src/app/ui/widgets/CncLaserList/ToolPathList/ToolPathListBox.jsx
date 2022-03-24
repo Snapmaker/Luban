@@ -248,9 +248,9 @@ const ToolPathListBox = (props) => {
                 <div
                     className={classNames(
                         'height-184',
-                        'position-re'
+                        'position-re',
                         // // 'align-c',
-                        // 'padding-vertical-4'
+                        'padding-vertical-4'
                     )}
                     tabIndex="-1"
                     role="button"

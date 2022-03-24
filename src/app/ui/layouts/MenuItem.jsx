@@ -5,10 +5,10 @@ import { noop, includes } from 'lodash';
 import i18n from '../../lib/i18n';
 import styles from './styles/maintoolbar.styl';
 import SvgIcon from '../components/SvgIcon';
-import { longLang } from '../../constants';
+import { longLangWithType } from '../../constants';
 // import Anchor from '../components/Anchor';
 
-function MenuItem({ menuItem, actions, lang }) {
+function MenuItem({ menuItem, actions, lang, headType }) {
     if (!menuItem) {
         return null;
     }
@@ -29,10 +29,10 @@ function MenuItem({ menuItem, actions, lang }) {
                     name={name}
                     disabled={disabled}
                     isHorizontal={false}
-                    className={classNames(styles['bar-icon'], iconClassName, includes(longLang, lang) && styles['bar-icon-for-long'])}
+                    className={classNames(styles['bar-icon'], iconClassName, includes(longLangWithType[lang], headType) && styles['bar-icon-for-long'])}
                     onClick={handleClick}
                     spanText={i18n._(title)}
-                    spanClassName={classNames(includes(longLang, lang) && styles['action-title-for-long'])}
+                    spanClassName={classNames(includes(longLangWithType[lang], headType) && styles['action-title-for-long'])}
                     inputInfo={inputInfo}
                     // type={['hoverNormal', 'pressNormal']}
                     type={['static']}
@@ -47,7 +47,8 @@ function MenuItem({ menuItem, actions, lang }) {
 MenuItem.propTypes = {
     menuItem: PropTypes.object.isRequired,
     actions: PropTypes.object.isRequired,
-    lang: PropTypes.string
+    lang: PropTypes.string,
+    headType: PropTypes.string
 };
 
 export default MenuItem;

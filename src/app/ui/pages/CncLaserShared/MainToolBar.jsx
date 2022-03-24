@@ -11,7 +11,7 @@ import { actions as editorActions } from '../../../flux/editor';
 import Dropdown from '../../components/Dropdown';
 import Cnc3DVisualizer from '../../views/Cnc3DVisualizer';
 import MainToolBar from '../../layouts/MainToolBar';
-import { HEAD_CNC, HEAD_LASER, MACHINE_SERIES, CONNECTION_TYPE_WIFI, longLang } from '../../../constants';
+import { HEAD_CNC, HEAD_LASER, MACHINE_SERIES, CONNECTION_TYPE_WIFI, longLangWithType } from '../../../constants';
 import { actions as laserActions } from '../../../flux/laser';
 import { renderModal } from '../../utils';
 import LaserSetBackground from '../../widgets/LaserSetBackground';
@@ -48,7 +48,7 @@ function useRenderMainToolBar({ headType, setShowHomePage, setShowJobType, setSh
     let menu;
     if (headType === HEAD_CNC) {
         menu = (
-            <Menu style={{ marginTop: '8px' }}>
+            <Menu>
                 <Menu.Item
                     onClick={handleShowStlModal}
                     disabled={showStlModal}
@@ -88,7 +88,7 @@ function useRenderMainToolBar({ headType, setShowHomePage, setShowJobType, setSh
         );
     } else if (headType === HEAD_LASER) {
         menu = (
-            <Menu style={{ marginTop: '8px' }}>
+            <Menu>
                 <Menu.Item
                     onClick={() => setShowCameraCapture(true)}
                     disabled={isOriginalSeries ? false : !(isConnected && connectionType === CONNECTION_TYPE_WIFI)}
@@ -220,7 +220,7 @@ function useRenderMainToolBar({ headType, setShowHomePage, setShowJobType, setSh
                                     name="MainToolbarStl3dView"
                                     type={['static']}
                                 >
-                                    <div className={`${includes(longLang, i18next.language) ? 'font-size-small' : 'font-size-base margin-top-4'} "color-black-3 height-16"`}>
+                                    <div className={`${includes(longLangWithType[i18next.language], headType) ? 'font-size-small' : 'font-size-base'} "color-black-3 height-16"`}>
                                         {i18n._('key-CncLaser/MainToolBar-STL 3D View')}
                                         <SvgIcon
                                             type={['static']}
@@ -257,7 +257,7 @@ function useRenderMainToolBar({ headType, setShowHomePage, setShowJobType, setSh
                                     name="MainToolbarCameraCapture"
                                     type={['static']}
                                 >
-                                    <div className={`${includes(longLang, i18next.language) ? 'font-size-small' : 'font-size-base margin-top-4'} color-black-3 height-16`}>
+                                    <div className={`${includes(longLangWithType[i18next.language], headType) ? 'font-size-small' : 'font-size-base margin-top-4'} color-black-3 height-16`}>
                                         {i18n._('key-CncLaser/MainToolBar-Camera Capture')}
                                         <SvgIcon
                                             type={['static']}
@@ -327,6 +327,7 @@ function useRenderMainToolBar({ headType, setShowHomePage, setShowJobType, setSh
                 <MainToolBar
                     leftItems={leftItems}
                     lang={i18next.language}
+                    headType={headType}
                 />
             );
         }

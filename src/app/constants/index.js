@@ -1367,3 +1367,10 @@ export const LOAD_MODEL_FROM_INNER = 0;
 export const LOAD_MODEL_FROM_OUTER = 1;
 
 export const longLang = ['de', 'es', 'fr', 'it', 'ru', 'uk', 'ja'];
+
+export const longLangWithType = {
+    'es': [HEAD_LASER, HEAD_CNC],
+    'fr': [HEAD_LASER, HEAD_CNC],
+    'it': [HEAD_LASER, HEAD_CNC],
+    'ru': [HEAD_PRINTING, HEAD_LASER, HEAD_CNC]
+};

@@ -71,13 +71,13 @@ const Begin = () => {
                 </div>
                 <div className={styles.beginContainer}>
                     {beginSelected === 'start-project' && (
-                        <div className={classNames(styles['link-bar'], 'margin-vertical-48')}>
+                        <div className={classNames(styles['link-bar'], 'margin-top-36', 'margin-bottom-48')}>
                             <div className={classNames(styles['3dp'], 'margin-horizontal-16')}>
                                 <Anchor onClick={() => handleNewFile(false, HEAD_PRINTING)} title={i18n._('key-HomePage/Begin-3D Printing G-code Generator')}>
                                     <div className={classNames(styles.imgWrapper)}>
                                         <img src={require('./images/icon_3d_120x120.svg')} alt="" />
                                     </div>
-                                    <span className={classNames('heading-2', 'align-c', 'text-overflow-ellipsis-line-2')}>{i18n._('key-HomePage/Begin-3D Printing')}</span>
+                                    <span className={classNames('heading-2', 'align-c', 'text-overflow-ellipsis-line-2', 'width-one-in-six')}>{i18n._('key-HomePage/Begin-3D Printing')}</span>
                                 </Anchor>
                             </div>
                             <div className={classNames(styles.laser, 'margin-horizontal-16')}>
@@ -93,7 +93,7 @@ const Begin = () => {
                                             </Button>
                                         </div>
                                     </div>
-                                    <span className={classNames('heading-2', 'align-c', 'text-overflow-ellipsis-line-2')}>{i18n._('key-HomePage/Begin-Laser')}</span>
+                                    <span className={classNames('heading-2', 'align-c', 'text-overflow-ellipsis-line-2', 'width-one-in-six')}>{i18n._('key-HomePage/Begin-Laser')}</span>
                                 </Anchor>
                             </div>
                             <div className={classNames(styles.cnc, 'margin-horizontal-16')}>
@@ -109,7 +109,7 @@ const Begin = () => {
                                             </Button>
                                         </div>
                                     </div>
-                                    <span className={classNames('heading-2', 'align-c', 'text-overflow-ellipsis-line-2')}>{i18n._('key-HomePage/Begin-CNC')}</span>
+                                    <span className={classNames('heading-2', 'align-c', 'text-overflow-ellipsis-line-2', 'width-one-in-six')}>{i18n._('key-HomePage/Begin-CNC')}</span>
                                 </Anchor>
                             </div>
                             <div className={classNames(styles.workspace, 'margin-horizontal-16')}>
@@ -117,7 +117,7 @@ const Begin = () => {
                                     <div className={classNames(styles.imgWrapper)}>
                                         <img src={require('./images/icon_workspace_120x120.svg')} alt="" />
                                     </div>
-                                    <span className={classNames('heading-2', 'align-c', 'text-overflow-ellipsis-line-2')}>{i18n._('key-HomePage/Begin-Workspace')}</span>
+                                    <span className={classNames('heading-2', 'align-c', 'text-overflow-ellipsis-line-2', 'width-one-in-six')}>{i18n._('key-HomePage/Begin-Workspace')}</span>
                                 </Anchor>
                             </div>
                         </div>

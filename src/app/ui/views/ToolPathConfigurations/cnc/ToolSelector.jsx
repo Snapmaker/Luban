@@ -156,7 +156,7 @@ ToolSelector.propTypes = {
     shouldSaveToolpath: PropTypes.bool,
     saveToolPath: PropTypes.func,
     setCurrentValueAsProfile: PropTypes.func.isRequired,
-    isModel: PropTypes.bool.isRequired
+    isModel: PropTypes.bool
 };
 
 export default ToolSelector;

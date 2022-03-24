@@ -252,7 +252,7 @@ const ScaleOverlay = React.memo(({
                         </Button>
                     )}
                     <Button
-                        className={`${isPrimeTowerSelected && 'margin-top-24'} ${!includes(longLang, i18next.language) && 'margin-left-8'}`}
+                        className={`${isPrimeTowerSelected && 'margin-top-24'} ${!includes(longLang, i18next.language) && 'margin-left-8 margin-top-32'}`}
                         type="primary"
                         priority="level-three"
                         width="100%"
