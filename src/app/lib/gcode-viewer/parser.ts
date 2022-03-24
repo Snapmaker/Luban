@@ -336,7 +336,7 @@ export class GCodeParser {
             if (lineArray[1]) {
                 const notes = lineArray[1].split(':', 2);
                 if (notes[0] === 'TYPE') {
-                    type = notes[1];
+                    type = notes[1].trim();
                 }
                 // if (notes[0] === 'LAYER') {
                 //     layer = Number(notes[1]);
