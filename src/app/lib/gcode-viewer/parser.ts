@@ -1,6 +1,6 @@
 import {
     Vector3,
-    LineCurve3,
+    LineCurve3, Color,
 } from 'three';
 import { LineTubeGeometry } from './LineTubeGeometry';
 import { LinePoint } from './LinePoint';
@@ -10,10 +10,24 @@ import { SegmentColorizer, SimpleColorizer } from './SegmentColorizer';
  * GCode renderer which parses a GCode file and displays it using
  * three.js. Use .element() to retrieve the DOM canvas element.
  */
+export type VisibleType = {
+    'WALL-INNER': boolean;
+    'WALL-OUTER': boolean;
+    'SKIN': boolean;
+    'SKIRT': boolean;
+    'FILL': boolean;
+    'TRAVEL': boolean;
+    'UNKNOWN': boolean;
+};
+
 export class GCodeParser {
     private combinedLines: LineTubeGeometry[] = []
 
     private gCode: string
+
+    public startLayer: number | undefined = undefined
+
+    public endLayer: number | undefined = undefined
 
     public min?: Vector3
 
@@ -28,6 +42,16 @@ export class GCodeParser {
     private maxSpeed = 0
 
     private layerIndex: { start: number, end: number }[] = []
+
+    private visibleTypes:VisibleType = {
+        'WALL-INNER': true,
+        'WALL-OUTER': true,
+        'SKIN': true,
+        'SKIRT': true,
+        'FILL': true,
+        'TRAVEL': true,
+        'UNKNOWN': true
+    };
 
     // Public configurations:
 
@@ -184,9 +208,28 @@ export class GCodeParser {
     }
 
     /**
+     * Set the lines visible by types
+     */
+    public async setVisbleTypes(type: string, visible: boolean) {
+        if (this.visibleTypes[type] !== undefined && this.visibleTypes[type] !== visible) {
+            this.visibleTypes[type] = visible;
+            console.log('set visible', type, visible, this.visibleTypes);
+            await this.parse();
+            this.sliceLayer(this.startLayer, this.endLayer);
+        }
+    }
+
+    /**
+     * Set the lines colors type
+     */
+    // public async setColortypes(colorTypes)
+
+    /**
      * Reads the GCode and crates a mesh of it.
      */
     public async parse() {
+        this.combinedLines = [];
+
         // Cache the start and end of each layer.
         // Note: This may not work properly in some cases where the nozzle moves back down mid-print.
         const layerPointsCache: Map<number, { start: number, end: number }> = new Map();
@@ -206,7 +249,7 @@ export class GCodeParser {
         let lastPoint: Vector3 = new Vector3(0, 0, 0);
         let lastE = 0;
         let lastF = 0;
-        let hotendTemp = 0;
+        // let hotendTemp = 0;
 
         // Retrieves a value taking into account possible relative values.
         // eslint-disable-next-line @typescript-eslint/no-shadow
@@ -225,7 +268,7 @@ export class GCodeParser {
         };
 
         const lines: (string | undefined)[] = this.gCode.split('\n');
-        this.gCode = ''; // clear memory
+        // this.gCode = ''; // clear memory
 
         let currentObject = 0;
         let lastAddedLinePoint: LinePoint | undefined;
@@ -251,13 +294,24 @@ export class GCodeParser {
 
         // Create the geometry.
         //this.combinedLines[oNr] = new LineTubeGeometry(this.radialSegments)
+
+        let type = 'TRAVEL';
         lines.forEach((line, i) => {
             if (line === undefined) {
                 return;
             }
 
             // Split off comments.
-            line = line.split(';', 2)[0];
+            const lineArray = line.split(';', 2);
+
+            line = lineArray[0];
+
+            if (lineArray[1]) {
+                const notes = lineArray[1].split(':', 2);
+                if (notes[0] === 'TYPE') {
+                    type = notes[1];
+                }
+            }
 
             const cmd = line.split(' ');
             // A move command.
@@ -284,19 +338,26 @@ export class GCodeParser {
                     }
 
                     // Get the color for this line.
-                    const color = this.colorizer.getColor({
-                        radius,
-                        segmentStart: lastPoint,
-                        segmentEnd: newPoint,
-                        speed: f,
-                        temp: hotendTemp
-                    });
+                    // const color = this.colorizer.getColor({
+                    //     radius,
+                    //     segmentStart: lastPoint,
+                    //     segmentEnd: newPoint,
+                    //     speed: f,
+                    //     temp: hotendTemp
+                    // });
+                    const color = new Color('#FFFFFF');
+                    if (cmd[0] === 'G0') {
+                        addLine(new LinePoint(lastPoint.clone(), radius, color, 0, 'TRAVEL', this.visibleTypes));
+                    }
+                    if (cmd[0] === 'G1') {
+                        addLine(new LinePoint(lastPoint.clone(), radius, color, 0, type, this.visibleTypes));
+                    }
 
                     // Insert the last point with the current radius.
                     // As the GCode contains the extrusion for the 'current' line,
                     // but the LinePoint contains the radius for the 'next' line
                     // we need to combine the last point with the current radius.
-                    addLine(new LinePoint(lastPoint.clone(), radius, color));
+                    // addLine(new LinePoint(lastPoint.clone(), radius, color));
 
                     // Try to figure out the layer start and end points.
                     if (lastPoint.z !== newPoint.z) {
@@ -361,7 +422,7 @@ export class GCodeParser {
             } else if (cmd[0] === 'M104' || cmd[0] === 'M109') {
                 // M104 S205 ; start heating hot end
                 // M109 S205 ; wait for hot end temperature
-                hotendTemp = this.parseValue(cmd.find((v) => v[0] === 'S')) || 0;
+                // hotendTemp = this.parseValue(cmd.find((v) => v[0] === 'S')) || 0;
             }
 
             lines[i] = undefined;

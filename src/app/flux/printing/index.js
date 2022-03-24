@@ -1,5 +1,4 @@
 import * as THREE from 'three';
-// import { GCodeParser } from 'gcode-viewer/dist/parser';
 import { acceleratedRaycast, computeBoundsTree, disposeBoundsTree } from 'three-mesh-bvh';
 import path from 'path';
 import { cloneDeep, isNil, filter, find as lodashFind } from 'lodash';
@@ -639,7 +638,7 @@ export const actions = {
         }
     },
     gcodeRenderingCallback: (data) => (dispatch, getState) => {
-        const { gcodeLineGroup, gcodeTypeInitialVisibility, gcodePreviewMode, gcodeLineObjects, gcodeParser, modelGroup } = getState().printing;
+        const { gcodeLineGroup, gcodeTypeInitialVisibility, gcodePreviewMode, gcodeLineObjects, gcodeParser } = getState().printing;
 
         const { status, value } = data;
         switch (status) {
@@ -684,19 +683,23 @@ export const actions = {
 
                 const gcode = value.gcode;
                 const parser = new GCodeParser(gcode);
-                parser.travelWidth = 0.5;
+                parser.travelWidth = 0.1;
+                parser.radialSegments = 3;
                 parser.parse();
                 parser.sliceLayer();
-                const material = modelGroup.models[0].modelModeMaterial;
+
+                const json = JSON.parse(machineStore.get('scene'));
+                const objectLoader = new THREE.ObjectLoader();
+                const images = objectLoader.parseImages(json.images);
+                const textures = objectLoader.parseTextures(json.textures, images);
+                const materials = objectLoader.parseMaterials(json.materials, textures);
+                const newMaterial = Object.values(materials)[0];
+                const material = newMaterial.clone();
+                material.vertexColors = true;
+
                 const newGcodeLineObjects = [];
-                const material2 = new THREE.MeshBasicMaterial({
-                    color: 0xffffff
-                });
-                material2.vertexColors = true;
-                console.log('test', material2);
                 parser.getGeometries().forEach(geometry => {
                     const newGcodeLineObject = new THREE.Mesh(geometry, material);
-                    // const newGcodeLineObject = new THREE.Mesh(geometry, material2);
                     gcodeLineGroup.add(newGcodeLineObject);
                     newGcodeLineObjects.push(newGcodeLineObject);
                 });
@@ -1548,7 +1551,35 @@ export const actions = {
 
     // preview
     setGcodeVisibilityByTypeAndDirection: (type, direction = LEFT_EXTRUDER, visible) => (dispatch, getState) => {
-        const { gcodeLine } = getState().printing;
+        const { gcodeLine, gcodeParser, gcodeLineObjects, gcodeLineGroup } = getState().printing;
+        // gcodeParser && gcodeParser.dispose();
+
+        gcodeParser.setVisbleTypes(type, visible);
+        gcodeLineObjects.forEach(object => {
+            gcodeLineGroup.remove(object);
+        });
+
+        const json = JSON.parse(machineStore.get('scene'));
+        const objectLoader = new THREE.ObjectLoader();
+        const images = objectLoader.parseImages(json.images);
+        const textures = objectLoader.parseTextures(json.textures, images);
+        const materials = objectLoader.parseMaterials(json.materials, textures);
+        const newMaterial = Object.values(materials)[0];
+        const material = newMaterial.clone();
+        material.vertexColors = true;
+
+        const newGcodeLineObjects = [];
+        gcodeParser.getGeometries().forEach(geometry => {
+            const newGcodeLineObject = new THREE.Mesh(geometry, material);
+            gcodeLineGroup.add(newGcodeLineObject);
+            newGcodeLineObjects.push(newGcodeLineObject);
+        });
+        gcodeParser.slice();
+        dispatch(actions.updateState({
+            gcodeLineObjects: newGcodeLineObjects,
+            gcodeParser
+        }));
+
         const uniforms = gcodeLine.material.uniforms;
         const value = visible ? 1 : 0;
         if (direction === LEFT_EXTRUDER) {
@@ -1650,7 +1681,10 @@ export const actions = {
 
     showGcodeLayers: (range) => (dispatch, getState) => {
         const { layerCount, gcodeLine, gcodePreviewMode, layerRangeDisplayed, gcodeParser } = getState().printing;
-        gcodeParser && gcodeParser.sliceLayer(Math.floor(range[0]), Math.floor(range[1]));
+        gcodeParser.startLayer = Math.floor(range[0]);
+        gcodeParser.endLayer = Math.floor(range[1]);
+        gcodeParser && gcodeParser.sliceLayer(gcodeParser.startLayer, gcodeParser.endLayer);
+
         if (!gcodeLine) {
             return;
         }
