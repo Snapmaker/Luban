@@ -394,6 +394,7 @@ export const actions = {
                         workflowStatus: status,
                         laserCamera
                     }));
+                    console.log('ddd', machineState.server.getGcodePrintingInfo(state));
                     dispatch(baseActions.updateState({
                         gcodePrintingInfo: machineState.server.getGcodePrintingInfo(state)
                     }));

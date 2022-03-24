@@ -216,7 +216,7 @@ class SocketHttp {
             .timeout(120000)
             .send(`token=${this.token}`)
             .end((err, res) => {
-                this.socket && this.socket.emit(eventName, _getResult(err, res));
+                this.socket && this.socket.emit(eventName, _getResult(err, res) || {});
             });
     }
 
@@ -421,6 +421,7 @@ class SocketHttp {
 
     public updateBedTemperature = (options: EventOptions) => {
         const { heatedBedTemperatureValue, eventName } = options;
+        console.log('updateBedTemperature', heatedBedTemperatureValue, eventName);
         const api = `${this.host}/api/v1/override_bed_temperature`;
         request
             .post(api)

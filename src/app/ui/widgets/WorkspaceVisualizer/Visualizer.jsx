@@ -363,12 +363,11 @@ class Visualizer extends PureComponent {
         tryPause: () => {
             // delay 500ms to let buffer executed. and status propagated
             setTimeout(() => {
-                if (this.state.gcode.received >= this.state.gcode.sent) {
+                if (this.state.gcode.received + 1 >= this.state.gcode.sent) {
                     this.pauseStatus = {
                         headStatus: this.state.controller.state.headStatus,
                         headPower: this.state.controller.state.headPower
                     };
-
                     if (this.pauseStatus.headStatus) {
                         this.props.executeGcode('M5');
                     }
@@ -422,10 +421,19 @@ class Visualizer extends PureComponent {
         handleStop: () => {
             const { workflowState } = this.state;
             const { workflowStatus, server, connectionType } = this.props;
+            if (this.actions.is3DP()) {
+                this.props.updatePause3dpStatus({
+                    pausing: true,
+                    pos: null
+                });
+            }
             if (connectionType === CONNECTION_TYPE_WIFI && workflowStatus !== WORKFLOW_STATUS_IDLE
                 || connectionType === CONNECTION_TYPE_SERIAL && workflowState !== WORKFLOW_STATE_IDLE) {
-                this.actions.handlePause();
-                server.stopServerGcode();
+                server.stopServerGcode(() => {
+                    if (connectionType === CONNECTION_TYPE_SERIAL) {
+                        this.actions.tryPause();
+                    }
+                });
             }
         },
         handleClose: () => {

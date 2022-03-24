@@ -1,7 +1,7 @@
 import { readFile } from 'fs';
 import logger from '../../lib/logger';
 // import workerManager from '../task-manager/workerManager';
-import socketSerial from './socket-serial';
+import socketSerial from './socket-serial.ts';
 import socketHttp from './socket-http';
 import { HEAD_PRINTING, HEAD_LASER, LEVEL_TWO_POWER_LASER_FOR_SM2, MACHINE_SERIES,
     CONNECTION_TYPE_WIFI, CONNECTION_TYPE_SERIAL, WORKFLOW_STATE_PAUSED } from '../../constants';
@@ -143,7 +143,7 @@ class ConnectionManager {
             this.socket.command(this.socket, {
                 cmd: 'gcode:start',
             });
-            socket && socket.emit(eventName);
+            socket && socket.emit(eventName, {});
         }
     }
 
@@ -199,7 +199,7 @@ class ConnectionManager {
                 }
             }
             const { eventName } = options;
-            socket && socket.emit(eventName);
+            socket && socket.emit(eventName, {});
         }
     };
 
@@ -211,7 +211,7 @@ class ConnectionManager {
             this.socket.command(this.socket, {
                 cmd: 'gcode:pause',
             });
-            socket && socket.emit(eventName);
+            socket && socket.emit(eventName, {});
         }
     };
 
@@ -220,10 +220,13 @@ class ConnectionManager {
             this.socket.stopGcode(options);
         } else {
             this.socket.command(this.socket, {
+                cmd: 'gcode:pause',
+            });
+            this.socket.command(this.socket, {
                 cmd: 'gcode:stop',
             });
             const { eventName } = options;
-            socket && socket.emit(eventName);
+            socket && socket.emit(eventName, {});
         }
     };
 

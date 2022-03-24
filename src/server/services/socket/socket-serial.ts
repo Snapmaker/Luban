@@ -78,7 +78,7 @@ class SocketSerial {
 
         if (controller.isOpen()) {
             log.debug('controller.isOpen() already');
-            // Join the room
+            // Join the room, useless
             // socket.join(port);
 
             socket.emit('connection:open', { port, dataSource });
@@ -96,7 +96,7 @@ class SocketSerial {
                 }
                 store.set(`controllers["${port}/${dataSource}"]`, controller);
 
-                // Join the room
+                // Join the room, useless
                 // socket.join(port);
 
                 socket.emit('connection:open', { port, dataSource });

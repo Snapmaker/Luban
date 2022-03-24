@@ -101,6 +101,21 @@ class Printing extends PureComponent {
         }
     };
 
+    getSnapshotBeforeUpdate(prevProps) {
+        const { heatedBedTargetTemperature, nozzleTargetTemperature } = this.props;
+        if (heatedBedTargetTemperature !== prevProps.heatedBedTargetTemperature) {
+            this.setState({ heatedBedTemperatureValue: heatedBedTargetTemperature });
+        }
+        if (nozzleTargetTemperature !== prevProps.nozzleTargetTemperature) {
+            this.setState({ nozzleTemperatureValue: nozzleTargetTemperature });
+        }
+        return prevProps;
+    }
+
+    componentDidUpdate() {
+
+    }
+
     render() {
         const { isConnected, heatedBedTemperature, heatedBedTargetTemperature, nozzleTemperature, nozzleTargetTemperature, workflowStatus } = this.props;
         const { zOffsetMarks, zOffsetValue } = this.state;

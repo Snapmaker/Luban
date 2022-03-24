@@ -145,6 +145,7 @@ export class Server extends events.EventEmitter {
     stopServerGcode(callback) {
         controller.emitEvent(CONNECTION_STOP_GCODE)
             .once(CONNECTION_STOP_GCODE, (options) => {
+                callback && callback();
                 const { msg, code, data } = options;
                 if (msg) {
                     callback && callback({ msg, code, data });
