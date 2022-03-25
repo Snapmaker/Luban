@@ -106,6 +106,8 @@ class TransformControls extends Object3D {
 
     hoverFace = null;
 
+    boxCenter = new Vector3();
+
     constructor(camera, isPrimeTower) {
         super();
 
@@ -592,7 +594,6 @@ class TransformControls extends Object3D {
         } else {
             this.showSelectedPeripherals();
         }
-
         if (this.object && this.object.children && this.object.children.length > 0) {
             const cameraPosition = new Vector3();
             const cameraQuaternion = new Quaternion();
@@ -632,6 +633,7 @@ class TransformControls extends Object3D {
                 const boundingBox = ThreeUtils.computeBoundingBox(this.object);
                 const maxObjectBoundingBox = boundingBox.max;
                 const minObjectBoundingBox = boundingBox.min;
+                boundingBox.getCenter(this.boxCenter);
                 const multiObjectWidth = new Vector3();
                 multiObjectWidth.x = (maxObjectBoundingBox.x - minObjectBoundingBox.x);
                 multiObjectWidth.y = (maxObjectBoundingBox.y - minObjectBoundingBox.y);
@@ -925,7 +927,6 @@ class TransformControls extends Object3D {
         if (!(this.object.children && this.object.children.length > 0) || !this.axis) {
             return false;
         }
-
         this.ray.setFromCamera(coord, this.camera);
 
         const intersect = this.ray.intersectObject(this.plane, true)[0];
@@ -933,6 +934,13 @@ class TransformControls extends Object3D {
             return false;
         }
 
+        throttle(() => {
+            window.dispatchEvent(updateRotateEvent({
+                rotate: {
+                    rotateAxis: this.axis.toLowerCase()
+                }
+            }));
+        }, 1000)();
 
         this.quaternionStart.copy(this.object.quaternion);
         this.scaleStart.copy(this.object.scale);

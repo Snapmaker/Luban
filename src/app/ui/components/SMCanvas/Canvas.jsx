@@ -8,8 +8,7 @@
 import noop from 'lodash/noop';
 import React, { PureComponent } from 'react';
 import { isNil, throttle, some } from 'lodash';
-import { Vector3, PerspectiveCamera, Scene, Group, AmbientLight, PointLight,
-    HemisphereLight, DirectionalLight } from 'three';
+import { Vector3, PerspectiveCamera, Scene, Group, AmbientLight, PointLight, HemisphereLight, DirectionalLight, Object3D } from 'three';
 import PropTypes from 'prop-types';
 import TWEEN from '@tweenjs/tween.js';
 
@@ -105,7 +104,7 @@ class Canvas extends PureComponent {
         this.group = null;
         this.light = null;
         this.rotateFontLeftTop = new Vector3();
-        this.rotateFontRightTop = new Vector3();
+        this.cloneRotatePeripheral = new Object3D();
         this.canvasWidthHalf = null;
         this.canvasHeightHalf = null;
         this.inputPositionTop = 0;
@@ -606,19 +605,21 @@ class Canvas extends PureComponent {
                 this.light.position.copy(this.camera.position);
             }
             if (this.controls.transformControl.mode === 'rotate' && this.modelGroup.selectedModelArray[0]?.type !== 'primeTower') {
-                // this.controls.transformControl
-                this.controls.transformControl.selectedFrontLeftTop.updateMatrixWorld();
-                this.controls.transformControl.selectedFrontRightTop.updateMatrixWorld();
-                this.rotateFontLeftTop.setFromMatrixPosition(this.controls.transformControl.selectedFrontLeftTop.matrixWorld);
-                this.rotateFontRightTop.setFromMatrixPosition(this.controls.transformControl.selectedFrontRightTop.matrixWorld);
+                this.cloneRotatePeripheral = this.controls.transformControl.rotatePeripheral.clone();
+
+                this.cloneRotatePeripheral.updateMatrixWorld();
+                this.rotateFontLeftTop.setFromMatrixPosition(this.cloneRotatePeripheral.matrixWorld);
                 this.rotateFontLeftTop.project(this.camera);
-                this.rotateFontRightTop.project(this.camera);
                 inputDOM = document.getElementById('rotate-input-control');
                 parentDOM = document.getElementById('smcanvas');
                 this.canvasWidthHalf = parentDOM.clientWidth * 0.5;
                 this.canvasHeightHalf = parentDOM.clientHeight * 0.5;
-                this.inputPositionLeft = `${(this.rotateFontLeftTop.x + this.rotateFontRightTop.x) * this.canvasWidthHalf / 2 + this.canvasWidthHalf - 48}px`;
-                this.inputPositionTop = `${-(this.rotateFontLeftTop.y * this.canvasHeightHalf) + this.canvasHeightHalf - 40}px`;
+                if (Math.abs(parseFloat(this.inputPositionLeft) - ((this.rotateFontLeftTop.x) * this.canvasWidthHalf + this.canvasWidthHalf)) > 10
+                || Math.abs(parseFloat(this.inputPositionTop) - (-(this.rotateFontLeftTop.y * this.canvasHeightHalf) + this.canvasHeightHalf - 200)) > 10
+                ) {
+                    this.inputPositionLeft = `${this.rotateFontLeftTop.x * this.canvasWidthHalf + this.canvasWidthHalf}px`;
+                    this.inputPositionTop = `${-(this.rotateFontLeftTop.y * this.canvasHeightHalf) + this.canvasHeightHalf - 200}px`;
+                }
                 inputDOM.style.top = this.inputPositionTop;
                 inputDOM.style.left = this.inputPositionLeft;
                 this.controls.transformControl.dragging && (inputDOM.style.display = 'block');

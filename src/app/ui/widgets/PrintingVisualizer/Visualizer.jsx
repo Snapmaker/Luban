@@ -520,7 +520,7 @@ class Visualizer extends PureComponent {
                         primeTowerSelected={primeTowerSelected}
                         transformMode={transformMode}
                     />
-                    <div className={`canvas-input position-ab border-${this.props.rotateAxis}`} id="rotate-input-control" style={{ display: 'none' }}>
+                    <div className={`canvas-input position-ab border-${this.props.rotateAxis} translate-animation-3`} id="rotate-input-control" style={{ display: 'none' }}>
                         <Input
                             size="small"
                             placeholder={i18n._('key-Printing/LeftBar-Enter an degree')}
