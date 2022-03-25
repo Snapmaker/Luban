@@ -2373,8 +2373,13 @@ export const actions = {
     },
 
     scaleToFitSelectedModel: () => (dispatch, getState) => {
-        const { modelGroup } = getState().printing;
-        const { size } = getState().machine;
+        const { modelGroup, stopArea: { left, right, front, back } } = getState().printing;
+        let { size } = getState().machine;
+        size = {
+            x: size.x - left - right,
+            y: size.y - front - back,
+            z: size.z
+        };
         dispatch(actions.recordModelBeforeTransform(modelGroup));
 
         const modelState = modelGroup.scaleToFitSelectedModel(size);
@@ -2389,6 +2394,7 @@ export const actions = {
     scaleToFitSelectedModelWithRotate: () => (dispatch, getState) => {
         const { modelGroup, stopArea: { left, right, front, back }, progressStatesManager } = getState().printing;
         const { size } = getState().machine;
+        const selectedGroup = cloneDeep(modelGroup.selectedGroup);
         progressStatesManager.startProgress(PROCESS_STAGE.PRINTING_SCALE_TO_FIT_WITH_ROTATE);
         dispatch(actions.updateState({
             stage: STEP_STAGE.PRINTING_SCALE_TO_FIT_WITH_ROTATE,
@@ -2425,19 +2431,28 @@ export const actions = {
                 switch (status) {
                     case 'FINISH': {
                         const { rotateAngel, maxScale, offsetX } = value;
+                        const { scale: originScale } = selectedGroup;
                         const newTransformation = {
                             rotationZ: THREE.Math.degToRad(rotateAngel),
-                            scaleX: maxScale,
-                            scaleY: maxScale,
-                            scaleZ: maxScale,
-                            positionX: offsetX,
-                            positionY: 0
+                            positionX: 0,
+                            positionY: 0,
+                            scaleX: originScale.x * maxScale,
+                            scaleY: originScale.y * maxScale,
+                            scaleZ: originScale.z * maxScale
                         };
                         dispatch(actions.updateSelectedModelTransformation(newTransformation, undefined, true));
+                        const center = new THREE.Vector3();
+                        ThreeUtils.computeBoundingBox(modelGroup.selectedGroup).getCenter(center);
+                        dispatch(actions.updateSelectedModelTransformation({
+                            positionX: offsetX - center.x,
+                            positionY: 0 - center.y
+                        }));
+                        const modelState = modelGroup.getState();
                         dispatch(actions.updateState({
                             stage: STEP_STAGE.PRINTING_SCALE_TO_FIT_WITH_ROTATE,
-                            progress: progressStatesManager.updateProgress(STEP_STAGE.PRINTING_SCALE_TO_FIT_WITH_ROTATE, 1)
+                            progress: progressStatesManager.updateProgress(STEP_STAGE.PRINTING_SCALE_TO_FIT_WITH_ROTATE, 1),
                         }));
+                        dispatch(actions.updateState(modelState));
                         break;
                     }
                     case 'UPDATE_PROGRESS': {

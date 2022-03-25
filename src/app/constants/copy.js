@@ -296,6 +296,10 @@ i18n._('key-Progress/3DP-Auto Rotate models successfully.');
 i18n._('key-Progress/3DP-Auto Rotate models failed.');
 i18n._('key-Printing/LeftBar-Auto Rotate Selected Models');
 i18n._('key-Printing/LeftBar-Auto Rotate All Models');
+i18n._('key-Progress/3DP-Scale to fit...{{progress}}%');
+i18n._('key-Printing/3DP-Scale to fit successfully.');
+i18n._('key-Printing/3DP-scale to fit failed.');
+
 
 // Machine Settings
 i18n._('key-App/Settings/MachineSettings-Single Extruder Toolhead');

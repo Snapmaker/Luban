@@ -273,9 +273,9 @@ class ProgressStatesManager {
                     percent: 1
                 }
             ],
-            'key-Progress/3DP-Auto Rotate models...{{progress}}%',
-            'key-Progress/3DP-Auto Rotate models successfully.',
-            'key-Progress/3DP-Auto Rotate models failed.');
+            'key-Progress/3DP-Scale to fit...{{progress}}%',
+            'key-Progress/3DP-Scale to fit successfully.',
+            'key-Progress/3DP-Scale to fit failed.');
     }
 
     push(processStageID, stages, notice, successNotice, failedNotice) {

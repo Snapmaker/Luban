@@ -14,7 +14,7 @@ const scaleToFitWithRotate = ({ data }) => {
         if (left !== right) {
             const originCenter = size.x / 2;
             const currentCenter = (size.x - right) / 2 + left / 2;
-            offsetX = (currentCenter - originCenter) / 2 - 5;
+            offsetX = currentCenter - originCenter;
         } else {
             offsetX = 0;
         }
@@ -58,7 +58,7 @@ const scaleToFitWithRotate = ({ data }) => {
         sendMessage({
             status: 'FINISH',
             value: {
-                maxScale,
+                maxScale: Math.round(maxScale * 10) / 10,
                 rotateAngel,
                 offsetX
             }
