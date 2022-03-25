@@ -290,7 +290,7 @@ class Visualizer extends PureComponent {
                     isRotate,
                     toolHead,
                     // for wifi indiviual
-                    gcodeFile,
+                    uploadName: gcodeFile.uploadName,
                     series,
                     laserFocalLength,
                     background,

@@ -1,7 +1,6 @@
-import { readFile } from 'fs';
 import logger from '../../lib/logger';
 // import workerManager from '../task-manager/workerManager';
-import socketSerial from './socket-serial.ts';
+import socketSerial from './socket-serial';
 import socketHttp from './socket-http';
 import { HEAD_PRINTING, HEAD_LASER, LEVEL_TWO_POWER_LASER_FOR_SM2, MACHINE_SERIES,
     CONNECTION_TYPE_WIFI, CONNECTION_TYPE_SERIAL, WORKFLOW_STATE_PAUSED } from '../../constants';
@@ -61,69 +60,60 @@ class ConnectionManager {
     startGcode = (socket, options) => {
         const { headType, isRotate, toolHead, isLaserPrintAutoMode, materialThickness, eventName } = options;
         if (this.connectionType === CONNECTION_TYPE_WIFI) {
-            const { gcodeFile, series, laserFocalLength, background, size, workPosition, originOffset } = options;
-            const gcodeFilePath = `${DataStorage.tmpDir}/${gcodeFile.uploadName}`;
-            readFile(gcodeFilePath, (err, res) => {
-                if (err) {
-                    log.error(`Read gcode file err, err=${err}`);
-                    this.socket && this.socket.emit(eventName, {
-                        msg: err
-                    });
-                    return;
-                }
-                const file = res;
-                const promises = [];
-                if (series !== MACHINE_SERIES.ORIGINAL.value && series !== MACHINE_SERIES.CUSTOM.value && headType === HEAD_LASER && !isRotate) {
-                    if (laserFocalLength) {
-                        const promise = new Promise((resolve) => {
-                            if (isLaserPrintAutoMode) {
-                                this.socket.executeGcode({ gcode: `G53;\nG0 Z${laserFocalLength + materialThickness} F1500;\nG54;` }, () => {
+            const { uploadName, series, laserFocalLength, background, size, workPosition, originOffset } = options;
+            const gcodeFilePath = `${DataStorage.tmpDir}/${uploadName}`;
+            const promises = [];
+            if (series !== MACHINE_SERIES.ORIGINAL.value && series !== MACHINE_SERIES.CUSTOM.value && headType === HEAD_LASER && !isRotate) {
+                if (laserFocalLength) {
+                    const promise = new Promise((resolve) => {
+                        if (isLaserPrintAutoMode) {
+                            this.socket.executeGcode({ gcode: `G53;\nG0 Z${laserFocalLength + materialThickness} F1500;\nG54;` }, () => {
+                                resolve();
+                            });
+                        } else {
+                            if (toolHead === LEVEL_TWO_POWER_LASER_FOR_SM2) {
+                                this.socket.executeGcode({ gcode: `G0 Z${materialThickness} F1500;` }, () => {
                                     resolve();
                                 });
                             } else {
-                                if (toolHead === LEVEL_TWO_POWER_LASER_FOR_SM2) {
-                                    this.socket.executeGcode({ gcode: `G0 Z${materialThickness} F1500;` }, () => {
-                                        resolve();
-                                    });
-                                } else {
-                                    this.socket.executeGcode({ gcode: 'G0 Z0 F1500;' }, () => {
-                                        resolve();
-                                    });
-                                }
+                                this.socket.executeGcode({ gcode: 'G0 Z0 F1500;' }, () => {
+                                    resolve();
+                                });
                             }
-                        });
-                        promises.push(promise);
-                    }
-
-                    // Camera Aid Background mode, force machine to work on machine coordinates (Origin = 0,0)
-                    if (background.enabled) {
-                        let x = parseFloat(workPosition.x) - parseFloat(originOffset.x);
-                        let y = parseFloat(workPosition.y) - parseFloat(originOffset.y);
-
-                        // Fix bug for x or y out of range
-                        x = Math.max(0, Math.min(x, size.x - 20));
-                        y = Math.max(0, Math.min(y, size.y - 20));
-
-                        const promise = new Promise((resolve) => {
-                            this.socket.executeGcode({ gcode: `G53;\nG0 X${x} Y${y};\nG54;\nG92 X${x} Y${y};` }, () => {
-                                resolve();
-                            });
-                        });
-                        promises.push(promise);
-                    }
+                        }
+                    });
+                    promises.push(promise);
                 }
-                Promise.all(promises)
-                    .then(() => {
-                        this.socket.uploadGcodeFile(gcodeFile.name, file, headType, (msg) => {
-                            if (msg) {
-                                return;
-                            }
-                            this.socket.startGcode(options);
+
+                // Camera Aid Background mode, force machine to work on machine coordinates (Origin = 0,0)
+                if (background.enabled) {
+                    let x = parseFloat(workPosition.x) - parseFloat(originOffset.x);
+                    let y = parseFloat(workPosition.y) - parseFloat(originOffset.y);
+
+                    // Fix bug for x or y out of range
+                    x = Math.max(0, Math.min(x, size.x - 20));
+                    y = Math.max(0, Math.min(y, size.y - 20));
+
+                    const promise = new Promise((resolve) => {
+                        this.socket.executeGcode({ gcode: `G53;\nG0 X${x} Y${y};\nG54;\nG92 X${x} Y${y};` }, () => {
+                            resolve();
                         });
                     });
-            });
+                    promises.push(promise);
+                }
+            }
+            Promise.all(promises)
+                .then(() => {
+                    this.socket.uploadGcodeFile(gcodeFilePath, headType, (msg) => {
+                        if (msg) {
+                            return;
+                        }
+                        this.socket.startGcode(options);
+                    });
+                });
         } else {
             const { workflowState } = options;
+            console.log('start print', headType, workflowState, WORKFLOW_STATE_PAUSED);
             if (headType === HEAD_LASER && workflowState !== WORKFLOW_STATE_PAUSED) {
                 this.socket.command(this.socket, {
                     args: ['G0 X0 Y0 F1000']
@@ -140,9 +130,11 @@ class ConnectionManager {
                     }
                 }
             }
-            this.socket.command(this.socket, {
-                cmd: 'gcode:start',
-            });
+            if (workflowState === 'idle') {
+                this.socket.command(this.socket, {
+                    cmd: 'gcode:start',
+                });
+            }
             socket && socket.emit(eventName, {});
         }
     }

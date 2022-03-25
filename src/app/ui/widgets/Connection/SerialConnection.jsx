@@ -77,56 +77,6 @@ function SerialConnection() {
         server.closeServer();
     }
 
-    const renderPortOption = (option) => {
-        const { value, label, manufacturer } = option;
-        const style = {
-            whiteSpace: 'nowrap',
-            textOverflow: 'ellipsis',
-            overflow: 'hidden'
-        };
-
-        const inuse = value === portState.port && isConnected;
-
-        return (
-            <div style={style} title={label}>
-                <div>
-                    {inuse && (
-                        <span>
-                            <i className="fa fa-lock" />
-                            <span className="space" />
-                        </span>
-                    )}
-                    {label}
-                </div>
-                {manufacturer && (
-                    <i>{i18n._('key-Workspace/Connection-Manufacturer: {{manufacturer}}', { manufacturer })}</i>
-                )}
-            </div>
-        );
-    };
-
-    const renderPortValue = (option) => {
-        const { value, label } = option;
-        const style = {
-            color: '#333',
-            textOverflow: 'ellipsis',
-            overflow: 'hidden'
-        };
-        const inuse = value === portState.port && isConnected;
-
-        return (
-            <div style={style} title={label}>
-                {inuse && (
-                    <span>
-                        <i className="fa fa-lock" />
-                        <span className="space" />
-                    </span>
-                )}
-                {label}
-            </div>
-        );
-    };
-
     const actions = {
         onChangePortOption: (option) => {
             const serverFound = servers.find(v => v.port === option.value);
@@ -244,7 +194,7 @@ function SerialConnection() {
 
     const canRefresh = !loadingPorts && !isOpen;
     const canChangePort = canRefresh;
-    const canOpenPort = portState && !isOpen;
+    const canOpenPort = portState.port && !isOpen;
 
     return (
         <div>
@@ -259,7 +209,6 @@ function SerialConnection() {
                         name="port"
                         noResultsText={i18n._('key-Workspace/Connection-No ports available.')}
                         onChange={actions.onChangePortOption}
-                        optionRenderer={renderPortOption}
                         options={map(servers, (o) => ({
                             value: o.port,
                             label: o.port,
@@ -267,7 +216,6 @@ function SerialConnection() {
                         }))}
                         placeholder={i18n._('key-Workspace/Connection-Choose a port')}
                         value={portState.port}
-                        valueRenderer={renderPortValue}
                     />
                     <SvgIcon
                         className="border-default-black-5 margin-left-8 border-radius-8"

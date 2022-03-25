@@ -29,8 +29,9 @@ class SocketServer extends EventEmitter {
         this.io = new Server(this.server, {
             serveClient: true,
             allowEIO3: true,
-            pingTimeout: 60000, // 60s without pong to consider the connection closed
-            path: '/socket.io'
+            pingTimeout: 180000, // 60s without pong to consider the connection closed
+            path: '/socket.io',
+            maxHttpBufferSize: 1e8
         });
 
         // JWT (JSON Web Tokens) support
@@ -93,7 +94,8 @@ class SocketServer extends EventEmitter {
         }
 
         // Disconnect from socket
-        socket.on('disconnect', () => {
+        socket.on('disconnect', (err) => {
+            log.debug(`Disconnected from err=${err}`);
             log.debug(`Disconnected from ${address}: id=${socket.id}, token.id=${token.id}, token.name=${token.name}`);
 
             this.emit('disconnection', socket);

@@ -106,6 +106,7 @@ export class Server extends events.EventEmitter {
     }
 
     startServerGcode(args, callback) {
+        console.log('args', args);
         controller.emitEvent(CONNECTION_START_GCODE, args)
             .once(CONNECTION_START_GCODE, ({ msg, code }) => {
                 dispatch(baseActions.updateState({

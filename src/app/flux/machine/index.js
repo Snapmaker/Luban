@@ -41,7 +41,7 @@ import discoverActions from './action-discover';
 import connectActions from './action-connect';
 
 const INITIAL_STATE = {
-    // region server discover
+    // region server disover
     // HTTP connection
     //  - servers: HTTP servers on Snapmaker 2.0
     //  - serverDiscovering: discover state
@@ -394,7 +394,6 @@ export const actions = {
                         workflowStatus: status,
                         laserCamera
                     }));
-                    console.log('ddd', machineState.server.getGcodePrintingInfo(state));
                     dispatch(baseActions.updateState({
                         gcodePrintingInfo: machineState.server.getGcodePrintingInfo(state)
                     }));
@@ -728,6 +727,7 @@ export const actions = {
             connectionStatus: CONNECTION_STATUS_IDLE,
             isHomed: null,
             workflowStatus: WORKFLOW_STATUS_UNKNOWN,
+            workflowState: WORKFLOW_STATE_IDLE,
             laserFocalLength: null,
             workPosition: { // work position
                 x: '0.000',
@@ -768,23 +768,23 @@ export const actions = {
             return;
         }
         controller
-            .emitEvent(CONNECTION_EXECUTE_GCODE, { gcode, context, cmd })
-            .once(CONNECTION_EXECUTE_GCODE, (gcodeArray) => {
+            .emitEvent(CONNECTION_EXECUTE_GCODE, { gcode, context, cmd }, (gcodeArray) => {
                 if (gcodeArray) {
-                    dispatch(actions.addConsoleLogs(gcodeArray));
-                    if (homingModal) {
+                    if (homingModal && gcode === 'G28') {
                         dispatch(baseActions.updateState({
                             homingModal: false
                         }));
                     }
+                    dispatch(actions.addConsoleLogs(gcodeArray));
                 }
             });
     },
 
     executeGcodeAutoHome: (homingModal = false) => (dispatch, getState) => {
         const { series, headType } = getState().workspace;
+        const { connectionType } = getState().machine;
         dispatch(actions.executeGcode('G53'));
-        if (homingModal) {
+        if (homingModal && connectionType === CONNECTION_TYPE_WIFI) {
             dispatch(baseActions.updateState({
                 homingModal
             }));

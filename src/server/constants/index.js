@@ -18,7 +18,7 @@ export const IP_WHITELIST = [
     'fc00::/7', // Unique local address
     'fe80::/10' // Link-local address
 ];
-
+export const CONNECTION_MATERIALTHICKNESS_ABORT = 'connection:materialThickness_abort';
 // Error Codes
 export const ERR_BAD_REQUEST = 400;
 export const ERR_UNAUTHORIZED = 401;

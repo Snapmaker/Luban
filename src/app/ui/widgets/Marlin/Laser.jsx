@@ -85,6 +85,11 @@ class Laser extends PureComponent {
                 });
             }
         }
+        return prevProps;
+    }
+
+    componentDidUpdate() {
+
     }
 
 

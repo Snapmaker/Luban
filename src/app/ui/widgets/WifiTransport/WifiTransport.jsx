@@ -9,7 +9,6 @@ import classNames from 'classnames';
 import { useDispatch, useSelector } from 'react-redux';
 import _ from 'lodash';
 import path from 'path';
-import request from 'superagent';
 import { controller } from '../../../lib/controller';
 import { pathWithRandomSuffix } from '../../../../shared/lib/random-utils';
 import i18n from '../../../lib/i18n';
@@ -18,8 +17,8 @@ import { normalizeNameDisplay } from '../../../lib/normalize-range';
 import styles from './index.styl';
 import {
     CONNECTION_TYPE_WIFI, WORKFLOW_STATE_IDLE, WORKFLOW_STATUS_IDLE,
-    DATA_PREFIX, HEAD_CNC, HEAD_LASER, HEAD_PRINTING,
-    LEVEL_TWO_POWER_LASER_FOR_SM2,
+    HEAD_CNC, HEAD_LASER, HEAD_PRINTING,
+    LEVEL_TWO_POWER_LASER_FOR_SM2, CONNECTION_MATERIALTHICKNESS_ABORT,
     CONNECTION_TYPE_SERIAL, CONNECTION_MATERIALTHICKNESS, CONNECTION_UPLOAD_FILE
 } from '../../../constants';
 import { actions as workspaceActions, WORKSPACE_STAGE } from '../../../flux/workspace';
@@ -337,6 +336,11 @@ function WifiTransport({ widgetActions, controlActions }) {
                     feedRate: 1500
                 };
                 controller.emitEvent(CONNECTION_MATERIALTHICKNESS, args)
+                    .once(CONNECTION_MATERIALTHICKNESS_ABORT, ({ req }) => {
+                        window.addEventListener('cancelReq', () => {
+                            req.abort();
+                        });
+                    })
                     .once(CONNECTION_MATERIALTHICKNESS, ({ data }) => {
                         const { status, thickness } = data;
                         if (status) {
@@ -361,32 +365,26 @@ function WifiTransport({ widgetActions, controlActions }) {
             if (!find) {
                 return;
             }
-            const gcodePath = `${DATA_PREFIX}/${find.uploadName}`;
-            request.get(gcodePath).end((err1, res) => {
-                const gcode = res.text;
-                const blob = new Blob([gcode], { type: 'text/plain' });
-                const file = new File([blob], find.name);
-                file.renderGcodeFileName = find.renderGcodeFileName;
-                controller.emitEvent(CONNECTION_UPLOAD_FILE, { filename: find.name, file: file })
-                    .once(CONNECTION_UPLOAD_FILE, ({ err, text }) => {
-                        isSendingFile.current.removeContainer();
-                        if (err) {
-                            modalSmallHOC({
-                                title: i18n._('key-Workspace/WifiTransport-Failed to send file.'),
-                                text: text,
-                                iconColor: '#FF4D4F',
-                                img: 'WarningTipsError'
-                            });
-                        } else {
-                            (modalSmallHOC({
-                                title: i18n._('key-Workspace/WifiTransport-File sent successfully.'),
-                                text: i18n._('key-Workspace/WifiTransport-Your file was successfully sent. Receive it on the Touchscreen.'),
-                                iconColor: '#4CB518',
-                                img: 'WarningTipsSuccess'
-                            }));
-                        }
-                    });
-            });
+            const gcodePath = `/${find.uploadName}`;
+            controller.emitEvent(CONNECTION_UPLOAD_FILE, { gcodePath: gcodePath })
+                .once(CONNECTION_UPLOAD_FILE, ({ err, text }) => {
+                    isSendingFile.current.removeContainer();
+                    if (err) {
+                        modalSmallHOC({
+                            title: i18n._('key-Workspace/WifiTransport-Failed to send file.'),
+                            text: text,
+                            iconColor: '#FF4D4F',
+                            img: 'WarningTipsError'
+                        });
+                    } else {
+                        (modalSmallHOC({
+                            title: i18n._('key-Workspace/WifiTransport-File sent successfully.'),
+                            text: i18n._('key-Workspace/WifiTransport-Your file was successfully sent. Receive it on the Touchscreen.'),
+                            iconColor: '#4CB518',
+                            img: 'WarningTipsSuccess'
+                        }));
+                    }
+                });
         },
         importFile: (fileObj) => {
             if (fileObj) {

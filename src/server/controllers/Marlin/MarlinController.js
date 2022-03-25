@@ -1026,7 +1026,7 @@ class MarlinController {
             },
             'gcode:start': () => {
                 this.event.trigger('gcode:start');
-
+                console.log('gcode:start');
                 // lock screen when running G-code (safety concern)
                 if (this.controller.state.series !== 'SM2' && semver.gte(this.controller.state.version, '2.4.0')) {
                     this.writeln('M1001 L');
@@ -1163,6 +1163,7 @@ class MarlinController {
 
                         return line.trim().length > 0;
                     });
+                console.log('data', data, context);
 
                 this.feeder.feed(data, context);
 

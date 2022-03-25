@@ -375,14 +375,14 @@ export const actions = {
      * @returns {Promise}
      */
     loadGcode: (gcodeFile) => async (dispatch, getState) => {
-        const { connectionStatus, port } = getState().machine;
+        const { connectionStatus, server } = getState().machine;
         gcodeFile = gcodeFile || getState().workspace.gcodeFile;
         if (connectionStatus !== CONNECTION_STATUS_CONNECTED || gcodeFile === null) {
             return;
         }
         dispatch(actions.updateState({ uploadState: 'uploading' }));
         try {
-            await api.loadGCode({ port, dataSource: PROTOCOL_TEXT, uploadName: gcodeFile.uploadName });
+            await api.loadGCode({ port: server?.port, dataSource: PROTOCOL_TEXT, uploadName: gcodeFile.uploadName });
 
             dispatch(actions.updateState({ uploadState: 'uploaded' }));
         } catch (e) {

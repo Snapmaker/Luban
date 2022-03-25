@@ -15,6 +15,7 @@ export const CONNECTION_PAUSE_GCODE = 'connection:pauseGcode';
 export const CONNECTION_STOP_GCODE = 'connection:stopGcode';
 export const CONNECTION_HEARTBEAT = 'connection:startHeartbeat';
 export const CONNECTION_MATERIALTHICKNESS = 'connection:materialThickness';
+export const CONNECTION_MATERIALTHICKNESS_ABORT = 'connection:materialThickness_abort';
 export const CONNECTION_GET_GCODEFILE = 'connection:getGcodeFile';
 export const CONNECTION_UPLOAD_FILE = 'connection:uploadFile';
 export const CONNECTION_Z_OFFSET = 'connection:updateZOffset';

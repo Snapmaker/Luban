@@ -221,8 +221,8 @@ class SerialPortClient {
         socketController.emit('machine:discover', { dataSource: this.dataSource, connectionType: 'serial' });
     }
 
-    emitEvent(eventName, options = {}) {
-        socketController.emit(eventName, { ...options, eventName });
+    emitEvent(eventName, options = {}, callback) {
+        socketController.emit(eventName, { ...options, eventName }, callback);
         return socketController;
     }
 

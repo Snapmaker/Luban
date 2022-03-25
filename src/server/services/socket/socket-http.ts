@@ -4,12 +4,14 @@ import { isEqual, isNil } from 'lodash';
 import type SocketServer from '../../lib/SocketManager';
 import logger from '../../lib/logger';
 import workerManager from '../task-manager/workerManager';
+import DataStorage from '../../DataStorage';
 import { HEAD_PRINTING, HEAD_LASER, HEAD_CNC, MACHINE_SERIES,
     SINGLE_EXTRUDER_TOOLHEAD_FOR_SM2,
     STANDARD_CNC_TOOLHEAD_FOR_SM2,
     LEVEL_ONE_POWER_LASER_FOR_SM2,
     LEVEL_TWO_POWER_LASER_FOR_SM2,
-    CONNECTION_TYPE_WIFI
+    CONNECTION_TYPE_WIFI,
+    CONNECTION_MATERIALTHICKNESS_ABORT
 } from '../../constants';
 import { valueOf } from '../../lib/contants-utils';
 import wifiServerManager from './WifiServerManager';
@@ -84,8 +86,7 @@ export type EventOptions = {
     x?: number,
     y?: number,
     feedRate?: number,
-    filename?: string,
-    file?: any,
+    gcodePath?: string,
     value?: number,
     enable?: boolean,
     workSpeedFactor?: number,
@@ -257,15 +258,21 @@ class SocketHttp {
     };
 
     public executeGcode = (options: EventOptions, callback) => {
-        const { gcode } = options;
-        const split = gcode.split('\n');
-        this.gcodeInfos.push({
-            gcodes: split
+        return new Promise(resolve => {
+            const { gcode } = options;
+            const split = gcode.split('\n');
+            this.gcodeInfos.push({
+                gcodes: split,
+                callback: (result) => {
+                    callback && callback(result);
+                    resolve(result);
+                }
+            });
+            this.startExecuteGcode();
         });
-        this.startExecuteGcode(callback);
     };
 
-    public startExecuteGcode = async (callback) => {
+    public startExecuteGcode = async () => {
         if (this.isGcodeExecuting) {
             return;
         }
@@ -280,7 +287,7 @@ class SocketHttp {
                     result.push(text);
                 }
             }
-            callback && callback();
+            splice.callback && splice.callback(result);
             this.socket && this.socket.emit('connection:executeGcode', result);
         }
         this.isGcodeExecuting = false;
@@ -312,13 +319,13 @@ class SocketHttp {
                 this.socket && this.socket.emit('connection:close');
                 return;
             }
+
             if (Object.keys(state).length === 0) {
                 return;
             } else {
                 state = {
                     ...state,
                     ...this.state,
-                    isFourAxis: Boolean(state.b),
                     isHomed: state?.homed,
                     status: state.status.toLowerCase(),
                     airPurifier: !isNil(state.airPurifierSwitch),
@@ -327,6 +334,7 @@ class SocketHttp {
                         y: state.y,
                         z: state.z,
                         b: state.b,
+                        isFourAxis: !isNil(state.b)
                     },
                     originOffset: {
                         x: state.offsetX,
@@ -352,7 +360,7 @@ class SocketHttp {
         });
     }
 
-    public uploadGcodeFile = (filename:string, file:string, type:string, callback) => {
+    public uploadGcodeFile = (gcodeFilePath:string, type:string, callback) => {
         const api = `${this.host}/api/v1/prepare_print`;
         if (type === HEAD_PRINTING) {
             type = '3DP';
@@ -365,7 +373,7 @@ class SocketHttp {
             .post(api)
             .field('token', this.token)
             .field('type', type)
-            .attach('file', file, filename)
+            .attach('file', gcodeFilePath)
             .end((err, res) => {
                 const { msg, data } = _getResult(err, res);
                 if (callback) {
@@ -377,9 +385,9 @@ class SocketHttp {
     public getLaserMaterialThickness = (options: EventOptions) => {
         const { x, y, feedRate, eventName } = options;
         const api = `${this.host}/api/request_Laser_Material_Thickness?token=${this.token}&x=${x}&y=${y}&feedRate=${feedRate}`;
-        request
-            .get(api)
-            .end((err, res) => {
+        const req = request.get(api);
+        this.socket && this.socket.emit(CONNECTION_MATERIALTHICKNESS_ABORT, { req });
+        req.end((err, res) => {
                 this.socket && this.socket.emit(eventName, _getResult(err, res));
             });
     };
@@ -395,13 +403,13 @@ class SocketHttp {
     };
 
     public uploadFile = (options: EventOptions) => {
-        const { filename, file, eventName } = options;
+        const { gcodePath, eventName } = options;
         const api = `${this.host}/api/v1/upload`;
         request
             .post(api)
             .timeout(300000)
             .field('token', this.token)
-            .attach('file', file, filename)
+            .attach('file', DataStorage.tmpDir + gcodePath)
             .end((err, res) => {
                 this.socket && this.socket.emit(eventName, _getResult(err, res));
             });
@@ -421,7 +429,6 @@ class SocketHttp {
 
     public updateBedTemperature = (options: EventOptions) => {
         const { heatedBedTemperatureValue, eventName } = options;
-        console.log('updateBedTemperature', heatedBedTemperatureValue, eventName);
         const api = `${this.host}/api/v1/override_bed_temperature`;
         request
             .post(api)
