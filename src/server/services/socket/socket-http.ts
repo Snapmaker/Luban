@@ -394,11 +394,17 @@ class SocketHttp {
 
     public getGcodeFile = (options: EventOptions) => {
         const { eventName } = options;
+        console.log('res', this.host, this.token);
+
         const api = `${this.host}/api/v1/print_file?token=${this.token}`;
         request
             .get(api)
             .end((err, res) => {
-                this.socket && this.socket.emit(eventName, _getResult(err, res));
+                console.log('res', res.text, _getResult(err, res));
+                this.socket && this.socket.emit(eventName, {
+                    msg: err?.message,
+                    text: res.text
+                });
             });
     };
 

@@ -113,28 +113,27 @@ class ConnectionManager {
                 });
         } else {
             const { workflowState } = options;
-            console.log('start print', headType, workflowState, WORKFLOW_STATE_PAUSED);
             if (headType === HEAD_LASER && workflowState !== WORKFLOW_STATE_PAUSED) {
-                this.socket.command(this.socket, {
-                    args: ['G0 X0 Y0 F1000']
+                this.socket.command(socket, {
+                    args: ['G0 X0 Y0 F1000', null]
                 });
                 if (!isRotate) {
                     if (toolHead === LEVEL_TWO_POWER_LASER_FOR_SM2) {
-                        this.socket.command(this.socket, {
-                            args: [`G0 Z${(isLaserPrintAutoMode ? 0 : materialThickness)} F1000`]
+                        this.socket.command(socket, {
+                            args: [`G0 Z${(isLaserPrintAutoMode ? 0 : materialThickness)} F1000`, null]
                         });
                     } else {
-                        this.socket.command(this.socket, {
-                            args: [`G0 Z${(isLaserPrintAutoMode ? materialThickness : 0)} F1000`]
+                        this.socket.command(socket, {
+                            args: [`G0 Z${(isLaserPrintAutoMode ? materialThickness : 0)} F1000`, null]
                         });
                     }
                 }
             }
-            if (workflowState === 'idle') {
-                this.socket.command(this.socket, {
+            setTimeout(() => {
+                this.socket.command(socket, {
                     cmd: 'gcode:start',
                 });
-            }
+            }, 100);
             socket && socket.emit(eventName, {});
         }
     }

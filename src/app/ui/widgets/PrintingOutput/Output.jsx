@@ -76,6 +76,7 @@ function Output() {
                 return;
             }
             gcodeFile.thumbnail = thumbnail.current.getDataURL() || defaultThumbnail;
+            console.log('thumbnail', thumbnail.current.getDataURL(), gcodeFile, defaultThumbnail);
             dispatch(workspaceActions.renderGcodeFile(gcodeFile));
             setShowWorkspace(true);
 

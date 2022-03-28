@@ -1172,11 +1172,14 @@ class MarlinController {
                     const senderIdle = (this.sender.state.sent === this.sender.state.received);
                     const feederIdle = !(this.feeder.isPending());
                     if (notBusy && senderIdle && feederIdle) {
+                        console.log('data2');
                         this.feeder.next();
                     }
                 }
+                console.log('dd', !this.lastCmdType, this.sender.size() === 0, !this.feeder.isPending());
                 // No executing command && sender is not sending.
                 if (!this.lastCmdType && this.sender.size() === 0 && !this.feeder.isPending()) {
+                    console.log('data3');
                     this.feeder.next();
                 }
             },

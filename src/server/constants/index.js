@@ -41,6 +41,8 @@ export const CURA_ENGINE_WIN64 = `${RESOURCES_DIR}/CuraEngine/3.6/Windows-x64/Cu
 
 
 export const WORKFLOW_STATE_PAUSED = 'paused';
+export const WORKFLOW_STATE_IDLE = 'idle';
+
 export const MACHINE_SERIES = {
     ORIGINAL: {
         value: 'Original',

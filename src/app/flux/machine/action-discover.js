@@ -31,9 +31,9 @@ const init = () => (dispatch, getState) => {
             // Note that we may receive this event many times.
             const { servers, connectionType } = getState().machine;
             if (connectionType === type) {
-                const resultServers = cloneDeep(servers.filter(v => v.port));
+                const resultServers = [];
                 for (const object of devices) {
-                    const find = servers.find(v => {
+                    const find = resultServers.find(v => {
                         return v.port === object.port;
                     });
                     if (!find) {

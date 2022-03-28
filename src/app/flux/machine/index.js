@@ -1,3 +1,4 @@
+/* eslint-disable import/no-cycle */
 import _, { isEmpty, isNil } from 'lodash';
 import {
     ABSENT_OBJECT,
@@ -475,11 +476,12 @@ export const actions = {
                     dispatch(actions.executeGcodeG54(series, headType));
                     if (_.includes([WORKFLOW_STATUS_PAUSED, WORKFLOW_STATUS_RUNNING], status)) {
                         controller.emitEvent(CONNECTION_GET_GCODEFILE)
-                            .once(CONNECTION_GET_GCODEFILE, ({ msg: error, text: gcode }) => {
+                            .once(CONNECTION_GET_GCODEFILE, (res) => {
+                                const { msg: error, text: gcode } = res;
                                 if (error) {
                                     return;
                                 }
-                                dispatch(workspaceActions.clearGcode());
+                                console.log('gcode', res, gcode);
                                 let suffix = 'gcode';
                                 if (headType === HEAD_LASER) {
                                     suffix = 'nc';
