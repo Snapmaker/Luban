@@ -44,7 +44,11 @@ const heartBeat = (param: IParam) => {
                         sendMessage({
                             status: 'online',
                             err,
-                            state: res.body,
+                            res: {
+                                text: res.text,
+                                body: res.body,
+                                status: res.status,
+                            }
                         });
                     }
                 });

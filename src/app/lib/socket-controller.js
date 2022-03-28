@@ -64,7 +64,7 @@ class SocketController {
         this.socket && this.socket.once(eventName, (...args) => {
             callback(...args);
         });
-        return this.socket;
+        return this;
     }
 }
 

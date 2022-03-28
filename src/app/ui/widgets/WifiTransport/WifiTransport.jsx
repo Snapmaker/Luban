@@ -335,12 +335,10 @@ function WifiTransport({ widgetActions, controlActions }) {
                     y: y,
                     feedRate: 1500
                 };
+                window.addEventListener('cancelReq', () => {
+                    controller.emitEvent(CONNECTION_MATERIALTHICKNESS_ABORT);
+                });
                 controller.emitEvent(CONNECTION_MATERIALTHICKNESS, args)
-                    .once(CONNECTION_MATERIALTHICKNESS_ABORT, ({ req }) => {
-                        window.addEventListener('cancelReq', () => {
-                            req.abort();
-                        });
-                    })
                     .once(CONNECTION_MATERIALTHICKNESS, ({ data }) => {
                         const { status, thickness } = data;
                         if (status) {
@@ -368,7 +366,7 @@ function WifiTransport({ widgetActions, controlActions }) {
             const gcodePath = `/${find.uploadName}`;
             controller.emitEvent(CONNECTION_UPLOAD_FILE, { gcodePath: gcodePath })
                 .once(CONNECTION_UPLOAD_FILE, ({ err, text }) => {
-                    isSendingFile.current.removeContainer();
+                    isSendingFile.current && isSendingFile.current.removeContainer();
                     if (err) {
                         modalSmallHOC({
                             title: i18n._('key-Workspace/WifiTransport-Failed to send file.'),

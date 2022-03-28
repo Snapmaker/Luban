@@ -256,9 +256,6 @@ class ConnectionManager {
         }
     }
 
-    getLaserMaterialThickness = (socket, options) => {
-        this.socket.getLaserMaterialThickness(options);
-    };
 
     loadFilament = (socket, options) => {
         if (this.connectionType === CONNECTION_TYPE_WIFI) {
@@ -409,6 +406,14 @@ class ConnectionManager {
 
     updateZOffset = (socket, options) => {
         this.socket.updateZOffset(options);
+    };
+
+    getLaserMaterialThickness = (socket, options) => {
+        this.socket.getLaserMaterialThickness(options);
+    };
+
+    abortLaserMaterialThickness = (socket, options) => {
+        this.socket.abortLaserMaterialThickness(options);
     }
     // only for Wifi
 }

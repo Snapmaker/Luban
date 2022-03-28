@@ -41,6 +41,7 @@ const connectionEventsObject = {
     'connection:setDoorDetection': connectionManager.setDoorDetection,
     'connection:setFilterSwitch': connectionManager.setFilterSwitch,
     'connection:setFilterWorkSpeed': connectionManager.setFilterWorkSpeed,
+    'connection:materialThickness_abort': connectionManager.abortLaserMaterialThickness,
 
 };
 

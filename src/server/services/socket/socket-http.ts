@@ -10,8 +10,7 @@ import { HEAD_PRINTING, HEAD_LASER, HEAD_CNC, MACHINE_SERIES,
     STANDARD_CNC_TOOLHEAD_FOR_SM2,
     LEVEL_ONE_POWER_LASER_FOR_SM2,
     LEVEL_TWO_POWER_LASER_FOR_SM2,
-    CONNECTION_TYPE_WIFI,
-    CONNECTION_MATERIALTHICKNESS_ABORT
+    CONNECTION_TYPE_WIFI
 } from '../../constants';
 import { valueOf } from '../../lib/contants-utils';
 import wifiServerManager from './WifiServerManager';
@@ -123,9 +122,11 @@ class SocketHttp {
 
     private state: StateOptions = {};
 
-    private heartBeatWorker= null;
+    private heartBeatWorker = null;
 
-    private moduleSettings=null;
+    private moduleSettings = null;
+
+    private getLaserMaterialThicknessReq = null;
 
     public onConnection = (socket: SocketServer) => {
         wifiServerManager.onConnection(socket);
@@ -314,35 +315,34 @@ class SocketHttp {
             host: this.host,
             token: this.token
         }], (result: any) => {
-            let state = result.state;
             if (result.status === 'offline') {
                 this.socket && this.socket.emit('connection:close');
                 return;
             }
-
-            if (Object.keys(state).length === 0) {
+            const { data, code } = _getResult(null, result.res);
+            // No Content
+            if (Object.keys(data).length === 0 || code === 204) {
                 return;
-            } else {
-                state = {
-                    ...state,
-                    ...this.state,
-                    isHomed: state?.homed,
-                    status: state.status.toLowerCase(),
-                    airPurifier: !isNil(state.airPurifierSwitch),
-                    pos: {
-                        x: state.x,
-                        y: state.y,
-                        z: state.z,
-                        b: state.b,
-                        isFourAxis: !isNil(state.b)
-                    },
-                    originOffset: {
-                        x: state.offsetX,
-                        y: state.offsetY,
-                        z: state.offsetZ,
-                    }
-                };
             }
+            const state = {
+                ...data,
+                ...this.state,
+                isHomed: data?.homed,
+                status: data.status.toLowerCase(),
+                airPurifier: !isNil(data.airPurifierSwitch),
+                pos: {
+                    x: data.x,
+                    y: data.y,
+                    z: data.z,
+                    b: data.b,
+                    isFourAxis: !isNil(data.b)
+                },
+                originOffset: {
+                    x: data.offsetX,
+                    y: data.offsetY,
+                    z: data.offsetZ,
+                }
+            };
 
             if (waitConfirm) {
                 waitConfirm = false;
@@ -382,11 +382,15 @@ class SocketHttp {
             });
     };
 
+    public abortLaserMaterialThickness = (options: EventOptions) => {
+        this.getLaserMaterialThicknessReq && this.getLaserMaterialThicknessReq.abort();
+    };
+
     public getLaserMaterialThickness = (options: EventOptions) => {
         const { x, y, feedRate, eventName } = options;
         const api = `${this.host}/api/request_Laser_Material_Thickness?token=${this.token}&x=${x}&y=${y}&feedRate=${feedRate}`;
         const req = request.get(api);
-        this.socket && this.socket.emit(CONNECTION_MATERIALTHICKNESS_ABORT, { req });
+        this.getLaserMaterialThicknessReq = req;
         req.end((err, res) => {
                 this.socket && this.socket.emit(eventName, _getResult(err, res));
             });
@@ -394,13 +398,11 @@ class SocketHttp {
 
     public getGcodeFile = (options: EventOptions) => {
         const { eventName } = options;
-        console.log('res', this.host, this.token);
 
         const api = `${this.host}/api/v1/print_file?token=${this.token}`;
         request
             .get(api)
             .end((err, res) => {
-                console.log('res', res.text, _getResult(err, res));
                 this.socket && this.socket.emit(eventName, {
                     msg: err?.message,
                     text: res.text

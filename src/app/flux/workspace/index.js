@@ -267,7 +267,6 @@ export const actions = {
                 lastModified: +file.lastModified,
                 thumbnail: ''
             };
-            console.log('renderGcodeFile', gcodeFile, shouldRenderGcode, isRepeat);
             dispatch(actions.renderGcodeFile(gcodeFile, !isRepeat, shouldRenderGcode));
         });
     },
@@ -282,7 +281,6 @@ export const actions = {
         // if (oldGcodeFile !== null && oldGcodeFile.uploadName === gcodeFile.uploadName) {
         //     return;
         // }
-        console.log('needToList', needToList, shouldAutoPreviewGcode);
         if (shouldRenderGcode) {
             await dispatch(actions.clearGcode());
             await dispatch(actions.updateState({
@@ -291,13 +289,13 @@ export const actions = {
                 renderState: 'rendering',
                 progress: 0
             }));
+            // TODO:  used for serialport
             await dispatch(actions.loadGcode(gcodeFile));
             workerManager.gcodeToArraybufferGeometry([{ func: 'WORKSPACE', gcodeFilename: gcodeFile.uploadName }], (data) => {
                 dispatch(actions.gcodeToArraybufferGeometryCallback(data));
             });
         } else {
             shouldAutoPreviewGcode && dispatch(actions.renderPreviewGcodeFile(gcodeFile));
-            console.log('gcodeFile', gcodeFile);
             await dispatch(actions.updateState({
                 boundingBox: gcodeFile?.boundingBox
             }));
