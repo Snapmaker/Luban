@@ -2380,9 +2380,11 @@ export const actions = {
             y: size.y - front - back,
             z: size.z
         };
+        const offsetX = (left - right) / 2;
+        const offsetY = (front - back) / 2;
         dispatch(actions.recordModelBeforeTransform(modelGroup));
 
-        const modelState = modelGroup.scaleToFitSelectedModel(size);
+        const modelState = modelGroup.scaleToFitSelectedModel(size, offsetX, offsetY);
         modelGroup.onModelAfterTransform();
 
         dispatch(actions.recordModelAfterTransform('scale', modelGroup));
@@ -2432,6 +2434,7 @@ export const actions = {
                     case 'FINISH': {
                         const { rotateAngel, maxScale, offsetX } = value;
                         const { scale: originScale } = selectedGroup;
+                        modelGroup.clearAllSupport();
                         const newTransformation = {
                             rotationZ: THREE.Math.degToRad(rotateAngel),
                             positionX: 0,
@@ -2440,13 +2443,20 @@ export const actions = {
                             scaleY: originScale.y * maxScale,
                             scaleZ: originScale.z * maxScale
                         };
-                        dispatch(actions.updateSelectedModelTransformation(newTransformation, undefined, true));
+                        dispatch(actions.recordModelBeforeTransform(modelGroup));
+                        // dispatch(actions.updateSelectedModelTransformation(newTransformation, undefined, true));
+                        modelGroup.updateSelectedGroupTransformation(newTransformation, undefined, true);
+                        // const p = modelGroup.calculateSelectedGroupPosition(modelGroup.selectedGroup);
+                        // const oldPosition = new THREE.Vector3();
                         const center = new THREE.Vector3();
                         ThreeUtils.computeBoundingBox(modelGroup.selectedGroup).getCenter(center);
-                        dispatch(actions.updateSelectedModelTransformation({
-                            positionX: offsetX - center.x,
-                            positionY: 0 - center.y
-                        }));
+                        const oldPosition = modelGroup.selectedGroup.position;
+                        modelGroup.updateSelectedGroupTransformation({
+                            positionX: offsetX + (oldPosition.x - center.x),
+                            positionY: oldPosition.y - center.y
+                        });
+                        modelGroup.onModelAfterTransform();
+                        dispatch(actions.recordModelAfterTransform('scale', modelGroup));
                         const modelState = modelGroup.getState();
                         dispatch(actions.updateState({
                             stage: STEP_STAGE.PRINTING_SCALE_TO_FIT_WITH_ROTATE,

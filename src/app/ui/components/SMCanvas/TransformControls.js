@@ -1001,9 +1001,7 @@ class TransformControls extends Object3D {
 
                 rotationAxis.applyQuaternion(this.parentQuaternionInv);
                 const quaternion = new Quaternion().setFromAxisAngle(rotationAxis, rotationAngle);
-                const worldQuaternion = new Quaternion();
                 this.object.quaternion.copy(quaternion).multiply(this.quaternionStart).normalize();
-                this.object.getWorldQuaternion(worldQuaternion);
                 throttle(() => {
                     window.dispatchEvent(updateRotateEvent({
                         rotate: {

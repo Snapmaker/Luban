@@ -1071,13 +1071,13 @@ class ModelGroup extends EventEmitter {
         return this.getState();
     }
 
-    scaleToFitSelectedModel(size) {
+    scaleToFitSelectedModel(size, offsetX = 0, offsetY = 0) {
         const selected = this.getSelectedModelArray();
         if (selected.length === 0) {
             return null;
         }
         selected.forEach((item) => {
-            item.scaleToFit(size);
+            item.scaleToFit(size, offsetX, offsetY);
             item.computeBoundingBox();
         });
         this.prepareSelectedGroup();
