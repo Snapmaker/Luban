@@ -8,9 +8,10 @@ import CheckboxItem from './CheckboxItem';
 import Anchor from '../../components/Anchor';
 import styles from './styles.styl';
 import SvgIcon from '../../components/SvgIcon';
+import { HEAD_CNC } from '../../../constants';
 
-function ConfigValueBox({ optionConfigGroup, calculateTextIndex, isCategorySelected, type = 'input', isOfficialDefinition = () => true, onChangeDefinition, selectedSettingDefaultValue, definitionForManager, customConfigs, showMiddle = false, hideMiniTitle = false }) {
-    const [activeCateId, setActiveCateId] = useState(0);
+function ConfigValueBox({ optionConfigGroup, calculateTextIndex, isCategorySelected, type = 'input', isOfficialDefinition = () => true, onChangeDefinition, selectedSettingDefaultValue, definitionForManager, customConfigs, showMiddle = false, hideMiniTitle = false, managerType }) {
+    const [activeCateId, setActiveCateId] = useState(2);
     const scrollDom = useRef(null);
     const fieldsDom = useRef([]);
     function setActiveCate(cateId) {
@@ -89,41 +90,49 @@ function ConfigValueBox({ optionConfigGroup, calculateTextIndex, isCategorySelec
                                         </div>
                                     )}
                                     {/* eslint no-return-assign: 0*/}
-                                    <div ref={el => fieldsDom.current[index] = el}>
-                                        { group.fields && group.fields.map((key) => {
-                                            if (type === 'input') {
-                                                return (
-                                                    <SettingItem
-                                                        settings={definitionForManager?.settings}
-                                                        definitionKey={key}
-                                                        ref={scrollDom}
-                                                        width="160px"
-                                                        key={key}
-                                                        isDefaultDefinition={isEditable}
-                                                        onChangeDefinition={onChangeDefinition}
-                                                        isProfile="true"
-                                                        defaultValue={{ // Check to reset
-                                                            value: selectedSettingDefaultValue && selectedSettingDefaultValue[key].default_value
-                                                        }}
-                                                        styleSize="large"
-                                                    />
-                                                );
-                                            } else if (type === 'checkbox') {
-                                                return (
-                                                    <CheckboxItem
-                                                        calculateTextIndex={calculateTextIndex}
-                                                        settings={definitionForManager?.settings}
-                                                        defaultValue={includes(customConfigs, key)}
-                                                        definitionKey={key}
-                                                        key={key}
-                                                        isOfficialDefinition={isOfficialDefinition}
-                                                        onChangeDefinition={onChangeDefinition}
-                                                    />
-                                                );
-                                            } else {
-                                                return null;
-                                            }
-                                        })}
+                                    <div className={`${managerType === HEAD_CNC && group.name === 'Carving Tool' && 'sm-flex justify-space-between'}`}>
+                                        <div ref={el => fieldsDom.current[index] = el}>
+                                            { group.fields && group.fields.map((key) => {
+                                                if (type === 'input') {
+                                                    return (
+                                                        <SettingItem
+                                                            settings={definitionForManager?.settings}
+                                                            definitionKey={key}
+                                                            // width={managerType === HEAD_CNC && group.name === 'Carving Tool' ? '120px' : '160px'}
+                                                            key={key}
+                                                            isDefaultDefinition={isEditable}
+                                                            onChangeDefinition={onChangeDefinition}
+                                                            isProfile="true"
+                                                            defaultValue={{ // Check to reset
+                                                                value: selectedSettingDefaultValue && selectedSettingDefaultValue[key].default_value
+                                                            }}
+                                                            styleSize={managerType === HEAD_CNC && group.name === 'Carving Tool' ? 'middle' : 'large'}
+                                                            managerType={managerType}
+                                                            officalDefinition={!!definitionForManager?.isDefault}
+                                                        />
+                                                    );
+                                                } else if (type === 'checkbox') {
+                                                    return (
+                                                        <CheckboxItem
+                                                            calculateTextIndex={calculateTextIndex}
+                                                            settings={definitionForManager?.settings}
+                                                            defaultValue={includes(customConfigs, key)}
+                                                            definitionKey={key}
+                                                            key={key}
+                                                            isOfficialDefinition={isOfficialDefinition}
+                                                            onChangeDefinition={onChangeDefinition}
+                                                        />
+                                                    );
+                                                } else {
+                                                    return null;
+                                                }
+                                            })}
+                                        </div>
+                                        {managerType === HEAD_CNC && group.name === 'Carving Tool' && (
+                                            <div>
+                                                <img style={{ width: 139, height: 203 }} src={`/resources/images/cnc/tool-type-${definitionForManager?.settings?.tool_type?.default_value}.jpg`} alt="" />
+                                            </div>
+                                        )}
                                     </div>
                                 </>
                             </div>
@@ -145,7 +154,8 @@ ConfigValueBox.propTypes = {
     onChangeDefinition: PropTypes.func.isRequired,
     selectedSettingDefaultValue: PropTypes.object,
     showMiddle: PropTypes.bool,
-    hideMiniTitle: PropTypes.bool
+    hideMiniTitle: PropTypes.bool,
+    managerType: PropTypes.string
 };
 
 export default React.memo(ConfigValueBox);

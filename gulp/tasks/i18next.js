@@ -176,6 +176,7 @@ const curaFields = [
     'multi_pass_depth',
     'fixed_power',
     // CNC
+    'tool_type',
     'diameter',
     'angle',
     'shaft_diameter',

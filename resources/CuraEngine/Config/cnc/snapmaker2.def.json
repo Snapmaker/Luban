@@ -3,6 +3,17 @@
     "version": "1.0.0",
     "name": "Carving V-bit",
     "settings": {
+        "tool_type": {
+            "default_value": "vbit",
+            "type": "enum",
+            "label": "Tool Type",
+            "description": "",
+            "options": {
+                "vbit": "V-bit",
+                "flat": "Flat",
+                "ball": "Ball"
+            }
+        },
         "diameter": {
             "default_value": 0.2,
             "type": "float",
@@ -19,7 +30,8 @@
             "max": 180,
             "unit": "°",
             "description": "Set the point angle of the carving tool.",
-            "label": "Point Angle"
+            "label": "Point Angle",
+            "enabled": "resolveOrValue('tool_type') == 'vbit'"
         },
         "shaft_diameter": {
             "default_value": 3.175,
@@ -28,7 +40,8 @@
             "max": 10,
             "unit": "mm",
             "description": "Set the shank diameter of the carving tool.",
-            "label": "Shank Diameter"
+            "label": "Shank Diameter",
+            "enabled": "resolveOrValue('tool_type') == 'vbit'"
         },
         "jog_speed": {
             "default_value": 1500,

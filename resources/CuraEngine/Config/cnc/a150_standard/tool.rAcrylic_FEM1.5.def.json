@@ -6,6 +6,9 @@
     "version": "1.0.0",
     "inherits": "snapmaker2",
     "overrides": {
+        "tool_type": {
+            "default_value": "flat"
+        },
         "diameter": {
             "default_value": 1.5
         },

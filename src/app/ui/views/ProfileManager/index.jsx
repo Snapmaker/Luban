@@ -391,6 +391,21 @@ function ProfileManager({
                 if (key === 'path_type' && value === 'path') {
                     newDefinitionForManager.settings.movement_mode.default_value = 'greyscale-line';
                 }
+                if (key === 'tool_type') {
+                    switch (value) {
+                        case 'vbit':
+                            newDefinitionForManager.settings.diameter.default_value = 0.2;
+                            break;
+                        case 'flat':
+                            newDefinitionForManager.settings.diameter.default_value = 1.5;
+                            break;
+                        case 'ball':
+                            newDefinitionForManager.settings.diameter.default_value = 3.175;
+                            break;
+                        default:
+                            break;
+                    }
+                }
             }
             setDefinitionState({
                 definitionForManager: newDefinitionForManager
@@ -637,6 +652,7 @@ function ProfileManager({
                                 selectedSettingDefaultValue={definitionState?.selectedSettingDefaultValue}
                                 showMiddle={managerType === PRINTING_MANAGER_TYPE_MATERIAL || managerType === PRINTING_MANAGER_TYPE_QUALITY}
                                 hideMiniTitle={false}
+                                managerType={managerType}
                             />
 
                         </div>

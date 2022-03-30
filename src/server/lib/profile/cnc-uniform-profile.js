@@ -11,6 +11,12 @@ const defaultToolListNames = [
     'Straight Groove V-bit'
 ];
 const defaultParameters = {
+    toolType: {
+        default_value: 'vbit',
+        type: 'input',
+        description: 'Set the tool type',
+        lable: 'Tool Type'
+    },
     diameter: {
         default_value: 0.2,
         type: 'float',

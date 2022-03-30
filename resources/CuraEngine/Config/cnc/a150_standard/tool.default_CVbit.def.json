@@ -6,6 +6,9 @@
     "inherits": "snapmaker2",
     "version": "1.0.0",
     "overrides": {
+        "tool_type": {
+            "default_value": "vbit"
+        },
         "diameter": {
             "default_value": 0.2
         },
