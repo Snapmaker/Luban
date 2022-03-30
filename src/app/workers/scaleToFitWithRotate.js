@@ -38,7 +38,7 @@ const scaleToFitWithRotate = ({ data }) => {
             ThreeUtils.applyObjectMatrix(tempSelectedGroup, new THREE.Matrix4().copy(tempSelectedGroup.matrix).invert());
             ThreeUtils.setObjectParent(meshObject, tempSelectedGroup);
         });
-        tempSelectedGroup.applyMatrix4(selectedGroupMatrix);
+        meshObjectJSON.length > 1 && tempSelectedGroup.applyMatrix4(selectedGroupMatrix);
         const whd = new THREE.Vector3();
         ThreeUtils.computeBoundingBox(tempSelectedGroup).getSize(whd);
         for (let i = 0; i < 19; i++) {
@@ -58,7 +58,7 @@ const scaleToFitWithRotate = ({ data }) => {
         sendMessage({
             status: 'FINISH',
             value: {
-                maxScale: Math.round(maxScale * 10) / 10,
+                maxScale: Math.round(maxScale * 1000) / 1000,
                 rotateAngel,
                 offsetX
             }

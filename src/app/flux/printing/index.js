@@ -54,6 +54,7 @@ import UngroupOperation3D from '../operation-history/UngroupOperation3D';
 import DeleteSupportsOperation3D from '../operation-history/DeleteSupportsOperation3D';
 import AddSupportsOperation3D from '../operation-history/AddSupportsOperation3D';
 import ArrangeOperation3D from '../operation-history/ArrangeOperation3D';
+import ScaleToFitWithRotateOperation3D from '../operation-history/ScaleToFitWithRotateOperation3D';
 import PrimeTowerModel from '../../models/PrimeTowerModel';
 import ThreeUtils from '../../three-extensions/ThreeUtils';
 
@@ -2409,11 +2410,11 @@ export const actions = {
                     modelItem.children.forEach(child => {
                         meshObjectJSON.push({
                             ...child.meshObject.geometry.toJSON(),
-                            modelItemMatrix: child.meshObject.matrix.clone()
+                            modelItemMatrix: child.meshObject.matrixWorld.clone()
                         });
                     });
                 } else {
-                    meshObjectJSON.push({ ...modelItem.meshObject.geometry.toJSON(), modelItemMatrix: modelItem.meshObject.matrix.clone() });
+                    meshObjectJSON.push({ ...modelItem.meshObject.geometry.toJSON(), modelItemMatrix: modelItem.meshObject.matrixWorld.clone() });
                 }
             });
             dispatch(actions.recordModelBeforeTransform(modelGroup));
@@ -2432,37 +2433,62 @@ export const actions = {
                 const { status, value } = payload;
                 switch (status) {
                     case 'FINISH': {
+                        const operations = new Operations();
+                        const originQuaternion = modelGroup.selectedGroup.quaternion.clone();
+                        let operation;
                         const { rotateAngel, maxScale, offsetX } = value;
                         const { scale: originScale } = selectedGroup;
-                        modelGroup.clearAllSupport();
+                        dispatch(actions.clearAllManualSupport(operations));
                         const newTransformation = {
-                            rotationZ: THREE.Math.degToRad(rotateAngel),
-                            positionX: 0,
-                            positionY: 0,
                             scaleX: originScale.x * maxScale,
                             scaleY: originScale.y * maxScale,
-                            scaleZ: originScale.z * maxScale
+                            scaleZ: originScale.z * maxScale,
+                            positionX: 0,
+                            positionY: 0
                         };
-                        dispatch(actions.recordModelBeforeTransform(modelGroup));
-                        // dispatch(actions.updateSelectedModelTransformation(newTransformation, undefined, true));
+                        // dispatch(actions.recordModelBeforeTransform(modelGroup, operations));
+                        const quaternion = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 0, 1), THREE.Math.degToRad(rotateAngel));
+                        modelGroup.selectedGroup.quaternion.copy(quaternion).multiply(originQuaternion).normalize();
                         modelGroup.updateSelectedGroupTransformation(newTransformation, undefined, true);
-                        // const p = modelGroup.calculateSelectedGroupPosition(modelGroup.selectedGroup);
-                        // const oldPosition = new THREE.Vector3();
+                        const { targetTmpState } = getState().printing;
+                        modelGroup.selectedModelArray.forEach(modelItem => {
+                            operation = new ScaleToFitWithRotateOperation3D({
+                                target: modelItem,
+                                ...targetTmpState[modelItem.modelID],
+                                to: { ...modelGroup.getSelectedModelTransformationForPrinting() }
+                            });
+                            operations.push(operation);
+                        });
                         const center = new THREE.Vector3();
                         ThreeUtils.computeBoundingBox(modelGroup.selectedGroup).getCenter(center);
                         const oldPosition = modelGroup.selectedGroup.position;
                         modelGroup.updateSelectedGroupTransformation({
                             positionX: offsetX + (oldPosition.x - center.x),
-                            positionY: oldPosition.y - center.y
+                            positionY: oldPosition.y - center.y,
                         });
                         modelGroup.onModelAfterTransform();
-                        dispatch(actions.recordModelAfterTransform('scale', modelGroup));
+                        modelGroup.selectedModelArray.forEach(modelItem => {
+                            operation = new ScaleToFitWithRotateOperation3D({
+                                target: modelItem,
+                                ...targetTmpState[modelItem.modelID],
+                                to: { ...modelGroup.getSelectedModelTransformationForPrinting() }
+                            });
+                            operations.push(operation);
+                        });
+                        // dispatch(actions.recordModelAfterTransform('scale', modelGroup, operations));
                         const modelState = modelGroup.getState();
                         dispatch(actions.updateState({
                             stage: STEP_STAGE.PRINTING_SCALE_TO_FIT_WITH_ROTATE,
                             progress: progressStatesManager.updateProgress(STEP_STAGE.PRINTING_SCALE_TO_FIT_WITH_ROTATE, 1),
                         }));
                         dispatch(actions.updateState(modelState));
+                        operations.registCallbackAfterAll(() => {
+                            dispatch(actions.updateState(modelGroup.getState()));
+                            dispatch(actions.destroyGcodeLine());
+                            dispatch(actions.displayModel());
+                            dispatch(actions.render());
+                        });
+                        dispatch(operationHistoryActions.setOperations(INITIAL_STATE.name, operations));
                         break;
                     }
                     case 'UPDATE_PROGRESS': {
