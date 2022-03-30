@@ -423,7 +423,6 @@ function Control({ widgetId, widgetActions: _widgetActions }) {
     }, [state]);
 
     useEffect(() => {
-        console.log('homingModal, isConnected', homingModal, isConnected);
         if (!isConnected) {
             setHomingModalShow(false);
         } else {
