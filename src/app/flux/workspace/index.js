@@ -5,10 +5,10 @@ import api from '../../api';
 import log from '../../lib/log';
 import { generateRandomPathName } from '../../../shared/lib/random-utils';
 import workerManager from '../../lib/manager/workerManager';
-
+/* eslint-disable-next-line import/no-cycle */
+import { actions as machineActions } from '../machine';
 import gcodeBufferGeometryToObj3d from '../../workers/GcodeToBufferGeometry/gcodeBufferGeometryToObj3d';
 import { CONNECTION_STATUS_CONNECTED, EPSILON, MACHINE_SERIES, PROTOCOL_TEXT } from '../../constants';
-import { controller } from '../../lib/controller';
 
 // Actions
 const ACTION_SET_STATE = 'WORKSPACE/ACTION_SET_STATE';
@@ -289,6 +289,7 @@ export const actions = {
                 renderState: 'rendering',
                 progress: 0
             }));
+            // TODO:  used for serialport
             await dispatch(actions.loadGcode(gcodeFile));
             workerManager.gcodeToArraybufferGeometry([{ func: 'WORKSPACE', gcodeFilename: gcodeFile.uploadName }], (data) => {
                 dispatch(actions.gcodeToArraybufferGeometryCallback(data));
@@ -375,14 +376,14 @@ export const actions = {
      * @returns {Promise}
      */
     loadGcode: (gcodeFile) => async (dispatch, getState) => {
-        const { connectionStatus, port } = getState().machine;
+        const { connectionStatus, server } = getState().machine;
         gcodeFile = gcodeFile || getState().workspace.gcodeFile;
         if (connectionStatus !== CONNECTION_STATUS_CONNECTED || gcodeFile === null) {
             return;
         }
         dispatch(actions.updateState({ uploadState: 'uploading' }));
         try {
-            await api.loadGCode({ port, dataSource: PROTOCOL_TEXT, uploadName: gcodeFile.uploadName });
+            await api.loadGCode({ port: server?.port, dataSource: PROTOCOL_TEXT, uploadName: gcodeFile.uploadName });
 
             dispatch(actions.updateState({ uploadState: 'uploaded' }));
         } catch (e) {
@@ -393,7 +394,7 @@ export const actions = {
     },
 
     unloadGcode: () => (dispatch) => {
-        controller.command('gcode:unload');
+        dispatch(machineActions.executeGcode(null, null, 'gcode:unload'));
         dispatch(actions.updateState({ uploadState: 'idle' }));
     },
 

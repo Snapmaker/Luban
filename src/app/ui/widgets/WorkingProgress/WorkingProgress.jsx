@@ -45,7 +45,7 @@ const WorkingProgress = ({ widgetActions, controlActions }) => {
         } else {
             widgetActions.setDisplay(false);
         }
-    }, [isConnected, currentWorkflowStatus, sent, total]);
+    }, [isConnected, currentWorkflowStatus, sent, total, widgetActions]);
     const handleMachine = (type) => {
         switch (type) {
             case 'run':

@@ -6,7 +6,6 @@ import ReactGA from 'react-ga';
 import { shortcutActions, priorities, ShortcutManager } from '../lib/shortcut';
 import { ToastContainer } from './components/Toast';
 import { actions as machineActions } from '../flux/machine';
-import { actions as developToolsActions } from '../flux/develop-tools';
 import { actions as laserActions } from '../flux/laser';
 import { actions as editorActions } from '../flux/editor';
 import { actions as cncActions } from '../flux/cnc';
@@ -26,7 +25,6 @@ class App extends PureComponent {
     static propTypes = {
         resetUserConfig: PropTypes.func.isRequired,
         machineInit: PropTypes.func.isRequired,
-        developToolsInit: PropTypes.func.isRequired,
         functionsInit: PropTypes.func.isRequired,
         textInit: PropTypes.func.isRequired,
         shouldCheckForUpdate: PropTypes.bool.isRequired,
@@ -103,7 +101,6 @@ class App extends PureComponent {
         // init machine module
         // TODO: move init to proper page
         this.props.machineInit();
-        this.props.developToolsInit();
 
         this.props.functionsInit();
         this.props.textInit();
@@ -170,7 +167,6 @@ const mapDispatchToProps = (dispatch) => {
     return {
         resetUserConfig: () => dispatch(settingActions.resetUserConfig()),
         machineInit: () => dispatch(machineActions.init()),
-        developToolsInit: () => dispatch(developToolsActions.init()),
         laserInit: () => dispatch(laserActions.init()),
         cncInit: () => dispatch(cncActions.init()),
         printingInit: () => dispatch(printingActions.init()),

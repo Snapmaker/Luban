@@ -113,7 +113,6 @@ const createServer = (options, callback) => {
         route: '/',
         server: () => createApplication()
     });
-
     webappengine({ port, host, backlog, routes })
         .on('ready', (server) => {
             // Start socket service

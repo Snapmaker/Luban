@@ -3,7 +3,7 @@ import TaskManager from './task-manager';
 
 import socketSerial from './socket/socket-serial';
 import socketSlice from './socket/socket-slice';
-import wifiServerManager from './socket/WifiServerManager';
+import connectionManager from './socket/ConnectionManager';
 
 import urljoin from '../lib/urljoin';
 import settings from '../config/settings';
@@ -16,34 +16,57 @@ export {
     configstore,
     monitor
 };
+const connectionEventsObject = {
+    'connection:open': connectionManager.connectionOpen,
+    'connection:close': connectionManager.connectionClose,
+    'connection:startGcode': connectionManager.startGcode,
+    'connection:resumeGcode': connectionManager.resumeGcode,
+    'connection:pauseGcode': connectionManager.pauseGcode,
+    'connection:stopGcode': connectionManager.stopGcode,
+    'connection:executeGcode': connectionManager.executeGcode,
+    'connection:startHeartbeat': connectionManager.startHeartbeat,
+    'connection:getGcodeFile': connectionManager.getGcodeFile,
+    'connection:uploadFile': connectionManager.uploadFile,
+    'connection:updateNozzleTemperature': connectionManager.updateNozzleTemperature,
+    'connection:updateBedTemperature': connectionManager.updateBedTemperature,
+    'connection:updateZOffset': connectionManager.updateZOffset,
+    'connection:loadFilament': connectionManager.loadFilament,
+    'connection:unloadFilament': connectionManager.unloadFilament,
+    'connection:updateWorkSpeedFactor': connectionManager.updateWorkSpeedFactor,
+    'connection:updateLaserPower': connectionManager.updateLaserPower,
+    'connection:switchLaserPower': connectionManager.switchLaserPower,
+    'connection:materialThickness': connectionManager.getLaserMaterialThickness,
+    'connection:setEnclosureLight': connectionManager.setEnclosureLight,
+    'connection:setEnclosureFan': connectionManager.setEnclosureFan,
+    'connection:setDoorDetection': connectionManager.setDoorDetection,
+    'connection:setFilterSwitch': connectionManager.setFilterSwitch,
+    'connection:setFilterWorkSpeed': connectionManager.setFilterWorkSpeed,
+    'connection:materialThickness_abort': connectionManager.abortLaserMaterialThickness,
 
+};
 
 function startServices(server) {
     // Start socket server
     const socketServer = new SocketServer();
 
-    socketServer.on('connection', (socket) => {
-        wifiServerManager.onConnection(socket);
-    });
+    socketServer.on('connection', connectionManager.onConnection);
 
-    socketServer.on('disconnection', (socket) => {
-        wifiServerManager.onDisconnection(socket);
-        socketSerial.onDisconnection(socket);
-    });
+    socketServer.on('disconnection', connectionManager.onDisconnection);
 
     // slice
     socketServer.registerEvent('slice', socketSlice.handleSlice);
     socketServer.registerEvent('generate-support', socketSlice.handleGenerateSupport);
 
-    // communication: http
-    socketServer.registerEvent('http:discover', wifiServerManager.refreshDevices);
+    // communication: http & serial port
+    socketServer.registerEvent('machine:discover', connectionManager.refreshDevices);
 
-    // communication: serial port
-    socketServer.registerEvent('serialport:list', socketSerial.serialportList);
-    socketServer.registerEvent('serialport:open', socketSerial.serialportOpen);
-    socketServer.registerEvent('serialport:close', socketSerial.serialportClose);
+
+    // socketServer.registerEvent('serialport:close', socketSerial.serialportClose);
     socketServer.registerEvent('command', socketSerial.command);
     socketServer.registerEvent('writeln', socketSerial.writeln);
+    Object.entries(connectionEventsObject).forEach(([key, value]) => {
+        socketServer.registerEvent(key, value);
+    });
 
     // task manager
     socketServer.registerEvent('taskCommit:generateToolPath', TaskManager.addGenerateToolPathTask);

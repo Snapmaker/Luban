@@ -1,5 +1,6 @@
+/* eslint-disable import/no-cycle */
+import { isEqual, cloneDeep } from 'lodash';
 import { controller } from '../../lib/controller';
-
 import { Server } from './Server';
 import baseActions from './action-base';
 
@@ -7,19 +8,43 @@ import baseActions from './action-base';
 const init = () => (dispatch, getState) => {
     const controllerEvents = {
         // Receive when new servers discovered
-        'http:discover': (objects) => {
+        'machine:discover': ({ devices, type }) => {
             // Note that we may receive this event many times.
-            const { servers } = getState().machine;
-
-            for (const object of objects) {
-                const find = servers.find(v => v.address === object.address && v.name === object.name);
-                if (!find) {
-                    const server = new Server(object.name, object.address, object.model);
-                    servers.unshift(server);
+            const { servers, connectionType } = getState().machine;
+            if (connectionType === type) {
+                const resultServers = cloneDeep(servers.filter(v => v.address));
+                for (const object of devices) {
+                    const find = servers.find(v => {
+                        return v.address === object.address && v.name === object.name;
+                    });
+                    if (!find) {
+                        const server = new Server({ name: object.name, address: object.address });
+                        resultServers.unshift(server);
+                    }
+                }
+                if (!isEqual(resultServers, servers)) {
+                    dispatch(baseActions.updateState({ servers: resultServers }));
                 }
             }
-
-            dispatch(baseActions.updateState({ servers: [...servers] }));
+        },
+        'machine:serial-discover': ({ devices, type }) => {
+            // Note that we may receive this event many times.
+            const { servers, connectionType } = getState().machine;
+            if (connectionType === type) {
+                const resultServers = [];
+                for (const object of devices) {
+                    const find = resultServers.find(v => {
+                        return v.port === object.port;
+                    });
+                    if (!find) {
+                        const server = new Server({ port: object.port });
+                        resultServers.unshift(server);
+                    }
+                }
+                if (!isEqual(resultServers, servers)) {
+                    dispatch(baseActions.updateState({ servers: resultServers }));
+                }
+            }
         }
     };
 

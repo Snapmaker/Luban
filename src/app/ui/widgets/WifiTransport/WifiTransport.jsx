@@ -9,7 +9,7 @@ import classNames from 'classnames';
 import { useDispatch, useSelector } from 'react-redux';
 import _ from 'lodash';
 import path from 'path';
-import request from 'superagent';
+import { controller } from '../../../lib/controller';
 import { pathWithRandomSuffix } from '../../../../shared/lib/random-utils';
 import i18n from '../../../lib/i18n';
 import UniApi from '../../../lib/uni-api';
@@ -17,9 +17,9 @@ import { normalizeNameDisplay } from '../../../lib/normalize-range';
 import styles from './index.styl';
 import {
     CONNECTION_TYPE_WIFI, WORKFLOW_STATE_IDLE, WORKFLOW_STATUS_IDLE,
-    DATA_PREFIX, HEAD_CNC, HEAD_LASER, HEAD_PRINTING,
-    LEVEL_TWO_POWER_LASER_FOR_SM2,
-    CONNECTION_TYPE_SERIAL
+    HEAD_CNC, HEAD_LASER, HEAD_PRINTING,
+    LEVEL_TWO_POWER_LASER_FOR_SM2, CONNECTION_MATERIALTHICKNESS_ABORT,
+    CONNECTION_TYPE_SERIAL, CONNECTION_MATERIALTHICKNESS, CONNECTION_UPLOAD_FILE
 } from '../../../constants';
 import { actions as workspaceActions, WORKSPACE_STAGE } from '../../../flux/workspace';
 import { actions as projectActions } from '../../../flux/project';
@@ -218,7 +218,7 @@ function WifiTransport({ widgetActions, controlActions }) {
     const originOffset = useSelector(state => state?.machine?.originOffset);
     const toolHeadName = useSelector(state => state?.workspace?.toolHead);
     const { previewBoundingBox, headType, gcodeFiles, previewModelGroup, previewRenderState, previewStage, isRotate } = useSelector(state => state.workspace);
-    const { server, isConnected, connectionType, size, workflowStatus, workflowState, isSendedOnWifi } = useSelector(state => state.machine);
+    const { isConnected, connectionType, size, workflowStatus, workflowState, isSendedOnWifi } = useSelector(state => state.machine);
     const [loadToWorkspaceOnLoad, setLoadToWorkspaceOnLoad] = useState(true);
     const [selectFileName, setSelectFileName] = useState('');
     const [selectFileType, setSelectFileType] = useState('');
@@ -330,17 +330,22 @@ function WifiTransport({ widgetActions, controlActions }) {
                 const deltaRedLine = 30;
                 const x = (maxX + minX) / 2 - originOffset.x + z0 / Math.sqrt(3) - deltaRedLine + deltaX / 2;
                 const y = (maxY + minY) / 2 - originOffset.y + deltaY / 2;
-                const options = {
+                const args = {
                     x: x,
                     y: y,
                     feedRate: 1500
                 };
-                server.getLaserMaterialThickness(options, async ({ status, thickness }) => {
-                    if (status) {
-                        await actions.onChangeMaterialThickness(thickness);
-                        controlActions.onCallBackRun();
-                    }
+                window.addEventListener('cancelReq', () => {
+                    controller.emitEvent(CONNECTION_MATERIALTHICKNESS_ABORT);
                 });
+                controller.emitEvent(CONNECTION_MATERIALTHICKNESS, args)
+                    .once(CONNECTION_MATERIALTHICKNESS, ({ data }) => {
+                        const { status, thickness } = data;
+                        if (status) {
+                            actions.onChangeMaterialThickness(thickness);
+                            controlActions.onCallBackRun();
+                        }
+                    });
                 return;
             }
             controlActions.onCallBackRun();
@@ -358,14 +363,10 @@ function WifiTransport({ widgetActions, controlActions }) {
             if (!find) {
                 return;
             }
-            const gcodePath = `${DATA_PREFIX}/${find.uploadName}`;
-            request.get(gcodePath).end((err1, res) => {
-                const gcode = res.text;
-                const blob = new Blob([gcode], { type: 'text/plain' });
-                const file = new File([blob], find.name);
-                file.renderGcodeFileName = find.renderGcodeFileName;
-                server.uploadFile(find.name, file, (err, data, text) => {
-                    isSendingFile.current.removeContainer();
+            const gcodePath = `/${find.uploadName}`;
+            controller.emitEvent(CONNECTION_UPLOAD_FILE, { gcodePath: gcodePath })
+                .once(CONNECTION_UPLOAD_FILE, ({ err, text }) => {
+                    isSendingFile.current && isSendingFile.current.removeContainer();
                     if (err) {
                         modalSmallHOC({
                             title: i18n._('key-Workspace/WifiTransport-Failed to send file.'),
@@ -382,7 +383,6 @@ function WifiTransport({ widgetActions, controlActions }) {
                         }));
                     }
                 });
-            });
         },
         importFile: (fileObj) => {
             if (fileObj) {
@@ -399,7 +399,7 @@ function WifiTransport({ widgetActions, controlActions }) {
             dispatch(machineActions.updateIsLaserPrintAutoMode(!isLaserPrintAutoMode));
         },
 
-        onChangeMaterialThickness: async (value) => {
+        onChangeMaterialThickness: (value) => {
             if (value < 0) {
                 // safely setting
                 value = 0;

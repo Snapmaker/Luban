@@ -24,7 +24,8 @@ class SocketController {
         this.socket && this.socket.destroy();
 
         this.socket = io.connect('', {
-            query: `token=${token}`
+            query: `token=${token}`,
+            transports: ['websocket']
         });
 
         this.socket.on('startup', () => {
@@ -57,6 +58,13 @@ class SocketController {
                 callback1(...args);
             }
         });
+    }
+
+    once(eventName, callback) {
+        this.socket && this.socket.once(eventName, (...args) => {
+            callback(...args);
+        });
+        return this;
     }
 }
 

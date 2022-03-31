@@ -1,3 +1,4 @@
+/* eslint-disable import/no-cycle */
 import cloneDeep from 'lodash/cloneDeep';
 import { find, includes } from 'lodash';
 import pkg from '../../../package.json';
@@ -15,17 +16,13 @@ import {
     SINGLE_EXTRUDER_TOOLHEAD_FOR_SM2
 } from '../../constants';
 import api from '../../api';
-/* eslint-disable-next-line import/no-cycle */
 import { actions as printingActions } from '../printing';
-/* eslint-disable-next-line import/no-cycle */
 import { actions as editorActions } from '../editor';
-// import machineAction from '../machine/action-base';
 import { actions as workspaceActions } from '../workspace';
 import { actions as appGlobalActions } from '../app-global';
 import { bubbleSortByAttribute } from '../../lib/numeric-utils';
 import { UniformToolpathConfig } from '../../lib/uniform-toolpath-config';
 import { checkIsSnapmakerProjectFile, checkIsGCodeFile } from '../../lib/check-name';
-/* eslint-disable-next-line import/no-cycle */
 import { actions as operationHistoryActions } from '../operation-history';
 import { machineStore } from '../../store/local-storage';
 

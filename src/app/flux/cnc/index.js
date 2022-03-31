@@ -1,3 +1,4 @@
+/* eslint-disable import/no-cycle */
 import { cloneDeep } from 'lodash';
 import ModelGroup from '../../models/ModelGroup';
 import i18n from '../../lib/i18n';

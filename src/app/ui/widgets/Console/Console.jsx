@@ -27,10 +27,6 @@ function Console({ widgetId, widgetActions, minimized, isDefault, clearRenderSta
         isConnected, port, server, clearRenderStamp, consoleLogs, minimized, isDefault
     });
     const controllerEvents = {
-        'serialport:close': () => {
-            // now, not to clear logs after disconnect
-            // actions.clearAll();
-        },
         // 'serialport:write': (data, context, dataSource) => {
         'serialport:write': (options) => {
             const { context } = options;

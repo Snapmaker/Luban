@@ -7,7 +7,6 @@ export enum WorkerMethods {
     evaluateSupportArea = 'evaluateSupportArea',
     gcodeToArraybufferGeometry = 'gcodeToArraybufferGeometry',
     gcodeToBufferGeometry = 'gcodeToBufferGeometry',
-    heartBeat = 'heartBeat',
     loadModel = 'loadModel',
     toolpathRenderer = 'toolpathRenderer'
     // LUBAN worker methods END
