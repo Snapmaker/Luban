@@ -28,7 +28,7 @@ const Button = React.memo((props) => {
                 )}
             >
                 <div className={classNames('position-re', styles['inside-button'])}>
-                    <div className={classNames(!!suffixIcon && styles['width-with-suffix-icon'])}>{props.children}</div>
+                    <div className={classNames(!!suffixIcon && styles['width-with-suffix-icon'], 'width-percent-100', 'text-overflow-ellipsis')}>{props.children}</div>
                     {
                         !!suffixIcon && (priority === 'level-one' || priority === 'level-two') && (
                             <div className={classNames(styles['suffix-container'], 'position-ab')}>

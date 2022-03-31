@@ -138,7 +138,7 @@ const SettingItem = React.forwardRef(({ definitionKey, settings, isDefaultDefini
     return (
         <TipTrigger title={i18n._(label)} content={i18n._(description)} key={definitionKey}>
             <div className="position-re sm-flex justify-space-between height-32 margin-vertical-8">
-                <span className="text-overflow-ellipsis width-auto main-text-normal max-width-174">
+                <span className="text-overflow-ellipsis width-auto main-text-normal max-width-184">
                     {i18n._(label)}
                 </span>
                 <div className="sm-flex-auto">

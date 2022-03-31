@@ -1,6 +1,7 @@
 import classNames from 'classnames';
 import React from 'react';
 import PropTypes from 'prop-types';
+import { Tooltip } from 'antd';
 import { noop, includes } from 'lodash';
 import i18n from '../../lib/i18n';
 import styles from './styles/maintoolbar.styl';
@@ -24,19 +25,21 @@ function MenuItem({ menuItem, actions, lang, headType }) {
             );
         case 'button':
             return (
-                <SvgIcon
-                    size={24}
-                    name={name}
-                    disabled={disabled}
-                    isHorizontal={false}
-                    className={classNames(styles['bar-icon'], iconClassName, includes(longLangWithType[lang], headType) && styles['bar-icon-for-long'])}
-                    onClick={handleClick}
-                    spanText={i18n._(title)}
-                    spanClassName={classNames(includes(longLangWithType[lang], headType) && styles['action-title-for-long'])}
-                    inputInfo={inputInfo}
-                    // type={['hoverNormal', 'pressNormal']}
-                    type={['static']}
-                />
+                <Tooltip title={i18n._(title)}>
+                    <SvgIcon
+                        size={24}
+                        name={name}
+                        disabled={disabled}
+                        isHorizontal={false}
+                        className={classNames(styles['bar-icon'], iconClassName, includes(longLangWithType[lang], headType) && styles['bar-icon-for-long'])}
+                        onClick={handleClick}
+                        spanText={i18n._(title)}
+                        spanClassName={classNames(includes(longLangWithType[lang], headType) && styles['action-title-for-long'])}
+                        inputInfo={inputInfo}
+                        // type={['hoverNormal', 'pressNormal']}
+                        type={['static']}
+                    />
+                </Tooltip>
             );
         case 'render':
             return customRender();

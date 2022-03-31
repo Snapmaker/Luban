@@ -71,7 +71,7 @@ const Begin = () => {
                 </div>
                 <div className={styles.beginContainer}>
                     {beginSelected === 'start-project' && (
-                        <div className={classNames(styles['link-bar'], 'margin-top-36', 'margin-bottom-48')}>
+                        <div className={classNames(styles['link-bar'], 'margin-top-36', 'margin-bottom-72')}>
                             <div className={classNames(styles['3dp'], 'margin-horizontal-16')}>
                                 <Anchor onClick={() => handleNewFile(false, HEAD_PRINTING)} title={i18n._('key-HomePage/Begin-3D Printing G-code Generator')}>
                                     <div className={classNames(styles.imgWrapper)}>
