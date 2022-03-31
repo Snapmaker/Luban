@@ -221,7 +221,7 @@ function VisualizerLeftBar({ setTransformMode, supportActions, updateBoundingBox
                                         onClick={() => {
                                             setTransformMode('translate');
                                         }}
-                                        disabled={showRotationAnalyzeModal || !hasModels || transformDisabled}
+                                        disabled={showRotationAnalyzeModal || !hasModels}
                                     />
                                 </li>
                                 <li
