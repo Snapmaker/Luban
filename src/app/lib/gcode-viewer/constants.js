@@ -41,4 +41,16 @@ export const TYPE_SETTINGS = {
     }
 };
 
+export const TYPE_CODE_COLOR = [
+    [0, 0, 0], // TODO: 0 not defined
+    [0, 255, 0],
+    [255, 33, 33],
+    [255, 255, 0],
+    [250, 140, 53],
+    [75, 0, 130],
+    [141, 75, 187],
+    [68, 206, 246],
+    [75, 0, 130]
+];
+
 export const GRAY_MODE_COLOR = '#D5D6D9';

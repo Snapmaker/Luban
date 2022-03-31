@@ -700,6 +700,7 @@ export const actions = {
                 const newGcodeLineObjects = [];
                 parser.getGeometries().forEach(geometry => {
                     const newGcodeLineObject = new THREE.Mesh(geometry, material);
+                    console.log('geometry', geometry);
                     gcodeLineGroup.add(newGcodeLineObject);
                     newGcodeLineObjects.push(newGcodeLineObject);
                 });
@@ -1568,6 +1569,7 @@ export const actions = {
         const newGcodeLineObjects = [];
         gcodeParser.getGeometries().forEach(geometry => {
             const newGcodeLineObject = new THREE.Mesh(geometry, material);
+            console.log('geometry', geometry);
             gcodeLineGroup.add(newGcodeLineObject);
             newGcodeLineObjects.push(newGcodeLineObject);
         });

@@ -214,20 +214,12 @@ export class GCodeParser {
     }
 
     /**
-     * Recalculate geometries
-     */
-    public async reparse() {
-        await this.parse();
-        this.sliceLayer(this.startLayer, this.endLayer);
-    }
-
-    /**
      * Set the lines visible by types
      */
     public async setVisbleTypes(type: string, visible: boolean) {
         if (this.visibleTypes[type] !== undefined && this.visibleTypes[type] !== visible) {
             this.visibleTypes[type] = visible;
-            this.reparse();
+            this.sliceLayer(this.startLayer, this.endLayer);
         }
     }
 
@@ -246,7 +238,12 @@ export class GCodeParser {
         }
         this.isGrayMode = isGrayMode;
         this.isDual = isDual;
-        this.reparse();
+        let mode = 0;
+        if (isDual) {
+            mode = 1;
+        }
+        this.combinedLines.forEach(line => line.changeColorsMode(mode, this.extruderColors));
+        this.sliceLayer(this.startLayer, this.endLayer);
     }
 
     /**
@@ -322,7 +319,7 @@ export class GCodeParser {
 
         let type = 'TRAVEL';
         let extruder = 0;
-        // let layer = 0;
+        let layer = 0;
         lines.forEach((line, i) => {
             if (line === undefined) {
                 return;
@@ -338,9 +335,34 @@ export class GCodeParser {
                 if (notes[0] === 'TYPE') {
                     type = notes[1].trim();
                 }
-                // if (notes[0] === 'LAYER') {
-                //     layer = Number(notes[1]);
-                // }
+
+                // Try to figure out the layer start and end points.
+                if (notes[0] === 'LAYER') {
+                    layer = Number(notes[1]);
+
+                    let last = layerPointsCache.get(layer - 1);
+                    let current = layerPointsCache.get(layer);
+
+                    if (last === undefined) {
+                        last = {
+                            end: 0,
+                            start: 0
+                        };
+                    }
+
+                    if (current === undefined) {
+                        current = {
+                            end: 0,
+                            start: 0
+                        };
+                    }
+
+                    last.end = pointCount - 1;
+                    current.start = pointCount;
+
+                    layerPointsCache.set(layer - 1, last);
+                    layerPointsCache.set(layer, current);
+                }
             }
 
             const cmd = line.split(' ');
@@ -382,43 +404,16 @@ export class GCodeParser {
                     //     temp: hotendTemp
                     // });
                     const color = new Color('#FFFFFF');
-                    if (cmd[0] === 'G0') {
-                        addLine(new LinePoint(lastPoint.clone(), radius, color, extruder, 'TRAVEL', this.visibleTypes, this.isGrayMode, this.isDual, this.extruderColors));
-                    }
-                    if (cmd[0] === 'G1') {
-                        addLine(new LinePoint(lastPoint.clone(), radius, color, extruder, type, this.visibleTypes, this.isGrayMode, this.isDual, this.extruderColors));
-                    }
 
                     // Insert the last point with the current radius.
                     // As the GCode contains the extrusion for the 'current' line,
                     // but the LinePoint contains the radius for the 'next' line
                     // we need to combine the last point with the current radius.
-                    // addLine(new LinePoint(lastPoint.clone(), radius, color));
-
-                    // Try to figure out the layer start and end points.
-                    if (lastPoint.z !== newPoint.z) {
-                        let last = layerPointsCache.get(lastPoint.z);
-                        let current = layerPointsCache.get(newPoint.z);
-
-                        if (last === undefined) {
-                            last = {
-                                end: 0,
-                                start: 0
-                            };
-                        }
-
-                        if (current === undefined) {
-                            current = {
-                                end: 0,
-                                start: 0
-                            };
-                        }
-
-                        last.end = pointCount - 1;
-                        current.start = pointCount;
-
-                        layerPointsCache.set(lastPoint.z, last);
-                        layerPointsCache.set(newPoint.z, current);
+                    if (cmd[0] === 'G0') {
+                        addLine(new LinePoint(lastPoint.clone(), radius, color, extruder, 'TRAVEL', this.visibleTypes, this.isGrayMode, this.isDual, this.extruderColors));
+                    }
+                    if (cmd[0] === 'G1') {
+                        addLine(new LinePoint(lastPoint.clone(), radius, color, extruder, type, this.visibleTypes, this.isGrayMode, this.isDual, this.extruderColors));
                     }
                 }
 

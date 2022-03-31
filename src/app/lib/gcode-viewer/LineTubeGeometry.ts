@@ -7,13 +7,16 @@ import {
     Vector3
 } from 'three';
 import { LinePoint } from './LinePoint';
+import { TYPE_CODE_COLOR } from './constants';
 
 interface PointData {
     pointNr: number
     radialNr: number
     vertices: number[]
     normals: number[]
-    colors: number[]
+    colors: number[],
+    lineType: number,
+    extruder: number
 }
 
 /**
@@ -49,6 +52,17 @@ export class LineTubeGeometry extends BufferGeometry {
 
     private segmentsRadialNumbers: number[] = []
 
+    private lineTypes: number[] = []
+
+    private extruders: number[] = []
+
+    /**
+     * color mode
+     * 0: line type mode
+     * 1: extruder mode
+     */
+    private colorMode: number = 0;
+
     constructor(radialSegments = 8) {
         super();
         this.type = 'LineTubeGeometry';
@@ -64,6 +78,8 @@ export class LineTubeGeometry extends BufferGeometry {
         this.colors = [];
         this.uvs = [];
         this.indices = [];
+        this.lineTypes = [];
+        this.extruders = [];
         this.segmentsRadialNumbers = [];
     }
 
@@ -151,6 +167,49 @@ export class LineTubeGeometry extends BufferGeometry {
         this.setIndex(this.indices.slice(startI, endI));
     }
 
+    public changeColorsMode(mode = 0, extruderColors) {
+        this.colorMode = mode;
+        const colors = this.getAttribute('color').clone();
+
+        if (this.colorMode === 0) {
+            for (let i = 0; i < colors.count; i++) {
+                for (let rgb = 0; rgb < 3; rgb++) {
+                    // @ts-ignore
+                    colors.array[i * 3 + rgb] = TYPE_CODE_COLOR[this.lineTypes[i]][rgb] / 255;
+                }
+            }
+        }
+        if (this.colorMode === 1) {
+            const r0 = parseInt(extruderColors[0].substring(1, 3), 16) / 255;
+            const g0 = parseInt(extruderColors[0].substring(3, 5), 16) / 255;
+            const b0 = parseInt(extruderColors[0].substring(5), 16) / 255;
+            const r1 = parseInt(extruderColors[1].substring(1, 3), 16) / 255;
+            const g1 = parseInt(extruderColors[1].substring(3, 5), 16) / 255;
+            const b1 = parseInt(extruderColors[1].substring(5), 16) / 255;
+            console.log('extruderColors', extruderColors);
+            for (let i = 0; i < colors.count; i++) {
+                if (this.extruders[i] === 0) {
+                    // @ts-ignore
+                    colors.array[i * 3 + 0] = r0;
+                    // @ts-ignore
+                    colors.array[i * 3 + 1] = g0;
+                    // @ts-ignore
+                    colors.array[i * 3 + 2] = b0;
+                } else {
+                    // @ts-ignore
+                    colors.array[i * 3 + 0] = r1;
+                    // @ts-ignore
+                    colors.array[i * 3 + 1] = g1;
+                    // @ts-ignore
+                    colors.array[i * 3 + 2] = b1;
+                }
+            }
+        }
+        console.log('mode', mode, colors);
+
+        this.setAttribute('color', colors);
+    }
+
     private generateSegment(i: number) {
         const prevPoint = this.pointsBuffer[i - 1];
 
@@ -169,7 +228,7 @@ export class LineTubeGeometry extends BufferGeometry {
         const lastRadius = this.pointsBuffer[i - 1]?.radius || 0;
 
         // eslint-disable-next-line @typescript-eslint/no-shadow
-        function createPointData(pointNr: number, radialNr: number, normal: Vector3, point: Vector3, radius: number, color: Color): PointData {
+        function createPointData(pointNr: number, radialNr: number, normal: Vector3, point: Vector3, radius: number, color: Color, lineType: number, extruder: number): PointData {
             return {
                 pointNr,
                 radialNr,
@@ -179,7 +238,9 @@ export class LineTubeGeometry extends BufferGeometry {
                     point.y + radius * normal.y,
                     point.z + radius * normal.z
                 ],
-                colors: color.toArray()
+                colors: color.toArray(),
+                lineType,
+                extruder
             };
         }
 
@@ -207,18 +268,18 @@ export class LineTubeGeometry extends BufferGeometry {
             // When the previous point doesn't exist, create one with the radius 0 (lastRadius is set to 0 in this case),
             // to create a closed starting point.
             if (prevPoint === undefined) {
-                segmentsPoints[0].push(createPointData(i, j, normal, point.point, lastRadius, point.color));
+                segmentsPoints[0].push(createPointData(i, j, normal, point.point, lastRadius, point.color, point.lineType, point.extruder));
             }
 
             // Then insert the current point with the current radius
-            segmentsPoints[1].push(createPointData(i, j, normal, point.point, point.radius, point.color));
+            segmentsPoints[1].push(createPointData(i, j, normal, point.point, point.radius, point.color, point.lineType, point.extruder));
 
             // And also the next point with the current radius to finish the current line.
-            segmentsPoints[2].push(createPointData(i, j, normal, nextPoint.point, point.radius, point.color));
+            segmentsPoints[2].push(createPointData(i, j, normal, nextPoint.point, point.radius, point.color, point.lineType, point.extruder));
 
             // if the next point is the last one, also finish the line by inserting one with zero radius.
             if (nextNextPoint === undefined) {
-                segmentsPoints[3].push(createPointData(i + 1, j, normal, nextPoint.point, 0, point.color));
+                segmentsPoints[3].push(createPointData(i + 1, j, normal, nextPoint.point, 0, point.color, point.lineType, point.extruder));
             }
         }
 
@@ -230,6 +291,10 @@ export class LineTubeGeometry extends BufferGeometry {
             this.colors.push(...colors);
             const vertices = p.reduce((prev, cur) => [...prev, ...cur.vertices], [] as number[]);
             this.vertices.push(...vertices);
+            const lineTypes = p.reduce((prev, cur) => [...prev, cur.lineType], [] as number[]);
+            this.lineTypes.push(...lineTypes);
+            const extruders = p.reduce((prev, cur) => [...prev, cur.extruder], [] as number[]);
+            this.extruders.push(...extruders);
             this.segmentsRadialNumbers.push(...p.map((cur) => cur.radialNr));
         });
 

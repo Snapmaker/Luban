@@ -74,7 +74,7 @@ class ThreeModel extends BaseModel {
                 // shininess: 1,
                 color: '#2a2c2e',
                 side: DoubleSide,
-                depthWrite: false,
+                depthWrite: true,
                 transparent: true,
                 opacity: 0.3,
                 polygonOffset: true,

@@ -11,7 +11,7 @@ export class LinePoint {
 
     public readonly extruder: number
 
-    public readonly type: string
+    public readonly lineType: number
 
     constructor(point: Vector3, radius: number, color: Color = new Color('#29BEB0'), extruder: number = 0, type: string = 'TRAVEL', visibleTypes: VisibleType,
         isGrayMode: boolean = false, isDual: boolean = false, extruderColors: string[] | undefined = undefined) {
@@ -32,12 +32,12 @@ export class LinePoint {
         if (isGrayMode) {
             this.color = new Color(GRAY_MODE_COLOR);
         } else if (isDual && extruderColors !== undefined) {
-            this.color = new Color(extruderColors[1 - extruder]); // TODO: debug
+            this.color = new Color(extruderColors[extruder]); // TODO: debug
         } else {
             this.color = new Color(TYPE_SETTINGS[type].color);
         }
 
         this.extruder = extruder;
-        this.type = type;
+        this.lineType = TYPE_SETTINGS[type].typeCode;
     }
 }
