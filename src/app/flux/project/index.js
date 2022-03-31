@@ -323,18 +323,18 @@ export const actions = {
             newTargetFile = name;
             tmpFile = `/Tmp/${targetFile}`;
         }
-        const newOpenedFile = await UniApi.File.saveAs(newTargetFile, tmpFile, (type, filePath = '') => {
+        UniApi.File.saveAs(newTargetFile, tmpFile, (type, filePath = '', newOpenedFile) => {
             dispatch(appGlobalActions.updateSavedModal({
                 showSavedModal: true,
                 savedModalType: type,
                 savedModalFilePath: filePath
             }));
             dispatch(actions.afterSaved());
+            if (newOpenedFile) {
+                dispatch(actions.setOpenedFileWithType(headType, newOpenedFile));
+            }
+            dispatch(actions.clearSavedEnvironment(headType));
         });
-        if (newOpenedFile) {
-            await dispatch(actions.setOpenedFileWithType(headType, newOpenedFile));
-        }
-        await dispatch(actions.clearSavedEnvironment(headType));
     },
     save: (headType, dialogOptions = false) => async (dispatch, getState) => {
         // save should return when no model in editor
@@ -416,6 +416,7 @@ export const actions = {
 
     // Note: add progress bar when saving project file
     afterSaved: () => () => {
+
     },
 
     openProject: (file, history, unReload = false, isGuideTours = false) => async (dispatch, getState) => {
