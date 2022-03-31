@@ -107,7 +107,7 @@ const ScaleOverlay = React.memo(({
                     break;
             }
         });
-        dispatch(printingActions.updateSelectedModelTransformation(newTransformation, isReset ? _isPrimeTowerSelected : false));
+        dispatch(printingActions.updateSelectedModelTransformation(newTransformation, isReset ? _isPrimeTowerSelected : undefined));
     };
 
     const resetScale = (_isPrimeTowerSelected) => {
