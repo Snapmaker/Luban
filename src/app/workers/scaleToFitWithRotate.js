@@ -6,7 +6,7 @@ const scaleToFitWithRotate = ({ data }) => {
     try {
         const tempSelectedGroup = new THREE.Group();
         // const { meshObjectJSON: { geometries }, left, right, front, back } = data;
-        const { meshObjectJSON, left, right, front, back, selectedGroupMatrix } = data;
+        const { meshObjectJSON, left, right, front, back, selectedGroupMatrix, selectedCount } = data;
         let { size } = data;
         let offsetX = 0;
         let maxScale = -1;
@@ -38,7 +38,7 @@ const scaleToFitWithRotate = ({ data }) => {
             ThreeUtils.applyObjectMatrix(tempSelectedGroup, new THREE.Matrix4().copy(tempSelectedGroup.matrix).invert());
             ThreeUtils.setObjectParent(meshObject, tempSelectedGroup);
         });
-        meshObjectJSON.length > 1 && tempSelectedGroup.applyMatrix4(selectedGroupMatrix);
+        selectedCount > 1 && tempSelectedGroup.applyMatrix4(selectedGroupMatrix);
         const whd = new THREE.Vector3();
         ThreeUtils.computeBoundingBox(tempSelectedGroup).getSize(whd);
         for (let i = 0; i < 19; i++) {

@@ -2395,9 +2395,8 @@ export const actions = {
     },
 
     scaleToFitSelectedModelWithRotate: () => (dispatch, getState) => {
-        const { modelGroup, stopArea: { left, right, front, back }, progressStatesManager } = getState().printing;
+        const { progressStatesManager, modelGroup, stopArea: { left, right, front, back } } = getState().printing;
         const { size } = getState().machine;
-        const selectedGroup = cloneDeep(modelGroup.selectedGroup);
         progressStatesManager.startProgress(PROCESS_STAGE.PRINTING_SCALE_TO_FIT_WITH_ROTATE);
         dispatch(actions.updateState({
             stage: STEP_STAGE.PRINTING_SCALE_TO_FIT_WITH_ROTATE,
@@ -2405,6 +2404,7 @@ export const actions = {
         }));
         setTimeout(() => {
             const meshObjectJSON = [];
+            // console.log(modelGroup.selectedModelArray);
             modelGroup.selectedModelArray.forEach(modelItem => {
                 if (modelItem instanceof ThreeGroup) {
                     modelItem.children.forEach(child => {
@@ -2425,7 +2425,8 @@ export const actions = {
                 right,
                 front,
                 back,
-                selectedGroupMatrix: modelGroup.selectedGroup.matrix.clone()
+                selectedGroupMatrix: modelGroup.selectedGroup.matrix.clone(),
+                selectedCount: modelGroup.selectedModelArray.length
             };
             workerManager.scaleToFitWithRotate([{
                 data
@@ -2437,7 +2438,7 @@ export const actions = {
                         const originQuaternion = modelGroup.selectedGroup.quaternion.clone();
                         let operation;
                         const { rotateAngel, maxScale, offsetX } = value;
-                        const { scale: originScale } = selectedGroup;
+                        const { scale: originScale } = modelGroup.selectedGroup;
                         dispatch(actions.clearAllManualSupport(operations));
                         const newTransformation = {
                             scaleX: originScale.x * maxScale,
@@ -2510,7 +2511,7 @@ export const actions = {
                         break;
                 }
             });
-        }, 150);
+        }, 200);
     },
     resetSelectedModelTransformation: () => (dispatch, getState) => {
         const { modelGroup } = getState().printing;
