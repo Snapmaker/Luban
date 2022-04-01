@@ -6,7 +6,8 @@ import logger from '../../lib/logger';
 import { CONNECTION_TYPE_WIFI, HEAD_PRINTING, SINGLE_EXTRUDER_TOOLHEAD_FOR_ORIGINAL } from '../../constants';
 import Business from '../../lib/SACP-SDK/SACP/business/Business';
 // import { readUint8 } from '../../lib/SACP-SDK/SACP/helper';
-// import { RequestData } from '../../lib/SACP-SDK/SACP/communication/Dispatcher';
+import { RequestData } from '../../lib/SACP-SDK/SACP/communication/Dispatcher';
+import { readString, readUint32, stringToBuffer, writeUint32 } from '../../lib/SACP-SDK/SACP/helper';
 
 const log = logger('lib:SocketTCP');
 
@@ -114,6 +115,45 @@ class SocketTCP {
             log.info(`subscribe heartbeat success: ${res.response}`);
         });
     };
+
+    public uploadFile = () => {
+        const filename = 'a.gcode';
+        const md5Str = '4ae09d45eac4aa08d013b5f2e01c67f6';
+        const fileLength = 4;
+
+
+        this.sacpClient.setHandler(0xb0, 0x01, (data: RequestData) => {
+            const { nextOffset, result: md5 } = readString(data.param);
+            const index = readUint32(data.param, nextOffset);
+            log.info(`receive file chunk request: md5: ${md5}, index: ${index}`);
+
+            const md5Buffer = stringToBuffer(md5);
+            const indexBuffer = Buffer.alloc(4, 0);
+            writeUint32(indexBuffer, 0, index);
+            const chunkBuffer = stringToBuffer('G28\n');
+
+            const buffer = Buffer.concat([Buffer.alloc(1, 0), md5Buffer, indexBuffer, chunkBuffer]);
+            this.sacpClient.ack(0xb0, 0x02, data.packet, buffer);
+        });
+
+        // handle file upload result
+        this.sacpClient.setHandler(0xb0, 0x02, (data: RequestData) => {
+            if (data.response === 0) {
+                log.info('file upload success');
+            } else {
+                log.error('file upload fail');
+            }
+            this.sacpClient.ack(0xb0, 0x02, data.packet, Buffer.alloc(1, 0));
+        });
+
+        this.sacpClient.uploadFile(filename, md5Str, fileLength).then((res) => {
+            if (res.response === 0) {
+                log.info('ready to upload file');
+            } else {
+                log.error('can not upload file');
+            }
+        });
+    }
 
     // public executeGcode = (options: EventOptions, callback) => {
     //     return new Promise(resolve => {
