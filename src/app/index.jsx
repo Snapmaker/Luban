@@ -7,7 +7,7 @@ import { ConfigProvider } from 'antd';
 import { Provider } from 'react-redux';
 import i18next from 'i18next';
 import { initReactI18next } from 'react-i18next';
-import ReactGA from 'react-ga';
+import ReactGA from 'react-ga4';
 import LanguageDetector from 'i18next-browser-languagedetector';
 import XHR from 'i18next-xhr-backend';
 import { TRACE, DEBUG, INFO, WARN, ERROR } from 'universal-logger';
@@ -103,8 +103,19 @@ series([
 
     const container = document.createElement('div');
     document.body.appendChild(container);
-
-    ReactGA.initialize('UA-106828154-1');
+    const userId = machineStore.get('userId');
+    console.log('userId', userId);
+    ReactGA.initialize([
+        {
+            trackingId: 'G-PVQS8L8HQM',
+            gaOptions: {
+                userId
+            }
+        }
+    ]);
+    ReactGA.gtag('set', 'user_properties', {
+        'crm_id': userId
+    });
 
     ReactDOM.render(
         <ConfigProvider autoInsertSpaceInButton={false}>

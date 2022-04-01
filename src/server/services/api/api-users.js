@@ -89,6 +89,7 @@ export const signin = (req, res) => {
             enabled: false, // session is disabled
             token: accessToken,
             sceneJson,
+            userId: config.get('Ga-User-Id'),
             name: user.name // empty name
         });
         return;
@@ -113,10 +114,12 @@ export const signin = (req, res) => {
             name: user.name
         };
         const accessToken = generateAccessToken(payload, settings.secret); // generate access token
+        console.log('ga api-user', config.get('Ga-User-Id'));
         res.send({
             enabled: true, // session is enabled
             token: accessToken, // new token
             sceneJson,
+            userId: config.get('Ga-User-Id'),
             name: user.name
         });
         return;
