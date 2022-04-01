@@ -10,8 +10,6 @@
         "./src/**/*"
     ],
     "exclude": [
-        "./src/server/lib/SACP-SDK/node_modules",
-        "./src/server/lib/SACP-SDK/tests",
-        "node_modules",
+        "./src/server/lib/SACP-SDK/tests/**/*"
     ]
 }

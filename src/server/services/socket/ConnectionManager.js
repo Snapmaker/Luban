@@ -2,6 +2,7 @@ import logger from '../../lib/logger';
 // import workerManager from '../task-manager/workerManager';
 import socketSerial from './socket-serial';
 import socketHttp from './socket-http';
+import socketTcp from './socket-tcp';
 import { HEAD_PRINTING, HEAD_LASER, LEVEL_TWO_POWER_LASER_FOR_SM2, MACHINE_SERIES,
     CONNECTION_TYPE_WIFI, CONNECTION_TYPE_SERIAL, WORKFLOW_STATE_PAUSED } from '../../constants';
 import DataStorage from '../../DataStorage';
@@ -41,11 +42,16 @@ class ConnectionManager {
     }
 
     connectionOpen = (socket, options) => {
-        const { connectionType } = options;
+        const { connectionType, sacp } = options;
         this.connectionType = connectionType;
         if (connectionType === CONNECTION_TYPE_WIFI) {
-            this.socket = socketHttp;
-            this.socket.connectionOpen(socket, options);
+            if (sacp) {
+                this.socket = socketTcp;
+                this.socket.connectionOpen(socket, options);
+            } else {
+                this.socket = socketHttp;
+                this.socket.connectionOpen(socket, options);
+            }
         } else {
             this.socket = socketSerial;
             this.socket.serialportOpen(socket, options);

@@ -78,6 +78,7 @@ const _getResult = (err, res) => {
 let intervalHandle = null;
 
 export type EventOptions = {
+    address?: string,
     eventName: string,
     host?: string,
     token?: string,
@@ -392,8 +393,8 @@ class SocketHttp {
         const req = request.get(api);
         this.getLaserMaterialThicknessReq = req;
         req.end((err, res) => {
-                this.socket && this.socket.emit(eventName, _getResult(err, res));
-            });
+            this.socket && this.socket.emit(eventName, _getResult(err, res));
+        });
     };
 
     public getGcodeFile = (options: EventOptions) => {
