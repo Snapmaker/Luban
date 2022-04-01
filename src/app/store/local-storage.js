@@ -89,7 +89,8 @@ if (semver.gte(settings.version, '4.2.2')) {
     const printingCustomConfigs = machineStore.get('printingCustomConfigs');
     if (printingCustomConfigs && Object.prototype.toString.call(printingCustomConfigs) === '[object String]') {
         const customConfigsArray = printingCustomConfigs.split('-');
-        const modifiedCustomConfigs = customConfigsArray.filter(str => !str.startsWith('switch_extruder_retraction_'));
+        const excludeConfigs = ['retraction_enable', 'retract_at_layer_change', 'retraction_amount', 'retraction_speed', 'retraction_hop_enabled', 'retraction_hop'];
+        const modifiedCustomConfigs = customConfigsArray.filter(str => excludeConfigs.indexOf(str) === -1);
         machineStore.set('printingCustomConfigs', modifiedCustomConfigs.join('-'));
     }
 }
