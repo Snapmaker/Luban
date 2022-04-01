@@ -13,11 +13,14 @@ export class LinePoint {
 
     public readonly lineType: number
 
+    public readonly layer: number
+
     constructor(point: Vector3, radius: number, color: Color = new Color('#29BEB0'), extruder: number = 0, type: string = 'TRAVEL', visibleTypes: VisibleType,
-        isGrayMode: boolean = false, isDual: boolean = false, extruderColors: string[] | undefined = undefined) {
+        isGrayMode: boolean = false, isDual: boolean = false, extruderColors: string[] | undefined = undefined, layer: number = 0) {
         this.point = point;
         this.radius = radius;
         this.color = color;
+        this.layer = layer;
 
         // const typeSetting = TYPE_SETTINGS[type];
         if (type === 'SKIRT') {

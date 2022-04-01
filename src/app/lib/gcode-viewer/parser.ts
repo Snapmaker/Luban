@@ -296,7 +296,7 @@ export class GCodeParser {
         let lastAddedLinePoint: LinePoint | undefined;
         let pointCount = 0;
         const addLine = (newLine: LinePoint) => {
-            if (pointCount > 0 && pointCount % this.pointsPerObject === 0) {
+            if (pointCount > 0 && newLine.layer > currentObject) {
                 // end the old geometry and increase the counter
                 this.combinedLines[currentObject].finish();
                 currentObject++;
@@ -410,10 +410,10 @@ export class GCodeParser {
                     // but the LinePoint contains the radius for the 'next' line
                     // we need to combine the last point with the current radius.
                     if (cmd[0] === 'G0') {
-                        addLine(new LinePoint(lastPoint.clone(), radius, color, extruder, 'TRAVEL', this.visibleTypes, this.isGrayMode, this.isDual, this.extruderColors));
+                        addLine(new LinePoint(lastPoint.clone(), radius, color, extruder, 'TRAVEL', this.visibleTypes, this.isGrayMode, this.isDual, this.extruderColors, layer));
                     }
                     if (cmd[0] === 'G1') {
-                        addLine(new LinePoint(lastPoint.clone(), radius, color, extruder, type, this.visibleTypes, this.isGrayMode, this.isDual, this.extruderColors));
+                        addLine(new LinePoint(lastPoint.clone(), radius, color, extruder, type, this.visibleTypes, this.isGrayMode, this.isDual, this.extruderColors, layer));
                     }
                 }
 
@@ -481,43 +481,46 @@ export class GCodeParser {
         if (start < 0 || end < 0) {
             throw new Error('negative values are not supported, yet');
         }
-
-        const objectStart = Math.floor(start / this.pointsPerObject);
-        const objectEnd = Math.ceil(end / this.pointsPerObject) - 1;
-
-        this.combinedLines.forEach((line, i) => {
-            // Render nothing if both are the same (and not undefined)
-            if (start !== undefined && start === end) {
-                line.slice(0, 0);
-                return;
-            }
-
-            let from = 0;
-            let to = line.pointsCount();
-
-            if (i === objectStart) {
-                from = start - i * this.pointsPerObject;
-                // If it is not the first object, remove the first point from the calculation.
-                if (objectStart > 0) {
-                    from++;
-                }
-            }
-
-            if (i === objectEnd) {
-                to = end - i * this.pointsPerObject;
-                // Only if it is not the last object, add the last point to the calculation.
-                if (objectEnd <= Math.floor(this.pointsCount() / this.pointsPerObject)) {
-                    to++;
-                }
-            }
-
-            if (i < objectStart || i > objectEnd) {
-                from = 0;
-                to = 0;
-            }
-
-            line.slice(from, to);
+        this.combinedLines.forEach(line => {
+            line.slice();
         });
+
+        // const objectStart = Math.floor(start / this.pointsPerObject);
+        // const objectEnd = Math.ceil(end / this.pointsPerObject) - 1;
+
+        // this.combinedLines.forEach((line, i) => {
+        //     // Render nothing if both are the same (and not undefined)
+        //     if (start !== undefined && start === end) {
+        //         line.slice(0, 0);
+        //         return;
+        //     }
+        //
+        //     let from = 0;
+        //     let to = line.pointsCount();
+        //
+        //     if (i === objectStart) {
+        //         from = start - i * this.pointsPerObject;
+        //         // If it is not the first object, remove the first point from the calculation.
+        //         if (objectStart > 0) {
+        //             from++;
+        //         }
+        //     }
+        //
+        //     if (i === objectEnd) {
+        //         to = end - i * this.pointsPerObject;
+        //         // Only if it is not the last object, add the last point to the calculation.
+        //         if (objectEnd <= Math.floor(this.pointsCount() / this.pointsPerObject)) {
+        //             to++;
+        //         }
+        //     }
+        //
+        //     if (i < objectStart || i > objectEnd) {
+        //         from = 0;
+        //         to = 0;
+        //     }
+        //
+        //     line.slice(from, to);
+        // });
     }
 
     /**

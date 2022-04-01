@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import { acceleratedRaycast, computeBoundsTree, disposeBoundsTree } from 'three-mesh-bvh';
 import path from 'path';
-import { cloneDeep, isNil, filter, find as lodashFind } from 'lodash';
+import { throttle, cloneDeep, isNil, filter, find as lodashFind } from 'lodash';
 // import FileSaver from 'file-saver';
 import { GCodeParser } from '../../lib/gcode-viewer/parser';
 import workerManager from '../../lib/manager/workerManager';
@@ -687,6 +687,7 @@ export const actions = {
                 parser.radialSegments = 3;
                 parser.parse();
                 parser.sliceLayer();
+                console.log('geometries', parser.getGeometries());
 
                 const json = JSON.parse(machineStore.get('scene'));
                 const objectLoader = new THREE.ObjectLoader();
@@ -700,7 +701,7 @@ export const actions = {
                 const newGcodeLineObjects = [];
                 parser.getGeometries().forEach(geometry => {
                     const newGcodeLineObject = new THREE.Mesh(geometry, material);
-                    console.log('geometry', geometry);
+                    // console.log('geometry', geometry);
                     gcodeLineGroup.add(newGcodeLineObject);
                     newGcodeLineObjects.push(newGcodeLineObject);
                 });
@@ -1569,7 +1570,7 @@ export const actions = {
         const newGcodeLineObjects = [];
         gcodeParser.getGeometries().forEach(geometry => {
             const newGcodeLineObject = new THREE.Mesh(geometry, material);
-            console.log('geometry', geometry);
+            // console.log('geometry', geometry);
             gcodeLineGroup.add(newGcodeLineObject);
             newGcodeLineObjects.push(newGcodeLineObject);
         });
@@ -1697,61 +1698,78 @@ export const actions = {
     },
 
     showGcodeLayers: (range) => (dispatch, getState) => {
-        const { layerCount, gcodeLine, gcodePreviewMode, layerRangeDisplayed, gcodeParser } = getState().printing;
-        gcodeParser.startLayer = Math.floor(range[0]);
-        gcodeParser.endLayer = Math.floor(range[1]);
-        gcodeParser && gcodeParser.sliceLayer(gcodeParser.startLayer, gcodeParser.endLayer);
+        throttle(() => {
+            const {
+                layerCount,
+                gcodeLine,
+                gcodePreviewMode,
+                layerRangeDisplayed,
+                gcodeLineObjects,
+                gcodeParser
+            } = getState().printing;
+            gcodeParser.startLayer = Math.floor(range[0]);
+            gcodeParser.endLayer = Math.floor(range[1]);
+            gcodeLineObjects.forEach((mesh, i) => {
+                if (i < range[0] || i > range[1]) {
+                    mesh.visible = false;
+                } else {
+                    mesh.visible = true;
+                }
+            });
 
-        if (!gcodeLine) {
-            return;
-        }
+            // gcodeParser && gcodeParser.sliceLayer(gcodeParser.startLayer, gcodeParser.endLayer);
 
-        if (range >= layerCount) {
-            dispatch(actions.displayModel());
-        } else {
-            dispatch(actions.displayGcode());
-        }
-        if (gcodePreviewMode === 'SingleLayer') {
-            // The moving direction is down
-            if (layerRangeDisplayed[0] > range[0]) {
-                range = [
-                    range[0] || 0,
-                    range[0] || 0
-                ];
+            if (!gcodeLine) {
+                return;
+            }
+
+            if (range >= layerCount) {
+                dispatch(actions.displayModel());
             } else {
-                range = [
-                    Math.min(layerCount, range[1]),
-                    Math.min(layerCount, range[1])
-                ];
+                dispatch(actions.displayGcode());
             }
-        } else {
-            if ((range[0] > layerRangeDisplayed[0] || range[1] > layerRangeDisplayed[1])) {
-                if (range[0] > layerRangeDisplayed[0] && range[0] > range[1]) {
-                    const tmp = range[1];
-                    range[1] = range[0];
-                    range[0] = tmp;
+            if (gcodePreviewMode === 'SingleLayer') {
+                // The moving direction is down
+                if (layerRangeDisplayed[0] > range[0]) {
+                    range = [
+                        range[0] || 0,
+                        range[0] || 0
+                    ];
+                } else {
+                    range = [
+                        Math.min(layerCount, range[1]),
+                        Math.min(layerCount, range[1])
+                    ];
                 }
-                range[1] = Math.min(layerCount, range[1]);
-                range[0] = Math.min(layerCount, range[0]);
-            }
+            } else {
+                if ((range[0] > layerRangeDisplayed[0] || range[1] > layerRangeDisplayed[1])) {
+                    if (range[0] > layerRangeDisplayed[0] && range[0] > range[1]) {
+                        const tmp = range[1];
+                        range[1] = range[0];
+                        range[0] = tmp;
+                    }
+                    range[1] = Math.min(layerCount, range[1]);
+                    range[0] = Math.min(layerCount, range[0]);
+                }
 
-            if ((range[0] < layerRangeDisplayed[0] || range[1] < layerRangeDisplayed[1])) {
-                if (range[1] < layerRangeDisplayed[0] && range[0] > range[1]) {
-                    const tmp = range[1];
-                    range[1] = range[0];
-                    range[0] = tmp;
+                if ((range[0] < layerRangeDisplayed[0] || range[1] < layerRangeDisplayed[1])) {
+                    if (range[1] < layerRangeDisplayed[0] && range[0] > range[1]) {
+                        const tmp = range[1];
+                        range[1] = range[0];
+                        range[0] = tmp;
+                    }
+                    range[1] = range[1] || 0;
+                    range[0] = range[0] || 0;
                 }
-                range[1] = range[1] || 0;
-                range[0] = range[0] || 0;
             }
-        }
-        range[0] = range[0] < 0 ? 0 : range[0];
-        gcodeLine.material.uniforms.u_visible_layer_range_start.value = Math.round(range[0], 10);
-        gcodeLine.material.uniforms.u_visible_layer_range_end.value = Math.round(range[1], 10);
-        dispatch(actions.updateState({
-            layerRangeDisplayed: range
-        }));
-        dispatch(actions.render());
+            range[0] = range[0] < 0 ? 0 : range[0];
+            gcodeLine.material.uniforms.u_visible_layer_range_start.value = Math.round(range[0], 10);
+            gcodeLine.material.uniforms.u_visible_layer_range_end.value = Math.round(range[1], 10);
+            dispatch(actions.updateState({
+                layerRangeDisplayed: range
+            }));
+            dispatch(actions.render());
+        }, 1000)();
     },
 
     // make an offset of gcode layer count
