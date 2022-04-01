@@ -1,5 +1,6 @@
 import isElectron from 'is-electron';
 import path from 'path';
+import semver from 'semver';
 import _ from 'lodash';
 import settings from '../config/settings';
 import log from '../lib/log';
@@ -82,6 +83,16 @@ const getLocalStore = (name) => {
 export const widgetStore = getLocalStore('widget');
 export const machineStore = getLocalStore('machine');
 export const printingStore = getLocalStore('printing');
+
+
+if (semver.gte(settings.version, '4.2.2')) {
+    const printingCustomConfigs = machineStore.get('printingCustomConfigs');
+    if (printingCustomConfigs && Object.prototype.toString.call(printingCustomConfigs) === '[object String]') {
+        const customConfigsArray = printingCustomConfigs.split('-');
+        const modifiedCustomConfigs = customConfigsArray.filter(str => !str.startsWith('switch_extruder_retraction_'));
+        machineStore.set('printingCustomConfigs', modifiedCustomConfigs.join('-'));
+    }
+}
 
 const storeManager = {
     widgetStore,

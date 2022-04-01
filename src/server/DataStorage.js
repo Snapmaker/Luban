@@ -103,16 +103,6 @@ class DataStorage {
                  [settings.version]: true
              });
          }
-
-         if (semver.gte(settings.version, '4.2.3')) {
-             const printingCustomConfigs = config.get('printingCustomConfigs');
-             if (printingCustomConfigs && Object.prototype.toString.call(printingCustomConfigs) === '[object String]') {
-                 const customConfigsArray = printingCustomConfigs.split('-');
-                 const modifiedCustomConfigs = customConfigsArray.filter(str => !str.startsWith('switch_extruder_retraction_'));
-                 config.set('printingCustomConfigs', modifiedCustomConfigs.join('-'));
-             }
-         }
-
          mkdirp.sync(this.envDir);
          mkdirp.sync(`${this.envDir}/printing`);
          mkdirp.sync(`${this.envDir}/laser`);
