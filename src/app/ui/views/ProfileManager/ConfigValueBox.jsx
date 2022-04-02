@@ -70,7 +70,7 @@ function ConfigValueBox({ optionConfigGroup, calculateTextIndex, isCategorySelec
                 className={classNames(styles['manager-details'], 'border-default-grey-1', 'border-radius-8')}
                 onWheel={() => { setActiveCate(); }}
             >
-                <div className="sm-parameter-container" ref={scrollDom}>
+                <div className="sm-parameter-container position-re" ref={scrollDom}>
                     {!isCategorySelected && optionConfigGroup.map((group, index) => {
                         const eachFieldsDom = fieldsDom.current[index];
                         return (
@@ -93,6 +93,7 @@ function ConfigValueBox({ optionConfigGroup, calculateTextIndex, isCategorySelec
                                                     <SettingItem
                                                         settings={definitionForManager?.settings}
                                                         definitionKey={key}
+                                                        ref={scrollDom}
                                                         width="160px"
                                                         key={key}
                                                         isDefaultDefinition={isEditable}
