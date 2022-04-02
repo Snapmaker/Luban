@@ -1125,6 +1125,7 @@ class SvgModel extends BaseModel {
                 // For inner text, have to update 'originalFile' inside resource when 'uploadName' changed
                 if (key === 'uploadName') {
                     this.resource.originalFile.update(others[key]);
+                    this[key] = others[key];
                 } else {
                     this[key] = others[key];
                 }

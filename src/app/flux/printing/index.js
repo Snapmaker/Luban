@@ -344,7 +344,7 @@ export const actions = {
 
         // state
         const printingState = getState().printing;
-        const { modelGroup, gcodeLineGroup } = printingState;
+        const { modelGroup, gcodeLineGroup, defaultMaterialId, defaultQualityId } = printingState;
         const { toolHead } = getState().machine;
         modelGroup.setDataChangedCallback(() => {
             dispatch(actions.render());
@@ -372,12 +372,11 @@ export const actions = {
         dispatch(actions.updateState({
             activeDefinition: definitionManager.activeDefinition,
             helpersExtruderConfig: { adhesion: LEFT_EXTRUDER_MAP_NUMBER, support: LEFT_EXTRUDER_MAP_NUMBER },
-
             extruderLDefinition: definitionManager.extruderLDefinition,
             extruderRDefinition: definitionManager.extruderRDefinition,
         }));
-        // todo：init 'activeDefinition' by localStorage
-        // dispatch(actions.updateActiveDefinition(definitionManager.snapmakerDefinition));
+        dispatch(actions.updateActiveDefinitionById(PRINTING_MANAGER_TYPE_MATERIAL, defaultMaterialId, false));
+        dispatch(actions.updateActiveDefinitionById(PRINTING_MANAGER_TYPE_QUALITY, defaultQualityId, false));
 
         // Update machine size after active definition is loaded
         const { size } = getState().machine;
@@ -823,13 +822,15 @@ export const actions = {
         dispatch(actions.updateActiveDefinition(definition));
     },
 
-    updateActiveDefinitionById: (type, definitionId) => (dispatch, getState) => {
+    updateActiveDefinitionById: (type, definitionId, shouldSave = true) => (dispatch, getState) => {
         const state = getState().printing;
         const definitionsKey = defaultDefinitionKeys[type].definitions;
         const definition = state[definitionsKey].find((item) => {
             return item.definitionId === definitionId;
         });
-        dispatch(actions.updateActiveDefinition(definition, true));
+        if (definition) {
+            dispatch(actions.updateActiveDefinition(definition, shouldSave));
+        }
     },
 
     updateActiveDefinition: (definition, shouldSave = false) => (dispatch, getState) => {
@@ -1418,6 +1419,7 @@ export const actions = {
         activeDefinition.settings.machine_heated_bed.default_value = extruderLDefinition.settings.machine_heated_bed.default_value;
         activeDefinition.settings.material_bed_temperature.default_value = extruderLDefinition.settings.material_bed_temperature.default_value;
         activeDefinition.settings.material_bed_temperature_layer_0.default_value = extruderLDefinition.settings.material_bed_temperature_layer_0.default_value;
+
 
         const finalDefinition = definitionManager.finalizeActiveDefinition(activeDefinition, true);
         const adhesionExtruder = helpersExtruderConfig.adhesion;
@@ -2806,7 +2808,7 @@ export const actions = {
                 isNewUser
             }));
         }).catch((err) => {
-            console.log({ err });
+            console.error({ err });
             dispatch(actions.updateState({
                 isNewUser: true
             }));

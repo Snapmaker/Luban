@@ -24,10 +24,10 @@ export const computeTransformationSizeForTextVector = (text, fontSize, lineHeigh
     let height = estimatedHeight + estimatedHeight * lineHeight * (numberOfLines - 1);
     let width = height / size.height * size.width;
 
-    if (width === 0) {
+    if (!width) {
         width = 0.01;
     }
-    if (height === 0) {
+    if (!height) {
         height = 0.01;
     }
 
