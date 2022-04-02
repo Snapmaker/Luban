@@ -11,10 +11,6 @@ import BaseModel from './ThreeBaseModel';
 import { machineStore } from '../store/local-storage';
 
 const materialOverstepped = new THREE.Color(0xa80006);
-const materialInSupport = new THREE.MeshPhysicalMaterial({
-    color: 0xffffff,
-    side: THREE.DoubleSide
-});
 class ThreeModel extends BaseModel {
     loadFrom = LOAD_MODEL_FROM_INNER;
 
@@ -38,8 +34,6 @@ class ThreeModel extends BaseModel {
     supportTag = false;
 
     tmpSupportMesh = null; // store support mesh when editing support, and restore it after editing support finished
-
-    tmpMaterial = null; // store previous material for support editing
 
     supportFaceMarks = [];
 
@@ -261,26 +255,22 @@ class ThreeModel extends BaseModel {
             this.isSelected = isSelected;
         }
         if (this.isEditingSupport) {
-            // TODO: uniform material for setting triangle color and textures
-            this.tmpMaterial = this.meshObject.material;
-            this.meshObject.material = materialInSupport;
+            this.meshObject.material.color.set(0xffffff);
         } else if (this.overstepped === true) {
-            this.meshObject.material = this.tmpMaterial || this.meshObject.material;
             this.meshObject.material.color.set(materialOverstepped);
-            this.tmpMaterial = null;
         } else if (this.isSelected === true) {
-            this.meshObject.material = this.tmpMaterial || this.meshObject.material;
             this.meshObject.material.color.set(this._materialSelected.clone());
-            this.tmpMaterial = null;
         } else {
-            this.meshObject.material = this.tmpMaterial || this.meshObject.material;
             this.meshObject.material.color.set(this._materialNormal.clone());
-            this.tmpMaterial = null;
         }
 
         // for indexed geometry
         if (this.type !== 'primeTower' && this.meshObject.geometry.getAttribute('color')) {
             this.meshObject.material.vertexColors = true;
+            this.meshObject.material.needsUpdate = true;
+        } else {
+            this.meshObject.material.vertexColors = false;
+            this.meshObject.material.needsUpdate = true;
         }
         // for support geometry
         if (this.supportTag) {

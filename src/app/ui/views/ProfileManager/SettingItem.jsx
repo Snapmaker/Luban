@@ -11,7 +11,7 @@ import TipTrigger from '../../components/TipTrigger';
 import SvgIcon from '../../components/SvgIcon';
 import Popover from '../../components/Popover';
 
-function SettingItem({ definitionKey, settings, isDefaultDefinition = () => true, onChangeDefinition, defaultValue, styleSize = 'large' }) {
+const SettingItem = React.forwardRef(({ definitionKey, settings, isDefaultDefinition = () => true, onChangeDefinition, defaultValue, styleSize = 'large' }, ref) => {
     const [showColor, setShowColor] = useState(false);
 
     const setting = settings[definitionKey];
@@ -190,6 +190,7 @@ function SettingItem({ definitionKey, settings, isDefaultDefinition = () => true
                     )}
                     {type === 'enum' && (
                         <Select
+                            ref={ref}
                             className="sm-flex-width align-r"
                             backspaceRemoves={false}
                             clearable={false}
@@ -246,7 +247,7 @@ function SettingItem({ definitionKey, settings, isDefaultDefinition = () => true
             </div>
         </TipTrigger>
     );
-}
+});
 SettingItem.propTypes = {
     settings: PropTypes.object.isRequired,
     definitionKey: PropTypes.string.isRequired,

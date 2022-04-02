@@ -324,6 +324,7 @@ export const actions = {
                                             shouldGenerateGcodeCounter: shouldGenerateGcodeCounter + 1
                                         }));
                                     }
+                                    progressStatesManager.startNextStep();
                                     break;
                                 }
                                 case 'data': {
