@@ -391,7 +391,7 @@ class DefinitionManager {
         const definition = {
             ...extruderDefinition
         };
-        PRINTING_MATERIAL_CONFIG_KEYS_SINGLE
+        PRINTING_MATERIAL_CONFIG_KEYS_SINGLE.concat('cool_fan_speed_min', 'cool_fan_speed_max')
             .forEach(key => {
                 const setting = materialDefinition.settings[key];
                 if (setting) {
