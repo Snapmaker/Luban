@@ -277,7 +277,7 @@ export class GCodeParser {
 
             const { extruder, lineType } = newLine;
             if (lastAddedLinePoint !== undefined) {
-                const startPoint = new LinePoint(lastAddedLinePoint.point, 0);
+                const startPoint = lastAddedLinePoint;
                 this.combinedLines[currentLayer * 16 + extruder * 8 + (lineType - 1)].add(startPoint);
             }
             this.combinedLines[currentLayer * 16 + extruder * 8 + (lineType - 1)].add(newLine);

@@ -1679,7 +1679,6 @@ export const actions = {
                 if (i < range[0] * 16 || i > range[1] * 16 + 15) {
                     mesh.visible = false;
                 } else {
-                    console.log('geo', gcodeParser.getGeometries()[i]);
                     mesh.visible = true;
                 }
             });
