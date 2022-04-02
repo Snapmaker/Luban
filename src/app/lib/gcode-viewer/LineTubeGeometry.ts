@@ -33,7 +33,7 @@ export class LineTubeGeometry extends BufferGeometry {
      * Saves up to 4 linePoints to generate the model.
      * The oldest one get's dropped after generating as it's not needed anymore.
      */
-    private pointsBuffer: LinePoint[] = []
+    pointsBuffer: LinePoint[] = []
 
     private pointsLength: number
 

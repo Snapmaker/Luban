@@ -6,20 +6,6 @@ import { LineTubeGeometry } from './LineTubeGeometry';
 import { LinePoint } from './LinePoint';
 import { SegmentColorizer, SimpleColorizer } from './SegmentColorizer';
 
-/**
- * GCode renderer which parses a GCode file and displays it using
- * three.js. Use .element() to retrieve the DOM canvas element.
- */
-export type VisibleType = {
-    'WALL-INNER': boolean;
-    'WALL-OUTER': boolean;
-    'SKIN': boolean;
-    'SUPPORT': boolean;
-    'FILL': boolean;
-    'TRAVEL': boolean;
-    'UNKNOWN': boolean;
-};
-
 export class GCodeParser {
     private combinedLines: LineTubeGeometry[] = []
 
@@ -44,16 +30,6 @@ export class GCodeParser {
     private maxSpeed = 0
 
     private layerIndex: { start: number, end: number }[] = []
-
-    private visibleTypes:VisibleType = {
-        'WALL-INNER': true,
-        'WALL-OUTER': true,
-        'SKIN': true,
-        'SUPPORT': true,
-        'FILL': true,
-        'TRAVEL': true,
-        'UNKNOWN': true
-    };
 
     private isGrayMode: boolean = false;
 
@@ -214,16 +190,6 @@ export class GCodeParser {
     }
 
     /**
-     * Set the lines visible by types
-     */
-    public async setVisbleTypes(type: string, visible: boolean) {
-        if (this.visibleTypes[type] !== undefined && this.visibleTypes[type] !== visible) {
-            this.visibleTypes[type] = visible;
-            this.sliceLayer(this.startLayer, this.endLayer);
-        }
-    }
-
-    /**
      * Set the lines colors type
      */
     public async setColortypes(isGrayMode: boolean | undefined = undefined, isDual: boolean | undefined = undefined) {
@@ -243,7 +209,7 @@ export class GCodeParser {
             mode = 1;
         }
         this.combinedLines.forEach(line => line.changeColorsMode(mode, this.extruderColors));
-        this.sliceLayer(this.startLayer, this.endLayer);
+        this.slice();
     }
 
     /**
@@ -292,30 +258,32 @@ export class GCodeParser {
         const lines: (string | undefined)[] = this.gCode.split('\n');
         // this.gCode = ''; // clear memory
 
-        let currentObject = 0;
+        let currentLayer = 0;
         let lastAddedLinePoint: LinePoint | undefined;
-        let pointCount = 0;
         const addLine = (newLine: LinePoint) => {
-            if (pointCount > 0 && newLine.layer > currentObject) {
+            if (newLine.layer > currentLayer) {
                 // end the old geometry and increase the counter
-                this.combinedLines[currentObject].finish();
-                currentObject++;
+                for (let i = 0; i < 16; i++) {
+                    this.combinedLines[currentLayer * 16 + i] && this.combinedLines[currentLayer * 16 + i].finish();
+                }
+                currentLayer = newLine.layer;
             }
 
-            if (this.combinedLines[currentObject] === undefined) {
-                this.combinedLines[currentObject] = new LineTubeGeometry(this.radialSegments);
-                if (lastAddedLinePoint) {
-                    this.combinedLines[currentObject].add(lastAddedLinePoint);
+            if (this.combinedLines[currentLayer * 16] === undefined) {
+                for (let i = 0; i < 16; i++) {
+                    this.combinedLines.push(new LineTubeGeometry(this.radialSegments));
                 }
             }
 
-            this.combinedLines[currentObject].add(newLine);
-            lastAddedLinePoint = newLine;
-            pointCount++;
-        };
+            const { extruder, lineType } = newLine;
+            if (lastAddedLinePoint !== undefined) {
+                const startPoint = new LinePoint(lastAddedLinePoint.point, 0);
+                this.combinedLines[currentLayer * 16 + extruder * 8 + (lineType - 1)].add(startPoint);
+            }
+            this.combinedLines[currentLayer * 16 + extruder * 8 + (lineType - 1)].add(newLine);
 
-        // Create the geometry.
-        //this.combinedLines[oNr] = new LineTubeGeometry(this.radialSegments)
+            lastAddedLinePoint = newLine;
+        };
 
         let type = 'TRAVEL';
         let extruder = 0;
@@ -356,9 +324,6 @@ export class GCodeParser {
                             start: 0
                         };
                     }
-
-                    last.end = pointCount - 1;
-                    current.start = pointCount;
 
                     layerPointsCache.set(layer - 1, last);
                     layerPointsCache.set(layer, current);
@@ -410,10 +375,10 @@ export class GCodeParser {
                     // but the LinePoint contains the radius for the 'next' line
                     // we need to combine the last point with the current radius.
                     if (cmd[0] === 'G0') {
-                        addLine(new LinePoint(lastPoint.clone(), radius, color, extruder, 'TRAVEL', this.visibleTypes, this.isGrayMode, this.isDual, this.extruderColors, layer));
+                        addLine(new LinePoint(lastPoint.clone(), radius, color, extruder, 'TRAVEL', this.isGrayMode, this.isDual, this.extruderColors, layer));
                     }
                     if (cmd[0] === 'G1') {
-                        addLine(new LinePoint(lastPoint.clone(), radius, color, extruder, type, this.visibleTypes, this.isGrayMode, this.isDual, this.extruderColors, layer));
+                        addLine(new LinePoint(lastPoint.clone(), radius, color, extruder, type, this.isGrayMode, this.isDual, this.extruderColors, layer));
                     }
                 }
 
@@ -456,15 +421,11 @@ export class GCodeParser {
         });
 
         // Finish last object
-        if (this.combinedLines[currentObject]) {
-            this.combinedLines[currentObject].finish();
+        for (let i = 0; i < 16; i++) {
+            if (this.combinedLines[currentLayer * 16 + i]) {
+                this.combinedLines[currentLayer * 16 + i].finish();
+            }
         }
-
-
-        // Sort the layers by starting line number.
-        this.layerIndex = Array.from(layerPointsCache.values()).sort((v1, v2) => v1.start - v2.start);
-        // Set the end of the last layer correctly.
-        this.layerIndex[this.layerIndex.length - 1].end = this.pointsCount() - 1;
     }
 
     /**
@@ -476,64 +437,10 @@ export class GCodeParser {
      * @param {number} start the starting segment
      * @param {number} end the ending segment (excluding)
      */
-    public slice(start: number = 0, end: number = this.pointsCount()) {
-        // TODO: support negative values like the slice from Array?
-        if (start < 0 || end < 0) {
-            throw new Error('negative values are not supported, yet');
-        }
+    public slice() {
         this.combinedLines.forEach(line => {
             line.slice();
         });
-
-        // const objectStart = Math.floor(start / this.pointsPerObject);
-        // const objectEnd = Math.ceil(end / this.pointsPerObject) - 1;
-
-        // this.combinedLines.forEach((line, i) => {
-        //     // Render nothing if both are the same (and not undefined)
-        //     if (start !== undefined && start === end) {
-        //         line.slice(0, 0);
-        //         return;
-        //     }
-        //
-        //     let from = 0;
-        //     let to = line.pointsCount();
-        //
-        //     if (i === objectStart) {
-        //         from = start - i * this.pointsPerObject;
-        //         // If it is not the first object, remove the first point from the calculation.
-        //         if (objectStart > 0) {
-        //             from++;
-        //         }
-        //     }
-        //
-        //     if (i === objectEnd) {
-        //         to = end - i * this.pointsPerObject;
-        //         // Only if it is not the last object, add the last point to the calculation.
-        //         if (objectEnd <= Math.floor(this.pointsCount() / this.pointsPerObject)) {
-        //             to++;
-        //         }
-        //     }
-        //
-        //     if (i < objectStart || i > objectEnd) {
-        //         from = 0;
-        //         to = 0;
-        //     }
-        //
-        //     line.slice(from, to);
-        // });
-    }
-
-    /**
-     * Slices the rendered model based on the passed start and end line numbers.
-     * (0, layerCount()) renders everything
-     *
-     * Note: Currently negative values are not allowed.
-     *
-     * @param {number} start the starting layer
-     * @param {number} end the ending layer (excluding)
-     */
-    public sliceLayer(start?: number, end?: number) {
-        this.slice(start && this.layerIndex[start]?.start, end && this.layerIndex[end]?.end + 1);
     }
 
     /**
@@ -542,23 +449,6 @@ export class GCodeParser {
      */
     public dispose() {
         this.combinedLines.forEach(e => e.dispose());
-    }
-
-    /**
-     * Get the amount of points in the model.
-     *
-     * @returns {number}
-     */
-    public pointsCount(): number {
-        return this.combinedLines.reduce((count, line, i) => {
-            // Do not count the first point of all objects after the first one.
-            // This point is always the same as the last from the previous object.
-            // The very first point is still counted -> i > 0.
-            if (i > 0) {
-                return count + line.pointsCount() - 1;
-            }
-            return count + line.pointsCount();
-        }, 0);
     }
 
     /**

@@ -686,7 +686,7 @@ export const actions = {
                 parser.travelWidth = 0.1;
                 parser.radialSegments = 3;
                 parser.parse();
-                parser.sliceLayer();
+                parser.slice();
                 console.log('geometries', parser.getGeometries());
 
                 const json = JSON.parse(machineStore.get('scene'));
@@ -1551,41 +1551,9 @@ export const actions = {
         });
     },
 
-    reparseGcodeParser: () => (dispatch, getState) => {
-        const { gcodeParser, gcodeLineObjects, gcodeLineGroup } = getState().printing;
-        // gcodeParser && gcodeParser.dispose();
-        gcodeLineObjects.forEach(object => {
-            gcodeLineGroup.remove(object);
-        });
-
-        const json = JSON.parse(machineStore.get('scene'));
-        const objectLoader = new THREE.ObjectLoader();
-        const images = objectLoader.parseImages(json.images);
-        const textures = objectLoader.parseTextures(json.textures, images);
-        const materials = objectLoader.parseMaterials(json.materials, textures);
-        const newMaterial = Object.values(materials)[0];
-        const material = newMaterial.clone();
-        material.vertexColors = true;
-
-        const newGcodeLineObjects = [];
-        gcodeParser.getGeometries().forEach(geometry => {
-            const newGcodeLineObject = new THREE.Mesh(geometry, material);
-            // console.log('geometry', geometry);
-            gcodeLineGroup.add(newGcodeLineObject);
-            newGcodeLineObjects.push(newGcodeLineObject);
-        });
-        gcodeParser.slice();
-        dispatch(actions.updateState({
-            gcodeLineObjects: newGcodeLineObjects,
-            gcodeParser
-        }));
-    },
-
     // preview
     setGcodeVisibilityByTypeAndDirection: (type, direction = LEFT_EXTRUDER, visible) => (dispatch, getState) => {
-        const { gcodeLine, gcodeParser } = getState().printing;
-        gcodeParser.setVisbleTypes(type, visible);
-        dispatch(actions.reparseGcodeParser());
+        const { gcodeLine } = getState().printing;
 
         const uniforms = gcodeLine.material.uniforms;
         const value = visible ? 1 : 0;
@@ -1654,7 +1622,6 @@ export const actions = {
     updateGcodePreviewMode: (mode) => (dispatch, getState) => {
         const { gcodeLine, layerRangeDisplayed, layerCount, gcodeParser } = getState().printing;
         gcodeParser.setColortypes(mode === 'GrayUnderTheTopFloor');
-        dispatch(actions.reparseGcodeParser());
 
         const uniforms = gcodeLine.material.uniforms;
 
@@ -1690,7 +1657,6 @@ export const actions = {
             ];
         }
         gcodeParser.setColortypes(undefined, renderLineType);
-        dispatch(actions.reparseGcodeParser());
 
         const uniforms = gcodeLine.material.uniforms;
         uniforms.u_color_type.value = renderLineType ? 1 : 0;
@@ -1710,14 +1676,13 @@ export const actions = {
             gcodeParser.startLayer = Math.floor(range[0]);
             gcodeParser.endLayer = Math.floor(range[1]);
             gcodeLineObjects.forEach((mesh, i) => {
-                if (i < range[0] || i > range[1]) {
+                if (i < range[0] * 16 || i > range[1] * 16 + 15) {
                     mesh.visible = false;
                 } else {
+                    console.log('geo', gcodeParser.getGeometries()[i]);
                     mesh.visible = true;
                 }
             });
-
-            // gcodeParser && gcodeParser.sliceLayer(gcodeParser.startLayer, gcodeParser.endLayer);
 
             if (!gcodeLine) {
                 return;
