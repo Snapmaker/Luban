@@ -359,7 +359,7 @@ class Visualizer extends Component {
             this.canvas.current.renderScene();
             this.canvas.current.setCameraOnTop();
 
-            this.canvas.current.controls.panOffset.add(new THREE.Vector3(this.props.target.x, this.props.target.y, 0));
+            this.canvas.current.controls.panOffset.add(new THREE.Vector3(this.props.target?.x || 0, this.props.target?.y || 0, 0));
             this.canvas.current.controls.updateCamera();
         }
 
