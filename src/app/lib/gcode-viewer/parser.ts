@@ -15,6 +15,9 @@ export class GCodeParser {
 
     public endLayer: number | undefined = undefined
 
+    public showTypes: boolean[] = [true, true, true, true, true, true, false, true,
+        true, true, true, true, true, true, false, true];
+
     public min?: Vector3
 
     public max?: Vector3
@@ -258,9 +261,16 @@ export class GCodeParser {
         const lines: (string | undefined)[] = this.gCode.split('\n');
         // this.gCode = ''; // clear memory
 
+        let type = 'TRAVEL';
+        let extruder = 0;
+        let layer = 0;
+
         let currentLayer = 0;
         let lastAddedLinePoint: LinePoint | undefined;
         const addLine = (newLine: LinePoint) => {
+            if (newLine.lineType === 1) {
+                console.log('newLine', newLine.lineType);
+            }
             if (newLine.layer > currentLayer) {
                 // end the old geometry and increase the counter
                 for (let i = 0; i < 16; i++) {
@@ -275,19 +285,16 @@ export class GCodeParser {
                 }
             }
 
-            const { extruder, lineType } = newLine;
             if (lastAddedLinePoint !== undefined) {
-                const startPoint = lastAddedLinePoint;
-                this.combinedLines[currentLayer * 16 + extruder * 8 + (lineType - 1)].add(startPoint);
+                // const startPoint = lastAddedLinePoint;
+                const startPoint = new LinePoint(newLine.point, 0);
+                this.combinedLines[currentLayer * 16 + newLine.extruder * 8 + (newLine.lineType - 1)].add(startPoint);
             }
-            this.combinedLines[currentLayer * 16 + extruder * 8 + (lineType - 1)].add(newLine);
+            this.combinedLines[currentLayer * 16 + newLine.extruder * 8 + (newLine.lineType - 1)].add(newLine);
 
             lastAddedLinePoint = newLine;
         };
 
-        let type = 'TRAVEL';
-        let extruder = 0;
-        let layer = 0;
         lines.forEach((line, i) => {
             if (line === undefined) {
                 return;

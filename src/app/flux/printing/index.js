@@ -58,6 +58,7 @@ import DeleteSupportsOperation3D from '../operation-history/DeleteSupportsOperat
 import AddSupportsOperation3D from '../operation-history/AddSupportsOperation3D';
 import ArrangeOperation3D from '../operation-history/ArrangeOperation3D';
 import PrimeTowerModel from '../../models/PrimeTowerModel';
+import { TYPE_SETTINGS } from '../../lib/gcode-viewer/constants';
 
 // register methods for three-mesh-bvh
 THREE.Mesh.prototype.raycast = acceleratedRaycast;
@@ -715,6 +716,7 @@ export const actions = {
                     gcodeLineObjects: newGcodeLineObjects,
                     gcodeParser: parser
                 }));
+                dispatch(actions.renderShowGcodeLines());
 
                 dispatch(actions.updateGcodePreviewMode(gcodePreviewMode));
 
@@ -1553,7 +1555,26 @@ export const actions = {
 
     // preview
     setGcodeVisibilityByTypeAndDirection: (type, direction = LEFT_EXTRUDER, visible) => (dispatch, getState) => {
-        const { gcodeLine } = getState().printing;
+        const { gcodeLine, gcodeParser } = getState().printing;
+        console.log('set type', type, direction, visible, TYPE_SETTINGS[type]);
+        const { showTypes } = gcodeParser;
+        if (type === 'TOOL0') {
+            for (let i = 0; i < 8; i++) {
+                showTypes[i] = visible;
+            }
+        } else if (type === 'TOOL1') {
+            for (let i = 8; i < 16; i++) {
+                showTypes[i] = visible;
+            }
+        } else {
+            let i = 0;
+            if (direction === RIGHT_EXTRUDER) {
+                i = 8;
+            }
+            i += TYPE_SETTINGS[type].typeCode - 1;
+            showTypes[i] = visible;
+        }
+        dispatch(actions.renderShowGcodeLines());
 
         const uniforms = gcodeLine.material.uniforms;
         const value = visible ? 1 : 0;
@@ -1663,6 +1684,18 @@ export const actions = {
         dispatch(actions.render());
     },
 
+    renderShowGcodeLines: () => (dispatch, getState) => {
+        const { gcodeParser, gcodeLineObjects } = getState().printing;
+        const { startLayer, endLayer, showTypes } = gcodeParser;
+        gcodeLineObjects.forEach((mesh, i) => {
+            if (i < (startLayer ?? 0) * 16 || i > (endLayer ?? 0) * 16 + 15 || !showTypes[i & 15]) {
+                mesh.visible = false;
+            } else {
+                mesh.visible = true;
+            }
+        });
+    },
+
     showGcodeLayers: (range) => (dispatch, getState) => {
         throttle(() => {
             const {
@@ -1670,18 +1703,11 @@ export const actions = {
                 gcodeLine,
                 gcodePreviewMode,
                 layerRangeDisplayed,
-                gcodeLineObjects,
                 gcodeParser
             } = getState().printing;
             gcodeParser.startLayer = Math.floor(range[0]);
             gcodeParser.endLayer = Math.floor(range[1]);
-            gcodeLineObjects.forEach((mesh, i) => {
-                if (i < range[0] * 16 || i > range[1] * 16 + 15) {
-                    mesh.visible = false;
-                } else {
-                    mesh.visible = true;
-                }
-            });
+            dispatch(actions.renderShowGcodeLines());
 
             if (!gcodeLine) {
                 return;
