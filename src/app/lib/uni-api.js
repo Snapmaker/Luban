@@ -176,13 +176,14 @@ const File = {
             callback && callback('web');
         }
     },
-    save(targetFile, tmpFile) {
+    save(targetFile, tmpFile, callback) {
         if (isElectron()) {
             const fs = window.require('fs');
             const app = window.require('electron').remote.app;
             tmpFile = app.getPath('userData') + tmpFile;
 
             fs.copyFileSync(tmpFile, targetFile);
+            callback && callback();
         }
     },
     popFile() {
@@ -200,31 +201,32 @@ const File = {
      * @param tmpFile - temporary file path, e.g. "/Tmp/xxx.stl"
      */
     // export file for project file
-    async saveAs(targetFile, tmpFile, callback = undefined) {
+    saveAs(targetFile, tmpFile, callback = undefined) {
         if (isElectron()) {
             const fs = window.require('fs');
             const { app } = window.require('electron').remote;
             const defaultPath = path.resolve(app.getPath('downloads'), path.basename(tmpFile));
             tmpFile = app.getPath('userData') + tmpFile;
             // eslint-disable-next-line no-use-before-define
-            const saveDialogReturnValue = await Dialog.showSaveDialog({
+            Dialog.showSaveDialog({
                 title: targetFile,
                 defaultPath,
                 filters: [{ name: 'files', extensions: [targetFile.split('.')[1]] }]
+            }).then((saveDialogReturnValue) => {
+                targetFile = saveDialogReturnValue.filePath;
+                if (!targetFile) throw new Error('select file canceled');
+
+                const file = { path: targetFile, name: window.require('path').basename(targetFile) };
+
+                fs.copyFileSync(tmpFile, targetFile);
+                // const menu = window.require('electron').remote.require('./electron-app/Menu');
+                // menu.addRecentFile(file);
+                const { ipcRenderer } = window.require('electron');
+                ipcRenderer.send('add-recent-file', file);
+
+                callback && callback('electron', targetFile, file);
             });
-            targetFile = saveDialogReturnValue.filePath;
-            if (!targetFile) throw new Error('select file canceled');
-
-            const file = { path: targetFile, name: window.require('path').basename(targetFile) };
-
-            fs.copyFileSync(tmpFile, targetFile);
-            // const menu = window.require('electron').remote.require('./electron-app/Menu');
-            // menu.addRecentFile(file);
-            const { ipcRenderer } = window.require('electron');
-            ipcRenderer.send('add-recent-file', file);
-
-            callback && callback('electron', targetFile);
-            return file;
+            return null;
         } else {
             request
                 .get(`/${DATA_PATH}${tmpFile}`)

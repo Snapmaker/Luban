@@ -25,6 +25,7 @@ import { UniformToolpathConfig } from '../../lib/uniform-toolpath-config';
 import { checkIsSnapmakerProjectFile, checkIsGCodeFile } from '../../lib/check-name';
 import { actions as operationHistoryActions } from '../operation-history';
 import { machineStore } from '../../store/local-storage';
+import ThreeModel from '../../models/ThreeModel';
 
 import i18n from '../../lib/i18n';
 import UniApi from '../../lib/uni-api';
@@ -32,6 +33,7 @@ import UniApi from '../../lib/uni-api';
 const INITIAL_STATE = {
     [HEAD_PRINTING]: {
         findLastEnvironment: false,
+        targetFile: null,
         openedFile: null,
         unSaved: false,
         content: null,
@@ -39,6 +41,7 @@ const INITIAL_STATE = {
     },
     [HEAD_CNC]: {
         findLastEnvironment: false,
+        targetFile: null,
         openedFile: null,
         unSaved: false,
         content: null,
@@ -46,6 +49,7 @@ const INITIAL_STATE = {
     },
     [HEAD_LASER]: {
         findLastEnvironment: false,
+        targetFile: null,
         openedFile: null,
         unSaved: false,
         content: null,
@@ -93,7 +97,6 @@ export const actions = {
         machineInfo.size = size;
         machineInfo.series = series;
         machineInfo.toolHead = toolHead;
-
         const envObj = { machineInfo, models: [], toolpaths: [] };
         envObj.version = pkg?.version;
         if (headType === HEAD_CNC || headType === HEAD_LASER) {
@@ -142,7 +145,7 @@ export const actions = {
         dispatch(actions.updateState(headType, { unSaved: false }));
     },
 
-    recoverModels: (modActions, models, envHeadType) => async (dispatch) => {
+    recoverModels: (promiseArray = [], modActions, models, envHeadType) => (dispatch) => {
         for (let k = 0; k < models.length; k++) {
             const { headType, originalName, uploadName, modelName, config, sourceType, gcodeConfig,
                 sourceWidth, sourceHeight, mode, transformation, modelID, supportTag, extruderConfig, children, parentModelID } = models[k];
@@ -156,11 +159,13 @@ export const actions = {
                 dispatch(operationHistoryActions.excludeModelById(envHeadType, modelID));
             }
 
-            await dispatch(modActions.generateModel(headType, {
-                loadFrom: LOAD_MODEL_FROM_OUTER, originalName, uploadName, modelName, sourceWidth, sourceHeight, mode, sourceType, config, gcodeConfig, transformation, modelID, extruderConfig, isGroup: !!children, parentModelID, children, primeTowerTag
-            }));
+            promiseArray.push(
+                dispatch(modActions.generateModel(headType, {
+                    loadFrom: LOAD_MODEL_FROM_OUTER, originalName, uploadName, modelName, sourceWidth, sourceHeight, mode, sourceType, config, gcodeConfig, transformation, modelID, extruderConfig, isGroup: !!children, parentModelID, children, primeTowerTag
+                }))
+            );
             if (children && children.length > 0) {
-                await dispatch(actions.recoverModels(modActions, children, envHeadType));
+                dispatch(actions.recoverModels(promiseArray, modActions, children, envHeadType));
             }
         }
     },
@@ -235,8 +240,8 @@ export const actions = {
                 model.mode = PROCESS_MODE_MESH;
             }
         }
-
-        await dispatch(actions.recoverModels(modActions, models, envHeadType));
+        const promiseArray = [];
+        dispatch(actions.recoverModels(promiseArray, modActions, models, envHeadType));
 
         const { toolPathGroup } = modState;
         if (toolPathGroup && toolPathGroup.toolPaths && toolPathGroup.toolPaths.length) {
@@ -263,6 +268,10 @@ export const actions = {
             }
         }
         await dispatch(actions.updateState(envHeadType, { unSaved: true }));
+
+        Promise.all(promiseArray).then(() => {
+            dispatch(actions.afterOpened(envHeadType));
+        }).catch(console.error);
     },
 
     exportFile: (targetFile, renderGcodeFileName = null) => async (dispatch) => {
@@ -298,20 +307,31 @@ export const actions = {
         UniApi.Menu.setItemEnabled('save', !!openedFile);
     },
 
-    saveAsFile: (headType) => async (dispatch) => {
-        const { body: { targetFile } } = await api.packageEnv({ headType });
-        const tmpFile = `/Tmp/${targetFile}`;
-        const openedFile = await UniApi.File.saveAs(targetFile, tmpFile, (type, filePath = '') => {
+    saveAsFile: (headType) => async (dispatch, getState) => {
+        const { unSaved, openedFile, targetFile } = getState().project[headType];
+        let tmpFile, newTargetFile;
+        if (unSaved || !openedFile) {
+            const { body: { targetFile: insideTargetFile } } = await api.packageEnv({ headType });
+            newTargetFile = insideTargetFile;
+            tmpFile = `/Tmp/${newTargetFile}`;
+            dispatch(actions.updateState(headType, { targetFile: newTargetFile }));
+        } else {
+            const { name } = openedFile;
+            newTargetFile = name;
+            tmpFile = `/Tmp/${targetFile}`;
+        }
+        UniApi.File.saveAs(newTargetFile, tmpFile, (type, filePath = '', newOpenedFile) => {
             dispatch(appGlobalActions.updateSavedModal({
                 showSavedModal: true,
                 savedModalType: type,
                 savedModalFilePath: filePath
             }));
+            dispatch(actions.afterSaved());
+            if (newOpenedFile) {
+                dispatch(actions.setOpenedFileWithType(headType, newOpenedFile));
+            }
+            dispatch(actions.clearSavedEnvironment(headType));
         });
-        if (openedFile) {
-            await dispatch(actions.setOpenedFileWithType(headType, openedFile));
-        }
-        await dispatch(actions.clearSavedEnvironment(headType));
     },
     save: (headType, dialogOptions = false) => async (dispatch, getState) => {
         // save should return when no model in editor
@@ -363,9 +383,37 @@ export const actions = {
         }
 
         const { body: { targetFile } } = await api.packageEnv({ headType });
+        dispatch(actions.updateState(headType, { targetFile }));
         const tmpFile = `/Tmp/${targetFile}`;
-        UniApi.File.save(openedFile.path, tmpFile);
+        UniApi.File.save(openedFile.path, tmpFile, () => {
+            dispatch(actions.afterSaved());
+        });
         await dispatch(actions.clearSavedEnvironment(headType));
+    },
+
+    afterOpened: (headType) => (dispatch, getState) => {
+        const { modelGroup } = getState().printing;
+        if (headType === HEAD_PRINTING) {
+            // when recovering project, add model to its group
+            modelGroup.groupsChildrenMap.forEach((subModels, group) => {
+                if (subModels.every(id => id instanceof ThreeModel)) {
+                    modelGroup.unselectAllModels();
+                    group.add(subModels);
+                    modelGroup.groupsChildrenMap.delete(group);
+                    modelGroup.models = [...modelGroup.models, group];
+                    group.stickToPlate();
+                    group.computeBoundingBox();
+                    const overstepped = modelGroup._checkOverstepped(group);
+                    group.setOversteppedAndSelected(overstepped, group.isSelected);
+                    modelGroup.addModelToSelectedGroup(group);
+                }
+            });
+        }
+    },
+
+    // Note: add progress bar when saving project file
+    afterSaved: () => () => {
+
     },
 
     openProject: (file, history, unReload = false, isGuideTours = false) => async (dispatch, getState) => {

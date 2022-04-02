@@ -35,8 +35,8 @@ export const actions = {
             dispatch(updateState(headType, {
                 history
             }));
+            dispatch(projectActions.autoSaveEnvironment(headType));
         }
-        dispatch(projectActions.autoSaveEnvironment(headType));
     },
     clear: (headType) => (dispatch, getState) => {
         const history = getState()[headType]?.history;

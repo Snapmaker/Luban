@@ -788,6 +788,7 @@ export const actions = {
         }
         modelGroup.updateSelectedMode(mode, config);
         dispatch(actions.processSelectedModel(headType));
+        dispatch(projectActions.autoSaveEnvironment(headType));
     },
 
     /**
@@ -834,6 +835,7 @@ export const actions = {
         };
 
         modelGroup.updateSelectedConfig(newConfig);
+        dispatch(projectActions.autoSaveEnvironment(headType));
     },
 
     // TODO: temporary workaround for model image processing
@@ -874,7 +876,6 @@ export const actions = {
         }));
 
         dispatch(actions.resetProcessState(headType));
-        dispatch(projectActions.autoSaveEnvironment(headType));
 
         controller.commitProcessImage({
             taskId: uuid(),

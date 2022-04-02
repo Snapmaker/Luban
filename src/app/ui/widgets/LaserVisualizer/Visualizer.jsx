@@ -355,6 +355,7 @@ class Visualizer extends Component {
             selectedToolPathModelArray.map(model => this.canvas.current.controls.attach(model.meshObject, SELECTEVENT.ADDSELECT));
         }
 
+        // TODO: Occasionally cannot find 'controls', error on finding 'panOffset' of 'undefined'
         if (renderingTimestamp !== this.props.renderingTimestamp) {
             this.canvas.current.renderScene();
             this.canvas.current.setCameraOnTop();
