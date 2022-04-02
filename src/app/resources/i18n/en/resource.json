@@ -141,6 +141,7 @@
     "Set the width of tabs.": "Set the width of tabs.",
     "Set whether the object is filled with lines or dots.": "Set whether the object is filled with lines or dots.",
     "Settings used for printing with multiple extruders.": "Settings used for printing with multiple extruders.",
+    "Limit tool location by object boundary \n - Tangent to Boundary:  Tool is located inside the machining  boundary \n - Past Boundary: tool can exceed machining boundary": "Limit tool location by object boundary \n - Tangent to Boundary:  Tool is located inside the machining  boundary \n - Past Boundary: tool can exceed machining boundary",
     "Shank Diameter": "Shank Diameter",
     "Shell": "Shell",
     "Skirt": "Skirt",

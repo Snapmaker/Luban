@@ -32,6 +32,9 @@
         },
         "step_over": {
             "default_value": 1.2
+        },
+        "tool_limiting": {
+            "default_value": true
         }
     }
 }
