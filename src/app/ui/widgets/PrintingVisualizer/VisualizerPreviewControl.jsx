@@ -15,6 +15,7 @@ import Select from '../../components/Select';
 import { DUAL_EXTRUDER_TOOLHEAD_FOR_SM2, GCODEPREVIEWMODES, GCODEPREVIEWMODES_ICONS, LEFT_EXTRUDER, RIGHT_EXTRUDER } from '../../../constants';
 import { machineStore } from '../../../store/local-storage';
 import SvgIcon from '../../components/SvgIcon';
+import Checkbox from '../../components/Checkbox';
 
 // TODO
 function useShowToggleBtn() {
@@ -39,11 +40,11 @@ function useShowToggleBtn() {
     };
 }
 
-const MIN = 30;
 const MAX = 288;
+const MIN = 30;
 
 function GcodeLayout() {
-    const layerCount = useSelector(state => state?.printing?.layerCount, shallowEqual);
+    const layerCount = useSelector(state => state?.printing?.layerCount - 1, shallowEqual);
     // const gcodePreviewMode = useSelector(state => state?.printing?.gcodePreviewMode, shallowEqual);
     const layerRangeDisplayed = useSelector(state => state?.printing?.layerRangeDisplayed, shallowEqual);
     const dispatch = useDispatch();
@@ -55,6 +56,9 @@ function GcodeLayout() {
 
     const [value, setValue] = useState([]);
     useEffect(() => {
+        // console.log('layerRangeDisplayed v', layerRangeDisplayed[0], layerRangeDisplayed[1], value[0] * x,
+        //     (value[1] - MIN) * x, layerRangeDisplayed[0] / x,
+        //     layerRangeDisplayed[1] / x + MIN);
         setValue([
             layerRangeDisplayed[0] / x,
             layerRangeDisplayed[1] / x + MIN
@@ -63,6 +67,7 @@ function GcodeLayout() {
 
 
     const onChangeShowLayer = throttle((v) => {
+        // console.log('v', v);
         dispatch(printingActions.showGcodeLayers([
             v[0] * x,
             (v[1] - MIN) * x
@@ -83,7 +88,7 @@ function GcodeLayout() {
                     vertical
                     min={0}
                     max={MAX}
-                    step={1 * MAX / layerCount}
+                    step={(MAX - MIN) / layerCount}
                     range={{ draggableTrack: true }}
                     value={value}
                     onChange={(v) => {
@@ -100,6 +105,7 @@ function GcodeLayout() {
 function VisualizerPreviewControl() {
     const [showPreviewPanel, setShowPreviewPanel] = useState(true);
     const [allShowTypes, setAllShowTypes] = useSetState({});
+    const [showOriginalModel, setShowOriginalModel] = useState(true);
     const isDualExtruder = (machineStore.get('machine.toolHead.printingToolhead') === DUAL_EXTRUDER_TOOLHEAD_FOR_SM2);
     const gcodeLine = useSelector(state => state?.printing?.gcodeLine, shallowEqual);
     const displayedType = useSelector(state => state?.printing?.displayedType, shallowEqual);
@@ -125,11 +131,14 @@ function VisualizerPreviewControl() {
         return (event) => {
             allShowTypes[direction][showType] = event.target.checked;
             setAllShowTypes(allShowTypes);
-            dispatch(printingActions.render({
-                gcodeTypeInitialVisibility: allShowTypes
-            }));
             dispatch(printingActions.setGcodeVisibilityByTypeAndDirection(showType, direction, event.target.checked));
         };
+    }
+
+    function toggleShowOriginalModel(event) {
+        const show = event.target.checked;
+        dispatch(printingActions.setShowOriginalModel(show));
+        setShowOriginalModel(show);
     }
 
     function toggleRenderLineType(option) {
@@ -141,6 +150,11 @@ function VisualizerPreviewControl() {
 
     useEffect(() => {
         setShowPreviewPanel(displayedType === 'gcode');
+        if (displayedType !== 'gcode') {
+            dispatch(printingActions.updateState({
+                gcodePreviewModeToogleVisible: 0
+            }));
+        }
     }, [displayedType]);
 
     useEffect(() => {
@@ -371,6 +385,24 @@ function VisualizerPreviewControl() {
                                                 />
                                             );
                                         }))}
+
+                                        <div className="border-top-normal padding-right-16 margin-right-16" />
+                                        <div className="sm-flex justify-space-between height-24 margin-vertical-8 padding-right-16">
+                                            <div>
+                                                <Checkbox
+                                                    checked={showOriginalModel}
+                                                    onChange={(event) => {
+                                                        toggleShowOriginalModel(event);
+                                                    }}
+                                                />
+                                                <span className="v-align-m margin-left-8">
+                                                    {i18n._('key-Printing/Preview-Model View')}
+                                                </span>
+                                            </div>
+                                            <div>
+                                                <span className="display-inline width-16 height-16 v-align-m border-radius-4" style={{ backgroundColor: '#D5D6D9' }} />
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                             </div>

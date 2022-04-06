@@ -4,7 +4,7 @@ import path from 'path';
 import { throttle, cloneDeep, isNil, filter, find as lodashFind } from 'lodash';
 // import FileSaver from 'file-saver';
 import { Vector3 } from 'three';
-import { GCodeParser } from '../../lib/gcode-viewer/parser';
+// import { GCodeParser } from '../../lib/gcode-viewer/parser';
 import workerManager from '../../lib/manager/workerManager';
 import {
     ABSENT_OBJECT,
@@ -61,7 +61,7 @@ import ArrangeOperation3D from '../operation-history/ArrangeOperation3D';
 import ScaleToFitWithRotateOperation3D from '../operation-history/ScaleToFitWithRotateOperation3D';
 import PrimeTowerModel from '../../models/PrimeTowerModel';
 import ThreeUtils from '../../three-extensions/ThreeUtils';
-import { TYPE_SETTINGS } from '../../lib/gcode-viewer/constants';
+// import { TYPE_SETTINGS } from '../../lib/gcode-viewer/constants';
 
 // register methods for three-mesh-bvh
 THREE.Mesh.prototype.raycast = acceleratedRaycast;
@@ -86,6 +86,16 @@ const getRealSeries = (series) => {
     }
     return series;
 };
+const getGcodeRenderValue = (object, index) => {
+    if (index / 8 >= 1) {
+        return Object.values(object[LEFT_EXTRUDER])[index % 8];
+    } else {
+        return Object.values(object[RIGHT_EXTRUDER])[index % 8];
+    }
+};
+function isLarger(a, b) {
+    return (a - b) > EPSILON;
+}
 
 const defaultDefinitionKeys = {
     material: {
@@ -151,8 +161,8 @@ const INITIAL_STATE = {
     filamentLength: 0,
     filamentWeight: 0,
     gcodeLineGroup: new THREE.Group(),
-    gcodeLineObjects: [],
-    gcodeParser: null,
+    // gcodeLineObjects: [],
+    // gcodeParser: null,
     gcodeLine: null,
     layerCount: 0,
     layerRangeDisplayed: [0, Infinity],
@@ -642,7 +652,7 @@ export const actions = {
         }
     },
     gcodeRenderingCallback: (data) => (dispatch, getState) => {
-        const { gcodeLineGroup, gcodeTypeInitialVisibility, gcodePreviewMode, gcodeLineObjects, gcodeParser } = getState().printing;
+        const { gcodeLineGroup, gcodePreviewMode } = getState().printing;
 
         const { status, value } = data;
         switch (status) {
@@ -666,68 +676,39 @@ export const actions = {
                 bufferGeometry.setAttribute('a_type_code', typeCodeAttribute);
                 bufferGeometry.setAttribute('a_tool_code', toolCodeAttribute);
 
-                const object3D = gcodeBufferGeometryToObj3d('3DP', bufferGeometry);
 
                 dispatch(actions.destroyGcodeLine());
-                // gcodeLineGroup.add(object3D);
-                console.log('object3D', object3D);
-                // const testObj = new LineTubeGeometry(8);
-                // const p1 = new LinePoint(new THREE.Vector3(100, 100, 0), 20, new THREE.Color('29BEB0'));
-                // const p2 = new LinePoint(new THREE.Vector3(50, 50, 0), 20, new THREE.Color('29BEB0'));
-                // testObj.add(p1);
-                // testObj.add(p2);
-                // testObj.finish();
-                // testObj.slice(0, 1);
-                // gcodeLineGroup.add(testObj);
 
-                gcodeLineObjects.forEach(object => {
-                    gcodeLineGroup.remove(object);
-                });
-                gcodeParser && gcodeParser.dispose();
+                // gcodeLineObjects.forEach(object => {
+                //     gcodeLineGroup.remove(object);
+                // });
+                // gcodeParser && gcodeParser.dispose();
+                const object3D = gcodeBufferGeometryToObj3d('3DP', bufferGeometry);
+                gcodeLineGroup.add(object3D);
 
-                const gcode = value.gcode;
-                const parser = new GCodeParser(gcode);
-                parser.travelWidth = 0.1;
-                parser.radialSegments = 3;
-                parser.parse();
-                parser.slice();
-                console.log('geometries', parser.getGeometries());
+                // const gcode = value.gcode;
+                // const parser = new GCodeParser(gcode, extruderColors);
+                // parser.travelWidth = 0.1;
+                // parser.radialSegments = 3;
+                // parser.parse();
+                // parser.slice();
+                // const newGcodeLineObjects = [];
 
-                const json = JSON.parse(machineStore.get('scene'));
-                const objectLoader = new THREE.ObjectLoader();
-                const images = objectLoader.parseImages(json.images);
-                const textures = objectLoader.parseTextures(json.textures, images);
-                const materials = objectLoader.parseMaterials(json.materials, textures);
-                const newMaterial = Object.values(materials)[0];
-                const material = newMaterial.clone();
-                material.vertexColors = true;
-
-                const newGcodeLineObjects = [];
-                parser.getGeometries().forEach(geometry => {
-                    const newGcodeLineObject = new THREE.Mesh(geometry, material);
-                    // console.log('geometry', geometry);
-                    gcodeLineGroup.add(newGcodeLineObject);
-                    newGcodeLineObjects.push(newGcodeLineObject);
-                });
+                // parser.getGeometries().forEach((geometry) => {
+                //     const newGcodeLineObject = gcodeBufferGeometryToObj3d('3DP', geometry, 'mesh');
+                //     newGcodeLineObjects.push(newGcodeLineObject);
+                // });
 
                 object3D.position.copy(new THREE.Vector3());
                 dispatch(actions.updateState({
                     layerCount,
                     layerRangeDisplayed: [0, layerCount - 1],
-                    renderLineType: false,
-                    gcodeLine: object3D,
-                    gcodeLineObjects: newGcodeLineObjects,
-                    gcodeParser: parser
+                    gcodeLine: object3D
+                    // gcodeLineObjects: newGcodeLineObjects,
+                    // gcodeParser: parser
                 }));
-                dispatch(actions.renderShowGcodeLines());
 
                 dispatch(actions.updateGcodePreviewMode(gcodePreviewMode));
-
-                Object.keys(GCODE_VISIBILITY_TYPE).forEach((type) => {
-                    dispatch(actions.setGcodeVisibilityByTypeAndDirection(type, LEFT_EXTRUDER, gcodeTypeInitialVisibility[LEFT_EXTRUDER][type] ? 1 : 0));
-                    dispatch(actions.setGcodeVisibilityByTypeAndDirection(type, RIGHT_EXTRUDER, gcodeTypeInitialVisibility[RIGHT_EXTRUDER][type] ? 1 : 0));
-                });
-                dispatch(actions.setGcodeColorByRenderLineType());
 
                 const { minX, minY, minZ, maxX, maxY, maxZ } = bounds;
                 dispatch(actions.checkGcodeBoundary(minX, minY, minZ, maxX, maxY, maxZ));
@@ -1562,114 +1543,120 @@ export const actions = {
         });
     },
 
+    setShowOriginalModel: (show) => (dispatch, getState) => {
+        console.log('show', show);
+        const { modelGroup } = getState().printing;
+        modelGroup.object.visible = show;
+        dispatch(actions.render());
+    },
+
     // preview
     setGcodeVisibilityByTypeAndDirection: (type, direction = LEFT_EXTRUDER, visible) => (dispatch, getState) => {
-        const { gcodeLine, gcodeParser } = getState().printing;
-        console.log('set type', type, direction, visible, TYPE_SETTINGS[type]);
-        const { showTypes } = gcodeParser;
+        const { gcodeLine, gcodeTypeInitialVisibility } = getState().printing;
         if (type === 'TOOL0') {
-            for (let i = 0; i < 8; i++) {
-                showTypes[i] = visible;
-            }
+            const gcodeVisibleType = gcodeTypeInitialVisibility[LEFT_EXTRUDER];
+            Object.entries(gcodeVisibleType).forEach(([key]) => {
+                gcodeVisibleType[key] = visible;
+            });
         } else if (type === 'TOOL1') {
-            for (let i = 8; i < 16; i++) {
-                showTypes[i] = visible;
-            }
+            const gcodeVisibleType = gcodeTypeInitialVisibility[RIGHT_EXTRUDER];
+            Object.entries(gcodeVisibleType).forEach(([key]) => {
+                gcodeVisibleType[key] = visible;
+            });
         } else {
-            let i = 0;
+            let gcodeVisibleType = gcodeTypeInitialVisibility[LEFT_EXTRUDER];
             if (direction === RIGHT_EXTRUDER) {
-                i = 8;
+                gcodeVisibleType = gcodeTypeInitialVisibility[RIGHT_EXTRUDER];
             }
-            i += TYPE_SETTINGS[type].typeCode - 1;
-            showTypes[i] = visible;
+            gcodeVisibleType[type] = visible;
         }
-        dispatch(actions.renderShowGcodeLines());
-
-        const uniforms = gcodeLine.material.uniforms;
-        const value = visible ? 1 : 0;
-        if (direction === LEFT_EXTRUDER) {
-            switch (type) {
-                case 'WALL-INNER':
-                    uniforms.u_l_wall_inner_visible.value = value;
-                    break;
-                case 'WALL-OUTER':
-                    uniforms.u_l_wall_outer_visible.value = value;
-                    break;
-                case 'SKIN':
-                    uniforms.u_l_skin_visible.value = value;
-                    break;
-                case 'SKIRT':
-                    uniforms.u_l_skirt_visible.value = value;
-                    break;
-                case 'SUPPORT':
-                    uniforms.u_l_support_visible.value = value;
-                    break;
-                case 'FILL':
-                    uniforms.u_l_fill_visible.value = value;
-                    break;
-                case 'TRAVEL':
-                    uniforms.u_l_travel_visible.value = value;
-                    break;
-                case 'UNKNOWN':
-                    uniforms.u_l_unknown_visible.value = value;
-                    break;
-                default:
-                    break;
-            }
-        } else {
-            switch (type) {
-                case 'WALL-INNER':
-                    uniforms.u_r_wall_inner_visible.value = value;
-                    break;
-                case 'WALL-OUTER':
-                    uniforms.u_r_wall_outer_visible.value = value;
-                    break;
-                case 'SKIN':
-                    uniforms.u_r_skin_visible.value = value;
-                    break;
-                case 'SKIRT':
-                    uniforms.u_r_skirt_visible.value = value;
-                    break;
-                case 'SUPPORT':
-                    uniforms.u_r_support_visible.value = value;
-                    break;
-                case 'FILL':
-                    uniforms.u_r_fill_visible.value = value;
-                    break;
-                case 'TRAVEL':
-                    uniforms.u_r_travel_visible.value = value;
-                    break;
-                case 'UNKNOWN':
-                    uniforms.u_r_unknown_visible.value = value;
-                    break;
-                default:
-                    break;
+        dispatch(actions.updateState({ gcodeTypeInitialVisibility }));
+        // dispatch(actions.renderShowGcodeLines());
+        if (gcodeLine) {
+            const uniforms = gcodeLine.material.uniforms;
+            const value = visible ? 1 : 0;
+            if (direction === LEFT_EXTRUDER) {
+                switch (type) {
+                    case 'WALL-INNER':
+                        uniforms.u_l_wall_inner_visible.value = value;
+                        break;
+                    case 'WALL-OUTER':
+                        uniforms.u_l_wall_outer_visible.value = value;
+                        break;
+                    case 'SKIN':
+                        uniforms.u_l_skin_visible.value = value;
+                        uniforms.u_l_skirt_visible.value = value;
+                        break;
+                    case 'SUPPORT':
+                        uniforms.u_l_support_visible.value = value;
+                        break;
+                    case 'FILL':
+                        uniforms.u_l_fill_visible.value = value;
+                        break;
+                    case 'TRAVEL':
+                        uniforms.u_l_travel_visible.value = value;
+                        break;
+                    case 'UNKNOWN':
+                        uniforms.u_l_unknown_visible.value = value;
+                        break;
+                    default:
+                        break;
+                }
+            } else {
+                switch (type) {
+                    case 'WALL-INNER':
+                        uniforms.u_r_wall_inner_visible.value = value;
+                        break;
+                    case 'WALL-OUTER':
+                        uniforms.u_r_wall_outer_visible.value = value;
+                        break;
+                    case 'SKIN':
+                        uniforms.u_r_skin_visible.value = value;
+                        uniforms.u_r_skirt_visible.value = value;
+                        break;
+                    case 'SUPPORT':
+                        uniforms.u_r_support_visible.value = value;
+                        break;
+                    case 'FILL':
+                        uniforms.u_r_fill_visible.value = value;
+                        break;
+                    case 'TRAVEL':
+                        uniforms.u_r_travel_visible.value = value;
+                        break;
+                    case 'UNKNOWN':
+                        uniforms.u_r_unknown_visible.value = value;
+                        break;
+                    default:
+                        break;
+                }
             }
         }
         dispatch(actions.render());
     },
 
     updateGcodePreviewMode: (mode) => (dispatch, getState) => {
-        const { gcodeLine, layerRangeDisplayed, layerCount, gcodeParser } = getState().printing;
-        gcodeParser.setColortypes(mode === 'GrayUnderTheTopFloor');
+        const { gcodeLine, layerRangeDisplayed, layerCount } = getState().printing;
+        // gcodeParser.setColortypes(mode === GCODEPREVIEWMODES[2]);
+        if (gcodeLine) {
+            const uniforms = gcodeLine.material.uniforms;
 
-        const uniforms = gcodeLine.material.uniforms;
-
-        if (mode === 'GrayUnderTheTopFloor') {
-            uniforms.u_middle_layer_set_gray.value = 1;
-        } else {
-            uniforms.u_middle_layer_set_gray.value = 0;
+            if (mode === GCODEPREVIEWMODES[2]) {
+                uniforms.u_middle_layer_set_gray.value = 1;
+            } else {
+                uniforms.u_middle_layer_set_gray.value = 0;
+            }
         }
+
         dispatch(actions.updateState({
             gcodePreviewModeToogleVisible: 0,
             gcodePreviewMode: mode
         }));
 
-        if (mode === 'SingleLayer') {
+        if (mode === GCODEPREVIEWMODES[1]) {
             dispatch(actions.showGcodeLayers([
                 layerRangeDisplayed[1], layerRangeDisplayed[1]
             ]));
-        } else if (mode === 'Ordinary' || mode === 'GrayUnderTheTopFloor') {
+        } else if (mode === GCODEPREVIEWMODES[0] || mode === GCODEPREVIEWMODES[2]) {
             if (layerRangeDisplayed[0] === layerRangeDisplayed[1]) {
                 dispatch(actions.showGcodeLayers([0, layerCount - 1]));
             } else {
@@ -1679,25 +1666,26 @@ export const actions = {
     },
 
     setGcodeColorByRenderLineType: () => (dispatch, getState) => {
-        const { gcodeLine, renderLineType, gcodeParser, extruderLDefinition, extruderRDefinition } = getState().printing;
-        if (renderLineType) {
-            gcodeParser.extruderColors = [
-                extruderLDefinition?.settings?.color?.default_value || WHITE_COLOR,
-                extruderRDefinition?.settings?.color?.default_value || BLACK_COLOR
-            ];
+        const { gcodeLine, renderLineType } = getState().printing;
+        // if (renderLineType) {
+        //     gcodeParser.extruderColors = {
+        //         toolColor0: extruderLDefinition?.settings?.color?.default_value || WHITE_COLOR,
+        //         toolColor1: extruderRDefinition?.settings?.color?.default_value || BLACK_COLOR
+        //     };
+        // }
+        // gcodeParser.setColortypes(undefined, renderLineType);
+        if (gcodeLine) {
+            const uniforms = gcodeLine.material.uniforms;
+            uniforms.u_color_type.value = renderLineType ? 1 : 0;
         }
-        gcodeParser.setColortypes(undefined, renderLineType);
-
-        const uniforms = gcodeLine.material.uniforms;
-        uniforms.u_color_type.value = renderLineType ? 1 : 0;
         dispatch(actions.render());
     },
 
     renderShowGcodeLines: () => (dispatch, getState) => {
-        const { gcodeParser, gcodeLineObjects } = getState().printing;
-        const { startLayer, endLayer, showTypes } = gcodeParser;
+        const { gcodeParser, gcodeLineObjects, gcodeTypeInitialVisibility } = getState().printing;
+        const { startLayer, endLayer } = gcodeParser;
         gcodeLineObjects.forEach((mesh, i) => {
-            if (i < (startLayer ?? 0) * 16 || i > (endLayer ?? 0) * 16 + 15 || !showTypes[i & 15]) {
+            if (i < (startLayer ?? 0) || i > (endLayer ?? 0) || !getGcodeRenderValue(gcodeTypeInitialVisibility, i)) {
                 mesh.visible = false;
             } else {
                 mesh.visible = true;
@@ -1709,27 +1697,37 @@ export const actions = {
         throttle(() => {
             const {
                 layerCount,
+                // gcodeLineObjects,
                 gcodeLine,
                 gcodePreviewMode,
-                layerRangeDisplayed,
-                gcodeParser
+                layerRangeDisplayed
+                // gcodeParser
             } = getState().printing;
-            gcodeParser.startLayer = Math.floor(range[0]);
-            gcodeParser.endLayer = Math.floor(range[1]);
-            dispatch(actions.renderShowGcodeLines());
 
             if (!gcodeLine) {
                 return;
             }
-
-            if (range >= layerCount) {
+            if (range[1] >= layerCount) {
                 dispatch(actions.displayModel());
             } else {
                 dispatch(actions.displayGcode());
             }
-            if (gcodePreviewMode === 'SingleLayer') {
+            let isUp = false;
+            if (gcodePreviewMode === GCODEPREVIEWMODES[1]) {
                 // The moving direction is down
-                if (layerRangeDisplayed[0] > range[0]) {
+                if (range[0] - layerRangeDisplayed[0] > EPSILON) {
+                    range = [
+                        range[0] || 0,
+                        range[0] || 0
+                    ];
+                    isUp = true;
+                } else if (range[1] - layerRangeDisplayed[1] > EPSILON) {
+                    range = [
+                        Math.min(layerCount, range[1]),
+                        Math.min(layerCount, range[1])
+                    ];
+                    isUp = true;
+                } else if (layerRangeDisplayed[0] - range[0] > EPSILON) {
                     range = [
                         range[0] || 0,
                         range[0] || 0
@@ -1741,34 +1739,64 @@ export const actions = {
                     ];
                 }
             } else {
-                if ((range[0] > layerRangeDisplayed[0] || range[1] > layerRangeDisplayed[1])) {
-                    if (range[0] > layerRangeDisplayed[0] && range[0] > range[1]) {
+                let isRelated = false;
+                if (Math.abs(layerRangeDisplayed[0] - layerRangeDisplayed[1]) === 0) {
+                    isRelated = true;
+                }
+                if (isLarger(range[0], layerRangeDisplayed[0]) || isLarger(range[1], layerRangeDisplayed[1])) {
+                    if (isRelated && isLarger(range[0], layerRangeDisplayed[0])) {
+                        range[1] = range[0];
+                    }
+                    if (isLarger(range[0], layerRangeDisplayed[0]) && isLarger(range[0], range[1])) {
                         const tmp = range[1];
                         range[1] = range[0];
                         range[0] = tmp;
                     }
+                    isUp = true;
                     range[1] = Math.min(layerCount, range[1]);
                     range[0] = Math.min(layerCount, range[0]);
                 }
-
-                if ((range[0] < layerRangeDisplayed[0] || range[1] < layerRangeDisplayed[1])) {
+                if (isLarger(layerRangeDisplayed[0], range[0]) || isLarger(layerRangeDisplayed[1], range[1])) {
+                    if (isRelated && isLarger(layerRangeDisplayed[1], range[1])) {
+                        range[0] = range[1];
+                    }
+                    // TODO: ?
                     if (range[1] < layerRangeDisplayed[0] && range[0] > range[1]) {
                         const tmp = range[1];
                         range[1] = range[0];
                         range[0] = tmp;
                     }
-                    range[1] = range[1] || 0;
-                    range[0] = range[0] || 0;
+                    range[1] = range[1] < 0 ? 0 : range[1];
+                    range[0] = range[0] < 0 ? 0 : range[0];
                 }
             }
-            range[0] = range[0] < 0 ? 0 : range[0];
-            gcodeLine.material.uniforms.u_visible_layer_range_start.value = Math.round(range[0], 10);
-            gcodeLine.material.uniforms.u_visible_layer_range_end.value = Math.round(range[1], 10);
+            const prevRange = [...range];
+            range[0] = range[0] < 0 ? 0 : Math.round(range[0]);
+            range[1] = range[1] < 0 ? 0 : Math.round(range[1]);
+            range[0] = range[0] > layerCount - 1 ? layerCount - 1 : range[0];
+            range[1] = range[1] > layerCount - 1 ? layerCount - 1 : range[1];
+            // gcodeParser.startLayer = range[0];
+            // gcodeParser.endLayer = range[1];
+            // dispatch(actions.renderShowGcodeLines());
+            if (gcodeLine) {
+                gcodeLine.material.uniforms.u_visible_layer_range_start.value = range[0];
+                gcodeLine.material.uniforms.u_visible_layer_range_end.value = range[1];
+            }
+            if (isUp && (range[0] - prevRange[0]) > 0 && (range[0] - prevRange[0]) < 1
+            && (range[1] - prevRange[1]) > 0 && (range[1] - prevRange[1]) < 1) {
+                range[0] = prevRange[0];
+                range[1] = prevRange[1];
+            }
+            if (!isUp && (range[0] - prevRange[0]) > 0 && (prevRange[0] - range[0]) < 1
+            && (range[1] - prevRange[1]) > 0 && (prevRange[1] - range[1]) < 1) {
+                range[0] = prevRange[0];
+                range[1] = prevRange[1];
+            }
             dispatch(actions.updateState({
                 layerRangeDisplayed: range
             }));
             dispatch(actions.render());
-        }, 1000)();
+        }, 0)();
     },
 
     // make an offset of gcode layer count
@@ -1793,7 +1821,7 @@ export const actions = {
 
     displayModel: () => (dispatch, getState) => {
         const { gcodeLineGroup, modelGroup } = getState().printing;
-        // modelGroup.object.visible = true;
+        modelGroup.object.visible = true;
         modelGroup.setDisplayType('model');
         gcodeLineGroup.visible = false;
         dispatch(actions.updateState({
@@ -2718,7 +2746,6 @@ export const actions = {
 
     displayGcode: () => (dispatch, getState) => {
         const { gcodeLineGroup, modelGroup } = getState().printing;
-        // modelGroup.object.visible = false;
         modelGroup.setDisplayType('gcode');
         gcodeLineGroup.visible = true;
         dispatch(actions.updateState({
@@ -2739,7 +2766,7 @@ export const actions = {
             toolColor1: extruderRDefinition?.settings?.color?.default_value || BLACK_COLOR
         };
         workerManager.gcodeToBufferGeometry([{ func: '3DP', gcodeFilename, extruderColors }], (data) => {
-            dispatch(actions.gcodeRenderingCallback(data));
+            dispatch(actions.gcodeRenderingCallback(data, extruderColors));
         });
     },
     /**

@@ -1,6 +1,6 @@
 export const TYPE_SETTINGS = {
     'WALL-INNER': {
-        rgb: [0, 255, 0],
+        rgb: [0, 245, 0],
         color: '#00FF00',
         typeCode: 1,
     },

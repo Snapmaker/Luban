@@ -119,11 +119,10 @@ export const GCODEPREVIEWMODES = [
     'GrayUnderTheTopFloor'
 ];
 
-// UI暂时没有提供，先用来测试
 export const GCODEPREVIEWMODES_ICONS = [
-    'MainToolbarJobSetup',
-    'MainToolbarTop',
-    'MainToolbarBottom',
+    'NormalMode',
+    'SingleLayerMode',
+    'GrayedOutMode'
 ];
 
 export const PRINTING_MATERIAL_CONFIG_COLORS = [

@@ -1,6 +1,6 @@
 import { v4 as uuid } from 'uuid';
 import * as THREE from 'three';
-import { MeshLambertMaterial, ObjectLoader, DoubleSide } from 'three';
+import { MeshLambertMaterial, ObjectLoader } from 'three';
 import {
     LOAD_MODEL_FROM_INNER
 } from '../constants';
@@ -64,19 +64,28 @@ class ThreeModel extends BaseModel {
             material = newMaterial;
 
             this.modelModeMaterial = material;
+            // Line version
             this.gcodeModeMaterial = new MeshLambertMaterial({
-                // opacity: 0.2,
-                // transparent: true,
-                // shininess: 1,
                 color: '#2a2c2e',
-                side: DoubleSide,
-                depthWrite: true,
+                side: THREE.FrontSide,
+                depthWrite: false,
                 transparent: true,
                 opacity: 0.3,
                 polygonOffset: true,
-                polygonOffsetFactor: -1,
-                polygonOffsetUnits: -5
+                polygonOffsetFactor: -5,
+                polygonOffsetUnits: -0.1
             });
+            // Linetube version, not remove
+            // this.gcodeModeMaterial = new MeshLambertMaterial({
+            //     color: '#2a2c2e',
+            //     side: DoubleSide,
+            //     depthWrite: false,
+            //     transparent: true,
+            //     opacity: 0.3,
+            //     polygonOffset: true,
+            //     polygonOffsetFactor: -1,
+            //     polygonOffsetUnits: -5
+            // });
         } catch (e) {
             console.error('error', e);
         }
@@ -264,13 +273,6 @@ class ThreeModel extends BaseModel {
         // attention: do not use Object3D.applyMatrix(matrix : Matrix4)
         // because applyMatrix is accumulated
         // anther way: decompose Matrix and reset position/rotation/scale
-        // let position = new THREE.Vector3();
-        // let quaternion = new THREE.Quaternion();
-        // let scale = new THREE.Vector3();
-        // matrix.decompose(position, quaternion, scale);
-        // this.position.copy(position);
-        // this.quaternion.copy(quaternion);
-        // this.scale.copy(scale);
     }
 
     setOversteppedAndSelected(overstepped, isSelected) {

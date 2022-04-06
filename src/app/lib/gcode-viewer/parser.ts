@@ -1,11 +1,14 @@
 import {
     Vector3,
-    LineCurve3, Color,
 } from 'three';
 import { LineTubeGeometry } from './LineTubeGeometry';
 import { LinePoint } from './LinePoint';
 import { SegmentColorizer, SimpleColorizer } from './SegmentColorizer';
 
+function getLength(lastPoint: Vector3, newPoint: Vector3) {
+    const distant = (lastPoint.x - newPoint.x) ** 2 + (lastPoint.y - newPoint.y) ** 2 + (lastPoint.z - newPoint.z) ** 2;
+    return distant ** 0.5;
+}
 export class GCodeParser {
     private combinedLines: LineTubeGeometry[] = []
 
@@ -15,14 +18,11 @@ export class GCodeParser {
 
     public endLayer: number | undefined = undefined
 
-    public showTypes: boolean[] = [true, true, true, true, true, true, false, true,
-        true, true, true, true, true, true, false, true];
-
     public min?: Vector3
 
     public max?: Vector3
 
-    public extruderColors: string[] = ['#FFFFFF', '#404040']
+    public extruderColors: { toolColor0: string, toolColor1: string } = { toolColor0: '#FFFFFF', toolColor1: '#404040' }
 
     private minTemp: number | undefined = undefined
 
@@ -88,9 +88,8 @@ export class GCodeParser {
      */
     constructor(gCode: string) {
         this.gCode = gCode;
-
         // Pre-calculate some min max values, needed for colorizing.
-        this.calcMinMaxMetadata();
+        // this.calcMinMaxMetadata();
     }
 
     /**
@@ -155,42 +154,42 @@ export class GCodeParser {
     /**
      * Pre-calculates the min max metadata which may be needed for the colorizers.
      */
-    private calcMinMaxMetadata() {
-        this.gCode.split('\n').forEach((line) => {
-            if (line === undefined || line[0] === ';') {
-                return;
-            }
-
-            const cmd = line.split(' ');
-            if (cmd[0] === 'G0' || cmd[0] === 'G1') {
-                // Feed rate -> speed
-                const f = this.parseValue(cmd.find((v) => v[0] === 'F'));
-
-                if (f === undefined) {
-                    return;
-                }
-
-                if (f > this.maxSpeed) {
-                    this.maxSpeed = f;
-                }
-                if (this.minSpeed === undefined || f < this.minSpeed) {
-                    this.minSpeed = f;
-                }
-            } else if (cmd[0] === 'M104' || cmd[0] === 'M109') {
-                // hot end temperature
-                // M104 S205 ; set hot end temp
-                // M109 S205 ; wait for hot end temp
-                const hotendTemp = this.parseValue(cmd.find((v) => v[0] === 'S')) || 0;
-
-                if (hotendTemp > this.maxTemp) {
-                    this.maxTemp = hotendTemp;
-                }
-                if (this.minTemp === undefined || hotendTemp < this.minTemp) {
-                    this.minTemp = hotendTemp;
-                }
-            }
-        });
-    }
+    // private calcMinMaxMetadata() {
+    //     this.gCode.split('\n').forEach((line) => {
+    //         if (line === undefined || line[0] === ';') {
+    //             return;
+    //         }
+    //
+    //         const cmd = line.split(' ');
+    //         if (cmd[0] === 'G0' || cmd[0] === 'G1') {
+    //             // Feed rate -> speed
+    //             const f = this.parseValue(cmd.find((v) => v[0] === 'F'));
+    //
+    //             if (f === undefined) {
+    //                 return;
+    //             }
+    //
+    //             if (f > this.maxSpeed) {
+    //                 this.maxSpeed = f;
+    //             }
+    //             if (this.minSpeed === undefined || f < this.minSpeed) {
+    //                 this.minSpeed = f;
+    //             }
+    //         } else if (cmd[0] === 'M104' || cmd[0] === 'M109') {
+    //             // hot end temperature
+    //             // M104 S205 ; set hot end temp
+    //             // M109 S205 ; wait for hot end temp
+    //             const hotendTemp = this.parseValue(cmd.find((v) => v[0] === 'S')) || 0;
+    //
+    //             if (hotendTemp > this.maxTemp) {
+    //                 this.maxTemp = hotendTemp;
+    //             }
+    //             if (this.minTemp === undefined || hotendTemp < this.minTemp) {
+    //                 this.minTemp = hotendTemp;
+    //             }
+    //         }
+    //     });
+    // }
 
     /**
      * Set the lines colors type
@@ -266,33 +265,23 @@ export class GCodeParser {
         let layer = 0;
 
         let currentLayer = 0;
-        let lastAddedLinePoint: LinePoint | undefined;
+        // const lastAddedLinePointArray: LinePoint[] | undefined = [];
+        // let addedLinePoint: LinePoint | undefined;
         const addLine = (newLine: LinePoint) => {
-            if (newLine.lineType === 1) {
-                console.log('newLine', newLine.lineType);
-            }
             if (newLine.layer > currentLayer) {
                 // end the old geometry and increase the counter
-                for (let i = 0; i < 16; i++) {
-                    this.combinedLines[currentLayer * 16 + i] && this.combinedLines[currentLayer * 16 + i].finish();
-                }
+                this.combinedLines[currentLayer] && this.combinedLines[currentLayer].finish();
                 currentLayer = newLine.layer;
             }
 
-            if (this.combinedLines[currentLayer * 16] === undefined) {
-                for (let i = 0; i < 16; i++) {
-                    this.combinedLines.push(new LineTubeGeometry(this.radialSegments));
-                }
+            if (this.combinedLines[currentLayer] === undefined) {
+                this.combinedLines.push(new LineTubeGeometry(this.radialSegments, newLine.layer));
             }
 
-            if (lastAddedLinePoint !== undefined) {
-                // const startPoint = lastAddedLinePoint;
-                const startPoint = new LinePoint(newLine.point, 0);
-                this.combinedLines[currentLayer * 16 + newLine.extruder * 8 + (newLine.lineType - 1)].add(startPoint);
-            }
-            this.combinedLines[currentLayer * 16 + newLine.extruder * 8 + (newLine.lineType - 1)].add(newLine);
+            this.combinedLines[currentLayer].add(newLine);
 
-            lastAddedLinePoint = newLine;
+            // addedLinePoint = newLine;
+            // lastAddedLinePointArray[newLine.extruder * 8 + (newLine.lineType - 1)] = newLine;
         };
 
         lines.forEach((line, i) => {
@@ -354,8 +343,7 @@ export class GCodeParser {
 
                 const newPoint = new Vector3(x, y, z);
 
-                const curve = new LineCurve3(lastPoint, newPoint);
-                const length = curve.getLength();
+                const length = getLength(lastPoint, newPoint);
 
                 if (length !== 0) {
                     let radius = (e - lastE) / length * 10;
@@ -375,17 +363,15 @@ export class GCodeParser {
                     //     speed: f,
                     //     temp: hotendTemp
                     // });
-                    const color = new Color('#FFFFFF');
-
                     // Insert the last point with the current radius.
                     // As the GCode contains the extrusion for the 'current' line,
                     // but the LinePoint contains the radius for the 'next' line
                     // we need to combine the last point with the current radius.
                     if (cmd[0] === 'G0') {
-                        addLine(new LinePoint(lastPoint.clone(), radius, color, extruder, 'TRAVEL', this.isGrayMode, this.isDual, this.extruderColors, layer));
+                        addLine(new LinePoint(lastPoint.clone(), radius, extruder, 'TRAVEL', this.isGrayMode, this.extruderColors, layer));
                     }
                     if (cmd[0] === 'G1') {
-                        addLine(new LinePoint(lastPoint.clone(), radius, color, extruder, type, this.isGrayMode, this.isDual, this.extruderColors, layer));
+                        addLine(new LinePoint(lastPoint.clone(), radius, extruder, type, this.isGrayMode, this.extruderColors, layer));
                     }
                 }
 
@@ -428,11 +414,7 @@ export class GCodeParser {
         });
 
         // Finish last object
-        for (let i = 0; i < 16; i++) {
-            if (this.combinedLines[currentLayer * 16 + i]) {
-                this.combinedLines[currentLayer * 16 + i].finish();
-            }
-        }
+        this.combinedLines[currentLayer].finish();
     }
 
     /**

@@ -1,3 +1,6 @@
+import * as THREE from 'three';
+import { DEFAULT_LUBAN_HOST } from '../../constants';
+
 export const PRINT3D_UNIFORMS = {
     u_visible_layer_range_start: { value: 0.0 },
     u_visible_layer_range_end: { value: 0.0 },
@@ -21,6 +24,10 @@ export const PRINT3D_UNIFORMS = {
     u_r_fill_visible: { value: 1 },
     u_r_travel_visible: { value: 0 },
     u_r_unknown_visible: { value: 1 },
+    texture: {
+        type: 't',
+        value: new THREE.TextureLoader().load(`${DEFAULT_LUBAN_HOST}/resources/images/wood.png`)
+    }
 
 };
 export const PRINT3D_VERT_SHADER = [
@@ -61,6 +68,7 @@ export const PRINT3D_VERT_SHADER = [
     'varying float v_layer_index;',
     'varying float v_type_code;',
     'varying float v_tool_code;',
+    // 'varying float vUv',
 
     'attribute float a_layer_index;',
     'attribute float a_type_code;',
@@ -74,8 +82,7 @@ export const PRINT3D_VERT_SHADER = [
     '    v_tool_code = a_tool_code;',
     '    v_color0 = a_color;',
     '    v_color1 = a_color1;',
-    // '    gl_PointSize = 5.0;',
-
+    // '    vUv = uv;',
     '    gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);',
     '}'
 ].join('');
@@ -113,12 +120,12 @@ export const PRINT3D_FRAG_SHADER = [
     'void main(){',
     '    if(v_layer_index > u_visible_layer_range_end){',
     // '        gl_FragColor = vec4(0.87, 0.87, 0.87, 0.75);',
-    '        return;',
+    '        discard;',
     '    }',
 
     '    if(v_layer_index < u_visible_layer_range_start){',
     // '        gl_FragColor = vec4(0.87, 0.87, 0.87, 0.75);',
-    '        return;',
+    '        discard;',
     '    }',
 
     '    if(u_l_wall_inner_visible == 0 && 0.5 < v_type_code && v_type_code < 1.5 && v_tool_code < 0.5){',
@@ -185,12 +192,15 @@ export const PRINT3D_FRAG_SHADER = [
     '        discard;',
     '    }',
     '    if(u_middle_layer_set_gray == 1){',
-    '        if(v_layer_index == u_visible_layer_range_end){',
-    '           gl_FragColor = vec4(v_color0.xyz, 1.0);',
-    '        } else {',
+    '        if(v_layer_index != u_visible_layer_range_end){',
     '           gl_FragColor = vec4(0.6, 0.6, 0.6, 0.75);',
-    '        }',
-    '        return;',
+    '        } else {',
+    '           gl_FragColor = vec4(v_color0.xyz, 1.0);',
+    '           if(u_color_type == 1 && !(6.5 < v_type_code && v_type_code < 7.5)){',
+    '               gl_FragColor = vec4(v_color1.xyz, 1.0);',
+    '           }',
+    '       }',
+    '       return;',
     '    }',
     '    gl_FragColor = vec4(v_color0.xyz, 1.0);',
     '    if(u_color_type == 1 && !(6.5 < v_type_code && v_type_code < 7.5)){',
