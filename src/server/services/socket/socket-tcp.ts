@@ -1,4 +1,7 @@
 import net from 'net';
+// import fs from 'fs';
+import path from 'path';
+// import crypto from 'crypto';
 import wifiServerManager from './WifiServerManager';
 import type SocketServer from '../../lib/SocketManager';
 import { EventOptions } from './socket-http';
@@ -6,8 +9,8 @@ import logger from '../../lib/logger';
 import { CONNECTION_TYPE_WIFI, HEAD_PRINTING, SINGLE_EXTRUDER_TOOLHEAD_FOR_ORIGINAL } from '../../constants';
 import Business from '../../lib/SACP-SDK/SACP/business/Business';
 // import { readUint8 } from '../../lib/SACP-SDK/SACP/helper';
-import { RequestData } from '../../lib/SACP-SDK/SACP/communication/Dispatcher';
-import { readString, readUint32, stringToBuffer, writeUint32 } from '../../lib/SACP-SDK/SACP/helper';
+// import { RequestData } from '../../lib/SACP-SDK/SACP/communication/Dispatcher';
+// import { readString, readUint16, readUint32, readUint8, stringToBuffer, writeUint32 } from '../../lib/SACP-SDK/SACP/helper';
 
 const log = logger('lib:SocketTCP');
 
@@ -23,6 +26,8 @@ class SocketTCP {
     constructor() {
         this.client = new net.Socket();
         this.sacpClient = new Business('tcp', this.client);
+        this.sacpClient.setLogger(log);
+
         this.client.on('data', (buffer) => {
             this.sacpClient.read(buffer);
         });
@@ -50,7 +55,7 @@ class SocketTCP {
 
     public connectionOpen = (socket: SocketServer, options: EventOptions) => {
         this.socket = socket;
-        this.sacpClient.setHandler(0x01, 0x03, () => {
+        this.sacpClient.setHandler(0x01, 0x03, (data) => {
             const state: any = {
                 toolHead: SINGLE_EXTRUDER_TOOLHEAD_FOR_ORIGINAL,
                 series: 'A400',
@@ -63,10 +68,12 @@ class SocketTCP {
                 err: state?.err,
                 type: CONNECTION_TYPE_WIFI
             });
+            this.sacpClient.ack(0x01, 0x03, data.packet, Buffer.alloc(1, 0));
 
-            this.sacpClient.requestHome().then((res) => {
-                log.info(`request homing: ${res.response}`);
-            });
+            // this.sacpClient.requestHome().then((res) => {
+            //     log.info(`request homing: ${res.response}`);
+            // });
+            // this.uploadFile();
         });
         this.client.connect({
             host: options.address,
@@ -117,37 +124,10 @@ class SocketTCP {
     };
 
     public uploadFile = () => {
-        const filename = 'a.gcode';
-        const md5Str = '4ae09d45eac4aa08d013b5f2e01c67f6';
-        const fileLength = 4;
-
-
-        this.sacpClient.setHandler(0xb0, 0x01, (data: RequestData) => {
-            const { nextOffset, result: md5 } = readString(data.param);
-            const index = readUint32(data.param, nextOffset);
-            log.info(`receive file chunk request: md5: ${md5}, index: ${index}`);
-
-            const md5Buffer = stringToBuffer(md5);
-            const indexBuffer = Buffer.alloc(4, 0);
-            writeUint32(indexBuffer, 0, index);
-            const chunkBuffer = stringToBuffer('G28\n');
-
-            const buffer = Buffer.concat([Buffer.alloc(1, 0), md5Buffer, indexBuffer, chunkBuffer]);
-            this.sacpClient.ack(0xb0, 0x02, data.packet, buffer);
-        });
-
-        // handle file upload result
-        this.sacpClient.setHandler(0xb0, 0x02, (data: RequestData) => {
-            if (data.response === 0) {
-                log.info('file upload success');
-            } else {
-                log.error('file upload fail');
-            }
-            this.sacpClient.ack(0xb0, 0x02, data.packet, Buffer.alloc(1, 0));
-        });
-
-        this.sacpClient.uploadFile(filename, md5Str, fileLength).then((res) => {
-            if (res.response === 0) {
+        const filePath = path.resolve('C:\\Users\\xk\\Desktop\\server.js');
+        // const filePath = path.resolve('C:\\Users\\xk\\Downloads\\exportbinary 1_31063006 (2).gcode');
+        this.sacpClient.uploadFile(filePath).then((res) => {
+            if (res.response.result === 0) {
                 log.info('ready to upload file');
             } else {
                 log.error('can not upload file');
