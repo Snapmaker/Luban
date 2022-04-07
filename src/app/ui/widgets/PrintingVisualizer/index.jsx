@@ -5,16 +5,17 @@ import Visualizer from './Visualizer';
 import styles from '../styles.styl';
 
 
-const PrintingVisualizerWidget = ({ rotateInputValue, rotateAxis }) => (
+const PrintingVisualizerWidget = ({ controlInputValue, controlAxis, controlMode }) => (
     <Widget borderless className={styles.visualizer}>
         <Widget.Content className={styles['visualizer-content-wrapper']}>
-            <Visualizer rotateInputValue={rotateInputValue} rotateAxis={rotateAxis} />
+            <Visualizer controlInputValue={controlInputValue} controlAxis={controlAxis} controlMode={controlMode} />
         </Widget.Content>
     </Widget>
 );
 
 PrintingVisualizerWidget.propTypes = {
-    rotateInputValue: PropTypes.number,
-    rotateAxis: PropTypes.string
+    controlInputValue: PropTypes.object,
+    controlAxis: PropTypes.object,
+    controlMode: PropTypes.string
 };
 export default PrintingVisualizerWidget;

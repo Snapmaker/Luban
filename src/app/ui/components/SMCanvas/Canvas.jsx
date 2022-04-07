@@ -16,6 +16,7 @@ import Controls, { EVENTS } from './Controls';
 import log from '../../../lib/log';
 import Detector from '../../../three-extensions/Detector';
 import WebGLRendererWrapper from '../../../three-extensions/WebGLRendererWrapper';
+import { TRANSLATE_MODE } from '../../../constants';
 
 const ANIMATION_DURATION = 500;
 const DEFAULT_MODEL_POSITION = new Vector3(0, 0, 0);
@@ -24,6 +25,7 @@ const FPS = 60;
 const renderT = 1 / FPS;
 let parentDOM = null;
 let inputDOM = null;
+let inputDOM2 = null; // translate has two input for X and Y axis
 class Canvas extends PureComponent {
     node = React.createRef();
 
@@ -103,7 +105,7 @@ class Canvas extends PureComponent {
         this.scene = null;
         this.group = null;
         this.light = null;
-        this.rotateFontLeftTop = new Vector3();
+        this.controlFrontLeftTop = new Vector3();
         this.cloneRotatePeripheral = new Object3D();
         this.canvasWidthHalf = null;
         this.canvasHeightHalf = null;
@@ -604,25 +606,47 @@ class Canvas extends PureComponent {
             if (this.transformSourceType === '2D') {
                 this.light.position.copy(this.camera.position);
             }
-            if (this.controls.transformControl.mode === 'rotate' && this.modelGroup.selectedModelArray[0]?.type !== 'primeTower') {
-                this.cloneRotatePeripheral = this.controls.transformControl.rotatePeripheral.clone();
+            if (this.controls.transformControl.mode !== 'mirror' && this.modelGroup.selectedModelArray[0]?.type !== 'primeTower') {
+                // this.cloneRotatePeripheral = this.controls.transformControl.rotatePeripheral.clone();
+                switch (this.controls.transformControl.mode) {
+                    case 'translate':
+                        this.cloneControlPeripheral = this.controls.transformControl.translatePeripheral.clone();
+                        break;
+                    case 'rotate':
+                        this.cloneControlPeripheral = this.controls.transformControl.rotatePeripheral.clone();
+                        break;
+                    case 'scale':
+                        this.cloneControlPeripheral = this.controls.transformControl.scalePeripheral.clone();
+                        break;
+                    default:
+                        this.cloneControlPeripheral = this.controls.transformControl.translatePeripheral.clone();
+                        break;
+                }
 
-                this.cloneRotatePeripheral.updateMatrixWorld();
-                this.rotateFontLeftTop.setFromMatrixPosition(this.cloneRotatePeripheral.matrixWorld);
-                this.rotateFontLeftTop.project(this.camera);
-                inputDOM = document.getElementById('rotate-input-control');
+                this.cloneControlPeripheral.updateMatrixWorld();
+                this.controlFrontLeftTop.setFromMatrixPosition(this.cloneControlPeripheral.matrixWorld);
+                this.controlFrontLeftTop.project(this.camera);
+                inputDOM = document.getElementById('control-input');
+                inputDOM2 = document.getElementById('control-input-2');
                 parentDOM = document.getElementById('smcanvas');
                 this.canvasWidthHalf = parentDOM.clientWidth * 0.5;
                 this.canvasHeightHalf = parentDOM.clientHeight * 0.5;
-                if (Math.abs(parseFloat(this.inputPositionLeft) - ((this.rotateFontLeftTop.x) * this.canvasWidthHalf + this.canvasWidthHalf)) > 10
-                || Math.abs(parseFloat(this.inputPositionTop) - (-(this.rotateFontLeftTop.y * this.canvasHeightHalf) + this.canvasHeightHalf - 200)) > 10
+                if (Math.abs(parseFloat(this.inputPositionLeft) - ((this.controlFrontLeftTop.x) * this.canvasWidthHalf + this.canvasWidthHalf)) > 10
+                || Math.abs(parseFloat(this.inputPositionTop) - (-(this.controlFrontLeftTop.y * this.canvasHeightHalf) + this.canvasHeightHalf - 200)) > 10
                 ) {
-                    this.inputPositionLeft = `${this.rotateFontLeftTop.x * this.canvasWidthHalf + this.canvasWidthHalf}px`;
-                    this.inputPositionTop = `${-(this.rotateFontLeftTop.y * this.canvasHeightHalf) + this.canvasHeightHalf - 200}px`;
+                    this.inputPositionLeft = `${this.controlFrontLeftTop.x * this.canvasWidthHalf + this.canvasWidthHalf}px`;
+                    this.inputPositionTop = `${-(this.controlFrontLeftTop.y * this.canvasHeightHalf) + this.canvasHeightHalf - 200}px`;
                 }
-                inputDOM.style.top = this.inputPositionTop;
-                inputDOM.style.left = this.inputPositionLeft;
-                this.controls.transformControl.dragging && (inputDOM.style.display = 'block');
+                inputDOM && (inputDOM.style.top = this.inputPositionTop);
+                inputDOM && (inputDOM.style.left = this.inputPositionLeft);
+                if (this.controls.transformControl.mode === TRANSLATE_MODE && this.controls.transformControl.axis === 'XY') {
+                    inputDOM2 && (inputDOM2.style.top = this.inputPositionTop);
+                    inputDOM2 && (inputDOM2.style.left = `${parseFloat(this.inputPositionLeft) + 120}px`);
+                    inputDOM2 && this.controls.transformControl.dragging && (inputDOM2.style.display = 'block');
+                } else {
+                    inputDOM2 && (inputDOM2.style.display = 'none');
+                }
+                this.controls.transformControl.dragging && inputDOM && (inputDOM.style.display = 'block');
             }
             if (this.controls.transformControl.mode !== 'rotate' || !this.modelGroup.selectedModelArray.length || this.modelGroup.hasHideModel()) {
                 inputDOM && (inputDOM.style.display = 'none');

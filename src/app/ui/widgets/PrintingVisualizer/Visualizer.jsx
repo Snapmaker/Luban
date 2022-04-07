@@ -4,14 +4,17 @@ import { connect } from 'react-redux';
 import { withRouter } from 'react-router';
 // import isEqual from 'lodash/isEqual';
 import { isEqual, find, some } from 'lodash';
-import { Vector3, Box3, Quaternion, Math as ThreeMath } from 'three';
+import { Vector3, Box3, Math as ThreeMath, Quaternion } from 'three';
 // , MeshPhongMaterial, DoubleSide, Mesh, CylinderBufferGeometry
 
 import { shortcutActions, priorities, ShortcutManager } from '../../../lib/shortcut';
 import {
     DUAL_EXTRUDER_TOOLHEAD_FOR_SM2,
     EPSILON,
-    HEAD_PRINTING
+    HEAD_PRINTING,
+    ROTATE_MODE,
+    SCALE_MODE,
+    TRANSLATE_MODE
 } from '../../../constants';
 import i18n from '../../../lib/i18n';
 import modal from '../../../lib/modal';
@@ -29,9 +32,14 @@ import VisualizerInfo from './VisualizerInfo';
 import PrintableCube from './PrintableCube';
 import styles from './styles.styl';
 import { STEP_STAGE } from '../../../lib/manager/ProgressManager';
+import { updateControlInputEvent } from '../../components/SMCanvas/TransformControls';
 
 const initQuaternion = new Quaternion();
-
+const modeSuffix = {
+    [ROTATE_MODE]: '°',
+    [TRANSLATE_MODE]: 'mm',
+    [SCALE_MODE]: '%'
+};
 class Visualizer extends PureComponent {
     static propTypes = {
         isActive: PropTypes.bool.isRequired,
@@ -88,8 +96,9 @@ class Visualizer extends PureComponent {
         showPrimeTower: PropTypes.func,
         printingToolhead: PropTypes.string,
         stopArea: PropTypes.object,
-        rotateAxis: PropTypes.string,
-        rotateInputValue: PropTypes.number,
+        controlAxis: PropTypes.object,
+        controlInputValue: PropTypes.object,
+        controlMode: PropTypes.string,
         displayModel: PropTypes.func
     };
 
@@ -193,6 +202,8 @@ class Visualizer extends PureComponent {
         setTransformMode: (value) => {
             this.props.setTransformMode(value);
             this.canvas.current.setTransformMode(value);
+            document.getElementById('control-input') && (document.getElementById('control-input').style.display = 'none');
+            document.getElementById('control-input-2') && (document.getElementById('control-input-2').style.display = 'none');
         },
         setHoverFace: (value) => {
             if (!this.props.selectedModelArray.length) return;
@@ -202,16 +213,39 @@ class Visualizer extends PureComponent {
         onRotationPlacementSelect: (userData) => {
             this.props.setRotationPlacementFace(userData);
         },
-        rotateByDirection: (rotateAxis, rotateAngle) => {
-            this.props.recordModelBeforeTransform(this.props.modelGroup);
-            const _rotateAxis = new Vector3(rotateAxis === 'X' ? 1 : 0, rotateAxis === 'Y' ? 1 : 0, rotateAxis === 'Z' ? 1 : 0);
-            const quaternion = new Quaternion().setFromAxisAngle(_rotateAxis, ThreeMath.degToRad(rotateAngle));
-            initQuaternion.copy(this.props.selectedModelArray[0].meshObject.quaternion);
-            this.props.selectedModelArray[0].meshObject.quaternion.copy(quaternion).multiply(initQuaternion).normalize();
-            this.props.modelGroup.onModelAfterTransform();
-            this.props.recordModelAfterTransform('rotate', this.props.modelGroup);
-            this.props.destroyGcodeLine();
-            this.props.displayModel();
+        controlInputTransform: (mode, axis, data) => {
+            if (mode === ROTATE_MODE) {
+                this.props.recordModelBeforeTransform(this.props.modelGroup);
+                const _rotateAxis = new Vector3(axis === 'x' ? 1 : 0, axis === 'y' ? 1 : 0, axis === 'z' ? 1 : 0);
+                const quaternion = new Quaternion().setFromAxisAngle(_rotateAxis, ThreeMath.degToRad(Number(data)));
+                initQuaternion.copy(this.props.selectedModelArray[0].meshObject.quaternion);
+                this.props.selectedModelArray[0].meshObject.quaternion.copy(quaternion).multiply(initQuaternion).normalize();
+                this.props.modelGroup.onModelAfterTransform();
+                this.props.recordModelAfterTransform('rotate', this.props.modelGroup);
+                this.props.destroyGcodeLine();
+                this.props.displayModel();
+            } else {
+                let newTransformation = {};
+                if (mode === TRANSLATE_MODE) {
+                    newTransformation = {
+                        [`position${axis.toUpperCase()}`]: Number(data)
+                    };
+                } else if (mode === SCALE_MODE) {
+                    newTransformation = {
+                        [`scale${axis.toUpperCase()}`]: Number(data / 100)
+                    };
+                }
+                this.props.updateSelectedModelTransformation(newTransformation);
+                window.dispatchEvent(updateControlInputEvent({
+                    controlValue: {
+                        mode,
+                        data: {
+                            ...this.props.controlInputValue,
+                            [axis]: Number(data)
+                        }
+                    }
+                }));
+            }
         }
     };
 
@@ -520,18 +554,36 @@ class Visualizer extends PureComponent {
                         primeTowerSelected={primeTowerSelected}
                         transformMode={transformMode}
                     />
-                    <div className={`canvas-input position-ab border-${this.props.rotateAxis} translate-animation-3`} id="rotate-input-control" style={{ display: 'none' }}>
-                        <Input
-                            size="small"
-                            placeholder={i18n._('key-Printing/LeftBar-Enter an degree')}
-                            value={this.props.rotateInputValue}
-                            suffix="°"
-                            allowUndefined
-                            onPressEnter={(event) => {
-                                this.actions.rotateByDirection(this.props.rotateAxis.toUpperCase(), event.target.value);
-                            }}
-                        />
-                    </div>
+                    {!(this.props.controlMode === TRANSLATE_MODE && this.props.controlAxis[0] === 'z') && (
+                        <div className={`canvas-input position-ab border-${this.props.controlAxis[0]} translate-animation-3`} id="control-input" style={{ display: 'none' }}>
+                            <Input
+                                size="small"
+                                placeholder={i18n._('key-Printing/LeftBar-Enter an degree')}
+                                value={this.props.controlInputValue ? this.props.controlInputValue[this.props.controlAxis[0]] : null}
+                                suffix={modeSuffix[this.props.controlMode]}
+                                allowUndefined
+                                prefix={`${this.props.controlAxis[0]}:`}
+                                onPressEnter={(event) => {
+                                    this.actions.controlInputTransform(this.props.controlMode, this.props.controlAxis[0], event.target.value);
+                                }}
+                            />
+                        </div>
+                    )}
+                    {this.props.controlAxis[1] && (
+                        <div className={`canvas-input position-ab border-${this.props.controlAxis[1]} translate-animation-3`} id="control-input-2">
+                            <Input
+                                size="small"
+                                placeholder={i18n._('key-Printing/LeftBar-Enter an degree')}
+                                value={this.props.controlInputValue ? this.props.controlInputValue[this.props.controlAxis[1]] : null}
+                                suffix={modeSuffix[this.props.controlMode]}
+                                prefix={`${this.props.controlAxis[1]}:`}
+                                allowUndefined
+                                onPressEnter={(event) => {
+                                    this.actions.controlInputTransform(this.props.controlMode, this.props.controlAxis[1], event.target.value);
+                                }}
+                            />
+                        </div>
+                    )}
                 </div>
                 <ContextMenu
                     ref={this.contextMenuRef}

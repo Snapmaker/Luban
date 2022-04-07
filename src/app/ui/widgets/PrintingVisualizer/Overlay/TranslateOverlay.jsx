@@ -11,6 +11,8 @@ import { actions as printingActions } from '../../../../flux/printing';
 import { actions as machineActions } from '../../../../flux/machine';
 /* eslint-disable-next-line import/no-cycle */
 import { CancelButton } from '../VisualizerLeftBar';
+import { updateControlInputEvent } from '../../../components/SMCanvas/TransformControls';
+import { TRANSLATE_MODE } from '../../../../constants';
 
 const angleOptions = [
     {
@@ -91,6 +93,15 @@ const TranslateOverlay = React.memo(({
             'moveX': _moveX,
             'moveY': _moveY
         });
+        window.dispatchEvent(updateControlInputEvent({
+            controlValue: {
+                mode: TRANSLATE_MODE,
+                data: {
+                    x: _moveX,
+                    y: _moveY
+                }
+            }
+        }));
         onModelAfterTransform();
     };
     const handleArrangeSettingsChange = (settings) => {
@@ -101,8 +112,8 @@ const TranslateOverlay = React.memo(({
     const updatePosition = (event) => {
         const { detail } = event;
         throttle(() => {
-            setMoveX(Math.round(detail.position.x * 10) / 10);
-            setMoveY(Math.round(detail.position.y * 10) / 10);
+            setMoveX(detail.position.x);
+            setMoveY(detail.position.y);
         }, 1000)();
     };
     useEffect(() => {
