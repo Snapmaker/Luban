@@ -1207,7 +1207,6 @@ class ModelGroup extends EventEmitter {
     updateSelectedGroupTransformation(transformation, newUniformScalingState = this.selectedGroup.uniformScalingState) {
         const { positionX, positionY, positionZ, rotationX, rotationY, rotationZ, scaleX, scaleY, scaleZ, uniformScalingState } = transformation;
         const shouldUniformScale = newUniformScalingState ?? this.selectedGroup.uniformScalingState;
-        console.log('this.selected', this.selectedGroup);
         if (positionX !== undefined) {
             this.selectedGroup.position.setX(positionX);
         }
@@ -2516,6 +2515,14 @@ class ModelGroup extends EventEmitter {
             model.supportFaceMarks = supportFaceMarks;
         });
         return availModels;
+    }
+
+    hasHideModel() {
+        return _.some(this.selectedModelArray, { visible: false });
+    }
+
+    allIsHideModel() {
+        return _.every(this.selectedModelArray, { visible: false });
     }
 }
 

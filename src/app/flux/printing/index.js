@@ -2278,18 +2278,6 @@ export const actions = {
         dispatch(actions.displayModel());
     },
 
-    // startAutoRotateSelectedModelProgess: () => (dispatch, getState) => {
-    //     const { progressStatesManager } = getState().printing;
-    //     progressStatesManager.startProgress(PROCESS_STAGE.PRINTING_AUTO_ROTATE);
-    //     dispatch(actions.updateState({
-    //         stage: STEP_STAGE.PRINTING_AUTO_ROTATING_MODELS,
-    //         progress: progressStatesManager.updateProgress(STEP_STAGE.PRINTING_AUTO_ROTATING_MODELS, 0.01)
-    //     }));
-    //     setTimeout(() => {
-    //         dispatch(actions.autoRotateSelectedModel());
-    //     }, 300);
-    // },
-
     autoRotateSelectedModel: () => (dispatch, getState) => {
         const { modelGroup, progressStatesManager } = getState().printing;
         const operations = new Operations();

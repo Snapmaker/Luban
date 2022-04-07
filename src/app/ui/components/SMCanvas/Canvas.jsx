@@ -7,7 +7,7 @@
 
 import noop from 'lodash/noop';
 import React, { PureComponent } from 'react';
-import { isNil, throttle, some } from 'lodash';
+import { isNil, throttle } from 'lodash';
 import { Vector3, PerspectiveCamera, Scene, Group, AmbientLight, PointLight, HemisphereLight, DirectionalLight, Object3D } from 'three';
 import PropTypes from 'prop-types';
 import TWEEN from '@tweenjs/tween.js';
@@ -624,7 +624,7 @@ class Canvas extends PureComponent {
                 inputDOM.style.left = this.inputPositionLeft;
                 this.controls.transformControl.dragging && (inputDOM.style.display = 'block');
             }
-            if (this.controls.transformControl.mode !== 'rotate' || !this.modelGroup.selectedModelArray.length || (this.modelGroup.selectedModelArray.length && some(this.modelGroup.selectedModelArray, { visible: false }))) {
+            if (this.controls.transformControl.mode !== 'rotate' || !this.modelGroup.selectedModelArray.length || this.modelGroup.hasHideModel()) {
                 inputDOM && (inputDOM.style.display = 'none');
             }
             this.renderer.render(this.scene, this.camera);

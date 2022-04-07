@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
+import { shallowEqual, useDispatch, useSelector } from 'react-redux';
 import * as THREE from 'three';
 import PropTypes from 'prop-types';
-import { throttle, filter, isUndefined, isNull, every } from 'lodash';
+import { throttle, filter, isUndefined, isNull } from 'lodash';
 import i18n from '../../../../lib/i18n';
 import { actions as printingActions } from '../../../../flux/printing';
 /* eslint-disable-next-line import/no-cycle */
@@ -54,6 +54,7 @@ const RotateOverlay = React.memo(({
     const [rotateY, setRotateY] = useState(null);
     const [rotateZ, setRotateZ] = useState(null);
     const selectedModelArray = useSelector(state => state?.printing?.modelGroup?.selectedModelArray);
+    const allIsHideModel = useSelector(state => state?.printing?.modelGroup?.allIsHideModel(), shallowEqual);
     const modelExcludePrimeTower = filter(selectedModelArray, (item) => {
         return item.type !== 'primeTower' && item.visible;
     });
@@ -64,7 +65,7 @@ const RotateOverlay = React.memo(({
     const rotationAnalysisEnableForSelected = hasModels && selectedModelArray.length && selectedModelArray.every((modelItem) => {
         return modelItem instanceof ThreeGroup || modelItem instanceof ThreeModel;
     });
-    const hasHideModel = every(selectedModelArray, { visible: false }) && selectedModelArray.length;
+    const hasHideModel = allIsHideModel && selectedModelArray.length;
     const dispatch = useDispatch();
     const updateRotate = (event) => {
         const { detail } = event;
