@@ -24,8 +24,7 @@ class SocketController {
         this.socket && this.socket.destroy();
 
         this.socket = io.connect('', {
-            query: `token=${token}`,
-            transports: ['websocket']
+            query: `token=${token}`
         });
 
         this.socket.on('startup', () => {
