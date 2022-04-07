@@ -519,10 +519,14 @@ class ModelGroup extends EventEmitter {
         return totalEstimatedTime_;
     }
 
-    getModels() {
+    getModels(filterKey = '') {
         const models = [];
         for (const model of this.models) {
-            models.push(model);
+            if (model.type === filterKey) {
+                continue;
+            } else {
+                models.push(model);
+            }
         }
         return models;
     }
@@ -1049,7 +1053,13 @@ class ModelGroup extends EventEmitter {
     }
 
     autoRotateSelectedModel() {
-        const selected = this.getSelectedModelArray();
+        // const selected = this.getSelectedModelArray();
+        let selected = [];
+        if (this.getSelectedModelArray().length > 0) {
+            selected = this.getSelectedModelArray();
+        } else {
+            selected = this.getModels('primeTower');
+        }
         if (selected.length === 0) {
             return null;
         }
@@ -1197,7 +1207,6 @@ class ModelGroup extends EventEmitter {
     updateSelectedGroupTransformation(transformation, newUniformScalingState = this.selectedGroup.uniformScalingState) {
         const { positionX, positionY, positionZ, rotationX, rotationY, rotationZ, scaleX, scaleY, scaleZ, uniformScalingState } = transformation;
         const shouldUniformScale = newUniformScalingState ?? this.selectedGroup.uniformScalingState;
-
         if (positionX !== undefined) {
             this.selectedGroup.position.setX(positionX);
         }
@@ -1277,13 +1286,31 @@ class ModelGroup extends EventEmitter {
             }
         }
         if (rotationX !== undefined) {
-            this.selectedGroup.rotation.x = rotationX;
+            if (this.selectedModelArray.length > 1) {
+                this.selectedGroup.children.forEach((meshItem) => {
+                    meshItem.rotation.x = rotationX;
+                });
+            } else {
+                this.selectedGroup.rotation.x = rotationX;
+            }
         }
         if (rotationY !== undefined) {
-            this.selectedGroup.rotation.y = rotationY;
+            if (this.selectedModelArray.length > 1) {
+                this.selectedGroup.children.forEach((meshItem) => {
+                    meshItem.rotation.y = rotationY;
+                });
+            } else {
+                this.selectedGroup.rotation.y = rotationY;
+            }
         }
         if (rotationZ !== undefined) {
-            this.selectedGroup.rotation.z = rotationZ;
+            if (this.selectedModelArray.length > 1) {
+                this.selectedGroup.children.forEach((meshItem) => {
+                    meshItem.rotation.z = rotationZ;
+                });
+            } else {
+                this.selectedGroup.rotation.z = rotationZ;
+            }
         }
         this.selectedGroup.updateMatrix();
         this.selectedGroup.shouldUpdateBoundingbox = false;
@@ -2476,6 +2503,14 @@ class ModelGroup extends EventEmitter {
             model.supportFaceMarks = supportFaceMarks;
         });
         return availModels;
+    }
+
+    hasHideModel() {
+        return _.some(this.selectedModelArray, { visible: false });
+    }
+
+    allIsHideModel() {
+        return _.every(this.selectedModelArray, { visible: false });
     }
 }
 

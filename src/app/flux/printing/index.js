@@ -55,6 +55,7 @@ import DeleteSupportsOperation3D from '../operation-history/DeleteSupportsOperat
 import AddSupportsOperation3D from '../operation-history/AddSupportsOperation3D';
 import ArrangeOperation3D from '../operation-history/ArrangeOperation3D';
 import PrimeTowerModel from '../../models/PrimeTowerModel';
+import ThreeUtils from '../../three-extensions/ThreeUtils';
 
 // register methods for three-mesh-bvh
 THREE.Mesh.prototype.raycast = acceleratedRaycast;
@@ -2260,18 +2261,114 @@ export const actions = {
     },
 
     autoRotateSelectedModel: () => (dispatch, getState) => {
-        const { modelGroup } = getState().printing;
+        const { modelGroup, progressStatesManager } = getState().printing;
         const operations = new Operations();
         dispatch(actions.clearAllManualSupport(operations));
         dispatch(actions.recordModelBeforeTransform(modelGroup));
 
-        const modelState = modelGroup.autoRotateSelectedModel();
-        modelGroup.onModelAfterTransform();
-
-        dispatch(actions.recordModelAfterTransform('rotate', modelGroup, operations));
-        dispatch(actions.updateState(modelState));
-        dispatch(actions.destroyGcodeLine());
-        dispatch(actions.displayModel());
+        progressStatesManager.startProgress(PROCESS_STAGE.PRINTING_AUTO_ROTATE);
+        let selected = [];
+        if (modelGroup.getSelectedModelArray().length > 0) {
+            selected = modelGroup.getSelectedModelArray().filter(item => item.visible);
+        } else {
+            selected = modelGroup.getModels('primeTower').filter(item => item.visible);
+        }
+        dispatch(actions.updateState({
+            stage: STEP_STAGE.PRINTING_AUTO_ROTATING_MODELS,
+            progress: progressStatesManager.updateProgress(STEP_STAGE.PRINTING_AUTO_ROTATING_MODELS, 0.01)
+        }));
+        setTimeout(() => {
+            if (selected.length === 1) {
+                dispatch(actions.updateState({
+                    progress: progressStatesManager.updateProgress(STEP_STAGE.PRINTING_AUTO_ROTATING_MODELS, 0.25)
+                }));
+            }
+            const selectedModelInfo = [];
+            const revertParentArr = [];
+            selected.forEach((modelItem) => {
+                let geometry = null;
+                if (modelItem instanceof ThreeGroup) {
+                    modelItem.computeConvex();
+                    geometry = modelItem.mergedGeometry;
+                } else {
+                    geometry = modelItem.meshObject.geometry;
+                }
+                const revertParent = ThreeUtils.removeObjectParent(modelItem.meshObject);
+                revertParentArr.push(revertParent);
+                modelItem.meshObject.updateMatrixWorld();
+                geometry.computeBoundingBox();
+                const inverseNormal = (modelItem.transformation.scaleX / Math.abs(modelItem.transformation.scaleX) < 0);
+                const modelItemInfo = {
+                    geometryJSON: geometry.toJSON(),
+                    matrixWorld: modelItem.meshObject.matrixWorld,
+                    convexGeometry: modelItem.convexGeometry,
+                    inverseNormal
+                };
+                selectedModelInfo.push(modelItemInfo);
+            });
+            workerManager.autoRotateModels([{
+                selectedModelInfo
+            }], (payload) => {
+                const { status, value } = payload;
+                switch (status) {
+                    case 'PARTIAL_SUCCESS': {
+                        const { progress, targetPlane, xyPlaneNormal, index, isFinish, isUpdateProgress } = value;
+                        if (isUpdateProgress) {
+                            dispatch(actions.updateState({
+                                progress
+                            }));
+                            return;
+                        }
+                        const rotateModel = selected[index];
+                        const _targetPlane = new THREE.Vector3(targetPlane.x, targetPlane.y, targetPlane.z);
+                        const _xyPlaneNormal = new THREE.Vector3(xyPlaneNormal.x, xyPlaneNormal.y, xyPlaneNormal.z);
+                        const newQuaternion = new THREE.Quaternion().setFromUnitVectors(_targetPlane, _xyPlaneNormal);
+                        rotateModel.meshObject.applyQuaternion(newQuaternion);
+                        rotateModel.meshObject.updateMatrix();
+                        rotateModel.stickToPlate();
+                        rotateModel.onTransform();
+                        const revertParentFunc = revertParentArr[index];
+                        // revertParentFunc();
+                        // const revertParent = ThreeUtils.removeObjectParent(rotateModel);
+                        revertParentFunc();
+                        // rotateModel.computeBoundingBox();
+                        dispatch(actions.updateState({
+                            stage: STEP_STAGE.PRINTING_AUTO_ROTATE_SUCCESSED,
+                            progress: progressStatesManager.updateProgress(STEP_STAGE.PRINTING_AUTO_ROTATING_MODELS, progress)
+                        }));
+                        if (isFinish) {
+                            const modelState = modelGroup.getState();
+                            modelGroup.onModelAfterTransform();
+                            dispatch(actions.recordModelAfterTransform('rotate', modelGroup, operations));
+                            dispatch(actions.updateState(modelState));
+                            dispatch(actions.destroyGcodeLine());
+                            dispatch(actions.displayModel());
+                            dispatch(actions.updateState({
+                                stage: STEP_STAGE.PRINTING_AUTO_ROTATE_SUCCESSED,
+                                progress: progressStatesManager.updateProgress(STEP_STAGE.PRINTING_AUTO_ROTATING_MODELS, 1)
+                            }));
+                        }
+                        break;
+                    }
+                    case 'PROGRESS': {
+                        const { progress } = value;
+                        dispatch(actions.updateState({
+                            progress
+                        }));
+                        break;
+                    }
+                    case 'ERROR': {
+                        dispatch(actions.updateState({
+                            stage: STEP_STAGE.PRINTING_AUTO_ROTATE_SUCCESSED,
+                            progress: progressStatesManager.updateProgress(STEP_STAGE.PRINTING_AUTO_ROTATING_MODELS, 1)
+                        }));
+                        break;
+                    }
+                    default:
+                        break;
+                }
+            });
+        }, 200);
     },
 
     scaleToFitSelectedModel: () => (dispatch, getState) => {

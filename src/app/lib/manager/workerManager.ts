@@ -4,6 +4,7 @@ import './Pool.worker';
 export enum WorkerMethods {
     // LUBAN worker methods BEGIN
     arrangeModels = 'arrangeModels',
+    autoRotateModels = 'autoRotateModels',
     evaluateSupportArea = 'evaluateSupportArea',
     gcodeToArraybufferGeometry = 'gcodeToArraybufferGeometry',
     gcodeToBufferGeometry = 'gcodeToBufferGeometry',

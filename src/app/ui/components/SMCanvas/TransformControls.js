@@ -16,10 +16,11 @@ import {
     OctahedronBufferGeometry,
     TorusBufferGeometry,
     MeshBasicMaterial,
-    LineBasicMaterial
+    LineBasicMaterial,
+    Math as ThreeMath,
 } from 'three';
 // import * as THREE from 'three';
-
+import { throttle, some } from 'lodash';
 import ThreeUtils from '../../../three-extensions/ThreeUtils';
 
 
@@ -30,7 +31,25 @@ const EVENTS = {
 };
 
 const OUTLINE = 'OUTLINE';
+// let objectCase = null;
+const updatePositionEvent = (transformData) => new CustomEvent('update-position', {
+    detail: transformData
+});
+const updateScaleEvent = (transformData) => new CustomEvent('update-scale', {
+    detail: transformData
+});
+const updateRotateEvent = (transformData) => new CustomEvent('update-rotate', {
+    detail: transformData
+});
 
+const RED = 0xff5759;
+const GREEN = 0x4cb518;
+const BLUE = 0x1890ff;
+const RED2 = 0xb32426;
+const GREEN2 = 0x287303;
+const BLUE2 = 0x0064c2;
+const GRAY = 0xd5d6d9;
+const GRAY2 = 0x2a2c2e;
 /**
  * TransformControls
  *
@@ -85,6 +104,10 @@ class TransformControls extends Object3D {
 
     prevMeshHover = null;
 
+    hoverFace = null;
+
+    boxCenter = new Vector3();
+
     constructor(camera, isPrimeTower) {
         super();
 
@@ -108,7 +131,6 @@ class TransformControls extends Object3D {
         for (const definition of definitions) {
             const [label, object, position, rotation, scale] = definition;
             object.label = label;
-
             if (position) {
                 object.position.set(position[0], position[1], position[2]);
             }
@@ -169,13 +191,6 @@ class TransformControls extends Object3D {
         // const RED = 0xe93100;
         // const GREEN = 0x22ac38;
         // const BLUE = 0x00b7ee;
-        const RED = 0xff5759;
-        const GREEN = 0x4cb518;
-        const BLUE = 0x1890ff;
-        const RED2 = 0xb32426;
-        const GREEN2 = 0x287303;
-        const BLUE2 = 0x0064c2;
-        const GRAY = 0xd5d6d9;
         // const DARKGRAY = 0x2778dd;
 
         const meshMaterialRed = meshMaterial.clone();
@@ -195,6 +210,10 @@ class TransformControls extends Object3D {
 
         const meshMaterialBlue2 = meshMaterial.clone();
         meshMaterialBlue2.color.set(BLUE2);
+
+        const meshMaterialGray2 = meshMaterial.clone();
+        meshMaterialGray2.color.set(GRAY2);
+        meshMaterialGray2.opacity = 0.1;
 
 
         const meshMaterialInvisible = meshMaterial.clone();
@@ -238,6 +257,7 @@ class TransformControls extends Object3D {
             MESH_MATERIAL_RED2: meshMaterialRed2,
             MESH_MATERIAL_GREEN2: meshMaterialGreen2,
             MESH_MATERIAL_BLUE2: meshMaterialBlue2,
+            MESH_MATERIAL_GRAY2: meshMaterialGray2,
 
             LINE_MATERIAL_DARKGRAY: lineMaterialDarkGray,
             LINE_MATERIAL_RED: lineMaterialRed,
@@ -292,7 +312,7 @@ class TransformControls extends Object3D {
         this.selectedFrontLeftBottom = this.createPeripheral([
             [OUTLINE, new Line(defaults.SELECTEDLINE.clone(), defaults.LINE_MATERIAL_DARKGRAY.clone()), null, null, [0.2, 0.2, 0.2]],
             [OUTLINE, new Line(defaults.SELECTEDLINE.clone(), defaults.LINE_MATERIAL_DARKGRAY.clone()), null, [0, 0, Math.PI / 2], [0.2, 0.2, 0.2]],
-            [OUTLINE, new Line(defaults.SELECTEDLINE.clone(), defaults.LINE_MATERIAL_DARKGRAY.clone()), null, [0, -Math.PI / 2, 0], [0.2, 0.2, 0.2]]
+            [OUTLINE, new Line(defaults.SELECTEDLINE.clone(), defaults.LINE_MATERIAL_DARKGRAY.clone()), null, [0, -Math.PI / 2, 0], [0.2, 0.2, 0.2]],
         ]);
         this.selectedFrontRightBottom = this.createPeripheral([
             [OUTLINE, new Line(defaults.LINE.clone(), defaults.LINE_MATERIAL_DARKGRAY.clone()), null, null, [-0.2, 0.2, 0.2]],
@@ -338,7 +358,7 @@ class TransformControls extends Object3D {
             this.selectedFrontLeftTop,
             this.selectedFrontRightTop,
             this.selectedBackLeftTop,
-            this.selectedBackRightTop
+            this.selectedBackRightTop,
         ];
         this.allSelectedPeripherals.forEach((peripheral) => {
             this.add(peripheral);
@@ -364,6 +384,73 @@ class TransformControls extends Object3D {
         });
     }
 
+    setHoverFace(face) {
+        this.hoverFace = face;
+
+        switch (face) {
+            case 'left':
+                this.leftPlane.children[0].material.color.set(BLUE);
+                this.leftPlane.children[0].material.opacity = 0.5;
+                this.planeArr.forEach((item) => {
+                    if (item.children[0].label !== 'LEFTPLANE') {
+                        item.children[0].material.color.set(GRAY2);
+                        item.children[0].material.opacity = 0.1;
+                    }
+                    item.visible = true;
+                });
+                break;
+            case 'top':
+                this.topPlane.children[0].material.color.set(BLUE);
+                this.topPlane.children[0].material.opacity = 0.5;
+                this.planeArr.forEach((item) => {
+                    if (item.children[0].label !== 'TOPPLANE') {
+                        item.children[0].material.color.set(GRAY2);
+                        item.children[0].material.opacity = 0.1;
+                    }
+                    item.visible = true;
+                });
+                break;
+            case 'right':
+                this.rightPlane.children[0].material.color.set(BLUE);
+                this.rightPlane.children[0].material.opacity = 0.5;
+                this.planeArr.forEach((item) => {
+                    if (item.children[0].label !== 'RIGHTPLANE') {
+                        item.children[0].material.color.set(GRAY2);
+                        item.children[0].material.opacity = 0.1;
+                    }
+                    item.visible = true;
+                });
+                break;
+            case 'front':
+                this.frontPlane.children[0].material.color.set(BLUE);
+                this.frontPlane.children[0].material.opacity = 0.5;
+                this.planeArr.forEach((item) => {
+                    if (item.children[0].label !== 'FRONTPLANE') {
+                        item.children[0].material.color.set(GRAY2);
+                        item.children[0].material.opacity = 0.1;
+                    }
+                    item.visible = true;
+                });
+                break;
+            case 'back':
+                this.backPlane.children[0].material.color.set(BLUE);
+                this.backPlane.children[0].material.opacity = 0.5;
+                this.planeArr.forEach((item) => {
+                    if (item.children[0].label !== 'BACKPLANE') {
+                        item.children[0].material.color.set(GRAY2);
+                        item.children[0].material.opacity = 0.1;
+                    }
+                    item.visible = true;
+                });
+                break;
+            default:
+                this.planeArr.forEach(item => {
+                    item.visible = false;
+                });
+                break;
+        }
+    }
+
     initRotatePeripherals() {
         const defaults = this.defaults;
 
@@ -385,6 +472,36 @@ class TransformControls extends Object3D {
         ]);
         this.rotatePicker.visiable = false;
         this.add(this.rotatePicker);
+        this.leftPlane = this.createPeripheral([
+            ['LEFTPLANE', new Mesh(new PlaneBufferGeometry(1, 1, 2), defaults.MESH_MATERIAL_GRAY2.clone()), null, [Math.PI / 2, Math.PI / 2, 0], null]
+        ]);
+        this.rightPlane = this.createPeripheral([
+            ['RIGHTPLANE', new Mesh(new PlaneBufferGeometry(1, 1, 2), defaults.MESH_MATERIAL_GRAY2.clone()), null, [Math.PI / 2, Math.PI / 2, 0], null]
+        ]);
+        this.topPlane = this.createPeripheral([
+            ['TOPPLANE', new Mesh(new PlaneBufferGeometry(1, 1, 2), defaults.MESH_MATERIAL_GRAY2.clone()), null, null, null]
+        ]);
+        this.bottomPlane = this.createPeripheral([
+            ['BOTTOMPLANE', new Mesh(new PlaneBufferGeometry(1, 1, 2), defaults.MESH_MATERIAL_GRAY2.clone()), null, null, null]
+        ]);
+        this.frontPlane = this.createPeripheral([
+            ['FRONTPLANE', new Mesh(new PlaneBufferGeometry(1, 1, 2), defaults.MESH_MATERIAL_GRAY2.clone()), null, [Math.PI / 2, 0, 0], null]
+        ]);
+        this.backPlane = this.createPeripheral([
+            ['BACKPLANE', new Mesh(new PlaneBufferGeometry(1, 1, 2), defaults.MESH_MATERIAL_GRAY2.clone()), null, [Math.PI / 2, 0, 0], null]
+        ]);
+        this.planeArr = [
+            this.leftPlane,
+            this.rightPlane,
+            this.topPlane,
+            this.bottomPlane,
+            this.frontPlane,
+            this.backPlane
+        ];
+        this.planeArr.forEach(item => {
+            item.visible = false;
+            this.add(item);
+        });
     }
 
     initScalePeripherals() {
@@ -477,7 +594,6 @@ class TransformControls extends Object3D {
         } else {
             this.showSelectedPeripherals();
         }
-
         if (this.object && this.object.children && this.object.children.length > 0) {
             const cameraPosition = new Vector3();
             const cameraQuaternion = new Quaternion();
@@ -491,14 +607,11 @@ class TransformControls extends Object3D {
             const objectPosition = new Vector3();
             const objectScale = new Vector3();
             const objectQuaternion = new Quaternion();
-            this.object.children.forEach((child) => {
-                // Update peripherals
-                this.translatePeripheral.visible = (this.mode === 'translate' && child.visible);
-                this.rotatePeripheral.visible = (this.mode === 'rotate' && child.visible && !this.isPrimeTower);
-                this.scalePeripheral.visible = (this.mode === 'scale' && child.visible);
-                this.mirrorPeripheral.visible = (this.mode === 'mirror' && child.visible && !this.isPrimeTower);
-            });
-
+            const hasHideModel = some(this.object.children, { visible: false });
+            this.translatePeripheral.visible = (this.mode === 'translate' && !hasHideModel);
+            this.rotatePeripheral.visible = (this.mode === 'rotate' && !hasHideModel && !this.isPrimeTower);
+            this.scalePeripheral.visible = (this.mode === 'scale' && !hasHideModel);
+            this.mirrorPeripheral.visible = (this.mode === 'mirror' && !hasHideModel && !this.isPrimeTower);
             this.object.matrixWorld.decompose(objectPosition, objectQuaternion, objectScale);
             // parent
             this.object.parent.matrixWorld.decompose(this.parentPosition, this.parentQuaternion, this.parentScale);
@@ -520,6 +633,7 @@ class TransformControls extends Object3D {
                 const boundingBox = ThreeUtils.computeBoundingBox(this.object);
                 const maxObjectBoundingBox = boundingBox.max;
                 const minObjectBoundingBox = boundingBox.min;
+                boundingBox.getCenter(this.boxCenter);
                 const multiObjectWidth = new Vector3();
                 multiObjectWidth.x = (maxObjectBoundingBox.x - minObjectBoundingBox.x);
                 multiObjectWidth.y = (maxObjectBoundingBox.y - minObjectBoundingBox.y);
@@ -564,7 +678,23 @@ class TransformControls extends Object3D {
                     maxObjectBoundingBox.y,
                     maxObjectBoundingBox.z
                 );
+                this.leftPlane.position.copy(new Vector3(minObjectBoundingBox.x, (maxObjectBoundingBox.y + minObjectBoundingBox.y) / 2, (minObjectBoundingBox.z + maxObjectBoundingBox.z) / 2));
+                this.leftPlane.scale.set(1, 1, 1).multiply(new Vector3(1, maxObjectBoundingBox.y - minObjectBoundingBox.y, maxObjectBoundingBox.z - minObjectBoundingBox.z));
 
+                this.rightPlane.position.copy(new Vector3(maxObjectBoundingBox.x, (maxObjectBoundingBox.y + minObjectBoundingBox.y) / 2, (minObjectBoundingBox.z + maxObjectBoundingBox.z) / 2));
+                this.rightPlane.scale.set(1, 1, 1).multiply(new Vector3(1, maxObjectBoundingBox.y - minObjectBoundingBox.y, maxObjectBoundingBox.z - minObjectBoundingBox.z));
+
+                this.topPlane.position.copy(new Vector3((minObjectBoundingBox.x + maxObjectBoundingBox.x) / 2, (minObjectBoundingBox.y + maxObjectBoundingBox.y) / 2, maxObjectBoundingBox.z));
+                this.topPlane.scale.set(1, 1, 1).multiply(new Vector3(maxObjectBoundingBox.x - minObjectBoundingBox.x, maxObjectBoundingBox.y - minObjectBoundingBox.y, 1));
+
+                this.bottomPlane.position.copy(new Vector3((minObjectBoundingBox.x + maxObjectBoundingBox.x) / 2, (minObjectBoundingBox.y + maxObjectBoundingBox.y) / 2, minObjectBoundingBox.z));
+                this.bottomPlane.scale.set(1, 1, 1).multiply(new Vector3(maxObjectBoundingBox.x - minObjectBoundingBox.x, maxObjectBoundingBox.y - minObjectBoundingBox.y, 1));
+
+                this.frontPlane.position.copy(new Vector3((minObjectBoundingBox.x + maxObjectBoundingBox.x) / 2, minObjectBoundingBox.y, (minObjectBoundingBox.z + maxObjectBoundingBox.z) / 2));
+                this.frontPlane.scale.set(1, 1, 1).multiply(new Vector3(maxObjectBoundingBox.x - minObjectBoundingBox.x, 1, maxObjectBoundingBox.z - minObjectBoundingBox.z));
+
+                this.backPlane.position.copy(new Vector3((minObjectBoundingBox.x + maxObjectBoundingBox.x) / 2, maxObjectBoundingBox.y, (minObjectBoundingBox.z + maxObjectBoundingBox.z) / 2));
+                this.backPlane.scale.set(1, 1, 1).multiply(new Vector3(maxObjectBoundingBox.x - minObjectBoundingBox.x, 1, maxObjectBoundingBox.z - minObjectBoundingBox.z));
                 this.selectedFrontLeftBottom.position.copy(FrontLeftBottomPosition);
                 this.selectedFrontRightBottom.position.copy(FrontRightBottomPosition);
 
@@ -582,7 +712,6 @@ class TransformControls extends Object3D {
                     handles.push(...peripheral.children);
                 });
             }
-
             if (this.mode === 'translate') {
                 this.translatePeripheral.position.copy(multiObjectPosition);
                 this.translatePeripheral.scale.set(1, 1, 1).multiplyScalar(eyeDistance / 8);
@@ -644,10 +773,6 @@ class TransformControls extends Object3D {
 
                 if (this.axis) {
                     if (handle.label === this.axis || handle.label === OUTLINE) {
-                        // handle.material.opacity = 1;
-                        const RED2 = 0xb32426;
-                        const GREEN2 = 0x287303;
-                        const BLUE2 = 0x0064c2;
                         if (handle.label === 'X') {
                             handle.material.color.set(RED2);
                         } else if (handle.label === 'Y') {
@@ -658,10 +783,6 @@ class TransformControls extends Object3D {
                             handle.material.color.set(BLUE2);
                         }
                     } else {
-                        // handle.material.opacity = 1;
-                        const RED = 0xff5759;
-                        const GREEN = 0x4cb518;
-                        const BLUE = 0x1890ff;
                         if (handle.label === 'X') {
                             handle.material.color.set(RED);
                         } else if (handle.label === 'Y') {
@@ -806,7 +927,6 @@ class TransformControls extends Object3D {
         if (!(this.object.children && this.object.children.length > 0) || !this.axis) {
             return false;
         }
-
         this.ray.setFromCamera(coord, this.camera);
 
         const intersect = this.ray.intersectObject(this.plane, true)[0];
@@ -814,6 +934,13 @@ class TransformControls extends Object3D {
             return false;
         }
 
+        throttle(() => {
+            window.dispatchEvent(updateRotateEvent({
+                rotate: {
+                    rotateAxis: this.axis.toLowerCase()
+                }
+            }));
+        }, 1000)();
 
         this.quaternionStart.copy(this.object.quaternion);
         this.scaleStart.copy(this.object.scale);
@@ -854,7 +981,11 @@ class TransformControls extends Object3D {
                 // Dive in to object local offset
                 offset.applyQuaternion(this.parentQuaternionInv).divide(this.parentScale);
                 this.object.position.copy(this.positionStart).add(offset);
-
+                throttle(() => {
+                    window.dispatchEvent(updatePositionEvent({
+                        position: this.object.position
+                    }));
+                }, 1000)();
                 break;
             }
             case 'rotate': {
@@ -870,8 +1001,17 @@ class TransformControls extends Object3D {
 
                 rotationAxis.applyQuaternion(this.parentQuaternionInv);
                 const quaternion = new Quaternion().setFromAxisAngle(rotationAxis, rotationAngle);
-
+                const worldQuaternion = new Quaternion();
                 this.object.quaternion.copy(quaternion).multiply(this.quaternionStart).normalize();
+                this.object.getWorldQuaternion(worldQuaternion);
+                throttle(() => {
+                    window.dispatchEvent(updateRotateEvent({
+                        rotate: {
+                            [this.axis.toLowerCase()]: ThreeMath.radToDeg(rotationAngle),
+                            rotateAxis: this.axis.toLowerCase()
+                        }
+                    }));
+                }, 1000)();
                 break;
             }
             case 'scale': {
@@ -904,7 +1044,12 @@ class TransformControls extends Object3D {
                 if (this.shouldApplyScaleToObjects(parentEVec)) {
                     this.object.scale.copy(this.scaleStart).multiply(parentEVec);
                 }
-
+                throttle(() => {
+                    window.dispatchEvent(updateScaleEvent({
+                        scale: this.object.scale,
+                        isPrimeTower
+                    }));
+                }, 1000)();
                 break;
             }
             default:
@@ -920,7 +1065,16 @@ class TransformControls extends Object3D {
     onMouseUp() {
         this.updateBoundingBox();
         this.dragging = false;
-
+        if (this.mode === 'rotate') {
+            window.dispatchEvent(updateRotateEvent({
+                rotate: {
+                    x: null,
+                    y: null,
+                    z: null,
+                    rotateAxis: null
+                }
+            }));
+        }
         this.dispatchEvent(EVENTS.UPDATE);
     }
 

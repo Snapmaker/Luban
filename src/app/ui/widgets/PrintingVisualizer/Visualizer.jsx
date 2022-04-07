@@ -4,7 +4,7 @@ import { connect } from 'react-redux';
 import { withRouter } from 'react-router';
 // import isEqual from 'lodash/isEqual';
 import { isEqual, find, some } from 'lodash';
-import { Vector3, Box3 } from 'three';
+import { Vector3, Box3, Quaternion, Math as ThreeMath } from 'three';
 // , MeshPhongMaterial, DoubleSide, Mesh, CylinderBufferGeometry
 
 import { shortcutActions, priorities, ShortcutManager } from '../../../lib/shortcut';
@@ -18,6 +18,7 @@ import modal from '../../../lib/modal';
 import ProgressBar from '../../components/ProgressBar';
 import ContextMenu from '../../components/ContextMenu';
 import { Button } from '../../components/Buttons';
+import { NumberInput as Input } from '../../components/Input';
 import Canvas from '../../components/SMCanvas';
 import { actions as printingActions } from '../../../flux/printing';
 import { actions as operationHistoryActions } from '../../../flux/operation-history';
@@ -28,6 +29,8 @@ import VisualizerInfo from './VisualizerInfo';
 import PrintableCube from './PrintableCube';
 import styles from './styles.styl';
 import { STEP_STAGE } from '../../../lib/manager/ProgressManager';
+
+const initQuaternion = new Quaternion();
 
 class Visualizer extends PureComponent {
     static propTypes = {
@@ -84,7 +87,10 @@ class Visualizer extends PureComponent {
         hidePrimeTower: PropTypes.func,
         showPrimeTower: PropTypes.func,
         printingToolhead: PropTypes.string,
-        stopArea: PropTypes.object
+        stopArea: PropTypes.object,
+        rotateAxis: PropTypes.string,
+        rotateInputValue: PropTypes.number,
+        displayModel: PropTypes.func
     };
 
     printableArea = null;
@@ -125,12 +131,9 @@ class Visualizer extends PureComponent {
             this.props.recordModelBeforeTransform(this.props.modelGroup);
         },
         onModelAfterTransform: (transformMode) => {
-            this.actions.onModelTransform();
+            this.props.onModelTransform();
             this.props.recordModelAfterTransform(transformMode, this.props.modelGroup);
             this.props.onModelAfterTransform();
-        },
-        onModelTransform: () => {
-            this.props.onModelTransform();
         },
         // context menu
         centerSelectedModel: () => {
@@ -191,8 +194,24 @@ class Visualizer extends PureComponent {
             this.props.setTransformMode(value);
             this.canvas.current.setTransformMode(value);
         },
+        setHoverFace: (value) => {
+            if (!this.props.selectedModelArray.length) return;
+            this.canvas.current.setHoverFace(value);
+            this.canvas.current.renderScene();
+        },
         onRotationPlacementSelect: (userData) => {
             this.props.setRotationPlacementFace(userData);
+        },
+        rotateByDirection: (rotateAxis, rotateAngle) => {
+            this.props.recordModelBeforeTransform(this.props.modelGroup);
+            const _rotateAxis = new Vector3(rotateAxis === 'X' ? 1 : 0, rotateAxis === 'Y' ? 1 : 0, rotateAxis === 'Z' ? 1 : 0);
+            const quaternion = new Quaternion().setFromAxisAngle(_rotateAxis, ThreeMath.degToRad(rotateAngle));
+            initQuaternion.copy(this.props.selectedModelArray[0].meshObject.quaternion);
+            this.props.selectedModelArray[0].meshObject.quaternion.copy(quaternion).multiply(initQuaternion).normalize();
+            this.props.modelGroup.onModelAfterTransform();
+            this.props.recordModelAfterTransform('rotate', this.props.modelGroup);
+            this.props.destroyGcodeLine();
+            this.props.displayModel();
         }
     };
 
@@ -463,6 +482,8 @@ class Visualizer extends PureComponent {
                     supportActions={this.supportActions}
                     scaleToFitSelectedModel={this.actions.scaleToFitSelectedModel}
                     autoRotateSelectedModel={this.actions.autoRotateSelectedModel}
+                    setHoverFace={this.actions.setHoverFace}
+                    arrangeAllModels={this.actions.arrangeAllModels}
                 />
                 <div className={styles['visualizer-bottom-left']}>
                     <VisualizerBottomLeft actions={this.actions} />
@@ -478,7 +499,7 @@ class Visualizer extends PureComponent {
 
                 <ProgressBar tips={notice} progress={progress * 100} />
 
-                <div className={styles['canvas-wrapper']}>
+                <div className={styles['canvas-wrapper']} style={{ position: 'relative' }}>
                     <Canvas
                         ref={this.canvas}
                         inProgress={inProgress}
@@ -495,11 +516,22 @@ class Visualizer extends PureComponent {
                         onModelAfterTransform={this.actions.onModelAfterTransform}
                         onRotationPlacementSelect={this.actions.onRotationPlacementSelect}
                         onModelBeforeTransform={this.actions.onModelBeforeTransform}
-                        onModelTransform={this.actions.onModelTransform}
                         showContextMenu={this.showContextMenu}
                         primeTowerSelected={primeTowerSelected}
                         transformMode={transformMode}
                     />
+                    <div className={`canvas-input position-ab border-${this.props.rotateAxis} translate-animation-3`} id="rotate-input-control" style={{ display: 'none' }}>
+                        <Input
+                            size="small"
+                            placeholder={i18n._('key-Printing/LeftBar-Enter an degree')}
+                            value={this.props.rotateInputValue}
+                            suffix="°"
+                            allowUndefined
+                            onPressEnter={(event) => {
+                                this.actions.rotateByDirection(this.props.rotateAxis.toUpperCase(), event.target.value);
+                            }}
+                        />
+                    </div>
                 </div>
                 <ContextMenu
                     ref={this.contextMenuRef}
@@ -671,7 +703,8 @@ const mapDispatchToProps = (dispatch) => ({
     applySupportBrush: (raycastResult) => dispatch(printingActions.applySupportBrush(raycastResult)),
     setRotationPlacementFace: (userData) => dispatch(printingActions.setRotationPlacementFace(userData)),
     hidePrimeTower: (targetModel) => dispatch(printingActions.hideSelectedModel(targetModel)),
-    showPrimeTower: (targetModel) => dispatch(printingActions.showSelectedModel(targetModel))
+    showPrimeTower: (targetModel) => dispatch(printingActions.showSelectedModel(targetModel)),
+    displayModel: () => dispatch(printingActions.displayModel())
 });
 
 export default withRouter(connect(mapStateToProps, mapDispatchToProps)(Visualizer));

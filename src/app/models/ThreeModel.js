@@ -322,7 +322,6 @@ class ThreeModel extends BaseModel {
         const z = (box3.max.z + box3.min.z) / 2;
         const center = new THREE.Vector3(x, y, z);
         center.applyMatrix4(this.meshObject.matrixWorld);
-
         // mirror operation on model may cause convex plane normal vector inverse, if it does, inverse it back
         const inverseNormal = (this.transformation.scaleX / Math.abs(this.transformation.scaleX) < 0);
         // TODO: how about do not use matrix to speed up

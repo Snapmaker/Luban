@@ -8,8 +8,7 @@
 import noop from 'lodash/noop';
 import React, { PureComponent } from 'react';
 import { isNil, throttle } from 'lodash';
-import { Vector3, PerspectiveCamera, Scene, Group, AmbientLight, PointLight,
-    HemisphereLight, DirectionalLight } from 'three';
+import { Vector3, PerspectiveCamera, Scene, Group, AmbientLight, PointLight, HemisphereLight, DirectionalLight, Object3D } from 'three';
 import PropTypes from 'prop-types';
 import TWEEN from '@tweenjs/tween.js';
 
@@ -23,7 +22,8 @@ const DEFAULT_MODEL_POSITION = new Vector3(0, 0, 0);
 const EPS = 0.000001;
 const FPS = 60;
 const renderT = 1 / FPS;
-
+let parentDOM = null;
+let inputDOM = null;
 class Canvas extends PureComponent {
     node = React.createRef();
 
@@ -53,7 +53,6 @@ class Canvas extends PureComponent {
         updateScale: PropTypes.func,
         onModelAfterTransform: PropTypes.func,
         onModelBeforeTransform: PropTypes.func,
-        onModelTransform: PropTypes.func,
         onRotationPlacementSelect: PropTypes.func,
 
         // tmp
@@ -97,10 +96,6 @@ class Canvas extends PureComponent {
         this.onModelBeforeTransform = this.props.onModelBeforeTransform || noop;
         this.onModelAfterTransform = this.props.onModelAfterTransform || noop;
         this.onRotationPlacementSelect = this.props.onRotationPlacementSelect || noop;
-        this.onModelTransform = throttle(this.props.onModelTransform || noop, 300, {
-            leading: false,
-            trailing: true
-        });
 
         // threejs
         this.camera = null;
@@ -108,6 +103,12 @@ class Canvas extends PureComponent {
         this.scene = null;
         this.group = null;
         this.light = null;
+        this.rotateFontLeftTop = new Vector3();
+        this.cloneRotatePeripheral = new Object3D();
+        this.canvasWidthHalf = null;
+        this.canvasHeightHalf = null;
+        this.inputPositionTop = 0;
+        this.inputPositionLeft = 0;
     }
 
     componentDidMount() {
@@ -305,11 +306,6 @@ class Canvas extends PureComponent {
         this.controls.on(EVENTS.BEFORE_TRANSFORM_OBJECT, () => {
             this.onModelBeforeTransform(this.controls.transformControl.mode);
         });
-        this.controls.on(EVENTS.TRANSFORM_OBJECT, () => {
-            if (this.props.canOperateModel) {
-                this.onModelTransform();
-            }
-        });
         this.controls.on(EVENTS.AFTER_TRANSFORM_OBJECT, () => {
             this.onModelAfterTransform(this.controls.transformControl.mode);
         });
@@ -324,6 +320,10 @@ class Canvas extends PureComponent {
         } else {
             this.controls && this.controls.setTransformMode(null);
         }
+    }
+
+    setHoverFace(face) {
+        this.controls && this.controls.transformControl.setHoverFace(face);
     }
 
     animation = () => {
@@ -604,9 +604,30 @@ class Canvas extends PureComponent {
             if (this.transformSourceType === '2D') {
                 this.light.position.copy(this.camera.position);
             }
+            if (this.controls.transformControl.mode === 'rotate' && this.modelGroup.selectedModelArray[0]?.type !== 'primeTower') {
+                this.cloneRotatePeripheral = this.controls.transformControl.rotatePeripheral.clone();
 
+                this.cloneRotatePeripheral.updateMatrixWorld();
+                this.rotateFontLeftTop.setFromMatrixPosition(this.cloneRotatePeripheral.matrixWorld);
+                this.rotateFontLeftTop.project(this.camera);
+                inputDOM = document.getElementById('rotate-input-control');
+                parentDOM = document.getElementById('smcanvas');
+                this.canvasWidthHalf = parentDOM.clientWidth * 0.5;
+                this.canvasHeightHalf = parentDOM.clientHeight * 0.5;
+                if (Math.abs(parseFloat(this.inputPositionLeft) - ((this.rotateFontLeftTop.x) * this.canvasWidthHalf + this.canvasWidthHalf)) > 10
+                || Math.abs(parseFloat(this.inputPositionTop) - (-(this.rotateFontLeftTop.y * this.canvasHeightHalf) + this.canvasHeightHalf - 200)) > 10
+                ) {
+                    this.inputPositionLeft = `${this.rotateFontLeftTop.x * this.canvasWidthHalf + this.canvasWidthHalf}px`;
+                    this.inputPositionTop = `${-(this.rotateFontLeftTop.y * this.canvasHeightHalf) + this.canvasHeightHalf - 200}px`;
+                }
+                inputDOM.style.top = this.inputPositionTop;
+                inputDOM.style.left = this.inputPositionLeft;
+                this.controls.transformControl.dragging && (inputDOM.style.display = 'block');
+            }
+            if (this.controls.transformControl.mode !== 'rotate' || !this.modelGroup.selectedModelArray.length || this.modelGroup.hasHideModel()) {
+                inputDOM && (inputDOM.style.display = 'none');
+            }
             this.renderer.render(this.scene, this.camera);
-
             TWEEN.update();
         }, renderT)();
     }
@@ -617,6 +638,7 @@ class Canvas extends PureComponent {
         }
         return (
             <div
+                id="smcanvas"
                 ref={this.node}
                 style={{
                     backgroundColor: '#F5F5F7'

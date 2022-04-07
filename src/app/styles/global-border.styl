@@ -76,6 +76,9 @@
 .border-bottom-normal {
     border-bottom: 1px solid $grey-1;
 }
+.border-bottom-dashed {
+    border-bottom: 1px dashed $grey-1;
+}
 .border-top-normal {
     border-top: 1px solid $grey-1;
 }
@@ -116,4 +119,31 @@
 }
 .bottom-8 {
     bottom: $px-grade-4;
+}
+
+.border-z {
+    .ant-input-affix-wrapper {
+        border-color: #1890ff !important;
+        > input {
+            color: #1890ff;
+        }
+    }
+}
+
+.border-y {
+    .ant-input-affix-wrapper {
+        border-color: #4cb518 !important;
+        > input {
+            color: #4cb518;
+        }
+    }
+}
+
+.border-x {
+    .ant-input-affix-wrapper {
+        border-color: #ff5759 !important;
+        > input {
+            color: #ff5759;
+        }
+    }
 }

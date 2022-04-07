@@ -8,8 +8,10 @@ import { NumberInput as Input } from '../../../components/Input';
 import { actions as printingActions } from '../../../../flux/printing';
 import styles from './styles.styl';
 import { renderModal } from '../../../utils';
+/* eslint-disable-next-line import/no-cycle */
+import { CancelButton } from '../VisualizerLeftBar';
 
-const SupportOverlay = ({ editSupport, CancelButton, setTransformMode }) => {
+const SupportOverlay = ({ editSupport, setTransformMode }) => {
     const selectedModelArray = useSelector(state => state?.printing?.modelGroup?.selectedModelArray, shallowEqual);
     const modelGroup = useSelector(state => state?.printing?.modelGroup, shallowEqual);
     const supportOverhangAngle = useSelector(state => state?.printing.supportOverhangAngle, shallowEqual);
@@ -140,7 +142,6 @@ const SupportOverlay = ({ editSupport, CancelButton, setTransformMode }) => {
 SupportOverlay.propTypes = {
     editSupport: PropTypes.func.isRequired,
     setTransformMode: PropTypes.func.isRequired,
-    CancelButton: PropTypes.func.isRequired
 };
 
 export default SupportOverlay;
