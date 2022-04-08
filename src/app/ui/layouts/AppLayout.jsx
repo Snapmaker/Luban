@@ -719,7 +719,8 @@ class AppLayout extends PureComponent {
                         if (materials.isRotate !== isRotate) {
                             await this.props.changeCoordinateMode(
                                 headType,
-                                COORDINATE_MODE_BOTTOM_CENTER, {
+                                COORDINATE_MODE_BOTTOM_CENTER,
+                                {
                                     x: materials.diameter * Math.PI,
                                     y: materials.length
                                 },
@@ -745,11 +746,16 @@ class AppLayout extends PureComponent {
                     if (this.props.store?.[pathname.slice(1)]?.materials?.isRotate && pathname === '/laser') {
                         type = '/laser-rotate';
                     }
-                    const file = await UniApi.Dialog.showOpenFileDialog(type);
-                    if (!file) {
+                    const isMultiSelect = pathname === '/printing';
+                    const files = await UniApi.Dialog.showOpenFileDialog(type, isMultiSelect);
+                    if (!files) {
                         return;
                     }
-                    fileObj = UniApi.File.constructFileObj(file.path, file.name.split('\\').pop());
+                    if (isMultiSelect) {
+                        fileObj = files.map(file => UniApi.File.constructFileObj(file.path, file.name.split('\\').pop()));
+                    } else {
+                        fileObj = UniApi.File.constructFileObj(files.path, files.name.split('\\').pop());
+                    }
                 }
                 switch (pathname) {
                     case '/printing': UniApi.Event.emit('appbar-menu:printing.import', fileObj); break;
@@ -860,12 +866,12 @@ class AppLayout extends PureComponent {
         return (
             <div className={isElectron() ? null : 'appbar'}>
                 <AppBar />
-                { showSettingsModal ? this.actions.renderSettingModal() : null }
-                { showDevelopToolsModal ? this.actions.renderDevelopToolsModal() : null }
-                { showCheckForUpdatesModal ? this.actions.renderCheckForUpdatesModal() : null }
-                { showDownloadUpdateModal ? this.actions.renderDownloadUpdateModal() : null }
-                { showSavedModal ? this.actions.renderSavedModal() : null }
-                { showArrangeModelsError ? this.actions.renderArrangeModelsError() : null }
+                {showSettingsModal ? this.actions.renderSettingModal() : null}
+                {showDevelopToolsModal ? this.actions.renderDevelopToolsModal() : null}
+                {showCheckForUpdatesModal ? this.actions.renderCheckForUpdatesModal() : null}
+                {showDownloadUpdateModal ? this.actions.renderDownloadUpdateModal() : null}
+                {showSavedModal ? this.actions.renderSavedModal() : null}
+                {showArrangeModelsError ? this.actions.renderArrangeModelsError() : null}
                 <div className={isElectron() ? null : classNames(styles['app-content'])}>
                     {this.props.children}
                 </div>
