@@ -2217,7 +2217,7 @@
                     "description": "The temperature to which to already start cooling down just before the end of printing.",
                     "unit": "°C",
                     "type": "float",
-                    "default_value": 100,
+                    "default_value": 195,
                     "value": "max(-273.15, material_print_temperature - 15)",
                     "minimum_value": "-273.15",
                     "minimum_value_warning": "material_standby_temperature",

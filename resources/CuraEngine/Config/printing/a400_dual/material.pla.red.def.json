@@ -7,7 +7,7 @@
   "i18nCategory": "key-default_category-PLA",
   "overrides": {
     "color": {
-      "default_value": "#ff0008"
+      "default_value": "#E70008"
     },
     "material_flow": {
       "default_value": 100
@@ -21,8 +21,14 @@
     "material_print_temperature": {
       "default_value": 205
     },
+    "cool_fan_speed_0": {
+        "default_value": 0
+    },
     "cool_fan_speed": {
       "default_value": 100
+    },
+    "cool_fan_full_layer": {
+      "default_value": 2
     },
     "material_bed_temperature_layer_0": {
       "default_value": 70
@@ -40,10 +46,10 @@
       "default_value": true
     },
     "retraction_speed": {
-      "default_value": 25
+      "default_value": 60
     },
     "retraction_amount": {
-      "default_value": 6.5
+      "default_value": 5
     },
     "retract_at_layer_change": {
       "default_value": false
@@ -59,12 +65,6 @@
     },
     "cool_fan_speed_max": {
       "default_value": 100
-    },
-    "switch_extruder_retraction_amount": {
-        "default_value": 6.5
-    },
-    "switch_extruder_retraction_speeds": {
-        "default_value": 60
     }
   }
 }

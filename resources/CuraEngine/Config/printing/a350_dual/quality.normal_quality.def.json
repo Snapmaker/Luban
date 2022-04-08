@@ -206,6 +206,9 @@
                 "prime_tower_enable": {
                     "default_value": false
                 },
+                "prime_tower_wipe_enabled": {
+                    "default_value": true
+                },
                 "ooze_shield_enabled": {
                     "default_value": false
                 },

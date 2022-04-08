@@ -3,7 +3,7 @@
     "version": "4.2.0",
     "inherits": "snapmaker2",
     "category": "Default",
-    "i18nName": "key-default_name-High Quality",
+    "i18nName": "key-default_name-Normal Quality",
     "i18nCategory": "key-default_category-Default",
     "overrides": {
         "resolution": {
@@ -206,6 +206,9 @@
                 "prime_tower_enable": {
                     "default_value": false
                 },
+                "prime_tower_wipe_enabled": {
+                    "default_value": true
+                },
                 "ooze_shield_enabled": {
                     "default_value": false
                 },
@@ -214,12 +217,6 @@
                 },
                 "ooze_shield_dist": {
                     "default_value": 2
-                },
-                "switch_extruder_retraction_amount": {
-                    "default_value": 5
-                },
-                "switch_extruder_retraction_speeds": {
-                    "default_value": 60
                 }
             }
         }

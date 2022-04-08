@@ -114,6 +114,8 @@ const curaFields = [
     'material_final_print_temperature',
     'material_standby_temperature',
     'cool_fan_speed',
+    'cool_fan_speed_0',
+    'cool_fan_full_layer',
     'machine_heated_bed',
     'material_bed_temperature',
     'material_bed_temperature_layer_0',

@@ -21,11 +21,11 @@
         "material_print_temperature": {
             "default_value": 235
         },
-        "material_final_print_temperature": {
-            "default_value": 100
+        "cool_fan_speed_0": {
+            "default_value": 0
         },
-        "material_standby_temperature": {
-            "default_value": 100
+        "cool_fan_full_layer": {
+          "default_value": 2
         },
         "cool_fan_speed": {
             "default_value": 0
@@ -59,12 +59,6 @@
         },
         "retraction_hop_enabled": {
             "default_value": false
-        },
-        "switch_extruder_retraction_amount": {
-            "default_value": 6.5
-        },
-        "switch_extruder_retraction_speeds": {
-            "default_value": 60
         }
     }
 }

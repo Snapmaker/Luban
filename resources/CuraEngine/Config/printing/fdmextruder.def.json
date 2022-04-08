@@ -393,7 +393,6 @@
                     "settable_per_mesh": false,
                     "settable_per_extruder": true
                 },
-
                 "retraction_speed": {
                     "label": "Retraction Speed",
                     "description": "The speed at which the filament is retracted and primed during a retraction move.",
@@ -477,6 +476,20 @@
                     "type": "bool",
                     "default_value": false,
                     "enabled": "retraction_enable",
+                    "settable_per_mesh": false,
+                    "settable_per_extruder": true
+                },
+                "switch_extruder_retraction_amount":
+                {
+                    "label": "Nozzle Switch Retraction Distance",
+                    "description": "The amount of retraction when switching extruders. Set to 0 for no retraction at all. This should generally be the same as the length of the heat zone.",
+                    "type": "float",
+                    "unit": "mm",
+                    "enabled": "retraction_enable and extruders_enabled_count > 1",
+                    "default_value": 6.5,
+                    "value": "machine_heat_zone_length",
+                    "minimum_value_warning": "0",
+                    "maximum_value_warning": "100",
                     "settable_per_mesh": false,
                     "settable_per_extruder": true
                 }
