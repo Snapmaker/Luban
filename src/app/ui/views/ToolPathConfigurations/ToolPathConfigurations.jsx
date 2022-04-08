@@ -73,6 +73,8 @@ function ToolPathConfigurations({ toolpath, onClose, headType }) {
                 if (newSettings.work_speed) newSettings.work_speed.default_value = gcodeConfig?.workSpeed;
                 if (newSettings.step_down) newSettings.step_down.default_value = gcodeConfig?.stepDown;
                 if (newSettings.step_over) newSettings.step_over.default_value = gcodeConfig?.stepOver;
+                if (newSettings.tool_type) newSettings.tool_type.default_value = gcodeConfig?.toolType;
+                if (newSettings.tool_extension_enabled) newSettings.tool_extension_enabled.default_value = gcodeConfig?.toolExtensionEnabled;
             }
             if (headType === HEAD_LASER) {
                 if (newSettings.path_type) newSettings.path_type.default_value = gcodeConfig?.pathType;

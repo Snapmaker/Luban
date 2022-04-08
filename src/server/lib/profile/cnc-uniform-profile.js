@@ -86,6 +86,16 @@ const defaultParameters = {
         unit: 'mm',
         label: 'Stepover',
         description: 'Set the space between parallel toolpaths.'
+    },
+    tool_extension_enabled: {
+        default_value: true,
+        type: 'enum',
+        label: 'Tool Limiting',
+        description: 'Limit tool location by object boundary \n - Tangent to Boundary:  Tool is located inside the machining  boundary \n - Past Boundary: tool can exceed machining boundary',
+        options: {
+            'true': 'Tangent to Boundary',
+            'false': 'Past Boundary'
+        }
     }
 };
 export const addNewParameter = (settings) => {

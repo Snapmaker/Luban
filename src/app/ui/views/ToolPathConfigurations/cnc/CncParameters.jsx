@@ -97,7 +97,7 @@ class CncParameters extends PureComponent {
         // Session Tool
         const toolDefinitionToolKeys = (type === TOOLPATH_TYPE_VECTOR || isRotate) ? [
             'workSpeed', 'plungeSpeed', 'stepDown', 'stepOver'
-        ] : ['workSpeed', 'plungeSpeed', 'stepDown', 'stepOver', 'toolLimiting'];
+        ] : ['workSpeed', 'plungeSpeed', 'stepDown', 'stepOver', 'toolExtensionEnabled'];
         const toolDefinitionTool = {};
         toolDefinitionToolKeys.forEach((key) => {
             if (allDefinition[key]) {

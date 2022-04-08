@@ -88,7 +88,7 @@
             "label": "Stepover",
             "description": "Set the space between parallel toolpaths."
         },
-        "tool_limiting": {
+        "tool_extension_enabled": {
             "default_value": true,
             "type": "enum",
             "label": "Tool Limiting",

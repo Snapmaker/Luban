@@ -185,7 +185,7 @@ const curaFields = [
     'plunge_speed',
     'step_down',
     'step_over',
-    'tool_limiting'
+    'tool_extension_enabled'
 ];
 
 const CURA_CATEGORIES = [

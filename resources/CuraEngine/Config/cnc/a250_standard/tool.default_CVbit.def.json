@@ -33,7 +33,7 @@
         "step_over": {
             "default_value": 0.12
         },
-        "tool_limiting": {
+        "tool_extension_enabled": {
             "default_value": true
         }
     }
