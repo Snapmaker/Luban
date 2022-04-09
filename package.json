@@ -275,7 +275,7 @@
     "session-file-store": "1.1.2",
     "sha1": "1.1.1",
     "shortid": "2.2.16",
-    "snapmaker-luban-engine": "^0.8.0",
+    "snapmaker-luban-engine": "^0.9.0",
     "socket.io": "4.0.2",
     "socket.io-client": "4.0.2",
     "socketio-jwt": "4.5.1",
