@@ -188,7 +188,7 @@ class Controls extends EventEmitter {
         this.updateCamera();
     }
 
-    fitViewIn(center, bbox) {
+    fitViewIn(center, r) {
         // set target
         this.camera.position.x += center.x - this.target.x;
         this.camera.position.y += center.y - this.target.y;
@@ -201,9 +201,7 @@ class Controls extends EventEmitter {
          * C: target center
          * then Scale = O2C / O1C
          */
-        const fullScreenMultiple = 0.45; // control the multiple of the (modelView / screen)
-        const p = bbox.min;
-        const r = Math.sqrt((p.x - center.x) * (p.x - center.x) + (p.y - center.y) * (p.y - center.y) + (p.z - center.z) * (p.z - center.z));
+        const fullScreenMultiple = 9 / 4; // control the multiple of the (modelView / screen)
         const o2c = r * fullScreenMultiple * Math.sqrt(2); // this.camera.fov = 45, so sin(45°) = sqrt(2)
         const o1 = { x: this.camera.position.x, y: this.camera.position.y, z: this.camera.position.z };
         const o1c = Math.sqrt((o1.x - center.x) * (o1.x - center.x) + (o1.y - center.y) * (o1.y - center.y) + (o1.z - center.z) * (o1.z - center.z));

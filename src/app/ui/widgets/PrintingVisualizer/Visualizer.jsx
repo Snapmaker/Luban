@@ -126,7 +126,17 @@ class Visualizer extends PureComponent {
             this.canvas.current.toTopFrontRight();
         },
         fitViewIn: () => {
-            this.canvas.current.fitViewIn(this.props.modelGroup.selectedGroup.position, this.props.modelGroup._bbox);
+            if (this.props.selectedModelArray.length !== 0) {
+                const { x, y, z } = this.props.modelGroup.getSelectedModelBBoxWHD();
+                const r = Math.sqrt(x * x + y * y + z * z) / 2;
+                this.canvas.current.fitViewIn(this.props.modelGroup.selectedGroup.position, r);
+            } else {
+                this.props.modelGroup.selectAllModels();
+                const { x, y, z } = this.props.modelGroup.getSelectedModelBBoxWHD();
+                const r = Math.sqrt(x * x + y * y + z * z) / 2;
+                this.canvas.current.fitViewIn(this.props.modelGroup.selectedGroup.position, r);
+                this.props.modelGroup.unselectAllModels();
+            }
         },
         onSelectModels: (intersect, selectEvent) => {
             this.props.selectMultiModel(intersect, selectEvent);
@@ -327,7 +337,7 @@ class Visualizer extends PureComponent {
         );
 
         window.addEventListener(
-            'fitviewin',
+            'fit-view-in',
             this.actions.fitViewIn,
             false
         );
@@ -432,7 +442,7 @@ class Visualizer extends PureComponent {
     componentWillUnmount() {
         this.props.clearOperationHistory();
         this.props.modelGroup.off('add', this.props.recordAddOperation);
-        window.removeEventListener('fitviewin', this.actions.fitViewIn, false);
+        window.removeEventListener('fit-view-in', this.actions.fitViewIn, false);
     }
 
     getNotice() {
@@ -551,7 +561,7 @@ class Visualizer extends PureComponent {
                             {
                                 type: 'item',
                                 label: i18n._('key-Printing/ContextMenu-FitViewIn'),
-                                disabled: inProgress || !isModelSelected || isSupportSelected,
+                                disabled: inProgress || !hasModel || isSupportSelected,
                                 onClick: this.actions.fitViewIn
                             },
                             {

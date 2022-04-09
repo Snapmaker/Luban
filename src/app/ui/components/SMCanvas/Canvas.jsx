@@ -504,8 +504,8 @@ class Canvas extends PureComponent {
         this.renderScene();
     }
 
-    fitViewIn(center, bbox) {
-        this.controls.fitViewIn(center, bbox);
+    fitViewIn(center, r) {
+        this.controls.fitViewIn(center, r);
     }
 
     toBottom() {
