@@ -51,13 +51,6 @@ export default class ScaleToFitWithRotateOpeartion3D extends Operation<ScaleToFi
             positionZ: positionZ
         });
         modelGroup.unselectAllModels();
-        // modelGroup.addModelToSelectedGroup(model);
-        // modelGroup.updateSelectedGroupTransformation({
-        //     positionX: positionX,
-        //     positionY: positionY,
-        //     positionZ: positionZ
-        // });
-        // modelGroup.unselectAllModels();
         model.onTransform();
 
         model.stickToPlate();
