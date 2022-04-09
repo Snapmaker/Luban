@@ -125,6 +125,9 @@ class Visualizer extends PureComponent {
         toTopFrontRight: () => {
             this.canvas.current.toTopFrontRight();
         },
+        fitViewIn: () => {
+            this.canvas.current.fitViewIn(this.props.modelGroup.selectedGroup.position, this.props.modelGroup._bbox);
+        },
         onSelectModels: (intersect, selectEvent) => {
             this.props.selectMultiModel(intersect, selectEvent);
         },
@@ -537,6 +540,12 @@ class Visualizer extends PureComponent {
                             },
                             {
                                 type: 'separator'
+                            },
+                            {
+                                type: 'item',
+                                label: i18n._('key-Printing/ContextMenu-FitViewIn'),
+                                disabled: inProgress || !isModelSelected || isSupportSelected,
+                                onClick: this.actions.fitViewIn
                             },
                             {
                                 type: 'item',
