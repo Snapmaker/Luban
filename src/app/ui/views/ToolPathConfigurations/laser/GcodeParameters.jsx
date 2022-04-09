@@ -18,7 +18,8 @@ class GcodeParameters extends PureComponent {
         toolDefinitions: PropTypes.array.isRequired,
         setCurrentToolDefinition: PropTypes.func.isRequired,
         isModifiedDefinition: PropTypes.bool.isRequired,
-        setCurrentValueAsProfile: PropTypes.func.isRequired
+        setCurrentValueAsProfile: PropTypes.func.isRequired,
+        isModel: PropTypes.bool
     };
 
     state = {
@@ -153,6 +154,7 @@ class GcodeParameters extends PureComponent {
                         setCurrentToolDefinition={this.props.setCurrentToolDefinition}
                         isModifiedDefinition={this.props.isModifiedDefinition}
                         setCurrentValueAsProfile={this.props.setCurrentValueAsProfile}
+                        isModel={this.props.isModel}
                     />
                     <ToolParameters
                         settings={laserDefinitionMethod}

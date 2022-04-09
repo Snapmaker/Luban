@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useDispatch, useSelector, shallowEqual } from 'react-redux';
+import i18next from 'i18next';
 import PropTypes from 'prop-types';
-import { throttle } from 'lodash';
+import { throttle, includes } from 'lodash';
 import i18n from '../../../../lib/i18n';
 import { actions as printingActions } from '../../../../flux/printing';
 /* eslint-disable-next-line import/no-cycle */
@@ -12,6 +13,7 @@ import { Button } from '../../../components/Buttons';
 import { updateControlInputEvent } from '../../../components/SMCanvas/TransformControls';
 import { SCALE_MODE } from '../../../../constants';
 
+const longLang = ['de', 'it'];
 const ScaleOverlay = React.memo(({
     setTransformMode,
     onModelAfterTransform,
@@ -275,10 +277,10 @@ const ScaleOverlay = React.memo(({
                         {i18n._('key-Printing/LeftBar-Uniform Scaling')}
                     </span>
                 </div>
-                <div className="sm-flex">
+                <div className={`sm-flex ${includes(longLang, i18next.language) && 'sm-flex-wrap'}`}>
                     {!isPrimeTowerSelected && (
                         <Button
-                            className="margin-top-32 margin-right-8"
+                            className={`margin-top-32 margin-bottom-8 ${!includes(longLang, i18next.language) && 'margin-right-8'}`}
                             type="primary"
                             priority="level-three"
                             width="100%"
@@ -288,7 +290,7 @@ const ScaleOverlay = React.memo(({
                         </Button>
                     )}
                     <Button
-                        className="margin-top-32 margin-left-8"
+                        className={`${isPrimeTowerSelected && 'margin-top-24'} ${!includes(longLang, i18next.language) && 'margin-top-32'}`}
                         type="primary"
                         priority="level-three"
                         width="100%"

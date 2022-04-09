@@ -430,7 +430,7 @@ function WifiConnection() {
                     <div
                         className={classNames(styles['connection-state'], 'padding-bottom-8', 'border-bottom-dashed-default')}
                     >
-                        <span className="main-text-normal">
+                        <span className="main-text-normal max-width-304 text-overflow-ellipsis display-inline">
                             {`${serverState?.name} (${i18n._(MACHINE_SERIES[series.toUpperCase()].label)})`}
                         </span>
                         <span className={styles['connection-state-icon']}>

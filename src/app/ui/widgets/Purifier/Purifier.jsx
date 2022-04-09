@@ -82,7 +82,7 @@ function Purifier({ widgetActions }) {
                 />
             </div>
             <div className="sm-flex justify-space-between margin-vertical-8">
-                <span>{i18n._('key-Workspace/Purifier-Fan Speed')}</span>
+                <span className="max-width-132 text-overflow-ellipsis line-height-32">{i18n._('key-Workspace/Purifier-Fan Speed')}</span>
                 <span
                     className={classNames(
                         'border-radius-8',

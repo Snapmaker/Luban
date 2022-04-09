@@ -73,7 +73,7 @@ function ConfigValueBox({ optionConfigGroup, calculateTextIndex, isCategorySelec
                     }, 200, { 'leading': false, 'trailing': true })
                 }
             >
-                <div className="sm-parameter-container position-re" ref={scrollDom}>
+                <div className="sm-parameter-container" ref={scrollDom}>
                     {!isCategorySelected && optionConfigGroup.map((group, index) => {
                         const eachFieldsDom = fieldsDom.current[index];
                         return (
@@ -96,7 +96,6 @@ function ConfigValueBox({ optionConfigGroup, calculateTextIndex, isCategorySelec
                                                     <SettingItem
                                                         settings={definitionForManager?.settings}
                                                         definitionKey={key}
-                                                        ref={scrollDom}
                                                         width="160px"
                                                         key={key}
                                                         isDefaultDefinition={isEditable}
