@@ -459,6 +459,7 @@ class Canvas extends PureComponent {
         this.camera.position.y = position.y;
         this.camera.position.z = position.z;
         this.controls.setTarget(new Vector3(0, 0, this.props.cameraInitialPosition.z));
+        this.controls.panScale = 1;
         this.renderScene();
     }
 
@@ -468,6 +469,7 @@ class Canvas extends PureComponent {
         this.camera.position.z = this.props.cameraInitialPosition.z;
         this.controls.setTarget(new Vector3(0, 0, this.props.cameraInitialPosition.z));
         // this.camera.lookAt(new Vector3(0, 0, this.cameraInitialPosition.z));
+        this.controls.panScale = 1;
         this.renderScene();
     }
 
@@ -479,6 +481,7 @@ class Canvas extends PureComponent {
         this.camera.position.y = position.y;
         this.camera.position.z = position.z;
         this.controls.setTarget(new Vector3(0, 0, this.props.cameraInitialPosition.z));
+        this.controls.panScale = 1;
         this.renderScene();
     }
 
@@ -490,6 +493,7 @@ class Canvas extends PureComponent {
         this.camera.position.y = position.y;
         this.camera.position.z = position.z;
         this.controls.setTarget(new Vector3(0, 0, this.props.cameraInitialPosition.z));
+        this.controls.panScale = 1;
         this.renderScene();
     }
 
@@ -501,6 +505,7 @@ class Canvas extends PureComponent {
         this.camera.position.y = position.y;
         this.camera.position.z = position.z;
         this.controls.setTarget(new Vector3(0, 0, this.props.cameraInitialPosition.z));
+        this.controls.panScale = 1;
         this.renderScene();
     }
 
@@ -524,6 +529,7 @@ class Canvas extends PureComponent {
                 this.camera.position.x = this.controls.target.x;
                 this.camera.position.y = this.controls.target.y - Math.sin(rotation) * dist;
                 this.camera.position.z = this.controls.target.z + Math.cos(rotation) * dist;
+                this.controls.panScale = 1;
             });
         this.startTween(tween);
     }
