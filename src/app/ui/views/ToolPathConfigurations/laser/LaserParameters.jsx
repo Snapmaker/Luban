@@ -21,7 +21,8 @@ class LaserParameters extends PureComponent {
 
         // size: PropTypes.object.isRequired,
         multipleEngine: PropTypes.bool.isRequired,
-        materials: PropTypes.object.isRequired
+        materials: PropTypes.object.isRequired,
+        isModel: PropTypes.bool
     };
 
     state = {
@@ -139,6 +140,7 @@ class LaserParameters extends PureComponent {
                         isModifiedDefinition={this.props.isModifiedDefinition}
                         setCurrentToolDefinition={this.props.setCurrentToolDefinition}
                         setCurrentValueAsProfile={this.props.setCurrentValueAsProfile}
+                        isModel={this.props.isModel}
                     />
                 </div>
             </React.Fragment>

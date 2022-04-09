@@ -65,11 +65,11 @@ const QuickStart = (props) => {
                                 </div>
                             </div>
                             <div className={classNames(styles.caseText)}>
-                                <div className={classNames(styles['case-title'], 'heading-3')}>
+                                <div className={classNames(styles['case-title'], 'heading-3', 'text-overflow-ellipsis-line-2')}>
                                     {i18n._(caseItem.title)}
                                 </div>
                                 <div className={classNames('disabled-text')}>
-                                    {i18n._(caseItem.tag_i18n)}
+                                    <span className='text-overflow-ellipsis display-inline width-percent-100'>{i18n._(caseItem.tag_i18n)}</span>
                                 </div>
                             </div>
                         </div>
@@ -89,12 +89,13 @@ const QuickStart = (props) => {
                                 </div>
                             </div>
                             <div className={classNames(styles.caseText)}>
-                                <div className={classNames(styles['case-title'], 'heading-3')}>
+                                <div className={classNames(styles['case-title'], 'heading-3', 'text-overflow-ellipsis-line-2')}>
                                     {i18n._(caseFourAxisItem.title)}
                                 </div>
                                 <div className={classNames('disabled-text')}>
-                                    <span style={{ paddingRight: 2 }}>{i18n._('key-HomePage/Begin-4-axis')}</span>
-                                    <span>{i18n._(caseFourAxisItem.tag_i18n)}</span>
+                                    {/* <span style={{ paddingRight: 2 }}>{i18n._('key-HomePage/Begin-4-axis')}</span>
+                                    <span>{i18n._(caseFourAxisItem.tag_i18n)}</span> */}
+                                    <span className='text-overflow-ellipsis display-inline width-percent-100'>{`${i18n._('key-HomePage/Begin-4-axis')} ${i18n._(caseFourAxisItem.tag_i18n)}`}</span>
                                 </div>
                             </div>
                         </div>

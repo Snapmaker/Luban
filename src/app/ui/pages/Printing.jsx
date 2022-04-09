@@ -4,6 +4,7 @@ import PropTypes from 'prop-types';
 import { useHistory, withRouter } from 'react-router-dom';
 import { includes, throttle } from 'lodash';
 import isElectron from 'is-electron';
+import i18next from 'i18next';
 // import { Steps } from 'intro.js-react';
 import 'intro.js/introjs.css';
 import { Trans } from 'react-i18next';
@@ -208,6 +209,8 @@ function useRenderMainToolBar() {
         return (
             <MainToolBar
                 leftItems={leftItems}
+                lang={i18next.language}
+                headType={HEAD_PRINTING}
             />
         );
     }

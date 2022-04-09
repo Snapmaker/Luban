@@ -32,7 +32,8 @@ class CncParameters extends PureComponent {
 
         // size: PropTypes.object.isRequired,
         multipleEngine: PropTypes.bool.isRequired,
-        materials: PropTypes.object.isRequired
+        materials: PropTypes.object.isRequired,
+        isModel: PropTypes.bool.isRequired
     };
 
     state = {
@@ -42,7 +43,7 @@ class CncParameters extends PureComponent {
     };
 
     render() {
-        const { toolPath, materials, multipleEngine } = this.props;
+        const { toolPath, materials, multipleEngine, isModel } = this.props;
 
         const { name, type, gcodeConfig, useLegacyEngine } = toolPath;
 
@@ -326,6 +327,7 @@ class CncParameters extends PureComponent {
                             setCurrentToolDefinition={this.props.setCurrentToolDefinition}
                             isModifiedDefinition={this.props.isModifiedDefinition}
                             setCurrentValueAsProfile={this.props.setCurrentValueAsProfile}
+                            isModel={isModel}
                         />
                         <ToolParameters
                             settings={toolDefinitionTool}

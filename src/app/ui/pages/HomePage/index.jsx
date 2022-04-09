@@ -54,6 +54,7 @@ const HomePage = (props) => { // Todo, what's the props ?
                         }
                     ]}
                     mainBarClassName="background-transparent"
+                    lang={i18next.language}
                 />
             )}
             <Begin {...props} />
