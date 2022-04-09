@@ -69,7 +69,7 @@ const QuickStart = (props) => {
                                     {i18n._(caseItem.title)}
                                 </div>
                                 <div className={classNames('disabled-text')}>
-                                    <span className='text-overflow-ellipsis display-inline width-percent-100'>{i18n._(caseItem.tag_i18n)}</span>
+                                    <span className="text-overflow-ellipsis display-inline width-percent-100">{i18n._(caseItem.tag_i18n)}</span>
                                 </div>
                             </div>
                         </div>
@@ -95,7 +95,7 @@ const QuickStart = (props) => {
                                 <div className={classNames('disabled-text')}>
                                     {/* <span style={{ paddingRight: 2 }}>{i18n._('key-HomePage/Begin-4-axis')}</span>
                                     <span>{i18n._(caseFourAxisItem.tag_i18n)}</span> */}
-                                    <span className='text-overflow-ellipsis display-inline width-percent-100'>{`${i18n._('key-HomePage/Begin-4-axis')} ${i18n._(caseFourAxisItem.tag_i18n)}`}</span>
+                                    <span className="text-overflow-ellipsis display-inline width-percent-100">{`${i18n._('key-HomePage/Begin-4-axis')} ${i18n._(caseFourAxisItem.tag_i18n)}`}</span>
                                 </div>
                             </div>
                         </div>

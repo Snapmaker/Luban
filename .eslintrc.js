@@ -2,7 +2,13 @@ const path = require('path');
 
 module.exports = {
     extends: 'snapmaker',
-    parser: 'babel-eslint',
+    parser: '@babel/eslint-parser',
+    parserOptions: {
+	    "requireConfigFile": false,
+        "babelOptions": {
+          "presets": ["@babel/preset-react"]
+        }
+    },
     env: {
         browser: true,
         node: true
