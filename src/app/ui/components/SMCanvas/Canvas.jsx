@@ -648,8 +648,9 @@ class Canvas extends PureComponent {
                 }
                 this.controls.transformControl.dragging && inputDOM && (inputDOM.style.display = 'block');
             }
-            if (this.controls.transformControl.mode !== 'rotate' || !this.modelGroup.selectedModelArray.length || this.modelGroup.hasHideModel()) {
+            if (!this.modelGroup.selectedModelArray.length || this.modelGroup.hasHideModel()) {
                 inputDOM && (inputDOM.style.display = 'none');
+                inputDOM2 && (inputDOM2.style.display = 'none');
             }
             this.renderer.render(this.scene, this.camera);
             TWEEN.update();

@@ -91,6 +91,7 @@ const ScaleOverlay = React.memo(({
     const onModelTransform = (transformations, isReset, _isPrimeTowerSelected = false) => {
         const newTransformation = {};
         let value = null;
+        let updateAxis = null;
         Object.keys(transformations).forEach(keyItem => {
             value = transformations[keyItem];
             switch (keyItem) {
@@ -100,6 +101,7 @@ const ScaleOverlay = React.memo(({
                         newTransformation.uniformScalingState = false;
                     }
                     newTransformation.scaleX = (transformation.scaleX > 0 ? value : -value);
+                    updateAxis = 'x';
                     break;
                 case 'scaleY':
                     if (_isPrimeTowerSelected) {
@@ -107,15 +109,26 @@ const ScaleOverlay = React.memo(({
                         newTransformation.uniformScalingState = false;
                     }
                     newTransformation.scaleY = (transformation.scaleY > 0 ? value : -value);
+                    updateAxis = 'y';
                     break;
                 case 'scaleZ':
                     newTransformation.scaleZ = (transformation.scaleZ > 0 ? value : -value);
+                    updateAxis = 'z';
                     break;
                 default:
                     break;
             }
         });
-        dispatch(printingActions.updateSelectedModelTransformation(newTransformation, isReset ? _isPrimeTowerSelected : false));
+        dispatch(printingActions.updateSelectedModelTransformation(newTransformation, isReset ? _isPrimeTowerSelected : undefined));
+        window.dispatchEvent(updateControlInputEvent({
+            controlValue: {
+                mode: SCALE_MODE,
+                axis: isReset ? undefined : updateAxis,
+                data: {
+                    [updateAxis]: newTransformation[`scale${updateAxis.toUpperCase()}`] * 100
+                }
+            }
+        }));
     };
 
     const resetScale = (_isPrimeTowerSelected) => {
@@ -172,10 +185,11 @@ const ScaleOverlay = React.memo(({
                         <Input
                             suffix="mm"
                             size="small"
-                            min={1}
+                            min={isPrimeTowerSelected ? 1 : initModelSize.x * 0.01}
+                            // min={0.1}
                             value={modelX}
                             onChange={(value) => {
-                                onModelTransform({ 'scaleX': value / modelSize.scaledX }, false, true);
+                                onModelTransform({ 'scaleX': value / modelSize.scaledX }, false, isPrimeTowerSelected);
                                 onModelAfterTransform();
                             }}
                             className="margin-right-8"
@@ -198,10 +212,10 @@ const ScaleOverlay = React.memo(({
                         <Input
                             suffix="mm"
                             size="small"
-                            min={1}
+                            min={isPrimeTowerSelected ? 1 : initModelSize.y * 0.01}
                             value={modelY}
                             onChange={(value) => {
-                                onModelTransform({ 'scaleY': value / modelSize.scaledY }, false, true);
+                                onModelTransform({ 'scaleY': value / modelSize.scaledY }, false, isPrimeTowerSelected);
                                 onModelAfterTransform();
                             }}
                             className="margin-right-8"
@@ -225,10 +239,10 @@ const ScaleOverlay = React.memo(({
                             <Input
                                 suffix="mm"
                                 size="small"
-                                min={1}
+                                min={isPrimeTowerSelected ? 1 : initModelSize.z * 0.01}
                                 value={modelZ}
                                 onChange={(value) => {
-                                    onModelTransform({ 'scaleZ': value / modelSize.scaledZ }, false, true);
+                                    onModelTransform({ 'scaleZ': value / modelSize.scaledZ }, false, isPrimeTowerSelected);
                                     onModelAfterTransform();
                                 }}
                                 className="margin-right-8"

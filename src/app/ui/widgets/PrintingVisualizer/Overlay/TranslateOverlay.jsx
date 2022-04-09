@@ -66,24 +66,37 @@ const TranslateOverlay = React.memo(({
     const [moveY, setMoveY] = useState(0);
     const [arragneSettings, setArragneSettings] = useState(printingArrangeSettings);
     const dispatch = useDispatch();
-    const onModelTransform = (transformations) => {
+    const onModelTransform = (transformations, isReset) => {
         const newTransformation = {};
+        const updateControlValue = {};
+        let updateAxis = null;
         Object.keys(transformations).forEach(keyItem => {
             let value = transformations[keyItem];
             switch (keyItem) {
                 case 'moveX':
                     value = Math.min(Math.max(value, -size.x / 2), size.x / 2);
                     newTransformation.positionX = value;
+                    updateControlValue.x = value;
+                    updateAxis = 'x';
                     break;
                 case 'moveY':
                     value = Math.min(Math.max(value, -size.y / 2), size.y / 2);
                     newTransformation.positionY = value;
+                    updateControlValue.y = value;
+                    updateAxis = 'y';
                     break;
                 default:
                     break;
             }
         });
         dispatch(printingActions.updateSelectedModelTransformation(newTransformation));
+        window.dispatchEvent(updateControlInputEvent({
+            controlValue: {
+                mode: TRANSLATE_MODE,
+                data: updateControlValue,
+                axis: isReset ? undefined : updateAxis
+            }
+        }));
     };
     const resetPosition = (_isPrimeTowerSelected = false) => {
         const { max } = modelGroup._bbox;
@@ -92,16 +105,7 @@ const TranslateOverlay = React.memo(({
         onModelTransform({
             'moveX': _moveX,
             'moveY': _moveY
-        });
-        window.dispatchEvent(updateControlInputEvent({
-            controlValue: {
-                mode: TRANSLATE_MODE,
-                data: {
-                    x: _moveX,
-                    y: _moveY
-                }
-            }
-        }));
+        }, true);
         onModelAfterTransform();
     };
     const handleArrangeSettingsChange = (settings) => {
