@@ -27,7 +27,7 @@
     "Different options that help improve priming your extrusion and adhesion to the build plate. Skirt is a line printed around the model, but not connected to the model. Brim adds a single layer flat area around the base of your model to prevent warping. Raft adds a thick grid with a roof below the model.": "Verschiedene Optionen, welche die Grundierung Ihrer Extrusion und die Adhäsion auf der Bauplatte verbessern. Bei der Skirt handelt es sich um eine Linie, die um das Modell herum gedruckt wird, aber nicht mit dem Modell verbunden ist. Die Brim fügt eine einschichtige flache Fläche um die Basis Ihres Modells hinzu, um Verformungen zu verhindern. Der Raft fügt ein dickes Raster mit einem Dach unterhalb des Modells hinzu.",
     "Distance from the top/bottom of the support structure to the print. This gap provides clearance to remove the supports after the model is printed. This value is rounded up to a multiple of the layer height.": "Entfernung von der Ober- oder Unterseite der Trägerstruktur zum Druck. Diese Lücke schafft den Freiraum, um die Träger zu entfernen, nachdem das Modell gedruckt wird. Dieser Wert wird auf ein Vielfaches der Schichthöhe aufgerundet.",
     "Distance of the ooze shield from the print, in the X/Y directions.": "",
-    "Don't Save": "Sparen Sie nicht",
+    "Don't Save": "nicht speichern",
     "Don't show again": "Nicht mehr anzeigen",
     "Don't show again in current session": "In der aktuellen Sitzung nicht mehr anzeigen",
     "Dot": "Punkt",

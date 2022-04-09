@@ -191,7 +191,7 @@ const TranslateOverlay = React.memo(({
                         placement="right"
                     >
                         <div className="sm-flex justify-space-between height-32 margin-bottom-8">
-                            <span>
+                            <span className="max-width-160 text-overflow-ellipsis">
                                 {i18n._('key-Printing/LeftBar-Rotation Step Around Z Axis')}
                             </span>
                             <div>

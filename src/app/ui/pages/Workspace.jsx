@@ -1,6 +1,7 @@
 import _ from 'lodash';
 import classNames from 'classnames';
 import React, { useEffect, useRef, useState } from 'react';
+import i18next from 'i18next';
 import includes from 'lodash/includes';
 import { useHistory } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
@@ -250,6 +251,7 @@ function Workspace({ isPopup, onClose, style, className }) {
         return (
             <MainToolBar
                 leftItems={leftItems}
+                lang={i18next.language}
             />
         );
     };

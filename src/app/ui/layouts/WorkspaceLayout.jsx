@@ -1,10 +1,12 @@
 import React, { useEffect, useRef } from 'react';
 // import Sortable from 'react-sortablejs';
-import { throttle } from 'lodash';
+import { throttle, includes } from 'lodash';
 import PropTypes from 'prop-types';
+import i18next from 'i18next';
 import classNames from 'classnames';
 import pubsub from 'pubsub-js';
 import styles from './styles/workspace.styl';
+import { longLang } from '../../constants';
 
 function WorkspaceLayout({ renderLeftView, renderRightView, renderMainToolBar, children }) {
     const primaryContainer = useRef();
@@ -40,7 +42,7 @@ function WorkspaceLayout({ renderLeftView, renderRightView, renderMainToolBar, c
                     renderMainToolBar()
                 )}
             </div>
-            <div className={styles.workspaceTable}>
+            <div className={classNames(styles['workspace-table'], includes(longLang, i18next.language) && styles['workspace-table-for-long-lang'])}>
                 <div
                     ref={primaryContainer}
                     className={classNames(

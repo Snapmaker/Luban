@@ -19,7 +19,7 @@
                 flex: 1
                 vertical-align: top
                 .manager-btn {
-                    display: inline-block
+                    display: flex;
                     height: 32px
                     line-height: 32px;
                     width: 100%;
@@ -111,6 +111,9 @@
         width: 100%;
         line-height: 32px;
         padding: 0px 10px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
     }
     .selected {
         background: #E6F2FD;

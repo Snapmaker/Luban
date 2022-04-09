@@ -63,7 +63,7 @@ const ImageProcessMode = ({ disabled }) => {
                                     >
                                         <i className={styles['laser-mode__icon-bw']} />
                                     </Anchor>
-                                    <span>{i18n._('key-Laser/ProcessingModeSection/ImageProcessMode-B&W')}</span>
+                                    <span className="max-width-76 text-overflow-ellipsis-line-2">{i18n._('key-Laser/ProcessingModeSection/ImageProcessMode-B&W')}</span>
                                 </div>
                             )}
                             { !isDXF && (
@@ -74,7 +74,7 @@ const ImageProcessMode = ({ disabled }) => {
                                     >
                                         <i className={styles['laser-mode__icon-greyscale']} />
                                     </Anchor>
-                                    <span>{i18n._('key-Laser/ProcessingModeSection/ImageProcessMode-GREYSCALE')}</span>
+                                    <span className="max-width-76 text-overflow-ellipsis-line-2">{i18n._('key-Laser/ProcessingModeSection/ImageProcessMode-GREYSCALE')}</span>
                                 </div>
                             )}
                             <div className={classNames(mode === 'vector' ? styles.selected : styles.unselected)}>
@@ -84,7 +84,7 @@ const ImageProcessMode = ({ disabled }) => {
                                 >
                                     <i className={styles['laser-mode__icon-vector']} />
                                 </Anchor>
-                                <span>{i18n._('key-Laser/ProcessingModeSection/ImageProcessMode-VECTOR')}</span>
+                                <span className="max-width-76 text-overflow-ellipsis-line-2">{i18n._('key-Laser/ProcessingModeSection/ImageProcessMode-VECTOR')}</span>
                             </div>
                             { !isDXF && (
                                 <div className={classNames(mode === 'halftone' ? styles.selected : styles.unselected)}>
@@ -94,7 +94,7 @@ const ImageProcessMode = ({ disabled }) => {
                                     >
                                         <i className={styles['laser-mode__icon-halftone']} />
                                     </Anchor>
-                                    <span>{i18n._('key-Laser/ProcessingModeSection/ImageProcessMode-HALFTONE')}</span>
+                                    <span className="max-width-76 text-overflow-ellipsis-line-2">{i18n._('key-Laser/ProcessingModeSection/ImageProcessMode-HALFTONE')}</span>
                                 </div>
                             )}
                         </div>

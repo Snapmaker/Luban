@@ -55,7 +55,7 @@ function SettingItem(props) {
             content={i18n._(content)}
         >
             <div key={settingName} className="position-re sm-flex justify-space-between height-32 margin-vertical-8">
-                <span className="sm-flex-auto sm-flex-order-negative main-text-normal">{i18n._(label)}</span>
+                <span className="sm-flex-auto sm-flex-order-negative main-text-normal max-width-208 text-overflow-ellipsis">{i18n._(label)}</span>
                 {type === 'bool-switch' && (
                     <div className="height-32">
                         <Switch
