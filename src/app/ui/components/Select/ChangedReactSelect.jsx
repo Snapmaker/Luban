@@ -1,7 +1,7 @@
 import PropTypes from 'prop-types';
 import { isNil, difference } from 'lodash';
 import classNames from 'classnames';
-import React, { useState } from 'react';
+import React, { PureComponent } from 'react';
 // import { components } from 'react-select';
 import { Select, TreeSelect } from 'antd';
 import styles from './styles.styl';
@@ -10,17 +10,50 @@ const { Option } = Select;
 const CustomValue = 'new';
 const PARENT_ID = 'parent';
 
-const ChangedReactSelect = React.forwardRef(({ value, showSearch = false, disabled = false, options, size = '100%', className, isGroup, onChange, valueObj, dropdownRender }, ref) => {
-    const [expandedKeys, setExpandedKeys] = useState([]);
+class ChangedReactSelect extends PureComponent {
+    static propTypes = {
+        value: PropTypes.oneOfType([
+            PropTypes.number,
+            PropTypes.bool,
+            PropTypes.string
+        ]),
+        showSearch: PropTypes.bool,
+        disabled: PropTypes.bool,
+        options: PropTypes.array.isRequired,
+        size: PropTypes.string,
+        className: PropTypes.string,
+        // whether using 'GroupHeading' component
+        isGroup: PropTypes.bool,
+        onChange: PropTypes.func,
+        // to calculate the 'defaultValue' for the react-select component
+        valueObj: PropTypes.shape({
+            firstKey: PropTypes.string,
+            firstValue: PropTypes.oneOfType([
+                PropTypes.number,
+                PropTypes.bool,
+                PropTypes.string
+            ])
+        }),
+        dropdownRender: PropTypes.func
+    };
 
-    const actions = {
+    static defaultProps = {
+        isGroup: false,
+        disabled: false
+    };
+
+    state = {
+        expandedKeys: []
+    }
+
+    actions = {
         onDropdownVisibleChange: (open) => {
             if (open) {
-                let newExpandedKeys = expandedKeys;
-                options.some((oldOption) => {
+                let newExpandedKeys = this.state.expandedKeys;
+                this.props.options.some((oldOption) => {
                     if (oldOption.definitionId !== CustomValue) {
                         return oldOption.options.some((child) => {
-                            if (child.definitionId === valueObj.firstValue) {
+                            if (child.definitionId === this.props.valueObj.firstValue) {
                                 newExpandedKeys = [PARENT_ID + oldOption.definitionId];
                                 return true;
                             }
@@ -29,30 +62,38 @@ const ChangedReactSelect = React.forwardRef(({ value, showSearch = false, disabl
                     }
                     return false;
                 });
-                if (newExpandedKeys !== expandedKeys) {
-                    setExpandedKeys(newExpandedKeys);
+                if (newExpandedKeys !== this.state.expandedKeys) {
+                    this.setState({
+                        expandedKeys: newExpandedKeys
+                    });
                 }
             }
         },
         onTreeExpand: (newExpandedKeys) => {
-            setExpandedKeys(difference(newExpandedKeys, expandedKeys));
+            this.setState({
+                expandedKeys: difference(newExpandedKeys, this.state.expandedKeys)
+            });
         },
-        handleChange: (_value) => {
-            const option = options.find(d => d.value === _value);
-            onChange && onChange(option);
+        handleChange: (value) => {
+            const option = this.props.options.find(d => d.value === value);
+            this.props.onChange && this.props.onChange(option);
         },
         handleTreeChange: (definitionId) => {
             if (definitionId.slice(0, 1) === '0') {
-                if (expandedKeys.length === 1 && definitionId === expandedKeys[0]) {
-                    setExpandedKeys([]);
+                if (this.state.expandedKeys.length === 1 && definitionId === this.state.expandedKeys[0]) {
+                    this.setState({
+                        expandedKeys: []
+                    });
                 } else {
-                    setExpandedKeys([definitionId]);
+                    this.setState({
+                        expandedKeys: [definitionId]
+                    });
                 }
             } else {
                 let currentOption = {};
                 // 0tool.28575028
                 if (definitionId !== CustomValue) {
-                    options.some((option) => {
+                    this.props.options.some((option) => {
                         return option.options.some((item) => {
                             if (item.definitionId === definitionId) {
                                 currentOption = item;
@@ -63,7 +104,7 @@ const ChangedReactSelect = React.forwardRef(({ value, showSearch = false, disabl
                         });
                     });
                 } else {
-                    options.some((option) => {
+                    this.props.options.some((option) => {
                         if (option.definitionId === CustomValue) {
                             currentOption = option;
                             return true;
@@ -72,116 +113,102 @@ const ChangedReactSelect = React.forwardRef(({ value, showSearch = false, disabl
                         }
                     });
                 }
-                onChange && onChange(currentOption);
+                this.props.onChange && this.props.onChange(currentOption);
             }
         }
-    };
+    }
 
-    let defaultValue = {};
-    if (isGroup) {
+    render() {
         const {
-            firstKey = '',
-            firstValue = ''
-        } = valueObj;
-        if (!isNil(firstValue) && !isNil(firstKey)) {
-            options.forEach((group) => {
-                if (group.options && group.options.find(d => d[firstKey] === firstValue)) {
-                    defaultValue = group.options.find(d => d[firstKey] === firstValue);
-                }
-            });
-        }
-        const treeData = options.map((oldOption) => {
-            const newOption = {};
-            newOption.title = oldOption.label;
-            newOption.value = oldOption.definitionId === 'new' ? oldOption.definitionId : PARENT_ID + oldOption.definitionId;
-            if (oldOption.definitionId !== CustomValue) {
-                // newOption.disabled = true;
-                newOption.selectable = false;
-                newOption.children = oldOption.options.map((child) => {
-                    child.value = child.definitionId;
-                    child.title = child?.name;
-                    child.disabled = false;
-                    return child;
-                });
-            } else {
-                newOption.disabled = false;
-            }
-
-            return newOption;
-        });
-
-        return (
-            <div className={classNames(styles['override-select'], className)} style={{ width: size }}>
-                <TreeSelect
-                    className={styles[size]}
-                    onTreeExpand={actions.onTreeExpand}
-                    showSearch
-                    style={{ width: size }}
-                    onDropdownVisibleChange={actions.onDropdownVisibleChange}
-                    treeExpandedKeys={expandedKeys}
-                    value={defaultValue?.definitionId}
-                    treeData={treeData}
-                    onChange={(option) => actions.handleTreeChange(option)}
-                />
-            </div>
-        );
-    } else {
-        // Compatible with old interfaces
-        if (!isNil(value)) {
-            defaultValue = options.find(d => d.value === value);
-        } else if (!isNil(valueObj)) {
+            valueObj,
+            value,
+            options,
+            size = '100%',
+            className,
+            isGroup,
+            showSearch = true,
+            disabled = true
+        } = this.props;
+        let defaultValue = {};
+        if (isGroup) {
             const {
-                firstKey = 'value',
+                firstKey = '',
                 firstValue = ''
             } = valueObj;
-            defaultValue = options.find(d => d[firstKey] === firstValue);
-        }
-        return (
-            <div className={classNames(styles['override-select'], className)}>
-                <Select
-                    dropdownRender={dropdownRender}
-                    getPopupContainer={() => ref?.current || document.querySelector('body')}
-                    className={styles[size]}
-                    value={defaultValue?.value}
-                    showSearch={showSearch}
-                    optionFilterProp="children"
-                    style={{ width: size }}
-                    disabled={disabled}
-                    onChange={actions.handleChange}
-                >
-                    {(options.map((option) => {
-                        return (<Option key={option.value + option.label} value={option.value}>{option.label}</Option>);
-                    }))}
-                </Select>
-            </div>
-        );
-    }
-});
+            if (!isNil(firstValue) && !isNil(firstKey)) {
+                options.forEach((group) => {
+                    if (group.options && group.options.find(d => d[firstKey] === firstValue)) {
+                        defaultValue = group.options.find(d => d[firstKey] === firstValue);
+                    }
+                });
+            }
+            const treeData = options.map((oldOption) => {
+                const newOption = {};
+                newOption.title = oldOption.label;
+                newOption.value = oldOption.definitionId === 'new' ? oldOption.definitionId : PARENT_ID + oldOption.definitionId;
+                if (oldOption.definitionId !== CustomValue) {
+                    // newOption.disabled = true;
+                    newOption.selectable = false;
+                    newOption.children = oldOption.options.map((child) => {
+                        child.value = child.definitionId;
+                        child.title = child?.name;
+                        child.disabled = false;
+                        return child;
+                    });
+                } else {
+                    newOption.disabled = false;
+                }
 
-ChangedReactSelect.propTypes = {
-    value: PropTypes.oneOfType([
-        PropTypes.number,
-        PropTypes.bool,
-        PropTypes.string
-    ]),
-    showSearch: PropTypes.bool,
-    disabled: PropTypes.bool,
-    options: PropTypes.array.isRequired,
-    size: PropTypes.string,
-    className: PropTypes.string,
-    // whether using 'GroupHeading' component
-    isGroup: PropTypes.bool,
-    onChange: PropTypes.func,
-    // to calculate the 'defaultValue' for the react-select component
-    valueObj: PropTypes.shape({
-        firstKey: PropTypes.string,
-        firstValue: PropTypes.oneOfType([
-            PropTypes.number,
-            PropTypes.bool,
-            PropTypes.string
-        ])
-    }),
-    dropdownRender: PropTypes.func
-};
+                return newOption;
+            });
+
+            return (
+                <div className={classNames(styles['override-select'], className)} style={{ width: size }}>
+                    <TreeSelect
+                        className={styles[size]}
+                        onTreeExpand={this.actions.onTreeExpand}
+                        showSearch
+                        style={{ width: size }}
+                        onDropdownVisibleChange={this.actions.onDropdownVisibleChange}
+                        treeExpandedKeys={this.state.expandedKeys}
+                        value={defaultValue?.definitionId}
+                        treeData={treeData}
+                        onChange={(option) => this.actions.handleTreeChange(option)}
+                    />
+                </div>
+            );
+        } else {
+            // Compatible with old interfaces
+            if (!isNil(value)) {
+                defaultValue = options.find(d => d.value === value);
+            } else if (!isNil(valueObj)) {
+                const {
+                    firstKey = 'value',
+                    firstValue = ''
+                } = valueObj;
+                defaultValue = options.find(d => d[firstKey] === firstValue);
+            }
+            return (
+                <div className={classNames(styles['override-select'], className)}>
+                    <Select
+                        dropdownRender={this.props.dropdownRender}
+                        className={styles[size]}
+                        value={defaultValue?.value}
+                        showSearch={showSearch}
+                        optionFilterProp="children"
+                        style={{ width: size }}
+                        disabled={disabled}
+                        onChange={this.actions.handleChange}
+                    >
+                        {(options.map((option) => {
+                            return (<Option key={option.value + option.label} value={option.value}>{option.label}</Option>);
+                        }))}
+                    </Select>
+                </div>
+            );
+        }
+    }
+}
+
 
 export default ChangedReactSelect;
