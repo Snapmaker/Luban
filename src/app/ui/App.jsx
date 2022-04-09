@@ -20,6 +20,7 @@ import Laser from './pages/Laser';
 import Settings from './pages/Settings';
 import UniApi from '../lib/uni-api';
 import AppLayout from './layouts/AppLayout';
+import { Server } from '../flux/machine/Server';
 
 class App extends PureComponent {
     static propTypes = {
@@ -113,6 +114,7 @@ class App extends PureComponent {
         }, 200);
 
         ShortcutManager.register(this.shortcutHandler);
+        Server.closeServerAfterWindowReload();
     }
 
     logPageView() {

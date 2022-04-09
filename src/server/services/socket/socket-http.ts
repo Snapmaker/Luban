@@ -196,18 +196,22 @@ class SocketHttp {
 
     public connectionClose = (socket: SocketServer, options: EventOptions) => {
         const { eventName } = options;
-        const api = `${this.host}/api/v1/disconnect`;
-        request
-            .post(api)
-            .timeout(3000)
-            .send(`token=${this.token}`)
-            .end((err, res) => {
-                socket && socket.emit(eventName, _getResult(err, res));
-            });
-        this.host = '';
-        this.token = '';
-        this.heartBeatWorker && this.heartBeatWorker.terminate();
-        clearInterval(intervalHandle);
+        if (this.host) {
+            const api = `${this.host}/api/v1/disconnect`;
+            request
+                .post(api)
+                .timeout(3000)
+                .send(`token=${this.token}`)
+                .end((err, res) => {
+                    socket && socket.emit(eventName, _getResult(err, res));
+                });
+            this.host = '';
+            this.token = '';
+            this.heartBeatWorker && this.heartBeatWorker.terminate();
+            clearInterval(intervalHandle);
+        } else {
+            socket && socket.emit(eventName, _getResult(new Error('connection not exist'), null));
+        }
     };
 
     public startGcode = (options: EventOptions) => {
