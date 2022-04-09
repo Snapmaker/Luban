@@ -599,6 +599,9 @@ class ModelGroup extends EventEmitter {
             if (selectModel) {
                 const objectIndex = this.selectedGroup.children.indexOf(selectModel.meshObject);
                 if (objectIndex === -1) {
+                    if (this.selectedModelArray.length === 1 && this.selectedModelArray[0] instanceof PrimeTowerModel) {
+                        this.unselectAllModels();
+                    }
                     let isModelAcrossGroup = false;
                     for (const selectedModel of this.selectedModelArray) {
                         if (selectedModel.parent !== selectModel.parent) {
@@ -2516,12 +2519,11 @@ class ModelGroup extends EventEmitter {
         return availModels;
     }
 
-    hasHideModel() {
-        return _.some(this.selectedModelArray, { visible: false });
-    }
-
-    allIsHideModel() {
-        return _.every(this.selectedModelArray, { visible: false });
+    isSelectedModelAllVisible() {
+        if (this.selectedModelArray.length === 0) {
+            return false;
+        }
+        return this.selectedModelArray.every(model => model.visible && !(model instanceof PrimeTowerModel));
     }
 }
 

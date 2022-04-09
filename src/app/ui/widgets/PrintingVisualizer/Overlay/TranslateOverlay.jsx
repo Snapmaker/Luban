@@ -62,6 +62,8 @@ const TranslateOverlay = React.memo(({
     const modelGroup = useSelector(state => state?.printing?.modelGroup);
     const selectedModelArray = useSelector(state => state?.printing?.modelGroup?.selectedModelArray);
     const transformation = useSelector(state => state?.printing?.modelGroup?.getSelectedModelTransformationForPrinting(), shallowEqual);
+    const isSelectedModelAllVisible = useSelector(state => state?.printing?.modelGroup?.isSelectedModelAllVisible(), shallowEqual);
+
     const [moveX, setMoveX] = useState(0);
     const [moveY, setMoveY] = useState(0);
     const [arragneSettings, setArragneSettings] = useState(printingArrangeSettings);
@@ -143,7 +145,7 @@ const TranslateOverlay = React.memo(({
                         <Input
                             suffix="mm"
                             size="small"
-                            disabled={transformDisabled}
+                            disabled={!isSelectedModelAllVisible && !isPrimeTowerSelected}
                             min={-size.x / 2}
                             max={size.x / 2}
                             value={moveX}
@@ -158,7 +160,7 @@ const TranslateOverlay = React.memo(({
                         <Input
                             suffix="mm"
                             size="small"
-                            disabled={transformDisabled}
+                            disabled={!isSelectedModelAllVisible && !isPrimeTowerSelected}
                             min={-size.y / 2}
                             max={size.y / 2}
                             value={moveY}
@@ -176,7 +178,7 @@ const TranslateOverlay = React.memo(({
                             type="primary"
                             priority="level-three"
                             width="100%"
-                            disabled={transformDisabled}
+                            disabled={!isSelectedModelAllVisible || transformDisabled}
                             onClick={() => resetPosition(isPrimeTowerSelected)}
                         >
                             <span>{i18n._('key-Printing/LeftBar-Move to Center')}</span>

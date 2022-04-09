@@ -79,7 +79,7 @@ function VisualizerLeftBar({ setTransformMode, supportActions, updateBoundingBox
     const [showEditSupportModal, setShowEditSupportModal] = useState(false);
     const displayedType = useSelector(state => state?.printing?.displayedType, shallowEqual);
     const hasModels = modelGroup.getModels().some(model => model.visible && !(model instanceof PrimeTowerModel));
-    const supportDisabled = (displayedType !== 'model' || modelGroup.getModelsAttachedSupport(false).length === 0 || showRotationAnalyzeModal);
+    const supportDisabled = displayedType !== 'model' || showRotationAnalyzeModal || showEditSupportModal || !hasModels || isPrimeTowerSelected;
     const isDualExtruder = machineStore.get('machine.toolHead.printingToolhead') === DUAL_EXTRUDER_TOOLHEAD_FOR_SM2;
     const [dualExtruderDisabled, setDualExtruderDisabled] = useState(false);
     const dispatch = useDispatch();
@@ -147,9 +147,7 @@ function VisualizerLeftBar({ setTransformMode, supportActions, updateBoundingBox
         },
     };
     // TODO: refactor these flags
-    const transformDisabled = showRotationAnalyzeModal || showEditSupportModal || !(selectedModelArray.length > 0 && selectedModelArray.every((model) => {
-        return model.visible === true;
-    }));
+    const transformDisabled = showRotationAnalyzeModal || showEditSupportModal || !hasModels;
     // TODO
 
     useEffect(() => {
@@ -225,7 +223,7 @@ function VisualizerLeftBar({ setTransformMode, supportActions, updateBoundingBox
                                     <SvgIcon
                                         color="#545659"
                                         className={classNames(
-                                            { [styles.selected]: (!showRotationAnalyzeModal && transformMode === 'translate') },
+                                            { [styles.selected]: (!transformDisabled && !showRotationAnalyzeModal && transformMode === 'translate') },
                                             'padding-horizontal-4'
                                         )}
                                         type={[`${!showRotationAnalyzeModal && transformMode === 'translate' ? 'hoverNoBackground' : 'hoverSpecial'}`, 'pressSpecial']}
@@ -234,7 +232,7 @@ function VisualizerLeftBar({ setTransformMode, supportActions, updateBoundingBox
                                         onClick={() => {
                                             setTransformMode('translate');
                                         }}
-                                        disabled={showRotationAnalyzeModal || !hasModels}
+                                        disabled={!!transformDisabled}
                                     />
                                 </li>
                                 <li
@@ -261,7 +259,7 @@ function VisualizerLeftBar({ setTransformMode, supportActions, updateBoundingBox
                                     <SvgIcon
                                         color="#545659"
                                         className={classNames(
-                                            { [styles.selected]: (!transformDisabled && transformMode === 'rotate') },
+                                            { [styles.selected]: (!isPrimeTowerSelected && !transformDisabled && transformMode === 'rotate') },
                                             'padding-horizontal-4'
                                         )}
                                         type={[`${!transformDisabled && transformMode === 'rotate' ? 'hoverNoBackground' : 'hoverSpecial'}`, 'pressSpecial']}
@@ -271,7 +269,7 @@ function VisualizerLeftBar({ setTransformMode, supportActions, updateBoundingBox
                                             setTransformMode('rotate');
                                         }}
                                         // disabled={!!(transformDisabled || isPrimeTowerSelected)}
-                                        disabled={!(hasModels && !isPrimeTowerSelected) || showRotationAnalyzeModal}
+                                        disabled={!!transformDisabled || isPrimeTowerSelected}
                                     />
                                 </li>
                                 <li
@@ -280,7 +278,7 @@ function VisualizerLeftBar({ setTransformMode, supportActions, updateBoundingBox
                                     <SvgIcon
                                         color="#545659"
                                         className={classNames(
-                                            { [styles.selected]: (!transformDisabled && transformMode === 'mirror') },
+                                            { [styles.selected]: (!transformDisabled && !isPrimeTowerSelected && transformMode === 'mirror') },
                                             'padding-horizontal-4'
                                         )}
                                         type={[`${!transformDisabled && transformMode === 'mirror' ? 'hoverNoBackground' : 'hoverSpecial'}`, 'pressSpecial']}
@@ -309,7 +307,7 @@ function VisualizerLeftBar({ setTransformMode, supportActions, updateBoundingBox
                                         onClick={() => {
                                             setTransformMode('support');
                                         }}
-                                        disabled={!!(!hasModels || supportDisabled || isPrimeTowerSelected)}
+                                        disabled={supportDisabled}
                                     />
                                 </li>
                                 {isDualExtruder && (
@@ -317,7 +315,7 @@ function VisualizerLeftBar({ setTransformMode, supportActions, updateBoundingBox
                                         <SvgIcon
                                             color="#545659"
                                             className={classNames(
-                                                { [styles.selected]: (!transformDisabled && transformMode === 'extruder') },
+                                                { [styles.selected]: (!transformDisabled && !isPrimeTowerSelected && transformMode === 'extruder') },
                                                 'padding-horizontal-4'
                                             )}
                                             type={[`${!transformDisabled && transformMode === 'extruder' ? 'hoverNoBackground' : 'hoverSpecial'}`, 'pressSpecial']}
@@ -327,7 +325,7 @@ function VisualizerLeftBar({ setTransformMode, supportActions, updateBoundingBox
                                                 setTransformMode('extruder');
                                                 !selectedModelArray.length && dispatch(printingActions.selectAllModels());
                                             }}
-                                            disabled={Boolean(dualExtruderDisabled)}
+                                            disabled={!hasModels || Boolean(dualExtruderDisabled) || isPrimeTowerSelected || showRotationAnalyzeModal || showEditSupportModal}
                                         />
                                     </li>
                                 )}
@@ -335,7 +333,7 @@ function VisualizerLeftBar({ setTransformMode, supportActions, updateBoundingBox
                         </span>
                     </nav>
                 </div>
-                {!showRotationAnalyzeModal && transformMode === 'translate' && (
+                {hasModels && !showRotationAnalyzeModal && transformMode === 'translate' && (
                     <TranslateOverlay
                         setTransformMode={setTransformMode}
                         onModelAfterTransform={actions.onModelAfterTransform}
@@ -353,7 +351,7 @@ function VisualizerLeftBar({ setTransformMode, supportActions, updateBoundingBox
                     />
                 )}
                 {showRotationAnalyzeModal && <RotationAnalysisOverlay onClose={() => { setShowRotationAnalyzeModal(false); }} />}
-                {hasModels && transformMode === 'rotate' && !isPrimeTowerSelected && (
+                {hasModels && !isPrimeTowerSelected && transformMode === 'rotate' && (
                     <RotateOverlay
                         setTransformMode={setTransformMode}
                         onModelAfterTransform={actions.onModelAfterTransform}
@@ -366,7 +364,7 @@ function VisualizerLeftBar({ setTransformMode, supportActions, updateBoundingBox
                     />
                 )}
 
-                {!transformDisabled && transformMode === 'mirror' && !isPrimeTowerSelected && (
+                {!transformDisabled && !isPrimeTowerSelected && transformMode === 'mirror' && (
                     <MirrorOverlay
                         setTransformMode={setTransformMode}
                         updateBoundingBox={updateBoundingBox}
@@ -374,8 +372,8 @@ function VisualizerLeftBar({ setTransformMode, supportActions, updateBoundingBox
                 )}
 
                 {showEditSupportModal && <EditSupportOverlay onClose={() => { setShowEditSupportModal(false); }} />}
-                {!supportDisabled && !showEditSupportModal && transformMode === 'support' && <SupportOverlay editSupport={() => { actions.editSupport(); }} />}
-                {!transformDisabled && transformMode === 'extruder' && isDualExtruder && (
+                {hasModels && !supportDisabled && !showEditSupportModal && transformMode === 'support' && <SupportOverlay setTransformMode={setTransformMode} editSupport={() => { actions.editSupport(); }} />}
+                {!isPrimeTowerSelected && !transformDisabled && transformMode === 'extruder' && isDualExtruder && (
                     <ExtruderOverlay setTransformMode={setTransformMode} setDualExtruderDisabled={setDualExtruderDisabled} />
                 )}
             </div>
