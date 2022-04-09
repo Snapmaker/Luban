@@ -18,7 +18,7 @@ export const IP_WHITELIST = [
     'fc00::/7', // Unique local address
     'fe80::/10' // Link-local address
 ];
-
+export const CONNECTION_MATERIALTHICKNESS_ABORT = 'connection:materialThickness_abort';
 // Error Codes
 export const ERR_BAD_REQUEST = 400;
 export const ERR_UNAUTHORIZED = 401;
@@ -39,6 +39,125 @@ export const CURA_ENGINE_MACOS = `${RESOURCES_DIR}/CuraEngine/3.6/macOS/CuraEngi
 export const CURA_ENGINE_LINUX = `${RESOURCES_DIR}/CuraEngine/3.6/Linux/CuraEngine`;
 export const CURA_ENGINE_WIN64 = `${RESOURCES_DIR}/CuraEngine/3.6/Windows-x64/CuraEngine.exe`;
 
+
+export const WORKFLOW_STATE_PAUSED = 'paused';
+export const WORKFLOW_STATE_IDLE = 'idle';
+
+export const MACHINE_SERIES = {
+    ORIGINAL: {
+        value: 'Original',
+        label: 'key-Luban/Machine/MachineSeries-Snapmaker Original',
+        setting: {
+            size: {
+                x: 125,
+                y: 125,
+                z: 125
+            },
+            laserSize: {
+                x: 125,
+                y: 125,
+                z: 125
+            }
+        }
+    },
+    ORIGINAL_LZ: {
+        value: 'Original Long Z-axis',
+        configPath: 'Original',
+        label: 'key-Luban/Machine/MachineSeries-Snapmaker Original with Z-axis Extension Module',
+        setting: {
+            size: {
+                x: 125,
+                y: 125,
+                z: 221
+            },
+            laserSize: {
+                x: 125,
+                y: 125,
+                z: 221
+            }
+        }
+    },
+    A150: {
+        value: 'A150',
+        label: 'key-Luban/Machine/MachineSeries-Snapmaker 2.0 A150',
+        setting: {
+            size: {
+                x: 160,
+                y: 160,
+                z: 145
+            },
+            laserSize: {
+                x: 167,
+                y: 165,
+                z: 150
+            }
+        },
+        alias: ['SM2-S', 'Snapmaker 2.0 A150']
+    },
+    A250: {
+        value: 'A250',
+        label: 'key-Luban/Machine/MachineSeries-Snapmaker 2.0 A250',
+        setting: {
+            size: {
+                x: 230,
+                y: 250,
+                z: 235
+            },
+            laserSize: {
+                x: 252,
+                y: 260,
+                z: 235
+            }
+        },
+        alias: ['SM2-M', 'Snapmaker 2.0 A250']
+
+    },
+    A350: {
+        value: 'A350',
+        label: 'key-Luban/Machine/MachineSeries-Snapmaker 2.0 A350',
+        setting: {
+            size: {
+                x: 320,
+                y: 350,
+                z: 330
+            },
+            laserSize: {
+                x: 345,
+                y: 357,
+                z: 334
+            }
+        },
+        alias: ['SM2-L', 'Snapmaker 2.0 A350']
+    },
+    CUSTOM: {
+        value: 'Custom',
+        label: 'key-Luban/Machine/MachineSeries-Custom',
+        setting: {
+            size: {
+                x: 125,
+                y: 125,
+                z: 125
+            },
+            laserSize: {
+                x: 125,
+                y: 125,
+                z: 125
+            }
+        },
+        alias: ['Custom']
+    }
+};
+
+export const SINGLE_EXTRUDER_TOOLHEAD_FOR_ORIGINAL = 'singleExtruderToolheadForOriginal';
+export const SINGLE_EXTRUDER_TOOLHEAD_FOR_SM2 = 'singleExtruderToolheadForSM2';
+export const DUAL_EXTRUDER_TOOLHEAD_FOR_SM2 = 'dualExtruderToolheadForSM2';
+export const LEVEL_ONE_POWER_LASER_FOR_ORIGINAL = 'levelOneLaserToolheadForOriginal';
+export const LEVEL_TWO_POWER_LASER_FOR_ORIGINAL = 'levelTwoLaserToolheadForOriginal';
+export const LEVEL_ONE_POWER_LASER_FOR_SM2 = 'levelOneLaserToolheadForSM2';
+export const LEVEL_TWO_POWER_LASER_FOR_SM2 = 'levelTwoLaserToolheadForSM2';
+export const STANDARD_CNC_TOOLHEAD_FOR_ORIGINAL = 'standardCNCToolheadForOriginal';
+export const STANDARD_CNC_TOOLHEAD_FOR_SM2 = 'standardCNCToolheadForSM2';
+
 // 3D Mesh Convert 2D Image
 export const FRONT = 'front';
 export const BACK = 'back';
@@ -46,6 +165,10 @@ export const LEFT = 'left';
 export const RIGHT = 'right';
 export const TOP = 'top';
 export const BOTTOM = 'bottom';
+
+// Connection Type
+export const CONNECTION_TYPE_SERIAL = 'serial';
+export const CONNECTION_TYPE_WIFI = 'wifi';
 
 // Head Type
 export const HEAD_CNC = 'cnc';
@@ -85,3 +208,11 @@ export const TOOLPATH_TYPE_IMAGE = 'image';
 export const TOOLPATH_TYPE_VECTOR = 'vector';
 export const TOOLPATH_TYPE_SCULPT = 'sculpt';
 export const EPS = 1e-6;
+
+export const DEFINITION_SNAPMAKER_EXTRUDER_0 = 'snapmaker_extruder_0';
+export const DEFINITION_SNAPMAKER_EXTRUDER_1 = 'snapmaker_extruder_1';
+export const DEFINITION_ACTIVE = 'active';
+export const DEFINITION_ACTIVE_FINAL = 'active_final';
+
+export const KEY_DEFAULT_CATEGORY_CUSTOM = 'key-default_category-Custom';
+export const KEY_DEFAULT_CATEGORY_DEFAULT = 'key-default_category-Default';

@@ -31,11 +31,35 @@ export default class MoveOperation3D extends Operation<MoveOperationState> {
     }
 
     public redo() {
+        const model = this.state.target;
+        const modelGroup = this.state.modelGroup;
+
+        modelGroup.unselectAllModels();
+        modelGroup.addModelToSelectedGroup(model);
         this.exec(this.state.to);
     }
 
     public undo() {
-        this.exec(this.state.from);
+        const model = this.state.target;
+        const modelGroup = this.state.modelGroup;
+
+        modelGroup.unselectAllModels();
+        modelGroup.addModelToSelectedGroup(model);
+
+        const current = modelGroup.getSelectedModelTransformationForPrinting();
+        if (this.state.to.positionZ > 0 && current.positionZ < this.state.to.positionZ) {
+            this.exec({
+                ...this.state.from,
+                positionZ: current.positionZ - this.state.to.positionZ
+            });
+        } else if (this.state.to.positionZ < 0 && current.positionZ > this.state.to.positionZ) {
+            this.exec({
+                ...this.state.from,
+                positionZ: -this.state.to.positionZ + current.positionZ + this.state.from.positionZ
+            });
+        } else {
+            this.exec(this.state.from);
+        }
     }
 
     private exec({ positionX, positionY, positionZ }) {
@@ -64,6 +88,7 @@ export default class MoveOperation3D extends Operation<MoveOperationState> {
                 modelGroup.stickToPlateAndCheckOverstepped(model);
             }
             if (model.parent && model.parent instanceof ThreeGroup) {
+                modelGroup.stickToPlateAndCheckOverstepped(model.parent);
                 model.parent.computeBoundingBox();
             }
             modelGroup.updatePrimeTowerHeight();

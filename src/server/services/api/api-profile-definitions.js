@@ -1,8 +1,11 @@
 import fs from 'fs';
 import path from 'path';
-import { ERR_BAD_REQUEST, ERR_INTERNAL_SERVER_ERROR } from '../../constants';
+import { ERR_BAD_REQUEST, ERR_INTERNAL_SERVER_ERROR, DEFINITION_SNAPMAKER_EXTRUDER_0, DEFINITION_SNAPMAKER_EXTRUDER_1, DEFINITION_ACTIVE, DEFINITION_ACTIVE_FINAL, KEY_DEFAULT_CATEGORY_CUSTOM, KEY_DEFAULT_CATEGORY_DEFAULT } from '../../constants';
 import { loadDefinitionsByPrefixName, loadAllSeriesDefinitions, DefinitionLoader } from '../../slicer';
 import DataStorage from '../../DataStorage';
+import logger from '../../lib/logger';
+
+const log = logger('service:profile-definitions');
 
 /**
  * Get raw definition which is unparsed and override.
@@ -19,9 +22,22 @@ export const getRawDefinition = (req, res) => {
 
     const filename = `${definitionId}.def.json`;
     const configDir = `${DataStorage.configDir}/${headType}/${series}/${filename}`;
-    const readFileSync = fs.readFileSync(configDir);
-    const parse = JSON.parse(readFileSync);
-    res.send({ filename: filename, definition: parse });
+    try {
+        const readFileSync = fs.readFileSync(configDir);
+        const parse = JSON.parse(readFileSync);
+        res.send({ filename: filename, definition: parse });
+    } catch (e) {
+        log.error(e);
+        res.status(ERR_INTERNAL_SERVER_ERROR).send({ msg: e.message });
+    }
+};
+
+const isPublicProfile = (definitionId) => {
+    return [
+        DEFINITION_ACTIVE,
+        DEFINITION_ACTIVE_FINAL,
+        DEFINITION_SNAPMAKER_EXTRUDER_0, DEFINITION_SNAPMAKER_EXTRUDER_1
+    ].includes(definitionId);
 };
 
 export const getDefinition = (req, res) => {
@@ -36,8 +52,11 @@ export const getDefinition = (req, res) => {
 
     const definitionLoader = new DefinitionLoader();
 
-    definitionLoader.loadDefinition(headType, definitionId, series);
-
+    if (isPublicProfile(definitionId)) {
+        definitionLoader.loadDefinition(headType, definitionId);
+    } else {
+        definitionLoader.loadDefinition(headType, definitionId, series);
+    }
     res.send({ definition: definitionLoader.toObject() });
 };
 
@@ -66,23 +85,36 @@ export const getConfigDefinitions = (req, res) => {
 const fsWriteFile = (filePath, data, res, callback) => {
     fs.writeFile(filePath, data, 'utf8', (err) => {
         if (err) {
+            log.error(err);
             res.status(ERR_INTERNAL_SERVER_ERROR).send({ err });
         } else {
             callback();
         }
     });
 };
-export const createDefinition = (req, res) => {
+export const createDefinition = async (req, res) => {
     const { headType } = req.params;
     const { definition } = req.body;
 
     const definitionLoader = new DefinitionLoader();
     definitionLoader.fromObject(definition);
-    const series = req.body.series ?? '';
+    const series = isPublicProfile(definitionLoader.definitionId) ? '' : (req.body.series ?? '');
 
     const filePath = path.join(`${DataStorage.configDir}/${headType}/${series}`, `${definitionLoader.definitionId}.def.json`);
     const backupPath = path.join(`${DataStorage.activeConfigDir}/${headType}/${series}`, `${definitionLoader.definitionId}.def.json`);
     const data = JSON.stringify(definitionLoader.toJSON(), null, 2);
+    if (!fs.existsSync(backupPath)) {
+        try {
+            await DataStorage.copyDirForInitSlicer({
+                srcDir: DataStorage.configDir,
+                dstDir: DataStorage.activeConfigDir,
+                overwriteTag: true,
+                inherit: true
+            });
+        } catch (e) {
+            log.error('copyDirForInitSlicer', e.message);
+        }
+    }
     const callback = () => {
         const loader = new DefinitionLoader();
         loader.loadDefinition(headType, definitionLoader.definitionId, series);
@@ -108,6 +140,7 @@ export const createTmpDefinition = (req, res) => {
     const filePath = path.join(`${DataStorage.tmpDir}`, uploadName);
     fs.writeFile(filePath, JSON.stringify(definitionLoader.toJSON(), null, 2), 'utf8', (err) => {
         if (err) {
+            log.error(err);
             res.status(ERR_INTERNAL_SERVER_ERROR).send({ err });
         } else {
             // load definition using new loader to avoid potential settings override issues
@@ -126,10 +159,12 @@ export const removeDefinition = (req, res) => {
     const backupPath = path.join(`${DataStorage.activeConfigDir}/${headType}/${series}`, `${definitionId}.def.json`);
     fs.unlink(filePath, (err) => {
         if (err) {
+            log.error(err);
             return res.status(ERR_INTERNAL_SERVER_ERROR).send({ err });
         } else {
             fs.unlink(backupPath, (unlinkErr) => {
                 if (unlinkErr) {
+                    log.error(unlinkErr);
                     return res.send({ status: 'ok', msg: 'Back up Remove failed!' });
                 } else {
                     return res.send({ status: 'ok', msg: 'Back up Remove success!' });
@@ -145,7 +180,7 @@ export const updateDefinition = async (req, res) => {
     const series = req.body.series;
 
     const definitionLoader = new DefinitionLoader();
-    if (definitionId === 'snapmaker_extruder_0' || definitionId === 'snapmaker_extruder_1') {
+    if (isPublicProfile(definitionId)) {
         definitionLoader.loadDefinition(headType, definitionId);
     } else {
         definitionLoader.loadDefinition(headType, definitionId, series);
@@ -156,8 +191,19 @@ export const updateDefinition = async (req, res) => {
     if (definition.name) {
         definitionLoader.updateName(definition.name);
     }
-    if (definition.category) {
+
+    // Because importing a custom profile does not need to support multiple languages. Therefore, relevant reset should be supported
+
+    if (definition.category !== undefined) {
         definitionLoader.updateCategory(definition.category);
+    }
+
+    if (definition.i18nCategory !== undefined) {
+        definitionLoader.updateI18nCategory(definition.i18nCategory);
+    }
+
+    if (definition.i18nName !== undefined) {
+        definitionLoader.updateI18nName(definition.i18nName);
     }
 
     if (definition.settings) {
@@ -166,12 +212,24 @@ export const updateDefinition = async (req, res) => {
 
     let filePath = '';
     let activeRecoverPath = '';
-    if (definitionId === 'snapmaker_extruder_0' || definitionId === 'snapmaker_extruder_1') {
+    if (isPublicProfile(definitionId)) {
         filePath = path.join(`${DataStorage.configDir}/${headType}`, `${definitionId}.def.json`);
         activeRecoverPath = path.join(`${DataStorage.activeConfigDir}/${headType}`, `${definitionId}.def.json`);
     } else {
         filePath = path.join(`${DataStorage.configDir}/${headType}/${series}`, `${definitionId}.def.json`);
         activeRecoverPath = path.join(`${DataStorage.activeConfigDir}/${headType}/${series}`, `${definitionId}.def.json`);
+    }
+    if (!fs.existsSync(DataStorage.activeConfigDir)) {
+        try {
+            await DataStorage.copyDirForInitSlicer({
+                srcDir: DataStorage.configDir,
+                dstDir: DataStorage.activeConfigDir,
+                overwriteTag: true,
+                inherit: true
+            });
+        } catch (e) {
+            log.error(e);
+        }
     }
     const data = JSON.stringify(definitionLoader.toJSON(), null, 2);
     const callback = () => {
@@ -186,6 +244,13 @@ export const updateDefinition = async (req, res) => {
     fsWriteFile(filePath, data, res, callback);
 };
 
+
+const isSourceFormDefault = (obj) => {
+    return obj.i18nCategory
+        && obj.i18nCategory !== KEY_DEFAULT_CATEGORY_CUSTOM
+        && obj.i18nCategory !== KEY_DEFAULT_CATEGORY_DEFAULT;
+};
+
 export const uploadDefinition = (req, res) => {
     const { headType } = req.params;
     const { definitionId, uploadName, series } = req.body;
@@ -193,15 +258,18 @@ export const uploadDefinition = (req, res) => {
     let obj;
     try {
         obj = JSON.parse(readFileSync);
+        // Compatible with profiles exported from older versions
+        if (!isSourceFormDefault(obj)) {
+            obj.category = '';
+            obj.i18nCategory = '';
+            obj.i18nName = '';
+        }
     } catch (e) {
         obj = {};
     }
 
     if (!obj.inherits || !fs.existsSync(`${DataStorage.configDir}/${headType}/${obj.inherits}.json`)) {
         obj.inherits = 'snapmaker2';
-    }
-    if (!obj.category) {
-        obj.category = 'Custom';
     }
 
     if (!obj.metadata) {

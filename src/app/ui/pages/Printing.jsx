@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { shallowEqual, useSelector, useDispatch } from 'react-redux';
 import PropTypes from 'prop-types';
 import { useHistory, withRouter } from 'react-router-dom';
-import { includes } from 'lodash';
+import { includes, throttle } from 'lodash';
 import isElectron from 'is-electron';
 // import { Steps } from 'intro.js-react';
 import 'intro.js/introjs.css';
@@ -90,7 +90,6 @@ const allWidgets = {
 const pageHeadType = HEAD_PRINTING;
 function useRenderMainToolBar() {
     const unSaved = useSelector(state => state?.project[pageHeadType]?.unSaved, shallowEqual);
-    const models = useSelector(state => state?.printing?.modelGroup?.getModels(), shallowEqual);
     const inProgress = useSelector(state => state?.printing?.inProgress, shallowEqual);
     const enableShortcut = useSelector(state => state?.printing?.enableShortcut, shallowEqual);
     const canRedo = useSelector(state => state?.printing?.history?.canRedo, shallowEqual);
@@ -152,7 +151,7 @@ function useRenderMainToolBar() {
             },
             {
                 title: i18n._('key-Printing/Page-Save'),
-                disabled: !unSaved || !models?.length || !enableShortcut,
+                disabled: !unSaved || !enableShortcut,
                 type: 'button',
                 name: 'MainToolbarSave',
                 iconClassName: 'printing-save-icon',
@@ -222,6 +221,8 @@ function Printing({ location }) {
     const [isDraggingWidget, setIsDraggingWidget] = useState(false);
     const [enabledIntro, setEnabledIntro] = useState(null);
     const [initIndex, setInitIndex] = useState(0);
+    const [rotateInputValue, setRotateInputValue] = useState(null);
+    const [rotateAxis, setRotateAxis] = useState('x');
     const dispatch = useDispatch();
     const history = useHistory();
     const [renderHomepage, renderMainToolBar, renderWorkspace] = useRenderMainToolBar();
@@ -231,12 +232,27 @@ function Printing({ location }) {
     const stepRef = useRef();
     useUnsavedTitle(pageHeadType);
     const [showTipModal, setShowTipModal] = useState(!isNewUser);
+    const updateRotate = (event) => {
+        const { detail } = event;
+        throttle(() => {
+            if (detail.rotate.rotateAxis === null) {
+                setRotateInputValue(null);
+            } else {
+                setRotateAxis(detail.rotate.rotateAxis);
+                setRotateInputValue(Math.round(detail.rotate[detail.rotate.rotateAxis] * 10) / 10);
+            }
+        }, 1000)();
+    };
     useEffect(() => {
         dispatch(printingActions.init());
         dispatch(printingActions.checkNewUser());
         logPageView({
             pathname: '/printing'
         });
+        window.addEventListener('update-rotate', updateRotate);
+        return () => {
+            window.removeEventListener('update-rotate', updateRotate);
+        };
     }, []);
     useEffect(() => {
         const readTip = machineStore.get('readTip', false);
@@ -344,7 +360,7 @@ function Printing({ location }) {
                 onDropAccepted={onDropAccepted}
                 onDropRejected={onDropRejected}
             >
-                <PrintingVisualizer widgetId="printingVisualizer" />
+                <PrintingVisualizer widgetId="printingVisualizer" rotateInputValue={rotateInputValue} rotateAxis={rotateAxis} />
                 {renderHomepage()}
                 {renderWorkspace()}
                 {enabledIntro && (
@@ -431,7 +447,7 @@ function Printing({ location }) {
                         <div className="width-432">
                             <span>
                                 {i18n._('key-Printing/Modal-Retraction profile migrated')},
-                                <a href="https://www.baidu.com" target="_blank" rel="noreferrer" className="link-text">{i18n._('key-Printing/Modal-Click here to learn more')}</a>.
+                                <a href="https://support.snapmaker.com/hc/en-us/articles/4438318910231-Retract-Z-Hop-Migrated-from-Printing-Settings-to-Material-Settings" target="_blank" rel="noreferrer" className="link-text">{i18n._('key-Printing/Modal-Click here to learn more')}</a>.
                             </span>
                             <Trans i18nKey="key-Printing/Modal-Backup Tip">
                                 For your historical data back up in <span role="presentation" onClick={openFolder} className="link-text">here</span>.

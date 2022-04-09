@@ -384,8 +384,13 @@ const OBJLoader = ( function () {
             var loader = new THREE.FileLoader( scope.manager );
             loader.setPath( this.path );
             loader.load( url, function ( text ) {
-
-                onLoad( scope.parse( text, onProgress ) );
+                try {
+                    onLoad( scope.parse( text, onProgress ) );
+                } catch (exception) {
+                    if (onError) {
+                        onError( exception );
+                    }
+                }
 
             }, null, onError );
 

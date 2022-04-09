@@ -1,3 +1,4 @@
+/* eslint-disable import/no-cycle */
 import { cloneDeep } from 'lodash';
 import ModelGroup from '../../models/ModelGroup';
 import i18n from '../../lib/i18n';
@@ -180,6 +181,7 @@ export const actions = {
             definitionsWithSameCategory = toolDefinitions.filter(d => d.category === oldName);
             for (const definition of definitionsWithSameCategory) {
                 definition.category = newName;
+                definition.i18nCategory = '';
                 await definitionManager.updateDefinition(definition);
                 // find the old tool category definition and replace it
                 const isReplacedDefinition = (d) => d.definitionId === definition.definitionId;
@@ -225,6 +227,7 @@ export const actions = {
         for (let i = 0; i < definitionsWithSameCategory.length; i++) {
             const newDefinition = definitionsWithSameCategory[i];
             newDefinition.category = newCategoryName;
+            newDefinition.i18nCategory = '';
             const definitionId = `${newDefinition.definitionId}${timestamp()}`;
             newDefinition.definitionId = definitionId;
             const createdDefinition = await definitionManager.createDefinition(newDefinition);

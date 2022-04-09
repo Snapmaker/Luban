@@ -1,13 +1,13 @@
 {
     "name": "PLA-Black",
-    "version": 2,
+    "version": "4.2.0",
     "inherits": "snapmaker",
     "category": "PLA",
     "i18nName": "key-default_name-PLA_Black",
     "i18nCategory": "key-default_category-PLA",
     "overrides": {
         "color": {
-            "default_value": "#000000"
+            "default_value": "#464646"
         },
         "material_flow": {
             "default_value": 100
@@ -40,10 +40,10 @@
             "default_value": true
         },
         "retraction_speed": {
-            "default_value": 25
+            "default_value": 60
         },
         "retraction_amount": {
-            "default_value": 6.5
+            "default_value": 5
         },
         "retract_at_layer_change": {
             "default_value": false

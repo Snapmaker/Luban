@@ -29,6 +29,8 @@ function isOfficialDefinition(definition) {
     return definition && includes([
         'material.pla', 'material.abs', 'material.petg',
         'material.pla.black', 'material.abs.black', 'material.petg.black',
+        'material.pla.blue', 'material.pla.grey', 'material.pla.red', 'material.pla.yellow',
+        'material.petg.blue', 'material.petg.red',
         'quality.fast_print', 'quality.normal_quality', 'quality.high_quality'
     ], definition.definitionId);
 }
@@ -68,13 +70,8 @@ function PrintingManager() {
             dispatch(printingActions.updateShowPrintingManager(false));
         },
         onChangeFileForManager: (event) => {
-            if (managerDisplayType === PRINTING_MANAGER_TYPE_MATERIAL) {
-                const materialFile = event.target.files[0];
-                dispatch(printingActions.onUploadManagerDefinition(materialFile, managerDisplayType));
-            } else {
-                const qualityFile = event.target.files[0];
-                dispatch(printingActions.onUploadManagerDefinition(qualityFile, managerDisplayType));
-            }
+            const file = event.target.files[0];
+            return dispatch(printingActions.onUploadManagerDefinition(file, managerDisplayType));
         },
         exportConfigFile: (definitionForManager) => {
             const definitionId = definitionForManager.definitionId;
@@ -86,12 +83,17 @@ function PrintingManager() {
             const definitionId = definitionForManager.definitionId;
             dispatch(printingActions.updateDefaultIdByType(managerDisplayType, definitionId, materialManagerDirection));
         },
-        onSaveDefinitionForManager: (newDefinition) => {
+        onSaveDefinitionForManager: async (newDefinition, shouldUpdateActive) => {
             // now setDefinitionState is synchronize, so remove setTimeout
             if (managerDisplayType === PRINTING_MANAGER_TYPE_MATERIAL) {
-                actions.onSaveMaterialForManager(managerDisplayType, newDefinition);
+                await actions.onSaveMaterialForManager(managerDisplayType, newDefinition);
             } else {
-                actions.onSaveQualityForManager(managerDisplayType, newDefinition);
+                await actions.onSaveQualityForManager(managerDisplayType, newDefinition);
+            }
+            if (shouldUpdateActive) {
+                actions.updateActiveDefinition(newDefinition.definitionId);
+                dispatch(printingActions.destroyGcodeLine());
+                dispatch(printingActions.displayModel());
             }
         },
         onSaveQualityForManager: async (type, newDefinition) => {
@@ -103,7 +105,7 @@ function PrintingManager() {
             }
 
             await dispatch(printingActions.updateDefinitionSettings(newDefinition, newDefinitionSettings));
-            dispatch(printingActions.updateDefinitionsForManager(newDefinition.definitionId, type));
+            return dispatch(printingActions.updateDefinitionsForManager(newDefinition.definitionId, type));
         },
         onSaveMaterialForManager: async (type, newDefinition) => {
             const newDefinitionSettings = {};
@@ -113,7 +115,7 @@ function PrintingManager() {
                 }
             }
             await dispatch(printingActions.updateDefinitionSettings(newDefinition, newDefinitionSettings));
-            dispatch(printingActions.updateDefinitionsForManager(newDefinition.definitionId, type));
+            return dispatch(printingActions.updateDefinitionsForManager(newDefinition.definitionId, type));
         },
 
         updateDefinitionName: async (definition, selectedName) => {
@@ -153,8 +155,11 @@ function PrintingManager() {
         getDefaultDefinition: (definitionId) => {
             return dispatch(printingActions.getDefaultDefinition(definitionId));
         },
-        resetDefinitionById: (definitionId) => {
-            return dispatch(printingActions.resetDefinitionById(managerDisplayType, definitionId));
+        resetDefinitionById: (definitionId, shouldDestroyGcodeLine) => {
+            return dispatch(printingActions.resetDefinitionById(managerDisplayType, definitionId, shouldDestroyGcodeLine));
+        },
+        updateActiveDefinition: (definitionId) => {
+            dispatch(printingActions.updateActiveDefinitionById(managerDisplayType, definitionId));
         }
     };
 
@@ -175,8 +180,6 @@ function PrintingManager() {
             isOfficialDefinition={isOfficialDefinition}
             optionConfigGroup={optionConfigGroup}
             allDefinitions={allDefinitions}
-            // disableCategory={managerDisplayType === PRINTING_MANAGER_TYPE_QUALITY}
-            disableCategory={false}
             managerTitle={managerDisplayType === PRINTING_MANAGER_TYPE_MATERIAL ? 'key-Printing/PrintingConfigurations-Material Settings' : 'key-Printing/PrintingConfigurations-Printing Settings'}
             activeDefinitionID={selectedIds[managerDisplayType].id}
             managerType={managerDisplayType}

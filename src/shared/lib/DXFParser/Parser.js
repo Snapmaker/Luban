@@ -3,8 +3,9 @@ import * as THREE from 'three';
 import { isUndefined } from 'lodash';
 import DxfParser from './DxfParser';
 import { svgInverse, svgToString } from '../SVGParser/SvgToString';
+import bSpline from './bSpline';
 
-const EPSILON = 1e-6;
+// const EPSILON = 1e-6;
 function angle2(p1, p2) {
     const v1 = new THREE.Vector2(p1.x, p1.y);
     const v2 = new THREE.Vector2(p2.x, p2.y);
@@ -20,62 +21,43 @@ function polar(point, distance, angle) {
     result.y = point.y + distance * Math.sin(angle);
     return result;
 }
-function drawBezierCurve(degreeOfSplineCurve, controlPoints, fitPoints) {
-    let points;
-    let interpolatedPoints = [];
-    let curve;
+function getBSplinePolyline(controlPoints, degree, knots, interpolationsPerSplineSegment, weights) {
+    const polyline = [];
+    const controlPointsForLib = controlPoints.map((p) => {
+        return [p.x, p.y];
+    });
 
-    if (fitPoints && fitPoints.length > 0) {
-        points = fitPoints.map((vec) => {
-            return new THREE.Vector2(vec.x, vec.y);
-        });
-        if (degreeOfSplineCurve === 2) {
-            for (let i = 0; i + 2 < points.length; i += 2) {
-                curve = new THREE.QuadraticBezierCurve(points[i], points[i + 1], points[i + 2]);
-                interpolatedPoints.push(...curve.getPoints(points.length * 4));
-            }
-        } else {
-            curve = new THREE.SplineCurve(points);
-            interpolatedPoints = curve.getPoints(points.length * 8);
-        }
-    } else {
-        if (controlPoints && controlPoints.length > 7) {
-            interpolatedPoints = controlPoints;
-        } else {
-            if (controlPoints.length === 4) {
-                let p0, p1;
-                // A spline divided into 40 parts is accurate enough and enlarge it to 50 parts
-                // and js floating point number is not accurate enough should add more 0.02
-                for (let t = 0; t <= 1 + EPSILON; t += 0.02) {
-                    p0 = (1 - t) ** 3 * controlPoints[0].x + 3 * t * (1 - t) ** 2 * controlPoints[1].x + 3 * t ** 2 * (1 - t) * controlPoints[2].x + t ** 3 * controlPoints[3].x;
-                    p1 = (1 - t) ** 3 * controlPoints[0].y + 3 * t * (1 - t) ** 2 * controlPoints[1].y + 3 * t ** 2 * (1 - t) * controlPoints[2].y + t ** 3 * controlPoints[3].y;
-                    interpolatedPoints.push({ x: p0, y: p1, z: 0 });
-                }
-            } else {
-                points = controlPoints.map((vec) => {
-                    return new THREE.Vector2(vec.x, vec.y);
-                });
-                if (degreeOfSplineCurve === 2) {
-                    for (let i = 0; i + 2 < points.length; i += 2) {
-                        curve = new THREE.QuadraticBezierCurve(points[i], points[i + 1], points[i + 2]);
-                        interpolatedPoints.push(...curve.getPoints(points.length));
-                    }
-                } else {
-                    curve = new THREE.SplineCurve(points);
-                    interpolatedPoints = curve.getPoints(points.length * 2);
-                }
-            }
+    const segmentTs = [knots[degree]];
+    const domain = [knots[degree], knots[knots.length - 1 - degree]];
+
+    for (let k = degree + 1; k < knots.length - degree; ++k) {
+        if (segmentTs[segmentTs.length - 1] !== knots[k]) {
+            segmentTs.push(knots[k]);
         }
     }
 
-    // if (controlPoints.length === 4 && fitPoints.length === 0) {
-    //     let p0, p1;
-    //     for (let t = 0; t < 1; t += 0.1) {
-    //         p0 = (1 - t) ** 3 * controlPoints[0].x + 3 * t * (1 - t) ** 2 * controlPoints[1].x + 3 * t ** 2 * (1 - t) * controlPoints[2].x + t ** 3 * controlPoints[3].x;
-    //         p1 = (1 - t) ** 3 * controlPoints[0].y + 3 * t * (1 - t) ** 2 * controlPoints[1].y + 3 * t ** 2 * (1 - t) * controlPoints[2].y + t ** 3 * controlPoints[3].y;
-    //         res.push({ x: p0, y: p1, z: 0 });
-    //     }
-    // }else snapmaker.com/download/luban/snapmaker-luban-3.2.0-win-x64.exe
+    interpolationsPerSplineSegment = interpolationsPerSplineSegment || 25;
+    for (let i = 1; i < segmentTs.length; ++i) {
+        const uMin = segmentTs[i - 1];
+        const uMax = segmentTs[i];
+        for (let k = 0; k <= interpolationsPerSplineSegment; ++k) {
+            const u = k / interpolationsPerSplineSegment * (uMax - uMin) + uMin;
+            // Clamp t to 0, 1 to handle numerical precision issues
+            let t = (u - domain[0]) / (domain[1] - domain[0]);
+            t = Math.max(t, 0);
+            t = Math.min(t, 1);
+            const p = bSpline(t, degree, controlPointsForLib, knots, weights);
+            polyline.push(new THREE.Vector2(p[0], p[1]));
+        }
+    }
+    return polyline;
+}
+
+function drawBezierCurve(controlPoints, degreeOfSplineCurve, knotValues) {
+    let interpolatedPoints = [];
+    const points = getBSplinePolyline(controlPoints, degreeOfSplineCurve, knotValues, 100);
+    const curve = new THREE.SplineCurve(points);
+    interpolatedPoints = curve.getPoints(points.length);
 
     return interpolatedPoints;
 }
@@ -218,15 +200,17 @@ export const dxfToSvg = (dxf, strokeWidth = 0.72) => {
             shape.paths.push(pathsObj);
         } else if (entities.type === 'SPLINE') {
             let newControlPoints = [];
-            newControlPoints = drawBezierCurve(entities.degreeOfSplineCurve, entities.controlPoints, entities.fitPoints);
+            newControlPoints = drawBezierCurve(entities.controlPoints, entities.degreeOfSplineCurve, entities.knotValues);
             entities.controlPoints = newControlPoints;
 
             pathsObj.points = [];
-            pathsObj.closed = false;
             entities.controlPoints.forEach((item) => {
                 pathsObj.points.push([item.x, item.y]);
             });
-            pathsObj.closed = false;
+            pathsObj.closed = entities.closed;
+            if (pathsObj.closed) {
+                pathsObj.points.push([entities.controlPoints[0].x, entities.controlPoints[0].y]);
+            }
             shape.paths.push(pathsObj);
         } else if (entities.type === 'POINT') {
             if (entities.position.y === 0 && entities.position.x === 0) {

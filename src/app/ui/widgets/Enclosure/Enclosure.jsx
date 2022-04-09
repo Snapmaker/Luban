@@ -1,121 +1,60 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState, useEffect } from 'react';
 // import PropTypes from 'prop-types';
-import { shallowEqual, useDispatch, useSelector } from 'react-redux';
+import { shallowEqual, useSelector } from 'react-redux';
 import TipTrigger from '../../components/TipTrigger';
 import Switch from '../../components/Switch';
-import { actions as machineActions } from '../../../flux/machine';
 import i18n from '../../../lib/i18n';
 import log from '../../../lib/log';
-
+import { controller } from '../../../lib/controller';
+import {
+    CONNECTION_ENCLOSURE_LIGHT,
+    CONNECTION_ENCLOSURE_FAN,
+    CONNECTION_DOOR_DETECTION,
+} from '../../../constants';
 
 function Enclosure() {
-    const { server, isConnected, headType, connectionType, enclosureLight, enclosureFan } = useSelector(state => state.machine, shallowEqual);
-    const [led, setLed] = useState(0);
-    const [fan, setFan] = useState(0);
+    const { isConnected, headType, connectionType, enclosureLight, enclosureFan } = useSelector(state => state.machine, shallowEqual);
     const [isLedReady, setIsLedReady] = useState(true);
     const [isFanReady, setIsFanReady] = useState(true);
     const [isDoorEnabled, setIsDoorEnabled] = useState(true);
-    const dispatch = useDispatch();
 
     const actions = {
         onHandleLed: async () => {
-            let _led;
-            if (led === 0) {
-                _led = 100;
-            } else {
-                _led = 0;
-            }
-            if (connectionType === 'wifi') {
-                server.setEnclosureLight(_led, (errMsg, res) => {
-                    if (errMsg) {
-                        log.error(errMsg);
-                        return;
-                    }
-                    if (res) {
-                        setLed(res.led);
-                    }
-                });
-            } else {
-                await dispatch(machineActions.executeGcode(`M1010 S3 P${_led};`, null));
-                setIsLedReady(false);
-            }
+            const _led = enclosureLight === 0 ? 100 : 0;
+            setIsLedReady(false);
+            controller.emitEvent(CONNECTION_ENCLOSURE_LIGHT, {
+                value: _led
+            });
         },
         onHandleCoolingFans: async () => {
-            let _fan;
-            if (fan === 0) {
-                _fan = 100;
-            } else {
-                _fan = 0;
-            }
-            if (connectionType === 'wifi') {
-                server.setEnclosureFan(_fan, (errMsg, res) => {
-                    if (errMsg) {
-                        log.error(errMsg);
-                        return;
-                    }
-                    if (res) {
-                        setFan(res.fan);
-                    }
-                });
-            } else {
-                await dispatch(machineActions.executeGcode(`M1010 S4 P${_fan};`, null));
-                setIsFanReady(false);
-            }
+            const _fan = enclosureFan === 0 ? 100 : 0;
+            setIsFanReady(false);
+            controller.emitEvent(CONNECTION_ENCLOSURE_FAN, {
+                value: _fan
+            });
         },
         onHandleDoorEnabled: () => {
-            server.setDoorDetection(!isDoorEnabled, (errMsg, res) => {
-                if (errMsg) {
-                    log.error(errMsg);
+            controller.emitEvent(CONNECTION_DOOR_DETECTION, {
+                enable: !isDoorEnabled
+            }).once(CONNECTION_DOOR_DETECTION, ({ msg, data }) => {
+                if (msg) {
+                    log.error(msg);
                     return;
                 }
-                if (res) {
-                    setIsDoorEnabled(res.isDoorEnabled);
+                if (data) {
+                    setIsDoorEnabled(data.isDoorEnabled);
                 }
             });
         }
     };
 
     useEffect(() => {
-        if (isConnected && connectionType === 'wifi') {
-            server.getEnclosureStatus((errMsg, res) => {
-                if (errMsg) {
-                    log.warn(errMsg);
-                } else {
-                    setLed(res.led);
-                    setFan(res.fan);
-                    setIsDoorEnabled(res.isDoorEnabled);
-                }
-            });
-        }
-    }, []);
-
-    useEffect(() => {
-        if (connectionType === 'serial') {
-            setLed(enclosureLight);
-            setIsLedReady(true);
-        }
+        setIsLedReady(true);
     }, [enclosureLight]);
 
     useEffect(() => {
-        if (connectionType === 'serial') {
-            setFan(enclosureFan);
-            setIsFanReady(true);
-        }
+        setIsFanReady(true);
     }, [enclosureFan]);
-
-    useEffect(() => {
-        if (isConnected && connectionType === 'wifi') {
-            server.getEnclosureStatus((errMsg, res) => {
-                if (errMsg) {
-                    log.warn(errMsg);
-                } else {
-                    setLed(res.led);
-                    setFan(res.fan);
-                    setIsDoorEnabled(res.isDoorEnabled);
-                }
-            });
-        }
-    }, [isConnected]);
 
     return (
         <div>
@@ -124,16 +63,16 @@ function Enclosure() {
                     <span>{i18n._('key-Workspace/Enclosure-LED Strips')}</span>
                     <Switch
                         onClick={actions.onHandleLed}
-                        checked={Boolean(led)}
-                        disabled={(connectionType === 'serial' && !isLedReady) || !isConnected}
+                        checked={Boolean(enclosureLight)}
+                        disabled={(!isLedReady) || !isConnected}
                     />
                 </div>
                 <div className="sm-flex justify-space-between margin-vertical-8 ">
                     <span>{i18n._('key-Workspace/Enclosure-Exhaust Fan')}</span>
                     <Switch
                         onClick={actions.onHandleCoolingFans}
-                        checked={Boolean(fan)}
-                        disabled={(connectionType === 'serial' && !isFanReady) || !isConnected}
+                        checked={Boolean(enclosureFan)}
+                        disabled={(!isFanReady) || !isConnected}
                     />
                 </div>
                 { (isConnected && connectionType === 'wifi' && headType !== '3dp') && (
@@ -150,7 +89,7 @@ function Enclosure() {
                             <Switch
                                 onClick={actions.onHandleDoorEnabled}
                                 checked={isDoorEnabled}
-                                disabled={(connectionType === 'serial' && !isFanReady) || !isConnected}
+                                disabled={(!isFanReady) || !isConnected}
                             />
                         </div>
                     </TipTrigger>

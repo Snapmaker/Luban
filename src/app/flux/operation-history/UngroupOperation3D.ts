@@ -52,7 +52,6 @@ export default class UngroupOperation3D extends Operation<UngroupState> {
             subModels.push(item.target);
         });
         target.add(subModels);
-        modelGroup.object.add(target.meshObject);
 
         subModelStates.forEach(item => {
             item.target.updateTransformation(item.transformation);

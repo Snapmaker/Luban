@@ -2,7 +2,6 @@ import path from 'path';
 import fs from 'fs';
 import mkdirp from 'mkdirp';
 import { includes, isUndefined, gt } from 'lodash';
-import { app } from 'electron';
 import isElectron from 'is-electron';
 import semver from 'semver';
 import { CNC_CONFIG_SUBCATEGORY, LASER_CONFIG_SUBCATEGORY, PRINTING_CONFIG_SUBCATEGORY } from './constants';
@@ -15,8 +14,6 @@ import pkg from '../../package.json';
 
 
 const log = logger('server:DataStorage');
-
-
 export const rmDir = (dirPath, removeSelf) => {
     log.info(`Clearing folder ${dirPath}`);
     if (removeSelf === undefined) {
@@ -28,6 +25,7 @@ export const rmDir = (dirPath, removeSelf) => {
         files = fs.readdirSync(dirPath);
         log.info(`Removing files: ${files}`);
     } catch (e) {
+        log.error(`Read directory fail ${dirPath}`);
         return;
     }
 
@@ -60,15 +58,17 @@ class DataStorage {
 
      fontDir;
 
+     scenesDir;
+
      userCaseDir;
 
      envDir;
 
      constructor() {
-         if (isElectron()) {
-             this.userDataDir = app.getPath('userData');
-         } else {
+         if (!isElectron()) {
              this.userDataDir = '.';
+         } else {
+             this.userDataDir = global.luban.userDataDir;
          }
          mkdirp.sync(this.userDataDir);
 
@@ -79,6 +79,7 @@ class DataStorage {
          this.defaultConfigDir = `${this.userDataDir}/Default`;
          this.fontDir = `${this.userDataDir}/Fonts`;
          this.envDir = `${this.userDataDir}/env`;
+         this.scenesDir = `${this.userDataDir}/Scenes`;
          this.recoverDir = `${this.userDataDir}/snapmaker-recover`;
          this.activeConfigDir = `${this.recoverDir}/Config-active`;
          this.longTermConfigDir = '';
@@ -87,7 +88,7 @@ class DataStorage {
      resolveRelativePath(pathString) {
          const regex = new RegExp(/^\.\//);
          if (isElectron() && regex.test(pathString)) {
-             pathString = path.resolve(app.getPath('userData'), pathString);
+             pathString = path.resolve(this.userDataDir, pathString);
          }
          return pathString;
      }
@@ -110,6 +111,7 @@ class DataStorage {
          mkdirp.sync(this.tmpDir);
          mkdirp.sync(this.sessionDir);
          mkdirp.sync(this.userCaseDir);
+         mkdirp.sync(this.scenesDir);
          !isReset && mkdirp.sync(this.recoverDir);
          rmDir(this.tmpDir, false);
          rmDir(this.sessionDir, false);
@@ -120,8 +122,8 @@ class DataStorage {
          await this.initEnv();
 
          await this.initFonts();
+         await this.initScenes();
          await this.initUserCase();
-         //  await this.versionAdaptation();
 
          // if alt+shift+r, cannot init recover config
          !isReset && await this.initRecoverActive();
@@ -362,6 +364,25 @@ class DataStorage {
          }
          await initFonts(this.fontDir);
      }
+
+     async initScenes() {
+         mkdirp.sync(this.scenesDir);
+
+         const SCENES_LOCAL = '../resources/scenes/';
+         if (fs.existsSync(SCENES_LOCAL)) {
+             const files = fs.readdirSync(SCENES_LOCAL);
+             for (const file of files) {
+                 const src = path.join(SCENES_LOCAL, file);
+                 const dst = path.join(this.scenesDir, file);
+                 if (fs.statSync(src)
+                     .isFile()) {
+                     fs.copyFileSync(src, dst, () => {
+                     });
+                 }
+             }
+         }
+     }
+
 
      async initUserCase() {
          mkdirp.sync(this.userCaseDir);

@@ -74,6 +74,8 @@ export default class BaseModel {
 
     type: string;
 
+    canAttachSupport: boolean = true; // PrimeTowerModel should set false
+
     constructor(modelInfo, modelGroup) {
         this.modelGroup = modelGroup;
 
@@ -88,7 +90,6 @@ export default class BaseModel {
 
     updateTransformation(transformation: ModelTransformation): ModelTransformation {
         const { positionX, positionY, positionZ, rotationX, rotationY, rotationZ, scaleX, scaleY, scaleZ, uniformScalingState } = transformation;
-        const { width, height } = transformation;
 
         if (uniformScalingState !== undefined) {
             (this.meshObject as any).uniformScalingState = uniformScalingState;
@@ -131,14 +132,13 @@ export default class BaseModel {
             this.meshObject.scale.z = scaleZ;
             this.transformation.scaleZ = scaleZ;
         }
-        // width & height dont effected on meshobject any more
-        if (width) {
-            this.transformation.width = width;
-        }
-        if (height) {
-            this.transformation.height = height;
-        }
         this.transformation = { ...this.transformation };
         return this.transformation;
+    }
+
+    rotateModelByZaxis(angle = 0) {
+        const unitZ = new THREE.Vector3(0, 0, 1);
+        const quaternion = new THREE.Quaternion().setFromAxisAngle(unitZ, angle * Math.PI / 180);
+        this.meshObject.applyQuaternion(quaternion);
     }
 }

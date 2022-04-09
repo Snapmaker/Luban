@@ -1,6 +1,6 @@
 {
     "name": "Model",
-    "version": 2,
+    "version": "4.2.0",
     "inherits": "snapmaker2",
     "overrides": {
         "infill_extruder_nr": {

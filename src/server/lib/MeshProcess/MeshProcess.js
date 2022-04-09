@@ -7,7 +7,6 @@ import {
     BOTTOM, FRONT, LEFT, RIGHT, TOP
 } from '../../constants';
 import { pathWithRandomSuffix } from '../../../shared/lib/random-utils';
-import DataStorage from '../../DataStorage';
 import { round } from '../../../shared/lib/utils';
 import { Line } from '../../../shared/lib/math/Line';
 import { Slicer } from './Slicer';
@@ -102,7 +101,7 @@ const writeSvg = (width, height, paths, outputFile, p = '') => {
         + '\n'
         + '      </svg>';
 
-    fs.writeFileSync(`${DataStorage.tmpDir}/${p}${outputFile.replace('.png', '.svg')}`, svg, 'utf8');
+    fs.writeFileSync(`${process.env.Tmpdir}/${p}${outputFile.replace('.png', '.svg')}`, svg, 'utf8');
 };
 
 export const DIRECTION_FACE_OPTIONS = {
@@ -149,7 +148,7 @@ export class MeshProcess {
         this.isRotate = isRotate;
         this.diameter = diameter;
 
-        this.mesh = Mesh.loadSTLFile(`${DataStorage.tmpDir}/${uploadName}`);
+        this.mesh = Mesh.loadSTLFile(`${process.env.Tmpdir}/${uploadName}`);
 
         this._setDirection();
 
@@ -386,7 +385,7 @@ export class MeshProcess {
                     }
                 }
 
-                image.write(`${DataStorage.tmpDir}/${this.outputFilename}`, () => {
+                image.write(`${process.env.Tmpdir}/${this.outputFilename}`, () => {
                     resolve({
                         filename: this.outputFilename,
                         width: width,

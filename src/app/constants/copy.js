@@ -176,6 +176,7 @@ i18n._('Parameters');
 i18n._('key-printing/material_settings-Temperature');
 i18n._('key-printing/material_settings-Extrusion');
 i18n._('key-Printing/LeftBar-Extruder Both');
+i18n._('key-Printing/PrintingConfigurations-Material Settings');
 
 // Profile Default name and category
 i18n._('key-default_name-Carving V-bit');
@@ -214,10 +215,14 @@ i18n._('key-default_name-ABS_Black');
 i18n._('key-default_name-ABS_White');
 i18n._('key-default_name-PLA_Black');
 i18n._('key-default_name-PLA_White');
+i18n._('key-default_name-PLA_Blue');
+i18n._('key-default_name-PLA_Grey');
+i18n._('key-default_name-PLA_Red');
+i18n._('key-default_name-PLA_Yellow');
 i18n._('key-default_name-PETG_Black');
 i18n._('key-default_name-PETG_White');
-
-
+i18n._('key-default_name-PETG_Blue');
+i18n._('key-default_name-PETG_Red');
 i18n._('key-default_category-Default Material');
 i18n._('key-default_category-Acrylic');
 i18n._('key-default_category-Epoxy Tooling Board');
@@ -235,6 +240,7 @@ i18n._('key-default_category-Pinewood');
 i18n._('key-default_category-Vegetable Tanned Leather');
 
 i18n._('key-default_category-Default');
+i18n._('key-default_category-Custom');
 i18n._('key-default_category-PLA');
 i18n._('key-default_category-PETG');
 i18n._('key-default_category-ABS');
@@ -279,6 +285,17 @@ i18n._('key-Progress/3DP-Failed to preview G-code.');
 i18n._('key-Progress/3DP-Calculating Rotation');
 i18n._('key-Progress/3DP-Calculated Rotation successfully.');
 i18n._('key-Progress/3DP-Failed to calculate Rotation.');
+i18n._('key-Progress/3DP-Generating support... {{progress}}%');
+i18n._('key-Progress/3DP-Generated support successfully.');
+i18n._('key-Progress/3DP-Failed to generate support.');
+i18n._('key-Progress/3DP-Arranging models...{{progress}}%');
+i18n._('key-Progress/3DP-Arrange models successfully.');
+i18n._('key-Progress/3DP-Arrange models failed.');
+i18n._('key-Progress/3DP-Auto Rotate models...{{progress}}%');
+i18n._('key-Progress/3DP-Auto Rotate models successfully.');
+i18n._('key-Progress/3DP-Auto Rotate models failed.');
+i18n._('key-Printing/LeftBar-Auto Rotate Selected Models');
+i18n._('key-Printing/LeftBar-Auto Rotate All Models');
 
 // Machine Settings
 i18n._('key-App/Settings/MachineSettings-Single Extruder Toolhead');

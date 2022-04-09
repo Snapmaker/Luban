@@ -8,6 +8,8 @@ import Mousetrap from 'mousetrap';
 import i18next from 'i18next';
 import classNames from 'classnames';
 import { cloneDeep } from 'lodash';
+import Checkbox from '../components/Checkbox';
+import { Button } from '../components/Buttons';
 import { renderModal } from '../utils';
 import AppBar from '../views/AppBar';
 import i18n from '../../lib/i18n';
@@ -16,6 +18,8 @@ import { checkIsSnapmakerProjectFile, checkIsGCodeFile } from '../../lib/check-n
 import Settings from '../pages/Settings/Settings';
 import FirmwareTool from '../pages/Settings/FirmwareTool';
 import SoftwareUpdate from '../pages/Settings/SoftwareUpdate';
+import DownloadUpdate from '../pages/Settings/SoftwareUpdate/DownloadUpdate';
+
 import {
     // HEAD_PRINTING,
     HEAD_LASER,
@@ -82,13 +86,21 @@ class AppLayout extends PureComponent {
         showSavedModal: PropTypes.bool.isRequired,
         savedModalType: PropTypes.string.isRequired,
         savedModalFilePath: PropTypes.string.isRequired,
-        updateSavedModal: PropTypes.func.isRequired
+        savedModalZIndex: PropTypes.number.isRequired,
+        updateSavedModal: PropTypes.func.isRequired,
+        showArrangeModelsError: PropTypes.bool.isRequired,
+        arrangeModelZIndex: PropTypes.number.isRequired,
+        updateShowArrangeModelsError: PropTypes.func.isRequired
     };
 
     state = {
         showSettingsModal: false,
         showDevelopToolsModal: false,
-        showCheckForUpdatesModal: false
+        showDownloadUpdateModal: false,
+        showCheckForUpdatesModal: false,
+        releaseNotes: '',
+        prevVersion: '',
+        version: ''
     }
 
     activeTab = ''
@@ -192,10 +204,80 @@ class AppLayout extends PureComponent {
                 actions: []
             });
         },
+        renderDownloadUpdateModal: () => {
+            const { releaseNotes, prevVersion, version } = this.state;
+            const { shouldCheckForUpdate } = this.props;
+            const { ipcRenderer } = window.require('electron');
+            const onClose = () => {
+                this.setState({
+                    showDownloadUpdateModal: false
+                });
+            };
+            return renderModal({
+                title: i18n._('key-App/Update-Update Snapmaker Luban'),
+                renderBody: () => {
+                    return (
+                        <DownloadUpdate
+                            releaseNotes={releaseNotes}
+                            prevVersion={prevVersion}
+                            version={version}
+                        />
+                    );
+                },
+                renderFooter: () => {
+                    return (
+                        <div className="sm-flex justify-space-between">
+                            <div className="display-inline height-32">
+                                <Checkbox
+                                    checked={shouldCheckForUpdate}
+                                    onChange={(event) => { this.props.updateShouldCheckForUpdate(event.target.checked); }}
+
+                                />
+                                <span className="margin-left-4">
+                                    {i18n._('key-App/Settings/SoftwareUpdate-Automatically check for updates')}
+                                </span>
+                            </div>
+                            <div className="display-inline">
+                                <Button
+                                    priority="level-two"
+                                    className="margin-left-8"
+                                    width="96px"
+                                    type="default"
+                                    onClick={onClose}
+                                >
+                                    {i18n._('key-App/Update-Later')}
+                                </Button>
+                                <Button
+                                    priority="level-two"
+                                    className="margin-left-8"
+                                    width="auto"
+                                    type="primary"
+                                    onClick={() => ipcRenderer.send('startingDownloadUpdate')}
+                                >
+                                    {i18n._('key-App/Update-Update Now')}
+                                </Button>
+                            </div>
+                        </div>
+                    );
+                },
+                onClose,
+                actions: []
+            });
+        },
         showCheckForUpdates: () => {
             this.setState({
                 showCheckForUpdatesModal: true
             });
+        },
+        showDownloadUpdate: (downloadInfo) => {
+            if (downloadInfo) {
+                this.setState({
+                    releaseNotes: downloadInfo.releaseNotes,
+                    prevVersion: downloadInfo.prevVersion,
+                    version: downloadInfo.version,
+                    showDownloadUpdateModal: true
+                });
+            }
         },
         renderSavedModal: () => {
             // TODO, add a component
@@ -208,7 +290,7 @@ class AppLayout extends PureComponent {
                         className={classNames('border-default-black-5', 'border-radius-4', 'box-shadow-module', 'position-ab',
                             'background-color-white', 'padding-horizontal-10', 'padding-vertical-10', 'bottom-0', 'margin-bottom-16')}
                         style={{
-                            zIndex: 9999, // TODO?
+                            zIndex: this.props.savedModalZIndex,
                             left: '50%',
                             transform: 'translateX(-50%)',
                             maxWidth: '360px'
@@ -248,7 +330,10 @@ class AppLayout extends PureComponent {
                     <div
                         className={classNames('border-default-black-5', 'border-radius-4', 'box-shadow-module', 'position-ab',
                             'background-color-white', 'padding-horizontal-16', 'padding-vertical-16', 'bottom-0', 'margin-bottom-16',
-                            'left-50-percent', 'max-width-360', 'z-index-top-modal')}
+                            'left-50-percent', 'max-width-360')}
+                        style={{
+                            zIndex: this.props.savedModalZIndex
+                        }}
                     >
                         <div className="sm-flex justify-space-between">
                             <div className="sm-flex-auto font-roboto font-weight-normal font-size-middle">
@@ -296,6 +381,52 @@ class AppLayout extends PureComponent {
                 );
             }
             return null;
+        },
+        renderArrangeModelsError: () => {
+            const onClose = () => {
+                this.props.updateShowArrangeModelsError({ showArrangeModelsError: false });
+            };
+            return (
+                <div
+                    className={classNames('border-default-black-5', 'border-radius-4', 'box-shadow-module', 'position-ab',
+                        'background-color-white', 'padding-horizontal-16', 'padding-vertical-16', 'bottom-0', 'margin-bottom-16',
+                        'left-50-percent', 'max-width-360')}
+                    style={{
+                        zIndex: this.props.arrangeModelZIndex
+                    }}
+                >
+                    <div className="sm-flex justify-space-between">
+                        <div className="sm-flex-auto font-roboto font-weight-normal font-size-middle">
+                            <SvgIcon
+                                name="WarningTipsError"
+                                size="24"
+                                type={['static']}
+                                color="red" // TODO
+                            />
+                            <span>
+                                {i18n._('key-app_layout-Print Area Exceeded')}
+                            </span>
+                        </div>
+                        <div className="sm-flex-auto">
+                            <SvgIcon
+                                name="Cancel"
+                                type={['static']}
+                                size="24"
+                                onClick={onClose}
+                            />
+                        </div>
+                    </div>
+                    <div
+                        className="sm-flex"
+                        style={{
+                            wordBreak: 'break-all',
+                            color: '#545659'
+                        }}
+                    >
+                        {i18n._('key-app_layout-Unable to place all models inside the print area.')}
+                    </div>
+                </div>
+            );
         },
         openProject: async (file) => {
             if (!file) {
@@ -406,8 +537,8 @@ class AppLayout extends PureComponent {
             UniApi.Event.on('update-should-check-for-update', (event, checkForUpdate) => {
                 this.props.updateShouldCheckForUpdate(checkForUpdate);
             });
-            UniApi.Event.on('update-available', (event, downloadInfo, oldVersion) => {
-                UniApi.Update.downloadUpdate(downloadInfo, oldVersion, this.props.shouldCheckForUpdate);
+            UniApi.Event.on('update-available', (event, downloadInfo) => {
+                UniApi.Event.emit('tile-modal:download-update.show', downloadInfo);
             });
             UniApi.Event.on('is-replacing-app-now', (event, downloadInfo) => {
                 UniApi.Update.isReplacingAppNow(downloadInfo);
@@ -701,17 +832,18 @@ class AppLayout extends PureComponent {
         }
     }
 
-    componentWillMount() {
+    // componentWillMount() {
+    // }
+
+    componentDidMount() {
         this.props.initMenuLanguage();
         this.actions.initUniEvent();
         this.actions.initFileOpen();
-    }
-
-    componentDidMount() {
         UniApi.Event.on('appbar-menu:preferences.show', this.actions.showPreferences);
         UniApi.Event.on('appbar-menu:developer-tools.show', this.actions.showDevelopTools);
         UniApi.Event.on('appbar-menu:check-for-updates.show', this.actions.showCheckForUpdates);
         UniApi.Event.on('appbar-menu:longterm-backup-config', this.actions.longTermBackupConfig);
+        UniApi.Event.on('tile-modal:download-update.show', this.actions.showDownloadUpdate);
     }
 
     componentWillUnmount() {
@@ -719,18 +851,21 @@ class AppLayout extends PureComponent {
         UniApi.Event.off('appbar-menu:developer-tools.show', this.actions.showDevelopTools);
         UniApi.Event.off('appbar-menu:check-for-updates.show', this.actions.showCheckForUpdates);
         UniApi.Event.off('appbar-menu:longterm-backup-config', this.actions.longTermBackupConfig);
+        UniApi.Event.off('tile-modal:download-update.show', this.actions.showDownloadUpdate);
     }
 
     render() {
-        const { showSettingsModal, showDevelopToolsModal, showCheckForUpdatesModal } = this.state;
-        const { showSavedModal } = this.props;
+        const { showSettingsModal, showDevelopToolsModal, showCheckForUpdatesModal, showDownloadUpdateModal } = this.state;
+        const { showSavedModal, showArrangeModelsError } = this.props;
         return (
             <div className={isElectron() ? null : 'appbar'}>
                 <AppBar />
                 { showSettingsModal ? this.actions.renderSettingModal() : null }
                 { showDevelopToolsModal ? this.actions.renderDevelopToolsModal() : null }
                 { showCheckForUpdatesModal ? this.actions.renderCheckForUpdatesModal() : null }
+                { showDownloadUpdateModal ? this.actions.renderDownloadUpdateModal() : null }
                 { showSavedModal ? this.actions.renderSavedModal() : null }
+                { showArrangeModelsError ? this.actions.renderArrangeModelsError() : null }
                 <div className={isElectron() ? null : classNames(styles['app-content'])}>
                     {this.props.children}
                 </div>
@@ -744,7 +879,9 @@ const mapStateToProps = (state) => {
     const { currentModalPath } = state.appbarMenu;
     const { shouldCheckForUpdate } = machineInfo;
     const { modelGroup } = state.printing;
-    const { showSavedModal, savedModalType, savedModalFilePath } = state.appGlobal;
+    const { showSavedModal, savedModalType, savedModalFilePath, savedModalZIndex,
+        showArrangeModelsError, arrangeModelZIndex
+    } = state.appGlobal;
     // const projectState = state.project;
     return {
         currentModalPath: currentModalPath ? currentModalPath.slice(1) : currentModalPath, // exclude hash character `#`
@@ -754,7 +891,10 @@ const mapStateToProps = (state) => {
         modelGroup,
         showSavedModal,
         savedModalType,
-        savedModalFilePath
+        savedModalFilePath,
+        savedModalZIndex,
+        showArrangeModelsError,
+        arrangeModelZIndex
     };
 };
 
@@ -782,7 +922,8 @@ const mapDispatchToProps = (dispatch) => {
         restartGuideTours: (pathname, history) => dispatch(projectActions.startProject(pathname, pathname, history, true)),
         updateMachineToolHead: (toolHead, series, headType) => dispatch(machineActions.updateMachineToolHead(toolHead, series, headType)),
         longTermBackupConfig: () => dispatch(settingsActions.longTermBackupConfig()),
-        updateSavedModal: (options) => dispatch(appGlobalActions.updateSavedModal(options))
+        updateSavedModal: (options) => dispatch(appGlobalActions.updateSavedModal(options)),
+        updateShowArrangeModelsError: (options) => dispatch(appGlobalActions.updateShowArrangeModelsError(options))
     };
 };
 

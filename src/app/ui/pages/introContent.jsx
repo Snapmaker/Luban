@@ -133,7 +133,7 @@ const cnc4AxisStepOne = (text1, text2, text3) => {
             </div>
             <div className="bottom-content">
                 <div>{text3}</div>
-                <img src="/resources/images/guide-tours/pic_job_setup_4aix_zero_116x128.png" alt="" className="job-setup-img width-120" />
+                <img src="/resources/images/cnc-laser/working-origin-cnc-4.png" alt="" className="job-setup-img width-120" />
             </div>
         </div>
     );

@@ -58,6 +58,13 @@ class SocketController {
             }
         });
     }
+
+    once(eventName, callback) {
+        this.socket && this.socket.once(eventName, (...args) => {
+            callback(...args);
+        });
+        return this;
+    }
 }
 
 const socketController = new SocketController();

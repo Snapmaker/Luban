@@ -12,6 +12,7 @@ import i18n from '../../../lib/i18n';
 import usePrevious from '../../../lib/hooks/previous';
 import { actions as machineActions } from '../../../flux/machine';
 import {
+    MACHINE_SERIES,
     ABSENT_OBJECT,
     CONNECTION_STATUS_CONNECTED,
     CONNECTION_STATUS_CONNECTING,
@@ -38,7 +39,7 @@ import styles from './index.styl';
 import ModalSmall from '../../components/Modal/ModalSmall';
 import ModalSmallInput from '../../components/Modal/ModalSmallInput';
 import { Server } from '../../../flux/machine/Server';
-import { actions as workspaceActions } from '../../../flux/workspace';
+// import { actions as workspaceActions } from '../../../flux/workspace';
 // import { machineStore } from '../../../store/local-storage';
 
 export const ModuleStatus = ({ moduleName, status }) => {
@@ -114,22 +115,15 @@ function WifiConnection() {
         },
         openServer: () => {
             dispatch(machineActions.connect.setSelectedServer(serverState));
-            dispatch(machineActions.openServer((err, data, text) => {
-                if (err) {
-                    actions.showWifiError(err, text);
+            serverState.openServer(({ msg, text }) => {
+                if (msg) {
+                    actions.showWifiError(msg, text);
                 }
                 setserverOpenState(null);
-                if (data?.toolHead && data.toolHead === LEVEL_TWO_POWER_LASER_FOR_SM2) {
-                    dispatch(workspaceActions.updateMachineState({
-                        headType: data.headType,
-                        toolHead: data.toolHead,
-                        series: series
-                    }));
-                }
-            }));
+            });
         },
         closeServer: () => {
-            dispatch(machineActions.closeServer());
+            server.closeServer();
             setSavedServerAddressState('');
         },
         hideWifiConnectionMessage: () => {
@@ -190,7 +184,7 @@ function WifiConnection() {
         },
         onCloseWifiConnectionMessage: () => {
             actions.hideWifiConnectionMessage();
-            actions.closeServer();
+            server.closeServer();
         },
 
         /**
@@ -207,7 +201,10 @@ function WifiConnection() {
                 onCancel: actions.onCloseManualWiFi,
                 onConfirm: (text) => {
                     dispatch(machineActions.connect.setManualIP(text));
-                    const newServer = new Server('Manual', text);
+                    const newServer = new Server({
+                        name: 'Manual',
+                        address: text
+                    });
 
                     // Try add new server
                     const _server = dispatch(machineActions.connect.addServer(newServer));
@@ -256,11 +253,6 @@ function WifiConnection() {
             setServerState(firstServer);
         }
     }
-
-    useEffect(() => {
-        // Discover servers on mounted
-        actions.onRefreshServers();
-    }, []);
 
     useEffect(() => {
         if (isConnected) {
@@ -433,13 +425,13 @@ function WifiConnection() {
                     </div>
                 </div>
             )}
-            {isConnected && (
+            {isConnected && series && (
                 <div className="margin-bottom-16 margin-top-12">
                     <div
                         className={classNames(styles['connection-state'], 'padding-bottom-8', 'border-bottom-dashed-default')}
                     >
                         <span className="main-text-normal">
-                            {`${serverState?.name} (${series.toUpperCase()})`}
+                            {`${serverState?.name} (${i18n._(MACHINE_SERIES[series.toUpperCase()].label)})`}
                         </span>
                         <span className={styles['connection-state-icon']}>
                             {workflowStatus === WORKFLOW_STATUS_UNKNOWN

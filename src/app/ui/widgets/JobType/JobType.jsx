@@ -97,7 +97,7 @@ function JobType({ headType, jobTypeState, setJobTypeState }) {
     const { isRotate, diameter, length } = materials;
 
     let imgOF3axisCoordinateMode = '';
-    if (!isRotate) {
+    if (!isRotate && coordinateMode.value !== 'bottom-center') { // TODO
         imgOF3axisCoordinateMode = `/resources/images/cnc-laser/working-origin-3-${coordinateMode.value}.png`;
     }
 

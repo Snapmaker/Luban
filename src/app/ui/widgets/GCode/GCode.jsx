@@ -87,7 +87,7 @@ function GCode({ widgetActions }) {
     const [state, setState] = useState(() => getInitialState());
 
     const controllerEvents = {
-        'serialport:close': (options) => {
+        'connection:close': (options) => {
             const { dataSource } = options;
             if (dataSource !== PROTOCOL_TEXT) {
                 return;

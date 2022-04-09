@@ -141,7 +141,7 @@ STLLoader.prototype = {
 			var vertices = [];
 			var normals = [];
 
-			for ( var face = 0; face < faces; face ++ ) {
+            for ( var face = 0; face < faces; face ++ ) {
 			    if (face / faces - progress > 0.01) {
                     progress = face / faces;
                     onProgress(progress);
@@ -175,23 +175,16 @@ STLLoader.prototype = {
 				}
 
 				for ( var i = 1; i <= 3; i ++ ) {
-
 					var vertexstart = start + i * 12;
-
 					vertices.push( reader.getFloat32( vertexstart, true ) );
 					vertices.push( reader.getFloat32( vertexstart + 4, true ) );
 					vertices.push( reader.getFloat32( vertexstart + 8, true ) );
 
 					normals.push( normalX, normalY, normalZ );
-
 					if ( hasColors ) {
-
 						colors.push( r, g, b );
-
 					}
-
 				}
-
 			}
 
 			geometry.setAttribute( 'position', new THREE.BufferAttribute( new Float32Array( vertices ), 3 ) );

@@ -8,9 +8,11 @@ import { getToolPathType } from '../../toolpaths/utils';
 
 import { toast } from '../../ui/components/Toast';
 import { ToastWapper } from '../../ui/components/Toast/toastContainer';
-
 import i18n from '../../lib/i18n';
+/* eslint-disable-next-line import/no-cycle */
 import { actions as operationHistoryActions } from '../operation-history';
+/* eslint-disable-next-line import/no-cycle */
+import { actions as projectActions } from '../project';
 import DeleteToolPathOperation from '../operation-history/DeleteToolPathOperation';
 import Operations from '../operation-history/Operations';
 import { timestamp } from '../../../shared/lib/random-utils';
@@ -29,8 +31,15 @@ export const processActions = {
         }));
 
         // start generate toolpath
+        const toolPathPromiseArray = [];
         toolPathGroup.toolPaths.forEach((toolPath) => {
-            dispatch(processActions.commitGenerateToolPath(headType, toolPath.id));
+            const { materials } = getState()[headType];
+            toolPathPromiseArray.push(toolPathGroup.commitToolPathPromise(toolPath?.id, { materials }));
+        });
+
+        Promise.all(toolPathPromiseArray).then((taskArray) => {
+            taskArray = taskArray.filter(d => !!d);
+            controller.commitToolPathTaskArray(taskArray);
         });
     },
 
@@ -52,7 +61,7 @@ export const processActions = {
         if (visibleToolPathsLength > 0) {
             progressStatesManager.startProgress(
                 PROCESS_STAGE.CNC_LASER_GENERATE_TOOLPATH_AND_PREVIEW,
-                [visibleToolPathsLength, visibleToolPathsLength, visibleToolPathsLength]
+                [visibleToolPathsLength, visibleToolPathsLength, 1] // generate gcode consider as one task
             );
         }
         toolPathGroup.toolPaths.forEach((toolPath) => {
@@ -225,6 +234,7 @@ export const processActions = {
                 isChangedAfterGcodeGenerating: true
             }));
         }
+        dispatch(projectActions.autoSaveEnvironment(headType));
     },
 
     updateToolPath: (headType, toolPathId, newState) => (dispatch, getState) => {
@@ -243,6 +253,7 @@ export const processActions = {
         dispatch(baseActions.updateState(headType, {
             isChangedAfterGcodeGenerating: true
         }));
+        dispatch(projectActions.autoSaveEnvironment(headType));
     },
 
     toolPathToDown: (headType, toolPathId) => (dispatch, getState) => {
@@ -251,6 +262,7 @@ export const processActions = {
         dispatch(baseActions.updateState(headType, {
             isChangedAfterGcodeGenerating: true
         }));
+        dispatch(projectActions.autoSaveEnvironment(headType));
     },
 
     toolPathToTop: (headType, toolPathId) => (dispatch, getState) => {
@@ -270,12 +282,13 @@ export const processActions = {
     },
 
     deleteToolPath: (headType, selectedToolPathIDArray) => (dispatch, getState) => {
-        const { toolPathGroup, displayedType } = getState()[headType];
+        const { toolPathGroup, displayedType, modelGroup } = getState()[headType];
 
         const operations = new Operations();
         selectedToolPathIDArray.forEach((id) => {
             const operation = new DeleteToolPathOperation({
                 target: toolPathGroup._getToolPath(id),
+                models: modelGroup?.models,
                 toolPathGroup
             });
             operations.push(operation);
@@ -524,31 +537,35 @@ export const processActions = {
         return createdDefinition;
     },
     onUploadToolDefinition: (headType, file) => async (dispatch, getState) => {
-        const { toolDefinitions } = getState()[headType];
-        const formData = new FormData();
-        formData.append('file', file);
-        // set a new name that cannot be repeated
-        formData.append('uploadName', `${file.name.substr(0, file.name.length - 9)}${timestamp()}.def.json`);
-        api.uploadFile(formData)
-            .then(async (res) => {
-                const response = res.body;
-                const definitionId = `New.${timestamp()}`;
-                const definition = await definitionManager.uploadDefinition(definitionId, response.uploadName);
-                let name = definition.name;
-                while (toolDefinitions.find(e => e.name === name)) {
-                    name = `#${name}`;
-                }
-                definition.name = name;
-                await definitionManager.updateDefinition({
-                    definitionId: definition.definitionId,
-                    name
+        return new Promise((resolve) => {
+            const { toolDefinitions } = getState()[headType];
+            const formData = new FormData();
+            formData.append('file', file);
+            // set a new name that cannot be repeated
+            formData.append('uploadName', `${file.name.substr(0, file.name.length - 9)}${timestamp()}.def.json`);
+            api.uploadFile(formData)
+                .then(async (res) => {
+                    const response = res.body;
+                    const definitionId = `New.${timestamp()}`;
+                    const definition = await definitionManager.uploadDefinition(definitionId, response.uploadName);
+
+                    let name = definition.name;
+                    while (toolDefinitions.find(e => e.name === name)) {
+                        name = `#${name}`;
+                    }
+                    definition.name = name;
+                    await definitionManager.updateDefinition({
+                        definitionId: definition.definitionId,
+                        name
+                    });
+                    dispatch(baseActions.updateState(headType, {
+                        toolDefinitions: [...toolDefinitions, definition]
+                    }));
+                    resolve(definition);
+                })
+                .catch(() => {
+                    // Ignore error
                 });
-                dispatch(baseActions.updateState(headType, {
-                    toolDefinitions: [...toolDefinitions, definition]
-                }));
-            })
-            .catch(() => {
-                // Ignore error
-            });
+        });
     }
 };

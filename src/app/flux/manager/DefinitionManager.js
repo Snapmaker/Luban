@@ -1,7 +1,13 @@
 import { includes } from 'lodash';
 import api from '../../api';
 import i18n from '../../lib/i18n';
-import { HEAD_CNC, RIGHT_EXTRUDER_MAP_NUMBER } from '../../constants';
+import {
+    HEAD_CNC, RIGHT_EXTRUDER_MAP_NUMBER,
+    PRINTING_MATERIAL_CONFIG_KEYS_SINGLE,
+    MACHINE_EXTRUDER_X,
+    MACHINE_EXTRUDER_Y,
+    KEY_DEFAULT_CATEGORY_CUSTOM
+} from '../../constants';
 
 const primeTowerDefinitionKeys = [
     'prime_tower_enable',
@@ -11,6 +17,7 @@ const primeTowerDefinitionKeys = [
     'prime_tower_brim_enbale',
     'prime_tower_wipe_enabled'
 ];
+
 class DefinitionManager {
     headType = HEAD_CNC;
 
@@ -78,22 +85,41 @@ class DefinitionManager {
         return definition;
     }
 
+    fillCustomCategory(definition) {
+        const isCustom = ({ metadata }) => {
+            if (metadata?.readonly) {
+                return false;
+            }
+            return true;
+        };
+        const category = definition.category || i18n._(KEY_DEFAULT_CATEGORY_CUSTOM);
+        const categoryApplyI18n = definition.i18nCategory ? i18n._(definition.i18nCategory) : category;
+
+        definition.category = isCustom(definition) ? category : categoryApplyI18n;
+        definition.i18nCategory = definition.i18nCategory || '';
+        return definition;
+    }
+
     async getConfigDefinitions() {
         const res = await api.profileDefinitions.getConfigDefinitions(this.headType, this.configPathname);
         const definitions = await this.markDefaultDefinitions(res.body.definitions);
-        return definitions;
+        return definitions.map(this.fillCustomCategory);
     }
 
     async getDefinitionsByPrefixName(prefix) {
         const res = await api.profileDefinitions.getDefinitionsByPrefixName(this.headType, prefix, this.configPathname);
         const definitions = await this.markDefaultDefinitions(res.body.definitions);
-        return definitions;
+        return definitions.map(this.fillCustomCategory);
     }
-
 
     async createDefinition(definition) {
         const res = await api.profileDefinitions.createDefinition(this.headType, definition, this.configPathname);
         return res.body.definition;
+    }
+
+    async createTmpDefinition(definition, definitionName) {
+        const res = await api.profileDefinitions.createTmpDefinition(definition, definitionName);
+        return res.body.uploadName;
     }
 
     async removeDefinition(definition) {
@@ -107,7 +133,7 @@ class DefinitionManager {
             console.error(err);
             return null;
         } else {
-            return definition;
+            return this.fillCustomCategory(definition);
         }
     }
 
@@ -182,13 +208,13 @@ class DefinitionManager {
 
             // "0 if infill_sparse_density == 100 else math.ceil(round(top_thickness / resolveOrValue('layer_height'), 4))"
             const topThickness = definition.settings.top_thickness.default_value;
-            const topLayers = infillSparseDensity === 100 ? 0 : Math.ceil(Math.round(topThickness / layerHeight));
+            const topLayers = infillSparseDensity === 100 ? 0 : Math.ceil(topThickness / layerHeight);
             definition.settings.top_layers.default_value = topLayers;
             settings.top_layers = { default_value: topLayers };
 
             // "999999 if infill_sparse_density == 100 else math.ceil(round(bottom_thickness / resolveOrValue('layer_height'), 4))"
             const bottomThickness = definition.settings.bottom_thickness.default_value;
-            const bottomLayers = infillSparseDensity === 100 ? 999999 : Math.ceil(Math.round(bottomThickness / layerHeight));
+            const bottomLayers = infillSparseDensity === 100 ? 999999 : Math.ceil(bottomThickness / layerHeight);
             definition.settings.bottom_layers.default_value = bottomLayers;
             settings.bottom_layers = { default_value: bottomLayers };
         }
@@ -361,13 +387,12 @@ class DefinitionManager {
         return definition;
     }
 
-    finalizeExtruderDefinition(extruderDefinition, materialDefinition) {
+    finalizeExtruderDefinition({ extruderDefinition, materialDefinition, hasPrimeTower, primeTowerXDefinition, primeTowerYDefinition }) {
         const definition = {
             ...extruderDefinition
         };
-        Object.keys(materialDefinition.ownKeys)
-            .forEach(index => {
-                const key = materialDefinition.ownKeys[index];
+        PRINTING_MATERIAL_CONFIG_KEYS_SINGLE.concat('cool_fan_speed_min', 'cool_fan_speed_max')
+            .forEach(key => {
                 const setting = materialDefinition.settings[key];
                 if (setting) {
                     definition.settings[key] = {
@@ -375,6 +400,14 @@ class DefinitionManager {
                     };
                 }
             });
+        if (hasPrimeTower) {
+            MACHINE_EXTRUDER_X.forEach((keyItem) => {
+                definition.settings[keyItem].default_value = primeTowerXDefinition;
+            });
+            MACHINE_EXTRUDER_Y.forEach((keyItem) => {
+                definition.settings[keyItem].default_value = primeTowerYDefinition;
+            });
+        }
         return definition;
     }
 

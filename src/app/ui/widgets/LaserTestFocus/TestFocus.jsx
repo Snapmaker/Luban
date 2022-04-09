@@ -10,7 +10,6 @@ import { Button } from '../../components/Buttons';
 import Modal from '../../components/Modal';
 import { NumberInput as Input } from '../../components/Input';
 import TipTrigger from '../../components/TipTrigger';
-import { controller } from '../../../lib/controller';
 import styles from './styles.styl';
 import generateLaserFocusGcode from '../../../lib/generateLaserFocusGcode';
 import { actions as workspaceActions } from '../../../flux/workspace';
@@ -29,6 +28,7 @@ class TestFocus extends PureComponent {
             hideInstructions: PropTypes.func
         }),
 
+        executeGcode: PropTypes.func.isRequired,
         renderGcode: PropTypes.func.isRequired,
         clearGcode: PropTypes.func.isRequired
     };
@@ -62,7 +62,7 @@ class TestFocus extends PureComponent {
                 `G0 Z${z} F100`,
                 'G92 X0 Y0 Z0'
             ];
-            controller.command('gcode', gcodes.join('\n'));
+            this.props.executeGcode(gcodes.join('\n'));
         }
     };
 
@@ -283,7 +283,8 @@ class TestFocus extends PureComponent {
 
 const mapDispatchToProps = (dispatch) => ({
     renderGcode: (name, gcode) => dispatch(workspaceActions.renderGcode(name, gcode)),
-    clearGcode: () => dispatch(workspaceActions.clearGcode())
+    clearGcode: () => dispatch(workspaceActions.clearGcode()),
+    executeGcode: (gcode) => dispatch(workspaceActions.executeGcode(gcode))
 });
 
 export default connect(null, mapDispatchToProps)(TestFocus);

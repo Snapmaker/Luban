@@ -5,10 +5,10 @@ import { CustomPicker } from 'react-color';
 import Anchor from '../Anchor';
 import SvgIcon from '../SvgIcon';
 import i18n from '../../../lib/i18n';
-import { componentsStore } from '../../../store/local-storage';
+import { printingStore } from '../../../store/local-storage';
 
 const ColorSelectorPicker = React.memo(({ onChangeComplete, onClose, colors, value, recentColorKey }) => {
-    const recentColors = (componentsStore.get(`color-selector-${recentColorKey}`) ?? []);
+    const recentColors = (printingStore.get(`color-selector-${recentColorKey}`) ?? []);
     for (let i = 0; i < 10; i++) {
         if (recentColors[i] === undefined) {
             recentColors.push('');
@@ -25,7 +25,7 @@ const ColorSelectorPicker = React.memo(({ onChangeComplete, onClose, colors, val
             }
             newRecentColors = [color, ...recentColors];
             newRecentColors.splice(10, 1);
-            componentsStore.set(`color-selector-${recentColorKey}`, newRecentColors);
+            printingStore.set(`color-selector-${recentColorKey}`, newRecentColors);
         }
     };
     return (
@@ -38,15 +38,17 @@ const ColorSelectorPicker = React.memo(({ onChangeComplete, onClose, colors, val
                     <SvgIcon
                         name="Cancel"
                         type={['static']}
-                        size="24"
+                        size={24}
                         onClick={onClose}
                     />
                 </div>
             </div>
-            {colors.map((colorLines) => {
+            {colors.map((colorLines, index) => {
+                const key = `colorLines-${index}`;
                 return (
                     <div
                         className="sm-flex position-re"
+                        key={key}
                     >
                         {colorLines.map((color) => {
                             return (
@@ -85,10 +87,12 @@ const ColorSelectorPicker = React.memo(({ onChangeComplete, onClose, colors, val
             <div
                 className="sm-flex position-re"
             >
-                {recentColors.map((color) => {
+                {recentColors.map((color, index) => {
+                    const key = `recentColor-${index}`;
                     if (color === '') {
                         return (
                             <div
+                                key={key}
                                 className={classNames('margin-left-2', 'margin-top-2', 'width-32', 'height-32',
                                     'padding-vertical-3', 'padding-horizontal-3')}
                             >
@@ -104,6 +108,7 @@ const ColorSelectorPicker = React.memo(({ onChangeComplete, onClose, colors, val
                             onClick={() => {
                                 onChangeColor(color, false);
                             }}
+                            key={key}
                         >
                             <div
                                 className={classNames(recentColors.indexOf(color) > 0 ? 'margin-left-2' : null,

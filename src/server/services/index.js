@@ -3,7 +3,7 @@ import TaskManager from './task-manager';
 
 import socketSerial from './socket/socket-serial';
 import socketSlice from './socket/socket-slice';
-import wifiServerManager from './socket/WifiServerManager';
+import connectionManager from './socket/ConnectionManager';
 
 import urljoin from '../lib/urljoin';
 import settings from '../config/settings';
@@ -16,33 +16,57 @@ export {
     configstore,
     monitor
 };
+const connectionEventsObject = {
+    'connection:open': connectionManager.connectionOpen,
+    'connection:close': connectionManager.connectionClose,
+    'connection:startGcode': connectionManager.startGcode,
+    'connection:resumeGcode': connectionManager.resumeGcode,
+    'connection:pauseGcode': connectionManager.pauseGcode,
+    'connection:stopGcode': connectionManager.stopGcode,
+    'connection:executeGcode': connectionManager.executeGcode,
+    'connection:startHeartbeat': connectionManager.startHeartbeat,
+    'connection:getGcodeFile': connectionManager.getGcodeFile,
+    'connection:uploadFile': connectionManager.uploadFile,
+    'connection:updateNozzleTemperature': connectionManager.updateNozzleTemperature,
+    'connection:updateBedTemperature': connectionManager.updateBedTemperature,
+    'connection:updateZOffset': connectionManager.updateZOffset,
+    'connection:loadFilament': connectionManager.loadFilament,
+    'connection:unloadFilament': connectionManager.unloadFilament,
+    'connection:updateWorkSpeedFactor': connectionManager.updateWorkSpeedFactor,
+    'connection:updateLaserPower': connectionManager.updateLaserPower,
+    'connection:switchLaserPower': connectionManager.switchLaserPower,
+    'connection:materialThickness': connectionManager.getLaserMaterialThickness,
+    'connection:setEnclosureLight': connectionManager.setEnclosureLight,
+    'connection:setEnclosureFan': connectionManager.setEnclosureFan,
+    'connection:setDoorDetection': connectionManager.setDoorDetection,
+    'connection:setFilterSwitch': connectionManager.setFilterSwitch,
+    'connection:setFilterWorkSpeed': connectionManager.setFilterWorkSpeed,
+    'connection:materialThickness_abort': connectionManager.abortLaserMaterialThickness,
 
+};
 
 function startServices(server) {
     // Start socket server
     const socketServer = new SocketServer();
 
-    socketServer.on('connection', (socket) => {
-        wifiServerManager.onConnection(socket);
-    });
+    socketServer.on('connection', connectionManager.onConnection);
 
-    socketServer.on('disconnection', (socket) => {
-        wifiServerManager.onDisconnection(socket);
-        socketSerial.onDisconnection(socket);
-    });
+    socketServer.on('disconnection', connectionManager.onDisconnection);
 
     // slice
     socketServer.registerEvent('slice', socketSlice.handleSlice);
+    socketServer.registerEvent('generate-support', socketSlice.handleGenerateSupport);
 
-    // communication: http
-    socketServer.registerEvent('http:discover', wifiServerManager.refreshDevices);
+    // communication: http & serial port
+    socketServer.registerEvent('machine:discover', connectionManager.refreshDevices);
 
-    // communication: serial port
-    socketServer.registerEvent('serialport:list', socketSerial.serialportList);
-    socketServer.registerEvent('serialport:open', socketSerial.serialportOpen);
-    socketServer.registerEvent('serialport:close', socketSerial.serialportClose);
+
+    // socketServer.registerEvent('serialport:close', socketSerial.serialportClose);
     socketServer.registerEvent('command', socketSerial.command);
     socketServer.registerEvent('writeln', socketSerial.writeln);
+    Object.entries(connectionEventsObject).forEach(([key, value]) => {
+        socketServer.registerEvent(key, value);
+    });
 
     // task manager
     socketServer.registerEvent('taskCommit:generateToolPath', TaskManager.addGenerateToolPathTask);
@@ -51,10 +75,9 @@ function startServices(server) {
     socketServer.registerEvent('taskCommit:processImage', TaskManager.addProcessImageTask);
     socketServer.registerEvent('taskCommit:cutModel', TaskManager.addCutModelTask);
 
-    socketServer.start(server);
+    socketServer.registerEvent('taskCancel:cutModel', TaskManager.cancelTask);
 
-    // Start task manager
-    TaskManager.start();
+    socketServer.start(server);
 }
 
 function registerApis(app) {
@@ -69,25 +92,27 @@ function registerApis(app) {
 
     // Register API routes with authorized access
     // Version
+    // deprecated?
     app.get(urljoin(settings.route, 'api/version/latest'), api.version.getLatestVersion);
 
     // Utils
-    app.get(urljoin(settings.route, 'api/utils/platform'), api.utils.getPlatform);
+    app.get(urljoin(settings.route, 'api/utils/platform'), api.utils.getPlatform); // deprecated?
     app.get(urljoin(settings.route, 'api/utils/fonts'), api.utils.getFonts);
     app.post(urljoin(settings.route, 'api/utils/font'), api.utils.uploadFont);
 
     // State
+    // depecated?
     app.get(urljoin(settings.route, 'api/state'), api.state.get);
     app.post(urljoin(settings.route, 'api/state'), api.state.set);
     app.delete(urljoin(settings.route, 'api/state'), api.state.unset);
 
     // G-code
-    app.get(urljoin(settings.route, 'api/gcode'), api.gcode.get);
+    app.get(urljoin(settings.route, 'api/gcode'), api.gcode.get); // deprecated?
     app.post(urljoin(settings.route, 'api/gcode'), api.gcode.set);
-    app.get(urljoin(settings.route, 'api/gcode/download'), api.gcode.download);
+    app.get(urljoin(settings.route, 'api/gcode/download'), api.gcode.download); // deprecated?
 
     // Controllers
-    app.get(urljoin(settings.route, 'api/controllers'), api.controllers.get);
+    app.get(urljoin(settings.route, 'api/controllers'), api.controllers.get); // deprecated?
 
     // Image
     app.post(urljoin(settings.route, 'api/image'), api.image.set);
@@ -104,12 +129,12 @@ function registerApis(app) {
 
 
     // Svg
-    app.post(urljoin(settings.route, 'api/svg/convertRasterToSvg'), api.svg.convertRasterToSvg);
+    app.post(urljoin(settings.route, 'api/svg/convertRasterToSvg'), api.svg.convertRasterToSvg); // deprecated?
     app.post(urljoin(settings.route, 'api/svg/convertTextToSvg'), api.svg.convertTextToSvg);
-    app.post(urljoin(settings.route, 'api/svg/convertOneLineTextToSvg'), api.svg.convertOneLineTextToSvg);
+    app.post(urljoin(settings.route, 'api/svg/convertOneLineTextToSvg'), api.svg.convertOneLineTextToSvg); // deprecated?
 
     // ToolPath
-    app.post(urljoin(settings.route, 'api/toolpath/generate'), api.toolpath.generate);
+    app.post(urljoin(settings.route, 'api/toolpath/generate'), api.toolpath.generate); // deprecated?
 
     // Commands
     // app.get(urljoin(settings.route, 'api/commands'), api.commands.fetch);
@@ -141,6 +166,7 @@ function registerApis(app) {
     app.delete(urljoin(settings.route, 'api/macros/:id'), api.macros.remove);
 
     // Watch
+    // deprecated?
     app.get(urljoin(settings.route, 'api/watch/files'), api.watch.getFiles);
     app.post(urljoin(settings.route, 'api/watch/files'), api.watch.getFiles);
     app.get(urljoin(settings.route, 'api/watch/file'), api.watch.readFile);

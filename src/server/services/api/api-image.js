@@ -15,8 +15,8 @@ import { ERR_INTERNAL_SERVER_ERROR } from '../../constants';
 import DataStorage from '../../DataStorage';
 import { stitch, stitchEach } from '../../lib/image-stitch';
 import { calibrationPhoto, getCameraCalibration, getPhoto, setMatrix, takePhoto } from '../../lib/image-getPhoto';
-import { Mesh } from '../../lib/MeshProcess/Mesh';
 import { generateRandomPathName } from '../../../shared/lib/random-utils';
+import workerManager from '../task-manager/workerManager';
 
 const log = logger('api:image');
 
@@ -53,22 +53,38 @@ export const set = (req, res) => {
                     // according to EXIF data, rotate image to a correct orientation
                     try {
                         const { buffer: imageBuffer } = await jpegAutoRotate.rotate(originalPath);
-                        fs.writeFile(tempPath, imageBuffer, () => {
-                            next();
+                        fs.writeFile(tempPath, imageBuffer, (err) => {
+                            if (err) {
+                                next(err);
+                            } else {
+                                next();
+                            }
                         });
                     } catch (e) {
-                        mv(originalPath, tempPath, () => {
-                            next();
+                        mv(originalPath, tempPath, (err) => {
+                            if (err) {
+                                next(err);
+                            } else {
+                                next();
+                            }
                         });
                     }
                 } else {
-                    mv(originalPath, tempPath, () => {
-                        next();
+                    mv(originalPath, tempPath, (err) => {
+                        if (err) {
+                            next(err);
+                        } else {
+                            next();
+                        }
                     });
                 }
             } else {
-                fs.copyFile(originalPath, tempPath, () => {
-                    next();
+                fs.copyFile(originalPath, tempPath, (err) => {
+                    if (err) {
+                        next(err);
+                    } else {
+                        next();
+                    }
                 });
             }
         },
@@ -104,14 +120,22 @@ export const set = (req, res) => {
                         originalName = originalName.replace(/\.zip$/, '');
                         tempName = originalName;
                     }
-                    const { width, height } = Mesh.loadSize(`${DataStorage.tmpDir}/${tempName}`, isRotate === 'true' || isRotate === true);
-                    res.send({
-                        originalName: originalName,
-                        uploadName: tempName,
-                        width: width,
-                        height: height
+                    workerManager.loadSize([
+                        { tempName, isRotate }, DataStorage.tmpDir
+                    ], (payload) => {
+                        if (payload.status === 'complete') {
+                            const { width, height } = payload;
+                            res.send({
+                                originalName: originalName,
+                                uploadName: tempName,
+                                width: width,
+                                height: height
+                            });
+                            next();
+                        } else if (payload.status === 'fail') {
+                            next(payload.error);
+                        }
                     });
-                    next();
                 } else {
                     jimp.read(tempPath).then((image) => {
                         res.send({

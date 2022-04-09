@@ -6,7 +6,7 @@ import pkg from '../../package.json';
 import logger from '../lib/logger';
 import { ConfigV1Regex, ConfigV1Suffix } from '../constants';
 
-const log = logger('definition');
+const log = logger('service:definition');
 
 const SETTING_FIELDS = [
     'label', 'description', 'type', 'options', 'unit', 'enabled', 'default_value', 'value', 'enabled',
@@ -18,10 +18,16 @@ const SETTING_FIELDS = [
 const DEFAULT_PRINTING_MATERIAL = [
     'material.pla.def.json',
     'material.pla.black.def.json',
+    'material.pla.blue.def.json',
+    'material.pla.grey.def.json',
+    'material.pla.red.def.json',
+    'material.pla.yellow.def.json',
     'material.abs.def.json',
     'material.abs.black.def.json',
     'material.petg.def.json',
-    'material.petg.black.def.json'
+    'material.petg.black.def.json',
+    'material.petg.red.def.json',
+    'material.petg.blue.def.json',
 ];
 
 const DEFAULT_PREDEFINED = {
@@ -30,11 +36,17 @@ const DEFAULT_PREDEFINED = {
         'quality.normal_quality.def.json',
         'quality.high_quality.def.json',
         'material.pla.def.json',
-        'material.abs.def.json',
-        'material.petg.def.json',
         'material.pla.black.def.json',
+        'material.pla.blue.def.json',
+        'material.pla.grey.def.json',
+        'material.pla.red.def.json',
+        'material.pla.yellow.def.json',
+        'material.abs.def.json',
         'material.abs.black.def.json',
-        'material.petg.black.def.json'
+        'material.petg.def.json',
+        'material.petg.black.def.json',
+        'material.petg.red.def.json',
+        'material.petg.blue.def.json',
     ],
     'cnc': [
         'tool.default_CVbit.def.json',
@@ -139,7 +151,7 @@ export class DefinitionLoader {
             json = JSON.parse(data);
             this.loadJSON(headType, definitionId, json);
         } catch (e) {
-            console.error(`JSON Syntax error of: ${definitionId}`);
+            log.error(`JSON Syntax error of: ${definitionId}`);
         }
     }
 
@@ -163,7 +175,7 @@ export class DefinitionLoader {
             json = JSON.parse(data);
             this.loadJSON(headType, definitionId, json);
         } catch (e) {
-            console.error(`JSON Syntax error of: ${definitionId}`);
+            log.error(`Default JSON Syntax error of: ${definitionId}`);
         }
     }
 
@@ -268,6 +280,7 @@ export class DefinitionLoader {
         this.definitionId = object.definitionId;
         this.name = object.name;
         this.category = object.category;
+        this.i18nCategory = object.i18nCategory;
         this.inherits = object.inherits;
         this.ownKeys = new Set(object.ownKeys);
         this.settings = object.settings;
@@ -280,6 +293,14 @@ export class DefinitionLoader {
 
     updateCategory(category) {
         this.category = category;
+    }
+
+    updateI18nName(i18nName) {
+        this.i18nName = i18nName;
+    }
+
+    updateI18nCategory(i18nCategory) {
+        this.i18nCategory = i18nCategory;
     }
 
     updateSettings(settings) {
@@ -328,7 +349,12 @@ export function loadMaterialDefinitions(headType, configPath) {
     // predefined.push('material.petg.def.json');
 
     const configDir = `${DataStorage.configDir}/${headType}`;
-    const defaultFilenames = fs.readdirSync(`${configDir}/${configPath}`);
+    let defaultFilenames = [];
+    try {
+        defaultFilenames = fs.readdirSync(`${configDir}/${configPath}`);
+    } catch (e) {
+        log.error(e);
+    }
     // Load pre-defined definitions first
     const definitions = [];
     for (const filename of predefined) {
@@ -366,7 +392,12 @@ export function loadQualityDefinitions(headType, configPath) {
     predefined.push('quality.high_quality.def.json');
 
     const configDir = `${DataStorage.configDir}/${headType}`;
-    const defaultFilenames = fs.readdirSync(`${configDir}/${configPath}`);
+    let defaultFilenames = [];
+    try {
+        defaultFilenames = fs.readdirSync(`${configDir}/${configPath}`);
+    } catch (e) {
+        log.error(e);
+    }
     // Load pre-defined definitions first
     const definitions = [];
     for (const filename of predefined) {
@@ -413,7 +444,12 @@ export function loadAllSeriesDefinitions(isDefault = false, headType, series = '
 
     const configDir = isDefault ? `${DataStorage.defaultConfigDir}/${headType}`
         : `${DataStorage.configDir}/${headType}`;
-    const defaultFilenames = fs.readdirSync(`${configDir}/${series}`);
+    let defaultFilenames = [];
+    try {
+        defaultFilenames = fs.readdirSync(`${configDir}/${series}`);
+    } catch (e) {
+        log.error(e);
+    }
 
     if (isDefault) {
         for (const filename of predefined) {
@@ -439,7 +475,7 @@ export function loadAllSeriesDefinitions(isDefault = false, headType, series = '
                     }
                     definitions.push(definitionLoader.toObject());
                 } catch (e) {
-                    console.log('e', e);
+                    log.error(e);
                 }
             }
         }

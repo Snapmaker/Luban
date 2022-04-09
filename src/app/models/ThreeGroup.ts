@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { BufferGeometryUtils } from 'three/examples/jsm/utils/BufferGeometryUtils';
 import BaseModel, { ModelTransformation, ModelInfo } from './ThreeBaseModel';
 import type ModelGroup from './ModelGroup';
 import type ThreeModel from './ThreeModel';
@@ -6,8 +7,6 @@ import ThreeUtils from '../three-extensions/ThreeUtils';
 import { HEAD_PRINTING, BOTH_EXTRUDER_MAP_NUMBER } from '../constants';
 import ConvexGeometry from '../three-extensions/ConvexGeometry';
 
-window.THREE = THREE;
-require('three/examples/js/utils/BufferGeometryUtils');
 
 type ExtruderConfig = {
     infill: string,
@@ -157,7 +156,7 @@ export default class ThreeGroup extends BaseModel {
     mergeGeometriesInGroup(): THREE.BufferGeometry {
         let geometry = new THREE.BufferGeometry();
         if (this.children.length > 0) {
-            geometry = THREE.BufferGeometryUtils.mergeBufferGeometries(this.children.map(model => {
+            geometry = BufferGeometryUtils.mergeBufferGeometries(this.children.map(model => {
                 if (model.meshObject instanceof THREE.Group) {
                     return (model as ThreeGroup).mergeGeometriesInGroup();
                 } else {
@@ -188,7 +187,7 @@ export default class ThreeGroup extends BaseModel {
     findModelInGroupByMesh(mesh: THREE.Mesh) {
         let modelFound = null, hasSelectedModel = false;
         this.traverse((model) => {
-            if (model.meshObject === mesh) {
+            if (model.meshObject === mesh || model.meshObject.children.indexOf(mesh) > -1) {
                 modelFound = model;
             }
         });
@@ -292,8 +291,9 @@ export default class ThreeGroup extends BaseModel {
             ...transformation
         };
 
-        this.children.forEach(model => model.onTransform());
-
+        this.children.forEach(subModel => {
+            subModel.onTransform();
+        });
         return this.transformation;
     }
 
@@ -340,11 +340,27 @@ export default class ThreeGroup extends BaseModel {
         }
     }
 
+    isModelInGroup() {
+        return this.parent && this.parent instanceof ThreeGroup;
+    }
+
     stickToPlate() {
         if (this.sourceType !== '3d') {
             return;
         }
 
+        /**
+         * In order to solve the problem of landing the model in the group when DeleteSupportsOperation3D
+         *
+         * 1. Group two models
+         * 2. Move an intra group model in the z-axis direction
+         * 3. Generate customized support for modified model
+         * 4. Then perform group operation
+         * 5. undo
+         */
+        if (this.meshObject.children.length !== this.children.length) {
+            return;
+        }
         const revert = ThreeUtils.removeObjectParent(this.meshObject);
 
         this.computeBoundingBox();
@@ -576,21 +592,23 @@ export default class ThreeGroup extends BaseModel {
         return result;
     }
 
-    setSupportPosition() { }
+    // setSupportPosition() { }
 
-    generateSupportGeometry() { }
+    // generateSupportGeometry() { }
 
-    setVertexColors() {
-        this.traverse((model) => {
-            model.setVertexColors();
-        });
-    }
+    // setVertexColors() {
+    //     this.traverse((model) => {
+    //         model.setVertexColors();
+    //     });
+    // }
 
-    removeVertexColors() {
-        this.traverse((model) => {
-            model.removeVertexColors();
-        });
-    }
+    // removeVertexColors() {
+    //     this.traverse((model) => {
+    //         model.removeVertexColors();
+    //     });
+    // }
+
+    // autoMarkSupportArea(): void {}
 
     getSerializableConfig(): ModelInfo {
         const {

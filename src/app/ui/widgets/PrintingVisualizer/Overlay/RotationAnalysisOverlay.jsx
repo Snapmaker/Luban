@@ -89,7 +89,7 @@ const Table = React.memo(({ tableColumns, onRowSelect, selectedRow, data, setDat
         if (refThead.current.children[0] && refTbody.current.children[0]) {
             const headCeilWidthArr = Array.prototype.slice.call(refThead.current.children[0].children).map(el => Math.ceil(el.getBoundingClientRect().width));
             const bodyCeilWidthArr = Array.prototype.slice.call(refTbody.current.children[0].children).map(el => Math.ceil(el.getBoundingClientRect().width));
-            const scrollbarVisible = (refScroll.current.getBoundingClientRect().width > refScroll.current.clientWidth);
+            const scrollbarVisible = (Math.floor(refScroll.current.getBoundingClientRect().width) > refScroll.current.clientWidth);
             const newWidthArr = [];
 
             setShowScrollWidth(scrollbarVisible);

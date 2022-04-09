@@ -115,7 +115,7 @@ export class Vector2 {
             const p2 = points[(i + 1) % points.length];
             area += p1.x * p2.y - p1.y * p2.x;
         }
-        return area;
+        return area / 2;
     }
 
     static areaForArray(points) {

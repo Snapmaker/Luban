@@ -1,13 +1,13 @@
 {
-    "version": 2,
-    "category": "Default",
-    "name": "ABS",
-    "i18nName": "key-default_name-ABS",
-    "i18nCategory": "key-default_category-Default",
+    "name": "ABS-White",
+    "version": "4.2.0",
     "inherits": "snapmaker",
+    "category": "ABS",
+    "i18nName": "key-default_name-ABS_White",
+    "i18nCategory": "key-default_category-ABS",
     "overrides": {
         "color": {
-            "default_value": "#000000"
+            "default_value": "#ffffff"
         },
         "material_flow": {
             "default_value": 100
@@ -40,10 +40,10 @@
             "default_value": true
         },
         "retraction_speed": {
-            "default_value": 25
+            "default_value": 60
         },
         "retraction_amount": {
-            "default_value": 6.5
+            "default_value": 5
         },
         "retract_at_layer_change": {
             "default_value": false

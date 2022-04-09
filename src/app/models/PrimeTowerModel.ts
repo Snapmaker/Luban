@@ -6,6 +6,8 @@ import { ModelInfo, ModelTransformation } from './ThreeBaseModel';
 class PrimeTowerModel extends ThreeModel {
     type: string;
 
+    canAttachSupport: boolean;
+
     constructor(initHeight: Number, modelGroup: ModelGroup, transformation?: ModelTransformation) {
         const geometry = new THREE.CylinderBufferGeometry(10, 10, 1, 60);
         const material = new THREE.MeshPhongMaterial({
@@ -33,6 +35,8 @@ class PrimeTowerModel extends ThreeModel {
         };
 
         super(modelInfo, modelGroup);
+        this.canAttachSupport = false;
+
         const positionX = transformation?.positionX || Math.max(modelGroup._bbox.max.x - 50, modelGroup._bbox.min.x - 50);
         const positionY = transformation?.positionY || Math.max(modelGroup._bbox.max.y - 50, modelGroup._bbox.min.y - 50);
         const scaleX = transformation?.scaleX || 1;

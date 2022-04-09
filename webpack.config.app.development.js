@@ -94,7 +94,10 @@ export default {
         rules: [
             {
                 test: /\.worker\.(j|t)s$/,
-                use: { loader: 'worker-loader' }
+                loader: 'worker-loader',
+                options: {
+                    filename: '[name].js',
+                },
             },
             {
                 test: /\.ts$/,
@@ -110,7 +113,7 @@ export default {
                 }
             },
             {
-                test: /\.jsx?$/,
+                test: /\.js(x)?$/,
                 loader: 'babel-loader',
                 exclude: /node_modules/,
                 options: babelConfig

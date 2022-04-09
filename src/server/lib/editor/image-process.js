@@ -2,7 +2,6 @@ import Jimp from '../jimp';
 
 import { pathWithRandomSuffix } from '../random-utils';
 import { convertRasterToSvg } from '../svg-convert';
-import DataStorage from '../../DataStorage';
 
 function bit(x) {
     if (x >= 128) {
@@ -83,7 +82,7 @@ export async function processLaserGreyscale(modelInfo, onProgress) {
         }
     }
     onProgress && onProgress(0.4);
-    const img = await Jimp.read(`${DataStorage.tmpDir}/${uploadName}`);
+    const img = await Jimp.read(`${process.env.Tmpdir}/${uploadName}`);
     onProgress && onProgress(0.6);
     img.alphaToWhite();
     if (invert) {
@@ -131,7 +130,7 @@ export async function processLaserGreyscale(modelInfo, onProgress) {
     }
     onProgress && onProgress(1);
     return new Promise(resolve => {
-        img.write(`${DataStorage.tmpDir}/${outputFilename}`, () => {
+        img.write(`${process.env.Tmpdir}/${outputFilename}`, () => {
             resolve({
                 filename: outputFilename
             });
@@ -149,7 +148,7 @@ export async function processCNCGreyscale(modelInfo, onProgress) {
 
     const outputFilename = pathWithRandomSuffix(uploadName);
 
-    const img = await Jimp.read(`${DataStorage.tmpDir}/${uploadName}`);
+    const img = await Jimp.read(`${process.env.Tmpdir}/${uploadName}`);
     img.alphaToWhite();
     if (invert) {
         img.invert();
@@ -163,7 +162,7 @@ export async function processCNCGreyscale(modelInfo, onProgress) {
         .background(0xffffffff);
     onProgress && onProgress(1);
     return new Promise(resolve => {
-        img.write(`${DataStorage.tmpDir}/${outputFilename}`, () => {
+        img.write(`${process.env.Tmpdir}/${outputFilename}`, () => {
             resolve({
                 filename: outputFilename
             });
@@ -181,7 +180,7 @@ export async function processBW(modelInfo, onProgress) {
     const { density = 4 } = modelInfo.gcodeConfig || {};
 
     const outputFilename = pathWithRandomSuffix(uploadName);
-    const img = await Jimp.read(`${DataStorage.tmpDir}/${uploadName}`);
+    const img = await Jimp.read(`${process.env.Tmpdir}/${uploadName}`);
 
     onProgress && onProgress(0.5);
     img
@@ -201,7 +200,7 @@ export async function processBW(modelInfo, onProgress) {
 
     onProgress && onProgress(1);
     return new Promise(resolve => {
-        img.write(`${DataStorage.tmpDir}/${outputFilename}`, () => {
+        img.write(`${process.env.Tmpdir}/${outputFilename}`, () => {
             resolve({
                 filename: outputFilename
             });
@@ -218,7 +217,7 @@ export async function processHalftone(modelInfo, onProgress) {
     const { npType, npSize, npAngle, threshold } = modelInfo.config;
     const { density = 4 } = modelInfo.gcodeConfig || {};
     const outputFilename = pathWithRandomSuffix(uploadName);
-    const img = await Jimp.read(`${DataStorage.tmpDir}/${uploadName}`);
+    const img = await Jimp.read(`${process.env.Tmpdir}/${uploadName}`);
     onProgress && onProgress(0.6);
     img
         .greyscale()
@@ -231,7 +230,7 @@ export async function processHalftone(modelInfo, onProgress) {
         .alphaToWhite();
     onProgress && onProgress(1);
     return new Promise(resolve => {
-        img.write(`${DataStorage.tmpDir}/${outputFilename}`, () => {
+        img.write(`${process.env.Tmpdir}/${outputFilename}`, () => {
             resolve({
                 filename: outputFilename
             });
@@ -262,7 +261,7 @@ export function processVector(modelInfo, onProgress) {
 
 
 // eslint-disable-next-line no-unused-vars
-function process(modelInfo, onProgress) {
+function _process(modelInfo, onProgress) {
     const { headType, sourceType, mode } = modelInfo;
     if (sourceType === 'raster' || sourceType === 'svg') {
         if (mode === 'greyscale') {

@@ -420,7 +420,7 @@ class MarlinController {
         this.controller.on('temperature', (res) => {
             if (!this.ready) {
                 this.ready = true;
-                this.emitAll('serialport:connected', { state: this.controller.state });
+                this.emitAll('connection:connected', { state: this.controller.state, dataSource, type: 'serial' });
             }
             log.silly(`controller.on('temperature'): source=${this.history.writeSource},
                 line=${JSON.stringify(this.history.writeLine)}, res=${JSON.stringify(res)}`);
@@ -585,7 +585,6 @@ class MarlinController {
             // Marlin state
             if (this.controller.state) {
                 this.state = this.controller.state;
-                // this.emitAll('Marlin:state', this.state);
                 this.emitAll('Marlin:state', { state: this.state });
             }
 
@@ -798,12 +797,9 @@ class MarlinController {
         this.serialport.open((err) => {
             if (err || !this.serialport.isOpen) {
                 log.error(`Error opening serial port "${port}/${dataSource}":`, err);
-                this.emitAll('serialport:open', { port, err });
                 callback(err); // notify error
                 return;
             }
-
-            this.emitAll('serialport:open', { port });
 
             callback(); // register controller
 
@@ -834,7 +830,7 @@ class MarlinController {
                     if (this.handler && !this.ready) {
                         log.error('this machine is not ready');
                         clearInterval(this.handler);
-                        this.emitAll('serialport:connected', { err: 'this machine is not ready' });
+                        this.emitAll('connection:connected', { err: 'this machine is not ready' });
                         this.close();
                     }
                 }, connectionTimeout - 1000);
@@ -870,9 +866,7 @@ class MarlinController {
         // Stop status query
         this.ready = false;
 
-        // this.emitAll('serialport:close', { port });
         // store.unset(`controllers["${port}"]`);
-        this.emitAll('serialport:close', { port });
         store.unset(`controllers["${port}/${dataSource}"]`);
 
         if (this.isOpen()) {
@@ -1032,7 +1026,6 @@ class MarlinController {
             },
             'gcode:start': () => {
                 this.event.trigger('gcode:start');
-
                 // lock screen when running G-code (safety concern)
                 if (this.controller.state.series !== 'SM2' && semver.gte(this.controller.state.version, '2.4.0')) {
                     this.writeln('M1001 L');

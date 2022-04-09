@@ -32,7 +32,7 @@ function CncToolManager({ closeToolManager, shouldSaveToolpath = false, saveTool
         },
         onChangeFileForManager: (event) => {
             const toolFile = event.target.files[0];
-            dispatch(editorActions.onUploadToolDefinition(HEAD_CNC, toolFile));
+            return dispatch(editorActions.onUploadToolDefinition(HEAD_CNC, toolFile));
         },
         exportConfigFile: (definitionForManager) => {
             const definitionId = definitionForManager.definitionId;
@@ -65,14 +65,12 @@ function CncToolManager({ closeToolManager, shouldSaveToolpath = false, saveTool
         updateCategoryName: async (definition, selectedName) => {
             try {
                 const definitionsWithSameCategory = toolDefinitions.filter(d => d.category === definition.category);
-                for (let i = 0; i < definitionsWithSameCategory.length; i++) {
-                    await dispatch(cncActions.updateToolDefinitionName(
-                        true,
-                        definitionsWithSameCategory[i].definitionId,
-                        definitionsWithSameCategory[i].category,
-                        selectedName,
-                    ));
-                }
+                await dispatch(cncActions.updateToolDefinitionName(
+                    true,
+                    definitionsWithSameCategory[0].definitionId,
+                    definitionsWithSameCategory[0].category,
+                    selectedName,
+                ));
                 return null;
             } catch (e) {
                 return Promise.reject(i18n._('key-Cnc/ToolManager-Failed to rename. Name already exists.'));
@@ -120,7 +118,6 @@ function CncToolManager({ closeToolManager, shouldSaveToolpath = false, saveTool
             isOfficialDefinition={isOfficialDefinition}
             optionConfigGroup={optionConfigGroup}
             allDefinitions={allDefinitions}
-            disableCategory={false}
             managerTitle="key-Cnc/ToolManger-Tool Settings"
             activeDefinitionID={activeToolListDefinition.definitionId}
             managerType={HEAD_CNC}

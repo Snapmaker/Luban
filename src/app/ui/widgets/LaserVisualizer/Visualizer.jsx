@@ -355,11 +355,12 @@ class Visualizer extends Component {
             selectedToolPathModelArray.map(model => this.canvas.current.controls.attach(model.meshObject, SELECTEVENT.ADDSELECT));
         }
 
+        // TODO: Occasionally cannot find 'controls', error on finding 'panOffset' of 'undefined'
         if (renderingTimestamp !== this.props.renderingTimestamp) {
             this.canvas.current.renderScene();
             this.canvas.current.setCameraOnTop();
 
-            this.canvas.current.controls.panOffset.add(new THREE.Vector3(this.props.target.x, this.props.target.y, 0));
+            this.canvas.current.controls.panOffset.add(new THREE.Vector3(this.props.target?.x || 0, this.props.target?.y || 0, 0));
             this.canvas.current.controls.updateCamera();
         }
 
@@ -497,7 +498,6 @@ class Visualizer extends Component {
                         cameraInitialTarget={new THREE.Vector3(0, 0, 0)}
                         onSelectModels={this.actions.onSelectModels}
                         onModelAfterTransform={noop}
-                        onModelTransform={noop}
                         showContextMenu={this.showContextMenu}
                         scale={this.props.scale}
                         minScale={MIN_LASER_CNC_CANVAS_SCALE}

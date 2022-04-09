@@ -58,7 +58,7 @@ function Material({ widgetActions }) {
         }
     }
     useEffect(() => {
-        widgetActions.setTitle(i18n._('key-Printing/PrintingConfigurations-Material Settings'));
+        widgetActions.setTitle(i18n._('key-Printing/PrintingConfigurations-Extruder'));
     }, [widgetActions]);
     useEffect(() => {
         const definition = materialDefinitions.find(d => d.definitionId === defaultMaterialId);
@@ -82,6 +82,7 @@ function Material({ widgetActions }) {
         const def = (direction === LEFT_EXTRUDER ? extruderLDefinition : extruderRDefinition);
         def.settings.machine_nozzle_size.default_value = value;
         dispatch(printingActions.updateExtruderDefinition(def, direction));
+        dispatch(projectActions.autoSaveEnvironment(HEAD_PRINTING));
     }
 
     const [diametersOptions, setDiametersOptions] = useState(NOZZLE_SIZE_DEFAULT_OPTIONS);
@@ -196,7 +197,7 @@ function Material({ widgetActions }) {
                 </div>
                 <div className="sm-flex align-center color-black-3 justify-space-between margin-top-8">
                     <span className="display-inline width-88 text-overflow-ellipsis">
-                        {printingToolhead === DUAL_EXTRUDER_TOOLHEAD_FOR_SM2 ? i18n._('key-Printing/PrintingConfigurations-Extruder L') : i18n._('key-Printing/PrintingConfigurations-Extruder')}
+                        {printingToolhead === DUAL_EXTRUDER_TOOLHEAD_FOR_SM2 ? i18n._('key-Printing/PrintingConfigurations-Extruder L') : i18n._('key-Laser/ToolpathParameters-Material')}
                     </span>
                     <div>
                         <Select

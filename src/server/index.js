@@ -22,10 +22,8 @@ const log = logger('init');
 
 const EPS = 1e-6;
 
-
 const createServer = (options, callback) => {
     options = { ...options };
-
     { // verbosity
         const verbosity = options.verbosity;
 
@@ -96,6 +94,8 @@ const createServer = (options, callback) => {
     // Data storage initialize
     DataStorage.init();
 
+    process.env.Tmpdir = DataStorage.tmpDir;
+
     // // Bugfix on Jimp's greyscale. ...moved to server/lib/jimp
 
     const { port = 0, host, backlog } = options;
@@ -113,7 +113,6 @@ const createServer = (options, callback) => {
         route: '/',
         server: () => createApplication()
     });
-
     webappengine({ port, host, backlog, routes })
         .on('ready', (server) => {
             // Start socket service
@@ -122,7 +121,6 @@ const createServer = (options, callback) => {
             // Deal with address bindings
             const realAddress = server.address().address;
             const realPort = server.address().port;
-
             callback && callback(null, {
                 address: realAddress,
                 port: realPort

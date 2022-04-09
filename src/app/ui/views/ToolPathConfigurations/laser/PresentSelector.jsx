@@ -59,11 +59,6 @@ function PresentSelector({ toolDefinitions, setCurrentToolDefinition, setCurrent
             const checkboxAndSelectGroup = {};
             const name = tool.name;
             const detailName = '';
-            // if (tool.settings.angle.default_value !== '180') {
-            //     detailName = `${tool.name} (${tool.settings.angle.default_value}${tool.settings.angle.unit} ${tool.settings.shaft_diameter.default_value}${tool.settings.shaft_diameter.unit})`;
-            // } else {
-            //     detailName = `${tool.name} (${tool.settings.shaft_diameter.default_value}${tool.settings.shaft_diameter.unit})`;
-            // }
             checkboxAndSelectGroup.name = name;
             checkboxAndSelectGroup.definitionId = definitionId;
             checkboxAndSelectGroup.label = `${detailName}`;

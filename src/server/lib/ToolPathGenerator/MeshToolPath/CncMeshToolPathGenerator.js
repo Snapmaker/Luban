@@ -1,6 +1,5 @@
 import EventEmitter from 'events';
 import { BACK, CNC_MESH_SLICE_MODE_LINKAGE, CNC_MESH_SLICE_MODE_ROTATION, FRONT, LEFT, RIGHT } from '../../../constants';
-import DataStorage from '../../../DataStorage';
 import CncReliefToolPathGenerator from '../CncReliefToolPathGenerator';
 import { DIRECTION_FACE_OPTIONS, MeshProcess } from '../../MeshProcess/MeshProcess';
 import XToBToolPath from '../../ToolPath/XToBToolPath';
@@ -95,7 +94,7 @@ export default class CncMeshToolPathGenerator extends EventEmitter {
                     height: res.height
                 }
             };
-            const modelPath = `${DataStorage.tmpDir}/${res.filename}`;
+            const modelPath = `${process.env.Tmpdir}/${res.filename}`;
             const generator = new CncReliefToolPathGenerator(modelInfo, modelPath);
             generator.on('progress', (p) => {
                 this.emit('progress', p * (i + 1) / 4);

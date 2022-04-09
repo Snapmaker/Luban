@@ -2,15 +2,16 @@ import fs from 'fs';
 import path from 'path';
 import childProcess from 'child_process';
 
-import { getPath } from 'snapmaker-luban-engine';
+import lubanEngine, { getPath } from 'snapmaker-luban-engine';
 import logger from '../lib/logger';
 import DataStorage from '../DataStorage';
 import settings from '../config/settings';
 import { DefinitionLoader } from './definition';
-import { generateRandomPathName } from '../../shared/lib/random-utils';
+import { generateRandomPathName, pathWithRandomSuffix } from '../../shared/lib/random-utils';
 import { HEAD_PRINTING, PRINTING_CONFIG_SUBCATEGORY } from '../constants';
+import { convertObjectKeyNameToUnderScoreCase } from '../lib/utils';
 
-const log = logger('print3d-slice');
+const log = logger('service:print3d-slice');
 
 const enginePath = getPath();
 
@@ -46,7 +47,6 @@ function callCuraEngine(modelConfig, supportConfig, outputPath) {
             args.push('-j', supportConfig.configFilePath);
         }
     }
-    console.log(args.join(' '));
     // log.info(`${enginePath} ${args.join(' ')}`);
     return childProcess.spawn(
         enginePath,
@@ -85,7 +85,7 @@ function processGcodeHeaderAfterCuraEngine(gcodeFilePath, boundingBox, thumbnail
         + `;thumbnail: ${thumbnail}\n`
         + `;file_total_lines: ${readFileSync.split('\n').length + 20}\n`
         + `;estimated_time(s): ${printTime}\n`
-        + `;nozzle_0_temperature(°C): ${extruderL.settings.material_print_temperature_layer_0.default_value}\n`
+        + `;nozzle_temperature(°C): ${extruderL.settings.material_print_temperature_layer_0.default_value}\n`
         + `;nozzle_1_temperature(°C): ${isTwoExtruder === 2 ? extruderR?.settings?.material_print_temperature_layer_0?.default_value : 'null'}\n`
         + `;nozzle_0_diameter(mm): ${extruderL.settings.machine_nozzle_size.default_value}\n`
         + `;nozzle_1_diameter(mm): ${isTwoExtruder === 2 ? extruderR?.settings?.machine_nozzle_size?.default_value : 'null'}\n`
@@ -203,6 +203,90 @@ function slice(params, onProgress, onSucceed, onError) {
         }
         log.info(`slice progress closed with code ${code}`);
     });
+}
+
+/**
+ * generate model support
+ * @param {*} modelInfo {
+    "data": [
+        {
+        "upload_name": "30down.stl",
+        "support_stl_filename": "s30down.stl",
+        "config": {
+            "support_angle": 60,
+            "layer_height_0": 0.3,
+            "support_mark_area": false
+        }
+        }
+    ]
+    }
+ * @param {*} onProgress function
+ * @param {*} onSucceed function
+ * @param {*} onError function
+ * @returns null
+ */
+export function generateSupport(modelInfo, onProgress, onSucceed, onError) {
+    const { data } = modelInfo;
+
+    const settingsForSupport = {
+        data: []
+    };
+    for (const d of data) {
+        settingsForSupport.data.push(convertObjectKeyNameToUnderScoreCase(d));
+        const uploadPath = `${DataStorage.tmpDir}/${d.uploadName}`;
+
+        if (!fs.existsSync(uploadPath)) {
+            log.error(`Slice Error: 3d model file does not exist -> ${uploadPath}`);
+            onError(`Slice Error: 3d model file does not exist -> ${uploadPath}`);
+            return;
+        }
+    }
+
+    const settingsFilePath = `${DataStorage.tmpDir}/${pathWithRandomSuffix('settings')}.json`;
+
+    try {
+        fs.writeFileSync(settingsFilePath, JSON.stringify(settingsForSupport));
+    } catch (e) {
+        log.error(`Fail to generate support settings: ${e}`);
+        onError(`Fail to generate support settings: ${e}`);
+        return;
+    }
+
+    lubanEngine.modelSupport(DataStorage.tmpDir, DataStorage.tmpDir, settingsFilePath)
+        .onStderr('data', (res) => {
+            const array = res.toString()
+                .split('\n');
+            array.map((item) => {
+                if (item.length < 10) {
+                    return null;
+                }
+                if (item.indexOf('Progress:') === 0 && item.indexOf('accomplished') === -1) {
+                    const start = item.search('[0-9.]*%');
+                    const end = item.indexOf('%');
+                    sliceProgress = Number(item.slice(start, end));
+                    onProgress(sliceProgress);
+                }
+                return null;
+            });
+        })
+        .end((err, res) => {
+            if (err) {
+                log.error(`fail to generate support: ${err}`);
+                onError(err);
+            } else {
+                const files = [];
+                data.forEach(v => {
+                    files.push({
+                        supportStlFilename: fs.existsSync(`${DataStorage.tmpDir}/${v.supportStlFilename}`) ? v.supportStlFilename : null,
+                        modelID: v.modelID
+                    });
+                });
+                onSucceed({
+                    files
+                });
+                log.info(`slice progress closed with code ${res.code}`);
+            }
+        });
 }
 
 export default slice;

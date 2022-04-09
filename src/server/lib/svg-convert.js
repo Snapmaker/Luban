@@ -7,7 +7,6 @@ import { pathWithRandomSuffix } from './random-utils';
 import logger from './logger';
 import SVGParser from '../../shared/lib/SVGParser';
 import fontManager from '../../shared/lib/FontManager';
-import DataStorage from '../DataStorage';
 import { svgToString } from '../../shared/lib/SVGParser/SvgToString';
 import { unionShapes } from '../../shared/lib/union-shapes';
 
@@ -21,7 +20,6 @@ const TEMPLATE = `<?xml version="1.0" encoding="utf-8"?>
   <%= path %>
 </svg>
 `;
-
 
 /**
  * @param options
@@ -38,7 +36,7 @@ const convertRasterToSvg = (options) => {
     if (/\.svg$/i.test(uploadName)) {
         if (!(/parsed\.svg$/i.test(uploadName))) {
             const newUploadName = uploadName.replace(/\.svg$/i, 'parsed.svg');
-            const uploadPath = `${DataStorage.tmpDir}/${newUploadName}`;
+            const uploadPath = `${process.env.Tmpdir}/${newUploadName}`;
             if (fs.existsSync(uploadPath)) {
                 return Promise.resolve({
                     filename: newUploadName
@@ -54,7 +52,7 @@ const convertRasterToSvg = (options) => {
         }
     }
     const outputFilename = pathWithRandomSuffix(`${uploadName}.svg`);
-    const modelPath = `${DataStorage.tmpDir}/${uploadName}`;
+    const modelPath = `${process.env.Tmpdir}/${uploadName}`;
     const params = {
         threshold: vectorThreshold,
         color: 'black',
@@ -69,7 +67,7 @@ const convertRasterToSvg = (options) => {
                 reject(err);
                 return;
             }
-            const targetPath = `${DataStorage.tmpDir}/${outputFilename}`;
+            const targetPath = `${process.env.Tmpdir}/${outputFilename}`;
             const svgParser = new SVGParser();
 
             const result = await svgParser.parse(svgStr);
@@ -94,10 +92,15 @@ const convertTextToSvg = async (options) => {
 
     const fontObj = await fontManager.getFont(fontFamily, null, style);
     const unitsPerEm = fontObj.unitsPerEm;
+    // https://docs.microsoft.com/en-us/typography/opentype/spec/os2#stypoascender
+    // TODO: The USE_TYPO_METRICS flag (bit 7) of the fsSelection field is used to choose between using sTypo* values or usWin* values for default line metrics.
+    // See fsSelection for additional details.
     const descender = _.isNil(fontObj?.tables?.os2?.sTypoDescender) ? fontObj?.descender : (fontObj?.tables?.os2?.sTypoDescender || 0);
-
+    const ascender = _.isNil(fontObj?.tables?.os2?.sTypoAscender) ? fontObj?.ascender : (fontObj?.tables?.os2?.sTypoAscender || 0);
+    const sTypoLineGap = fontObj?.tables?.os2?.sTypoLineGap || 0;
     // Big enough to being rendered clearly on canvas (still has space for improvements)
-    const estimatedFontSize = Math.round(fontSize / 72 * 25.4 * 10);
+    const realUnitsPerEm = (ascender - descender + sTypoLineGap) > unitsPerEm ? (ascender - descender + sTypoLineGap) : unitsPerEm;
+    const estimatedFontSize = (fontSize / 72 * 25.4 * 10) * (realUnitsPerEm) / unitsPerEm;
 
     const lines = text.split('\n');
     const numberOfLines = lines.length;
@@ -112,7 +115,8 @@ const convertTextToSvg = async (options) => {
     }
 
     // We use descender line as the bottom of a line, first line with lineHeight = 1
-    let y = (unitsPerEm + descender) * estimatedFontSize / unitsPerEm, x = 0;
+    let y = (ascender - descender + sTypoLineGap) > unitsPerEm ? estimatedFontSize
+            : (realUnitsPerEm + descender) / realUnitsPerEm * estimatedFontSize, x = 0;
     const fullPath = new opentype.Path();
     for (let i = 0; i < numberOfLines; i++) {
         const line = lines[i];
@@ -133,24 +137,25 @@ const convertTextToSvg = async (options) => {
     // Calculate size and render SVG template
     const boundingBox = fullPath.getBoundingBox();
     const width = boundingBox.x2 - boundingBox.x1;
-    const height = estimatedFontSize + estimatedFontSize * lineHeight * (numberOfLines - 1);
+    // const height = estimatedFontSize + estimatedFontSize * lineHeight * (numberOfLines - 1);
+    const height = boundingBox.y2 - boundingBox.y1;
 
     const svgString = _.template(TEMPLATE)({
         path: fullPath.toSVG(),
         x0: boundingBox.x1,
-        y0: 0,
+        y0: boundingBox.y1,
         width: width,
         height: height
     });
     const svgParser = new SVGParser();
     // Don't delete, for debugging
-    // const targetPath1 = `${DataStorage.tmpDir}/${uploadName}_new.svg`;
+    // const targetPath1 = `${process.env.Tmpdir}/${uploadName}_new.svg`;
     // fs.writeFileSync(targetPath1, svgString);
     const result = await svgParser.parse(svgString);
     unionShapes(result.shapes);
 
     return new Promise((resolve, reject) => {
-        const targetPath = `${DataStorage.tmpDir}/${uploadName}`;
+        const targetPath = `${process.env.Tmpdir}/${uploadName}`;
         fs.writeFile(targetPath, svgToString(result), (err) => {
             if (err) {
                 log.error(err);
@@ -185,7 +190,7 @@ const convertOneLineTextToSvg = async (options) => {
         height: bbox.height
     });
     return new Promise((resolve, reject) => {
-        const targetPath = `${DataStorage.tmpDir}/${uploadName}`;
+        const targetPath = `${process.env.Tmpdir}/${uploadName}`;
         fs.writeFile(targetPath, svgString, (err) => {
             if (err) {
                 log.error(err);
@@ -201,6 +206,5 @@ const convertOneLineTextToSvg = async (options) => {
         });
     });
 };
-
 
 export { convertRasterToSvg, convertTextToSvg, convertOneLineTextToSvg };

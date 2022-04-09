@@ -298,7 +298,7 @@ function Control({ widgetId, widgetActions: _widgetActions }) {
     };
 
     const controllerEvents = {
-        'serialport:close': (options) => {
+        'connection:close': (options) => {
             const { dataSource: _dataSource } = options;
             if (_dataSource !== dataSource) {
                 return;

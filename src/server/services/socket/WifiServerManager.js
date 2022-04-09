@@ -3,10 +3,12 @@ import EventEmitter from 'events';
 import zipWith from 'lodash/zipWith';
 import { createSocket } from 'dgram';
 import logger from '../../lib/logger';
+import { CONNECTION_TYPE_WIFI } from '../../constants';
 
 const log = logger('lib:deviceManager');
 
 const DISCOVER_SERVER_PORT = 20054;
+let intervalHandle = null;
 
 
 /**
@@ -53,9 +55,11 @@ class WifiServerManager extends EventEmitter {
             }
 
             this.devices.push(device);
-
             for (const socket of this.sockets) {
-                socket.emit('http:discover', this.devices);
+                socket.emit('machine:discover', {
+                    devices: this.devices,
+                    type: CONNECTION_TYPE_WIFI
+                });
             }
         });
     };
@@ -75,7 +79,6 @@ class WifiServerManager extends EventEmitter {
         const ifaces = os.networkInterfaces();
         for (const key of Object.keys(ifaces)) {
             const iface = ifaces[key];
-
             for (const address of iface) {
                 if (address.family === 'IPv4' && !address.internal) {
                     const broadcastAddress = zipWith(
@@ -105,10 +108,12 @@ class WifiServerManager extends EventEmitter {
 
     onConnection = (socket) => {
         this.sockets.push(socket);
+        intervalHandle = setInterval(this.refreshDevices, 1000);
     };
 
     onDisconnection = (socket) => {
         this.sockets = this.sockets.filter(e => e !== socket);
+        clearInterval(intervalHandle);
     }
 }
 

@@ -1,6 +1,6 @@
 {
   "name": "snapmaker-luban",
-  "version": "4.2.0",
+  "version": "4.2.2",
   "description": "Snapmaker 3-in-1 Software for 3D Printing, Laser Engraving and CNC Cutting.",
   "homepage": "https://github.com/Snapmaker/Luban",
   "author": "Snapmaker Dev Team <whimsycwd@snapmaker.com>",
@@ -63,8 +63,8 @@
     "serve-favicon": "2.5.0",
     "session-file-store": "1.1.2",
     "shortid": "2.2.16",
-    "snapmaker-luban-engine": "0.7.0",
-    "socket.io": "2.2.0",
+    "snapmaker-luban-engine": "^0.8.0",
+    "socket.io": "4.0.2",
     "socketio-jwt": "4.5.1",
     "spawn-default-shell": "2.0.0",
     "static-eval": "2.0.5",
@@ -76,6 +76,7 @@
     "watch": "1.0.2",
     "webappengine": "1.2.0",
     "winston": "3.0.1",
+    "workerpool": "6.1.5",
     "xml2js": "0.4.23"
   }
 }

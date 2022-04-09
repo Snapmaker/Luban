@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { useDispatch, useSelector, shallowEqual } from 'react-redux';
 import PropTypes from 'prop-types';
 import classNames from 'classnames';
-import _ from 'lodash';
+import { isNull, cloneDeep } from 'lodash';
 import i18n from '../../../lib/i18n';
 import { actions as editorActions } from '../../../flux/editor';
 import Anchor from '../../components/Anchor';
@@ -92,7 +92,6 @@ function getFastEditSettingsKeys(toolPath) {
 function ToolPathFastConfigurations({ setEditingToolpath, headType, toolpath }) {
     const activeToolListDefinition = useSelector(state => state[headType]?.activeToolListDefinition, shallowEqual);
     const toolDefinitions = useSelector(state => state[headType]?.toolDefinitions, shallowEqual);
-
     const dispatch = useDispatch();
     const [toolPath, setToolPath] = useState(toolpath);
     const [currentToolDefinition, setCurrentToolDefinition] = useState(activeToolListDefinition);
@@ -145,7 +144,7 @@ function ToolPathFastConfigurations({ setEditingToolpath, headType, toolpath }) 
     }
     const updateActiveToolDefinition = (currentToolPath) => {
         const { toolParams, gcodeConfig } = currentToolPath;
-        const activeToolDefinition = _.cloneDeep(activeToolListDefinition);
+        const activeToolDefinition = cloneDeep(activeToolListDefinition);
         const oldTooldefinition = toolDefinitions?.find((d) => {
             return d.definitionId === toolParams.definitionId;
         });
@@ -185,7 +184,7 @@ function ToolPathFastConfigurations({ setEditingToolpath, headType, toolpath }) 
 
     useEffect(() => {
         setToolPath(toolpath);
-        if (!_.isNull(toolpath)) {
+        if (!isNull(toolpath)) {
             updateActiveToolDefinition(toolpath);
         }
     }, [toolpath]);
@@ -322,10 +321,10 @@ function ToolPathFastConfigurations({ setEditingToolpath, headType, toolpath }) 
         const { gcodeConfig } = toolPath;
         let allDefinition = {};
         if (headType === HEAD_CNC && activeToolListDefinition) {
-            allDefinition = _.cloneDeep(CNC_DEFAULT_GCODE_PARAMETERS_DEFINITION);
+            allDefinition = cloneDeep(CNC_DEFAULT_GCODE_PARAMETERS_DEFINITION);
         }
         if (headType === HEAD_LASER && activeToolListDefinition) {
-            allDefinition = _.cloneDeep(LASER_DEFAULT_GCODE_PARAMETERS_DEFINITION);
+            allDefinition = cloneDeep(LASER_DEFAULT_GCODE_PARAMETERS_DEFINITION);
         }
         Object.keys(allDefinition).forEach((key) => {
             allDefinition[key].default_value = gcodeConfig[key];

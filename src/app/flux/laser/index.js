@@ -1,5 +1,5 @@
+/* eslint-disable import/no-cycle */
 import * as THREE from 'three';
-// import { DATA_PREFIX, EPSILON } from '../../constants';
 import { cloneDeep } from 'lodash';
 import {
     COORDINATE_MODE_BOTTOM_CENTER,
@@ -28,7 +28,6 @@ import definitionManager from '../manager/DefinitionManager';
 import i18n from '../../lib/i18n';
 import { timestamp } from '../../../shared/lib/random-utils';
 import ProgressStatesManager, { STEP_STAGE } from '../../lib/manager/ProgressManager';
-// import { valueOf } from '../../lib/contants-utils';
 
 const initModelGroup = new ModelGroup('laser');
 const operationHistory = new OperationHistory();
@@ -264,6 +263,7 @@ export const actions = {
             definitionsWithSameCategory = toolDefinitions.filter(d => d.category === oldName);
             for (const definition of definitionsWithSameCategory) {
                 definition.category = newName;
+                definition.i18nCategory = '';
                 await definitionManager.updateDefinition(definition);
                 // find the old tool category definition and replace it
                 const isReplacedDefinition = (d) => d.definitionId === definition.definitionId;
@@ -309,6 +309,7 @@ export const actions = {
         for (let i = 0; i < definitionsWithSameCategory.length; i++) {
             const newDefinition = definitionsWithSameCategory[i];
             newDefinition.category = newCategoryName;
+            newDefinition.i18nCategory = '';
             const definitionId = `${newDefinition.definitionId}${timestamp()}`;
             newDefinition.definitionId = definitionId;
             const createdDefinition = await definitionManager.createDefinition(newDefinition);

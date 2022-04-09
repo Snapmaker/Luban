@@ -81,7 +81,8 @@ export default {
         // https://github.com/expressjs/morgan
         'morgan': {
             // The ':id' token is defined at app.js
-            format: ':id \x1b[1m:method\x1b[0m \x1b[33m:url\x1b[0m \x1b[34m:status\x1b[0m :response-time ms'
+            format: ':date[iso] - \x1b[1m:method\x1b[0m \x1b[33m:url\x1b[0m \x1b[34m:status\x1b[0m :response-time ms'
+            // format: ':id \x1b[1m:method\x1b[0m \x1b[33m:url\x1b[0m \x1b[34m:status\x1b[0m :response-time ms'
         },
         // https://github.com/expressjs/compression
         'compression': {

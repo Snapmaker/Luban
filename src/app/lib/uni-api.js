@@ -6,8 +6,9 @@ import events from 'events';
 import path from 'path';
 import i18n from './i18n';
 import pkg from '../../../package.json';
+import { DATA_PATH } from '../constants';
 
-class AppbarMenuEvent extends events.EventEmitter {}
+class AppbarMenuEvent extends events.EventEmitter { }
 
 const menuEvent = new AppbarMenuEvent();
 /**
@@ -68,6 +69,7 @@ const Update = {
             ipcRenderer.send('checkForUpdate');
         }
     },
+    // TODO: useless
     downloadUpdate(downloadInfo, oldVersion, shouldCheckForUpdate) {
         if (isElectron()) {
             const { remote, ipcRenderer } = window.require('electron');
@@ -174,13 +176,14 @@ const File = {
             callback && callback('web');
         }
     },
-    save(targetFile, tmpFile) {
+    save(targetFile, tmpFile, callback) {
         if (isElectron()) {
             const fs = window.require('fs');
             const app = window.require('electron').remote.app;
             tmpFile = app.getPath('userData') + tmpFile;
 
             fs.copyFileSync(tmpFile, targetFile);
+            callback && callback();
         }
     },
     popFile() {
@@ -198,34 +201,35 @@ const File = {
      * @param tmpFile - temporary file path, e.g. "/Tmp/xxx.stl"
      */
     // export file for project file
-    async saveAs(targetFile, tmpFile, callback = undefined) {
+    saveAs(targetFile, tmpFile, callback = undefined) {
         if (isElectron()) {
             const fs = window.require('fs');
             const { app } = window.require('electron').remote;
             const defaultPath = path.resolve(app.getPath('downloads'), path.basename(tmpFile));
             tmpFile = app.getPath('userData') + tmpFile;
             // eslint-disable-next-line no-use-before-define
-            const saveDialogReturnValue = await Dialog.showSaveDialog({
+            Dialog.showSaveDialog({
                 title: targetFile,
                 defaultPath,
                 filters: [{ name: 'files', extensions: [targetFile.split('.')[1]] }]
+            }).then((saveDialogReturnValue) => {
+                targetFile = saveDialogReturnValue.filePath;
+                if (!targetFile) throw new Error('select file canceled');
+
+                const file = { path: targetFile, name: window.require('path').basename(targetFile) };
+
+                fs.copyFileSync(tmpFile, targetFile);
+                // const menu = window.require('electron').remote.require('./electron-app/Menu');
+                // menu.addRecentFile(file);
+                const { ipcRenderer } = window.require('electron');
+                ipcRenderer.send('add-recent-file', file);
+
+                callback && callback('electron', targetFile, file);
             });
-            targetFile = saveDialogReturnValue.filePath;
-            if (!targetFile) throw new Error('select file canceled');
-
-            const file = { path: targetFile, name: window.require('path').basename(targetFile) };
-
-            fs.copyFileSync(tmpFile, targetFile);
-            // const menu = window.require('electron').remote.require('./electron-app/Menu');
-            // menu.addRecentFile(file);
-            const { ipcRenderer } = window.require('electron');
-            ipcRenderer.send('add-recent-file', file);
-
-            callback && callback('electron', targetFile);
-            return file;
+            return null;
         } else {
             request
-                .get(`/data${tmpFile}`)
+                .get(`/${DATA_PATH}${tmpFile}`)
                 .responseType('blob')
                 .end((err, res) => {
                     FileSaver.saveAs(res.body, targetFile, true);
@@ -235,9 +239,21 @@ const File = {
         }
     },
 
+    resetProfile(profile) {
+        // Rename the exported profile name, which is consistent with the current language
+        profile.name = profile.i18nName ? i18n._(profile.i18nName) : profile.name;
+        // Reset category and i18n of the exported profile
+        profile.category = '';
+        profile.i18nCategory = '';
+        profile.i18nName = '';
+        return JSON.stringify(profile, null, 4);
+    },
+
     // export file for 3dp/laser/cnc
     async exportAs(targetFile, tmpFile, renderGcodeFileName = null, callback = undefined) {
+        let isProfileConfig = false;
         if (isNil(renderGcodeFileName)) {
+            isProfileConfig = true;
             renderGcodeFileName = targetFile;
         } else {
             if (renderGcodeFileName.slice(renderGcodeFileName.length - 9) === '.def.json') {
@@ -262,19 +278,35 @@ const File = {
             if (!targetFile) throw new Error('export file canceled');
 
             const file = { path: targetFile, name: renderGcodeFileName };
-            fs.copyFileSync(tmpFile, targetFile);
+            if (isProfileConfig) {
+                const txt = fs.readFileSync(tmpFile, 'utf8');
+                const newProfile = this.resetProfile(JSON.parse(txt));
+                fs.writeFileSync(targetFile, newProfile, 'utf8');
+            } else {
+                fs.copyFileSync(tmpFile, targetFile);
+            }
 
             callback && callback('electron', targetFile);
             return file;
         } else {
-            request
-                .get(`/data${tmpFile}`)
-                .responseType('blob')
-                .end((err, res) => {
-                    // FileSaver.saveAs(res.body, targetFile, true);
-                    FileSaver.saveAs(res.body, renderGcodeFileName, true);
-                    callback && callback('web');
-                });
+            if (isProfileConfig) {
+                request
+                    .get(`/${DATA_PATH}${tmpFile}`)
+                    .end((err, res) => {
+                        const json = res.body;
+                        const newProfile = this.resetProfile(json);
+                        FileSaver.saveAs(new Blob([newProfile]), renderGcodeFileName, true);
+                        callback && callback('web');
+                    });
+            } else {
+                request
+                    .get(`/${DATA_PATH}${tmpFile}`)
+                    .responseType('blob')
+                    .end((err, res) => {
+                        FileSaver.saveAs(res.body, renderGcodeFileName, true);
+                        callback && callback('web');
+                    });
+            }
             return null;
         }
     },
@@ -428,9 +460,11 @@ const Window = {
     },
     reload() {
         window.location.href = '/';
+        Window.setOpenedFile('');
     },
     forceReload() {
         window.location.href = '/';
+        Window.setOpenedFile('');
     },
     viewInBrowser() {
         if (isElectron()) {

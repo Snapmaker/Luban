@@ -6,7 +6,6 @@ import earcut from 'earcut';
 import * as THREE from 'three';
 import { MeshProcess } from './MeshProcess';
 import { pathWithRandomSuffix } from '../../../shared/lib/random-utils';
-import DataStorage from '../../DataStorage';
 import { svgToStringForCut } from '../../../shared/lib/SVGParser/SvgToString';
 import STLExporter from '../../../shared/lib/STL/STLExporter';
 
@@ -133,7 +132,7 @@ class STLToSvgStack {
 
             if (isWrite) {
                 const svgStr = svgToStringForCut(svgFileState.svg);
-                fs.writeFileSync(`${DataStorage.tmpDir}/${this.outputFilename}_${svgFileState.index}.svg`, svgStr, 'utf8');
+                fs.writeFileSync(`${process.env.Tmpdir}/${this.outputFilename}_${svgFileState.index}.svg`, svgStr, 'utf8');
 
                 result.push({
                     width: width,
@@ -162,15 +161,19 @@ class STLToSvgStack {
             const polygonsPart = slicerLayer.polygonsPart;
 
             svgFileState.svg.shapes[0].paths.push({
-                points: [[svgFileState.startX, svgFileState.startY], [svgFileState.startX + boundingBoxX, svgFileState.startY],
+                points: [
+                    [svgFileState.startX, svgFileState.startY], [svgFileState.startX + boundingBoxX, svgFileState.startY],
                     [svgFileState.startX + boundingBoxX, svgFileState.startY + boundingBoxY],
-                    [svgFileState.startX, svgFileState.startY + boundingBoxY], [svgFileState.startX, svgFileState.startY]]
+                    [svgFileState.startX, svgFileState.startY + boundingBoxY], [svgFileState.startX, svgFileState.startY]
+                ]
             });
 
             svgFileState.svg.shapes[0].paths.push({
-                points: [[svgFileState.startX + aabb.length.x + 2, svgFileState.startY + 2], [svgFileState.startX + boundingBoxX - 2, svgFileState.startY + 2],
+                points: [
+                    [svgFileState.startX + aabb.length.x + 2, svgFileState.startY + 2], [svgFileState.startX + boundingBoxX - 2, svgFileState.startY + 2],
                     [svgFileState.startX + boundingBoxX - 2, svgFileState.startY + boundingBoxY - 2],
-                    [svgFileState.startX + aabb.length.x + 2, svgFileState.startY + boundingBoxY - 2], [svgFileState.startX + aabb.length.x + 2, svgFileState.startY + 2]]
+                    [svgFileState.startX + aabb.length.x + 2, svgFileState.startY + boundingBoxY - 2], [svgFileState.startX + aabb.length.x + 2, svgFileState.startY + 2]
+                ]
             });
 
             // Set digits
@@ -272,7 +275,7 @@ class STLToSvgStack {
 
         const mesh = new THREE.Mesh(bufferGeometry, new THREE.MeshBasicMaterial());
 
-        fs.writeFileSync(`${DataStorage.tmpDir}/${this.outputFilename}`, new STLExporter().parse(mesh, { binary: true }), 'utf8');
+        fs.writeFileSync(`${process.env.Tmpdir}/${this.outputFilename}`, new STLExporter().parse(mesh, { binary: true }), 'utf8');
 
         return {
             width: aabb.length.x,

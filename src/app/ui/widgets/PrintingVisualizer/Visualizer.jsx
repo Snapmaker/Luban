@@ -4,7 +4,7 @@ import { connect } from 'react-redux';
 import { withRouter } from 'react-router';
 // import isEqual from 'lodash/isEqual';
 import { isEqual, find, some } from 'lodash';
-import { Vector3, Box3 } from 'three';
+import { Vector3, Box3, Quaternion, Math as ThreeMath } from 'three';
 // , MeshPhongMaterial, DoubleSide, Mesh, CylinderBufferGeometry
 
 import { shortcutActions, priorities, ShortcutManager } from '../../../lib/shortcut';
@@ -18,6 +18,7 @@ import modal from '../../../lib/modal';
 import ProgressBar from '../../components/ProgressBar';
 import ContextMenu from '../../components/ContextMenu';
 import { Button } from '../../components/Buttons';
+import { NumberInput as Input } from '../../components/Input';
 import Canvas from '../../components/SMCanvas';
 import { actions as printingActions } from '../../../flux/printing';
 import { actions as operationHistoryActions } from '../../../flux/operation-history';
@@ -28,6 +29,8 @@ import VisualizerInfo from './VisualizerInfo';
 import PrintableCube from './PrintableCube';
 import styles from './styles.styl';
 import { STEP_STAGE } from '../../../lib/manager/ProgressManager';
+
+const initQuaternion = new Quaternion();
 
 class Visualizer extends PureComponent {
     static propTypes = {
@@ -71,8 +74,8 @@ class Visualizer extends PureComponent {
         updateSelectedModelTransformation: PropTypes.func.isRequired,
         duplicateSelectedModel: PropTypes.func.isRequired,
         setTransformMode: PropTypes.func.isRequired,
-        saveSupport: PropTypes.func.isRequired,
-        clearAllManualSupport: PropTypes.func.isRequired,
+        moveSupportBrush: PropTypes.func.isRequired,
+        applySupportBrush: PropTypes.func.isRequired,
         autoRotateSelectedModel: PropTypes.func.isRequired,
         layFlatSelectedModel: PropTypes.func.isRequired,
         scaleToFitSelectedModel: PropTypes.func.isRequired,
@@ -84,12 +87,10 @@ class Visualizer extends PureComponent {
         hidePrimeTower: PropTypes.func,
         showPrimeTower: PropTypes.func,
         printingToolhead: PropTypes.string,
-        stopArea: PropTypes.object
-    };
-
-    state = {
-        isSupporting: false,
-        defaultSupportSize: { x: 5, y: 5 },
+        stopArea: PropTypes.object,
+        rotateAxis: PropTypes.string,
+        rotateInputValue: PropTypes.number,
+        displayModel: PropTypes.func
     };
 
     printableArea = null;
@@ -130,12 +131,9 @@ class Visualizer extends PureComponent {
             this.props.recordModelBeforeTransform(this.props.modelGroup);
         },
         onModelAfterTransform: (transformMode) => {
-            this.actions.onModelTransform();
+            this.props.onModelTransform();
             this.props.recordModelAfterTransform(transformMode, this.props.modelGroup);
             this.props.onModelAfterTransform();
-        },
-        onModelTransform: () => {
-            this.props.onModelTransform();
         },
         // context menu
         centerSelectedModel: () => {
@@ -196,59 +194,47 @@ class Visualizer extends PureComponent {
             this.props.setTransformMode(value);
             this.canvas.current.setTransformMode(value);
         },
+        setHoverFace: (value) => {
+            if (!this.props.selectedModelArray.length) return;
+            this.canvas.current.setHoverFace(value);
+            this.canvas.current.renderScene();
+        },
         onRotationPlacementSelect: (userData) => {
             this.props.setRotationPlacementFace(userData);
+        },
+        rotateByDirection: (rotateAxis, rotateAngle) => {
+            this.props.recordModelBeforeTransform(this.props.modelGroup);
+            const _rotateAxis = new Vector3(rotateAxis === 'X' ? 1 : 0, rotateAxis === 'Y' ? 1 : 0, rotateAxis === 'Z' ? 1 : 0);
+            const quaternion = new Quaternion().setFromAxisAngle(_rotateAxis, ThreeMath.degToRad(rotateAngle));
+            initQuaternion.copy(this.props.selectedModelArray[0].meshObject.quaternion);
+            this.props.selectedModelArray[0].meshObject.quaternion.copy(quaternion).multiply(initQuaternion).normalize();
+            this.props.modelGroup.onModelAfterTransform();
+            this.props.recordModelAfterTransform('rotate', this.props.modelGroup);
+            this.props.destroyGcodeLine();
+            this.props.displayModel();
         }
     };
 
     // all support related actions used in VisualizerModelTransformation & canvas.controls & contextmenu
     supportActions = {
-        isSupporting: () => {
-            return this.state.isSupporting;
-        },
         startSupportMode: () => {
             this.props.destroyGcodeLine();
             this.actions.setTransformMode('support');
-            this.setState({ isSupporting: true });
             this.canvas.current.startSupportMode();
-            const model = this.props.selectedModelArray[0];
-            model.setVertexColors();
+            // const model = this.props.selectedModelArray[0];
+            // model.setVertexColors();
         },
         stopSupportMode: () => {
-            this.setState({ isSupporting: false });
-            this.supportActions.saveSupport();
+            // this.supportActions.saveSupport();
             this.canvas.current.stopSupportMode();
-            const model = this.props.selectedModelArray[0];
-            model && model.removeVertexColors();
+            // const model = this.props.selectedModelArray[0];
+            // model && model.removeVertexColors();
         },
-        moveSupport: (position) => {
-            const { modelGroup } = this.props;
-            if (!this._model) {
-                this._model = modelGroup.addSupportOnSelectedModel(this.state.defaultSupportSize);
-            }
-            this._model.setSupportPosition(position);
+        moveSupport: (raycastResult) => {
+            this.props.moveSupportBrush(raycastResult);
         },
-        saveSupport: () => {
-            if (this._model) {
-                this.props.saveSupport(this._model);
-                this._model = null;
-            }
-        },
-        setDefaultSupportSize: (size) => {
-            let defaultSupportSize = this.state.defaultSupportSize;
-            defaultSupportSize = { ...defaultSupportSize, ...size };
-            this.setState({ defaultSupportSize });
-        },
-        clearSelectedSupport: () => {
-            const { modelGroup } = this.props;
-            // support can only be selected with supports
-            const isSupportSelected = modelGroup.selectedModelArray.length > 0 && modelGroup.selectedModelArray[0].supportTag === true;
-            if (isSupportSelected) {
-                this.props.removeSelectedModel();
-            }
-        },
-        clearAllManualSupport: () => {
-            this.props.clearAllManualSupport();
+        applyBrush: (raycastResult) => {
+            this.props.applySupportBrush(raycastResult);
         }
     };
 
@@ -324,7 +310,7 @@ class Visualizer extends PureComponent {
         this.props.clearOperationHistory();
         this.canvas.current.resizeWindow();
         this.canvas.current.enable3D();
-        this.setState({ defaultSupportSize: { x: 5, y: 5 } });
+        // this.setState({ defaultSupportSize: { x: 5, y: 5 } });
         ShortcutManager.register(this.shortcutHandler);
         window.addEventListener(
             'hashchange',
@@ -344,8 +330,11 @@ class Visualizer extends PureComponent {
             this.canvas.current.setTransformMode(transformMode);
             if (transformMode === 'rotate-placement') {
                 this.canvas.current.setSelectedModelConvexMeshGroup(modelGroup.selectedModelConvexMeshGroup);
-            } else if (transformMode !== 'support') {
-                this.supportActions.stopSupportMode();
+            } else if (transformMode !== 'support-edit') {
+                // this.supportActions.stopSupportMode();
+                this.canvas.current.stopSupportMode();
+            } else if (transformMode === 'support-edit') {
+                this.canvas.current.startSupportMode();
             }
         }
         if (selectedModelArray !== prevProps.selectedModelArray) {
@@ -491,10 +480,10 @@ class Visualizer extends PureComponent {
                     updateBoundingBox={this.actions.updateBoundingBox}
                     setTransformMode={this.actions.setTransformMode}
                     supportActions={this.supportActions}
-                    defaultSupportSize={this.state.defaultSupportSize}
-                    isSupporting={this.state.isSupporting}
                     scaleToFitSelectedModel={this.actions.scaleToFitSelectedModel}
                     autoRotateSelectedModel={this.actions.autoRotateSelectedModel}
+                    setHoverFace={this.actions.setHoverFace}
+                    arrangeAllModels={this.actions.arrangeAllModels}
                 />
                 <div className={styles['visualizer-bottom-left']}>
                     <VisualizerBottomLeft actions={this.actions} />
@@ -510,7 +499,7 @@ class Visualizer extends PureComponent {
 
                 <ProgressBar tips={notice} progress={progress * 100} />
 
-                <div className={styles['canvas-wrapper']}>
+                <div className={styles['canvas-wrapper']} style={{ position: 'relative' }}>
                     <Canvas
                         ref={this.canvas}
                         inProgress={inProgress}
@@ -527,11 +516,22 @@ class Visualizer extends PureComponent {
                         onModelAfterTransform={this.actions.onModelAfterTransform}
                         onRotationPlacementSelect={this.actions.onRotationPlacementSelect}
                         onModelBeforeTransform={this.actions.onModelBeforeTransform}
-                        onModelTransform={this.actions.onModelTransform}
                         showContextMenu={this.showContextMenu}
                         primeTowerSelected={primeTowerSelected}
                         transformMode={transformMode}
                     />
+                    <div className={`canvas-input position-ab border-${this.props.rotateAxis} translate-animation-3`} id="rotate-input-control" style={{ display: 'none' }}>
+                        <Input
+                            size="small"
+                            placeholder={i18n._('key-Printing/LeftBar-Enter an degree')}
+                            value={this.props.rotateInputValue}
+                            suffix="°"
+                            allowUndefined
+                            onPressEnter={(event) => {
+                                this.actions.rotateByDirection(this.props.rotateAxis.toUpperCase(), event.target.value);
+                            }}
+                        />
+                    </div>
                 </div>
                 <ContextMenu
                     ref={this.contextMenuRef}
@@ -687,7 +687,7 @@ const mapDispatchToProps = (dispatch) => ({
     redo: () => dispatch(printingActions.redo(HEAD_PRINTING)),
     removeSelectedModel: () => dispatch(printingActions.removeSelectedModel()),
     removeAllModels: () => dispatch(printingActions.removeAllModels()),
-    arrangeAllModels: () => dispatch(printingActions.arrangeAllModels()),
+    arrangeAllModels: (angle = 45, offset = 1, padding = 0) => dispatch(printingActions.arrangeAllModels(angle, offset, padding)),
     onModelTransform: () => dispatch(printingActions.onModelTransform()),
     onModelAfterTransform: () => dispatch(printingActions.onModelAfterTransform()),
     updateSelectedModelTransformation: (transformation, newUniformScalingState) => {
@@ -699,11 +699,12 @@ const mapDispatchToProps = (dispatch) => ({
     autoRotateSelectedModel: () => dispatch(printingActions.autoRotateSelectedModel()),
     scaleToFitSelectedModel: () => dispatch(printingActions.scaleToFitSelectedModel()),
     setTransformMode: (value) => dispatch(printingActions.setTransformMode(value)),
-    clearAllManualSupport: () => dispatch(printingActions.clearAllManualSupport()),
-    saveSupport: (model) => dispatch(printingActions.saveSupport(model)),
+    moveSupportBrush: (raycastResult) => dispatch(printingActions.moveSupportBrush(raycastResult)),
+    applySupportBrush: (raycastResult) => dispatch(printingActions.applySupportBrush(raycastResult)),
     setRotationPlacementFace: (userData) => dispatch(printingActions.setRotationPlacementFace(userData)),
     hidePrimeTower: (targetModel) => dispatch(printingActions.hideSelectedModel(targetModel)),
-    showPrimeTower: (targetModel) => dispatch(printingActions.showSelectedModel(targetModel))
+    showPrimeTower: (targetModel) => dispatch(printingActions.showSelectedModel(targetModel)),
+    displayModel: () => dispatch(printingActions.displayModel())
 });
 
 export default withRouter(connect(mapStateToProps, mapDispatchToProps)(Visualizer));
