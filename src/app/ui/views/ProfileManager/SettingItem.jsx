@@ -11,7 +11,7 @@ import TipTrigger from '../../components/TipTrigger';
 import SvgIcon from '../../components/SvgIcon';
 import Popover from '../../components/Popover';
 
-const SettingItem = React.forwardRef(({ definitionKey, settings, isDefaultDefinition = () => true, onChangeDefinition, defaultValue, styleSize = 'large', managerType, officalDefinition  }, ref) => {
+const SettingItem = React.forwardRef(({ definitionKey, settings, isDefaultDefinition = () => true, onChangeDefinition, defaultValue, styleSize = 'large', managerType, officalDefinition }, ref) => {
     const [showColor, setShowColor] = useState(false);
 
     const setting = settings[definitionKey];
