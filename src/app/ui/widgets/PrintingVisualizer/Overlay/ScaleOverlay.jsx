@@ -21,7 +21,7 @@ const ScaleOverlay = React.memo(({
     const selectedModelArray = useSelector(state => state?.printing?.modelGroup?.selectedModelArray);
     const transformation = useSelector(state => state?.printing?.modelGroup?.getSelectedModelTransformationForPrinting(), shallowEqual);
     const primeTowerHeight = useSelector(state => state?.printing?.primeTowerHeight, shallowEqual);
-    const selectedModelBBoxDes = useSelector(state => state?.printing?.modelGroup?.getSelectedModelBBoxWHD());
+    const selectedModelBBoxDes = useSelector(state => state?.printing?.modelGroup?.getSelectedModelBBoxWHD(), shallowEqual);
     const selectedGroup = useSelector(state => state?.printing?.modelGroup?.selectedGroup, shallowEqual);
     const [scalePercentObj, setScalePercentObj] = useState({
         x: 100,
