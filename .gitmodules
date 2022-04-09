@@ -3,4 +3,4 @@
 	url = https://github.com/jane-rose/luban-case-library
 [submodule "src/server/lib/SACP-SDK"]
 	path = src/server/lib/SACP-SDK
-	url = git@github.com:Snapmaker/SACP-SDK.git
+	url = https://github.com/Snapmaker/SACP-SDK.git
