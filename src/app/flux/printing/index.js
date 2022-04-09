@@ -59,8 +59,6 @@ import ScaleToFitWithRotateOperation3D from '../operation-history/ScaleToFitWith
 import PrimeTowerModel from '../../models/PrimeTowerModel';
 import ThreeUtils from '../../three-extensions/ThreeUtils';
 
-import { uiActions } from './actions-ui';
-
 // register methods for three-mesh-bvh
 THREE.Mesh.prototype.raycast = acceleratedRaycast;
 THREE.BufferGeometry.prototype.computeBoundsTree = computeBoundsTree;
@@ -137,6 +135,7 @@ const INITIAL_STATE = {
 
     // Stage reflects current state of visualizer
     stage: STEP_STAGE.EMPTY,
+    promptTasks: [],
 
     selectedModelIDArray: [],
     selectedModelArray: [],
@@ -297,8 +296,6 @@ async function uploadMesh(mesh, stlFileName) {
 }
 
 export const actions = {
-    ...uiActions,
-
     updateState: (state) => {
         return {
             type: ACTION_UPDATE_STATE,
@@ -2640,8 +2637,8 @@ export const actions = {
         const modelNames = files || [{ originalName, uploadName }];
         let _progress = 0;
         progressStatesManager.startProgress(PROCESS_STAGE.PRINTING_LOAD_MODEL);
-
-        const ps = modelNames.map(model => {
+        const promptTasks = [];
+        const promises = modelNames.map(model => {
             return new Promise(async (resolve, reject) => {
                 const { toolHead: { printingToolhead } } = getState().machine;
                 _progress = modelNames.length === 1 ? 0.25 : 0.001;
@@ -2763,7 +2760,10 @@ export const actions = {
                                 break;
                             }
                             case 'LOAD_MODEL_FAILED': {
-                                dispatch(uiActions.loadModelFail(model.originalName));
+                                promptTasks.push({
+                                    status: 'fail',
+                                    originalName: model.originalName
+                                });
                                 if (modelNames.length > 1) {
                                     _progress += 1 / modelNames.length;
                                     dispatch(actions.updateState({
@@ -2773,8 +2773,9 @@ export const actions = {
                                 } else {
                                     progressStatesManager.finishProgress(false);
                                     dispatch(actions.updateState({
-                                        stage: STEP_STAGE.PRINTING_LOAD_MODEL_FAILED,
-                                        progress: 0
+                                        stage: STEP_STAGE.PRINTING_LOAD_MODEL_COMPLETE,
+                                        progress: 0,
+                                        promptTasks
                                     }));
                                 }
                                 reject();
@@ -2789,7 +2790,7 @@ export const actions = {
             });
         });
 
-        await Promise.allSettled(ps);
+        await Promise.allSettled(promises);
 
         const newModels = modelGroup.models.filter((model) => {
             return !models.includes(model);
@@ -2800,16 +2801,17 @@ export const actions = {
             const isLarge = ['x', 'y', 'z'].some((key) => modelSize[key] >= size[key]);
 
             if (isLarge) {
-                dispatch(uiActions.scaletoFit(modelGroup, model)).then(() => {
-                    modelGroup.selectModelById(model.modelID);
-                    dispatch(actions.scaleToFitSelectedModel([model]));
+                promptTasks.push({
+                    status: 'needScaletoFit',
+                    model
                 });
             }
         });
         if (!(modelNames.length === 1 && newModels.length === 0)) {
             dispatch(actions.updateState({
-                stage: STEP_STAGE.PRINTING_LOAD_MODEL_SUCCEED,
-                progress: progressStatesManager.updateProgress(STEP_STAGE.PRINTING_LOADING_MODEL, 1)
+                stage: STEP_STAGE.PRINTING_LOAD_MODEL_COMPLETE,
+                progress: progressStatesManager.updateProgress(STEP_STAGE.PRINTING_LOADING_MODEL, 1),
+                promptTasks
             }));
         }
     },
