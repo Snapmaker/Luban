@@ -124,6 +124,7 @@ function VisualizerLeftBar({ setTransformMode, supportActions, updateBoundingBox
                     setShowRotationAnalyzeModal(true);
                 }, 100);
             });
+            window.dispatchEvent(new CustomEvent('fitviewin', {}));
         },
         rotateOnlyForUniformScale: (rotateFn) => {
             if (actions.isNonUniformScaled()) {

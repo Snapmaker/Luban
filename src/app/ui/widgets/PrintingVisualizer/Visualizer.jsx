@@ -325,6 +325,12 @@ class Visualizer extends PureComponent {
             },
             false
         );
+
+        window.addEventListener(
+            'fitviewin',
+            this.actions.fitViewIn,
+            false
+        );
         this.props.modelGroup.on('add', this.props.recordAddOperation);
     }
 
@@ -426,6 +432,7 @@ class Visualizer extends PureComponent {
     componentWillUnmount() {
         this.props.clearOperationHistory();
         this.props.modelGroup.off('add', this.props.recordAddOperation);
+        window.removeEventListener('fitviewin', this.actions.fitViewIn, false);
     }
 
     getNotice() {

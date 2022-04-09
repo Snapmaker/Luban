@@ -36,6 +36,7 @@ const SupportOverlay = ({ editSupport, setTransformMode }) => {
         },
         editSupport() {
             editSupport();
+            window.dispatchEvent(new CustomEvent('fitviewin', {}));
         }
     };
     const renderGenerateSupportConfirm = () => {
