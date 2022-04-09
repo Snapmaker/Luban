@@ -111,6 +111,7 @@ class Canvas extends PureComponent {
         this.canvasHeightHalf = null;
         this.inputPositionTop = 0;
         this.inputPositionLeft = 0;
+        this.inputLeftOffset = 0;
     }
 
     componentDidMount() {
@@ -629,22 +630,21 @@ class Canvas extends PureComponent {
                 inputDOM = document.getElementById('control-input');
                 inputDOM2 = document.getElementById('control-input-2');
                 parentDOM = document.getElementById('smcanvas');
+                this.inputLeftOffset = inputDOM2 ? 104 : 48; // one input width is 96, if has inputDOM2, inputDOM has marginRight 16px
                 this.canvasWidthHalf = parentDOM.clientWidth * 0.5;
                 this.canvasHeightHalf = parentDOM.clientHeight * 0.5;
-                if (Math.abs(parseFloat(this.inputPositionLeft) - ((this.controlFrontLeftTop.x) * this.canvasWidthHalf + this.canvasWidthHalf)) > 10
-                || Math.abs(parseFloat(this.inputPositionTop) - (-(this.controlFrontLeftTop.y * this.canvasHeightHalf) + this.canvasHeightHalf - 200)) > 10
+                if (Math.abs(parseFloat(this.inputPositionLeft) - (this.controlFrontLeftTop.x * this.canvasWidthHalf + this.canvasWidthHalf - this.inputLeftOffset)) > 10
+                || Math.abs(parseFloat(this.inputPositionTop) - (-(this.controlFrontLeftTop.y * this.canvasHeightHalf) + this.canvasHeightHalf - 220)) > 10
                 ) {
-                    this.inputPositionLeft = `${this.controlFrontLeftTop.x * this.canvasWidthHalf + this.canvasWidthHalf}px`;
-                    this.inputPositionTop = `${-(this.controlFrontLeftTop.y * this.canvasHeightHalf) + this.canvasHeightHalf - 200}px`;
+                    this.inputPositionLeft = `${this.controlFrontLeftTop.x * this.canvasWidthHalf + this.canvasWidthHalf - this.inputLeftOffset}px`;
+                    this.inputPositionTop = `${-(this.controlFrontLeftTop.y * this.canvasHeightHalf) + this.canvasHeightHalf - 220}px`;
                 }
                 inputDOM && (inputDOM.style.top = this.inputPositionTop);
                 inputDOM && (inputDOM.style.left = this.inputPositionLeft);
-                if (this.controls.transformControl.mode === TRANSLATE_MODE && this.controls.transformControl.axis === 'XY') {
+                if (this.controls.transformControl.mode === TRANSLATE_MODE && (this.controls.transformControl.axis === 'XY' || this.controls.transformControl.axis === null)) {
                     inputDOM2 && (inputDOM2.style.top = this.inputPositionTop);
                     inputDOM2 && (inputDOM2.style.left = `${parseFloat(this.inputPositionLeft) + 120}px`);
                     inputDOM2 && this.controls.transformControl.dragging && (inputDOM2.style.display = 'block');
-                } else {
-                    inputDOM2 && (inputDOM2.style.display = 'none');
                 }
                 this.controls.transformControl.dragging && inputDOM && (inputDOM.style.display = 'block');
             }
