@@ -25,6 +25,7 @@ import ThreeUtils from '../../../three-extensions/ThreeUtils';
 
 
 import { ArcBufferGeometry } from './ArcGeometry';
+import { SCALE_MODE, TRANSLATE_MODE } from '../../../constants';
 
 const EVENTS = {
     UPDATE: { type: 'update' }
@@ -939,13 +940,25 @@ class TransformControls extends Object3D {
         }
 
         throttle(() => {
+            let data = {};
+            if (this.mode.toLowerCase() === SCALE_MODE) {
+                data = {
+                    x: Math.round(Math.abs(this.object.scale.x) * 1000) / 10,
+                    y: Math.round(Math.abs(this.object.scale.y) * 1000) / 10,
+                    z: Math.round(Math.abs(this.object.scale.z) * 1000) / 10
+                };
+            } else if (this.mode.toLowerCase() === TRANSLATE_MODE) {
+                data = {
+                    x: Math.round(this.object.position.x * 10) / 10,
+                    y: Math.round(this.object.position.y * 10) / 10,
+                    z: Math.round(this.object.position.z * 10) / 10
+                };
+            }
             window.dispatchEvent(updateControlInputEvent({
-                // [this.mode.toLowerCase()]: {
-                //     [`${this.mode.toLowerCase()}Axis`]: this.axis.toLowerCase()
-                // }
                 controlValue: {
                     mode: this.mode.toLowerCase(),
-                    axis: this.axis.toLowerCase()
+                    axis: this.axis.toLowerCase(),
+                    data
                 }
             }));
         }, 1000)();
