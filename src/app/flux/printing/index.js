@@ -2392,8 +2392,7 @@ export const actions = {
 
         const modelState = (() => {
             if (models && models.length > 0) {
-                const res = modelGroup.scaleToFitFromModel(size, offsetX, offsetY, models);
-                return res;
+                return modelGroup.scaleToFitFromModel(size, offsetX, offsetY, models);
             } else {
                 return modelGroup.scaleToFitSelectedModel(size, offsetX, offsetY);
             }
@@ -2770,13 +2769,6 @@ export const actions = {
                                         stage: STEP_STAGE.PRINTING_LOADING_MODEL,
                                         progress: progressStatesManager.updateProgress(STEP_STAGE.PRINTING_LOADING_MODEL, _progress)
                                     }));
-                                } else {
-                                    progressStatesManager.finishProgress(false);
-                                    dispatch(actions.updateState({
-                                        stage: STEP_STAGE.PRINTING_LOAD_MODEL_COMPLETE,
-                                        progress: 0,
-                                        promptTasks
-                                    }));
                                 }
                                 reject();
                                 break;
@@ -2807,7 +2799,14 @@ export const actions = {
                 });
             }
         });
-        if (!(modelNames.length === 1 && newModels.length === 0)) {
+        if (modelNames.length === 1 && newModels.length === 0) {
+            progressStatesManager.finishProgress(false);
+            dispatch(actions.updateState({
+                stage: STEP_STAGE.PRINTING_LOAD_MODEL_COMPLETE,
+                progress: 0,
+                promptTasks
+            }));
+        } else {
             dispatch(actions.updateState({
                 stage: STEP_STAGE.PRINTING_LOAD_MODEL_COMPLETE,
                 progress: progressStatesManager.updateProgress(STEP_STAGE.PRINTING_LOADING_MODEL, 1),

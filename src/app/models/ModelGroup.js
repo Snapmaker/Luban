@@ -1072,25 +1072,21 @@ class ModelGroup extends EventEmitter {
     }
 
 
-    scaleToFitFromModel(size, models) {
+    scaleToFitFromModel(size, offsetX = 0, offsetY = 0, models) {
         models.forEach((model) => {
-            model.scaleToFit(size);
+            model.scaleToFit(size, offsetX, offsetY);
             model.computeBoundingBox();
         });
 
         return this.getState();
     }
 
-    scaleToFitSelectedModel(size, offsetX = 0, offsetY = 0, models) {
-        const selected = models || this.getSelectedModelArray();
+    scaleToFitSelectedModel(size, offsetX = 0, offsetY = 0) {
+        const selected = this.getSelectedModelArray();
         if (selected.length === 0) {
             return null;
         }
-        selected.forEach((item) => {
-            item.scaleToFit(size, offsetX, offsetY);
-            item.computeBoundingBox();
-        });
-        this.scaleToFitFromModel(size, selected);
+        this.scaleToFitFromModel(size, offsetX, offsetY, selected);
         this.prepareSelectedGroup();
         return this.getState();
     }

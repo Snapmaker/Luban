@@ -32,24 +32,17 @@ class Dropzone extends PureComponent {
         if (acceptExtNames.length === 0 || !onDropAccepted || !onDropRejected) {
             return;
         }
-        if (this.props.multiple === true) {
-            const files = acceptedFiles.filter((file) => {
-                return acceptExtNames.includes(path.extname(file.name).toLowerCase());
-            });
+        const files = acceptedFiles.filter((file) => {
+            return acceptExtNames.includes(path.extname(file.name).toLowerCase());
+        });
 
-            if (files.length > 0) {
-                onDropAccepted(this.props.multiple === true ? files : files[0]);
-            }
-            if (files.length !== acceptedFiles.length) {
+        if (files.length > 0) {
+            if (this.props.multiple === true && files.length !== acceptedFiles.length) {
                 onDropRejected();
             }
+            onDropAccepted(this.props.multiple === true ? files : files[0]);
         } else {
-            const file = acceptedFiles[0];
-            if (acceptExtNames.includes(path.extname(file.name).toLowerCase())) {
-                onDropAccepted(file);
-            } else {
-                onDropRejected(file);
-            }
+            onDropRejected();
         }
     }
 

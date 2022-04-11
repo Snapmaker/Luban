@@ -17,6 +17,7 @@ import i18n from '../../../lib/i18n';
 import ProgressBar from '../../components/ProgressBar';
 import ContextMenu from '../../components/ContextMenu';
 import Canvas from '../../components/SMCanvas';
+import { NumberInput as Input } from '../../components/Input';
 import { actions as printingActions } from '../../../flux/printing';
 import { actions as operationHistoryActions } from '../../../flux/operation-history';
 import VisualizerLeftBar from './VisualizerLeftBar';
