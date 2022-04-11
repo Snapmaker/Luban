@@ -11,7 +11,7 @@ import TipTrigger from '../../components/TipTrigger';
 import SvgIcon from '../../components/SvgIcon';
 import Popover from '../../components/Popover';
 
-const SettingItem = React.forwardRef(({ definitionKey, settings, isDefaultDefinition = () => true, onChangeDefinition, defaultValue, styleSize = 'large' }, ref) => {
+function SettingItem({ definitionKey, settings, isDefaultDefinition = () => true, onChangeDefinition, defaultValue, styleSize = 'large' }) {
     const [showColor, setShowColor] = useState(false);
 
     const setting = settings[definitionKey];
@@ -138,7 +138,7 @@ const SettingItem = React.forwardRef(({ definitionKey, settings, isDefaultDefini
     return (
         <TipTrigger title={i18n._(label)} content={i18n._(description)} key={definitionKey}>
             <div className="position-re sm-flex justify-space-between height-32 margin-vertical-8">
-                <span className="text-overflow-ellipsis width-auto main-text-normal max-width-160">
+                <span className="text-overflow-ellipsis width-auto main-text-normal max-width-184">
                     {i18n._(label)}
                 </span>
                 <div className="sm-flex-auto">
@@ -190,7 +190,6 @@ const SettingItem = React.forwardRef(({ definitionKey, settings, isDefaultDefini
                     )}
                     {type === 'enum' && (
                         <Select
-                            ref={ref}
                             className="sm-flex-width align-r"
                             backspaceRemoves={false}
                             clearable={false}
@@ -247,7 +246,7 @@ const SettingItem = React.forwardRef(({ definitionKey, settings, isDefaultDefini
             </div>
         </TipTrigger>
     );
-});
+}
 SettingItem.propTypes = {
     settings: PropTypes.object.isRequired,
     definitionKey: PropTypes.string.isRequired,

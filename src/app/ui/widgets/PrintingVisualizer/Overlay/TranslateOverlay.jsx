@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import classNames from 'classnames';
 import { useDispatch, useSelector, shallowEqual } from 'react-redux';
 import { throttle } from 'lodash';
 import PropTypes from 'prop-types';
@@ -13,6 +14,7 @@ import { actions as machineActions } from '../../../../flux/machine';
 import { CancelButton } from '../VisualizerLeftBar';
 import { updateControlInputEvent } from '../../../components/SMCanvas/TransformControls';
 import { TRANSLATE_MODE } from '../../../../constants';
+import styles from './styles.styl';
 
 const angleOptions = [
     {
@@ -135,7 +137,7 @@ const TranslateOverlay = React.memo(({
 
     return (
         <div
-            className="position-ab width-360 margin-left-72 border-default-grey-1 border-radius-8 background-color-white"
+            className="position-ab width-328 margin-left-72 padding-bottom-16 border-default-grey-1 border-radius-8 background-color-white"
             style={{
                 marginTop: '60px'
             }}
@@ -146,13 +148,13 @@ const TranslateOverlay = React.memo(({
                     onClick={() => setTransformMode('')}
                 />
             </div>
-            <div className="padding-vertical-10 padding-horizontal-16 height-40">
+            <div className="padding-vertical-10 padding-horizontal-16 height-40 font-size-middle">
                 {i18n._('key-Printing/LeftBar-Model position')}
             </div>
-            <div className="padding-vertical-16 padding-horizontal-16 ">
+            <div className="padding-top-8 padding-horizontal-16">
                 <div className="sm-flex justify-space-between height-32 margin-bottom-8">
                     <span className="sm-flex-auto color-red-1">X</span>
-                    <div className="sm-flex-auto">
+                    <div className="sm-flex-auto margin-left-n-28">
                         <Input
                             suffix="mm"
                             size="small"
@@ -167,7 +169,7 @@ const TranslateOverlay = React.memo(({
                         />
                     </div>
                     <span className="sm-flex-auto color-green-1">Y</span>
-                    <div className="sm-flex-auto">
+                    <div className="sm-flex-auto margin-left-n-28">
                         <Input
                             suffix="mm"
                             size="small"
@@ -185,7 +187,7 @@ const TranslateOverlay = React.memo(({
                 {!isSupportSelected && (
                     <div className="sm-flex">
                         <Button
-                            className="margin-vertical-16"
+                            className="margin-top-16"
                             type="primary"
                             priority="level-three"
                             width="100%"
@@ -196,17 +198,18 @@ const TranslateOverlay = React.memo(({
                         </Button>
                     </div>
                 )}
-                <div className="border-top-normal padding-vertical-10 padding-horizontal-16 height-40">
+                <div className={classNames(styles['dashed-line'])} />
+                <div className="padding-vertical-10 height-40 font-size-middle">
                     {i18n._('key-Printing/LeftBar-Arrange Options')}
                 </div>
-                <div className="padding-top-16 padding-horizontal-16">
+                <div className="padding-top-16">
                     <TipTrigger
                         title={i18n._('key-Printing/LeftBar-Rotation Step Around Z Axis')}
                         content={i18n._('key-Printing/LeftBar-Rotation Step Around Z Axis Content')}
                         placement="right"
                     >
                         <div className="sm-flex justify-space-between height-32 margin-bottom-8">
-                            <span>
+                            <span className="max-width-160 text-overflow-ellipsis">
                                 {i18n._('key-Printing/LeftBar-Rotation Step Around Z Axis')}
                             </span>
                             <div>
@@ -236,7 +239,7 @@ const TranslateOverlay = React.memo(({
                             <div>
                                 <Input
                                     suffix="mm"
-                                    size="small"
+                                    size="middle"
                                     min={1}
                                     value={arragneSettings.offset}
                                     onChange={(offset) => {
@@ -261,7 +264,7 @@ const TranslateOverlay = React.memo(({
                             <div>
                                 <Input
                                     suffix="mm"
-                                    size="small"
+                                    size="middle"
                                     min={0}
                                     value={arragneSettings.padding}
                                     onChange={(padding) => {
@@ -276,7 +279,7 @@ const TranslateOverlay = React.memo(({
                     </TipTrigger>
                     <div className="sm-flex">
                         <Button
-                            className="margin-top-32"
+                            className="margin-top-16"
                             type="primary"
                             priority="level-three"
                             width="100%"

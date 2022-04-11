@@ -464,7 +464,7 @@ function Control({ widgetId, widgetActions: _widgetActions }) {
                 </KeypadOverlay>
             </div> */}
 
-            <div className="sm-flex justify-space-between margin-vertical-8">
+            <div className="margin-vertical-8">
                 <Button
                     type="primary"
                     level="level-three"
@@ -474,13 +474,13 @@ function Control({ widgetId, widgetActions: _widgetActions }) {
                 >
                     {i18n._('key-Workspace/Console-Home')}
                 </Button>
-                <div>
-                    <span className="">{i18n._('key-Workspace/Console-Jog Speed')}</span>
+                <div className="sm-flex justify-space-between align-center">
+                    <span className="max-width-208 text-overflow-ellipsis">{i18n._('key-Workspace/Console-Jog Speed')}</span>
                     <Select
                         backspaceRemoves={false}
                         className="margin-left-8"
                         clearable={false}
-                        size="small"
+                        size="middle"
                         menuContainerStyle={{ zIndex: 5 }}
                         options={state.jogSpeedOptions}
                         onNewOptionClick={actions.onCreateJogSpeedOption}
