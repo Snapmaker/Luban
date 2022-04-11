@@ -599,7 +599,7 @@ class ModelGroup extends EventEmitter {
             if (selectModel) {
                 const objectIndex = this.selectedGroup.children.indexOf(selectModel.meshObject);
                 if (objectIndex === -1) {
-                    if (this.selectedModelArray.length === 1 && this.selectedModelArray[0] instanceof PrimeTowerModel) {
+                    if (this.selectedModelArray.length === 1 && this.selectedModelArray[0].type === 'primeTower') {
                         this.unselectAllModels();
                     }
                     let isModelAcrossGroup = false;
@@ -2523,7 +2523,7 @@ class ModelGroup extends EventEmitter {
         if (this.selectedModelArray.length === 0) {
             return false;
         }
-        return this.selectedModelArray.every(model => model.visible && !(model instanceof PrimeTowerModel));
+        return this.selectedModelArray.every(model => model.visible && model.type !== 'primeTower');
     }
 }
 

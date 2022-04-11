@@ -52,7 +52,6 @@ const TranslateOverlay = React.memo(({
     setTransformMode,
     onModelAfterTransform,
     arrangeAllModels,
-    transformDisabled,
     size,
     hasModels
 }) => {
@@ -119,6 +118,9 @@ const TranslateOverlay = React.memo(({
         if (selectedModelArray.length >= 1) {
             setMoveX(Math.round(transformation.positionX * 10) / 10);
             setMoveY(Math.round(transformation.positionY * 10) / 10);
+        } else {
+            setMoveX(0);
+            setMoveY(0);
         }
     }, [selectedModelArray]);
 
@@ -178,7 +180,10 @@ const TranslateOverlay = React.memo(({
                             type="primary"
                             priority="level-three"
                             width="100%"
-                            disabled={!isSelectedModelAllVisible || transformDisabled}
+                            disabled={
+                                (selectedModelArray.length === 0 && !isPrimeTowerSelected)
+                                || (selectedModelArray.length > 0 && !isPrimeTowerSelected && !isSelectedModelAllVisible)
+                            }
                             onClick={() => resetPosition(isPrimeTowerSelected)}
                         >
                             <span>{i18n._('key-Printing/LeftBar-Move to Center')}</span>
@@ -289,7 +294,6 @@ TranslateOverlay.propTypes = {
     setTransformMode: PropTypes.func.isRequired,
     onModelAfterTransform: PropTypes.func.isRequired,
     arrangeAllModels: PropTypes.func.isRequired,
-    transformDisabled: PropTypes.bool.isRequired,
     size: PropTypes.object.isRequired,
     hasModels: PropTypes.bool.isRequired
 };

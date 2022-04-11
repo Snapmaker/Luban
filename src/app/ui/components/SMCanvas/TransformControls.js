@@ -955,7 +955,6 @@ class TransformControls extends Object3D {
     }
 
     onMouseMove(coord, isPrimeTower = false) {
-        console.log('isPrimeTower =', isPrimeTower);
         this.object.shouldUpdateBoundingbox = false;
         if (!(this.object.children && this.object.children.length > 0) || !this.axis || !this.dragging) {
             return false;
