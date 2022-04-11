@@ -81,7 +81,7 @@ function VisualizerLeftBar({ setTransformMode, supportActions, updateBoundingBox
     const hasModels = modelGroup.getModels().some(model => model.visible && !(model instanceof PrimeTowerModel));
     const supportDisabled = (displayedType !== 'model' || modelGroup.getModelsAttachedSupport(false).length === 0 || showRotationAnalyzeModal);
     const isDualExtruder = machineStore.get('machine.toolHead.printingToolhead') === DUAL_EXTRUDER_TOOLHEAD_FOR_SM2;
-    const [dualExtruderDisabled, setDualExtruderDisabled] = useState(!models.length);
+    const [dualExtruderDisabled, setDualExtruderDisabled] = useState(false);
     const dispatch = useDispatch();
     const fileInput = useRef(null);
 
@@ -173,6 +173,19 @@ function VisualizerLeftBar({ setTransformMode, supportActions, updateBoundingBox
             }
         }
     }, [models.length, models]);
+
+    useEffect(() => {
+        if (selectedModelArray.length) {
+            for (const model of selectedModelArray) {
+                if (model.visible) {
+                    setDualExtruderDisabled(false);
+                    break;
+                } else {
+                    setDualExtruderDisabled(true);
+                }
+            }
+        }
+    }, [selectedModelArray]);
 
     return (
         <React.Fragment>

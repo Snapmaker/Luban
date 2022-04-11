@@ -447,14 +447,14 @@ class ThreeModel extends BaseModel {
         return result;
     }
 
-    scaleToFit(size) {
+    scaleToFit(size, offsetX, offsetY) {
         const revertParent = ThreeUtils.removeObjectParent(this.meshObject);
         const modelSize = new THREE.Vector3();
         this.computeBoundingBox();
         this.boundingBox.getSize(modelSize);
         const scalar = ['x', 'y', 'z'].reduce((prev, key) => Math.min((size[key] - 5) / modelSize[key], prev), Number.POSITIVE_INFINITY);
         this.meshObject.scale.multiplyScalar(scalar);
-        this.meshObject.position.set(0, 0, 0);
+        this.meshObject.position.set(offsetX, offsetY, 0);
         this.meshObject.updateMatrix();
         this.setSelected();
         this.stickToPlate();

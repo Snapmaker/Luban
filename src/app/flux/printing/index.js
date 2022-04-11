@@ -54,6 +54,7 @@ import UngroupOperation3D from '../operation-history/UngroupOperation3D';
 import DeleteSupportsOperation3D from '../operation-history/DeleteSupportsOperation3D';
 import AddSupportsOperation3D from '../operation-history/AddSupportsOperation3D';
 import ArrangeOperation3D from '../operation-history/ArrangeOperation3D';
+import ScaleToFitWithRotateOperation3D from '../operation-history/ScaleToFitWithRotateOperation3D';
 import PrimeTowerModel from '../../models/PrimeTowerModel';
 import ThreeUtils from '../../three-extensions/ThreeUtils';
 
@@ -1638,7 +1639,7 @@ export const actions = {
         dispatch(actions.render());
     },
 
-    updateSelectedModelTransformation: (transformation, newUniformScalingState) => (dispatch, getState) => {
+    updateSelectedModelTransformation: (transformation, newUniformScalingState, isAllRotate) => (dispatch, getState) => {
         const { modelGroup } = getState().printing;
         let transformMode;
         switch (true) {
@@ -1656,7 +1657,7 @@ export const actions = {
         }
         dispatch(actions.recordModelBeforeTransform(modelGroup));
         // TODO
-        modelGroup.updateSelectedGroupTransformation(transformation, newUniformScalingState);
+        modelGroup.updateSelectedGroupTransformation(transformation, newUniformScalingState, isAllRotate);
         modelGroup.onModelAfterTransform();
 
         dispatch(actions.recordModelAfterTransform(transformMode, modelGroup));
@@ -2333,7 +2334,7 @@ export const actions = {
                         revertParentFunc();
                         // rotateModel.computeBoundingBox();
                         dispatch(actions.updateState({
-                            stage: STEP_STAGE.PRINTING_AUTO_ROTATE_SUCCESSED,
+                            stage: STEP_STAGE.PRINTING_AUTO_ROTATING_MODELS,
                             progress: progressStatesManager.updateProgress(STEP_STAGE.PRINTING_AUTO_ROTATING_MODELS, progress)
                         }));
                         if (isFinish) {
@@ -2344,7 +2345,7 @@ export const actions = {
                             dispatch(actions.destroyGcodeLine());
                             dispatch(actions.displayModel());
                             dispatch(actions.updateState({
-                                stage: STEP_STAGE.PRINTING_AUTO_ROTATE_SUCCESSED,
+                                stage: STEP_STAGE.PRINTING_AUTO_ROTATING_MODELS,
                                 progress: progressStatesManager.updateProgress(STEP_STAGE.PRINTING_AUTO_ROTATING_MODELS, 1)
                             }));
                         }
@@ -2353,13 +2354,14 @@ export const actions = {
                     case 'PROGRESS': {
                         const { progress } = value;
                         dispatch(actions.updateState({
-                            progress
+                            stage: STEP_STAGE.PRINTING_AUTO_ROTATING_MODELS,
+                            progress: progressStatesManager.updateProgress(STEP_STAGE.PRINTING_AUTO_ROTATING_MODELS, progress)
                         }));
                         break;
                     }
                     case 'ERROR': {
                         dispatch(actions.updateState({
-                            stage: STEP_STAGE.PRINTING_AUTO_ROTATE_SUCCESSED,
+                            stage: STEP_STAGE.PRINTING_AUTO_ROTATE_FAILED,
                             progress: progressStatesManager.updateProgress(STEP_STAGE.PRINTING_AUTO_ROTATING_MODELS, 1)
                         }));
                         break;
@@ -2372,11 +2374,18 @@ export const actions = {
     },
 
     scaleToFitSelectedModel: () => (dispatch, getState) => {
-        const { modelGroup } = getState().printing;
-        const { size } = getState().machine;
+        const { modelGroup, stopArea: { left, right, front, back } } = getState().printing;
+        let { size } = getState().machine;
+        size = {
+            x: size.x - left - right,
+            y: size.y - front - back,
+            z: size.z
+        };
+        const offsetX = (left - right) / 2;
+        const offsetY = (front - back) / 2;
         dispatch(actions.recordModelBeforeTransform(modelGroup));
 
-        const modelState = modelGroup.scaleToFitSelectedModel(size);
+        const modelState = modelGroup.scaleToFitSelectedModel(size, offsetX, offsetY);
         modelGroup.onModelAfterTransform();
 
         dispatch(actions.recordModelAfterTransform('scale', modelGroup));
@@ -2385,6 +2394,125 @@ export const actions = {
         dispatch(actions.displayModel());
     },
 
+    scaleToFitSelectedModelWithRotate: () => (dispatch, getState) => {
+        const { progressStatesManager, modelGroup, stopArea: { left, right, front, back } } = getState().printing;
+        const { size } = getState().machine;
+        progressStatesManager.startProgress(PROCESS_STAGE.PRINTING_SCALE_TO_FIT_WITH_ROTATE);
+        dispatch(actions.updateState({
+            stage: STEP_STAGE.PRINTING_SCALE_TO_FIT_WITH_ROTATE,
+            progress: progressStatesManager.updateProgress(STEP_STAGE.PRINTING_SCALE_TO_FIT_WITH_ROTATE, 0.15)
+        }));
+        setTimeout(() => {
+            const meshObjectJSON = [];
+            // console.log(modelGroup.selectedModelArray);
+            modelGroup.selectedModelArray.forEach(modelItem => {
+                if (modelItem instanceof ThreeGroup) {
+                    modelItem.children.forEach(child => {
+                        meshObjectJSON.push({
+                            ...child.meshObject.geometry.toJSON(),
+                            modelItemMatrix: child.meshObject.matrixWorld.clone()
+                        });
+                    });
+                } else {
+                    meshObjectJSON.push({ ...modelItem.meshObject.geometry.toJSON(), modelItemMatrix: modelItem.meshObject.matrixWorld.clone() });
+                }
+            });
+            dispatch(actions.recordModelBeforeTransform(modelGroup));
+            const data = {
+                size,
+                meshObjectJSON,
+                left,
+                right,
+                front,
+                back,
+                selectedGroupMatrix: modelGroup.selectedGroup.matrix.clone(),
+                selectedCount: modelGroup.selectedModelArray.length
+            };
+            workerManager.scaleToFitWithRotate([{
+                data
+            }], (payload) => {
+                const { status, value } = payload;
+                switch (status) {
+                    case 'FINISH': {
+                        const operations = new Operations();
+                        const originQuaternion = modelGroup.selectedGroup.quaternion.clone();
+                        let operation;
+                        const { rotateAngel, maxScale, offsetX } = value;
+                        const { scale: originScale } = modelGroup.selectedGroup;
+                        dispatch(actions.clearAllManualSupport(operations));
+                        const newTransformation = {
+                            scaleX: originScale.x * maxScale,
+                            scaleY: originScale.y * maxScale,
+                            scaleZ: originScale.z * maxScale,
+                            positionX: 0,
+                            positionY: 0
+                        };
+                        // dispatch(actions.recordModelBeforeTransform(modelGroup, operations));
+                        const quaternion = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 0, 1), THREE.Math.degToRad(rotateAngel));
+                        modelGroup.selectedGroup.quaternion.copy(quaternion).multiply(originQuaternion).normalize();
+                        modelGroup.updateSelectedGroupTransformation(newTransformation, undefined, true);
+                        const { targetTmpState } = getState().printing;
+                        modelGroup.selectedModelArray.forEach(modelItem => {
+                            operation = new ScaleToFitWithRotateOperation3D({
+                                target: modelItem,
+                                ...targetTmpState[modelItem.modelID],
+                                to: { ...modelGroup.getSelectedModelTransformationForPrinting() }
+                            });
+                            operations.push(operation);
+                        });
+                        const center = new THREE.Vector3();
+                        ThreeUtils.computeBoundingBox(modelGroup.selectedGroup).getCenter(center);
+                        const oldPosition = modelGroup.selectedGroup.position;
+                        modelGroup.updateSelectedGroupTransformation({
+                            positionX: offsetX + (oldPosition.x - center.x),
+                            positionY: oldPosition.y - center.y,
+                        });
+                        modelGroup.onModelAfterTransform();
+                        modelGroup.selectedModelArray.forEach(modelItem => {
+                            operation = new ScaleToFitWithRotateOperation3D({
+                                target: modelItem,
+                                ...targetTmpState[modelItem.modelID],
+                                to: { ...modelGroup.getSelectedModelTransformationForPrinting() }
+                            });
+                            operations.push(operation);
+                        });
+                        // dispatch(actions.recordModelAfterTransform('scale', modelGroup, operations));
+                        const modelState = modelGroup.getState();
+                        dispatch(actions.updateState({
+                            stage: STEP_STAGE.PRINTING_SCALE_TO_FIT_WITH_ROTATE,
+                            progress: progressStatesManager.updateProgress(STEP_STAGE.PRINTING_SCALE_TO_FIT_WITH_ROTATE, 1),
+                        }));
+                        dispatch(actions.updateState(modelState));
+                        operations.registCallbackAfterAll(() => {
+                            dispatch(actions.updateState(modelGroup.getState()));
+                            dispatch(actions.destroyGcodeLine());
+                            dispatch(actions.displayModel());
+                            dispatch(actions.render());
+                        });
+                        dispatch(operationHistoryActions.setOperations(INITIAL_STATE.name, operations));
+                        break;
+                    }
+                    case 'UPDATE_PROGRESS': {
+                        const { progress } = value;
+                        dispatch(actions.updateState({
+                            stage: STEP_STAGE.PRINTING_SCALE_TO_FIT_WITH_ROTATE,
+                            progress: progressStatesManager.updateProgress(STEP_STAGE.PRINTING_SCALE_TO_FIT_WITH_ROTATE, progress)
+                        }));
+                        break;
+                    }
+                    case 'ERR': {
+                        dispatch(actions.updateState({
+                            stage: STEP_STAGE.PRINTING_SCALE_TO_FIT_WITH_ROTATE_FAILED,
+                            progress: progressStatesManager.updateProgress(STEP_STAGE.PRINTING_SCALE_TO_FIT_WITH_ROTATE, 1)
+                        }));
+                        break;
+                    }
+                    default:
+                        break;
+                }
+            });
+        }, 200);
+    },
     resetSelectedModelTransformation: () => (dispatch, getState) => {
         const { modelGroup } = getState().printing;
         dispatch(actions.recordModelBeforeTransform(modelGroup));
