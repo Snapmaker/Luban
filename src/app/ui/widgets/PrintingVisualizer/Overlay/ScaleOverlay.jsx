@@ -28,14 +28,15 @@ const ScaleOverlay = React.memo(({
         y: 100,
         z: 100
     });
-    const [initModelSize, setInitModelSize] = useState({
-        x: selectedModelBBoxDes.x / selectedGroup.scale.x,
-        y: selectedModelBBoxDes.y / selectedGroup.scale.y,
-        z: selectedModelBBoxDes.z / selectedGroup.scale.z,
-    }); // the model size when scale = 1
+    // hidden model size after scale
+    // const [initModelSize, setInitModelSize] = useState({
+    //     x: selectedModelBBoxDes.x / selectedGroup.scale.x,
+    //     y: selectedModelBBoxDes.y / selectedGroup.scale.y,
+    //     z: selectedModelBBoxDes.z / selectedGroup.scale.z,
+    // }); // the model size when scale = 1
     const [modelX, setModelX] = useState(0);
     const [modelY, setModelY] = useState(0);
-    const [modelZ, setModelZ] = useState(0);
+    // const [modelZ, setModelZ] = useState(0);
     const [uniformScalingState, setUniformScalingState] = useState(true);
     const dispatch = useDispatch();
     const [modelSize, setModelSize] = useState({});
@@ -44,10 +45,13 @@ const ScaleOverlay = React.memo(({
         const { detail } = event;
         throttle(() => {
             setScalePercentObj(detail.scale);
-            setModelX(Math.round(detail.scale.x * initModelSize.x) / 100);
-            setModelY(Math.round(detail.scale.y * initModelSize.y) / 100);
-            setModelZ(Math.round(detail.scale.z * initModelSize.z) / 100);
-            !detail.isPrimeTower && setModelZ(Math.round(detail.scale.z * initModelSize.z) / 100);
+            setModelX(Math.round(detail.scale.x * 20) / 100);
+            setModelY(Math.round(detail.scale.y * 20) / 100);
+            // hidden model size after scale
+            // setModelX(Math.round(detail.scale.x * initModelSize.x) / 100);
+            // setModelY(Math.round(detail.scale.y * initModelSize.y) / 100);
+            // setModelZ(Math.round(detail.scale.z * initModelSize.z) / 100);
+            // !detail.isPrimeTower && setModelZ(Math.round(detail.scale.z * initModelSize.z) / 100);
         }, 1000)();
     };
     useEffect(() => {
@@ -57,21 +61,24 @@ const ScaleOverlay = React.memo(({
         };
     }, []);
     useEffect(() => {
-        const updateInitModelSize = {
-            x: selectedModelBBoxDes.x / selectedGroup.scale.x,
-            y: selectedModelBBoxDes.y / selectedGroup.scale.y,
-            z: selectedModelBBoxDes.z / selectedGroup.scale.z,
-        };
-        setInitModelSize(updateInitModelSize);
-        const originModelSize = {
-            scaledX: selectedModelBBoxDes.x / selectedGroup.scale.x,
-            scaledY: selectedModelBBoxDes.y / selectedGroup.scale.y,
-            scaledZ: selectedModelBBoxDes.z / selectedGroup.scale.z
-        };
-        setModelX(Number(selectedModelBBoxDes.x.toFixed(1)));
-        setModelY(Number(selectedModelBBoxDes.y.toFixed(1)));
-        setModelZ(Number(selectedModelBBoxDes.z.toFixed(1)));
-        setModelSize(originModelSize);
+        // hidden model size after scale
+        // const updateInitModelSize = {
+        //     x: selectedModelBBoxDes.x / selectedGroup.scale.x,
+        //     y: selectedModelBBoxDes.y / selectedGroup.scale.y,
+        //     z: selectedModelBBoxDes.z / selectedGroup.scale.z,
+        // };
+        // setInitModelSize(updateInitModelSize);
+        if (isPrimeTowerSelected) {
+            const originModelSize = {
+                scaledX: selectedModelBBoxDes.x / selectedGroup.scale.x,
+                scaledY: selectedModelBBoxDes.y / selectedGroup.scale.y,
+                scaledZ: selectedModelBBoxDes.z / selectedGroup.scale.z
+            };
+            setModelX(Number(selectedModelBBoxDes.x.toFixed(1)));
+            setModelY(Number(selectedModelBBoxDes.y.toFixed(1)));
+            // setModelZ(Number(selectedModelBBoxDes.z.toFixed(1)));
+            setModelSize(originModelSize);
+        }
         const newScalePercentObj = {
             x: Math.round(Math.abs(transformation.scaleX) * 1000) / 10,
             y: Math.round(Math.abs(transformation.scaleY) * 1000) / 10,
@@ -182,18 +189,20 @@ const ScaleOverlay = React.memo(({
                 <div className="sm-flex height-32 margin-bottom-8">
                     <span className="sm-flex-auto width-16 color-red-1">X</span>
                     <div className="position-ab sm-flex-auto margin-horizontal-24">
-                        <Input
-                            suffix="mm"
-                            size="small"
-                            min={isPrimeTowerSelected ? 1 : initModelSize.x * 0.01}
-                            // min={0.1}
-                            value={modelX}
-                            onChange={(value) => {
-                                onModelTransform({ 'scaleX': value / modelSize.scaledX }, false, isPrimeTowerSelected);
-                                onModelAfterTransform();
-                            }}
-                            className="margin-right-8"
-                        />
+                        {isPrimeTowerSelected && (
+                            <Input
+                                suffix="mm"
+                                size="small"
+                                min={1}
+                                // min={0.1}
+                                value={modelX}
+                                onChange={(value) => {
+                                    onModelTransform({ 'scaleX': value / modelSize.scaledX }, false, isPrimeTowerSelected);
+                                    onModelAfterTransform();
+                                }}
+                                className="margin-right-8"
+                            />
+                        )}
                         <Input
                             suffix="%"
                             size="small"
@@ -209,17 +218,19 @@ const ScaleOverlay = React.memo(({
                 <div className="sm-flex height-32 margin-bottom-8">
                     <span className="sm-flex-auto width-16 color-green-1">Y</span>
                     <div className="position-ab sm-flex-auto margin-horizontal-24">
-                        <Input
-                            suffix="mm"
-                            size="small"
-                            min={isPrimeTowerSelected ? 1 : initModelSize.y * 0.01}
-                            value={modelY}
-                            onChange={(value) => {
-                                onModelTransform({ 'scaleY': value / modelSize.scaledY }, false, isPrimeTowerSelected);
-                                onModelAfterTransform();
-                            }}
-                            className="margin-right-8"
-                        />
+                        {isPrimeTowerSelected && (
+                            <Input
+                                suffix="mm"
+                                size="small"
+                                min={1}
+                                value={modelY}
+                                onChange={(value) => {
+                                    onModelTransform({ 'scaleY': value / modelSize.scaledY }, false, isPrimeTowerSelected);
+                                    onModelAfterTransform();
+                                }}
+                                className="margin-right-8"
+                            />
+                        )}
                         <Input
                             suffix="%"
                             size="small"
@@ -236,7 +247,8 @@ const ScaleOverlay = React.memo(({
                     <div className="sm-flex height-32 margin-bottom-8">
                         <span className="sm-flex-auto width-16 color-blue-2">Z</span>
                         <div className="position-ab sm-flex-auto margin-horizontal-24">
-                            <Input
+                            {/* hidden model size after scale */}
+                            {/* <Input
                                 suffix="mm"
                                 size="small"
                                 min={isPrimeTowerSelected ? 1 : initModelSize.z * 0.01}
@@ -246,7 +258,7 @@ const ScaleOverlay = React.memo(({
                                     onModelAfterTransform();
                                 }}
                                 className="margin-right-8"
-                            />
+                            /> */}
                             <Input
                                 suffix="%"
                                 size="small"
