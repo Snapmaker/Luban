@@ -505,7 +505,50 @@ class Canvas extends PureComponent {
     }
 
     fitViewIn(center, r) {
-        this.controls.fitViewIn(center, r);
+        // from
+        const object = {
+            ox: this.camera.position.x,
+            oy: this.camera.position.y,
+            oz: this.camera.position.z
+        };
+
+        // Calculate to = { o2, c }
+        // P1 = this.camrea + newTarget - oldTarget
+        const p1 = {
+            x: this.camera.position.x + center.x - this.controls.target.x,
+            y: this.camera.position.y + center.y - this.controls.target.y,
+            z: this.camera.position.z + center.z - this.controls.target.z
+        };
+        const multiple = 9 / 4;
+        const p1c = Math.sqrt((p1.x - center.x) * (p1.x - center.x) + (p1.y - center.y) * (p1.y - center.y) + (p1.z - center.z) * (p1.z - center.z));
+        const o2 = {
+            x: multiple * (p1.x - center.x) * Math.sqrt(2) * r / p1c + center.x,
+            y: multiple * (p1.y - center.y) * Math.sqrt(2) * r / p1c + center.y,
+            z: multiple * (p1.z - center.z) * Math.sqrt(2) * r / p1c + center.z,
+        };
+
+        // to
+        const to = {
+            ox: o2.x,
+            oy: o2.y,
+            oz: o2.z
+        };
+        this.controls.setTarget(new Vector3(center.x, center.y, center.z));
+        const tween = new TWEEN.Tween(object)
+            .to(to, ANIMATION_DURATION)
+            .onUpdate(() => {
+                this.camera.position.x = object.ox;
+                this.camera.position.y = object.oy;
+                this.camera.position.z = object.oz;
+            });
+        this.startTween(tween);
+
+        this.camera.position.x = o2.x;
+        this.camera.position.y = o2.y;
+        this.camera.position.z = o2.z;
+        this.controls.setTarget(new Vector3(center.x, center.y, center.z));
+
+        this.renderScene();
     }
 
     toBottom() {

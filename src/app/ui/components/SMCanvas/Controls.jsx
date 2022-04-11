@@ -188,27 +188,6 @@ class Controls extends EventEmitter {
         this.updateCamera();
     }
 
-    fitViewIn(center, r) {
-        // set target
-        this.camera.position.x += center.x - this.target.x;
-        this.camera.position.y += center.y - this.target.y;
-        this.camera.position.z += center.z - this.target.z;
-
-        /**
-         * Calculate scale
-         * O1: now camera position
-         * O2: camera position after scale
-         * C: target center
-         * then Scale = O2C / O1C
-         */
-        const fullScreenMultiple = 9 / 4; // control the multiple of the (modelView / screen)
-        const o2c = r * fullScreenMultiple * Math.sqrt(2); // this.camera.fov = 45, so sin(45°) = sqrt(2)
-        const o1 = { x: this.camera.position.x, y: this.camera.position.y, z: this.camera.position.z };
-        const o1c = Math.sqrt((o1.x - center.x) * (o1.x - center.x) + (o1.y - center.y) * (o1.y - center.y) + (o1.z - center.z) * (o1.z - center.z));
-        this.scale = o2c / o1c;
-        this.setTarget(new THREE.Vector3(center.x, center.y, center.z));
-    }
-
     setPrimeTower(value) {
         this.isPrimeTower = value;
     }
