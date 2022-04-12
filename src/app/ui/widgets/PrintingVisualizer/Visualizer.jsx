@@ -514,7 +514,6 @@ class Visualizer extends PureComponent {
                     updateBoundingBox={this.actions.updateBoundingBox}
                     setTransformMode={this.actions.setTransformMode}
                     supportActions={this.supportActions}
-                    scaleToFitSelectedModel={this.actions.scaleToFitSelectedModel}
                     autoRotateSelectedModel={this.actions.autoRotateSelectedModel}
                     setHoverFace={this.actions.setHoverFace}
                     arrangeAllModels={this.actions.arrangeAllModels}

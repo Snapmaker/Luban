@@ -9,6 +9,7 @@ export enum WorkerMethods {
     gcodeToArraybufferGeometry = 'gcodeToArraybufferGeometry',
     gcodeToBufferGeometry = 'gcodeToBufferGeometry',
     loadModel = 'loadModel',
+    scaleToFitWithRotate = 'scaleToFitWithRotate',
     toolpathRenderer = 'toolpathRenderer'
     // LUBAN worker methods END
 }
