@@ -340,7 +340,7 @@ const File = {
  * Dialogs control in electron
  */
 const Dialog = {
-    async showOpenFileDialog(type) {
+    async showOpenFileDialog(type, isMultiSelect) {
         type = typeof type === 'string' ? type.slice(1) : '';
         let extensions = ['snap3dp', 'snaplzr', 'snapcnc'];
         switch (type) { // substring '/3dp' to '3dp'
@@ -369,13 +369,21 @@ const Dialog = {
                 currentWindow,
                 {
                     title: 'Snapmaker Luban',
-                    filters: [{ name: 'files', extensions }]
+                    filters: [{ name: 'files', extensions }],
+                    properties: isMultiSelect ? ['multiSelections'] : []
                 }
             );
             const filePaths = openDialogReturnValue.filePaths;
             if (!filePaths || !filePaths[0]) return null;
-            const file = { path: filePaths[0], name: window.require('path').basename(filePaths[0]) };
-            return file;
+            if (isMultiSelect) {
+                const files = filePaths.map(item => {
+                    return { path: item, name: window.require('path').basename(item) };
+                });
+                return files;
+            } else {
+                const file = { path: filePaths[0], name: window.require('path').basename(filePaths[0]) };
+                return file;
+            }
         }
         return null;
     },

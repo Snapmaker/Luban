@@ -14,12 +14,10 @@ import {
     HEAD_PRINTING
 } from '../../../constants';
 import i18n from '../../../lib/i18n';
-import modal from '../../../lib/modal';
 import ProgressBar from '../../components/ProgressBar';
 import ContextMenu from '../../components/ContextMenu';
-import { Button } from '../../components/Buttons';
-import { NumberInput as Input } from '../../components/Input';
 import Canvas from '../../components/SMCanvas';
+import { NumberInput as Input } from '../../components/Input';
 import { actions as printingActions } from '../../../flux/printing';
 import { actions as operationHistoryActions } from '../../../flux/operation-history';
 import VisualizerLeftBar from './VisualizerLeftBar';
@@ -28,6 +26,8 @@ import VisualizerBottomLeft from './VisualizerBottomLeft';
 import VisualizerInfo from './VisualizerInfo';
 import PrintableCube from './PrintableCube';
 import styles from './styles.styl';
+import { loadModelFailPopup, scaletoFitPopup } from './VisualizerPopup';
+
 import { STEP_STAGE } from '../../../lib/manager/ProgressManager';
 
 const initQuaternion = new Quaternion();
@@ -37,6 +37,7 @@ class Visualizer extends PureComponent {
         isActive: PropTypes.bool.isRequired,
         size: PropTypes.object.isRequired,
         stage: PropTypes.number.isRequired,
+        promptTasks: PropTypes.array.isRequired,
         selectedModelArray: PropTypes.array,
         transformation: PropTypes.object,
         modelGroup: PropTypes.object.isRequired,
@@ -160,8 +161,8 @@ class Visualizer extends PureComponent {
         layFlatSelectedModel: () => {
             this.props.layFlatSelectedModel();
         },
-        scaleToFitSelectedModel: () => {
-            this.props.scaleToFitSelectedModel();
+        scaleToFitSelectedModel: (models) => {
+            this.props.scaleToFitSelectedModel(models);
         },
         mirrorSelectedModel: (value) => {
             switch (value) {
@@ -325,7 +326,7 @@ class Visualizer extends PureComponent {
     }
 
     componentDidUpdate(prevProps) {
-        const { size, stopArea, transformMode, selectedModelArray, renderingTimestamp, modelGroup, stage, primeTowerHeight, enablePrimeTower, printingToolhead } = this.props;
+        const { size, stopArea, transformMode, selectedModelArray, renderingTimestamp, modelGroup, stage, primeTowerHeight, enablePrimeTower, printingToolhead, promptTasks } = this.props;
         if (transformMode !== prevProps.transformMode) {
             this.canvas.current.setTransformMode(transformMode);
             if (transformMode === 'rotate-placement') {
@@ -374,48 +375,20 @@ class Visualizer extends PureComponent {
             this.canvas.current.renderScene();
         }
 
-        if (stage !== prevProps.stage && stage === STEP_STAGE.PRINTING_LOAD_MODEL_FAILED) {
-            modal({
-                cancelTitle: i18n._(''),
-                title: i18n._('key-Printing/ContextMenu-Import Error'),
-                body: i18n._('Failed to import this object. \nPlease select a supported file format.')
-            });
-        }
-        if (stage !== prevProps.stage && stage === STEP_STAGE.PRINTING_LOAD_MODEL_SUCCEED) {
-            if (selectedModelArray[0] && selectedModelArray[0].boundingBox) {
-                const modelSize = new Vector3();
-                selectedModelArray[0].boundingBox.getSize(modelSize);
-                const isLarge = ['x', 'y', 'z'].some((key) => modelSize[key] >= size[key]);
-
-                if (isLarge) {
-                    const popupActions = modal({
-                        title: i18n._('key-Printing/ContextMenu-Scale to Fit'),
-                        body: (
-                            <React.Fragment>
-                                <p>{i18n._('key-Printing/ContextMenu-Model size has exceeded the printable area.')}</p>
-                                <p>{i18n._('key-Printing/ContextMenu-Scale it to the maximum printable size?')}</p>
-                            </React.Fragment>
-
-                        ),
-
-                        footer: (
-                            <Button
-                                priority="level-two"
-                                type="primary"
-                                width="96px"
-                                className="margin-left-4"
-                                onClick={() => {
-                                    this.actions.scaleToFitSelectedModel();
-                                    popupActions.close();
-                                }}
-                            >
-                                {i18n._('key-Printing/ContextMenu-Scale')}
-                            </Button>
-                        )
+        if (stage !== prevProps.stage && stage === STEP_STAGE.PRINTING_LOAD_MODEL_COMPLETE) {
+            if (promptTasks.length > 0) {
+                promptTasks.filter(item => item.status === 'fail').forEach(item => {
+                    loadModelFailPopup(item.originalName);
+                });
+                promptTasks.filter(item => item.status === 'needScaletoFit').forEach(item => {
+                    scaletoFitPopup(item.model).then(() => {
+                        modelGroup.selectModelById(item.model.modelID);
+                        this.actions.scaleToFitSelectedModel([item.model]);
                     });
-                }
+                });
             }
         }
+
         if (enablePrimeTower !== prevProps.enablePrimeTower && printingToolhead === DUAL_EXTRUDER_TOOLHEAD_FOR_SM2) {
             let primeTowerModel = find(modelGroup.models, { type: 'primeTower' });
             if (!primeTowerModel) {
@@ -454,7 +427,8 @@ class Visualizer extends PureComponent {
 
     getNotice() {
         const { stage } = this.props;
-        return this.props.progressStatesManager.getNotice(stage);
+        const progress = ((this.props.progress || 0) * 100).toFixed(1);
+        return `${this.props.progressStatesManager.getNotice(stage)} ${progress} %`;
     }
 
     showContextMenu = (event) => {
@@ -615,6 +589,7 @@ const mapStateToProps = (state, ownProps) => {
     const {
         progressStatesManager,
         stage,
+        promptTasks,
         modelGroup,
         hasModel,
         gcodeLineGroup,
@@ -648,6 +623,7 @@ const mapStateToProps = (state, ownProps) => {
         leftBarOverlayVisible,
         isActive,
         stage,
+        promptTasks,
         size,
         selectedModelArray: modelGroup.selectedModelArray,
         transformation: modelGroup.getSelectedModelTransformationForPrinting(),
@@ -696,7 +672,7 @@ const mapDispatchToProps = (dispatch) => ({
     layFlatSelectedModel: () => dispatch(printingActions.layFlatSelectedModel()),
     resetSelectedModelTransformation: () => dispatch(printingActions.resetSelectedModelTransformation()),
     autoRotateSelectedModel: () => dispatch(printingActions.autoRotateSelectedModel()),
-    scaleToFitSelectedModel: () => dispatch(printingActions.scaleToFitSelectedModel()),
+    scaleToFitSelectedModel: (models) => dispatch(printingActions.scaleToFitSelectedModel(models)),
     setTransformMode: (value) => dispatch(printingActions.setTransformMode(value)),
     moveSupportBrush: (raycastResult) => dispatch(printingActions.moveSupportBrush(raycastResult)),
     applySupportBrush: (raycastResult) => dispatch(printingActions.applySupportBrush(raycastResult)),
