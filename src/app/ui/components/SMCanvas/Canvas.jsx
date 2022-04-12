@@ -519,7 +519,7 @@ class Canvas extends PureComponent {
             y: this.camera.position.y + center.y - this.controls.target.y,
             z: this.camera.position.z + center.z - this.controls.target.z
         };
-        const multiple = 9 / 4;
+        const multiple = 1.8;
         const p1c = Math.sqrt((p1.x - center.x) * (p1.x - center.x) + (p1.y - center.y) * (p1.y - center.y) + (p1.z - center.z) * (p1.z - center.z));
         const o2 = {
             x: multiple * (p1.x - center.x) * Math.sqrt(2) * r / p1c + center.x,
