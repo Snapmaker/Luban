@@ -4,6 +4,7 @@ import path from 'path';
 import classNames from 'classnames';
 import { noop } from 'lodash';
 // import PropTypes from 'prop-types';
+import { v4 as uuid } from 'uuid';
 import Menu from '../../components/Menu';
 import { Button } from '../../components/Buttons';
 import Dropdown from '../../components/Dropdown';
@@ -22,6 +23,7 @@ import { renderPopup } from '../../utils';
 import Workspace from '../../pages/Workspace';
 import SvgIcon from '../../components/SvgIcon';
 import { STEP_STAGE } from '../../../lib/manager/ProgressManager';
+import { successfulUse } from '../../utils/gaEvent';
 
 function useRenderWorkspace() {
     const [showWorkspace, setShowWorkspace] = useState(false);
@@ -75,6 +77,7 @@ function Output() {
                 });
                 return;
             }
+            successfulUse(uuid(), '3dp');
             gcodeFile.thumbnail = thumbnail.current.getDataURL() || defaultThumbnail;
             dispatch(workspaceActions.renderGcodeFile(gcodeFile));
             setShowWorkspace(true);
@@ -89,6 +92,7 @@ function Output() {
                 });
                 return;
             }
+            successfulUse(uuid(), '3dp');
             const filename = path.basename(gcodeFile?.name);
             dispatch(projectActions.exportFile(filename, gcodeFile.renderGcodeFileName));
         }

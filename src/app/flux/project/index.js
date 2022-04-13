@@ -1,6 +1,7 @@
 /* eslint-disable import/no-cycle */
 import cloneDeep from 'lodash/cloneDeep';
 import { find, includes } from 'lodash';
+import { v4 as uuid } from 'uuid';
 import pkg from '../../../package.json';
 import {
     HEAD_CNC,
@@ -29,6 +30,7 @@ import ThreeModel from '../../models/ThreeModel';
 
 import i18n from '../../lib/i18n';
 import UniApi from '../../lib/uni-api';
+import { printingSaveProject } from '../../ui/utils/gaEvent';
 
 const INITIAL_STATE = {
     [HEAD_PRINTING]: {
@@ -345,6 +347,8 @@ export const actions = {
         if (!unSaved) {
             return;
         }
+
+        printingSaveProject(uuid());
 
         // https://github.com/electron/electron/pull/4029 Should revers change after the electron version is upgraded
         if (dialogOptions) {

@@ -3,6 +3,7 @@ import { useSelector, useDispatch, shallowEqual } from 'react-redux';
 import PropTypes from 'prop-types';
 import classNames from 'classnames';
 import { noop } from 'lodash';
+import { v4 as uuid } from 'uuid';
 import { actions as workspaceActions } from '../../../flux/workspace';
 import { actions as editorActions } from '../../../flux/editor';
 import { actions as projectActions } from '../../../flux/project';
@@ -21,6 +22,7 @@ import i18n from '../../../lib/i18n';
 import UniApi from '../../../lib/uni-api';
 import Thumbnail from '../CncLaserShared/Thumbnail';
 import SvgIcon from '../../components/SvgIcon';
+import { successfulUse } from '../../utils/gaEvent';
 
 const Output = ({ headType }) => {
     const displayedType = useSelector(state => state[headType]?.displayedType);
@@ -58,6 +60,7 @@ const Output = ({ headType }) => {
             if (gcodeFile === null) {
                 return;
             }
+            successfulUse(uuid(), headType);
             await dispatch(workspaceActions.renderGcodeFile(gcodeFile));
             setShowWorkspace(true);
             window.scrollTo(0, 0);
@@ -66,6 +69,7 @@ const Output = ({ headType }) => {
             if (gcodeFile === null) {
                 return;
             }
+            successfulUse(uuid(), headType);
             dispatch(projectActions.exportFile(gcodeFile.uploadName, gcodeFile.renderGcodeFileName));
         },
         onProcess: () => {

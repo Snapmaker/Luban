@@ -7,7 +7,6 @@ import { ConfigProvider } from 'antd';
 import { Provider } from 'react-redux';
 import i18next from 'i18next';
 import { initReactI18next } from 'react-i18next';
-import ReactGA from 'react-ga4';
 import LanguageDetector from 'i18next-browser-languagedetector';
 import XHR from 'i18next-xhr-backend';
 import { TRACE, DEBUG, INFO, WARN, ERROR } from 'universal-logger';
@@ -22,6 +21,7 @@ import App from './ui/App';
 import './styles/vendor.styl';
 import './styles/app.styl';
 import 'antd/dist/antd.css';
+import { initialize } from './ui/utils/gaEvent';
 
 series([
     (next) => {
@@ -104,18 +104,7 @@ series([
     const container = document.createElement('div');
     document.body.appendChild(container);
     const userId = machineStore.get('userId');
-    console.log('userId', userId);
-    ReactGA.initialize([
-        {
-            trackingId: 'G-PVQS8L8HQM',
-            gaOptions: {
-                userId
-            }
-        }
-    ]);
-    ReactGA.gtag('set', 'user_properties', {
-        'crm_id': userId
-    });
+    initialize(userId);
 
     ReactDOM.render(
         <ConfigProvider autoInsertSpaceInButton={false}>
