@@ -373,9 +373,7 @@ export default function reducer(state = INITIAL_STATE, action) {
     if (headType === 'laser') {
         switch (type) {
             case ACTION_UPDATE_STATE: {
-                const ll = Object.assign({}, state, { ...action.state });
-                window.ll = ll;
-                return ll;
+                return Object.assign({}, state, { ...action.state });
             }
             case ACTION_UPDATE_TRANSFORMATION: {
                 return Object.assign({}, state, {

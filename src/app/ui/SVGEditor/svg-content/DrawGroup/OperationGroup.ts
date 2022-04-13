@@ -1,9 +1,10 @@
 import { createSVGElement, setAttributes } from '../../element-utils';
-import { Mode, pointRadius, minimumSpacing, pointSize, pointWeight, TCoordinate, ThemeColor } from './constants';
+import { MODE, POINT_RADIUS, MINIMUM_SPACING, POINT_SIZE, POINT_WEIGHT, THEME_COLOR } from './constants';
 import { ControlPoint, EndPoint } from './Point';
+import { TCoordinate } from './types';
 
 class OperationGroup {
-    public mode: Mode;
+    public mode: MODE;
 
     public controlsArray: (ControlPoint | EndPoint)[] = [];
 
@@ -32,10 +33,10 @@ class OperationGroup {
         this.previewLine = createSVGElement({
             element: 'path',
             attr: {
-                'stroke-width': pointWeight / this.scale,
+                'stroke-width': POINT_WEIGHT / this.scale,
                 id: 'previewLine',
                 fill: 'transparent',
-                stroke: ThemeColor
+                stroke: THEME_COLOR
             }
         });
 
@@ -55,10 +56,10 @@ class OperationGroup {
         return createSVGElement({
             element: 'path',
             attr: {
-                'stroke-width': pointWeight / this.scale,
+                'stroke-width': POINT_WEIGHT / this.scale,
                 d: `M ${a.join(' ')} L ${b.join(' ')} Z`,
                 fill: '',
-                stroke: ThemeColor
+                stroke: THEME_COLOR
             }
         });
     }
@@ -67,20 +68,20 @@ class OperationGroup {
         const attr = {
             fill: '',
             'fill-opacity': 1,
-            width: pointSize / this.scale,
-            height: pointSize / this.scale,
-            x: point.x - (pointRadius / this.scale),
-            y: point.y - (pointRadius / this.scale),
-            stroke: ThemeColor,
-            'stroke-width': pointWeight / this.scale,
+            width: POINT_SIZE / this.scale,
+            height: POINT_SIZE / this.scale,
+            x: point.x - (POINT_RADIUS / this.scale),
+            y: point.y - (POINT_RADIUS / this.scale),
+            stroke: THEME_COLOR,
+            'stroke-width': POINT_WEIGHT / this.scale,
             rx: '0',
             ry: '0',
             'pointer-events': 'all',
             'is-controls': true
         };
         if (point instanceof EndPoint) {
-            attr.rx = `${pointRadius / this.scale}`;
-            attr.ry = `${pointRadius / this.scale}`;
+            attr.rx = `${POINT_RADIUS / this.scale}`;
+            attr.ry = `${POINT_RADIUS / this.scale}`;
         }
         return createSVGElement({
             element: 'rect',
@@ -99,10 +100,10 @@ class OperationGroup {
             const elem = this.controlPoints.children[index];
             if (elem) {
                 setAttributes(elem, {
-                    x: `${item.x - pointRadius / this.scale}`,
-                    y: `${item.y - pointRadius / this.scale}`,
-                    rx: item instanceof ControlPoint ? '0' : `${pointRadius / this.scale}`,
-                    ry: item instanceof ControlPoint ? '0' : `${pointRadius / this.scale}`,
+                    x: `${item.x - POINT_RADIUS / this.scale}`,
+                    y: `${item.y - POINT_RADIUS / this.scale}`,
+                    rx: item instanceof ControlPoint ? '0' : `${POINT_RADIUS / this.scale}`,
+                    ry: item instanceof ControlPoint ? '0' : `${POINT_RADIUS / this.scale}`,
                     visibility: 'visible',
                 });
             } else {
@@ -142,7 +143,7 @@ class OperationGroup {
         if (controlsArray.length === 0) {
             return;
         }
-        const pointRadiusWithScale = pointRadius / this.scale;
+        const pointRadiusWithScale = POINT_RADIUS / this.scale;
 
         const pointData = [];
         const curveData = [] as unknown as [TCoordinate, TCoordinate, TCoordinate];
@@ -157,7 +158,7 @@ class OperationGroup {
                 pointData.push(item);
             }
 
-            if (this.mode === Mode.DRAW) {
+            if (this.mode === MODE.DRAW) {
                 if (item instanceof ControlPoint) {
                     const a = controlsArray[index - 1];
                     const b = controlsArray[index + 1];
@@ -241,7 +242,7 @@ class OperationGroup {
         }
         const lasetEndPoint = this.controlsArray[this.controlsArray.length - 1];
 
-        if (Math.sqrt((lasetEndPoint.x - x) ** 2 + (lasetEndPoint.y - y) ** 2) <= minimumSpacing) {
+        if (Math.sqrt((lasetEndPoint.x - x) ** 2 + (lasetEndPoint.y - y) ** 2) <= MINIMUM_SPACING) {
             return;
         }
         const point = new ControlPoint(x, y);
@@ -253,7 +254,7 @@ class OperationGroup {
         if (this.controlsArray.length > 0) {
             const lasetPoint = this.controlsArray[this.controlsArray.length - 1];
             if (lasetPoint instanceof ControlPoint) {
-                if (Math.sqrt((lasetPoint.x - x) ** 2 + (lasetPoint.y - y) ** 2) <= minimumSpacing) {
+                if (Math.sqrt((lasetPoint.x - x) ** 2 + (lasetPoint.y - y) ** 2) <= MINIMUM_SPACING) {
                     return false;
                 }
                 const lasetEndPoint = this.controlsArray[this.controlsArray.length - 2];
@@ -296,7 +297,7 @@ class OperationGroup {
     }
 
     public updatePrviewByCursor(cursorPoint: ControlPoint | EndPoint) {
-        if (this.controlsArray.length === 0 || this.mode !== Mode.DRAW) {
+        if (this.controlsArray.length === 0 || this.mode !== MODE.DRAW) {
             return;
         }
 
@@ -332,15 +333,15 @@ class OperationGroup {
         this.scale = scale;
 
         Array.from(this.controlPoints.children).forEach(elem => {
-            elem.setAttribute('width', `${pointSize / this.scale}`);
-            elem.setAttribute('height', `${pointSize / this.scale}`);
+            elem.setAttribute('width', `${POINT_SIZE / this.scale}`);
+            elem.setAttribute('height', `${POINT_SIZE / this.scale}`);
             elem.setAttribute('stroke-width', `${1 / this.scale}`);
 
             const rx = elem.getAttribute('rx');
             const ry = elem.getAttribute('ry');
             if (rx !== '0' && ry !== '0') {
-                elem.setAttribute('rx', `${pointRadius / this.scale}`);
-                elem.setAttribute('ry', `${pointRadius / this.scale}`);
+                elem.setAttribute('rx', `${POINT_RADIUS / this.scale}`);
+                elem.setAttribute('ry', `${POINT_RADIUS / this.scale}`);
             }
         });
 

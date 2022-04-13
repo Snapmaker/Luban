@@ -1,18 +1,16 @@
-export const ThemeColor = '#1890ff';
+export const THEME_COLOR = '#1890ff';
 
-export const attachSpace = 8;
+export const ATTACH_SPACE = 8;
 
-export enum Mode {
+export enum MODE {
     NONE,
     DRAW = 'draw',
     SELECT = 'select'
 }
 
-export const pointSize = 10;
-export const pointRadius = pointSize / 2;
-export const AttachPointRadius = 3.2;
-export const pointWeight = 1;
+export const POINT_SIZE = 10;
+export const POINT_RADIUS = POINT_SIZE / 2;
+export const ATTACH_POINT_RADIUS = 3.2;
+export const POINT_WEIGHT = 1;
 
-export type TCoordinate = [number, number];
-
-export const minimumSpacing = 2;
+export const MINIMUM_SPACING = 2;

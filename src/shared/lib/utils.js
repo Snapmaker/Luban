@@ -1,5 +1,5 @@
 import _ from 'lodash';
-import { JudgeMoveMiniDistance } from '../../app/constants';
+import { SVG_MOVE_MINI_DISTANCE } from '../../app/constants';
 
 export const EPSILON = 1e-6;
 
@@ -73,7 +73,7 @@ export const checkIsImageSuffix = (filePath) => {
 export const whetherTransformed = (objValue, othValue) => {
     const res = Object.keys(objValue).some((key) => {
         if (typeof objValue[key] === 'number') {
-            return Math.abs(objValue[key] - othValue[key]) > JudgeMoveMiniDistance;
+            return Math.abs(objValue[key] - othValue[key]) > SVG_MOVE_MINI_DISTANCE;
         } else {
             return objValue[key] !== othValue[key];
         }

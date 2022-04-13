@@ -1,7 +1,8 @@
 import { Bezier } from 'bezier-js';
 import { v4 as uuid } from 'uuid';
 import { createSVGElement } from '../../element-utils';
-import { pointRadius, pointSize, ThemeColor, TCoordinate, minimumSpacing } from './constants';
+import { POINT_RADIUS, POINT_SIZE, THEME_COLOR, MINIMUM_SPACING } from './constants';
+import { TCoordinate } from './types';
 
 class Line {
     public points: TCoordinate[];
@@ -105,8 +106,8 @@ class Line {
                         return;
                     }
                 }
-                this.EndPointsEle[index].setAttribute('x', `${x - pointRadius / this.scale}`);
-                this.EndPointsEle[index].setAttribute('y', `${y - pointRadius / this.scale}`);
+                this.EndPointsEle[index].setAttribute('x', `${x - POINT_RADIUS / this.scale}`);
+                this.EndPointsEle[index].setAttribute('y', `${y - POINT_RADIUS / this.scale}`);
                 this.EndPointsEle[index].setAttribute('cx', `${x}`);
                 this.EndPointsEle[index].setAttribute('cy', `${y}`);
             });
@@ -137,7 +138,7 @@ class Line {
     }
 
     public generateEndPointEle() {
-        const pointRadiusWithScale = pointRadius / this.scale;
+        const pointRadiusWithScale = POINT_RADIUS / this.scale;
         this.EndPoins.forEach((item) => {
             if (!item || !item[0]) {
                 return;
@@ -151,7 +152,7 @@ class Line {
     }
 
     private createCircle([x, y]: TCoordinate) {
-        const pointRadiusWithScale = pointRadius / this.scale;
+        const pointRadiusWithScale = POINT_RADIUS / this.scale;
 
         return createSVGElement({
             element: 'rect',
@@ -161,13 +162,13 @@ class Line {
                 'fill-opacity': 1,
                 rx: `${pointRadiusWithScale}`,
                 ry: `${pointRadiusWithScale}`,
-                width: pointSize / this.scale,
-                height: pointSize / this.scale,
+                width: POINT_SIZE / this.scale,
+                height: POINT_SIZE / this.scale,
                 x: x - pointRadiusWithScale,
                 cx: x,
                 y: y - pointRadiusWithScale,
                 cy: y,
-                stroke: ThemeColor,
+                stroke: THEME_COLOR,
                 'stroke-width': 1 / this.scale,
                 'pointer-events': 'all',
                 id: uuid()
@@ -176,7 +177,7 @@ class Line {
     }
 
     private calcSymmetryPoint([x, y]: TCoordinate, [x1, y1]: TCoordinate): TCoordinate {
-        if (Math.sqrt((x1 - x) ** 2 + (y1 - y) ** 2) <= minimumSpacing) {
+        if (Math.sqrt((x1 - x) ** 2 + (y1 - y) ** 2) <= MINIMUM_SPACING) {
             return null;
         }
         return [2 * x1 - x, 2 * y1 - y];
@@ -212,12 +213,12 @@ class Line {
 
         this.elem.setAttribute('stroke-width', `${1 / this.scale}`);
 
-        const pointRadiusWithScale = pointRadius / this.scale;
+        const pointRadiusWithScale = POINT_RADIUS / this.scale;
         this.EndPointsEle.forEach((elem, index) => {
             const item = this.EndPoins[index];
 
-            elem.setAttribute('width', `${pointSize / this.scale}`);
-            elem.setAttribute('height', `${pointSize / this.scale}`);
+            elem.setAttribute('width', `${POINT_SIZE / this.scale}`);
+            elem.setAttribute('height', `${POINT_SIZE / this.scale}`);
             elem.setAttribute('rx', `${pointRadiusWithScale}`);
             elem.setAttribute('ry', `${pointRadiusWithScale}`);
             elem.setAttribute('x', `${item[0] - pointRadiusWithScale}`);

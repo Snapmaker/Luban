@@ -14,7 +14,7 @@ import api from '../api';
 import { checkIsImageSuffix } from '../../shared/lib/utils';
 import BaseModel from './BaseModel';
 import Resource from './Resource';
-import { JudgeMoveMiniDistance } from '../constants';
+import { SVG_MOVE_MINI_DISTANCE } from '../constants';
 // import { DEFAULT_FILL_COLOR } from '../ui/SVGEditor/constants';
 
 const EVENTS = {
@@ -352,14 +352,14 @@ class SvgModel extends BaseModel {
 
             return [arr[0], arr[arr.length - 1]].some((i) => {
                 return (!latest.connected ? [latestPoints[0], latestPoints[latestPoints.length - 1]] : [latestPoints[latestPoints.length - 1]]).some((j) => {
-                    return Math.abs(i[0] - j[0]) <= JudgeMoveMiniDistance && Math.abs(i[1] - j[1]) <= JudgeMoveMiniDistance;
+                    return Math.abs(i[0] - j[0]) <= SVG_MOVE_MINI_DISTANCE && Math.abs(i[1] - j[1]) <= SVG_MOVE_MINI_DISTANCE;
                 });
             });
         };
         const setSort = (item, connected) => {
             const latest = sorted[sorted.length - 1];
             if (connected && latest) {
-                if (Math.abs(latest.item[latest.item.length - 1][0] - item[0][0]) <= JudgeMoveMiniDistance && Math.abs(latest.item[latest.item.length - 1][1] - item[0][1]) <= JudgeMoveMiniDistance) {
+                if (Math.abs(latest.item[latest.item.length - 1][0] - item[0][0]) <= SVG_MOVE_MINI_DISTANCE && Math.abs(latest.item[latest.item.length - 1][1] - item[0][1]) <= SVG_MOVE_MINI_DISTANCE) {
                     sorted.push({ item, connected: true });
                 } else {
                     item.reverse();
@@ -387,8 +387,8 @@ class SvgModel extends BaseModel {
                     // flip first point
                     if (!latest.connected) {
                         if (!(
-                            Math.abs(latestPoints[latestPoints.length - 1][0] - c[0][0]) <= JudgeMoveMiniDistance
-                            && Math.abs(latestPoints[latestPoints.length - 1][1] - c[0][1]) <= JudgeMoveMiniDistance)
+                            Math.abs(latestPoints[latestPoints.length - 1][0] - c[0][0]) <= SVG_MOVE_MINI_DISTANCE
+                            && Math.abs(latestPoints[latestPoints.length - 1][1] - c[0][1]) <= SVG_MOVE_MINI_DISTANCE)
                         ) {
                             const arr = latestPoints;
                             const a = arr.pop();

@@ -1,6 +1,7 @@
 import type DrawGroup from '../../ui/SVGEditor/svg-content/DrawGroup';
-import { TCoordinate } from '../../ui/SVGEditor/svg-content/DrawGroup/constants';
 import Operation from './Operation';
+
+export type TCoordinate = [number, number];
 
 type DrawDeleteProp = {
     target: {

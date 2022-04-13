@@ -25,6 +25,7 @@ import {
     MIN_LASER_CNC_CANVAS_SCALE, MAX_LASER_CNC_CANVAS_SCALE
 } from '../../constants';
 import { baseActions } from './actions-base';
+/* eslint-disable-next-line import/no-cycle */
 import { processActions } from './actions-process';
 
 import workerManager from '../../lib/manager/workerManager';
@@ -36,6 +37,7 @@ import { PROCESS_STAGE, STEP_STAGE } from '../../lib/manager/ProgressManager';
 import VisibleOperation2D from '../operation-history/VisibleOperation2D';
 import AddOperation2D from '../operation-history/AddOperation2D';
 import DeleteOperation2D from '../operation-history/DeleteOperation2D';
+/* eslint-disable-next-line import/no-cycle */
 import { actions as operationHistoryActions } from '../operation-history';
 import Operations from '../operation-history/Operations';
 import MoveOperation2D from '../operation-history/MoveOperation2D';
@@ -584,7 +586,9 @@ export const actions = {
      * @param transformation - ?
      * @param modelID - optional, used in project recovery
      */
-    generateModel: (headType, { originalName, uploadName, sourceWidth, sourceHeight, mode, sourceType, config, gcodeConfig, transformation, modelID, zIndex, isLimit }) => (dispatch, getState) => {
+    generateModel: (headType, {
+        originalName, uploadName, sourceWidth, sourceHeight, mode, sourceType, config, gcodeConfig, transformation, modelID, zIndex, isLimit
+    }) => (dispatch, getState) => {
         const { size } = getState().machine;
         const { materials, modelGroup, SVGActions, contentGroup, toolPathGroup, coordinateMode, coordinateSize } = getState()[headType];
         sourceType = sourceType || getSourceType(originalName);
