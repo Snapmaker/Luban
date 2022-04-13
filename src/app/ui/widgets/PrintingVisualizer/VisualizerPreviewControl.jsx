@@ -56,9 +56,6 @@ function GcodeLayout() {
 
     const [value, setValue] = useState([]);
     useEffect(() => {
-        // console.log('layerRangeDisplayed v', layerRangeDisplayed[0], layerRangeDisplayed[1], value[0] * x,
-        //     (value[1] - MIN) * x, layerRangeDisplayed[0] / x,
-        //     layerRangeDisplayed[1] / x + MIN);
         setValue([
             layerRangeDisplayed[0] / x,
             layerRangeDisplayed[1] / x + MIN
@@ -67,7 +64,6 @@ function GcodeLayout() {
 
 
     const onChangeShowLayer = throttle((v) => {
-        // console.log('v', v);
         dispatch(printingActions.showGcodeLayers([
             v[0] * x,
             (v[1] - MIN) * x

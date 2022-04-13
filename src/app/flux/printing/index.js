@@ -676,7 +676,6 @@ export const actions = {
                 bufferGeometry.setAttribute('a_type_code', typeCodeAttribute);
                 bufferGeometry.setAttribute('a_tool_code', toolCodeAttribute);
 
-
                 dispatch(actions.destroyGcodeLine());
 
                 // gcodeLineObjects.forEach(object => {
@@ -1544,7 +1543,6 @@ export const actions = {
     },
 
     setShowOriginalModel: (show) => (dispatch, getState) => {
-        console.log('show', show);
         const { modelGroup } = getState().printing;
         modelGroup.object.visible = show;
         dispatch(actions.render());

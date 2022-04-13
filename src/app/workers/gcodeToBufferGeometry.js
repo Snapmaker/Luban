@@ -46,7 +46,7 @@ const gcodeToBufferGeometry = async (message) => {
             toolCodes,
             layerCount,
             bounds,
-            gcode
+            gcode // TODO: used gcode parser
         }
     };
     sendMessage(
