@@ -134,7 +134,9 @@ class Visualizer extends PureComponent {
                 this.props.modelGroup.selectAllModels();
                 const { x, y, z } = this.props.modelGroup.getSelectedModelBBoxWHD();
                 const r = Math.sqrt(x * x + y * y + z * z) / 2;
-                this.canvas.current.fitViewIn(this.props.modelGroup.selectedGroup.position, r);
+                if (r > 0.000001) {
+                    this.canvas.current.fitViewIn(this.props.modelGroup.selectedGroup.position, r);
+                }
                 this.props.modelGroup.unselectAllModels();
             }
         },

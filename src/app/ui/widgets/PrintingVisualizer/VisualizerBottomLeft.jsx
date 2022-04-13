@@ -45,6 +45,13 @@ function VisualizerBottomLeft({ actions }) {
                     className="margin-left-2"
                     onClick={actions.toRight}
                 />
+                <div className="border-left-normal display-inline text-overflow-ellipsis height-20 margin-left-2 margin-top-4" />
+                <SvgIcon
+                    name="ScaleToFit"
+                    size={24}
+                    className="margin-left-2"
+                    onClick={actions.fitViewIn}
+                />
             </div>
         </React.Fragment>
     );
@@ -55,7 +62,8 @@ VisualizerBottomLeft.propTypes = {
         toTop: PropTypes.func.isRequired,
         toTopFrontRight: PropTypes.func.isRequired,
         toRight: PropTypes.func.isRequired,
-        toFront: PropTypes.func.isRequired
+        toFront: PropTypes.func.isRequired,
+        fitViewIn: PropTypes.func.isRequired
     })
 };
 export default React.memo(VisualizerBottomLeft);
