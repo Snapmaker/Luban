@@ -101,7 +101,7 @@ class SerialPortClient {
 
     settings = {};
 
-    workflowState = WORKFLOW_STATE_IDLE;
+    workflowStatus = WORKFLOW_STATE_IDLE;
 
     static map = new Map();
 
@@ -165,13 +165,9 @@ class SerialPortClient {
                             this.type = '';
                             this.state = {};
                             this.settings = {};
-                            this.workflowState = WORKFLOW_STATE_IDLE;
+                            this.state.workflowStatus = WORKFLOW_STATE_IDLE;
                         }
                     }
-                }
-                if (eventName === 'workflow:state') {
-                    // this.workflowState = args[0];
-                    this.workflowState = options.workflowState;
                 }
                 if (eventName === 'Marlin:state') {
                     this.type = MARLIN;

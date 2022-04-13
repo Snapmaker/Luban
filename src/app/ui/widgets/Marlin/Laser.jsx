@@ -9,12 +9,10 @@ import { NumberInput as Input } from '../../components/Input';
 import SvgIcon from '../../components/SvgIcon';
 import WorkSpeed from './WorkSpeed';
 import {
-    CONNECTION_TYPE_WIFI,
     LEVEL_TWO_POWER_LASER_FOR_SM2,
     WORKFLOW_STATUS_PAUSED,
     WORKFLOW_STATUS_RUNNING,
-    WORKFLOW_STATE_PAUSED,
-    WORKFLOW_STATE_RUNNING, CONNECTION_TYPE_SERIAL, CONNECTION_LASER_POWER,
+    CONNECTION_LASER_POWER,
     CONNECTION_SWITCH_LASER_POWER,
 } from '../../../constants';
 import { controller } from '../../../lib/controller';
@@ -24,8 +22,6 @@ class Laser extends PureComponent {
         headStatus: PropTypes.bool,
         laserPower: PropTypes.number,
         workflowStatus: PropTypes.string,
-        workflowState: PropTypes.string,
-        connectionType: PropTypes.string,
         isConnected: PropTypes.bool,
         toolHead: PropTypes.string,
     };
@@ -46,9 +42,8 @@ class Laser extends PureComponent {
 
     actions = {
         isPrinting: () => {
-            const { workflowStatus, workflowState, connectionType } = this.props;
-            return (_.includes([WORKFLOW_STATUS_RUNNING, WORKFLOW_STATUS_PAUSED], workflowStatus) && connectionType === CONNECTION_TYPE_WIFI)
-                || (_.includes([WORKFLOW_STATE_PAUSED, WORKFLOW_STATE_RUNNING], workflowState) && connectionType === CONNECTION_TYPE_SERIAL);
+            const { workflowStatus } = this.props;
+            return _.includes([WORKFLOW_STATUS_RUNNING, WORKFLOW_STATUS_PAUSED], workflowStatus);
         },
         onChangeLaserPower: (value) => {
             this.setState({
@@ -167,12 +162,11 @@ class Laser extends PureComponent {
 
 const mapStateToProps = (state) => {
     const machine = state.machine;
-    const { workflowStatus, workflowState, connectionType, laserPower, headStatus, isConnected } = machine;
+    const { workflowStatus, connectionType, laserPower, headStatus, isConnected } = machine;
     const { toolHead } = state.workspace;
 
     return {
         workflowStatus,
-        workflowState,
         connectionType,
         laserPower,
         headStatus,

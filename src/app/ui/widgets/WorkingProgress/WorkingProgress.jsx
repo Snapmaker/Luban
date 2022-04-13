@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
 import { useSelector } from 'react-redux';
 import { Progress } from 'antd';
 import PropTypes from 'prop-types';
@@ -22,20 +22,14 @@ Text.propTypes = {
 
 const WorkingProgress = ({ widgetActions, controlActions }) => {
     const {
-        isConnected, workflowStatus,
+        isConnected, workflowStatus: currentWorkflowStatus,
         gcodePrintingInfo: { progress, elapsedTime, remainingTime, total, sent, printStatus },
-        connectionType, workflowState
     } = useSelector(state => state.machine);
     const gcodeFile = useSelector(state => state.workspace.gcodeFile);
     const fileName = gcodeFile?.renderGcodeFileName ?? gcodeFile?.name;
-    const [currentWorkflowStatus, setCurrentWorkflowStatus] = useState(null);
     useEffect(() => {
         widgetActions.setTitle(i18n._('key-Workspace/Workprogress-Working'));
     }, []);
-    useEffect(() => {
-        const newCurrent = connectionType === 'wifi' ? workflowStatus : workflowState;
-        setCurrentWorkflowStatus(newCurrent);
-    }, [workflowState, workflowStatus, connectionType]);
     useEffect(() => {
         if (
             isConnected

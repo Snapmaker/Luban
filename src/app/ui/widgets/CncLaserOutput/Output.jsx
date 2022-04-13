@@ -31,7 +31,6 @@ const Output = ({ headType }) => {
     const shouldGenerateGcodeCounter = useSelector(state => state[headType]?.shouldGenerateGcodeCounter);
     const hasModel = useSelector(state => state[headType]?.modelGroup.hasModel(), shallowEqual);
     const toolPathGroup = useSelector(state => state[headType]?.toolPathGroup);
-    const workflowState = useSelector(state => state.machine?.workflowState);
     const isGcodeGenerating = useSelector(state => state[headType]?.isGcodeGenerating);
 
     const [showWorkspace, setShowWorkspace] = useState(false);
@@ -138,14 +137,14 @@ const Output = ({ headType }) => {
         <Menu>
             <Menu.Item
                 onClick={actions.onLoadGcode}
-                disabled={shouldRenderToolPaths || !hasModel || workflowState === 'running' || isGcodeGenerating || gcodeFile === null}
+                disabled={shouldRenderToolPaths || !hasModel || isGcodeGenerating || gcodeFile === null}
             >
                 <div className={classNames('align-c', 'padding-vertical-4')}>
                     {i18n._('key-CncLaser/G-codeAction-Load G-code to Workspace')}
                 </div>
             </Menu.Item>
             <Menu.Item
-                disabled={shouldRenderToolPaths || !hasModel || workflowState === 'running' || isGcodeGenerating || gcodeFile === null}
+                disabled={shouldRenderToolPaths || !hasModel || isGcodeGenerating || gcodeFile === null}
                 onClick={actions.onExport}
             >
                 <div className={classNames('align-c', 'padding-vertical-4')}>
@@ -217,11 +216,9 @@ const Output = ({ headType }) => {
                             <Button
                                 type="primary"
                                 priority="level-one"
-                                disabled={shouldRenderToolPaths || !hasModel || workflowState === 'running' || isGcodeGenerating || gcodeFile === null}
+                                disabled={shouldRenderToolPaths || !hasModel || isGcodeGenerating || gcodeFile === null}
                                 className={classNames(
                                     'position-ab',
-                                    // 'bottom-ne-8',
-                                    // 'margin-top-10',
                                     displayedType === DISPLAYED_TYPE_TOOLPATH ? 'display-block' : 'display-none'
                                 )}
                                 suffixIcon={<SvgIcon name="DropdownOpen" type={['static']} color="#d5d6d9" />}

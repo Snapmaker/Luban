@@ -26,7 +26,7 @@ function SerialConnection() {
         isOpen, enclosureOnline, isConnected, server, servers,
         // connectionTimeout, airPurifier, airPurifierHasPower,
         airPurifier, airPurifierHasPower,
-        heatedBedTemperature, laserCamera, workflowState, emergencyStopOnline
+        heatedBedTemperature, laserCamera, workflowStatus, emergencyStopOnline
     } = useSelector(state => state.machine);
     const {
         toolHead, headType, series: seriesInfo
@@ -237,11 +237,11 @@ function SerialConnection() {
                             {i18n._(MACHINE_SERIES[seriesInfo.toUpperCase()].label)}
                         </span>
                         <span className={styles['connection-state-icon']}>
-                            {workflowState === WORKFLOW_STATE_IDLE
+                            {workflowStatus === WORKFLOW_STATE_IDLE
                             && <i className="sm-icon-14 sm-icon-idle" />}
-                            {workflowState === WORKFLOW_STATE_PAUSED
+                            {workflowStatus === WORKFLOW_STATE_PAUSED
                             && <i className="sm-icon-14 sm-icon-paused" />}
-                            {workflowState === WORKFLOW_STATE_RUNNING
+                            {workflowStatus === WORKFLOW_STATE_RUNNING
                             && <i className="sm-icon-14 sm-icon-running" />}
                         </span>
                     </div>

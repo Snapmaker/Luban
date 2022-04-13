@@ -373,6 +373,7 @@ export const actions = {
                 } = state;
                 dispatch(baseActions.updateState({
                     laser10WErrorState,
+                    workflowStatus: status,
                     isHomed
                 }));
                 if (!isNil(airPurifier)) {
@@ -392,13 +393,13 @@ export const actions = {
                         airPurifierFilterHealth: airPurifierFilterHealth,
                         isEmergencyStopped: isEmergencyStopped,
                         isEnclosureDoorOpen: isEnclosureDoorOpen,
-                        workflowStatus: status,
                         laserCamera
                     }));
                     dispatch(baseActions.updateState({
                         gcodePrintingInfo: machineState.server.getGcodePrintingInfo(state)
                     }));
                 } else {
+                    console.log('serial', status);
                     dispatch(baseActions.updateState({
                         headStatus: headStatus,
                         laserFocalLength: zFocus + LASER_MOCK_PLATE_HEIGHT,
@@ -522,12 +523,12 @@ export const actions = {
             'serialport:emergencyStop': (options) => {
                 dispatch(actions.close(options, true));
             },
-            'workflow:state': (options) => {
-                const { workflowState } = options;
-                dispatch(baseActions.updateState({
-                    workflowState
-                }));
-            },
+            // 'workflow:state': (options) => {
+            //     const { workflowState } = options;
+            //     dispatch(baseActions.updateState({
+            //         workflowState
+            //     }));
+            // },
             'sender:status': (options) => {
                 const { data } = options;
                 const { total, sent, received, startTime, finishTime, elapsedTime, remainingTime } = data;

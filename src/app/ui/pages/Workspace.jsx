@@ -86,6 +86,7 @@ function Workspace({ isPopup, onClose, style, className }) {
     const primaryWidgets = useSelector(state => state.widget.workspace.left.widgets);
     const secondaryWidgets = useSelector(state => state.widget.workspace.right.widgets);
     const defaultWidgets = useSelector(state => state.widget.workspace.default.widgets);
+    const workflowStatus = useSelector(state => state.machine?.workflowStatus);
     const [previewModalShow, setPreviewModalShow] = useState(false);
     const [isDraggingWidget, setIsDraggingWidget] = useState(false);
     const [connected, setConnected] = useState(controller.connected);
@@ -266,7 +267,7 @@ function Workspace({ isPopup, onClose, style, className }) {
                 updateTabContainer={actions.updateTabContainer}
             >
                 <Dropzone
-                    disabled={isDraggingWidget || controller.workflowState !== WORKFLOW_STATE_IDLE}
+                    disabled={isDraggingWidget || workflowStatus !== WORKFLOW_STATE_IDLE}
                     accept={ACCEPT}
                     dragEnterMsg={i18n._('key-Workspace/Page-Drop a G-code file here.')}
                     onDropAccepted={actions.onDropAccepted}

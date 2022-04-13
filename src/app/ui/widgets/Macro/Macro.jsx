@@ -7,12 +7,9 @@ import TipTrigger from '../../components/TipTrigger';
 import SvgIcon from '../../components/SvgIcon';
 import {
     MODAL_RUN_MACRO,
-    MODAL_EDIT_MACRO,
-    WORKFLOW_STATE_IDLE
+    MODAL_EDIT_MACRO
 } from '../../../constants';
 import api from '../../../api';
-// import { Button } from '../../components/Buttons';
-// import Space from '../../components/Space';
 import i18n from '../../../lib/i18n';
 import { actions as machineActions } from '../../../flux/machine';
 
@@ -21,7 +18,7 @@ import styles from './index.styl';
 const STATUS_IDLE = 'idle';
 
 function Macro({ updateModal, openModal, macros }) {
-    const { workflowState, workflowStatus, isConnected } = useSelector(state => state.machine);
+    const { workflowStatus, isConnected } = useSelector(state => state.machine);
     const [macrosState, setMacrosState] = useState([]);
     const dispatch = useDispatch();
 
@@ -58,7 +55,7 @@ function Macro({ updateModal, openModal, macros }) {
                 return false;
             }
 
-            if (workflowState !== WORKFLOW_STATE_IDLE && workflowStatus !== STATUS_IDLE) {
+            if (workflowStatus !== STATUS_IDLE) {
                 return false;
             }
             return true;
