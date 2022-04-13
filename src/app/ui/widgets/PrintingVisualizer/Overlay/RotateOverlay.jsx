@@ -69,9 +69,9 @@ const RotateOverlay = React.memo(({
     const updateRotate = (event) => {
         const { detail } = event;
         throttle(() => {
-            !isUndefined(detail.rotate.x) && setRotateX(isNull(detail.rotate.x) ? null : Math.round(detail.rotate.x * 10) / 10);
-            !isUndefined(detail.rotate.y) && setRotateY(isNull(detail.rotate.y) ? null : Math.round(detail.rotate.y * 10) / 10);
-            !isUndefined(detail.rotate.z) && setRotateZ(isNull(detail.rotate.z) ? null : Math.round(detail.rotate.z * 10) / 10);
+            !isUndefined(detail.rotate.x) && setRotateX(isNull(detail.rotate.x) ? null : detail.rotate.x);
+            !isUndefined(detail.rotate.y) && setRotateY(isNull(detail.rotate.y) ? null : detail.rotate.y);
+            !isUndefined(detail.rotate.z) && setRotateZ(isNull(detail.rotate.z) ? null : detail.rotate.z);
         }, 1000)();
     };
     useEffect(() => {

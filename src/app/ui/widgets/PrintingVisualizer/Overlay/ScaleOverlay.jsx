@@ -10,6 +10,8 @@ import { CancelButton } from '../VisualizerLeftBar';
 import { NumberInput as Input } from '../../../components/Input';
 import Checkbox from '../../../components/Checkbox';
 import { Button } from '../../../components/Buttons';
+import { updateControlInputEvent } from '../../../components/SMCanvas/TransformControls';
+import { SCALE_MODE } from '../../../../constants';
 
 const longLang = ['de', 'it'];
 const ScaleOverlay = React.memo(({
@@ -27,26 +29,29 @@ const ScaleOverlay = React.memo(({
         y: 100,
         z: 100
     });
+    // hidden model size after scale
+    // const [initModelSize, setInitModelSize] = useState({
+    //     x: selectedModelBBoxDes.x / selectedGroup.scale.x,
+    //     y: selectedModelBBoxDes.y / selectedGroup.scale.y,
+    //     z: selectedModelBBoxDes.z / selectedGroup.scale.z,
+    // }); // the model size when scale = 1
     const [modelX, setModelX] = useState(0);
     const [modelY, setModelY] = useState(0);
     // const [modelZ, setModelZ] = useState(0);
     const [uniformScalingState, setUniformScalingState] = useState(true);
     const dispatch = useDispatch();
     const [modelSize, setModelSize] = useState({});
-
     const updateScale = (event) => {
         const { detail } = event;
         throttle(() => {
-            const newScalePercentObj = {
-                x: Math.round(Math.abs(detail.scale.x) * 1000) / 10,
-                y: Math.round(Math.abs(detail.scale.y) * 1000) / 10,
-                z: Math.round(Math.abs(detail.scale.z) * 1000) / 10
-            };
-            setScalePercentObj(newScalePercentObj);
-            if (detail.isPrimeTower) {
-                setModelX(Math.round(Math.abs(detail.scale.x) * 200) / 10);
-                setModelY(Math.round(Math.abs(detail.scale.y) * 200) / 10);
-            }
+            setScalePercentObj(detail.scale);
+            setModelX(Math.round(detail.scale.x * 20) / 100);
+            setModelY(Math.round(detail.scale.y * 20) / 100);
+            // hidden model size after scale
+            // setModelX(Math.round(detail.scale.x * initModelSize.x) / 100);
+            // setModelY(Math.round(detail.scale.y * initModelSize.y) / 100);
+            // setModelZ(Math.round(detail.scale.z * initModelSize.z) / 100);
+            // !detail.isPrimeTower && setModelZ(Math.round(detail.scale.z * initModelSize.z) / 100);
         }, 1000)();
     };
     useEffect(() => {
@@ -56,17 +61,23 @@ const ScaleOverlay = React.memo(({
         };
     }, []);
     useEffect(() => {
+        // hidden model size after scale
+        // const updateInitModelSize = {
+        //     x: selectedModelBBoxDes.x / selectedGroup.scale.x,
+        //     y: selectedModelBBoxDes.y / selectedGroup.scale.y,
+        //     z: selectedModelBBoxDes.z / selectedGroup.scale.z,
+        // };
+        // setInitModelSize(updateInitModelSize);
         if (isPrimeTowerSelected) {
-            const model = selectedModelArray[0];
-            const { min, max } = model.boundingBox;
-            const newModelSize = {
-                scaledX: (max.x - min.x) / selectedGroup.scale.x,
-                scaledY: (max.y - min.y) / selectedGroup.scale.y,
-                scaledZ: (max.z - min.z) / selectedGroup.scale.z,
+            const originModelSize = {
+                scaledX: selectedModelBBoxDes.x / selectedGroup.scale.x,
+                scaledY: selectedModelBBoxDes.y / selectedGroup.scale.y,
+                scaledZ: selectedModelBBoxDes.z / selectedGroup.scale.z
             };
-            setModelX(Number((max.x - min.x).toFixed(1)));
-            setModelY(Number((max.y - min.y).toFixed(1)));
-            setModelSize(newModelSize);
+            setModelX(Number(selectedModelBBoxDes.x.toFixed(1)));
+            setModelY(Number(selectedModelBBoxDes.y.toFixed(1)));
+            // setModelZ(Number(selectedModelBBoxDes.z.toFixed(1)));
+            setModelSize(originModelSize);
         }
         const newScalePercentObj = {
             x: Math.round(Math.abs(transformation.scaleX || 0) * 1000) / 10,
@@ -87,6 +98,7 @@ const ScaleOverlay = React.memo(({
     const onModelTransform = (transformations, isReset, _isPrimeTowerSelected = false) => {
         const newTransformation = {};
         let value = null;
+        let updateAxis = null;
         Object.keys(transformations).forEach(keyItem => {
             value = transformations[keyItem];
             switch (keyItem) {
@@ -96,6 +108,7 @@ const ScaleOverlay = React.memo(({
                         newTransformation.uniformScalingState = false;
                     }
                     newTransformation.scaleX = (transformation.scaleX > 0 ? value : -value);
+                    updateAxis = 'x';
                     break;
                 case 'scaleY':
                     if (_isPrimeTowerSelected) {
@@ -103,15 +116,26 @@ const ScaleOverlay = React.memo(({
                         newTransformation.uniformScalingState = false;
                     }
                     newTransformation.scaleY = (transformation.scaleY > 0 ? value : -value);
+                    updateAxis = 'y';
                     break;
                 case 'scaleZ':
                     newTransformation.scaleZ = (transformation.scaleZ > 0 ? value : -value);
+                    updateAxis = 'z';
                     break;
                 default:
                     break;
             }
         });
         dispatch(printingActions.updateSelectedModelTransformation(newTransformation, isReset ? _isPrimeTowerSelected : undefined));
+        window.dispatchEvent(updateControlInputEvent({
+            controlValue: {
+                mode: SCALE_MODE,
+                axis: isReset ? undefined : updateAxis,
+                data: {
+                    [updateAxis]: newTransformation[`scale${updateAxis.toUpperCase()}`] * 100
+                }
+            }
+        }));
     };
 
     const resetScale = (_isPrimeTowerSelected) => {
@@ -121,6 +145,17 @@ const ScaleOverlay = React.memo(({
             'scaleZ': _isPrimeTowerSelected ? primeTowerHeight : 1,
             'uniformScalingState': !_isPrimeTowerSelected
         }, true);
+        window.dispatchEvent(updateControlInputEvent({
+            controlValue: {
+                mode: SCALE_MODE,
+                data: {
+                    x: 100,
+                    y: 100,
+                    z: 100
+                }
+                // axis: updateAxis
+            }
+        }));
         onModelAfterTransform();
     };
 
@@ -150,9 +185,10 @@ const ScaleOverlay = React.memo(({
                                 suffix="mm"
                                 size="small"
                                 min={1}
+                                // min={0.1}
                                 value={modelX}
                                 onChange={(value) => {
-                                    onModelTransform({ 'scaleX': value / modelSize.scaledX }, false, true);
+                                    onModelTransform({ 'scaleX': value / modelSize.scaledX }, false, isPrimeTowerSelected);
                                     onModelAfterTransform();
                                 }}
                                 className="margin-right-8"
@@ -181,7 +217,7 @@ const ScaleOverlay = React.memo(({
                                 min={1}
                                 value={modelY}
                                 onChange={(value) => {
-                                    onModelTransform({ 'scaleY': value / modelSize.scaledY }, false, true);
+                                    onModelTransform({ 'scaleY': value / modelSize.scaledY }, false, isPrimeTowerSelected);
                                     onModelAfterTransform();
                                 }}
                                 className="margin-right-8"
@@ -204,6 +240,18 @@ const ScaleOverlay = React.memo(({
                     <div className="sm-flex height-32 margin-bottom-8">
                         <span className="sm-flex-auto width-16 color-blue-2">Z</span>
                         <div className="position-ab sm-flex-auto margin-horizontal-24">
+                            {/* hidden model size after scale */}
+                            {/* <Input
+                                suffix="mm"
+                                size="small"
+                                min={isPrimeTowerSelected ? 1 : initModelSize.z * 0.01}
+                                value={modelZ}
+                                onChange={(value) => {
+                                    onModelTransform({ 'scaleZ': value / modelSize.scaledZ }, false, isPrimeTowerSelected);
+                                    onModelAfterTransform();
+                                }}
+                                className="margin-right-8"
+                            /> */}
                             <Input
                                 suffix="%"
                                 size="small"

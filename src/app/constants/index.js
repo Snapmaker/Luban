@@ -82,6 +82,11 @@ export const LEFT_EXTRUDER_MAP_NUMBER = '0';
 export const RIGHT_EXTRUDER_MAP_NUMBER = '1';
 export const BOTH_EXTRUDER_MAP_NUMBER = '2';
 
+// for transformControl mode
+export const ROTATE_MODE = 'rotate';
+export const SCALE_MODE = 'scale';
+export const TRANSLATE_MODE = 'translate';
+
 // Stages for 3d print
 export const STAGES_3DP = {
     noModel: 10,

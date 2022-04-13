@@ -12,6 +12,8 @@ import { actions as printingActions } from '../../../../flux/printing';
 import { actions as machineActions } from '../../../../flux/machine';
 /* eslint-disable-next-line import/no-cycle */
 import { CancelButton } from '../VisualizerLeftBar';
+import { updateControlInputEvent } from '../../../components/SMCanvas/TransformControls';
+import { TRANSLATE_MODE } from '../../../../constants';
 import styles from './styles.styl';
 
 const angleOptions = [
@@ -67,24 +69,37 @@ const TranslateOverlay = React.memo(({
     const [moveY, setMoveY] = useState(0);
     const [arragneSettings, setArragneSettings] = useState(printingArrangeSettings);
     const dispatch = useDispatch();
-    const onModelTransform = (transformations) => {
+    const onModelTransform = (transformations, isReset) => {
         const newTransformation = {};
+        const updateControlValue = {};
+        let updateAxis = null;
         Object.keys(transformations).forEach(keyItem => {
             let value = transformations[keyItem];
             switch (keyItem) {
                 case 'moveX':
                     value = Math.min(Math.max(value, -size.x / 2), size.x / 2);
                     newTransformation.positionX = value;
+                    updateControlValue.x = value;
+                    updateAxis = 'x';
                     break;
                 case 'moveY':
                     value = Math.min(Math.max(value, -size.y / 2), size.y / 2);
                     newTransformation.positionY = value;
+                    updateControlValue.y = value;
+                    updateAxis = 'y';
                     break;
                 default:
                     break;
             }
         });
         dispatch(printingActions.updateSelectedModelTransformation(newTransformation));
+        window.dispatchEvent(updateControlInputEvent({
+            controlValue: {
+                mode: TRANSLATE_MODE,
+                data: updateControlValue,
+                axis: isReset ? undefined : updateAxis
+            }
+        }));
     };
     const resetPosition = (_isPrimeTowerSelected = false) => {
         const { max } = modelGroup._bbox;
@@ -93,7 +108,7 @@ const TranslateOverlay = React.memo(({
         onModelTransform({
             'moveX': _moveX,
             'moveY': _moveY
-        });
+        }, true);
         onModelAfterTransform();
     };
     const handleArrangeSettingsChange = (settings) => {
@@ -104,8 +119,8 @@ const TranslateOverlay = React.memo(({
     const updatePosition = (event) => {
         const { detail } = event;
         throttle(() => {
-            setMoveX(Math.round(detail.position.x * 10) / 10);
-            setMoveY(Math.round(detail.position.y * 10) / 10);
+            setMoveX(detail.position.x);
+            setMoveY(detail.position.y);
         }, 1000)();
     };
     useEffect(() => {

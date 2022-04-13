@@ -18,7 +18,7 @@ import { actions as printingActions } from '../../flux/printing';
 import { actions as projectActions } from '../../flux/project';
 import ProjectLayout from '../layouts/ProjectLayout';
 import MainToolBar from '../layouts/MainToolBar';
-import { HEAD_PRINTING } from '../../constants';
+import { HEAD_PRINTING, ROTATE_MODE } from '../../constants';
 import { renderPopup, renderWidgetList, logPageView, useUnsavedTitle } from '../utils';
 import { machineStore } from '../../store/local-storage';
 
@@ -224,8 +224,11 @@ function Printing({ location }) {
     const [isDraggingWidget, setIsDraggingWidget] = useState(false);
     const [enabledIntro, setEnabledIntro] = useState(null);
     const [initIndex, setInitIndex] = useState(0);
-    const [rotateInputValue, setRotateInputValue] = useState(null);
-    const [rotateAxis, setRotateAxis] = useState('x');
+    // const [rotateInputValue, setRotateInputValue] = useState(null);
+    // const [rotateAxis, setRotateAxis] = useState('x');
+    const [controlInputValue, setControlInputValue] = useState(null);
+    const [controlAxis, setControlAxis] = useState(['x']);
+    const [controlMode, setControlMode] = useState(null);
     const dispatch = useDispatch();
     const history = useHistory();
     const [renderHomepage, renderMainToolBar, renderWorkspace] = useRenderMainToolBar();
@@ -235,14 +238,17 @@ function Printing({ location }) {
     const stepRef = useRef();
     useUnsavedTitle(pageHeadType);
     const [showTipModal, setShowTipModal] = useState(!isNewUser);
-    const updateRotate = (event) => {
+    const updateControlInput = (event) => {
         const { detail } = event;
         throttle(() => {
-            if (detail.rotate.rotateAxis === null) {
-                setRotateInputValue(null);
+            setControlMode(detail.controlValue.mode);
+            if (detail.controlValue.mode === ROTATE_MODE && detail.controlValue.axis === null) {
+                setControlInputValue(null);
             } else {
-                setRotateAxis(detail.rotate.rotateAxis);
-                setRotateInputValue(Math.round(detail.rotate[detail.rotate.rotateAxis] * 10) / 10);
+                if (detail.controlValue.axis) {
+                    setControlAxis(detail.controlValue.axis.split(''));
+                }
+                setControlInputValue({ ...detail.controlValue.data });
             }
         }, 1000)();
     };
@@ -252,9 +258,9 @@ function Printing({ location }) {
         logPageView({
             pathname: '/printing'
         });
-        window.addEventListener('update-rotate', updateRotate);
+        window.addEventListener('update-control-input', updateControlInput);
         return () => {
-            window.removeEventListener('update-rotate', updateRotate);
+            window.removeEventListener('update-control-input', updateControlInput);
         };
     }, []);
     useEffect(() => {
@@ -364,7 +370,7 @@ function Printing({ location }) {
                 onDropAccepted={onDropAccepted}
                 onDropRejected={onDropRejected}
             >
-                <PrintingVisualizer widgetId="printingVisualizer" rotateInputValue={rotateInputValue} rotateAxis={rotateAxis} />
+                <PrintingVisualizer widgetId="printingVisualizer" controlInputValue={controlInputValue} controlAxis={controlAxis} controlMode={controlMode} />
                 {renderHomepage()}
                 {renderWorkspace()}
                 {enabledIntro && (
