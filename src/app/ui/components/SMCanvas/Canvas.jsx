@@ -661,7 +661,8 @@ class Canvas extends PureComponent {
             if (this.transformSourceType === '2D') {
                 this.light.position.copy(this.camera.position);
             }
-            if (this.controls.transformControl.mode !== 'mirror' && this.modelGroup.selectedModelArray[0]?.type !== 'primeTower') {
+            if (this.controls.transformControl.mode !== 'mirror' && this.modelGroup?.selectedModelArray
+            && this.modelGroup.selectedModelArray[0]?.type !== 'primeTower') {
                 switch (this.controls.transformControl.mode) {
                     case 'translate':
                         this.cloneControlPeripheral = this.controls.transformControl.translatePeripheral.clone();
