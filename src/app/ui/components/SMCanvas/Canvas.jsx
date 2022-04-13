@@ -462,6 +462,7 @@ class Canvas extends PureComponent {
         this.camera.position.y = position.y;
         this.camera.position.z = position.z;
         this.controls.setTarget(new Vector3(0, 0, this.props.cameraInitialPosition.z));
+        this.controls.panScale = 1;
         this.renderScene();
     }
 
@@ -471,6 +472,7 @@ class Canvas extends PureComponent {
         this.camera.position.z = this.props.cameraInitialPosition.z;
         this.controls.setTarget(new Vector3(0, 0, this.props.cameraInitialPosition.z));
         // this.camera.lookAt(new Vector3(0, 0, this.cameraInitialPosition.z));
+        this.controls.panScale = 1;
         this.renderScene();
     }
 
@@ -482,6 +484,7 @@ class Canvas extends PureComponent {
         this.camera.position.y = position.y;
         this.camera.position.z = position.z;
         this.controls.setTarget(new Vector3(0, 0, this.props.cameraInitialPosition.z));
+        this.controls.panScale = 1;
         this.renderScene();
     }
 
@@ -493,6 +496,7 @@ class Canvas extends PureComponent {
         this.camera.position.y = position.y;
         this.camera.position.z = position.z;
         this.controls.setTarget(new Vector3(0, 0, this.props.cameraInitialPosition.z));
+        this.controls.panScale = 1;
         this.renderScene();
     }
 
@@ -504,6 +508,7 @@ class Canvas extends PureComponent {
         this.camera.position.y = position.y;
         this.camera.position.z = position.z;
         this.controls.setTarget(new Vector3(0, 0, this.props.cameraInitialPosition.z));
+        this.controls.panScale = 1;
         this.renderScene();
     }
 
@@ -527,6 +532,7 @@ class Canvas extends PureComponent {
                 this.camera.position.x = this.controls.target.x;
                 this.camera.position.y = this.controls.target.y - Math.sin(rotation) * dist;
                 this.camera.position.z = this.controls.target.z + Math.cos(rotation) * dist;
+                this.controls.panScale = 1;
             });
         this.startTween(tween);
     }
@@ -608,7 +614,6 @@ class Canvas extends PureComponent {
                 this.light.position.copy(this.camera.position);
             }
             if (this.controls.transformControl.mode !== 'mirror' && this.modelGroup.selectedModelArray[0]?.type !== 'primeTower') {
-                // this.cloneRotatePeripheral = this.controls.transformControl.rotatePeripheral.clone();
                 switch (this.controls.transformControl.mode) {
                     case 'translate':
                         this.cloneControlPeripheral = this.controls.transformControl.translatePeripheral.clone();
@@ -623,7 +628,6 @@ class Canvas extends PureComponent {
                         this.cloneControlPeripheral = this.controls.transformControl.translatePeripheral.clone();
                         break;
                 }
-
                 this.cloneControlPeripheral.updateMatrixWorld();
                 this.controlFrontLeftTop.setFromMatrixPosition(this.cloneControlPeripheral.matrixWorld);
                 this.controlFrontLeftTop.project(this.camera);
@@ -648,7 +652,7 @@ class Canvas extends PureComponent {
                 }
                 this.controls.transformControl.dragging && inputDOM && (inputDOM.style.display = 'block');
             }
-            if (!this.modelGroup.selectedModelArray.length || this.modelGroup.hasHideModel()) {
+            if (!this.modelGroup.selectedModelArray?.length || !this.modelGroup.isSelectedModelAllVisible()) {
                 inputDOM && (inputDOM.style.display = 'none');
                 inputDOM2 && (inputDOM2.style.display = 'none');
             }

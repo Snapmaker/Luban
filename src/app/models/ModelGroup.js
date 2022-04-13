@@ -599,6 +599,9 @@ class ModelGroup extends EventEmitter {
             if (selectModel) {
                 const objectIndex = this.selectedGroup.children.indexOf(selectModel.meshObject);
                 if (objectIndex === -1) {
+                    if (this.selectedModelArray.length === 1 && this.selectedModelArray[0].type === 'primeTower') {
+                        this.unselectAllModels();
+                    }
                     let isModelAcrossGroup = false;
                     for (const selectedModel of this.selectedModelArray) {
                         if (selectedModel.parent !== selectModel.parent) {
@@ -1071,15 +1074,22 @@ class ModelGroup extends EventEmitter {
         return this.getState();
     }
 
+
+    scaleToFitFromModel(size, offsetX = 0, offsetY = 0, models) {
+        models.forEach((model) => {
+            model.scaleToFit(size, offsetX, offsetY);
+            model.computeBoundingBox();
+        });
+
+        return this.getState();
+    }
+
     scaleToFitSelectedModel(size, offsetX = 0, offsetY = 0) {
         const selected = this.getSelectedModelArray();
         if (selected.length === 0) {
             return null;
         }
-        selected.forEach((item) => {
-            item.scaleToFit(size, offsetX, offsetY);
-            item.computeBoundingBox();
-        });
+        this.scaleToFitFromModel(size, offsetX, offsetY, selected);
         this.prepareSelectedGroup();
         return this.getState();
     }
@@ -2516,12 +2526,11 @@ class ModelGroup extends EventEmitter {
         return availModels;
     }
 
-    hasHideModel() {
-        return _.some(this.selectedModelArray, { visible: false });
-    }
-
-    allIsHideModel() {
-        return _.every(this.selectedModelArray, { visible: false });
+    isSelectedModelAllVisible() {
+        if (this.selectedModelArray.length === 0) {
+            return false;
+        }
+        return this.selectedModelArray.every(model => model.visible && model.type !== 'primeTower');
     }
 }
 

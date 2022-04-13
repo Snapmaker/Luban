@@ -44,7 +44,6 @@ const RotateOverlay = React.memo(({
     setTransformMode,
     onModelAfterTransform,
     rotateWithAnalysis,
-    modelGroup,
     hasModels,
     autoRotateSelectedModel,
     setHoverFace,
@@ -53,19 +52,19 @@ const RotateOverlay = React.memo(({
     const [rotateX, setRotateX] = useState(null);
     const [rotateY, setRotateY] = useState(null);
     const [rotateZ, setRotateZ] = useState(null);
-    const selectedModelArray = useSelector(state => state?.printing?.modelGroup?.selectedModelArray);
-    const allIsHideModel = useSelector(state => state?.printing?.modelGroup?.allIsHideModel(), shallowEqual);
+    const modelGroup = useSelector(state => state?.printing?.modelGroup);
+    const models = modelGroup.models;
+    const selectedModelArray = modelGroup.selectedModelArray;
+    const isSelectedModelAllVisible = useSelector(state => state?.printing?.modelGroup?.isSelectedModelAllVisible(), shallowEqual);
     const modelExcludePrimeTower = filter(selectedModelArray, (item) => {
-        return item.type !== 'primeTower' && item.visible;
+        return item.type !== 'primeTower';
     });
-    const hasSelectedModel = modelExcludePrimeTower.length;
-    const isSingleSelected = (modelExcludePrimeTower.length === 1);
+    const isSingleSelected = modelExcludePrimeTower.length === 1 && isSelectedModelAllVisible;
     // const [hasSelectedModel, setHasSelectedModel] = useState(false);
     // const [isSingleSelected, setIsSingleSelected] = useState(false);
     const rotationAnalysisEnableForSelected = hasModels && selectedModelArray.length && selectedModelArray.every((modelItem) => {
         return modelItem instanceof ThreeGroup || modelItem instanceof ThreeModel;
     });
-    const hasHideModel = allIsHideModel && selectedModelArray.length;
     const dispatch = useDispatch();
     const updateRotate = (event) => {
         const { detail } = event;
@@ -167,7 +166,7 @@ const RotateOverlay = React.memo(({
                         priority="level-three"
                         width="100%"
                         onClick={autoRotate}
-                        disabled={hasHideModel}
+                        disabled={models.length === 0}
                     >
                         {i18n._(`${rotationAnalysisEnableForSelected ? 'key-Printing/LeftBar-Auto Rotate Selected Models' : 'key-Printing/LeftBar-Auto Rotate All Models'}`)}
                     </Button>
@@ -271,7 +270,7 @@ const RotateOverlay = React.memo(({
                                 value={rotateX}
                                 suffix="°"
                                 allowUndefined
-                                disabled={!hasSelectedModel || !!transformDisabled}
+                                disabled={!isSelectedModelAllVisible || !!transformDisabled}
                                 onPressEnter={(e) => {
                                     rotateByDirection('X', e.target.value, 'freeRotate');
                                 }}
@@ -287,7 +286,7 @@ const RotateOverlay = React.memo(({
                                 suffix="°"
                                 value={rotateY}
                                 allowUndefined
-                                disabled={!hasSelectedModel || !!transformDisabled}
+                                disabled={!isSelectedModelAllVisible || !!transformDisabled}
                                 onPressEnter={(e) => {
                                     rotateByDirection('Y', e.target.value, 'freeRotate');
                                 }}
@@ -302,7 +301,7 @@ const RotateOverlay = React.memo(({
                                 placeholder={i18n._('key-Printing/LeftBar-Enter an degree')}
                                 suffix="°"
                                 value={rotateZ}
-                                disabled={!hasSelectedModel || !!transformDisabled}
+                                disabled={!isSelectedModelAllVisible || !!transformDisabled}
                                 allowUndefined
                                 onPressEnter={(e) => {
                                     rotateByDirection('Z', e.target.value, 'freeRotate');
@@ -316,7 +315,7 @@ const RotateOverlay = React.memo(({
                         priority="level-three"
                         width="100%"
                         onClick={resetRotation}
-                        disabled={!hasSelectedModel || !!transformDisabled}
+                        disabled={!isSelectedModelAllVisible || !!transformDisabled}
                     >
                         <span>{i18n._('key-Printing/LeftBar-Reset')}</span>
                     </Button>
@@ -330,7 +329,6 @@ RotateOverlay.propTypes = {
     setTransformMode: PropTypes.func.isRequired,
     onModelAfterTransform: PropTypes.func.isRequired,
     rotateWithAnalysis: PropTypes.func.isRequired,
-    modelGroup: PropTypes.object.isRequired,
     hasModels: PropTypes.bool.isRequired,
     autoRotateSelectedModel: PropTypes.func.isRequired,
     setHoverFace: PropTypes.func.isRequired,

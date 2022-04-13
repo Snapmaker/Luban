@@ -38,7 +38,7 @@ class ProgressBar extends React.PureComponent {
                 this.timeout = setTimeout(() => this.setState({ display: 'none' }), 800);
             }
         }
-        if (this.props.tips === i18n._('key-Progress/3DP-Failed to load model.')) {
+        if (this.props.tips.includes(i18n._('key-Progress/3DP-Failed to load model.'))) {
             this.setState({ display: 'none' });
         }
         return prevProps;
@@ -55,6 +55,7 @@ class ProgressBar extends React.PureComponent {
                         size="lg"
                         closable={false}
                         centered={false}
+                        zIndex={2000}
                         style={{ top: 'calc(100vh - 126px)', padding: '16px 0 0' }}
                     >
                         <Modal.Body style={{ marginBottom: '-24px', marginTop: '-40px' }}>

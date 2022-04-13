@@ -531,6 +531,7 @@ export const CNC_TOOL_CONFIG_GROUP = [
     {
         name: 'Carving Tool',
         fields: [
+            'tool_type',
             'diameter',
             'angle',
             'shaft_diameter'

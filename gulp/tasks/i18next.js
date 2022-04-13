@@ -176,6 +176,7 @@ const curaFields = [
     'multi_pass_depth',
     'fixed_power',
     // CNC
+    'tool_type',
     'diameter',
     'angle',
     'shaft_diameter',
@@ -183,7 +184,8 @@ const curaFields = [
     'work_speed',
     'plunge_speed',
     'step_down',
-    'step_over'
+    'step_over',
+    'tool_extension_enabled'
 ];
 
 const CURA_CATEGORIES = [

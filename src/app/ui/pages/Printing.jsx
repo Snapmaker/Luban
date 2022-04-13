@@ -284,9 +284,9 @@ function Printing({ location }) {
         }
     }, [enabledIntro]);
 
-    async function onDropAccepted(file) {
+    async function onDropAccepted(files) {
         try {
-            await dispatch(printingActions.uploadModel(file));
+            await dispatch(printingActions.uploadModel(files));
         } catch (e) {
             modal({
                 title: i18n._('key-Printing/Page-Failed to open model.'),
@@ -363,6 +363,7 @@ function Printing({ location }) {
             renderModalView={renderModalView}
         >
             <Dropzone
+                multiple
                 disabled={isDraggingWidget}
                 accept=".stl, .obj"
                 dragEnterMsg={i18n._('key-Printing/Page-Drop an STL/OBJ file here.')}
