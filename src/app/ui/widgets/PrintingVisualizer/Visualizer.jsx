@@ -484,13 +484,12 @@ class Visualizer extends PureComponent {
 
     getNotice() {
         const { stage } = this.props;
-        const progress = ((this.props.progress || 0) * 100).toFixed(1);
-        return `${this.props.progressStatesManager.getNotice(stage)} ${progress} %`;
+        return this.props.progressStatesManager.getNotice(stage);
     }
 
     showContextMenu = (event) => {
         !this.props.leftBarOverlayVisible && this.contextMenuRef.current.show(event);
-    };
+    }
 
     render() {
         const { size, selectedModelArray, modelGroup, gcodeLineGroup, inProgress, hasModel, displayedType, transformMode } = this.props; // transformMode

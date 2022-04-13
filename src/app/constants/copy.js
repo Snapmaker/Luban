@@ -276,7 +276,7 @@ i18n._('key-Progress/Laser-Loading model...');
 i18n._('key-Progress/Laser-Loaded model successfully.');
 i18n._('key-Progress/Laser-Failed to load model.');
 
-i18n._('key-Progress/3DP-Loading model...');
+i18n._('key-Progress/3DP-Loading model...{{progress}}%');
 i18n._('key-Progress/3DP-Loaded model successfully.');
 i18n._('key-Progress/3DP-Failed to load model.');
 i18n._('key-Progress/3DP-Previewing G-code...{{progress}}%');

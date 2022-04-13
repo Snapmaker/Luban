@@ -924,7 +924,7 @@
     "key-Progress/3DP-Generating support... {{progress}}%": "",
     "key-Progress/3DP-GrayUnderTheTopFloor": "",
     "key-Progress/3DP-Loaded model successfully.": "モデルが正しくロードされました。",
-    "key-Progress/3DP-Loading model...": "モデルをロード中...",
+    "key-Progress/3DP-Loading model...{{progress}}%": "モデルをロード中...{{progress}}%",
     "key-Progress/3DP-Ordinary": "",
     "key-Progress/3DP-Previewed G-code successfully.": "Gコードが正しくプレビューされました。",
     "key-Progress/3DP-Previewing G-code...{{progress}}%": "Gコードをプレビュー中...{{progress}}%",
