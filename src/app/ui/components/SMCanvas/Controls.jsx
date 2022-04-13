@@ -148,7 +148,6 @@ class Controls extends EventEmitter {
         this.transformControl.addEventListener('update', () => {
             this.emit(EVENTS.UPDATE);
         });
-        this.transformControl.mode = 'translate';
         this.props?.displayedType !== 'gcode' && this.group.add(this.transformControl);
     }
 

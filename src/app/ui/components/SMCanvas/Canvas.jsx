@@ -610,7 +610,7 @@ class Canvas extends PureComponent {
             if (this.transformSourceType === '2D') {
                 this.light.position.copy(this.camera.position);
             }
-            if (this.controls.transformControl.mode === 'rotate' && this.modelGroup.selectedModelArray[0]?.type !== 'primeTower') {
+            if (this.controls.transformControl.mode === 'rotate' && this.modelGroup.selectedModelArray[0] && this.modelGroup.selectedModelArray[0].type !== 'primeTower') {
                 this.cloneRotatePeripheral = this.controls.transformControl.rotatePeripheral.clone();
 
                 this.cloneRotatePeripheral.updateMatrixWorld();
@@ -621,7 +621,7 @@ class Canvas extends PureComponent {
                 this.canvasWidthHalf = parentDOM.clientWidth * 0.5;
                 this.canvasHeightHalf = parentDOM.clientHeight * 0.5;
                 if (Math.abs(parseFloat(this.inputPositionLeft) - ((this.rotateFontLeftTop.x) * this.canvasWidthHalf + this.canvasWidthHalf)) > 10
-                || Math.abs(parseFloat(this.inputPositionTop) - (-(this.rotateFontLeftTop.y * this.canvasHeightHalf) + this.canvasHeightHalf - 200)) > 10
+                    || Math.abs(parseFloat(this.inputPositionTop) - (-(this.rotateFontLeftTop.y * this.canvasHeightHalf) + this.canvasHeightHalf - 200)) > 10
                 ) {
                     this.inputPositionLeft = `${this.rotateFontLeftTop.x * this.canvasWidthHalf + this.canvasWidthHalf}px`;
                     this.inputPositionTop = `${-(this.rotateFontLeftTop.y * this.canvasHeightHalf) + this.canvasHeightHalf - 200}px`;
@@ -630,7 +630,7 @@ class Canvas extends PureComponent {
                 inputDOM.style.left = this.inputPositionLeft;
                 this.controls.transformControl.dragging && (inputDOM.style.display = 'block');
             }
-            if (this.controls.transformControl.mode !== 'rotate' || !this.modelGroup.selectedModelArray.length || this.modelGroup.hasHideModel()) {
+            if (this.controls.transformControl.mode !== 'rotate' || !this.modelGroup.selectedModelArray.length || !this.modelGroup.isSelectedModelAllVisible()) {
                 inputDOM && (inputDOM.style.display = 'none');
             }
             this.renderer.render(this.scene, this.camera);
