@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useSelector, useDispatch, shallowEqual } from 'react-redux';
 import { cloneDeep, find } from 'lodash';
 import PropTypes from 'prop-types';
+import classNames from 'classnames';
 import i18n from '../../../../lib/i18n';
 /* eslint-disable-next-line import/no-cycle */
 import { CancelButton, renderExtruderIcon, whiteHex } from '../VisualizerLeftBar';
@@ -11,6 +12,7 @@ import { actions as projectActions } from '../../../../flux/project';
 import Dropdown from '../../../components/Dropdown';
 import Menu from '../../../components/Menu';
 import SvgIcon from '../../../components/SvgIcon';
+import styles from './styles.styl';
 
 const extruderLabelMap = {
     '0': 'Extruder L',
@@ -168,7 +170,11 @@ const ExtruderOverlay = React.memo(({
         const leftExtruderColor = status === '1' ? colorR : colorL;
         const rightExtruderColor = status === '0' ? colorL : colorR;
         return (
-            <div className="sm-flex justify-space-between margin-left-16 width-160 border-default-black-5 border-radius-8 padding-vertical-4 padding-left-8" style={disabled ? { background: '#f5f5f5', cursor: 'not-allowed', color: 'rgba(0, 0, 0, 0.25)' } : {}}>
+            <div className={classNames(
+                'sm-flex justify-space-between margin-left-16 width-160 border-default-black-5 border-radius-8 padding-vertical-4 padding-left-8',
+                (disabled ? styles['extruder-item-disabled'] : '')
+            )}
+            >
                 <span className="text-overflow-ellipsis">{i18n._(`key-Printing/LeftBar-${extruderLabelMap[status]}`)}</span>
                 <div className="sm-flex">
                     {renderExtruderIcon(leftExtruderColor, rightExtruderColor)}
