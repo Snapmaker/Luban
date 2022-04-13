@@ -53,6 +53,12 @@ const INITIAL_STATE = {
 
     modelGroup: initModelGroup,
     SVGActions: new SVGActionsFactory(initModelGroup),
+    SVGCanvasMode: 'select',
+    SVGCanvasExt: {
+        extShape: '',
+        showExtShape: false,
+        elem: null
+    },
 
     displayedType: DISPLAYED_TYPE_MODEL,
     toolPathGroup: new ToolPathGroup(initModelGroup, 'laser'),

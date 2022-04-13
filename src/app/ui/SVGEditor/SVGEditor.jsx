@@ -1,276 +1,301 @@
-import React, { PureComponent } from 'react';
+import React, { forwardRef, useEffect, useImperativeHandle, useRef } from 'react';
 import PropTypes from 'prop-types';
 
 
 import { shortcutActions, priorities, ShortcutManager } from '../../lib/shortcut';
 import styles from './index.styl';
-import { SVG_EVENT_CONTEXTMENU, SVG_EVENT_MODE } from './constants';
+import { SVG_EVENT_CONTEXTMENU } from './constants';
 import SVGCanvas from './SVGCanvas';
 import SVGLeftBar from './SVGLeftBar';
 
-class SVGEditor extends PureComponent {
-    static propTypes = {
-        // eslint-disable-next-line react/no-unused-prop-types
-        isActive: PropTypes.bool,
-        size: PropTypes.object.isRequired,
-        materials: PropTypes.object.isRequired,
-        SVGActions: PropTypes.object.isRequired,
-        scale: PropTypes.number.isRequired,
-        minScale: PropTypes.number,
-        maxScale: PropTypes.number,
-        target: PropTypes.object,
-        coordinateMode: PropTypes.object.isRequired,
-        coordinateSize: PropTypes.object.isRequired,
-        editable: PropTypes.bool,
-        menuDisabledCount: PropTypes.number,
+const SVGEditor = forwardRef((props, ref) => {
+    const canvas = useRef(null);
+    const leftBarRef = useRef(null);
+    const extRef = useRef(props.SVGCanvasExt);
+    extRef.current = props.SVGCanvasExt;
 
-        updateScale: PropTypes.func.isRequired,
-        updateTarget: PropTypes.func.isRequired,
+    const menuDisabledCountRef = useRef(props.menuDisabledCount);
+    menuDisabledCountRef.current = props.menuDisabledCount;
 
-        initContentGroup: PropTypes.func.isRequired,
-        showContextMenu: PropTypes.func,
-
-        // insertDefaultTextVector: PropTypes.func.isRequired
-
-        // editor actions
-        onCreateElement: PropTypes.func.isRequired,
-        onSelectElements: PropTypes.func.isRequired,
-        onClearSelection: PropTypes.func.isRequired,
-        onMoveSelectedElementsByKey: PropTypes.func.isRequired,
-        updateTextTransformationAfterEdit: PropTypes.func.isRequired,
-        getSelectedElementsUniformScalingState: PropTypes.func.isRequired,
-
-        elementActions: PropTypes.shape({
-            moveElementsStart: PropTypes.func.isRequired,
-            moveElements: PropTypes.func.isRequired,
-            moveElementsFinish: PropTypes.func.isRequired,
-            resizeElementsStart: PropTypes.func.isRequired,
-            resizeElements: PropTypes.func.isRequired,
-            resizeElementsFinish: PropTypes.func.isRequired,
-            rotateElementsStart: PropTypes.func.isRequired,
-            rotateElements: PropTypes.func.isRequired,
-            rotateElementsFinish: PropTypes.func.isRequired,
-            moveElementsOnKeyDown: PropTypes.func.isRequired
-        }).isRequired,
-        editorActions: PropTypes.object.isRequired,
-
-        createText: PropTypes.func.isRequired,
-
-        onChangeFile: PropTypes.func.isRequired,
-        onClickToUpload: PropTypes.func.isRequired,
-        fileInput: PropTypes.object.isRequired,
-        allowedFiles: PropTypes.string.isRequired,
-        headType: PropTypes.string
+    const onStopDraw = (exitCompletely, nextMode) => {
+        return canvas.current.stopDraw(exitCompletely, nextMode);
     };
 
-    flag = (Math.random() * 100).toFixed();
-
-    canvas = React.createRef();
-
-    leftBarRef = React.createRef();
-
-    state = {
-        mode: 'select'
-    };
-
-    shortcutHandler = {
-        title: this.constructor.name,
+    const shortcutHandler = {
+        title: 'SVGEditor',
         // TODO: unregister in case of component is destroyed
-        isActive: () => this.props.isActive,
+        isActive: () => props.isActive,
         priority: priorities.VIEW,
         shortcuts: {
             [shortcutActions.UNDO]: () => {
-                if (!(this.props.menuDisabledCount > 0)) {
-                    this.props.editorActions.undo();
+                if (!(menuDisabledCountRef.current > 0)) {
+                    props.editorActions.undo();
                 }
             },
             [shortcutActions.REDO]: () => {
-                if (!(this.props.menuDisabledCount > 0)) {
-                    this.props.editorActions.redo();
+                if (!(menuDisabledCountRef.current > 0)) {
+                    props.editorActions.redo();
                 }
             },
             [shortcutActions.SELECTALL]: () => {
-                if (!(this.props.menuDisabledCount > 0)) {
-                    this.props.editorActions.selectAll();
+                if (!(menuDisabledCountRef.current > 0)) {
+                    props.editorActions.selectAll();
                 }
             },
             [shortcutActions.UNSELECT]: () => {
-                if (!(this.props.menuDisabledCount > 0)) {
-                    this.props.editorActions.unselectAll();
+                if (!(menuDisabledCountRef.current > 0)) {
+                    props.editorActions.unselectAll();
                 }
             },
             [shortcutActions.DELETE]: () => {
-                if (!(this.props.menuDisabledCount > 0)) {
-                    this.props.editorActions.deleteSelectedModel();
+                if (!(menuDisabledCountRef.current > 0)) {
+                    props.editorActions.deleteSelectedModel(extRef.current.elem ? 'draw' : props.SVGCanvasMode);
                 }
             },
             [shortcutActions.COPY]: () => {
-                if (!(this.props.menuDisabledCount > 0)) {
-                    this.props.editorActions.copy();
+                if (!(menuDisabledCountRef.current > 0)) {
+                    props.editorActions.copy();
                 }
             },
             [shortcutActions.PASTE]: () => {
-                if (!(this.props.menuDisabledCount > 0)) {
-                    this.props.editorActions.paste();
+                if (!(menuDisabledCountRef.current > 0)) {
+                    props.editorActions.paste();
                 }
             },
             [shortcutActions.DUPLICATE]: () => {
-                if (!(this.props.menuDisabledCount > 0)) {
-                    this.props.editorActions.duplicateSelectedModel();
+                if (!(menuDisabledCountRef.current > 0)) {
+                    props.editorActions.duplicateSelectedModel();
                 }
             },
             [shortcutActions.CUT]: () => {
-                if (!(this.props.menuDisabledCount > 0)) {
-                    this.props.editorActions.cut();
+                if (!(menuDisabledCountRef.current > 0)) {
+                    props.editorActions.cut();
+                }
+            },
+            [shortcutActions.ENTER]: () => {
+                if (!(menuDisabledCountRef.current > 0)) {
+                    onStopDraw(true);
                 }
             },
             // optimize: accelerate when continuous click
             'MOVE-UP': {
                 keys: ['up'],
                 callback: () => {
-                    this.props.elementActions.moveElementsStart(this.props.SVGActions.getSelectedElements());
-                    this.props.elementActions.moveElements(this.props.SVGActions.getSelectedElements(), { dx: 0, dy: -1 });
+                    props.elementActions.moveElementsStart(props.SVGActions.getSelectedElements());
+                    props.elementActions.moveElements(props.SVGActions.getSelectedElements(), { dx: 0, dy: -1 });
                 },
                 keyupCallback: () => {
-                    this.props.elementActions.moveElementsFinish(this.props.SVGActions.getSelectedElements());
+                    props.elementActions.moveElementsFinish(props.SVGActions.getSelectedElements());
                 }
             },
             'MOVE-DOWM': {
                 keys: ['down'],
                 callback: () => {
-                    this.props.elementActions.moveElementsStart(this.props.SVGActions.getSelectedElements());
-                    this.props.elementActions.moveElements(this.props.SVGActions.getSelectedElements(), { dx: 0, dy: 1 });
+                    props.elementActions.moveElementsStart(props.SVGActions.getSelectedElements());
+                    props.elementActions.moveElements(props.SVGActions.getSelectedElements(), { dx: 0, dy: 1 });
                 },
                 keyupCallback: () => {
-                    this.props.elementActions.moveElementsFinish(this.props.SVGActions.getSelectedElements());
+                    props.elementActions.moveElementsFinish(props.SVGActions.getSelectedElements());
                 }
             },
             'MOVE-LEFT': {
                 keys: ['left'],
                 callback: () => {
-                    this.props.elementActions.moveElementsStart(this.props.SVGActions.getSelectedElements());
-                    this.props.elementActions.moveElements(this.props.SVGActions.getSelectedElements(), { dx: -1, dy: 0 });
+                    props.elementActions.moveElementsStart(props.SVGActions.getSelectedElements());
+                    props.elementActions.moveElements(props.SVGActions.getSelectedElements(), { dx: -1, dy: 0 });
                 },
                 keyupCallback: () => {
-                    this.props.elementActions.moveElementsFinish(this.props.SVGActions.getSelectedElements());
+                    props.elementActions.moveElementsFinish(props.SVGActions.getSelectedElements());
                 }
             },
             'MOVE-RIGHT': {
                 keys: ['right'],
                 callback: () => {
-                    this.props.elementActions.moveElementsStart(this.props.SVGActions.getSelectedElements());
-                    this.props.elementActions.moveElements(this.props.SVGActions.getSelectedElements(), { dx: 1, dy: 0 });
+                    props.elementActions.moveElementsStart(props.SVGActions.getSelectedElements());
+                    props.elementActions.moveElements(props.SVGActions.getSelectedElements(), { dx: 1, dy: 0 });
                 },
                 keyupCallback: () => {
-                    this.props.elementActions.moveElementsFinish(this.props.SVGActions.getSelectedElements());
+                    props.elementActions.moveElementsFinish(props.SVGActions.getSelectedElements());
                 }
             }
 
         }
     };
 
+    useEffect(() => {
+        ShortcutManager.register(shortcutHandler);
+    }, []);
 
-    constructor(props) {
-        super(props);
+    const changeCanvasMode = (_mode, ext) => {
+        props.editorActions.setMode(_mode, ext);
+    };
 
-        this.setMode = this.setMode.bind(this);
-        ShortcutManager.register(this.shortcutHandler);
-    }
+    useEffect(() => {
+        // canvas.current.on(SVG_EVENT_MODE, (_mode) => {
+        //     changeCanvasMode(_mode);
+        // });
 
-    componentDidMount() {
-        this.canvas.current.on(SVG_EVENT_MODE, (mode) => {
-            this.setState({
-                mode: mode
-            });
-        });
-
-        this.canvas.current.on(SVG_EVENT_CONTEXTMENU, (event) => {
-            this.props.showContextMenu(event);
+        canvas.current.on(SVG_EVENT_CONTEXTMENU, (event) => {
+            props.showContextMenu(event);
         });
 
         // Init, Setup SVGContentGroup
-        this.props.initContentGroup(this.canvas.current.svgContentGroup);
-    }
+        props.initContentGroup(canvas.current.svgContentGroup);
+    }, []);
 
-
-    setMode(mode, extShape) {
-        // this.mode = mode;
-        this.canvas.current.setMode(mode, extShape);
-    }
-
-    insertDefaultTextVector = async () => {
-        const element = await this.props.createText('Snapmaker');
-        this.props.onCreateElement(element);
+    const insertDefaultTextVector = async () => {
+        const element = await props.createText('Snapmaker');
+        props.onCreateElement(element);
 
         // todo, select text after create
-        // this.canvas.current.selectOnly([elem]);
-        this.setMode('select');
+        // canvas.current.selectOnly([elem]);
+        changeCanvasMode('select');
     };
 
-    hideLeftBarOverlay = () => {
-        this.leftBarRef.current.actions.hideLeftBarOverlay();
-    }
+    const hideLeftBarOverlay = () => {
+        leftBarRef.current.actions.hideLeftBarOverlay();
+    };
 
-    zoomIn() {
-        this.canvas.current.zoomIn();
-    }
+    const zoomIn = () => {
+        canvas.current.zoomIn();
+    };
 
-    zoomOut() {
-        this.canvas.current.zoomOut();
-    }
+    const zoomOut = () => {
+        canvas.current.zoomOut();
+    };
 
-    autoFocus() {
-        this.canvas.current.autoFocus();
-    }
+    const autoFocus = () => {
+        canvas.current.autoFocus();
+    };
 
-    render() {
-        return (
-            <React.Fragment>
-                <div className={styles['laser-table']} style={{ position: 'relative' }}>
-                    <div className={styles['laser-table-row']}>
-                        <div className={styles['view-space']}>
-                            <SVGCanvas
-                                className={styles['svg-content']}
-                                editable={this.props.editable}
-                                SVGActions={this.props.SVGActions}
-                                size={this.props.size}
-                                materials={this.props.materials}
-                                scale={this.props.scale}
-                                minScale={this.props.minScale}
-                                maxScale={this.props.maxScale}
-                                target={this.props.target}
-                                updateScale={this.props.updateScale}
-                                updateTarget={this.props.updateTarget}
-                                coordinateMode={this.props.coordinateMode}
-                                coordinateSize={this.props.coordinateSize}
-                                ref={this.canvas}
-                                onCreateElement={this.props.onCreateElement}
-                                onSelectElements={this.props.onSelectElements}
-                                onClearSelection={this.props.onClearSelection}
-                                onMoveSelectedElementsByKey={this.props.onMoveSelectedElementsByKey}
-                                updateTextTransformationAfterEdit={this.props.updateTextTransformationAfterEdit}
-                                getSelectedElementsUniformScalingState={this.props.getSelectedElementsUniformScalingState}
-                                elementActions={this.props.elementActions}
-                                hideLeftBarOverlay={this.hideLeftBarOverlay}
-                            />
-                        </div>
-                        <SVGLeftBar
-                            ref={this.leftBarRef}
-                            mode={this.state.mode}
-                            insertDefaultTextVector={this.insertDefaultTextVector}
-                            setMode={this.setMode}
-                            onChangeFile={this.props.onChangeFile}
-                            onClickToUpload={this.props.onClickToUpload}
-                            fileInput={this.props.fileInput}
-                            allowedFiles={this.props.allowedFiles}
-                            editable={this.props.editable}
-                            headType={this.props.headType}
+    useImperativeHandle(ref, () => ({
+        zoomIn, zoomOut, autoFocus
+    }));
+
+    const onStartDraw = () => {
+        canvas.current.startDraw();
+    };
+
+
+    const onDrawTransformComplete = (...args) => {
+        props.editorActions.onDrawTransformComplete(...args);
+    };
+
+    return (
+        <React.Fragment>
+            <div className={styles['laser-table']} style={{ position: 'relative' }}>
+                <div className={styles['laser-table-row']}>
+                    <div className={styles['view-space']}>
+                        <SVGCanvas
+                            mode={props.SVGCanvasMode}
+                            ext={props.SVGCanvasExt}
+                            className={styles['svg-content']}
+                            editable={props.editable}
+                            SVGActions={props.SVGActions}
+                            size={props.size}
+                            materials={props.materials}
+                            scale={props.scale}
+                            minScale={props.minScale}
+                            maxScale={props.maxScale}
+                            target={props.target}
+                            updateScale={props.updateScale}
+                            updateTarget={props.updateTarget}
+                            coordinateMode={props.coordinateMode}
+                            coordinateSize={props.coordinateSize}
+                            ref={canvas}
+                            onCreateElement={props.onCreateElement}
+                            onSelectElements={props.onSelectElements}
+                            onClearSelection={props.onClearSelection}
+                            onMoveSelectedElementsByKey={props.onMoveSelectedElementsByKey}
+                            updateTextTransformationAfterEdit={props.updateTextTransformationAfterEdit}
+                            getSelectedElementsUniformScalingState={props.getSelectedElementsUniformScalingState}
+                            elementActions={props.elementActions}
+                            hideLeftBarOverlay={hideLeftBarOverlay}
+                            onDrawLine={props.editorActions.onDrawLine}
+                            onDrawDelete={props.editorActions.onDrawDelete}
+                            onDrawTransform={props.editorActions.onDrawTransform}
+                            onDrawTransformComplete={(...args) => onDrawTransformComplete(...args)}
+                            onDrawStart={props.editorActions.onDrawStart}
+                            onDrawComplete={props.editorActions.onDrawComplete}
+                            onBoxSelect={props.editorActions.onBoxSelect}
+                            setMode={changeCanvasMode}
                         />
                     </div>
+                    <SVGLeftBar
+                        ref={leftBarRef}
+                        mode={props.SVGCanvasMode}
+                        selectEditing={!!props.SVGCanvasExt.elem}
+                        insertDefaultTextVector={insertDefaultTextVector}
+                        setMode={changeCanvasMode}
+                        onChangeFile={props.onChangeFile}
+                        onClickToUpload={props.onClickToUpload}
+                        fileInput={props.fileInput}
+                        allowedFiles={props.allowedFiles}
+                        editable={props.editable}
+                        headType={props.headType}
+                        onStartDraw={() => onStartDraw()}
+                        onStopDraw={(exitCompletely, nextMode) => onStopDraw(exitCompletely, nextMode)}
+                    />
                 </div>
-            </React.Fragment>
-        );
-    }
-}
+            </div>
+        </React.Fragment>
+    );
+});
+
+SVGEditor.propTypes = {
+    isActive: PropTypes.bool,
+    size: PropTypes.object.isRequired,
+    materials: PropTypes.object.isRequired,
+    SVGActions: PropTypes.object.isRequired,
+    scale: PropTypes.number.isRequired,
+    minScale: PropTypes.number,
+    maxScale: PropTypes.number,
+    target: PropTypes.object,
+    coordinateMode: PropTypes.object.isRequired,
+    coordinateSize: PropTypes.object.isRequired,
+    editable: PropTypes.bool,
+    menuDisabledCount: PropTypes.number,
+    SVGCanvasMode: PropTypes.string.isRequired,
+    SVGCanvasExt: PropTypes.string.isRequired,
+
+    updateScale: PropTypes.func.isRequired,
+    updateTarget: PropTypes.func.isRequired,
+
+    initContentGroup: PropTypes.func.isRequired,
+    showContextMenu: PropTypes.func,
+
+    // insertDefaultTextVector: PropTypes.func.isRequired
+
+    // editor actions
+    onCreateElement: PropTypes.func.isRequired,
+    onSelectElements: PropTypes.func.isRequired,
+    onClearSelection: PropTypes.func.isRequired,
+    onMoveSelectedElementsByKey: PropTypes.func.isRequired,
+    updateTextTransformationAfterEdit: PropTypes.func.isRequired,
+    getSelectedElementsUniformScalingState: PropTypes.func.isRequired,
+
+    elementActions: PropTypes.shape({
+        moveElementsStart: PropTypes.func.isRequired,
+        moveElements: PropTypes.func.isRequired,
+        moveElementsFinish: PropTypes.func.isRequired,
+        resizeElementsStart: PropTypes.func.isRequired,
+        resizeElements: PropTypes.func.isRequired,
+        resizeElementsFinish: PropTypes.func.isRequired,
+        rotateElementsStart: PropTypes.func.isRequired,
+        rotateElements: PropTypes.func.isRequired,
+        rotateElementsFinish: PropTypes.func.isRequired,
+        moveElementsOnKeyDown: PropTypes.func.isRequired,
+        isPointInSelectArea: PropTypes.func.isRequired
+    }).isRequired,
+    editorActions: PropTypes.object.isRequired,
+
+    createText: PropTypes.func.isRequired,
+
+    onChangeFile: PropTypes.func.isRequired,
+    onClickToUpload: PropTypes.func.isRequired,
+    fileInput: PropTypes.object.isRequired,
+    allowedFiles: PropTypes.string.isRequired,
+    headType: PropTypes.string
+};
 
 export default SVGEditor;

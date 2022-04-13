@@ -63,6 +63,8 @@ class Visualizer extends Component {
         renderingTimestamp: PropTypes.number.isRequired,
         enableShortcut: PropTypes.bool.isRequired,
         isOverSize: PropTypes.bool,
+        SVGCanvasMode: PropTypes.string.isRequired,
+        SVGCanvasExt: PropTypes.string.isRequired,
         // func
         selectAllElements: PropTypes.func.isRequired,
         cut: PropTypes.func.isRequired,
@@ -115,7 +117,8 @@ class Visualizer extends Component {
             rotateElementsStart: PropTypes.func.isRequired,
             rotateElements: PropTypes.func.isRequired,
             rotateElementsFinish: PropTypes.func.isRequired,
-            moveElementsOnKeyDown: PropTypes.func.isRequired
+            moveElementsOnKeyDown: PropTypes.func.isRequired,
+            isPointInSelectArea: PropTypes.func.isRequired
         })
     };
 
@@ -258,8 +261,8 @@ class Visualizer extends Component {
         onUpdateSelectedModelPosition: (position) => {
             this.props.onSetSelectedModelPosition(position);
         },
-        deleteSelectedModel: () => {
-            this.props.removeSelectedModelsByCallback();
+        deleteSelectedModel: (mode) => {
+            this.props.removeSelectedModelsByCallback(mode);
         },
         arrangeAllModels: () => {
             this.props.arrangeAllModels2D();
@@ -291,6 +294,30 @@ class Visualizer extends Component {
             } else {
                 this.actions.onClickToUpload();
             }
+        },
+        onDrawLine: (line, closedLoop) => {
+            this.props.onDrawLine(line, closedLoop);
+        },
+        onDrawDelete: (lines) => {
+            this.props.onDrawDelete(lines);
+        },
+        onDrawTransform: ({ before, after }) => {
+            this.props.onDrawTransform(before, after);
+        },
+        onDrawTransformComplete: ({ elem, before, after }) => {
+            this.props.onDrawTransformComplete(elem, before, after);
+        },
+        onDrawStart: (elem) => {
+            this.props.onDrawStart(elem);
+        },
+        onDrawComplete: (elem) => {
+            this.props.onDrawComplete(elem);
+        },
+        onBoxSelect: (bbox, onlyContainSelect) => {
+            this.props.onBoxSelect(bbox, onlyContainSelect);
+        },
+        setMode: (mode, extShape) => {
+            this.props.setMode(mode, extShape);
         }
     };
 
@@ -440,6 +467,8 @@ class Visualizer extends Component {
                         isActive={!this.props.currentModalPath && this.props.pathname.indexOf('cnc') > 0 && this.props.enableShortcut}
                         ref={this.svgCanvas}
                         editable={editable}
+                        SVGCanvasMode={this.props.SVGCanvasMode}
+                        SVGCanvasExt={this.props.SVGCanvasExt}
                         size={this.props.size}
                         menuDisabledCount={this.props.menuDisabledCount}
                         initContentGroup={this.props.initContentGroup}
@@ -660,7 +689,7 @@ const mapStateToProps = (state, ownProps) => {
     const { size } = state.machine;
     const { currentModalPath, menuDisabledCount } = state.appbarMenu;
     const { page, materials, modelGroup, toolPathGroup, displayedType, hasModel, isChangedAfterGcodeGenerating,
-        renderingTimestamp, stage, progress, SVGActions, scale, target, coordinateMode, coordinateSize, showSimulation, progressStatesManager, enableShortcut, isOverSize } = state.cnc;
+        renderingTimestamp, stage, progress, SVGActions, scale, target, coordinateMode, coordinateSize, showSimulation, progressStatesManager, enableShortcut, isOverSize, SVGCanvasMode, SVGCanvasExt } = state.cnc;
     const selectedModelArray = modelGroup.getSelectedModelArray();
     const selectedModelID = modelGroup.getSelectedModel().modelID;
     const selectedToolPathModels = modelGroup.getSelectedToolPathModels();
@@ -693,7 +722,9 @@ const mapStateToProps = (state, ownProps) => {
         isChangedAfterGcodeGenerating,
         stage,
         progress,
-        isOverSize
+        isOverSize,
+        SVGCanvasMode,
+        SVGCanvasExt
     };
 };
 
@@ -716,8 +747,7 @@ const mapDispatchToProps = (dispatch) => {
         onFlipSelectedModel: (flip) => dispatch(editorActions.onFlipSelectedModel('cnc', flip)),
         selectModelInProcess: (intersect, selectEvent) => dispatch(editorActions.selectModelInProcess('cnc', intersect, selectEvent)),
         duplicateSelectedModel: () => dispatch(editorActions.duplicateSelectedModel('cnc')),
-        removeSelectedModelsByCallback: () => dispatch(editorActions.removeSelectedModelsByCallback('cnc')),
-
+        removeSelectedModelsByCallback: (mode) => dispatch(editorActions.removeSelectedModelsByCallback('cnc', mode)),
         cut: () => dispatch(editorActions.cut('cnc')),
         copy: () => dispatch(editorActions.copy('cnc')),
         paste: () => dispatch(editorActions.paste('cnc')),
@@ -734,6 +764,16 @@ const mapDispatchToProps = (dispatch) => {
         uploadImage: (file, mode, onFailure, isLimit) => dispatch(editorActions.uploadImage('cnc', file, mode, onFailure, isLimit)),
         switchToPage: (page) => dispatch(editorActions.switchToPage('cnc', page)),
         checkIsOversizeImage: (file, onFailure) => dispatch(editorActions.checkIsOversizeImage('cnc', file, onFailure)),
+
+        onDrawLine: (line, closedLoop) => dispatch(editorActions.drawLine('cnc', line, closedLoop)),
+        onDrawDelete: (lines) => dispatch(editorActions.drawDelete('cnc', lines)),
+        onDrawTransform: (before, after) => dispatch(editorActions.drawTransform('cnc', before, after)),
+        onDrawTransformComplete: (elem, before, after) => dispatch(editorActions.drawTransformComplete('cnc', elem, before, after)),
+        onDrawStart: (elem) => dispatch(editorActions.drawStart('cnc', elem)),
+        onDrawComplete: (elem) => dispatch(editorActions.drawComplete('cnc', elem)),
+        onBoxSelect: (bbox, onlyContainSelect) => dispatch(editorActions.boxSelect('cnc', bbox, onlyContainSelect)),
+        setMode: (mode, ext) => dispatch(editorActions.setCanvasMode('cnc', mode, ext)),
+
         elementActions: {
             moveElementsStart: (elements, options) => dispatch(editorActions.moveElementsStart('cnc', elements, options)),
             moveElements: (elements, options) => dispatch(editorActions.moveElements('cnc', elements, options)),
@@ -745,7 +785,8 @@ const mapDispatchToProps = (dispatch) => {
             rotateElements: (elements, options) => dispatch(editorActions.rotateElements('cnc', elements, options)),
             rotateElementsFinish: (elements, options) => dispatch(editorActions.rotateElementsFinish('cnc', elements, options)),
             moveElementsOnKeyDown: (options) => dispatch(editorActions.moveElementsOnKeyDown('cnc', null, options)),
-            rotateElementsImmediately: (elements, options) => dispatch(editorActions.rotateElementsImmediately('cnc', elements, options))
+            rotateElementsImmediately: (elements, options) => dispatch(editorActions.rotateElementsImmediately('cnc', elements, options)),
+            isPointInSelectArea: (x, y) => dispatch(editorActions.isPointInSelectArea('cnc', x, y))
         }
         // onModelTransform: () => dispatch(editorActions.onModelTransform('cnc')),
         // onModelAfterTransform: () => dispatch(editorActions.onModelAfterTransform('cnc'))

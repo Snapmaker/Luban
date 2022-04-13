@@ -56,6 +56,7 @@ export default class DeleteOperation2D extends Operation {
         this.state.toolPaths = [];
 
         model.setParent(svgActions.svgContentGroup.group);
+        model.setPreSelection(svgActions.svgContentGroup.preSelectionGroup);
         modelGroup.object.add(model.meshObject);
         model.meshObject.addEventListener('update', modelGroup.onModelUpdate);
         modelGroup.models.push(model);

@@ -65,6 +65,8 @@ class Visualizer extends Component {
         isChangedAfterGcodeGenerating: PropTypes.bool.isRequired,
         enableShortcut: PropTypes.bool.isRequired,
         isOverSize: PropTypes.bool,
+        SVGCanvasMode: PropTypes.string.isRequired,
+        SVGCanvasExt: PropTypes.string.isRequired,
 
         // func
         selectAllElements: PropTypes.func.isRequired,
@@ -118,7 +120,8 @@ class Visualizer extends Component {
             rotateElementsStart: PropTypes.func.isRequired,
             rotateElements: PropTypes.func.isRequired,
             rotateElementsFinish: PropTypes.func.isRequired,
-            moveElementsOnKeyDown: PropTypes.func.isRequired
+            moveElementsOnKeyDown: PropTypes.func.isRequired,
+            isPointInSelectArea: PropTypes.func.isRequired
         })
     };
 
@@ -278,8 +281,8 @@ class Visualizer extends Component {
         onUpdateSelectedModelPosition: (position) => {
             this.props.onSetSelectedModelPosition(position);
         },
-        deleteSelectedModel: () => {
-            this.props.removeSelectedModelsByCallback();
+        deleteSelectedModel: (mode) => {
+            this.props.removeSelectedModelsByCallback(mode);
         },
         arrangeAllModels: () => {
             this.props.arrangeAllModels2D();
@@ -311,6 +314,30 @@ class Visualizer extends Component {
             } else {
                 this.actions.onClickToUpload();
             }
+        },
+        onDrawLine: (line, closedLoop) => {
+            this.props.onDrawLine(line, closedLoop);
+        },
+        onDrawDelete: (lines) => {
+            this.props.onDrawDelete(lines);
+        },
+        onDrawTransform: ({ before, after }) => {
+            this.props.onDrawTransform(before, after);
+        },
+        onDrawTransformComplete: ({ elem, before, after }) => {
+            this.props.onDrawTransformComplete(elem, before, after);
+        },
+        onDrawStart: (elem) => {
+            this.props.onDrawStart(elem);
+        },
+        onDrawComplete: (elem) => {
+            this.props.onDrawComplete(elem);
+        },
+        onBoxSelect: (bbox, onlyContainSelect) => {
+            this.props.onBoxSelect(bbox, onlyContainSelect);
+        },
+        setMode: (mode, extShape) => {
+            this.props.setMode(mode, extShape);
         }
     };
 
@@ -447,6 +474,8 @@ class Visualizer extends Component {
                 >
                     <SVGEditor
                         editable={editable}
+                        SVGCanvasMode={this.props.SVGCanvasMode}
+                        SVGCanvasExt={this.props.SVGCanvasExt}
                         isActive={!this.props.currentModalPath && this.props.pathname.indexOf('laser') > 0 && this.props.enableShortcut}
                         ref={this.svgCanvas}
                         menuDisabledCount={this.props.menuDisabledCount}
@@ -671,7 +700,7 @@ const mapStateToProps = (state, ownProps) => {
     const { currentModalPath, menuDisabledCount } = state.appbarMenu;
     const { background, progressStatesManager } = state.laser;
     const { SVGActions, scale, target, materials, page, selectedModelID, modelGroup, svgModelGroup, toolPathGroup, displayedType,
-        isChangedAfterGcodeGenerating, renderingTimestamp, stage, progress, coordinateMode, coordinateSize, enableShortcut, isOverSize } = state.laser;
+        isChangedAfterGcodeGenerating, renderingTimestamp, stage, progress, coordinateMode, coordinateSize, enableShortcut, isOverSize, SVGCanvasMode, SVGCanvasExt } = state.laser;
     const selectedModelArray = modelGroup.getSelectedModelArray();
     const selectedToolPathModelArray = modelGroup.getSelectedToolPathModels();
 
@@ -704,7 +733,9 @@ const mapStateToProps = (state, ownProps) => {
         renderingTimestamp,
         stage,
         progress,
-        isOverSize
+        isOverSize,
+        SVGCanvasMode,
+        SVGCanvasExt
     };
 };
 
@@ -726,7 +757,7 @@ const mapDispatchToProps = (dispatch) => {
         onSetSelectedModelPosition: (position) => dispatch(editorActions.onSetSelectedModelPosition('laser', position)),
         onFlipSelectedModel: (flip) => dispatch(editorActions.onFlipSelectedModel('laser', flip)),
         selectModelInProcess: (intersect, selectEvent) => dispatch(editorActions.selectModelInProcess('laser', intersect, selectEvent)),
-        removeSelectedModelsByCallback: () => dispatch(editorActions.removeSelectedModelsByCallback('laser')),
+        removeSelectedModelsByCallback: (mode) => dispatch(editorActions.removeSelectedModelsByCallback('laser', mode)),
         duplicateSelectedModel: () => dispatch(editorActions.duplicateSelectedModel('laser')),
 
         cut: () => dispatch(editorActions.cut('laser')),
@@ -747,6 +778,15 @@ const mapDispatchToProps = (dispatch) => {
         cutModel: (file, onFailure) => dispatch(editorActions.cutModel('laser', file, onFailure)),
         switchToPage: (page) => dispatch(editorActions.switchToPage('laser', page)),
 
+        onDrawLine: (line, closedLoop) => dispatch(editorActions.drawLine('laser', line, closedLoop)),
+        onDrawDelete: (lines) => dispatch(editorActions.drawDelete('laser', lines)),
+        onDrawTransform: (before, after) => dispatch(editorActions.drawTransform('laser', before, after)),
+        onDrawTransformComplete: (elem, before, after) => dispatch(editorActions.drawTransformComplete('laser', elem, before, after)),
+        onDrawStart: (elem) => dispatch(editorActions.drawStart('laser', elem)),
+        onDrawComplete: (elem) => dispatch(editorActions.drawComplete('laser', elem)),
+        onBoxSelect: (bbox, onlyContainSelect) => dispatch(editorActions.boxSelect('laser', bbox, onlyContainSelect)),
+        setMode: (mode, ext) => dispatch(editorActions.setCanvasMode('laser', mode, ext)),
+
         elementActions: {
             moveElementsStart: (elements) => dispatch(editorActions.moveElementsStart('laser', elements)),
             moveElements: (elements, options) => dispatch(editorActions.moveElements('laser', elements, options)),
@@ -758,7 +798,8 @@ const mapDispatchToProps = (dispatch) => {
             rotateElements: (elements, options) => dispatch(editorActions.rotateElements('laser', elements, options)),
             rotateElementsFinish: (elements, options) => dispatch(editorActions.rotateElementsFinish('laser', elements, options)),
             moveElementsOnKeyDown: (options) => dispatch(editorActions.moveElementsOnKeyDown('laser', null, options)),
-            rotateElementsImmediately: (elements, options) => dispatch(editorActions.rotateElementsImmediately('laser', elements, options))
+            rotateElementsImmediately: (elements, options) => dispatch(editorActions.rotateElementsImmediately('laser', elements, options)),
+            isPointInSelectArea: (x, y) => dispatch(editorActions.isPointInSelectArea('laser', x, y))
         }
         // onModelTransform: () => dispatch(editorActions.onModelTransform('laser')),
         // onModelAfterTransform: () => dispatch(editorActions.onModelAfterTransform('laser'))

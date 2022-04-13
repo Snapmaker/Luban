@@ -5,6 +5,7 @@ export enum WorkerMethods {
     // LUBAN worker methods BEGIN
     arrangeModels = 'arrangeModels',
     autoRotateModels = 'autoRotateModels',
+    boxSelect = 'boxSelect',
     evaluateSupportArea = 'evaluateSupportArea',
     gcodeToArraybufferGeometry = 'gcodeToArraybufferGeometry',
     gcodeToBufferGeometry = 'gcodeToBufferGeometry',

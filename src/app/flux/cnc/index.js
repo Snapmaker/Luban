@@ -57,6 +57,12 @@ const INITIAL_STATE = {
     simulationNeedToPreview: true,
 
     SVGActions: new SVGActionsFactory(initModelGroup),
+    SVGCanvasMode: 'select',
+    SVGCanvasExt: {
+        extShape: '',
+        showExtShape: false,
+        elem: null
+    },
 
     isGcodeGenerating: false,
     isChangedAfterGcodeGenerating: true,

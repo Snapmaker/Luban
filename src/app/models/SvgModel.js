@@ -1,7 +1,9 @@
 import { v4 as uuid } from 'uuid';
 import * as THREE from 'three';
 import Canvg from 'canvg';
-import { coordGmSvgToModel } from '../ui/SVGEditor/element-utils';
+import svgPath from 'svgpath';
+import { cloneDeep } from 'lodash';
+import { coordGmSvgToModel, createSVGElement } from '../ui/SVGEditor/element-utils';
 
 import { NS } from '../ui/SVGEditor/lib/namespaces';
 
@@ -12,6 +14,7 @@ import api from '../api';
 import { checkIsImageSuffix } from '../../shared/lib/utils';
 import BaseModel from './BaseModel';
 import Resource from './Resource';
+import { SVG_MOVE_MINI_DISTANCE } from '../constants';
 // import { DEFAULT_FILL_COLOR } from '../ui/SVGEditor/constants';
 
 const EVENTS = {
@@ -180,6 +183,10 @@ class SvgModel extends BaseModel {
 
     resource = new Resource();
 
+    pathPreSelectionArea = null;
+
+    vertexPoints = []
+
     constructor(modelInfo, modelGroup) {
         super(modelInfo, modelGroup);
         const { elem, size } = modelInfo;
@@ -210,6 +217,7 @@ class SvgModel extends BaseModel {
         this.processMode(modelInfo.mode, modelInfo.config);
         // use model info to refresh element
         this.refresh();
+        this.generatePathPreSelectionArea();
         // trigger update source, should add parmas to togger this func
         this.onTransform();
     }
@@ -262,6 +270,13 @@ class SvgModel extends BaseModel {
         this.appendToParent();
     }
 
+    setPreSelection(parent) {
+        if (this.pathPreSelectionArea) {
+            this.pathPreSelectionArea.setAttribute('target-id', this.modelID);
+            parent.append(this.pathPreSelectionArea);
+        }
+    }
+
     appendToParent() {
         this.parent && this.parent.append(this.elem);
     }
@@ -311,45 +326,168 @@ class SvgModel extends BaseModel {
         }
     }
 
+    calculationPath(path) {
+        const allPoints = [];
+        svgPath(path).iterate((segment, __, x, y) => {
+            const arr = cloneDeep(segment);
+            const mark = arr.shift();
+
+            if (mark !== 'M' && mark !== 'Z') {
+                const points = [];
+                points.push([x, y]);
+                for (let index = 0; index < arr.length; index += 2) {
+                    points.push([
+                        Number(arr[index]),
+                        Number(arr[index + 1])
+                    ]);
+                }
+                allPoints.push(points);
+            }
+        });
+
+        const sorted = [];
+        const findConnect = (arr) => {
+            const latest = sorted[sorted.length - 1];
+            const latestPoints = latest.item;
+
+            return [arr[0], arr[arr.length - 1]].some((i) => {
+                return (!latest.connected ? [latestPoints[0], latestPoints[latestPoints.length - 1]] : [latestPoints[latestPoints.length - 1]]).some((j) => {
+                    return Math.abs(i[0] - j[0]) <= SVG_MOVE_MINI_DISTANCE && Math.abs(i[1] - j[1]) <= SVG_MOVE_MINI_DISTANCE;
+                });
+            });
+        };
+        const setSort = (item, connected) => {
+            const latest = sorted[sorted.length - 1];
+            if (connected && latest) {
+                if (Math.abs(latest.item[latest.item.length - 1][0] - item[0][0]) <= SVG_MOVE_MINI_DISTANCE && Math.abs(latest.item[latest.item.length - 1][1] - item[0][1]) <= SVG_MOVE_MINI_DISTANCE) {
+                    sorted.push({ item, connected: true });
+                } else {
+                    item.reverse();
+                    sorted.push({ item, connected: true });
+                }
+            } else {
+                sorted.push({ item, connected: false });
+            }
+        };
+
+        const setupConnection = () => {
+            let flag = true;
+            while (flag) {
+                const connected = allPoints.map((i, _index) => {
+                    return {
+                        arr: i,
+                        _index
+                    };
+                }).filter(p => p.arr && findConnect(p.arr));
+                const latest = sorted[sorted.length - 1];
+                const latestPoints = latest.item;
+
+                if (connected.length > 0) {
+                    const c = allPoints[connected[0]._index];
+                    // flip first point
+                    if (!latest.connected) {
+                        if (!(
+                            Math.abs(latestPoints[latestPoints.length - 1][0] - c[0][0]) <= SVG_MOVE_MINI_DISTANCE
+                            && Math.abs(latestPoints[latestPoints.length - 1][1] - c[0][1]) <= SVG_MOVE_MINI_DISTANCE)
+                        ) {
+                            const arr = latestPoints;
+                            const a = arr.pop();
+                            const b = arr.shift();
+                            arr.push(b);
+                            arr.unshift(a);
+                            sorted[sorted.length - 1] = {
+                                item: arr,
+                                connected: false
+                            };
+                        }
+                    }
+                    setSort(c, true);
+                    allPoints[connected[0]._index] = null;
+                    flag = true;
+                } else {
+                    flag = false;
+                }
+            }
+        };
+
+        for (let index = 0; index < allPoints.length; index++) {
+            if (sorted.length === 0) {
+                setSort(allPoints[index], false);
+                allPoints[index] = null;
+                setupConnection();
+            }
+            if (allPoints[index]) {
+                // TODO: Judge whether the new point is connected to the head of the latest clip. Flip the latest clip
+                setSort(allPoints[index], false);
+                setupConnection();
+            }
+        }
+
+        const mark = (length) => {
+            switch (length) {
+                case 1:
+                    return 'L';
+                case 2:
+                    return 'Q';
+                case 3:
+                    return 'C';
+                default:
+                    return '';
+            }
+        };
+
+        const paths = sorted.reduce((p, c) => {
+            const arr = c.item;
+            if (c.connected) {
+                arr.shift();
+                p[p.length - 1] += ` ${mark(arr.length)} ${arr.map(item => item.join(' ')).join(' ')}`;
+            } else {
+                p.push(`M ${arr.shift().join(' ')} ${mark(arr.length)} ${arr.map(item => item.join(' ')).join(' ')}`);
+            }
+            return p;
+        }, []);
+
+        return paths;
+    }
+
     genModelConfig() {
         const elem = this.elem;
         const coord = coordGmSvgToModel(this.size, elem);
 
-        // eslint-disable-next-line prefer-const
-        let { x, y, width, height, positionX, positionY, scaleX, scaleY } = coord;
-        width *= scaleX;
-        height *= scaleY;
+        const { x, y, width, height, positionX, positionY } = coord;
+        let modelContent = '';
+        const isDraw = elem.getAttribute('id')?.includes('graph');
 
-        const clone = elem.cloneNode(true);
-        clone.setAttribute('transform', `scale(${scaleX} ${scaleY})`);
-        clone.setAttribute('font-size', clone.getAttribute('font-size'));
-
-        let vx = x * scaleX;
-        let vy = y * scaleY;
-        let vwidth = width;
-        let vheight = height;
-
-        if (scaleX < 0) {
-            vx += vwidth;
-            vwidth = -vwidth;
-        }
-        if (scaleY < 0) {
-            vy += vheight;
-            vheight = -vheight;
+        if (elem instanceof SVGPathElement && isDraw) {
+            const path = elem.getAttribute('d');
+            const paths = this.calculationPath(path);
+            const segments = paths.map(item => {
+                const clone = elem.cloneNode(true);
+                clone.setAttribute('d', item);
+                clone.setAttribute('transform', 'scale(1 1)');
+                clone.setAttribute('font-size', clone.getAttribute('font-size'));
+                return new XMLSerializer().serializeToString(clone);
+            });
+            modelContent = segments.join('');
+        } else {
+            const clone = elem.cloneNode(true);
+            clone.setAttribute('transform', 'scale(1 1)');
+            clone.setAttribute('font-size', clone.getAttribute('font-size'));
+            modelContent = new XMLSerializer().serializeToString(clone);
         }
 
         // Todo: need to optimize
-        const content = `<svg x="0" y="0" width="${vwidth}mm" height="${vheight}mm" `
-            + `viewBox="${vx} ${vy} ${vwidth} ${vheight}" `
-            + `xmlns="http://www.w3.org/2000/svg">${new XMLSerializer().serializeToString(clone)}</svg>`;
+        const content = `<svg x="0" y="0" width="${width}mm" height="${height}mm" `
+            + `viewBox="${x} ${y} ${width} ${height}" `
+            + `xmlns="http://www.w3.org/2000/svg">${modelContent}</svg>`;
         const model = {
             modelID: elem.getAttribute('id'),
             content: content,
             width: width,
             height: height,
             transformation: {
-                positionX: positionX,
-                positionY: positionY
+                positionX,
+                positionY
             },
             config: {
                 svgNodeName: elem.nodeName,
@@ -448,6 +586,10 @@ class SvgModel extends BaseModel {
         return this.elem.transform.baseVal;
     }
 
+    isDrawGraphic() {
+        return this.elem.getAttribute('id')?.includes('graph');
+    }
+
     refreshElemAttrs() {
         const elem = this.elem;
         const { config, transformation, width, height } = this;
@@ -475,6 +617,21 @@ class SvgModel extends BaseModel {
             //     numberAttrs.push('x1', 'y1', 'x2', 'y2');
             //     break;
             case 'path': {
+                const isDraw = this.isDrawGraphic();
+                if (isDraw) {
+                    const d = elem.getAttribute('d');
+                    const bbox = elem.getBBox();
+                    const cx = bbox.x + bbox.width / 2;
+                    const cy = bbox.y + bbox.height / 2;
+                    // clone Model
+                    if (cx !== x || cy !== y) {
+                        const newPath = svgPath(d)
+                            .translate(x - cx, y - cy)
+                            .toString();
+                        elem.setAttribute('d', newPath);
+                    }
+                    break;
+                }
                 const imageElement = document.createElementNS(NS.SVG, 'image');
                 const absWidth = Math.abs(width), absHeight = Math.abs(height);
                 const attributes = {
@@ -735,6 +892,23 @@ class SvgModel extends BaseModel {
                 element.setAttribute('height', imageHeight);
                 break;
             }
+            case 'path': {
+                const d = element.getAttribute('d');
+                const bbox = element.getBBox();
+                const cx = bbox.x + bbox.width / 2;
+                const cy = bbox.y + bbox.height / 2;
+                const newPath = svgPath(d)
+                    .translate(-cx, -cy)
+                    .scale(absScaleX, absScaleY)
+                    // .rotate(angle)
+                    .translate(x, y)
+                    .toString();
+                element.setAttribute('d', newPath);
+                scaleX /= absScaleX;
+                scaleY /= absScaleY;
+                break;
+            }
+
             case 'rect': {
                 element.setAttribute('x', x - width * absScaleX / 2);
                 element.setAttribute('y', y - height * absScaleY / 2);
@@ -756,6 +930,7 @@ class SvgModel extends BaseModel {
         }
 
         SvgModel.recalculateElementTransformList(element, { x, y, scaleX, scaleY, angle });
+        SvgModel.updatePathPreSelectionArea(element);
     }
 
     static recalculateElementTransformList(element, t) {
@@ -982,6 +1157,37 @@ class SvgModel extends BaseModel {
         this.updateTransformation(this.transformation);
     }
 
+    generatePathPreSelectionArea() {
+        if (this.type === 'path') {
+            const d = this.elem.getAttribute('d');
+            const strokeWidth = this.elem.getAttribute('stroke-width');
+            const id = this.elem.getAttribute('id');
+            this.pathPreSelectionArea = createSVGElement({
+                element: 'path',
+                attr: {
+                    'target-id': id,
+                    'stroke-width': Number(strokeWidth) * 20,
+                    d,
+                    fill: 'transparent',
+                    stroke: 'transparent'
+                }
+            });
+        }
+    }
+
+    static updatePathPreSelectionArea(element) {
+        if (element && element.nodeName === 'path') {
+            const d = element.getAttribute('d');
+            const id = element.getAttribute('id');
+            const transform = element.getAttribute('transform');
+            const pathPreSelectionArea = document.querySelector(`[target-id="${id}"]`);
+            if (pathPreSelectionArea) {
+                pathPreSelectionArea.setAttribute('d', d);
+                pathPreSelectionArea.setAttribute('transform', transform);
+            }
+        }
+    }
+
     // updateVisible(param) {
     //     if (param === false) {
     //         this.modelObject3D && (this.modelObject3D.visible = param);
@@ -1052,6 +1258,24 @@ class SvgModel extends BaseModel {
         );
     }
 
+    computevertexPoints() {
+        const { width, height, rotationZ } = this.transformation;
+        const { logicalX: x, logicalY: y } = this;
+        const modelBoxPoints = [
+            [x - width / 2, y + height / 2],
+            [x - width / 2, y - height / 2],
+            [x + width / 2, y - height / 2],
+            [x + width / 2, y + height / 2]
+        ];
+
+        this.vertexPoints = modelBoxPoints.map(([x1, y1]) => {
+            return [
+                (x1 - x) * Math.cos(rotationZ) - (y1 - y) * Math.sin(rotationZ) + x,
+                (x1 - x) * Math.sin(rotationZ) + (y1 - y) * Math.cos(rotationZ) + y
+            ];
+        });
+    }
+
     getTaskInfo() {
         const taskInfo = {
             modelID: this.modelID,
@@ -1107,7 +1331,12 @@ class SvgModel extends BaseModel {
         // Need to update source for SVG, element attributes(width, height) changed
         // Not to update source for text, because <path> need to remap first
         // Todo, <Path> error, add remap method or not to use model source
-        this.updateSource();
+        // this.updateSource();
+        const isDraw = this.isDrawGraphic();
+        if (isDraw) {
+            this.config.d = this.elem.getAttribute('d');
+        }
+        this.computevertexPoints();
     }
 
     async updateAndRefresh({ transformation, config, ...others } = {}) {
@@ -1144,7 +1373,9 @@ class SvgModel extends BaseModel {
     clone(modelGroup) {
         const clone = new SvgModel({ ...this }, modelGroup);
         clone.originModelID = this.modelID;
-        clone.modelID = uuid();
+        const specialPrefix = this.isDrawGraphic() ? 'graph-' : '';
+        clone.modelID = `${specialPrefix}${uuid()}`;
+        clone.updateConfig(clone.config);
         clone.generateModelObject3D();
         clone.generateProcessObject3D();
         this.meshObject.updateMatrixWorld();
@@ -1192,6 +1423,21 @@ class SvgModel extends BaseModel {
             transformation,
             processImageName: this.resource.processedFile.name
         };
+    }
+
+    isStraightLine() {
+        if (this.type === 'path') {
+            const d = this.elem.getAttribute('d');
+            const flag = ['M', 'L', 'Z'];
+            let res = true;
+            svgPath(d).iterate((segment, index) => {
+                if (segment[0] !== flag[index]) {
+                    res = false;
+                }
+            });
+            return res;
+        }
+        return false;
     }
 }
 

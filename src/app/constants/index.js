@@ -32,6 +32,7 @@ export const CONNECTION_DOOR_DETECTION = 'connection:setDoorDetection';
 export const CONNECTION_FILTER_SWITCH = 'connection:setFilterSwitch';
 export const CONNECTION_FILTER_WORKSPEED = 'connection:setFilterWorkSpeed';
 
+export const SVG_MOVE_MINI_DISTANCE = 1e-4;
 
 // Controller
 export const MARLIN = 'Marlin';
