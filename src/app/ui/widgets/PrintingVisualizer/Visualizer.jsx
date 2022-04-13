@@ -128,14 +128,14 @@ class Visualizer extends PureComponent {
         fitViewIn: () => {
             if (this.props.selectedModelArray.length !== 0) {
                 const { x, y, z } = this.props.modelGroup.getSelectedModelBBoxWHD();
-                const r = Math.sqrt(x * x + y * y + z * z) / 2;
-                this.canvas.current.fitViewIn(this.props.modelGroup.selectedGroup.position, r);
+                const selectedGroupBsphereRadius = Math.sqrt(x * x + y * y + z * z) / 2;
+                this.canvas.current.fitViewIn(this.props.modelGroup.selectedGroup.position, selectedGroupBsphereRadius);
             } else {
                 this.props.modelGroup.selectAllModels();
                 const { x, y, z } = this.props.modelGroup.getSelectedModelBBoxWHD();
-                const r = Math.sqrt(x * x + y * y + z * z) / 2;
-                if (r > 0.000001) {
-                    this.canvas.current.fitViewIn(this.props.modelGroup.selectedGroup.position, r);
+                const selectedGroupBsphereRadius = Math.sqrt(x * x + y * y + z * z) / 2;
+                if (selectedGroupBsphereRadius > 0.000001) {
+                    this.canvas.current.fitViewIn(this.props.modelGroup.selectedGroup.position, selectedGroupBsphereRadius);
                 }
                 this.props.modelGroup.unselectAllModels();
             }

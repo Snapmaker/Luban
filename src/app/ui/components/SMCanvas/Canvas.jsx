@@ -504,7 +504,8 @@ class Canvas extends PureComponent {
         this.renderScene();
     }
 
-    fitViewIn(center, r) {
+    fitViewIn(center, selectedGroupBsphereRadius) {
+        const r = selectedGroupBsphereRadius;
         // from
         const object = {
             ox: this.camera.position.x,
