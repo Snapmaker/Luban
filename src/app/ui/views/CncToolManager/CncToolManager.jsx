@@ -25,7 +25,6 @@ function CncToolManager({ closeToolManager, shouldSaveToolpath = false, saveTool
     const series = useSelector(state => state?.machine?.series);
     const toolHead = useSelector(state => state?.machine?.toolHead);
     const dispatch = useDispatch();
-
     const actions = {
         closeManager: () => {
             closeToolManager && closeToolManager();
