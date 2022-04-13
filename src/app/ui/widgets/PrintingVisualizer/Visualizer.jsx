@@ -33,6 +33,7 @@ import { loadModelFailPopup, scaletoFitPopup } from './VisualizerPopup';
 
 import { STEP_STAGE } from '../../../lib/manager/ProgressManager';
 import { updateControlInputEvent } from '../../components/SMCanvas/TransformControls';
+import ModeToggleBtn from './ModeToggleBtn';
 
 const initQuaternion = new Quaternion();
 const modeSuffix = {
@@ -483,13 +484,12 @@ class Visualizer extends PureComponent {
 
     getNotice() {
         const { stage } = this.props;
-        const progress = ((this.props.progress || 0) * 100).toFixed(1);
-        return `${this.props.progressStatesManager.getNotice(stage)} ${progress} %`;
+        return this.props.progressStatesManager.getNotice(stage);
     }
 
     showContextMenu = (event) => {
         !this.props.leftBarOverlayVisible && this.contextMenuRef.current.show(event);
-    };
+    }
 
     render() {
         const { size, selectedModelArray, modelGroup, gcodeLineGroup, inProgress, hasModel, displayedType, transformMode } = this.props; // transformMode
@@ -521,6 +521,8 @@ class Visualizer extends PureComponent {
                 <div className={styles['visualizer-preview-control']}>
                     <VisualizerPreviewControl />
                 </div>
+
+                <ModeToggleBtn />
 
                 <div className={styles['visualizer-info']}>
                     <VisualizerInfo />

@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import noop from 'lodash/noop';
 // import ObjToBufferGeometryPrint3d from './ObjToBufferGeometryPrint3d';
 import request from 'superagent';
+// import { GCodeRenderer, Color } from 'gcode-viewer';
 import GcodeToBufferGeometryPrint3d from './GcodeToBufferGeometryPrint3d';
 import {
     DATA_PREFIX
@@ -111,7 +112,8 @@ const gcodeToBufferGeometry = async (func, filename, extruderColors, onProgress 
                 result = {
                     bufferGeometry,
                     layerCount,
-                    bounds
+                    bounds,
+                    gcode
                 };
                 break;
             }

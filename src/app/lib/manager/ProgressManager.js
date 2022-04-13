@@ -205,7 +205,7 @@ class ProgressStatesManager {
                     percent: 1
                 }
             ],
-            'key-Progress/3DP-Loading model...',
+            'key-Progress/3DP-Loading model...{{progress}}%',
             'key-Progress/3DP-Loaded model successfully.',
             'key-Progress/3DP-Failed to load model.');
         this.push(PROCESS_STAGE.PRINTING_SLICE_AND_PREVIEW,

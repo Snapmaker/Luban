@@ -29,6 +29,7 @@ const ScaleOverlay = React.memo(({
         y: 100,
         z: 100
     });
+    const selectedModelBBoxDes = useSelector(state => state?.printing?.modelGroup?.getSelectedModelBBoxWHD(), shallowEqual);
     // hidden model size after scale
     // const [initModelSize, setInitModelSize] = useState({
     //     x: selectedModelBBoxDes.x / selectedGroup.scale.x,

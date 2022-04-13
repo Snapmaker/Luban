@@ -101,6 +101,31 @@ export const BLACK_COLOR = '#464646';
 
 export const KEY_DEFAULT_CATEGORY_CUSTOM = 'key-default_category-Custom';
 
+export const GCODE_VISIBILITY_TYPE = {
+    'WALL-INNER': true,
+    'WALL-OUTER': true,
+    SKIN: true,
+    SKIRT: true,
+    SUPPORT: true,
+    FILL: true,
+    TRAVEL: false,
+    UNKNOWN: true,
+    TOOL0: true,
+    TOOL1: true
+};
+
+export const GCODEPREVIEWMODES = [
+    'Ordinary',
+    'SingleLayer',
+    'GrayUnderTheTopFloor'
+];
+
+export const GCODEPREVIEWMODES_ICONS = [
+    'NormalMode',
+    'SingleLayerMode',
+    'GrayedOutMode'
+];
+
 export const PRINTING_MATERIAL_CONFIG_COLORS = [
     [WHITE_COLOR, BLACK_COLOR],
     ['#E70008', '#b36100', '#d4cc00', '#35a000', '#00685a', '#006a99', '#003c7c', '#4c2868', '#b3196f', '#767676'],

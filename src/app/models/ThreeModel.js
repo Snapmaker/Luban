@@ -1,6 +1,6 @@
 import { v4 as uuid } from 'uuid';
 import * as THREE from 'three';
-import { ObjectLoader } from 'three';
+import { MeshLambertMaterial, ObjectLoader } from 'three';
 import {
     LOAD_MODEL_FROM_INNER
 } from '../constants';
@@ -35,6 +35,14 @@ class ThreeModel extends BaseModel {
 
     tmpSupportMesh = null; // store support mesh when editing support, and restore it after editing support finished
 
+    tmpMaterial = null; // store previous material for support editing
+
+    modelModeMaterial = null;
+
+    gcodeModeMaterial = null;
+
+    displayedType = 'model';
+
     supportFaceMarks = [];
 
     originalGeometry = null;
@@ -54,6 +62,30 @@ class ThreeModel extends BaseModel {
             const materials = objectLoader.parseMaterials(json.materials, textures);
             const newMaterial = Object.values(materials)[0];
             material = newMaterial;
+
+            this.modelModeMaterial = material;
+            // Line version
+            this.gcodeModeMaterial = new MeshLambertMaterial({
+                color: '#2a2c2e',
+                side: THREE.FrontSide,
+                depthWrite: false,
+                transparent: true,
+                opacity: 0.3,
+                polygonOffset: true,
+                polygonOffsetFactor: -5,
+                polygonOffsetUnits: -0.1
+            });
+            // Linetube version, not remove
+            // this.gcodeModeMaterial = new MeshLambertMaterial({
+            //     color: '#2a2c2e',
+            //     side: DoubleSide,
+            //     depthWrite: false,
+            //     transparent: true,
+            //     opacity: 0.3,
+            //     polygonOffset: true,
+            //     polygonOffsetFactor: -1,
+            //     polygonOffsetUnits: -5
+            // });
         } catch (e) {
             console.error('error', e);
         }
@@ -128,6 +160,11 @@ class ThreeModel extends BaseModel {
 
     set visible(value) {
         this.meshObject.visible = value;
+    }
+
+    updateDisplayedType(value) {
+        this.displayedType = value;
+        this.setSelected(false);
     }
 
     updateModelName(newName) {
@@ -236,13 +273,6 @@ class ThreeModel extends BaseModel {
         // attention: do not use Object3D.applyMatrix(matrix : Matrix4)
         // because applyMatrix is accumulated
         // anther way: decompose Matrix and reset position/rotation/scale
-        // let position = new THREE.Vector3();
-        // let quaternion = new THREE.Quaternion();
-        // let scale = new THREE.Vector3();
-        // matrix.decompose(position, quaternion, scale);
-        // this.position.copy(position);
-        // this.quaternion.copy(quaternion);
-        // this.scale.copy(scale);
     }
 
     setOversteppedAndSelected(overstepped, isSelected) {
@@ -254,14 +284,26 @@ class ThreeModel extends BaseModel {
         if (typeof isSelected === 'boolean') {
             this.isSelected = isSelected;
         }
-        if (this.isEditingSupport) {
-            this.meshObject.material.color.set(0xffffff);
-        } else if (this.overstepped === true) {
-            this.meshObject.material.color.set(materialOverstepped);
-        } else if (this.isSelected === true) {
-            this.meshObject.material.color.set(this._materialSelected.clone());
+        if (this.displayedType !== 'model') {
+            this.meshObject.material = this.gcodeModeMaterial;
         } else {
-            this.meshObject.material.color.set(this._materialNormal.clone());
+            this.meshObject.material = this.modelModeMaterial;
+            if (this.isEditingSupport) {
+                // TODO: uniform material for setting triangle color and textures
+                this.meshObject.material.color.set(0xffffff);
+            } else if (this.overstepped === true) {
+                this.meshObject.material = this.tmpMaterial || this.meshObject.material;
+                this.meshObject.material.color.set(materialOverstepped);
+                this.tmpMaterial = null;
+            } else if (this.isSelected === true) {
+                this.meshObject.material = this.tmpMaterial || this.meshObject.material;
+                this.meshObject.material.color.set(this._materialSelected.clone());
+                this.tmpMaterial = null;
+            } else {
+                this.meshObject.material = this.tmpMaterial || this.meshObject.material;
+                this.meshObject.material.color.set(this._materialNormal.clone());
+                this.tmpMaterial = null;
+            }
         }
 
         // for indexed geometry

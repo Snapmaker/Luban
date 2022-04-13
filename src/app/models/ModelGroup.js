@@ -1922,6 +1922,12 @@ class ModelGroup extends EventEmitter {
         this.modelChanged();
     }
 
+    setDisplayType(displayedType) {
+        this.models.forEach(model => {
+            model.updateDisplayedType(displayedType);
+        });
+    }
+
     stickToPlateAndCheckOverstepped(model) {
         if (model.sourceType === '3d') {
             model.computeBoundingBox();
