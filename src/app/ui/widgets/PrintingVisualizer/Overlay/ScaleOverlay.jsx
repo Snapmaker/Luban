@@ -21,6 +21,7 @@ const ScaleOverlay = React.memo(({
     const transformation = useSelector(state => state?.printing?.modelGroup?.getSelectedModelTransformationForPrinting(), shallowEqual);
     const primeTowerHeight = useSelector(state => state?.printing?.primeTowerHeight, shallowEqual);
     const selectedGroup = useSelector(state => state?.printing?.modelGroup?.selectedGroup, shallowEqual);
+    const isSelectedModelAllVisible = useSelector(state => state?.printing?.modelGroup?.isSelectedModelAllVisible(), shallowEqual);
     const [scalePercentObj, setScalePercentObj] = useState({
         x: 100,
         y: 100,
@@ -32,6 +33,7 @@ const ScaleOverlay = React.memo(({
     const [uniformScalingState, setUniformScalingState] = useState(true);
     const dispatch = useDispatch();
     const [modelSize, setModelSize] = useState({});
+
     const updateScale = (event) => {
         const { detail } = event;
         throttle(() => {
@@ -67,9 +69,9 @@ const ScaleOverlay = React.memo(({
             setModelSize(newModelSize);
         }
         const newScalePercentObj = {
-            x: Math.round(Math.abs(transformation.scaleX) * 1000) / 10,
-            y: Math.round(Math.abs(transformation.scaleY) * 1000) / 10,
-            z: Math.round(Math.abs(transformation.scaleZ) * 1000) / 10
+            x: Math.round(Math.abs(transformation.scaleX || 0) * 1000) / 10,
+            y: Math.round(Math.abs(transformation.scaleY || 0) * 1000) / 10,
+            z: Math.round(Math.abs(transformation.scaleZ || 0) * 1000) / 10
         };
         setScalePercentObj(newScalePercentObj);
         setUniformScalingState(transformation.uniformScalingState);
@@ -160,6 +162,7 @@ const ScaleOverlay = React.memo(({
                             suffix="%"
                             size="small"
                             min={1}
+                            disabled={!isSelectedModelAllVisible && !isPrimeTowerSelected}
                             value={scalePercentObj.x}
                             onChange={(value) => {
                                 onModelTransform({ 'scaleX': value / 100 }, false, isPrimeTowerSelected);
@@ -189,6 +192,7 @@ const ScaleOverlay = React.memo(({
                             size="small"
                             min={1}
                             value={scalePercentObj.y}
+                            disabled={!isPrimeTowerSelected && !isSelectedModelAllVisible}
                             onChange={(value) => {
                                 onModelTransform({ 'scaleY': value / 100 }, false, isPrimeTowerSelected);
                                 onModelAfterTransform();
@@ -205,6 +209,7 @@ const ScaleOverlay = React.memo(({
                                 size="small"
                                 min={1}
                                 value={scalePercentObj.z}
+                                disabled={!isSelectedModelAllVisible}
                                 onChange={(value) => {
                                     onModelTransform({ 'scaleZ': value / 100 });
                                     onModelAfterTransform();
@@ -220,7 +225,7 @@ const ScaleOverlay = React.memo(({
                         onClick={() => {
                             changeUniformScalingState(uniformScalingState); // Todo: bug, state error
                         }}
-                        disabled={isPrimeTowerSelected}
+                        disabled={!isSelectedModelAllVisible || isPrimeTowerSelected}
                     />
                     <span
                         className="height-20 margin-horizontal-8"
@@ -235,6 +240,7 @@ const ScaleOverlay = React.memo(({
                             type="primary"
                             priority="level-three"
                             width="100%"
+                            disabled={!isSelectedModelAllVisible}
                             onClick={scaleToFitSelectedModel}
                         >
                             <span>{i18n._('key-Printing/LeftBar-Scale to Fit')}</span>
@@ -245,6 +251,7 @@ const ScaleOverlay = React.memo(({
                         type="primary"
                         priority="level-three"
                         width="100%"
+                        disabled={!isPrimeTowerSelected && !isSelectedModelAllVisible}
                         onClick={() => resetScale(isPrimeTowerSelected)}
                     >
                         <span>{i18n._('key-Printing/LeftBar-Reset')}</span>

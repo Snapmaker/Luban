@@ -82,7 +82,10 @@ class Controls extends EventEmitter {
     // scale
     scale = 1;
 
-    scaleRate = 0.98;
+    scaleRate = 0.90;
+
+    // pan zoom factor, when distance is 700, the init panScale is 1
+    panScale = 1;
 
     // calculation only
     offset = new THREE.Vector3();
@@ -145,7 +148,6 @@ class Controls extends EventEmitter {
         this.transformControl.addEventListener('update', () => {
             this.emit(EVENTS.UPDATE);
         });
-        this.transformControl.mode = 'translate';
         this.props?.displayedType !== 'gcode' && this.group.add(this.transformControl);
     }
 
@@ -232,12 +234,16 @@ class Controls extends EventEmitter {
         const elem = this.domElement === document ? document.body : this.domElement;
 
         this.offset.copy(this.camera.position).sub(this.target);
-
         // calculate move distance of target in perspective view of camera
         const distance = 2 * this.offset.length() * Math.tan(this.camera.fov / 2 * Math.PI / 180);
-
-        this.panLeft(distance * deltaX / elem.clientHeight, this.camera.matrix);
-        this.panUp(distance * deltaY / elem.clientHeight, this.camera.matrix);
+        let currentScale = this.panScale;
+        if (this.panScale <= 3) {
+            currentScale = 1;
+        } else {
+            currentScale = (this.panScale * 0.5) * 0.75;
+        }
+        this.panLeft(distance * deltaX * currentScale / elem.clientWidth, this.camera.matrix);
+        this.panUp(distance * deltaY * currentScale / elem.clientHeight, this.camera.matrix);
     }
 
     setScale(scale) {
@@ -632,7 +638,7 @@ class Controls extends EventEmitter {
             v.sub(scope.camera.position).normalize();
             // now v is Vector3 which is from mouse position camera position
             const distanceAll = v1.copy(scope.target).sub(scope.camera.position).length();
-
+            this.panScale = Math.round((Math.log(distanceAll / 700) / Math.log(this.scaleRate)) * 10) / 10;
             scope.mouse3D.copy(scope.camera.position).add(v.multiplyScalar(distanceAll));
         };
     })();

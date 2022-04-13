@@ -12,6 +12,8 @@ const MirrorOverlay = React.memo(({
     updateBoundingBox
 }) => {
     const transformation = useSelector(state => state?.printing?.modelGroup?.getSelectedModelTransformationForPrinting(), shallowEqual);
+    const isSelectedModelAllVisible = useSelector(state => state?.printing?.modelGroup?.isSelectedModelAllVisible(), shallowEqual);
+
     const dispatch = useDispatch();
     const mirrorSelectedModel = (value) => {
         switch (value) {
@@ -62,6 +64,7 @@ const MirrorOverlay = React.memo(({
                         type="primary"
                         priority="level-three"
                         width="100%"
+                        disabled={!isSelectedModelAllVisible}
                         onClick={() => mirrorSelectedModel('X')}
                     >
                         <span className="color-red-1">{i18n._('key-Printing/LeftBar-X ')}</span>
@@ -72,6 +75,7 @@ const MirrorOverlay = React.memo(({
                         type="primary"
                         priority="level-three"
                         width="100%"
+                        disabled={!isSelectedModelAllVisible}
                         onClick={() => mirrorSelectedModel('Y')}
                     >
                         <span className="color-green-1">{i18n._('key-Printing/LeftBar-Y ')}</span>
@@ -82,6 +86,7 @@ const MirrorOverlay = React.memo(({
                         type="primary"
                         priority="level-three"
                         width="100%"
+                        disabled={!isSelectedModelAllVisible}
                         onClick={() => mirrorSelectedModel('Z')}
                     >
                         <span className="color-blue-2">{i18n._('key-Printing/LeftBar-Z ')}</span>

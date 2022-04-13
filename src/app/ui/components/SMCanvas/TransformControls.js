@@ -69,7 +69,7 @@ class TransformControls extends Object3D {
 
     object = new Group();
 
-    _mode = 'translate';
+    _mode = null;
 
     _axis = null;
 
