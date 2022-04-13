@@ -134,6 +134,21 @@ class Visualizer extends PureComponent {
         toTopFrontRight: () => {
             this.canvas.current.toTopFrontRight();
         },
+        fitViewIn: () => {
+            if (this.props.selectedModelArray.length !== 0) {
+                const { x, y, z } = this.props.modelGroup.getSelectedModelBBoxWHD();
+                const selectedGroupBsphereRadius = Math.sqrt(x * x + y * y + z * z) / 2;
+                this.canvas.current.fitViewIn(this.props.modelGroup.selectedGroup.position, selectedGroupBsphereRadius);
+            } else {
+                this.props.modelGroup.selectAllModels();
+                const { x, y, z } = this.props.modelGroup.getSelectedModelBBoxWHD();
+                const selectedGroupBsphereRadius = Math.sqrt(x * x + y * y + z * z) / 2;
+                if (selectedGroupBsphereRadius > 0.000001) {
+                    this.canvas.current.fitViewIn(this.props.modelGroup.selectedGroup.position, selectedGroupBsphereRadius);
+                }
+                this.props.modelGroup.unselectAllModels();
+            }
+        },
         onSelectModels: (intersect, selectEvent) => {
             this.props.selectMultiModel(intersect, selectEvent);
         },
@@ -356,6 +371,12 @@ class Visualizer extends PureComponent {
             },
             false
         );
+
+        window.addEventListener(
+            'fit-view-in',
+            this.actions.fitViewIn,
+            false
+        );
         this.props.modelGroup.on('add', this.props.recordAddOperation);
     }
 
@@ -457,6 +478,7 @@ class Visualizer extends PureComponent {
     componentWillUnmount() {
         this.props.clearOperationHistory();
         this.props.modelGroup.off('add', this.props.recordAddOperation);
+        window.removeEventListener('fit-view-in', this.actions.fitViewIn, false);
     }
 
     getNotice() {
@@ -589,6 +611,12 @@ class Visualizer extends PureComponent {
                             },
                             {
                                 type: 'separator'
+                            },
+                            {
+                                type: 'item',
+                                label: i18n._('key-Printing/ContextMenu-FitViewIn'),
+                                disabled: inProgress || !hasModel || isSupportSelected,
+                                onClick: this.actions.fitViewIn
                             },
                             {
                                 type: 'item',

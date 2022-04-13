@@ -210,6 +210,16 @@ class ModelGroup extends EventEmitter {
         };
     }
 
+    getAllModelBBoxWHD() {
+        const whd = new Vector3(0, 0, 0);
+        ThreeUtils.computeBoundingBox(this.object).getSize(whd);
+        return {
+            x: whd.x,
+            y: whd.y,
+            z: whd.z
+        };
+    }
+
     hasAnyModelVisible() {
         return this.models.filter(m => !m.supportTag).some((model) => model.visible);
     }
