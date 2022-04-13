@@ -133,7 +133,7 @@ function VisualizerPreviewControl() {
 
     function toggleShowOriginalModel(event) {
         const show = event.target.checked;
-        dispatch(printingActions.setShowOriginalModel(show));
+        // dispatch(printingActions.setShowOriginalModel(show));
         setShowOriginalModel(show);
     }
 
@@ -151,7 +151,14 @@ function VisualizerPreviewControl() {
                 gcodePreviewModeToogleVisible: 0
             }));
         }
+        if (displayedType === 'gcode') {
+            dispatch(printingActions.setShowOriginalModel(showOriginalModel));
+        }
     }, [displayedType]);
+
+    useEffect(() => {
+        dispatch(printingActions.setShowOriginalModel(showOriginalModel));
+    }, [showOriginalModel]);
 
     useEffect(() => {
         setAllShowTypes(gcodeTypeInitialVisibility);
