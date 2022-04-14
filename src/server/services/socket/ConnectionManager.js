@@ -46,12 +46,13 @@ class ConnectionManager {
         this.connectionType = connectionType;
         if (connectionType === CONNECTION_TYPE_WIFI) {
             if (sacp) {
+                this.protocol = 'SACP';
                 this.socket = socketTcp;
-                this.socket.connectionOpen(socket, options);
             } else {
+                this.protocol = '';
                 this.socket = socketHttp;
-                this.socket.connectionOpen(socket, options);
             }
+            this.socket.connectionOpen(socket, options);
         } else {
             this.socket = socketSerial;
             this.socket.serialportOpen(socket, options);
@@ -421,6 +422,27 @@ class ConnectionManager {
     abortLaserMaterialThickness = (socket, options) => {
         this.socket.abortLaserMaterialThickness(options);
     }
+
+    // camera capture related, currently for socket-tcp
+    takePhoto = (params, callback) => {
+        this.socket.takePhoto(params, callback);
+    };
+
+    getCameraCalibration = (callback) => {
+        this.socket.getCameraCalibration(callback);
+    };
+
+    getPhoto = (callback) => {
+        this.socket.getPhoto(callback);
+    };
+
+    getCalibrationPhoto = (callback) => {
+        this.socket.getCalibrationPhoto(callback);
+    };
+
+    setMatrix = (params, callback) => {
+        this.socket.setMatrix(params, callback);
+    };
     // only for Wifi
 }
 

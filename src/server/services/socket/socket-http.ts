@@ -94,6 +94,8 @@ export type EventOptions = {
     nozzleTemperatureValue?: number,
     heatedBedTemperatureValue?: number,
     zOffset?: number,
+    headType?: string,
+    uploadName?: string,
 };
 export type StateOptions = {
     headType?: string,
@@ -383,7 +385,7 @@ class SocketHttp {
             });
     };
 
-    public abortLaserMaterialThickness = (options: EventOptions) => {
+    public abortLaserMaterialThickness = () => {
         this.getLaserMaterialThicknessReq && this.getLaserMaterialThicknessReq.abort();
     };
 
