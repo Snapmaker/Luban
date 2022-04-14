@@ -351,6 +351,7 @@ function VisualizerPreviewControl() {
                                             return (
                                                 <PreviewType
                                                     fatherContent={fatherContent}
+                                                    key={fatherContent}
                                                     fatherColor={fatherColor}
                                                     isDropdown={isDualExtruder}
                                                     childrenObjects={
