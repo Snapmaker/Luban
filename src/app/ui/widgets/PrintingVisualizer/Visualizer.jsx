@@ -98,7 +98,7 @@ class Visualizer extends PureComponent {
         showPrimeTower: PropTypes.func,
         printingToolhead: PropTypes.string,
         stopArea: PropTypes.object,
-        controlAxis: PropTypes.object,
+        controlAxis: PropTypes.array,
         controlInputValue: PropTypes.object,
         controlMode: PropTypes.string,
         displayModel: PropTypes.func

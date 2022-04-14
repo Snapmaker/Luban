@@ -15,7 +15,7 @@ const PrintingVisualizerWidget = ({ controlInputValue, controlAxis, controlMode 
 
 PrintingVisualizerWidget.propTypes = {
     controlInputValue: PropTypes.object,
-    controlAxis: PropTypes.object,
+    controlAxis: PropTypes.array,
     controlMode: PropTypes.string
 };
 export default PrintingVisualizerWidget;
