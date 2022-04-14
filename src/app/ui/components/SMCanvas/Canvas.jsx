@@ -542,7 +542,6 @@ class Canvas extends PureComponent {
             oy: o2.y,
             oz: o2.z
         };
-        this.controls.setTarget(new Vector3(center.x, center.y, center.z));
         const tween = new TWEEN.Tween(object)
             .to(to, ANIMATION_DURATION)
             .onUpdate(() => {
@@ -552,12 +551,13 @@ class Canvas extends PureComponent {
             });
         this.startTween(tween);
 
-        this.camera.position.x = o2.x;
-        this.camera.position.y = o2.y;
-        this.camera.position.z = o2.z;
-        this.controls.setTarget(new Vector3(center.x, center.y, center.z));
-
-        this.renderScene();
+        setTimeout(() => {
+            this.camera.position.x = o2.x;
+            this.camera.position.y = o2.y;
+            this.camera.position.z = o2.z;
+            this.controls.setTarget(new Vector3(center.x, center.y, center.z));
+            this.renderScene();
+        }, ANIMATION_DURATION);
     }
 
     toBottom() {

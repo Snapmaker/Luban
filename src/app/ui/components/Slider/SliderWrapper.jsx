@@ -17,7 +17,10 @@ class SliderWrapper extends PureComponent {
         size: PropTypes.string,
         marks: PropTypes.object,
         disabled: PropTypes.bool,
-        value: PropTypes.number.isRequired
+        value: PropTypes.oneOfType([
+            PropTypes.number,
+            PropTypes.array
+        ]),
     };
 
     render() {

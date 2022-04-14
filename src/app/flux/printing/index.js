@@ -1732,8 +1732,8 @@ export const actions = {
                     ];
                 } else {
                     range = [
-                        Math.min(layerCount, range[1]),
-                        Math.min(layerCount, range[1])
+                        Math.max(Math.min(layerCount, range[1]), 0),
+                        Math.max(Math.min(layerCount, range[1]), 0)
                     ];
                 }
             } else {
@@ -1794,7 +1794,7 @@ export const actions = {
                 layerRangeDisplayed: range
             }));
             dispatch(actions.render());
-        }, 200)();
+        }, 50)();
     },
 
     // make an offset of gcode layer count
