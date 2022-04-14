@@ -119,7 +119,7 @@ const NumberInput = React.memo(({
 NumberInput.propTypes = {
     className: PropTypes.string,
     size: PropTypes.string,
-    value: PropTypes.number.isRequired,
+    value: PropTypes.number,
     defaultValue: PropTypes.number,
     disabled: PropTypes.bool,
     min: PropTypes.number,

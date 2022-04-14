@@ -661,7 +661,7 @@ class Canvas extends PureComponent {
             if (this.transformSourceType === '2D') {
                 this.light.position.copy(this.camera.position);
             }
-            if (this.controls.transformControl.mode !== 'mirror' && this.modelGroup?.selectedModelArray
+            if (this.transformSourceType === '3D' && this.controls.transformControl.mode !== 'mirror' && this.modelGroup?.selectedModelArray
             && this.modelGroup.selectedModelArray[0]?.type !== 'primeTower') {
                 switch (this.controls.transformControl.mode) {
                     case 'translate':
@@ -701,7 +701,7 @@ class Canvas extends PureComponent {
                 }
                 this.controls.transformControl.dragging && inputDOM && (inputDOM.style.display = 'block');
             }
-            if (!this.modelGroup.selectedModelArray?.length || !this.modelGroup.isSelectedModelAllVisible()) {
+            if (this.transformSourceType === '3D' && (!this.modelGroup.selectedModelArray?.length || !this.modelGroup.isSelectedModelAllVisible())) {
                 inputDOM && (inputDOM.style.display = 'none');
                 inputDOM2 && (inputDOM2.style.display = 'none');
             }
