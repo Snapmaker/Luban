@@ -1794,7 +1794,7 @@ export const actions = {
                 layerRangeDisplayed: range
             }));
             dispatch(actions.render());
-        }, 0)();
+        }, 50)();
     },
 
     // make an offset of gcode layer count
