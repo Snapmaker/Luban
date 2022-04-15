@@ -9,6 +9,7 @@ import workerManager from '../../lib/manager/workerManager';
 import { actions as machineActions } from '../machine';
 import gcodeBufferGeometryToObj3d from '../../workers/GcodeToBufferGeometry/gcodeBufferGeometryToObj3d';
 import { CONNECTION_STATUS_CONNECTED, EPSILON, MACHINE_SERIES, PROTOCOL_TEXT } from '../../constants';
+import { logGcodeExport } from '../../ui/utils/gaEvent';
 
 // Actions
 const ACTION_SET_STATE = 'WORKSPACE/ACTION_SET_STATE';
@@ -273,6 +274,7 @@ export const actions = {
 
     renderGcodeFile: (gcodeFile, needToList = true, shouldRenderGcode = false) => async (dispatch, getState) => {
         const { shouldAutoPreviewGcode } = getState().machine;
+        const { headType, isRotate } = getState().workspace;
 
         // const oldGcodeFile = getState().workspace.gcodeFile;
         if (needToList) {
@@ -291,6 +293,8 @@ export const actions = {
             }));
             // TODO:  used for serialport
             await dispatch(actions.loadGcode(gcodeFile));
+            logGcodeExport(headType, 'local', isRotate);
+
             workerManager.gcodeToArraybufferGeometry([{ func: 'WORKSPACE', gcodeFilename: gcodeFile.uploadName }], (data) => {
                 dispatch(actions.gcodeToArraybufferGeometryCallback(data));
             });

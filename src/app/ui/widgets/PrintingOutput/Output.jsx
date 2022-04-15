@@ -4,7 +4,6 @@ import path from 'path';
 import classNames from 'classnames';
 import { noop } from 'lodash';
 // import PropTypes from 'prop-types';
-import { v4 as uuid } from 'uuid';
 import Menu from '../../components/Menu';
 import { Button } from '../../components/Buttons';
 import Dropdown from '../../components/Dropdown';
@@ -23,7 +22,8 @@ import { renderPopup } from '../../utils';
 import Workspace from '../../pages/Workspace';
 import SvgIcon from '../../components/SvgIcon';
 import { STEP_STAGE } from '../../../lib/manager/ProgressManager';
-import { successfulUse } from '../../utils/gaEvent';
+import { sliceTrigger, successfulUse } from '../../utils/gaEvent';
+import { HEAD_PRINTING } from '../../../constants';
 
 function useRenderWorkspace() {
     const [showWorkspace, setShowWorkspace] = useState(false);
@@ -68,6 +68,7 @@ function Output() {
         onClickGenerateGcode: () => {
             const gcodeThumbnail = thumbnail.current.getThumbnail();
             dispatch(printingActions.generateGcode(gcodeThumbnail));
+            sliceTrigger(HEAD_PRINTING);
         },
         onClickLoadGcode: () => {
             if (isGcodeOverstepped) {
@@ -77,11 +78,10 @@ function Output() {
                 });
                 return;
             }
-            successfulUse(uuid(), '3dp');
             gcodeFile.thumbnail = thumbnail.current.getDataURL() || defaultThumbnail;
             dispatch(workspaceActions.renderGcodeFile(gcodeFile));
             setShowWorkspace(true);
-
+            successfulUse(HEAD_PRINTING);
             window.scrollTo(0, 0);
         },
         onClickExportGcode: () => {
@@ -92,9 +92,9 @@ function Output() {
                 });
                 return;
             }
-            successfulUse(uuid(), '3dp');
             const filename = path.basename(gcodeFile?.name);
             dispatch(projectActions.exportFile(filename, gcodeFile.renderGcodeFileName));
+            successfulUse(HEAD_PRINTING);
         }
     };
     useEffect(() => {

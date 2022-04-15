@@ -62,6 +62,7 @@ import ScaleToFitWithRotateOperation3D from '../operation-history/ScaleToFitWith
 import PrimeTowerModel from '../../models/PrimeTowerModel';
 import ThreeUtils from '../../three-extensions/ThreeUtils';
 // import { TYPE_SETTINGS } from '../../lib/gcode-viewer/constants';
+import { logToolBarOperation } from '../../ui/utils/gaEvent';
 
 // register methods for three-mesh-bvh
 THREE.Mesh.prototype.raycast = acceleratedRaycast;
@@ -2725,6 +2726,7 @@ export const actions = {
     undo: () => (dispatch, getState) => {
         const { canUndo } = getState().printing.history;
         if (canUndo) {
+            logToolBarOperation(HEAD_PRINTING, 'undo');
             dispatch(operationHistoryActions.undo(INITIAL_STATE.name));
             dispatch(actions.destroyGcodeLine());
             dispatch(actions.displayModel());
@@ -2735,6 +2737,7 @@ export const actions = {
     redo: () => (dispatch, getState) => {
         const { canRedo } = getState().printing.history;
         if (canRedo) {
+            logToolBarOperation(HEAD_PRINTING, 'redo');
             dispatch(operationHistoryActions.redo(INITIAL_STATE.name));
             dispatch(actions.destroyGcodeLine());
             dispatch(actions.displayModel());
@@ -3154,6 +3157,7 @@ export const actions = {
         dispatch(actions.updateState(modelState));
         dispatch(actions.destroyGcodeLine());
         dispatch(actions.displayModel());
+        logToolBarOperation(HEAD_PRINTING, 'align');
     },
 
     group: () => (dispatch, getState) => {
@@ -3198,6 +3202,7 @@ export const actions = {
         dispatch(actions.updateState(modelState));
         dispatch(actions.destroyGcodeLine());
         dispatch(actions.displayModel());
+        logToolBarOperation(HEAD_PRINTING, 'group');
     },
 
     ungroup: () => (dispatch, getState) => {
@@ -3241,6 +3246,7 @@ export const actions = {
         dispatch(actions.updateState(modelState));
         dispatch(actions.destroyGcodeLine());
         dispatch(actions.displayModel());
+        logToolBarOperation(HEAD_PRINTING, 'ungroup');
     },
 
     setModelsMeshColor: (direction, color) => (dispatch, getState) => {

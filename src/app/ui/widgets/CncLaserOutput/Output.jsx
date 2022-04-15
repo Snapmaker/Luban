@@ -3,7 +3,6 @@ import { useSelector, useDispatch, shallowEqual } from 'react-redux';
 import PropTypes from 'prop-types';
 import classNames from 'classnames';
 import { noop } from 'lodash';
-import { v4 as uuid } from 'uuid';
 import { actions as workspaceActions } from '../../../flux/workspace';
 import { actions as editorActions } from '../../../flux/editor';
 import { actions as projectActions } from '../../../flux/project';
@@ -22,7 +21,7 @@ import i18n from '../../../lib/i18n';
 import UniApi from '../../../lib/uni-api';
 import Thumbnail from '../CncLaserShared/Thumbnail';
 import SvgIcon from '../../components/SvgIcon';
-import { successfulUse } from '../../utils/gaEvent';
+import { sliceTrigger, successfulUse } from '../../utils/gaEvent';
 
 const Output = ({ headType }) => {
     const displayedType = useSelector(state => state[headType]?.displayedType);
@@ -35,6 +34,7 @@ const Output = ({ headType }) => {
     const toolPathGroup = useSelector(state => state[headType]?.toolPathGroup);
     const workflowState = useSelector(state => state.machine?.workflowState);
     const isGcodeGenerating = useSelector(state => state[headType]?.isGcodeGenerating);
+    const materials = useSelector(state => state[headType]?.materials);
 
     const [showWorkspace, setShowWorkspace] = useState(false);
     const [showExportOptions, setShowExportOptions] = useState(false);
@@ -60,8 +60,8 @@ const Output = ({ headType }) => {
             if (gcodeFile === null) {
                 return;
             }
-            successfulUse(uuid(), headType);
             await dispatch(workspaceActions.renderGcodeFile(gcodeFile));
+            successfulUse(headType, materials.isRotate);
             setShowWorkspace(true);
             window.scrollTo(0, 0);
         },
@@ -69,7 +69,7 @@ const Output = ({ headType }) => {
             if (gcodeFile === null) {
                 return;
             }
-            successfulUse(uuid(), headType);
+            successfulUse(headType, materials.isRotate);
             dispatch(projectActions.exportFile(gcodeFile.uploadName, gcodeFile.renderGcodeFileName));
         },
         onProcess: () => {
@@ -81,6 +81,7 @@ const Output = ({ headType }) => {
         preview: async () => {
             if (needToPreview) {
                 await dispatch(editorActions.preview(headType));
+                sliceTrigger(headType);
             } else {
                 dispatch(editorActions.showToolPathGroupObject(headType));
             }
