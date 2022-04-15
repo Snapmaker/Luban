@@ -4,7 +4,7 @@ import path from 'path';
 import crypto from 'crypto';
 import wifiServerManager from './WifiServerManager';
 import type SocketServer from '../../lib/SocketManager';
-import { EventOptions } from './socket-http';
+import { EventOptions } from './types';
 import logger from '../../lib/logger';
 import { CONNECTION_TYPE_WIFI, HEAD_CNC, HEAD_LASER, HEAD_PRINTING, LEVEL_TWO_POWER_LASER_FOR_SM2, WORKFLOW_STATE_IDLE } from '../../constants';
 import Business, { CoordinateType, ToolHeadType } from '../../lib/SACP-SDK/SACP/business/Business';
@@ -13,9 +13,6 @@ import DataStorage from '../../DataStorage';
 // import MovementInstruction, { MoveDirection } from '../../lib/SACP-SDK/SACP/business/models/MovementInstruction';
 import CoordinateInfo, { Direction } from '../../lib/SACP-SDK/SACP/business/models/CoordinateInfo';
 import MovementInstruction, { MoveDirection } from '../../lib/SACP-SDK/SACP/business/models/MovementInstruction';
-// import { readUint8 } from '../../lib/SACP-SDK/SACP/helper';
-// import { RequestData } from '../../lib/SACP-SDK/SACP/communication/Dispatcher';
-// import { readString, readUint16, readUint32, readUint8, stringToBuffer, writeUint32 } from '../../lib/SACP-SDK/SACP/helper';
 
 const log = logger('lib:SocketTCP');
 

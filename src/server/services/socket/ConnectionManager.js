@@ -2,7 +2,7 @@ import logger from '../../lib/logger';
 // import workerManager from '../task-manager/workerManager';
 import socketSerial from './socket-serial';
 import socketHttp from './socket-http';
-import socketTcp from './socket-tcp';
+import socketTcp from './SACP-TCP';
 import { HEAD_PRINTING, HEAD_LASER, LEVEL_TWO_POWER_LASER_FOR_SM2, MACHINE_SERIES,
     CONNECTION_TYPE_WIFI, CONNECTION_TYPE_SERIAL, WORKFLOW_STATE_PAUSED } from '../../constants';
 import DataStorage from '../../DataStorage';

@@ -89,16 +89,6 @@ export const getPhoto = (options) => {
         return new Promise(resolve => {
             connectionManager.getPhoto((res) => {
                 if (res.success) {
-                    // let fileName = `img${index}.jpg`;
-                    // fileName = pathWithRandomSuffix(fileName);
-                    // fs.rename(res.filePath, `${DataStorage.tmpDir}/${fileName}`, (err) => {
-                    //     if (err) {
-                    //         log.error(`getPhoto, rename error: ${err}`);
-                    //     }
-                    //     resolve({
-                    //         fileName
-                    //     });
-                    // });
                     resolve({
                         fileName: res.filename
                     });
@@ -138,12 +128,6 @@ export const calibrationPhoto = (options) => {
         return new Promise(resolve => {
             connectionManager.getCalibrationPhoto((res) => {
                 if (res.success) {
-                    // let fileName = 'calibration.jpg';
-                    // fileName = pathWithRandomSuffix(fileName);
-                    // fs.rename(res.filePath, `${DataStorage.tmpDir}/${fileName}`, (err) => {
-                    //     if (err) {
-                    //         log.error(`getPhoto, rename error: ${err}`);
-                    //     }
                     const fileName = res.filename;
                     Jimp.read(`${DataStorage.tmpDir}/${fileName}`).then((image) => {
                         const { width, height } = image.bitmap;
@@ -153,7 +137,6 @@ export const calibrationPhoto = (options) => {
                             height
                         });
                     });
-                    // });
                 } else {
                     resolve({
                         status: 404
@@ -189,7 +172,7 @@ export const calibrationPhoto = (options) => {
 
 export const setMatrix = (options) => {
     const { matrix, address, toolHead } = options;
-    log.info(`setMatrix: matrix=${JSON.stringify(matrix)}, toolHead=${toolHead}`);
+    log.info(`setMatrix: matrix=${matrix}, toolHead=${toolHead}`);
     if (connectionManager.protocol === 'SACP') {
         return new Promise(resolve => {
             connectionManager.setMatrix({

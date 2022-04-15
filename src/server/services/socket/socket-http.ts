@@ -14,6 +14,7 @@ import { HEAD_PRINTING, HEAD_LASER, HEAD_CNC, MACHINE_SERIES,
 } from '../../constants';
 import { valueOf } from '../../lib/contants-utils';
 import wifiServerManager from './WifiServerManager';
+import { EventOptions } from './types';
 
 let waitConfirm: boolean;
 const log = logger('lib:SocketHttp');
@@ -77,26 +78,6 @@ const _getResult = (err, res) => {
 // let timeoutHandle = null;
 let intervalHandle = null;
 
-export type EventOptions = {
-    address?: string,
-    eventName: string,
-    host?: string,
-    token?: string,
-    gcode?: string,
-    x?: number,
-    y?: number,
-    feedRate?: number,
-    gcodePath?: string,
-    value?: number,
-    enable?: boolean,
-    workSpeedFactor?: number,
-    laserPower?: number,
-    nozzleTemperatureValue?: number,
-    heatedBedTemperatureValue?: number,
-    zOffset?: number,
-    headType?: string,
-    uploadName?: string,
-};
 export type StateOptions = {
     headType?: string,
     toolHead?: string,
