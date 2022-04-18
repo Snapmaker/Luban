@@ -17,10 +17,11 @@ const stylusLoader = require('stylus-loader');
 const babelConfig = require('./babel.config');
 const languages = require('./webpack.config.app-i18n').languages;
 
-
 const timestamp = new Date().getTime();
+const pkg = require('./package.json');
+const { clientPort, serverPort } = pkg.config;
 
-export default {
+module.exports = {
     mode: 'development',
     target: 'web',
     devtool: 'source-map',
@@ -39,14 +40,14 @@ export default {
             // https://github.com/Yaffle/EventSource
             'eventsource-polyfill',
             // https://github.com/glenjamin/webpack-hot-middleware
-            'webpack-hot-middleware/client?reload=true',
+            // 'webpack-hot-middleware/client?reload=true',
             path.resolve(__dirname, 'src/app/polyfill/index.js')
         ],
         app: [
             // https://github.com/Yaffle/EventSource
             'eventsource-polyfill',
             // https://github.com/glenjamin/webpack-hot-middleware
-            'webpack-hot-middleware/client?reload=true',
+            // 'webpack-hot-middleware/client?reload=true',
             path.resolve(__dirname, 'src/app/index.jsx')
         ]
     },
@@ -179,5 +180,18 @@ export default {
         fs: 'empty',
         net: 'empty',
         tls: 'empty'
-    }
+    },
+    devServer: {
+        port: clientPort,
+        contentBase: path.resolve(__dirname, 'output/app'),
+        proxy: {
+            '/api': `http://localhost:${serverPort}`,
+            '/data': `http://localhost:${serverPort}`,
+            '/resources': `http://localhost:${serverPort}`,
+            '/socket.io': {
+                target: `ws://localhost:${serverPort}`,
+                ws: true
+            }
+        }
+    },
 };

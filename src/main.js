@@ -29,8 +29,11 @@ const loadingMenu = [{
 const childProcess = require('child_process');
 
 const USER_DATA_DIR = 'userDataDir';
-const SERVER_DATA = 'serverData';
+const SERVER_STARTED = 'serverStartd';
 const UPLOAD_WINDOWS = 'uploadWindows';
+
+const { clientPort } = pkg.config;
+
 // crashReporter.start({
 //     productName: 'Snapmaker',
 //     globalExtra: { _companyName: 'Snapmaker' },
@@ -224,11 +227,11 @@ const showMainWindow = async () => {
             userDataDir
         });
         child.on('message', (data) => {
-            if (data.type === SERVER_DATA) {
+            if (data.type === SERVER_STARTED) {
                 serverData = data;
-                const { address, port } = { ...serverData };
+                const { address } = { ...serverData };
                 configureWindow(window);
-                loadUrl = `http://${address}:${port}`;
+                loadUrl = `http://${address}:${clientPort}`;
                 const filter = {
                     urls: [
                         // 'http://*/',

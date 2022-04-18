@@ -5,16 +5,17 @@ import program from 'commander';
 import isElectron from 'is-electron';
 import pkg from './package.json';
 
-const SERVER_DATA = 'serverData';
+const SERVER_STARTED = 'serverStartd';
 // Defaults to 'production'
 process.env.NODE_ENV = process.env.NODE_ENV || 'production';
 
 const increaseVerbosityLevel = (val, total) => {
     return total + 1;
 };
+const { serverPort } = pkg.config;
 
 const defaultHost = isElectron() ? '127.0.0.1' : '0.0.0.0';
-const defaultPort = isElectron() ? 0 : 8000;
+const defaultPort = serverPort;
 
 program
     .version(pkg.version)
@@ -54,7 +55,7 @@ const launchServer = () => new Promise((resolve, reject) => {
             reject(err);
             return;
         }
-        process.send({ type: SERVER_DATA, ...data });
+        process.send({ type: SERVER_STARTED, ...data });
         resolve(data);
     });
 });
