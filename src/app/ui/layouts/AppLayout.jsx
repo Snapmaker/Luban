@@ -52,6 +52,7 @@ import styles from './styles/appbar.styl';
 import ModelExporter from '../widgets/PrintingVisualizer/ModelExporter';
 import Anchor from '../components/Anchor';
 import SvgIcon from '../components/SvgIcon';
+import { logLubanQuit } from '../utils/gaEvent';
 
 class AppLayout extends PureComponent {
     static propTypes = {
@@ -834,6 +835,9 @@ class AppLayout extends PureComponent {
                 if (!(pathname === '/workspace' || pathname === '/' || pathname === 'undefined')) {
                     this.props.restartGuideTours(pathname, this.props.history);
                 }
+            });
+            UniApi.Event.on('will-quit', () => {
+                logLubanQuit();
             });
         }
     }

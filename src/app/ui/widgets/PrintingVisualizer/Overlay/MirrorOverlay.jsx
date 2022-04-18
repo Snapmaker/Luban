@@ -6,6 +6,8 @@ import i18n from '../../../../lib/i18n';
 import { CancelButton } from '../VisualizerLeftBar';
 import { actions as printingActions } from '../../../../flux/printing';
 import { Button } from '../../../components/Buttons';
+import { logTransformOperation } from '../../../utils/gaEvent';
+import { HEAD_PRINTING } from '../../../../constants';
 
 const MirrorOverlay = React.memo(({
     setTransformMode,
@@ -42,6 +44,7 @@ const MirrorOverlay = React.memo(({
             default:
                 break;
         }
+        logTransformOperation(HEAD_PRINTING, 'mirror', 'button');
         updateBoundingBox();
     };
     return (

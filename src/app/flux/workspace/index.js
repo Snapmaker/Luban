@@ -293,7 +293,7 @@ export const actions = {
             }));
             // TODO:  used for serialport
             await dispatch(actions.loadGcode(gcodeFile));
-            logGcodeExport(headType, 'local', isRotate);
+            logGcodeExport(headType, 'workspace', isRotate);
 
             workerManager.gcodeToArraybufferGeometry([{ func: 'WORKSPACE', gcodeFilename: gcodeFile.uploadName }], (data) => {
                 dispatch(actions.gcodeToArraybufferGeometryCallback(data));

@@ -29,6 +29,7 @@ import ThreeModel from '../../models/ThreeModel';
 
 import i18n from '../../lib/i18n';
 import UniApi from '../../lib/uni-api';
+import { logGcodeExport, logModuleVisit } from '../../ui/utils/gaEvent';
 
 const INITIAL_STATE = {
     [HEAD_PRINTING]: {
@@ -274,8 +275,10 @@ export const actions = {
         }).catch(console.error);
     },
 
-    exportFile: (targetFile, renderGcodeFileName = null) => async (dispatch) => {
+    exportFile: (targetFile, renderGcodeFileName = null) => async (dispatch, getState) => {
+        const { headType, isRotate } = getState().workspace;
         const tmpFile = `/Tmp/${targetFile}`;
+        logGcodeExport(headType, 'local', isRotate);
         await UniApi.File.exportAs(targetFile, tmpFile, renderGcodeFileName, (type, filePath = '') => {
             dispatch(appGlobalActions.updateSavedModal({
                 showSavedModal: true,
@@ -551,6 +554,7 @@ export const actions = {
         } else {
             isGuideTours = machineStore.get('guideTours')?.guideTours3dp;
         }
+        logModuleVisit(newHeadType, isRotate);
         history.push({
             pathname: to,
             state: {

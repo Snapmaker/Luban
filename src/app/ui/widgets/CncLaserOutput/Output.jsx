@@ -21,7 +21,7 @@ import i18n from '../../../lib/i18n';
 import UniApi from '../../../lib/uni-api';
 import Thumbnail from '../CncLaserShared/Thumbnail';
 import SvgIcon from '../../components/SvgIcon';
-import { sliceTrigger, successfulUse } from '../../utils/gaEvent';
+import { logGcodeExport } from '../../utils/gaEvent';
 
 const Output = ({ headType }) => {
     const displayedType = useSelector(state => state[headType]?.displayedType);
@@ -61,7 +61,7 @@ const Output = ({ headType }) => {
                 return;
             }
             await dispatch(workspaceActions.renderGcodeFile(gcodeFile));
-            successfulUse(headType, materials.isRotate);
+            logGcodeExport(headType, 'workspace', materials.isRotate);
             setShowWorkspace(true);
             window.scrollTo(0, 0);
         },
@@ -69,7 +69,7 @@ const Output = ({ headType }) => {
             if (gcodeFile === null) {
                 return;
             }
-            successfulUse(headType, materials.isRotate);
+            logGcodeExport(headType, 'local', materials.isRotate);
             dispatch(projectActions.exportFile(gcodeFile.uploadName, gcodeFile.renderGcodeFileName));
         },
         onProcess: () => {
@@ -81,7 +81,6 @@ const Output = ({ headType }) => {
         preview: async () => {
             if (needToPreview) {
                 await dispatch(editorActions.preview(headType));
-                sliceTrigger(headType);
             } else {
                 dispatch(editorActions.showToolPathGroupObject(headType));
             }

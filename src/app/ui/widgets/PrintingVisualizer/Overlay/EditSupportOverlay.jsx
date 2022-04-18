@@ -10,6 +10,8 @@ import SvgIcon from '../../../components/SvgIcon';
 import Slider from '../../../components/Slider';
 import { actions as printingActions } from '../../../../flux/printing';
 import { actions as menuActions } from '../../../../flux/appbar-menu';
+import { logTransformOperation } from '../../../utils/gaEvent';
+import { HEAD_PRINTING } from '../../../../constants';
 
 let tmpDiameter;
 const EditSupportOverlay = ({ onClose }) => {
@@ -19,6 +21,7 @@ const EditSupportOverlay = ({ onClose }) => {
 
     const actions = {
         finish: (shouldApplyChanges) => {
+            logTransformOperation(HEAD_PRINTING, 'support', 'edit_done');
             dispatch(printingActions.finishEditSupportArea(shouldApplyChanges));
             onClose();
         },

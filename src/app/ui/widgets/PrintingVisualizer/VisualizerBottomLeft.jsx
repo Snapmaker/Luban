@@ -5,6 +5,8 @@ import i18n from '../../../lib/i18n';
 import PrintingObjectListBox from '../PrintingObjectList';
 import Card from '../../components/Card';
 import SvgIcon from '../../components/SvgIcon';
+import { logModelViewOperation, logObjectListOperation } from '../../utils/gaEvent';
+import { HEAD_PRINTING } from '../../../constants';
 
 function VisualizerBottomLeft({ actions }) {
     return (
@@ -12,6 +14,9 @@ function VisualizerBottomLeft({ actions }) {
             <Card
                 className={classNames('margin-horizontal-8')}
                 title={i18n._('key-Printing/ObjectList-Object List')}
+                onListToogleVisible={(visible) => {
+                    logObjectListOperation(HEAD_PRINTING, visible ? 'expand' : 'pack');
+                }}
             >
                 <PrintingObjectListBox />
             </Card>
@@ -50,7 +55,10 @@ function VisualizerBottomLeft({ actions }) {
                     name="ScaleToFit"
                     size={24}
                     className="margin-left-2"
-                    onClick={actions.fitViewIn}
+                    onClick={() => {
+                        logModelViewOperation(HEAD_PRINTING, 'fit_view_in');
+                        actions.fitViewIn();
+                    }}
                 />
             </div>
         </React.Fragment>

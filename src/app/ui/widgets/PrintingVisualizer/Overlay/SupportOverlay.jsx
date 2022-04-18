@@ -10,6 +10,8 @@ import styles from './styles.styl';
 import { renderModal } from '../../../utils';
 /* eslint-disable-next-line import/no-cycle */
 import { CancelButton } from '../VisualizerLeftBar';
+import { logTransformOperation } from '../../../utils/gaEvent';
+import { HEAD_PRINTING } from '../../../../constants';
 
 const SupportOverlay = ({ editSupport, setTransformMode }) => {
     const selectedModelArray = useSelector(state => state?.printing?.modelGroup?.selectedModelArray, shallowEqual);
@@ -30,13 +32,16 @@ const SupportOverlay = ({ editSupport, setTransformMode }) => {
             } else {
                 actions.generateAutoSupport(supportOverhangAngle);
             }
+            logTransformOperation(HEAD_PRINTING, 'support', 'auto');
         },
         clearAllManualSupport() {
             dispatch(printingActions.clearAllManualSupport());
+            logTransformOperation(HEAD_PRINTING, 'support', 'clear');
         },
         editSupport() {
             editSupport();
             window.dispatchEvent(new CustomEvent('fit-view-in', {}));
+            logTransformOperation(HEAD_PRINTING, 'support', 'edit_in');
         }
     };
     const renderGenerateSupportConfirm = () => {

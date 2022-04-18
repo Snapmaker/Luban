@@ -7,14 +7,17 @@ type THeadType = 'printing' | 'laser' | 'cnc'
 
 type Transformation = {
     move: 'input' | 'center' | 'axis' | 'XY' | 'arrange',
-    scale: 'input_%' | 'axis',
-    roate: 'input' | 'axis' | 'analyze_in' | 'analyze_out' | 'face' | 'auto',
+    scale: 'input_%' | 'axis' | 'to_fit' | 'reset',
+    roate: 'input' | 'axis' | 'analyze_in' | 'analyze_out' | 'face' | 'auto' | 'reset',
     mirror: 'button'
-    support: 'auto' | 'edit_in' | 'edit_done'
+    support: 'auto' | 'edit_in' | 'edit_done' | 'clear'
 }
 
 type ToolName = 'save' | 'undo' | 'redo' | 'align' | 'group' | 'ungroup'
-    | 'job_setup' | 'top' | 'bottom' | 'camera_capture_add_backgroup' | 'camera_capture_remove_backgroup'
+    // laser /cnc
+    | 'job_setup' | 'top' | 'bottom'
+    // laser_special
+    | 'camera_capture_add_backgroup' | 'camera_capture_remove_backgroup'
 
 export function logPageView({ pathname }: { pathname: string, isRotate: boolean }) {
     if (pathname) {
@@ -56,6 +59,12 @@ const sendMessage = (messageType: string, category: string, data: Record<string,
         data.toolHead = getToolHead(data.headType as THeadType);
         delete data.headType;
     }
+    console.log(`messageType=${messageType}, data=${JSON.stringify({
+        messageType,
+        category,
+        ...data
+    })}`);
+
     ReactGA.gtag('event', 'sendMessage', {
         messageType,
         category,
@@ -66,6 +75,11 @@ const sendMessage = (messageType: string, category: string, data: Record<string,
 // TODO 推出Luban清除projectId
 const lubanVisit = () => {
     return sendMessage('luban_visit', 'user');
+};
+
+const logLubanQuit = () => {
+    machineStore.set('projectId', '');
+    return sendMessage('luban_quit', 'user');
 };
 
 export const logModuleVisit = (headType: THeadType, isRotate?: boolean) => {
@@ -93,7 +107,7 @@ export const logObjectListOperation = (headType: THeadType, type: 'pack' | 'expa
     });
 };
 
-export const logModelViewOperation = (headType: THeadType, type: 'isometric' | 'front' | 'top' | 'left' | 'right') => {
+export const logModelViewOperation = (headType: THeadType, type: 'isometric' | 'front' | 'top' | 'left' | 'right' | 'fit_view_in') => {
     return sendMessage(`${headType}_model_view_${type}`, 'model_view');
 };
 
@@ -117,21 +131,14 @@ export const logPritingSlice = (headType: THeadType, profileFrom: {
     });
 };
 
-export const logSvgSlice = (headType: THeadType, profileFrom: {
-    isDefault: boolean,
-    updatedDefault: boolean
-}, toolpathCount: number) => {
-    const profileFromUpdatedDefault = profileFrom.updatedDefault ? '1' : '0';
-    const defaultProfile = profileFrom.isDefault ? profileFromUpdatedDefault : '2';
-
+export const logSvgSlice = (headType: THeadType, toolpathsCount: number) => {
     return sendMessage(`${headType}_slice`, 'slice', {
         headType,
-        defaultProfile,
-        toolpathCount
+        toolpathsCount
     });
 };
 
-export const logProfileChange = (headType: THeadType, type: 'material' | 'printing_setting') => {
+export const logProfileChange = (headType: THeadType, type: 'material' | 'materialRight' | 'quality') => {
     return sendMessage(`${headType}_select_${type}`, `${headType}_flow`);
 };
 
@@ -169,5 +176,6 @@ export default {
     logSvgSlice,
     logProfileChange,
     logGcodeExport,
+    logLubanQuit,
     initialize
 };

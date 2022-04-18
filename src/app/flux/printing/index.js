@@ -62,7 +62,7 @@ import ScaleToFitWithRotateOperation3D from '../operation-history/ScaleToFitWith
 import PrimeTowerModel from '../../models/PrimeTowerModel';
 import ThreeUtils from '../../three-extensions/ThreeUtils';
 // import { TYPE_SETTINGS } from '../../lib/gcode-viewer/constants';
-import { logToolBarOperation } from '../../ui/utils/gaEvent';
+import { logPritingSlice, logProfileChange, logToolBarOperation, logTransformOperation } from '../../ui/utils/gaEvent';
 
 // register methods for three-mesh-bvh
 THREE.Mesh.prototype.raycast = acceleratedRaycast;
@@ -514,6 +514,9 @@ export const actions = {
     updateDefaultConfigId: (type, defaultId, direction = LEFT_EXTRUDER) => (dispatch, getState) => {
         let { series } = getState().machine;
         series = getRealSeries(series);
+        const printingState = getState().printing;
+        const { defaultMaterialId, defaultMaterialIdRight, defaultQualityId } = printingState;
+
         let originalConfigId = {};
         if (machineStore.get('defaultConfigId')) {
             originalConfigId = JSON.parse(machineStore.get('defaultConfigId'));
@@ -523,15 +526,24 @@ export const actions = {
                 switch (direction) {
                     case LEFT_EXTRUDER:
                         originalConfigId[series].material = defaultId;
+                        if (defaultMaterialId !== defaultId) {
+                            logProfileChange(HEAD_PRINTING, 'material');
+                        }
                         break;
                     case RIGHT_EXTRUDER:
                         originalConfigId[series].materialRight = defaultId;
+                        if (defaultMaterialIdRight !== defaultId) {
+                            logProfileChange(HEAD_PRINTING, 'materialRight');
+                        }
                         break;
                     default:
                         break;
                 }
             } else {
                 originalConfigId[series][type] = defaultId;
+                if (defaultQualityId !== defaultId) {
+                    logProfileChange(HEAD_PRINTING, type);
+                }
             }
         } else {
             originalConfigId[series] = {
@@ -1485,6 +1497,28 @@ export const actions = {
             renderGcodeFileName
         };
         controller.slice(params);
+        // TODO
+        // const isAllValueDefault = optionConfigGroup.every((item) => {
+        //     return item.fields.every((key) => {
+        //         return (
+        //             finalDefinition.settings[key].default_value === finalDefinition[key].default_value
+        //         );
+        //     });
+        // });
+        logPritingSlice(HEAD_PRINTING, {
+            isDefault: false
+            // updatedDefault:
+        }, {
+            isDefault: false
+        }, JSON.stringify({
+            nozzle_diameter: finalDefinition.settings?.nozzle_diameter?.default_value,
+            layer_height: finalDefinition.settings?.layer_height?.default_value,
+            infill_pattern: finalDefinition.settings?.infill_pattern?.default_value,
+            auto_support: finalDefinition.settings?.auto_support?.default_value,
+            initial_layer_line_width_factor: finalDefinition.settings?.initial_layer_line_width_factor?.default_value,
+            initial_layer_height: finalDefinition.settings?.initial_layer_height?.default_value,
+            build_plate_adhesion_type: finalDefinition.settings?.build_plate_adhesion_type?.default_value,
+        }));
     },
 
     prepareModel: () => (dispatch, getState) => {
@@ -1782,12 +1816,12 @@ export const actions = {
                 gcodeLine.material.uniforms.u_visible_layer_range_end.value = range[1];
             }
             if (isUp && (range[0] - prevRange[0]) > 0 && (range[0] - prevRange[0]) < 1
-            && (range[1] - prevRange[1]) > 0 && (range[1] - prevRange[1]) < 1) {
+                && (range[1] - prevRange[1]) > 0 && (range[1] - prevRange[1]) < 1) {
                 range[0] = prevRange[0];
                 range[1] = prevRange[1];
             }
             if (!isUp && (range[0] - prevRange[0]) > 0 && (prevRange[0] - range[0]) < 1
-            && (range[1] - prevRange[1]) > 0 && (prevRange[1] - range[1]) < 1) {
+                && (range[1] - prevRange[1]) > 0 && (prevRange[1] - range[1]) < 1) {
                 range[0] = prevRange[0];
                 range[1] = prevRange[1];
             }
@@ -2285,7 +2319,10 @@ export const actions = {
         recovery();
     },
 
-    recordModelAfterTransform: (transformMode, modelGroup, combinedOperations) => (dispatch, getState) => {
+    recordModelAfterTransform: (transformMode, modelGroup, combinedOperations, axis) => (dispatch, getState) => {
+        if (axis) {
+            logTransformOperation(HEAD_PRINTING, transformMode, axis);
+        }
         const { targetTmpState } = getState().printing;
         let operations, operation;
         if (combinedOperations) {

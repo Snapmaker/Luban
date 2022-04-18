@@ -22,7 +22,7 @@ import { renderPopup } from '../../utils';
 import Workspace from '../../pages/Workspace';
 import SvgIcon from '../../components/SvgIcon';
 import { STEP_STAGE } from '../../../lib/manager/ProgressManager';
-import { sliceTrigger, successfulUse } from '../../utils/gaEvent';
+import { logGcodeExport } from '../../utils/gaEvent';
 import { HEAD_PRINTING } from '../../../constants';
 
 function useRenderWorkspace() {
@@ -68,7 +68,6 @@ function Output() {
         onClickGenerateGcode: () => {
             const gcodeThumbnail = thumbnail.current.getThumbnail();
             dispatch(printingActions.generateGcode(gcodeThumbnail));
-            sliceTrigger(HEAD_PRINTING);
         },
         onClickLoadGcode: () => {
             if (isGcodeOverstepped) {
@@ -81,7 +80,7 @@ function Output() {
             gcodeFile.thumbnail = thumbnail.current.getDataURL() || defaultThumbnail;
             dispatch(workspaceActions.renderGcodeFile(gcodeFile));
             setShowWorkspace(true);
-            successfulUse(HEAD_PRINTING);
+            logGcodeExport(HEAD_PRINTING, 'workspace');
             window.scrollTo(0, 0);
         },
         onClickExportGcode: () => {
@@ -94,7 +93,7 @@ function Output() {
             }
             const filename = path.basename(gcodeFile?.name);
             dispatch(projectActions.exportFile(filename, gcodeFile.renderGcodeFileName));
-            successfulUse(HEAD_PRINTING);
+            logGcodeExport(HEAD_PRINTING, 'local');
         }
     };
     useEffect(() => {
