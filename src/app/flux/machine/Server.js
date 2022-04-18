@@ -87,10 +87,12 @@ export class Server extends events.EventEmitter {
     closeServer() {
         controller.emitEvent(CONNECTION_CLOSE)
             .once(CONNECTION_CLOSE, () => {
+                console.log('closeServer');
                 dispatch(machineActions.resetMachineState());
                 dispatch(workspaceActions.updateMachineState({
                     headType: '',
-                    toolHead: ''
+                    toolHead: '',
+                    isRotate: false
                 }));
             });
     }
@@ -106,7 +108,6 @@ export class Server extends events.EventEmitter {
     }
 
     startServerGcode(args, callback) {
-        console.log('args', args);
         controller.emitEvent(CONNECTION_START_GCODE, args)
             .once(CONNECTION_START_GCODE, ({ msg, code }) => {
                 dispatch(baseActions.updateState({

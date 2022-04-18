@@ -280,6 +280,7 @@ class Visualizer extends PureComponent {
                 workPosition,
                 originOffset } = this.props;
             const { workflowState } = this.state;
+            console.log('toolHead', toolHead);
             if ((connectionType === CONNECTION_TYPE_WIFI && workflowStatus === WORKFLOW_STATUS_IDLE)
                 || (connectionType === CONNECTION_TYPE_SERIAL && workflowState === WORKFLOW_STATE_IDLE)) {
                 server.startServerGcode({

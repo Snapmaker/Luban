@@ -311,6 +311,7 @@ export const actions = {
                         isRotate: pos.isFourAxis
                     }));
                 }
+                console.log('pos', pos);
                 if (pos.isFourAxis) {
                     if (Number(machineState.workPosition.x) !== Number(pos.x)
                         || Number(machineState.workPosition.y) !== Number(pos.y)
@@ -723,6 +724,7 @@ export const actions = {
     },
 
     resetMachineState: () => (dispatch) => {
+        console.log('resetMachineState');
         dispatch(baseActions.updateState({
             isOpen: false,
             isConnected: false,

@@ -15,8 +15,11 @@ import {
 } from '../../constants';
 import { valueOf } from '../../lib/contants-utils';
 import wifiServerManager from './WifiServerManager';
+import config from '../configstore';
+
 
 let waitConfirm: boolean;
+const WIFI_TOKEN: string = 'wifiToken';
 const log = logger('lib:SocketHttp');
 
 
@@ -145,7 +148,8 @@ class SocketHttp {
     public connectionOpen = (socket: SocketServer, options: EventOptions) => {
         const { host, token } = options;
         this.host = host;
-        this.token = token;
+        this.token = token || config.get(WIFI_TOKEN);
+        console.log('this.token', this.token, config.get(WIFI_TOKEN));
         this.socket = socket;
         log.debug(`wifi host="${this.host}" : token=${this.token}`);
         const api = `${this.host}/api/v1/connect`;
@@ -153,10 +157,12 @@ class SocketHttp {
         request
             .post(api)
             .timeout(3000)
-            .send(token ? `token=${this.token}` : '')
+            .send(this.token ? `token=${this.token}` : '')
             .end((err, res) => {
                 if (res?.body?.token) {
                     this.token = res.body.token;
+                    console.log('this.token 2', this.token);
+                    config.set(WIFI_TOKEN, this.token);
                 }
                 const result = _getResult(err, res);
                 const { data } = result;

@@ -64,6 +64,7 @@ class ConnectionManager {
             const gcodeFilePath = `${DataStorage.tmpDir}/${uploadName}`;
             const promises = [];
             if (series !== MACHINE_SERIES.ORIGINAL.value && series !== MACHINE_SERIES.CUSTOM.value && headType === HEAD_LASER && !isRotate) {
+                console.log('laserFocalLength', laserFocalLength, materialThickness);
                 if (laserFocalLength) {
                     const promise = new Promise((resolve) => {
                         if (isLaserPrintAutoMode) {
