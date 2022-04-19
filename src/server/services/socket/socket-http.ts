@@ -386,7 +386,7 @@ class SocketHttp {
             });
     };
 
-    public abortLaserMaterialThickness = (options: EventOptions) => {
+    public abortLaserMaterialThickness = () => {
         this.getLaserMaterialThicknessReq && this.getLaserMaterialThicknessReq.abort();
     };
 
@@ -396,8 +396,8 @@ class SocketHttp {
         const req = request.get(api);
         this.getLaserMaterialThicknessReq = req;
         req.end((err, res) => {
-                this.socket && this.socket.emit(eventName, _getResult(err, res));
-            });
+            this.socket && this.socket.emit(eventName, _getResult(err, res));
+        });
     };
 
     public getGcodeFile = (options: EventOptions) => {
@@ -407,10 +407,29 @@ class SocketHttp {
         request
             .get(api)
             .end((err, res) => {
-                this.socket && this.socket.emit(eventName, {
-                    msg: err?.message,
-                    text: res.text
-                });
+                if (err) {
+                    this.socket && this.socket.emit(eventName, {
+                        msg: err?.message,
+                        text: res.text
+                    });
+                } else {
+                    let gcodeStr = '';
+                    res.on('data', chunk => {
+                        gcodeStr += chunk;
+                    });
+                    res.once('end', () => {
+                        this.socket && this.socket.emit(eventName, {
+                            msg: err?.message,
+                            text: gcodeStr
+                        });
+                    });
+                    res.once('error', (error) => {
+                        this.socket && this.socket.emit(eventName, {
+                            msg: error?.message,
+                            text: ''
+                        });
+                    });
+                }
             });
     };
 
