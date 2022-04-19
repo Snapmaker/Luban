@@ -27,7 +27,7 @@ import {
     BLACK_COLOR,
     GCODE_VISIBILITY_TYPE,
     GCODEPREVIEWMODES
-} from '../../constants';
+} from '../../constants/index';
 import { timestamp } from '../../../shared/lib/random-utils';
 import { machineStore } from '../../store/local-storage';
 import ProgressStatesManager, { PROCESS_STAGE, STEP_STAGE } from '../../lib/manager/ProgressManager';

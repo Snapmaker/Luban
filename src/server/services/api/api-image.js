@@ -3,7 +3,6 @@ import fs from 'fs';
 import mv from 'mv';
 import jimp from 'jimp';
 import jpegAutoRotate from 'jpeg-autorotate';
-import async from 'async';
 import logger from '../../lib/logger';
 import SVGParser from '../../../shared/lib/SVGParser';
 import { parseDxf, generateSvgFromDxf } from '../../../shared/lib/DXFParser/Parser';
@@ -20,7 +19,19 @@ import workerManager from '../task-manager/workerManager';
 
 const log = logger('api:image');
 
-export const set = (req, res) => {
+const moveFile = (originalPath, tempPath) => {
+    return new Promise((resolve, reject) => {
+        mv(originalPath, tempPath, (err) => {
+            if (err) {
+                reject(new Error(err));
+            } else {
+                resolve();
+            }
+        });
+    });
+};
+
+export const set = async (req, res) => {
     const files = req.files;
     const { isRotate } = req.body;
     let originalName, tempName, tempPath, originalPath;
@@ -42,125 +53,95 @@ export const set = (req, res) => {
     }
     const extname = path.extname(tempName).toLowerCase();
 
-    async.series([
-        async (next) => {
-            if (files) {
-                // jpg image may have EXIF data, parse it
-                // https://blog.csdn.net/weixin_40243894/article/details/107049225
-                // TODO: png image also can contain EXIF data, but we does not have a test file
-                // https://stackoverflow.com/questions/9542359/does-png-contain-exif-data-like-jpg
-                if (/jpe?g$/.test(extname)) {
-                    // according to EXIF data, rotate image to a correct orientation
-                    try {
-                        const { buffer: imageBuffer } = await jpegAutoRotate.rotate(originalPath);
-                        fs.writeFile(tempPath, imageBuffer, (err) => {
-                            if (err) {
-                                next(err);
-                            } else {
-                                next();
-                            }
-                        });
-                    } catch (e) {
-                        mv(originalPath, tempPath, (err) => {
-                            if (err) {
-                                next(err);
-                            } else {
-                                next();
-                            }
-                        });
-                    }
-                } else {
-                    mv(originalPath, tempPath, (err) => {
+    try {
+        if (files) {
+            // jpg image may have EXIF data, parse it
+            // https://blog.csdn.net/weixin_40243894/article/details/107049225
+            // TODO: png image also can contain EXIF data, but we does not have a test file
+            // https://stackoverflow.com/questions/9542359/does-png-contain-exif-data-like-jpg
+            if (/jpe?g$/.test(extname)) {
+                // according to EXIF data, rotate image to a correct orientation
+                try {
+                    const { buffer: imageBuffer } = await jpegAutoRotate.rotate(originalPath);
+                    await fs.writeFile(tempPath, imageBuffer, (err) => {
                         if (err) {
-                            next(err);
-                        } else {
-                            next();
+                            throw new Error(err);
                         }
                     });
+                } catch (e) {
+                    await moveFile(originalPath, tempPath);
                 }
             } else {
-                fs.copyFile(originalPath, tempPath, (err) => {
-                    if (err) {
-                        next(err);
-                    } else {
-                        next();
-                    }
-                });
+                await moveFile(originalPath, tempPath);
             }
-        },
-        async (next) => {
-            try {
-                if (extname === '.svg') {
-                    const svgParser = new SVGParser();
-                    const svg = await svgParser.parseFile(tempPath);
+        } else {
+            await fs.copyFile(originalPath, tempPath, (err) => {
+                if (err) {
+                    throw new Error(err);
+                }
+            });
+        }
+        if (extname === '.svg') {
+            const svgParser = new SVGParser();
+            const svg = await svgParser.parseFile(tempPath);
+            res.send({
+                originalName: originalName,
+                uploadName: tempName,
+                width: svg.width,
+                height: svg.height
+            });
+        } else if (extname === '.dxf') {
+            const result = await parseDxf(tempPath);
+            const svg = await generateSvgFromDxf(result.svg, tempPath, tempName);
+            const { width, height } = result;
+
+            res.send({
+                originalName: originalName,
+                uploadName: svg.uploadName,
+                width,
+                height
+            });
+        } else if (extname === '.stl' || extname === '.zip') {
+            if (extname === '.zip') {
+                await unzipFile(`${tempName}`, `${DataStorage.tmpDir}`);
+                originalName = originalName.replace(/\.zip$/, '');
+                tempName = originalName;
+            }
+            workerManager.loadSize([
+                { tempName, isRotate }, DataStorage.tmpDir
+            ], (payload) => {
+                if (payload.status === 'complete') {
+                    const { width, height } = payload;
                     res.send({
                         originalName: originalName,
                         uploadName: tempName,
-                        width: svg.width,
-                        height: svg.height
+                        width: width,
+                        height: height
                     });
-
-                    next();
-                } else if (extname === '.dxf') {
-                    const result = await parseDxf(tempPath);
-                    const svg = await generateSvgFromDxf(result.svg, tempPath, tempName);
-                    const { width, height } = result;
-
-                    res.send({
-                        originalName: originalName,
-                        uploadName: svg.uploadName,
-                        width,
-                        height
-                    });
-
-                    next();
-                } else if (extname === '.stl' || extname === '.zip') {
-                    if (extname === '.zip') {
-                        await unzipFile(`${tempName}`, `${DataStorage.tmpDir}`);
-                        originalName = originalName.replace(/\.zip$/, '');
-                        tempName = originalName;
-                    }
-                    workerManager.loadSize([
-                        { tempName, isRotate }, DataStorage.tmpDir
-                    ], (payload) => {
-                        if (payload.status === 'complete') {
-                            const { width, height } = payload;
-                            res.send({
-                                originalName: originalName,
-                                uploadName: tempName,
-                                width: width,
-                                height: height
-                            });
-                            next();
-                        } else if (payload.status === 'fail') {
-                            next(payload.error);
-                        }
-                    });
-                } else {
-                    jimp.read(tempPath).then((image) => {
-                        res.send({
-                            originalName: originalName,
-                            uploadName: tempName,
-                            width: image.bitmap.width,
-                            height: image.bitmap.height
-                        });
-                        next();
-                    }).catch((err) => {
-                        next(err);
-                    });
+                } else if (payload.status === 'fail') {
+                    throw new Error(payload.error);
                 }
-            } catch (e) {
-                next(e);
-            }
+            });
+        } else {
+            jimp.read(tempPath).then((image) => {
+                res.send({
+                    originalName: originalName,
+                    uploadName: tempName,
+                    width: image.bitmap.width,
+                    height: image.bitmap.height
+                });
+            }).catch((err) => {
+                throw new Error(err);
+            });
         }
-    ], (err) => {
+    } catch (err) {
         if (err) {
-            log.error(`Failed to read image ${tempName} ,${err} `);
+            log.error(`Failed to read image ${tempName} ,${err.message} `);
             res.status(ERR_INTERNAL_SERVER_ERROR).end();
         } else {
             res.end();
         }
-    });
+    }
 };
 /**
  * Process Image for Laser.

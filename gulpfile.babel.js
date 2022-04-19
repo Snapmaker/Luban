@@ -30,8 +30,8 @@ const development = gulp.series(
     prepareDevelopment,
     clean,
     gulp.parallel(
-        serverCopyDevelopment,
         serverBuildDevelopment,
+        serverCopyDevelopment,
         appCopyDevelopment
     )
 );

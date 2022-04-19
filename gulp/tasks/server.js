@@ -3,7 +3,6 @@ import nodemon from 'gulp-nodemon';
 import log from 'fancy-log';
 import PluginError from 'plugin-error';
 import webpack from 'webpack';
-import fs from 'fs';
 
 //
 // Development Copy
@@ -20,12 +19,8 @@ export function serverCopyDevelopment() {
 // Development Build
 //
 export function serverBuildDevelopment(cb) {
-    const webpackConfig = require('../../webpack.config.server.development');
-    webpack(webpackConfig, (err, stats) => {
-        if (err) {
-            throw new PluginError('server:build', err);
-        }
-        log('[server:build]', stats.toString({ colors: true }));
+    const exec = require('child_process').exec;
+    exec('npm run build:server', () => {
         cb();
     });
 }
@@ -62,7 +57,8 @@ export function serverStartDevelopment(cb) {
             'NODE_ENV': 'development'
         },
         ext: 'js json ts',
-        tasks: ['serverBuildDevelopment'],
+        // tasks: ['serverBuildDevelopment'],
+        tasks: [],
         done: cb,
         stdout: false
     }).on('readable', function () {
@@ -71,42 +67,43 @@ export function serverStartDevelopment(cb) {
     });
 }
 
-function replace(path, flag, str) {
-    const content = fs.readFileSync(path, 'utf-8');
-    const eol = '\n';
-    const data = content.replace(
-        new RegExp(`(// LUBAN ${flag} BEGIN)[\\s\\S]*\\n(\\s*// LUBAN ${flag} END)`), `$1${eol}${str}$2`
-    );
-    fs.writeFile(path, data, { encoding: 'utf-8' }, () => { });
-}
+// function replace(path, flag, str) {
+//     const content = fs.readFileSync(path, 'utf-8');
+//     const eol = '\n';
+//     const data = content.replace(
+//         new RegExp(`(// LUBAN ${flag} BEGIN)[\\s\\S]*\\n(\\s*// LUBAN ${flag} END)`), `$1${eol}${str}$2`
+//     );
+//     fs.writeFile(path, data, { encoding: 'utf-8' }, () => { });
+// }
 
-function generateWorkerMethods(path) {
-    const dir = fs.readdirSync(path, { encoding: 'utf-8' });
-    const workerFiles = dir.filter((name) => {
-        const stat = fs.statSync(`${path}/${name}`);
-        return stat.isFile();
-    }).map((file) => {
-        const [name] = file.split('.');
-        return name;
-    });
-    const workerMethods = workerFiles.reduce((prev, file, index) => {
-        prev += `    ${file} = '${file}'${index !== workerFiles.length - 1 ? ',' : ''}\n`;
-        return prev;
-    }, '');
-    return workerMethods;
-}
+// function generateWorkerMethods(path) {
+//     const dir = fs.readdirSync(path, { encoding: 'utf-8' });
+//     const workerFiles = dir.filter((name) => {
+//         const stat = fs.statSync(`${path}/${name}`);
+//         return stat.isFile();
+//     }).map((file) => {
+//         const [name] = file.split('.');
+//         return name;
+//     });
+//     const workerMethods = workerFiles.reduce((prev, file, index) => {
+//         prev += `    ${file} = '${file}'${index !== workerFiles.length - 1 ? ',' : ''}\n`;
+//         return prev;
+//     }, '');
+//     return workerMethods;
+// }
 
 export function serverWatchDevelopment(cb) {
-    const watch = require('gulp-watch');
-    return watch(['./src/app/workers/*', './src/server/services/task-manager/workers/*'], () => {
-        const workerMethods = generateWorkerMethods('./src/app/workers');
-        replace('./src/app/lib/manager/workerManager.ts', 'worker methods', workerMethods);
+    cb();
+    // const watch = require('gulp-watch');
+    // return watch(['./src/app/workers/*', './src/server/services/task-manager/workers/*'], () => {
+    //     const workerMethods = generateWorkerMethods('./src/app/workers');
+    //     replace('./src/app/lib/manager/workerManager.ts', 'worker methods', workerMethods);
 
-        const ServerWorkerMethods = generateWorkerMethods('./src/server/services/task-manager/workers');
-        replace('./src/server/services/task-manager/workerManager.ts', 'worker methods', ServerWorkerMethods);
+    //     const ServerWorkerMethods = generateWorkerMethods('./src/server/services/task-manager/workers');
+    //     replace('./src/server/services/task-manager/workerManager.ts', 'worker methods', ServerWorkerMethods);
 
-        cb();
-    });
+    //     cb();
+    // });
 }
 
 //

@@ -1,6 +1,5 @@
 import workerpool, { WorkerPool } from 'workerpool';
 import DataStorage from '../../DataStorage';
-import './Pool.worker';
 
 export enum WorkerMethods {
     // LUBAN worker methods BEGIN

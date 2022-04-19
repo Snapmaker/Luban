@@ -5,7 +5,7 @@ import program from 'commander';
 import isElectron from 'is-electron';
 import pkg from './package.json';
 
-const SERVER_STARTED = 'serverStartd';
+// const SERVER_STARTED = 'serverStartd';
 // Defaults to 'production'
 process.env.NODE_ENV = process.env.NODE_ENV || 'production';
 
@@ -37,7 +37,11 @@ if (normalizedArgv.length > 1) {
     program.parse(normalizedArgv);
 }
 
-const launchServer = () => new Promise((resolve, reject) => {
+const launchServer = (userDataDir) => new Promise((resolve, reject) => {
+    global.luban = {
+        userDataDir
+    };
+
     // Change working directory to 'server' before require('./server')
     process.chdir(path.resolve(__dirname, 'server'));
 
@@ -55,15 +59,15 @@ const launchServer = () => new Promise((resolve, reject) => {
             reject(err);
             return;
         }
-        process.send({ type: SERVER_STARTED, ...data });
+        // process.send({ type: SERVER_STARTED, ...data });
         resolve(data);
     });
 });
 
-process.on('message', (data) => {
-    global.luban = {
-        userDataDir: data.userDataDir
-    };
-    launchServer();
-});
+// process.on('message', (data) => {
+//     global.luban = {
+//         userDataDir: data.userDataDir
+//     };
+//     launchServer();
+// });
 export default launchServer;
