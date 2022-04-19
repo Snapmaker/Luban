@@ -1456,6 +1456,7 @@ export const actions = {
         const adhesionExtruder = helpersExtruderConfig.adhesion;
         const supportExtruder = helpersExtruderConfig.support;
         finalDefinition.settings.adhesion_extruder_nr.default_value = adhesionExtruder;
+        console.log('finalDefinition.settings.adhesion_extruder_nr', finalDefinition.settings.adhesion_extruder_nr, finalDefinition.settings?.adhesion_type);
         finalDefinition.settings.support_extruder_nr.default_value = supportExtruder;
         finalDefinition.settings.support_infill_extruder_nr.default_value = supportExtruder;
         finalDefinition.settings.support_extruder_nr_layer_0.default_value = supportExtruder;

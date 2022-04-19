@@ -64,7 +64,6 @@ class ConnectionManager {
             const gcodeFilePath = `${DataStorage.tmpDir}/${uploadName}`;
             const promises = [];
             if (series !== MACHINE_SERIES.ORIGINAL.value && series !== MACHINE_SERIES.CUSTOM.value && headType === HEAD_LASER && !isRotate) {
-                console.log('laserFocalLength', laserFocalLength, materialThickness);
                 if (laserFocalLength) {
                     const promise = new Promise((resolve) => {
                         if (isLaserPrintAutoMode) {
@@ -73,7 +72,7 @@ class ConnectionManager {
                             });
                         } else {
                             if (toolHead === LEVEL_TWO_POWER_LASER_FOR_SM2) {
-                                this.socket.executeGcode({ gcode: `G0 Z${materialThickness} F1500;` }, () => {
+                                this.socket.executeGcode({ gcode: `G53;\nG0 Z${laserFocalLength + materialThickness} F1500;\nG54;` }, () => {
                                     resolve();
                                 });
                             } else {

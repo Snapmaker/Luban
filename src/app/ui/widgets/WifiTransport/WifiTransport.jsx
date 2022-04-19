@@ -341,6 +341,7 @@ function WifiTransport({ widgetActions, controlActions }) {
                 controller.emitEvent(CONNECTION_MATERIALTHICKNESS, args)
                     .once(CONNECTION_MATERIALTHICKNESS, ({ data }) => {
                         const { status, thickness } = data;
+                        // TODO: if status is false, will not start print in this logic
                         if (status) {
                             actions.onChangeMaterialThickness(thickness);
                             controlActions.onCallBackRun();

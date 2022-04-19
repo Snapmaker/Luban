@@ -132,6 +132,7 @@ export const cncUniformProfile = (filename, configDir) => {
                     newDefinition.version = json.version;
                     newDefinition.name = item.name;
                     newDefinition.settings = item.config;
+                    newDefinition.inherits = 'snapmaker2';
                     const newName = `${json.definitionId}${item.name}`;
                     newDefinition.settings = addNewParameter(newDefinition?.settings);
                     fs.writeFileSync(path.join(configDir, `${newName}${ConfigV1Suffix}`), JSON.stringify(newDefinition));

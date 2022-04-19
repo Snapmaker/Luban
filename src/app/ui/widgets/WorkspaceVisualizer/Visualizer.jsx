@@ -280,7 +280,7 @@ class Visualizer extends PureComponent {
                 workPosition,
                 originOffset } = this.props;
             const { workflowState } = this.state;
-            console.log('toolHead', toolHead);
+            console.log('toolHead', toolHead, isLaserPrintAutoMode);
             if ((connectionType === CONNECTION_TYPE_WIFI && workflowStatus === WORKFLOW_STATUS_IDLE)
                 || (connectionType === CONNECTION_TYPE_SERIAL && workflowState === WORKFLOW_STATE_IDLE)) {
                 server.startServerGcode({
@@ -571,10 +571,12 @@ class Visualizer extends PureComponent {
         }
         // open the enclosureDoorOpened modal
         if (nextProps.isEnclosureDoorOpen !== this.props.isEnclosureDoorOpen) {
+            console.log('isEnclosureDoorOpen', this.props.isEnclosureDoorOpen);
             this.setState({
                 showEnclosureDoorWarn: nextProps.isEnclosureDoorOpen
             });
         } else if (this.props.doorSwitchCount !== 0 && nextProps.doorSwitchCount !== this.props.doorSwitchCount) {
+            console.log('doorSwitchCount', nextProps.doorSwitchCount);
             this.setState({
                 showEnclosureDoorWarn: true
             });
