@@ -399,7 +399,6 @@ export const actions = {
                         gcodePrintingInfo: machineState.server.getGcodePrintingInfo(state)
                     }));
                 } else {
-                    console.log('serial', status);
                     dispatch(baseActions.updateState({
                         headStatus: headStatus,
                         laserFocalLength: zFocus + LASER_MOCK_PLATE_HEIGHT,
@@ -482,7 +481,6 @@ export const actions = {
                                 if (error) {
                                     return;
                                 }
-                                console.log('gcode', res, gcode);
                                 let suffix = 'gcode';
                                 if (headType === HEAD_LASER) {
                                     suffix = 'nc';
