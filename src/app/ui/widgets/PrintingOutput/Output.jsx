@@ -66,6 +66,7 @@ function Output() {
         onClickGenerateGcode: () => {
             const gcodeThumbnail = thumbnail.current.getThumbnail();
             dispatch(printingActions.generateGcode(gcodeThumbnail));
+            dispatch(printingActions.generateGrayModeObject());
         },
         onClickLoadGcode: () => {
             if (isGcodeOverstepped) {

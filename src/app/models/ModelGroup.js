@@ -36,6 +36,7 @@ class ModelGroup extends EventEmitter {
         this.headType = headType;
         // this.object = new Object3D();
         this.object = new Group();
+        this.grayModeObject = new Group();
         this.models = [];
         this.selectedGroup = new Group();
         this.selectedGroup.uniformScalingState = true;

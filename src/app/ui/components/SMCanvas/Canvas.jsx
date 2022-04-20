@@ -171,8 +171,12 @@ class Canvas extends PureComponent {
         if (nextProps.displayedType !== this.props.displayedType) {
             if (nextProps.displayedType === 'gcode') {
                 this.controls.removeTransformControls();
+                this.group.remove(this.modelGroup.object);
+                this.group.add(this.modelGroup.grayModeObject);
             } else {
                 this.controls.recoverTransformControls(nextProps.primeTowerSelected, nextProps.transformMode);
+                this.group.remove(this.modelGroup.grayModeObject);
+                this.group.add(this.modelGroup.object);
             }
             this.renderScene();
         }
