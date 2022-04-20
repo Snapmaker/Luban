@@ -17,7 +17,6 @@
   "main": "main.js",
   "dependencies": {
     "@babel/runtime": "7.12.18",
-    "async": "2.5.0",
     "bcrypt-nodejs": "0.0.3",
     "body-parser": "1.18.3",
     "chalk": "2.4.2",
@@ -83,7 +82,7 @@
     "commitizen": {
       "path": "./.cz-conventional-changelog.js"
     },
-    "clientPort": 8080,
-    "serverPort": 8000
+    "CLIENT_PORT": 8080,
+    "SERVER_PORT": 8000
   }
 }

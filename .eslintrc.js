@@ -4,9 +4,9 @@ module.exports = {
     extends: 'snapmaker',
     parser: '@babel/eslint-parser',
     parserOptions: {
-	    "requireConfigFile": false,
-        "babelOptions": {
-          "presets": ["@babel/preset-react"]
+        'requireConfigFile': false,
+        'babelOptions': {
+            'presets': ['@babel/preset-react']
         }
     },
     env: {

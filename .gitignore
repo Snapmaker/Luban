@@ -9,7 +9,6 @@ npm-debug.log*
 /dist
 /output
 /releases
-/dll
 
 # local files
 /local/

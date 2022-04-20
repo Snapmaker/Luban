@@ -23,7 +23,7 @@
   },
   "preferGlobal": true,
   "scripts": {
-    "postinstall": "electron-rebuild & npm run dll",
+    "postinstall": "electron-rebuild",
     "commit": "npx git-cz",
     "pkgsync": "node build/pkgsync.js",
     "update-i18n": "gulp i18nextServer i18nextApp",
@@ -43,7 +43,7 @@
     "build:win-x64": "bash -c 'build/electron-builder.sh --win --x64'",
     "clean": "bash -c 'rm -rf ./dist ./output'",
     "start-electron": "electron ./dist/Luban/main",
-    "start-dev": "gulp serverStartDevelopment & npm run watch:server & npm run serve",
+    "start-dev": "concurrently --kill-others --raw \"npm run serve\" \"gulp serverStartDevelopment\" \"npm run watch:server\" \"npm run watch:server-worker\"",
     "start-prod": "cross-env NODE_ENV=production ./bin/cli",
     "dev": "npm run build-dev && npm run start-dev",
     "prod": "npm run build-prod && npm run start-prod",
@@ -55,9 +55,8 @@
     "coveralls": "tape -r @@babel/register test/*.js --coverage --coverage-report=text-lcov --nyc-arg=--require --nyc-arg=babel-register --nyc-arg=--require --nyc-arg=babel-polyfill | coveralls",
     "serve": "webpack serve --config webpack.config.app.development.js --progress",
     "watch:server-worker": "webpack --config webpack.config.server.worker.development.js",
-    "watch:server": "tsc -p ./tsconfig-server.json --watch & npm run watch:server-worker",
-    "build:server": "tsc -p ./tsconfig-server.json",
-    "dll": "webpack --config webpack.dll.js"
+    "watch:server": "tsc -p ./tsconfig-server.json --watch",
+    "build:server": "tsc -p ./tsconfig-server.json"
   },
   "build": {
     "appId": "com.snapmaker.luban",
@@ -179,7 +178,6 @@
     "@types/bezier-js": "^4.1.0",
     "@types/superagent": "^3.8.3",
     "antd": "4.16.13",
-    "async": "2.5.0",
     "bcrypt-nodejs": "0.0.3",
     "bezier-js": "^6.1.0",
     "body-parser": "1.18.3",
@@ -242,7 +240,6 @@
     "mousetrap": "1.6.5",
     "mv": "2.1.1",
     "namespace-constants": "0.5.0",
-    "nodemon": "^2.0.15",
     "normalize.css": "7.0.0",
     "opentype.js": "0.9.0",
     "overlap-area": "^1.0.0",
@@ -297,7 +294,6 @@
     "tar": "6.1.11",
     "three": "0.124.0",
     "three-mesh-bvh": "^0.5.5",
-    "ts-node": "^10.7.0",
     "universal-logger": "1.0.1",
     "universal-logger-browser": "1.0.2",
     "uuid": "8.3.2",
@@ -342,10 +338,10 @@
     "@types/workerpool": "^6.1.0",
     "@typescript-eslint/eslint-plugin": "5.0.0",
     "@typescript-eslint/parser": "5.0.0",
-    "add-asset-html-webpack-plugin": "^5.0.2",
     "babel-loader": "8.1.0",
     "bundle-loader": "0.5.6",
     "commitizen": "4.0.5",
+    "concurrently": "7.1.0",
     "copy-props": "3.0.1",
     "coveralls": "3.0.14",
     "cross-env": "5.2.1",
@@ -372,7 +368,6 @@
     "glob": "7.1.7",
     "gulp": "4.0.2",
     "gulp-babel": "8.0.0",
-    "gulp-exec": "^5.0.0",
     "gulp-nodemon": "2.4.2",
     "gulp-sort": "2.0.0",
     "gulp-watch": "^5.0.1",
@@ -392,7 +387,6 @@
     "react-textarea-autosize": "7.1.2",
     "redux-devtools": "3.7.0",
     "snapmaker-react-icon": "^1.19.11",
-    "speed-measure-webpack-plugin": "^1.5.0",
     "style-loader": "0.21.0",
     "stylint": "1.5.9",
     "stylus": "0.54.8",
@@ -404,8 +398,6 @@
     "typescript": "4.4.4",
     "url-loader": "1.0.1",
     "webpack": "4.41.6",
-    "webpack-bundle-analyzer": "^4.5.0",
-    "webpack-cli": "^4.9.1",
     "webpack-dev-middleware": "3.7.3",
     "webpack-dev-server": "3.10.3",
     "webpack-hot-middleware": "2.25.1",
@@ -419,8 +411,8 @@
     "commitizen": {
       "path": "./.cz-conventional-changelog.js"
     },
-    "clientPort": 8080,
-    "serverPort": 8000
+    "CLIENT_PORT": 8080,
+    "SERVER_PORT": 8000
   },
   "husky": {
     "hooks": {
