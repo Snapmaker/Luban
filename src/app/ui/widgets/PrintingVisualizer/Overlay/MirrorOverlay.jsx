@@ -1,11 +1,14 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import { useSelector, shallowEqual, useDispatch } from 'react-redux';
+import classNames from 'classnames';
 import i18n from '../../../../lib/i18n';
 /* eslint-disable-next-line import/no-cycle */
 import { CancelButton } from '../VisualizerLeftBar';
 import { actions as printingActions } from '../../../../flux/printing';
 import { Button } from '../../../components/Buttons';
+import styles from './styles.styl';
+
 
 const MirrorOverlay = React.memo(({
     setTransformMode,
@@ -51,7 +54,7 @@ const MirrorOverlay = React.memo(({
                 marginTop: '216px'
             }}
         >
-            <div className="sm-flex justify-space-between border-bottom-normal padding-vertical-10 padding-horizontal-16 height-40">
+            <div className={classNames(styles['overlay-title-font'], 'sm-flex justify-space-between border-bottom-normal padding-vertical-10 padding-horizontal-16 height-40')}>
                 {i18n._('key-Printing/LeftBar-Mirror')}
                 <CancelButton
                     onClick={() => setTransformMode('')}

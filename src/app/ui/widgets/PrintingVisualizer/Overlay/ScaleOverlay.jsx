@@ -3,6 +3,8 @@ import { useDispatch, useSelector, shallowEqual } from 'react-redux';
 import i18next from 'i18next';
 import PropTypes from 'prop-types';
 import { throttle, includes } from 'lodash';
+import classNames from 'classnames';
+import styles from './styles.styl';
 import i18n from '../../../../lib/i18n';
 import { actions as printingActions } from '../../../../flux/printing';
 /* eslint-disable-next-line import/no-cycle */
@@ -171,7 +173,7 @@ const ScaleOverlay = React.memo(({
                 marginTop: '112px'
             }}
         >
-            <div className="sm-flex justify-space-between border-bottom-normal padding-vertical-10 padding-horizontal-16 height-40">
+            <div className={classNames(styles['overlay-title-font'], 'sm-flex justify-space-between border-bottom-normal padding-vertical-10 padding-horizontal-16 height-40')}>
                 {i18n._('key-Printing/LeftBar-Scale')}
                 <CancelButton
                     onClick={() => setTransformMode('')}

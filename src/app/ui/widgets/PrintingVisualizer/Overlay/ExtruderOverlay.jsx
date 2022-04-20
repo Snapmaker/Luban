@@ -243,7 +243,7 @@ const ExtruderOverlay = React.memo(({
                 marginTop: '320px'
             }}
         >
-            <div className="border-bottom-normal padding-vertical-10 padding-horizontal-16 height-40 sm-flex justify-space-between">
+            <div className={classNames(styles['overlay-title-font'], 'border-bottom-normal padding-vertical-10 padding-horizontal-16 height-40 sm-flex justify-space-between')}>
                 {i18n._('key-Printing/LeftBar-Extruder')}
                 <CancelButton
                     onClick={() => setTransformMode('')}
