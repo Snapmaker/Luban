@@ -13,7 +13,7 @@ const MachineSetting = (props) => {
     const dispatch = useDispatch();
     const machine = useSelector(state => state?.machine);
     const workspace = useSelector(state => state?.workspace);
-    const { isConnected, connectionType, workflowState } = machine;
+    const { isConnected, connectionType, workflowStatus } = machine;
     const { headType, series } = workspace;
     const [enclosureDoorDetection, setEnclosureDoorDetection] = useState(machine?.enclosureDoorDetection);
     const [zAxisModule, setZAxisModule] = useState(machine?.zAxisModule);
@@ -28,13 +28,13 @@ const MachineSetting = (props) => {
             && connectionType === 'serial'
             && !!headType
             && (series === 'Original' || series === 'Original Long Z-axis')
-            && workflowState !== 'running'
+            && workflowStatus !== 'running'
         ) {
             props.widgetActions.setDisplay(true);
         } else {
             props.widgetActions.setDisplay(false);
         }
-    }, [isConnected, connectionType, headType, series, workflowState]);
+    }, [isConnected, connectionType, headType, series, workflowStatus]);
     const onSave = () => {
         dispatch(machineActions.setZAxisModuleState(zAxisModule));
         dispatch(machineActions.setEnclosureState(enclosureDoorDetection));

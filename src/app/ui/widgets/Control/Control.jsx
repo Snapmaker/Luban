@@ -81,7 +81,7 @@ function Control({ widgetId, widgetActions: _widgetActions }) {
     const originOffset = useSelector(state => state.machine.originOffset) || {};
     const { jog, axes, dataSource } = widgets[widgetId];
     const { speed = 1500, keypad, selectedDistance, customDistance, selectedAngle, customAngle } = jog;
-    const { headType, isConnected, workflowState, workflowStatus, homingModal } = machine;
+    const { headType, isConnected, workflowStatus, homingModal } = machine;
     const dispatch = useDispatch();
     function getInitialState() {
         const jogSpeed = speed;
@@ -342,10 +342,10 @@ function Control({ widgetId, widgetActions: _widgetActions }) {
         // This prevents accidental movement while sending G-code commands.
         setState({
             ...state,
-            keypadJogging: (workflowState === WORKFLOW_STATE_IDLE) ? keypadJogging : false,
-            selectedAxis: (workflowState === WORKFLOW_STATE_IDLE) ? selectedAxis : ''
+            keypadJogging: (workflowStatus === WORKFLOW_STATE_IDLE) ? keypadJogging : false,
+            selectedAxis: (workflowStatus === WORKFLOW_STATE_IDLE) ? selectedAxis : ''
         });
-    }, [workflowState]);
+    }, [workflowStatus]);
 
     useEffect(() => {
         setState({
@@ -432,7 +432,6 @@ function Control({ widgetId, widgetActions: _widgetActions }) {
 
     function canClick() {
         return (isConnected
-            && includes([WORKFLOW_STATE_IDLE], workflowState)
             && includes([WORKFLOW_STATUS_IDLE, WORKFLOW_STATUS_UNKNOWN], workflowStatus));
     }
 

@@ -14,7 +14,7 @@ import i18n from '../../../lib/i18n';
 import SvgIcon from '../../components/SvgIcon';
 // import styles from './index.styl';
 
-
+// Not used for now
 class WorkflowControl extends PureComponent {
     static propTypes = {
         uploadState: PropTypes.string.isRequired,
@@ -22,7 +22,6 @@ class WorkflowControl extends PureComponent {
         workflowStatus: PropTypes.string,
         isConnected: PropTypes.bool,
         connectionType: PropTypes.string,
-        state: PropTypes.object,
         renderState: PropTypes.string.isRequired,
         actions: PropTypes.shape({
             handleClose: PropTypes.func.isRequired,
@@ -84,11 +83,9 @@ class WorkflowControl extends PureComponent {
     };
 
     render() {
-        const { state, connectionType, workflowStatus, isConnected } = this.props;
-        const { workflowState } = state;
+        const { connectionType, workflowStatus: status, isConnected } = this.props;
         const { isServerWaiting } = this.state;
         const isWifi = connectionType && connectionType === CONNECTION_TYPE_WIFI;
-        const status = isWifi ? workflowStatus : workflowState;
         const isRendered = this.props.renderState === 'rendered';
         const isUploaded = isWifi ? this.props.isSendedOnWifi : this.props.uploadState === 'uploaded';
         const canClose = isRendered && _.includes([WORKFLOW_STATE_IDLE, WORKFLOW_STATUS_IDLE, WORKFLOW_STATUS_UNKNOWN], status);

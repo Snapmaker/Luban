@@ -48,7 +48,6 @@ function getInitialState() {
     return {
         port: controller.port,
         units: METRIC_UNITS,
-        workflowState: controller.workflowState,
 
         // G-code Status (from server)
         total: 0,
@@ -95,15 +94,6 @@ function GCode({ widgetActions }) {
             const initialState = getInitialState();
             setState({ ...state, ...initialState });
         },
-        'workflow:state': (options) => {
-            const { workflowState, dataSource } = options;
-            if (dataSource !== PROTOCOL_TEXT) {
-                return;
-            }
-            if (state.workflowState !== workflowState) {
-                setState({ ...state, workflowState });
-            }
-        }
     };
 
     function addControllerEvents() {

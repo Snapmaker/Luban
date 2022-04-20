@@ -14,7 +14,7 @@ class LaserTestFocusWidget extends PureComponent {
         headType: PropTypes.string,
         widgetActions: PropTypes.object.isRequired,
         isConnected: PropTypes.bool.isRequired,
-        workflowState: PropTypes.string,
+        workflowStatus: PropTypes.string,
         connectionType: PropTypes.string,
         series: PropTypes.string
     };
@@ -49,11 +49,11 @@ class LaserTestFocusWidget extends PureComponent {
     }
 
     componentDidUpdate(prevProps) {
-        const { isConnected, headType, workflowState, connectionType, series } = this.props;
+        const { isConnected, headType, workflowStatus, connectionType, series } = this.props;
         if (
             isConnected !== prevProps.isConnected
             || headType !== prevProps.headType
-            || workflowState !== prevProps.workflowState
+            || workflowStatus !== prevProps.workflowStatus
             || connectionType !== prevProps.connectionType
             || series !== prevProps.series
         ) {
@@ -76,7 +76,7 @@ class LaserTestFocusWidget extends PureComponent {
         return (
             <TestFocus
                 isConnected={this.props.isConnected}
-                workflowState={this.props.workflowState}
+                workflowStatus={this.props.workflowStatus}
                 showInstructions={state.showInstructions}
                 actions={this.actions}
             />
@@ -84,12 +84,12 @@ class LaserTestFocusWidget extends PureComponent {
     }
 }
 const mapStateToProps = (state) => {
-    const { isConnected, workflowState, connectionType } = state.machine;
+    const { isConnected, workflowStatus, connectionType } = state.machine;
     const { headType, series } = state.workspace;
     return {
         headType: headType,
         isConnected,
-        workflowState,
+        workflowStatus,
         connectionType,
         series
     };

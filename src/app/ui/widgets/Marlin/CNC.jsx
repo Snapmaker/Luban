@@ -7,9 +7,6 @@ import WorkSpeed from './WorkSpeed';
 import i18n from '../../../lib/i18n';
 import Switch from '../../components/Switch';
 import {
-    CONNECTION_TYPE_SERIAL,
-    CONNECTION_TYPE_WIFI,
-    WORKFLOW_STATE_PAUSED, WORKFLOW_STATE_RUNNING,
     WORKFLOW_STATUS_PAUSED,
     WORKFLOW_STATUS_RUNNING
 } from '../../../constants';
@@ -18,8 +15,6 @@ class Printing extends PureComponent {
     static propTypes = {
         headStatus: PropTypes.bool,
         workflowStatus: PropTypes.string,
-        workflowState: PropTypes.string,
-        connectionType: PropTypes.string,
         executeGcode: PropTypes.func.isRequired
     };
 
@@ -39,9 +34,8 @@ class Printing extends PureComponent {
             });
         },
         isPrinting: () => {
-            const { workflowStatus, workflowState, connectionType } = this.props;
-            return (_.includes([WORKFLOW_STATUS_RUNNING, WORKFLOW_STATUS_PAUSED], workflowStatus) && connectionType === CONNECTION_TYPE_WIFI)
-                || (_.includes([WORKFLOW_STATE_PAUSED, WORKFLOW_STATE_RUNNING], workflowState) && connectionType === CONNECTION_TYPE_SERIAL);
+            const { workflowStatus } = this.props;
+            return _.includes([WORKFLOW_STATUS_RUNNING, WORKFLOW_STATUS_PAUSED], workflowStatus);
         }
     };
 
@@ -67,11 +61,10 @@ class Printing extends PureComponent {
 
 const mapStateToProps = (state) => {
     const machine = state.machine;
-    const { headStatus, workflowStatus, workflowState, connectionType } = machine;
+    const { headStatus, workflowStatus, connectionType } = machine;
     return {
         headStatus,
         workflowStatus,
-        workflowState,
         connectionType
     };
 };

@@ -373,6 +373,7 @@ export const actions = {
                 } = state;
                 dispatch(baseActions.updateState({
                     laser10WErrorState,
+                    workflowStatus: status,
                     isHomed
                 }));
                 if (!isNil(airPurifier)) {
@@ -392,7 +393,6 @@ export const actions = {
                         airPurifierFilterHealth: airPurifierFilterHealth,
                         isEmergencyStopped: isEmergencyStopped,
                         isEnclosureDoorOpen: isEnclosureDoorOpen,
-                        workflowStatus: status,
                         laserCamera
                     }));
                     dispatch(baseActions.updateState({
@@ -481,7 +481,6 @@ export const actions = {
                                 if (error) {
                                     return;
                                 }
-                                console.log('gcode', res, gcode);
                                 let suffix = 'gcode';
                                 if (headType === HEAD_LASER) {
                                     suffix = 'nc';
@@ -522,12 +521,12 @@ export const actions = {
             'serialport:emergencyStop': (options) => {
                 dispatch(actions.close(options, true));
             },
-            'workflow:state': (options) => {
-                const { workflowState } = options;
-                dispatch(baseActions.updateState({
-                    workflowState
-                }));
-            },
+            // 'workflow:state': (options) => {
+            //     const { workflowState } = options;
+            //     dispatch(baseActions.updateState({
+            //         workflowState
+            //     }));
+            // },
             'sender:status': (options) => {
                 const { data } = options;
                 const { total, sent, received, startTime, finishTime, elapsedTime, remainingTime } = data;

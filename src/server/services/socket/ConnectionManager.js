@@ -112,8 +112,8 @@ class ConnectionManager {
                     });
                 });
         } else {
-            const { workflowState } = options;
-            if (headType === HEAD_LASER && workflowState !== WORKFLOW_STATE_PAUSED) {
+            const { workflowStatus } = options;
+            if (headType === HEAD_LASER && workflowStatus !== WORKFLOW_STATE_PAUSED) {
                 this.socket.command(socket, {
                     args: ['G0 X0 Y0 F1000', null]
                 });

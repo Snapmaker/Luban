@@ -326,22 +326,22 @@ class MarlinController {
         // Workflow
         this.workflow = new Workflow();
         this.workflow.on('start', () => {
-            // this.emitAll('workflow:state', this.workflow.state);
-            this.emitAll('workflow:state', { workflowState: this.workflow.state });
+            this.state.status = this.workflow.state;
+            this.emitAll('Marlin:state', { state: this.state, dataSource });
             this.sender.rewind();
         });
         this.workflow.on('stop', () => {
-            // this.emitAll('workflow:state', this.workflow.state);
-            this.emitAll('workflow:state', { workflowState: this.workflow.state });
+            this.state.status = this.workflow.state;
+            this.emitAll('Marlin:state', { state: this.state, dataSource });
             this.sender.rewind();
         });
         this.workflow.on('pause', () => {
-            // this.emitAll('workflow:state', this.workflow.state);
-            this.emitAll('workflow:state', { workflowState: this.workflow.state });
+            this.state.status = this.workflow.state;
+            this.emitAll('Marlin:state', { state: this.state, dataSource });
         });
         this.workflow.on('resume', () => {
-            // this.emitAll('workflow:state', this.workflow.state);
-            this.emitAll('workflow:state', { workflowState: this.workflow.state });
+            this.state.status = this.workflow.state;
+            this.emitAll('Marlin:state', { state: this.state, dataSource });
             this.sender.next();
         });
 
@@ -585,6 +585,7 @@ class MarlinController {
             // Marlin state
             if (this.controller.state) {
                 this.state = this.controller.state;
+                this.state.status = this.workflow.state;
                 this.emitAll('Marlin:state', { state: this.state });
             }
 
@@ -933,13 +934,11 @@ class MarlinController {
         //
         const { dataSource } = this.options;
         if (!isEmpty(this.state)) {
+            this.state.status = this.workflow.state;
             socket.emit('Marlin:state', { state: this.state, dataSource });
         }
         if (!isEmpty(this.settings)) {
             socket.emit('Marlin:settings', { settings: this.settings, dataSource });
-        }
-        if (this.workflow) {
-            socket.emit('workflow:state', { workflowState: this.workflow.state, dataSource });
         }
         if (this.sender) {
             socket.emit('sender:status', { data: this.sender.toJSON(), dataSource });
