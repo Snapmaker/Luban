@@ -18,7 +18,7 @@ const init = () => (dispatch, getState) => {
                         return v.address === object.address && v.name === object.name;
                     });
                     if (!find) {
-                        const server = new Server({ name: object.name, address: object.address });
+                        const server = new Server({ name: object.name, address: object.address, sacp: object.sacp });
                         resultServers.unshift(server);
                     }
                 }
@@ -37,7 +37,7 @@ const init = () => (dispatch, getState) => {
                         return v.port === object.port;
                     });
                     if (!find) {
-                        const server = new Server({ port: object.port });
+                        const server = new Server({ port: object.port, sacp: object.sacp });
                         resultServers.unshift(server);
                     }
                 }

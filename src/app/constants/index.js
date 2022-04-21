@@ -1429,6 +1429,11 @@ export const LASER_10W_TAKE_PHOTO_POSITION = {
         x: 155,
         y: 82,
         z: 150
+    },
+    A400: {
+        x: 400,
+        y: 400,
+        z: 400
     }
 };
 

@@ -14,6 +14,7 @@ import { HEAD_PRINTING, HEAD_LASER, HEAD_CNC, MACHINE_SERIES,
 } from '../../constants';
 import { valueOf } from '../../lib/contants-utils';
 import wifiServerManager from './WifiServerManager';
+import { EventOptions } from './types';
 
 let waitConfirm: boolean;
 const log = logger('lib:SocketHttp');
@@ -77,23 +78,6 @@ const _getResult = (err, res) => {
 // let timeoutHandle = null;
 let intervalHandle = null;
 
-export type EventOptions = {
-    eventName: string,
-    host?: string,
-    token?: string,
-    gcode?: string,
-    x?: number,
-    y?: number,
-    feedRate?: number,
-    gcodePath?: string,
-    value?: number,
-    enable?: boolean,
-    workSpeedFactor?: number,
-    laserPower?: number,
-    nozzleTemperatureValue?: number,
-    heatedBedTemperatureValue?: number,
-    zOffset?: number,
-};
 export type StateOptions = {
     headType?: string,
     toolHead?: string,
@@ -382,7 +366,7 @@ class SocketHttp {
             });
     };
 
-    public abortLaserMaterialThickness = (options: EventOptions) => {
+    public abortLaserMaterialThickness = () => {
         this.getLaserMaterialThicknessReq && this.getLaserMaterialThicknessReq.abort();
     };
 
@@ -392,8 +376,8 @@ class SocketHttp {
         const req = request.get(api);
         this.getLaserMaterialThicknessReq = req;
         req.end((err, res) => {
-                this.socket && this.socket.emit(eventName, _getResult(err, res));
-            });
+            this.socket && this.socket.emit(eventName, _getResult(err, res));
+        });
     };
 
     public getGcodeFile = (options: EventOptions) => {
