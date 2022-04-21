@@ -1,7 +1,7 @@
 import i18next from 'i18next';
 import ReactGA from 'react-ga4';
 import { v4 as uuid } from 'uuid';
-import { machineStore } from '../../store/local-storage';
+import { machineStore } from '../store/local-storage';
 
 type THeadType = 'printing' | 'laser' | 'cnc'
 
@@ -73,11 +73,11 @@ const sendMessage = (messageType: string, category: string, data: Record<string,
 };
 
 // TODO 推出Luban清除projectId
-const lubanVisit = () => {
+export const lubanVisit = () => {
     return sendMessage('luban_visit', 'user');
 };
 
-const logLubanQuit = () => {
+export const logLubanQuit = () => {
     machineStore.set('projectId', '');
     return sendMessage('luban_quit', 'user');
 };
@@ -111,22 +111,16 @@ export const logModelViewOperation = (headType: THeadType, type: 'isometric' | '
     return sendMessage(`${headType}_model_view_${type}`, 'model_view');
 };
 
-export const logPritingSlice = (headType: THeadType, profileFrom: {
-    isDefault: boolean,
-    updatedDefault: boolean
-}, printingFrom?: {
-    isDefault: boolean,
-    updatedDefault: boolean
+export const logPritingSlice = (headType: THeadType, profileStatus: {
+    defaultMaterialL,
+    defaultMaterialR,
+    defaultMaterialQuality
 }, sliceSetting?: string) => {
-    const profileFromUpdatedDefault = profileFrom.updatedDefault ? '1' : '0';
-    const defaultMaterial = profileFrom.isDefault ? profileFromUpdatedDefault : '2';
-    const printingFromUpdatedDefault = printingFrom.updatedDefault ? '1' : '0';
-    const defaultPrintingSetting = printingFrom.isDefault ? printingFromUpdatedDefault : '2';
-
     return sendMessage(`${headType}_slice`, 'slice', {
         headType,
-        defaultMaterial,
-        defaultPrintingSetting,
+        defaultMaterialL: profileStatus.defaultMaterialL,
+        defaultMaterialR: profileStatus.defaultMaterialR,
+        defaultMaterialQuality: profileStatus.defaultMaterialQuality,
         sliceSetting
     });
 };
@@ -158,8 +152,8 @@ export const initialize = (userId: string) => {
         custom_map: {
             dimension0: 'messageType',
             metric0: 'num'
-        }
-        // debug_mode: true
+        },
+        debug_mode: true
     });
 
     lubanVisit();
@@ -177,5 +171,6 @@ export default {
     logProfileChange,
     logGcodeExport,
     logLubanQuit,
-    initialize
+    initialize,
+    lubanVisit
 };

@@ -22,8 +22,8 @@ import { renderPopup } from '../../utils';
 import Workspace from '../../pages/Workspace';
 import SvgIcon from '../../components/SvgIcon';
 import { STEP_STAGE } from '../../../lib/manager/ProgressManager';
-import { logGcodeExport } from '../../utils/gaEvent';
 import { HEAD_PRINTING } from '../../../constants';
+import { logGcodeExport } from '../../../lib/gaEvent';
 
 function useRenderWorkspace() {
     const [showWorkspace, setShowWorkspace] = useState(false);

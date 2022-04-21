@@ -403,7 +403,6 @@ app.on('window-all-closed', () => {
  */
 app.on('will-quit', () => {
     DataStorage.clear();
-    mainWindow.webContents.send('will-quit');
 });
 
 // Open the project file when the app is started on the windows platform

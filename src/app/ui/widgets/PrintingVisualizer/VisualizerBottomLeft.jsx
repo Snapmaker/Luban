@@ -5,8 +5,8 @@ import i18n from '../../../lib/i18n';
 import PrintingObjectListBox from '../PrintingObjectList';
 import Card from '../../components/Card';
 import SvgIcon from '../../components/SvgIcon';
-import { logModelViewOperation, logObjectListOperation } from '../../utils/gaEvent';
 import { HEAD_PRINTING } from '../../../constants';
+import { logObjectListOperation, logModelViewOperation } from '../../../lib/gaEvent';
 
 function VisualizerBottomLeft({ actions }) {
     return (

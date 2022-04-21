@@ -18,7 +18,7 @@ import Operations from '../operation-history/Operations';
 import { timestamp } from '../../../shared/lib/random-utils';
 import definitionManager from '../manager/DefinitionManager';
 import api from '../../api';
-import { logSvgSlice } from '../../ui/utils/gaEvent';
+import { logSvgSlice } from '../../lib/gaEvent';
 
 let toastId;
 export const processActions = {

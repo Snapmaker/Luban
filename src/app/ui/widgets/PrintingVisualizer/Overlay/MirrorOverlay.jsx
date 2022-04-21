@@ -6,8 +6,8 @@ import i18n from '../../../../lib/i18n';
 import { CancelButton } from '../VisualizerLeftBar';
 import { actions as printingActions } from '../../../../flux/printing';
 import { Button } from '../../../components/Buttons';
-import { logTransformOperation } from '../../../utils/gaEvent';
 import { HEAD_PRINTING } from '../../../../constants';
+import { logTransformOperation } from '../../../../lib/gaEvent';
 
 const MirrorOverlay = React.memo(({
     setTransformMode,

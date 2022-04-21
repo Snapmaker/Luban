@@ -26,7 +26,7 @@ import RotateOverlay from './Overlay/RotateOverlay';
 import ExtruderOverlay from './Overlay/ExtruderOverlay';
 /* eslint-disable-next-line import/no-cycle */
 import MirrorOverlay from './Overlay/MirrorOverlay';
-import { logTransformOperation } from '../../utils/gaEvent';
+import { logTransformOperation } from '../../../lib/gaEvent';
 
 export const whiteHex = '#ffffff';
 export const renderExtruderIcon = (leftExtruderColor, rightExtruderColor) => (

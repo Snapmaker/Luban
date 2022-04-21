@@ -26,7 +26,12 @@ import {
     WHITE_COLOR,
     BLACK_COLOR,
     GCODE_VISIBILITY_TYPE,
-    GCODEPREVIEWMODES
+    GCODEPREVIEWMODES,
+    PRINTING_MATERIAL_CONFIG_GROUP_SINGLE,
+    SINGLE_EXTRUDER_TOOLHEAD_FOR_SM2,
+    PRINTING_MATERIAL_CONFIG_GROUP_DUAL,
+    PRINTING_QUALITY_CONFIG_GROUP_SINGLE,
+    PRINTING_QUALITY_CONFIG_GROUP_DUAL
 } from '../../constants';
 import { timestamp } from '../../../shared/lib/random-utils';
 import { machineStore } from '../../store/local-storage';
@@ -62,7 +67,7 @@ import ScaleToFitWithRotateOperation3D from '../operation-history/ScaleToFitWith
 import PrimeTowerModel from '../../models/PrimeTowerModel';
 import ThreeUtils from '../../three-extensions/ThreeUtils';
 // import { TYPE_SETTINGS } from '../../lib/gcode-viewer/constants';
-import { logPritingSlice, logProfileChange, logToolBarOperation, logTransformOperation } from '../../ui/utils/gaEvent';
+import { logPritingSlice, logProfileChange, logToolBarOperation, logTransformOperation } from '../../lib/gaEvent';
 
 // register methods for three-mesh-bvh
 THREE.Mesh.prototype.raycast = acceleratedRaycast;
@@ -664,6 +669,105 @@ export const actions = {
             });
         }
     },
+
+    logGenerateGcode: () => (dispatch, getState) => {
+        const { extruderLDefinition, extruderRDefinition, defaultMaterialId,
+            defaultMaterialIdRight, defaultQualityId, qualityDefinitions, defaultDefinitions } = getState().printing;
+
+        const extruderLDefaultDefinition = defaultDefinitions.find(d => d.definitionId === defaultMaterialId);
+        const { toolHead } = getState().machine;
+        let defaultMaterialL = extruderLDefaultDefinition?.isDefault ? '0' : '2';
+
+        const activeActiveQualityDefinition = lodashFind(qualityDefinitions, { definitionId: defaultQualityId });
+        const defaultQualityDefinition = defaultDefinitions.find(d => d.definitionId === defaultQualityId);
+        let defaultMaterialQuality = defaultQualityDefinition?.isDefault ? '0' : '2';
+
+        const settings = {
+            layer_height: activeActiveQualityDefinition.settings?.layer_height?.default_value,
+            infill_pattern: activeActiveQualityDefinition.settings?.infill_pattern?.default_value,
+            auto_support: activeActiveQualityDefinition.settings?.support_enable?.default_value,
+            initial_layer_height: activeActiveQualityDefinition.settings?.layer_height_0?.default_value,
+            build_plate_adhesion_type: activeActiveQualityDefinition.settings?.adhesion_type?.default_value,
+            initial_layer_line_width_factor: activeActiveQualityDefinition.settings?.initial_layer_line_width_factor?.default_value
+        };
+
+        if (toolHead.printingToolhead === SINGLE_EXTRUDER_TOOLHEAD_FOR_SM2) {
+            settings.nozzle_diameter_L = extruderLDefinition.settings?.machine_nozzle_size?.default_value;
+
+            if (defaultMaterialL === '0') {
+                defaultMaterialL = PRINTING_MATERIAL_CONFIG_GROUP_SINGLE.some((item) => {
+                    return item.fields.some((key) => {
+                        return (
+                            extruderLDefaultDefinition?.settings[key].default_value
+                            !== extruderLDefinition.settings[key].default_value
+                        );
+                    });
+                }) ? '1' : '0';
+            }
+            if (defaultMaterialQuality === '0') {
+                defaultMaterialQuality = PRINTING_QUALITY_CONFIG_GROUP_SINGLE.some((item) => {
+                    return item.fields.some((key) => {
+                        return (
+                            activeActiveQualityDefinition.settings[key].default_value
+                            !== defaultQualityDefinition.settings[key].default_value
+                        );
+                    });
+                }) ? '1' : '0';
+            }
+            logPritingSlice(HEAD_PRINTING, {
+                isDefault: extruderLDefaultDefinition.isDefault,
+                updatedDefault: defaultMaterialL
+            }, {
+                isDefault: false,
+                updatedDefault: false
+            }, JSON.stringify(settings));
+        } else {
+            const extruderRDefaultDefinition = defaultDefinitions.find(d => d.definitionId === defaultMaterialIdRight);
+
+            settings.nozzle_diameter_L = extruderLDefinition.settings?.machine_nozzle_size?.default_value;
+            settings.nozzle_diameter_R = extruderRDefinition.settings?.machine_nozzle_size?.default_value;
+
+            if (defaultMaterialL === '0') {
+                defaultMaterialL = PRINTING_MATERIAL_CONFIG_GROUP_SINGLE.some((item) => {
+                    return item.fields.some((key) => {
+                        return (
+                            extruderLDefaultDefinition.settings[key].default_value
+                            !== extruderLDefinition.settings[key].default_value
+                        );
+                    });
+                }) ? '1' : '0';
+            }
+
+            let defaultMaterialR = extruderRDefaultDefinition?.isDefault ? '0' : '2';
+            if (defaultMaterialR === '0') {
+                defaultMaterialR = PRINTING_MATERIAL_CONFIG_GROUP_DUAL.some((item) => {
+                    return item.fields.some((key) => {
+                        return (
+                            extruderRDefaultDefinition?.settings[key].default_value
+                            !== extruderRDefinition.settings[key].default_value
+                        );
+                    });
+                }) ? '1' : '0';
+            }
+
+            if (defaultMaterialQuality === '0') {
+                defaultMaterialQuality = PRINTING_QUALITY_CONFIG_GROUP_DUAL.some((item) => {
+                    return item.fields.some((key) => {
+                        return (
+                            activeActiveQualityDefinition.settings[key].default_value
+                            !== defaultQualityDefinition.settings[key].default_value
+                        );
+                    });
+                }) ? '1' : '0';
+            }
+            logPritingSlice(HEAD_PRINTING, {
+                defaultMaterialL,
+                defaultMaterialR,
+                defaultMaterialQuality
+            }, JSON.stringify(settings));
+        }
+    },
+
     gcodeRenderingCallback: (data) => (dispatch, getState) => {
         const { gcodeLineGroup, gcodePreviewMode } = getState().printing;
 
@@ -732,6 +836,7 @@ export const actions = {
                 dispatch(actions.updateState({
                     stage: STEP_STAGE.PRINTING_PREVIEWING
                 }));
+                dispatch(actions.logGenerateGcode(layerCount));
                 break;
             }
             case 'progress': {
@@ -1497,28 +1602,6 @@ export const actions = {
             renderGcodeFileName
         };
         controller.slice(params);
-        // TODO
-        // const isAllValueDefault = optionConfigGroup.every((item) => {
-        //     return item.fields.every((key) => {
-        //         return (
-        //             finalDefinition.settings[key].default_value === finalDefinition[key].default_value
-        //         );
-        //     });
-        // });
-        logPritingSlice(HEAD_PRINTING, {
-            isDefault: false
-            // updatedDefault:
-        }, {
-            isDefault: false
-        }, JSON.stringify({
-            nozzle_diameter: finalDefinition.settings?.nozzle_diameter?.default_value,
-            layer_height: finalDefinition.settings?.layer_height?.default_value,
-            infill_pattern: finalDefinition.settings?.infill_pattern?.default_value,
-            auto_support: finalDefinition.settings?.auto_support?.default_value,
-            initial_layer_line_width_factor: finalDefinition.settings?.initial_layer_line_width_factor?.default_value,
-            initial_layer_height: finalDefinition.settings?.initial_layer_height?.default_value,
-            build_plate_adhesion_type: finalDefinition.settings?.build_plate_adhesion_type?.default_value,
-        }));
     },
 
     prepareModel: () => (dispatch, getState) => {

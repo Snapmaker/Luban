@@ -12,7 +12,7 @@ import Checkbox from '../../../components/Checkbox';
 import { Button } from '../../../components/Buttons';
 import { updateControlInputEvent } from '../../../components/SMCanvas/TransformControls';
 import { HEAD_PRINTING, SCALE_MODE } from '../../../../constants';
-import { logTransformOperation } from '../../../utils/gaEvent';
+import { logTransformOperation } from '../../../../lib/gaEvent';
 
 const longLang = ['de', 'it'];
 const ScaleOverlay = React.memo(({

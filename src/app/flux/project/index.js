@@ -29,7 +29,7 @@ import ThreeModel from '../../models/ThreeModel';
 
 import i18n from '../../lib/i18n';
 import UniApi from '../../lib/uni-api';
-import { logGcodeExport, logModuleVisit } from '../../ui/utils/gaEvent';
+import { logGcodeExport, logModuleVisit } from '../../lib/gaEvent';
 
 const INITIAL_STATE = {
     [HEAD_PRINTING]: {

@@ -21,7 +21,7 @@ import i18n from '../../../lib/i18n';
 import UniApi from '../../../lib/uni-api';
 import Thumbnail from '../CncLaserShared/Thumbnail';
 import SvgIcon from '../../components/SvgIcon';
-import { logGcodeExport } from '../../utils/gaEvent';
+import { logGcodeExport } from '../../../lib/gaEvent';
 
 const Output = ({ headType }) => {
     const displayedType = useSelector(state => state[headType]?.displayedType);

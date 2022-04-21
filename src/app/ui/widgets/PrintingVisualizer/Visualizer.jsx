@@ -34,7 +34,7 @@ import { loadModelFailPopup, scaletoFitPopup } from './VisualizerPopup';
 import { STEP_STAGE } from '../../../lib/manager/ProgressManager';
 import { updateControlInputEvent } from '../../components/SMCanvas/TransformControls';
 import ModeToggleBtn from './ModeToggleBtn';
-import { logModelViewOperation } from '../../utils/gaEvent';
+import { logModelViewOperation } from '../../../lib/gaEvent';
 
 const initQuaternion = new Quaternion();
 const modeSuffix = {

@@ -15,7 +15,7 @@ import { EPSILON, HEAD_PRINTING } from '../../../../constants';
 import ThreeGroup from '../../../../models/ThreeGroup';
 import ThreeModel from '../../../../models/ThreeModel';
 import ThreeUtils from '../../../../three-extensions/ThreeUtils';
-import { logTransformOperation } from '../../../utils/gaEvent';
+import { logTransformOperation } from '../../../../lib/gaEvent';
 
 const isNonUniformScaled = (autoRotateModelArray) => {
     const result = autoRotateModelArray.every(modelItem => {

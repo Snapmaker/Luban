@@ -21,7 +21,8 @@ import App from './ui/App';
 import './styles/vendor.styl';
 import './styles/app.styl';
 import 'antd/dist/antd.css';
-import { initialize } from './ui/utils/gaEvent';
+import { initialize } from './lib/gaEvent';
+
 
 series([
     (next) => {

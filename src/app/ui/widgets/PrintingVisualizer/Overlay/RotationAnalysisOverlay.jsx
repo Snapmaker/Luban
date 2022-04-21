@@ -8,8 +8,8 @@ import { actions as printingActions } from '../../../../flux/printing';
 import { actions as menuActions } from '../../../../flux/appbar-menu';
 import i18n from '../../../../lib/i18n';
 import styles from './styles.styl';
-import { logTransformOperation } from '../../../utils/gaEvent';
 import { HEAD_PRINTING } from '../../../../constants';
+import { logTransformOperation } from '../../../../lib/gaEvent';
 
 function normalizeNum(num) {
     if (typeof num === 'number') {
@@ -136,7 +136,7 @@ const Table = React.memo(({ tableColumns, onRowSelect, selectedRow, data, setDat
                 </thead>
             </table>
             <div className={classNames(styles.scroll)} ref={refScroll}>
-                { data.length === 0 ? <div className="text-center padding-vertical-56">{i18n._('key-Printing/RotationAnalyze-Loading')}</div> : null }
+                {data.length === 0 ? <div className="text-center padding-vertical-56">{i18n._('key-Printing/RotationAnalyze-Loading')}</div> : null}
                 <table>
                     <tbody ref={refTbody}>
                         {

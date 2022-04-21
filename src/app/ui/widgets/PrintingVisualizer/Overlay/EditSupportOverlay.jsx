@@ -10,8 +10,8 @@ import SvgIcon from '../../../components/SvgIcon';
 import Slider from '../../../components/Slider';
 import { actions as printingActions } from '../../../../flux/printing';
 import { actions as menuActions } from '../../../../flux/appbar-menu';
-import { logTransformOperation } from '../../../utils/gaEvent';
 import { HEAD_PRINTING } from '../../../../constants';
+import { logTransformOperation } from '../../../../lib/gaEvent';
 
 let tmpDiameter;
 const EditSupportOverlay = ({ onClose }) => {

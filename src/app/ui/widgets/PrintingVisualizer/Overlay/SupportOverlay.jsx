@@ -10,8 +10,8 @@ import styles from './styles.styl';
 import { renderModal } from '../../../utils';
 /* eslint-disable-next-line import/no-cycle */
 import { CancelButton } from '../VisualizerLeftBar';
-import { logTransformOperation } from '../../../utils/gaEvent';
 import { HEAD_PRINTING } from '../../../../constants';
+import { logTransformOperation } from '../../../../lib/gaEvent';
 
 const SupportOverlay = ({ editSupport, setTransformMode }) => {
     const selectedModelArray = useSelector(state => state?.printing?.modelGroup?.selectedModelArray, shallowEqual);

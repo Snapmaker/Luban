@@ -28,8 +28,7 @@ import definitionManager from '../manager/DefinitionManager';
 import i18n from '../../lib/i18n';
 import { timestamp } from '../../../shared/lib/random-utils';
 import ProgressStatesManager, { STEP_STAGE } from '../../lib/manager/ProgressManager';
-import { logToolBarOperation } from '../../ui/utils/gaEvent';
-// import { valueOf } from '../../lib/contants-utils';
+import { logToolBarOperation } from '../../lib/gaEvent';
 
 const initModelGroup = new ModelGroup('laser');
 const operationHistory = new OperationHistory();

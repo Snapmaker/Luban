@@ -15,7 +15,7 @@ import { CancelButton } from '../VisualizerLeftBar';
 import { updateControlInputEvent } from '../../../components/SMCanvas/TransformControls';
 import { HEAD_PRINTING, TRANSLATE_MODE } from '../../../../constants';
 import styles from './styles.styl';
-import { logTransformOperation } from '../../../utils/gaEvent';
+import { logTransformOperation } from '../../../../lib/gaEvent';
 
 const angleOptions = [
     {
