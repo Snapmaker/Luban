@@ -919,7 +919,6 @@ export const actions = {
      */
     updateExtruderDefinition: (definition, direction = LEFT_EXTRUDER) => (dispatch, getState) => {
         const { activeDefinition, extruderLDefinition, extruderRDefinition, helpersExtruderConfig } = getState().printing;
-
         if (!definition) {
             return;
         }
@@ -1486,7 +1485,6 @@ export const actions = {
         finalDefinition.settings.support_interface_extruder_nr.default_value = supportExtruder;
         finalDefinition.settings.support_roof_extruder_nr.default_value = supportExtruder;
         finalDefinition.settings.support_bottom_extruder_nr.default_value = supportExtruder;
-
         await definitionManager.createDefinition(finalDefinition);
 
         // slice

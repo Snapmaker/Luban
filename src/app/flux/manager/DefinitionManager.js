@@ -348,7 +348,11 @@ class DefinitionManager {
                 }
             });
         const meshKeys = ['infill_line_distance', 'infill_line_width',
-            'wall_line_count', 'wall_line_width', 'wall_line_width_0', 'wall_line_width_x', 'skin_line_width'];
+            'wall_line_count', 'wall_line_width', 'wall_line_width_0', 'wall_line_width_x', 'skin_line_width', 'wall_material_flow',
+            'skin_material_flow',
+            'roofing_material_flow',
+            'infill_material_flow',
+        ];
         meshKeys.forEach((key) => {
             definition.settings[key] = {
                 default_value: 0
@@ -366,9 +370,11 @@ class DefinitionManager {
         if (item.extruderConfig.infill === '0') {
             definition.settings.infill_line_distance.default_value = extruderLDefinition.settings.infill_line_distance.default_value;
             definition.settings.infill_line_width.default_value = extruderLDefinition.settings.infill_line_width.default_value;
+            definition.settings.infill_material_flow.default_value = extruderLDefinition.settings.material_flow;
         } else {
             definition.settings.infill_line_distance.default_value = extruderRDefinition.settings.infill_line_distance.default_value;
             definition.settings.infill_line_width.default_value = extruderRDefinition.settings.infill_line_width.default_value;
+            definition.settings.infill_material_flow.default_value = extruderRDefinition.settings.material_flow;
         }
 
         if (item.extruderConfig.shell === '0') {
@@ -377,12 +383,20 @@ class DefinitionManager {
             definition.settings.wall_line_width_0.default_value = extruderLDefinition.settings.wall_line_width_0.default_value;
             definition.settings.wall_line_width_x.default_value = extruderLDefinition.settings.wall_line_width_x.default_value;
             definition.settings.skin_line_width.default_value = extruderLDefinition.settings.skin_line_width.default_value;
+            definition.settings.wall_material_flow.default_value = extruderLDefinition.settings.material_flow.default_value;
+            definition.settings.skin_material_flow.default_value = extruderLDefinition.settings.material_flow.default_value;
+            definition.settings.roofing_material_flow.default_value = extruderLDefinition.settings.material_flow.default_value;
+            definition.settings.infill_material_flow.default_value = extruderLDefinition.settings.material_flow.default_value;
         } else {
             definition.settings.wall_line_count.default_value = extruderRDefinition.settings.wall_line_count.default_value;
             definition.settings.wall_line_width.default_value = extruderRDefinition.settings.wall_line_width.default_value;
             definition.settings.wall_line_width_0.default_value = extruderRDefinition.settings.wall_line_width_0.default_value;
             definition.settings.wall_line_width_x.default_value = extruderRDefinition.settings.wall_line_width_x.default_value;
             definition.settings.skin_line_width.default_value = extruderRDefinition.settings.skin_line_width.default_value;
+            definition.settings.wall_material_flow.default_value = extruderRDefinition.settings.material_flow.default_value;
+            definition.settings.skin_material_flow.default_value = extruderRDefinition.settings.material_flow.default_value;
+            definition.settings.roofing_material_flow.default_value = extruderRDefinition.settings.material_flow.default_value;
+            definition.settings.infill_material_flow.default_value = extruderRDefinition.settings.material_flow.default_value;
         }
         return definition;
     }
@@ -391,6 +405,12 @@ class DefinitionManager {
         const definition = {
             ...extruderDefinition
         };
+        const extruderKey = [
+            'skirt_brim_material_flow',
+            'support_material_flow',
+            'support_interface_material_flow',
+            'prime_tower_flow'
+        ];
         PRINTING_MATERIAL_CONFIG_KEYS_SINGLE.concat('cool_fan_speed_min', 'cool_fan_speed_max')
             .forEach(key => {
                 const setting = materialDefinition.settings[key];
@@ -400,6 +420,14 @@ class DefinitionManager {
                     };
                 }
             });
+        extruderKey.forEach(key => {
+            const setting = materialDefinition.settings.material_flow;
+            if (setting) {
+                definition.settings[key] = {
+                    default_value: setting.default_value
+                };
+            }
+        });
         if (hasPrimeTower) {
             MACHINE_EXTRUDER_X.forEach((keyItem) => {
                 definition.settings[keyItem].default_value = primeTowerXDefinition;
