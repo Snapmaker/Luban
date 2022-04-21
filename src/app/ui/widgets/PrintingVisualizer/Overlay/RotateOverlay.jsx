@@ -170,7 +170,7 @@ const RotateOverlay = React.memo(({
         }];
 
         return dataModal.map(v => (
-            <div className={classNames(styles['rotate-svg'])}>
+            <div className={classNames(styles['rotate-svg'])} disabled={!isSingleSelected || !!transformDisabled}>
                 <SvgIcon
                     name={v.name}
                     size={24}
