@@ -66,7 +66,6 @@ const sendMessage = (messageType: string, category: string, data: Record<string,
     });
 };
 
-// TODO 推出Luban清除projectId
 export const lubanVisit = () => {
     return sendMessage('luban_visit', 'user');
 };
