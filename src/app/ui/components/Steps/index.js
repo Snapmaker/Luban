@@ -68,6 +68,7 @@ export default class Steps extends Component {
         // We need to manually keep track of the visibility state to avoid a callback hell.
         this.isVisible = false;
         this.options = {
+            exitOnOverlayClick: false,
             nextLabel: i18n._('key-Modal/Common-Next'),
             doneLabel: i18n._('key-Modal/Common-Complete')
         };
