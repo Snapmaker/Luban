@@ -140,6 +140,8 @@ export const PRINTING_MATERIAL_CONFIG_KEYS_SINGLE = [
     // Temperature
     'material_diameter',
     'material_print_temperature',
+    'material_final_print_temperature',
+    'material_standby_temperature',
     'material_print_temperature_layer_0',
     'cool_fan_speed',
     'machine_heated_bed',
@@ -162,9 +164,13 @@ export const PRINTING_MATERIAL_CONFIG_KEYS_DUAL = [
     // Temperature
     'material_diameter',
     'material_print_temperature',
+    'material_final_print_temperature',
+    'material_standby_temperature',
     'material_print_temperature_layer_0',
     'cool_fan_speed',
+    'cool_fan_speed_0',
     'machine_heated_bed',
+    'cool_fan_full_layer',
     'material_bed_temperature',
     'material_bed_temperature_layer_0',
     // Extrude
@@ -176,7 +182,8 @@ export const PRINTING_MATERIAL_CONFIG_KEYS_DUAL = [
     'retraction_amount',
     'retraction_speed',
     'retraction_hop_enabled',
-    'retraction_hop'
+    'retraction_hop',
+    'switch_extruder_retraction_amount'
 ];
 export const PRINTING_QUALITY_CONFIG_KEYS_SINGLE = [
     'layer_height',
@@ -247,11 +254,12 @@ export const PRINTING_QUALITY_CONFIG_KEYS_DUAL = [
     'support_z_distance',
     // 'dual'
     'prime_tower_enable',
+    'prime_tower_wipe_enabled',
     'ooze_shield_enabled',
     'ooze_shield_angle',
-    'ooze_shield_dist',
-    'switch_extruder_retraction_amount',
-    'switch_extruder_retraction_speeds'
+    'ooze_shield_dist'
+    // 'switch_extruder_retraction_amount',
+    // 'switch_extruder_retraction_speeds'
 ];
 export const MACHINE_EXTRUDER_X = ['machine_extruder_start_pos_x', 'machine_extruder_end_pos_x'];
 export const MACHINE_EXTRUDER_Y = ['machine_extruder_start_pos_y', 'machine_extruder_end_pos_y'];
@@ -267,8 +275,11 @@ export const PRINTING_MATERIAL_CONFIG_GROUP_SINGLE = [
         fields: [
             'material_diameter',
             'material_print_temperature',
+            'material_final_print_temperature',
+            'material_standby_temperature',
             'material_print_temperature_layer_0',
             'cool_fan_speed',
+            'cool_fan_full_layer',
             'machine_heated_bed',
             'material_bed_temperature',
             'material_bed_temperature_layer_0'
@@ -305,8 +316,12 @@ export const PRINTING_MATERIAL_CONFIG_GROUP_DUAL = [
         fields: [
             'material_diameter',
             'material_print_temperature',
+            'material_final_print_temperature',
+            'material_standby_temperature',
             'material_print_temperature_layer_0',
             'cool_fan_speed',
+            'cool_fan_speed_0',
+            'cool_fan_full_layer',
             'machine_heated_bed',
             'material_bed_temperature',
             'material_bed_temperature_layer_0'
@@ -325,7 +340,9 @@ export const PRINTING_MATERIAL_CONFIG_GROUP_DUAL = [
             'retraction_enable',
             'retract_at_layer_change',
             'retraction_amount',
+            'switch_extruder_retraction_amount',
             'retraction_speed',
+            'switch_extruder_retraction_speeds',
             'retraction_hop_enabled',
             'retraction_hop'
         ]
@@ -470,11 +487,12 @@ export const PRINTING_QUALITY_CONFIG_GROUP_DUAL = [
         name: 'Dual Extrusion',
         fields: [
             'prime_tower_enable',
+            'prime_tower_wipe_enabled',
             'ooze_shield_enabled',
             'ooze_shield_angle',
-            'ooze_shield_dist',
-            'switch_extruder_retraction_amount',
-            'switch_extruder_retraction_speeds'
+            'ooze_shield_dist'
+            // 'switch_extruder_retraction_amount',
+            // 'switch_extruder_retraction_speeds'
         ]
     }
 ];
@@ -1005,10 +1023,9 @@ export const MACHINE_SERIES = {
         },
         alias: ['SM2-L', 'Snapmaker 2.0 A350']
     },
-    // defined for debug, need fix
     A400: {
         value: 'A400',
-        label: 'key-Luban/Machine/MachineSeries-Snapmaker A400',
+        label: 'key-Luban/Machine/MachineSeries-Snapmaker 2.0 A400',
         setting: {
             size: {
                 x: 400,
@@ -1021,7 +1038,7 @@ export const MACHINE_SERIES = {
                 z: 400
             }
         },
-        alias: ['Snapmaker A400']
+        alias: ['SM2-XL', 'Snapmaker 2.0 400']
     },
     CUSTOM: {
         value: 'Custom',
@@ -1110,11 +1127,14 @@ export const MACHINE_TOOL_HEADS = {
         }
     },
     [SINGLE_EXTRUDER_TOOLHEAD_FOR_SM2]: {
-        platform: [MACHINE_SERIES.A150.value, MACHINE_SERIES.A250.value, MACHINE_SERIES.A350.value],
+        platform: [MACHINE_SERIES.A150.value, MACHINE_SERIES.A250.value, MACHINE_SERIES.A350.value, MACHINE_SERIES.A400.value],
         value: SINGLE_EXTRUDER_TOOLHEAD_FOR_SM2,
         key: 'singleExtruderToolheadForSM2',
         pathname: 'single',
-        // label: SINGLE_EXTRUDER_TOOLHEAD,
+        // label: SINGL
+        //
+        //
+        // E_EXTRUDER_TOOLHEAD,
         label: 'key-App/Settings/MachineSettings-Single Extruder Toolhead',
         // mock offset data
         offset: {
@@ -1124,7 +1144,7 @@ export const MACHINE_TOOL_HEADS = {
         }
     },
     [DUAL_EXTRUDER_TOOLHEAD_FOR_SM2]: {
-        platform: [MACHINE_SERIES.A150.value, MACHINE_SERIES.A250.value, MACHINE_SERIES.A350.value],
+        platform: [MACHINE_SERIES.A150.value, MACHINE_SERIES.A250.value, MACHINE_SERIES.A350.value, MACHINE_SERIES.A400.value],
         value: DUAL_EXTRUDER_TOOLHEAD_FOR_SM2,
         pathname: 'dual',
         key: 'dualExtruderToolheadForSM2',
@@ -1137,7 +1157,7 @@ export const MACHINE_TOOL_HEADS = {
         }
     },
     [LEVEL_ONE_POWER_LASER_FOR_SM2]: {
-        platform: [MACHINE_SERIES.A150.value, MACHINE_SERIES.A250.value, MACHINE_SERIES.A350.value],
+        platform: [MACHINE_SERIES.A150.value, MACHINE_SERIES.A250.value, MACHINE_SERIES.A350.value, MACHINE_SERIES.A400.value],
         value: LEVEL_ONE_POWER_LASER_FOR_SM2,
         pathname: '1600mw',
         key: 'levelOneLaserToolheadForSM2',
@@ -1150,7 +1170,7 @@ export const MACHINE_TOOL_HEADS = {
         }
     },
     [LEVEL_TWO_POWER_LASER_FOR_SM2]: {
-        platform: [MACHINE_SERIES.A150.value, MACHINE_SERIES.A250.value, MACHINE_SERIES.A350.value],
+        platform: [MACHINE_SERIES.A150.value, MACHINE_SERIES.A250.value, MACHINE_SERIES.A350.value, MACHINE_SERIES.A400.value],
         value: LEVEL_TWO_POWER_LASER_FOR_SM2,
         pathname: '10w',
         label: 'key-App/Settings/MachineSettings-10W Laser',
@@ -1163,7 +1183,7 @@ export const MACHINE_TOOL_HEADS = {
         }
     },
     [STANDARD_CNC_TOOLHEAD_FOR_SM2]: {
-        platform: [MACHINE_SERIES.A150.value, MACHINE_SERIES.A250.value, MACHINE_SERIES.A350.value],
+        platform: [MACHINE_SERIES.A150.value, MACHINE_SERIES.A250.value, MACHINE_SERIES.A350.value, MACHINE_SERIES.A400.value],
         value: STANDARD_CNC_TOOLHEAD_FOR_SM2,
         key: 'standardCNCToolheadForSM2',
         pathname: 'standard',
@@ -1391,6 +1411,11 @@ export const INITIAL_TOOL_HEAD_FOR_SM2 = {
 
 
 export const LASER_10W_TAKE_PHOTO_POSITION = {
+    A400: { // TODO: need to test
+        x: 290,
+        y: 210,
+        z: 350
+    },
     A350: {
         x: 232,
         y: 178,

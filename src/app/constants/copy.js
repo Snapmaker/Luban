@@ -10,6 +10,7 @@ i18n._('key-Luban/Machine/MachineSeries-Snapmaker 2.0 A150');
 i18n._('key-Luban/Machine/MachineSeries-Snapmaker 2.0 A250');
 i18n._('key-Luban/Machine/MachineSeries-Snapmaker 2.0 A350');
 i18n._('key-Luban/Machine/MachineSeries-Custom');
+i18n._('key-Luban/Machine/MachineSeries-Snapmaker 2.0 A400');
 
 i18n._('key-machine_selection-Workspace');
 i18n._('key-machine_selection-3D Printing');
@@ -173,6 +174,8 @@ i18n._('Carving Tool');
 i18n._('Parameters');
 
 // Printing Profile
+i18n._('key-Printing/PrintingConfigurations-Material Settings');
+
 i18n._('key-printing/material_settings-Temperature');
 i18n._('key-printing/material_settings-Extrusion');
 i18n._('key-Printing/LeftBar-Extruder Both');

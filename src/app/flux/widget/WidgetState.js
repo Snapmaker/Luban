@@ -204,6 +204,13 @@ const SERIES_STATES = {
                 widgets: ['toolpath-list', 'laser-params']
             }
         }
+    },
+    A400: {
+        laser: {
+            default: {
+                widgets: ['toolpath-list', 'laser-params']
+            }
+        }
     }
 };
 
@@ -309,6 +316,9 @@ class WidgetState {
         }
         if (!arrayEqual(widgetState.seriesStates.A350.laser.default.widgets, SERIES_STATES.A350.laser.default.widgets)) {
             widgetState.seriesStates.A350.laser.default.widgets = SERIES_STATES.A350.laser.default.widgets;
+        }
+        if (!arrayEqual(widgetState.seriesStates.A400.laser.default.widgets, SERIES_STATES.A400.laser.default.widgets)) {
+            widgetState.seriesStates.A400.laser.default.widgets = SERIES_STATES.A400.laser.default.widgets;
         }
     }
 

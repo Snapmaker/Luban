@@ -1103,7 +1103,7 @@ export const actions = {
             activeDefinition.settings.support_roof_line_width.default_value = extruderDef.settings.support_roof_line_width.default_value;
             activeDefinition.settings.support_bottom_line_width.default_value = extruderDef.settings.support_bottom_line_width.default_value;
             activeDefinition.settings.prime_tower_line_width.default_value = extruderDef.settings.prime_tower_line_width.default_value;
-            activeDefinition.settings.prime_tower_wipe_enabled.default_value = true;
+            // activeDefinition.settings.prime_tower_wipe_enabled.default_value = extruderDef.setting.prime_tower_wipe_enabled.default_value;
         }
         dispatch(actions.updateDefinitionSettings(activeDefinition, activeDefinition.settings, false));
 
@@ -1542,7 +1542,7 @@ export const actions = {
             activeDefinition.settings.prime_tower_position_x.default_value = primeTowerXDefinition;
             activeDefinition.settings.prime_tower_position_y.default_value = primeTowerYDefinition;
             activeDefinition.settings.prime_tower_size.default_value = primeTowerWidth;
-            activeDefinition.settings.prime_tower_wipe_enabled.default_value = true;
+            // activeDefinition.settings.prime_tower_wipe_enabled.default_value = true;
         }
         const indexL = materialDefinitions.findIndex(d => d.definitionId === defaultMaterialId);
         const indexR = materialDefinitions.findIndex(d => d.definitionId === defaultMaterialIdRight);
