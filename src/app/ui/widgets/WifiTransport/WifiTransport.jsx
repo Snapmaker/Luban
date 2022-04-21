@@ -314,7 +314,8 @@ function WifiTransport({ widgetActions, controlActions }) {
         },
 
         loadGcodeToWorkspace: async () => {
-            const find = gcodeFiles.find(v => v.uploadName === selectFileName);
+            const find = gcodeFiles.find(v => v.uploadName.toLowerCase() === selectFileName.toLowerCase());
+            console.log(find, toolHeadName, isLaserAutoFocus, isRotate);
             if (!find) {
                 return;
             }

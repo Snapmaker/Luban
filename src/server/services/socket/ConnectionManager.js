@@ -2,10 +2,9 @@ import logger from '../../lib/logger';
 // import workerManager from '../task-manager/workerManager';
 import socketSerial from './socket-serial';
 import socketHttp from './socket-http';
-import {
-    HEAD_PRINTING, HEAD_LASER, LEVEL_TWO_POWER_LASER_FOR_SM2, MACHINE_SERIES,
-    CONNECTION_TYPE_WIFI, CONNECTION_TYPE_SERIAL, WORKFLOW_STATE_PAUSED
-} from '../../constants';
+import socketTcp from './SACP-TCP';
+import { HEAD_PRINTING, HEAD_LASER, LEVEL_TWO_POWER_LASER_FOR_SM2, MACHINE_SERIES,
+    CONNECTION_TYPE_WIFI, CONNECTION_TYPE_SERIAL, WORKFLOW_STATE_PAUSED } from '../../constants';
 import DataStorage from '../../DataStorage';
 import ScheduledTasks from '../../lib/ScheduledTasks';
 
@@ -48,10 +47,16 @@ class ConnectionManager {
     }
 
     connectionOpen = (socket, options) => {
-        const { connectionType } = options;
+        const { connectionType, sacp } = options;
         this.connectionType = connectionType;
         if (connectionType === CONNECTION_TYPE_WIFI) {
-            this.socket = socketHttp;
+            if (sacp) {
+                this.protocol = 'SACP';
+                this.socket = socketTcp;
+            } else {
+                this.protocol = '';
+                this.socket = socketHttp;
+            }
             this.socket.connectionOpen(socket, options);
         } else {
             this.socket = socketSerial;
@@ -422,6 +427,27 @@ class ConnectionManager {
     abortLaserMaterialThickness = (socket, options) => {
         this.socket.abortLaserMaterialThickness(options);
     }
+
+    // camera capture related, currently for socket-tcp
+    takePhoto = (params, callback) => {
+        this.socket.takePhoto(params, callback);
+    };
+
+    getCameraCalibration = (callback) => {
+        this.socket.getCameraCalibration(callback);
+    };
+
+    getPhoto = (callback) => {
+        this.socket.getPhoto(callback);
+    };
+
+    getCalibrationPhoto = (callback) => {
+        this.socket.getCalibrationPhoto(callback);
+    };
+
+    setMatrix = (params, callback) => {
+        this.socket.setMatrix(params, callback);
+    };
     // only for Wifi
 }
 

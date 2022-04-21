@@ -15,6 +15,7 @@ import {
 } from '../../constants';
 import { valueOf } from '../../lib/contants-utils';
 import wifiServerManager from './WifiServerManager';
+import { EventOptions } from './types';
 
 
 let waitConfirm: boolean;
@@ -79,24 +80,6 @@ const _getResult = (err, res) => {
 // let timeoutHandle = null;
 let intervalHandle = null;
 
-export type EventOptions = {
-    eventName: string,
-    host?: string,
-    token?: string,
-    gcode?: string,
-    x?: number,
-    y?: number,
-    feedRate?: number,
-    gcodePath?: string,
-    renderGcodeFileName?: string,
-    value?: number,
-    enable?: boolean,
-    workSpeedFactor?: number,
-    laserPower?: number,
-    nozzleTemperatureValue?: number,
-    heatedBedTemperatureValue?: number,
-    zOffset?: number,
-};
 export type StateOptions = {
     headType?: string,
     toolHead?: string,
@@ -160,7 +143,7 @@ class SocketHttp {
                 if (res?.body?.token) {
                     this.token = res.body.token;
                 }
-                if(err){
+                if (err) {
                     log.debug(`err="${err}"`);
                 }
                 const result = _getResult(err, res);
