@@ -364,7 +364,7 @@ function WifiTransport({ widgetActions, controlActions }) {
                 return;
             }
             const gcodePath = `/${find.uploadName}`;
-            controller.emitEvent(CONNECTION_UPLOAD_FILE, { gcodePath: gcodePath })
+            controller.emitEvent(CONNECTION_UPLOAD_FILE, { gcodePath: gcodePath, renderGcodeFileName: find.renderGcodeFileName })
                 .once(CONNECTION_UPLOAD_FILE, ({ err, text }) => {
                     isSendingFile.current && isSendingFile.current.removeContainer();
                     if (err) {
