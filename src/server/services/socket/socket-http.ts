@@ -5,7 +5,8 @@ import type SocketServer from '../../lib/SocketManager';
 import logger from '../../lib/logger';
 import workerManager from '../task-manager/workerManager';
 import DataStorage from '../../DataStorage';
-import { HEAD_PRINTING, HEAD_LASER, HEAD_CNC, MACHINE_SERIES,
+import {
+    HEAD_PRINTING, HEAD_LASER, HEAD_CNC, MACHINE_SERIES,
     SINGLE_EXTRUDER_TOOLHEAD_FOR_SM2,
     STANDARD_CNC_TOOLHEAD_FOR_SM2,
     LEVEL_ONE_POWER_LASER_FOR_SM2,
@@ -360,7 +361,7 @@ class SocketHttp {
         });
     }
 
-    public uploadGcodeFile = (gcodeFilePath:string, type:string, callback) => {
+    public uploadGcodeFile = (gcodeFilePath: string, type: string, callback) => {
         const api = `${this.host}/api/v1/prepare_print`;
         if (type === HEAD_PRINTING) {
             type = '3DP';
@@ -382,7 +383,7 @@ class SocketHttp {
             });
     };
 
-    public abortLaserMaterialThickness = (options: EventOptions) => {
+    public abortLaserMaterialThickness = () => {
         this.getLaserMaterialThicknessReq && this.getLaserMaterialThicknessReq.abort();
     };
 
@@ -392,8 +393,8 @@ class SocketHttp {
         const req = request.get(api);
         this.getLaserMaterialThicknessReq = req;
         req.end((err, res) => {
-                this.socket && this.socket.emit(eventName, _getResult(err, res));
-            });
+            this.socket && this.socket.emit(eventName, _getResult(err, res));
+        });
     };
 
     public getGcodeFile = (options: EventOptions) => {
@@ -549,41 +550,41 @@ class SocketHttp {
             });
     };
 
-   public setDoorDetection = (options: EventOptions) => {
-       const { eventName, enable } = options;
-       const api = `${this.host}/api/v1/enclosure`;
-       request
-           .post(api)
-           .send(`token=${this.token}`)
-           .send(`isDoorEnabled=${enable}`)
-           .end((err, res) => {
-               this.socket && this.socket.emit(eventName, _getResult(err, res));
-           });
-   };
+    public setDoorDetection = (options: EventOptions) => {
+        const { eventName, enable } = options;
+        const api = `${this.host}/api/v1/enclosure`;
+        request
+            .post(api)
+            .send(`token=${this.token}`)
+            .send(`isDoorEnabled=${enable}`)
+            .end((err, res) => {
+                this.socket && this.socket.emit(eventName, _getResult(err, res));
+            });
+    };
 
-   public setFilterSwitch = (options: EventOptions) => {
-       const { eventName, enable } = options;
-       const api = `${this.host}/api/v1/air_purifier_switch`;
-       request
-           .post(api)
-           .send(`token=${this.token}`)
-           .send(`switch=${enable}`)
-           .end((err, res) => {
-               this.socket && this.socket.emit(eventName, _getResult(err, res));
-           });
-   };
+    public setFilterSwitch = (options: EventOptions) => {
+        const { eventName, enable } = options;
+        const api = `${this.host}/api/v1/air_purifier_switch`;
+        request
+            .post(api)
+            .send(`token=${this.token}`)
+            .send(`switch=${enable}`)
+            .end((err, res) => {
+                this.socket && this.socket.emit(eventName, _getResult(err, res));
+            });
+    };
 
-   public setFilterWorkSpeed = (options: EventOptions) => {
-       const { eventName, value } = options;
-       const api = `${this.host}/api/v1/air_purifier_fan_speed`;
-       request
-           .post(api)
-           .send(`token=${this.token}`)
-           .send(`fan_speed=${value}`)
-           .end((err, res) => {
-               this.socket && this.socket.emit(eventName, _getResult(err, res));
-           });
-   };
+    public setFilterWorkSpeed = (options: EventOptions) => {
+        const { eventName, value } = options;
+        const api = `${this.host}/api/v1/air_purifier_fan_speed`;
+        request
+            .post(api)
+            .send(`token=${this.token}`)
+            .send(`fan_speed=${value}`)
+            .end((err, res) => {
+                this.socket && this.socket.emit(eventName, _getResult(err, res));
+            });
+    };
 }
 
 const socketHttp = new SocketHttp();

@@ -31,12 +31,9 @@ module.exports = {
     mode: 'development',
     devtool: 'eval-source-map',
     target: 'node',
-    context: path.resolve(__dirname, 'src/server'),
-    entry: {
-        index: [
-            './index.js'
-        ]
-    },
+    watch: true,
+    context: path.resolve(__dirname, './src/server'),
+    entry: path.resolve(__dirname, './src/server/services/task-manager/Pool.worker.js'),
     output: {
         path: path.resolve(__dirname, 'output/server'),
         filename: '[name].js',
@@ -50,15 +47,15 @@ module.exports = {
     module: {
         rules: [
             {
+                test: /\.ts$/,
+                loader: 'ts-loader'
+            },
+            {
                 test: /\.worker\.(j|t)s$/,
                 loader: 'worker-loader',
                 options: {
                     filename: '[name].js',
                 },
-            },
-            {
-                test: /\.ts$/,
-                loader: 'ts-loader'
             },
             {
                 test: /\.jsx?$/,
