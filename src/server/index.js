@@ -118,9 +118,6 @@ const createServer = (options, callback) => {
             // Start socket service
             startServices(server);
 
-            // Register scheduled tasks
-
-
             // Deal with address bindings
             const realAddress = server.address().address;
             const realPort = server.address().port;

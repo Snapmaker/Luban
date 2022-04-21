@@ -95,13 +95,10 @@ class DataStorage {
 
      async init(isReset = false) {
          const definitionUpdated = config.get('DefinitionUpdated');
-         const gaUserId = config.get('Ga-User-Id');
-         console.log('gaUuid', gaUserId, isNil(gaUserId));
-         // if (isNil(gaUserId)) {
-         const gaUuid = uuid();
-         console.log('gaUuid', gaUuid);
-         config.set('Ga-User-Id', gaUuid);
-         // }
+         const gaUserId = config.get('gaUserId');
+         if (isNil(gaUserId)) {
+             config.set('gaUserId', uuid());
+         }
          let overwriteProfiles = false;
          if (semver.gte(settings.version, '4.1.0') && (!definitionUpdated || !definitionUpdated[settings.version])) {
              overwriteProfiles = true;

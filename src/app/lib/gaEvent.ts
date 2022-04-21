@@ -59,12 +59,6 @@ const sendMessage = (messageType: string, category: string, data: Record<string,
         data.toolHead = getToolHead(data.headType as THeadType);
         delete data.headType;
     }
-    console.log(`messageType=${messageType}, data=${JSON.stringify({
-        messageType,
-        category,
-        ...data
-    })}`);
-
     ReactGA.gtag('event', 'sendMessage', {
         messageType,
         category,
@@ -152,25 +146,9 @@ export const initialize = (userId: string) => {
         custom_map: {
             dimension0: 'messageType',
             metric0: 'num'
-        },
-        debug_mode: true
+        }
+        // debug_mode: true
     });
 
     lubanVisit();
-};
-
-export default {
-    logPageView,
-    logModuleVisit,
-    logToolBarOperation,
-    logTransformOperation,
-    logObjectListOperation,
-    logModelViewOperation,
-    logPritingSlice,
-    logSvgSlice,
-    logProfileChange,
-    logGcodeExport,
-    logLubanQuit,
-    initialize,
-    lubanVisit
 };

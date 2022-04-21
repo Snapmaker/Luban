@@ -8,7 +8,6 @@ export default {
         api.signin({ token })
             .then((res) => {
                 const { enabled = false, token: newToken = '', name = '', sceneJson = '', userId } = { ...res.body };
-                console.log('userId', userId);
                 machineStore.set('session.enabled', enabled);
                 machineStore.set('session.token', newToken);
                 machineStore.set('session.name', name);
