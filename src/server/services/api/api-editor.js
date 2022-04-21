@@ -32,13 +32,12 @@ export const uploadEditorFile = async (req, res) => {
     try {
         await moveFile(file.path, uploadPath);
 
-        editorProcess(options).then((result) => {
-            res.send({
-                originalName: originalName,
-                uploadName: uploadPath,
-                width: result.width,
-                height: result.height
-            });
+        const result = await editorProcess(options);
+        res.send({
+            originalName: originalName,
+            uploadName: uploadPath,
+            width: result.width,
+            height: result.height
         });
         res.end();
     } catch (error) {
