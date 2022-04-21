@@ -82,7 +82,7 @@ class SocketTCP {
             //     }).then(() => {
             //     });
             // }, 2000);
-            this.sacpClient.getModuleInfo().then(({ moduleInfos }) => {
+            this.sacpClient.getModuleInfo().then(({ data: moduleInfos }) => {
                 const info = moduleInfos.find(moduleInfo => moduleInfo.moduleId === 14);
                 this.sacpClient.getLaserToolHeadInfo(info.key).then(({ laserToolHeadInfo }) => {
                     this.laserFocalLength = laserToolHeadInfo.laserFocalLength;
@@ -120,7 +120,7 @@ class SocketTCP {
         // });
         this.client.connect({
             host: options.address,
-            port: 8080
+            port: 8888
         }, () => {
             log.info('TCP connected');
             const result: any = {
@@ -154,7 +154,7 @@ class SocketTCP {
 
     public startHeartbeat = (socket, options) => {
         console.log(socket, options);
-        this.sacpClient.subscribeHeartbeat({ interval: 1000 }, (data) => {
+        this.sacpClient.subscribeHeartbeat({ interval: 1000 }, () => {
             // log.info(`receive heartbeat: ${data.response}`);
             clearTimeout(this.heartbeatTimer);
             this.heartbeatTimer = setTimeout(() => {
@@ -162,7 +162,7 @@ class SocketTCP {
                 this.socket && this.socket.emit('connection:close');
             }, 60000);
         }).then((res) => {
-            log.info(`subscribe heartbeat success: ${res.response}`);
+            log.info(`subscribe heartbeat success: ${res}`);
         });
     };
 
@@ -275,32 +275,36 @@ class SocketTCP {
                 result.thickness = thickness;
             }
             this.thickness = result.thickness;
+            try {
+                const res1 = await this.sacpClient.updateCoordinate(CoordinateType.MACHINE);
+                console.log('=====', res1);
+                this.sacpClient.getCurrentCoordinateInfo().then(async ({ coordinateSystemInfo }) => {
+                    const xNow = coordinateSystemInfo.coordinates.find(item => item.key === Direction.X1).value;
+                    const yNow = coordinateSystemInfo.coordinates.find(item => item.key === Direction.Y1).value;
+                    const zNow = coordinateSystemInfo.coordinates.find(item => item.key === Direction.Z1).value;
 
-            await this.sacpClient.updateCoordinate(CoordinateType.MACHINE);
-            this.sacpClient.getCurrentCoordinateInfo().then(async ({ coordinateSystemInfo }) => {
-                const xNow = coordinateSystemInfo.coordinates.find(item => item.key === Direction.X1).value;
-                const yNow = coordinateSystemInfo.coordinates.find(item => item.key === Direction.Y1).value;
-                const zNow = coordinateSystemInfo.coordinates.find(item => item.key === Direction.Z1).value;
+                    console.log('current positions', xNow, yNow, zNow);
+                    console.log('thickness & focal', this.thickness, this.laserFocalLength);
 
-                console.log('current positions', xNow, yNow, zNow);
-                console.log('thickness & focal', this.thickness, this.laserFocalLength);
+                    await this.sacpClient.updateCoordinate(CoordinateType.WORKSPACE);
 
-                await this.sacpClient.updateCoordinate(CoordinateType.WORKSPACE);
+                    const newX = new CoordinateInfo(Direction.X1, xNow);
+                    const newY = new CoordinateInfo(Direction.Y1, yNow);
+                    const newZ = new CoordinateInfo(Direction.Z1, zNow - (this.laserFocalLength + this.thickness));
+                    const newCoord = [newX, newY, newZ];
 
-                const newX = new CoordinateInfo(Direction.X1, xNow);
-                const newY = new CoordinateInfo(Direction.Y1, yNow);
-                const newZ = new CoordinateInfo(Direction.Z1, zNow - (this.laserFocalLength + this.thickness));
-                const newCoord = [newX, newY, newZ];
+                    console.log('new positions', newCoord);
 
-                console.log('new positions', newCoord);
+                    await this.sacpClient.setWorkOrigin(newCoord);
 
-                await this.sacpClient.setWorkOrigin(newCoord);
+                    const zMove = new MovementInstruction(MoveDirection.Z1, 0);
+                    await this.sacpClient.moveAbsolutely([zMove], 0);
 
-                const zMove = new MovementInstruction(MoveDirection.Z1, 0);
-                await this.sacpClient.moveAbsolutely([zMove], 0);
-
-                this.socket && this.socket.emit(eventName, { data: result });
-            });
+                    this.socket && this.socket.emit(eventName, { data: result });
+                });
+            } catch (e) {
+                log.error(`getLaserMaterialThickness error: ${e}`);
+            }
         });
     };
 

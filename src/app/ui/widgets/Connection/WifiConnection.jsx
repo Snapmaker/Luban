@@ -207,7 +207,8 @@ function WifiConnection() {
                     dispatch(machineActions.connect.setManualIP(text));
                     const newServer = new Server({
                         name: 'Manual',
-                        address: text
+                        address: text,
+                        addByUser: true
                     });
 
                     // Try add new server

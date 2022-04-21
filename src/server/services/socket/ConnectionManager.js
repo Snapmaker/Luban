@@ -1,3 +1,4 @@
+import net from 'net';
 import logger from '../../lib/logger';
 // import workerManager from '../task-manager/workerManager';
 import socketSerial from './socket-serial';
@@ -46,17 +47,32 @@ class ConnectionManager {
         }
     }
 
-    connectionOpen = (socket, options) => {
-        const { connectionType, sacp } = options;
+    connectionOpen = async (socket, options) => {
+        const { connectionType, sacp, addByUser, address } = options;
         this.connectionType = connectionType;
         if (connectionType === CONNECTION_TYPE_WIFI) {
             if (sacp) {
                 this.protocol = 'SACP';
                 this.socket = socketTcp;
+            } else if (addByUser) {
+                try {
+                    const protocol = await this.inspectProtocol(address);
+                    if (protocol === 'SACP') {
+                        this.protocol = 'SACP';
+                        this.socket = socketTcp;
+                    } else {
+                        this.protocol = '';
+                        this.socket = socketHttp;
+                    }
+                } catch (e) {
+                    log.error(`connectionOpen inspect protocol error: ${e}`);
+                }
             } else {
                 this.protocol = '';
                 this.socket = socketHttp;
             }
+
+
             this.socket.connectionOpen(socket, options);
         } else {
             this.socket = socketSerial;
@@ -68,6 +84,44 @@ class ConnectionManager {
     connectionClose = (socket, options) => {
         this.socket && this.socket.connectionClose(socket, options);
     };
+
+    inspectProtocol = async (address) => {
+        const PORT_SCREEN_HTTP = 8080, PORT_SCREEN_SACP = 8888;
+        const [resSACP, resHTTP] = await Promise.allSettled([
+            this.tryConnect(address, PORT_SCREEN_SACP),
+            this.tryConnect(address, PORT_SCREEN_HTTP)
+        ]);
+        if (resHTTP.value) {
+            return 'HTTP';
+        } else if (resSACP.value) {
+            return 'SACP';
+        }
+        return '';
+    }
+
+    tryConnect = (host, port) => {
+        return new Promise((resolve) => {
+            const tcpSocket = net.createConnection({
+                host,
+                port,
+                timeout: 1000
+            }, () => {
+                tcpSocket.destroy();
+                resolve(true);
+                log.debug(`tryConnect connected ${host}:${port}`);
+            });
+            tcpSocket.once('timeout', () => {
+                tcpSocket.destroy();
+                log.debug(`tryConnect connect ${host}:${port} timeout`);
+                resolve(false);
+            });
+            tcpSocket.once('error', (e) => {
+                tcpSocket.destroy();
+                log.debug(`tryConnect connect ${host}:${port} error: ${e}`);
+                resolve(false);
+            });
+        });
+    }
 
     startGcode = (socket, options) => {
         const { headType, isRotate, toolHead, isLaserPrintAutoMode, materialThickness, eventName } = options;
