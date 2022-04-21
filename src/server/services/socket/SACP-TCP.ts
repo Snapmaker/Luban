@@ -82,7 +82,7 @@ class SocketTCP {
             //     }).then(() => {
             //     });
             // }, 2000);
-            this.sacpClient.getModuleInfo().then(({ moduleInfos }) => {
+            this.sacpClient.getModuleInfo().then(({ data: moduleInfos }) => {
                 const info = moduleInfos.find(moduleInfo => moduleInfo.moduleId === 14);
                 this.sacpClient.getLaserToolHeadInfo(info.key).then(({ laserToolHeadInfo }) => {
                     this.laserFocalLength = laserToolHeadInfo.laserFocalLength;
@@ -154,7 +154,7 @@ class SocketTCP {
 
     public startHeartbeat = (socket, options) => {
         console.log(socket, options);
-        this.sacpClient.subscribeHeartbeat({ interval: 1000 }, (data) => {
+        this.sacpClient.subscribeHeartbeat({ interval: 1000 }, () => {
             // log.info(`receive heartbeat: ${data.response}`);
             clearTimeout(this.heartbeatTimer);
             this.heartbeatTimer = setTimeout(() => {
@@ -162,7 +162,7 @@ class SocketTCP {
                 this.socket && this.socket.emit('connection:close');
             }, 60000);
         }).then((res) => {
-            log.info(`subscribe heartbeat success: ${res.response}`);
+            log.info(`subscribe heartbeat success: ${res.code}`);
         });
     };
 
