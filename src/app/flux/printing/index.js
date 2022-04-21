@@ -1368,7 +1368,7 @@ export const actions = {
     },
 
     generateGcode: (thumbnail, isGuideTours = false) => async (dispatch, getState) => {
-        const { hasModel, activeDefinition, modelGroup, progressStatesManager, helpersExtruderConfig,
+        const { hasModel, activeDefinition, modelGroup, progressStatesManager, helpersExtruderConfig, layerCount,
             extruderLDefinition, extruderRDefinition, defaultMaterialId, defaultMaterialIdRight, materialDefinitions, stopArea: { left, front } } = getState().printing;
         const { size, toolHead: { printingToolhead } } = getState().machine;
         if (!hasModel) {
@@ -1481,7 +1481,10 @@ export const actions = {
             originalName,
             boundingBox,
             thumbnail: thumbnail,
-            renderGcodeFileName
+            renderGcodeFileName,
+            layerCount,
+            matierial0: materialDefinitions[indexL]?.name,
+            matierial1: materialDefinitions[indexR]?.name,
         };
         controller.slice(params);
     },

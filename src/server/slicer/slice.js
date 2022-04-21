@@ -62,7 +62,7 @@ function callCuraEngine(modelConfig, supportConfig, outputPath) {
 
 let sliceProgress, filamentLength, filamentWeight, printTime;
 
-function processGcodeHeaderAfterCuraEngine(gcodeFilePath, boundingBox, thumbnail) {
+function processGcodeHeaderAfterCuraEngine(gcodeFilePath, boundingBox, thumbnail, others) {
     const activeFinal = new DefinitionLoader();
     activeFinal.loadDefinition(PRINTING_CONFIG_SUBCATEGORY, 'active_final');
     const isTwoExtruder = activeFinal?.settings?.extruders_enabled_count?.default_value;
@@ -81,7 +81,7 @@ function processGcodeHeaderAfterCuraEngine(gcodeFilePath, boundingBox, thumbnail
     const header = `${';Header Start\n'
         + '\n'
         + `${readFileSync.substring(0, splitIndex)}\n`
-        + ';header_type: 3dp\n'
+        + ';header_type: 3dp_dual\n'
         + `;thumbnail: ${thumbnail}\n`
         + `;file_total_lines: ${readFileSync.split('\n').length + 20}\n`
         + `;estimated_time(s): ${printTime}\n`
@@ -97,6 +97,12 @@ function processGcodeHeaderAfterCuraEngine(gcodeFilePath, boundingBox, thumbnail
         + `;min_x(mm): ${boundingBoxMin.x}\n`
         + `;min_y(mm): ${boundingBoxMin.y}\n`
         + `;min_z(mm): ${boundingBoxMin.z}\n`
+        + `;layer_number: ${others?.layerCount}\n`
+        + `;layer_height: ${activeFinal.settings.speed_infill.default_value}\n`
+        + `;matierial_weight: ${filamentWeight}\n`
+        + `;matierial_length: ${filamentLength}\n`
+        + `;matierial_0: ${others?.matierial0}\n`
+        + `;matierial_1: ${others?.matierial1}\n`
         + '\n'
         + ';Header End\n'
         + '\n'
@@ -117,11 +123,17 @@ function slice(params, onProgress, onSucceed, onError) {
         return;
     }
 
-    const { originalName, model, support, definition, boundingBox, thumbnail, renderGcodeFileName: renderName } = params;
+    const { originalName, model, support, definition, layerCount, matierial0, matierial1,
+        boundingBox, thumbnail, renderGcodeFileName: renderName } = params;
     const modelConfig = {
         configFilePath: `${DataStorage.configDir}/${PRINTING_CONFIG_SUBCATEGORY}/active_final.def.json`,
         path: [],
         modelConfigFilePath: []
+    };
+    const others = {
+        layerCount,
+        matierial0,
+        matierial1,
     };
     for (let i = 0; i < model.length; i++) {
         const modelName = model[i];
@@ -189,7 +201,7 @@ function slice(params, onProgress, onSucceed, onError) {
         if (filamentLength && filamentWeight && printTime) {
             sliceProgress = 1;
             onProgress(sliceProgress);
-            const gcodeFileLength = processGcodeHeaderAfterCuraEngine(gcodeFilePath, boundingBox, thumbnail);
+            const gcodeFileLength = processGcodeHeaderAfterCuraEngine(gcodeFilePath, boundingBox, thumbnail, others);
 
             onSucceed({
                 gcodeFilename: gcodeFilename,
