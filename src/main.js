@@ -206,7 +206,7 @@ const showMainWindow = async () => {
     if (!serverData) {
         // only start server once
         // TODO: start server on the outermost
-        const child = childProcess.fork(path.resolve(__dirname, 'server-cli.js'));
+        const child = childProcess.fork(path.resolve(__dirname, 'server-cli.js'), [], { execArgv: ['--inspect=127.0.0.1:9230'] });
         // window.webContents.openDevTools();
         window.loadURL(path.resolve(__dirname, 'app', 'loading.html')).catch(err => {
             console.log('err', err.message);

@@ -1004,6 +1004,24 @@ export const MACHINE_SERIES = {
         },
         alias: ['SM2-L', 'Snapmaker 2.0 A350']
     },
+    // defined for debug, need fix
+    A400: {
+        value: 'A400',
+        label: 'key-Luban/Machine/MachineSeries-Snapmaker A400',
+        setting: {
+            size: {
+                x: 400,
+                y: 400,
+                z: 400
+            },
+            laserSize: {
+                x: 400,
+                y: 400,
+                z: 400
+            }
+        },
+        alias: ['Snapmaker A400']
+    },
     CUSTOM: {
         value: 'Custom',
         label: 'key-Luban/Machine/MachineSeries-Custom',
@@ -1386,6 +1404,11 @@ export const LASER_10W_TAKE_PHOTO_POSITION = {
         x: 155,
         y: 82,
         z: 150
+    },
+    A400: {
+        x: 400,
+        y: 400,
+        z: 400
     }
 };
 
