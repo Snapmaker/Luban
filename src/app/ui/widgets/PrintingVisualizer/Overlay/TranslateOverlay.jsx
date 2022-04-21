@@ -152,7 +152,7 @@ const TranslateOverlay = React.memo(({
                     onClick={() => setTransformMode('')}
                 />
             </div>
-            <div className={classNames(styles['overlay-sub-title-font'], 'padding-vertical-10 padding-horizontal-16 height-40')}>
+            <div className={classNames(styles['overlay-sub-title-font'], 'padding-top-12 padding-horizontal-16')}>
                 {i18n._('key-Printing/LeftBar-Model position')}
             </div>
             <div className="padding-top-8 padding-horizontal-16">
@@ -206,10 +206,10 @@ const TranslateOverlay = React.memo(({
                     </div>
                 )}
                 <div className={classNames(styles['dashed-line'])} />
-                <div className={classNames(styles['overlay-sub-title-font'], 'padding-vertical-10 height-40')}>
+                <div className={classNames(styles['overlay-sub-title-font'], 'padding-vertical-10 padding-top-8')}>
                     {i18n._('key-Printing/LeftBar-Arrange Options')}
                 </div>
-                <div className="padding-top-16">
+                <div className="padding-top-8">
                     <TipTrigger
                         title={i18n._('key-Printing/LeftBar-Rotation Step Around Z Axis')}
                         content={i18n._('key-Printing/LeftBar-Rotation Step Around Z Axis Content')}

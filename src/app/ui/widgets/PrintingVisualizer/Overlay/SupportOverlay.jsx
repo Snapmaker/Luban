@@ -109,7 +109,7 @@ const SupportOverlay = ({ editSupport, setTransformMode }) => {
                         </div>
                     </div>
                     <div className={classNames(styles['dashed-line'])} />
-                    <div className={classNames(styles['overlay-sub--title-font'], 'sm-flex')}>{i18n._('key-Printing/LeftBar/Support-Editing Support')}</div>
+                    <div className={classNames(styles['overlay-sub-title-font'], 'sm-flex padding-top-8')}>{i18n._('key-Printing/LeftBar/Support-Editing Support')}</div>
                     <div className="sm-flex justify-space-between">
                         <Button
                             className="margin-top-8 display-inline"

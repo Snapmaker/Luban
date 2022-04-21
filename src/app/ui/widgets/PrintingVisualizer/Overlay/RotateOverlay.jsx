@@ -198,7 +198,7 @@ const RotateOverlay = React.memo(({
                     onClick={() => setTransformMode('')}
                 />
             </div>
-            <div className="padding-vertical-16 padding-horizontal-16">
+            <div className="padding-top-12 padding-bottom-16 padding-horizontal-16">
                 <div className="padding-bottom-16 border-bottom-dashed">
                     <div className={classNames(styles['overlay-sub-title-font'])}>{i18n._('key-Printing/LeftBar-Auto Rotate')}</div>
                     <Button
@@ -212,7 +212,7 @@ const RotateOverlay = React.memo(({
                         {i18n._(`${rotationAnalysisEnableForSelected ? 'key-Printing/LeftBar-Auto Rotate Selected Models' : 'key-Printing/LeftBar-Auto Rotate All Models'}`)}
                     </Button>
                 </div>
-                <div className="padding-vertical-16 border-bottom-dashed">
+                <div className="padding-top-12 padding-bottom-16 border-bottom-dashed">
                     <div className={classNames(styles['overlay-sub-title-font'])}>
                         {i18n._('key-Printing/LeftBar-Rotate By Direction')}
                     </div>
@@ -230,7 +230,7 @@ const RotateOverlay = React.memo(({
                         <span>{i18n._('key-Printing/LeftBar-Rotate on Face')}</span>
                     </Button>
                 </div>
-                <div className="padding-top-16">
+                <div className="padding-top-12">
                     <div className={classNames(styles['overlay-sub-title-font'])}>
                         {i18n._('key-Printing/LeftBar-Free Rotate')}
                     </div>
