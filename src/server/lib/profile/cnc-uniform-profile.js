@@ -1,7 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 import { isNil, includes } from 'lodash';
-import { ConfigV1Suffix, ConfigV1Regex } from '../../constants';
+import { ConfigV1Suffix, ConfigV1Regex, ConfigV2Regex, ConfigV2Suffix } from '../../constants';
 
 
 const defaultToolListNames = [
@@ -140,5 +140,12 @@ export const cncUniformProfile = (filename, configDir) => {
             });
             fs.unlinkSync(filePath);
         }
+    }
+    if (ConfigV2Regex.test(filename) && filename.substr(0, filename.length - ConfigV2Suffix.length) !== 'active') {
+        const filePath = path.join(configDir, filename);
+        const data = fs.readFileSync(filePath, 'utf8');
+        const json = JSON.parse(data);
+        json.inherits = 'snapmaker2';
+        fs.writeFileSync(filePath, JSON.stringify(json));
     }
 };
