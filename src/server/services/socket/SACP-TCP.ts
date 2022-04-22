@@ -120,7 +120,7 @@ class SocketTCP {
         // });
         this.client.connect({
             host: options.address,
-            port: 8080
+            port: 8888
         }, () => {
             log.info('TCP connected');
             const result: any = {
@@ -162,7 +162,7 @@ class SocketTCP {
                 this.socket && this.socket.emit('connection:close');
             }, 60000);
         }).then((res) => {
-            log.info(`subscribe heartbeat success: ${res.code}`);
+            log.info(`subscribe heartbeat success: ${res}`);
         });
     };
 
