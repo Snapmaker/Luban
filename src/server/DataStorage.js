@@ -66,7 +66,16 @@ class DataStorage {
 
     constructor() {
         if (isElectron()) {
+<<<<<<< HEAD
             this.userDataDir = global.luban.userDataDir;
+=======
+            console.log('##############', JSON.string(process.env));
+            if (process.env.NODE_ENV === 'development') {
+                this.userDataDir = app.getPath('userData');
+            } else {
+                this.userDataDir = process.env.USER_DATA_DIR;
+            }
+>>>>>>> Fix: Fix test production pack
         } else {
             this.userDataDir = '.';
         }

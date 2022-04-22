@@ -278,6 +278,7 @@ const showMainWindow = async () => {
                 startToBegin({ ...data, port: CLIENT_PORT });
             });
         } else {
+<<<<<<< HEAD
             const child = childProcess.fork(
                 path.resolve(__dirname, 'server-cli.js'),
                 [],
@@ -286,6 +287,12 @@ const showMainWindow = async () => {
                         ...process.env,
                         USER_DATA_DIR: userDataDir
                     }
+=======
+            const child = childProcess.fork(path.resolve(__dirname, 'server-cli.js'), {
+                env: {
+                    ...process.env,
+                    USER_DATA_DIR: userDataDir
+>>>>>>> Fix: Fix test production pack
                 }
             );
             child.on('message', (data) => {
