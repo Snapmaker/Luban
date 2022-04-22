@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import path from 'path';
 import { v4 as uuid } from 'uuid';
 import { includes } from 'lodash';
+import { isInside } from 'overlap-area';
 /* eslint-disable-next-line import/no-cycle */
 import { actions as projectActions } from '../project';
 import api from '../../api';
@@ -738,6 +739,28 @@ export const actions = {
             });
     },
 
+    getMouseTargetByCoordinate: (headType, x, y) => (dispatch, getState) => {
+        const { modelGroup } = getState()[headType];
+        const models = modelGroup.models;
+        if (models.length > 0) {
+            const svgDateElem = models[0].elem?.parentElement;
+            const svgDateElemChilds = svgDateElem?.children ? Array.from(svgDateElem?.children) : [];
+            if (svgDateElem && svgDateElemChilds) {
+                const arr = models.filter(model => {
+                    return model.visible;
+                }).sort((a, b) => {
+                    return svgDateElemChilds.findIndex(elem => elem === b.elem) - svgDateElemChilds.findIndex(elem => elem === a.elem);
+                });
+                const index = arr.findIndex(model => {
+                    return isInside([x, y], model.vertexPoints);
+                });
+                return index === -1 ? null : arr[index]?.elem;
+            }
+            return null;
+        }
+        return null;
+    },
+
     // TODO: method docs
     selectTargetModel: (model, headType, isMultiSelect = false) => (dispatch, getState) => {
         const { SVGActions, modelGroup } = getState()[headType];
@@ -1403,6 +1426,19 @@ export const actions = {
         }
         SVGActions.clearSelection();
         dispatch(baseActions.render(headType));
+    },
+
+    isSelectedAllVisible: (headType) => (dispatch, getState) => {
+        const { SVGActions } = getState()[headType];
+        const selectedElements = SVGActions.getSelectedElements();
+        const allVisible = selectedElements.every(elem => {
+            return elem.getAttribute('display') !== 'none';
+        });
+        if (allVisible) {
+            return selectedElements;
+        } else {
+            return false;
+        }
     },
 
     /**

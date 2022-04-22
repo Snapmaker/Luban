@@ -102,7 +102,9 @@ class SVGCanvas extends PureComponent {
             rotateElementsStart: PropTypes.func.isRequired,
             rotateElements: PropTypes.func.isRequired,
             rotateElementsFinish: PropTypes.func.isRequired,
-            isPointInSelectArea: PropTypes.func.isRequired
+            isPointInSelectArea: PropTypes.func.isRequired,
+            getMouseTargetByCoordinate: PropTypes.func.isRequired,
+            isSelectedAllVisible: PropTypes.func.isRequired
         }).isRequired,
 
         // TODO: remove it, to flux (for textActions)
@@ -465,7 +467,7 @@ class SVGCanvas extends PureComponent {
         }
     }
 
-    getMouseTarget = (event) => {
+    getMouseTarget = (event, x, y) => {
         let target = event.target;
         if (target === this.svgContainer) {
             return this.svgContainer;
@@ -489,12 +491,26 @@ class SVGCanvas extends PureComponent {
                 return path;
             }
         }
-
-        while (target && target.parentNode && target.parentNode !== this.svgContentGroup.group && target.parentNode.nodeName !== 'svg') {
-            target = target.parentNode;
+        if (target.parentNode && this.svgContentGroup.isElementOperator(target.parentNode)) {
+            return target.parentNode;
         }
+        target = this.props.elementActions.getMouseTargetByCoordinate(x - this.props.size.x, this.props.size.y - y);
         return target;
     };
+
+    isCanMove(mouseTarget, x, y) {
+        if (this.mode !== 'select' || this.editingElem) {
+            return false;
+        }
+        const allVisible = this.svgContentGroup.selectedElements.every(elem => {
+            return elem.getAttribute('display') !== 'none';
+        });
+        if (!allVisible) {
+            return false;
+        }
+        return this.svgContentGroup.selectedElements.includes(mouseTarget)
+            || this.props.elementActions.isPointInSelectArea(x - this.props.size.x, this.props.size.y - y);
+    }
 
     onMouseDown = (event) => {
         // event.preventDefault();
@@ -509,7 +525,7 @@ class SVGCanvas extends PureComponent {
         const pt = transformPoint({ x: event.pageX, y: event.pageY }, matrix);
         const x = pt.x;
         const y = pt.y;
-        const mouseTarget = this.getMouseTarget(event);
+        const mouseTarget = this.getMouseTarget(event, x, y);
         if (rightClick || event.ctrlKey || event.metaKey) {
             draw.mode = this.mode;
             // this.setMode('panMove');
@@ -525,10 +541,7 @@ class SVGCanvas extends PureComponent {
             }
         }
 
-        if (this.mode === 'select' && !this.editingElem && (
-            this.svgContentGroup.selectedElements.includes(mouseTarget)
-            || this.props.elementActions.isPointInSelectArea(x - this.props.size.x, this.props.size.y - y)
-        )) {
+        if (this.isCanMove(mouseTarget, x, y)) {
             this.mode = 'move';
         }
         // hide left bar overlay
@@ -1202,7 +1215,7 @@ class SVGCanvas extends PureComponent {
             }
 
             case 'panMove': {
-                if (!draw.moved && draw.mode !== 'draw') {
+                if (!draw.moved && draw.mode !== 'draw' && (draw.mode === 'select' && !this.editingElem)) {
                     this.onContextmenu(event);
                 }
                 this.props.updateTarget(this.target);
@@ -1290,7 +1303,7 @@ class SVGCanvas extends PureComponent {
                 // this.addToSelection([element]);
             } else {
                 // in stead select another element or select nothing
-                const target = this.getMouseTarget(event);
+                const target = this.getMouseTarget(event, x, y);
                 if (target && target !== this.svgContainer && target.id !== 'printable-area-group') {
                     this.selectOnly([target]);
                 } else {
@@ -1319,13 +1332,14 @@ class SVGCanvas extends PureComponent {
     }
 
     onDblClick = (evt) => {
-        const mouseTarget = this.getMouseTarget(evt);
+        const matrix = this.svgContentGroup.getScreenCTM().inverse();
+        const { x, y } = transformPoint({ x: evt.pageX, y: evt.pageY }, matrix);
+
+        const mouseTarget = this.getMouseTarget(evt, x, y);
         const { tagName } = mouseTarget;
 
         if (this.props.editable && tagName === 'text' && this.mode !== 'textedit') {
-            const matrix = this.svgContentGroup.getScreenCTM().inverse();
-            const pt = transformPoint({ x: evt.pageX, y: evt.pageY }, matrix);
-            this.textActions.select(mouseTarget, pt.x, pt.y);
+            this.textActions.select(mouseTarget, x, y);
             this.setMode('textedit');
         } else if (tagName === 'path' && mouseTarget.getAttribute('id')?.includes('graph')) {
             SvgModel.completeElementTransform(mouseTarget);

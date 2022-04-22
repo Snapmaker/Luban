@@ -19,7 +19,7 @@ class SocketSerial {
     public onConnection = (socket: SocketServer) => {
         intervalHandle = setInterval(() => {
             this.serialportList(socket);
-        }, 1000);
+        }, 10000000);
     }
 
     public onDisconnection = (socket: SocketServer) => {
@@ -120,7 +120,7 @@ class SocketSerial {
         // Leave the room
         // socket.leave(port);
         controller.close(() => {
-        // Remove controller from store
+            // Remove controller from store
             store.unset(`controllers["${port}/${dataSource}"]`);
 
             // Destroy controller

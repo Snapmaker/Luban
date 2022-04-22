@@ -504,10 +504,11 @@ export const actions = {
             stopArea: newStopArea
         }));
 
-        modelGroup.updateBoundingBox(new THREE.Box3(
+        const modelState = modelGroup.updateBoundingBox(new THREE.Box3(
             new THREE.Vector3(-size.x / 2 - EPSILON + newStopArea.left, -size.y / 2 + newStopArea.front - EPSILON, -EPSILON),
             new THREE.Vector3(size.x / 2 + EPSILON - newStopArea.right, size.y / 2 - newStopArea.back + EPSILON, size.z + EPSILON)
         ));
+        dispatch(actions.updateState(modelState));
     },
 
     updateDefaultConfigId: (type, defaultId, direction = LEFT_EXTRUDER) => (dispatch, getState) => {

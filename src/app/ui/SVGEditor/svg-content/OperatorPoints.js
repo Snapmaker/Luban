@@ -131,6 +131,7 @@ class OperatorPoints {
     updateScale(scale) { // just change the engineer scale
         this.scale = scale;
 
+        this.allSelectedElementsBox.setAttribute('stroke-width', 2 / this.scale);
         this.rotateGripConnector.setAttribute('stroke-width', 1 / this.scale);
         const ny = this.rotateGripConnector.getAttribute('y1');
         this.rotateGripConnector.setAttribute('y2', ny - GRIP_RADIUS * 9.4 / this.scale);
@@ -193,24 +194,16 @@ class OperatorPoints {
      * TODO: Refactor this method
      */
     _getElementBBoxAndRotation(element) {
-        // offset = stroke-width offset
-        let offset = 0 / this.scale;
-        if (element.getAttribute('stroke') !== 'none') {
-            const strokeWidth = parseFloat(element.getAttribute('stroke-width')) || 0;
-            offset += strokeWidth / 2;
-        }
-
         const bbox = getBBox(element);
         const x = bbox.x, y = bbox.y, w = bbox.width, h = bbox.height;
         const transformList = getTransformList(element);
         const transform = transformListToTransform(transformList);
         const transformedBox = transformBox(x, y, w, h, transform.matrix);
 
-        // calculate bounding box with offset
-        let nx = transformedBox.x - offset;
-        let ny = transformedBox.y - offset;
-        let nw = transformedBox.width + offset * 2;
-        let nh = transformedBox.height + offset * 2;
+        let nx = transformedBox.x;
+        let ny = transformedBox.y;
+        let nw = transformedBox.width;
+        let nh = transformedBox.height;
 
         const angle = getRotationAngle(element);
         const cx = nx + nw / 2, cy = ny + nh / 2;
@@ -228,12 +221,11 @@ class OperatorPoints {
             nbox.tr = transformPoint(tr, rm);
             nbox.bl = transformPoint(bl, rm);
             nbox.br = transformPoint(br, rm);
-            // Note that offset should be rotated too
             // TODO: optimize the rotation
-            const minx = Math.min(nbox.tl.x, Math.min(nbox.tr.x, Math.min(nbox.bl.x, nbox.br.x))) - offset;
-            const miny = Math.min(nbox.tl.y, Math.min(nbox.tr.y, Math.min(nbox.bl.y, nbox.br.y))) - offset;
-            const maxx = Math.max(nbox.tl.x, Math.max(nbox.tr.x, Math.max(nbox.bl.x, nbox.br.x))) + offset;
-            const maxy = Math.max(nbox.tl.y, Math.max(nbox.tr.y, Math.max(nbox.bl.y, nbox.br.y))) + offset;
+            const minx = Math.min(nbox.tl.x, Math.min(nbox.tr.x, Math.min(nbox.bl.x, nbox.br.x)));
+            const miny = Math.min(nbox.tl.y, Math.min(nbox.tr.y, Math.min(nbox.bl.y, nbox.br.y)));
+            const maxx = Math.max(nbox.tl.x, Math.max(nbox.tr.x, Math.max(nbox.bl.x, nbox.br.x)));
+            const maxy = Math.max(nbox.tl.y, Math.max(nbox.tr.y, Math.max(nbox.bl.y, nbox.br.y)));
             nx = minx;
             ny = miny;
             nw = (maxx - minx);

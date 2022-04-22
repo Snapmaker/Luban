@@ -24,19 +24,19 @@ const boxSelect = (bbox: TBbox, modelsBbox: TBbox[], onlyContainSelect: boolean,
         return { ...model, index };
     }).sort((a, b) => {
         return b.width + b.height - a.width - a.height;
-    }).forEach(({ vertexPoints, width, height, index }) => {
-        if (width === 0) { width = 1; }
-        if (height === 0) { height = 1; }
+    }).forEach(({ vertexPoints, index }) => {
         if (onlyContainSelect) {
-            const res = vertexPoints.every(point => {
+            const isContain = vertexPoints.every(point => {
                 return isInside(point, selectBoxPoints);
             });
-            if (res) {
+            if (isContain) {
                 selectedIndex.push(index);
             }
         } else {
-            const overlapSize = getOverlapSize(selectBoxPoints, vertexPoints);
-            if (overlapSize) {
+            const isIntersect = vertexPoints.length === 2 ? vertexPoints.some(point => {
+                return isInside(point, selectBoxPoints);
+            }) : getOverlapSize(selectBoxPoints, vertexPoints);
+            if (isIntersect) {
                 selectedIndex.push(index);
             }
         }

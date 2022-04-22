@@ -297,7 +297,7 @@ class SvgModel extends BaseModel {
         this.isToolPathSelect = selected;
 
         switch (this.type) {
-            // case 'path':
+            case 'path':
             case 'circle':
             case 'rect':
             case 'ellipse':
@@ -1259,21 +1259,34 @@ class SvgModel extends BaseModel {
     }
 
     computevertexPoints() {
-        const { width, height, rotationZ } = this.transformation;
+        const { rotationZ } = this.transformation;
         const { logicalX: x, logicalY: y } = this;
-        const modelBoxPoints = [
-            [x - width / 2, y + height / 2],
-            [x - width / 2, y - height / 2],
-            [x + width / 2, y - height / 2],
-            [x + width / 2, y + height / 2]
-        ];
-
-        this.vertexPoints = modelBoxPoints.map(([x1, y1]) => {
-            return [
-                (x1 - x) * Math.cos(rotationZ) - (y1 - y) * Math.sin(rotationZ) + x,
-                (x1 - x) * Math.sin(rotationZ) + (y1 - y) * Math.cos(rotationZ) + y
+        const { width, height } = this.transformation;
+        if (!width) {
+            this.vertexPoints = [
+                [x, y + height / 2],
+                [x, y - height / 2],
             ];
-        });
+        } else if (!height) {
+            this.vertexPoints = [
+                [x - width / 2, y],
+                [x + width / 2, y],
+            ];
+        } else {
+            const modelBoxPoints = [
+                [x - width / 2, y + height / 2],
+                [x - width / 2, y - height / 2],
+                [x + width / 2, y - height / 2],
+                [x + width / 2, y + height / 2]
+            ];
+
+            this.vertexPoints = modelBoxPoints.map(([x1, y1]) => {
+                return [
+                    (x1 - x) * Math.cos(rotationZ) - (y1 - y) * Math.sin(rotationZ) + x,
+                    (x1 - x) * Math.sin(rotationZ) + (y1 - y) * Math.cos(rotationZ) + y
+                ];
+            });
+        }
     }
 
     getTaskInfo() {
