@@ -154,7 +154,7 @@ const RotateOverlay = React.memo(({
         }, {
             name: 'ViewFront',
             click: () => rotateByDirection('X', 90, 'direction'),
-            mouseEnter: () => setHoverFace('font'),
+            mouseEnter: () => setHoverFace('front'),
         }, {
             name: 'ViewRight',
             click: () => rotateByDirection('Y', 90, 'direction'),
@@ -170,7 +170,7 @@ const RotateOverlay = React.memo(({
         }];
 
         return dataModal.map(v => (
-            <div className={classNames(styles['rotate-svg'])} disabled={!isSingleSelected || !!transformDisabled}>
+            <div key={v.name} className={classNames(styles['rotate-svg'])} disabled={!isSingleSelected || !!transformDisabled}>
                 <SvgIcon
                     name={v.name}
                     size={24}
