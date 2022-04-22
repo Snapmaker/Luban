@@ -78,11 +78,10 @@ const checkoutBoundingBoxIsNull = (boundingBox) => {
 };
 
 // eslint-disable-next-line consistent-return
-const generateGcode = ({ toolPaths, size }) => {
+const generateGcode = ({ toolPaths, size, toolHead, origin, series }) => {
     if (!toolPaths && !_.isArray(toolPaths) && toolPaths.length === 0) {
         return sendMessage({ status: 'fail', value: 'modelInfo is empty.' });
     }
-    console.log({ size });
     sendMessage({ status: 'progress', value: 0.05 });
 
     const { headType } = toolPaths[0];
@@ -184,6 +183,8 @@ const generateGcode = ({ toolPaths, size }) => {
 
     let headerStart = ';Header Start\n'
         + `;header_type: ${headType}\n`
+        + `;tool_head: ${toolHead}\n`
+        + `;machine: ${series}\n`
         + `;renderMethod: ${renderMethod}\n`
         + ';file_total_lines: fileTotalLines\n'
         + `;estimated_time(s): ${estimatedTime}\n`
@@ -202,6 +203,7 @@ const generateGcode = ({ toolPaths, size }) => {
         + `;power(%): ${power}\n`
         + `;work_size_x: ${size.x}\n`
         + `;work_size_y: ${size.y}\n`
+        + `;origin: ${origin}\n`
         + `;thumbnail: ${thumbnail}\n`
         + ';Header End\n'
         + '\n';

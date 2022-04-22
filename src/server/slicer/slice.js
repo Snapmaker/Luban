@@ -81,7 +81,9 @@ function processGcodeHeaderAfterCuraEngine(gcodeFilePath, boundingBox, thumbnail
     const header = `${';Header Start\n'
         + '\n'
         + `${readFileSync.substring(0, splitIndex)}\n`
-        + ';header_type: 3dp_dual\n'
+        + ';header_type: 3dp\n'
+        + `;tool_head: ${others?.printingToolhead}\n`
+        + `;machine: ${others?.series}\n`
         + `;thumbnail: ${thumbnail}\n`
         + `;file_total_lines: ${readFileSync.split('\n').length + 20}\n`
         + `;estimated_time(s): ${printTime}\n`
@@ -101,8 +103,8 @@ function processGcodeHeaderAfterCuraEngine(gcodeFilePath, boundingBox, thumbnail
         + `;layer_height: ${activeFinal.settings.speed_infill.default_value}\n`
         + `;matierial_weight: ${filamentWeight}\n`
         + `;matierial_length: ${filamentLength}\n`
-        + `;matierial_0: ${others?.matierial0}\n`
-        + `;matierial_1: ${others?.matierial1}\n`
+        + `;nozzle_0_material: ${others?.matierial0}\n`
+        + `;nozzle_1_material: ${others?.matierial1}\n`
         + '\n'
         + ';Header End\n'
         + '\n'
@@ -124,7 +126,7 @@ function slice(params, onProgress, onSucceed, onError) {
     }
 
     const { originalName, model, support, definition, layerCount, matierial0, matierial1,
-        boundingBox, thumbnail, renderGcodeFileName: renderName } = params;
+        boundingBox, thumbnail, renderGcodeFileName: renderName, printingToolhead, series } = params;
     const modelConfig = {
         configFilePath: `${DataStorage.configDir}/${PRINTING_CONFIG_SUBCATEGORY}/active_final.def.json`,
         path: [],
@@ -134,6 +136,8 @@ function slice(params, onProgress, onSucceed, onError) {
         layerCount,
         matierial0,
         matierial1,
+        printingToolhead,
+        series
     };
     for (let i = 0; i < model.length; i++) {
         const modelName = model[i];
