@@ -1386,7 +1386,14 @@ export const actions = {
             let meshObject = lodashFind(modelGroup.object.children, { uuid: model.meshObject.uuid });
             meshObject = meshObject.clone();
             meshObject.material = materialNormal;
-            meshObject.clear();
+            if (model instanceof ThreeGroup) {
+                meshObject.children.forEach(mesh => {
+                    mesh.material = materialNormal;
+                    mesh.clear(); // clear support mesh
+                });
+            } else {
+                meshObject.clear(); // clear support mesh
+            }
             modelGroup.grayModeObject.add(meshObject);
         });
     },
