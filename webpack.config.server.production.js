@@ -36,7 +36,8 @@ module.exports = {
     entry: {
         index: [
             './index.js'
-        ]
+        ],
+        'Pool.worker': path.resolve(__dirname, './src/server/services/task-manager/Pool.worker.js')
     },
     output: {
         path: path.resolve(__dirname, 'dist/Luban/server'),
