@@ -93,8 +93,8 @@ const defaultParameters = {
         label: 'Tool Limiting',
         description: 'Limit tool location by object boundary \n - Tangent to Boundary:  Tool is located inside the machining  boundary \n - Past Boundary: tool can exceed machining boundary',
         options: {
-            'true': 'Tangent to Boundary',
-            'false': 'Past Boundary'
+            'false': 'Tangent to Boundary',
+            'true': 'Past Boundary'
         }
     }
 };
