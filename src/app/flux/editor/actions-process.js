@@ -337,8 +337,6 @@ export const processActions = {
     commitGenerateGcode: (headType) => (dispatch, getState) => {
         const { toolPathGroup, progressStatesManager } = getState()[headType];
         const { size } = getState().machine;
-        console.log(getState());
-        console.log({ size });
         const toolPaths = toolPathGroup.getCommitGenerateGcodeInfos();
 
         if (!toolPaths || toolPaths.length === 0) {
