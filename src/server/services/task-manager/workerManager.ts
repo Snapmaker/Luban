@@ -1,6 +1,9 @@
 import workerpool, { WorkerPool } from 'workerpool';
 import DataStorage from '../../DataStorage';
 
+if (process.env.NODE_ENV === 'production') {
+    require('./Pool.worker');
+}
 export enum WorkerMethods {
     // LUBAN worker methods BEGIN
     cutModel = 'cutModel',
@@ -39,7 +42,6 @@ Object.entries(WorkerMethods).forEach(([, method]) => {
                     }
                 }))
         ) as WorkerPool;
-
         const handle = pool.exec(method, data, {
             on: (payload) => {
                 if (onmessage) {
