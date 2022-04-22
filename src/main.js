@@ -369,7 +369,7 @@ const showMainWindow = async () => {
 
 // Allow max 4G memory usage
 if (process.arch === 'x64') {
-    app.commandLine.appendSwitch('--js-flags', '--max-old-space-size=4096');
+    app.commandLine.appendSwitch('--js-flags', '--max-old-space-size=6144');
 }
 
 app.commandLine.appendSwitch('ignore-gpu-blacklist');

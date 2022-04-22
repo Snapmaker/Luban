@@ -102,6 +102,7 @@ class ThreeModel extends BaseModel {
         }
 
         this.meshObject = new THREE.Mesh(this.geometry, material);
+        this.meshObject.name = modelInfo?.uploadName;
 
         this.processImageName = processImageName;
 
@@ -325,7 +326,7 @@ class ThreeModel extends BaseModel {
      *
      * @returns {ThreeModel}
      */
-    clone(modelGroup) {
+    clone(modelGroup = this.modelGroup) {
         const modelInfo = {
             ...this,
             loadFrom: LOAD_MODEL_FROM_INNER,
