@@ -5,6 +5,7 @@ import React, { PureComponent } from 'react';
 // import { components } from 'react-select';
 import { Select, TreeSelect } from 'antd';
 import styles from './styles.styl';
+import i18n from '../../../lib/i18n';
 
 const { Option } = Select;
 const CustomValue = 'new';
@@ -181,12 +182,14 @@ class ChangedReactSelect extends PureComponent {
             // Compatible with old interfaces
             if (!isNil(value)) {
                 defaultValue = options.find(d => d.value === value);
+                console.log('defaultValue', defaultValue, options, value);
             } else if (!isNil(valueObj)) {
                 const {
                     firstKey = 'value',
                     firstValue = ''
                 } = valueObj;
                 defaultValue = options.find(d => d[firstKey] === firstValue);
+                console.log('defaultValue', defaultValue, options);
             }
             return (
                 <div className={classNames(styles['override-select'], className)}>
@@ -201,7 +204,7 @@ class ChangedReactSelect extends PureComponent {
                         onChange={this.actions.handleChange}
                     >
                         {(options.map((option) => {
-                            return (<Option key={option.value + option.label} value={option.value}>{option.label}</Option>);
+                            return (<Option key={option.value + option.label} value={option.value}>{i18n._(option.label)}</Option>);
                         }))}
                     </Select>
                 </div>

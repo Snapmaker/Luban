@@ -19,7 +19,7 @@ import styles from './styles.styl';
 const angleOptions = [
     {
         value: 360,
-        label: i18n._('key-Printing/LeftBar-No Rotation')
+        label: 'key-Printing/LeftBar-No Rotation'
     },
     {
         value: 20,
@@ -112,6 +112,7 @@ const TranslateOverlay = React.memo(({
         onModelAfterTransform();
     };
     const handleArrangeSettingsChange = (settings) => {
+        console.log('settings', settings);
         setArragneSettings(settings);
         dispatch(machineActions.updateArrangeSettings(settings));
     };
@@ -209,7 +210,7 @@ const TranslateOverlay = React.memo(({
                 <div className="padding-vertical-10 height-40 font-size-middle">
                     {i18n._('key-Printing/LeftBar-Arrange Options')}
                 </div>
-                <div className="padding-top-16">
+                <div>
                     <TipTrigger
                         title={i18n._('key-Printing/LeftBar-Rotation Step Around Z Axis')}
                         content={i18n._('key-Printing/LeftBar-Rotation Step Around Z Axis Content')}
