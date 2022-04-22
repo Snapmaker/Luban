@@ -90,7 +90,9 @@ const SVGEditor = forwardRef((props, ref) => {
                 }
             },
             [shortcutActions.ENTER]: () => {
+                console.log('menuDisabledCountRef.current =', menuDisabledCountRef.current);
                 if (!(menuDisabledCountRef.current > 0)) {
+                    console.log('emit enter key');
                     onStopDraw(true);
                 }
             },
@@ -136,6 +138,7 @@ const SVGEditor = forwardRef((props, ref) => {
     };
 
     useEffect(() => {
+        console.log('-------------- register');
         ShortcutManager.register(shortcutHandler);
     }, []);
 
