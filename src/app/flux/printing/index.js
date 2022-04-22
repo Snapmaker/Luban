@@ -1367,6 +1367,38 @@ export const actions = {
         }
     },
 
+    generateGrayModeObject: () => async (dispatch, getState) => {
+        const { modelGroup } = getState().printing;
+        modelGroup.grayModeObject = new THREE.Group();
+        const materialNormal = new THREE.MeshLambertMaterial({
+            color: '#2a2c2e',
+            side: THREE.FrontSide,
+            depthWrite: false,
+            transparent: true,
+            opacity: 0.3,
+            polygonOffset: true,
+            polygonOffsetFactor: -5,
+            polygonOffsetUnits: -0.1
+        });
+        const models = filter(modelGroup.getModels(), (modelItem) => {
+            return modelItem.visible && modelItem.type !== 'primeTower';
+        });
+        models.forEach(model => {
+            let meshObject = lodashFind(modelGroup.object.children, { uuid: model.meshObject.uuid });
+            meshObject = meshObject.clone();
+            meshObject.material = materialNormal;
+            if (model instanceof ThreeGroup) {
+                meshObject.children.forEach(mesh => {
+                    mesh.material = materialNormal;
+                    mesh.clear(); // clear support mesh
+                });
+            } else {
+                meshObject.clear(); // clear support mesh
+            }
+            modelGroup.grayModeObject.add(meshObject);
+        });
+    },
+
     generateGcode: (thumbnail, isGuideTours = false) => async (dispatch, getState) => {
         const { hasModel, activeDefinition, modelGroup, progressStatesManager, helpersExtruderConfig,
             extruderLDefinition, extruderRDefinition, defaultMaterialId, defaultMaterialIdRight, materialDefinitions, stopArea: { left, front } } = getState().printing;

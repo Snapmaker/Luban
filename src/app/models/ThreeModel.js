@@ -41,7 +41,7 @@ class ThreeModel extends BaseModel {
 
     gcodeModeMaterial = null;
 
-    displayedType = 'model';
+    // displayedType = 'model';
 
     supportFaceMarks = [];
 
