@@ -265,8 +265,8 @@ const showMainWindow = async () => {
     if (!serverData) {
         // only start server once
         if (process.env.NODE_ENV === 'development') {
-            // Change working directory to 'server' before require('./server')
             process.chdir(path.resolve(__dirname, 'server'));
+            // Use require instead of import to avoid being precompiled in production mode
             const { createServer } = require('./server');
             createServer({
                 port: SERVER_PORT,
