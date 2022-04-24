@@ -12,10 +12,12 @@ import MenuBuilder, { addRecentFile, cleanAllRecentFiles } from './electron-app/
 import DataStorage from './DataStorage';
 import pkg from './package.json';
 // const { crashReporter } = require('electron');
-import { createServer } from './server';
 
 const config = new Store();
 const userDataDir = app.getPath('userData');
+global.luban = {
+    userDataDir
+};
 let serverData = null;
 let mainWindow = null;
 // https://www.electronjs.org/docs/latest/breaking-changes#planned-breaking-api-changes-100
@@ -28,7 +30,6 @@ const loadingMenu = [{
 
 const childProcess = require('child_process');
 
-const USER_DATA_DIR = 'userDataDir';
 const SERVER_DATA = 'serverData';
 const UPLOAD_WINDOWS = 'uploadWindows';
 
@@ -40,10 +41,6 @@ const { CLIENT_PORT, SERVER_PORT } = pkg.config;
 //     submitURL: 'https://api.snapmaker.com',
 //     uploadToServer: true
 // });
-
-global.luban = {
-    userDataDir
-};
 
 function getBrowserWindowOptions() {
     const defaultOptions = {
@@ -271,8 +268,9 @@ const showMainWindow = async () => {
     if (!serverData) {
         // only start server once
         if (process.env.NODE_ENV === 'development') {
-            // Change working directory to 'server' before require('./server')
             process.chdir(path.resolve(__dirname, 'server'));
+            // Use require instead of import to avoid being precompiled in production mode
+            const { createServer } = require('./server');
             createServer({
                 port: SERVER_PORT,
                 host: '127.0.0.1'
@@ -280,11 +278,16 @@ const showMainWindow = async () => {
                 startToBegin({ ...data, port: CLIENT_PORT });
             });
         } else {
-            const child = childProcess.fork(path.resolve(__dirname, 'server-cli.js'));
-            child.send({
-                type: USER_DATA_DIR,
-                userDataDir
-            });
+            const child = childProcess.fork(
+                path.resolve(__dirname, 'server-cli.js'),
+                [],
+                {
+                    env: {
+                        ...process.env,
+                        USER_DATA_DIR: userDataDir
+                    }
+                }
+            );
             child.on('message', (data) => {
                 if (data.type === SERVER_DATA) {
                     startToBegin(data);

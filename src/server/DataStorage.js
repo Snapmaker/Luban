@@ -4,7 +4,6 @@ import mkdirp from 'mkdirp';
 import { includes, isUndefined, gt } from 'lodash';
 import isElectron from 'is-electron';
 import semver from 'semver';
-import { app } from 'electron';
 import { CNC_CONFIG_SUBCATEGORY, LASER_CONFIG_SUBCATEGORY, PRINTING_CONFIG_SUBCATEGORY } from './constants';
 import { cncUniformProfile } from './lib/profile/cnc-uniform-profile';
 import logger from './lib/logger';
@@ -67,11 +66,7 @@ class DataStorage {
 
      constructor() {
          if (isElectron()) {
-             if (process.env.NODE_ENV === 'development') {
-                 this.userDataDir = app.getPath('userData');
-             } else {
-                 this.userDataDir = global.luban.userDataDir;
-             }
+             this.userDataDir = global.luban.userDataDir;
          } else {
              this.userDataDir = '.';
          }
