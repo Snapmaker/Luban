@@ -17,7 +17,7 @@ const config = new Store();
 const userDataDir = app.getPath('userData');
 global.luban = {
     userDataDir
-}
+};
 let serverData = null;
 let mainWindow = null;
 // https://www.electronjs.org/docs/latest/breaking-changes#planned-breaking-api-changes-100
