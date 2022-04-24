@@ -91,7 +91,7 @@ function ConfigValueBox({ optionConfigGroup, calculateTextIndex, isCategorySelec
                                     )}
                                     {/* eslint no-return-assign: 0*/}
                                     <div className={`${managerType === HEAD_CNC && group.name === 'Carving Tool' && 'sm-flex justify-space-between'}`}>
-                                        <div ref={el => fieldsDom.current[index] = el}>
+                                        <div ref={el => fieldsDom.current[index] = el} className={`${managerType === HEAD_CNC && group.name === 'Carving Tool' && 'width-percent-100'}`}>
                                             { group.fields && group.fields.map((key) => {
                                                 if (type === 'input') {
                                                     return (
@@ -130,7 +130,7 @@ function ConfigValueBox({ optionConfigGroup, calculateTextIndex, isCategorySelec
                                         </div>
                                         {managerType === HEAD_CNC && group.name === 'Carving Tool' && (
                                             <div>
-                                                <img style={{ width: 139, height: 203 }} src={`/resources/images/cnc/tool-type-${definitionForManager?.settings?.tool_type?.default_value}.jpg`} alt="" />
+                                                <img style={{ width: 80, height: 203, marginLeft: 20 }} src={`/resources/images/cnc/tool-type-${definitionForManager?.settings?.tool_type?.default_value}.jpg`} alt="" />
                                             </div>
                                         )}
                                     </div>

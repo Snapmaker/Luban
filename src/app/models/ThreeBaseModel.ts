@@ -161,13 +161,11 @@ export default class BaseModel {
     }
 
     updateDisplayedType(value) {
-        console.log({ value });
         this.displayedType = value;
         this.setSelectedGroup();
     }
 
     setSelectedGroup(isSelected?: boolean) {
-        console.log(this.displayedType);
         if (typeof isSelected === 'boolean') {
             this.isSelected = isSelected;
         }
