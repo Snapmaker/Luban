@@ -87,12 +87,10 @@ export class Server extends events.EventEmitter {
     closeServer() {
         controller.emitEvent(CONNECTION_CLOSE)
             .once(CONNECTION_CLOSE, () => {
-                console.log('closeServer');
                 dispatch(machineActions.resetMachineState());
                 dispatch(workspaceActions.updateMachineState({
                     headType: '',
-                    toolHead: '',
-                    isRotate: false
+                    toolHead: ''
                 }));
             });
     }
