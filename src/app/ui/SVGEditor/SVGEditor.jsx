@@ -38,109 +38,109 @@ const SVGEditor = forwardRef((props, ref) => {
         selectedElements && props.elementActions.moveElementsFinish(selectedElements);
     };
 
-    const shortcutHandler = {
-        title: 'SVGEditor',
-        // TODO: unregister in case of component is destroyed
-        isActive: () => props.isActive,
-        priority: priorities.VIEW,
-        shortcuts: {
-            [shortcutActions.UNDO]: () => {
-                if (!(menuDisabledCountRef.current > 0)) {
-                    props.editorActions.undo();
-                }
-            },
-            [shortcutActions.REDO]: () => {
-                if (!(menuDisabledCountRef.current > 0)) {
-                    props.editorActions.redo();
-                }
-            },
-            [shortcutActions.SELECTALL]: () => {
-                if (!(menuDisabledCountRef.current > 0)) {
-                    props.editorActions.selectAll();
-                }
-            },
-            [shortcutActions.UNSELECT]: () => {
-                if (!(menuDisabledCountRef.current > 0)) {
-                    props.editorActions.unselectAll();
-                }
-            },
-            [shortcutActions.DELETE]: () => {
-                if (!(menuDisabledCountRef.current > 0)) {
-                    props.editorActions.deleteSelectedModel(extRef.current.elem ? 'draw' : props.SVGCanvasMode);
-                }
-            },
-            [shortcutActions.COPY]: () => {
-                if (!(menuDisabledCountRef.current > 0)) {
-                    props.editorActions.copy();
-                }
-            },
-            [shortcutActions.PASTE]: () => {
-                if (!(menuDisabledCountRef.current > 0)) {
-                    props.editorActions.paste();
-                }
-            },
-            [shortcutActions.DUPLICATE]: () => {
-                if (!(menuDisabledCountRef.current > 0)) {
-                    props.editorActions.duplicateSelectedModel();
-                }
-            },
-            [shortcutActions.CUT]: () => {
-                if (!(menuDisabledCountRef.current > 0)) {
-                    props.editorActions.cut();
-                }
-            },
-            [shortcutActions.ENTER]: () => {
-                console.log('menuDisabledCountRef.current =', menuDisabledCountRef.current);
-                if (!(menuDisabledCountRef.current > 0)) {
-                    console.log('emit enter key');
-                    onStopDraw(true);
-                }
-            },
-            // optimize: accelerate when continuous click
-            'MOVE-UP': {
-                keys: ['up'],
-                callback: () => {
-                    moveElements({ dx: 0, dy: -1 });
-                },
-                keyupCallback: () => {
-                    moveElementsFinish();
-                }
-            },
-            'MOVE-DOWM': {
-                keys: ['down'],
-                callback: () => {
-                    moveElements({ dx: 0, dy: 1 });
-                },
-                keyupCallback: () => {
-                    moveElementsFinish();
-                }
-            },
-            'MOVE-LEFT': {
-                keys: ['left'],
-                callback: () => {
-                    moveElements({ dx: -1, dy: 0 });
-                },
-                keyupCallback: () => {
-                    moveElementsFinish();
-                }
-            },
-            'MOVE-RIGHT': {
-                keys: ['right'],
-                callback: () => {
-                    moveElements({ dx: 1, dy: 0 });
-                },
-                keyupCallback: () => {
-                    moveElementsFinish();
-                }
-            }
-
-        }
-    };
 
     useEffect(() => {
-        console.log('-------------- register');
+        const shortcutHandler = {
+            title: 'SVGEditor',
+            // TODO: unregister in case of component is destroyed
+            isActive: () => props.isActive,
+            priority: priorities.VIEW,
+            shortcuts: {
+                [shortcutActions.UNDO]: () => {
+                    if (!(menuDisabledCountRef.current > 0)) {
+                        props.editorActions.undo();
+                    }
+                },
+                [shortcutActions.REDO]: () => {
+                    if (!(menuDisabledCountRef.current > 0)) {
+                        props.editorActions.redo();
+                    }
+                },
+                [shortcutActions.SELECTALL]: () => {
+                    if (!(menuDisabledCountRef.current > 0)) {
+                        props.editorActions.selectAll();
+                    }
+                },
+                [shortcutActions.UNSELECT]: () => {
+                    if (!(menuDisabledCountRef.current > 0)) {
+                        props.editorActions.unselectAll();
+                    }
+                },
+                [shortcutActions.DELETE]: () => {
+                    if (!(menuDisabledCountRef.current > 0)) {
+                        props.editorActions.deleteSelectedModel(extRef.current.elem ? 'draw' : props.SVGCanvasMode);
+                    }
+                },
+                [shortcutActions.COPY]: () => {
+                    if (!(menuDisabledCountRef.current > 0)) {
+                        props.editorActions.copy();
+                    }
+                },
+                [shortcutActions.PASTE]: () => {
+                    if (!(menuDisabledCountRef.current > 0)) {
+                        props.editorActions.paste();
+                    }
+                },
+                [shortcutActions.DUPLICATE]: () => {
+                    if (!(menuDisabledCountRef.current > 0)) {
+                        props.editorActions.duplicateSelectedModel();
+                    }
+                },
+                [shortcutActions.CUT]: () => {
+                    if (!(menuDisabledCountRef.current > 0)) {
+                        props.editorActions.cut();
+                    }
+                },
+                [shortcutActions.ENTER]: () => {
+                    console.log('menuDisabledCountRef.current =', menuDisabledCountRef.current);
+                    if (!(menuDisabledCountRef.current > 0)) {
+                        console.log('emit enter key');
+                        onStopDraw(true);
+                    }
+                },
+                // optimize: accelerate when continuous click
+                'MOVE-UP': {
+                    keys: ['up'],
+                    callback: () => {
+                        moveElements({ dx: 0, dy: -1 });
+                    },
+                    keyupCallback: () => {
+                        moveElementsFinish();
+                    }
+                },
+                'MOVE-DOWM': {
+                    keys: ['down'],
+                    callback: () => {
+                        moveElements({ dx: 0, dy: 1 });
+                    },
+                    keyupCallback: () => {
+                        moveElementsFinish();
+                    }
+                },
+                'MOVE-LEFT': {
+                    keys: ['left'],
+                    callback: () => {
+                        moveElements({ dx: -1, dy: 0 });
+                    },
+                    keyupCallback: () => {
+                        moveElementsFinish();
+                    }
+                },
+                'MOVE-RIGHT': {
+                    keys: ['right'],
+                    callback: () => {
+                        moveElements({ dx: 1, dy: 0 });
+                    },
+                    keyupCallback: () => {
+                        moveElementsFinish();
+                    }
+                }
+
+            }
+        };
+        console.log('################33');
         ShortcutManager.register(shortcutHandler);
-    }, []);
+    }, [props.editorActions, props.isActive]);
 
     const changeCanvasMode = (_mode, ext) => {
         props.editorActions.setMode(_mode, ext);

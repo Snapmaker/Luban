@@ -50,6 +50,7 @@ function Output() {
     const displayedType = useSelector(state => state?.printing?.displayedType, shallowEqual);
     const defaultThumbnail = useSelector(state => state?.printing?.thumbnail);
     const leftBarOverlayVisible = useSelector(state => state?.printing?.leftBarOverlayVisible, shallowEqual);
+    const workflowState = useSelector(state => state?.machine?.workflowState, shallowEqual);
 
     const dispatch = useDispatch();
     const thumbnail = useRef(null);
@@ -106,7 +107,7 @@ function Output() {
             <Menu.Item
                 onClick={actions.onClickLoadGcode}
                 key="Load G-code to Workspace"
-                disabled={!gcodeLine}
+                disabled={workflowState === 'running' || !gcodeLine}
             >
                 <div className={classNames('align-c', 'padding-vertical-4')}>
                     {i18n._('key-Printing/G-codeAction-Load G-code to Workspace')}

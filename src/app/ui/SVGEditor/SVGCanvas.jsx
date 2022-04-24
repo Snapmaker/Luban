@@ -487,7 +487,7 @@ class SVGCanvas extends PureComponent {
         } else if ((this.mode === 'select' || this.mode === 'move') && target.parentElement === this.preSelectionGroup) {
             const targetId = target.getAttribute('target-id');
             const path = document.querySelector(`path[id="${targetId}"]`);
-            if (path) {
+            if (path && path.getAttribute('display') !== 'null') {
                 return path;
             }
         }
@@ -1336,6 +1336,9 @@ class SVGCanvas extends PureComponent {
         const { x, y } = transformPoint({ x: evt.pageX, y: evt.pageY }, matrix);
 
         const mouseTarget = this.getMouseTarget(evt, x, y);
+        if (!mouseTarget) {
+            return;
+        }
         const { tagName } = mouseTarget;
 
         if (this.props.editable && tagName === 'text' && this.mode !== 'textedit') {

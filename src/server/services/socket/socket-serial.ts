@@ -19,7 +19,7 @@ class SocketSerial {
     public onConnection = (socket: SocketServer) => {
         intervalHandle = setInterval(() => {
             this.serialportList(socket);
-        }, 10000000);
+        }, 1000);
     }
 
     public onDisconnection = (socket: SocketServer) => {

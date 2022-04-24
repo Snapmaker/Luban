@@ -273,9 +273,13 @@ class SVGContentGroup {
                 this.selectedElements.push(elem);
             }
         }
-        const posAndsize = this.operatorPoints.resizeGrips(this.selectedElements);
+        const hasHideElem = this.selectedElements.some(elem => elem.getAttribute('display') === 'none');
         this.showSelectorGrips(true);
-        // todo
+        const posAndsize = this.operatorPoints.resizeGrips(this.selectedElements);
+
+        if (hasHideElem) {
+            this.showSelectorResizeAndRotateGrips(!hasHideElem);
+        }
         return posAndsize;
     }
 
