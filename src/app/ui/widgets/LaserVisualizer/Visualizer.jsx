@@ -121,7 +121,9 @@ class Visualizer extends Component {
             rotateElements: PropTypes.func.isRequired,
             rotateElementsFinish: PropTypes.func.isRequired,
             moveElementsOnKeyDown: PropTypes.func.isRequired,
-            isPointInSelectArea: PropTypes.func.isRequired
+            isPointInSelectArea: PropTypes.func.isRequired,
+            getMouseTargetByCoordinate: PropTypes.func.isRequired,
+            isSelectedAllVisible: PropTypes.func.isRequired
         })
     };
 

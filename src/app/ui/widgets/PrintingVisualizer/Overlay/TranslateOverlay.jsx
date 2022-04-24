@@ -12,7 +12,7 @@ import { actions as printingActions } from '../../../../flux/printing';
 import { actions as machineActions } from '../../../../flux/machine';
 /* eslint-disable-next-line import/no-cycle */
 import { CancelButton } from '../VisualizerLeftBar';
-import { updateControlInputEvent } from '../../../components/SMCanvas/TransformControls';
+import { emitUpdateControlInputEvent } from '../../../components/SMCanvas/TransformControls';
 import { TRANSLATE_MODE } from '../../../../constants';
 import styles from './styles.styl';
 
@@ -93,13 +93,13 @@ const TranslateOverlay = React.memo(({
             }
         });
         dispatch(printingActions.updateSelectedModelTransformation(newTransformation));
-        window.dispatchEvent(updateControlInputEvent({
+        emitUpdateControlInputEvent({
             controlValue: {
                 mode: TRANSLATE_MODE,
                 data: updateControlValue,
                 axis: isReset ? undefined : updateAxis
             }
-        }));
+        });
     };
     const resetPosition = (_isPrimeTowerSelected = false) => {
         const { max } = modelGroup._bbox;

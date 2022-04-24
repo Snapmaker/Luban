@@ -32,7 +32,7 @@ import styles from './styles.styl';
 import { loadModelFailPopup, scaletoFitPopup } from './VisualizerPopup';
 
 import { STEP_STAGE } from '../../../lib/manager/ProgressManager';
-import { updateControlInputEvent } from '../../components/SMCanvas/TransformControls';
+import { emitUpdateControlInputEvent } from '../../components/SMCanvas/TransformControls';
 import ModeToggleBtn from './ModeToggleBtn';
 
 const initQuaternion = new Quaternion();
@@ -253,7 +253,7 @@ class Visualizer extends PureComponent {
                     };
                 }
                 this.props.updateSelectedModelTransformation(newTransformation);
-                window.dispatchEvent(updateControlInputEvent({
+                emitUpdateControlInputEvent({
                     controlValue: {
                         mode,
                         data: {
@@ -261,7 +261,7 @@ class Visualizer extends PureComponent {
                             [axis]: Number(data)
                         }
                     }
-                }));
+                });
             }
         }
     };
