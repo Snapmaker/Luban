@@ -42,7 +42,6 @@ function Output() {
     const stage = useSelector(state => state?.printing?.stage, shallowEqual);
     const modelGroup = useSelector(state => state?.printing?.modelGroup);
     const hasAnyModelVisible = useSelector(state => state?.printing?.modelGroup?.hasAnyModelVisible(), shallowEqual);
-    const hasModel = useSelector(state => state?.printing?.hasModel, shallowEqual);
     const isAnyModelOverstepped = useSelector(state => state?.printing?.isAnyModelOverstepped, shallowEqual);
     const isGcodeOverstepped = useSelector(state => state?.printing?.isGcodeOverstepped, shallowEqual);
     const gcodeLine = useSelector(state => state?.printing?.gcodeLine);
@@ -133,7 +132,7 @@ function Output() {
                         type="primary"
                         priority="level-one"
                         onClick={actions.onClickGenerateGcode}
-                        disabled={!hasModel || !hasAnyModelVisible || isSlicing || isAnyModelOverstepped || leftBarOverlayVisible}
+                        disabled={!hasAnyModelVisible || isSlicing || isAnyModelOverstepped || leftBarOverlayVisible}
                     >
                         {i18n._('key-Printing/G-codeAction-Generate G-code')}
                     </Button>
