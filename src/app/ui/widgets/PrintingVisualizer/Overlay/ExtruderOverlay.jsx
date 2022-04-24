@@ -238,7 +238,7 @@ const ExtruderOverlay = React.memo(({
     }, [materialDefinitions, defaultMaterialIdRight, defaultMaterialId]);
     return (
         <div
-            className="position-ab width-328 margin-left-72 border-default-grey-1 border-radius-8 background-color-white"
+            className={classNames(styles['extruder-overlay'], 'position-ab width-328 margin-left-72 border-default-grey-1 border-radius-8 background-color-white')}
             style={{
                 marginTop: '320px'
             }}
@@ -317,7 +317,9 @@ const ExtruderOverlay = React.memo(({
                         </Dropdown>
                     </div>
                 </div>
-                <div className="height-1 border-bottom-dashed-grey-1 margin-right-16 margin-left-8 margin-top-16 margin-bottom-8" />
+                <div className="padding-right-16 padding-left-4">
+                    <div className={classNames(styles['dashed-line'])} />
+                </div>
                 <div className="select-models-container">
                     {helpersExtruderInfoShow && (
                         <div className="sm-flex align-center justify-space-between margin-right-16">
