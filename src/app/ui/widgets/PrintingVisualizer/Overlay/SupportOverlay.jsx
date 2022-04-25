@@ -10,6 +10,8 @@ import styles from './styles.styl';
 import { renderModal } from '../../../utils';
 /* eslint-disable-next-line import/no-cycle */
 import { CancelButton } from '../VisualizerLeftBar';
+import { HEAD_PRINTING } from '../../../../constants';
+import { logTransformOperation } from '../../../../lib/gaEvent';
 
 const SupportOverlay = ({ editSupport, setTransformMode }) => {
     const selectedModelArray = useSelector(state => state?.printing?.modelGroup?.selectedModelArray, shallowEqual);
@@ -30,13 +32,15 @@ const SupportOverlay = ({ editSupport, setTransformMode }) => {
             } else {
                 actions.generateAutoSupport(supportOverhangAngle);
             }
+            logTransformOperation(HEAD_PRINTING, 'support', 'auto');
         },
         clearAllManualSupport() {
             dispatch(printingActions.clearAllManualSupport());
+            logTransformOperation(HEAD_PRINTING, 'support', 'clear');
         },
         editSupport() {
             editSupport();
-            window.dispatchEvent(new CustomEvent('fit-view-in', {}));
+            logTransformOperation(HEAD_PRINTING, 'support', 'edit_in');
         }
     };
     const renderGenerateSupportConfirm = () => {
@@ -74,14 +78,14 @@ const SupportOverlay = ({ editSupport, setTransformMode }) => {
                     marginTop: '268px'
                 }}
             >
-                <div className="sm-flex justify-space-between border-bottom-normal padding-vertical-10 padding-horizontal-16 height-40 font-size-middle">
+                <div className={classNames(styles['overlay-title-font'], 'sm-flex justify-space-between border-bottom-normal padding-vertical-10 padding-horizontal-16 height-40')}>
                     {i18n._('key-Printing/LeftBar/Support-Support')}
                     <CancelButton
                         onClick={() => setTransformMode('')}
                     />
                 </div>
                 <div className="padding-bottom-16 padding-top-12 padding-horizontal-16">
-                    <div className="sm-flex font-size-middle">{i18n._('key-Printing/LeftBar/Support-Auto Support')}</div>
+                    <div className={classNames(styles['overlay-sub-title-font'], 'sm-flex')}>{i18n._('key-Printing/LeftBar/Support-Auto Support')}</div>
                     <Button
                         className="margin-top-8"
                         type="primary"
@@ -109,7 +113,7 @@ const SupportOverlay = ({ editSupport, setTransformMode }) => {
                         </div>
                     </div>
                     <div className={classNames(styles['dashed-line'])} />
-                    <div className="sm-flex font-size-middle">{i18n._('key-Printing/LeftBar/Support-Editing Support')}</div>
+                    <div className={classNames(styles['overlay-sub-title-font'], 'sm-flex padding-top-8')}>{i18n._('key-Printing/LeftBar/Support-Editing Support')}</div>
                     <div className="sm-flex justify-space-between">
                         <Button
                             className="margin-top-8 display-inline"

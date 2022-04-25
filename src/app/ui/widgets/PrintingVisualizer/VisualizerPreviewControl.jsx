@@ -40,33 +40,27 @@ function useShowToggleBtn() {
     };
 }
 
-const MAX = 380;
-const MIN = 30;
-
 function GcodeLayout() {
     const layerCount = useSelector(state => state?.printing?.layerCount - 1, shallowEqual);
     // const gcodePreviewMode = useSelector(state => state?.printing?.gcodePreviewMode, shallowEqual);
     const layerRangeDisplayed = useSelector(state => state?.printing?.layerRangeDisplayed, shallowEqual);
     const dispatch = useDispatch();
-
-    const [x, setX] = useState(layerCount / (MAX - MIN));
-    useEffect(() => {
-        setX(layerCount / (MAX - MIN));
-    }, [layerCount]);
+    // keep the slider highlight min-height 30px
+    const temp = Math.round(30 / 288 * layerCount);
 
     const [value, setValue] = useState([]);
     useEffect(() => {
         setValue([
-            layerRangeDisplayed[0] / x,
-            layerRangeDisplayed[1] / x + MIN
+            layerRangeDisplayed[0],
+            layerRangeDisplayed[1] + temp
         ]);
-    }, [layerRangeDisplayed, x]);
+    }, [layerRangeDisplayed]);
 
 
     const onChangeShowLayer = throttle((v) => {
         dispatch(printingActions.showGcodeLayers([
-            v[0] * x,
-            (v[1] - MIN) * x
+            v[0],
+            v[1] - temp
         ]));
     }, 300);
     return (
@@ -83,8 +77,8 @@ function GcodeLayout() {
                     className={styles['vertical-slider']}
                     vertical
                     min={0}
-                    max={MAX}
-                    step={(MAX - MIN) / layerCount}
+                    max={layerCount + temp}
+                    step={1}
                     range={{ draggableTrack: true }}
                     value={value}
                     onChange={(v) => {

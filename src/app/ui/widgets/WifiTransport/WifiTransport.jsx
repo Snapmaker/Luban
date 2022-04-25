@@ -341,6 +341,7 @@ function WifiTransport({ widgetActions, controlActions }) {
                 controller.emitEvent(CONNECTION_MATERIALTHICKNESS, args)
                     .once(CONNECTION_MATERIALTHICKNESS, ({ data }) => {
                         const { status, thickness } = data;
+                        // TODO: if status is false, will not start print in this logic
                         if (status) {
                             actions.onChangeMaterialThickness(thickness);
                             controlActions.onCallBackRun();
@@ -364,7 +365,7 @@ function WifiTransport({ widgetActions, controlActions }) {
                 return;
             }
             const gcodePath = `/${find.uploadName}`;
-            controller.emitEvent(CONNECTION_UPLOAD_FILE, { gcodePath: gcodePath })
+            controller.emitEvent(CONNECTION_UPLOAD_FILE, { gcodePath: gcodePath, renderGcodeFileName: find.renderGcodeFileName })
                 .once(CONNECTION_UPLOAD_FILE, ({ err, text }) => {
                     isSendingFile.current && isSendingFile.current.removeContainer();
                     if (err) {

@@ -127,6 +127,9 @@
         background-image: url("data:image/svg+xml,%3csvg width='100%25' height='100%25' xmlns='http://www.w3.org/2000/svg'%3e%3crect width='100%25' height='100%25' fill='none' stroke='%23D5D6D9' stroke-width='4' stroke-dasharray='1%2c12' stroke-dashoffset='0' stroke-linecap='square'/%3e%3c/svg%3e");
     }
 }
+.extruder-overlay .dashed-line{
+    width: calc(100% - 5px)
+}
 
 .edit-support {
     width: 280px;
@@ -150,7 +153,7 @@
     }
     & footer {
         background-color: rgb(245, 245, 247);
-        padding: 8px 24px;
+        padding: 8px 16px;
         text-align: right;
     }
     & .overflow-visible {
@@ -190,3 +193,30 @@
     cursor: not-allowed;
     color: rgba(0, 0, 0, 0.25)
 }
+
+
+.overlay-title-font
+.overlay-sub-title-font {
+    font-size: $font-size-middle
+    color: #545659
+    line-height: 24px
+}
+
+.overlay-title-font 
+    font-weight: 700
+
+.overlay-sub-title-font 
+    font-weight: 500
+
+
+.rotate-svg 
+    height: 30px
+    width: 30px
+    text-align: center;
+    line-height: 30px;
+    &:hover
+        background-color: #D5D6D9
+        border-radius: 3.75px;
+
+.rotate-svg[disabled]:hover
+    background-color: transparent

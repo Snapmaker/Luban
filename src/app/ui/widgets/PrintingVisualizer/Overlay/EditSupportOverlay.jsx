@@ -10,6 +10,8 @@ import SvgIcon from '../../../components/SvgIcon';
 import Slider from '../../../components/Slider';
 import { actions as printingActions } from '../../../../flux/printing';
 import { actions as menuActions } from '../../../../flux/appbar-menu';
+import { HEAD_PRINTING } from '../../../../constants';
+import { logTransformOperation } from '../../../../lib/gaEvent';
 
 let tmpDiameter;
 const EditSupportOverlay = ({ onClose }) => {
@@ -19,6 +21,7 @@ const EditSupportOverlay = ({ onClose }) => {
 
     const actions = {
         finish: (shouldApplyChanges) => {
+            logTransformOperation(HEAD_PRINTING, 'support', 'edit_done');
             dispatch(printingActions.finishEditSupportArea(shouldApplyChanges));
             onClose();
         },
@@ -84,7 +87,7 @@ const EditSupportOverlay = ({ onClose }) => {
 
     return (
         <div className={classNames(styles['edit-support'])}>
-            <header>
+            <header className={classNames(styles['overlay-sub-title-font'])}>
                 <span>{i18n._('key-Printing/LeftBar/EditSupport-Edit Support')}</span>
             </header>
             <section>
@@ -142,7 +145,6 @@ const EditSupportOverlay = ({ onClose }) => {
                     priority="level-two"
                     type="default"
                     width="96px"
-                    className="margin-left-8"
                 >
                     {i18n._('key-Printing/LeftBar/EditSupport-Cancel')}
                 </Button>

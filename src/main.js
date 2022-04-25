@@ -299,9 +299,11 @@ const showMainWindow = async () => {
             });
         }
         // window.webContents.openDevTools();
-        window.loadURL(path.resolve(__dirname, 'app', 'loading.html')).catch(err => {
-            console.log('err', err.message);
-        });
+        window.loadURL(path.resolve(__dirname, 'app', 'loading.html'))
+            .then(() => window.setTitle(`Snapmaker Luban ${pkg.version}`))
+            .catch(err => {
+                console.log('err', err.message);
+            });
         window.setBackgroundColor('#f5f5f7');
         if (process.platform === 'win32') {
             window.show();

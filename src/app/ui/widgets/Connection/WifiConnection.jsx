@@ -61,6 +61,7 @@ function WifiConnection() {
         connectionAuto,
         server,
         savedServerAddress,
+        savedServerToken,
         manualIp,
         // machine status headType,
         workflowStatus, isOpen, isConnected,
@@ -243,6 +244,9 @@ function WifiConnection() {
         } else {
             // If no server selected, we select server based on saved server address
             find = _servers.find(v => v.address === savedServerAddress);
+            if (find) {
+                find.setToken(savedServerToken);
+            }
         }
 
         if (find) {

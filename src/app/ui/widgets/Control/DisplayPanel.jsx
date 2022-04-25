@@ -87,7 +87,6 @@ class DisplayPanel extends PureComponent {
             machinePositionY = workPosition.y;
             machinePositionZ = workPosition.z;
         }
-
         return (
             <div className={classNames(styles['coordinate-panel'], 'margin-bottom-16')}>
                 <table className="table table-bordered " style={{

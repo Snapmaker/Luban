@@ -21,6 +21,7 @@ import i18n from '../../../lib/i18n';
 import UniApi from '../../../lib/uni-api';
 import Thumbnail from '../CncLaserShared/Thumbnail';
 import SvgIcon from '../../components/SvgIcon';
+import { logGcodeExport } from '../../../lib/gaEvent';
 
 const Output = ({ headType }) => {
     const displayedType = useSelector(state => state[headType]?.displayedType);
@@ -33,6 +34,7 @@ const Output = ({ headType }) => {
     const toolPathGroup = useSelector(state => state[headType]?.toolPathGroup);
     const workflowState = useSelector(state => state.machine?.workflowState);
     const isGcodeGenerating = useSelector(state => state[headType]?.isGcodeGenerating);
+    const materials = useSelector(state => state[headType]?.materials);
 
     const [showWorkspace, setShowWorkspace] = useState(false);
     const [showExportOptions, setShowExportOptions] = useState(false);
@@ -59,6 +61,7 @@ const Output = ({ headType }) => {
                 return;
             }
             await dispatch(workspaceActions.renderGcodeFile(gcodeFile));
+            logGcodeExport(headType, 'workspace', materials.isRotate);
             setShowWorkspace(true);
             window.scrollTo(0, 0);
         },
@@ -66,6 +69,7 @@ const Output = ({ headType }) => {
             if (gcodeFile === null) {
                 return;
             }
+            logGcodeExport(headType, 'local', materials.isRotate);
             dispatch(projectActions.exportFile(gcodeFile.uploadName, gcodeFile.renderGcodeFileName));
         },
         onProcess: () => {

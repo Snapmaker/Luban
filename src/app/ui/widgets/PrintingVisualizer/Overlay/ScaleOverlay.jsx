@@ -3,6 +3,8 @@ import { useDispatch, useSelector, shallowEqual } from 'react-redux';
 import i18next from 'i18next';
 import PropTypes from 'prop-types';
 import { throttle, includes } from 'lodash';
+import classNames from 'classnames';
+import styles from './styles.styl';
 import i18n from '../../../../lib/i18n';
 import { actions as printingActions } from '../../../../flux/printing';
 /* eslint-disable-next-line import/no-cycle */
@@ -11,7 +13,8 @@ import { NumberInput as Input } from '../../../components/Input';
 import Checkbox from '../../../components/Checkbox';
 import { Button } from '../../../components/Buttons';
 import { emitUpdateControlInputEvent } from '../../../components/SMCanvas/TransformControls';
-import { SCALE_MODE } from '../../../../constants';
+import { HEAD_PRINTING, SCALE_MODE } from '../../../../constants';
+import { logTransformOperation } from '../../../../lib/gaEvent';
 
 const longLang = ['de', 'it'];
 const ScaleOverlay = React.memo(({
@@ -128,6 +131,7 @@ const ScaleOverlay = React.memo(({
             }
         });
         dispatch(printingActions.updateSelectedModelTransformation(newTransformation, isReset ? _isPrimeTowerSelected : undefined));
+        !isReset && logTransformOperation(HEAD_PRINTING, 'scale', 'input_%');
         emitUpdateControlInputEvent({
             controlValue: {
                 mode: SCALE_MODE,
@@ -146,6 +150,7 @@ const ScaleOverlay = React.memo(({
             'scaleZ': _isPrimeTowerSelected ? primeTowerHeight : 1,
             'uniformScalingState': !_isPrimeTowerSelected
         }, true);
+        logTransformOperation(HEAD_PRINTING, 'scale', 'reset');
         emitUpdateControlInputEvent({
             controlValue: {
                 mode: SCALE_MODE,
@@ -161,6 +166,7 @@ const ScaleOverlay = React.memo(({
     };
 
     const scaleToFitSelectedModel = () => {
+        logTransformOperation(HEAD_PRINTING, 'scale', 'to_fit');
         dispatch(printingActions.scaleToFitSelectedModelWithRotate());
     };
 
@@ -171,7 +177,7 @@ const ScaleOverlay = React.memo(({
                 marginTop: '112px'
             }}
         >
-            <div className="sm-flex justify-space-between border-bottom-normal padding-vertical-10 padding-horizontal-16 height-40">
+            <div className={classNames(styles['overlay-title-font'], 'sm-flex justify-space-between border-bottom-normal padding-vertical-10 padding-horizontal-16 height-40')}>
                 {i18n._('key-Printing/LeftBar-Scale')}
                 <CancelButton
                     onClick={() => setTransformMode('')}

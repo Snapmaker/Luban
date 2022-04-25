@@ -76,6 +76,14 @@ export default class BaseModel {
 
     canAttachSupport: boolean = true; // PrimeTowerModel should set false
 
+    displayedType: string = 'model';
+
+    isSelected: boolean = false;
+
+    gcodeModeMaterial: THREE.Material;
+
+    modelModeMaterial: THREE.Material = new THREE.MeshStandardMaterial({ color: 0xe0e0e0, visible: false });
+
     constructor(modelInfo, modelGroup) {
         this.modelGroup = modelGroup;
 
@@ -86,6 +94,16 @@ export default class BaseModel {
         this.modelName = this.modelName ?? 'unnamed';
         this.transformation = { ...DEFAULT_TRANSFORMATION, ...this.transformation };
         this.type = modelInfo.type || 'baseModel';
+        this.gcodeModeMaterial = new THREE.MeshLambertMaterial({
+            color: '#2a2c2e',
+            side: THREE.FrontSide,
+            depthWrite: false,
+            transparent: true,
+            opacity: 0.3,
+            polygonOffset: true,
+            polygonOffsetFactor: -5,
+            polygonOffsetUnits: -0.1
+        });
     }
 
     updateTransformation(transformation: ModelTransformation): ModelTransformation {
@@ -140,5 +158,22 @@ export default class BaseModel {
         const unitZ = new THREE.Vector3(0, 0, 1);
         const quaternion = new THREE.Quaternion().setFromAxisAngle(unitZ, angle * Math.PI / 180);
         this.meshObject.applyQuaternion(quaternion);
+    }
+
+    updateDisplayedType(value) {
+        this.displayedType = value;
+        this.setSelectedGroup();
+    }
+
+    setSelectedGroup(isSelected?: boolean) {
+        if (typeof isSelected === 'boolean') {
+            this.isSelected = isSelected;
+        }
+        if (this.displayedType !== 'model') {
+            (this.meshObject as any).material = this.gcodeModeMaterial;
+        } else {
+            (this.meshObject as any).material = this.modelModeMaterial;
+            (this.meshObject as any).material.color.set(new THREE.Color('#cecece'));
+        }
     }
 }

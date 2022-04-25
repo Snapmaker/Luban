@@ -10,8 +10,8 @@ import { Button } from '../../components/Buttons';
 
 
 const MotionButtonGroup = (props) => {
-    const { state, actions } = props;
-    const { canClick, workPosition } = state;
+    const { state, actions, workPosition } = props;
+    const { canClick } = state;
 
     return (
         <div>
@@ -86,6 +86,7 @@ const MotionButtonGroup = (props) => {
 
 MotionButtonGroup.propTypes = {
     state: PropTypes.object,
+    workPosition: PropTypes.object,
     actions: PropTypes.object,
     executeGcode: PropTypes.func
 };
