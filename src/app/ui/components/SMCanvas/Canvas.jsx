@@ -514,6 +514,9 @@ class Canvas extends PureComponent {
 
     fitViewIn(center, selectedGroupBsphereRadius) {
         const r = selectedGroupBsphereRadius;
+        const newTarget = {
+            ...center
+        };
         // from
         const object = {
             ox: this.camera.position.x,
@@ -555,7 +558,7 @@ class Canvas extends PureComponent {
             this.camera.position.x = o2.x;
             this.camera.position.y = o2.y;
             this.camera.position.z = o2.z;
-            this.controls.setTarget(new Vector3(center.x, center.y, center.z));
+            this.controls.setTarget(new Vector3(newTarget.x, newTarget.y, newTarget.z));
             this.renderScene();
         }, ANIMATION_DURATION);
     }
