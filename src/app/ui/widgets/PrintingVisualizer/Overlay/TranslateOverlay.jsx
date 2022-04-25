@@ -112,7 +112,6 @@ const TranslateOverlay = React.memo(({
         onModelAfterTransform();
     };
     const handleArrangeSettingsChange = (settings) => {
-        console.log('settings', settings);
         setArragneSettings(settings);
         dispatch(machineActions.updateArrangeSettings(settings));
     };
