@@ -58,6 +58,10 @@ const TransformationSection = ({ headType, updateSelectedModelUniformScalingStat
     const selectedNotHide = (selectedModelArray.length === 1) && selectedModelArray[0].visible || selectedModelArray.length > 1;
     const canFlip = (selectedModelArray.length === 1 && !selectedModelArray[0].isStraightLine());
 
+    const SVGCanvasMode = useSelector(state => state[headType]?.SVGCanvasMode);
+    const SVGCanvasExt = useSelector(state => state[headType]?.SVGCanvasExt);
+    const drawing = SVGCanvasMode === 'draw' || SVGCanvasExt.elem;
+
     const dispatch = useDispatch();
     useEffect(() => {
         selectedModelArray.length && selectedModelArray.forEach((item) => {
@@ -149,7 +153,7 @@ const TransformationSection = ({ headType, updateSelectedModelUniformScalingStat
                                     <Input
                                         suffix="mm"
                                         className="margin-horizontal-2"
-                                        disabled={disabled || !selectedNotHide}
+                                        disabled={disabled || !selectedNotHide || drawing}
                                         value={toFixed(logicalX, 1)}
                                         size="small"
                                         min={-size.x}
@@ -167,7 +171,7 @@ const TransformationSection = ({ headType, updateSelectedModelUniformScalingStat
                                 <span>
                                     <Input
                                         suffix="mm"
-                                        disabled={disabled || !selectedNotHide}
+                                        disabled={disabled || !selectedNotHide || drawing}
                                         className="margin-horizontal-2"
                                         value={toFixed(logicalY, 1)}
                                         size="small"
@@ -197,7 +201,7 @@ const TransformationSection = ({ headType, updateSelectedModelUniformScalingStat
                                     <Input
                                         suffix="mm"
                                         className="margin-horizontal-2"
-                                        disabled={disabled || !selectedNotHide || canResize === false}
+                                        disabled={disabled || !selectedNotHide || canResize === false || drawing}
                                         value={toFixed(logicalWidth, 1)}
                                         min={minSize}
                                         size="small"
@@ -210,7 +214,7 @@ const TransformationSection = ({ headType, updateSelectedModelUniformScalingStat
                             </div>
                             <button
                                 type="button"
-                                disabled={disabled || !selectedNotHide || isCNC4AxisImage3d}
+                                disabled={disabled || !selectedNotHide || isCNC4AxisImage3d || drawing}
                                 className={classNames(
                                     uniformScalingState ? styles.icon_size_lock : styles.icon_size_unlock,
                                     'display-inline',
@@ -230,7 +234,7 @@ const TransformationSection = ({ headType, updateSelectedModelUniformScalingStat
                                     <Input
                                         suffix="mm"
                                         className="margin-horizontal-2"
-                                        disabled={disabled || !selectedNotHide || canResize === false}
+                                        disabled={disabled || !selectedNotHide || canResize === false || drawing}
                                         value={toFixed(logicalHeight, 1)}
                                         min={minSize}
                                         max={size.y}
@@ -258,7 +262,7 @@ const TransformationSection = ({ headType, updateSelectedModelUniformScalingStat
                                 />
                                 <Input
                                     suffix="°"
-                                    disabled={disabled || !selectedNotHide || !canRotate}
+                                    disabled={disabled || !selectedNotHide || !canRotate || drawing}
                                     value={toFixedNumber(logicalAngle, 1)}
                                     className="margin-horizontal-2"
                                     size="small"
@@ -270,7 +274,7 @@ const TransformationSection = ({ headType, updateSelectedModelUniformScalingStat
                                     <SvgIcon
                                         name="FlipLevel"
                                         className="padding-horizontal-8 border-radius-8 border-default-grey-1"
-                                        disabled={disabled || !selectedNotHide}
+                                        disabled={disabled || !selectedNotHide || drawing}
                                         onClick={actions.onFlipHorizontally}
                                         // type={['static']}
                                         size={26}
@@ -281,7 +285,7 @@ const TransformationSection = ({ headType, updateSelectedModelUniformScalingStat
                                     <SvgIcon
                                         name="FlipVertical"
                                         className="padding-horizontal-8 border-radius-8 border-default-grey-1"
-                                        disabled={disabled || !selectedNotHide}
+                                        disabled={disabled || !selectedNotHide || drawing}
                                         onClick={actions.onFlipVertically}
                                         size={26}
                                         borderRadius={8}

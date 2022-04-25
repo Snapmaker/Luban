@@ -10,7 +10,7 @@ import modal from '../../../lib/modal';
 import SvgIcon from '../../components/SvgIcon';
 import RotationAnalysisOverlay from './Overlay/RotationAnalysisOverlay';
 import EditSupportOverlay from './Overlay/EditSupportOverlay';
-import { DUAL_EXTRUDER_TOOLHEAD_FOR_SM2, EPSILON } from '../../../constants';
+import { DUAL_EXTRUDER_TOOLHEAD_FOR_SM2, EPSILON, HEAD_PRINTING } from '../../../constants';
 import { machineStore } from '../../../store/local-storage';
 // import TipTrigger from '../../components/TipTrigger';
 import PrimeTowerModel from '../../../models/PrimeTowerModel';
@@ -26,6 +26,7 @@ import RotateOverlay from './Overlay/RotateOverlay';
 import ExtruderOverlay from './Overlay/ExtruderOverlay';
 /* eslint-disable-next-line import/no-cycle */
 import MirrorOverlay from './Overlay/MirrorOverlay';
+import { logTransformOperation } from '../../../lib/gaEvent';
 
 export const whiteHex = '#ffffff';
 export const renderExtruderIcon = (leftExtruderColor, rightExtruderColor) => (
@@ -67,7 +68,8 @@ export const CancelButton = ({ onClick }) => {
 CancelButton.propTypes = {
     onClick: PropTypes.func.isRequired,
 };
-function VisualizerLeftBar({ setTransformMode, supportActions, updateBoundingBox, autoRotateSelectedModel, arrangeAllModels, setHoverFace }) {
+function VisualizerLeftBar({ setTransformMode, supportActions, updateBoundingBox,
+    autoRotateSelectedModel, arrangeAllModels, setHoverFace, fitViewIn }) {
     const size = useSelector(state => state?.machine?.size, shallowEqual);
     const selectedModelArray = useSelector(state => state?.printing?.modelGroup?.selectedModelArray);
     const modelGroup = useSelector(state => state?.printing?.modelGroup);
@@ -119,9 +121,10 @@ function VisualizerLeftBar({ setTransformMode, supportActions, updateBoundingBox
                 dispatch(printingActions.startAnalyzeRotationProgress());
                 setTimeout(() => {
                     setShowRotationAnalyzeModal(true);
+                    fitViewIn && fitViewIn();
                 }, 100);
             });
-            window.dispatchEvent(new CustomEvent('fit-view-in', {}));
+            logTransformOperation(HEAD_PRINTING, 'roate', 'analyze_in');
         },
         rotateOnlyForUniformScale: (rotateFn) => {
             if (actions.isNonUniformScaled()) {
@@ -136,7 +139,8 @@ function VisualizerLeftBar({ setTransformMode, supportActions, updateBoundingBox
         },
         editSupport: useCallback(() => {
             setShowEditSupportModal(true);
-        }, [setShowEditSupportModal]),
+            fitViewIn && fitViewIn();
+        }, [setShowEditSupportModal, fitViewIn]),
         isNonUniformScaled: () => {
             const { scaleX, scaleY, scaleZ } = selectedModelArray[0].transformation;
             return Math.abs(Math.abs(scaleX) - Math.abs(scaleY)) > EPSILON
@@ -366,7 +370,8 @@ VisualizerLeftBar.propTypes = {
     setTransformMode: PropTypes.func.isRequired,
     updateBoundingBox: PropTypes.func.isRequired,
     arrangeAllModels: PropTypes.func.isRequired,
-    setHoverFace: PropTypes.func.isRequired
+    setHoverFace: PropTypes.func.isRequired,
+    fitViewIn: PropTypes.func.isRequired
 };
 
 export default React.memo(VisualizerLeftBar);

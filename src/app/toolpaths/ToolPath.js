@@ -3,6 +3,7 @@ import { includes } from 'lodash';
 import * as THREE from 'three';
 import { FAILED, getToolPathType, IDLE, RUNNING, SUCCESS, WARNING } from './utils';
 import { MATERIAL_SELECTED, MATERIAL_UNSELECTED } from '../workers/ShaderMaterial/ToolpathRendererMeterial';
+import { MINIMUM_WIDTH_AND_HEIGHT } from '../constants';
 
 class ToolPath {
     id;
@@ -208,6 +209,12 @@ class ToolPath {
         const modelInfos = selectModels
             .map(v => v.getTaskInfo())
             .map(v => {
+                if (!v.transformation.width) {
+                    v.transformation.width = MINIMUM_WIDTH_AND_HEIGHT;
+                }
+                if (!v.transformation.height) {
+                    v.transformation.height = MINIMUM_WIDTH_AND_HEIGHT;
+                }
                 return {
                     visible: v.visible,
                     modelID: v.modelID,

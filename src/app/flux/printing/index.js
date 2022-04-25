@@ -26,7 +26,12 @@ import {
     WHITE_COLOR,
     BLACK_COLOR,
     GCODE_VISIBILITY_TYPE,
-    GCODEPREVIEWMODES
+    GCODEPREVIEWMODES,
+    PRINTING_MATERIAL_CONFIG_GROUP_SINGLE,
+    SINGLE_EXTRUDER_TOOLHEAD_FOR_SM2,
+    PRINTING_MATERIAL_CONFIG_GROUP_DUAL,
+    PRINTING_QUALITY_CONFIG_GROUP_SINGLE,
+    PRINTING_QUALITY_CONFIG_GROUP_DUAL
 } from '../../constants';
 import { timestamp } from '../../../shared/lib/random-utils';
 import { machineStore } from '../../store/local-storage';
@@ -62,6 +67,7 @@ import ScaleToFitWithRotateOperation3D from '../operation-history/ScaleToFitWith
 import PrimeTowerModel from '../../models/PrimeTowerModel';
 import ThreeUtils from '../../three-extensions/ThreeUtils';
 // import { TYPE_SETTINGS } from '../../lib/gcode-viewer/constants';
+import { logPritingSlice, logProfileChange, logToolBarOperation, logTransformOperation } from '../../lib/gaEvent';
 
 // register methods for three-mesh-bvh
 THREE.Mesh.prototype.raycast = acceleratedRaycast;
@@ -504,15 +510,19 @@ export const actions = {
             stopArea: newStopArea
         }));
 
-        modelGroup.updateBoundingBox(new THREE.Box3(
+        const modelState = modelGroup.updateBoundingBox(new THREE.Box3(
             new THREE.Vector3(-size.x / 2 - EPSILON + newStopArea.left, -size.y / 2 + newStopArea.front - EPSILON, -EPSILON),
             new THREE.Vector3(size.x / 2 + EPSILON - newStopArea.right, size.y / 2 - newStopArea.back + EPSILON, size.z + EPSILON)
         ));
+        dispatch(actions.updateState(modelState));
     },
 
     updateDefaultConfigId: (type, defaultId, direction = LEFT_EXTRUDER) => (dispatch, getState) => {
         let { series } = getState().machine;
         series = getRealSeries(series);
+        const printingState = getState().printing;
+        const { defaultMaterialId, defaultMaterialIdRight, defaultQualityId } = printingState;
+
         let originalConfigId = {};
         if (machineStore.get('defaultConfigId')) {
             originalConfigId = JSON.parse(machineStore.get('defaultConfigId'));
@@ -522,15 +532,24 @@ export const actions = {
                 switch (direction) {
                     case LEFT_EXTRUDER:
                         originalConfigId[series].material = defaultId;
+                        if (defaultMaterialId !== defaultId) {
+                            logProfileChange(HEAD_PRINTING, 'material');
+                        }
                         break;
                     case RIGHT_EXTRUDER:
                         originalConfigId[series].materialRight = defaultId;
+                        if (defaultMaterialIdRight !== defaultId) {
+                            logProfileChange(HEAD_PRINTING, 'materialRight');
+                        }
                         break;
                     default:
                         break;
                 }
             } else {
                 originalConfigId[series][type] = defaultId;
+                if (defaultQualityId !== defaultId) {
+                    logProfileChange(HEAD_PRINTING, type);
+                }
             }
         } else {
             originalConfigId[series] = {
@@ -610,7 +629,12 @@ export const actions = {
                 const { progressStatesManager } = state;
                 progressStatesManager.finishProgress(false);
                 dispatch(actions.updateState({
-                    stage: STEP_STAGE.PRINTING_SLICE_FAILED
+                    progress: 100,
+                    stage: STEP_STAGE.PRINTING_SLICE_FAILED,
+                    promptTasks: [{
+                        status: 'fail',
+                        type: 'slice'
+                    }]
                 }));
             });
 
@@ -651,6 +675,103 @@ export const actions = {
             });
         }
     },
+
+    logGenerateGcode: () => (dispatch, getState) => {
+        const { extruderLDefinition, extruderRDefinition, defaultMaterialId,
+            defaultMaterialIdRight, defaultQualityId, qualityDefinitions, defaultDefinitions } = getState().printing;
+
+        const extruderLDefaultDefinition = defaultDefinitions.find(d => d.definitionId === defaultMaterialId);
+        const { toolHead } = getState().machine;
+        let defaultMaterialL = extruderLDefaultDefinition?.isDefault ? '0' : '2';
+
+        const activeActiveQualityDefinition = lodashFind(qualityDefinitions, { definitionId: defaultQualityId });
+        const defaultQualityDefinition = defaultDefinitions.find(d => d.definitionId === defaultQualityId);
+        let defaultMaterialQuality = defaultQualityDefinition?.isDefault ? '0' : '2';
+
+        const settings = {
+            layer_height: activeActiveQualityDefinition.settings?.layer_height?.default_value,
+            infill_pattern: activeActiveQualityDefinition.settings?.infill_pattern?.default_value,
+            auto_support: activeActiveQualityDefinition.settings?.support_enable?.default_value,
+            initial_layer_height: activeActiveQualityDefinition.settings?.layer_height_0?.default_value,
+            build_plate_adhesion_type: activeActiveQualityDefinition.settings?.adhesion_type?.default_value,
+            initial_layer_line_width_factor: activeActiveQualityDefinition.settings?.initial_layer_line_width_factor?.default_value
+        };
+
+        if (toolHead.printingToolhead === SINGLE_EXTRUDER_TOOLHEAD_FOR_SM2) {
+            settings.nozzle_diameter_L = extruderLDefinition.settings?.machine_nozzle_size?.default_value;
+
+            if (defaultMaterialL === '0') {
+                defaultMaterialL = PRINTING_MATERIAL_CONFIG_GROUP_SINGLE.some((item) => {
+                    return item.fields.some((key) => {
+                        return (
+                            extruderLDefaultDefinition?.settings[key].default_value
+                            !== extruderLDefinition.settings[key].default_value
+                        );
+                    });
+                }) ? '1' : '0';
+            }
+            if (defaultMaterialQuality === '0') {
+                defaultMaterialQuality = PRINTING_QUALITY_CONFIG_GROUP_SINGLE.some((item) => {
+                    return item.fields.some((key) => {
+                        return (
+                            activeActiveQualityDefinition.settings[key].default_value
+                            !== defaultQualityDefinition.settings[key].default_value
+                        );
+                    });
+                }) ? '1' : '0';
+            }
+            logPritingSlice(HEAD_PRINTING, {
+                defaultMaterialL,
+                defaultMaterialR: '',
+                defaultMaterialQuality
+            }, JSON.stringify(settings));
+        } else {
+            const extruderRDefaultDefinition = defaultDefinitions.find(d => d.definitionId === defaultMaterialIdRight);
+
+            settings.nozzle_diameter_L = extruderLDefinition.settings?.machine_nozzle_size?.default_value;
+            settings.nozzle_diameter_R = extruderRDefinition.settings?.machine_nozzle_size?.default_value;
+
+            if (defaultMaterialL === '0') {
+                defaultMaterialL = PRINTING_MATERIAL_CONFIG_GROUP_SINGLE.some((item) => {
+                    return item.fields.some((key) => {
+                        return (
+                            extruderLDefaultDefinition.settings[key].default_value
+                            !== extruderLDefinition.settings[key].default_value
+                        );
+                    });
+                }) ? '1' : '0';
+            }
+
+            let defaultMaterialR = extruderRDefaultDefinition?.isDefault ? '0' : '2';
+            if (defaultMaterialR === '0') {
+                defaultMaterialR = PRINTING_MATERIAL_CONFIG_GROUP_DUAL.some((item) => {
+                    return item.fields.some((key) => {
+                        return (
+                            extruderRDefaultDefinition?.settings[key].default_value
+                            !== extruderRDefinition.settings[key].default_value
+                        );
+                    });
+                }) ? '1' : '0';
+            }
+
+            if (defaultMaterialQuality === '0') {
+                defaultMaterialQuality = PRINTING_QUALITY_CONFIG_GROUP_DUAL.some((item) => {
+                    return item.fields.some((key) => {
+                        return (
+                            activeActiveQualityDefinition.settings[key].default_value
+                            !== defaultQualityDefinition.settings[key].default_value
+                        );
+                    });
+                }) ? '1' : '0';
+            }
+            logPritingSlice(HEAD_PRINTING, {
+                defaultMaterialL,
+                defaultMaterialR,
+                defaultMaterialQuality
+            }, JSON.stringify(settings));
+        }
+    },
+
     gcodeRenderingCallback: (data) => (dispatch, getState) => {
         const { gcodeLineGroup, gcodePreviewMode } = getState().printing;
 
@@ -719,6 +840,7 @@ export const actions = {
                 dispatch(actions.updateState({
                     stage: STEP_STAGE.PRINTING_PREVIEWING
                 }));
+                dispatch(actions.logGenerateGcode(layerCount));
                 break;
             }
             case 'progress': {
@@ -919,7 +1041,6 @@ export const actions = {
      */
     updateExtruderDefinition: (definition, direction = LEFT_EXTRUDER) => (dispatch, getState) => {
         const { activeDefinition, extruderLDefinition, extruderRDefinition, helpersExtruderConfig } = getState().printing;
-
         if (!definition) {
             return;
         }
@@ -1494,7 +1615,6 @@ export const actions = {
         finalDefinition.settings.support_interface_extruder_nr.default_value = supportExtruder;
         finalDefinition.settings.support_roof_extruder_nr.default_value = supportExtruder;
         finalDefinition.settings.support_bottom_extruder_nr.default_value = supportExtruder;
-
         await definitionManager.createDefinition(finalDefinition);
 
         // slice
@@ -1576,7 +1696,9 @@ export const actions = {
 
     setShowOriginalModel: (show) => (dispatch, getState) => {
         const { modelGroup } = getState().printing;
-        modelGroup.object.visible = show;
+        // modelGroup.object.visible = show;
+        modelGroup.object.visible = false;
+        modelGroup.grayModeObject.visible = show;
         dispatch(actions.render());
     },
 
@@ -1809,16 +1931,16 @@ export const actions = {
             // gcodeParser.endLayer = range[1];
             // dispatch(actions.renderShowGcodeLines());
             if (gcodeLine) {
-                gcodeLine.material.uniforms.u_visible_layer_range_start.value = range[0];
+                gcodeLine.material.uniforms.u_visible_layer_range_start.value = range[0] || -100;
                 gcodeLine.material.uniforms.u_visible_layer_range_end.value = range[1];
             }
             if (isUp && (range[0] - prevRange[0]) > 0 && (range[0] - prevRange[0]) < 1
-            && (range[1] - prevRange[1]) > 0 && (range[1] - prevRange[1]) < 1) {
+                && (range[1] - prevRange[1]) > 0 && (range[1] - prevRange[1]) < 1) {
                 range[0] = prevRange[0];
                 range[1] = prevRange[1];
             }
             if (!isUp && (range[0] - prevRange[0]) > 0 && (prevRange[0] - range[0]) < 1
-            && (range[1] - prevRange[1]) > 0 && (prevRange[1] - range[1]) < 1) {
+                && (range[1] - prevRange[1]) > 0 && (prevRange[1] - range[1]) < 1) {
                 range[0] = prevRange[0];
                 range[1] = prevRange[1];
             }
@@ -1877,7 +1999,6 @@ export const actions = {
             default: break;
         }
         dispatch(actions.recordModelBeforeTransform(modelGroup));
-        // TODO
         modelGroup.updateSelectedGroupTransformation(transformation, newUniformScalingState, isAllRotate);
         modelGroup.onModelAfterTransform();
 
@@ -2316,7 +2437,10 @@ export const actions = {
         recovery();
     },
 
-    recordModelAfterTransform: (transformMode, modelGroup, combinedOperations) => (dispatch, getState) => {
+    recordModelAfterTransform: (transformMode, modelGroup, combinedOperations, axis) => (dispatch, getState) => {
+        if (axis) {
+            logTransformOperation(HEAD_PRINTING, transformMode, axis);
+        }
         const { targetTmpState } = getState().printing;
         let operations, operation;
         if (combinedOperations) {
@@ -2631,7 +2755,6 @@ export const actions = {
         }));
         setTimeout(() => {
             const meshObjectJSON = [];
-            // console.log(modelGroup.selectedModelArray);
             modelGroup.selectedModelArray.forEach(modelItem => {
                 if (modelItem instanceof ThreeGroup) {
                     modelItem.children.forEach(child => {
@@ -2757,6 +2880,7 @@ export const actions = {
     undo: () => (dispatch, getState) => {
         const { canUndo } = getState().printing.history;
         if (canUndo) {
+            logToolBarOperation(HEAD_PRINTING, 'undo');
             dispatch(operationHistoryActions.undo(INITIAL_STATE.name));
             dispatch(actions.destroyGcodeLine());
             dispatch(actions.displayModel());
@@ -2767,6 +2891,7 @@ export const actions = {
     redo: () => (dispatch, getState) => {
         const { canRedo } = getState().printing.history;
         if (canRedo) {
+            logToolBarOperation(HEAD_PRINTING, 'redo');
             dispatch(operationHistoryActions.redo(INITIAL_STATE.name));
             dispatch(actions.destroyGcodeLine());
             dispatch(actions.displayModel());
@@ -3186,6 +3311,7 @@ export const actions = {
         dispatch(actions.updateState(modelState));
         dispatch(actions.destroyGcodeLine());
         dispatch(actions.displayModel());
+        logToolBarOperation(HEAD_PRINTING, 'align');
     },
 
     group: () => (dispatch, getState) => {
@@ -3230,6 +3356,7 @@ export const actions = {
         dispatch(actions.updateState(modelState));
         dispatch(actions.destroyGcodeLine());
         dispatch(actions.displayModel());
+        logToolBarOperation(HEAD_PRINTING, 'group');
     },
 
     ungroup: () => (dispatch, getState) => {
@@ -3273,6 +3400,7 @@ export const actions = {
         dispatch(actions.updateState(modelState));
         dispatch(actions.destroyGcodeLine());
         dispatch(actions.displayModel());
+        logToolBarOperation(HEAD_PRINTING, 'ungroup');
     },
 
     setModelsMeshColor: (direction, color) => (dispatch, getState) => {
@@ -3589,9 +3717,7 @@ export const actions = {
 export default function reducer(state = INITIAL_STATE, action) {
     switch (action.type) {
         case ACTION_UPDATE_STATE: {
-            const s = Object.assign({}, state, action.state);
-            window.pp = s;
-            return s;
+            return Object.assign({}, state, action.state);
         }
         case ACTION_UPDATE_TRANSFORMATION: {
             return Object.assign({}, state, {

@@ -4,6 +4,7 @@ import { MARLIN, PROTOCOL_SCREEN, PROTOCOL_TEXT, WORKFLOW_STATE_IDLE } from '../
 import socketController from './socket-controller';
 import log from './log';
 import { machineStore } from '../store/local-storage';
+import { lubanVisit } from './gaEvent';
 
 class SerialPortClient {
     callbacks = {
@@ -75,7 +76,9 @@ class SerialPortClient {
         'generate-support:started': [],
         'generate-support:completed': [],
         'generate-support:progress': [],
-        'generate-support:error': []
+        'generate-support:error': [],
+
+        'daily:heartbeat': []
     };
 
     dataSource = '';
@@ -168,6 +171,10 @@ class SerialPortClient {
                             this.workflowState = WORKFLOW_STATE_IDLE;
                         }
                     }
+                }
+                if (eventName === 'daily:heartbeat') {
+                    lubanVisit();
+                    return;
                 }
                 if (eventName === 'workflow:state') {
                     // this.workflowState = args[0];

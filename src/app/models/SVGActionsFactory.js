@@ -1,7 +1,7 @@
 import { isInside } from 'overlap-area';
 import svgPath from 'svgpath';
 import { cloneDeep } from 'lodash';
-import { DATA_PREFIX } from '../constants';
+import { DATA_PREFIX, MINIMUM_WIDTH_AND_HEIGHT } from '../constants';
 import { coordGmSvgToModel, getBBox } from '../ui/SVGEditor/element-utils';
 
 // import { remapElement } from '../../widgets/SVGEditor/element-recalculate';
@@ -69,10 +69,10 @@ function genModelConfig(elem, size, materials = {}) {
     // eslint-disable-next-line prefer-const
     let { x, y, width, height, positionX, positionY, scaleX, scaleY } = coord;
     if (!width) {
-        width = 1;
+        width = MINIMUM_WIDTH_AND_HEIGHT;
     }
     if (!height) {
-        height = 1;
+        height = MINIMUM_WIDTH_AND_HEIGHT;
     }
     // leave a little space for line width
     let vx = (x - deltaLeftX) * scaleX;

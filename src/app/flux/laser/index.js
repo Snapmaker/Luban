@@ -28,6 +28,7 @@ import definitionManager from '../manager/DefinitionManager';
 import i18n from '../../lib/i18n';
 import { timestamp } from '../../../shared/lib/random-utils';
 import ProgressStatesManager, { STEP_STAGE } from '../../lib/manager/ProgressManager';
+import { logToolBarOperation } from '../../lib/gaEvent';
 
 const initModelGroup = new ModelGroup('laser');
 const operationHistory = new OperationHistory();
@@ -220,6 +221,7 @@ export const actions = {
         const { group } = state.background;
         group.remove(...group.children);
         group.add(mesh);
+        logToolBarOperation(HEAD_LASER, 'camera_capture_add_backgroup');
         dispatch(actions.setBackgroundEnabled(true));
         dispatch(editorActions.updateState(HEAD_LASER, {
             useBackground: true
@@ -233,6 +235,7 @@ export const actions = {
 
         const { group } = state.background;
         group.remove(...group.children);
+        logToolBarOperation(HEAD_LASER, 'camera_capture_remove_backgroup');
         dispatch(actions.setBackgroundEnabled(false));
         dispatch(editorActions.updateState(HEAD_LASER, {
             useBackground: false

@@ -17,6 +17,9 @@ function SettingItem({ definitionKey, settings, isDefaultDefinition = () => true
     const setting = settings[definitionKey];
 
     const isProfile = !isDefaultDefinition();
+    if (!setting) {
+        return null;
+    }
     const { label, description, type, unit = '', enabled, options, min, max } = setting;
     const settingDefaultValue = setting.default_value;
     const isDefault = defaultValue && (defaultValue.value === settingDefaultValue);
@@ -138,7 +141,7 @@ function SettingItem({ definitionKey, settings, isDefaultDefinition = () => true
     return (
         <TipTrigger title={i18n._(label)} content={i18n._(description)} key={definitionKey}>
             <div className="position-re sm-flex justify-space-between height-32 margin-vertical-8">
-                <span className="text-overflow-ellipsis width-auto main-text-normal max-width-160 margin-right-8">
+                <span className="text-overflow-ellipsis width-auto main-text-normal" style={{ maxWidth: '171px' }}>
                     {i18n._(label)}
                 </span>
                 <div className="sm-flex-auto">

@@ -29,11 +29,12 @@ import VisualizerBottomLeft from './VisualizerBottomLeft';
 import VisualizerInfo from './VisualizerInfo';
 import PrintableCube from './PrintableCube';
 import styles from './styles.styl';
-import { loadModelFailPopup, scaletoFitPopup } from './VisualizerPopup';
+import { loadModelFailPopup, scaletoFitPopup, sliceFailPopup } from './VisualizerPopup';
 
 import { STEP_STAGE } from '../../../lib/manager/ProgressManager';
-import { updateControlInputEvent } from '../../components/SMCanvas/TransformControls';
+import { emitUpdateControlInputEvent } from '../../components/SMCanvas/TransformControls';
 import ModeToggleBtn from './ModeToggleBtn';
+import { logModelViewOperation } from '../../../lib/gaEvent';
 
 const initQuaternion = new Quaternion();
 const modeSuffix = {
@@ -121,18 +122,23 @@ class Visualizer extends PureComponent {
             this.canvas.current.zoomOut();
         },
         toFront: () => {
+            logModelViewOperation(HEAD_PRINTING, 'front');
             this.canvas.current.toFront();
         },
         toLeft: () => {
+            logModelViewOperation(HEAD_PRINTING, 'left');
             this.canvas.current.toLeft();
         },
         toRight: () => {
+            logModelViewOperation(HEAD_PRINTING, 'right');
             this.canvas.current.toRight();
         },
         toTop: () => {
+            logModelViewOperation(HEAD_PRINTING, 'top');
             this.canvas.current.toTop();
         },
         toTopFrontRight: () => {
+            logModelViewOperation(HEAD_PRINTING, 'isometric');
             this.canvas.current.toTopFrontRight();
         },
         fitViewIn: () => {
@@ -156,9 +162,9 @@ class Visualizer extends PureComponent {
         onModelBeforeTransform: () => {
             this.props.recordModelBeforeTransform(this.props.modelGroup);
         },
-        onModelAfterTransform: (transformMode) => {
+        onModelAfterTransform: (transformMode, axis) => {
             this.props.onModelTransform();
-            this.props.recordModelAfterTransform(transformMode, this.props.modelGroup);
+            this.props.recordModelAfterTransform(transformMode, this.props.modelGroup, axis);
             this.props.onModelAfterTransform();
         },
         // context menu
@@ -253,7 +259,7 @@ class Visualizer extends PureComponent {
                     };
                 }
                 this.props.updateSelectedModelTransformation(newTransformation);
-                window.dispatchEvent(updateControlInputEvent({
+                emitUpdateControlInputEvent({
                     controlValue: {
                         mode,
                         data: {
@@ -261,7 +267,7 @@ class Visualizer extends PureComponent {
                             [axis]: Number(data)
                         }
                     }
-                }));
+                });
             }
         }
     };
@@ -431,17 +437,21 @@ class Visualizer extends PureComponent {
             this.canvas.current.renderScene();
         }
 
-        if (stage !== prevProps.stage && stage === STEP_STAGE.PRINTING_LOAD_MODEL_COMPLETE) {
+        if (stage !== prevProps.stage) {
             if (promptTasks.length > 0) {
-                promptTasks.filter(item => item.status === 'fail').forEach(item => {
-                    loadModelFailPopup(item.originalName);
-                });
-                promptTasks.filter(item => item.status === 'needScaletoFit').forEach(item => {
-                    scaletoFitPopup(item.model).then(() => {
-                        modelGroup.selectModelById(item.model.modelID);
-                        this.actions.scaleToFitSelectedModel([item.model]);
+                if (stage === STEP_STAGE.PRINTING_LOAD_MODEL_COMPLETE) {
+                    promptTasks.filter(item => item.status === 'fail').forEach(item => {
+                        loadModelFailPopup(item.originalName);
                     });
-                });
+                    promptTasks.filter(item => item.status === 'needScaletoFit').forEach(item => {
+                        scaletoFitPopup(item.model).then(() => {
+                            modelGroup.selectModelById(item.model.modelID);
+                            this.actions.scaleToFitSelectedModel([item.model]);
+                        });
+                    });
+                } else if (stage === STEP_STAGE.PRINTING_SLICE_FAILED) {
+                    sliceFailPopup();
+                }
             }
         }
 
@@ -507,6 +517,7 @@ class Visualizer extends PureComponent {
                 ref={this.visualizerRef}
             >
                 <VisualizerLeftBar
+                    fitViewIn={this.actions.fitViewIn}
                     updateBoundingBox={this.actions.updateBoundingBox}
                     setTransformMode={this.actions.setTransformMode}
                     supportActions={this.supportActions}
@@ -728,7 +739,7 @@ const mapStateToProps = (state, ownProps) => {
 const mapDispatchToProps = (dispatch) => ({
     recordAddOperation: (model) => dispatch(printingActions.recordAddOperation(model)),
     recordModelBeforeTransform: (modelGroup) => dispatch(printingActions.recordModelBeforeTransform(modelGroup)),
-    recordModelAfterTransform: (transformMode, modelGroup) => dispatch(printingActions.recordModelAfterTransform(transformMode, modelGroup)),
+    recordModelAfterTransform: (transformMode, modelGroup, axis) => dispatch(printingActions.recordModelAfterTransform(transformMode, modelGroup, null, axis)),
     clearOperationHistory: () => dispatch(operationHistoryActions.clear(HEAD_PRINTING)),
 
     hideSelectedModel: () => dispatch(printingActions.hideSelectedModel()),

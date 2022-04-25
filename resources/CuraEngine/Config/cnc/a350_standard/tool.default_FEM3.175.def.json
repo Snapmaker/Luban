@@ -34,7 +34,7 @@
             "default_value": 0.5
         },
         "tool_extension_enabled": {
-            "default_value": true
+            "default_value": false
         }
     }
 }

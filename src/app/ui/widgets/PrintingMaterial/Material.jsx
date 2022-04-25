@@ -46,7 +46,6 @@ function Material({ widgetActions }) {
         const definition = materialDefinitions.find(d => d.definitionId === definitionId);
         if (definition) {
             // update selectedId
-            dispatch(printingActions.updateDefaultConfigId(PRINTING_MANAGER_TYPE_MATERIAL, definition.definitionId, direction));
             dispatch(printingActions.updateDefaultMaterialId(definition.definitionId, direction));
             dispatch(printingActions.updateExtruderDefinition(definition, direction));
             // update active definition
@@ -123,7 +122,7 @@ function Material({ widgetActions }) {
                                 setSelectorCustomValue(event.target.value);
                             }}
                         />
-                        { selectorCustomValue !== '' && (
+                        {selectorCustomValue !== '' && (
                             <SvgIcon
                                 className="margin-top-2"
                                 color="#1890FF"

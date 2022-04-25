@@ -118,7 +118,9 @@ class Visualizer extends Component {
             rotateElements: PropTypes.func.isRequired,
             rotateElementsFinish: PropTypes.func.isRequired,
             moveElementsOnKeyDown: PropTypes.func.isRequired,
-            isPointInSelectArea: PropTypes.func.isRequired
+            isPointInSelectArea: PropTypes.func.isRequired,
+            getMouseTargetByCoordinate: PropTypes.func.isRequired,
+            isSelectedAllVisible: PropTypes.func.isRequired
         })
     };
 
@@ -786,7 +788,9 @@ const mapDispatchToProps = (dispatch) => {
             rotateElementsFinish: (elements, options) => dispatch(editorActions.rotateElementsFinish('cnc', elements, options)),
             moveElementsOnKeyDown: (options) => dispatch(editorActions.moveElementsOnKeyDown('cnc', null, options)),
             rotateElementsImmediately: (elements, options) => dispatch(editorActions.rotateElementsImmediately('cnc', elements, options)),
-            isPointInSelectArea: (x, y) => dispatch(editorActions.isPointInSelectArea('cnc', x, y))
+            isPointInSelectArea: (x, y) => dispatch(editorActions.isPointInSelectArea('cnc', x, y)),
+            getMouseTargetByCoordinate: (x, y) => dispatch(editorActions.getMouseTargetByCoordinate('cnc', x, y)),
+            isSelectedAllVisible: () => dispatch(editorActions.isSelectedAllVisible('cnc'))
         }
         // onModelTransform: () => dispatch(editorActions.onModelTransform('cnc')),
         // onModelAfterTransform: () => dispatch(editorActions.onModelAfterTransform('cnc'))

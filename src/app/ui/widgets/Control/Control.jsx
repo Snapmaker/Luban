@@ -441,7 +441,7 @@ function Control({ widgetId, widgetActions: _widgetActions }) {
     return (
         <div>
             <DisplayPanel
-                workPosition={state.workPosition}
+                workPosition={workPosition}
                 originOffset={state.originOffset}
                 headType={headType}
                 executeGcode={actions.executeGcode}
@@ -493,6 +493,7 @@ function Control({ widgetId, widgetActions: _widgetActions }) {
 
             <ControlPanel
                 state={state}
+                workPosition={workPosition}
                 actions={actions}
                 executeGcode={actions.executeGcode}
             />

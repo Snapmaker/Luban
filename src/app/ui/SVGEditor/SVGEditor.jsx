@@ -1,4 +1,4 @@
-import React, { forwardRef, useEffect, useImperativeHandle, useRef } from 'react';
+import React, { forwardRef, useEffect, useImperativeHandle, useRef, useState } from 'react';
 import PropTypes from 'prop-types';
 
 
@@ -14,117 +14,130 @@ const SVGEditor = forwardRef((props, ref) => {
     const extRef = useRef(props.SVGCanvasExt);
     extRef.current = props.SVGCanvasExt;
 
-    const menuDisabledCountRef = useRef(props.menuDisabledCount);
-    menuDisabledCountRef.current = props.menuDisabledCount;
+    const [menuDisabledCount, setMenuDisabledCount] = useState(props.menuDisabledCount);
+    useEffect(() => {
+        setMenuDisabledCount(props.menuDisabledCount);
+    }, [props.menuDisabledCount]);
+
+    const menuDisabledCountRef = useRef(menuDisabledCount);
+    menuDisabledCountRef.current = menuDisabledCount;
 
     const onStopDraw = (exitCompletely, nextMode) => {
         return canvas.current.stopDraw(exitCompletely, nextMode);
     };
 
-    const shortcutHandler = {
-        title: 'SVGEditor',
-        // TODO: unregister in case of component is destroyed
-        isActive: () => props.isActive,
-        priority: priorities.VIEW,
-        shortcuts: {
-            [shortcutActions.UNDO]: () => {
-                if (!(menuDisabledCountRef.current > 0)) {
-                    props.editorActions.undo();
-                }
-            },
-            [shortcutActions.REDO]: () => {
-                if (!(menuDisabledCountRef.current > 0)) {
-                    props.editorActions.redo();
-                }
-            },
-            [shortcutActions.SELECTALL]: () => {
-                if (!(menuDisabledCountRef.current > 0)) {
-                    props.editorActions.selectAll();
-                }
-            },
-            [shortcutActions.UNSELECT]: () => {
-                if (!(menuDisabledCountRef.current > 0)) {
-                    props.editorActions.unselectAll();
-                }
-            },
-            [shortcutActions.DELETE]: () => {
-                if (!(menuDisabledCountRef.current > 0)) {
-                    props.editorActions.deleteSelectedModel(extRef.current.elem ? 'draw' : props.SVGCanvasMode);
-                }
-            },
-            [shortcutActions.COPY]: () => {
-                if (!(menuDisabledCountRef.current > 0)) {
-                    props.editorActions.copy();
-                }
-            },
-            [shortcutActions.PASTE]: () => {
-                if (!(menuDisabledCountRef.current > 0)) {
-                    props.editorActions.paste();
-                }
-            },
-            [shortcutActions.DUPLICATE]: () => {
-                if (!(menuDisabledCountRef.current > 0)) {
-                    props.editorActions.duplicateSelectedModel();
-                }
-            },
-            [shortcutActions.CUT]: () => {
-                if (!(menuDisabledCountRef.current > 0)) {
-                    props.editorActions.cut();
-                }
-            },
-            [shortcutActions.ENTER]: () => {
-                if (!(menuDisabledCountRef.current > 0)) {
-                    onStopDraw(true);
-                }
-            },
-            // optimize: accelerate when continuous click
-            'MOVE-UP': {
-                keys: ['up'],
-                callback: () => {
-                    props.elementActions.moveElementsStart(props.SVGActions.getSelectedElements());
-                    props.elementActions.moveElements(props.SVGActions.getSelectedElements(), { dx: 0, dy: -1 });
-                },
-                keyupCallback: () => {
-                    props.elementActions.moveElementsFinish(props.SVGActions.getSelectedElements());
-                }
-            },
-            'MOVE-DOWM': {
-                keys: ['down'],
-                callback: () => {
-                    props.elementActions.moveElementsStart(props.SVGActions.getSelectedElements());
-                    props.elementActions.moveElements(props.SVGActions.getSelectedElements(), { dx: 0, dy: 1 });
-                },
-                keyupCallback: () => {
-                    props.elementActions.moveElementsFinish(props.SVGActions.getSelectedElements());
-                }
-            },
-            'MOVE-LEFT': {
-                keys: ['left'],
-                callback: () => {
-                    props.elementActions.moveElementsStart(props.SVGActions.getSelectedElements());
-                    props.elementActions.moveElements(props.SVGActions.getSelectedElements(), { dx: -1, dy: 0 });
-                },
-                keyupCallback: () => {
-                    props.elementActions.moveElementsFinish(props.SVGActions.getSelectedElements());
-                }
-            },
-            'MOVE-RIGHT': {
-                keys: ['right'],
-                callback: () => {
-                    props.elementActions.moveElementsStart(props.SVGActions.getSelectedElements());
-                    props.elementActions.moveElements(props.SVGActions.getSelectedElements(), { dx: 1, dy: 0 });
-                },
-                keyupCallback: () => {
-                    props.elementActions.moveElementsFinish(props.SVGActions.getSelectedElements());
-                }
-            }
-
+    const moveElements = (config) => {
+        const selectedElements = props.elementActions.isSelectedAllVisible();
+        if (selectedElements) {
+            props.elementActions.moveElementsStart(selectedElements);
+            props.elementActions.moveElements(selectedElements, config);
         }
     };
+    const moveElementsFinish = () => {
+        const selectedElements = props.elementActions.isSelectedAllVisible();
+        selectedElements && props.elementActions.moveElementsFinish(selectedElements);
+    };
+
 
     useEffect(() => {
+        const shortcutHandler = {
+            title: 'SVGEditor',
+            // TODO: unregister in case of component is destroyed
+            isActive: () => props.isActive,
+            priority: priorities.VIEW,
+            shortcuts: {
+                [shortcutActions.UNDO]: () => {
+                    if (!(menuDisabledCountRef.current > 0)) {
+                        props.editorActions.undo();
+                    }
+                },
+                [shortcutActions.REDO]: () => {
+                    if (!(menuDisabledCountRef.current > 0)) {
+                        props.editorActions.redo();
+                    }
+                },
+                [shortcutActions.SELECTALL]: () => {
+                    if (!(menuDisabledCountRef.current > 0)) {
+                        props.editorActions.selectAll();
+                    }
+                },
+                [shortcutActions.UNSELECT]: () => {
+                    if (!(menuDisabledCountRef.current > 0)) {
+                        props.editorActions.unselectAll();
+                    }
+                },
+                [shortcutActions.DELETE]: () => {
+                    if (!(menuDisabledCountRef.current > 0)) {
+                        props.editorActions.deleteSelectedModel(extRef.current.elem ? 'draw' : props.SVGCanvasMode);
+                    }
+                },
+                [shortcutActions.COPY]: () => {
+                    if (!(menuDisabledCountRef.current > 0)) {
+                        props.editorActions.copy();
+                    }
+                },
+                [shortcutActions.PASTE]: () => {
+                    if (!(menuDisabledCountRef.current > 0)) {
+                        props.editorActions.paste();
+                    }
+                },
+                [shortcutActions.DUPLICATE]: () => {
+                    if (!(menuDisabledCountRef.current > 0)) {
+                        props.editorActions.duplicateSelectedModel();
+                    }
+                },
+                [shortcutActions.CUT]: () => {
+                    if (!(menuDisabledCountRef.current > 0)) {
+                        props.editorActions.cut();
+                    }
+                },
+                [shortcutActions.ENTER]: () => {
+                    if (!(menuDisabledCountRef.current > 0)) {
+                        onStopDraw(true);
+                    }
+                },
+                // optimize: accelerate when continuous click
+                'MOVE-UP': {
+                    keys: ['up'],
+                    callback: () => {
+                        moveElements({ dx: 0, dy: -1 });
+                    },
+                    keyupCallback: () => {
+                        moveElementsFinish();
+                    }
+                },
+                'MOVE-DOWM': {
+                    keys: ['down'],
+                    callback: () => {
+                        moveElements({ dx: 0, dy: 1 });
+                    },
+                    keyupCallback: () => {
+                        moveElementsFinish();
+                    }
+                },
+                'MOVE-LEFT': {
+                    keys: ['left'],
+                    callback: () => {
+                        moveElements({ dx: -1, dy: 0 });
+                    },
+                    keyupCallback: () => {
+                        moveElementsFinish();
+                    }
+                },
+                'MOVE-RIGHT': {
+                    keys: ['right'],
+                    callback: () => {
+                        moveElements({ dx: 1, dy: 0 });
+                    },
+                    keyupCallback: () => {
+                        moveElementsFinish();
+                    }
+                }
+
+            }
+        };
         ShortcutManager.register(shortcutHandler);
-    }, []);
+    }, [props.editorActions, props.isActive]);
 
     const changeCanvasMode = (_mode, ext) => {
         props.editorActions.setMode(_mode, ext);
@@ -285,7 +298,9 @@ SVGEditor.propTypes = {
         rotateElements: PropTypes.func.isRequired,
         rotateElementsFinish: PropTypes.func.isRequired,
         moveElementsOnKeyDown: PropTypes.func.isRequired,
-        isPointInSelectArea: PropTypes.func.isRequired
+        isPointInSelectArea: PropTypes.func.isRequired,
+        getMouseTargetByCoordinate: PropTypes.func.isRequired,
+        isSelectedAllVisible: PropTypes.func.isRequired
     }).isRequired,
     editorActions: PropTypes.object.isRequired,
 

@@ -1,10 +1,13 @@
 import React from 'react';
 import classNames from 'classnames';
 import PropTypes from 'prop-types';
+import { Tooltip } from 'antd';
 import i18n from '../../../lib/i18n';
 import PrintingObjectListBox from '../PrintingObjectList';
 import Card from '../../components/Card';
 import SvgIcon from '../../components/SvgIcon';
+import { HEAD_PRINTING } from '../../../constants';
+import { logObjectListOperation, logModelViewOperation } from '../../../lib/gaEvent';
 
 function VisualizerBottomLeft({ actions }) {
     return (
@@ -12,46 +15,63 @@ function VisualizerBottomLeft({ actions }) {
             <Card
                 className={classNames('margin-horizontal-8')}
                 title={i18n._('key-Printing/ObjectList-Object List')}
+                onListToogleVisible={(visible) => {
+                    logObjectListOperation(HEAD_PRINTING, visible ? 'expand' : 'pack');
+                }}
             >
                 <PrintingObjectListBox />
             </Card>
             <div className={classNames('margin-horizontal-8', 'height-30')}>
-                <SvgIcon
-                    name="ViewIsometric"
-                    size={24}
-                    onClick={actions.toTopFrontRight}
-                />
-                <SvgIcon
-                    name="ViewFront"
-                    size={24}
-                    className="margin-left-2"
-                    onClick={actions.toFront}
-                />
-                <SvgIcon
-                    name="ViewTop"
-                    size={24}
-                    className="margin-left-2"
-                    onClick={actions.toTop}
-                />
-                <SvgIcon
-                    name="ViewLeft"
-                    size={24}
-                    className="margin-left-2"
-                    onClick={actions.toLeft}
-                />
-                <SvgIcon
-                    name="ViewRight"
-                    size={24}
-                    className="margin-left-2"
-                    onClick={actions.toRight}
-                />
-                <div className="border-left-normal display-inline text-overflow-ellipsis height-20 margin-left-2 margin-top-4" />
-                <SvgIcon
-                    name="ScaleToFit"
-                    size={24}
-                    className="margin-left-2"
-                    onClick={actions.fitViewIn}
-                />
+                <Tooltip title={i18n._('key-Printing/View-Isometric')} arrowPointAtCenter>
+                    <SvgIcon
+                        name="ViewIsometric"
+                        size={24}
+                        onClick={actions.toTopFrontRight}
+                    />
+                </Tooltip>
+                <Tooltip title={i18n._('key-Printing/View-Front')} arrowPointAtCenter>
+                    <SvgIcon
+                        name="ViewFront"
+                        size={24}
+                        className="margin-left-2"
+                        onClick={actions.toFront}
+                    />
+                </Tooltip>
+                <Tooltip title={i18n._('key-Printing/View-Top')} arrowPointAtCenter>
+                    <SvgIcon
+                        name="ViewTop"
+                        size={24}
+                        className="margin-left-2"
+                        onClick={actions.toTop}
+                    />
+                </Tooltip>
+                <Tooltip title={i18n._('key-Printing/View-Left')} arrowPointAtCenter>
+                    <SvgIcon
+                        name="ViewLeft"
+                        size={24}
+                        className="margin-left-2"
+                        onClick={actions.toLeft}
+                    />
+                </Tooltip>
+                <Tooltip title={i18n._('key-Printing/View-Right')} arrowPointAtCenter>
+                    <SvgIcon
+                        name="ViewRight"
+                        size={24}
+                        className="margin-left-2"
+                        onClick={actions.toRight}
+                    />
+                </Tooltip>
+                <div className="display-inline width-1 height-22 background-grey-1 margin-horizontal-4 margin-vertical-4" />
+                <Tooltip title={i18n._('key-Printing/View-Auto Zoom')} arrowPointAtCenter>
+                    <SvgIcon
+                        name="ScaleToFit"
+                        size={24}
+                        onClick={() => {
+                          logModelViewOperation(HEAD_PRINTING, 'fit_view_in');
+                          actions.fitViewIn();
+                        }}
+                    />
+                </Tooltip>
             </div>
         </React.Fragment>
     );

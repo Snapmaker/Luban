@@ -200,6 +200,8 @@ function slice(params, onProgress, onSucceed, onError) {
                 gcodeFilePath: gcodeFilePath,
                 renderGcodeFileName
             });
+        } else {
+            onError('Slice Error');
         }
         log.info(`slice progress closed with code ${code}`);
     });

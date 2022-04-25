@@ -13,8 +13,6 @@ import WorkSpeed from './WorkSpeed';
 import { CONNECTION_TYPE_WIFI,
     WORKFLOW_STATUS_PAUSED,
     WORKFLOW_STATUS_RUNNING,
-    CONNECTION_BED_TEMPERATURE,
-    CONNECTION_NOZZLE_TEMPERATURE,
     CONNECTION_Z_OFFSET,
     CONNECTION_LOAD_FILAMENT,
     CONNECTION_UNLOAD_FILAMENT
@@ -30,6 +28,7 @@ class Printing extends PureComponent {
         workflowStatus: PropTypes.string.isRequired,
         nozzleTemperature: PropTypes.number.isRequired,
         addConsoleLogs: PropTypes.func.isRequired,
+        executeGcode: PropTypes.func.isRequired,
         heatedBedTemperature: PropTypes.number.isRequired
     };
 
@@ -52,9 +51,10 @@ class Printing extends PureComponent {
             });
         },
         onClickNozzleTemperature: () => {
-            controller.emitEvent(CONNECTION_NOZZLE_TEMPERATURE, {
-                nozzleTemperatureValue: this.state.nozzleTemperatureValue
-            });
+            // controller.emitEvent(CONNECTION_NOZZLE_TEMPERATURE, {
+            //     nozzleTemperatureValue: this.state.nozzleTemperatureValue
+            // });
+            this.props.executeGcode(`M104 S${this.state.nozzleTemperatureValue}`);
         },
         onChangeHeatedBedTemperatureValue: (value) => {
             this.setState({
@@ -62,9 +62,10 @@ class Printing extends PureComponent {
             });
         },
         onClickHeatedBedTemperature: () => {
-            controller.emitEvent(CONNECTION_BED_TEMPERATURE, {
-                heatedBedTemperatureValue: this.state.heatedBedTemperatureValue
-            });
+            // controller.emitEvent(CONNECTION_BED_TEMPERATURE, {
+            //     heatedBedTemperatureValue: this.state.heatedBedTemperatureValue
+            // });
+            this.props.executeGcode(`M140 S${this.state.heatedBedTemperatureValue}`);
         },
         onChangeZOffset: (value) => {
             this.setState({
@@ -249,7 +250,8 @@ const mapStateToProps = (state) => {
 
 const mapDispatchToProps = (dispatch) => {
     return {
-        addConsoleLogs: (gcode, context) => dispatch(machineActions.addConsoleLogs(gcode, context))
+        addConsoleLogs: (gcode, context) => dispatch(machineActions.addConsoleLogs(gcode, context)),
+        executeGcode: (gcode, context, cmd) => dispatch(machineActions.executeGcode(gcode, context, cmd))
     };
 };
 

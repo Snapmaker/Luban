@@ -351,7 +351,7 @@ function ToolPathFastConfigurations({ setEditingToolpath, headType, toolpath }) 
                 <div className="sm-flex height-40 border-bottom-normal padding-horizontal-16">
                     <span className="sm-flex-width main-text-normal">{i18n._('key-unused-General Parameters')}</span>
                 </div>
-                <div className="padding-horizontal-16 padding-vertical-16">
+                <div className="padding-horizontal-16">
                     {toolPath.headType === HEAD_CNC && currentToolDefinition && (
                         <ToolSelector
                             toolDefinition={currentToolDefinition}

@@ -36,10 +36,13 @@ export default class ScaleToFitWithRotateOpeartion3D extends Operation<ScaleToFi
     private exec(transform: ModelTransformation) {
         const model = this.state.target;
         const modelGroup = this.state.modelGroup;
-        const { scaleX, scaleY, scaleZ, rotationZ, positionX, positionY, positionZ } = transform;
+        // NOTE: Had to add 'rotationX, rotationY' since 'scale to fit' is possible to change model's rotationX and rotationY
+        const { scaleX, scaleY, scaleZ, rotationX, rotationY, rotationZ, positionX, positionY, positionZ } = transform;
         modelGroup.unselectAllModels();
         modelGroup.addModelToSelectedGroup(model);
         modelGroup.updateSelectedGroupTransformation({
+            rotationX: rotationX,
+            rotationY: rotationY,
             rotationZ: rotationZ,
             scaleX: scaleX,
             scaleY: scaleY,

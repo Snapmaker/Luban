@@ -106,7 +106,6 @@ export class Server extends events.EventEmitter {
     }
 
     startServerGcode(args, callback) {
-        console.log('args', args);
         controller.emitEvent(CONNECTION_START_GCODE, args)
             .once(CONNECTION_START_GCODE, ({ msg, code }) => {
                 dispatch(baseActions.updateState({
@@ -345,5 +344,16 @@ export class Server extends events.EventEmitter {
             printStatus
         };
         return this.gcodePrintingInfo;
+    }
+
+    static closeServerAfterWindowReload() {
+        controller.emitEvent(CONNECTION_CLOSE)
+            .once(CONNECTION_CLOSE, () => {
+                dispatch(machineActions.resetMachineState());
+                dispatch(workspaceActions.updateMachineState({
+                    headType: '',
+                    toolHead: ''
+                }));
+            });
     }
 }
