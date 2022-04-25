@@ -87,6 +87,7 @@ export type EventOptions = {
     y?: number,
     feedRate?: number,
     gcodePath?: string,
+    renderGcodeFileName?: string,
     value?: number,
     enable?: boolean,
     workSpeedFactor?: number,
@@ -374,7 +375,7 @@ class SocketHttp {
             .post(api)
             .field('token', this.token)
             .field('type', type)
-            .attach('file', gcodeFilePath)
+            .attach('file', gcodeFilePath, { filename: gcodeFilePath })
             .end((err, res) => {
                 const { msg, data } = _getResult(err, res);
                 if (callback) {
@@ -412,13 +413,13 @@ class SocketHttp {
     };
 
     public uploadFile = (options: EventOptions) => {
-        const { gcodePath, eventName } = options;
+        const { gcodePath, eventName, renderGcodeFileName } = options;
         const api = `${this.host}/api/v1/upload`;
         request
             .post(api)
             .timeout(300000)
             .field('token', this.token)
-            .attach('file', DataStorage.tmpDir + gcodePath)
+            .attach('file', DataStorage.tmpDir + gcodePath, { filename: renderGcodeFileName })
             .end((err, res) => {
                 this.socket && this.socket.emit(eventName, _getResult(err, res));
             });
