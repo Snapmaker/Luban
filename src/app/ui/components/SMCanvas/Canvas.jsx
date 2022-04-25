@@ -314,7 +314,7 @@ class Canvas extends PureComponent {
             this.onModelBeforeTransform(this.controls.transformControl.mode);
         });
         this.controls.on(EVENTS.AFTER_TRANSFORM_OBJECT, () => {
-            this.onModelAfterTransform(this.controls.transformControl.mode);
+            this.onModelAfterTransform(this.controls.transformControl.mode, this.controls.transformControl.axis);
         });
         this.controls.on(EVENTS.SELECT_PLACEMENT_FACE, (userData) => {
             this.onRotationPlacementSelect(userData);

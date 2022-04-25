@@ -22,6 +22,8 @@ import { renderPopup } from '../../utils';
 import Workspace from '../../pages/Workspace';
 import SvgIcon from '../../components/SvgIcon';
 import { STEP_STAGE } from '../../../lib/manager/ProgressManager';
+import { HEAD_PRINTING } from '../../../constants';
+import { logGcodeExport } from '../../../lib/gaEvent';
 
 function useRenderWorkspace() {
     const [showWorkspace, setShowWorkspace] = useState(false);
@@ -79,7 +81,7 @@ function Output() {
             gcodeFile.thumbnail = thumbnail.current.getDataURL() || defaultThumbnail;
             dispatch(workspaceActions.renderGcodeFile(gcodeFile));
             setShowWorkspace(true);
-
+            logGcodeExport(HEAD_PRINTING, 'workspace');
             window.scrollTo(0, 0);
         },
         onClickExportGcode: () => {
@@ -92,6 +94,7 @@ function Output() {
             }
             const filename = path.basename(gcodeFile?.name);
             dispatch(projectActions.exportFile(filename, gcodeFile.renderGcodeFileName));
+            logGcodeExport(HEAD_PRINTING, 'local');
         }
     };
     useEffect(() => {

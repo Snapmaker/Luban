@@ -34,6 +34,7 @@ import { loadModelFailPopup, scaletoFitPopup } from './VisualizerPopup';
 import { STEP_STAGE } from '../../../lib/manager/ProgressManager';
 import { updateControlInputEvent } from '../../components/SMCanvas/TransformControls';
 import ModeToggleBtn from './ModeToggleBtn';
+import { logModelViewOperation } from '../../../lib/gaEvent';
 
 const initQuaternion = new Quaternion();
 const modeSuffix = {
@@ -121,18 +122,23 @@ class Visualizer extends PureComponent {
             this.canvas.current.zoomOut();
         },
         toFront: () => {
+            logModelViewOperation(HEAD_PRINTING, 'front');
             this.canvas.current.toFront();
         },
         toLeft: () => {
+            logModelViewOperation(HEAD_PRINTING, 'left');
             this.canvas.current.toLeft();
         },
         toRight: () => {
+            logModelViewOperation(HEAD_PRINTING, 'right');
             this.canvas.current.toRight();
         },
         toTop: () => {
+            logModelViewOperation(HEAD_PRINTING, 'top');
             this.canvas.current.toTop();
         },
         toTopFrontRight: () => {
+            logModelViewOperation(HEAD_PRINTING, 'isometric');
             this.canvas.current.toTopFrontRight();
         },
         fitViewIn: () => {
@@ -156,9 +162,9 @@ class Visualizer extends PureComponent {
         onModelBeforeTransform: () => {
             this.props.recordModelBeforeTransform(this.props.modelGroup);
         },
-        onModelAfterTransform: (transformMode) => {
+        onModelAfterTransform: (transformMode, axis) => {
             this.props.onModelTransform();
-            this.props.recordModelAfterTransform(transformMode, this.props.modelGroup);
+            this.props.recordModelAfterTransform(transformMode, this.props.modelGroup, axis);
             this.props.onModelAfterTransform();
         },
         // context menu
@@ -728,7 +734,7 @@ const mapStateToProps = (state, ownProps) => {
 const mapDispatchToProps = (dispatch) => ({
     recordAddOperation: (model) => dispatch(printingActions.recordAddOperation(model)),
     recordModelBeforeTransform: (modelGroup) => dispatch(printingActions.recordModelBeforeTransform(modelGroup)),
-    recordModelAfterTransform: (transformMode, modelGroup) => dispatch(printingActions.recordModelAfterTransform(transformMode, modelGroup)),
+    recordModelAfterTransform: (transformMode, modelGroup, axis) => dispatch(printingActions.recordModelAfterTransform(transformMode, modelGroup, null, axis)),
     clearOperationHistory: () => dispatch(operationHistoryActions.clear(HEAD_PRINTING)),
 
     hideSelectedModel: () => dispatch(printingActions.hideSelectedModel()),

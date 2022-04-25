@@ -13,7 +13,8 @@ import { NumberInput as Input } from '../../../components/Input';
 import Checkbox from '../../../components/Checkbox';
 import { Button } from '../../../components/Buttons';
 import { updateControlInputEvent } from '../../../components/SMCanvas/TransformControls';
-import { SCALE_MODE } from '../../../../constants';
+import { HEAD_PRINTING, SCALE_MODE } from '../../../../constants';
+import { logTransformOperation } from '../../../../lib/gaEvent';
 
 const longLang = ['de', 'it'];
 const ScaleOverlay = React.memo(({
@@ -130,6 +131,7 @@ const ScaleOverlay = React.memo(({
             }
         });
         dispatch(printingActions.updateSelectedModelTransformation(newTransformation, isReset ? _isPrimeTowerSelected : undefined));
+        !isReset && logTransformOperation(HEAD_PRINTING, 'scale', 'input_%');
         window.dispatchEvent(updateControlInputEvent({
             controlValue: {
                 mode: SCALE_MODE,
@@ -148,6 +150,7 @@ const ScaleOverlay = React.memo(({
             'scaleZ': _isPrimeTowerSelected ? primeTowerHeight : 1,
             'uniformScalingState': !_isPrimeTowerSelected
         }, true);
+        logTransformOperation(HEAD_PRINTING, 'scale', 'reset');
         window.dispatchEvent(updateControlInputEvent({
             controlValue: {
                 mode: SCALE_MODE,
@@ -163,6 +166,7 @@ const ScaleOverlay = React.memo(({
     };
 
     const scaleToFitSelectedModel = () => {
+        logTransformOperation(HEAD_PRINTING, 'scale', 'to_fit');
         dispatch(printingActions.scaleToFitSelectedModelWithRotate());
     };
 

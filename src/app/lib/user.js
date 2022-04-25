@@ -7,11 +7,12 @@ export default {
     signin: ({ token }) => new Promise((resolve) => {
         api.signin({ token })
             .then((res) => {
-                const { enabled = false, token: newToken = '', name = '', sceneJson = '' } = { ...res.body };
+                const { enabled = false, token: newToken = '', name = '', sceneJson = '', userId } = { ...res.body };
                 machineStore.set('session.enabled', enabled);
                 machineStore.set('session.token', newToken);
                 machineStore.set('session.name', name);
                 machineStore.set('scene', sceneJson);
+                machineStore.set('userId', userId);
 
                 authenticated = true;
                 resolve({ authenticated: true });

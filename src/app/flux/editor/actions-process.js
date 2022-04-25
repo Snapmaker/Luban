@@ -18,6 +18,7 @@ import Operations from '../operation-history/Operations';
 import { timestamp } from '../../../shared/lib/random-utils';
 import definitionManager from '../manager/DefinitionManager';
 import api from '../../api';
+import { logSvgSlice } from '../../lib/gaEvent';
 
 let toastId;
 export const processActions = {
@@ -71,6 +72,7 @@ export const processActions = {
             toolPath.object = toolPath.object.clone();
             toolPathGroup.toolPathObjects.add(toolPath.object);
         });
+        logSvgSlice(headType, visibleToolPathsLength);
         // toolPathGroup.selectToolPathById();
         dispatch(baseActions.updateState(headType, {
             needToPreview: false

@@ -12,10 +12,11 @@ import modal from '../../../../lib/modal';
 import { NumberInput as Input } from '../../../components/Input';
 import { Button } from '../../../components/Buttons';
 import SvgIcon from '../../../components/SvgIcon';
-import { EPSILON } from '../../../../constants';
+import { EPSILON, HEAD_PRINTING } from '../../../../constants';
 import ThreeGroup from '../../../../models/ThreeGroup';
 import ThreeModel from '../../../../models/ThreeModel';
 import ThreeUtils from '../../../../three-extensions/ThreeUtils';
+import { logTransformOperation } from '../../../../lib/gaEvent';
 import styles from './styles.styl';
 
 const isNonUniformScaled = (autoRotateModelArray) => {
@@ -109,6 +110,7 @@ const RotateOverlay = React.memo(({
         rotateOnlyForUniformScale(() => {
             autoRotateSelectedModel();
         }, autoRotateModelArray);
+        logTransformOperation(HEAD_PRINTING, 'roate', 'auto');
     };
 
     const resetRotation = () => {
@@ -118,6 +120,7 @@ const RotateOverlay = React.memo(({
             'rotateZ': THREE.Math.degToRad(0)
         });
         onModelAfterTransform();
+        logTransformOperation(HEAD_PRINTING, 'roate', 'reset');
     };
 
     const rotateByDirection = (rotateAxis, rotateAngle, type) => {
@@ -133,12 +136,14 @@ const RotateOverlay = React.memo(({
                 modelItem.meshObject.updateMatrix();
                 revertParent();
             });
+            logTransformOperation(HEAD_PRINTING, 'roate', 'free');
         } else if (type === 'direction') {
             const meshObject = selectedModelArray[0].meshObject;
             const revertParent = ThreeUtils.removeObjectParent(meshObject);
             selectedModelArray[0].meshObject.applyQuaternion(quaternion);
             selectedModelArray[0].meshObject.updateMatrix();
             revertParent();
+            logTransformOperation(HEAD_PRINTING, 'roate', 'direction');
         }
         modelGroup.onModelAfterTransform();
         dispatch(printingActions.recordModelAfterTransform('rotate', modelGroup));
