@@ -1783,7 +1783,7 @@ export const actions = {
             // gcodeParser.endLayer = range[1];
             // dispatch(actions.renderShowGcodeLines());
             if (gcodeLine) {
-                gcodeLine.material.uniforms.u_visible_layer_range_start.value = range[0];
+                gcodeLine.material.uniforms.u_visible_layer_range_start.value = range[0] || -100;
                 gcodeLine.material.uniforms.u_visible_layer_range_end.value = range[1];
             }
             if (isUp && (range[0] - prevRange[0]) > 0 && (range[0] - prevRange[0]) < 1
