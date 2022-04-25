@@ -305,7 +305,7 @@ function VisualizerPreviewControl() {
                                 <div className="border-bottom-normal padding-horizontal-16 height-40 heading-3">
                                     {i18n._('key-Printing/Preview-Line Type')}
                                 </div>
-                                <div className="padding-vertical-16 padding-left-16">
+                                <div className="padding-vertical-12 padding-left-16">
                                     {isDualExtruder && (
                                         <div className="sm-flex justify-space-between height-24 margin-bottom-10">
                                             <div>
@@ -385,7 +385,7 @@ function VisualizerPreviewControl() {
                                         }))}
 
                                         <div className="border-top-normal padding-right-16 margin-right-16" />
-                                        <div className="sm-flex justify-space-between height-24 margin-vertical-8 padding-right-16">
+                                        <div className="sm-flex justify-space-between height-24 margin-top-8 padding-right-16">
                                             <div>
                                                 <Checkbox
                                                     checked={showOriginalModel}

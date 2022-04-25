@@ -135,12 +135,8 @@ export const set = async (req, res) => {
             });
         }
     } catch (err) {
-        if (err) {
-            log.error(`Failed to read image ${tempName} ,${err.message} `);
-            res.status(ERR_INTERNAL_SERVER_ERROR).end();
-        } else {
-            res.end();
-        }
+        log.error(`Failed to read image ${tempName} ,${err.message} `);
+        res.status(ERR_INTERNAL_SERVER_ERROR).end();
     }
 };
 /**

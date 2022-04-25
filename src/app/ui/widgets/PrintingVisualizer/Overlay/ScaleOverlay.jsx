@@ -12,7 +12,7 @@ import { CancelButton } from '../VisualizerLeftBar';
 import { NumberInput as Input } from '../../../components/Input';
 import Checkbox from '../../../components/Checkbox';
 import { Button } from '../../../components/Buttons';
-import { updateControlInputEvent } from '../../../components/SMCanvas/TransformControls';
+import { emitUpdateControlInputEvent } from '../../../components/SMCanvas/TransformControls';
 import { HEAD_PRINTING, SCALE_MODE } from '../../../../constants';
 import { logTransformOperation } from '../../../../lib/gaEvent';
 
@@ -132,7 +132,7 @@ const ScaleOverlay = React.memo(({
         });
         dispatch(printingActions.updateSelectedModelTransformation(newTransformation, isReset ? _isPrimeTowerSelected : undefined));
         !isReset && logTransformOperation(HEAD_PRINTING, 'scale', 'input_%');
-        window.dispatchEvent(updateControlInputEvent({
+        emitUpdateControlInputEvent({
             controlValue: {
                 mode: SCALE_MODE,
                 axis: isReset ? undefined : updateAxis,
@@ -140,7 +140,7 @@ const ScaleOverlay = React.memo(({
                     [updateAxis]: newTransformation[`scale${updateAxis.toUpperCase()}`] * 100
                 }
             }
-        }));
+        });
     };
 
     const resetScale = (_isPrimeTowerSelected) => {
@@ -151,7 +151,7 @@ const ScaleOverlay = React.memo(({
             'uniformScalingState': !_isPrimeTowerSelected
         }, true);
         logTransformOperation(HEAD_PRINTING, 'scale', 'reset');
-        window.dispatchEvent(updateControlInputEvent({
+        emitUpdateControlInputEvent({
             controlValue: {
                 mode: SCALE_MODE,
                 data: {
@@ -161,7 +161,7 @@ const ScaleOverlay = React.memo(({
                 }
                 // axis: updateAxis
             }
-        }));
+        });
         onModelAfterTransform();
     };
 

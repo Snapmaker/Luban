@@ -120,7 +120,7 @@ class SocketSerial {
         // Leave the room
         // socket.leave(port);
         controller.close(() => {
-        // Remove controller from store
+            // Remove controller from store
             store.unset(`controllers["${port}/${dataSource}"]`);
 
             // Destroy controller

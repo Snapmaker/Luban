@@ -1,3 +1,4 @@
+import { MINIMUM_WIDTH_AND_HEIGHT } from '../../constants/index';
 import {
     ACTION_RESET_CALCULATED_STATE,
     ACTION_UPDATE_CONFIG,
@@ -25,10 +26,10 @@ export const computeTransformationSizeForTextVector = (text, fontSize, lineHeigh
     let width = height / size.height * size.width;
 
     if (!width) {
-        width = 0.01;
+        width = MINIMUM_WIDTH_AND_HEIGHT;
     }
     if (!height) {
-        height = 0.01;
+        height = MINIMUM_WIDTH_AND_HEIGHT;
     }
 
     return {

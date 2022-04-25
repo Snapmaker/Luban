@@ -10,7 +10,7 @@ export const loadModelFailPopup = (fileName) => {
         body: (
             <React.Fragment>
                 <p>{i18n._('Failed to import this object. \nPlease select a supported file format.')}</p>
-                <p>fileName: {fileName}</p>
+                <p>{i18n._('key-Printing/ContextMenu-Model source name')}: {fileName}</p>
             </React.Fragment>
         )
     });
@@ -24,7 +24,7 @@ export const scaletoFitPopup = (model) => {
                 <React.Fragment>
                     <p>{i18n._('key-Printing/ContextMenu-Model size has exceeded the printable area.')}</p>
                     <p>{i18n._('key-Printing/ContextMenu-Scale it to the maximum printable size?')}</p>
-                    <p>fileName: {model.modelName}</p>
+                    <p>{i18n._('key-Printing/ContextMenu-Model source name')}: {model.modelName}</p>
                 </React.Fragment>
             ),
 
@@ -47,5 +47,18 @@ export const scaletoFitPopup = (model) => {
                 reject();
             }
         });
+    });
+};
+
+
+export const sliceFailPopup = () => {
+    return modal({
+        cancelTitle: i18n._(''),
+        title: i18n._('key-Progress/3DP-Failed to preview G-code.'),
+        body: (
+            <React.Fragment>
+                <p>{i18n._('key-Progress/3DP-Failed to preview G-code.')}</p>
+            </React.Fragment>
+        )
     });
 };

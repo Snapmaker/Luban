@@ -510,10 +510,11 @@ export const actions = {
             stopArea: newStopArea
         }));
 
-        modelGroup.updateBoundingBox(new THREE.Box3(
+        const modelState = modelGroup.updateBoundingBox(new THREE.Box3(
             new THREE.Vector3(-size.x / 2 - EPSILON + newStopArea.left, -size.y / 2 + newStopArea.front - EPSILON, -EPSILON),
             new THREE.Vector3(size.x / 2 + EPSILON - newStopArea.right, size.y / 2 - newStopArea.back + EPSILON, size.z + EPSILON)
         ));
+        dispatch(actions.updateState(modelState));
     },
 
     updateDefaultConfigId: (type, defaultId, direction = LEFT_EXTRUDER) => (dispatch, getState) => {
@@ -628,7 +629,12 @@ export const actions = {
                 const { progressStatesManager } = state;
                 progressStatesManager.finishProgress(false);
                 dispatch(actions.updateState({
-                    stage: STEP_STAGE.PRINTING_SLICE_FAILED
+                    progress: 100,
+                    stage: STEP_STAGE.PRINTING_SLICE_FAILED,
+                    promptTasks: [{
+                        status: 'fail',
+                        type: 'slice'
+                    }]
                 }));
             });
 
@@ -1924,7 +1930,7 @@ export const actions = {
             // gcodeParser.endLayer = range[1];
             // dispatch(actions.renderShowGcodeLines());
             if (gcodeLine) {
-                gcodeLine.material.uniforms.u_visible_layer_range_start.value = range[0];
+                gcodeLine.material.uniforms.u_visible_layer_range_start.value = range[0] || -100;
                 gcodeLine.material.uniforms.u_visible_layer_range_end.value = range[1];
             }
             if (isUp && (range[0] - prevRange[0]) > 0 && (range[0] - prevRange[0]) < 1
@@ -3710,9 +3716,7 @@ export const actions = {
 export default function reducer(state = INITIAL_STATE, action) {
     switch (action.type) {
         case ACTION_UPDATE_STATE: {
-            const s = Object.assign({}, state, action.state);
-            window.pp = s;
-            return s;
+            return Object.assign({}, state, action.state);
         }
         case ACTION_UPDATE_TRANSFORMATION: {
             return Object.assign({}, state, {

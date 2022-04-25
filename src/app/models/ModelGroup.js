@@ -516,7 +516,7 @@ class ModelGroup extends EventEmitter {
 
     updateBoundingBox(bbox) {
         this._bbox = bbox;
-        this._checkAnyModelOversteppedOrSelected();
+        return this.getState();
     }
 
     totalEstimatedTime() {

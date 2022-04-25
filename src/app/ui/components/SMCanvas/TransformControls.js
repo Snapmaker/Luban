@@ -33,19 +33,38 @@ const EVENTS = {
 
 const OUTLINE = 'OUTLINE';
 // let objectCase = null;
-const updatePositionEvent = (transformData) => new CustomEvent('update-position', {
-    detail: transformData
-});
-const updateScaleEvent = (transformData) => new CustomEvent('update-scale', {
-    detail: transformData
-});
-const updateRotateEvent = (transformData) => new CustomEvent('update-rotate', {
-    detail: transformData
-});
 
-export const updateControlInputEvent = (transformData) => new CustomEvent('update-control-input', {
-    detail: transformData
-});
+export const emitUpdatePositionEvent = throttle((transformData) => {
+    return window.dispatchEvent(
+        new CustomEvent('update-position', {
+            detail: transformData
+        })
+    );
+}, 1000);
+
+export const emitUpdateScaleEvent = throttle((transformData) => {
+    return window.dispatchEvent(
+        new CustomEvent('update-scale', {
+            detail: transformData
+        })
+    );
+}, 1000);
+
+export const emitUpdateRotateEvent = throttle((transformData) => {
+    return window.dispatchEvent(
+        new CustomEvent('update-rotate', {
+            detail: transformData
+        })
+    );
+}, 1000);
+
+export const emitUpdateControlInputEvent = throttle((transformData) => {
+    return window.dispatchEvent(
+        new CustomEvent('update-control-input', {
+            detail: transformData
+        })
+    );
+}, 1000);
 
 const RED = 0xff5759;
 const GREEN = 0x4cb518;
@@ -938,30 +957,27 @@ class TransformControls extends Object3D {
         if (!intersect) {
             return false;
         }
-
-        throttle(() => {
-            let data = {};
-            if (this.mode.toLowerCase() === SCALE_MODE) {
-                data = {
-                    x: Math.round(Math.abs(this.object.scale.x) * 1000) / 10,
-                    y: Math.round(Math.abs(this.object.scale.y) * 1000) / 10,
-                    z: Math.round(Math.abs(this.object.scale.z) * 1000) / 10
-                };
-            } else if (this.mode.toLowerCase() === TRANSLATE_MODE) {
-                data = {
-                    x: Math.round(this.object.position.x * 10) / 10,
-                    y: Math.round(this.object.position.y * 10) / 10,
-                    z: Math.round(this.object.position.z * 10) / 10
-                };
+        let data = {};
+        if (this.mode.toLowerCase() === SCALE_MODE) {
+            data = {
+                x: Math.round(Math.abs(this.object.scale.x) * 1000) / 10,
+                y: Math.round(Math.abs(this.object.scale.y) * 1000) / 10,
+                z: Math.round(Math.abs(this.object.scale.z) * 1000) / 10
+            };
+        } else if (this.mode.toLowerCase() === TRANSLATE_MODE) {
+            data = {
+                x: Math.round(this.object.position.x * 10) / 10,
+                y: Math.round(this.object.position.y * 10) / 10,
+                z: Math.round(this.object.position.z * 10) / 10
+            };
+        }
+        emitUpdateControlInputEvent({
+            controlValue: {
+                mode: this.mode.toLowerCase(),
+                axis: this.axis.toLowerCase(),
+                data
             }
-            window.dispatchEvent(updateControlInputEvent({
-                controlValue: {
-                    mode: this.mode.toLowerCase(),
-                    axis: this.axis.toLowerCase(),
-                    data
-                }
-            }));
-        }, 1000)();
+        });
 
         this.quaternionStart.copy(this.object.quaternion);
         this.scaleStart.copy(this.object.scale);
@@ -1007,18 +1023,16 @@ class TransformControls extends Object3D {
                     y: Math.round(this.object.position.y * 10) / 10,
                     z: Math.round(this.object.position.z * 10) / 10
                 };
-                throttle(() => {
-                    window.dispatchEvent(updatePositionEvent({
-                        position: roundPosition
-                    }));
-                    window.dispatchEvent(updateControlInputEvent({
-                        controlValue: {
-                            mode: this.mode.toLowerCase(),
-                            data: roundPosition,
-                            axis: this.axis.toLowerCase()
-                        }
-                    }));
-                }, 1000)();
+                emitUpdatePositionEvent({
+                    position: roundPosition
+                });
+                emitUpdateControlInputEvent({
+                    controlValue: {
+                        mode: this.mode.toLowerCase(),
+                        data: roundPosition,
+                        axis: this.axis.toLowerCase()
+                    }
+                });
                 break;
             }
             case 'rotate': {
@@ -1036,23 +1050,21 @@ class TransformControls extends Object3D {
                 const quaternion = new Quaternion().setFromAxisAngle(rotationAxis, rotationAngle);
                 this.object.quaternion.copy(quaternion).multiply(this.quaternionStart).normalize();
                 const roundRotate = Math.round(ThreeMath.radToDeg(rotationAngle) * 10) / 10;
-                throttle(() => {
-                    window.dispatchEvent(updateRotateEvent({
-                        rotate: {
-                            [this.axis.toLowerCase()]: roundRotate,
-                            rotateAxis: this.axis.toLowerCase()
-                        }
-                    }));
-                    window.dispatchEvent(updateControlInputEvent({
-                        controlValue: {
-                            mode: this.mode.toLowerCase(),
-                            data: {
-                                [this.axis.toLowerCase()]: roundRotate
-                            },
-                            axis: this.axis.toLowerCase()
-                        }
-                    }));
-                }, 1000)();
+                emitUpdateRotateEvent({
+                    rotate: {
+                        [this.axis.toLowerCase()]: roundRotate,
+                        rotateAxis: this.axis.toLowerCase()
+                    }
+                });
+                emitUpdateControlInputEvent({
+                    controlValue: {
+                        mode: this.mode.toLowerCase(),
+                        data: {
+                            [this.axis.toLowerCase()]: roundRotate
+                        },
+                        axis: this.axis.toLowerCase()
+                    }
+                });
                 break;
             }
             case 'scale': {
@@ -1090,21 +1102,19 @@ class TransformControls extends Object3D {
                     y: Math.round(Math.abs(this.object.scale.y) * 1000) / 10,
                     z: Math.round(Math.abs(this.object.scale.z) * 1000) / 10
                 };
-                throttle(() => {
-                    window.dispatchEvent(updateScaleEvent({
-                        scale: roundScale,
-                        isPrimeTower,
-                        axis: this.axis.toLowerCase()
-                    }));
-                    window.dispatchEvent(updateControlInputEvent({
-                        controlValue: {
-                            mode: this.mode.toLowerCase(),
-                            axis: this.axis.toLowerCase(),
-                            data: roundScale,
-                            isPrimeTower
-                        }
-                    }));
-                }, 1000)();
+                emitUpdateScaleEvent({
+                    scale: roundScale,
+                    isPrimeTower,
+                    axis: this.axis.toLowerCase()
+                });
+                emitUpdateControlInputEvent({
+                    controlValue: {
+                        mode: this.mode.toLowerCase(),
+                        axis: this.axis.toLowerCase(),
+                        data: roundScale,
+                        isPrimeTower
+                    }
+                });
                 break;
             }
             default:
@@ -1121,21 +1131,21 @@ class TransformControls extends Object3D {
         this.updateBoundingBox();
         this.dragging = false;
         if (this.mode === 'rotate') {
-            window.dispatchEvent(updateRotateEvent({
+            emitUpdateRotateEvent({
                 rotate: {
                     x: null,
                     y: null,
                     z: null,
                     rotateAxis: null
                 }
-            }));
-            window.dispatchEvent(updateControlInputEvent({
+            });
+            emitUpdateControlInputEvent({
                 controlValue: {
                     mode: this.mode.toLowerCase(),
                     axis: null,
                     data: null
                 }
-            }));
+            });
         }
         this.dispatchEvent(EVENTS.UPDATE);
     }

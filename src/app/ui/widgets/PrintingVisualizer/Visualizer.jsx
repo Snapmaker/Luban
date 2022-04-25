@@ -29,10 +29,10 @@ import VisualizerBottomLeft from './VisualizerBottomLeft';
 import VisualizerInfo from './VisualizerInfo';
 import PrintableCube from './PrintableCube';
 import styles from './styles.styl';
-import { loadModelFailPopup, scaletoFitPopup } from './VisualizerPopup';
+import { loadModelFailPopup, scaletoFitPopup, sliceFailPopup } from './VisualizerPopup';
 
 import { STEP_STAGE } from '../../../lib/manager/ProgressManager';
-import { updateControlInputEvent } from '../../components/SMCanvas/TransformControls';
+import { emitUpdateControlInputEvent } from '../../components/SMCanvas/TransformControls';
 import ModeToggleBtn from './ModeToggleBtn';
 import { logModelViewOperation } from '../../../lib/gaEvent';
 
@@ -259,7 +259,7 @@ class Visualizer extends PureComponent {
                     };
                 }
                 this.props.updateSelectedModelTransformation(newTransformation);
-                window.dispatchEvent(updateControlInputEvent({
+                emitUpdateControlInputEvent({
                     controlValue: {
                         mode,
                         data: {
@@ -267,7 +267,7 @@ class Visualizer extends PureComponent {
                             [axis]: Number(data)
                         }
                     }
-                }));
+                });
             }
         }
     };
@@ -437,17 +437,21 @@ class Visualizer extends PureComponent {
             this.canvas.current.renderScene();
         }
 
-        if (stage !== prevProps.stage && stage === STEP_STAGE.PRINTING_LOAD_MODEL_COMPLETE) {
+        if (stage !== prevProps.stage) {
             if (promptTasks.length > 0) {
-                promptTasks.filter(item => item.status === 'fail').forEach(item => {
-                    loadModelFailPopup(item.originalName);
-                });
-                promptTasks.filter(item => item.status === 'needScaletoFit').forEach(item => {
-                    scaletoFitPopup(item.model).then(() => {
-                        modelGroup.selectModelById(item.model.modelID);
-                        this.actions.scaleToFitSelectedModel([item.model]);
+                if (stage === STEP_STAGE.PRINTING_LOAD_MODEL_COMPLETE) {
+                    promptTasks.filter(item => item.status === 'fail').forEach(item => {
+                        loadModelFailPopup(item.originalName);
                     });
-                });
+                    promptTasks.filter(item => item.status === 'needScaletoFit').forEach(item => {
+                        scaletoFitPopup(item.model).then(() => {
+                            modelGroup.selectModelById(item.model.modelID);
+                            this.actions.scaleToFitSelectedModel([item.model]);
+                        });
+                    });
+                } else if (stage === STEP_STAGE.PRINTING_SLICE_FAILED) {
+                    sliceFailPopup();
+                }
             }
         }
 
