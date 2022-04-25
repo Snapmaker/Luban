@@ -386,7 +386,6 @@ class DefinitionManager {
             definition.settings.wall_material_flow.default_value = extruderLDefinition.settings.material_flow.default_value;
             definition.settings.skin_material_flow.default_value = extruderLDefinition.settings.material_flow.default_value;
             definition.settings.roofing_material_flow.default_value = extruderLDefinition.settings.material_flow.default_value;
-            definition.settings.infill_material_flow.default_value = extruderLDefinition.settings.material_flow.default_value;
         } else {
             definition.settings.wall_line_count.default_value = extruderRDefinition.settings.wall_line_count.default_value;
             definition.settings.wall_line_width.default_value = extruderRDefinition.settings.wall_line_width.default_value;
@@ -396,7 +395,6 @@ class DefinitionManager {
             definition.settings.wall_material_flow.default_value = extruderRDefinition.settings.material_flow.default_value;
             definition.settings.skin_material_flow.default_value = extruderRDefinition.settings.material_flow.default_value;
             definition.settings.roofing_material_flow.default_value = extruderRDefinition.settings.material_flow.default_value;
-            definition.settings.infill_material_flow.default_value = extruderRDefinition.settings.material_flow.default_value;
         }
         return definition;
     }

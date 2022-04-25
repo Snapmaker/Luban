@@ -40,9 +40,6 @@ function useShowToggleBtn() {
     };
 }
 
-// const MAX = 288;
-// const MIN = 30;
-
 function GcodeLayout() {
     const layerCount = useSelector(state => state?.printing?.layerCount - 1, shallowEqual);
     // const gcodePreviewMode = useSelector(state => state?.printing?.gcodePreviewMode, shallowEqual);
