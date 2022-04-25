@@ -16,7 +16,7 @@ export const actions = {
                 res = await api.macros.delete(macro.id);
             }
         } catch (err) {
-            //Ignore error
+            // Ignore error
         }
         dispatch(printingActions.removeAllModels());
 

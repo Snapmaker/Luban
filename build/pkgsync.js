@@ -27,6 +27,7 @@ pkgApp.repository = pkg.repository;
 
 // Copy only Node.js dependencies to application package.json
 pkgApp.dependencies = _.pick(pkg.dependencies, deps);
+pkgApp.config = pkg.config;
 
 const target = path.resolve(__dirname, '../src/package.json');
 const content = JSON.stringify(pkgApp, null, 2);

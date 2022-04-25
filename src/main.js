@@ -13,9 +13,11 @@ import DataStorage from './DataStorage';
 import pkg from './package.json';
 // const { crashReporter } = require('electron');
 
-
 const config = new Store();
 const userDataDir = app.getPath('userData');
+global.luban = {
+    userDataDir
+};
 let serverData = null;
 let mainWindow = null;
 // https://www.electronjs.org/docs/latest/breaking-changes#planned-breaking-api-changes-100
@@ -28,9 +30,11 @@ const loadingMenu = [{
 
 const childProcess = require('child_process');
 
-const USER_DATA_DIR = 'userDataDir';
 const SERVER_DATA = 'serverData';
 const UPLOAD_WINDOWS = 'uploadWindows';
+
+const { CLIENT_PORT, SERVER_PORT } = pkg.config;
+
 // crashReporter.start({
 //     productName: 'Snapmaker',
 //     globalExtra: { _companyName: 'Snapmaker' },
@@ -195,6 +199,63 @@ if (process.platform === 'win32') {
     }
 }
 
+const startToBegin = (data) => {
+    serverData = data;
+    const { address, port } = { ...serverData };
+    configureWindow(mainWindow);
+    loadUrl = `http://${address}:${port}`;
+    const filter = {
+        urls: [
+            // 'http://*/',
+            'http://*/resources/images/*',
+            'http://*/app.css',
+            'http://*/polyfill.*.*',
+            'http://*/vendor.*.*',
+            'http://*/app.*.*',
+            'http://*/*/*.worker.js',
+        ]
+    };
+    protocol.registerFileProtocol(
+        'luban',
+        (request, callback) => {
+            const { pathname } = url.parse(request.url);
+            const p = pathname === '/' ? 'index.html' : pathname.substr(1);
+            callback(fs.createReadStream(path.normalize(`${__dirname}/app/${p}`)));
+        },
+        (error) => {
+            if (error) {
+                console.error('error', error);
+            }
+        }
+    );
+    // https://github.com/electron/electron/issues/21675
+    // If needed, resolve CORS. https://stackoverflow.com/questions/51254618/how-do-you-handle-cors-in-an-electron-app
+
+    session.defaultSession.webRequest.onBeforeRequest(
+        filter,
+        (request, callback) => {
+            const redirectURL = request.url.replace(/^http/, 'luban');
+            callback({ redirectURL });
+        }
+    );
+
+    // Ignore proxy settings
+    // https://electronjs.org/docs/api/session#sessetproxyconfig-callback
+
+    const webContentsSession = mainWindow.webContents.session;
+    webContentsSession.setProxy({ proxyRules: 'direct://' })
+        .then(() => mainWindow.loadURL(loadUrl).catch(err => {
+            console.log('err', err.message);
+        }));
+
+    try {
+        // TODO: move to server
+        DataStorage.init();
+    } catch (err) {
+        console.error('Error: ', err);
+    }
+};
+
 const showMainWindow = async () => {
     const windowOptions = getBrowserWindowOptions();
     const window = new BrowserWindow(windowOptions);
@@ -203,14 +264,46 @@ const showMainWindow = async () => {
         const menu = Menu.buildFromTemplate(loadingMenu);
         Menu.setApplicationMenu(menu);
     }
+
     if (!serverData) {
         // only start server once
-        // TODO: start server on the outermost
-        const child = childProcess.fork(path.resolve(__dirname, 'server-cli.js'));
+        if (process.env.NODE_ENV === 'development') {
+            process.chdir(path.resolve(__dirname, 'server'));
+            // Use require instead of import to avoid being precompiled in production mode
+            const { createServer } = require('./server');
+            createServer({
+                port: SERVER_PORT,
+                host: '127.0.0.1'
+            }, (err, data) => {
+                startToBegin({ ...data, port: CLIENT_PORT });
+            });
+        } else {
+            const child = childProcess.fork(
+                path.resolve(__dirname, 'server-cli.js'),
+                [],
+                {
+                    env: {
+                        ...process.env,
+                        USER_DATA_DIR: userDataDir
+                    }
+                }
+            );
+            child.on('message', (data) => {
+                if (data.type === SERVER_DATA) {
+                    startToBegin(data);
+                } else if (data.type === UPLOAD_WINDOWS) {
+                    window.loadURL(loadUrl).catch(err => {
+                        console.log('err', err.message);
+                    });
+                }
+            });
+        }
         // window.webContents.openDevTools();
-        window.loadURL(path.resolve(__dirname, 'app', 'loading.html')).catch(err => {
-            console.log('err', err.message);
-        });
+        window.loadURL(path.resolve(__dirname, 'app', 'loading.html'))
+            .then(() => window.setTitle(`Snapmaker Luban ${pkg.version}`))
+            .catch(err => {
+                console.log('err', err.message);
+            });
         window.setBackgroundColor('#f5f5f7');
         if (process.platform === 'win32') {
             window.show();
@@ -219,72 +312,6 @@ const showMainWindow = async () => {
                 window.show();
             });
         }
-        child.send({
-            type: USER_DATA_DIR,
-            userDataDir
-        });
-        child.on('message', (data) => {
-            if (data.type === SERVER_DATA) {
-                serverData = data;
-                const { address, port } = { ...serverData };
-                configureWindow(window);
-                loadUrl = `http://${address}:${port}`;
-                const filter = {
-                    urls: [
-                        // 'http://*/',
-                        'http://*/resources/images/*',
-                        'http://*/app.css',
-                        'http://*/polyfill.*.*',
-                        'http://*/vendor.*.*',
-                        'http://*/app.*.*',
-                        'http://*/*/*.worker.js',
-                    ]
-                };
-                protocol.registerFileProtocol(
-                    'luban',
-                    (request, callback) => {
-                        const { pathname } = url.parse(request.url);
-                        const p = pathname === '/' ? 'index.html' : pathname.substr(1);
-                        callback(fs.createReadStream(path.normalize(`${__dirname}/app/${p}`)));
-                    },
-                    (error) => {
-                        if (error) {
-                            console.error('error', error);
-                        }
-                    }
-                );
-                // https://github.com/electron/electron/issues/21675
-                // If needed, resolve CORS. https://stackoverflow.com/questions/51254618/how-do-you-handle-cors-in-an-electron-app
-
-                session.defaultSession.webRequest.onBeforeRequest(
-                    filter,
-                    (request, callback) => {
-                        const redirectURL = request.url.replace(/^http/, 'luban');
-                        callback({ redirectURL });
-                    }
-                );
-
-                // Ignore proxy settings
-                // https://electronjs.org/docs/api/session#sessetproxyconfig-callback
-
-                const webContentsSession = window.webContents.session;
-                webContentsSession.setProxy({ proxyRules: 'direct://' })
-                    .then(() => window.loadURL(loadUrl).catch(err => {
-                        console.log('err', err.message);
-                    }));
-
-                try {
-                    // TODO: move to server
-                    DataStorage.init();
-                } catch (err) {
-                    console.error('Error: ', err);
-                }
-            } else if (data.type === UPLOAD_WINDOWS) {
-                window.loadURL(loadUrl).catch(err => {
-                    console.log('err', err.message);
-                });
-            }
-        });
         // serverData = await launchServer();
     } else {
         if (process.platform === 'win32') {
@@ -347,7 +374,7 @@ const showMainWindow = async () => {
 
 // Allow max 4G memory usage
 if (process.arch === 'x64') {
-    app.commandLine.appendSwitch('--js-flags', '--max-old-space-size=4096');
+    app.commandLine.appendSwitch('--js-flags', '--max-old-space-size=6144');
 }
 
 app.commandLine.appendSwitch('ignore-gpu-blacklist');

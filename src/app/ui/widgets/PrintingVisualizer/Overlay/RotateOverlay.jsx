@@ -3,6 +3,7 @@ import { shallowEqual, useDispatch, useSelector } from 'react-redux';
 import * as THREE from 'three';
 import PropTypes from 'prop-types';
 import { throttle, filter, isUndefined, isNull } from 'lodash';
+import classNames from 'classnames';
 import i18n from '../../../../lib/i18n';
 import { actions as printingActions } from '../../../../flux/printing';
 /* eslint-disable-next-line import/no-cycle */
@@ -16,6 +17,7 @@ import ThreeGroup from '../../../../models/ThreeGroup';
 import ThreeModel from '../../../../models/ThreeModel';
 import ThreeUtils from '../../../../three-extensions/ThreeUtils';
 import { logTransformOperation } from '../../../../lib/gaEvent';
+import styles from './styles.styl';
 
 const isNonUniformScaled = (autoRotateModelArray) => {
     const result = autoRotateModelArray.every(modelItem => {
@@ -149,6 +151,45 @@ const RotateOverlay = React.memo(({
         dispatch(printingActions.displayModel());
     };
 
+    const faceDownMannuallySvgs = () => {
+        const dataModal = [{
+            name: 'ViewLeft',
+            click: () => rotateByDirection('Y', -90, 'direction'),
+            mouseEnter: () => setHoverFace('left'),
+        }, {
+            name: 'ViewFront',
+            click: () => rotateByDirection('X', 90, 'direction'),
+            mouseEnter: () => setHoverFace('front'),
+        }, {
+            name: 'ViewRight',
+            click: () => rotateByDirection('Y', 90, 'direction'),
+            mouseEnter: () => setHoverFace('right'),
+        }, {
+            name: 'ViewBack',
+            click: () => rotateByDirection('X', -90, 'direction'),
+            mouseEnter: () => setHoverFace('back'),
+        }, {
+            name: 'ViewTop',
+            click: () => rotateByDirection('X', 180, 'direction'),
+            mouseEnter: () => setHoverFace('top'),
+        }];
+
+        return dataModal.map(v => (
+            <div key={v.name} className={classNames(styles['rotate-svg'])} disabled={!isSingleSelected || !!transformDisabled}>
+                <SvgIcon
+                    name={v.name}
+                    size={24}
+                    type={['static']}
+                    disabled={!isSingleSelected || !!transformDisabled}
+                    onClick={v.click}
+                    onMouseEnter={v.mouseEnter}
+                    onMouseLeave={() => setHoverFace('null')}
+                />
+            </div>
+
+        ));
+    };
+
     return (
         <div
             className="position-ab width-280 margin-left-72 border-default-grey-1 border-radius-8 background-color-white"
@@ -156,15 +197,15 @@ const RotateOverlay = React.memo(({
                 marginTop: '164px'
             }}
         >
-            <div className="sm-flex justify-space-between border-bottom-normal padding-vertical-10 padding-horizontal-16 height-40">
+            <div className={classNames(styles['overlay-title-font'], 'sm-flex justify-space-between border-bottom-normal padding-vertical-10 padding-horizontal-16 height-40')}>
                 {i18n._('key-Printing/LeftBar-Rotate')}
                 <CancelButton
                     onClick={() => setTransformMode('')}
                 />
             </div>
-            <div className="padding-vertical-16 padding-horizontal-16">
-                <div className="padding-bottom-16 border-bottom-dashed">
-                    <div className="heading-3-normal">{i18n._('key-Printing/LeftBar-Auto Rotate')}</div>
+            <div className="padding-top-12 padding-bottom-16 padding-horizontal-16">
+                <div>
+                    <div className={classNames(styles['overlay-sub-title-font'])}>{i18n._('key-Printing/LeftBar-Auto Rotate')}</div>
                     <Button
                         className="margin-top-8"
                         type="primary"
@@ -176,83 +217,17 @@ const RotateOverlay = React.memo(({
                         {i18n._(`${rotationAnalysisEnableForSelected ? 'key-Printing/LeftBar-Auto Rotate Selected Models' : 'key-Printing/LeftBar-Auto Rotate All Models'}`)}
                     </Button>
                 </div>
-                <div className="padding-vertical-16 border-bottom-dashed">
-                    <div className="heading-3-normal">
+
+                <div className={classNames(styles['dashed-line'])} />
+                <div className="padding-top-12">
+                    <div className={classNames(styles['overlay-sub-title-font'])}>
                         {i18n._('key-Printing/LeftBar-Rotate By Direction')}
                     </div>
-                    <div className="sm-flex margin-top-8">
-                        <SvgIcon
-                            name="ViewLeft"
-                            size={24}
-                            type={['static']}
-                            disabled={!isSingleSelected || !!transformDisabled}
-                            onClick={() => rotateByDirection('Y', -90, 'direction')}
-                            onMouseEnter={() => {
-                                setHoverFace('left');
-                            }}
-                            onMouseLeave={() => {
-                                setHoverFace('null');
-                            }}
-                        />
-                        <SvgIcon
-                            className="margin-left-8"
-                            name="ViewFront"
-                            size={24}
-                            type={['static']}
-                            disabled={!isSingleSelected || !!transformDisabled}
-                            onClick={() => rotateByDirection('X', 90, 'direction')}
-                            onMouseEnter={() => {
-                                setHoverFace('front');
-                            }}
-                            onMouseLeave={() => {
-                                setHoverFace('null');
-                            }}
-                        />
-                        <SvgIcon
-                            className="margin-left-8"
-                            name="ViewRight"
-                            size={24}
-                            type={['static']}
-                            disabled={!isSingleSelected || !!transformDisabled}
-                            onClick={() => rotateByDirection('Y', 90, 'direction')}
-                            onMouseEnter={() => {
-                                setHoverFace('right');
-                            }}
-                            onMouseLeave={() => {
-                                setHoverFace('null');
-                            }}
-                        />
-                        <SvgIcon
-                            className="margin-left-8"
-                            name="ViewBack"
-                            size={24}
-                            type={['static']}
-                            disabled={!isSingleSelected || !!transformDisabled}
-                            onClick={() => rotateByDirection('X', -90, 'direction')}
-                            onMouseEnter={() => {
-                                setHoverFace('back');
-                            }}
-                            onMouseLeave={() => {
-                                setHoverFace('null');
-                            }}
-                        />
-                        <SvgIcon
-                            className="margin-left-8"
-                            name="ViewTop"
-                            size={24}
-                            type={['static']}
-                            disabled={!isSingleSelected || !!transformDisabled}
-                            onClick={() => rotateByDirection('X', 180, 'direction')}
-                            onMouseEnter={() => {
-                                setHoverFace('top');
-                            }}
-                            onMouseLeave={() => {
-                                setHoverFace('null');
-                            }}
-                        />
+                    <div className="sm-flex margin-top-4">
+                        {faceDownMannuallySvgs()}
                     </div>
                     <Button
-                        className="margin-top-16"
+                        className="margin-top-4"
                         type="primary"
                         priority="level-three"
                         width="100%"
@@ -262,8 +237,9 @@ const RotateOverlay = React.memo(({
                         <span>{i18n._('key-Printing/LeftBar-Rotate on Face')}</span>
                     </Button>
                 </div>
-                <div className="padding-top-16">
-                    <div className="heading-3-normal">
+                <div className={classNames(styles['dashed-line'])} />
+                <div className="padding-top-12">
+                    <div className={classNames(styles['overlay-sub-title-font'])}>
                         {i18n._('key-Printing/LeftBar-Free Rotate')}
                     </div>
                     <div className="sm-flex height-32 margin-vertical-8">

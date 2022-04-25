@@ -1,0 +1,26 @@
+{
+    "include": [
+        "./src/server/**/*"
+    ],
+    "exclude": [
+        "./output/",
+        "./src/app/**/*",
+        "babel.config.js",
+        "webpack.config.app-i18n.js",
+        "webpack.config.app.development.js"
+    ],
+    "compilerOptions": {
+        "module": "commonjs",
+        "target": "ESNext",
+        "allowJs": true,
+        "sourceMap": false,
+        "inlineSourceMap": false,
+        "noUnusedLocals": true,
+        "esModuleInterop": true,
+        "rootDir": "./src/",
+        "outDir": "./output/",
+        "watch": false,
+        "skipLibCheck": true,
+        "baseUrl": "."
+    }
+}

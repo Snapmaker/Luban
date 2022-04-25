@@ -4,8 +4,7 @@ import clean from './gulp/tasks/clean';
 import {
     serverCopyDevelopment,
     serverBuildDevelopment,
-    serverStartDevelopment as _serverStartDevelopment,
-    serverWatchDevelopment,
+    serverStartDevelopment,
     serverCopyProduction,
     serverBuildProduction
 } from './gulp/tasks/server';
@@ -30,8 +29,8 @@ const development = gulp.series(
     prepareDevelopment,
     clean,
     gulp.parallel(
-        serverCopyDevelopment,
         serverBuildDevelopment,
+        serverCopyDevelopment,
         appCopyDevelopment
     )
 );
@@ -45,11 +44,6 @@ const production = gulp.series(
         appCopyProduction,
         appBuildProduction
     )
-);
-
-const serverStartDevelopment = gulp.parallel(
-    _serverStartDevelopment,
-    serverWatchDevelopment
 );
 
 export {

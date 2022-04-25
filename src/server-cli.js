@@ -37,6 +37,10 @@ if (normalizedArgv.length > 1) {
 }
 
 const launchServer = () => new Promise((resolve, reject) => {
+    global.luban = {
+        userDataDir: process.env.USER_DATA_DIR
+    };
+
     // Change working directory to 'server' before require('./server')
     process.chdir(path.resolve(__dirname, 'server'));
 
@@ -59,10 +63,4 @@ const launchServer = () => new Promise((resolve, reject) => {
     });
 });
 
-process.on('message', (data) => {
-    global.luban = {
-        userDataDir: data.userDataDir
-    };
-    launchServer();
-});
-export default launchServer;
+export default launchServer();
