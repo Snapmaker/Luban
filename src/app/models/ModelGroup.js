@@ -222,7 +222,7 @@ class ModelGroup extends EventEmitter {
     }
 
     hasAnyModelVisible() {
-        return this.models.filter(m => !m.supportTag).some((model) => model.visible);
+        return this.getModels('primeTower').some((model) => model.visible);
     }
 
     toggleModelsVisible(visible, models) {

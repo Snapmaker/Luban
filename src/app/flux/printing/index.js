@@ -1519,6 +1519,7 @@ export const actions = {
             modelGroup.grayModeObject.add(meshObject);
         });
     },
+
     generateGcode: (thumbnail, isGuideTours = false) => async (dispatch, getState) => {
         const { hasModel, activeDefinition, modelGroup, progressStatesManager, helpersExtruderConfig,
             extruderLDefinition, extruderRDefinition, defaultMaterialId, defaultMaterialIdRight, materialDefinitions, stopArea: { left, front } } = getState().printing;
