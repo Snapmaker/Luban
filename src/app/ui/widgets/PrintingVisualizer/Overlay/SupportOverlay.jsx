@@ -74,14 +74,14 @@ const SupportOverlay = ({ editSupport, setTransformMode }) => {
                     marginTop: '268px'
                 }}
             >
-                <div className="sm-flex justify-space-between border-bottom-normal padding-vertical-10 padding-horizontal-16 height-40 font-size-middle">
+                <div className={classNames(styles['overlay-title-font'], 'sm-flex justify-space-between border-bottom-normal padding-vertical-10 padding-horizontal-16 height-40')}>
                     {i18n._('key-Printing/LeftBar/Support-Support')}
                     <CancelButton
                         onClick={() => setTransformMode('')}
                     />
                 </div>
                 <div className="padding-bottom-16 padding-top-12 padding-horizontal-16">
-                    <div className="sm-flex font-size-middle">{i18n._('key-Printing/LeftBar/Support-Auto Support')}</div>
+                    <div className={classNames(styles['overlay-sub-title-font'], 'sm-flex')}>{i18n._('key-Printing/LeftBar/Support-Auto Support')}</div>
                     <Button
                         className="margin-top-8"
                         type="primary"
@@ -109,7 +109,7 @@ const SupportOverlay = ({ editSupport, setTransformMode }) => {
                         </div>
                     </div>
                     <div className={classNames(styles['dashed-line'])} />
-                    <div className="sm-flex font-size-middle">{i18n._('key-Printing/LeftBar/Support-Editing Support')}</div>
+                    <div className={classNames(styles['overlay-sub-title-font'], 'sm-flex padding-top-8')}>{i18n._('key-Printing/LeftBar/Support-Editing Support')}</div>
                     <div className="sm-flex justify-space-between">
                         <Button
                             className="margin-top-8 display-inline"

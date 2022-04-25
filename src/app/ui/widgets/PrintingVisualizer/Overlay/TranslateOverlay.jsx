@@ -146,13 +146,13 @@ const TranslateOverlay = React.memo(({
                 marginTop: '60px'
             }}
         >
-            <div className="sm-flex justify-space-between border-bottom-normal padding-vertical-10 padding-horizontal-16 height-40">
+            <div className={classNames(styles['overlay-title-font'], 'sm-flex justify-space-between border-bottom-normal padding-vertical-10 padding-horizontal-16 height-40')}>
                 {i18n._('key-Printing/LeftBar-Move')}
                 <CancelButton
                     onClick={() => setTransformMode('')}
                 />
             </div>
-            <div className="padding-vertical-10 padding-horizontal-16 height-40 font-size-middle">
+            <div className={classNames(styles['overlay-sub-title-font'], 'padding-top-12 padding-horizontal-16')}>
                 {i18n._('key-Printing/LeftBar-Model position')}
             </div>
             <div className="padding-top-8 padding-horizontal-16">
@@ -206,10 +206,10 @@ const TranslateOverlay = React.memo(({
                     </div>
                 )}
                 <div className={classNames(styles['dashed-line'])} />
-                <div className="padding-vertical-10 height-40 font-size-middle">
+                <div className={classNames(styles['overlay-sub-title-font'], 'padding-vertical-10 padding-top-8')}>
                     {i18n._('key-Printing/LeftBar-Arrange Options')}
                 </div>
-                <div className="padding-top-16">
+                <div className="padding-top-8">
                     <TipTrigger
                         title={i18n._('key-Printing/LeftBar-Rotation Step Around Z Axis')}
                         content={i18n._('key-Printing/LeftBar-Rotation Step Around Z Axis Content')}

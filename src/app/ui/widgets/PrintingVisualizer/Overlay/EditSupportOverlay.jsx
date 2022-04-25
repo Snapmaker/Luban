@@ -84,7 +84,7 @@ const EditSupportOverlay = ({ onClose }) => {
 
     return (
         <div className={classNames(styles['edit-support'])}>
-            <header>
+            <header className={classNames(styles['overlay-sub-title-font'])}>
                 <span>{i18n._('key-Printing/LeftBar/EditSupport-Edit Support')}</span>
             </header>
             <section>
@@ -142,7 +142,6 @@ const EditSupportOverlay = ({ onClose }) => {
                     priority="level-two"
                     type="default"
                     width="96px"
-                    className="margin-left-8"
                 >
                     {i18n._('key-Printing/LeftBar/EditSupport-Cancel')}
                 </Button>
