@@ -308,9 +308,7 @@ export const actions = {
 export default function reducer(state = INITIAL_STATE, action) {
     switch (action.type) {
         case ACTION_UPDATE_STATE: {
-            const s = Object.assign({}, state, action.state);
-            window.app = s;
-            return s;
+            return Object.assign({}, state, action.state);
         }
         default: return state;
     }

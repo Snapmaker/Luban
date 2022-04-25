@@ -742,6 +742,7 @@ export const actions = {
     getMouseTargetByCoordinate: (headType, x, y) => (dispatch, getState) => {
         const { modelGroup } = getState()[headType];
         const models = modelGroup.models;
+        console.log(x, y);
         if (models.length > 0) {
             const svgDateElem = models[0].elem?.parentElement;
             const svgDateElemChilds = svgDateElem?.children ? Array.from(svgDateElem?.children) : [];
@@ -2210,9 +2211,9 @@ export const actions = {
             operations.push(operation);
             history.push(operations);
 
+            SvgModel.completeElementTransform(elem);
             model.onTransform();
             model.updateSource();
-            SvgModel.completeElementTransform(elem);
 
             dispatch(actions.updateState(headType, {
                 history
@@ -2258,7 +2259,9 @@ export const actions = {
         const models = modelGroup.models;
         workerManager.boxSelect([
             bbox,
-            models.map((model) => {
+            models.filter((model) => {
+                return model.visible;
+            }).map((model) => {
                 const { width, height } = model.transformation;
                 return { width, height, vertexPoints: model.vertexPoints };
             }),

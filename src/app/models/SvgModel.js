@@ -1260,8 +1260,7 @@ class SvgModel extends BaseModel {
 
     computevertexPoints() {
         const { rotationZ } = this.transformation;
-        const { logicalX: x, logicalY: y } = this;
-        const { width, height } = this.transformation;
+        const { width, height, positionX: x, positionY: y } = this.transformation;
         if (!width) {
             this.vertexPoints = [
                 [x, y + height / 2],

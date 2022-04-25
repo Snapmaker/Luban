@@ -487,7 +487,7 @@ class SVGCanvas extends PureComponent {
         } else if ((this.mode === 'select' || this.mode === 'move') && target.parentElement === this.preSelectionGroup) {
             const targetId = target.getAttribute('target-id');
             const path = document.querySelector(`path[id="${targetId}"]`);
-            if (path && path.getAttribute('display') !== 'null') {
+            if (path && path.getAttribute('display') !== 'none') {
                 return path;
             }
         }
