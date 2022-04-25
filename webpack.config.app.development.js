@@ -118,6 +118,15 @@ module.exports = {
                 exclude: /node_modules/
             },
             {
+                test: /\.ts$/,
+                loader: 'ts-loader',
+                exclude: /node_modules/,
+                include: [
+                    path.resolve(__dirname, 'src/app'),
+                    path.resolve(__dirname, 'src/shared'),
+                ]
+            },
+            {
                 test: /\.jsx?$|\.ts$/,
                 loader: 'eslint-loader',
                 enforce: 'pre',
@@ -128,13 +137,17 @@ module.exports = {
                 }
             },
             {
-                test: /\.(t|j)s(x)?$/,
+                test: /\.js(x)?$/,
                 loader: 'babel-loader',
                 exclude: /node_modules/,
                 options: {
                     ...babelConfig,
                     cacheDirectory: true
-                }
+                },
+                include: [
+                    path.resolve(__dirname, 'src/app'),
+                    path.resolve(__dirname, 'src/shared'),
+                ]
             },
             {
                 oneOf: [
