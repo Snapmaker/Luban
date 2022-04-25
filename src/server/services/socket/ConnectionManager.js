@@ -54,7 +54,7 @@ class ConnectionManager {
     };
 
     connectionClose = (socket, options) => {
-        this.socket.connectionClose(socket, options);
+        this.socket && this.socket.connectionClose(socket, options);
     };
 
     startGcode = (socket, options) => {
