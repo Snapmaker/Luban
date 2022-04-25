@@ -834,7 +834,7 @@ class MarlinController {
                         this.close();
                     }
                 }, connectionTimeout - 1000);
-            }, 100);
+            }, 1000);
 
             log.debug(`Connected to serial port "${port}/${dataSource}"`);
 
