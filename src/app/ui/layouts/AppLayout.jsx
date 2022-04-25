@@ -52,6 +52,7 @@ import styles from './styles/appbar.styl';
 import ModelExporter from '../widgets/PrintingVisualizer/ModelExporter';
 import Anchor from '../components/Anchor';
 import SvgIcon from '../components/SvgIcon';
+import { logLubanQuit } from '../../lib/gaEvent';
 
 class AppLayout extends PureComponent {
     static propTypes = {
@@ -569,6 +570,7 @@ class AppLayout extends PureComponent {
                 }
             });
             UniApi.Event.on('save-and-close', async () => {
+                logLubanQuit();
                 await this.actions.saveAll();
                 UniApi.Window.call('destroy');
             });

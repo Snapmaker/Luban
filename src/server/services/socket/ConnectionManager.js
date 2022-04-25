@@ -2,9 +2,12 @@ import logger from '../../lib/logger';
 // import workerManager from '../task-manager/workerManager';
 import socketSerial from './socket-serial';
 import socketHttp from './socket-http';
-import { HEAD_PRINTING, HEAD_LASER, LEVEL_TWO_POWER_LASER_FOR_SM2, MACHINE_SERIES,
-    CONNECTION_TYPE_WIFI, CONNECTION_TYPE_SERIAL, WORKFLOW_STATE_PAUSED } from '../../constants';
+import {
+    HEAD_PRINTING, HEAD_LASER, LEVEL_TWO_POWER_LASER_FOR_SM2, MACHINE_SERIES,
+    CONNECTION_TYPE_WIFI, CONNECTION_TYPE_SERIAL, WORKFLOW_STATE_PAUSED
+} from '../../constants';
 import DataStorage from '../../DataStorage';
+import ScheduledTasks from '../../lib/ScheduledTasks';
 
 const log = logger('lib:ConnectionManager');
 const ensureRange = (value, min, max) => {
@@ -21,14 +24,18 @@ class ConnectionManager {
 
     protocol = '';
 
+    scheduledTasksHandle
+
     onConnection = (socket) => {
         socketHttp.onConnection(socket);
         socketSerial.onConnection(socket);
+        this.scheduledTasksHandle = new ScheduledTasks(socket);
     }
 
     onDisconnection = (socket) => {
         socketHttp.onDisconnection(socket);
         socketSerial.onDisconnection(socket);
+        this.scheduledTasksHandle.cancelTasks();
     }
 
     refreshDevices = (socket, options) => {
@@ -54,7 +61,7 @@ class ConnectionManager {
     };
 
     connectionClose = (socket, options) => {
-        this.socket.connectionClose(socket, options);
+        this.socket && this.socket.connectionClose(socket, options);
     };
 
     startGcode = (socket, options) => {

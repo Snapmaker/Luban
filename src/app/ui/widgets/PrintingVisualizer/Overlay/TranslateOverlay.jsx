@@ -13,8 +13,9 @@ import { actions as machineActions } from '../../../../flux/machine';
 /* eslint-disable-next-line import/no-cycle */
 import { CancelButton } from '../VisualizerLeftBar';
 import { updateControlInputEvent } from '../../../components/SMCanvas/TransformControls';
-import { TRANSLATE_MODE } from '../../../../constants';
+import { HEAD_PRINTING, TRANSLATE_MODE } from '../../../../constants';
 import styles from './styles.styl';
+import { logTransformOperation } from '../../../../lib/gaEvent';
 
 const angleOptions = [
     {
@@ -92,6 +93,7 @@ const TranslateOverlay = React.memo(({
                     break;
             }
         });
+        !isReset && logTransformOperation(HEAD_PRINTING, 'move', 'input');
         dispatch(printingActions.updateSelectedModelTransformation(newTransformation));
         window.dispatchEvent(updateControlInputEvent({
             controlValue: {
@@ -109,6 +111,7 @@ const TranslateOverlay = React.memo(({
             'moveX': _moveX,
             'moveY': _moveY
         }, true);
+        logTransformOperation(HEAD_PRINTING, 'move', 'center');
         onModelAfterTransform();
     };
     const handleArrangeSettingsChange = (settings) => {
@@ -146,13 +149,13 @@ const TranslateOverlay = React.memo(({
                 marginTop: '60px'
             }}
         >
-            <div className="sm-flex justify-space-between border-bottom-normal padding-vertical-10 padding-horizontal-16 height-40">
+            <div className={classNames(styles['overlay-title-font'], 'sm-flex justify-space-between border-bottom-normal padding-vertical-10 padding-horizontal-16 height-40')}>
                 {i18n._('key-Printing/LeftBar-Move')}
                 <CancelButton
                     onClick={() => setTransformMode('')}
                 />
             </div>
-            <div className="padding-vertical-10 padding-horizontal-16 height-40 font-size-middle">
+            <div className={classNames(styles['overlay-sub-title-font'], 'padding-top-12 padding-horizontal-16')}>
                 {i18n._('key-Printing/LeftBar-Model position')}
             </div>
             <div className="padding-top-8 padding-horizontal-16">
@@ -206,7 +209,7 @@ const TranslateOverlay = React.memo(({
                     </div>
                 )}
                 <div className={classNames(styles['dashed-line'])} />
-                <div className="padding-vertical-10 height-40 font-size-middle">
+                <div className={classNames(styles['overlay-sub-title-font'], 'padding-vertical-10 padding-top-8')}>
                     {i18n._('key-Printing/LeftBar-Arrange Options')}
                 </div>
                 <div>
@@ -293,6 +296,7 @@ const TranslateOverlay = React.memo(({
                             onClick={() => {
                                 const { angle, offset, padding } = arragneSettings;
                                 arrangeAllModels(angle, offset, padding);
+                                logTransformOperation(HEAD_PRINTING, 'move', 'arrange');
                             }}
                             disabled={!hasModels}
                         >

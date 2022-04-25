@@ -6,6 +6,8 @@ import i18n from '../../../lib/i18n';
 import PrintingObjectListBox from '../PrintingObjectList';
 import Card from '../../components/Card';
 import SvgIcon from '../../components/SvgIcon';
+import { HEAD_PRINTING } from '../../../constants';
+import { logObjectListOperation, logModelViewOperation } from '../../../lib/gaEvent';
 
 function VisualizerBottomLeft({ actions }) {
     return (
@@ -13,6 +15,9 @@ function VisualizerBottomLeft({ actions }) {
             <Card
                 className={classNames('margin-horizontal-8')}
                 title={i18n._('key-Printing/ObjectList-Object List')}
+                onListToogleVisible={(visible) => {
+                    logObjectListOperation(HEAD_PRINTING, visible ? 'expand' : 'pack');
+                }}
             >
                 <PrintingObjectListBox />
             </Card>
@@ -61,7 +66,10 @@ function VisualizerBottomLeft({ actions }) {
                     <SvgIcon
                         name="ScaleToFit"
                         size={24}
-                        onClick={actions.fitViewIn}
+                        onClick={() => {
+                          logModelViewOperation(HEAD_PRINTING, 'fit_view_in');
+                          actions.fitViewIn();
+                        }}
                     />
                 </Tooltip>
             </div>

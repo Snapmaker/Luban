@@ -345,4 +345,15 @@ export class Server extends events.EventEmitter {
         };
         return this.gcodePrintingInfo;
     }
+
+    static closeServerAfterWindowReload() {
+        controller.emitEvent(CONNECTION_CLOSE)
+            .once(CONNECTION_CLOSE, () => {
+                dispatch(machineActions.resetMachineState());
+                dispatch(workspaceActions.updateMachineState({
+                    headType: '',
+                    toolHead: ''
+                }));
+            });
+    }
 }

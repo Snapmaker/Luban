@@ -171,8 +171,12 @@ class Canvas extends PureComponent {
         if (nextProps.displayedType !== this.props.displayedType) {
             if (nextProps.displayedType === 'gcode') {
                 this.controls.removeTransformControls();
+                this.group.remove(this.modelGroup.object);
+                this.group.add(this.modelGroup.grayModeObject);
             } else {
                 this.controls.recoverTransformControls(nextProps.primeTowerSelected, nextProps.transformMode);
+                this.group.remove(this.modelGroup.grayModeObject);
+                this.group.add(this.modelGroup.object);
             }
             this.renderScene();
         }
@@ -310,7 +314,7 @@ class Canvas extends PureComponent {
             this.onModelBeforeTransform(this.controls.transformControl.mode);
         });
         this.controls.on(EVENTS.AFTER_TRANSFORM_OBJECT, () => {
-            this.onModelAfterTransform(this.controls.transformControl.mode);
+            this.onModelAfterTransform(this.controls.transformControl.mode, this.controls.transformControl.axis);
         });
         this.controls.on(EVENTS.SELECT_PLACEMENT_FACE, (userData) => {
             this.onRotationPlacementSelect(userData);
@@ -514,6 +518,9 @@ class Canvas extends PureComponent {
 
     fitViewIn(center, selectedGroupBsphereRadius) {
         const r = selectedGroupBsphereRadius;
+        const newTarget = {
+            ...center
+        };
         // from
         const object = {
             ox: this.camera.position.x,
@@ -555,7 +562,7 @@ class Canvas extends PureComponent {
             this.camera.position.x = o2.x;
             this.camera.position.y = o2.y;
             this.camera.position.z = o2.z;
-            this.controls.setTarget(new Vector3(center.x, center.y, center.z));
+            this.controls.setTarget(new Vector3(newTarget.x, newTarget.y, newTarget.z));
             this.renderScene();
         }, ANIMATION_DURATION);
     }

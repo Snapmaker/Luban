@@ -89,6 +89,7 @@ export const signin = (req, res) => {
             enabled: false, // session is disabled
             token: accessToken,
             sceneJson,
+            userId: config.get('gaUserId'),
             name: user.name // empty name
         });
         return;
@@ -117,6 +118,7 @@ export const signin = (req, res) => {
             enabled: true, // session is enabled
             token: accessToken, // new token
             sceneJson,
+            userId: config.get('gaUserId'),
             name: user.name
         });
         return;

@@ -2,7 +2,6 @@ import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
 import { HashRouter, Route, Switch } from 'react-router-dom';
 import { connect } from 'react-redux';
-import ReactGA from 'react-ga';
 import { shortcutActions, priorities, ShortcutManager } from '../lib/shortcut';
 import { ToastContainer } from './components/Toast';
 import { actions as machineActions } from '../flux/machine';
@@ -20,6 +19,7 @@ import Laser from './pages/Laser';
 import Settings from './pages/Settings';
 import UniApi from '../lib/uni-api';
 import AppLayout from './layouts/AppLayout';
+import { Server } from '../flux/machine/Server';
 
 class App extends PureComponent {
     static propTypes = {
@@ -113,12 +113,7 @@ class App extends PureComponent {
         }, 200);
 
         ShortcutManager.register(this.shortcutHandler);
-    }
-
-    logPageView() {
-        const path = window.location.pathname + window.location.search + window.location.hash;
-        ReactGA.set({ page: path });
-        ReactGA.pageview(path);
+        Server.closeServerAfterWindowReload();
     }
 
     render() {
