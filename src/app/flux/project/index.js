@@ -271,6 +271,9 @@ export const actions = {
 
         Promise.all(promiseArray).then(() => {
             dispatch(actions.afterOpened(envHeadType));
+            if (envHeadType === HEAD_PRINTING) {
+                dispatch(modActions.updateAllModelColors());
+            }
         }).catch(console.error);
     },
 
