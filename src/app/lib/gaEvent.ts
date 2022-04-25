@@ -1,4 +1,5 @@
 import i18next from 'i18next';
+// @ts-ignore
 import ReactGA from 'react-ga4';
 import { v4 as uuid } from 'uuid';
 import { machineStore } from '../store/local-storage';

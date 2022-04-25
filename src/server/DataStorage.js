@@ -1,10 +1,9 @@
 import path from 'path';
 import fs from 'fs';
 import mkdirp from 'mkdirp';
-import { includes, isUndefined, gt, isNil } from 'lodash';
+import { includes, isUndefined, gt } from 'lodash';
 import isElectron from 'is-electron';
 import semver from 'semver';
-import { v4 as uuid } from 'uuid';
 import { CNC_CONFIG_SUBCATEGORY, LASER_CONFIG_SUBCATEGORY, PRINTING_CONFIG_SUBCATEGORY } from './constants';
 import { cncUniformProfile } from './lib/profile/cnc-uniform-profile';
 import logger from './lib/logger';

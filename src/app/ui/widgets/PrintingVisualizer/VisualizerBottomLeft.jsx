@@ -67,8 +67,8 @@ function VisualizerBottomLeft({ actions }) {
                         name="ScaleToFit"
                         size={24}
                         onClick={() => {
-                          logModelViewOperation(HEAD_PRINTING, 'fit_view_in');
-                          actions.fitViewIn();
+                            logModelViewOperation(HEAD_PRINTING, 'fit_view_in');
+                            actions.fitViewIn();
                         }}
                     />
                 </Tooltip>
