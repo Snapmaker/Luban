@@ -40,7 +40,6 @@ const SupportOverlay = ({ editSupport, setTransformMode }) => {
         },
         editSupport() {
             editSupport();
-            window.dispatchEvent(new CustomEvent('fit-view-in', {}));
             logTransformOperation(HEAD_PRINTING, 'support', 'edit_in');
         }
     };

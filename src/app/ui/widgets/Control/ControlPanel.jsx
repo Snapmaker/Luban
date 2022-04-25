@@ -7,7 +7,7 @@ import styles from './index.styl';
 
 
 const ControlPanel = (props) => {
-    const isFourAxis = props.state.workPosition.isFourAxis;
+    const isFourAxis = props.workPosition.isFourAxis;
     return (
         <div className={styles['control-panel']}>
             {isFourAxis && (
@@ -38,6 +38,7 @@ const ControlPanel = (props) => {
 
 ControlPanel.propTypes = {
     state: PropTypes.object,
+    workPosition: PropTypes.object.isRequired,
     actions: PropTypes.object,
     executeGcode: PropTypes.func
 };

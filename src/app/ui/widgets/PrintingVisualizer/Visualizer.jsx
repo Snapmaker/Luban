@@ -513,6 +513,7 @@ class Visualizer extends PureComponent {
                 ref={this.visualizerRef}
             >
                 <VisualizerLeftBar
+                    fitViewIn={this.actions.fitViewIn}
                     updateBoundingBox={this.actions.updateBoundingBox}
                     setTransformMode={this.actions.setTransformMode}
                     supportActions={this.supportActions}

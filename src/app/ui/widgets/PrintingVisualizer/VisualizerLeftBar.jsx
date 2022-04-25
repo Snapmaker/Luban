@@ -68,7 +68,8 @@ export const CancelButton = ({ onClick }) => {
 CancelButton.propTypes = {
     onClick: PropTypes.func.isRequired,
 };
-function VisualizerLeftBar({ setTransformMode, supportActions, updateBoundingBox, autoRotateSelectedModel, arrangeAllModels, setHoverFace }) {
+function VisualizerLeftBar({ setTransformMode, supportActions, updateBoundingBox,
+    autoRotateSelectedModel, arrangeAllModels, setHoverFace, fitViewIn }) {
     const size = useSelector(state => state?.machine?.size, shallowEqual);
     const selectedModelArray = useSelector(state => state?.printing?.modelGroup?.selectedModelArray);
     const modelGroup = useSelector(state => state?.printing?.modelGroup);
@@ -120,10 +121,10 @@ function VisualizerLeftBar({ setTransformMode, supportActions, updateBoundingBox
                 dispatch(printingActions.startAnalyzeRotationProgress());
                 setTimeout(() => {
                     setShowRotationAnalyzeModal(true);
+                    fitViewIn && fitViewIn();
                 }, 100);
             });
             logTransformOperation(HEAD_PRINTING, 'roate', 'analyze_in');
-            window.dispatchEvent(new CustomEvent('fit-view-in', {}));
         },
         rotateOnlyForUniformScale: (rotateFn) => {
             if (actions.isNonUniformScaled()) {
@@ -138,7 +139,8 @@ function VisualizerLeftBar({ setTransformMode, supportActions, updateBoundingBox
         },
         editSupport: useCallback(() => {
             setShowEditSupportModal(true);
-        }, [setShowEditSupportModal]),
+            fitViewIn && fitViewIn();
+        }, [setShowEditSupportModal, fitViewIn]),
         isNonUniformScaled: () => {
             const { scaleX, scaleY, scaleZ } = selectedModelArray[0].transformation;
             return Math.abs(Math.abs(scaleX) - Math.abs(scaleY)) > EPSILON
@@ -368,7 +370,8 @@ VisualizerLeftBar.propTypes = {
     setTransformMode: PropTypes.func.isRequired,
     updateBoundingBox: PropTypes.func.isRequired,
     arrangeAllModels: PropTypes.func.isRequired,
-    setHoverFace: PropTypes.func.isRequired
+    setHoverFace: PropTypes.func.isRequired,
+    fitViewIn: PropTypes.func.isRequired
 };
 
 export default React.memo(VisualizerLeftBar);

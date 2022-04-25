@@ -8,6 +8,7 @@ import i18n from '../../../lib/i18n';
 import { NumberInput as Input } from '../../components/Input';
 import SvgIcon from '../../components/SvgIcon';
 import WorkSpeed from './WorkSpeed';
+import { actions as machineActions } from '../../../flux/machine';
 import {
     CONNECTION_TYPE_WIFI,
     LEVEL_TWO_POWER_LASER_FOR_SM2,
@@ -28,6 +29,7 @@ class Laser extends PureComponent {
         connectionType: PropTypes.string,
         isConnected: PropTypes.bool,
         toolHead: PropTypes.string,
+        addConsoleLogs: PropTypes.func.isRequired,
     };
 
     state = {
@@ -63,6 +65,10 @@ class Laser extends PureComponent {
                 isSM2: this.props.toolHead === LEVEL_TWO_POWER_LASER_FOR_SM2,
                 laserPower: this.state.laserPower,
                 laserPowerOpen: this.state.laserPowerOpen
+            }).once(CONNECTION_SWITCH_LASER_POWER, (result) => {
+                if (result) {
+                    this.props.addConsoleLogs(result);
+                }
             });
             this.setState({
                 laserPowerOpen: !this.state.laserPowerOpen
@@ -73,6 +79,10 @@ class Laser extends PureComponent {
                 isPrinting: this.actions.isPrinting(),
                 laserPower: this.state.laserPower,
                 laserPowerOpen: this.state.laserPowerOpen
+            }).once(CONNECTION_LASER_POWER, (result) => {
+                if (result) {
+                    this.props.addConsoleLogs(result);
+                }
             });
         }
     };
@@ -180,6 +190,10 @@ const mapStateToProps = (state) => {
         toolHead
     };
 };
+const mapDispatchToProps = (dispatch) => {
+    return {
+        addConsoleLogs: (gcode, context) => dispatch(machineActions.addConsoleLogs(gcode, context)),
+    };
+};
 
-
-export default connect(mapStateToProps, null)(Laser);
+export default connect(mapStateToProps, mapDispatchToProps)(Laser);

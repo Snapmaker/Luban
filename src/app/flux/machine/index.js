@@ -481,7 +481,6 @@ export const actions = {
                                 if (error) {
                                     return;
                                 }
-                                console.log('gcode', res, gcode);
                                 let suffix = 'gcode';
                                 if (headType === HEAD_LASER) {
                                     suffix = 'nc';

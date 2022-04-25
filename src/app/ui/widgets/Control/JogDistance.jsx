@@ -12,9 +12,8 @@ import {
 import styles from './index.styl';
 
 const JogDistance = (props) => {
-    const { state, actions } = props;
-    const { canClick, units, selectedDistance, selectedAngle, customDistance, customAngle, workPosition } = state;
-    // console.log('JogDistance', selectedAngle, customAngle);
+    const { state, actions, workPosition } = props;
+    const { canClick, units, selectedDistance, selectedAngle, customDistance, customAngle } = state;
     const distance = String(selectedDistance); // force convert to string
     let isCustomDistanceSelected = true;
     if (workPosition.isFourAxis) {
@@ -304,6 +303,7 @@ const JogDistance = (props) => {
 
 JogDistance.propTypes = {
     state: PropTypes.object,
+    workPosition: PropTypes.object,
     actions: PropTypes.object
 };
 

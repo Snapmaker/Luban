@@ -1992,7 +1992,6 @@ export const actions = {
             default: break;
         }
         dispatch(actions.recordModelBeforeTransform(modelGroup));
-        // TODO
         modelGroup.updateSelectedGroupTransformation(transformation, newUniformScalingState, isAllRotate);
         modelGroup.onModelAfterTransform();
 

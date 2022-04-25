@@ -6,8 +6,8 @@ import styles from './index.styl';
 
 
 const JogPad = React.memo((props) => {
-    const { state, actions } = props;
-    const { canClick, keypadJogging, selectedAxis, workPosition } = state;
+    const { state, actions, workPosition } = props;
+    const { canClick, keypadJogging, selectedAxis } = state;
 
     return (
         <div className={styles['jog-pad']}>
@@ -343,6 +343,7 @@ const JogPad = React.memo((props) => {
 });
 
 JogPad.propTypes = {
+    workPosition: PropTypes.object,
     state: PropTypes.object,
     actions: PropTypes.object
 };

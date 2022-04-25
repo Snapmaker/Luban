@@ -17,6 +17,9 @@ function SettingItem({ definitionKey, settings, isDefaultDefinition = () => true
     const setting = settings[definitionKey];
 
     const isProfile = !isDefaultDefinition();
+    if (!setting) {
+        return null;
+    }
     const { label, description, type, unit = '', enabled, options, min, max } = setting;
     const settingDefaultValue = setting.default_value;
     const isDefault = defaultValue && (defaultValue.value === settingDefaultValue);
