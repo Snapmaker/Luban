@@ -715,11 +715,9 @@ export const actions = {
                 }) ? '1' : '0';
             }
             logPritingSlice(HEAD_PRINTING, {
-                isDefault: extruderLDefaultDefinition.isDefault,
-                updatedDefault: defaultMaterialL
-            }, {
-                isDefault: false,
-                updatedDefault: false
+                defaultMaterialL,
+                defaultMaterialR: '',
+                defaultMaterialQuality
             }, JSON.stringify(settings));
         } else {
             const extruderRDefaultDefinition = defaultDefinitions.find(d => d.definitionId === defaultMaterialIdRight);

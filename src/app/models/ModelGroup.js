@@ -1924,7 +1924,7 @@ class ModelGroup extends EventEmitter {
 
     setDisplayType(displayedType) {
         this.models.forEach(model => {
-            model.updateDisplayedType && model.updateDisplayedType(displayedType);
+            model.updateDisplayedType(displayedType);
         });
     }
 

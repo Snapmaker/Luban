@@ -221,7 +221,7 @@ export const actions = {
         const { group } = state.background;
         group.remove(...group.children);
         group.add(mesh);
-        logToolBarOperation('laser', 'camera_capture_add_backgroup');
+        logToolBarOperation(HEAD_LASER, 'camera_capture_add_backgroup');
         dispatch(actions.setBackgroundEnabled(true));
         dispatch(editorActions.updateState(HEAD_LASER, {
             useBackground: true
@@ -235,7 +235,7 @@ export const actions = {
 
         const { group } = state.background;
         group.remove(...group.children);
-        logToolBarOperation('laser', 'camera_capture_remove_backgroup');
+        logToolBarOperation(HEAD_LASER, 'camera_capture_remove_backgroup');
         dispatch(actions.setBackgroundEnabled(false));
         dispatch(editorActions.updateState(HEAD_LASER, {
             useBackground: false
