@@ -401,9 +401,14 @@ export const actions = {
             modelGroup.groupsChildrenMap.forEach((subModels, group) => {
                 if (subModels.every(id => id instanceof ThreeModel)) {
                     modelGroup.unselectAllModels();
+
+                    group.meshObject.updateMatrixWorld();
+                    const groupMatrix = group.meshObject.matrixWorld.clone();
                     group.add(subModels);
                     modelGroup.groupsChildrenMap.delete(group);
                     modelGroup.models = [...modelGroup.models, group];
+                    group.meshObject.applyMatrix4(groupMatrix);
+
                     group.stickToPlate();
                     group.computeBoundingBox();
                     const overstepped = modelGroup._checkOverstepped(group);
