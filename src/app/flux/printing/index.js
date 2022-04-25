@@ -611,7 +611,12 @@ export const actions = {
                 const { progressStatesManager } = state;
                 progressStatesManager.finishProgress(false);
                 dispatch(actions.updateState({
-                    stage: STEP_STAGE.PRINTING_SLICE_FAILED
+                    progress: 100,
+                    stage: STEP_STAGE.PRINTING_SLICE_FAILED,
+                    promptTasks: [{
+                        status: 'fail',
+                        type: 'slice'
+                    }]
                 }));
             });
 
@@ -1782,12 +1787,12 @@ export const actions = {
                 gcodeLine.material.uniforms.u_visible_layer_range_end.value = range[1];
             }
             if (isUp && (range[0] - prevRange[0]) > 0 && (range[0] - prevRange[0]) < 1
-            && (range[1] - prevRange[1]) > 0 && (range[1] - prevRange[1]) < 1) {
+                && (range[1] - prevRange[1]) > 0 && (range[1] - prevRange[1]) < 1) {
                 range[0] = prevRange[0];
                 range[1] = prevRange[1];
             }
             if (!isUp && (range[0] - prevRange[0]) > 0 && (prevRange[0] - range[0]) < 1
-            && (range[1] - prevRange[1]) > 0 && (prevRange[1] - range[1]) < 1) {
+                && (range[1] - prevRange[1]) > 0 && (prevRange[1] - range[1]) < 1) {
                 range[0] = prevRange[0];
                 range[1] = prevRange[1];
             }

@@ -49,3 +49,16 @@ export const scaletoFitPopup = (model) => {
         });
     });
 };
+
+
+export const sliceFailPopup = () => {
+    return modal({
+        cancelTitle: i18n._(''),
+        title: i18n._('key-Progress/3DP-Failed to preview G-code.'),
+        body: (
+            <React.Fragment>
+                <p>{i18n._('key-Progress/3DP-Failed to preview G-code.')}</p>
+            </React.Fragment>
+        )
+    });
+};
