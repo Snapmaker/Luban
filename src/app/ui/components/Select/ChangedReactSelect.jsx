@@ -182,14 +182,12 @@ class ChangedReactSelect extends PureComponent {
             // Compatible with old interfaces
             if (!isNil(value)) {
                 defaultValue = options.find(d => d.value === value);
-                console.log('defaultValue', defaultValue, options, value);
             } else if (!isNil(valueObj)) {
                 const {
                     firstKey = 'value',
                     firstValue = ''
                 } = valueObj;
                 defaultValue = options.find(d => d[firstKey] === firstValue);
-                console.log('defaultValue', defaultValue, options);
             }
             return (
                 <div className={classNames(styles['override-select'], className)}>

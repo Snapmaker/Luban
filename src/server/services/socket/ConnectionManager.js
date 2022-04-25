@@ -289,47 +289,47 @@ class ConnectionManager {
     }
 
     updateLaserPower = (socket, options) => {
-        const { isPrinting, laserPower, laserPowerOpen } = options;
+        const { isPrinting, laserPower, laserPowerOpen, eventName } = options;
         if (isPrinting) {
             if (this.connectionType === CONNECTION_TYPE_WIFI) {
                 this.socket.updateLaserPower(options);
             } else {
                 this.executeGcode(
                     this.socket,
-                    { gcode: `M3 P${laserPower} S${laserPower * 255 / 100}` }
+                    { gcode: `M3 P${laserPower} S${laserPower * 255 / 100}`, eventName }
                 );
             }
         } else {
             if (laserPowerOpen) {
                 this.executeGcode(
                     this.socket,
-                    { gcode: `M3 P${laserPower} S${laserPower * 255 / 100}` }
+                    { gcode: `M3 P${laserPower} S${laserPower * 255 / 100}`, eventName }
                 );
             }
             this.executeGcode(
                 this.socket,
-                { gcode: 'M500' }
+                { gcode: 'M500', eventName }
             );
         }
     }
 
     switchLaserPower = (socket, options) => {
-        const { isSM2, laserPower, laserPowerOpen } = options;
+        const { isSM2, laserPower, laserPowerOpen, eventName } = options;
         if (laserPowerOpen) {
             this.executeGcode(
                 this.socket,
-                { gcode: 'M3 P0 S0' }
+                { gcode: 'M3 P0 S0', eventName }
             );
         } else {
             if (isSM2) {
                 this.executeGcode(
                     this.socket,
-                    { gcode: 'M3 P1 S2.55' }
+                    { gcode: 'M3 P1 S2.55', eventName }
                 );
             } else {
                 this.executeGcode(
                     this.socket,
-                    { gcode: `M3 P${laserPower} S${laserPower * 255 / 100}` }
+                    { gcode: `M3 P${laserPower} S${laserPower * 255 / 100}`, eventName }
                 );
             }
         }

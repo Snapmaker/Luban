@@ -1847,6 +1847,7 @@ export const actions = {
         }
         dispatch(actions.recordModelBeforeTransform(modelGroup));
         // TODO
+        console.log('this.state transformation', transformation);
         modelGroup.updateSelectedGroupTransformation(transformation, newUniformScalingState, isAllRotate);
         modelGroup.onModelAfterTransform();
 
@@ -2600,7 +2601,6 @@ export const actions = {
         }));
         setTimeout(() => {
             const meshObjectJSON = [];
-            // console.log(modelGroup.selectedModelArray);
             modelGroup.selectedModelArray.forEach(modelItem => {
                 if (modelItem instanceof ThreeGroup) {
                     modelItem.children.forEach(child => {

@@ -159,6 +159,9 @@ class SocketHttp {
                 if (res?.body?.token) {
                     this.token = res.body.token;
                 }
+                if(err){
+                    log.debug(`err="${err}"`);
+                }
                 const result = _getResult(err, res);
                 const { data } = result;
                 if (data) {
@@ -262,7 +265,7 @@ class SocketHttp {
 
     public executeGcode = (options: EventOptions, callback) => {
         return new Promise(resolve => {
-            const { gcode } = options;
+            const { gcode, eventName } = options;
             const split = gcode.split('\n');
             this.gcodeInfos.push({
                 gcodes: split,
@@ -271,11 +274,11 @@ class SocketHttp {
                     resolve(result);
                 }
             });
-            this.startExecuteGcode();
+            this.startExecuteGcode(eventName);
         });
     };
 
-    public startExecuteGcode = async () => {
+    public startExecuteGcode = async (eventName:string) => {
         if (this.isGcodeExecuting) {
             return;
         }
@@ -291,7 +294,7 @@ class SocketHttp {
                 }
             }
             splice.callback && splice.callback(result);
-            this.socket && this.socket.emit('connection:executeGcode', result);
+            this.socket && this.socket.emit(eventName || 'connection:executeGcode', result);
         }
         this.isGcodeExecuting = false;
     };

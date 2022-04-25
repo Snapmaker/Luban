@@ -10,7 +10,7 @@ export const MaterialWithColor = ({ name, color }) => {
             <span className={classNames('text-overflow-ellipsis', styles.text)}>{name}</span>
             {color && (
                 <div
-                    className="width-16 height-16"
+                    className="width-16 height-16 margin-right-8"
                     style={{
                         backgroundColor: color,
                         border: '1px solid #B9BCBF',
