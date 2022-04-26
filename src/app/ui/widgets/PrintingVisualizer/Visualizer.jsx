@@ -186,8 +186,8 @@ class Visualizer extends PureComponent {
         clearBuildPlate: () => {
             this.props.removeAllModels();
         },
-        arrangeAllModels: () => {
-            this.props.arrangeAllModels();
+        arrangeAllModels: (angle, offset, padding) => {
+            this.props.arrangeAllModels(angle, offset, padding);
         },
         layFlatSelectedModel: () => {
             this.props.layFlatSelectedModel();
