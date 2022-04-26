@@ -318,3 +318,5 @@ i18n._('key-settings_message-checking'); // Checking for updates.
 i18n._('key-settings_message-error'); // An error occurred while checking for updates.
 
 i18n._('key-Printing/Modal-Backup Tip');
+
+i18n._('key-Printing/LeftBar-No Rotation');
