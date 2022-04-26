@@ -949,6 +949,8 @@
     "key-Progress/3DP-Previewing G-code...{{progress}}%": "Previsualizando código G...{{progress}}%",
     "key-Progress/3DP-Scale to fit...{{progress}}%": "Scale to fit...{{progress}}%",
     "key-Progress/3DP-SingleLayer": "",
+    "key-Progress/3DP-Slice Failed": "",
+    "key-Progress/3DP-Slice Failed reason": "",
     "key-Progress/Laser-Failed to load model.": "Fallo al cargar modelo",
     "key-Progress/Laser-Loaded model successfully.": "Modelo cargado con éxito.",
     "key-Progress/Laser-Loading model...": "Cargando modelo...",

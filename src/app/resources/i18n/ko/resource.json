@@ -949,6 +949,8 @@
     "key-Progress/3DP-Previewing G-code...{{progress}}%": "G-코드 미리보기 중...{{progress}}%",
     "key-Progress/3DP-Scale to fit...{{progress}}%": "Scale to fit...{{progress}}%",
     "key-Progress/3DP-SingleLayer": "",
+    "key-Progress/3DP-Slice Failed": "",
+    "key-Progress/3DP-Slice Failed reason": "",
     "key-Progress/Laser-Failed to load model.": "모델 불러오기 실패",
     "key-Progress/Laser-Loaded model successfully.": "모델 불러오기를 완료했습니다.",
     "key-Progress/Laser-Loading model...": "모델 불러오는 중...",

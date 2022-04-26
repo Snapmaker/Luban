@@ -949,6 +949,8 @@
     "key-Progress/3DP-Previewing G-code...{{progress}}%": "预览 G 代码中...{{progress}}%",
     "key-Progress/3DP-Scale to fit...{{progress}}%": "自适应缩放中...{{progress}}%",
     "key-Progress/3DP-SingleLayer": "单层视图",
+    "key-Progress/3DP-Slice Failed": "切片失败",
+    "key-Progress/3DP-Slice Failed reason": "模型太小, 切片失败",
     "key-Progress/Laser-Failed to load model.": "导入模型失败",
     "key-Progress/Laser-Loaded model successfully.": "加载模型成功",
     "key-Progress/Laser-Loading model...": "加载模型...",
