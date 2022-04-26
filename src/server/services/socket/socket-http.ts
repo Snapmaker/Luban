@@ -173,6 +173,7 @@ class SocketHttp {
                     let headType = data.headType;
                     let toolHead: string;
                     switch (data.headType) {
+                        case 0:
                         case 1:
                             headType = HEAD_PRINTING;
                             toolHead = SINGLE_EXTRUDER_TOOLHEAD_FOR_SM2;
