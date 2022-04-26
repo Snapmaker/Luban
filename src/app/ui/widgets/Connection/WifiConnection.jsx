@@ -116,6 +116,9 @@ function WifiConnection() {
         },
         openServer: () => {
             dispatch(machineActions.connect.setSelectedServer(serverState));
+            if (serverState.address === savedServerAddress) {
+                serverState.setToken(savedServerToken);
+            }
             serverState.openServer(({ msg, text }) => {
                 if (msg) {
                     actions.showWifiError(msg, text);
@@ -242,11 +245,7 @@ function WifiConnection() {
         if (selectedServer !== ABSENT_OBJECT) {
             find = _servers.find(v => v.name === selectedServer.name && v.address === selectedServer.address);
         } else {
-            // If no server selected, we select server based on saved server address
             find = _servers.find(v => v.address === savedServerAddress);
-            if (find) {
-                find.setToken(savedServerToken);
-            }
         }
 
         if (find) {
