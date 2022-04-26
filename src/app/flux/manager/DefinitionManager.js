@@ -348,7 +348,7 @@ class DefinitionManager {
                 }
             });
         const meshKeys = ['infill_line_distance', 'infill_line_width',
-            'wall_line_count', 'wall_line_width', 'wall_line_width_0', 'wall_line_width_x', 'skin_line_width', 'wall_material_flow',
+            'wall_line_count', 'wall_line_width', 'wall_line_width_0', 'wall_line_width_x', 'skin_line_width', 'wall_0_material_flow', 'wall_x_material_flow',
             'skin_material_flow',
             'roofing_material_flow',
             'infill_material_flow',
@@ -383,7 +383,8 @@ class DefinitionManager {
             definition.settings.wall_line_width_0.default_value = extruderLDefinition.settings.wall_line_width_0.default_value;
             definition.settings.wall_line_width_x.default_value = extruderLDefinition.settings.wall_line_width_x.default_value;
             definition.settings.skin_line_width.default_value = extruderLDefinition.settings.skin_line_width.default_value;
-            definition.settings.wall_material_flow.default_value = extruderLDefinition.settings.material_flow.default_value;
+            definition.settings.wall_x_material_flow.default_value = extruderLDefinition.settings.material_flow.default_value;
+            definition.settings.wall_0_material_flow.default_value = extruderLDefinition.settings.material_flow.default_value;
             definition.settings.skin_material_flow.default_value = extruderLDefinition.settings.material_flow.default_value;
             definition.settings.roofing_material_flow.default_value = extruderLDefinition.settings.material_flow.default_value;
         } else {
@@ -392,7 +393,8 @@ class DefinitionManager {
             definition.settings.wall_line_width_0.default_value = extruderRDefinition.settings.wall_line_width_0.default_value;
             definition.settings.wall_line_width_x.default_value = extruderRDefinition.settings.wall_line_width_x.default_value;
             definition.settings.skin_line_width.default_value = extruderRDefinition.settings.skin_line_width.default_value;
-            definition.settings.wall_material_flow.default_value = extruderRDefinition.settings.material_flow.default_value;
+            definition.settings.wall_x_material_flow.default_value = extruderRDefinition.settings.material_flow.default_value;
+            definition.settings.wall_0_material_flow.default_value = extruderRDefinition.settings.material_flow.default_value;
             definition.settings.skin_material_flow.default_value = extruderRDefinition.settings.material_flow.default_value;
             definition.settings.roofing_material_flow.default_value = extruderRDefinition.settings.material_flow.default_value;
         }
