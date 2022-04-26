@@ -6,6 +6,7 @@ type TBbox = {
     y: number,
     width: number,
     height: number,
+    visible: boolean,
     vertexPoints?: Array<([number, number])>
 }
 
@@ -24,7 +25,10 @@ const boxSelect = (bbox: TBbox, modelsBbox: TBbox[], onlyContainSelect: boolean,
         return { ...model, index };
     }).sort((a, b) => {
         return b.width + b.height - a.width - a.height;
-    }).forEach(({ vertexPoints, index }) => {
+    }).forEach(({ vertexPoints, index, visible }) => {
+        if (!visible) {
+            return;
+        }
         if (onlyContainSelect) {
             const isContain = vertexPoints.every(point => {
                 return isInside(point, selectBoxPoints);

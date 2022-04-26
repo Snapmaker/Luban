@@ -742,7 +742,6 @@ export const actions = {
     getMouseTargetByCoordinate: (headType, x, y) => (dispatch, getState) => {
         const { modelGroup } = getState()[headType];
         const models = modelGroup.models;
-        console.log(x, y);
         if (models.length > 0) {
             const svgDateElem = models[0].elem?.parentElement;
             const svgDateElemChilds = svgDateElem?.children ? Array.from(svgDateElem?.children) : [];
@@ -2259,11 +2258,9 @@ export const actions = {
         const models = modelGroup.models;
         workerManager.boxSelect([
             bbox,
-            models.filter((model) => {
-                return model.visible;
-            }).map((model) => {
+            models.map((model) => {
                 const { width, height } = model.transformation;
-                return { width, height, vertexPoints: model.vertexPoints };
+                return { width, height, vertexPoints: model.vertexPoints, visible: model.visible };
             }),
             onlyContainSelect,
             size
