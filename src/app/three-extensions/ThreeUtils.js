@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { EPS } from '../lib/numeric-utils';
 
 const ThreeUtils = {
     getQuaternionBetweenVector3(v1, v2) {
@@ -336,8 +337,8 @@ const ThreeUtils = {
     },
 
     isReverseEdge(e1, e2) {
-        return e1[0].x === e2[1].x && e1[0].y === e2[1].y && e1[0].z === e2[1].z
-        && e2[0].x === e1[1].x && e2[0].y === e1[1].y && e2[0].z === e1[1].z;
+        return Math.abs(e1[0].x - e2[1].x) < EPS && Math.abs(e1[0].y - e2[1].y) < EPS && Math.abs(e1[0].z - e2[1].z) < EPS
+        && Math.abs(e2[0].x - e1[1].x) < EPS && Math.abs(e2[0].y - e1[1].y) < EPS && Math.abs(e2[0].z - e1[1].z) < EPS;
     },
 
     checkEdgeAvailable(newEdge, edges) {
@@ -359,14 +360,22 @@ const ThreeUtils = {
         const tempEdges = edges.slice(1);
         const arrangedEdges = [edge];
         while (tempEdges.length > 0) {
+            let found = false;
             for (let j = tempEdges.length - 1; j > -1; j--) {
                 const edgeChecked = tempEdges[j];
-                if (edge[1].x === edgeChecked[0].x && edge[1].y === edgeChecked[0].y && edge[1].z === edgeChecked[0].z) {
+                if (Math.abs(edge[1].x - edgeChecked[0].x) < EPS
+                    && Math.abs(edge[1].y - edgeChecked[0].y) < EPS
+                    && Math.abs(edge[1].z - edgeChecked[0].z) < EPS
+                ) {
                     arrangedEdges.push(edgeChecked);
                     edge = edgeChecked;
                     tempEdges.splice(j, 1);
+                    found = true;
                     break;
                 }
+            }
+            if (!found) {
+                break;
             }
         }
         return arrangedEdges;
