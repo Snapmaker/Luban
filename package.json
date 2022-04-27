@@ -31,7 +31,7 @@
     "prebuild": "bash build/prebuild-prod.sh",
     "prebuild-dev": "bash build/prebuild-dev.sh",
     "prebuild-prod": "bash build/prebuild-prod.sh",
-    "build": "gulp production",
+    "build": "gulp production --max_old_space_size=8092",
     "build-dev": "gulp development",
     "build-prod": "gulp production",
     "electron-builder": "electron-builder --publish never",
