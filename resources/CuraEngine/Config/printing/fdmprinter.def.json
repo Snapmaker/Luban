@@ -877,6 +877,17 @@
                     "maximum_value_warning": "150",
                     "settable_per_mesh": false,
                     "settable_per_extruder": true
+                },
+                "material_flow_layer_0": {
+                    "label": "Initial Layer Flow",
+                    "description": "Flow compensation for the first layer: the amount of material extruded on the initial layer is multiplied by this value.",
+                    "unit": "%",
+                    "default_value": 100,
+                    "type": "float",
+                    "minimum_value": "0.0001",
+                    "minimum_value_warning": "50",
+                    "maximum_value_warning": "150",
+                    "settable_per_mesh": true
                 }
             }
         },
@@ -2450,17 +2461,6 @@
                             "settable_per_extruder": true
                         }
                     }
-                },
-                "material_flow_layer_0": {
-                    "label": "Initial Layer Flow",
-                    "description": "Flow compensation for the first layer: the amount of material extruded on the initial layer is multiplied by this value.",
-                    "unit": "%",
-                    "default_value": 100,
-                    "type": "float",
-                    "minimum_value": "0.0001",
-                    "minimum_value_warning": "50",
-                    "maximum_value_warning": "150",
-                    "settable_per_mesh": true
                 },
                 "material_standby_temperature": {
                     "label": "Standby Temperature",

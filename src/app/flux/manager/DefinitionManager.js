@@ -347,11 +347,13 @@ class DefinitionManager {
                     definition.ownKeys.push(key);
                 }
             });
-        const meshKeys = ['infill_line_distance', 'infill_line_width',
+        const meshKeys = [
+            'infill_line_distance', 'infill_line_width',
             'wall_line_count', 'wall_line_width', 'wall_line_width_0', 'wall_line_width_x', 'skin_line_width', 'wall_0_material_flow', 'wall_x_material_flow',
             'skin_material_flow',
             'roofing_material_flow',
             'infill_material_flow',
+            'material_flow_layer_0'
         ];
         meshKeys.forEach((key) => {
             definition.settings[key] = {
@@ -366,15 +368,15 @@ class DefinitionManager {
         definition.settings.wall_x_extruder_nr.default_value = item.extruderConfig.shell;
         definition.settings.roofing_extruder_nr.default_value = item.extruderConfig.shell;
         definition.settings.top_bottom_extruder_nr.default_value = item.extruderConfig.shell;
-
+        definition.settings.material_flow_layer_0.default_value = activeDefinition.settings.material_flow_layer_0.default_value;
         if (item.extruderConfig.infill === '0') {
             definition.settings.infill_line_distance.default_value = extruderLDefinition.settings.infill_line_distance.default_value;
             definition.settings.infill_line_width.default_value = extruderLDefinition.settings.infill_line_width.default_value;
-            definition.settings.infill_material_flow.default_value = extruderLDefinition.settings.material_flow;
+            definition.settings.infill_material_flow.default_value = extruderLDefinition.settings.material_flow.default_value;
         } else {
             definition.settings.infill_line_distance.default_value = extruderRDefinition.settings.infill_line_distance.default_value;
             definition.settings.infill_line_width.default_value = extruderRDefinition.settings.infill_line_width.default_value;
-            definition.settings.infill_material_flow.default_value = extruderRDefinition.settings.material_flow;
+            definition.settings.infill_material_flow.default_value = extruderRDefinition.settings.material_flow.default_value;
         }
 
         if (item.extruderConfig.shell === '0') {
