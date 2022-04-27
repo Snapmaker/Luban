@@ -7,7 +7,7 @@ import type SocketServer from '../../lib/SocketManager';
 import { EventOptions } from './types';
 import logger from '../../lib/logger';
 import { CONNECTION_TYPE_WIFI, HEAD_CNC, HEAD_LASER, HEAD_PRINTING, LEVEL_TWO_POWER_LASER_FOR_SM2, WORKFLOW_STATE_IDLE } from '../../constants';
-import Business, { CoordinateType, ToolHeadType } from '../../lib/SACP-SDK/SACP/business/Business';
+import Business, { CoordinateType, RequestPhotoInfo, ToolHeadType } from '../../lib/SACP-SDK/SACP/business/Business';
 import CalibrationInfo from '../../lib/SACP-SDK/SACP/business/models/CalibrationInfo';
 import DataStorage from '../../DataStorage';
 // import MovementInstruction, { MoveDirection } from '../../lib/SACP-SDK/SACP/business/models/MovementInstruction';
@@ -25,9 +25,9 @@ class SocketTCP {
 
     private sacpClient: Business;
 
-    laserFocalLength: number = 0;
+    private laserFocalLength: number = 0;
 
-    thickness: number = 0;
+    private thickness: number = 0;
 
     constructor() {
         this.client = new net.Socket();
@@ -62,7 +62,7 @@ class SocketTCP {
     public connectionOpen = (socket: SocketServer, options: EventOptions) => {
         this.socket = socket;
         this.sacpClient.setHandler(0x01, 0x03, (data) => {
-            const state: any = {
+            const state = {
                 toolHead: LEVEL_TWO_POWER_LASER_FOR_SM2,
                 series: 'A400',
                 status: WORKFLOW_STATE_IDLE,
@@ -86,7 +86,7 @@ class SocketTCP {
                 const info = moduleInfos.find(moduleInfo => moduleInfo.moduleId === 14);
                 this.sacpClient.getLaserToolHeadInfo(info.key).then(({ laserToolHeadInfo }) => {
                     this.laserFocalLength = laserToolHeadInfo.laserFocalLength;
-                    console.log('laserToolHeadInfo.laserFocalLength', laserToolHeadInfo.laserFocalLength);
+                    log.debug(`laserToolHeadInfo.laserFocalLength, ${laserToolHeadInfo.laserFocalLength}`);
                     this.socket && this.socket.emit('Marlin:state', {
                         state: {
                             isHomed: true,
@@ -123,7 +123,7 @@ class SocketTCP {
             port: 8888
         }, () => {
             log.info('TCP connected');
-            const result: any = {
+            const result = {
                 msg: '',
                 data: {
                     hasEnclosure: false,
@@ -142,7 +142,7 @@ class SocketTCP {
         this.client.destroy();
         if (this.client.destroyed) {
             log.info('TCP manually closed');
-            const result: any = {
+            const result = {
                 code: 200,
                 data: {},
                 msg: '',
@@ -152,15 +152,14 @@ class SocketTCP {
         }
     }
 
-    public startHeartbeat = (socket, options) => {
-        console.log(socket, options);
+    public startHeartbeat = () => {
         this.sacpClient.subscribeHeartbeat({ interval: 1000 }, () => {
             // log.info(`receive heartbeat: ${data.response}`);
             clearTimeout(this.heartbeatTimer);
             this.heartbeatTimer = setTimeout(() => {
                 log.info('TCP connection closed');
                 this.socket && this.socket.emit('connection:close');
-            }, 60000);
+            }, 60000); // TODO: should change this after file transfer ready
         }).then((res) => {
             log.info(`subscribe heartbeat success: ${res}`);
         });
@@ -169,7 +168,6 @@ class SocketTCP {
     public uploadFile = (options: EventOptions) => {
         const { gcodePath, eventName } = options;
         const gcodeFullPath = `${DataStorage.tmpDir}${gcodePath}`;
-        console.log(DataStorage, DataStorage.tmpDir, gcodeFullPath);
         this.sacpClient.uploadFile(path.resolve(gcodeFullPath)).then((res) => {
             const result = {
                 err: null,
@@ -186,7 +184,7 @@ class SocketTCP {
         });
     };
 
-    public takePhoto = async (params, callback) => {
+    public takePhoto = async (params: RequestPhotoInfo, callback: (result: { status: boolean }) => void) => {
         return this.sacpClient.takePhoto(params).then(({ response }) => {
             if (response.result === 0) {
                 callback({ status: true });
@@ -196,31 +194,18 @@ class SocketTCP {
         });
     }
 
-    public getCameraCalibration = (callback) => {
+    public getCameraCalibration = (callback: (matrix: CalibrationInfo) => void) => {
         return this.sacpClient.getCameraCalibration(ToolHeadType.LASER10000mW).then(({ response }) => {
             if (response.result === 0) {
                 const calibrationInfo = new CalibrationInfo().fromBuffer(response.data);
                 callback(calibrationInfo);
             } else {
-                callback({
-                    // points: [
-                    //     { x: 47, y: 138 },
-                    //     { x: 967, y: 161 },
-                    //     { x: 959, y: 1110 },
-                    //     { x: 42, y: 1093 }
-                    // ],
-                    // corners: [
-                    //     { x: 122, y: 228 },
-                    //     { x: 222, y: 228 },
-                    //     { x: 222, y: 128 },
-                    //     { x: 122, y: 128 }
-                    // ]
-                });
+                callback(new CalibrationInfo());
             }
         });
     }
 
-    public getPhoto = (callback) => {
+    public getPhoto = (callback: (result: { success: boolean, filename: string }) => void) => {
         return this.sacpClient.getPhoto(0).then(({ response, data }) => {
             let success = false;
             let filename = '';
@@ -235,7 +220,7 @@ class SocketTCP {
         });
     }
 
-    public getCalibrationPhoto = (callback) => {
+    public getCalibrationPhoto = (callback: (result: { success: boolean, filename: string }) => void) => {
         return this.sacpClient.getCalibrationPhoto(ToolHeadType.LASER10000mW).then(({ response, data }) => {
             let success = false;
             let filename = '';
@@ -250,10 +235,12 @@ class SocketTCP {
         });
     }
 
-    public setMatrix = (params, callback) => {
+    public setMatrix = (params: { matrix: CalibrationInfo }, callback: (result: string) => void) => {
         return this.sacpClient.setMatrix(ToolHeadType.LASER10000mW, params.matrix).then(({ response }) => {
             if (response.result === 0) {
                 callback('');
+            } else {
+                callback('error');
             }
         });
     }
@@ -277,14 +264,14 @@ class SocketTCP {
             this.thickness = result.thickness;
             try {
                 const res1 = await this.sacpClient.updateCoordinate(CoordinateType.MACHINE);
-                console.log('=====', res1);
+                log.debug(`=====, ${res1}`);
                 this.sacpClient.getCurrentCoordinateInfo().then(async ({ coordinateSystemInfo }) => {
                     const xNow = coordinateSystemInfo.coordinates.find(item => item.key === Direction.X1).value;
                     const yNow = coordinateSystemInfo.coordinates.find(item => item.key === Direction.Y1).value;
                     const zNow = coordinateSystemInfo.coordinates.find(item => item.key === Direction.Z1).value;
 
-                    console.log('current positions', xNow, yNow, zNow);
-                    console.log('thickness & focal', this.thickness, this.laserFocalLength);
+                    log.debug(`current positions, ${xNow}, ${yNow}, ${zNow}`);
+                    log.debug(`thickness & focal, ${this.thickness}, ${this.laserFocalLength}`);
 
                     await this.sacpClient.updateCoordinate(CoordinateType.WORKSPACE);
 
@@ -293,7 +280,7 @@ class SocketTCP {
                     const newZ = new CoordinateInfo(Direction.Z1, zNow - (this.laserFocalLength + this.thickness));
                     const newCoord = [newX, newY, newZ];
 
-                    console.log('new positions', newCoord);
+                    log.debug(`new positions, ${newCoord}`);
 
                     await this.sacpClient.setWorkOrigin(newCoord);
 
@@ -312,15 +299,12 @@ class SocketTCP {
         // this.getLaserMaterialThicknessReq && this.getLaserMaterialThicknessReq.abort();
     };
 
-    public executeGcode = async (options: EventOptions, callback) => {
+    public executeGcode = async (options: EventOptions, callback: () => void) => {
         const { gcode } = options;
         const gcodeLines = gcode.split('\n');
         // callback && callback();
-        console.log('executeGcode', gcodeLines);
+        log.debug(`executeGcode, ${gcodeLines}`);
         try {
-            // for (const line of gcodeLines) {
-            //     await this._execGcodeString(line);
-            // }
             callback && callback();
             this.socket && this.socket.emit('connection:executeGcode', { msg: '', res: null });
         } catch (e) {
@@ -328,95 +312,15 @@ class SocketTCP {
         }
     };
 
-    // private _execGcodeString = (gcodeLine: string) => {
-    //     console.log('_execGcodeString', gcodeLine);
-    //     switch (true) {
-    //         case gcodeLine.startsWith('G28'):
-    //             return this.sacpClient.requestHome();
-    //         case gcodeLine.startsWith('G53'):
-    //             return this.sacpClient.updateCoordinate(CoordinateType.MACHINE);
-    //         case gcodeLine.startsWith('G54'):
-    //             return this.sacpClient.updateCoordinate(CoordinateType.WORKSPACE);
-    //         case gcodeLine.startsWith('G92'): {
-    //             const result = [];
-    //             result.push({ key: MoveDirection.X1, res: /x(\d+)/ig.exec(gcodeLine) });
-    //             result.push({ key: MoveDirection.Y1, res: /y(\d+)/ig.exec(gcodeLine) });
-    //             result.push({ key: MoveDirection.Z1, res: /z(\d+)/ig.exec(gcodeLine) });
-    //             result.push({ key: MoveDirection.B1, res: /b(\d+)/ig.exec(gcodeLine) });
-
-    //             const coordinateInfos = result
-    //                 .map(regexResult => {
-    //                     if (regexResult.res && regexResult.res.length > 1) {
-    //                         return {
-    //                             key: regexResult.direction,
-    //                             value: Number(regexResult.res.pop())
-    //                         };
-    //                     }
-    //                     return null;
-    //                 })
-    //                 .filter(item => item !== null);
-
-    //             return this.sacpClient.setWorkOrigin(coordinateInfos as Array<CoordinateInfo>);
-    //         }
-    //         case gcodeLine.startsWith('G0'): {
-    //             const result = [];
-    //             result.push({ direction: MoveDirection.X1, res: /x(\d+)/ig.exec(gcodeLine) });
-    //             result.push({ direction: MoveDirection.Y1, res: /y(\d+)/ig.exec(gcodeLine) });
-    //             result.push({ direction: MoveDirection.Z1, res: /z(\d+)/ig.exec(gcodeLine) });
-    //             result.push({ direction: MoveDirection.B1, res: /b(\d+)/ig.exec(gcodeLine) });
-
-    //             let speed = 0;
-    //             const regexSpeed = /f(\d+)/ig.exec(gcodeLine);
-    //             if (regexSpeed && regexSpeed.length > 1) {
-    //                 speed = Number(regexSpeed.pop());
-    //             }
-
-    //             const movementInstructions = result
-    //                 .map(regexResult => {
-    //                     if (regexResult.res && regexResult.res.length > 1) {
-    //                         return {
-    //                             direction: regexResult.direction,
-    //                             distance: Number(regexResult.res.pop())
-    //                         };
-    //                     }
-    //                     return null;
-    //                 })
-    //                 .filter(item => item !== null);
-
-    //             return this.sacpClient.moveAbsolutely(movementInstructions as Array<MovementInstruction>, speed);
-    //         }
-    //         default: return Promise.reject(new Error('unsupport gcode now'));
-    //     }
-    // }
-
-    public uploadGcodeFile = (gcodeFilePath: string, type: string, callback) => {
+    public uploadGcodeFile = (gcodeFilePath: string, type: string, callback: (msg: string, data: boolean) => void) => {
         this.sacpClient.uploadFile(gcodeFilePath).then(({ response }) => {
-            let msg = '', data = null;
+            let msg = '', data = false;
             if (response.result === 0) {
                 msg = '';
                 data = true;
             }
             callback(msg, data);
         });
-        // const api = `${this.host}/api/v1/prepare_print`;
-        // if (type === HEAD_PRINTING) {
-        //     type = '3DP';
-        // } else if (type === HEAD_LASER) {
-        //     type = 'Laser';
-        // } else if (type === HEAD_CNC) {
-        //     type = 'CNC';
-        // }
-        // request
-        //     .post(api)
-        //     .field('token', this.token)
-        //     .field('type', type)
-        //     .attach('file', gcodeFilePath)
-        //     .end((err, res) => {
-        //         const { msg, data } = _getResult(err, res);
-        //         if (callback) {
-        //             callback(msg, data);
-        //         }
-        //     });
     };
 
     // start print
