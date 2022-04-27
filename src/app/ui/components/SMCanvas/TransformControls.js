@@ -40,7 +40,7 @@ export const emitUpdatePositionEvent = throttle((transformData) => {
             detail: transformData
         })
     );
-}, 1000);
+}, 300);
 
 export const emitUpdateScaleEvent = throttle((transformData) => {
     return window.dispatchEvent(
@@ -48,7 +48,7 @@ export const emitUpdateScaleEvent = throttle((transformData) => {
             detail: transformData
         })
     );
-}, 1000);
+}, 300);
 
 export const emitUpdateRotateEvent = throttle((transformData) => {
     return window.dispatchEvent(
@@ -56,7 +56,7 @@ export const emitUpdateRotateEvent = throttle((transformData) => {
             detail: transformData
         })
     );
-}, 1000);
+}, 300);
 
 export const emitUpdateControlInputEvent = throttle((transformData) => {
     return window.dispatchEvent(
@@ -64,7 +64,7 @@ export const emitUpdateControlInputEvent = throttle((transformData) => {
             detail: transformData
         })
     );
-}, 1000);
+}, 300);
 
 const RED = 0xff5759;
 const GREEN = 0x4cb518;

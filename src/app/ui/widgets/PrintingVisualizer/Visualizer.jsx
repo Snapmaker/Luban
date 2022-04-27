@@ -570,7 +570,7 @@ class Visualizer extends PureComponent {
                                 value={this.props.controlInputValue ? this.props.controlInputValue[this.props.controlAxis[0]] : null}
                                 suffix={modeSuffix[this.props.controlMode]}
                                 allowUndefined
-                                prefix={`${this.props.controlAxis[0]}:`}
+                                prefix={`${this.props.controlAxis[0].toUpperCase()}:`}
                                 onPressEnter={(event) => {
                                     this.actions.controlInputTransform(this.props.controlMode, this.props.controlAxis[0], event.target.value);
                                 }}
@@ -584,7 +584,7 @@ class Visualizer extends PureComponent {
                                 placeholder={i18n._('key-Printing/LeftBar-Enter an degree')}
                                 value={this.props.controlInputValue ? this.props.controlInputValue[this.props.controlAxis[1]] : null}
                                 suffix={modeSuffix[this.props.controlMode]}
-                                prefix={`${this.props.controlAxis[1]}:`}
+                                prefix={`${this.props.controlAxis[1].toUpperCase()}:`}
                                 allowUndefined
                                 onPressEnter={(event) => {
                                     this.actions.controlInputTransform(this.props.controlMode, this.props.controlAxis[1], event.target.value);
