@@ -79,7 +79,6 @@ function VisualizerLeftBar({ setTransformMode, supportActions, updateBoundingBox
     const enableShortcut = useSelector(state => state?.printing?.enableShortcut, shallowEqual);
     const [showRotationAnalyzeModal, setShowRotationAnalyzeModal] = useState(false);
     const [showEditSupportModal, setShowEditSupportModal] = useState(false);
-    const displayedType = useSelector(state => state?.printing?.displayedType, shallowEqual);
     const isDualExtruder = machineStore.get('machine.toolHead.printingToolhead') === DUAL_EXTRUDER_TOOLHEAD_FOR_SM2;
     const dispatch = useDispatch();
     const fileInput = useRef(null);
@@ -164,7 +163,7 @@ function VisualizerLeftBar({ setTransformMode, supportActions, updateBoundingBox
     const scaleDisabled = showRotationAnalyzeModal || showEditSupportModal || !hasAnyVisableModels;
     const rotateDisabled = showRotationAnalyzeModal || showEditSupportModal || !hasVisableModels || isPrimeTowerSelected;
     const mirrorDisabled = showRotationAnalyzeModal || showEditSupportModal || !hasVisableModels || isPrimeTowerSelected;
-    const supportDisabled = displayedType !== 'model' || showRotationAnalyzeModal || showEditSupportModal || !hasVisableModels || isPrimeTowerSelected;
+    const supportDisabled = showRotationAnalyzeModal || showEditSupportModal || !hasVisableModels || isPrimeTowerSelected;
     const extruderDisabled = showRotationAnalyzeModal || showEditSupportModal || !hasVisableModels || isPrimeTowerSelected;
 
     return (

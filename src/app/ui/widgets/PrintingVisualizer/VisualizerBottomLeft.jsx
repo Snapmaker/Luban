@@ -8,6 +8,7 @@ import Card from '../../components/Card';
 import SvgIcon from '../../components/SvgIcon';
 import { HEAD_PRINTING } from '../../../constants';
 import { logObjectListOperation, logModelViewOperation } from '../../../lib/gaEvent';
+import styles from './styles.styl';
 
 function VisualizerBottomLeft({ actions }) {
     return (
@@ -26,6 +27,7 @@ function VisualizerBottomLeft({ actions }) {
                     <SvgIcon
                         name="ViewIsometric"
                         size={24}
+                        className={classNames(styles['view-switch'])}
                         onClick={actions.toTopFrontRight}
                     />
                 </Tooltip>
@@ -33,7 +35,7 @@ function VisualizerBottomLeft({ actions }) {
                     <SvgIcon
                         name="ViewFront"
                         size={24}
-                        className="margin-left-2"
+                        className={classNames(styles['view-switch'], 'margin-left-2')}
                         onClick={actions.toFront}
                     />
                 </Tooltip>
@@ -41,7 +43,7 @@ function VisualizerBottomLeft({ actions }) {
                     <SvgIcon
                         name="ViewTop"
                         size={24}
-                        className="margin-left-2"
+                        className={classNames(styles['view-switch'], 'margin-left-2')}
                         onClick={actions.toTop}
                     />
                 </Tooltip>
@@ -49,7 +51,7 @@ function VisualizerBottomLeft({ actions }) {
                     <SvgIcon
                         name="ViewLeft"
                         size={24}
-                        className="margin-left-2"
+                        className={classNames(styles['view-switch'], 'margin-left-2')}
                         onClick={actions.toLeft}
                     />
                 </Tooltip>
@@ -57,7 +59,7 @@ function VisualizerBottomLeft({ actions }) {
                     <SvgIcon
                         name="ViewRight"
                         size={24}
-                        className="margin-left-2"
+                        className={classNames(styles['view-switch'], 'margin-left-2')}
                         onClick={actions.toRight}
                     />
                 </Tooltip>
@@ -66,6 +68,7 @@ function VisualizerBottomLeft({ actions }) {
                     <SvgIcon
                         name="ScaleToFit"
                         size={24}
+                        className={classNames(styles['view-switch'])}
                         onClick={() => {
                             logModelViewOperation(HEAD_PRINTING, 'fit_view_in');
                             actions.fitViewIn();

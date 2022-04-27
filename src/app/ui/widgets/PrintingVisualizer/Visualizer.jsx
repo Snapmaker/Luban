@@ -566,7 +566,7 @@ class Visualizer extends PureComponent {
                         <div className={`canvas-input position-ab border-${this.props.controlAxis[0]} translate-animation-3`} id="control-input" style={{ display: 'none' }}>
                             <Input
                                 size="small"
-                                placeholder={i18n._('key-Printing/LeftBar-Enter an degree')}
+                                placeholder="0"
                                 value={this.props.controlInputValue ? this.props.controlInputValue[this.props.controlAxis[0]] : null}
                                 suffix={modeSuffix[this.props.controlMode]}
                                 allowUndefined
@@ -581,7 +581,7 @@ class Visualizer extends PureComponent {
                         <div className={`canvas-input position-ab border-${this.props.controlAxis[1]} translate-animation-3`} id="control-input-2">
                             <Input
                                 size="small"
-                                placeholder={i18n._('key-Printing/LeftBar-Enter an degree')}
+                                placeholder="0"
                                 value={this.props.controlInputValue ? this.props.controlInputValue[this.props.controlAxis[1]] : null}
                                 suffix={modeSuffix[this.props.controlMode]}
                                 prefix={`${this.props.controlAxis[1].toUpperCase()}:`}

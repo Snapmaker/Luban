@@ -756,7 +756,7 @@
     "key-Printing/ContextMenu-Hide": "隐藏",
     "key-Printing/ContextMenu-Import Error": "导入错误",
     "key-Printing/ContextMenu-Model size has exceeded the printable area.": "模型尺寸超出打印区域。",
-    "key-Printing/ContextMenu-Model source name": "",
+    "key-Printing/ContextMenu-Model source name": "文件名",
     "key-Printing/ContextMenu-Paste": "粘贴",
     "key-Printing/ContextMenu-Reset Model Transformation": "重置模型变换",
     "key-Printing/ContextMenu-Scale": "缩放",

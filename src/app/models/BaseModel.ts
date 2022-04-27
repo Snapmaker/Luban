@@ -45,6 +45,10 @@ abstract class BaseModel {
 
     meshObject: THREE.Mesh & { uniformScalingState: boolean };
 
+    width: number;
+
+    height: number;
+
     constructor(modelInfo: unknown, modelGroup: ModelGroup) {
         this.modelGroup = modelGroup;
 

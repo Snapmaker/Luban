@@ -115,7 +115,11 @@ class Controls extends EventEmitter {
 
     isMouseDown = false;
 
-    constructor(sourceType, displayedType, camera, group, domElement, onScale, onPan, supportActions, minScale = undefined, maxScale = undefined, scaleSize = undefined) {
+    isClickOnPeripheral = false;
+
+    constructor(
+        sourceType, displayedType, camera, group, domElement, onScale, onPan, supportActions, minScale = undefined, maxScale = undefined, scaleSize = undefined
+    ) {
         super();
 
         this.sourceType = sourceType;
@@ -308,6 +312,7 @@ class Controls extends EventEmitter {
                     if (this.transformControl.onMouseDown(coord)) {
                         this.state = STATE.TRANSFORM;
                         this.emit(EVENTS.BEFORE_TRANSFORM_OBJECT);
+                        this.isClickOnPeripheral = true;
                         break;
                     }
                 }
@@ -550,7 +555,11 @@ class Controls extends EventEmitter {
                     if (intersect) {
                         selectEvent = SELECTEVENT.UNSELECT_ADDSELECT;
                     } else {
-                        selectEvent = SELECTEVENT.UNSELECT;
+                        if (!this.isClickOnPeripheral) {
+                            selectEvent = SELECTEVENT.UNSELECT;
+                        } else {
+                            this.isClickOnPeripheral = false;
+                        }
                     }
                 }
             }
