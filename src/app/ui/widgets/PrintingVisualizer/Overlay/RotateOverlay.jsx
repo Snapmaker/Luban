@@ -13,8 +13,6 @@ import { NumberInput as Input } from '../../../components/Input';
 import { Button } from '../../../components/Buttons';
 import SvgIcon from '../../../components/SvgIcon';
 import { EPSILON, HEAD_PRINTING } from '../../../../constants';
-import ThreeGroup from '../../../../models/ThreeGroup';
-import ThreeModel from '../../../../models/ThreeModel';
 import ThreeUtils from '../../../../three-extensions/ThreeUtils';
 import { logTransformOperation } from '../../../../lib/gaEvent';
 import styles from './styles.styl';
@@ -59,15 +57,15 @@ const RotateOverlay = React.memo(({
     const models = modelGroup.models;
     const selectedModelArray = modelGroup.selectedModelArray;
     const isSelectedModelAllVisible = useSelector(state => state?.printing?.modelGroup?.isSelectedModelAllVisible(), shallowEqual);
+    const isPrimeTowerSelected = useSelector(state => state?.printing?.modelGroup?.isPrimeTowerSelected());
+
     const modelExcludePrimeTower = filter(selectedModelArray, (item) => {
         return item.type !== 'primeTower';
     });
     const isSingleSelected = modelExcludePrimeTower.length === 1 && isSelectedModelAllVisible;
     // const [hasSelectedModel, setHasSelectedModel] = useState(false);
     // const [isSingleSelected, setIsSingleSelected] = useState(false);
-    const rotationAnalysisEnableForSelected = hasModels && selectedModelArray.length && selectedModelArray.every((modelItem) => {
-        return modelItem instanceof ThreeGroup || modelItem instanceof ThreeModel;
-    });
+    const rotationAnalysisEnableForSelected = hasModels && !isPrimeTowerSelected && isSelectedModelAllVisible;
     const dispatch = useDispatch();
     const updateRotate = (event) => {
         const { detail } = event;
@@ -106,7 +104,7 @@ const RotateOverlay = React.memo(({
     };
 
     const autoRotate = () => {
-        const autoRotateModelArray = rotationAnalysisEnableForSelected ? selectedModelArray : modelGroup.getModels('primeTower');
+        const autoRotateModelArray = rotationAnalysisEnableForSelected ? selectedModelArray : modelGroup.getVisibleModels();
         rotateOnlyForUniformScale(() => {
             autoRotateSelectedModel();
         }, autoRotateModelArray);

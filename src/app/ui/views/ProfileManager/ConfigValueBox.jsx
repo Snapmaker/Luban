@@ -128,7 +128,7 @@ function ConfigValueBox({ optionConfigGroup, calculateTextIndex, isCategorySelec
                                                 }
                                             })}
                                         </div>
-                                        {managerType === HEAD_CNC && group.name === 'Carving Tool' && (
+                                        {managerType === HEAD_CNC && group.name === 'Carving Tool' && definitionForManager?.settings?.tool_type?.default_value && (
                                             <div>
                                                 <img style={{ width: 80, height: 203, marginLeft: 20 }} src={`/resources/images/cnc/tool-type-${definitionForManager?.settings?.tool_type?.default_value}.jpg`} alt="" />
                                             </div>

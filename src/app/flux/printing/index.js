@@ -704,8 +704,8 @@ export const actions = {
                 defaultMaterialL = PRINTING_MATERIAL_CONFIG_GROUP_SINGLE.some((item) => {
                     return item.fields.some((key) => {
                         return (
-                            extruderLDefaultDefinition?.settings[key].default_value
-                            !== extruderLDefinition.settings[key].default_value
+                            extruderLDefaultDefinition?.settings[key]?.default_value
+                            !== extruderLDefinition.settings[key]?.default_value
                         );
                     });
                 }) ? '1' : '0';
@@ -714,8 +714,8 @@ export const actions = {
                 defaultMaterialQuality = PRINTING_QUALITY_CONFIG_GROUP_SINGLE.some((item) => {
                     return item.fields.some((key) => {
                         return (
-                            activeActiveQualityDefinition.settings[key].default_value
-                            !== defaultQualityDefinition.settings[key].default_value
+                            activeActiveQualityDefinition.settings[key]?.default_value
+                            !== defaultQualityDefinition.settings[key]?.default_value
                         );
                     });
                 }) ? '1' : '0';
@@ -1971,6 +1971,14 @@ export const actions = {
         }));
     },
 
+    exitPreview: () => (dispatch, getState) => {
+        const { displayedType } = getState().printing;
+        if (displayedType !== 'model') {
+            dispatch(actions.destroyGcodeLine());
+            dispatch(actions.displayModel());
+        }
+    },
+
     displayModel: () => (dispatch, getState) => {
         const { gcodeLineGroup, modelGroup } = getState().printing;
         modelGroup.object.visible = true;
@@ -2614,10 +2622,10 @@ export const actions = {
 
         progressStatesManager.startProgress(PROCESS_STAGE.PRINTING_AUTO_ROTATE);
         let selected = [];
-        if (modelGroup.getSelectedModelArray().length > 0) {
-            selected = modelGroup.getSelectedModelArray().filter(item => item.visible);
+        if (modelGroup.isSelectedModelAllVisible()) {
+            selected = modelGroup.getSelectedModelArray();
         } else {
-            selected = modelGroup.getModels('primeTower').filter(item => item.visible);
+            selected = modelGroup.getVisibleModels();
         }
         dispatch(actions.updateState({
             stage: STEP_STAGE.PRINTING_AUTO_ROTATING_MODELS,
@@ -2746,6 +2754,7 @@ export const actions = {
     },
 
     scaleToFitSelectedModelWithRotate: () => (dispatch, getState) => {
+        dispatch(actions.exitPreview());
         const { progressStatesManager, modelGroup, stopArea: { left, right, front, back } } = getState().printing;
         const { size } = getState().machine;
         progressStatesManager.startProgress(PROCESS_STAGE.PRINTING_SCALE_TO_FIT_WITH_ROTATE);
@@ -2878,7 +2887,12 @@ export const actions = {
 
     // uploadModel
     undo: () => (dispatch, getState) => {
-        const { canUndo } = getState().printing.history;
+        const { history, displayedType } = getState().printing;
+        const { canUndo } = history;
+        if (displayedType !== 'model') {
+            dispatch(actions.destroyGcodeLine());
+            dispatch(actions.displayModel());
+        }
         if (canUndo) {
             logToolBarOperation(HEAD_PRINTING, 'undo');
             dispatch(operationHistoryActions.undo(INITIAL_STATE.name));
@@ -2889,6 +2903,7 @@ export const actions = {
     },
 
     redo: () => (dispatch, getState) => {
+        dispatch(actions.exitPreview());
         const { canRedo } = getState().printing.history;
         if (canRedo) {
             logToolBarOperation(HEAD_PRINTING, 'redo');
@@ -2943,6 +2958,8 @@ export const actions = {
     //     }
     // },
     clearAllManualSupport: (combinedOperations) => (dispatch, getState) => {
+        dispatch(actions.exitPreview());
+
         const { modelGroup } = getState().printing;
         const modelsWithSupport = modelGroup.getModelsAttachedSupport(false);
         if (modelsWithSupport.length > 0) {
@@ -3271,6 +3288,8 @@ export const actions = {
         }));
     },
     groupAndAlign: () => (dispatch, getState) => {
+        dispatch(actions.exitPreview());
+
         const { modelGroup } = getState().printing;
 
         const modelsbeforeGroup = modelGroup.getModels().slice(0);
@@ -3309,12 +3328,12 @@ export const actions = {
 
         dispatch(operationHistoryActions.setOperations(INITIAL_STATE.name, operations));
         dispatch(actions.updateState(modelState));
-        dispatch(actions.destroyGcodeLine());
-        dispatch(actions.displayModel());
         logToolBarOperation(HEAD_PRINTING, 'align');
     },
 
     group: () => (dispatch, getState) => {
+        dispatch(actions.exitPreview());
+
         const { modelGroup } = getState().printing;
         // Stores the model structure before the group operation, which is used for undo operation
         const modelsBeforeGroup = modelGroup.getModels().slice(0);
@@ -3354,12 +3373,12 @@ export const actions = {
 
         dispatch(operationHistoryActions.setOperations(INITIAL_STATE.name, operations));
         dispatch(actions.updateState(modelState));
-        dispatch(actions.destroyGcodeLine());
-        dispatch(actions.displayModel());
         logToolBarOperation(HEAD_PRINTING, 'group');
     },
 
     ungroup: () => (dispatch, getState) => {
+        dispatch(actions.exitPreview());
+
         const { modelGroup } = getState().printing;
 
         const groups = modelGroup.getSelectedModelArray().filter(model => model instanceof ThreeGroup);
@@ -3398,8 +3417,6 @@ export const actions = {
 
         dispatch(operationHistoryActions.setOperations(INITIAL_STATE.name, operations));
         dispatch(actions.updateState(modelState));
-        dispatch(actions.destroyGcodeLine());
-        dispatch(actions.displayModel());
         logToolBarOperation(HEAD_PRINTING, 'ungroup');
     },
 

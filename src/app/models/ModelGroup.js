@@ -542,6 +542,12 @@ class ModelGroup extends EventEmitter {
         return models;
     }
 
+    getVisibleModels() {
+        return this.models.filter(model => {
+            return model.type !== 'primeTower' && model.visible;
+        });
+    }
+
 
     calculateSelectedGroupPosition() {
         const boundingBoxTemp = ThreeUtils.computeBoundingBox(this.selectedGroup);

@@ -39,8 +39,12 @@ const SupportOverlay = ({ editSupport, setTransformMode }) => {
             logTransformOperation(HEAD_PRINTING, 'support', 'clear');
         },
         editSupport() {
-            editSupport();
-            logTransformOperation(HEAD_PRINTING, 'support', 'edit_in');
+            dispatch(printingActions.exitPreview());
+            // In preview mode, wait for modelGroup.object.parent recovery
+            setTimeout(() => {
+                editSupport();
+                logTransformOperation(HEAD_PRINTING, 'support', 'edit_in');
+            });
         }
     };
     const renderGenerateSupportConfirm = () => {
