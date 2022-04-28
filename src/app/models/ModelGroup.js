@@ -544,7 +544,12 @@ class ModelGroup extends EventEmitter {
 
     getVisibleModels() {
         return this.models.filter(model => {
-            return model.type !== 'primeTower' && model.visible;
+            if (!model.visible || model.type === 'primeTower') {
+                return false;
+            } else if (model instanceof ThreeGroup) {
+                return model.children.every(subModel => subModel.visible);
+            }
+            return true;
         });
     }
 
@@ -2207,7 +2212,7 @@ class ModelGroup extends EventEmitter {
     filterModelsCanAttachSupport(models = this.models) {
         const modelsToAddSupport = [];
         this.traverseModels(models, (subModel) => {
-            if (subModel instanceof ThreeModel && subModel.canAttachSupport && subModel.visible) {
+            if (subModel instanceof ThreeModel && subModel.canAttachSupport && subModel.visible && subModel.type !== 'primeTower') {
                 modelsToAddSupport.push(subModel);
             }
         });
@@ -2215,26 +2220,15 @@ class ModelGroup extends EventEmitter {
     }
 
     getModelsAttachedSupport(defaultSelectAllModels = true) {
-        let models = [];
-        if (this.selectedModelArray.length === 0) {
-            if (defaultSelectAllModels) {
-                this.selectAllModels();
-                models = this.selectedModelArray;
-            } else {
-                models = this.models;
-            }
+        if (defaultSelectAllModels) {
+            return this.filterModelsCanAttachSupport(this.models);
         } else {
-            models = this.selectedModelArray;
+            return this.filterModelsCanAttachSupport(this.selectedModelArray);
         }
-        if (models.length > 0) {
-            return this.filterModelsCanAttachSupport(models);
-        }
-        return [];
     }
 
-    clearAllSupport() {
-        const availModels = this.getModelsAttachedSupport(false);
-        availModels.forEach(model => {
+    clearAllSupport(models) {
+        models.forEach(model => {
             model.meshObject.clear();
             model.supportFaceMarks = [];
             model.stickToPlate();
@@ -2430,10 +2424,9 @@ class ModelGroup extends EventEmitter {
         });
     }
 
-    computeSupportArea(angle) {
+    computeSupportArea(models, angle) {
         // group is not considered
-        const availModels = this.getModelsAttachedSupport();
-        availModels.forEach(model => {
+        models.forEach(model => {
             model.meshObject.updateMatrixWorld();
             const bufferGeometry = model.meshObject.geometry;
             const clone = bufferGeometry.clone();
@@ -2546,14 +2539,21 @@ class ModelGroup extends EventEmitter {
 
             model.supportFaceMarks = supportFaceMarks;
         });
-        return availModels;
+        return models;
     }
 
     isSelectedModelAllVisible() {
         if (this.selectedModelArray.length === 0) {
             return false;
         }
-        return this.selectedModelArray.every(model => model.visible && model.type !== 'primeTower');
+        return this.selectedModelArray.every(model => {
+            if (!model.visible || model.type === 'primeTower') {
+                return false;
+            } else if (model instanceof ThreeGroup) {
+                return model.children.every(subModel => subModel.visible);
+            }
+            return true;
+        });
     }
 }
 

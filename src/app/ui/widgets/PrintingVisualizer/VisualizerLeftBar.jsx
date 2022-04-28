@@ -137,8 +137,9 @@ function VisualizerLeftBar({ setTransformMode, supportActions, updateBoundingBox
             }
         },
         editSupport: useCallback(() => {
-            setShowEditSupportModal(true);
             fitViewIn && fitViewIn();
+            modelGroup.selectAllModels();
+            setShowEditSupportModal(true);
         }, [setShowEditSupportModal, fitViewIn]),
         isNonUniformScaled: () => {
             const { scaleX, scaleY, scaleZ } = selectedModelArray[0].transformation;

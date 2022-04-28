@@ -578,11 +578,7 @@ class ExtractSquareTrace extends PureComponent {
                         <Modal.Header>
                             {i18n._('key-Laser/CameraCapture-Camera Capture')}
                         </Modal.Header>
-                        <Modal.Body
-                            className={classNames(
-                                styles['modal-body']
-                            )}
-                        >
+                        <Modal.Body>
                             <div style={{ margin: '0 0 16px', width: '432px' }}>
                                 {i18n._('key-Laser/CameraCapture-The camera on the Laser Module captures nine images of the Laser Engraving and Cutting Platform, and stitches them as a background.')}
                             </div>

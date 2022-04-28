@@ -2961,13 +2961,17 @@ export const actions = {
         dispatch(actions.exitPreview());
 
         const { modelGroup } = getState().printing;
-        const modelsWithSupport = modelGroup.getModelsAttachedSupport(false);
-        if (modelsWithSupport.length > 0) {
+
+        // Give priority to the selected supporting models, Second, apply all models
+        const selectedAvailModels = modelGroup.getModelsAttachedSupport(false);
+        const availModels = selectedAvailModels.length > 0 ? selectedAvailModels : modelGroup.getModelsAttachedSupport();
+
+        if (availModels.length > 0) {
             let operations = new Operations();
             if (combinedOperations) {
                 operations = combinedOperations;
             }
-            for (const model of modelsWithSupport) {
+            for (const model of availModels) {
                 const operation = new DeleteSupportsOperation3D({
                     target: model,
                     support: model.meshObject.children[0],
@@ -2979,7 +2983,7 @@ export const actions = {
                 dispatch(operationHistoryActions.setOperations(INITIAL_STATE.name, operations));
             }
 
-            modelGroup.clearAllSupport();
+            modelGroup.clearAllSupport(availModels);
         }
     },
     setDefaultSupportSize: (size) => (dispatch, getState) => {
@@ -3700,34 +3704,38 @@ export const actions = {
 
     computeAutoSupports: (angle) => (dispatch, getState) => {
         const { modelGroup, progressStatesManager } = getState().printing;
-
-        progressStatesManager.startProgress(PROCESS_STAGE.PRINTING_GENERATE_SUPPORT, [1, 1]);
-        dispatch(actions.updateState({
-            stage: STEP_STAGE.PRINTING_GENERATE_SUPPORT_AREA,
-            progress: progressStatesManager.updateProgress(STEP_STAGE.PRINTING_GENERATE_SUPPORT_AREA, 0.25)
-        }));
-
         // record previous support face marks for undo&redo
         const tmpSupportFaceMarks = {};
-        const availModels = modelGroup.getModelsAttachedSupport();
-        availModels.forEach(model => {
-            tmpSupportFaceMarks[model.modelID] = model.supportFaceMarks;
-        });
-        dispatch(actions.updateState({
-            tmpSupportFaceMarks
-        }));
+        // Give priority to the selected supporting models, Second, apply all models
+        const selectedAvailModels = modelGroup.getModelsAttachedSupport(false);
+        const availModels = selectedAvailModels.length > 0 ? selectedAvailModels : modelGroup.getModelsAttachedSupport();
 
-        const models = modelGroup.computeSupportArea(angle);
+        if (availModels.length > 0) {
+            progressStatesManager.startProgress(PROCESS_STAGE.PRINTING_GENERATE_SUPPORT, [1, 1]);
+            dispatch(actions.updateState({
+                stage: STEP_STAGE.PRINTING_GENERATE_SUPPORT_AREA,
+                progress: progressStatesManager.updateProgress(STEP_STAGE.PRINTING_GENERATE_SUPPORT_AREA, 0.25)
+            }));
 
-        dispatch(actions.updateState({
-            stage: STEP_STAGE.PRINTING_GENERATE_SUPPORT_AREA,
-            progress: progressStatesManager.updateProgress(STEP_STAGE.PRINTING_GENERATE_SUPPORT_AREA, 1)
-        }));
-        if (models.length > 0) {
-            dispatch(actions.generateSupports(models, angle));
+            availModels.forEach(model => {
+                tmpSupportFaceMarks[model.modelID] = model.supportFaceMarks;
+            });
+            dispatch(actions.updateState({
+                tmpSupportFaceMarks
+            }));
+
+            const models = modelGroup.computeSupportArea(availModels, angle);
+
+            dispatch(actions.updateState({
+                stage: STEP_STAGE.PRINTING_GENERATE_SUPPORT_AREA,
+                progress: progressStatesManager.updateProgress(STEP_STAGE.PRINTING_GENERATE_SUPPORT_AREA, 1)
+            }));
+            if (models.length > 0) {
+                dispatch(actions.generateSupports(models, angle));
+            }
+            dispatch(actions.destroyGcodeLine());
+            dispatch(actions.displayModel());
         }
-        dispatch(actions.destroyGcodeLine());
-        dispatch(actions.displayModel());
     }
 };
 
