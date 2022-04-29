@@ -28,6 +28,10 @@ const DEFAULT_PRINTING_MATERIAL = [
     'material.petg.black.def.json',
     'material.petg.red.def.json',
     'material.petg.blue.def.json',
+    'material.pla.wood.def.json',
+    'material.pla.glow.def.json',
+    'material.tpu.black.def.json',
+    'material.tpu.yellow.def.json'
 ];
 
 const DEFAULT_PREDEFINED = {
@@ -47,6 +51,10 @@ const DEFAULT_PREDEFINED = {
         'material.petg.black.def.json',
         'material.petg.red.def.json',
         'material.petg.blue.def.json',
+        'material.pla.wood.def.json',
+        'material.pla.glow.def.json',
+        'material.tpu.black.def.json',
+        'material.tpu.yellow.def.json'
     ],
     'cnc': [
         'tool.default_CVbit.def.json',
