@@ -1369,7 +1369,8 @@ export const actions = {
             'material.pla', 'material.abs', 'material.petg',
             'material.pla.black', 'material.abs.black', 'material.petg.black',
             'material.pla.blue', 'material.pla.grey', 'material.pla.red', 'material.pla.yellow',
-            'material.petg.blue', 'material.petg.red'
+            'material.petg.blue', 'material.petg.red', 'material.pla.glow', 'material.pla.wood',
+            'material.tpu.black', 'material.tpu.yellow'
         ];
         for (const definition of state.materialDefinitions) {
             if (defaultDefinitionIds.includes(definition.definitionId)) {

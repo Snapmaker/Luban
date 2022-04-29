@@ -43,6 +43,7 @@ function getMaterialSelectOptions(materialDefinitions) {
             const checkboxAndSelectGroup = {};
             const name = tool.name;
             const color = tool?.settings?.color?.default_value;
+            console.log({ tool });
             checkboxAndSelectGroup.name = <MaterialWithColor name={name} color={color} />;
             checkboxAndSelectGroup.definitionId = definitionId;
             checkboxAndSelectGroup.value = `${definitionId}-${name}`;

@@ -30,7 +30,8 @@ function isOfficialDefinition(definition) {
         'material.pla', 'material.abs', 'material.petg',
         'material.pla.black', 'material.abs.black', 'material.petg.black',
         'material.pla.blue', 'material.pla.grey', 'material.pla.red', 'material.pla.yellow',
-        'material.petg.blue', 'material.petg.red',
+        'material.petg.blue', 'material.petg.red', 'material.pla.glow', 'material.pla.wood',
+        'material.tpu.black', 'material.tpu.yellow',
         'quality.fast_print', 'quality.normal_quality', 'quality.high_quality'
     ], definition.definitionId);
 }
