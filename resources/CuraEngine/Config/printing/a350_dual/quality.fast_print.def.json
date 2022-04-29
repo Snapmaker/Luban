@@ -20,6 +20,9 @@
                 "initial_layer_line_width_factor": {
                     "default_value": 100,
                     "label": "Initial Layer Line Width"
+                },
+                "material_flow_layer_0": {
+                    "default_value": 100
                 }
             }
         },

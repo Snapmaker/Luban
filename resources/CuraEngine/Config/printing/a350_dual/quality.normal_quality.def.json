@@ -3,7 +3,7 @@
     "version": "4.2.0",
     "inherits": "snapmaker2",
     "category": "Default",
-    "i18nName": "key-default_name-Normal Quality",
+    "i18nName": "key-default_name-High Quality",
     "i18nCategory": "key-default_category-Default",
     "overrides": {
         "resolution": {
@@ -20,6 +20,9 @@
                 "initial_layer_line_width_factor": {
                     "default_value": 100,
                     "label": "Initial Layer Line Width"
+                },
+                "material_flow_layer_0": {
+                    "default_value": 100
                 }
             }
         },

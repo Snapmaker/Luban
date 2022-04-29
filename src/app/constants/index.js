@@ -147,7 +147,6 @@ export const PRINTING_MATERIAL_CONFIG_KEYS_SINGLE = [
     'material_bed_temperature_layer_0',
     // Extrude
     'material_flow',
-    'material_flow_layer_0',
     // retraction
     'retraction_enable',
     'retract_at_layer_change',
@@ -169,7 +168,7 @@ export const PRINTING_MATERIAL_CONFIG_KEYS_DUAL = [
     'material_bed_temperature_layer_0',
     // Extrude
     'material_flow',
-    'material_flow_layer_0',
+    // 'material_flow_layer_0',
     // retraction
     'retraction_enable',
     'retract_at_layer_change',
@@ -182,6 +181,7 @@ export const PRINTING_QUALITY_CONFIG_KEYS_SINGLE = [
     'layer_height',
     'layer_height_0',
     'initial_layer_line_width_factor',
+    'material_flow_layer_0',
     'wall_thickness',
     'top_thickness',
     'bottom_thickness',
@@ -216,6 +216,7 @@ export const PRINTING_QUALITY_CONFIG_KEYS_DUAL = [
     'layer_height',
     'layer_height_0',
     'initial_layer_line_width_factor',
+    'material_flow_layer_0',
     'wall_thickness',
     'top_thickness',
     'bottom_thickness',
@@ -278,7 +279,7 @@ export const PRINTING_MATERIAL_CONFIG_GROUP_SINGLE = [
         name: 'key-printing/material_settings-Extrusion',
         fields: [
             'material_flow',
-            'material_flow_layer_0'
+            // 'material_flow_layer_0'
         ]
     },
     {
@@ -316,7 +317,7 @@ export const PRINTING_MATERIAL_CONFIG_GROUP_DUAL = [
         name: 'key-printing/material_settings-Extrusion',
         fields: [
             'material_flow',
-            'material_flow_layer_0'
+            // 'material_flow_layer_0'
         ]
     },
     {
@@ -337,7 +338,8 @@ export const PRINTING_QUALITY_CONFIG_GROUP_SINGLE = [
         fields: [
             'layer_height',
             'layer_height_0',
-            'initial_layer_line_width_factor'
+            'initial_layer_line_width_factor',
+            'material_flow_layer_0'
         ]
     },
     {
@@ -405,7 +407,8 @@ export const PRINTING_QUALITY_CONFIG_GROUP_DUAL = [
         fields: [
             'layer_height',
             'layer_height_0',
-            'initial_layer_line_width_factor'
+            'initial_layer_line_width_factor',
+            'material_flow_layer_0'
         ]
     },
     {

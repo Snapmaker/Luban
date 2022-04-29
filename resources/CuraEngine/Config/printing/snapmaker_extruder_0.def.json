@@ -149,10 +149,10 @@
         "material_flow": {
             "default_value": 100
         },
-        "material_flow_layer_0": {
+        "wall_0_material_flow": {
             "default_value": 100
         },
-        "wall_material_flow": {
+        "wall_x_material_flow": {
             "default_value": 100
         },
         "skin_material_flow": {
