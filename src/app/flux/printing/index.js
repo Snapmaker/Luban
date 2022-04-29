@@ -1,73 +1,71 @@
-import * as THREE from 'three';
-import { acceleratedRaycast, computeBoundsTree, disposeBoundsTree } from 'three-mesh-bvh';
+import { cloneDeep, filter, find as lodashFind, isNil } from 'lodash';
 import path from 'path';
-import { cloneDeep, isNil, filter, find as lodashFind } from 'lodash';
+import * as THREE from 'three';
 // import FileSaver from 'file-saver';
 import { Vector3 } from 'three';
-// import { GCodeParser } from '../../lib/gcode-viewer/parser';
-import workerManager from '../../lib/manager/workerManager';
+import { acceleratedRaycast, computeBoundsTree, disposeBoundsTree } from 'three-mesh-bvh';
+import { timestamp } from '../../../shared/lib/random-utils';
+import api from '../../api';
 import {
     ABSENT_OBJECT,
-    EPSILON,
+    BLACK_COLOR,
+    BOTH_EXTRUDER_MAP_NUMBER,
     DATA_PREFIX,
+    DUAL_EXTRUDER_LIMIT_WIDTH_L,
+    DUAL_EXTRUDER_LIMIT_WIDTH_R,
+    DUAL_EXTRUDER_TOOLHEAD_FOR_SM2,
+    EPSILON,
+    GCODEPREVIEWMODES,
+    GCODE_VISIBILITY_TYPE,
+    getMachineSeriesWithToolhead,
+    HEAD_PRINTING,
+    LEFT_EXTRUDER,
+    LEFT_EXTRUDER_MAP_NUMBER,
+    LOAD_MODEL_FROM_INNER,
+    MACHINE_SERIES,
     PRINTING_MANAGER_TYPE_MATERIAL,
     PRINTING_MANAGER_TYPE_QUALITY,
-    MACHINE_SERIES,
-    HEAD_PRINTING,
-    getMachineSeriesWithToolhead,
-    LOAD_MODEL_FROM_INNER,
-    LEFT_EXTRUDER,
-    RIGHT_EXTRUDER,
-    LEFT_EXTRUDER_MAP_NUMBER,
-    RIGHT_EXTRUDER_MAP_NUMBER,
-    DUAL_EXTRUDER_TOOLHEAD_FOR_SM2,
-    DUAL_EXTRUDER_LIMIT_WIDTH_L,
-    DUAL_EXTRUDER_LIMIT_WIDTH_R, BOTH_EXTRUDER_MAP_NUMBER,
-    WHITE_COLOR,
-    BLACK_COLOR,
-    GCODE_VISIBILITY_TYPE,
-    GCODEPREVIEWMODES,
-    PRINTING_MATERIAL_CONFIG_GROUP_SINGLE,
-    SINGLE_EXTRUDER_TOOLHEAD_FOR_SM2,
     PRINTING_MATERIAL_CONFIG_GROUP_DUAL,
+    PRINTING_MATERIAL_CONFIG_GROUP_SINGLE,
+    PRINTING_QUALITY_CONFIG_GROUP_DUAL,
     PRINTING_QUALITY_CONFIG_GROUP_SINGLE,
-    PRINTING_QUALITY_CONFIG_GROUP_DUAL
+    RIGHT_EXTRUDER,
+    RIGHT_EXTRUDER_MAP_NUMBER,
+    SINGLE_EXTRUDER_TOOLHEAD_FOR_SM2,
+    WHITE_COLOR
 } from '../../constants';
-import { timestamp } from '../../../shared/lib/random-utils';
-import { machineStore } from '../../store/local-storage';
-import ProgressStatesManager, { PROCESS_STAGE, STEP_STAGE } from '../../lib/manager/ProgressManager';
-
+import { controller } from '../../lib/controller';
+import { logPritingSlice, logProfileChange, logToolBarOperation, logTransformOperation } from '../../lib/gaEvent';
 import i18n from '../../lib/i18n';
-import definitionManager from '../manager/DefinitionManager';
-import api from '../../api';
+import ProgressStatesManager, { PROCESS_STAGE, STEP_STAGE } from '../../lib/manager/ProgressManager';
+import workerManager from '../../lib/manager/workerManager';
 import ModelGroup from '../../models/ModelGroup';
-import gcodeBufferGeometryToObj3d from '../../workers/GcodeToBufferGeometry/gcodeBufferGeometryToObj3d';
+import PrimeTowerModel from '../../models/PrimeTowerModel';
+import ThreeGroup from '../../models/ThreeGroup';
+import { machineStore } from '../../store/local-storage';
+import ThreeUtils from '../../three-extensions/ThreeUtils';
 import ModelExporter from '../../ui/widgets/PrintingVisualizer/ModelExporter';
 import ModelLoader from '../../ui/widgets/PrintingVisualizer/ModelLoader';
-import { controller } from '../../lib/controller';
-/* eslint-disable-next-line import/no-cycle */
-import { actions as operationHistoryActions } from '../operation-history';
+import gcodeBufferGeometryToObj3d from '../../workers/GcodeToBufferGeometry/gcodeBufferGeometryToObj3d';
 import { actions as appGlobalActions } from '../app-global';
-import Operations from '../operation-history/Operations';
-import MoveOperation3D from '../operation-history/MoveOperation3D';
-import RotateOperation3D from '../operation-history/RotateOperation3D';
-import ScaleOperation3D from '../operation-history/ScaleOperation3D';
-import DeleteOperation3D from '../operation-history/DeleteOperation3D';
+import definitionManager from '../manager/DefinitionManager';
+// eslint-disable-next-line import/no-cycle
+import { actions as operationHistoryActions } from '../operation-history';
 import AddOperation3D from '../operation-history/AddOperation3D';
-import VisibleOperation3D from '../operation-history/VisibleOperation3D';
-import OperationHistory from '../operation-history/OperationHistory';
-import GroupOperation3D from '../operation-history/GroupOperation3D';
-import GroupAlignOperation3D from '../operation-history/GroupAlignOperation3D';
-import ThreeGroup from '../../models/ThreeGroup';
-import UngroupOperation3D from '../operation-history/UngroupOperation3D';
-import DeleteSupportsOperation3D from '../operation-history/DeleteSupportsOperation3D';
 import AddSupportsOperation3D from '../operation-history/AddSupportsOperation3D';
 import ArrangeOperation3D from '../operation-history/ArrangeOperation3D';
+import DeleteOperation3D from '../operation-history/DeleteOperation3D';
+import DeleteSupportsOperation3D from '../operation-history/DeleteSupportsOperation3D';
+import GroupAlignOperation3D from '../operation-history/GroupAlignOperation3D';
+import GroupOperation3D from '../operation-history/GroupOperation3D';
+import MoveOperation3D from '../operation-history/MoveOperation3D';
+import OperationHistory from '../operation-history/OperationHistory';
+import Operations from '../operation-history/Operations';
+import RotateOperation3D from '../operation-history/RotateOperation3D';
+import ScaleOperation3D from '../operation-history/ScaleOperation3D';
 import ScaleToFitWithRotateOperation3D from '../operation-history/ScaleToFitWithRotateOperation3D';
-import PrimeTowerModel from '../../models/PrimeTowerModel';
-import ThreeUtils from '../../three-extensions/ThreeUtils';
-// import { TYPE_SETTINGS } from '../../lib/gcode-viewer/constants';
-import { logPritingSlice, logProfileChange, logToolBarOperation, logTransformOperation } from '../../lib/gaEvent';
+import UngroupOperation3D from '../operation-history/UngroupOperation3D';
+import VisibleOperation3D from '../operation-history/VisibleOperation3D';
 
 // register methods for three-mesh-bvh
 THREE.Mesh.prototype.raycast = acceleratedRaycast;

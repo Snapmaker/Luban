@@ -662,7 +662,9 @@ class Visualizer extends PureComponent {
                                 type: 'item',
                                 label: i18n._('key-Printing/ContextMenu-Auto Arrange'),
                                 disabled: inProgress || !hasModel || isSupportSelected,
-                                onClick: this.actions.arrangeAllModels
+                                onClick: () => {
+                                    this.actions.arrangeAllModels();
+                                }
                             }
                         ]
                     }
