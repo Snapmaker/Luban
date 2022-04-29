@@ -29,7 +29,12 @@ const SupportOverlay = ({ editSupport, setTransformMode }) => {
         },
         checkIfOverrideSupport() {
             if (generateAutoSupportEnableForSelected || modelGroup.getModelsAttachedSupport().length > 0) {
-                setWillOverrideSupport(true);
+                const res = modelGroup.checkIfOverrideSupport();
+                if (res) {
+                    setWillOverrideSupport(res);
+                } else {
+                    actions.generateAutoSupport(supportOverhangAngle);
+                }
             }
         },
         clearAllManualSupport() {

@@ -2415,7 +2415,8 @@ class ModelGroup extends EventEmitter {
     }
 
     checkIfOverrideSupport() {
-        const availModels = this.getModelsAttachedSupport();
+        const selectedAvailModels = this.getModelsAttachedSupport(false);
+        const availModels = selectedAvailModels.length > 0 ? selectedAvailModels : this.getModelsAttachedSupport();
         return availModels.some(model => {
             if (model.supportFaceMarks) {
                 return model.supportFaceMarks.indexOf(1) > -1;
