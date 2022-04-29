@@ -97,12 +97,15 @@ export const logTransformOperation = <Key extends keyof Transformation>(headType
 
 export const logObjectListOperation = (headType: THeadType, type: 'pack' | 'expand', objectCount: number) => {
     return sendMessage(`${headType}_object_list_${type}`, 'object_list', {
-        objectCount
+        objectCount,
+        headType
     });
 };
 
 export const logModelViewOperation = (headType: THeadType, type: 'isometric' | 'front' | 'top' | 'left' | 'right' | 'fit_view_in') => {
-    return sendMessage(`${headType}_model_view_${type}`, 'model_view');
+    return sendMessage(`${headType}_model_view_${type}`, 'model_view', {
+        headType
+    });
 };
 
 export const logPritingSlice = (headType: THeadType, profileStatus: {
@@ -133,22 +136,15 @@ export const logProfileChange = (headType: THeadType, type: 'material' | 'materi
 export const logGcodeExport = (headType: THeadType, to: 'local' | 'workspace', isRotate?: boolean) => {
     const projectType = getProjectType(headType, isRotate);
     return sendMessage(`${headType}_export_${to}`, 'export_gcode', {
+        headType,
         projectType
     });
 };
 
 export const initialize = (userId: string) => {
-    ReactGA.initialize('G-CZ95MGND3N');
+    ReactGA.initialize('G-PVQS8L8HQM');
     ReactGA.gtag('set', 'user_properties', {
         'crm_id': userId
     });
-    ReactGA.gtag('config', 'G-CZ95MGND3N', {
-        custom_map: {
-            dimension0: 'messageType',
-            metric0: 'num'
-        }
-        // debug_mode: true
-    });
-
     lubanVisit();
 };

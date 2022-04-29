@@ -946,7 +946,7 @@
     "key-Progress/3DP-Loading model...{{progress}}%": "Loading model...{{progress}}%",
     "key-Progress/3DP-Ordinary": "Global View",
     "key-Progress/3DP-Previewed G-code successfully.": "Previewed G-code successfully.",
-    "key-Progress/3DP-Previewing G-code...{{progress}}%": "Previewing G-code...{{progress}}",
+    "key-Progress/3DP-Previewing G-code...{{progress}}%": "Previewing G-code...{{progress}}%",
     "key-Progress/3DP-Scale to fit...{{progress}}%": "Scale to fit...{{progress}}%",
     "key-Progress/3DP-SingleLayer": "Single-layer View",
     "key-Progress/3DP-Slice Failed": "Slice Failed",

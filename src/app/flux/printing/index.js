@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import { acceleratedRaycast, computeBoundsTree, disposeBoundsTree } from 'three-mesh-bvh';
 import path from 'path';
-import { throttle, cloneDeep, isNil, filter, find as lodashFind } from 'lodash';
+import { cloneDeep, isNil, filter, find as lodashFind } from 'lodash';
 // import FileSaver from 'file-saver';
 import { Vector3 } from 'three';
 // import { GCodeParser } from '../../lib/gcode-viewer/parser';
@@ -1846,109 +1846,107 @@ export const actions = {
     },
 
     showGcodeLayers: (range) => (dispatch, getState) => {
-        throttle(() => {
-            const {
-                layerCount,
-                // gcodeLineObjects,
-                gcodeLine,
-                gcodePreviewMode,
-                layerRangeDisplayed
-                // gcodeParser
-            } = getState().printing;
+        const {
+            layerCount,
+            // gcodeLineObjects,
+            gcodeLine,
+            gcodePreviewMode,
+            layerRangeDisplayed
+            // gcodeParser
+        } = getState().printing;
 
-            if (!gcodeLine) {
-                return;
-            }
-            if (range[1] >= layerCount) {
-                dispatch(actions.displayModel());
+        if (!gcodeLine) {
+            return;
+        }
+        if (range[1] >= layerCount) {
+            dispatch(actions.displayModel());
+        } else {
+            dispatch(actions.displayGcode());
+        }
+        let isUp = false;
+        if (gcodePreviewMode === GCODEPREVIEWMODES[1]) {
+            // The moving direction is down
+            if (range[0] - layerRangeDisplayed[0] > EPSILON) {
+                range = [
+                    range[0] || 0,
+                    range[0] || 0
+                ];
+                isUp = true;
+            } else if (range[1] - layerRangeDisplayed[1] > EPSILON) {
+                range = [
+                    Math.min(layerCount, range[1]),
+                    Math.min(layerCount, range[1])
+                ];
+                isUp = true;
+            } else if (layerRangeDisplayed[0] - range[0] > EPSILON) {
+                range = [
+                    range[0] || 0,
+                    range[0] || 0
+                ];
             } else {
-                dispatch(actions.displayGcode());
+                range = [
+                    Math.max(Math.min(layerCount, range[1]), 0),
+                    Math.max(Math.min(layerCount, range[1]), 0)
+                ];
             }
-            let isUp = false;
-            if (gcodePreviewMode === GCODEPREVIEWMODES[1]) {
-                // The moving direction is down
-                if (range[0] - layerRangeDisplayed[0] > EPSILON) {
-                    range = [
-                        range[0] || 0,
-                        range[0] || 0
-                    ];
-                    isUp = true;
-                } else if (range[1] - layerRangeDisplayed[1] > EPSILON) {
-                    range = [
-                        Math.min(layerCount, range[1]),
-                        Math.min(layerCount, range[1])
-                    ];
-                    isUp = true;
-                } else if (layerRangeDisplayed[0] - range[0] > EPSILON) {
-                    range = [
-                        range[0] || 0,
-                        range[0] || 0
-                    ];
-                } else {
-                    range = [
-                        Math.max(Math.min(layerCount, range[1]), 0),
-                        Math.max(Math.min(layerCount, range[1]), 0)
-                    ];
+        } else {
+            let isRelated = false;
+            if (Math.abs(layerRangeDisplayed[0] - layerRangeDisplayed[1]) === 0) {
+                isRelated = true;
+            }
+            if (isLarger(range[0], layerRangeDisplayed[0]) || isLarger(range[1], layerRangeDisplayed[1])) {
+                if (isRelated && isLarger(range[0], layerRangeDisplayed[0])) {
+                    range[1] = range[0];
                 }
-            } else {
-                let isRelated = false;
-                if (Math.abs(layerRangeDisplayed[0] - layerRangeDisplayed[1]) === 0) {
-                    isRelated = true;
+                if (isLarger(range[0], layerRangeDisplayed[0]) && isLarger(range[0], range[1])) {
+                    const tmp = range[1];
+                    range[1] = range[0];
+                    range[0] = tmp;
                 }
-                if (isLarger(range[0], layerRangeDisplayed[0]) || isLarger(range[1], layerRangeDisplayed[1])) {
-                    if (isRelated && isLarger(range[0], layerRangeDisplayed[0])) {
-                        range[1] = range[0];
-                    }
-                    if (isLarger(range[0], layerRangeDisplayed[0]) && isLarger(range[0], range[1])) {
-                        const tmp = range[1];
-                        range[1] = range[0];
-                        range[0] = tmp;
-                    }
-                    isUp = true;
-                    range[1] = Math.min(layerCount, range[1]);
-                    range[0] = Math.min(layerCount, range[0]);
+                isUp = true;
+                range[1] = Math.min(layerCount, range[1]);
+                range[0] = Math.min(layerCount, range[0]);
+            }
+            if (isLarger(layerRangeDisplayed[0], range[0]) || isLarger(layerRangeDisplayed[1], range[1])) {
+                if (isRelated && isLarger(layerRangeDisplayed[1], range[1])) {
+                    range[0] = range[1];
                 }
-                if (isLarger(layerRangeDisplayed[0], range[0]) || isLarger(layerRangeDisplayed[1], range[1])) {
-                    if (isRelated && isLarger(layerRangeDisplayed[1], range[1])) {
-                        range[0] = range[1];
-                    }
-                    // TODO: ?
-                    if (range[1] < layerRangeDisplayed[0] && range[0] > range[1]) {
-                        const tmp = range[1];
-                        range[1] = range[0];
-                        range[0] = tmp;
-                    }
-                    range[1] = range[1] < 0 ? 0 : range[1];
-                    range[0] = range[0] < 0 ? 0 : range[0];
+                // TODO: ?
+                if (range[1] < layerRangeDisplayed[0] && range[0] > range[1]) {
+                    const tmp = range[1];
+                    range[1] = range[0];
+                    range[0] = tmp;
                 }
+                range[1] = range[1] < 0 ? 0 : range[1];
+                range[0] = range[0] < 0 ? 0 : range[0];
             }
-            const prevRange = [...range];
-            range[0] = range[0] < 0 ? 0 : Math.round(range[0]);
-            range[1] = range[1] < 0 ? 0 : Math.round(range[1]);
-            range[0] = range[0] > layerCount - 1 ? layerCount - 1 : range[0];
-            range[1] = range[1] > layerCount - 1 ? layerCount - 1 : range[1];
-            // gcodeParser.startLayer = range[0];
-            // gcodeParser.endLayer = range[1];
-            // dispatch(actions.renderShowGcodeLines());
-            if (gcodeLine) {
-                gcodeLine.material.uniforms.u_visible_layer_range_start.value = range[0] || -100;
-                gcodeLine.material.uniforms.u_visible_layer_range_end.value = range[1];
-            }
-            if (isUp && (range[0] - prevRange[0]) > 0 && (range[0] - prevRange[0]) < 1
-                && (range[1] - prevRange[1]) > 0 && (range[1] - prevRange[1]) < 1) {
-                range[0] = prevRange[0];
-                range[1] = prevRange[1];
-            }
-            if (!isUp && (range[0] - prevRange[0]) > 0 && (prevRange[0] - range[0]) < 1
-                && (range[1] - prevRange[1]) > 0 && (prevRange[1] - range[1]) < 1) {
-                range[0] = prevRange[0];
-                range[1] = prevRange[1];
-            }
-            dispatch(actions.updateState({
-                layerRangeDisplayed: range
-            }));
-            dispatch(actions.render());
-        }, 50)();
+        }
+        const prevRange = [...range];
+        range[0] = range[0] < 0 ? 0 : Math.round(range[0]);
+        range[1] = range[1] < 0 ? 0 : Math.round(range[1]);
+        range[0] = range[0] > layerCount - 1 ? layerCount - 1 : range[0];
+        range[1] = range[1] > layerCount - 1 ? layerCount - 1 : range[1];
+        // gcodeParser.startLayer = range[0];
+        // gcodeParser.endLayer = range[1];
+        // dispatch(actions.renderShowGcodeLines());
+        if (gcodeLine) {
+            gcodeLine.material.uniforms.u_visible_layer_range_start.value = range[0] || -100;
+            gcodeLine.material.uniforms.u_visible_layer_range_end.value = range[1];
+        }
+        if (isUp && (range[0] - prevRange[0]) > 0 && (range[0] - prevRange[0]) < 1
+            && (range[1] - prevRange[1]) > 0 && (range[1] - prevRange[1]) < 1) {
+            range[0] = prevRange[0];
+            range[1] = prevRange[1];
+        }
+        if (!isUp && (range[0] - prevRange[0]) > 0 && (prevRange[0] - range[0]) < 1
+            && (range[1] - prevRange[1]) > 0 && (prevRange[1] - range[1]) < 1) {
+            range[0] = prevRange[0];
+            range[1] = prevRange[1];
+        }
+        dispatch(actions.updateState({
+            layerRangeDisplayed: range
+        }));
+        dispatch(actions.render());
     },
 
     // make an offset of gcode layer count
