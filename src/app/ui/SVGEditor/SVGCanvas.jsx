@@ -225,10 +225,9 @@ class SVGCanvas extends PureComponent {
             coorDelta.dx -= nextProps.coordinateSize.x / 2 * nextProps.coordinateMode.setting.sizeMultiplyFactor.x;
             coorDelta.dy += nextProps.coordinateSize.y / 2 * nextProps.coordinateMode.setting.sizeMultiplyFactor.y;
 
-            this.offsetX = coorDelta.dx / 1;
-            this.offsetY = coorDelta.dy / 1;
-            this.target = { x: -this.offsetX, y: this.offsetY };
-            this.props.updateTarget(this.target);
+            this.props.updateTarget({
+                x: -coorDelta.dx / 1, y: coorDelta.dy / 1
+            });
             this.updateCanvas(null, nextProps.materials);
         }
         if (nextProps.mode !== this.props.mode || nextProps.ext !== this.props.ext) {

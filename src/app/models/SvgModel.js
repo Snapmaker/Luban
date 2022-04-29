@@ -541,15 +541,11 @@ class SvgModel extends BaseModel {
             sourceWidth = width,
             sourceHeight = height;
 
-
         this.sourceHeight = sourceHeight || this.sourceHeight;
         this.sourceWidth = sourceWidth || this.sourceWidth;
-        this.width = width || this.width;
-        this.height = height || this.height;
         // this.uploadName = uploadName || this.uploadName;
         this.resource.originalFile.update(uploadName);
         this.resource.processedFile.update(processImageName);
-
 
         // this.displayModelObject3D(uploadName, sourceWidth, sourceHeight);
         // const width = this.transformation.width;
@@ -1338,6 +1334,9 @@ class SvgModel extends BaseModel {
             width: t.width * Math.abs(t.scaleX),
             height: t.height * Math.abs(t.scaleY)
         };
+
+        this.width = transformation.width;
+        this.height = transformation.height;
 
         this.updateTransformation(transformation);
         // Need to update source for SVG, element attributes(width, height) changed

@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import { acceleratedRaycast, computeBoundsTree, disposeBoundsTree } from 'three-mesh-bvh';
 import path from 'path';
-import { throttle, cloneDeep, isNil, filter, find as lodashFind } from 'lodash';
+import { cloneDeep, isNil, filter, find as lodashFind } from 'lodash';
 // import FileSaver from 'file-saver';
 import { Vector3 } from 'three';
 // import { GCodeParser } from '../../lib/gcode-viewer/parser';
@@ -704,8 +704,8 @@ export const actions = {
                 defaultMaterialL = PRINTING_MATERIAL_CONFIG_GROUP_SINGLE.some((item) => {
                     return item.fields.some((key) => {
                         return (
-                            extruderLDefaultDefinition?.settings[key].default_value
-                            !== extruderLDefinition.settings[key].default_value
+                            extruderLDefaultDefinition?.settings[key]?.default_value
+                            !== extruderLDefinition.settings[key]?.default_value
                         );
                     });
                 }) ? '1' : '0';
@@ -714,8 +714,8 @@ export const actions = {
                 defaultMaterialQuality = PRINTING_QUALITY_CONFIG_GROUP_SINGLE.some((item) => {
                     return item.fields.some((key) => {
                         return (
-                            activeActiveQualityDefinition.settings[key].default_value
-                            !== defaultQualityDefinition.settings[key].default_value
+                            activeActiveQualityDefinition.settings[key]?.default_value
+                            !== defaultQualityDefinition.settings[key]?.default_value
                         );
                     });
                 }) ? '1' : '0';
@@ -1847,109 +1847,107 @@ export const actions = {
     },
 
     showGcodeLayers: (range) => (dispatch, getState) => {
-        throttle(() => {
-            const {
-                layerCount,
-                // gcodeLineObjects,
-                gcodeLine,
-                gcodePreviewMode,
-                layerRangeDisplayed
-                // gcodeParser
-            } = getState().printing;
+        const {
+            layerCount,
+            // gcodeLineObjects,
+            gcodeLine,
+            gcodePreviewMode,
+            layerRangeDisplayed
+            // gcodeParser
+        } = getState().printing;
 
-            if (!gcodeLine) {
-                return;
-            }
-            if (range[1] >= layerCount) {
-                dispatch(actions.displayModel());
+        if (!gcodeLine) {
+            return;
+        }
+        if (range[1] >= layerCount) {
+            dispatch(actions.displayModel());
+        } else {
+            dispatch(actions.displayGcode());
+        }
+        let isUp = false;
+        if (gcodePreviewMode === GCODEPREVIEWMODES[1]) {
+            // The moving direction is down
+            if (range[0] - layerRangeDisplayed[0] > EPSILON) {
+                range = [
+                    range[0] || 0,
+                    range[0] || 0
+                ];
+                isUp = true;
+            } else if (range[1] - layerRangeDisplayed[1] > EPSILON) {
+                range = [
+                    Math.min(layerCount, range[1]),
+                    Math.min(layerCount, range[1])
+                ];
+                isUp = true;
+            } else if (layerRangeDisplayed[0] - range[0] > EPSILON) {
+                range = [
+                    range[0] || 0,
+                    range[0] || 0
+                ];
             } else {
-                dispatch(actions.displayGcode());
+                range = [
+                    Math.max(Math.min(layerCount, range[1]), 0),
+                    Math.max(Math.min(layerCount, range[1]), 0)
+                ];
             }
-            let isUp = false;
-            if (gcodePreviewMode === GCODEPREVIEWMODES[1]) {
-                // The moving direction is down
-                if (range[0] - layerRangeDisplayed[0] > EPSILON) {
-                    range = [
-                        range[0] || 0,
-                        range[0] || 0
-                    ];
-                    isUp = true;
-                } else if (range[1] - layerRangeDisplayed[1] > EPSILON) {
-                    range = [
-                        Math.min(layerCount, range[1]),
-                        Math.min(layerCount, range[1])
-                    ];
-                    isUp = true;
-                } else if (layerRangeDisplayed[0] - range[0] > EPSILON) {
-                    range = [
-                        range[0] || 0,
-                        range[0] || 0
-                    ];
-                } else {
-                    range = [
-                        Math.max(Math.min(layerCount, range[1]), 0),
-                        Math.max(Math.min(layerCount, range[1]), 0)
-                    ];
+        } else {
+            let isRelated = false;
+            if (Math.abs(layerRangeDisplayed[0] - layerRangeDisplayed[1]) === 0) {
+                isRelated = true;
+            }
+            if (isLarger(range[0], layerRangeDisplayed[0]) || isLarger(range[1], layerRangeDisplayed[1])) {
+                if (isRelated && isLarger(range[0], layerRangeDisplayed[0])) {
+                    range[1] = range[0];
                 }
-            } else {
-                let isRelated = false;
-                if (Math.abs(layerRangeDisplayed[0] - layerRangeDisplayed[1]) === 0) {
-                    isRelated = true;
+                if (isLarger(range[0], layerRangeDisplayed[0]) && isLarger(range[0], range[1])) {
+                    const tmp = range[1];
+                    range[1] = range[0];
+                    range[0] = tmp;
                 }
-                if (isLarger(range[0], layerRangeDisplayed[0]) || isLarger(range[1], layerRangeDisplayed[1])) {
-                    if (isRelated && isLarger(range[0], layerRangeDisplayed[0])) {
-                        range[1] = range[0];
-                    }
-                    if (isLarger(range[0], layerRangeDisplayed[0]) && isLarger(range[0], range[1])) {
-                        const tmp = range[1];
-                        range[1] = range[0];
-                        range[0] = tmp;
-                    }
-                    isUp = true;
-                    range[1] = Math.min(layerCount, range[1]);
-                    range[0] = Math.min(layerCount, range[0]);
+                isUp = true;
+                range[1] = Math.min(layerCount, range[1]);
+                range[0] = Math.min(layerCount, range[0]);
+            }
+            if (isLarger(layerRangeDisplayed[0], range[0]) || isLarger(layerRangeDisplayed[1], range[1])) {
+                if (isRelated && isLarger(layerRangeDisplayed[1], range[1])) {
+                    range[0] = range[1];
                 }
-                if (isLarger(layerRangeDisplayed[0], range[0]) || isLarger(layerRangeDisplayed[1], range[1])) {
-                    if (isRelated && isLarger(layerRangeDisplayed[1], range[1])) {
-                        range[0] = range[1];
-                    }
-                    // TODO: ?
-                    if (range[1] < layerRangeDisplayed[0] && range[0] > range[1]) {
-                        const tmp = range[1];
-                        range[1] = range[0];
-                        range[0] = tmp;
-                    }
-                    range[1] = range[1] < 0 ? 0 : range[1];
-                    range[0] = range[0] < 0 ? 0 : range[0];
+                // TODO: ?
+                if (range[1] < layerRangeDisplayed[0] && range[0] > range[1]) {
+                    const tmp = range[1];
+                    range[1] = range[0];
+                    range[0] = tmp;
                 }
+                range[1] = range[1] < 0 ? 0 : range[1];
+                range[0] = range[0] < 0 ? 0 : range[0];
             }
-            const prevRange = [...range];
-            range[0] = range[0] < 0 ? 0 : Math.round(range[0]);
-            range[1] = range[1] < 0 ? 0 : Math.round(range[1]);
-            range[0] = range[0] > layerCount - 1 ? layerCount - 1 : range[0];
-            range[1] = range[1] > layerCount - 1 ? layerCount - 1 : range[1];
-            // gcodeParser.startLayer = range[0];
-            // gcodeParser.endLayer = range[1];
-            // dispatch(actions.renderShowGcodeLines());
-            if (gcodeLine) {
-                gcodeLine.material.uniforms.u_visible_layer_range_start.value = range[0] || -100;
-                gcodeLine.material.uniforms.u_visible_layer_range_end.value = range[1];
-            }
-            if (isUp && (range[0] - prevRange[0]) > 0 && (range[0] - prevRange[0]) < 1
-                && (range[1] - prevRange[1]) > 0 && (range[1] - prevRange[1]) < 1) {
-                range[0] = prevRange[0];
-                range[1] = prevRange[1];
-            }
-            if (!isUp && (range[0] - prevRange[0]) > 0 && (prevRange[0] - range[0]) < 1
-                && (range[1] - prevRange[1]) > 0 && (prevRange[1] - range[1]) < 1) {
-                range[0] = prevRange[0];
-                range[1] = prevRange[1];
-            }
-            dispatch(actions.updateState({
-                layerRangeDisplayed: range
-            }));
-            dispatch(actions.render());
-        }, 50)();
+        }
+        const prevRange = [...range];
+        range[0] = range[0] < 0 ? 0 : Math.round(range[0]);
+        range[1] = range[1] < 0 ? 0 : Math.round(range[1]);
+        range[0] = range[0] > layerCount - 1 ? layerCount - 1 : range[0];
+        range[1] = range[1] > layerCount - 1 ? layerCount - 1 : range[1];
+        // gcodeParser.startLayer = range[0];
+        // gcodeParser.endLayer = range[1];
+        // dispatch(actions.renderShowGcodeLines());
+        if (gcodeLine) {
+            gcodeLine.material.uniforms.u_visible_layer_range_start.value = range[0] || -100;
+            gcodeLine.material.uniforms.u_visible_layer_range_end.value = range[1];
+        }
+        if (isUp && (range[0] - prevRange[0]) > 0 && (range[0] - prevRange[0]) < 1
+            && (range[1] - prevRange[1]) > 0 && (range[1] - prevRange[1]) < 1) {
+            range[0] = prevRange[0];
+            range[1] = prevRange[1];
+        }
+        if (!isUp && (range[0] - prevRange[0]) > 0 && (prevRange[0] - range[0]) < 1
+            && (range[1] - prevRange[1]) > 0 && (prevRange[1] - range[1]) < 1) {
+            range[0] = prevRange[0];
+            range[1] = prevRange[1];
+        }
+        dispatch(actions.updateState({
+            layerRangeDisplayed: range
+        }));
+        dispatch(actions.render());
     },
 
     // make an offset of gcode layer count
@@ -1970,6 +1968,14 @@ export const actions = {
         dispatch(actions.updateState({
             isGcodeOverstepped: overstepped
         }));
+    },
+
+    exitPreview: () => (dispatch, getState) => {
+        const { displayedType } = getState().printing;
+        if (displayedType !== 'model') {
+            dispatch(actions.destroyGcodeLine());
+            dispatch(actions.displayModel());
+        }
     },
 
     displayModel: () => (dispatch, getState) => {
@@ -2615,10 +2621,10 @@ export const actions = {
 
         progressStatesManager.startProgress(PROCESS_STAGE.PRINTING_AUTO_ROTATE);
         let selected = [];
-        if (modelGroup.getSelectedModelArray().length > 0) {
-            selected = modelGroup.getSelectedModelArray().filter(item => item.visible);
+        if (modelGroup.isSelectedModelAllVisible()) {
+            selected = modelGroup.getSelectedModelArray();
         } else {
-            selected = modelGroup.getModels('primeTower').filter(item => item.visible);
+            selected = modelGroup.getVisibleModels();
         }
         dispatch(actions.updateState({
             stage: STEP_STAGE.PRINTING_AUTO_ROTATING_MODELS,
@@ -2747,6 +2753,7 @@ export const actions = {
     },
 
     scaleToFitSelectedModelWithRotate: () => (dispatch, getState) => {
+        dispatch(actions.exitPreview());
         const { progressStatesManager, modelGroup, stopArea: { left, right, front, back } } = getState().printing;
         const { size } = getState().machine;
         progressStatesManager.startProgress(PROCESS_STAGE.PRINTING_SCALE_TO_FIT_WITH_ROTATE);
@@ -2879,7 +2886,12 @@ export const actions = {
 
     // uploadModel
     undo: () => (dispatch, getState) => {
-        const { canUndo } = getState().printing.history;
+        const { history, displayedType } = getState().printing;
+        const { canUndo } = history;
+        if (displayedType !== 'model') {
+            dispatch(actions.destroyGcodeLine());
+            dispatch(actions.displayModel());
+        }
         if (canUndo) {
             logToolBarOperation(HEAD_PRINTING, 'undo');
             dispatch(operationHistoryActions.undo(INITIAL_STATE.name));
@@ -2890,6 +2902,7 @@ export const actions = {
     },
 
     redo: () => (dispatch, getState) => {
+        dispatch(actions.exitPreview());
         const { canRedo } = getState().printing.history;
         if (canRedo) {
             logToolBarOperation(HEAD_PRINTING, 'redo');
@@ -2944,14 +2957,20 @@ export const actions = {
     //     }
     // },
     clearAllManualSupport: (combinedOperations) => (dispatch, getState) => {
+        dispatch(actions.exitPreview());
+
         const { modelGroup } = getState().printing;
-        const modelsWithSupport = modelGroup.getModelsAttachedSupport(false);
-        if (modelsWithSupport.length > 0) {
+
+        // Give priority to the selected supporting models, Second, apply all models
+        const selectedAvailModels = modelGroup.getModelsAttachedSupport(false);
+        const availModels = selectedAvailModels.length > 0 ? selectedAvailModels : modelGroup.getModelsAttachedSupport();
+
+        if (availModels.length > 0) {
             let operations = new Operations();
             if (combinedOperations) {
                 operations = combinedOperations;
             }
-            for (const model of modelsWithSupport) {
+            for (const model of availModels) {
                 const operation = new DeleteSupportsOperation3D({
                     target: model,
                     support: model.meshObject.children[0],
@@ -2963,7 +2982,7 @@ export const actions = {
                 dispatch(operationHistoryActions.setOperations(INITIAL_STATE.name, operations));
             }
 
-            modelGroup.clearAllSupport();
+            modelGroup.clearAllSupport(availModels);
         }
     },
     setDefaultSupportSize: (size) => (dispatch, getState) => {
@@ -3272,6 +3291,8 @@ export const actions = {
         }));
     },
     groupAndAlign: () => (dispatch, getState) => {
+        dispatch(actions.exitPreview());
+
         const { modelGroup } = getState().printing;
 
         const modelsbeforeGroup = modelGroup.getModels().slice(0);
@@ -3310,12 +3331,12 @@ export const actions = {
 
         dispatch(operationHistoryActions.setOperations(INITIAL_STATE.name, operations));
         dispatch(actions.updateState(modelState));
-        dispatch(actions.destroyGcodeLine());
-        dispatch(actions.displayModel());
         logToolBarOperation(HEAD_PRINTING, 'align');
     },
 
     group: () => (dispatch, getState) => {
+        dispatch(actions.exitPreview());
+
         const { modelGroup } = getState().printing;
         // Stores the model structure before the group operation, which is used for undo operation
         const modelsBeforeGroup = modelGroup.getModels().slice(0);
@@ -3355,12 +3376,12 @@ export const actions = {
 
         dispatch(operationHistoryActions.setOperations(INITIAL_STATE.name, operations));
         dispatch(actions.updateState(modelState));
-        dispatch(actions.destroyGcodeLine());
-        dispatch(actions.displayModel());
         logToolBarOperation(HEAD_PRINTING, 'group');
     },
 
     ungroup: () => (dispatch, getState) => {
+        dispatch(actions.exitPreview());
+
         const { modelGroup } = getState().printing;
 
         const groups = modelGroup.getSelectedModelArray().filter(model => model instanceof ThreeGroup);
@@ -3399,8 +3420,6 @@ export const actions = {
 
         dispatch(operationHistoryActions.setOperations(INITIAL_STATE.name, operations));
         dispatch(actions.updateState(modelState));
-        dispatch(actions.destroyGcodeLine());
-        dispatch(actions.displayModel());
         logToolBarOperation(HEAD_PRINTING, 'ungroup');
     },
 
@@ -3684,34 +3703,38 @@ export const actions = {
 
     computeAutoSupports: (angle) => (dispatch, getState) => {
         const { modelGroup, progressStatesManager } = getState().printing;
-
-        progressStatesManager.startProgress(PROCESS_STAGE.PRINTING_GENERATE_SUPPORT, [1, 1]);
-        dispatch(actions.updateState({
-            stage: STEP_STAGE.PRINTING_GENERATE_SUPPORT_AREA,
-            progress: progressStatesManager.updateProgress(STEP_STAGE.PRINTING_GENERATE_SUPPORT_AREA, 0.25)
-        }));
-
         // record previous support face marks for undo&redo
         const tmpSupportFaceMarks = {};
-        const availModels = modelGroup.getModelsAttachedSupport();
-        availModels.forEach(model => {
-            tmpSupportFaceMarks[model.modelID] = model.supportFaceMarks;
-        });
-        dispatch(actions.updateState({
-            tmpSupportFaceMarks
-        }));
+        // Give priority to the selected supporting models, Second, apply all models
+        const selectedAvailModels = modelGroup.getModelsAttachedSupport(false);
+        const availModels = selectedAvailModels.length > 0 ? selectedAvailModels : modelGroup.getModelsAttachedSupport();
 
-        const models = modelGroup.computeSupportArea(angle);
+        if (availModels.length > 0) {
+            progressStatesManager.startProgress(PROCESS_STAGE.PRINTING_GENERATE_SUPPORT, [1, 1]);
+            dispatch(actions.updateState({
+                stage: STEP_STAGE.PRINTING_GENERATE_SUPPORT_AREA,
+                progress: progressStatesManager.updateProgress(STEP_STAGE.PRINTING_GENERATE_SUPPORT_AREA, 0.25)
+            }));
 
-        dispatch(actions.updateState({
-            stage: STEP_STAGE.PRINTING_GENERATE_SUPPORT_AREA,
-            progress: progressStatesManager.updateProgress(STEP_STAGE.PRINTING_GENERATE_SUPPORT_AREA, 1)
-        }));
-        if (models.length > 0) {
-            dispatch(actions.generateSupports(models, angle));
+            availModels.forEach(model => {
+                tmpSupportFaceMarks[model.modelID] = model.supportFaceMarks;
+            });
+            dispatch(actions.updateState({
+                tmpSupportFaceMarks
+            }));
+
+            const models = modelGroup.computeSupportArea(availModels, angle);
+
+            dispatch(actions.updateState({
+                stage: STEP_STAGE.PRINTING_GENERATE_SUPPORT_AREA,
+                progress: progressStatesManager.updateProgress(STEP_STAGE.PRINTING_GENERATE_SUPPORT_AREA, 1)
+            }));
+            if (models.length > 0) {
+                dispatch(actions.generateSupports(models, angle));
+            }
+            dispatch(actions.destroyGcodeLine());
+            dispatch(actions.displayModel());
         }
-        dispatch(actions.destroyGcodeLine());
-        dispatch(actions.displayModel());
     }
 };
 

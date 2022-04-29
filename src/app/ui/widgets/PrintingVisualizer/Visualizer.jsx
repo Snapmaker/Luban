@@ -566,11 +566,11 @@ class Visualizer extends PureComponent {
                         <div className={`canvas-input position-ab border-${this.props.controlAxis[0]} translate-animation-3`} id="control-input" style={{ display: 'none' }}>
                             <Input
                                 size="small"
-                                placeholder={i18n._('key-Printing/LeftBar-Enter an degree')}
+                                placeholder="0"
                                 value={this.props.controlInputValue ? this.props.controlInputValue[this.props.controlAxis[0]] : null}
                                 suffix={modeSuffix[this.props.controlMode]}
                                 allowUndefined
-                                prefix={`${this.props.controlAxis[0]}:`}
+                                prefix={`${this.props.controlAxis[0].toUpperCase()}:`}
                                 onPressEnter={(event) => {
                                     this.actions.controlInputTransform(this.props.controlMode, this.props.controlAxis[0], event.target.value);
                                 }}
@@ -581,10 +581,10 @@ class Visualizer extends PureComponent {
                         <div className={`canvas-input position-ab border-${this.props.controlAxis[1]} translate-animation-3`} id="control-input-2">
                             <Input
                                 size="small"
-                                placeholder={i18n._('key-Printing/LeftBar-Enter an degree')}
+                                placeholder="0"
                                 value={this.props.controlInputValue ? this.props.controlInputValue[this.props.controlAxis[1]] : null}
                                 suffix={modeSuffix[this.props.controlMode]}
-                                prefix={`${this.props.controlAxis[1]}:`}
+                                prefix={`${this.props.controlAxis[1].toUpperCase()}:`}
                                 allowUndefined
                                 onPressEnter={(event) => {
                                     this.actions.controlInputTransform(this.props.controlMode, this.props.controlAxis[1], event.target.value);

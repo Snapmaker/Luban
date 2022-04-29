@@ -20,7 +20,7 @@ import {
     Math as ThreeMath,
 } from 'three';
 // import * as THREE from 'three';
-import { throttle, some } from 'lodash';
+import { throttle } from 'lodash';
 import ThreeUtils from '../../../three-extensions/ThreeUtils';
 
 
@@ -40,7 +40,7 @@ export const emitUpdatePositionEvent = throttle((transformData) => {
             detail: transformData
         })
     );
-}, 1000);
+}, 300);
 
 export const emitUpdateScaleEvent = throttle((transformData) => {
     return window.dispatchEvent(
@@ -48,7 +48,7 @@ export const emitUpdateScaleEvent = throttle((transformData) => {
             detail: transformData
         })
     );
-}, 1000);
+}, 300);
 
 export const emitUpdateRotateEvent = throttle((transformData) => {
     return window.dispatchEvent(
@@ -56,7 +56,7 @@ export const emitUpdateRotateEvent = throttle((transformData) => {
             detail: transformData
         })
     );
-}, 1000);
+}, 300);
 
 export const emitUpdateControlInputEvent = throttle((transformData) => {
     return window.dispatchEvent(
@@ -64,7 +64,7 @@ export const emitUpdateControlInputEvent = throttle((transformData) => {
             detail: transformData
         })
     );
-}, 1000);
+}, 300);
 
 const RED = 0xff5759;
 const GREEN = 0x4cb518;
@@ -581,6 +581,7 @@ class TransformControls extends Object3D {
         if (mode !== this._mode) {
             this._mode = mode;
             this.dispatchEvent(EVENTS.UPDATE);
+            this.tooglePeripheralVisible();
         }
     }
 
@@ -631,11 +632,7 @@ class TransformControls extends Object3D {
             const objectPosition = new Vector3();
             const objectScale = new Vector3();
             const objectQuaternion = new Quaternion();
-            const hasHideModel = some(this.object.children, { visible: false });
-            this.translatePeripheral.visible = (this.mode === 'translate' && !hasHideModel);
-            this.rotatePeripheral.visible = (this.mode === 'rotate' && !hasHideModel && !this.isPrimeTower);
-            this.scalePeripheral.visible = (this.mode === 'scale' && !hasHideModel);
-            this.mirrorPeripheral.visible = (this.mode === 'mirror' && !hasHideModel && !this.isPrimeTower);
+
             this.object.matrixWorld.decompose(objectPosition, objectQuaternion, objectScale);
             // parent
             this.object.parent.matrixWorld.decompose(this.parentPosition, this.parentQuaternion, this.parentScale);
@@ -879,11 +876,32 @@ class TransformControls extends Object3D {
         super.updateMatrixWorld(force);
     }
 
+    hasHideModel(obj = this.object) {
+        if (!obj.visible) {
+            return true;
+        }
+        if (obj.children.length) {
+            return obj.children.some((child) => {
+                return this.hasHideModel(child);
+            });
+        }
+        return false;
+    }
+
+    tooglePeripheralVisible() {
+        const res = this.hasHideModel();
+        this.translatePeripheral.visible = (this.mode === 'translate' && !res);
+        this.rotatePeripheral.visible = (this.mode === 'rotate' && !res && !this.isPrimeTower);
+        this.scalePeripheral.visible = (this.mode === 'scale' && !res);
+        this.mirrorPeripheral.visible = (this.mode === 'mirror' && !res && !this.isPrimeTower);
+    }
+
     attach(objects) {
         this.object = objects;
         this.visible = true;
 
         this.dispatchEvent(EVENTS.UPDATE);
+        this.tooglePeripheralVisible();
     }
 
 

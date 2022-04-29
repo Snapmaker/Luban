@@ -22,7 +22,9 @@ const init = () => (dispatch) => {
 
 const setConnectionType = (connectionType) => (dispatch) => {
     if (!includes([CONNECTION_TYPE_WIFI, CONNECTION_TYPE_SERIAL], connectionType)) return;
-
+    if (connectionType === CONNECTION_TYPE_WIFI) {
+        dispatch(baseActions.updateState({ servers: [] }));
+    }
     dispatch(baseActions.updateState({ connectionType }));
 
     machineStore.set('connection.type', connectionType);

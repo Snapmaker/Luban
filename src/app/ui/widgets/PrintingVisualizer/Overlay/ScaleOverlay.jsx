@@ -283,7 +283,7 @@ const ScaleOverlay = React.memo(({
                         disabled={!isSelectedModelAllVisible || isPrimeTowerSelected}
                     />
                     <span
-                        className="height-20 margin-horizontal-8"
+                        className="height-32 margin-horizontal-8"
                     >
                         {i18n._('key-Printing/LeftBar-Uniform Scaling')}
                     </span>

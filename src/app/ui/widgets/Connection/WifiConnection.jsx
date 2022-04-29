@@ -119,9 +119,9 @@ function WifiConnection() {
             if (serverState.address === savedServerAddress) {
                 serverState.setToken(savedServerToken);
             }
-            serverState.openServer(({ msg, text }) => {
+            serverState.openServer(({ msg, text, code }) => {
                 if (msg) {
-                    actions.showWifiError(msg, text);
+                    actions.showWifiError(msg, text, code);
                 }
                 setserverOpenState(null);
             });
@@ -174,10 +174,10 @@ function WifiConnection() {
                 actions.hideWifiConnectionMessage();
             }, 1000);
         },
-        showWifiError: (err, data) => {
+        showWifiError: (msg, text, code) => {
             setConnectionMessage({
-                text: i18n._(data || err.message),
-                title: err.status ? i18n._(`Error ${err.status}`) : i18n._('key-Workspace/Connection-Error'),
+                text: i18n._(text || msg),
+                title: code ? i18n._(`Error ${code}`) : i18n._('key-Workspace/Connection-Error'),
                 img: 'WarningTipsError',
                 iconColor: '#FF4D4F',
                 showCloseButton: true,

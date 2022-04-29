@@ -144,11 +144,17 @@ class SocketHttp {
         wifiServerManager.refreshDevices();
     }
 
+    public init = () => {
+        this.gcodeInfos = [];
+        this.isGcodeExecuting = false;
+    }
+
     public connectionOpen = (socket: SocketServer, options: EventOptions) => {
         const { host, token } = options;
         this.host = host;
         this.token = token;
         this.socket = socket;
+        this.init();
         log.debug(`wifi host="${this.host}" : token=${this.token}`);
         const api = `${this.host}/api/v1/connect`;
         intervalHandle = setInterval(this.getEnclosureStatus, 1000);
@@ -160,7 +166,7 @@ class SocketHttp {
                 if (res?.body?.token) {
                     this.token = res.body.token;
                 }
-                if(err){
+                if (err) {
                     log.debug(`err="${err}"`);
                 }
                 const result = _getResult(err, res);
@@ -354,7 +360,6 @@ class SocketHttp {
                     z: data.offsetZ,
                 }
             };
-
             if (waitConfirm) {
                 waitConfirm = false;
                 this.socket && this.socket.emit('connection:connected', {

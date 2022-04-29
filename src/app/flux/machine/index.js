@@ -815,9 +815,11 @@ export const actions = {
     // endregion
 
     addConsoleLogs: (consoleLogs) => (dispatch) => {
-        dispatch(baseActions.updateState({
-            consoleLogs: consoleLogs
-        }));
+        if (Array.isArray(consoleLogs)) {
+            dispatch(baseActions.updateState({
+                consoleLogs: consoleLogs
+            }));
+        }
     },
 
     setShouldShowCncWarning: (value) => (dispatch) => {

@@ -209,7 +209,7 @@ const TranslateOverlay = React.memo(({
                     </div>
                 )}
                 <div className={classNames(styles['dashed-line'])} />
-                <div className={classNames(styles['overlay-sub-title-font'], 'padding-vertical-10 padding-top-8')}>
+                <div className={classNames(styles['overlay-sub-title-font'], 'padding-vertical-8')}>
                     {i18n._('key-Printing/LeftBar-Arrange Options')}
                 </div>
                 <div>

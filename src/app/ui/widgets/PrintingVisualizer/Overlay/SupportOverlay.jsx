@@ -14,33 +14,35 @@ import { HEAD_PRINTING } from '../../../../constants';
 import { logTransformOperation } from '../../../../lib/gaEvent';
 
 const SupportOverlay = ({ editSupport, setTransformMode }) => {
-    const selectedModelArray = useSelector(state => state?.printing?.modelGroup?.selectedModelArray, shallowEqual);
     const modelGroup = useSelector(state => state?.printing?.modelGroup, shallowEqual);
     const supportOverhangAngle = useSelector(state => state?.printing.supportOverhangAngle, shallowEqual);
     const [willOverrideSupport, setWillOverrideSupport] = useState(false);
     const dispatch = useDispatch();
 
+    const generateAutoSupportEnableForSelected = modelGroup.getModelsAttachedSupport(false).length > 0;
+
     const actions = {
         generateAutoSupport(angle) {
             dispatch(printingActions.computeAutoSupports(angle));
             setWillOverrideSupport(false);
+            logTransformOperation(HEAD_PRINTING, 'support', 'auto');
         },
         checkIfOverrideSupport() {
-            const res = modelGroup.checkIfOverrideSupport();
-            if (res) {
-                setWillOverrideSupport(res);
-            } else {
-                actions.generateAutoSupport(supportOverhangAngle);
+            if (generateAutoSupportEnableForSelected || modelGroup.getModelsAttachedSupport().length > 0) {
+                setWillOverrideSupport(true);
             }
-            logTransformOperation(HEAD_PRINTING, 'support', 'auto');
         },
         clearAllManualSupport() {
             dispatch(printingActions.clearAllManualSupport());
             logTransformOperation(HEAD_PRINTING, 'support', 'clear');
         },
         editSupport() {
-            editSupport();
-            logTransformOperation(HEAD_PRINTING, 'support', 'edit_in');
+            dispatch(printingActions.exitPreview());
+            // In preview mode, wait for modelGroup.object.parent recovery
+            setTimeout(() => {
+                editSupport();
+                logTransformOperation(HEAD_PRINTING, 'support', 'edit_in');
+            });
         }
     };
     const renderGenerateSupportConfirm = () => {
@@ -94,7 +96,7 @@ const SupportOverlay = ({ editSupport, setTransformMode }) => {
                         onClick={() => actions.checkIfOverrideSupport()}
                     >
                         {
-                            selectedModelArray.length > 0 ? <span>{i18n._('key-Printing/LeftBar/Support-Generate Auto Support')}</span> : <span>{i18n._('key-Printing/LeftBar/Support-Generate Auto Support (For All)')}</span>
+                            generateAutoSupportEnableForSelected ? <span>{i18n._('key-Printing/LeftBar/Support-Generate Auto Support')}</span> : <span>{i18n._('key-Printing/LeftBar/Support-Generate Auto Support (For All)')}</span>
                         }
                     </Button>
                     <div className="sm-flex justify-space-between height-32 margin-top-8">
@@ -123,7 +125,7 @@ const SupportOverlay = ({ editSupport, setTransformMode }) => {
                             onClick={actions.editSupport}
                         >
                             {
-                                selectedModelArray.length > 0 ? <span>{i18n._('key-Printing/LeftBar/Support-Edit')}</span> : <span>{i18n._('key-Printing/LeftBar/Support-Edit All')}</span>
+                                generateAutoSupportEnableForSelected ? <span>{i18n._('key-Printing/LeftBar/Support-Edit')}</span> : <span>{i18n._('key-Printing/LeftBar/Support-Edit All')}</span>
                             }
                         </Button>
                         <Button
@@ -134,7 +136,7 @@ const SupportOverlay = ({ editSupport, setTransformMode }) => {
                             onClick={actions.clearAllManualSupport}
                         >
                             {
-                                selectedModelArray.length > 0 ? <span>{i18n._('key-Printing/LeftBar/Support-Clear')}</span> : <span>{i18n._('key-Printing/LeftBar/Support-Clear All')}</span>
+                                generateAutoSupportEnableForSelected ? <span>{i18n._('key-Printing/LeftBar/Support-Clear')}</span> : <span>{i18n._('key-Printing/LeftBar/Support-Clear All')}</span>
                             }
                         </Button>
                     </div>

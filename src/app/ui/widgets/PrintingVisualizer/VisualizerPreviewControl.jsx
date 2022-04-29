@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 // import PropTypes from 'prop-types';
 import { useDispatch, useSelector, shallowEqual } from 'react-redux';
 import classNames from 'classnames';
-import { find, throttle } from 'lodash';
+import { find } from 'lodash';
 import isElectron from 'is-electron';
 import Slider from '../../components/Slider';
 import PreviewType from '../../components/PreviewType';
@@ -57,12 +57,12 @@ function GcodeLayout() {
     }, [layerRangeDisplayed]);
 
 
-    const onChangeShowLayer = throttle((v) => {
+    const onChangeShowLayer = (v) => {
         dispatch(printingActions.showGcodeLayers([
             v[0],
             v[1] - temp
         ]));
-    }, 300);
+    };
     return (
         <div className={styles['layer-wrapper']}>
             <span className={styles['layer-label']}>{Math.round(layerRangeDisplayed[1], 10)}</span>
