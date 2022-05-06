@@ -1,6 +1,7 @@
 {
     "version": "4.2.0",
     "category": "Default",
+    "isRecommended": true,
     "name": "High Quality",
     "i18nName": "key-default_name-High Quality",
     "i18nCategory": "key-default_category-Default",

@@ -57,7 +57,7 @@ class Thumbnail extends PureComponent {
     getThumbnail() {
         this.object && (this.scene.remove(this.object));
         this.object = new Group();
-        this.object.add(...this.props.modelGroup.getModels('primeTower').map(d => d.clone().meshObject));
+        this.object.add(...this.props.modelGroup.getModels().map(d => d.clone().meshObject));
 
         // calculate center point
         const boundingBox = ThreeUtils.computeBoundingBox(this.object);

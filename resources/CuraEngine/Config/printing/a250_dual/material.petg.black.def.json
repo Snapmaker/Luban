@@ -1,6 +1,7 @@
 {
     "version": "4.2.0",
     "name": "PETG-Black",
+    "isRecommended": true,
     "inherits": "snapmaker",
     "category": "PETG",
     "i18nName": "key-default_name-PETG_Black",
@@ -28,7 +29,7 @@
             "default_value": 100
         },
         "cool_fan_full_layer": {
-          "default_value": 2
+            "default_value": 2
         },
         "material_bed_temperature_layer_0": {
             "default_value": 75

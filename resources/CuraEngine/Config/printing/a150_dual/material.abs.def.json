@@ -2,6 +2,7 @@
     "name": "ABS-White",
     "version": "4.2.0",
     "inherits": "snapmaker",
+    "isRecommended": true,
     "category": "ABS",
     "i18nName": "key-default_name-ABS_White",
     "i18nCategory": "key-default_category-ABS",
@@ -25,7 +26,7 @@
             "default_value": 0
         },
         "cool_fan_full_layer": {
-          "default_value": 2
+            "default_value": 2
         },
         "cool_fan_speed": {
             "default_value": 0

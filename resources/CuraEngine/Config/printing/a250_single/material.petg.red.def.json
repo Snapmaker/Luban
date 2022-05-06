@@ -1,64 +1,65 @@
 {
-  "name": "PETG-Red",
-  "version": "4.2.0",
-  "inherits": "snapmaker",
-  "category": "PETG",
-  "i18nName": "key-default_name-PETG_Red",
-  "i18nCategory": "key-default_category-PETG",
-  "overrides": {
-    "color": {
-      "default_value": "#E70008"
+    "name": "PETG-Red",
+    "version": "4.2.0",
+    "inherits": "snapmaker",
+    "category": "PETG",
+    "i18nName": "key-default_name-PETG_Red",
+    "i18nCategory": "key-default_category-PETG",
+    "overrides": {
+        "color": {
+            "default_value": "#E70008"
+        },
+        "material_flow": {
+            "default_value": 100
+        },
+        "machine_heated_bed": {
+            "default_value": true
+        },
+        "material_print_temperature_layer_0": {
+            "default_value": 235
+        },
+        "material_print_temperature": {
+            "default_value": 235
+        },
+        "cool_fan_speed": {
+            "default_value": 100
+        },
+        "material_bed_temperature_layer_0": {
+            "default_value": 75
+        },
+        "material_bed_temperature": {
+            "default_value": 70
+        },
+        "material_diameter": {
+            "default_value": 1.75
+        },
+        "material_final_print_temperature": {
+            "default_value": 235
+        },
+        "cool_fan_speed_min": {
+            "default_value": 100
+        },
+        "cool_fan_speed_max": {
+            "default_value": 100
+        },
+        "retraction_enable": {
+            "default_value": true
+        },
+        "retraction_speed": {
+            "default_value": 60
+        },
+        "retraction_amount": {
+            "default_value": 5
+        },
+        "retract_at_layer_change": {
+            "default_value": false
+        },
+        "retraction_hop": {
+            "default_value": 1
+        },
+        "retraction_hop_enabled": {
+            "default_value": false
+        }
     },
-    "material_flow": {
-      "default_value": 100
-    },
-    "machine_heated_bed": {
-      "default_value": true
-    },
-    "material_print_temperature_layer_0": {
-      "default_value": 235
-    },
-    "material_print_temperature": {
-      "default_value": 235
-    },
-    "cool_fan_speed": {
-      "default_value": 100
-    },
-    "material_bed_temperature_layer_0": {
-      "default_value": 75
-    },
-    "material_bed_temperature": {
-      "default_value": 70
-    },
-    "material_diameter": {
-      "default_value": 1.75
-    },
-    "material_final_print_temperature": {
-      "default_value": 235
-    },
-    "cool_fan_speed_min": {
-      "default_value": 100
-    },
-    "cool_fan_speed_max": {
-      "default_value": 100
-    },
-    "retraction_enable": {
-      "default_value": true
-    },
-    "retraction_speed": {
-      "default_value": 60
-    },
-    "retraction_amount": {
-      "default_value": 5
-    },
-    "retract_at_layer_change": {
-      "default_value": false
-    },
-    "retraction_hop": {
-      "default_value": 1
-    },
-    "retraction_hop_enabled": {
-      "default_value": false
-    }
-  }
+    "isRecommended": true
 }

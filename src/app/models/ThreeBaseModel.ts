@@ -107,7 +107,6 @@ export default class BaseModel {
     public isSelected: boolean = false;
 
     public modelGroup: ModelGroup;
-    public canAttachSupport: boolean = true; // PrimeTowerModel should set false
     public type: string;
 
     public extruderConfig: ExtruderConfig;

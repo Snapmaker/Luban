@@ -11,12 +11,12 @@ import TipTrigger from '../../components/TipTrigger';
 import SvgIcon from '../../components/SvgIcon';
 import Popover from '../../components/Popover';
 
-function SettingItem({ definitionKey, settings, isDefaultDefinition = () => true, onChangeDefinition, defaultValue, styleSize = 'large', managerType, officalDefinition }) {
+function SettingItem({ definitionKey, settings, isDefaultDefinition = false, onChangeDefinition, defaultValue, styleSize = 'large', managerType, officalDefinition }) {
     const [showColor, setShowColor] = useState(false);
 
     const setting = settings[definitionKey];
 
-    const isProfile = !isDefaultDefinition();
+    const isProfile = isDefaultDefinition;
     if (!setting) {
         return null;
     }
@@ -254,12 +254,12 @@ function SettingItem({ definitionKey, settings, isDefaultDefinition = () => true
 SettingItem.propTypes = {
     settings: PropTypes.object.isRequired,
     definitionKey: PropTypes.string.isRequired,
-    isDefaultDefinition: PropTypes.func,
+    isDefaultDefinition: PropTypes.bool,
     onChangeDefinition: PropTypes.func.isRequired,
     defaultValue: PropTypes.object,
     styleSize: PropTypes.string,
     managerType: PropTypes.string,
-    officalDefinition: PropTypes.bool,
+    officalDefinition: PropTypes.bool
 };
 
 export default React.memo(SettingItem);
