@@ -5,7 +5,7 @@ import socketSerial from './socket-serial';
 import socketHttp from './socket-http';
 import socketTcp from './SACP-TCP';
 import { HEAD_PRINTING, HEAD_LASER, LEVEL_TWO_POWER_LASER_FOR_SM2, MACHINE_SERIES,
-    CONNECTION_TYPE_WIFI, CONNECTION_TYPE_SERIAL, WORKFLOW_STATE_PAUSED } from '../../constants';
+    CONNECTION_TYPE_WIFI, CONNECTION_TYPE_SERIAL, WORKFLOW_STATE_PAUSED, PORT_SCREEN_HTTP, PORT_SCREEN_SACP } from '../../constants';
 import DataStorage from '../../DataStorage';
 import ScheduledTasks from '../../lib/ScheduledTasks';
 
@@ -86,7 +86,6 @@ class ConnectionManager {
     };
 
     inspectProtocol = async (address) => {
-        const PORT_SCREEN_HTTP = 8080, PORT_SCREEN_SACP = 8888;
         const [resSACP, resHTTP] = await Promise.allSettled([
             this.tryConnect(address, PORT_SCREEN_SACP),
             this.tryConnect(address, PORT_SCREEN_HTTP)

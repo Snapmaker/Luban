@@ -233,3 +233,6 @@ export const DEFINITION_ACTIVE_FINAL = 'active_final';
 
 export const KEY_DEFAULT_CATEGORY_CUSTOM = 'key-default_category-Custom';
 export const KEY_DEFAULT_CATEGORY_DEFAULT = 'key-default_category-Default';
+
+export const PORT_SCREEN_HTTP = 8080;
+export const PORT_SCREEN_SACP = 8888;

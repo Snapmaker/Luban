@@ -82,7 +82,6 @@ const generateGcode = ({ toolPaths, size, toolHead, origin, series }) => {
     if (!toolPaths && !_.isArray(toolPaths) && toolPaths.length === 0) {
         return sendMessage({ status: 'fail', value: 'modelInfo is empty.' });
     }
-    console.log({ size });
     sendMessage({ status: 'progress', value: 0.05 });
 
     const { headType } = toolPaths[0];
