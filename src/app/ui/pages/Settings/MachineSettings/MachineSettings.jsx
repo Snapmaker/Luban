@@ -107,6 +107,10 @@ function MachineSettings() {
         {
             ...MACHINE_SERIES.A350,
             label: i18n._(MACHINE_SERIES.A350.label)
+        },
+        {
+            ...MACHINE_SERIES.A400,
+            label: i18n._(MACHINE_SERIES.A400.label)
         }
     ];
     const dispatch = useDispatch();
@@ -136,7 +140,7 @@ function MachineSettings() {
     const actions = {
         // Machine Model
         onChangeMachineSeries: (option) => {
-            if (option.value === 'A150' || option.value === 'A250' || option.value === 'A350') {
+            if (option.value === 'A150' || option.value === 'A250' || option.value === 'A350' || option.value === 'A400') {
                 setPrintingToolheadSelected(MACHINE_TOOL_HEADS[SINGLE_EXTRUDER_TOOLHEAD_FOR_SM2].value);
                 setLaserToolheadSelected(MACHINE_TOOL_HEADS[LEVEL_ONE_POWER_LASER_FOR_SM2].value);
                 setCncToolheadSelected(MACHINE_TOOL_HEADS[STANDARD_CNC_TOOLHEAD_FOR_SM2].value);

@@ -129,6 +129,23 @@ export const MACHINE_SERIES = {
         },
         alias: ['SM2-L', 'Snapmaker 2.0 A350']
     },
+    A400: {
+        value: 'A400',
+        label: 'key-Luban/Machine/MachineSeries-Snapmaker A400',
+        setting: {
+            size: {
+                x: 400,
+                y: 400,
+                z: 400
+            },
+            laserSize: {
+                x: 400,
+                y: 400,
+                z: 400
+            }
+        },
+        alias: ['SM2-L', 'Snapmaker A400']
+    },
     CUSTOM: {
         value: 'Custom',
         label: 'key-Luban/Machine/MachineSeries-Custom',
@@ -216,3 +233,6 @@ export const DEFINITION_ACTIVE_FINAL = 'active_final';
 
 export const KEY_DEFAULT_CATEGORY_CUSTOM = 'key-default_category-Custom';
 export const KEY_DEFAULT_CATEGORY_DEFAULT = 'key-default_category-Default';
+
+export const PORT_SCREEN_HTTP = 8080;
+export const PORT_SCREEN_SACP = 8888;
