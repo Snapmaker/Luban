@@ -438,6 +438,9 @@ class DataStorage {
         rmDir(this.defaultConfigDir, true);
         rmDir(this.fontDir, true);
         rmDir(this.envDir, true);
+
+        fs.unlinkSync(settings.rcfile);
+        log.info(`rm file:[${settings.rcfile}]`);
     }
 }
 
