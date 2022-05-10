@@ -1,7 +1,8 @@
 import isEmpty from 'lodash/isEmpty';
 import { Observable } from 'rxjs';
-import { Transfer } from 'threads';
 import GcodeToBufferGeometryWorkspace from './GcodeToBufferGeometry/GcodeToBufferGeometryWorkspace';
+
+const { Transfer } = require('threads');
 
 type GcodeToArraybufferGeometryData = {
     func: string;

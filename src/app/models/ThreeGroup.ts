@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { BufferGeometryUtils } from 'three/examples/jsm/utils/BufferGeometryUtils';
-import BaseModel, { ModelTransformation, ModelInfo, TSize } from './ThreeBaseModel';
+import BaseModel, { ModelTransformation, ModelInfo, TSize, ModelLoadedInGroup } from './ThreeBaseModel';
 import type ModelGroup from './ModelGroup';
 import type ThreeModel from './ThreeModel';
 import ThreeUtils from '../three-extensions/ThreeUtils';
@@ -9,8 +9,16 @@ import ConvexGeometry from '../three-extensions/ConvexGeometry';
 
 type traverseCallback = (mesh: ThreeModel) => void;
 
+type mfPositionsType = {
+    groupName?: string,
+    matrix?: number [],
+    children: Array<ModelLoadedInGroup>;
+};
+
 export default class ThreeGroup extends BaseModel {
     public children: Array<ThreeModel | ThreeGroup>;
+
+    public positionsArr?: mfPositionsType;
 
     declare public meshObject: THREE.Group;
 
@@ -549,7 +557,7 @@ export default class ThreeGroup extends BaseModel {
     public getSerializableConfig(): ModelInfo {
         const {
             modelID, limitSize, headType, sourceType, sourceHeight, sourceWidth, originalName, uploadName, mode,
-            transformation, processImageName, visible, extruderConfig, modelName
+            transformation, processImageName, visible, extruderConfig, modelName, positionsArr
         } = this;
         const children = this.children.map((model) => {
             const serializableConfig: ModelInfo = model.getSerializableConfig();
@@ -566,6 +574,7 @@ export default class ThreeGroup extends BaseModel {
             sourceWidth,
             originalName,
             uploadName,
+            positionsArr,
             mode,
             visible,
             transformation,

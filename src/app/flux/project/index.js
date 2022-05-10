@@ -149,7 +149,7 @@ export const actions = {
 
     recoverModels: (promiseArray = [], modActions, models, envHeadType) => (dispatch) => {
         for (let k = 0; k < models.length; k++) {
-            const { headType, originalName, uploadName, modelName, config, sourceType, gcodeConfig,
+            const { headType, originalName, uploadName, modelName, config, sourceType, gcodeConfig, positionsArr,
                 sourceWidth, sourceHeight, mode, transformation, modelID, supportTag, extruderConfig, children, parentModelID } = models[k];
             const primeTowerTag = includes(originalName, 'prime_tower');
             // prevent project recovery recorded into operation history
@@ -178,6 +178,7 @@ export const actions = {
                     extruderConfig,
                     isGroup: !!children,
                     parentModelID,
+                    positionsArr,
                     children,
                     primeTowerTag
                 }))
@@ -202,6 +203,7 @@ export const actions = {
                 model.headType = HEAD_PRINTING;
             }
         });
+        console.log('envObj', envObj);
         // backup project if needed
         if (backendRecover) {
             UniformToolpathConfig(envObj);

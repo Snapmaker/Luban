@@ -367,7 +367,7 @@ function Laser({ location }) {
             >
                 <Dropzone
                     disabled={isDraggingWidget}
-                    accept={isRotate ? ACCEPT : `${ACCEPT}, .stl`}
+                    accept={isRotate ? ACCEPT : `${ACCEPT}, .stl, .3mf, .amf`}
                     dragEnterMsg={i18n._('key-Laser/Page-Drop an image file here.')}
                     onDropAccepted={actions.onDropAccepted}
                     onDropRejected={actions.onDropRejected}

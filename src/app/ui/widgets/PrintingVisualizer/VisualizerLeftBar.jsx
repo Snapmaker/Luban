@@ -173,7 +173,7 @@ function VisualizerLeftBar({ setTransformMode, supportActions, updateBoundingBox
                 <input
                     ref={fileInput}
                     type="file"
-                    accept=".stl, .obj"
+                    accept=".stl, .obj, .3mf, .amf"
                     className="display-none"
                     multiple
                     onChange={actions.onChangeFile}

@@ -1,5 +1,6 @@
-import { spawn, Worker, Pool } from 'threads';
 import './Pool.worker';
+
+const { spawn, Worker, Pool } = require('threads');
 
 export enum WorkerMethods {
     // LUBAN worker methods BEGIN

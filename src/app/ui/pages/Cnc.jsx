@@ -44,7 +44,7 @@ import Thumbnail from '../widgets/CncLaserShared/Thumbnail';
 import { laserCncIntroStepOne, laserCncIntroStepTwo, laserCncIntroStepFive, laserCncIntroStepSix, cnc4AxisStepOne } from './introContent';
 import useSetState from '../../lib/hooks/set-state';
 
-const ACCEPT = '.svg, .png, .jpg, .jpeg, .bmp, .dxf, .stl';
+const ACCEPT = '.svg, .png, .jpg, .jpeg, .bmp, .dxf, .stl, .3mf, .amf';
 const pageHeadType = HEAD_CNC;
 function useRenderWarning() {
     const [showWarning, setShowWarning] = useState(false);
@@ -217,7 +217,7 @@ function Cnc({ location }) {
                 uploadMode = PROCESS_MODE_VECTOR;
             } else if (extname.toLowerCase() === '.dxf') {
                 uploadMode = PROCESS_MODE_VECTOR;
-            } else if (extname.toLowerCase() === '.stl') {
+            } else if (['.stl', '.3mf', '.amf'].includes(extname.toLowerCase())) {
                 uploadMode = PROCESS_MODE_MESH;
             } else {
                 uploadMode = PROCESS_MODE_GREYSCALE;

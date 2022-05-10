@@ -1,4 +1,4 @@
-import { expose } from 'threads/worker';
+const { expose } = require('threads/worker');
 
 const methods = require
     .context('../../workers', false, /\.(t|j)s/)

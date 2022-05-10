@@ -490,7 +490,7 @@ class Visualizer extends Component {
                         onChangeFile={this.actions.onChangeFile}
                         onClickToUpload={this.actions.onClickToUpload}
                         fileInput={this.fileInput}
-                        allowedFiles=".svg, .png, .jpg, .jpeg, .bmp, .dxf, .stl"
+                        allowedFiles=".svg, .png, .jpg, .jpeg, .bmp, .dxf, .stl, .amf, .3mf"
                         headType={HEAD_CNC}
                     />
                 </div>
