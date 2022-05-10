@@ -189,9 +189,8 @@ function RotationAnalysisOverlay({ onClose }) {
                 // restore initial transformation
                 const model = modelGroup.selectedModelArray[0];
                 modelGroup.unselectAllModels();
-                model.meshObject.position.set(initialTransformation.positionX, initialTransformation.positionY, initialTransformation.positionZ);
-                model.meshObject.rotation.set(initialTransformation.rotationX, initialTransformation.rotationY, initialTransformation.rotationZ);
-                model.meshObject.scale.set(initialTransformation.scaleX, initialTransformation.scaleY, initialTransformation.scaleZ);
+                console.log('', initialTransformation);
+
                 modelGroup.selectModelById(model.modelID);
                 model.stickToPlate();
                 model.computeBoundingBox();

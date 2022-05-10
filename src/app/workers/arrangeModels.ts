@@ -148,6 +148,7 @@ const arrangeModels = (data: ArrangeModelsData) => {
 
             const x = validArea.max.x - validArea.min.x - padding * 2 + offset;
             const y = validArea.max.y - validArea.min.y - padding * 2 + offset;
+            console.log('before nesting', stls, angle, offset);
             const parts = nesting(
                 stls,
                 {

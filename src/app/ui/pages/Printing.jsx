@@ -435,7 +435,7 @@ function Printing({ location }) {
             <Dropzone
                 multiple
                 disabled={isDraggingWidget}
-                accept=".stl, .obj"
+                accept=".stl, .obj, .3mf, .amf"
                 dragEnterMsg={i18n._('key-Printing/Page-Drop an STL/OBJ file here.')}
                 onDropAccepted={onDropAccepted}
                 onDropRejected={onDropRejected}

@@ -140,7 +140,7 @@ function Laser({ location }) {
             if (extname === '.svg' || extname === '.dxf') {
                 mode = PROCESS_MODE_VECTOR;
             }
-            if (extname === '.stl') {
+            if (extname === '.stl' || extname === '.3mf' || extname === '.amf') {
                 dispatch(editorActions.cutModel(HEAD_LASER, file, () => {
                     modal({
                         cancelTitle: i18n._('key-Laser/Page-Close'),
@@ -367,7 +367,7 @@ function Laser({ location }) {
             >
                 <Dropzone
                     disabled={isDraggingWidget}
-                    accept={isRotate ? ACCEPT : `${ACCEPT}, .stl`}
+                    accept={isRotate ? ACCEPT : `${ACCEPT}, .stl, .3mf, .amf`}
                     dragEnterMsg={i18n._('key-Laser/Page-Drop an image file here.')}
                     onDropAccepted={actions.onDropAccepted}
                     onDropRejected={actions.onDropRejected}

@@ -338,7 +338,6 @@ const File = {
 };
 
 
-
 /**
  * Window control in electron
  */
@@ -461,8 +460,8 @@ export default {
     Update,
     Event,
     Menu,
-    File,
     Dialog,
+    File,
     Window,
     Connection,
     APP

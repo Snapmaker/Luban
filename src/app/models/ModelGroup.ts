@@ -1,4 +1,5 @@
-import { Sphere, SphereBufferGeometry, MeshStandardMaterial, Vector3, Group, Matrix4, BufferGeometry, Mesh, Float32BufferAttribute, MeshBasicMaterial, Plane, Box3, Object3D, Intersection, BufferAttribute, DynamicDrawUsage, LineSegments, LineBasicMaterial, PlaneGeometry, NotEqualStencilFunc, ReplaceStencilOp, MeshPhongMaterial, Vector2, Shape, ShapeGeometry, FrontSide } from 'three';
+import { Sphere, SphereBufferGeometry, MeshStandardMaterial, Vector3, Group, Matrix4, BufferGeometry, Mesh, Float32BufferAttribute, MeshBasicMaterial, Plane, Box3, Object3D,
+    Intersection, BufferAttribute, DynamicDrawUsage, LineSegments, LineBasicMaterial, PlaneGeometry, NotEqualStencilFunc, ReplaceStencilOp, MeshPhongMaterial, Vector2, Shape, ShapeGeometry, FrontSide } from 'three';
 import EventEmitter from 'events';
 import { CONTAINED, INTERSECTED, NOT_INTERSECTED } from 'three-mesh-bvh';
 import { v4 as uuid } from 'uuid';
@@ -21,6 +22,7 @@ import { ModelEvents } from './events';
 import { TPolygon } from './ClipperModel';
 import { PolygonsUtils } from '../../shared/lib/math/PolygonsUtils';
 import workerManager from '../lib/manager/workerManager';
+import ConvexGeometry from '../three-extensions/ConvexGeometry';
 
 import { IResult as TBrimResult } from '../workers/plateAdhesion/generateBrim';
 import { IResult as TRaftResult } from '../workers/plateAdhesion/generateRaft';
@@ -79,6 +81,7 @@ type TAdhesionConfig = {
 }
 
 class ModelGroup extends EventEmitter {
+    public namesMap: Map<string, number> = new Map();
     public object: Group;
     public grayModeObject: Group;
     public models: (TModel)[];
@@ -1516,7 +1519,6 @@ class ModelGroup extends EventEmitter {
             m.computeBoundingBox();
             box3Arr.push(m.boundingBox);
         }
-
         const length = Math.max(this._bbox.max.x - this._bbox.min.x, this._bbox.max.y - this._bbox.min.y);
         const step = 5; // min distance of models &
         const z = 1;
@@ -1687,7 +1689,7 @@ class ModelGroup extends EventEmitter {
      *
      * @returns {TModel}
      */
-    public addModel(modelInfo: ModelInfo | SVGModelInfo) {
+    public addModel(modelInfo: ModelInfo | SVGModelInfo, immediatelyShow = true) {
         if (modelInfo.headType === HEAD_PRINTING && modelInfo.isGroup) {
             const group = new ThreeGroup(modelInfo, this);
             group.updateTransformation(modelInfo.transformation);
@@ -1733,14 +1735,16 @@ class ModelGroup extends EventEmitter {
                     }
                 });
             } else {
-                // add to group and select
-                model.stickToPlate();
-                this.models.push(model);
-                // todo, use this to refresh obj list
-                this.models = [...this.models];
-                this.object.add(model.meshObject);
-                // model.initClipper(this.localPlane);
-                this.selectModelById(model.modelID);
+                if (immediatelyShow) {
+                    // add to group and select
+                    model.stickToPlate();
+                    this.models.push(model);
+                    // todo, use this to refresh obj list
+                    this.models = [...this.models];
+                    this.object.add(model.meshObject);
+
+                    this.selectModelById(model.modelID);
+                }
             }
         } else {
             // add to group and select
@@ -1750,11 +1754,96 @@ class ModelGroup extends EventEmitter {
             this.object.add(model.meshObject);
         }
 
-        this.emit(ModelEvents.AddModel, model);
-        // refresh view
-        this.modelChanged();
-        modelInfo.sourceType === '3d' && this.updatePrimeTowerHeight();
+        if (immediatelyShow) {
+            this.emit('add', model);
+            // refresh view
+            this.modelChanged();
+            modelInfo.sourceType === '3d' && this.updatePrimeTowerHeight();
+        }
         return model;
+    }
+
+    public addGroup(modelInfo: ModelInfo, isMfRecovery: Boolean = false) {
+        const group = new ThreeGroup(modelInfo, this);
+        const { positionsArr, loadFrom, size, headType, sourceType, transformation, children } = modelInfo;
+        group.modelName = this._createNewModelName(group);
+        group.positionsArr = positionsArr;
+
+        const subModels = [];
+        positionsArr.children.forEach((child, index) => {
+            const { positions, meshName: name, matrix } = child;
+            const bufferGeometry = new BufferGeometry();
+            const modelPositionAttribute = new BufferAttribute(positions, 3);
+            const material = new MeshStandardMaterial({ color: 0xa0a0a0 });
+
+            bufferGeometry.setAttribute('position', modelPositionAttribute);
+
+            bufferGeometry.computeVertexNormals();
+
+            const modelAdded = this.addModel({
+                loadFrom,
+                limitSize: size,
+                headType,
+                sourceType,
+                originalName: name,
+                uploadName: name,
+                modelName: name,
+                geometry: bufferGeometry,
+                material: material,
+            }, false);
+            modelAdded.meshObject.applyMatrix4(new Matrix4().fromArray(matrix));
+            if (children && children[index]) {
+                modelAdded.updateTransformation(children[index].transformation);
+            }
+            modelAdded.onTransform();
+
+            // update each model's convexGeometry
+            const vertices = [];
+            for (let i = 0; i < positions.length; i += 3) {
+                vertices.push(
+                    new Vector3(
+                        positions[i],
+                        positions[i + 1],
+                        positions[i + 2]
+                    )
+                );
+            }
+            const convexGeometry = new ConvexGeometry(vertices) as any;
+            const convexBufferGeometry = new BufferGeometry().fromGeometry(
+                convexGeometry
+            );
+
+            modelAdded.modelName = this._createNewModelName(modelAdded as ThreeModel);
+
+            if (modelAdded instanceof ThreeModel) {
+                modelAdded.setConvexGeometry(convexBufferGeometry);
+            }
+            subModels.push(modelAdded);
+        });
+        group.add(subModels);
+
+        group.stickToPlate();
+        if (!isMfRecovery) {
+            group.meshObject.position.x = 0;
+            group.meshObject.position.y = 0;
+            const point = this._computeAvailableXY(group);
+            group.meshObject.position.x = point.x;
+            group.meshObject.position.y = point.y;
+        } else {
+            group.updateTransformation(transformation);
+        }
+        group.meshObject.updateMatrix();
+        group.computeBoundingBox();
+        group.onTransform();
+
+        this.object.add(group.meshObject);
+        this.models = [...this.models, group];
+
+        this.unselectAllModels();
+        this.addModelToSelectedGroup(group);
+        this.updatePrimeTowerHeight();
+
+        this.emit('add', group);
     }
 
     /**
@@ -1815,9 +1904,9 @@ class ModelGroup extends EventEmitter {
         let baseName = '';
         if (model.sourceType === '3d') {
             if (model instanceof ThreeGroup) {
-                baseName = 'Group';
+                baseName = model.originalName || 'Group';
             } else {
-                baseName = model.originalName;
+                baseName = model.originalName || 'Model';
             }
         } else {
             const { config } = model;
@@ -1832,31 +1921,28 @@ class ModelGroup extends EventEmitter {
             }
         }
 
-        let count = 1;
+        const count = this.namesMap.get(baseName) || 1;
+        this.namesMap.set(baseName, count + 1);
+
         let name = '';
-        while (1) {
-            if (baseName === 'Text' || baseName === 'Shape') {
-                name = `${baseName} ${count.toString()}`;
-            } else {
-                if (count === 1) {
-                    if (model instanceof ThreeGroup) {
-                        name = `${baseName} ${count.toString()}`;
-                    } else {
-                        name = baseName;
-                    }
+        if (baseName === 'Text' || baseName === 'Shape') {
+            name = `${baseName} ${count}`;
+        } else {
+            if (count === 1) {
+                if (model instanceof ThreeGroup) {
+                    name = `${baseName} ${count}`;
                 } else {
-                    if (model instanceof ThreeGroup) {
-                        name = `${baseName} ${count.toString()}`;
-                    } else {
-                        name = `${baseName} (${count.toString()})`;
-                    }
+                    name = baseName;
+                }
+            } else {
+                if (model instanceof ThreeGroup) {
+                    name = `${baseName} ${count}`;
+                } else {
+                    name = `${baseName} (${count})`;
                 }
             }
-            if (!this.getModelByModelName(name)) {
-                return name;
-            }
-            count++;
         }
+        return name;
     }
 
     /**
@@ -1937,9 +2023,10 @@ class ModelGroup extends EventEmitter {
 
     public analyzeSelectedModelRotation() {
         if (this.selectedModelArray.length === 1) {
-            const model = this.selectedModelArray[0] as Model3D;
+            const model = this.selectedModelArray[0] as ThreeGroup;
             const rotationInfo = model.analyzeRotation();
             const tableResult: TRotationAnalysisTable[] = [];
+            // todo
             if (rotationInfo) {
                 const len = Math.min(20, rotationInfo.rates.length);
                 for (let i = 0; i < len; i++) {

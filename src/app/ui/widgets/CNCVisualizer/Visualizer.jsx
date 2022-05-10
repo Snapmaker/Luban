@@ -5,18 +5,18 @@ import * as THREE from 'three';
 import { connect } from 'react-redux';
 import { withRouter } from 'react-router-dom';
 import PropTypes from 'prop-types';
-import path from 'path';
 import classNames from 'classnames';
 
+import path from 'path';
 import i18n from '../../../lib/i18n';
 import { controller } from '../../../lib/controller';
 import { humanReadableTime } from '../../../lib/time-utils';
+import { getUploadModeByFilename } from '../../../lib/units';
 import ProgressBar from '../../components/ProgressBar';
 import ContextMenu from '../../components/ContextMenu';
 import Space from '../../components/Space';
 import Modal from '../../components/Modal';
 import { Button } from '../../components/Buttons';
-
 import Canvas from '../../components/SMCanvas';
 import PrintablePlate from '../CncLaserShared/PrintablePlate';
 import VisualizerBottomLeft from '../CncLaserShared/VisualizerBottomLeft';
@@ -26,7 +26,7 @@ import VisualizerTopRight from '../CncLaserTopRight/VisualizerTopRight';
 // eslint-disable-next-line no-unused-vars
 import {
     DISPLAYED_TYPE_TOOLPATH, HEAD_CNC, MAX_LASER_CNC_CANVAS_SCALE, MIN_LASER_CNC_CANVAS_SCALE,
-    PAGE_EDITOR, PROCESS_MODE_GREYSCALE, PROCESS_MODE_MESH, PROCESS_MODE_VECTOR,
+    PAGE_EDITOR,
     SELECTEVENT, VISUALIZER_CAMERA_HEIGHT
 } from '../../../constants';
 import SVGEditor from '../../SVGEditor';
@@ -161,16 +161,7 @@ class Visualizer extends Component {
         onChangeFile: (event) => {
             const file = event.target.files[0];
             const extname = path.extname(file.name).toLowerCase();
-            let uploadMode;
-            if (extname.toLowerCase() === '.svg') {
-                uploadMode = PROCESS_MODE_VECTOR;
-            } else if (extname.toLowerCase() === '.dxf') {
-                uploadMode = PROCESS_MODE_VECTOR;
-            } else if (extname.toLowerCase() === '.stl') {
-                uploadMode = PROCESS_MODE_MESH;
-            } else {
-                uploadMode = PROCESS_MODE_GREYSCALE;
-            }
+            const uploadMode = getUploadModeByFilename(file.name);
 
             this.setState({
                 file,
@@ -490,7 +481,7 @@ class Visualizer extends Component {
                         onChangeFile={this.actions.onChangeFile}
                         onClickToUpload={this.actions.onClickToUpload}
                         fileInput={this.fileInput}
-                        allowedFiles=".svg, .png, .jpg, .jpeg, .bmp, .dxf, .stl"
+                        allowedFiles=".svg, .png, .jpg, .jpeg, .bmp, .dxf, .stl, .amf, .3mf"
                         headType={HEAD_CNC}
                     />
                 </div>

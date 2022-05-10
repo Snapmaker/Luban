@@ -2,7 +2,6 @@
 import { cloneDeep, filter, find as lodashFind, isNil } from 'lodash';
 import path from 'path';
 import * as THREE from 'three';
-import { Transfer } from 'threads';
 import { Vector3 } from 'three';
 import {
     acceleratedRaycast,
@@ -27,6 +26,7 @@ import {
     LEFT_EXTRUDER,
     LEFT_EXTRUDER_MAP_NUMBER,
     LOAD_MODEL_FROM_INNER,
+    LOAD_MODEL_FROM_OUTER,
     MACHINE_SERIES,
     PRINTING_MANAGER_TYPE_MATERIAL,
     PRINTING_MANAGER_TYPE_QUALITY,
@@ -83,6 +83,8 @@ import UngroupOperation3D from '../operation-history/UngroupOperation3D';
 import VisibleOperation3D from '../operation-history/VisibleOperation3D';
 import { resolveDefinition } from '../../../shared/lib/definitionResolver';
 import ThreeModel from '../../models/ThreeModel';
+
+const { Transfer } = require('threads');
 
 // register methods for three-mesh-bvh
 THREE.Mesh.prototype.raycast = acceleratedRaycast;
@@ -332,7 +334,6 @@ const createLoadModelWorker = (() => {
             };
             runningTasks[uploadPath] = task;
         }
-
         task.cbOnMessage.push(onMessage);
     };
 })();
@@ -356,7 +357,7 @@ async function uploadMesh(mesh, stlFileName) {
 
     const formData = new FormData();
     formData.append('file', fileOfBlob);
-    const uploadResult = await api.uploadFile(formData);
+    const uploadResult = await api.uploadFile(formData, HEAD_PRINTING);
     return uploadResult;
 }
 
@@ -1284,8 +1285,8 @@ export const actions = {
         return new Promise(resolve => {
             const formData = new FormData();
             formData.append('file', file);
-            api.uploadFile(formData)
-                .then(async res => {
+            api.uploadFile(formData, HEAD_PRINTING)
+                .then(async (res) => {
                     const response = res.body;
                     const definitionId = `${type}.${timestamp()}`;
                     const definition = await definitionManager.uploadDefinition(
@@ -1714,7 +1715,7 @@ export const actions = {
             // Notice user that model is being loading
             const formData = new FormData();
             formData.append('file', file);
-            const res = await api.uploadFile(formData);
+            const res = await api.uploadFile(formData, HEAD_PRINTING);
             const { originalName, uploadName } = res.body;
             return { originalName, uploadName };
         });
@@ -2767,6 +2768,7 @@ export const actions = {
             }
             models.push(modelInfo);
         });
+        console.log('models', models);
 
         const res = workerManager.arrangeModels(
             {
@@ -3588,6 +3590,7 @@ export const actions = {
             extruderConfig,
             isGroup = false,
             parentModelID = '',
+            isMfRecovery,
             modelName,
             children,
             primeTowerTag
@@ -3612,9 +3615,15 @@ export const actions = {
                         progress: progressStatesManager.updateProgress(STEP_STAGE.PRINTING_LOADING_MODEL, _progress)
                     })
                 );
+                console.log(
+                    'isGroup && !isMfRecovery', isGroup , !isMfRecovery
+                );
+                if (!model.uploadName) {
+                    resolve();
+                }
                 const uploadPath = `${DATA_PREFIX}/${model.uploadName}`;
 
-                if (isGroup) {
+                if (isGroup && !isMfRecovery) {
                     const modelState = await modelGroup.generateModel({
                         loadFrom,
                         limitSize: size,
@@ -3637,6 +3646,7 @@ export const actions = {
                         children
                     });
                     dispatch(actions.updateState(modelState));
+
                     dispatch(actions.displayModel());
                     dispatch(actions.destroyGcodeLine());
                     resolve();
@@ -3763,6 +3773,39 @@ export const actions = {
                                     );
                                 }
                                 reject();
+                                break;
+                            }
+                            case 'LOAD_GROUP_POSITIONS': {
+                                const { positionsArr, originalPosition } = data;
+                                console.log('positionsArr', positionsArr, children);
+                                modelGroup.addGroup({
+                                    loadFrom: LOAD_MODEL_FROM_OUTER,
+                                    limitSize: size,
+                                    headType,
+                                    sourceType,
+                                    positionsArr,
+                                    originalName: model.originalName,
+                                    uploadName: model.uploadName,
+                                    modelName: null,
+                                    children,
+                                    originalPosition,
+                                    transformation
+                                }, isMfRecovery);
+
+
+                                const modelState = modelGroup.getState();
+                                dispatch(actions.updateState(modelState));
+                                dispatch(actions.updateAllModelColors());
+                                dispatch(actions.displayModel());
+                                dispatch(actions.destroyGcodeLine());
+                                if (modelNames.length > 1) {
+                                    _progress += 1 / modelNames.length;
+                                    dispatch(actions.updateState({
+                                        stage: STEP_STAGE.PRINTING_LOADING_MODEL,
+                                        progress: progressStatesManager.updateProgress(STEP_STAGE.PRINTING_LOADING_MODEL, _progress)
+                                    }));
+                                }
+                                resolve();
                                 break;
                             }
                             default:

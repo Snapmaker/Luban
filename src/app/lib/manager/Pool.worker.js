@@ -1,4 +1,4 @@
-import { expose } from 'threads/worker';
+const { expose } = require('threads/worker');
 
 import arrangeModels from '../../workers/arrangeModels';
 import autoRotateModels from '../../workers/autoRotateModels';

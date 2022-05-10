@@ -33,6 +33,12 @@ export type ExtruderConfig = {
     shell: '0' | '1' | '2',
 };
 
+export type ModelLoadedInGroup = {
+    positions: Float32Array;
+    meshName?: string;
+    matrix?: number[];
+}
+
 export type ModelInfo = {
     modelID?: string,
     parentModelID?: string,
@@ -63,9 +69,14 @@ export type ModelInfo = {
     width?: number;
     height?: number;
     isGroup?: boolean;
+    isMfRecovery?: boolean;
     // svg
     elem?: SvgModelElement;
     size?: TSize;
+    positionsArr?: {
+        children: Array<ModelLoadedInGroup>;
+        matrix?: number[];
+    }
 };
 
 const DEFAULT_TRANSFORMATION: ModelTransformation = {

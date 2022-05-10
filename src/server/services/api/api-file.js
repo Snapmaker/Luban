@@ -16,6 +16,7 @@ import {
 import { DUAL_EXTRUDER_TOOLHEAD_FOR_SM2, getMachineSeriesWithToolhead, INITIAL_TOOL_HEAD_FOR_ORIGINAL, INITIAL_TOOL_HEAD_FOR_SM2 } from '../../../app/constants';
 import { removeSpecialChars } from '../../../shared/lib/utils';
 import { generateRandomPathName } from '../../../shared/lib/random-utils';
+import { convertFileToSTL } from '../../lib/model-to-stl';
 
 const log = logger('api:file');
 
@@ -26,7 +27,8 @@ function copyFileSync(src, dst) {
 }
 function traverse(models, callback) {
     models.forEach(model => {
-        if (model.children) {
+        // callback && callback(model);
+        if (model.children && !model.isMfRecovery) {
             traverse(model.children, callback);
         } else {
             callback && callback(model);
@@ -68,39 +70,45 @@ const cpFileToTmp = async (file, uploadName) => {
 export const set = async (req, res) => {
     let { uploadName } = req.body;
     const file = req.files.file;
-    if (file) { // post blob file in web
-        const originalName = removeSpecialChars(path.basename(file.name));
-        if (!uploadName) {
-            uploadName = generateRandomPathName(originalName);
-        }
-        uploadName = uploadName.toLowerCase();
-
-        const uploadPath = `${DataStorage.tmpDir}/${uploadName}`;
-
-        mv(file.path, uploadPath, (err) => {
-            if (err) {
-                log.error(`Failed to upload file ${originalName}`);
-                res.status(ERR_INTERNAL_SERVER_ERROR).send({
-                    msg: `Failed to upload file ${originalName}: ${err}`
-                });
-            } else {
-                res.send({
-                    originalName,
-                    uploadName
-                });
-                res.end();
+    const headType = req.query.headType;
+    try {
+        if (file) { // post blob file in web
+            let filename = file.name, filePath = file.path;
+            if (headType !== 'printing') {
+                ({ filename, filePath } = await convertFileToSTL(file));
             }
-        });
-    } else { // post file pathname in electron
-        try {
+            const originalName = removeSpecialChars(path.basename(filename));
+            if (!uploadName) {
+                uploadName = generateRandomPathName(originalName);
+            }
+            uploadName = uploadName.toLowerCase();
+
+            const uploadPath = `${DataStorage.tmpDir}/${uploadName}`;
+
+            mv(filePath, uploadPath, (err) => {
+                if (err) {
+                    log.error(`Failed to upload file ${originalName}`);
+                    res.status(ERR_INTERNAL_SERVER_ERROR).send({
+                        msg: `Failed to upload file ${originalName}: ${err}`
+                    });
+                } else {
+                    res.send({
+                        originalName,
+                        uploadName
+                    });
+                    res.end();
+                }
+            });
+        } else { // post file pathname in electron
             const ret = await cpFileToTmp(JSON.parse(req.body.file));
             res.send(ret);
             res.end();
-        } catch (err) {
-            res.status(ERR_INTERNAL_SERVER_ERROR).send({
-                msg: `Failed to upload file: ${err}`
-            });
         }
+    } catch (err) {
+        log.error(`Failed to upload file: ${err.message} - ${err.stack}`);
+        res.status(ERR_INTERNAL_SERVER_ERROR).send({
+            msg: `Failed to upload file: ${err}`
+        });
     }
 };
 /**
@@ -375,12 +383,13 @@ export const recoverEnv = async (req, res) => {
 
         const currentSeriesPath = getSeriesPathFromMachineInfo(config?.machineInfo);
 
+
         traverse(config.models, (model) => {
             const { originalName, uploadName } = model;
-
             copyFileSync(`${envDir}/${originalName}`, `${DataStorage.tmpDir}/${originalName}`);
             copyFileSync(`${envDir}/${uploadName}`, `${DataStorage.tmpDir}/${uploadName}`);
         });
+
 
         if (config.defaultMaterialId && /^material.([0-9_]+)$/.test(config.defaultMaterialId)) {
             copyFileSync(`${envDir}/${config.defaultMaterialId}.def.json`, `${DataStorage.configDir}/${headType}/${currentSeriesPath}/${config.defaultMaterialId}.def.json`);

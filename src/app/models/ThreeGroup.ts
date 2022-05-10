@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { BufferGeometryUtils } from 'three/examples/jsm/utils/BufferGeometryUtils';
+import path from 'path';
 import BaseModel, { ModelTransformation, ModelInfo, TSize } from './ThreeBaseModel';
 import type ModelGroup from './ModelGroup';
 import type ThreeModel from './ThreeModel';
@@ -49,6 +50,11 @@ export default class ThreeGroup extends BaseModel {
     public set visible(value: boolean) {
         this.meshObject.visible = value;
     }
+
+    private get isMfRecovery() {
+        return ['.3mf', '.amf'].includes(path.extname(this.originalName).toLowerCase()) as boolean;
+    }
+
 
     public add(models: Array<(ThreeModel | ThreeGroup)>) {
         this.children = [...this.children, ...models];
@@ -258,6 +264,7 @@ export default class ThreeGroup extends BaseModel {
 
         // set selected group position need to remove children temporarily
         const children = [...this.meshObject.children];
+
         children.map((obj) => ThreeUtils.removeObjectParent(obj));
         // only make the diff translation
         const oldPosition = new THREE.Vector3();
@@ -470,6 +477,7 @@ export default class ThreeGroup extends BaseModel {
      * @returns Object
      */
     public analyzeRotation() {
+        console.log('this.meshObject', this.meshObject.scale.x);
         this.computeConvex();
         if (this.sourceType !== '3d' || !this.convexGeometry) {
             return null;
@@ -551,13 +559,14 @@ export default class ThreeGroup extends BaseModel {
     public getSerializableConfig(): ModelInfo {
         const {
             modelID, limitSize, headType, sourceType, sourceHeight, sourceWidth, originalName, uploadName, mode,
-            transformation, processImageName, visible, extruderConfig, modelName
+            transformation, processImageName, visible, extruderConfig, modelName, isMfRecovery
         } = this;
         const children = this.children.map((model) => {
             const serializableConfig: ModelInfo = model.getSerializableConfig();
             serializableConfig.parentModelID = modelID;
             return serializableConfig;
         });
+        console.log('getSerializableConfig isMfRecovery', isMfRecovery);
 
         return {
             modelID,
@@ -569,6 +578,7 @@ export default class ThreeGroup extends BaseModel {
             originalName,
             uploadName,
             mode,
+            isMfRecovery,
             visible,
             transformation,
             processImageName,
