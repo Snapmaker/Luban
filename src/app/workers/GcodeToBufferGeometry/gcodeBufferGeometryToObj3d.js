@@ -40,7 +40,7 @@ function lineToGeometry(bufferGeometry) {
     //     return;
     // }
     const zUp = new THREE.Vector3(0, 0, 1), zDown = new THREE.Vector3(0, 0, -1);
-    const vertices = [], indices = [], exColors = [], exColors1 = [], exLayerIndices = [], exTypeCodes = [], exToolCodes = [];
+    const vertices = [], indices = [], exColors = [], exColors1 = [], exLayerIndices = [], exTypeCodes = [], exToolCodes = [], normals = [];
     const layerHeight = 0.6;
     const lineWidth = 0.6;
 
@@ -66,6 +66,11 @@ function lineToGeometry(bufferGeometry) {
         exTypeCodes.push(typeCodes[i], typeCodes[i], typeCodes[i], typeCodes[i]);
         exToolCodes.push(toolCodes[i], toolCodes[i], toolCodes[i], toolCodes[i]);
 
+        normals.push(...new THREE.Vector3().subVectors(up, pointStart).toArray());
+        normals.push(...new THREE.Vector3().subVectors(right, pointStart).toArray());
+        normals.push(...new THREE.Vector3().subVectors(down, pointStart).toArray());
+        normals.push(...new THREE.Vector3().subVectors(left, pointStart).toArray());
+
         // point end expanded 4 points
         const down1 = new THREE.Vector3(pointEnd.x, pointEnd.y, pointEnd.z - layerHeight / 2);
         const up1 = new THREE.Vector3(pointEnd.x, pointEnd.y, pointEnd.z + layerHeight / 2);
@@ -80,6 +85,11 @@ function lineToGeometry(bufferGeometry) {
         exLayerIndices.push(layerIndices[i + 1], layerIndices[i + 1], layerIndices[i + 1], layerIndices[i + 1]);
         exTypeCodes.push(typeCodes[i + 1], typeCodes[i + 1], typeCodes[i + 1], typeCodes[i + 1]);
         exToolCodes.push(toolCodes[i + 1], toolCodes[i + 1], toolCodes[i + 1], toolCodes[i + 1]);
+
+        normals.push(...new THREE.Vector3().subVectors(up1, pointEnd).toArray());
+        normals.push(...new THREE.Vector3().subVectors(right1, pointEnd).toArray());
+        normals.push(...new THREE.Vector3().subVectors(down1, pointEnd).toArray());
+        normals.push(...new THREE.Vector3().subVectors(left1, pointEnd).toArray());
 
         // 封闭起点和终点的竖截面
         if (i === 0) {
@@ -132,6 +142,7 @@ function lineToGeometry(bufferGeometry) {
     const geometry = new THREE.BufferGeometry();
     geometry.setIndex(indices);
     geometry.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
+    geometry.setAttribute('normal', new THREE.Float32BufferAttribute(normals, 3));
     const exColorsAttr = new THREE.Uint8BufferAttribute(exColors, 3);
     exColorsAttr.normalized = true;
     const exColors1Attr = new THREE.Uint8BufferAttribute(exColors, 3);
@@ -141,7 +152,7 @@ function lineToGeometry(bufferGeometry) {
     geometry.setAttribute('a_layer_index', new THREE.Float32BufferAttribute(exLayerIndices, 1));
     geometry.setAttribute('a_type_code', new THREE.Float32BufferAttribute(exTypeCodes, 1));
     geometry.setAttribute('a_tool_code', new THREE.Float32BufferAttribute(exToolCodes, 1));
-    geometry.computeVertexNormals();
+    // geometry.computeVertexNormals();
     console.log(vertices, indices, geometry);
     return geometry;
 }
