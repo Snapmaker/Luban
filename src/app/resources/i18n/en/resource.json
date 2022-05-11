@@ -307,6 +307,8 @@
     "key-App/Settings/General-Learn more": "Learn more",
     "key-App/Settings/General-Preview file when import G code to workspace": "Preview file when importing G-code to Workspace",
     "key-App/Settings/General-Software Update": "Software Update",
+    "key-App/Settings/General-Workspace Settting": "Workspace Settting",
+    "key-App/Settings/General-Workspace Hide the console when working": "Hide the console when working",
     "key-App/Settings/MachineSettings-10W Laser": "10W Laser",
     "key-App/Settings/MachineSettings-1600mW Laser": "1600mW Laser",
     "key-App/Settings/MachineSettings-200mW Laser": "200mW Laser",

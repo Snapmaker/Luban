@@ -306,6 +306,8 @@
     "key-App/Settings/General-Learn more": "了解更多",
     "key-App/Settings/General-Preview file when import G code to workspace": "导入 G 代码到工作区时预览文件",
     "key-App/Settings/General-Software Update": "软件更新",
+    "key-App/Settings/General-Workspace Settting": "工作区设置",
+    "key-App/Settings/General-Workspace Hide the console when working": "作业时隐藏控制台",
     "key-App/Settings/MachineSettings-10W Laser": "10W 激光",
     "key-App/Settings/MachineSettings-1600mW Laser": "1600mW 激光",
     "key-App/Settings/MachineSettings-200mW Laser": "200mW 激光",
