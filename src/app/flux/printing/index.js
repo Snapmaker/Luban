@@ -590,7 +590,7 @@ export const actions = {
                 }));
             });
             controller.on('slice:completed', (args) => {
-                const { gcodeFilename, gcodeFileLength, printTime, filamentLength, filamentWeight, renderGcodeFileName } = args;
+                const { gcodeFilename, gcodeFileLength, printTime, filamentLength, filamentWeight, renderGcodeFileName, gcodeHeader } = args;
                 const { progressStatesManager } = getState().printing;
                 dispatch(actions.updateState({
                     gcodeFile: {
@@ -599,7 +599,17 @@ export const actions = {
                         size: gcodeFileLength,
                         lastModified: +new Date(),
                         thumbnail: '',
-                        renderGcodeFileName
+                        renderGcodeFileName,
+
+                        type: gcodeHeader[';header_type'],
+                        nozzle_temperature: gcodeHeader[';nozzle_temperature(°C)'],
+                        build_plate_temperature: gcodeHeader[';build_plate_temperature(°C)'],
+                        work_speed: gcodeHeader[';work_speed(mm/minute)'],
+                        estimated_time: gcodeHeader[';estimated_time(s)'],
+                        matierial_weight: gcodeHeader[';matierial_weight'],
+                        nozzle_1_temperature: gcodeHeader[';nozzle_1_temperature(°C)'],
+                        jog_speed: gcodeHeader[';jog_speed(mm/minute)'],
+                        power: gcodeHeader[';power(%)'],
                     },
                     printTime,
                     filamentLength,

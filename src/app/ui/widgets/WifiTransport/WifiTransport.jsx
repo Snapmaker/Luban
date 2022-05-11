@@ -37,6 +37,7 @@ import { actions as machineActions } from '../../../flux/machine';
 import Checkbox from '../../components/Checkbox';
 import { NumberInput as Input } from '../../components/Input';
 import SecondaryToolbar from '../CanvasToolbar/SecondaryToolbar';
+import GCodeParams from './GCodeParams';
 
 const changeNameInput = [];
 const suffixLength = 7;
@@ -47,6 +48,7 @@ const GcodePreviewItem = React.memo(({ gcodeFile, index, selected, onSelectFile,
 
     let size = '';
     const { isRenaming, uploadName } = gcodeFile;
+    console.log('gcode file', gcodeFile);
     if (!gcodeFile.size) {
         size = '';
     } else if (gcodeFile.size / 1024 / 1024 > 1) {
@@ -504,6 +506,7 @@ function WifiTransport({ widgetActions, controlActions }) {
     const isSended = isWifi ? isSendedOnWifi : true;
     const canPlay = hasFile && isConnected && isSended && _.includes([WORKFLOW_STATE_IDLE, WORKFLOW_STATUS_IDLE], currentWorkflowStatus);
     const canSend = hasFile && isConnected && isHeadType && isWifi && isSendedOnWifi;
+    console.log('========================gcodeFiles', gcodeFiles);
     return (
         <div className="border-default-grey-1 border-radius-8">
             <input
@@ -607,6 +610,7 @@ function WifiTransport({ widgetActions, controlActions }) {
                         {i18n._('key-Workspace/LaserStartJob-start_job')}
                     </Modal.Header>
                     <Modal.Body>
+                        {/* TODO: in one modal */}
                         <div className="width-438">
                             {!isRotate && toolHeadName !== LEVEL_TWO_POWER_LASER_FOR_SM2 && (
                                 <Trans i18nKey="key-Workspace/LaserStartJob-3axis_start_job_prompt">
@@ -741,6 +745,7 @@ function WifiTransport({ widgetActions, controlActions }) {
                                     <Spin />
                                 </div>
                             )}
+                            <GCodeParams gcodeFile={gcodeFiles[selectFileIndex] || {}} />
                         </div>
                     </Modal.Body>
                     <Modal.Footer>
