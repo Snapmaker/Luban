@@ -1,11 +1,11 @@
+import net from 'net';
 import logger from '../../lib/logger';
 // import workerManager from '../task-manager/workerManager';
 import socketSerial from './socket-serial';
 import socketHttp from './socket-http';
-import {
-    HEAD_PRINTING, HEAD_LASER, LEVEL_TWO_POWER_LASER_FOR_SM2, MACHINE_SERIES,
-    CONNECTION_TYPE_WIFI, CONNECTION_TYPE_SERIAL, WORKFLOW_STATE_PAUSED
-} from '../../constants';
+import socketTcp from './SACP-TCP';
+import { HEAD_PRINTING, HEAD_LASER, LEVEL_TWO_POWER_LASER_FOR_SM2, MACHINE_SERIES,
+    CONNECTION_TYPE_WIFI, CONNECTION_TYPE_SERIAL, WORKFLOW_STATE_PAUSED, PORT_SCREEN_HTTP, PORT_SCREEN_SACP } from '../../constants';
 import DataStorage from '../../DataStorage';
 import ScheduledTasks from '../../lib/ScheduledTasks';
 
@@ -47,11 +47,32 @@ class ConnectionManager {
         }
     }
 
-    connectionOpen = (socket, options) => {
-        const { connectionType } = options;
+    connectionOpen = async (socket, options) => {
+        const { connectionType, sacp, addByUser, address } = options;
         this.connectionType = connectionType;
         if (connectionType === CONNECTION_TYPE_WIFI) {
-            this.socket = socketHttp;
+            if (sacp) {
+                this.protocol = 'SACP';
+                this.socket = socketTcp;
+            } else if (addByUser) {
+                try {
+                    const protocol = await this.inspectProtocol(address);
+                    if (protocol === 'SACP') {
+                        this.protocol = 'SACP';
+                        this.socket = socketTcp;
+                    } else {
+                        this.protocol = '';
+                        this.socket = socketHttp;
+                    }
+                } catch (e) {
+                    log.error(`connectionOpen inspect protocol error: ${e}`);
+                }
+            } else {
+                this.protocol = '';
+                this.socket = socketHttp;
+            }
+
+
             this.socket.connectionOpen(socket, options);
         } else {
             this.socket = socketSerial;
@@ -63,6 +84,43 @@ class ConnectionManager {
     connectionClose = (socket, options) => {
         this.socket && this.socket.connectionClose(socket, options);
     };
+
+    inspectProtocol = async (address) => {
+        const [resSACP, resHTTP] = await Promise.allSettled([
+            this.tryConnect(address, PORT_SCREEN_SACP),
+            this.tryConnect(address, PORT_SCREEN_HTTP)
+        ]);
+        if (resHTTP.value) {
+            return 'HTTP';
+        } else if (resSACP.value) {
+            return 'SACP';
+        }
+        return '';
+    }
+
+    tryConnect = (host, port) => {
+        return new Promise((resolve) => {
+            const tcpSocket = net.createConnection({
+                host,
+                port,
+                timeout: 1000
+            }, () => {
+                tcpSocket.destroy();
+                resolve(true);
+                log.debug(`tryConnect connected ${host}:${port}`);
+            });
+            tcpSocket.once('timeout', () => {
+                tcpSocket.destroy();
+                log.debug(`tryConnect connect ${host}:${port} timeout`);
+                resolve(false);
+            });
+            tcpSocket.once('error', (e) => {
+                tcpSocket.destroy();
+                log.debug(`tryConnect connect ${host}:${port} error: ${e}`);
+                resolve(false);
+            });
+        });
+    }
 
     startGcode = (socket, options) => {
         const { headType, isRotate, toolHead, isLaserPrintAutoMode, materialThickness, eventName } = options;
@@ -422,6 +480,27 @@ class ConnectionManager {
     abortLaserMaterialThickness = (socket, options) => {
         this.socket.abortLaserMaterialThickness(options);
     }
+
+    // camera capture related, currently for socket-tcp
+    takePhoto = (params, callback) => {
+        this.socket.takePhoto(params, callback);
+    };
+
+    getCameraCalibration = (callback) => {
+        this.socket.getCameraCalibration(callback);
+    };
+
+    getPhoto = (callback) => {
+        this.socket.getPhoto(callback);
+    };
+
+    getCalibrationPhoto = (callback) => {
+        this.socket.getCalibrationPhoto(callback);
+    };
+
+    setMatrix = (params, callback) => {
+        this.socket.setMatrix(params, callback);
+    };
     // only for Wifi
 }
 

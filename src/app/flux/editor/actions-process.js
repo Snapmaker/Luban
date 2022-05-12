@@ -3,7 +3,7 @@ import _ from 'lodash';
 import { baseActions } from './actions-base';
 import { controller } from '../../lib/controller';
 import { STEP_STAGE, PROCESS_STAGE } from '../../lib/manager/ProgressManager';
-import { DISPLAYED_TYPE_MODEL, DISPLAYED_TYPE_TOOLPATH, HEAD_LASER, SELECTEVENT } from '../../constants';
+import { DISPLAYED_TYPE_MODEL, DISPLAYED_TYPE_TOOLPATH, HEAD_CNC, HEAD_LASER, SELECTEVENT } from '../../constants';
 import { getToolPathType } from '../../toolpaths/utils';
 
 import { toast } from '../../ui/components/Toast';
@@ -337,7 +337,9 @@ export const processActions = {
      * @returns {Function}
      */
     commitGenerateGcode: (headType) => (dispatch, getState) => {
-        const { toolPathGroup, progressStatesManager } = getState()[headType];
+        const { toolPathGroup, progressStatesManager, coordinateMode } = getState()[headType];
+        const { size, toolHead, series } = getState().machine;
+        const currentToolHead = (headType === HEAD_CNC ? toolHead.cncToolhead : toolHead.laserToolhead);
         const toolPaths = toolPathGroup.getCommitGenerateGcodeInfos();
 
         if (!toolPaths || toolPaths.length === 0) {
@@ -356,7 +358,13 @@ export const processActions = {
         controller.commitGcodeTask({
             taskId: uuid(),
             headType: headType,
-            data: toolPaths
+            data: {
+                toolPaths,
+                size,
+                toolHead: currentToolHead,
+                origin: coordinateMode.value,
+                series
+            }
         });
     },
 

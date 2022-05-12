@@ -41,7 +41,7 @@ const isNotNull = (value) => {
 export class Server extends events.EventEmitter {
     gcodePrintingInfo = {};
 
-    constructor({ name = '', address = '', model, port = '' }) {
+    constructor({ name = '', address = '', model, port = '', sacp = '', addByUser = false }) {
         super();
         this.name = name;
         this.address = address;
@@ -49,6 +49,8 @@ export class Server extends events.EventEmitter {
         this.port = port;
         this.model = model || 'Unknown Model';
         this.selected = false;
+        this.addByUser = addByUser;
+        this.sacp = sacp;
     }
 
     get isWifi() {
@@ -60,7 +62,10 @@ export class Server extends events.EventEmitter {
             host: this.host,
             token: this.token,
             connectionType: this.isWifi ? CONNECTION_TYPE_WIFI : CONNECTION_TYPE_SERIAL,
-            port: this.port
+            port: this.port,
+            sacp: this.sacp,
+            addByUser: this.addByUser,
+            address: this.address
         })
             .once(CONNECTION_OPEN, ({ msg, data, text }) => {
                 if (msg) {
