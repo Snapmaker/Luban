@@ -1,5 +1,8 @@
 import * as THREE from 'three';
+import { Box2, Mesh, Object3D } from 'three';
 import { v4 as uuid } from 'uuid';
+import { PROCESS_MODE_BW, PROCESS_MODE_GREYSCALE, PROCESS_MODE_HALFTONE, PROCESS_MODE_MESH, PROCESS_MODE_VECTOR } from '../../server/constants';
+import { SOURCE_TYPE } from '../constants';
 import type ModelGroup from './ModelGroup';
 
 export interface ModelTransformation {
@@ -30,37 +33,107 @@ const DEFAULT_TRANSFORMATION: ModelTransformation = {
     uniformScalingState: true
 };
 
+export type TSize = {
+    x: number;
+    y: number;
+    z: number;
+};
+
+export type TElem = SVGRectElement | SVGCircleElement | SVGPathElement | SVGImageElement;
+
+export type TMode = typeof PROCESS_MODE_BW
+    | typeof PROCESS_MODE_HALFTONE
+    | typeof PROCESS_MODE_VECTOR
+    | typeof PROCESS_MODE_GREYSCALE
+    | typeof PROCESS_MODE_MESH
+
+export type ModelInfo = {
+    modelID?: string,
+    parentModelID?: string,
+    limitSize?: Object,
+    headType?: string,
+    sourceType: '2d',
+    sourceHeight?: number,
+    sourceWidth?: number,
+    originalName?: string,
+    uploadName?: string,
+    modelName?: string,
+    config?: {
+        algorithm: string;
+        brightness: number;
+        bwThreshold: number;
+        contrast: number;
+        whiteClip: number;
+        invert: boolean
+        svgNodeName: string;
+    },
+    mode: TMode,
+    visible?: boolean,
+    transformation?: ModelTransformation,
+    processImageName?: string,
+    type?: string,
+    convexGeometry?: THREE.BufferGeometry,
+    loadFrom?: 0 | 1,
+    color?: string;
+    width?: number;
+    height?: number;
+    elem: TElem;
+    size: TSize
+};
+
+
 // BaseModel only do data process
 // isolated from Model.js which renamed to ThreeModel.js
 abstract class BaseModel {
-    visible = true;
+    public visible: boolean = true;
 
-    modelGroup = null;
+    public modelGroup: ModelGroup = null;
 
-    modelID = '';
+    public modelID: string = '';
+    public originModelID: string = '';
+    public modelName: string = '';
+    public uploadImageName: string = '';
+    public sourceType: SOURCE_TYPE;
+    public modelObject3D?: Object3D;
+    public processObject3D?: Object3D;
 
-    modelName = '';
+    public transformation: ModelTransformation = DEFAULT_TRANSFORMATION;
 
-    transformation = DEFAULT_TRANSFORMATION;
+    public meshObject: THREE.Mesh & { uniformScalingState?: boolean };
 
-    meshObject: THREE.Mesh & { uniformScalingState: boolean };
+    public width: number;
+    public height: number;
+    public elem: TElem;
+    public size: TSize
+    public sourceHeight: number;
+    public sourceWidth: number;
 
-    width: number;
+    public boundingBox: Box2;
 
-    height: number;
+    public headType: string;
+    public originalName: string;
+    public limitSize: number
 
-    constructor(modelInfo: unknown, modelGroup: ModelGroup) {
+    // TODO
+    public config: Record<string, string | number | boolean> = {}
+    public mode: TMode;
+
+    public parent: SVGGElement;
+    public image3dObj: Mesh;
+
+    public constructor(modelInfo: ModelInfo, modelGroup: ModelGroup) {
         this.modelGroup = modelGroup;
 
-        // eslint-disable-next-line no-return-assign
-        Object.keys(modelInfo).map(key => this[key] = modelInfo[key]);
+        Object.keys(modelInfo).forEach((key) => {
+            this[key] = modelInfo[key];
+        });
 
         this.modelID = this.modelID || `id${uuid()}`;
         this.modelName = this.modelName ?? 'unnamed';
         this.transformation = { ...DEFAULT_TRANSFORMATION, ...this.transformation };
     }
 
-    public updateTransformation(transformation: ModelTransformation) {
+    public updateTransformation(transformation: Partial<ModelTransformation>) {
         const { positionX, positionY, positionZ, rotationX, rotationY, rotationZ, scaleX, scaleY, scaleZ, uniformScalingState } = transformation;
         const { width, height } = transformation;
 

@@ -1,4 +1,5 @@
-import { Vector3, Matrix4, MeshPhongMaterial, TextureLoader
+import {
+    Vector3, Matrix4, MeshPhongMaterial, TextureLoader
     // DoubleSide, CylinderGeometry,Mesh
 } from 'three';
 
@@ -216,9 +217,6 @@ class Cnc3DVisualizer extends Component {
     //         }
     //     }
     // }
-
-    componentDidUpdate() {
-    }
 
     getSnapshotBeforeUpdate(prevProps) {
         if (this.props.hasModel) {

@@ -7,7 +7,9 @@ module.exports = {
         'requireConfigFile': false,
         'babelOptions': {
             'presets': ['@babel/preset-react']
-        }
+        },
+        project: ['./tsconfig.json']
+
     },
     env: {
         browser: true,
@@ -68,17 +70,85 @@ module.exports = {
         'no-multi-str': 0,
         'no-lonely-if': 0,
         'no-bitwise': 0,
-        'max-classes-per-file': 0
+        'max-classes-per-file': 0,
+        'lines-between-class-members': [
+            2,
+            'always', {
+                'exceptAfterSingleLine': true // skip checking empty lines after single-line class members
+            }
+        ],
+        'semi': [2, 'always']
     },
+    ignorePatterns: ['*.d.ts'],
     overrides: [{
         files: ['*.ts', '*.tsx'],
         parser: '@typescript-eslint/parser',
-        plugins: ['@typescript-eslint'],
+        plugins: ['@typescript-eslint'], //  'sort-class-members'
         rules: {
             'no-shadow': 'off',
             '@typescript-eslint/no-shadow': ['error'],
+            'no-empty-function': 'off',
+            // 'typescript/no-empty-interface': 2,
+            '@typescript-eslint/no-empty-function': ['error'],
+            'no-extra-semi': 'off',
+            '@typescript-eslint/no-extra-semi': ['error'],
             'no-unused-vars': 'off',
-            '@typescript-eslint/no-unused-vars': ['error']
+            '@typescript-eslint/no-unused-vars': ['error'],
+            '@typescript-eslint/explicit-member-accessibility': ['error'], // Require explicit accessibility modifiers on class properties and methods
+            // '@typescript-eslint/no-explicit-any': ['error'],
+            // 'sort-class-members/sort-class-members': [
+            //     'error',
+            //     {
+            //         order: [
+            //             '[properties]',
+            //             '[static-properties]',
+            //             'constructor',
+            //             '[static-methods]',
+            //             '[methods]',
+            //             '[conventional-private-methods]'
+            //         ],
+            //         'accessorPairPositioning': 'getThenSet',
+            //         groups: {
+            //             properties: [
+            //                 {
+            //                     sort: 'alphabetical',
+            //                     type: 'property',
+            //                 },
+            //             ],
+            //             methods: [
+            //                 {
+            //                     sort: 'alphabetical',
+            //                     type: 'methods',
+            //                 },
+            //             ]
+            //         }
+
+            //     }
+            // ],
+            // '@typescript-eslint/member-ordering': [
+            //     2,
+            //     {
+            //         classes: {
+            //             memberTypes: ['public-field', 'private-field', 'constructor', 'get', 'set', 'static-method', 'public-method', 'private-method'],
+            //             // order: 'alphabetically-case-insensitive'
+            //         },
+            //         // classes: {
+            //         // }
+            //     }
+            // ],
+            // '@typescript-eslint/no-unsafe-return': 'error',
+            // '@typescript-eslint/explicit-function-return-type': ['error', {
+            //     allowExpressions: true
+            // }],
+            '@typescript-eslint/promise-function-async': 'error',
+
+            'arrow-parens': 2,
+            // '@typescript-eslint/typedef': ['error', {
+            //     memberVariableDeclaration: true, // Whether to enforce type annotations on member variables of classes.
+            //     propertyDeclaration: true, // Whether to enforce type annotations for properties of interfaces and types.
+            //     parameter: true, // Whether to enforce type annotations for parameters of functions and methods.
+            //     // arrowParameter: true // Whether to enforce type annotations for parameters of arrow functions.
+            // }]
         }
     }]
 };

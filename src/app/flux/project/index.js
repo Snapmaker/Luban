@@ -7,7 +7,7 @@ import {
     HEAD_LASER,
     HEAD_PRINTING,
     HEAD_TYPE_ENV_NAME,
-    SOURCE_TYPE_IMAGE3D,
+    SOURCE_TYPE,
     PROCESS_MODE_MESH,
     getCurrentHeadType,
     COORDINATE_MODE_CENTER, COORDINATE_MODE_BOTTOM_CENTER, PAGE_EDITOR, DISPLAYED_TYPE_MODEL,
@@ -237,7 +237,7 @@ export const actions = {
 
         // Compatible with mesh mode
         for (const model of models) {
-            if (model.sourceType === SOURCE_TYPE_IMAGE3D) {
+            if (model.sourceType === SOURCE_TYPE.IMAGE3D) {
                 model.mode = PROCESS_MODE_MESH;
             }
         }

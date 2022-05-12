@@ -20,7 +20,7 @@ type MoveOperationState = MoveOperationProp & {
 }
 
 export default class MoveOperation3D extends Operation<MoveOperationState> {
-    constructor(state: MoveOperationProp) {
+    public constructor(state: MoveOperationProp) {
         super();
         this.state = {
             target: state.target,
@@ -62,36 +62,25 @@ export default class MoveOperation3D extends Operation<MoveOperationState> {
         }
     }
 
-    private exec({ positionX, positionY, positionZ }) {
+    private exec({ positionX, positionY, positionZ }: Positon) {
         const model = this.state.target;
         const modelGroup = this.state.modelGroup;
         modelGroup.unselectAllModels();
-        if (model instanceof ThreeModel && model.supportTag) {
-            modelGroup.addModelToSelectedGroup(model);
-            modelGroup.updateSelectedGroupTransformation({
-                positionX, positionY, positionZ: 0
-            });
-            model.meshObject.parent.updateMatrix();
-            modelGroup.unselectAllModels();
-            model.onTransform();
 
-            modelGroup.stickToPlateAndCheckOverstepped(model.target);
-        } else {
-            modelGroup.addModelToSelectedGroup(model);
-            modelGroup.updateSelectedGroupTransformation({
-                positionX, positionY, positionZ
-            });
+        modelGroup.addModelToSelectedGroup(model);
+        modelGroup.updateSelectedGroupTransformation({
+            positionX, positionY, positionZ
+        });
 
-            modelGroup.unselectAllModels();
-            model.onTransform();
-            if (model instanceof ThreeGroup) {
-                modelGroup.stickToPlateAndCheckOverstepped(model);
-            }
-            if (model.parent && model.parent instanceof ThreeGroup) {
-                modelGroup.stickToPlateAndCheckOverstepped(model.parent);
-                model.parent.computeBoundingBox();
-            }
-            modelGroup.updatePrimeTowerHeight();
+        modelGroup.unselectAllModels();
+        model.onTransform();
+        if (model instanceof ThreeGroup) {
+            modelGroup.stickToPlateAndCheckOverstepped(model);
         }
+        if (model.parent && model.parent instanceof ThreeGroup) {
+            modelGroup.stickToPlateAndCheckOverstepped(model.parent);
+            model.parent.computeBoundingBox();
+        }
+        modelGroup.updatePrimeTowerHeight();
     }
 }

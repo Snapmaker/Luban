@@ -4,7 +4,6 @@ import {
     ACTION_UPDATE_CONFIG,
     ACTION_UPDATE_GCODE_CONFIG,
     ACTION_UPDATE_STATE,
-    ACTION_UPDATE_TRANSFORMATION
 } from '../actionType';
 
 /**
@@ -52,15 +51,6 @@ export const baseActions = {
             type: ACTION_UPDATE_STATE,
             headType,
             state
-        };
-    },
-
-    updateTransformation: (headType, transformation) => {
-        checkHeadType(headType);
-        return {
-            type: ACTION_UPDATE_TRANSFORMATION,
-            headType,
-            transformation
         };
     },
 

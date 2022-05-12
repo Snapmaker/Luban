@@ -1,5 +1,4 @@
 import i18next from 'i18next';
-// @ts-ignore
 import ReactGA from 'react-ga4';
 import { v4 as uuid } from 'uuid';
 import { machineStore } from '../store/local-storage';
@@ -38,7 +37,7 @@ export function logPageView({ pathname }: { pathname: string, isRotate: boolean 
 
 const getToolHead = (headType: THeadType) => {
     const toolHead = machineStore.get('machine.toolHead');
-    return toolHead[`${headType}Toolhead`];
+    return toolHead[`${headType}Toolhead`] as string;
 };
 
 const getProjectType = (headType: THeadType, isRotate?: boolean) => {
@@ -109,9 +108,9 @@ export const logModelViewOperation = (headType: THeadType, type: 'isometric' | '
 };
 
 export const logPritingSlice = (headType: THeadType, profileStatus: {
-    defaultMaterialL,
-    defaultMaterialR,
-    defaultMaterialQuality
+    defaultMaterialL: string,
+    defaultMaterialR: string,
+    defaultMaterialQuality: string
 }, sliceSetting?: string) => {
     return sendMessage(`${headType}_slice`, 'slice', {
         headType,

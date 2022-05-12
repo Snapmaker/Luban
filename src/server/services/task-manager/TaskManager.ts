@@ -2,7 +2,7 @@ import logger from '../../lib/logger';
 import { EPS } from '../../constants';
 import Task from './Task';
 import { asyncFor } from '../../../shared/lib/array-async';
-import workerManager from './workerManager';
+import workerManager, { IWorkerManager } from './workerManager';
 
 // const TASK_STATUS_IDLE = 'idle';
 const TASK_STATUS_DEPRECATED = 'deprecated';
@@ -18,11 +18,11 @@ export const TASK_TYPE_CUT_MODEL = 'cutModel';
 const log = logger('service:TaskManager');
 
 class TaskManager {
-    private workerManager = workerManager;
+    private workerManager: IWorkerManager = workerManager;
 
     private tasks: Task[] = []
 
-    private exec(runnerName: string, task) {
+    private exec(runnerName: string, task: Task) {
         const { terminate } = this.workerManager[runnerName]([task.data], (payload) => {
             if (payload.status === 'progress') {
                 this.onProgress(task, payload.value);
@@ -35,27 +35,33 @@ class TaskManager {
         task.terminateFn = terminate;
     }
 
-    private onProgress(task, p) {
+    private onProgress(task: Task, p: number) {
         task.socket.emit(`taskProgress:${task.taskType}`, {
             progress: p,
             headType: task.headType
         });
     }
 
-    private onComplete(task: Task, res: any) {
+    private onComplete(task: Task, res: unknown) {
         if (task.taskType === TASK_TYPE_GENERATE_TOOLPATH) {
-            task.filenames = res;
+            task.filenames = res as string;
         } else if (task.taskType === TASK_TYPE_GENERATE_GCODE) {
-            task.gcodeFile = res.gcodeFile;
+            task.gcodeFile = (res as { gcodeFile: string }).gcodeFile;
         } else if (task.taskType === TASK_TYPE_GENERATE_VIEWPATH) {
-            task.viewPathFile = res.viewPathFile;
+            task.viewPathFile = (res as { viewPathFile: string }).viewPathFile;
         } else if (task.taskType === TASK_TYPE_PROCESS_IMAGE) {
-            task.filename = res.filename;
-            task.width = res.width;
-            task.height = res.height;
+            const { filename, width, height } = res as {
+                filename: string, width: string, height: string
+            };
+            task.filename = filename;
+            task.width = width;
+            task.height = height;
         } else if (task.taskType === TASK_TYPE_CUT_MODEL) {
-            task.stlInfo = res.stlFile;
-            task.svgInfo = res.svgFiles;
+            const { stlFile, svgFiles } = res as {
+                stlFile: string, svgFiles: string
+            };
+            task.stlInfo = stlFile;
+            task.svgInfo = svgFiles;
         }
 
         if (task.taskStatus !== TASK_STATUS_DEPRECATED) {
@@ -78,7 +84,7 @@ class TaskManager {
         this.tasks.splice(this.tasks.indexOf(task), 1);
     }
 
-    async taskHandle(task: Task) {
+    private async taskHandle(task: Task) {
         let currentProgress = 0;
         const onProgress = (p) => {
             if (p - currentProgress > EPS) {
@@ -117,7 +123,7 @@ class TaskManager {
 
     public async addTask(task: Task) {
         let exists = false;
-        this.tasks.forEach(t => {
+        this.tasks.forEach((t) => {
             if (t.equal(task)) {
                 t.taskStatus = TASK_STATUS_DEPRECATED;
                 exists = true;
@@ -131,7 +137,7 @@ class TaskManager {
     }
 
     public cancelTask(taskId: string) {
-        const res = this.tasks.find(task => task.taskId === taskId);
+        const res = this.tasks.find((task) => task.taskId === taskId);
         if (res) {
             res.terminateFn();
             log.info(`task: ${taskId} has been cancelled`);

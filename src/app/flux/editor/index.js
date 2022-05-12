@@ -19,7 +19,7 @@ import {
     PROCESS_MODE_VECTOR,
     PAGE_EDITOR,
     PAGE_PROCESS,
-    SOURCE_TYPE_IMAGE3D,
+    SOURCE_TYPE,
     DATA_PREFIX,
     COORDINATE_MODE_CENTER,
     COORDINATE_MODE_BOTTOM_CENTER, DISPLAYED_TYPE_MODEL,
@@ -614,14 +614,14 @@ export const actions = {
                 width = transformation?.width;
                 height = transformation?.height;
             }
-            if (sourceType === SOURCE_TYPE_IMAGE3D) {
+            if (sourceType === SOURCE_TYPE.IMAGE3D) {
                 const newModelSize = sizeModel(size, materials, sourceWidth, sourceHeight);
                 scale = newModelSize?.scale;
             }
         } else {
             const extname = path.extname(uploadName);
             const isScale = !includes(scaleExtname, extname);
-            const newModelSize = sourceType !== SOURCE_TYPE_IMAGE3D
+            const newModelSize = sourceType !== SOURCE_TYPE.IMAGE3D
                 ? limitModelSizeByMachineSize(coordinateSize, sourceWidth, sourceHeight, isLimit, isScale)
                 : sizeModel(size, materials, sourceWidth, sourceHeight);
             width = newModelSize?.width;
@@ -839,14 +839,10 @@ export const actions = {
      *        - uniformScalingState
      * @returns {Function}
      */
-    updateSelectedModelTransformation: (headType, transformation) => (dispatch, getState) => {
+    updateSelectedModelUniformScalingState: (headType, uniformScalingState) => (dispatch, getState) => {
         const { SVGActions } = getState()[headType];
-        SVGActions.updateSelectedElementsTransformation(transformation);
+        SVGActions.updateSelectedElementsUniformScalingState(uniformScalingState);
 
-        // note that reprocess model only after resize and flip
-        if (transformation.scaleX || transformation.scaleY) {
-            dispatch(actions.processSelectedModel(headType));
-        }
         dispatch(actions.resetProcessState(headType));
     },
 
@@ -1061,91 +1057,6 @@ export const actions = {
         dispatch(baseActions.render(headType));
     },
 
-    onSetSelectedModelPosition: (headType, position) => (dispatch, getState) => {
-        // const { model } = getState()[headType];
-        // const transformation = model.modelInfo.transformation;
-        const model = getState()[headType].modelGroup.getSelectedModel();
-        if (!model) return;
-
-        const { SVGActions } = getState()[headType];
-
-        const { transformation } = model;
-        let posX = 0;
-        let posY = 0;
-        const { width, height } = transformation;
-        switch (position) {
-            case 'Top Left':
-                posX = -width / 2;
-                posY = height / 2;
-                break;
-            case 'Top Middle':
-                posX = 0;
-                posY = height / 2;
-                break;
-            case 'Top Right':
-                posX = width / 2;
-                posY = height / 2;
-                break;
-            case 'Center Left':
-                posX = -width / 2;
-                posY = 0;
-                break;
-            case 'Center':
-                posX = 0;
-                posY = 0;
-                break;
-            case 'Center Right':
-                posX = width / 2;
-                posY = 0;
-                break;
-            case 'Bottom Left':
-                posX = -width / 2;
-                posY = -height / 2;
-                break;
-            case 'Bottom Middle':
-                posX = 0;
-                posY = -height / 2;
-                break;
-            case 'Bottom Right':
-                posX = width / 2;
-                posY = -height / 2;
-                break;
-            default:
-                posX = 0;
-                posY = 0;
-        }
-        transformation.positionX = posX;
-        transformation.positionY = posY;
-        transformation.rotationZ = 0;
-
-        SVGActions.updateSelectedElementsTransformation(transformation);
-    },
-
-    onModelTransform: (headType) => (dispatch, getState) => {
-        const { modelGroup, transformationUpdateTime } = getState()[headType];
-
-        const modelState = modelGroup.onModelTransform();
-        if (new Date().getTime() - transformationUpdateTime > 50) {
-            dispatch(baseActions.updateTransformation(headType, modelState.transformation));
-        }
-    },
-
-    onModelAfterTransform: (headType) => (dispatch, getState) => {
-        const { modelGroup, SVGActions } = getState()[headType];
-        if (modelGroup) {
-            const modelState = modelGroup.onModelAfterTransform();
-
-            if (modelState) {
-                // dispatch(svgModelActions.updateSelectedTransformation(headType, modelGroup.getSelectedModelTransformation()));
-                const transformation = modelGroup.getSelectedModelTransformation();
-                SVGActions.updateSelectedElementsTransformation(transformation);
-
-                dispatch(baseActions.updateState(headType, { modelState }));
-                dispatch(baseActions.updateTransformation(headType, modelState.transformation));
-            }
-        }
-    },
-
     initSelectedModelListener: (headType) => (dispatch, getState) => {
         const { modelGroup } = getState()[headType];
 
@@ -1174,7 +1085,7 @@ export const actions = {
             return;
         }
 
-        if (model.sourceType === SOURCE_TYPE_IMAGE3D) {
+        if (model.sourceType === SOURCE_TYPE.IMAGE3D) {
             const { width, height } = taskResult;
             if (!isEqual(width, model.width) || !isEqual(height, model.height)) {
                 const modelOptions = {
@@ -1192,10 +1103,8 @@ export const actions = {
             }
         }
 
-        // modelGroup.updateSelectedModelProcessImage(processImageName);
         model.updateProcessImageName(processImageName);
 
-        // SVGActions.updateElementImage(processImageName);
         SVGActions.updateSvgModelImage(model, processImageName);
 
         dispatch(baseActions.resetCalculatedState(headType));
@@ -1238,9 +1147,7 @@ export const actions = {
     arrangeAllModels2D: (headType) => (dispatch, getState) => {
         const { modelGroup } = getState()[headType];
         modelGroup.arrangeAllModels2D();
-        const modelState = modelGroup.onModelTransform();
-
-        dispatch(baseActions.updateTransformation(headType, modelState.transformation));
+        modelGroup.onModelTransform();
         dispatch(baseActions.render(headType));
     },
 
@@ -2005,7 +1912,7 @@ export const actions = {
             // modelID: 'id56746944-1822-4d80-a566-64614921906a',
             // modelName: cutModelInfo.originalName,
             // headType: headType,
-            // sourceType: SOURCE_TYPE_IMAGE3D,
+            // sourceType: SOURCE_TYPE.IMAGE3D,
             // mode: PROCESS_MODE_VECTOR,
             // visible: true,
             // isToolPathSelect: false,

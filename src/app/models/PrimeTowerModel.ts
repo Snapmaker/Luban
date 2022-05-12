@@ -4,16 +4,12 @@ import type ModelGroup from './ModelGroup';
 import { ModelInfo, ModelTransformation } from './ThreeBaseModel';
 
 class PrimeTowerModel extends ThreeModel {
-    type: string;
-
-    canAttachSupport: boolean;
-
-    constructor(initHeight: Number, modelGroup: ModelGroup, transformation?: ModelTransformation) {
+    public constructor(initHeight: number, modelGroup: ModelGroup, transformation?: ModelTransformation) {
         const geometry = new THREE.CylinderBufferGeometry(10, 10, 1, 60);
         const material = new THREE.MeshPhongMaterial({
             side: THREE.DoubleSide,
             color: 0xB9BCBF
-        });
+        }) as unknown as THREE.MeshStandardMaterial;
         geometry.rotateX(Math.PI / 2);
         const originalName = `prime_tower_${(Math.random() * 1000).toFixed(0)}`;
         const modelName = modelGroup._createNewModelName({

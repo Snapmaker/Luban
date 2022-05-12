@@ -21,7 +21,7 @@ class CursorGroup {
 
     private scale: number;
 
-    constructor(scale: number) {
+    public constructor(scale: number) {
         this.scale = scale;
         this.init();
     }

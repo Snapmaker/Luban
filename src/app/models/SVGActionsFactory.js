@@ -2,7 +2,7 @@ import { isInside } from 'overlap-area';
 import svgPath from 'svgpath';
 import { cloneDeep } from 'lodash';
 import { DATA_PREFIX, MINIMUM_WIDTH_AND_HEIGHT } from '../constants';
-import { coordGmSvgToModel, getBBox } from '../ui/SVGEditor/element-utils';
+import { coordGmSvgToModel } from '../ui/SVGEditor/element-utils';
 
 // import { remapElement } from '../../widgets/SVGEditor/element-recalculate';
 import { NS } from '../ui/SVGEditor/lib/namespaces';
@@ -265,6 +265,13 @@ class SVGActionsFactory {
         selected.setAttribute('href', imagePath);
     }
 
+    updateSelectedElementsUniformScalingState(uniformScalingState) {
+        const selectedSVGModels = this.selectedSvgModels;
+        if (selectedSVGModels.length === 1) {
+            selectedSVGModels[0].updateTransformation({ uniformScalingState });
+        }
+    }
+
     updateSvgModelImage(svgModel, imageName) {
         const imagePath = `${DATA_PREFIX}/${imageName}`;
         svgModel.elem.setAttribute('href', imagePath);
@@ -315,85 +322,6 @@ class SVGActionsFactory {
         if (childNodes[index] && childNodes[index - 1]) {
             const item = childNodes[index];
             this.svgContentGroup.group.insertBefore(item, childNodes[0]);
-        }
-    }
-
-    // multi select
-    /**
-     *
-     * @param transformation
-     *
-     *      - uniformScalingState
-     *      - positionX, positionY,
-     *      - rotationZ
-     *      - scaleX, scaleY, width, height
-     */
-    updateSelectedElementsTransformation(transformation) {
-        const selectedSVGModels = this.selectedSvgModels;
-        const elements = this.svgContentGroup.selectedElements;
-        if (elements.length === 0) {
-            return;
-        }
-
-        const { uniformScalingState, rotationZ, scaleX, scaleY, width, height } = transformation;
-        let { positionX, positionY } = transformation;
-
-        // Update uniform scaling state
-        if (uniformScalingState !== undefined) {
-            if (selectedSVGModels.length === 1) {
-                const model = selectedSVGModels[0];
-                model.updateTransformation({ uniformScalingState: transformation.uniformScalingState });
-            }
-        }
-
-        // Update Position X, Y
-        if (positionX !== undefined || positionY !== undefined) {
-            const transformationOld = this.modelGroup.getSelectedModelTransformation();
-            if (positionX === undefined) {
-                positionX = transformationOld.positionX;
-            }
-            if (positionY === undefined) {
-                positionY = transformationOld.positionY;
-            }
-
-            const dx = positionX - transformationOld.positionX;
-            const dy = -(positionY - transformationOld.positionY);
-
-            // Modifications on SVG Element
-            // mouse down (create createSVGTransform = translate(0, 0))
-            this.svgContentGroup.translateSelectedElementsOnMouseDown();
-            const transform = svg.createSVGTransform();
-            transform.setTranslate(dx, dy);
-
-            // mouse move (replace SVGTransform)
-            this.svgContentGroup.translateSelectedElementsOnMouseMove(transform);
-
-            this.updateSelectedModelsByTransformation({ dx, dy });
-        }
-
-        // Update rotation
-        if (rotationZ !== undefined) {
-            // mouse up
-            const { x: cx, y: cy } = this.svgContentGroup.operatorPoints.getCenterPoint();
-
-            // calculate delta angle from rotationZ
-            const angle = -rotationZ * 180 / Math.PI;
-            const angleOld = -this.modelGroup.getSelectedModelTransformation().rotationZ * 180 / Math.PI; // always 0
-            const deltaAngle = (angle - angleOld + 540) % 360 - 180;
-
-            //
-            this.updateSelectedModelsByTransformation({ cx, cy, deltaAngle });
-        }
-
-        // Update scale
-        if ((scaleX !== undefined || scaleY !== undefined)) {
-            this.updateSelectedModelsByTransformation({
-                scaleX, width, scaleY, height
-            });
-        }
-
-        for (const model of selectedSVGModels) {
-            model.onTransform();
         }
     }
 
@@ -499,127 +427,6 @@ class SVGActionsFactory {
     // TODO: move out as a helper function.
 
 
-    /**
-     *
-     * @param deviation
-     *      - dx, dy
-     *      - cx, cy, deltaAngle
-     *      - scaleX
-     *      - scaleY
-     */
-    updateSelectedModelsByTransformation(deviation) { // todo, just after move now
-        const elements = this.svgContentGroup.selectedElements;
-
-        const selectedModels = this.selectedSvgModels;
-        const selectedModelsTransformation = this.modelGroup.getSelectedModelTransformation();
-        const transformation = {
-            positionX: selectedModelsTransformation.positionX,
-            positionY: selectedModelsTransformation.positionY,
-            rotationZ: selectedModelsTransformation.rotationZ,
-            scaleX: selectedModelsTransformation.scaleX,
-            scaleY: selectedModelsTransformation.scaleY
-        };
-
-        // comeback to transform before mouse down
-        // for (const svgModel of selectedModels) {
-        //     this.setElementTransformToList(this.svgContentGroup.operatorPoints.operatorPointsGroup.transform.baseVal, svgModel.relatedModel.transformation);
-        // }
-
-        // translate after mouseup
-        if (deviation.dx || deviation.dy) {
-            // translate models
-            for (const svgModel of selectedModels) {
-                svgModel.onUpdate();
-            }
-
-            // translate operationGrips
-            transformation.positionX = selectedModelsTransformation.positionX + deviation.dx;
-            transformation.positionY = selectedModelsTransformation.positionY - deviation.dy;
-        }
-
-        // rotate after mouseup
-        if (deviation.deltaAngle) {
-            // translate and rotate models
-
-            // FIXME
-            for (const model of selectedModels) {
-                const elem = model.elem;
-
-                const rotateBox = svg.createSVGTransform();
-                rotateBox.setRotate(deviation.deltaAngle, deviation.cx, deviation.cy);
-
-                const startBbox = getBBox(elem);
-                const startCenter = svg.createSVGPoint();
-                startCenter.x = startBbox.x + startBbox.width / 2;
-                startCenter.y = startBbox.y + startBbox.height / 2;
-
-                const endCenter = startCenter.matrixTransform(rotateBox.matrix);
-                // why model new center?
-                const modelNewCenter = model.pointSvgToModel(endCenter);
-
-                const rotationZ = ((model.transformation.rotationZ * 180 / Math.PI - deviation.deltaAngle + 540) % 360 - 180) * Math.PI / 180;
-                const positionX = modelNewCenter.x;
-                const positionY = modelNewCenter.y;
-
-                // <path> cannot use this
-                // because it has no xy
-                if (model.type !== 'path') {
-                    model.updateAndRefresh({
-                        transformation: {
-                            positionX: positionX,
-                            positionY: positionY,
-                            rotationZ: rotationZ
-                        }
-                    });
-                } else {
-                    // TODO: sometimes cannot move right position
-                    model.updateAndRefresh({
-                        transformation: {
-                            rotationZ: rotationZ
-                        }
-                    });
-
-                    const transform = svg.createSVGTransform();
-                    transform.setTranslate(modelNewCenter.x - model.transformation.positionX, -(modelNewCenter.y - model.transformation.positionY));
-                    const transformList = elem.transform.baseVal;
-                    transformList.insertItemBefore(transform, 0);
-                    model.onUpdate();
-                }
-            }
-
-            // for (const svgModel of selectedModels) {
-            //     svgModel.onUpdate();
-            // }
-
-            // rotate operationGrips
-            transformation.rotationZ = ((transformation.rotationZ * 180 / Math.PI - deviation.deltaAngle + 180) % 360 - 180) * Math.PI / 180;
-        }
-
-        if (deviation.scaleX !== undefined || deviation.scaleY !== undefined) {
-            const element = elements[0];
-            const model = this.getSVGModelByElement(element);
-
-            if (deviation.scaleX !== undefined) {
-                model.updateAndRefresh({
-                    transformation: {
-                        width: deviation.width,
-                        scaleX: deviation.scaleX
-                    }
-                });
-            }
-            if (deviation.scaleY !== undefined) {
-                model.updateAndRefresh({
-                    transformation: {
-                        height: deviation.height,
-                        scaleY: deviation.scaleY
-                    }
-                });
-            }
-        }
-
-        this.modelGroup.updateSelectedGroupTransformation(transformation);
-        this.resetSelection();
-    }
 
     addSelectedSvgModelsByModels(models) {
         this.modelGroup.addSelectedModels(models);

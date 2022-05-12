@@ -1208,11 +1208,13 @@ export const LASER_MOCK_PLATE_HEIGHT = 6;
 export const SVG_NODE_NAME_TEXT = 'text';
 export const SVG_NODE_NAME_IMAGE = 'image';
 
-export const SOURCE_TYPE_3DP = '3dp';
-export const SOURCE_TYPE_SVG = 'svg';
-export const SOURCE_TYPE_TEXT = 'text';
-export const SOURCE_TYPE_RASTER = 'raster';
-export const SOURCE_TYPE_IMAGE3D = 'image3d';
+export enum SOURCE_TYPE {
+    '3DP' = '3dp',
+    SVG = 'svg',
+    TEXT = 'text',
+    RASTER = 'raster',
+    IMAGE3D = 'image3d'
+}
 
 export const PROCESS_MODE_BW = 'bw';
 export const PROCESS_MODE_HALFTONE = 'halftone';
@@ -1309,23 +1311,23 @@ export const COORDINATE_MODE_BOTTOM_CENTER = {
         }
     }
 };
-export function getCurrentHeadType(pathname) {
+export function getCurrentHeadType(pathname: string) {
     if (!pathname) {
         return null;
     }
-    let headType = null;
+    let headType: string;
     if (pathname.indexOf(HEAD_CNC) >= 0) headType = HEAD_CNC;
     if (pathname.indexOf(HEAD_LASER) >= 0) headType = HEAD_LASER;
     if (pathname.indexOf(HEAD_PRINTING) >= 0) headType = HEAD_PRINTING;
     return headType;
 }
 
-export function getMachineSeriesWithToolhead(platform, toolhead) {
+export function getMachineSeriesWithToolhead(platform: string, toolhead: string) {
     const seriesInfo = valueOf(MACHINE_SERIES, 'value', platform) || MACHINE_SERIES.ORIGINAL;
     const size = seriesInfo ? seriesInfo.setting?.size : MACHINE_SERIES.ORIGINAL.setting.size;
     const workSize = {};
     const configPathname = {};
-    Object.keys(toolhead).forEach(key => {
+    Object.keys(toolhead).forEach((key: string) => {
         const type = key.split('Toolhead')[0];
         const headToolInfo = MACHINE_TOOL_HEADS[toolhead[key]];
         workSize[type] = {

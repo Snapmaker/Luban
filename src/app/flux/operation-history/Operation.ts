@@ -1,17 +1,18 @@
 export default abstract class Operation<T> {
+    public description: string = this.constructor.name;
+
     protected state: T;
 
-    description = this.constructor.name;
 
-    mergePreviousOperation() {
+    public mergePreviousOperation() {
         throw new Error('NotImplementedException');
     }
 
-    redo() {
+    public redo() {
         throw new Error('NotImplementedException');
     }
 
-    undo() {
+    public undo() {
         throw new Error('NotImplementedException');
     }
 }

@@ -4,7 +4,17 @@
         "sourceMap": true,
         "target": "es5",
         "noUnusedLocals": true,
-        "esModuleInterop": true
+        "esModuleInterop": true,
+        "strictPropertyInitialization": false,
+        "skipLibCheck": true,
+        "pretty": true,
+        "preserveConstEnums": true,
+        "useDefineForClassFields": true,
+        "noEmit": false,
+        "strictFunctionTypes": true,
+        "typeRoots": [
+            "types"
+        ]
     },
     "include": [
         "./src/**/*"

@@ -1,66 +1,57 @@
 import { v4 as uuid } from 'uuid';
 import * as THREE from 'three';
-import { MeshLambertMaterial, ObjectLoader } from 'three';
+import noop from 'lodash/noop';
+import { MeshLambertMaterial, Object3D, ObjectLoader } from 'three';
 import {
     LOAD_MODEL_FROM_INNER
 } from '../constants';
 
 import ThreeUtils from '../three-extensions/ThreeUtils';
 import ThreeGroup from './ThreeGroup';
-import BaseModel from './ThreeBaseModel';
+import BaseModel, { ModelInfo, TSize } from './ThreeBaseModel';
 import { machineStore } from '../store/local-storage';
+import type ModelGroup from './ModelGroup';
 
 const materialOverstepped = new THREE.Color(0xa80006);
+
 class ThreeModel extends BaseModel {
-    loadFrom = LOAD_MODEL_FROM_INNER;
+    public isThreeModel: boolean = true;
 
-    parent = null;
+    public target: unknown = null;
+    public originalPosition: TSize;
+    public supportTag: boolean = false;
+    public supportFaceMarks: number[] = [];
+    public convexGeometry: THREE.Geometry;
 
-    isThreeModel = true;
+    public originalGeometry: THREE.BufferGeometry;
+    public tmpSupportMesh: Object3D;
 
-    extruderConfig = {
-        infill: '0',
-        shell: '0',
-        // adhesion: '0',
-        // support: '0'
-    };
+    // declare public meshObject: THREE.Mesh;
+    declare public meshObject: THREE.Mesh<THREE.BufferGeometry, THREE.MeshStandardMaterial | THREE.MeshLambertMaterial> & { uniformScalingState?: boolean };
 
-    isSelected = false;
+    public isEditingSupport: boolean = false;
 
-    isEditingSupport = false;
+    private geometry: THREE.BufferGeometry;
 
-    target = null;
+    private processImageName: string;
+    private _materialNormal: THREE.Color;
+    private _materialSelected: THREE.Color;
 
-    supportTag = false;
 
-    tmpSupportMesh = null; // store support mesh when editing support, and restore it after editing support finished
-
-    tmpMaterial = null; // store previous material for support editing
-
-    modelModeMaterial = null;
-
-    gcodeModeMaterial = null;
-
-    // displayedType = 'model';
-
-    supportFaceMarks = [];
-
-    originalGeometry = null;
-
-    constructor(modelInfo, modelGroup) {
+    public constructor(modelInfo: ModelInfo, modelGroup: ModelGroup) {
         super(modelInfo, modelGroup);
         const { width, height, processImageName } = modelInfo;
 
-        this.geometry = modelInfo.geometry || new THREE.PlaneGeometry(width, height);
+        this.geometry = modelInfo.geometry || new THREE.PlaneGeometry(width, height) as unknown as THREE.BufferGeometry;
         let material = modelInfo.material || new THREE.MeshStandardMaterial({ color: 0xe0e0e0, visible: false });
 
         try {
             const objectLoader = new ObjectLoader();
             const json = JSON.parse(machineStore.get('scene'));
-            const images = objectLoader.parseImages(json.images);
+            const images = objectLoader.parseImages(json.images, noop);
             const textures = objectLoader.parseTextures(json.textures, images);
             const materials = objectLoader.parseMaterials(json.materials, textures);
-            const newMaterial = Object.values(materials)[0];
+            const newMaterial = Object.values(materials)[0] as THREE.MeshStandardMaterial;
             material = newMaterial;
 
             this.modelModeMaterial = material;
@@ -98,7 +89,7 @@ class ThreeModel extends BaseModel {
             normal && clonedGeometry.setAttribute('normal', normal);
             this.geometry = clonedGeometry;
         } else {
-            this.geometry = new THREE.PlaneGeometry(width, height);
+            this.geometry = new THREE.PlaneGeometry(width, height) as unknown as THREE.BufferGeometry;
         }
 
         this.meshObject = new THREE.Mesh(this.geometry, material);
@@ -115,21 +106,11 @@ class ThreeModel extends BaseModel {
             this.transformation.scaleY = this.transformation.height / height;
         }
 
-        this.modelObject3D = null;
-        this.processObject3D = null;
-
-        // for cnc model visualizer
-        this.image3dObj = null;
-
-        this.estimatedTime = 0;
-
         this.boundingBox = null;
         this.overstepped = false;
         this.convexGeometry = null;
         this.modelGroup = modelGroup;
 
-        this.lastToolPathStr = null;
-        this.isToolPath = false;
         this.extruderConfig = {
             ...this.extruderConfig,
             ...modelInfo.extruderConfig
@@ -155,30 +136,30 @@ class ThreeModel extends BaseModel {
         this.updateMaterialColor(modelInfo.color ?? '#cecece');
     }
 
-    get visible() {
+    public get visible() {
         return this.meshObject.visible;
     }
 
-    set visible(value) {
+    public set visible(value: boolean) {
         this.meshObject.visible = value;
     }
 
-    updateDisplayedType(value) {
+    public updateDisplayedType(value: string) {
         this.displayedType = value;
         this.setSelected(false);
     }
 
-    updateModelName(newName) {
+    public updateModelName(newName: string) {
         this.modelName = newName;
     }
 
-    updateMaterialColor(color) {
+    public updateMaterialColor(color: string) {
         this._materialNormal = new THREE.Color(color);
         this._materialSelected = new THREE.Color(color);
         this.setSelected();
     }
 
-    onTransform() {
+    public onTransform() {
         // const geometrySize = ThreeUtils.getGeometrySize(this.meshObject.geometry, true);
         const { uniformScalingState } = this.meshObject;
 
@@ -202,7 +183,9 @@ class ThreeModel extends BaseModel {
             this.meshObject.getWorldScale(scale);
             const quaternion = new THREE.Quaternion();
             this.meshObject.getWorldQuaternion(quaternion);
-            rotation = new THREE.Euler().setFromQuaternion(quaternion, undefined, false);
+            // TODO ts
+            rotation = new THREE.Euler().setFromQuaternion(quaternion, undefined);
+            // rotation = new THREE.Euler().setFromQuaternion(quaternion, undefined, false);
         }
 
         const transformation = {
@@ -227,16 +210,12 @@ class ThreeModel extends BaseModel {
         return this.transformation;
     }
 
-    updateTransformation(transformation) {
-        super.updateTransformation(transformation);
-    }
-
-    computeBoundingBox() {
+    public computeBoundingBox() {
         this.boundingBox = ThreeUtils.computeBoundingBox(this.meshObject);
     }
 
     // 3D
-    setConvexGeometry(convexGeometry) {
+    public setConvexGeometry(convexGeometry: THREE.BufferGeometry) {
         if (convexGeometry instanceof THREE.BufferGeometry) {
             this.convexGeometry = new THREE.Geometry().fromBufferGeometry(convexGeometry);
             this.convexGeometry.mergeVertices();
@@ -245,11 +224,11 @@ class ThreeModel extends BaseModel {
         }
     }
 
-    isModelInGroup() {
+    public isModelInGroup() {
         return this.parent && this.parent instanceof ThreeGroup;
     }
 
-    stickToPlate() {
+    public stickToPlate() {
         if (this.sourceType !== '3d') {
             return;
         }
@@ -267,7 +246,7 @@ class ThreeModel extends BaseModel {
     }
 
     // 3D
-    setMatrix(matrix) {
+    public setMatrix(matrix: THREE.Matrix4) {
         this.meshObject.updateMatrix();
         this.meshObject.applyMatrix4(new THREE.Matrix4().copy(this.meshObject.matrix).invert());
         this.meshObject.applyMatrix4(matrix);
@@ -276,12 +255,12 @@ class ThreeModel extends BaseModel {
         // anther way: decompose Matrix and reset position/rotation/scale
     }
 
-    setOversteppedAndSelected(overstepped, isSelected) {
+    public setOversteppedAndSelected(overstepped: boolean, isSelected: boolean) {
         this.overstepped = overstepped;
         this.setSelected(isSelected);
     }
 
-    setSelected(isSelected) {
+    public setSelected(isSelected?: boolean) {
         if (typeof isSelected === 'boolean') {
             this.isSelected = isSelected;
         }
@@ -293,17 +272,14 @@ class ThreeModel extends BaseModel {
                 // TODO: uniform material for setting triangle color and textures
                 this.meshObject.material.color.set(0xffffff);
             } else if (this.overstepped === true) {
-                this.meshObject.material = this.tmpMaterial || this.meshObject.material;
+                this.meshObject.material = this.meshObject.material;
                 this.meshObject.material.color.set(materialOverstepped);
-                this.tmpMaterial = null;
             } else if (this.isSelected === true) {
-                this.meshObject.material = this.tmpMaterial || this.meshObject.material;
+                this.meshObject.material = this.meshObject.material;
                 this.meshObject.material.color.set(this._materialSelected.clone());
-                this.tmpMaterial = null;
             } else {
-                this.meshObject.material = this.tmpMaterial || this.meshObject.material;
+                this.meshObject.material = this.meshObject.material;
                 this.meshObject.material.color.set(this._materialNormal.clone());
-                this.tmpMaterial = null;
             }
         }
 
@@ -322,16 +298,16 @@ class ThreeModel extends BaseModel {
     }
 
     /**
-     * Note that you need to give cloned Model a new model name.
-     *
-     * @returns {ThreeModel}
-     */
-    clone(modelGroup = this.modelGroup) {
+    * Note that you need to give cloned Model a new model name.
+    *
+    * @returns {ThreeModel}
+    */
+    public clone(modelGroup: ModelGroup = this.modelGroup) {
         const modelInfo = {
             ...this,
             loadFrom: LOAD_MODEL_FROM_INNER,
             material: this.meshObject.material
-        };
+        } as unknown as ModelInfo;
         const clone = new ThreeModel(modelInfo, modelGroup);
         clone.originModelID = this.modelID;
         clone.modelID = uuid();
@@ -345,12 +321,12 @@ class ThreeModel extends BaseModel {
     }
 
     /**
-     * Find the best fit direction, and rotate the model
-     * step1. get big planes of convex geometry
-     * step2. calculate area, support volumes of each big plane
-     * step3. find the best fit plane using formula below
-     */
-    autoRotate() {
+    * Find the best fit direction, and rotate the model
+    * step1. get big planes of convex geometry
+    * step2. calculate area, support volumes of each big plane
+    * step3. find the best fit plane using formula below
+    */
+    public autoRotate() {
         if (this.sourceType !== '3d' || !this.convexGeometry) {
             return;
         }
@@ -387,7 +363,7 @@ class ThreeModel extends BaseModel {
         const minSupportVolume = Math.min.apply(null, objPlanes.supportVolumes);
         // if has a direction without support, choose it
         if (minSupportVolume < 1) {
-            const idx = objPlanes.supportVolumes.findIndex(i => i === minSupportVolume);
+            const idx = objPlanes.supportVolumes.findIndex((i) => i === minSupportVolume);
             targetPlane = objPlanes.planes[idx];
         }
 
@@ -406,7 +382,7 @@ class ThreeModel extends BaseModel {
             }
 
             const maxRate = Math.max.apply(null, rates);
-            const idx = rates.findIndex(r => r === maxRate);
+            const idx = rates.findIndex((r) => r === maxRate);
             targetPlane = bigPlanes.planes[idx];
         }
         // WARNING: applyQuternion DONT update Matrix...
@@ -418,7 +394,7 @@ class ThreeModel extends BaseModel {
         revertParent();
     }
 
-    rotateByPlane(targetPlane) {
+    public rotateByPlane(targetPlane: THREE.Plane) {
         const xyPlaneNormal = new THREE.Vector3(0, 0, -1);
         const revertParent = ThreeUtils.removeObjectParent(this.meshObject);
         this.meshObject.updateMatrixWorld();
@@ -430,7 +406,7 @@ class ThreeModel extends BaseModel {
         revertParent();
     }
 
-    analyzeRotation() {
+    public analyzeRotation() {
         if (this.sourceType !== '3d' || !this.convexGeometry) {
             return null;
         }
@@ -490,7 +466,7 @@ class ThreeModel extends BaseModel {
         return result;
     }
 
-    scaleToFit(size, offsetX, offsetY) {
+    public scaleToFit(size: TSize, offsetX: number, offsetY: number) {
         const revertParent = ThreeUtils.removeObjectParent(this.meshObject);
         const modelSize = new THREE.Vector3();
         this.computeBoundingBox();
@@ -505,7 +481,7 @@ class ThreeModel extends BaseModel {
         revertParent();
     }
 
-    layFlat() {
+    public layFlat() {
         if (this.sourceType !== '3d') {
             return;
         }
@@ -550,71 +526,9 @@ class ThreeModel extends BaseModel {
         revertParent();
     }
 
-    // setSupportPosition(position) {
-    //     const object = this.meshObject;
-    //     object.position.copy(position);
-    //     object.updateMatrix();
-    //     this.generateSupportGeometry();
-    // }
-
-    // generateSupportGeometry() {
-    //     const target = this.target;
-    //     const center = new THREE.Vector3();
-    //     this.meshObject.getWorldPosition(center);
-    //     center.setZ(0);
-
-    //     const rayDirection = new THREE.Vector3(0, 0, 1);
-    //     const size = this.supportSize;
-    //     const raycaster = new THREE.Raycaster(center, rayDirection);
-    //     const intersects = raycaster.intersectObject(target.meshObject, true);
-
-    //     let intersect = intersects[0];
-    //     if (intersects.length >= 2) {
-    //         intersect = intersects[intersects.length - 2];
-    //     }
-    //     this.isInitSupport = true;
-    //     let height = 100;
-    //     if (intersect && intersect.distance > 0) {
-    //         this.isInitSupport = false;
-    //         height = intersect.point.z;
-    //     }
-
-    //     const geometry = ThreeUtils.generateSupportBoxGeometry(size.x, size.y, height);
-
-    //     geometry.computeVertexNormals();
-
-    //     this.meshObject.geometry = geometry;
-    //     this.geometry = geometry;
-    //     this.computeBoundingBox();
-    // }
-
-    // setVertexColors() {
-    //     this.meshObject.updateMatrixWorld();
-    //     const bufferGeometry = this.meshObject.geometry;
-    //     const clone = bufferGeometry.clone();
-    //     clone.applyMatrix4(this.meshObject.matrixWorld.clone());
-
-    //     const positions = clone.getAttribute('position').array;
-    //     const normals = clone.getAttribute('normal').array;
-
-    //     WorkerManager.evaluateSupportArea({ positions, normals }, (e) => {
-    //         const { colors } = e.data;
-    //         bufferGeometry.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3));
-    //         this.setSelected(true);
-    //         this.modelGroup.modelChanged();
-    //     });
-    // }
-
-    // removeVertexColors() {
-    //     const bufferGeometry = this.meshObject.geometry;
-    //     bufferGeometry.deleteAttribute('color');
-    //     this.setSelected();
-    //     this.modelGroup && this.modelGroup.modelChanged();
-    // }
-
-    getSerializableConfig() {
+    public getSerializableConfig() {
         const {
-            modelID, limitSize, headType, sourceType, sourceHeight, sourceWidth, originalName, uploadName, config, mode,
+            modelID, limitSize, headType, sourceType, sourceHeight, sourceWidth, originalName, uploadName, mode,
             transformation, processImageName, supportTag, visible, extruderConfig, modelName
         } = this;
 
@@ -627,7 +541,6 @@ class ThreeModel extends BaseModel {
             sourceWidth,
             originalName,
             uploadName,
-            config,
             mode,
             visible,
             transformation,

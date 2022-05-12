@@ -1,5 +1,4 @@
 import Operation from './Operation';
-import type Model from '../../models/ThreeBaseModel';
 import ThreeModel from '../../models/ThreeModel';
 import ThreeGroup from '../../models/ThreeGroup';
 import type ModelGroup from '../../models/ModelGroup';
@@ -13,8 +12,8 @@ type ModelSnapshot = {
 }
 
 type GroupState = {
-    modelsBeforeGroup: Model[],
-    modelsAfterGroup: Model[],
+    modelsBeforeGroup: (ThreeGroup | ThreeModel)[],
+    modelsAfterGroup: (ThreeGroup | ThreeModel)[],
     selectedModels: Array<ThreeModel | ThreeGroup>,
     target: ThreeGroup,
     modelGroup: ModelGroup,
@@ -26,7 +25,7 @@ type GroupState = {
 // Scenario 3: multiple models in a group are selected. If all models in the group are selected, it is scenario 2
 // Scenario 4: both the model outside the group and the group are selected
 export default class GroupOperation3D extends Operation<GroupState> {
-    constructor(state: GroupState) {
+    public constructor(state: GroupState) {
         super();
         this.state = {
             modelsBeforeGroup: state.modelsBeforeGroup || [],
@@ -44,7 +43,7 @@ export default class GroupOperation3D extends Operation<GroupState> {
 
         modelGroup.unselectAllModels();
         const modelsToGroup = [];
-        this.state.selectedModels.forEach(model => {
+        this.state.selectedModels.forEach((model) => {
             if (model instanceof ThreeGroup) {
                 const children = (model as ThreeGroup).disassemble();
                 modelsToGroup.push(...children);
@@ -55,7 +54,7 @@ export default class GroupOperation3D extends Operation<GroupState> {
             // If it is a sunModel, Remove it from the group
             // After removal, there are always other models in the group
             if (model.parent && model.parent instanceof ThreeGroup && modelSnapshot) {
-                const index = model.parent.children.findIndex(subModel => subModel.modelID === model.modelID);
+                const index = model.parent.children.findIndex((subModel) => subModel.modelID === model.modelID);
                 model.parent.children.splice(index, 1);
                 ThreeUtils.setObjectParent(model.meshObject, model.parent.meshObject.parent);
                 model.parent.updateGroupExtruder();
@@ -77,12 +76,12 @@ export default class GroupOperation3D extends Operation<GroupState> {
         modelGroup.unselectAllModels();
         modelGroup.object.remove(target.meshObject);
 
-        this.state.selectedModels.forEach(model => {
+        this.state.selectedModels.forEach((model) => {
             const modelSnapshot = this.state.modelsRelation.get(model.modelID);
             if (model instanceof ThreeModel && modelSnapshot) {
                 if (modelSnapshot.groupModelID) {
                     // SubModel of the original group
-                    const group = modelGroup.getModel(modelSnapshot.groupModelID);
+                    const group = modelGroup.getModel(modelSnapshot.groupModelID) as ThreeGroup;
                     // The original group will always exist
                     modelGroup.recoveryGroup(group, model);
                     group.stickToPlate();

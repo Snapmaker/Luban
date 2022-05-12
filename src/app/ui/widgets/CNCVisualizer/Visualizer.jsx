@@ -245,14 +245,6 @@ class Visualizer extends Component {
         onSelectModels: (intersect, selectEvent) => {
             this.props.selectModelInProcess(intersect, selectEvent);
         },
-        /*
-        onModelAfterTransform: () => {
-            this.props.onModelAfterTransform();
-        },
-        onModelTransform: () => {
-            this.props.onModelTransform();
-        },
-        */
         // context menu
         bringToFront: () => {
             this.props.bringSelectedModelToFront();

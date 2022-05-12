@@ -8,7 +8,7 @@ type VisibleState = {
 };
 
 export default class VisibleOperation3D extends Operation<VisibleState> {
-    constructor(state: VisibleState) {
+    public constructor(state: VisibleState) {
         super();
         this.state = {
             target: state.target,
