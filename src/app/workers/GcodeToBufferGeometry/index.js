@@ -88,9 +88,9 @@ const gcodeToBufferGeometryPrint3d = (
         new GcodeToBufferGeometryPrint3d().parse(
             gcodeObj,
             extruderColors,
-            (bufferGeometry, layerCount, bounds) => {
+            (gcodeEntityLayers, layerCount, bounds) => {
                 resolve({
-                    bufferGeometry,
+                    gcodeEntityLayers,
                     layerCount,
                     bounds,
                 });
@@ -119,11 +119,7 @@ const gcodeToBufferGeometry = async (
         const gcode = await readFile(gcodeFilepath);
         switch (func) {
             case '3DP': {
-                const {
-                    bufferGeometry,
-                    layerCount,
-                    bounds,
-                } = await gcodeToBufferGeometryPrint3d(
+                const { gcodeEntityLayers, layerCount, bounds } = await gcodeToBufferGeometryPrint3d(
                     gcode,
                     extruderColors,
                     (progress) => {
@@ -131,7 +127,7 @@ const gcodeToBufferGeometry = async (
                     }
                 );
                 result = {
-                    bufferGeometry,
+                    gcodeEntityLayers,
                     layerCount,
                     bounds,
                     gcode,

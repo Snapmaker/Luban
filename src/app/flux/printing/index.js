@@ -974,36 +974,24 @@ export const actions = {
         const { status, value } = data;
         switch (status) {
             case 'succeed': {
-                const {
-                    positions,
-                    colors,
-                    colors1,
-                    layerIndices,
-                    typeCodes,
-                    toolCodes,
-                    layerCount,
-                    bounds
-                } = value;
-                const bufferGeometry = new THREE.BufferGeometry();
-                const positionAttribute = new THREE.Float32BufferAttribute(positions.send, 3);
-                const colorAttribute = new THREE.Uint8BufferAttribute(colors.send, 3);
-                // this will map the buffer values to 0.0f - +1.0f in the shader
-                colorAttribute.normalized = true;
-                const color1Attribute = new THREE.Uint8BufferAttribute(colors1.send, 3);
-                color1Attribute.normalized = true;
-                const layerIndexAttribute = new THREE.Float32BufferAttribute(layerIndices.send, 1);
-                const typeCodeAttribute = new THREE.Float32BufferAttribute(typeCodes.send, 1);
-                const toolCodeAttribute = new THREE.Float32BufferAttribute(toolCodes.send, 1);
+                const { gcodeEntityLayers: bufferGeometry, layerCount, bounds } = value;
+                // const bufferGeometry = new THREE.BufferGeometry();
+                // const positionAttribute = new THREE.Float32BufferAttribute(positions, 3);
+                // const colorAttribute = new THREE.Uint8BufferAttribute(colors, 3);
+                // // this will map the buffer values to 0.0f - +1.0f in the shader
+                // colorAttribute.normalized = true;
+                // const color1Attribute = new THREE.Uint8BufferAttribute(colors1, 3);
+                // color1Attribute.normalized = true;
+                // const layerIndexAttribute = new THREE.Float32BufferAttribute(layerIndices, 1);
+                // const typeCodeAttribute = new THREE.Float32BufferAttribute(typeCodes, 1);
+                // const toolCodeAttribute = new THREE.Float32BufferAttribute(toolCodes, 1);
 
-                bufferGeometry.setAttribute('position', positionAttribute);
-                bufferGeometry.setAttribute('a_color', colorAttribute);
-                bufferGeometry.setAttribute('a_color1', color1Attribute);
-                bufferGeometry.setAttribute(
-                    'a_layer_index',
-                    layerIndexAttribute
-                );
-                bufferGeometry.setAttribute('a_type_code', typeCodeAttribute);
-                bufferGeometry.setAttribute('a_tool_code', toolCodeAttribute);
+                // bufferGeometry.setAttribute('position', positionAttribute);
+                // bufferGeometry.setAttribute('a_color', colorAttribute);
+                // bufferGeometry.setAttribute('a_color1', color1Attribute);
+                // bufferGeometry.setAttribute('a_layer_index', layerIndexAttribute);
+                // bufferGeometry.setAttribute('a_type_code', typeCodeAttribute);
+                // bufferGeometry.setAttribute('a_tool_code', toolCodeAttribute);
 
                 dispatch(actions.destroyGcodeLine());
 
@@ -1933,12 +1921,8 @@ export const actions = {
     },
 
     // preview
-    setGcodeVisibilityByTypeAndDirection: (
-        type,
-        direction = LEFT_EXTRUDER,
-        visible
-    ) => (dispatch, getState) => {
-        const { gcodeLine, gcodeTypeInitialVisibility } = getState().printing;
+    setGcodeVisibilityByTypeAndDirection: (type, direction = LEFT_EXTRUDER, visible) => (dispatch, getState) => {
+        const { gcodeTypeInitialVisibility } = getState().printing;
         if (type === 'TOOL0') {
             const gcodeVisibleType = gcodeTypeInitialVisibility[LEFT_EXTRUDER];
             Object.entries(gcodeVisibleType).forEach(([key]) => {
@@ -1958,84 +1942,80 @@ export const actions = {
         }
         dispatch(actions.updateState({ gcodeTypeInitialVisibility }));
         // dispatch(actions.renderShowGcodeLines());
-        if (gcodeLine) {
-            const uniforms = gcodeLine.material.uniforms;
-            const value = visible ? 1 : 0;
-            if (direction === LEFT_EXTRUDER) {
-                switch (type) {
-                    case 'WALL-INNER':
-                        uniforms.u_l_wall_inner_visible.value = value;
-                        break;
-                    case 'WALL-OUTER':
-                        uniforms.u_l_wall_outer_visible.value = value;
-                        break;
-                    case 'SKIN':
-                        uniforms.u_l_skin_visible.value = value;
-                        uniforms.u_l_skirt_visible.value = value;
-                        break;
-                    case 'SUPPORT':
-                        uniforms.u_l_support_visible.value = value;
-                        break;
-                    case 'FILL':
-                        uniforms.u_l_fill_visible.value = value;
-                        break;
-                    case 'TRAVEL':
-                        uniforms.u_l_travel_visible.value = value;
-                        break;
-                    case 'UNKNOWN':
-                        uniforms.u_l_unknown_visible.value = value;
-                        break;
-                    default:
-                        break;
-                }
-            } else {
-                switch (type) {
-                    case 'WALL-INNER':
-                        uniforms.u_r_wall_inner_visible.value = value;
-                        break;
-                    case 'WALL-OUTER':
-                        uniforms.u_r_wall_outer_visible.value = value;
-                        break;
-                    case 'SKIN':
-                        uniforms.u_r_skin_visible.value = value;
-                        uniforms.u_r_skirt_visible.value = value;
-                        break;
-                    case 'SUPPORT':
-                        uniforms.u_r_support_visible.value = value;
-                        break;
-                    case 'FILL':
-                        uniforms.u_r_fill_visible.value = value;
-                        break;
-                    case 'TRAVEL':
-                        uniforms.u_r_travel_visible.value = value;
-                        break;
-                    case 'UNKNOWN':
-                        uniforms.u_r_unknown_visible.value = value;
-                        break;
-                    default:
-                        break;
-                }
-            }
-        }
+        // if (gcodeLine) {
+        //     const uniforms = gcodeLine.material.uniforms;
+        //     const value = visible ? 1 : 0;
+        //     if (direction === LEFT_EXTRUDER) {
+        //         switch (type) {
+        //             case 'WALL-INNER':
+        //                 uniforms.u_l_wall_inner_visible.value = value;
+        //                 break;
+        //             case 'WALL-OUTER':
+        //                 uniforms.u_l_wall_outer_visible.value = value;
+        //                 break;
+        //             case 'SKIN':
+        //                 uniforms.u_l_skin_visible.value = value;
+        //                 uniforms.u_l_skirt_visible.value = value;
+        //                 break;
+        //             case 'SUPPORT':
+        //                 uniforms.u_l_support_visible.value = value;
+        //                 break;
+        //             case 'FILL':
+        //                 uniforms.u_l_fill_visible.value = value;
+        //                 break;
+        //             case 'TRAVEL':
+        //                 uniforms.u_l_travel_visible.value = value;
+        //                 break;
+        //             case 'UNKNOWN':
+        //                 uniforms.u_l_unknown_visible.value = value;
+        //                 break;
+        //             default:
+        //                 break;
+        //         }
+        //     } else {
+        //         switch (type) {
+        //             case 'WALL-INNER':
+        //                 uniforms.u_r_wall_inner_visible.value = value;
+        //                 break;
+        //             case 'WALL-OUTER':
+        //                 uniforms.u_r_wall_outer_visible.value = value;
+        //                 break;
+        //             case 'SKIN':
+        //                 uniforms.u_r_skin_visible.value = value;
+        //                 uniforms.u_r_skirt_visible.value = value;
+        //                 break;
+        //             case 'SUPPORT':
+        //                 uniforms.u_r_support_visible.value = value;
+        //                 break;
+        //             case 'FILL':
+        //                 uniforms.u_r_fill_visible.value = value;
+        //                 break;
+        //             case 'TRAVEL':
+        //                 uniforms.u_r_travel_visible.value = value;
+        //                 break;
+        //             case 'UNKNOWN':
+        //                 uniforms.u_r_unknown_visible.value = value;
+        //                 break;
+        //             default:
+        //                 break;
+        //         }
+        //     }
+        // }
         dispatch(actions.render());
     },
 
     updateGcodePreviewMode: (mode) => (dispatch, getState) => {
-        const {
-            gcodeLine,
-            layerRangeDisplayed,
-            layerCount
-        } = getState().printing;
+        const { layerRangeDisplayed, layerCount } = getState().printing;
         // gcodeParser.setColortypes(mode === GCODEPREVIEWMODES[2]);
-        if (gcodeLine) {
-            const uniforms = gcodeLine.material.uniforms;
+        // if (gcodeLine) {
+        //     const uniforms = gcodeLine.material.uniforms;
 
-            if (mode === GCODEPREVIEWMODES[2]) {
-                uniforms.u_middle_layer_set_gray.value = 1;
-            } else {
-                uniforms.u_middle_layer_set_gray.value = 0;
-            }
-        }
+        //     if (mode === GCODEPREVIEWMODES[2]) {
+        //         uniforms.u_middle_layer_set_gray.value = 1;
+        //     } else {
+        //         uniforms.u_middle_layer_set_gray.value = 0;
+        //     }
+        // }
 
         dispatch(
             actions.updateState({
@@ -2072,10 +2052,11 @@ export const actions = {
         //     };
         // }
         // gcodeParser.setColortypes(undefined, renderLineType);
-        if (gcodeLine) {
-            const uniforms = gcodeLine.material.uniforms;
-            uniforms.u_color_type.value = renderLineType ? 1 : 0;
-        }
+        console.log(gcodeLine, renderLineType);
+        // if (gcodeLine) {
+        //     const uniforms = gcodeLine.material.uniforms;
+        //     uniforms.u_color_type.value = renderLineType ? 1 : 0;
+        // }
         dispatch(actions.render());
     },
 
@@ -2182,17 +2163,12 @@ export const actions = {
         // gcodeParser.startLayer = range[0];
         // gcodeParser.endLayer = range[1];
         // dispatch(actions.renderShowGcodeLines());
-        if (gcodeLine) {
-            gcodeLine.material.uniforms.u_visible_layer_range_start.value = range[0] || -100;
-            gcodeLine.material.uniforms.u_visible_layer_range_end.value = range[1];
-        }
-        if (
-            isUp
-            && range[0] - prevRange[0] > 0
-            && range[0] - prevRange[0] < 1
-            && range[1] - prevRange[1] > 0
-            && range[1] - prevRange[1] < 1
-        ) {
+        // if (gcodeLine) {
+        //     gcodeLine.material.uniforms.u_visible_layer_range_start.value = range[0] || -100;
+        //     gcodeLine.material.uniforms.u_visible_layer_range_end.value = range[1];
+        // }
+        if (isUp && (range[0] - prevRange[0]) > 0 && (range[0] - prevRange[0]) < 1
+            && (range[1] - prevRange[1]) > 0 && (range[1] - prevRange[1]) < 1) {
             range[0] = prevRange[0];
             range[1] = prevRange[1];
         }

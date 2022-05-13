@@ -1,4 +1,4 @@
-import * as THREE from 'three';
+// import * as THREE from 'three';
 import isEmpty from 'lodash/isEmpty';
 import noop from 'lodash/noop';
 import ToolPath from '../../../shared/lib/gcodeToolPath';
@@ -39,6 +39,8 @@ const TYPE_SETTINGS = {
 };
 
 class GcodeToBufferGeometryPrint3d {
+    gcodeEntityLayers = [];
+
     // Attention : switch y <====> z
     // vertexBuffer.push(new THREE.Vector3(this.state.x, this.state.z, -this.state.y));
     parse(gcode, extruderColors = { toolColor0: '#FFFFFF', toolColor1: '#000000' }, onParsed = noop, onProgress = noop, onError = noop) {
@@ -139,6 +141,12 @@ class GcodeToBufferGeometryPrint3d {
                         colors1.push(toolColorRGB1[1]);
                         colors1.push(toolColorRGB1[2]);
                     }
+
+                    this.addGcodeLayerInfo(layerIndex, typeCode, toolCode, {
+                        x: lastX,
+                        y: lastY,
+                        z: lastZ
+                    });
                 }
 
                 positions.push(v2.x);
@@ -162,6 +170,8 @@ class GcodeToBufferGeometryPrint3d {
                     colors1.push(toolColorRGB1[1]);
                     colors1.push(toolColorRGB1[2]);
                 }
+
+                this.addGcodeLayerInfo(layerIndex, typeCode, toolCode, v2);
 
                 if (
                     modal.gcodeType === 'start'
@@ -191,26 +201,27 @@ class GcodeToBufferGeometryPrint3d {
         const layerCount = layerIndex + 1;
         onProgress(1);
 
-        const bufferGeometry = new THREE.BufferGeometry();
-        const positionAttribute = new THREE.Float32BufferAttribute(positions, 3);
-        const colorAttribute = new THREE.Uint8BufferAttribute(colors, 3);
-        // this will map the buffer values to 0.0f - +1.0f in the shader
-        colorAttribute.normalized = true;
-        const color1Attribute = new THREE.Uint8BufferAttribute(colors1, 3);
-        // this will map the buffer values to 0.0f - +1.0f in the shader
-        color1Attribute.normalized = true;
-        const layerIndexAttribute = new THREE.Float32BufferAttribute(layerIndices, 1);
-        const typeCodeAttribute = new THREE.Float32BufferAttribute(typeCodes, 1);
-        const toolCodeAttribute = new THREE.Float32BufferAttribute(toolCodes, 1);
+        // const bufferGeometry = new THREE.BufferGeometry();
+        // const positionAttribute = new THREE.Float32BufferAttribute(positions, 3);
+        // const colorAttribute = new THREE.Uint8BufferAttribute(colors, 3);
+        // // this will map the buffer values to 0.0f - +1.0f in the shader
+        // colorAttribute.normalized = true;
+        // const color1Attribute = new THREE.Uint8BufferAttribute(colors1, 3);
+        // // this will map the buffer values to 0.0f - +1.0f in the shader
+        // color1Attribute.normalized = true;
+        // const layerIndexAttribute = new THREE.Float32BufferAttribute(layerIndices, 1);
+        // const typeCodeAttribute = new THREE.Float32BufferAttribute(typeCodes, 1);
+        // const toolCodeAttribute = new THREE.Float32BufferAttribute(toolCodes, 1);
 
-        bufferGeometry.setAttribute('position', positionAttribute);
-        bufferGeometry.setAttribute('a_color', colorAttribute);
-        bufferGeometry.setAttribute('a_color1', color1Attribute);
-        bufferGeometry.setAttribute('a_layer_index', layerIndexAttribute);
-        bufferGeometry.setAttribute('a_type_code', typeCodeAttribute);
-        bufferGeometry.setAttribute('a_tool_code', toolCodeAttribute);
+        // bufferGeometry.setAttribute('position', positionAttribute);
+        // bufferGeometry.setAttribute('a_color', colorAttribute);
+        // bufferGeometry.setAttribute('a_color1', color1Attribute);
+        // bufferGeometry.setAttribute('a_layer_index', layerIndexAttribute);
+        // bufferGeometry.setAttribute('a_type_code', typeCodeAttribute);
+        // bufferGeometry.setAttribute('a_tool_code', toolCodeAttribute);
 
-        onParsed(bufferGeometry, layerCount, bounds);
+        // onParsed(bufferGeometry, layerCount, bounds);
+        onParsed(this.gcodeEntityLayers, layerCount, bounds);
     }
 
     getTypeSetting(typeCode) {
@@ -220,6 +231,25 @@ class GcodeToBufferGeometryPrint3d {
             }
         }
         return null;
+    }
+
+    addGcodeLayerInfo(layerIndex, typeCode, toolCode, v2) {
+        if (!this.gcodeEntityLayers[layerIndex]) {
+            this.gcodeEntityLayers[layerIndex] = [];
+        }
+        const typeInLayerFound = this.gcodeEntityLayers[layerIndex].find(typeInLayer => {
+            return typeInLayer.toolCode === toolCode && typeInLayer.typeCode === typeCode;
+        });
+        if (typeInLayerFound) {
+            typeInLayerFound.positions.push(v2.x, v2.y, v2.z);
+        } else {
+            this.gcodeEntityLayers[layerIndex].push({
+                typeCode: typeCode,
+                toolCode: toolCode,
+                color: this.getTypeSetting(typeCode)?.rgb.map(color => color / 255),
+                positions: [v2.x, v2.y, v2.z]
+            });
+        }
     }
 }
 
