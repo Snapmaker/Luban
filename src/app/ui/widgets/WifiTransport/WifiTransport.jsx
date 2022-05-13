@@ -48,7 +48,6 @@ const GcodePreviewItem = React.memo(({ gcodeFile, index, selected, onSelectFile,
 
     let size = '';
     const { isRenaming, uploadName } = gcodeFile;
-    console.log('gcode file', gcodeFile);
     if (!gcodeFile.size) {
         size = '';
     } else if (gcodeFile.size / 1024 / 1024 > 1) {
@@ -506,7 +505,6 @@ function WifiTransport({ widgetActions, controlActions }) {
     const isSended = isWifi ? isSendedOnWifi : true;
     const canPlay = hasFile && isConnected && isSended && _.includes([WORKFLOW_STATE_IDLE, WORKFLOW_STATUS_IDLE], currentWorkflowStatus);
     const canSend = hasFile && isConnected && isHeadType && isWifi && isSendedOnWifi;
-    console.log('========================gcodeFiles', gcodeFiles);
     return (
         <div className="border-default-grey-1 border-radius-8">
             <input

@@ -3,6 +3,7 @@ import { EPS } from '../../constants';
 import Task from './Task';
 import { asyncFor } from '../../../shared/lib/array-async';
 import workerManager from './workerManager';
+import { parseLubanGcodeHeader } from '../../lib/parseGcodeHeader';
 
 // const TASK_STATUS_IDLE = 'idle';
 const TASK_STATUS_DEPRECATED = 'deprecated';
@@ -46,7 +47,8 @@ class TaskManager {
         if (task.taskType === TASK_TYPE_GENERATE_TOOLPATH) {
             task.filenames = res;
         } else if (task.taskType === TASK_TYPE_GENERATE_GCODE) {
-            task.gcodeFile = res.gcodeFile;
+            const gcodeHeader = parseLubanGcodeHeader(res.filePath);
+            task.gcodeFile = { ...res.gcodeFile, header: gcodeHeader };
         } else if (task.taskType === TASK_TYPE_GENERATE_VIEWPATH) {
             task.viewPathFile = res.viewPathFile;
         } else if (task.taskType === TASK_TYPE_PROCESS_IMAGE) {

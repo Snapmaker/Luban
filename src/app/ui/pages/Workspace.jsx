@@ -4,7 +4,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import i18next from 'i18next';
 import includes from 'lodash/includes';
 import { useHistory } from 'react-router-dom';
-import { useDispatch, useSelector } from 'react-redux';
+import { shallowEqual, useDispatch, useSelector } from 'react-redux';
 import PropTypes from 'prop-types';
 import { Button } from '../components/Buttons';
 import Modal from '../components/Modal';
@@ -86,6 +86,8 @@ function Workspace({ isPopup, onClose, style, className }) {
     const primaryWidgets = useSelector(state => state.widget.workspace.left.widgets);
     const secondaryWidgets = useSelector(state => state.widget.workspace.right.widgets);
     const defaultWidgets = useSelector(state => state.widget.workspace.default.widgets);
+    const shouldHideConsole = useSelector(state => state?.machine?.shouldHideConsole, shallowEqual);
+    console.log(shouldHideConsole);
     const [previewModalShow, setPreviewModalShow] = useState(false);
     const [isDraggingWidget, setIsDraggingWidget] = useState(false);
     const [connected, setConnected] = useState(controller.connected);
@@ -177,6 +179,7 @@ function Workspace({ isPopup, onClose, style, className }) {
             workspaceVisualizerRef.actions.handlePause();
         },
         onCallBackStop: () => {
+            // TODO: there should be a modal fisrt
             workspaceVisualizerRef.actions.handleStop();
         },
         onPreviewModalShow: (value) => {

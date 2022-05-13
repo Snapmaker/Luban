@@ -77,6 +77,7 @@ const WorkingProgress = ({ widgetActions, controlActions }) => {
                 <div className="sm-flex justify-space-between align-center margin-top-16">
                     <Button width="160px" type="default" onClick={() => handleMachine(currentWorkflowStatus === 'running' ? 'pause' : 'run')}>
                         <SvgIcon
+                        // TODO: pause translation animation
                             name={currentWorkflowStatus === 'running' ? 'WorkspaceSuspend' : 'WorkspacePlay'}
                             type={['static']}
                             color={currentWorkflowStatus === 'running' ? '#FFA940' : '#4CB518'}
