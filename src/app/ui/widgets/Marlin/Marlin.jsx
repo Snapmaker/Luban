@@ -53,6 +53,9 @@ function MarlinWidget({ widgetActions }) {
             {(headType === HEAD_PRINTING) && <Printing />}
             {headType === HEAD_LASER && <Laser />}
             {headType === HEAD_CNC && <CNC />}
+            {/* <Printing /> */}
+            {/* <Laser /> */}
+            {/* <CNC /> */}
         </div>
     );
 }

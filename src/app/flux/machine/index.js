@@ -19,7 +19,8 @@ import {
     LEVEL_ONE_POWER_LASER_FOR_ORIGINAL,
     STANDARD_CNC_TOOLHEAD_FOR_ORIGINAL,
     CONNECTION_EXECUTE_GCODE,
-    CONNECTION_GET_GCODEFILE
+    CONNECTION_GET_GCODEFILE,
+    LEFT_EXTRUDER
 } from '../../constants';
 
 import i18n from '../../lib/i18n';
@@ -96,6 +97,7 @@ const INITIAL_STATE = {
     // currentMachine: INITIAL_MACHINE_SERIES_WITH_HEADTOOL,
     size: MACHINE_SERIES.ORIGINAL.setting.size,
     laserSize: MACHINE_SERIES.ORIGINAL.setting.laserSize,
+    currentWorkNozzle: LEFT_EXTRUDER,
     // endregion
 
     // Console
@@ -131,6 +133,9 @@ const INITIAL_STATE = {
     headStatus: null,
     nozzleTemperature: 0,
     nozzleTargetTemperature: 0,
+    // for dual extruder -> right extruder
+    nozzleRightTemperature: 0,
+    nozzleRightTargetTemperature: 0,
     heatedBedTemperature: 0,
     heatedBedTargetTemperature: 0,
     laserCamera: false,
@@ -339,30 +344,15 @@ export const actions = {
         // Register event listeners
         const controllerEvents = {
             'Marlin:state': (options) => {
-                // Note: serialPort & Wifi
+                // Note: serialPort & Wifi -> for heartBeat
                 const { state } = options;
-                const {
-                    headType,
-                    pos,
-                    originOffset,
-                    headStatus,
-                    headPower,
-                    temperature,
-                    zFocus,
-                    isHomed,
-                    zAxisModule,
-                    laser10WErrorState
-                } = state;
+                console.log({ state });
+                const { headType, pos, originOffset, headStatus, headPower, temperature, zFocus, isHomed, zAxisModule, laser10WErrorState } = state;
                 const machineState = getState().machine;
-                if (
-                    machineState.isRotate !== pos.isFourAxis
-                    && (headType === HEAD_LASER || headType === HEAD_CNC)
-                ) {
-                    dispatch(
-                        workspaceActions.updateMachineState({
-                            isRotate: pos.isFourAxis
-                        })
-                    );
+                if ((machineState.isRotate !== pos?.isFourAxis) && (headType === HEAD_LASER || headType === HEAD_CNC)) {
+                    dispatch(workspaceActions.updateMachineState({
+                        isRotate: pos.isFourAxis
+                    }));
                 }
                 if (pos.isFourAxis) {
                     if (
@@ -438,60 +428,71 @@ export const actions = {
                     airPurifierFilterHealth,
                     isEmergencyStopped,
                     moduleList: moduleStatusList,
-                    laserCamera
+                    laserCamera,
+                    nozzleRightTargetTemperature,
+                    nozzleRightTemperature
                 } = state;
-                dispatch(
-                    baseActions.updateState({
-                        laser10WErrorState,
-                        isHomed
-                    })
-                );
-                if (!isNil(airPurifier)) {
-                    dispatch(
-                        baseActions.updateState({
-                            laserFocalLength: laserFocalLength,
-                            laserPower: laserPower,
-                            nozzleTemperature: nozzleTemperature,
-                            nozzleTargetTemperature: nozzleTargetTemperature,
-                            heatedBedTemperature: heatedBedTemperature,
-                            doorSwitchCount: doorSwitchCount,
-                            heatedBedTargetTemperature: heatedBedTargetTemperature,
-                            // Note: Wifi indiviual
-                            moduleStatusList,
-                            airPurifier: airPurifier,
-                            airPurifierSwitch: airPurifierSwitch,
-                            airPurifierFanSpeed: airPurifierFanSpeed,
-                            airPurifierFilterHealth: airPurifierFilterHealth,
-                            isEmergencyStopped: isEmergencyStopped,
-                            isEnclosureDoorOpen: isEnclosureDoorOpen,
-                            workflowStatus: status,
-                            laserCamera
-                        })
-                    );
-                    dispatch(
-                        baseActions.updateState({
-                            gcodePrintingInfo: machineState.server.getGcodePrintingInfo(
-                                state
-                            )
-                        })
-                    );
+                dispatch(baseActions.updateState({
+                    laser10WErrorState,
+                    workflowStatus: status,
+                    isHomed
+                }));
+                if (!isNil(laserFocalLength)) {
+                    dispatch(baseActions.updateState({
+                        laserFocalLength
+                    }));
+                } else if (!isNil(zFocus)) {
+                    dispatch(baseActions.updateState({
+                        laserFocalLength: zFocus + LASER_MOCK_PLATE_HEIGHT
+                    }));
+                }
+                if (!isNil(laserPower)) {
+                    dispatch(baseActions.updateState({
+                        laserPower
+                    }));
+                } else if (!isNil(headPower)) {
+                    dispatch(baseActions.updateState({
+                        laserPower: headPower
+                    }));
+                }
+                if (!isNil(temperature)) {
+                    dispatch(baseActions.updateState({
+                        nozzleTemperature: parseFloat(temperature.t),
+                        nozzleTargetTemperature: parseFloat(temperature.tTarget),
+                        heatedBedTemperature: parseFloat(temperature.b),
+                        heatedBedTargetTemperature: parseFloat(temperature.bTarget)
+                        // TO DO: 2.0 Serial connection need to add right extruder temperature info
+                    }));
                 } else {
-                    dispatch(
-                        baseActions.updateState({
-                            headStatus: headStatus,
-                            laserFocalLength: zFocus + LASER_MOCK_PLATE_HEIGHT,
-                            laserPower: headPower,
-                            nozzleTemperature: parseFloat(temperature.t),
-                            nozzleTargetTemperature: parseFloat(
-                                temperature.tTarget
-                            ),
-                            heatedBedTemperature: parseFloat(temperature.b),
-                            heatedBedTargetTemperature: parseFloat(
-                                temperature.bTarget
-                            ),
-                            zAxisModule: zAxisModule
-                        })
-                    );
+                    dispatch(baseActions.updateState({
+                        nozzleTemperature: nozzleTemperature,
+                        nozzleTargetTemperature: nozzleTargetTemperature,
+                        nozzleRightTemperature: nozzleRightTemperature,
+                        nozzleRightTargetTemperature: nozzleRightTargetTemperature,
+                        heatedBedTemperature: heatedBedTemperature,
+                        heatedBedTargetTemperature: heatedBedTargetTemperature
+                    }));
+                }
+                if (!isNil(moduleStatusList)) {
+                    dispatch(baseActions.updateState(moduleStatusList));
+                }
+                if (!isNil(doorSwitchCount)) {
+                    dispatch(baseActions.updateState(doorSwitchCount));
+                }
+                !isNil(isEnclosureDoorOpen) && dispatch(baseActions.updateState(isEnclosureDoorOpen));
+                !isNil(zAxisModule) && dispatch(baseActions.updateState(zAxisModule));
+                !isNil(headStatus) && dispatch(baseActions.updateState(headStatus));
+                !isNil(laserCamera) && dispatch(baseActions.updateState(laserCamera));
+                if (!isNil(airPurifier)) {
+                    dispatch(baseActions.updateState({
+                        airPurifier: airPurifier,
+                        airPurifierSwitch: airPurifierSwitch,
+                        airPurifierFanSpeed: airPurifierFanSpeed,
+                        airPurifierFilterHealth: airPurifierFilterHealth
+                    }));
+                    dispatch(baseActions.updateState({
+                        gcodePrintingInfo: machineState.server.getGcodePrintingInfo(state)
+                    }));
                 }
                 // TODO: wifi emergencyStop goes there
                 if (isEmergencyStopped) {
@@ -547,20 +548,13 @@ export const actions = {
                     return;
                 }
                 let machineSeries = '';
-                const {
-                    toolHead,
-                    series,
-                    headType,
-                    status,
-                    isHomed,
-                    moduleStatusList
-                } = state;
+                console.log({ state });
+                const { toolHead, series, headType, status, isHomed, moduleStatusList } = state;
                 const { seriesSize } = state;
-                dispatch(
-                    baseActions.updateState({
-                        isHomed: isHomed
-                    })
-                );
+                console.log('connection', state);
+                dispatch(baseActions.updateState({
+                    isHomed: isHomed
+                }));
                 if (!isNil(seriesSize)) {
                     machineSeries = valueOf(
                         MACHINE_SERIES,
@@ -576,16 +570,14 @@ export const actions = {
                     dispatch(workspaceActions.loadGcode());
                 } else {
                     const _isRotate = moduleStatusList?.rotaryModule;
-                    dispatch(
-                        baseActions.updateState({
-                            workflowStatus: status
-                        })
-                    );
-                    dispatch(
-                        workspaceActions.updateMachineState({
-                            isRotate: _isRotate
-                        })
-                    );
+                    const emergency = moduleStatusList?.emergencyStopButton;
+                    dispatch(baseActions.updateState({
+                        workflowStatus: status,
+                        emergencyStopOnline: emergency
+                    }));
+                    dispatch(workspaceActions.updateMachineState({
+                        isRotate: _isRotate
+                    }));
                     machineSeries = series;
                 }
                 if (machineSeries && headType && headType !== 'UNKNOWN') {

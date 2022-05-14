@@ -46,8 +46,30 @@ export const WORKFLOW_STATE_IDLE = 'idle';
 // Workflow status
 export const WORKFLOW_STATUS_UNKNOWN = 'unknown';
 export const WORKFLOW_STATUS_IDLE = 'idle';
+export const WORKFLOW_STATUS_STARTING = 'starting';
 export const WORKFLOW_STATUS_RUNNING = 'running';
+export const WORKFLOW_STATUS_PAUSING = 'pausing';
 export const WORKFLOW_STATUS_PAUSED = 'paused';
+export const WORKFLOW_STATUS_STOPPING = 'stopping';
+export const WORKFLOW_STATUS_STOPPED = 'stopped';
+export const WORKFLOW_STATUS_FINISHING = 'finishing';
+export const WORKFLOW_STATUS_COMPLETED = 'completed';
+export const WORKFLOW_STATUS_RECOVERING = 'recovering';
+export const WROKFLOW_STATUS_RESUMING = 'resuming';
+
+export const WORKFLOW_STATUS_MAP = {
+    '0': WORKFLOW_STATE_IDLE,
+    '1': WORKFLOW_STATUS_STARTING,
+    '2': WORKFLOW_STATUS_RUNNING,
+    '3': WORKFLOW_STATUS_PAUSING,
+    '4': WORKFLOW_STATUS_PAUSED,
+    '5': WORKFLOW_STATUS_STOPPING,
+    '6': WORKFLOW_STATUS_STOPPED,
+    '7': WORKFLOW_STATUS_FINISHING,
+    '8': WORKFLOW_STATUS_COMPLETED,
+    '9': WORKFLOW_STATUS_RECOVERING,
+    '10': WROKFLOW_STATUS_RESUMING
+};
 
 // Workflow State
 
@@ -1116,6 +1138,7 @@ export const LEVEL_ONE_POWER_LASER_FOR_SM2 = 'levelOneLaserToolheadForSM2';
 export const LEVEL_TWO_POWER_LASER_FOR_SM2 = 'levelTwoLaserToolheadForSM2';
 export const STANDARD_CNC_TOOLHEAD_FOR_ORIGINAL = 'standardCNCToolheadForOriginal';
 export const STANDARD_CNC_TOOLHEAD_FOR_SM2 = 'standardCNCToolheadForSM2';
+export const LEVEL_TWO_CNC_TOOLHEAD_FOR_SM2 = 'levelTwoCNCToolheadForSM2';
 
 export const DUAL_EXTRUDER_LIMIT_WIDTH_L = 20;
 export const DUAL_EXTRUDER_LIMIT_WIDTH_R = 20;
@@ -1544,4 +1567,27 @@ export const longLangWithType = {
     fr: [HEAD_LASER, HEAD_CNC],
     it: [HEAD_LASER, HEAD_CNC],
     ru: [HEAD_PRINTING, HEAD_LASER, HEAD_CNC]
+};
+
+export const SERIAL_MAP_SACP = {
+    '0': 'A150',
+    '1': 'A250',
+    '2': 'A350',
+    '3': 'A400'
+};
+
+export const PRINTING_MODULE = [1, 13];
+export const LASER_MODULE = [2, 14];
+export const CNC_MODULE = [1, 15];
+export const EMERGENCY_STOP_BUTTON = [8, 517];
+export const ENCLOSURE_MODULES = [5, 16];
+export const ROTARY_MODULES = [6];
+export const AIR_PURIFIER_MODULES = [7];
+export const MODULEID_TOOLHEAD_MAP = {
+    '0': SINGLE_EXTRUDER_TOOLHEAD_FOR_SM2,
+    '1': STANDARD_CNC_TOOLHEAD_FOR_SM2,
+    '2': LEVEL_ONE_POWER_LASER_FOR_SM2,
+    '13': DUAL_EXTRUDER_TOOLHEAD_FOR_SM2,
+    '14': LEVEL_TWO_POWER_LASER_FOR_SM2,
+    '15': LEVEL_TWO_CNC_TOOLHEAD_FOR_SM2
 };

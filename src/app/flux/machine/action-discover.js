@@ -30,6 +30,7 @@ const init = () => (dispatch, getState) => {
         'machine:serial-discover': ({ devices, type }) => {
             // Note that we may receive this event many times.
             const { servers, connectionType } = getState().machine;
+            // const { series } = getState().workspace;
             if (connectionType === type) {
                 const resultServers = [];
                 for (const object of devices) {
@@ -41,6 +42,7 @@ const init = () => (dispatch, getState) => {
                         resultServers.unshift(server);
                     }
                 }
+                // console.log({ servers, resultServers, series });
                 if (!isEqual(resultServers, servers)) {
                     dispatch(baseActions.updateState({ servers: resultServers }));
                 }

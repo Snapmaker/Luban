@@ -3,7 +3,8 @@ import logger from '../../lib/logger';
 // import workerManager from '../task-manager/workerManager';
 import socketSerial from './socket-serial';
 import socketHttp from './socket-http';
-import socketTcp from './SACP-TCP';
+import socketTcp from './sacp/SACP-TCP';
+import socketSerialNew from './sacp/SACP-SERIAL';
 import { HEAD_PRINTING, HEAD_LASER, LEVEL_TWO_POWER_LASER_FOR_SM2, MACHINE_SERIES,
     CONNECTION_TYPE_WIFI, CONNECTION_TYPE_SERIAL, WORKFLOW_STATE_PAUSED, PORT_SCREEN_HTTP, PORT_SCREEN_SACP } from '../../constants';
 import DataStorage from '../../DataStorage';
@@ -75,8 +76,15 @@ class ConnectionManager {
 
             this.socket.connectionOpen(socket, options);
         } else {
-            this.socket = socketSerial;
-            this.socket.serialportOpen(socket, options);
+            // if (sacp) {
+                // this.socket = ;
+                log.debug('serialSacp');
+                this.socket = socketSerialNew;
+                this.socket.connectionOpen(socket, options);
+            // } else {
+                // this.socket = socketSerial;
+                // this.socket.serialportOpen(socket, options);
+            // }
         }
         log.debug(`connectionOpen connectionType=${connectionType} this.socket=${this.socket}`);
     };
@@ -502,6 +510,10 @@ class ConnectionManager {
         this.socket.setMatrix(params, callback);
     };
     // only for Wifi
+
+    goHome = () => {
+        this.socket.goHome();
+    }
 }
 
 const connectionManager = new ConnectionManager();

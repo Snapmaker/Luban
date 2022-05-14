@@ -19,3 +19,35 @@ export type EventOptions = {
     uploadName?: string,
     renderGcodeFileName?: string
 };
+
+export type ConnectedData = {
+    toolHead?: string,
+    series?: string,
+    headType?: string,
+    status?: string,
+    isHomed?: boolean,
+    moduleStatusList?: object,
+    seriesSize?: string
+};
+
+export type MarlinStateData = {
+    status?: string, // for workflow status
+    laserFocalLength?: number,
+    laserPower?: number,
+    nozzleTemperature?: number,
+    nozzleTargetTemperature?: number,
+    nozzleRightTemperature?: number,
+    nozzleRightTargetTemperature?: number,
+    heatedBedTemperature?: number,
+    heatedBedTargetTemperature?: number,
+    isEnclosureDoorOpen?: boolean,
+    airPurifier?: boolean,
+    airPurifierSwitch?: boolean,
+    airPurifierFanSpeed?: number,
+    airPurifierFilterHealth?: number, // Filter lifetime
+    isEmergencyStopped?: boolean,
+    moduleStatusList?: object,
+    laserCamera?: boolean,
+    pos?: object,
+    originOffset?: object
+};
