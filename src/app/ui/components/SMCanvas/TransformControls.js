@@ -877,10 +877,10 @@ class TransformControls extends Object3D {
     }
 
     hasHideModel(obj = this.object) {
-        if (!obj.visible) {
+        if (!!obj && !obj.visible) {
             return true;
         }
-        if (obj.children.length) {
+        if (obj?.children.length) {
             return obj.children.some((child) => {
                 return this.hasHideModel(child);
             });

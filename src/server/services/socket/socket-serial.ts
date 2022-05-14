@@ -26,6 +26,7 @@ class SocketSerial {
         clearInterval(intervalHandle);
         const controllers = store.get('controllers', {});
         Object.keys(controllers).forEach((port) => {
+            log.debug(`port, ${port}`);
             const controller = controllers[port];
             if (!controller) {
                 return;

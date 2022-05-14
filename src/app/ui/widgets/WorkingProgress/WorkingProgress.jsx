@@ -23,8 +23,7 @@ Text.propTypes = {
 const WorkingProgress = ({ widgetActions, controlActions }) => {
     const {
         isConnected, workflowStatus,
-        gcodePrintingInfo: { progress, elapsedTime, remainingTime, total, sent, printStatus },
-        connectionType, workflowState
+        gcodePrintingInfo: { progress, elapsedTime, remainingTime, total, sent, printStatus }
     } = useSelector(state => state.machine);
     const gcodeFile = useSelector(state => state.workspace.gcodeFile);
     const fileName = gcodeFile?.renderGcodeFileName ?? gcodeFile?.name;
@@ -33,9 +32,10 @@ const WorkingProgress = ({ widgetActions, controlActions }) => {
         widgetActions.setTitle(i18n._('key-Workspace/Workprogress-Working'));
     }, []);
     useEffect(() => {
-        const newCurrent = connectionType === 'wifi' ? workflowStatus : workflowState;
-        setCurrentWorkflowStatus(newCurrent);
-    }, [workflowState, workflowStatus, connectionType]);
+        // const newCurrent = connectionType === 'wifi' ? workflowStatus : workflowState;
+        setCurrentWorkflowStatus(workflowStatus);
+        console.log({ workflowStatus });
+    }, [workflowStatus]);
     useEffect(() => {
         if (
             isConnected

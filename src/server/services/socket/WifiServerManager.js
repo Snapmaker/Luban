@@ -66,11 +66,11 @@ class WifiServerManager extends EventEmitter {
 
 
     refreshDevices = () => {
+        // console.log('refreshDevices');
         // Clear devices and send broadcast only when not refreshing to avoid duplicated refresh
         if (this.refreshing) {
             return;
         }
-
         this.refreshing = true;
         this.devices = [];
 

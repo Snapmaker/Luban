@@ -71,6 +71,7 @@ function WifiConnection() {
         heatedBedTemperature,
         laserCamera
     } = useSelector(state => state.machine);
+    console.log({ servers });
     const {
         toolHead, headType, series
     } = useSelector(state => state?.workspace);

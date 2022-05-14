@@ -2,34 +2,36 @@ import net from 'net';
 import fs from 'fs';
 import path from 'path';
 import crypto from 'crypto';
-import wifiServerManager from './WifiServerManager';
-import type SocketServer from '../../lib/SocketManager';
-import { EventOptions } from './types';
-import logger from '../../lib/logger';
-import { CONNECTION_TYPE_WIFI, HEAD_CNC, HEAD_LASER, HEAD_PRINTING, LEVEL_TWO_POWER_LASER_FOR_SM2, WORKFLOW_STATE_IDLE } from '../../constants';
-import Business, { CoordinateType, RequestPhotoInfo, ToolHeadType } from '../../lib/SACP-SDK/SACP/business/Business';
-import CalibrationInfo from '../../lib/SACP-SDK/SACP/business/models/CalibrationInfo';
-import DataStorage from '../../DataStorage';
+import wifiServerManager from '../WifiServerManager';
+import type SocketServer from '../../../lib/SocketManager';
+import { EventOptions } from '../types';
+import logger from '../../../lib/logger';
+import { CONNECTION_TYPE_WIFI, DUAL_EXTRUDER_TOOLHEAD_FOR_SM2, HEAD_CNC, HEAD_LASER, HEAD_PRINTING, WORKFLOW_STATE_PAUSED } from '../../../constants';
+import Business, { CoordinateType, RequestPhotoInfo, ToolHeadType } from '../../../lib/SACP-SDK/SACP/business/Business';
+import CalibrationInfo from '../../../lib/SACP-SDK/SACP/business/models/CalibrationInfo';
+import DataStorage from '../../../DataStorage';
 // import MovementInstruction, { MoveDirection } from '../../lib/SACP-SDK/SACP/business/models/MovementInstruction';
-import CoordinateInfo, { Direction } from '../../lib/SACP-SDK/SACP/business/models/CoordinateInfo';
-import MovementInstruction, { MoveDirection } from '../../lib/SACP-SDK/SACP/business/models/MovementInstruction';
+import CoordinateInfo, { Direction } from '../../../lib/SACP-SDK/SACP/business/models/CoordinateInfo';
+import MovementInstruction, { MoveDirection } from '../../../lib/SACP-SDK/SACP/business/models/MovementInstruction';
+import SocketBASE from './SACP-BASE';
 
 const log = logger('lib:SocketTCP');
 
-class SocketTCP {
-    private heartbeatTimer;
+class SocketTCP extends SocketBASE {
+    // private heartbeatTimer;
 
-    private socket: SocketServer;
+    // private socket: SocketServer;
 
     private client: net.Socket;
 
-    private sacpClient: Business;
+    // private sacpClient: Business;
 
     private laserFocalLength: number = 0;
 
     private thickness: number = 0;
 
     constructor() {
+        super();
         this.client = new net.Socket();
         this.sacpClient = new Business('tcp', this.client);
         this.sacpClient.setLogger(log);
@@ -63,10 +65,10 @@ class SocketTCP {
         this.socket = socket;
         this.sacpClient.setHandler(0x01, 0x03, (data) => {
             const state = {
-                toolHead: LEVEL_TWO_POWER_LASER_FOR_SM2,
+                toolHead: DUAL_EXTRUDER_TOOLHEAD_FOR_SM2,
                 series: 'A400',
-                status: WORKFLOW_STATE_IDLE,
-                headType: HEAD_LASER,
+                status: WORKFLOW_STATE_PAUSED,
+                headType: HEAD_PRINTING,
                 isHomed: true,
                 err: null
             };
@@ -153,16 +155,7 @@ class SocketTCP {
     }
 
     public startHeartbeat = () => {
-        this.sacpClient.subscribeHeartbeat({ interval: 1000 }, () => {
-            // log.info(`receive heartbeat: ${data.response}`);
-            clearTimeout(this.heartbeatTimer);
-            this.heartbeatTimer = setTimeout(() => {
-                log.info('TCP connection closed');
-                this.socket && this.socket.emit('connection:close');
-            }, 60000); // TODO: should change this after file transfer ready
-        }).then((res) => {
-            log.info(`subscribe heartbeat success: ${res}`);
-        });
+        this.startHeartbeatBase(this.sacpClient);
     };
 
     public uploadFile = (options: EventOptions) => {

@@ -42,7 +42,7 @@ const connectionEventsObject = {
     'connection:setFilterSwitch': connectionManager.setFilterSwitch,
     'connection:setFilterWorkSpeed': connectionManager.setFilterWorkSpeed,
     'connection:materialThickness_abort': connectionManager.abortLaserMaterialThickness,
-
+    'connection:goHome': connectionManager.goHome
 };
 
 function startServices(server) {
