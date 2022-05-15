@@ -49,12 +49,12 @@ class GcodeToBufferGeometryPrint3d {
             return;
         }
 
-        const colors = [];
-        const colors1 = [];
-        const positions = [];
-        const layerIndices = [];
-        const typeCodes = [];
-        const toolCodes = [];
+        // const colors = [];
+        // const colors1 = [];
+        // const positions = [];
+        // const layerIndices = [];
+        // const typeCodes = [];
+        // const toolCodes = [];
 
         const bounds = {
             minX: Number.MAX_VALUE,
@@ -66,30 +66,34 @@ class GcodeToBufferGeometryPrint3d {
         };
 
         const { toolColor0, toolColor1 } = extruderColors;
-        let r0, b0, g0, r1, b1, g1;
-        if (toolColor0.length === 7) {
-            r0 = parseInt(toolColor0.substring(1, 3), 16);
-            g0 = parseInt(toolColor0.substring(3, 5), 16);
-            b0 = parseInt(toolColor0.substring(5), 16);
-        } else {
-            r0 = 255;
-            b0 = 255;
-            g0 = 255;
-        }
-        if (toolColor1.length === 7) {
-            r1 = parseInt(toolColor1.substring(1, 3), 16);
-            g1 = parseInt(toolColor1.substring(3, 5), 16);
-            b1 = parseInt(toolColor1.substring(5), 16);
-        } else {
-            r1 = 0;
-            b1 = 0;
-            g1 = 0;
-        }
-        const toolColorRGB0 = [r0, g0, b0];
-        const toolColorRGB1 = [r1, g1, b1];
+        console.log(toolColor0, toolColor1);
+        // let r0, b0, g0, r1, b1, g1;
+        // if (toolColor0.length === 7) {
+        //     r0 = parseInt(toolColor0.substring(1, 3), 16);
+        //     g0 = parseInt(toolColor0.substring(3, 5), 16);
+        //     b0 = parseInt(toolColor0.substring(5), 16);
+        // } else {
+        //     r0 = 255;
+        //     b0 = 255;
+        //     g0 = 255;
+        // }
+        // if (toolColor1.length === 7) {
+        //     r1 = parseInt(toolColor1.substring(1, 3), 16);
+        //     g1 = parseInt(toolColor1.substring(3, 5), 16);
+        //     b1 = parseInt(toolColor1.substring(5), 16);
+        // } else {
+        //     r1 = 0;
+        //     b1 = 0;
+        //     g1 = 0;
+        // }
+        // const toolColorRGB0 = [r0, g0, b0];
+        // const toolColorRGB1 = [r1, g1, b1];
 
         let layerIndex = 0;
         let lastTypeCode = null;
+        let lastToolCode = null;
+        let lastLayerIndex = null;
+        let lastPosition = null;
 
         let progress = 0;
 
@@ -97,13 +101,13 @@ class GcodeToBufferGeometryPrint3d {
             addLine: (modal, v1, v2) => {
                 const typeCode = v2.type;
                 const toolCode = modal.tool;
-                const typeSetting = this.getTypeSetting(typeCode);
+                // const typeSetting = this.getTypeSetting(typeCode);
                 layerIndex = modal.layer;
-                const rgb = [
-                    typeSetting.rgb[0],
-                    typeSetting.rgb[1],
-                    typeSetting.rgb[2]
-                ];
+                // const rgb = [
+                //     typeSetting.rgb[0],
+                //     typeSetting.rgb[1],
+                //     typeSetting.rgb[2]
+                // ];
 
                 // duplicate one point to display without interpolation
                 // color of end point decides line color
@@ -113,63 +117,70 @@ class GcodeToBufferGeometryPrint3d {
                 if (!lastTypeCode) {
                     lastTypeCode = typeCode;
                 }
+                if (lastToolCode === null) {
+                    lastToolCode = toolCode;
+                }
+                if (lastLayerIndex === null) {
+                    lastLayerIndex = layerIndex;
+                }
                 if (lastTypeCode !== typeCode) {
+                    this.setGcodeLayerInfoBreak(lastLayerIndex, lastTypeCode, lastToolCode);
                     lastTypeCode = typeCode;
+                    lastLayerIndex = layerIndex;
+                    lastToolCode = toolCode;
 
                     // use: last position + current color + current layer index + current type code
-                    const lastZ = positions[positions.length - 1];
-                    const lastY = positions[positions.length - 2];
-                    const lastX = positions[positions.length - 3];
-                    positions.push(lastX);
-                    positions.push(lastY);
-                    positions.push(lastZ);
+                    // const lastZ = positions[positions.length - 1];
+                    // const lastY = positions[positions.length - 2];
+                    // const lastX = positions[positions.length - 3];
+                    // positions.push(lastX);
+                    // positions.push(lastY);
+                    // positions.push(lastZ);
 
-                    colors.push(rgb[0]);
-                    colors.push(rgb[1]);
-                    colors.push(rgb[2]);
+                    // colors.push(rgb[0]);
+                    // colors.push(rgb[1]);
+                    // colors.push(rgb[2]);
 
-                    layerIndices.push(layerIndex);
-                    typeCodes.push(typeCode);
-                    toolCodes.push(toolCode);
+                    // layerIndices.push(layerIndex);
+                    // typeCodes.push(typeCode);
+                    // toolCodes.push(toolCode);
 
-                    if (toolCode === 0) {
-                        colors1.push(toolColorRGB0[0]);
-                        colors1.push(toolColorRGB0[1]);
-                        colors1.push(toolColorRGB0[2]);
-                    } else {
-                        colors1.push(toolColorRGB1[0]);
-                        colors1.push(toolColorRGB1[1]);
-                        colors1.push(toolColorRGB1[2]);
-                    }
-
-                    this.addGcodeLayerInfo(layerIndex, typeCode, toolCode, {
-                        x: lastX,
-                        y: lastY,
-                        z: lastZ
-                    });
+                    // if (toolCode === 0) {
+                    //     colors1.push(toolColorRGB0[0]);
+                    //     colors1.push(toolColorRGB0[1]);
+                    //     colors1.push(toolColorRGB0[2]);
+                    // } else {
+                    //     colors1.push(toolColorRGB1[0]);
+                    //     colors1.push(toolColorRGB1[1]);
+                    //     colors1.push(toolColorRGB1[2]);
+                    // }
+                    this.addGcodeLayerInfo(layerIndex, typeCode, toolCode, lastPosition);
                 }
 
-                positions.push(v2.x);
-                positions.push(v2.y);
-                positions.push(v2.z);
+                lastPosition = {
+                    x: v2.x, y: v2.y, z: v2.z
+                };
+                // positions.push(v2.x);
+                // positions.push(v2.y);
+                // positions.push(v2.z);
 
-                colors.push(rgb[0]);
-                colors.push(rgb[1]);
-                colors.push(rgb[2]);
+                // colors.push(rgb[0]);
+                // colors.push(rgb[1]);
+                // colors.push(rgb[2]);
 
-                layerIndices.push(layerIndex);
-                typeCodes.push(typeCode);
-                toolCodes.push(toolCode);
-                // console.log('toolCode', toolCode);
-                if (toolCode === 0) {
-                    colors1.push(toolColorRGB0[0]);
-                    colors1.push(toolColorRGB0[1]);
-                    colors1.push(toolColorRGB0[2]);
-                } else {
-                    colors1.push(toolColorRGB1[0]);
-                    colors1.push(toolColorRGB1[1]);
-                    colors1.push(toolColorRGB1[2]);
-                }
+                // layerIndices.push(layerIndex);
+                // typeCodes.push(typeCode);
+                // toolCodes.push(toolCode);
+                // // console.log('toolCode', toolCode);
+                // if (toolCode === 0) {
+                //     colors1.push(toolColorRGB0[0]);
+                //     colors1.push(toolColorRGB0[1]);
+                //     colors1.push(toolColorRGB0[2]);
+                // } else {
+                //     colors1.push(toolColorRGB1[0]);
+                //     colors1.push(toolColorRGB1[1]);
+                //     colors1.push(toolColorRGB1[2]);
+                // }
 
                 this.addGcodeLayerInfo(layerIndex, typeCode, toolCode, v2);
 
@@ -221,6 +232,7 @@ class GcodeToBufferGeometryPrint3d {
         // bufferGeometry.setAttribute('a_tool_code', toolCodeAttribute);
 
         // onParsed(bufferGeometry, layerCount, bounds);
+        console.log(this.gcodeEntityLayers);
         onParsed(this.gcodeEntityLayers, layerCount, bounds);
     }
 
@@ -247,8 +259,18 @@ class GcodeToBufferGeometryPrint3d {
                 typeCode: typeCode,
                 toolCode: toolCode,
                 color: this.getTypeSetting(typeCode)?.rgb.map(color => color / 255),
+                breakPositionsIndex: [],
                 positions: [v2.x, v2.y, v2.z]
             });
+        }
+    }
+
+    setGcodeLayerInfoBreak(layerIndex, typeCode, toolCode) {
+        const typeInLayerFound = this.gcodeEntityLayers[layerIndex].find(typeInLayer => {
+            return typeInLayer.toolCode === toolCode && typeInLayer.typeCode === typeCode;
+        });
+        if (typeInLayerFound) {
+            typeInLayerFound.breakPositionsIndex.push(typeInLayerFound.positions.length / 3 - 1);
         }
     }
 }

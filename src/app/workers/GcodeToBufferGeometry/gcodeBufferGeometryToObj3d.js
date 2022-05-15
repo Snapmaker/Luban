@@ -24,7 +24,7 @@ function elementToVector3(arr) {
 //     return line;
 // }
 
-function lineToGeometry(originalPositions) {
+function lineToGeometry(originalPositions, breakPositionsIndex) {
     const positions = elementToVector3(originalPositions);
     // const positions = elementToVector3(bufferGeometry.getAttribute('position').array);
     // const colors = elementToVector3(bufferGeometry.getAttribute('a_color').array);
@@ -43,11 +43,14 @@ function lineToGeometry(originalPositions) {
     const zUp = new THREE.Vector3(0, 0, 1), zDown = new THREE.Vector3(0, 0, -1);
     const vertices = [], indices = [], normals = [];
     // exColors = [], exColors1 = [], exLayerIndices = [], exTypeCodes = [], exToolCodes = [],
-    const layerHeight = 0.6;
-    const lineWidth = 0.6;
+    const layerHeight = 0.24;
+    const lineWidth = 0.4;
 
     let currentIndex = 0;
     for (let i = 0; i < line.length - 1; i++) {
+        if (breakPositionsIndex.indexOf(i) > -1) {
+            continue;
+        }
         const pointStart = line[i];
         const pointEnd = line[i + 1];
         const lineSegmentVector = new THREE.Vector3().subVectors(pointEnd, pointStart);
@@ -117,30 +120,30 @@ function lineToGeometry(originalPositions) {
     }
 
     // 拐角补面
-    currentIndex = 4;
-    for (let i = 1; i < line.length - 1; i++) {
-        const pointStart = line[i - 1];
-        const pointCenter = line[i];
-        const pointEnd = line[i + 1];
+    // currentIndex = 4;
+    // for (let i = 1; i < line.length - 1; i++) {
+    //     const pointStart = line[i - 1];
+    //     const pointCenter = line[i];
+    //     const pointEnd = line[i + 1];
 
-        const sc = new THREE.Vector3().subVectors(pointStart, pointCenter);
-        const ec = new THREE.Vector3().subVectors(pointEnd, pointCenter);
+    //     const sc = new THREE.Vector3().subVectors(pointStart, pointCenter);
+    //     const ec = new THREE.Vector3().subVectors(pointEnd, pointCenter);
 
-        const normal = new THREE.Vector3().crossVectors(sc, ec);
-        // console.log('angle', normal, sc, ec, normal.angleTo(zUp));
-        if (normal.angleTo(zUp) > Math.PI / 2) {
-            indices.push(...[
-                0, 1, 5, 2, 5, 1
-            ].map(index => index + currentIndex));
-        } else if (normal.angleTo(zUp) < Math.PI / 2) {
-            indices.push(...[
-                0, 7, 3, 2, 3, 7
-            ].map(index => index + currentIndex));
-        } else {
-            // console.log('90');
-        }
-        currentIndex += 8;
-    }
+    //     const normal = new THREE.Vector3().crossVectors(sc, ec);
+    //     // console.log('angle', normal, sc, ec, normal.angleTo(zUp));
+    //     if (normal.angleTo(zUp) > Math.PI / 2) {
+    //         indices.push(...[
+    //             0, 1, 5, 2, 5, 1
+    //         ].map(index => index + currentIndex));
+    //     } else if (normal.angleTo(zUp) < Math.PI / 2) {
+    //         indices.push(...[
+    //             0, 7, 3, 2, 3, 7
+    //         ].map(index => index + currentIndex));
+    //     } else {
+    //         // console.log('90');
+    //     }
+    //     currentIndex += 8;
+    // }
     const geometry = new THREE.BufferGeometry();
     geometry.setIndex(indices);
     geometry.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
@@ -155,7 +158,7 @@ function lineToGeometry(originalPositions) {
     // geometry.setAttribute('a_type_code', new THREE.Float32BufferAttribute(exTypeCodes, 1));
     // geometry.setAttribute('a_tool_code', new THREE.Float32BufferAttribute(exToolCodes, 1));
     // geometry.computeVertexNormals();
-    console.log(vertices, indices, geometry);
+    // console.log(vertices, indices, geometry);
     return geometry;
 }
 
@@ -184,11 +187,12 @@ const gcodeBufferGeometryToObj3d = (func, bufferGeometry, renderMethod) => {
                 gcodeEntityLayers.forEach((layer, index) => {
                     layer.forEach(layerType => {
                         if (layerType.typeCode !== 7) {
-                            const geometry = lineToGeometry(layerType.positions);
+                            // console.log('breakPositionsIndex', layerType.breakPositionsIndex);
+                            const geometry = lineToGeometry(layerType.positions, layerType.breakPositionsIndex);
                             const mesh = new THREE.Mesh(geometry, new THREE.ShaderMaterial({
                                 vertexShader: PRINT3D_VERT_SHADER,
                                 fragmentShader: PRINT3D_FRAG_SHADER,
-                                side: THREE.DoubleSide,
+                                side: THREE.FrontSide,
                                 uniforms: {
                                     color: {
                                         value: layerType.color || 0xffffff,
