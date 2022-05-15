@@ -407,7 +407,16 @@ export const processActions = {
                 size: gcodeFile.size,
                 lastModified: gcodeFile.lastModified,
                 thumbnail: gcodeFile.thumbnail,
-                renderGcodeFileName: renderGcodeFileName
+                renderGcodeFileName: renderGcodeFileName,
+
+
+                type: gcodeFile.header[';header_type'],
+                work_speed: gcodeFile.header[';work_speed(mm/minute)'],
+                estimated_time: gcodeFile.header[';estimated_time(s)'],
+
+                // cnc
+                jog_speed: gcodeFile.header[';jog_speed(mm/minute)'],
+                power: gcodeFile.header[';power(%)'],
             },
             stage: STEP_STAGE.CNC_LASER_GENERATING_GCODE,
             isGcodeGenerating: false,
