@@ -92,6 +92,7 @@ const WorkingProgress = ({ widgetActions, controlActions }) => {
             && (currentWorkflowStatus === 'running' || currentWorkflowStatus === 'paused' || (total !== 0 && sent >= total))
         ) {
             widgetActions.setDisplay(true);
+            setIsPausing(false);
         } else {
             widgetActions.setDisplay(false);
         }
@@ -103,7 +104,7 @@ const WorkingProgress = ({ widgetActions, controlActions }) => {
                 break;
             case 'pause':
                 setIsPausing(true);
-                controlActions.onCallBackPause(() => { setIsPausing(false); });
+                controlActions.onCallBackPause();
                 break;
             case 'stop':
                 setShowStopComfirmModal(true);
