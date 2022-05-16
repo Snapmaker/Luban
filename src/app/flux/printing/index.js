@@ -286,10 +286,12 @@ const INITIAL_STATE = {
     supportBrushStatus: 'add', // add | remove
 
     gcodeEntity: {
-        lineWidth0: 0,
-        lineWidth: 0,
-        layerHeight0: 0,
-        layerHeight: 0,
+        extruderLlineWidth0: 1.5,
+        extruderLlineWidth: 1,
+        extruderRlineWidth0: 2,
+        extruderRlineWidth: 1.6,
+        layerHeight0: 0.5,
+        layerHeight: 0.4,
     }
 };
 
@@ -975,8 +977,8 @@ export const actions = {
         }
     },
 
-    gcodeRenderingCallback: (data) => (dispatch, getState) => {
-        const { gcodeLineGroup, gcodePreviewMode, activeDefinition, extruderLDefinition, extruderRDefinition } = getState().printing;
+    gcodeRenderingCallback: (data, extruderColors) => (dispatch, getState) => {
+        const { gcodeLineGroup, gcodePreviewMode, gcodeEntity } = getState().printing;
 
         const { status, value } = data;
         switch (status) {
@@ -1007,10 +1009,8 @@ export const actions = {
                 // });
                 // gcodeParser && gcodeParser.dispose();
                 const object3D = gcodeBufferGeometryToObj3d('3DP', bufferGeometry, null, {
-                    initialLineWidth: 0,
-                    lineWidth: extruderLDefinition.settings.machine_nozzle_size.default_value,
-                    initialLayerHeight: activeDefinition.settings.layer_height_0.default_value,
-                    layerHeight: activeDefinition.settings.layer_height.default_value,
+                    ...gcodeEntity,
+                    extruderColors
                 });
                 gcodeLineGroup.add(object3D);
 
@@ -1813,7 +1813,16 @@ export const actions = {
         };
         */
         // save line width and layer height for gcode preview
-
+        dispatch(actions.updateState({
+            gcodeEntity: {
+                extruderLlineWidth0: extruderLDefinition.settings.wall_line_width_0.default_value,
+                extruderLlineWidth: extruderLDefinition.settings.wall_line_width_x.default_value,
+                extruderRlineWidth0: extruderRDefinition.settings.wall_line_width_0.default_value,
+                extruderRlineWidth: extruderRDefinition.settings.wall_line_width_x.default_value,
+                layerHeight0: finalDefinition.settings.layer_height_0.default_value,
+                layerHeight: finalDefinition.settings.layer_height.default_value,
+            }
+        }));
 
         const boundingBox = modelGroup.getBoundingBox();
         const params = {
@@ -2020,17 +2029,19 @@ export const actions = {
     },
 
     updateGcodePreviewMode: (mode) => (dispatch, getState) => {
-        const { layerRangeDisplayed, layerCount } = getState().printing;
+        const { gcodeLine, layerRangeDisplayed, layerCount } = getState().printing;
         // gcodeParser.setColortypes(mode === GCODEPREVIEWMODES[2]);
-        // if (gcodeLine) {
-        //     const uniforms = gcodeLine.material.uniforms;
-
-        //     if (mode === GCODEPREVIEWMODES[2]) {
-        //         uniforms.u_middle_layer_set_gray.value = 1;
-        //     } else {
-        //         uniforms.u_middle_layer_set_gray.value = 0;
-        //     }
-        // }
+        if (gcodeLine) {
+            // const uniforms = gcodeLine.material.uniforms;
+            gcodeLine.children.forEach(mesh => {
+                const uniforms = mesh.material.uniforms;
+                if (mode === GCODEPREVIEWMODES[2]) {
+                    uniforms.u_middle_layer_set_gray.value = 1;
+                } else {
+                    uniforms.u_middle_layer_set_gray.value = 0;
+                }
+            });
+        }
 
         dispatch(
             actions.updateState({
@@ -2067,11 +2078,14 @@ export const actions = {
         //     };
         // }
         // gcodeParser.setColortypes(undefined, renderLineType);
-        console.log(gcodeLine, renderLineType);
-        // if (gcodeLine) {
-        //     const uniforms = gcodeLine.material.uniforms;
-        //     uniforms.u_color_type.value = renderLineType ? 1 : 0;
-        // }
+        // console.log(gcodeLine, renderLineType);
+        if (gcodeLine) {
+            // const uniforms = gcodeLine.material.uniforms;
+            gcodeLine.children.forEach(mesh => {
+                const uniforms = mesh.material.uniforms;
+                uniforms.u_color_type.value = renderLineType ? 1 : 0;
+            });
+        }
         dispatch(actions.render());
     },
 

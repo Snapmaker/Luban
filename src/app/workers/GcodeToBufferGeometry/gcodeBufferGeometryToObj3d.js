@@ -24,7 +24,7 @@ function elementToVector3(arr) {
 //     return line;
 // }
 
-function lineToGeometry(originalPositions, breakPositionsIndex) {
+function lineToGeometry(originalPositions, breakPositionsIndex, width, height) {
     const positions = elementToVector3(originalPositions);
     // const positions = elementToVector3(bufferGeometry.getAttribute('position').array);
     // const colors = elementToVector3(bufferGeometry.getAttribute('a_color').array);
@@ -43,8 +43,8 @@ function lineToGeometry(originalPositions, breakPositionsIndex) {
     const zUp = new THREE.Vector3(0, 0, 1), zDown = new THREE.Vector3(0, 0, -1);
     const vertices = [], indices = [], normals = [];
     // exColors = [], exColors1 = [], exLayerIndices = [], exTypeCodes = [], exToolCodes = [],
-    const layerHeight = 0.24;
-    const lineWidth = 0.4;
+    const halfHeight = height / 2;
+    const halfWidth = width / 2;
 
     let currentIndex = 0;
     for (let i = 0; i < line.length - 1; i++) {
@@ -56,11 +56,11 @@ function lineToGeometry(originalPositions, breakPositionsIndex) {
         const lineSegmentVector = new THREE.Vector3().subVectors(pointEnd, pointStart);
 
         // point start expanded 4 points
-        const down = new THREE.Vector3(pointStart.x, pointStart.y, pointStart.z - layerHeight / 2);
-        const up = new THREE.Vector3(pointStart.x, pointStart.y, pointStart.z + layerHeight / 2);
-        const leftN = new THREE.Vector3().crossVectors(zUp, lineSegmentVector).normalize().multiplyScalar(lineWidth / 2);
+        const down = new THREE.Vector3(pointStart.x, pointStart.y, pointStart.z - halfHeight);
+        const up = new THREE.Vector3(pointStart.x, pointStart.y, pointStart.z + halfHeight);
+        const leftN = new THREE.Vector3().crossVectors(zUp, lineSegmentVector).normalize().multiplyScalar(halfWidth);
         const left = new THREE.Vector3(leftN.x + pointStart.x, leftN.y + pointStart.y, leftN.z + pointStart.z);
-        const rightN = new THREE.Vector3().crossVectors(zDown, lineSegmentVector).normalize().multiplyScalar(lineWidth / 2);
+        const rightN = new THREE.Vector3().crossVectors(zDown, lineSegmentVector).normalize().multiplyScalar(halfWidth);
         const right = new THREE.Vector3(rightN.x + pointStart.x, rightN.y + pointStart.y, rightN.z + pointStart.z);
 
         // same as CSS top right down left
@@ -77,11 +77,11 @@ function lineToGeometry(originalPositions, breakPositionsIndex) {
         normals.push(...new THREE.Vector3().subVectors(left, pointStart).toArray());
 
         // point end expanded 4 points
-        const down1 = new THREE.Vector3(pointEnd.x, pointEnd.y, pointEnd.z - layerHeight / 2);
-        const up1 = new THREE.Vector3(pointEnd.x, pointEnd.y, pointEnd.z + layerHeight / 2);
-        // const left1N = new THREE.Vector3().crossVectors(zUp, lineSegmentVector).normalize().multiplyScalar(lineWidth / 2);
+        const down1 = new THREE.Vector3(pointEnd.x, pointEnd.y, pointEnd.z - halfHeight);
+        const up1 = new THREE.Vector3(pointEnd.x, pointEnd.y, pointEnd.z + halfHeight);
+        // const left1N = new THREE.Vector3().crossVectors(zUp, lineSegmentVector).normalize().multiplyScalar(halfWidth);
         const left1 = new THREE.Vector3(leftN.x + pointEnd.x, leftN.y + pointEnd.y, leftN.z + pointEnd.z);
-        // const right1N = new THREE.Vector3().crossVectors(zDown, lineSegmentVector).normalize().multiplyScalar(lineWidth / 2);
+        // const right1N = new THREE.Vector3().crossVectors(zDown, lineSegmentVector).normalize().multiplyScalar(halfWidth);
         const right1 = new THREE.Vector3(rightN.x + pointEnd.x, rightN.y + pointEnd.y, rightN.z + pointEnd.z);
 
         vertices.push(...up1.toArray(), ...right1.toArray(), ...down1.toArray(), ...left1.toArray());
@@ -162,7 +162,7 @@ function lineToGeometry(originalPositions, breakPositionsIndex) {
     return geometry;
 }
 
-const gcodeBufferGeometryToObj3d = (func, bufferGeometry, renderMethod) => {
+const gcodeBufferGeometryToObj3d = (func, bufferGeometry, renderMethod, params) => {
     let obj3d = null;
     switch (func) {
         case '3DP':
@@ -184,17 +184,44 @@ const gcodeBufferGeometryToObj3d = (func, bufferGeometry, renderMethod) => {
                 const gcodeEntityLayers = bufferGeometry;
 
                 const object3D = new THREE.Group();
+                const r0 = parseInt(params.extruderColors.toolColor0.substring(1, 3), 16) / 0xff;
+                const g0 = parseInt(params.extruderColors.toolColor0.substring(3, 5), 16) / 0xff;
+                const b0 = parseInt(params.extruderColors.toolColor0.substring(5), 16) / 0xff;
+
+                const r1 = parseInt(params.extruderColors.toolColor1.substring(1, 3), 16) / 0xff;
+                const g1 = parseInt(params.extruderColors.toolColor1.substring(3, 5), 16) / 0xff;
+                const b1 = parseInt(params.extruderColors.toolColor1.substring(5), 16) / 0xff;
                 gcodeEntityLayers.forEach((layer, index) => {
                     layer.forEach(layerType => {
                         if (layerType.typeCode !== 7) {
+                            let width = 0, height = params.layerHeight;
+                            if (layerType.toolCode === 0) {
+                                width = params.extruderLlineWidth;
+                                if (index === 0) {
+                                    width = params.extruderLlineWidth0;
+                                    height = params.layerHeight0;
+                                }
+                            } else {
+                                width = params.extruderRlineWidth;
+                                if (index === 0) {
+                                    width = params.extruderRlineWidth0;
+                                    height = params.layerHeight0;
+                                }
+                            }
                             // console.log('breakPositionsIndex', layerType.breakPositionsIndex);
-                            const geometry = lineToGeometry(layerType.positions, layerType.breakPositionsIndex);
+                            const geometry = lineToGeometry(layerType.positions, layerType.breakPositionsIndex, width, height);
                             const mesh = new THREE.Mesh(geometry, new THREE.ShaderMaterial({
                                 vertexShader: PRINT3D_VERT_SHADER,
                                 fragmentShader: PRINT3D_FRAG_SHADER,
                                 side: THREE.DoubleSide,
                                 uniforms: {
                                     ...PRINT3D_UNIFORMS,
+                                    u_color0: {
+                                        value: [r0, g0, b0],
+                                    },
+                                    u_color1: {
+                                        value: [r1, g1, b1],
+                                    },
                                     color: {
                                         value: layerType.color || 0xffffff,
                                     },
@@ -220,6 +247,12 @@ const gcodeBufferGeometryToObj3d = (func, bufferGeometry, renderMethod) => {
                                 side: THREE.DoubleSide,
                                 uniforms: {
                                     ...PRINT3D_UNIFORMS,
+                                    u_color0: {
+                                        value: [r0, g0, b0],
+                                    },
+                                    u_color1: {
+                                        value: [r1, g1, b1],
+                                    },
                                     color: {
                                         value: layerType.color || 0xffffff,
                                     },
