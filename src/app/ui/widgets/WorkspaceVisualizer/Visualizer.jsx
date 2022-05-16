@@ -360,7 +360,7 @@ class Visualizer extends PureComponent {
                 });
             }
         },
-        tryPause: () => {
+        tryPause: (cb) => {
             // delay 500ms to let buffer executed. and status propagated
             setTimeout(() => {
                 if (this.state.gcode.received + 1 >= this.state.gcode.sent) {
@@ -395,12 +395,13 @@ class Visualizer extends PureComponent {
                         this.props.executeGcode(gcode);
                         this.props.updatePause3dpStatus(pause3dpStatus);
                     }
+                    cb && cb();
                 } else {
                     this.actions.tryPause();
                 }
             }, 50);
         },
-        handlePause: () => {
+        handlePause: (cb) => {
             const { workflowStatus, connectionType, server } = this.props;
             const { workflowState } = this.state;
             if (this.actions.is3DP()) {
@@ -413,7 +414,7 @@ class Visualizer extends PureComponent {
                 || connectionType === CONNECTION_TYPE_SERIAL && workflowState === WORKFLOW_STATE_RUNNING) {
                 server.pauseServerGcode(() => {
                     if (connectionType === CONNECTION_TYPE_SERIAL) {
-                        this.actions.tryPause();
+                        this.actions.tryPause(cb);
                     }
                 });
             }

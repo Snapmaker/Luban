@@ -6,6 +6,8 @@ import i18n from '../../../lib/i18n';
 import { formatDuration } from '../GCode/GCode';
 import { Button } from '../../components/Buttons';
 import SvgIcon from '../../components/SvgIcon';
+import Modal from '../../components/Modal';
+import Loading from './Loading';
 
 const Text = ({ name, value }) => {
     return (
@@ -20,6 +22,51 @@ Text.propTypes = {
     value: PropTypes.string
 };
 
+const StopConfirmModal = (props) => {
+    return (
+        <Modal
+            centered
+            visible
+            onClose={() => { props.onClose(); }}
+        >
+            <Modal.Header>
+                停止作业
+                {/* {i18n._(headerTextKey)} */}
+            </Modal.Header>
+            <Modal.Body>
+                {props.children}
+                你确定要停止打印作业吗？
+                {/* {i18n._(bodyTextKey)} */}
+            </Modal.Body>
+            <Modal.Footer>
+                <Button
+                    className="margin-right-8"
+                    priority="level-two"
+                    type="default"
+                    width="96px"
+                    onClick={() => { props.onClose(); }}
+                >
+                    <div className="align-c">Cancel</div>
+                </Button>
+                <Button
+                    priority="level-two"
+                    type="primary"
+                    width="96px"
+                    onClick={() => { props.onConfirm(); props.onClose(); }}
+                >
+                    <div className="align-c">Yes</div>
+                </Button>
+            </Modal.Footer>
+        </Modal>
+    );
+};
+StopConfirmModal.propTypes = {
+    children: PropTypes.array,
+    onClose: PropTypes.func.isRequired,
+    onConfirm: PropTypes.func.isRequired,
+};
+
+
 const WorkingProgress = ({ widgetActions, controlActions }) => {
     const {
         isConnected, workflowStatus,
@@ -29,6 +76,9 @@ const WorkingProgress = ({ widgetActions, controlActions }) => {
     const gcodeFile = useSelector(state => state.workspace.gcodeFile);
     const fileName = gcodeFile?.renderGcodeFileName ?? gcodeFile?.name;
     const [currentWorkflowStatus, setCurrentWorkflowStatus] = useState(null);
+    const [isPausing, setIsPausing] = useState(false);
+    const [showStopComfirmModal, setShowStopComfirmModal] = useState(false);
+
     useEffect(() => {
         widgetActions.setTitle(i18n._('key-Workspace/Workprogress-Working'));
     }, []);
@@ -52,10 +102,12 @@ const WorkingProgress = ({ widgetActions, controlActions }) => {
                 controlActions.onCallBackRun();
                 break;
             case 'pause':
-                controlActions.onCallBackPause();
+                setIsPausing(true);
+                controlActions.onCallBackPause(() => { setIsPausing(false); });
                 break;
             case 'stop':
-                controlActions.onCallBackStop();
+                setShowStopComfirmModal(true);
+                // controlActions.onCallBackStop();
                 break;
             default:
                 break;
@@ -75,13 +127,21 @@ const WorkingProgress = ({ widgetActions, controlActions }) => {
             </div>
             {printStatus !== 'Complete' && (
                 <div className="sm-flex justify-space-between align-center margin-top-16">
-                    <Button width="160px" type="default" onClick={() => handleMachine(currentWorkflowStatus === 'running' ? 'pause' : 'run')}>
-                        <SvgIcon
-                        // TODO: pause translation animation
-                            name={currentWorkflowStatus === 'running' ? 'WorkspaceSuspend' : 'WorkspacePlay'}
-                            type={['static']}
-                            color={currentWorkflowStatus === 'running' ? '#FFA940' : '#4CB518'}
-                        />
+                    <Button disable={isPausing} width="160px" type="default" onClick={() => handleMachine(currentWorkflowStatus === 'running' ? 'pause' : 'run')}>
+                        {!isPausing && (
+                            <SvgIcon
+                                // TODO: pause translation animation
+                                name={currentWorkflowStatus === 'running' ? 'WorkspaceSuspend' : 'WorkspacePlay'}
+                                type={['static']}
+                                color={currentWorkflowStatus === 'running' ? '#FFA940' : '#4CB518'}
+                            />
+                        )}
+                        {isPausing && (
+                            <Loading
+                                style={{ color: '#B9BCBF', position: 'relative', top: -2 }}
+                                className="margin-right-4"
+                            />
+                        )}
                         <span className="height-24">{currentWorkflowStatus === 'running' ? i18n._('key-Workspace/WorkflowControl-Pause') : i18n._('key-Workspace/WorkflowControl-Run')}</span>
                     </Button>
                     <Button width="160px" type="default" onClick={() => handleMachine('stop')}>
@@ -93,6 +153,9 @@ const WorkingProgress = ({ widgetActions, controlActions }) => {
                         <span className="height-24">{i18n._('key-Workspace/WorkflowControl-Stop')}</span>
                     </Button>
                 </div>
+            )}
+            {showStopComfirmModal && (
+                <StopConfirmModal onClose={() => setShowStopComfirmModal(false)} onConfirm={() => { controlActions.onCallBackStop(); }} />
             )}
         </div>
     );
