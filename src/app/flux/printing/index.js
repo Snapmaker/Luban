@@ -602,6 +602,7 @@ export const actions = {
                         renderGcodeFileName,
 
                         type: gcodeHeader[';header_type'],
+                        tool_head: gcodeHeader[';tool_head'],
                         nozzle_temperature: gcodeHeader[';nozzle_temperature(°C)'],
                         build_plate_temperature: gcodeHeader[';build_plate_temperature(°C)'],
                         work_speed: gcodeHeader[';work_speed(mm/minute)'],

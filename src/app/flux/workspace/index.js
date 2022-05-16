@@ -153,7 +153,6 @@ export const actions = {
             .then((res) => {
                 const response = res.body;
                 const header = response.gcodeHeader;
-                console.log('header', header);
                 const gcodeFile = {
                     name: file.name,
                     uploadName: response.uploadName,
@@ -179,25 +178,14 @@ export const actions = {
                     // TODO: add what header preview need
                     // single extruder
                     type: header[';header_type'],
+                    tool_head: header[';tool_head'],
                     nozzle_temperature: header[';nozzle_temperature(°C)'],
                     build_plate_temperature: header[';build_plate_temperature(°C)'],
                     work_speed: header[';work_speed(mm/minute)'],
                     estimated_time: header[';estimated_time(s)'],
                     matierial_weight: header[';matierial_weight'],
-                    // dual extruder
-                    // left
-                    // nozzle_0_diameter: header[';nozzle_0_diameter(mm)'], // 口径
-                    // nozzle_0_material: header[';nozzle_0_material'],
-                    // nozzle_temperature: header[';nozzle_temperature(°C)'],
-                    // right
-                    // nozzle_1_diameter: header[';nozzle_1_diameter(mm)'], // 口径
-                    // nozzle_1_material: header[';nozzle_1_material'],
                     nozzle_1_temperature: header[';nozzle_1_temperature(°C)'],
-
-                    // cnc
-                    // 点动速度
                     jog_speed: header[';jog_speed(mm/minute)'],
-                    // laser
                     power: header[';power(%)'],
                 };
                 dispatch(actions.addGcodeFiles(gcodeFile));

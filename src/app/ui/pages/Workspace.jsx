@@ -173,8 +173,8 @@ function Workspace({ isPopup, onClose, style, className }) {
         onCallBackRun: () => {
             workspaceVisualizerRef.actions.handleRun();
         },
-        onCallBackPause: () => {
-            workspaceVisualizerRef.actions.handlePause();
+        onCallBackPause: (cb) => {
+            workspaceVisualizerRef.actions.handlePause(cb);
         },
         onCallBackStop: () => {
             workspaceVisualizerRef.actions.handleStop();
