@@ -283,7 +283,14 @@ const INITIAL_STATE = {
 
     tmpSupportFaceMarks: {},
     supportOverhangAngle: 50,
-    supportBrushStatus: 'add' // add | remove
+    supportBrushStatus: 'add', // add | remove
+
+    gcodeEntity: {
+        lineWidth0: 0,
+        lineWidth: 0,
+        layerHeight0: 0,
+        layerHeight: 0,
+    }
 };
 
 const ACTION_UPDATE_STATE = 'printing/ACTION_UPDATE_STATE';
@@ -968,8 +975,8 @@ export const actions = {
         }
     },
 
-    gcodeRenderingCallback: data => (dispatch, getState) => {
-        const { gcodeLineGroup, gcodePreviewMode } = getState().printing;
+    gcodeRenderingCallback: (data) => (dispatch, getState) => {
+        const { gcodeLineGroup, gcodePreviewMode, activeDefinition, extruderLDefinition, extruderRDefinition } = getState().printing;
 
         const { status, value } = data;
         switch (status) {
@@ -999,10 +1006,12 @@ export const actions = {
                 //     gcodeLineGroup.remove(object);
                 // });
                 // gcodeParser && gcodeParser.dispose();
-                const object3D = gcodeBufferGeometryToObj3d(
-                    '3DP',
-                    bufferGeometry
-                );
+                const object3D = gcodeBufferGeometryToObj3d('3DP', bufferGeometry, null, {
+                    initialLineWidth: 0,
+                    lineWidth: extruderLDefinition.settings.machine_nozzle_size.default_value,
+                    initialLayerHeight: activeDefinition.settings.layer_height_0.default_value,
+                    layerHeight: activeDefinition.settings.layer_height.default_value,
+                });
                 gcodeLineGroup.add(object3D);
 
                 // const gcode = value.gcode;
@@ -1603,14 +1612,12 @@ export const actions = {
         const { gcodeLine, gcodeLineGroup } = getState().printing;
         if (gcodeLine) {
             gcodeLineGroup.remove(gcodeLine);
-            gcodeLine.geometry.dispose();
-            dispatch(
-                actions.updateState({
-                    gcodeFile: null,
-                    gcodeLine: null,
-                    displayedType: 'model'
-                })
-            );
+            // gcodeLine.geometry.dispose();
+            dispatch(actions.updateState({
+                gcodeFile: null,
+                gcodeLine: null,
+                displayedType: 'model'
+            }));
         }
     },
 
@@ -1805,6 +1812,8 @@ export const actions = {
             modelFileName: filename
         };
         */
+        // save line width and layer height for gcode preview
+
 
         const boundingBox = modelGroup.getBoundingBox();
         const params = {
@@ -1922,7 +1931,7 @@ export const actions = {
 
     // preview
     setGcodeVisibilityByTypeAndDirection: (type, direction = LEFT_EXTRUDER, visible) => (dispatch, getState) => {
-        const { gcodeTypeInitialVisibility } = getState().printing;
+        const { gcodeLine, gcodeTypeInitialVisibility } = getState().printing;
         if (type === 'TOOL0') {
             const gcodeVisibleType = gcodeTypeInitialVisibility[LEFT_EXTRUDER];
             Object.entries(gcodeVisibleType).forEach(([key]) => {
@@ -1942,65 +1951,71 @@ export const actions = {
         }
         dispatch(actions.updateState({ gcodeTypeInitialVisibility }));
         // dispatch(actions.renderShowGcodeLines());
-        // if (gcodeLine) {
-        //     const uniforms = gcodeLine.material.uniforms;
-        //     const value = visible ? 1 : 0;
-        //     if (direction === LEFT_EXTRUDER) {
-        //         switch (type) {
-        //             case 'WALL-INNER':
-        //                 uniforms.u_l_wall_inner_visible.value = value;
-        //                 break;
-        //             case 'WALL-OUTER':
-        //                 uniforms.u_l_wall_outer_visible.value = value;
-        //                 break;
-        //             case 'SKIN':
-        //                 uniforms.u_l_skin_visible.value = value;
-        //                 uniforms.u_l_skirt_visible.value = value;
-        //                 break;
-        //             case 'SUPPORT':
-        //                 uniforms.u_l_support_visible.value = value;
-        //                 break;
-        //             case 'FILL':
-        //                 uniforms.u_l_fill_visible.value = value;
-        //                 break;
-        //             case 'TRAVEL':
-        //                 uniforms.u_l_travel_visible.value = value;
-        //                 break;
-        //             case 'UNKNOWN':
-        //                 uniforms.u_l_unknown_visible.value = value;
-        //                 break;
-        //             default:
-        //                 break;
-        //         }
-        //     } else {
-        //         switch (type) {
-        //             case 'WALL-INNER':
-        //                 uniforms.u_r_wall_inner_visible.value = value;
-        //                 break;
-        //             case 'WALL-OUTER':
-        //                 uniforms.u_r_wall_outer_visible.value = value;
-        //                 break;
-        //             case 'SKIN':
-        //                 uniforms.u_r_skin_visible.value = value;
-        //                 uniforms.u_r_skirt_visible.value = value;
-        //                 break;
-        //             case 'SUPPORT':
-        //                 uniforms.u_r_support_visible.value = value;
-        //                 break;
-        //             case 'FILL':
-        //                 uniforms.u_r_fill_visible.value = value;
-        //                 break;
-        //             case 'TRAVEL':
-        //                 uniforms.u_r_travel_visible.value = value;
-        //                 break;
-        //             case 'UNKNOWN':
-        //                 uniforms.u_r_unknown_visible.value = value;
-        //                 break;
-        //             default:
-        //                 break;
-        //         }
-        //     }
-        // }
+        if (gcodeLine) {
+            // const uniforms = gcodeLine.material.uniforms;
+            const value = visible ? 1 : 0;
+            if (direction === LEFT_EXTRUDER) {
+                gcodeLine.children.forEach(mesh => {
+                    const uniforms = mesh.material.uniforms;
+                    switch (type) {
+                        case 'WALL-INNER':
+                            uniforms.u_l_wall_inner_visible.value = value;
+                            break;
+                        case 'WALL-OUTER':
+                            uniforms.u_l_wall_outer_visible.value = value;
+                            break;
+                        case 'SKIN':
+                            uniforms.u_l_skin_visible.value = value;
+                            uniforms.u_l_skirt_visible.value = value;
+                            break;
+                        case 'SUPPORT':
+                            uniforms.u_l_support_visible.value = value;
+                            break;
+                        case 'FILL':
+                            uniforms.u_l_fill_visible.value = value;
+                            break;
+                        case 'TRAVEL':
+                            uniforms.u_l_travel_visible.value = value;
+                            break;
+                        case 'UNKNOWN':
+                            uniforms.u_l_unknown_visible.value = value;
+                            break;
+                        default:
+                            break;
+                    }
+                });
+            } else {
+                gcodeLine.children.forEach(mesh => {
+                    const uniforms = mesh.material.uniforms;
+                    switch (type) {
+                        case 'WALL-INNER':
+                            uniforms.u_r_wall_inner_visible.value = value;
+                            break;
+                        case 'WALL-OUTER':
+                            uniforms.u_r_wall_outer_visible.value = value;
+                            break;
+                        case 'SKIN':
+                            uniforms.u_r_skin_visible.value = value;
+                            uniforms.u_r_skirt_visible.value = value;
+                            break;
+                        case 'SUPPORT':
+                            uniforms.u_r_support_visible.value = value;
+                            break;
+                        case 'FILL':
+                            uniforms.u_r_fill_visible.value = value;
+                            break;
+                        case 'TRAVEL':
+                            uniforms.u_r_travel_visible.value = value;
+                            break;
+                        case 'UNKNOWN':
+                            uniforms.u_r_unknown_visible.value = value;
+                            break;
+                        default:
+                            break;
+                    }
+                });
+            }
+        }
         dispatch(actions.render());
     },
 
@@ -2163,10 +2178,12 @@ export const actions = {
         // gcodeParser.startLayer = range[0];
         // gcodeParser.endLayer = range[1];
         // dispatch(actions.renderShowGcodeLines());
-        // if (gcodeLine) {
-        //     gcodeLine.material.uniforms.u_visible_layer_range_start.value = range[0] || -100;
-        //     gcodeLine.material.uniforms.u_visible_layer_range_end.value = range[1];
-        // }
+        if (gcodeLine) {
+            gcodeLine.children.forEach(mesh => {
+                mesh.material.uniforms.u_visible_layer_range_start.value = range[0] || -100;
+                mesh.material.uniforms.u_visible_layer_range_end.value = range[1];
+            });
+        }
         if (isUp && (range[0] - prevRange[0]) > 0 && (range[0] - prevRange[0]) < 1
             && (range[1] - prevRange[1]) > 0 && (range[1] - prevRange[1]) < 1) {
             range[0] = prevRange[0];

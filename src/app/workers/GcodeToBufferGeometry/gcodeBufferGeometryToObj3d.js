@@ -192,8 +192,9 @@ const gcodeBufferGeometryToObj3d = (func, bufferGeometry, renderMethod) => {
                             const mesh = new THREE.Mesh(geometry, new THREE.ShaderMaterial({
                                 vertexShader: PRINT3D_VERT_SHADER,
                                 fragmentShader: PRINT3D_FRAG_SHADER,
-                                side: THREE.FrontSide,
+                                side: THREE.DoubleSide,
                                 uniforms: {
+                                    ...PRINT3D_UNIFORMS,
                                     color: {
                                         value: layerType.color || 0xffffff,
                                     },
@@ -212,12 +213,13 @@ const gcodeBufferGeometryToObj3d = (func, bufferGeometry, renderMethod) => {
                         } else {
                             // travel should render as a line
                             const geometry = new THREE.BufferGeometry();
-                            geometry.setAttribute('position', new THREE.Float32BufferAttribute(layerType.positions), 3);
+                            geometry.setAttribute('position', new THREE.Float32BufferAttribute(layerType.positions, 3));
                             const line = new THREE.Line(geometry, new THREE.ShaderMaterial({
                                 vertexShader: PRINT3D_VERT_SHADER,
                                 fragmentShader: PRINT3D_FRAG_SHADER,
                                 side: THREE.DoubleSide,
                                 uniforms: {
+                                    ...PRINT3D_UNIFORMS,
                                     color: {
                                         value: layerType.color || 0xffffff,
                                     },
@@ -230,7 +232,9 @@ const gcodeBufferGeometryToObj3d = (func, bufferGeometry, renderMethod) => {
                                     layer: {
                                         value: index
                                     }
-                                }
+                                },
+                                linewidth: 10,
+                                wireframeLinewidth: 5
                             }));
                             object3D.add(line);
                         }
