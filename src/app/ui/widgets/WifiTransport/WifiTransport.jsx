@@ -531,8 +531,6 @@ function WifiTransport({ widgetActions, controlActions }) {
 
         setIsUnknownGCodeType(!Object.keys(matchMap).includes(gcodeType));
         setIsGCdoeFileMatchToolHead(headType === matchMap[gcodeType]);
-        console.log(Object.keys(matchMap));
-        console.log(headType === matchMap[gcodeType], headType, matchMap[gcodeType], gcodeType, !Object.keys(matchMap).includes(gcodeType));
     }, [headType, selectFileIndex]);
 
     return (

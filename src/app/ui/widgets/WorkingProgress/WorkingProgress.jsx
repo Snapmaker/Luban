@@ -127,7 +127,7 @@ const WorkingProgress = ({ widgetActions, controlActions }) => {
             </div>
             {printStatus !== 'Complete' && (
                 <div className="sm-flex justify-space-between align-center margin-top-16">
-                    <Button disable={isPausing} width="160px" type="default" onClick={() => handleMachine(currentWorkflowStatus === 'running' ? 'pause' : 'run')}>
+                    <Button width="160px" type="default" onClick={() => handleMachine(currentWorkflowStatus === 'running' ? 'pause' : 'run')}>
                         {!isPausing && (
                             <SvgIcon
                                 // TODO: pause translation animation
@@ -138,7 +138,7 @@ const WorkingProgress = ({ widgetActions, controlActions }) => {
                         )}
                         {isPausing && (
                             <Loading
-                                style={{ color: '#B9BCBF', position: 'relative', top: -2 }}
+                                style={{ color: '#B9BCBF', position: 'relative', top: -3, marginRight: 4 }}
                                 className="margin-right-4"
                             />
                         )}
