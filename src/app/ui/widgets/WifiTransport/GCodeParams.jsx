@@ -27,8 +27,8 @@ const GCodeParams = (props) => {
                     matierial_weight: { key: 'key-Workspace/GCodeParams-Matierial weight', value: `${props.gcodeFile.matierial_weight.toFixed(1)}g` },
                 };
                 if (isDualExture) {
-                    gcodeFile.nozzle_temperature = { key: 'key-Workspace/GCodeParams-Left nozzle temperature', value: `${props.gcodeFile.nozzle_1_temperature}°C` };
-                    gcodeFile.nozzle_1_temperature = { key: 'key-Workspace/GCodeParams-Right nozzle temperature', value: `${props.gcodeFile.nozzle_1_temperature}°C` };
+                    tmpGcodeFile.nozzle_temperature = { key: 'key-Workspace/GCodeParams-Left nozzle temperature', value: `${props.gcodeFile.nozzle_1_temperature}°C` };
+                    tmpGcodeFile.nozzle_1_temperature = { key: 'key-Workspace/GCodeParams-Right nozzle temperature', value: `${props.gcodeFile.nozzle_1_temperature}°C` };
                 }
                 break;
             }
