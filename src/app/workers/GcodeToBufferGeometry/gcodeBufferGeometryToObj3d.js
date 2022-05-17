@@ -11,45 +11,32 @@ function elementToVector3(arr) {
     return vectors;
 }
 
-// function deduplicateNearPoints(lineAll) {
-//     const line = [];
-//     let currentPoint = lineAll[0];
-//     line.push(currentPoint);
-//     for (let i = 1; i < lineAll.length; i++) {
-//         if (!currentPoint.equals(lineAll[i])) {
-//             line.push(lineAll[i]);
-//             currentPoint = lineAll[i];
-//         }
-//     }
-//     return line;
-// }
-
 function lineToGeometry(originalPositions, breakPositionsIndex, width, height) {
     const positions = elementToVector3(originalPositions);
-    // const positions = elementToVector3(bufferGeometry.getAttribute('position').array);
-    // const colors = elementToVector3(bufferGeometry.getAttribute('a_color').array);
-    // const colors1 = elementToVector3(bufferGeometry.getAttribute('a_color1').array);
-    // const layerIndices = bufferGeometry.getAttribute('a_layer_index').array;
-    // const typeCodes = bufferGeometry.getAttribute('a_type_code').array;
-    // const toolCodes = bufferGeometry.getAttribute('a_tool_code').array;
-
-    // 去除前后重复的点
     const line = positions;
-    // const line = deduplicateNearPoints(positions);
-    // console.log(line.length, deduplicateNearPoints);
-    // if (line.length < 2) {
-    //     return;
-    // }
     const zUp = new THREE.Vector3(0, 0, 1), zDown = new THREE.Vector3(0, 0, -1);
     const vertices = [], indices = [], normals = [];
-    // exColors = [], exColors1 = [], exLayerIndices = [], exTypeCodes = [], exToolCodes = [],
     const halfHeight = height / 2;
     const halfWidth = width / 2;
 
     let currentIndex = 0;
     for (let i = 0; i < line.length - 1; i++) {
         if (breakPositionsIndex.indexOf(i) > -1) {
+            /**
+             * add faces for break points
+             * .______________.     ._____.   <- line
+             * ^              ^           ^
+             * start point   break point  end point
+             * */
+            indices.push(...[
+                4, 5, 6, 4, 6, 7,
+            ].map(index => index + currentIndex - 8));
             continue;
+        }
+        if (breakPositionsIndex.indexOf(i - 1) > -1) {
+            indices.push(...[
+                0, 2, 1, 0, 3, 2,
+            ].map(index => index + currentIndex));
         }
         const pointStart = line[i];
         const pointEnd = line[i + 1];
@@ -65,11 +52,6 @@ function lineToGeometry(originalPositions, breakPositionsIndex, width, height) {
 
         // same as CSS top right down left
         vertices.push(...up.toArray(), ...right.toArray(), ...down.toArray(), ...left.toArray());
-        // exColors.push(...colors[i].toArray(), ...colors[i].toArray(), ...colors[i].toArray(), ...colors[i].toArray());
-        // exColors1.push(...colors1[i].toArray(), ...colors1[i].toArray(), ...colors1[i].toArray(), ...colors1[i].toArray());
-        // exLayerIndices.push(layerIndices[i], layerIndices[i], layerIndices[i], layerIndices[i]);
-        // exTypeCodes.push(typeCodes[i], typeCodes[i], typeCodes[i], typeCodes[i]);
-        // exToolCodes.push(toolCodes[i], toolCodes[i], toolCodes[i], toolCodes[i]);
 
         normals.push(...new THREE.Vector3().subVectors(up, pointStart).toArray());
         normals.push(...new THREE.Vector3().subVectors(right, pointStart).toArray());
@@ -79,24 +61,17 @@ function lineToGeometry(originalPositions, breakPositionsIndex, width, height) {
         // point end expanded 4 points
         const down1 = new THREE.Vector3(pointEnd.x, pointEnd.y, pointEnd.z - halfHeight);
         const up1 = new THREE.Vector3(pointEnd.x, pointEnd.y, pointEnd.z + halfHeight);
-        // const left1N = new THREE.Vector3().crossVectors(zUp, lineSegmentVector).normalize().multiplyScalar(halfWidth);
         const left1 = new THREE.Vector3(leftN.x + pointEnd.x, leftN.y + pointEnd.y, leftN.z + pointEnd.z);
-        // const right1N = new THREE.Vector3().crossVectors(zDown, lineSegmentVector).normalize().multiplyScalar(halfWidth);
         const right1 = new THREE.Vector3(rightN.x + pointEnd.x, rightN.y + pointEnd.y, rightN.z + pointEnd.z);
 
         vertices.push(...up1.toArray(), ...right1.toArray(), ...down1.toArray(), ...left1.toArray());
-        // exColors.push(...colors[i + 1].toArray(), ...colors[i + 1].toArray(), ...colors[i + 1].toArray(), ...colors[i + 1].toArray());
-        // exColors1.push(...colors1[i + 1].toArray(), ...colors1[i + 1].toArray(), ...colors1[i + 1].toArray(), ...colors1[i + 1].toArray());
-        // exLayerIndices.push(layerIndices[i + 1], layerIndices[i + 1], layerIndices[i + 1], layerIndices[i + 1]);
-        // exTypeCodes.push(typeCodes[i + 1], typeCodes[i + 1], typeCodes[i + 1], typeCodes[i + 1]);
-        // exToolCodes.push(toolCodes[i + 1], toolCodes[i + 1], toolCodes[i + 1], toolCodes[i + 1]);
 
         normals.push(...new THREE.Vector3().subVectors(up1, pointEnd).toArray());
         normals.push(...new THREE.Vector3().subVectors(right1, pointEnd).toArray());
         normals.push(...new THREE.Vector3().subVectors(down1, pointEnd).toArray());
         normals.push(...new THREE.Vector3().subVectors(left1, pointEnd).toArray());
 
-        // 封闭起点和终点的竖截面
+        // generate faces for start and end points
         if (i === 0) {
             indices.push(...[
                 0, 2, 1, 0, 3, 2,
@@ -108,7 +83,7 @@ function lineToGeometry(originalPositions, breakPositionsIndex, width, height) {
             ].map(index => index + currentIndex));
         }
 
-        // 侧边面
+        // generate faces
         indices.push(...[
             3, 0, 7, 0, 4, 7,
             0, 1, 4, 1, 5, 4,
@@ -119,9 +94,19 @@ function lineToGeometry(originalPositions, breakPositionsIndex, width, height) {
         currentIndex += 8;
     }
 
-    // 拐角补面
     // currentIndex = 4;
     // for (let i = 1; i < line.length - 1; i++) {
+    //     if (breakPositionsIndex.indexOf(i) > -1 || breakPositionsIndex.indexOf(i - 1) > -1) {
+    //         continue;
+    //     }
+    //     /**
+    //      * calculate the relative position between sc and ec, then decide which side should add faces
+    //      *        center
+    //      *         /\
+    //      *       /   \
+    //      *     /      \
+    //      * start      end
+    //      */
     //     const pointStart = line[i - 1];
     //     const pointCenter = line[i];
     //     const pointEnd = line[i + 1];
@@ -148,17 +133,6 @@ function lineToGeometry(originalPositions, breakPositionsIndex, width, height) {
     geometry.setIndex(indices);
     geometry.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
     geometry.setAttribute('normal', new THREE.Float32BufferAttribute(normals, 3));
-    // const exColorsAttr = new THREE.Uint8BufferAttribute(exColors, 3);
-    // exColorsAttr.normalized = true;
-    // const exColors1Attr = new THREE.Uint8BufferAttribute(exColors, 3);
-    // exColors1Attr.normalized = true;
-    // geometry.setAttribute('a_color', exColorsAttr);
-    // geometry.setAttribute('a_color1', exColors1Attr);
-    // geometry.setAttribute('a_layer_index', new THREE.Float32BufferAttribute(exLayerIndices, 1));
-    // geometry.setAttribute('a_type_code', new THREE.Float32BufferAttribute(exTypeCodes, 1));
-    // geometry.setAttribute('a_tool_code', new THREE.Float32BufferAttribute(exToolCodes, 1));
-    // geometry.computeVertexNormals();
-    // console.log(vertices, indices, geometry);
     return geometry;
 }
 
@@ -213,14 +187,11 @@ const gcodeBufferGeometryToObj3d = (func, bufferGeometry, renderMethod, params) 
                             const mesh = new THREE.Mesh(geometry, new THREE.ShaderMaterial({
                                 vertexShader: PRINT3D_VERT_SHADER,
                                 fragmentShader: PRINT3D_FRAG_SHADER,
-                                side: THREE.DoubleSide,
+                                side: THREE.FrontSide,
                                 uniforms: {
                                     ...PRINT3D_UNIFORMS,
-                                    u_color0: {
-                                        value: [r0, g0, b0],
-                                    },
-                                    u_color1: {
-                                        value: [r1, g1, b1],
+                                    u_color: {
+                                        value: layerType.toolCode === 0 ? [r0, g0, b0] : [r1, g1, b1],
                                     },
                                     color: {
                                         value: layerType.color || 0xffffff,
@@ -234,24 +205,36 @@ const gcodeBufferGeometryToObj3d = (func, bufferGeometry, renderMethod, params) 
                                     layer: {
                                         value: index
                                     }
+                                },
+                                depthTest: true,
+                                depthWrite: true,
+                                extensions: {
+                                    derivatives: true,
+                                    fragDepth: true,
+                                    drawBuffers: true
                                 }
                             }));
                             object3D.add(mesh);
                         } else {
                             // travel should render as a line
                             const geometry = new THREE.BufferGeometry();
-                            geometry.setAttribute('position', new THREE.Float32BufferAttribute(layerType.positions, 3));
-                            const line = new THREE.Line(geometry, new THREE.ShaderMaterial({
+                            const positions = elementToVector3(layerType.positions);
+                            const segmentPositions = [];
+                            for (let i = 0; i < positions.length - 1; i++) {
+                                if (layerType.breakPositionsIndex.indexOf(i) > -1) {
+                                    continue;
+                                }
+                                segmentPositions.push(...positions[i].toArray(), ...positions[i + 1].toArray());
+                            }
+                            geometry.setAttribute('position', new THREE.Float32BufferAttribute(segmentPositions, 3));
+                            const line = new THREE.LineSegments(geometry, new THREE.ShaderMaterial({
                                 vertexShader: PRINT3D_VERT_SHADER,
                                 fragmentShader: PRINT3D_FRAG_SHADER,
-                                side: THREE.DoubleSide,
+                                side: THREE.FrontSide,
                                 uniforms: {
                                     ...PRINT3D_UNIFORMS,
-                                    u_color0: {
-                                        value: [r0, g0, b0],
-                                    },
-                                    u_color1: {
-                                        value: [r1, g1, b1],
+                                    u_color: {
+                                        value: layerType.color || 0xffffff,
                                     },
                                     color: {
                                         value: layerType.color || 0xffffff,
@@ -265,6 +248,13 @@ const gcodeBufferGeometryToObj3d = (func, bufferGeometry, renderMethod, params) 
                                     layer: {
                                         value: index
                                     }
+                                },
+                                depthTest: true,
+                                depthWrite: true,
+                                extensions: {
+                                    derivatives: true,
+                                    fragDepth: true,
+                                    drawBuffers: true
                                 },
                                 linewidth: 10,
                                 wireframeLinewidth: 5
