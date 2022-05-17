@@ -73,7 +73,8 @@ const MotionButtonGroup = (props) => {
                     className="margin-bottom-8"
                     priority="level-three"
                     onClick={() => {
-                        props.executeGcode('G92 X0 Y0 Z0 B0');
+                        // props.executeGcode('G92 X0 Y0 Z0 B0');
+                        actions.setWorkOrigin();
                     }}
                     disabled={!canClick}
                 >
@@ -88,7 +89,7 @@ MotionButtonGroup.propTypes = {
     state: PropTypes.object,
     workPosition: PropTypes.object,
     actions: PropTypes.object,
-    executeGcode: PropTypes.func
+    // executeGcode: PropTypes.func
 };
 
 export default MotionButtonGroup;

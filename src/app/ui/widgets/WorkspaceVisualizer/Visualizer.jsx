@@ -279,9 +279,10 @@ class Visualizer extends PureComponent {
                 size,
                 workPosition,
                 originOffset } = this.props;
-            const { workflowState } = this.state;
-            if ((connectionType === CONNECTION_TYPE_WIFI && workflowStatus === WORKFLOW_STATUS_IDLE)
-                || (connectionType === CONNECTION_TYPE_SERIAL && workflowState === WORKFLOW_STATE_IDLE)) {
+            // const { workflowState } = this.state;
+            // if ((connectionType === CONNECTION_TYPE_WIFI && workflowStatus === WORKFLOW_STATUS_IDLE)
+            //     || (connectionType === CONNECTION_TYPE_SERIAL && workflowState === WORKFLOW_STATE_IDLE)) {
+            if (workflowStatus === WORKFLOW_STATUS_IDLE) {
                 server.startServerGcode({
                     headType,
                     workflowStatus,
@@ -297,8 +298,8 @@ class Visualizer extends PureComponent {
                     size,
                     workPosition,
                     originOffset,
-                    // for serialport indiviual
-                    workflowState,
+                    // // for serialport indiviual
+                    // workflowStatus,
                 }, (res) => {
                     if (res) {
                         const { msg, code } = res;
@@ -329,7 +330,7 @@ class Visualizer extends PureComponent {
             }
 
             if ((connectionType === CONNECTION_TYPE_WIFI && workflowStatus === WORKFLOW_STATUS_PAUSED)
-                || (connectionType === CONNECTION_TYPE_SERIAL && workflowState === WORKFLOW_STATE_PAUSED)) {
+                || (connectionType === CONNECTION_TYPE_SERIAL && workflowStatus === WORKFLOW_STATE_PAUSED)) {
                 server.resumeServerGcode({
                     headType: this.props.headType,
                     pause3dpStatus: this.props.pause3dpStatus,

@@ -31,6 +31,9 @@ export const CONNECTION_ENCLOSURE_FAN = 'connection:setEnclosureFan';
 export const CONNECTION_DOOR_DETECTION = 'connection:setDoorDetection';
 export const CONNECTION_FILTER_SWITCH = 'connection:setFilterSwitch';
 export const CONNECTION_FILTER_WORKSPEED = 'connection:setFilterWorkSpeed';
+export const CONNECTION_GO_HOME = 'connection:goHome';
+export const CONNECTION_COORDINATE_MOVE = 'connection:coordinateMove';
+export const CONNECTION_SET_WORK_ORIGIN = 'connection:setWorkOrigin';
 
 export const SVG_MOVE_MINI_DISTANCE = 1e-4;
 export const MINIMUM_WIDTH_AND_HEIGHT = 0.01;
@@ -69,6 +72,13 @@ export const WORKFLOW_STATUS_MAP = {
     '8': WORKFLOW_STATUS_COMPLETED,
     '9': WORKFLOW_STATUS_RECOVERING,
     '10': WROKFLOW_STATUS_RESUMING
+};
+
+export const COORDINATE_AXIS = {
+    'X': 0,
+    'Y': 1,
+    'Z': 2,
+    'B': 4
 };
 
 // Workflow State

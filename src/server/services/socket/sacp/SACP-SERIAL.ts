@@ -25,7 +25,6 @@ class SocketSerialNew extends SocketBASE {
     public connectionOpen = async (socket: SocketServer) => {
         this.availPorts = await SerialPort.list();
         this.socket = socket;
-        log.debug(`avalid ${this.availPorts[0].path}`);
         if (this.availPorts.length > 0) {
             this.serialport = new SerialPort(this.availPorts[0].path, {
                 autoOpen: false,
@@ -33,7 +32,7 @@ class SocketSerialNew extends SocketBASE {
             });
             this.sacpClient = new Business('serialport', this.serialport);
             this.serialport.on('data', (data) => {
-                console.log('data', data);
+                // console.log('data', data);
                 this.sacpClient.read(data);
             });
             this.serialport.once('open', () => {
@@ -43,12 +42,6 @@ class SocketSerialNew extends SocketBASE {
                     // TO DO: Need to get seriesSize for 'connection:connected' event
                     let state: ConnectedData = {};
                     await this.sacpClient.getModuleInfo().then(({ data: moduleInfos }) => {
-                        Object.keys(moduleInfos).forEach(key => {
-                            log.debug(`key: ${key}, value: ${moduleInfos[key]}`);
-                            Object.keys(moduleInfos[key]).forEach(childKey => {
-                                log.debug(`childKey: ${childKey}, value: ${moduleInfos[key][childKey]}`);
-                            });
-                        });
                         const moduleListStatus = {
                             // airPurifier: false,
                             emergencyStopButton: false,
@@ -77,12 +70,6 @@ class SocketSerialNew extends SocketBASE {
                         state.moduleStatusList = moduleListStatus;
                     });
                     await this.sacpClient.getCurrentCoordinateInfo().then(({ data: coordinateInfos }) => {
-                        // Object.keys(coordinateInfos).forEach(key => {
-                        //     log.debug(`key: ${key}`);
-                        //     Object.keys(coordinateInfos[key]).forEach(childKey => {
-                        //         log.debug(`childKey: ${childKey}, value: ${coordinateInfos[key][childKey]}`);
-                        //     });
-                        // });
                         const isHomed = !(coordinateInfos?.coordinateSystemInfo?.homed); // 0: homed, 1: need to home
                         state.isHomed = isHomed;
                     });
@@ -90,9 +77,7 @@ class SocketSerialNew extends SocketBASE {
                         Object.keys(machineInfos).forEach(key => {
                             log.debug(`key: ${key}, value: ${machineInfos[key]}`);
                         });
-                        // result = {
-                        //     series: SERIAL_MAP_SACP[machineInfos.type]
-                        // };
+
                         state = {
                             ...state,
                             series: SERIAL_MAP_SACP[machineInfos.type]
@@ -136,11 +121,12 @@ class SocketSerialNew extends SocketBASE {
         this.socket.emit('connection:close');
     }
 
-    public goHome = () => {
-        this.sacpClient.requestHome().then(({ response }) => {
-            console.log({ response });
-        });
-    }
+    // public goHome = () => {
+    //     log.info('onClick gohome');
+    //     this.sacpClient.requestHome().then(({ response }) => {
+    //         log.info(`Go-Home, ${response}`);
+    //     });
+    // }
 }
 
 export default new SocketSerialNew();

@@ -1,19 +1,19 @@
 import { includes, find } from 'lodash';
-import Business from '../../../lib/SACP-SDK/SACP/business/Business';
+import Business, { CoordinateType } from '../../../lib/SACP-SDK/SACP/business/Business';
 import SocketServer from '../../../lib/SocketManager';
 import logger from '../../../lib/logger';
-import { WORKFLOW_STATUS_MAP, EMERGENCY_STOP_BUTTON, ENCLOSURE_MODULES, AIR_PURIFIER_MODULES, ROTARY_MODULES } from '../../../../app/constants';
+import { COORDINATE_AXIS, WORKFLOW_STATUS_MAP, HEAD_PRINTING, EMERGENCY_STOP_BUTTON, ENCLOSURE_MODULES, AIR_PURIFIER_MODULES, ROTARY_MODULES } from '../../../../app/constants';
 import { readUint8 } from '../../../lib/SACP-SDK/SACP/helper';
 import GetHotBed from '../../../lib/SACP-SDK/SACP/business/models/GetHotBed';
 import CoordinateSystemInfo from '../../../lib/SACP-SDK/SACP/business/models/CoordinateSystemInfo';
-import { MarlinStateData } from '../types';
-import { HEAD_PRINTING } from '../../../constants';
+import { EventOptions, MarlinStateData } from '../types';
 import ExtruderInfo from '../../../lib/SACP-SDK/SACP/business/models/ExtruderInfo';
+import CoordinateInfo, { Direction } from '../../../lib/SACP-SDK/SACP/business/models/CoordinateInfo';
 
 const log = logger('lib:SocketBASE');
 
 class SocketBASE {
-    private heartbeatTimer;
+    // private heartbeatTimer;
 
     socket: SocketServer;
 
@@ -21,18 +21,77 @@ class SocketBASE {
 
     public startHeartbeatBase = (sacpClient: Business) => {
         this.sacpClient = sacpClient;
+        let stateData: MarlinStateData;
         let statusKey = 0;
-        // this.socket = socket;
         const moduleStatusList = {
             rotaryModule: false,
             airPurifier: false,
             emergencyStopButton: false,
             enclosure: false
         };
-        let stateData: MarlinStateData;
-        // get position
-        this.sacpClient.subscribeCurrentCoordinateInfo({ interval: 2000 }, (data) => {
-            console.log('subscribePosition');
+        this.sacpClient.subscribeHeartbeat({ interval: 1000 }, async (data) => {
+            // log.info(`receive heartbeat: ${data.response}`);
+            statusKey = readUint8(data.response.data, 0);
+            await this.sacpClient.getModuleInfo().then(({ data: moduleInfos }) => {
+                moduleInfos.forEach(module => {
+                    if (includes(EMERGENCY_STOP_BUTTON, module.moduleId)) {
+                        moduleStatusList.emergencyStopButton = true;
+                    }
+                    if (includes(ENCLOSURE_MODULES, module.moduleId)) {
+                        moduleStatusList.enclosure = true;
+                    }
+                    if (includes(ROTARY_MODULES, module.moduleId)) {
+                        moduleStatusList.rotaryModule = true;
+                    }
+                    if (includes(AIR_PURIFIER_MODULES, module.moduleId)) {
+                        stateData.airPurifier = true;
+                        // new to update airPurifier status
+                    }
+                });
+            });
+            // stateData.status = WORKFLOW_STATUS_MAP[statusKey];
+            this.socket && this.socket.emit('Marlin:state', { state: {
+                ...stateData,
+                status: WORKFLOW_STATUS_MAP[statusKey],
+                headType: HEAD_PRINTING,
+                moduleStatusList
+            } });
+            // clearTimeout(this.heartbeatTimer);
+            // this.heartbeatTimer = setTimeout(() => {
+            //     log.info('TCP connection closed');
+            //     this.socket && this.socket.emit('connection:close');
+            // }, 60000); // TODO: should change this after file transfer ready
+        }).then((res) => {
+            log.info(`subscribe heartbeat success: ${res}`);
+        });
+        this.sacpClient.subscribeHotBedTemperature({ interval: 1000 }, (data) => {
+            // log.info(`revice hotbed: ${data.response}`);
+            const hotBedInfo = new GetHotBed().fromBuffer(data.response.data);
+            stateData = {
+                ...stateData,
+                heatedBedTargetTemperature: hotBedInfo?.zoneList[0]?.targetTemzperature || 0,
+                heatedBedTemperature: hotBedInfo?.zoneList[0]?.currentTemperature || 0
+            };
+        }).then(res => {
+            log.info(`subscribe hotbed success: ${res}`);
+        });
+        this.sacpClient.subscribeNozzleInfo({ interval: 1000 }, (data) => {
+            // log.info(`revice nozzle: ${data.response}`);
+            const nozzleInfo = new ExtruderInfo().fromBuffer(data.response.data);
+            const leftInfo = find(nozzleInfo.extruderList, { index: 0 });
+            const rightInfo = find(nozzleInfo.extruderList, { index: 1 });
+            stateData = {
+                ...stateData,
+                nozzleTemperature: leftInfo.currentTemperature,
+                nozzleTargetTemperature: leftInfo.targetTemperature,
+                nozzleRightTargetTemperature: rightInfo?.targetTemperature || 0,
+                nozzleRightTemperature: rightInfo?.currentTemperature || 0
+            };
+        }).then(res => {
+            log.info(`subscribe nozzle success: ${res}`);
+        });
+        this.sacpClient.subscribeCurrentCoordinateInfo({ interval: 1000 }, (data) => {
+            // log.info(`revice coordinate: ${data.response}`);
             const response = data.response;
             const coordinateInfos = new CoordinateSystemInfo().fromBuffer(response.data);
             const currentCoordinate = coordinateInfos.coordinates;
@@ -55,74 +114,57 @@ class SocketBASE {
                 pos,
                 originOffset
             };
-            console.log('subScribePosition', pos, originOffset);
-        });
-        // get hot bed temperature
-        this.sacpClient.subscribeHotBedTemperature({ interval: 2000 }, (data) => {
-            console.log('subscribeHotBed', data);
-            const hotBedInfo = new GetHotBed().fromBuffer(data.response.data);
-            console.log({ hotBedInfo });
-            stateData = {
-                ...stateData,
-                heatedBedTargetTemperature: hotBedInfo?.zoneList[0]?.targetTemzperature || 0,
-                heatedBedTemperature: hotBedInfo?.zoneList[0]?.currentTemperature || 0
-            };
-        });
-        // get nozzle temperature
-        this.sacpClient.subscribeNozzleInfo({ interval: 2000 }, ({ response }) => {
-            const nozzleInfo = new ExtruderInfo().fromBuffer(response.data);
-            const leftInfo = find(nozzleInfo.extruderList, { index: 0 });
-            const rightInfo = find(nozzleInfo.extruderList, { index: 1 });
-            stateData = {
-                ...stateData,
-                nozzleTemperature: leftInfo.currentTemperature,
-                nozzleTargetTemperature: leftInfo.targetTemperature,
-                nozzleRightTargetTemperature: rightInfo?.targetTemperature || 0,
-                nozzleRightTemperature: rightInfo?.currentTemperature || 0
-            };
-        });
-        // get workflow status, moduleInfo, emergency button status
-        this.sacpClient.subscribeHeartbeat({ interval: 2000 }, async (data) => {
-            log.info(`receive heartbeat: ${data.response}`);
-            statusKey = readUint8(data.response.data, 0);
-            stateData = {
-                ...stateData,
-                status: WORKFLOW_STATUS_MAP[statusKey]
-            };
-            await this.sacpClient.getModuleInfo().then(({ data: moduleInfos }) => {
-                moduleInfos.forEach(module => {
-                    if (includes(EMERGENCY_STOP_BUTTON, module.moduleId)) {
-                        moduleStatusList.emergencyStopButton = true;
-                    }
-                    if (includes(ENCLOSURE_MODULES, module.moduleId)) {
-                        moduleStatusList.enclosure = true;
-                    }
-                    if (includes(ROTARY_MODULES, module.moduleId)) {
-                        moduleStatusList.rotaryModule = true;
-                    }
-                    if (includes(AIR_PURIFIER_MODULES, module.moduleId)) {
-                        stateData.airPurifier = true;
-                        // new to update airPurifier status
-                    }
-                });
-            });
-            await this.sacpClient.getEmergencyStopInfo().then(() => {
-                // console.log('emergencyStatus', emergencyStatus);
-            });
-            clearTimeout(this.heartbeatTimer);
-            // this.heartbeatTimer = setTimeout(() => {
-            //     log.info('TCP connection closed');
-            //     this.socket && this.socket.emit('connection:close');
-            // }, 2000); // TODO: should change this after file transfer ready
-            this.socket && this.socket.emit('Marlin:state', { state: {
-                ...stateData,
-                moduleStatusList,
-                headType: HEAD_PRINTING
-            } });
-        }).then((res) => {
-            log.info(`subscribe heartbeat success: ${res}`);
+            console.log('originOffset', originOffset);
+        }).then(res => {
+            log.info(`subscribe coordination success: ${res}`);
         });
     };
+
+    public executeGcode = async (options: EventOptions, callback: () => void) => {
+        log.info('run executeGcode');
+        const { gcode } = options;
+        const gcodeLines = gcode.split('\n');
+        // callback && callback();
+        log.debug(`executeGcode, ${gcodeLines}`);
+        try {
+            callback && callback();
+            this.socket && this.socket.emit('connection:executeGcode', { msg: '', res: null });
+        } catch (e) {
+            log.error(`execute gcode error: ${e}`);
+        }
+    };
+
+    public goHome = () => {
+        log.info('onClick gohome');
+        this.sacpClient.requestHome().then(({ response }) => {
+            log.info(`Go-Home, ${response}`);
+        });
+    }
+
+    public coordinateMove = ({ moveOrders, jogSpeed }) => {
+        log.info(`coordinate: ${moveOrders}`);
+        const distances = [];
+        const directions = [];
+        moveOrders.forEach(item => {
+            directions.push(COORDINATE_AXIS[item.axis]);
+            distances.push(item.distance);
+        });
+        this.sacpClient.requestAbsoluteCooridateMove(directions, distances, jogSpeed, CoordinateType.WORKSPACE).then(res => {
+            log.info(`Coordinate Move: ${res}`);
+        });
+    }
+
+    public setWorkOrigin = ({ xPosition, yPosition, zPosition, bPosition }) => {
+        log.info(`position: ${xPosition}, ${yPosition}, ${zPosition}, ${bPosition}`);
+        const coordinateInfos = [new CoordinateInfo(Direction.X1, 0), new CoordinateInfo(Direction.Y1, 0), new CoordinateInfo(Direction.Z1, 0)];
+        if (bPosition) {
+            coordinateInfos.push(new CoordinateInfo(Direction.B1, -bPosition));
+        }
+        this.sacpClient.setWorkOrigin(coordinateInfos).then(res => {
+            // log.info(`Set Work Origin: ${res.data}`);
+            console.log(res);
+        });
+    }
 }
 
 export default SocketBASE;
