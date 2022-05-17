@@ -1,17 +1,14 @@
 import fs from 'fs';
 import { generateRandomPathName } from '../../../../shared/lib/random-utils';
 import { editorProcess } from '../../../lib/editor/process';
-import {
-    SOURCE_TYPE_RASTER,
-    TOOLPATH_TYPE_VECTOR
-} from '../../../constants';
+import { SOURCE_TYPE_RASTER, TOOLPATH_TYPE_VECTOR } from '../../../constants';
 import slice from '../../../slicer/call-engine';
 import sendMessage from '../utils/sendMessage';
 
 const generateLaserToolPathFromEngine = (allTasks, onProgress) => {
     // const allResultPromise = [];
     const toolPathLength = allTasks?.length;
-    const allResultPromise = allTasks.map(async (task) => {
+    const allResultPromise = allTasks.map(async task => {
         const modelInfos = task.data;
         if (!modelInfos || modelInfos?.length === 0) {
             return Promise.reject(new Error('modelInfo is empty.'));
@@ -23,7 +20,7 @@ const generateLaserToolPathFromEngine = (allTasks, onProgress) => {
                 const result = await editorProcess(modelInfo);
                 modelInfo.uploadName = result.filename;
             }
-            if (!(/parsed\.svg$/i.test(modelInfo.uploadName))) {
+            if (!/parsed\.svg$/i.test(modelInfo.uploadName)) {
                 const newUploadName = modelInfo.uploadName.replace(/\.svg$/i, 'parsed.svg');
                 const uploadPath = `${process.env.Tmpdir}/${newUploadName}`;
                 if (fs.existsSync(uploadPath)) {
@@ -52,39 +49,43 @@ const generateLaserToolPathFromEngine = (allTasks, onProgress) => {
         };
 
         return new Promise((resolve, reject) => {
-            slice(sliceParams, onProgress, (res) => {
-                resolve({
-                    taskId,
-                    filenames: res.filenames
-                });
-            }, () => {
-                reject(new Error('Slice Error'));
-            });
+            slice(
+                sliceParams,
+                onProgress,
+                res => {
+                    resolve({
+                        taskId,
+                        filenames: res.filenames
+                    });
+                },
+                () => {
+                    reject(new Error('Slice Error'));
+                }
+            );
         });
     });
     return Promise.all(allResultPromise);
 };
 
-const generateToolPath = (allTasks) => {
+const generateToolPath = allTasks => {
     const { headType } = allTasks[0];
+    console.log('generateToolPath', allTasks);
     if (!['laser', 'cnc'].includes(headType)) {
         return sendMessage({ status: 'fail', value: `Unsupported type: ${headType}` });
     }
 
-    const onProgress = (num) => {
+    const onProgress = num => {
         sendMessage({ status: 'progress', value: num });
     };
 
     return new Promise((resolve, reject) => {
-        generateLaserToolPathFromEngine(allTasks, onProgress).then((ret) => {
-            resolve(
-                sendMessage({ status: 'complete', value: ret })
-            );
-        }).catch((err) => {
-            reject(
-                sendMessage({ status: 'fail', value: err })
-            );
-        });
+        generateLaserToolPathFromEngine(allTasks, onProgress)
+            .then(ret => {
+                resolve(sendMessage({ status: 'complete', value: ret }));
+            })
+            .catch(err => {
+                reject(sendMessage({ status: 'fail', value: err }));
+            });
     });
 };
 

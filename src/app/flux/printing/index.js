@@ -2,6 +2,7 @@ import { cloneDeep, filter, find as lodashFind, isNil } from 'lodash';
 import path from 'path';
 import * as THREE from 'three';
 // import FileSaver from 'file-saver';
+import { Transfer } from 'threads';
 import { Vector3 } from 'three';
 import {
     acceleratedRaycast,
@@ -94,11 +95,9 @@ const isDefaultQualityDefinition = (definitionId) => {
             || definitionId.indexOf('normal_quality') !== -1)
     );
 };
-const getRealSeries = (series) => {
-    if (
-        series === MACHINE_SERIES.ORIGINAL_LZ.value
-        || series === MACHINE_SERIES.CUSTOM.value
-    ) {
+
+const getRealSeries = series => {
+    if (series === MACHINE_SERIES.ORIGINAL_LZ.value || series === MACHINE_SERIES.CUSTOM.value) {
         series = MACHINE_SERIES.ORIGINAL.value;
     }
     return series;
@@ -297,24 +296,22 @@ const createLoadModelWorker = (() => {
         let task = runningTasks[uploadPath];
         if (!task) {
             task = {
-                worker: workerManager.loadModel(
-                    [{ uploadPath }],
-                    async (data) => {
-                        const { type } = data;
+                worker: workerManager.loadModel(uploadPath, data => {
+                    const { type } = data;
 
-                        switch (type) {
-                            case 'LOAD_MODEL_CONVEX':
-                            case 'LOAD_MODEL_FAILED':
-                                task.worker.terminate();
-                                delete runningTasks[uploadPath];
-                                break;
-                            default:
-                                break;
-                        }
-                        for (const fn of task.cbOnMessage) {
-                            if (typeof fn === 'function') {
-                                fn(data);
-                            }
+                    switch (type) {
+                        case 'LOAD_MODEL_FAILED':
+                            task.worker.then(result => {
+                                result.terminate();
+                            });
+                            delete runningTasks[uploadPath];
+                            break;
+                        default:
+                            break;
+                    }
+                    for (const fn of task.cbOnMessage) {
+                        if (typeof fn === 'function') {
+                            fn(data);
                         }
                     }
                 ),
@@ -351,21 +348,21 @@ async function uploadMesh(mesh, stlFileName) {
 }
 
 export const actions = {
-    updateState: (state) => {
+    updateState: state => {
         return {
             type: ACTION_UPDATE_STATE,
             state
         };
     },
 
-    updateTransformation: (transformation) => {
+    updateTransformation: transformation => {
         return {
             type: ACTION_UPDATE_TRANSFORMATION,
             transformation
         };
     },
 
-    render: () => (dispatch) => {
+    render: () => dispatch => {
         dispatch(
             actions.updateState({
                 renderingTimestamp: +new Date()
@@ -383,24 +380,15 @@ export const actions = {
         const { toolHead, series, size } = getState().machine;
         // await dispatch(machineActions.updateMachineToolHead(toolHead, series, CONFIG_HEADTYPE));
         const currentMachine = getMachineSeriesWithToolhead(series, toolHead);
-        await definitionManager.init(
-            CONFIG_HEADTYPE,
-            currentMachine.configPathname[CONFIG_HEADTYPE]
-        );
+        await definitionManager.init(CONFIG_HEADTYPE, currentMachine.configPathname[CONFIG_HEADTYPE]);
+
         dispatch(
             actions.updateState({
-                materialDefinitions: await definitionManager.getDefinitionsByPrefixName(
-                    'material'
-                ),
-                qualityDefinitions: await definitionManager.getDefinitionsByPrefixName(
-                    'quality'
-                ),
-                extruderLDefinition: await definitionManager.getDefinitionsByPrefixName(
-                    'snapmaker_extruder_0'
-                ),
-                extruderRDefinition: await definitionManager.getDefinitionsByPrefixName(
-                    'snapmaker_extruder_1'
-                )
+                activeDefinition: definitionManager.activeDefinition,
+                materialDefinitions: await definitionManager.getDefinitionsByPrefixName('material'),
+                qualityDefinitions: await definitionManager.getDefinitionsByPrefixName('quality'),
+                extruderLDefinition: await definitionManager.getDefinitionsByPrefixName('snapmaker_extruder_0'),
+                extruderRDefinition: await definitionManager.getDefinitionsByPrefixName('snapmaker_extruder_1')
             })
         );
         // model group
@@ -420,7 +408,7 @@ export const actions = {
             () => {
                 dispatch(actions.render());
             },
-            (height) => {
+            height => {
                 dispatch(actions.updateState({ primeTowerHeight: height }));
             }
         );
@@ -445,9 +433,7 @@ export const actions = {
                 dispatch(
                     actions.updateState({
                         defaultMaterialId: newConfigId[series]?.material,
-                        defaultMaterialIdRight:
-                            newConfigId[series]?.materialRight
-                            || 'material.pla',
+                        defaultMaterialIdRight: newConfigId[series]?.materialRight || 'material.pla',
                         defaultQualityId: newConfigId[series]?.quality
                     })
                 );
@@ -516,7 +502,7 @@ export const actions = {
         } else {
             useLeft = true;
         }
-        modelGroup.getModels().forEach((model) => {
+        modelGroup.getModels().forEach(model => {
             // TODO, use constants
             if (model.type === 'baseModel' || model.type === 'group') {
                 if (
@@ -762,7 +748,7 @@ export const actions = {
                 dispatch(actions.loadGcode(gcodeFilename));
                 dispatch(actions.setTransformMode(''));
             });
-            controller.on('slice:progress', (progress) => {
+            controller.on('slice:progress', progress => {
                 const state = getState().printing;
                 const { progressStatesManager } = state;
                 if (
@@ -810,7 +796,7 @@ export const actions = {
                     })
                 );
             });
-            controller.on('generate-support:completed', (args) => {
+            controller.on('generate-support:completed', args => {
                 const { supportFilePaths } = args;
                 const { progressStatesManager } = getState().printing;
                 dispatch(
@@ -825,7 +811,7 @@ export const actions = {
 
                 dispatch(actions.loadSupports(supportFilePaths));
             });
-            controller.on('generate-support:progress', (progress) => {
+            controller.on('generate-support:progress', progress => {
                 const state = getState().printing;
                 const { progressStatesManager } = state;
                 if (
@@ -877,12 +863,8 @@ export const actions = {
         const activeActiveQualityDefinition = lodashFind(qualityDefinitions, {
             definitionId: defaultQualityId
         });
-        const defaultQualityDefinition = defaultDefinitions.find(
-            (d) => d.definitionId === defaultQualityId
-        );
-        let defaultMaterialQuality = defaultQualityDefinition?.isDefault
-            ? '0'
-            : '2';
+        const defaultQualityDefinition = defaultDefinitions.find(d => d.definitionId === defaultQualityId);
+        let defaultMaterialQuality = defaultQualityDefinition?.isDefault ? '0' : '2';
 
         const settings = {
             layer_height:
@@ -909,33 +891,20 @@ export const actions = {
             settings.nozzle_diameter_L = extruderLDefinition.settings?.machine_nozzle_size?.default_value;
 
             if (defaultMaterialL === '0') {
-                defaultMaterialL = PRINTING_MATERIAL_CONFIG_GROUP_SINGLE.some(
-                    (item) => {
-                        return item.fields.some((key) => {
-                            return (
-                                extruderLDefaultDefinition?.settings[key]
-                                    ?.default_value
-                                !== extruderLDefinition.settings[key]?.default_value
-                            );
-                        });
-                    }
-                )
+                defaultMaterialL = PRINTING_MATERIAL_CONFIG_GROUP_SINGLE.some(item => {
+                    return item.fields.some(key => {
+                        return extruderLDefaultDefinition?.settings[key]?.default_value !== extruderLDefinition.settings[key]?.default_value;
+                    });
+                })
                     ? '1'
                     : '0';
             }
             if (defaultMaterialQuality === '0') {
-                defaultMaterialQuality = PRINTING_QUALITY_CONFIG_GROUP_SINGLE.some(
-                    (item) => {
-                        return item.fields.some((key) => {
-                            return (
-                                activeActiveQualityDefinition.settings[key]
-                                    ?.default_value
-                                !== defaultQualityDefinition.settings[key]
-                                    ?.default_value
-                            );
-                        });
-                    }
-                )
+                defaultMaterialQuality = PRINTING_QUALITY_CONFIG_GROUP_SINGLE.some(item => {
+                    return item.fields.some(key => {
+                        return activeActiveQualityDefinition.settings[key]?.default_value !== defaultQualityDefinition.settings[key]?.default_value;
+                    });
+                })
                     ? '1'
                     : '0';
             }
@@ -957,17 +926,11 @@ export const actions = {
             settings.nozzle_diameter_R = extruderRDefinition.settings?.machine_nozzle_size?.default_value;
 
             if (defaultMaterialL === '0') {
-                defaultMaterialL = PRINTING_MATERIAL_CONFIG_GROUP_SINGLE.some(
-                    (item) => {
-                        return item.fields.some((key) => {
-                            return (
-                                extruderLDefaultDefinition.settings[key]
-                                    .default_value
-                                !== extruderLDefinition.settings[key].default_value
-                            );
-                        });
-                    }
-                )
+                defaultMaterialL = PRINTING_MATERIAL_CONFIG_GROUP_SINGLE.some(item => {
+                    return item.fields.some(key => {
+                        return extruderLDefaultDefinition.settings[key].default_value !== extruderLDefinition.settings[key].default_value;
+                    });
+                })
                     ? '1'
                     : '0';
             }
@@ -976,34 +939,21 @@ export const actions = {
                 ? '0'
                 : '2';
             if (defaultMaterialR === '0') {
-                defaultMaterialR = PRINTING_MATERIAL_CONFIG_GROUP_DUAL.some(
-                    (item) => {
-                        return item.fields.some((key) => {
-                            return (
-                                extruderRDefaultDefinition?.settings[key]
-                                    .default_value
-                                !== extruderRDefinition.settings[key].default_value
-                            );
-                        });
-                    }
-                )
+                defaultMaterialR = PRINTING_MATERIAL_CONFIG_GROUP_DUAL.some(item => {
+                    return item.fields.some(key => {
+                        return extruderRDefaultDefinition?.settings[key].default_value !== extruderRDefinition.settings[key].default_value;
+                    });
+                })
                     ? '1'
                     : '0';
             }
 
             if (defaultMaterialQuality === '0') {
-                defaultMaterialQuality = PRINTING_QUALITY_CONFIG_GROUP_DUAL.some(
-                    (item) => {
-                        return item.fields.some((key) => {
-                            return (
-                                activeActiveQualityDefinition.settings[key]
-                                    .default_value
-                                !== defaultQualityDefinition.settings[key]
-                                    .default_value
-                            );
-                        });
-                    }
-                )
+                defaultMaterialQuality = PRINTING_QUALITY_CONFIG_GROUP_DUAL.some(item => {
+                    return item.fields.some(key => {
+                        return activeActiveQualityDefinition.settings[key].default_value !== defaultQualityDefinition.settings[key].default_value;
+                    });
+                })
                     ? '1'
                     : '0';
             }
@@ -1019,7 +969,7 @@ export const actions = {
         }
     },
 
-    gcodeRenderingCallback: (data) => (dispatch, getState) => {
+    gcodeRenderingCallback: data => (dispatch, getState) => {
         const { gcodeLineGroup, gcodePreviewMode } = getState().printing;
 
         const { status, value } = data;
@@ -1036,33 +986,15 @@ export const actions = {
                     bounds
                 } = value;
                 const bufferGeometry = new THREE.BufferGeometry();
-                const positionAttribute = new THREE.Float32BufferAttribute(
-                    positions,
-                    3
-                );
-                const colorAttribute = new THREE.Uint8BufferAttribute(
-                    colors,
-                    3
-                );
+                const positionAttribute = new THREE.Float32BufferAttribute(positions.send, 3);
+                const colorAttribute = new THREE.Uint8BufferAttribute(colors.send, 3);
                 // this will map the buffer values to 0.0f - +1.0f in the shader
                 colorAttribute.normalized = true;
-                const color1Attribute = new THREE.Uint8BufferAttribute(
-                    colors1,
-                    3
-                );
+                const color1Attribute = new THREE.Uint8BufferAttribute(colors1.send, 3);
                 color1Attribute.normalized = true;
-                const layerIndexAttribute = new THREE.Float32BufferAttribute(
-                    layerIndices,
-                    1
-                );
-                const typeCodeAttribute = new THREE.Float32BufferAttribute(
-                    typeCodes,
-                    1
-                );
-                const toolCodeAttribute = new THREE.Float32BufferAttribute(
-                    toolCodes,
-                    1
-                );
+                const layerIndexAttribute = new THREE.Float32BufferAttribute(layerIndices.send, 1);
+                const typeCodeAttribute = new THREE.Float32BufferAttribute(typeCodes.send, 1);
+                const toolCodeAttribute = new THREE.Float32BufferAttribute(toolCodes.send, 1);
 
                 bufferGeometry.setAttribute('position', positionAttribute);
                 bufferGeometry.setAttribute('a_color', colorAttribute);
@@ -1139,16 +1071,10 @@ export const actions = {
             case 'progress': {
                 const state = getState().printing;
                 const { progressStatesManager } = state;
-                if (
-                    Math.abs(value - state.progress) > 0.01
-                    || value > 1 - EPSILON
-                ) {
+                if (Math.abs(value - state.progress) > 0.01 || value > 1 - EPSILON) {
                     dispatch(
                         actions.updateState({
-                            progress: progressStatesManager.updateProgress(
-                                STEP_STAGE.PRINTING_PREVIEWING,
-                                value
-                            )
+                            progress: progressStatesManager.updateProgress(STEP_STAGE.PRINTING_PREVIEWING, value)
                         })
                     );
                 }
@@ -1170,7 +1096,7 @@ export const actions = {
         }
     },
 
-    getDefaultDefinition: (id) => (dispatch, getState) => {
+    getDefaultDefinition: id => (dispatch, getState) => {
         const { defaultDefinitions } = getState().printing;
         const def = defaultDefinitions.find((d) => d.definitionId === id);
         return def?.settings;
@@ -1219,7 +1145,7 @@ export const actions = {
         );
     },
 
-    updateManagerDisplayType: (managerDisplayType) => (dispatch) => {
+    updateManagerDisplayType: managerDisplayType => dispatch => {
         dispatch(actions.updateState({ managerDisplayType }));
     },
 
@@ -1261,11 +1187,11 @@ export const actions = {
     },
 
     onUploadManagerDefinition: (file, type) => (dispatch, getState) => {
-        return new Promise((resolve) => {
+        return new Promise(resolve => {
             const formData = new FormData();
             formData.append('file', file);
             api.uploadFile(formData)
-                .then(async (res) => {
+                .then(async res => {
                     const response = res.body;
                     const definitionId = `${type}.${timestamp()}`;
                     const definition = await definitionManager.uploadDefinition(
@@ -1323,7 +1249,7 @@ export const actions = {
         }
         if (isCategorySelected) {
             const oldCategory = definition.category;
-            definitions.forEach((item) => {
+            definitions.forEach(item => {
                 if (item.category === oldCategory) {
                     item.category = name;
                     item.i18nCategory = '';
@@ -1412,9 +1338,7 @@ export const actions = {
             };
         }
 
-        const createdDefinition = await definitionManager.createDefinition(
-            newDefinition
-        );
+        const createdDefinition = await definitionManager.createDefinition(newDefinition);
 
         dispatch(
             actions.updateState({
@@ -1532,7 +1456,7 @@ export const actions = {
                 return false;
             }
         });
-        const ps = definitionsWithSameCategory.map((item) => {
+        const ps = definitionsWithSameCategory.map(item => {
             return dispatch(actions.removeDefinitionByType(type, item, true));
         });
         await Promise.all(ps);
@@ -1603,14 +1527,10 @@ export const actions = {
         );
     },
 
-    updateIsRecommended: (isRecommended) => (dispatch) => {
+    updateIsRecommended: isRecommended => dispatch => {
         dispatch(actions.updateState({ isRecommended }));
     },
-    updateDefaultIdByType: (
-        type,
-        newDefinitionId,
-        direction = LEFT_EXTRUDER
-    ) => (dispatch) => {
+    updateDefaultIdByType: (type, newDefinitionId, direction = LEFT_EXTRUDER) => dispatch => {
         let defaultId;
         if (type === PRINTING_MANAGER_TYPE_MATERIAL) {
             defaultId = direction === LEFT_EXTRUDER
@@ -1619,9 +1539,7 @@ export const actions = {
         } else {
             defaultId = defaultDefinitionKeys[type].id;
         }
-        dispatch(
-            actions.updateDefaultConfigId(type, newDefinitionId, direction)
-        );
+        dispatch(actions.updateDefaultConfigId(type, newDefinitionId, direction));
         dispatch(
             actions.updateState({
                 [defaultId]: newDefinitionId
@@ -1631,29 +1549,14 @@ export const actions = {
         dispatch(actions.destroyGcodeLine());
         dispatch(actions.displayModel());
     },
-    updateDefaultMaterialId: (materialId, direction = LEFT_EXTRUDER) => (
-        dispatch
-    ) => {
-        const updateKey = direction === LEFT_EXTRUDER
-            ? 'defaultMaterialId'
-            : 'defaultMaterialIdRight';
-        dispatch(
-            actions.updateDefaultConfigId(
-                PRINTING_MANAGER_TYPE_MATERIAL,
-                materialId,
-                direction
-            )
-        );
+    updateDefaultMaterialId: (materialId, direction = LEFT_EXTRUDER) => dispatch => {
+        const updateKey = direction === LEFT_EXTRUDER ? 'defaultMaterialId' : 'defaultMaterialIdRight';
+        dispatch(actions.updateDefaultConfigId(PRINTING_MANAGER_TYPE_MATERIAL, materialId, direction));
         dispatch(actions.updateState({ [updateKey]: materialId }));
     },
 
-    updateDefaultQualityId: (qualityId) => (dispatch) => {
-        dispatch(
-            actions.updateDefaultConfigId(
-                PRINTING_MANAGER_TYPE_QUALITY,
-                qualityId
-            )
-        );
+    updateDefaultQualityId: qualityId => dispatch => {
+        dispatch(actions.updateDefaultConfigId(PRINTING_MANAGER_TYPE_QUALITY, qualityId));
         dispatch(actions.updateState({ defaultQualityId: qualityId }));
     },
 
@@ -1665,7 +1568,7 @@ export const actions = {
      * @returns {Function}
      * @private
      */
-    __loadModel: (files) => async (dispatch) => {
+    __loadModel: files => async dispatch => {
         const headType = 'printing';
         const sourceType = '3d';
         const mode = '3d';
@@ -1686,8 +1589,8 @@ export const actions = {
 
     // Upload model
     // @param files
-    uploadModel: (files) => async (dispatch, getState) => {
-        const ps = Array.from(files).map(async (file) => {
+    uploadModel: files => async (dispatch, getState) => {
+        const ps = Array.from(files).map(async file => {
             // Notice user that model is being loading
             const formData = new FormData();
             formData.append('file', file);
@@ -1699,7 +1602,7 @@ export const actions = {
         actions.__loadModel(fileNames)(dispatch, getState);
     },
 
-    setTransformMode: (value) => (dispatch) => {
+    setTransformMode: value => dispatch => {
         // dispatch(actions.destroyGcodeLine());
         // dispatch(actions.displayModel());
         dispatch(
@@ -1758,16 +1661,13 @@ export const actions = {
         });
     },
 
-    generateGcode: (thumbnail, isGuideTours = false) => async (
-        dispatch,
-        getState
-    ) => {
+    generateGcode: (thumbnail, isGuideTours = false) => async (dispatch, getState) => {
         const {
             hasModel,
+            activeDefinition,
             modelGroup,
             progressStatesManager,
             helpersExtruderConfig,
-            series,
             layerCount,
             extruderLDefinition,
             extruderRDefinition,
@@ -2025,7 +1925,7 @@ export const actions = {
         });
     },
 
-    setShowOriginalModel: (show) => (dispatch, getState) => {
+    setShowOriginalModel: show => (dispatch, getState) => {
         const { modelGroup } = getState().printing;
         // modelGroup.object.visible = show;
         modelGroup.object.visible = false;
@@ -2200,7 +2100,7 @@ export const actions = {
         });
     },
 
-    showGcodeLayers: (range) => (dispatch, getState) => {
+    showGcodeLayers: range => (dispatch, getState) => {
         const {
             layerCount,
             // gcodeLineObjects,
@@ -2225,18 +2125,12 @@ export const actions = {
                 range = [range[0] || 0, range[0] || 0];
                 isUp = true;
             } else if (range[1] - layerRangeDisplayed[1] > EPSILON) {
-                range = [
-                    Math.min(layerCount, range[1]),
-                    Math.min(layerCount, range[1])
-                ];
+                range = [Math.min(layerCount, range[1]), Math.min(layerCount, range[1])];
                 isUp = true;
             } else if (layerRangeDisplayed[0] - range[0] > EPSILON) {
                 range = [range[0] || 0, range[0] || 0];
             } else {
-                range = [
-                    Math.max(Math.min(layerCount, range[1]), 0),
-                    Math.max(Math.min(layerCount, range[1]), 0)
-                ];
+                range = [Math.max(Math.min(layerCount, range[1]), 0), Math.max(Math.min(layerCount, range[1]), 0)];
             }
         } else {
             let isRelated = false;
@@ -2323,7 +2217,7 @@ export const actions = {
 
     // make an offset of gcode layer count
     // offset can be negative
-    offsetGcodeLayers: (offset) => (dispatch, getState) => {
+    offsetGcodeLayers: offset => (dispatch, getState) => {
         const { layerRangeDisplayed } = getState().printing;
         dispatch(
             actions.showGcodeLayers([
@@ -2459,7 +2353,7 @@ export const actions = {
         dispatch(actions.updateState(modelState));
     },
 
-    hideSelectedModel: (targetModel) => (dispatch, getState) => {
+    hideSelectedModel: targetModel => (dispatch, getState) => {
         const { modelGroup } = getState().printing;
         let targetModels;
         if (!targetModel) {
@@ -2502,7 +2396,7 @@ export const actions = {
         dispatch(actions.displayModel());
     },
 
-    showSelectedModel: (targetModel) => (dispatch, getState) => {
+    showSelectedModel: targetModel => (dispatch, getState) => {
         const { modelGroup } = getState().printing;
         const modelState = modelGroup.showSelectedModel([targetModel]);
 
@@ -2625,12 +2519,12 @@ export const actions = {
         dispatch(actions.render());
     },
 
-    updateSelectedModelsExtruder: (extruderConfig) => (dispatch, getState) => {
+    updateSelectedModelsExtruder: extruderConfig => (dispatch, getState) => {
         const { modelGroup } = getState().printing;
         const models = Object.assign([], getState().printing.modelGroup.models);
         for (const model of modelGroup.selectedModelArray) {
             let modelItem = null;
-            modelGroup.traverseModels(models, (item) => {
+            modelGroup.traverseModels(models, item => {
                 if (model.modelID === item.modelID) {
                     modelItem = item;
                 }
@@ -2707,7 +2601,7 @@ export const actions = {
         );
 
         const models = [];
-        modelGroup.getModels().forEach((model) => {
+        modelGroup.getModels().forEach(model => {
             if (model instanceof PrimeTowerModel) {
                 return;
             }
@@ -2717,10 +2611,10 @@ export const actions = {
             };
             if (modelInfo.isGroup) {
                 const children = [];
-                model.children.forEach((child) => {
+                model.children.forEach(child => {
                     children.push({
                         count: child.geometry.getAttribute('position').count,
-                        array: child.geometry.getAttribute('position').array,
+                        array: Transfer(child.geometry.getAttribute('position').array),
                         matrix: child.meshObject.matrix
                     });
                 });
@@ -2733,7 +2627,7 @@ export const actions = {
                 modelInfo.children = [
                     {
                         count: model.geometry.getAttribute('position').count,
-                        array: model.geometry.getAttribute('position').array,
+                        array: Transfer(model.geometry.getAttribute('position').array),
                         matrix: model.meshObject.matrix
                     }
                 ];
@@ -2746,33 +2640,28 @@ export const actions = {
         });
 
         const res = workerManager.arrangeModels(
-            [
-                {
-                    models,
-                    validArea: modelGroup.getValidArea(),
-                    angle,
-                    offset: offset / 2,
-                    padding,
-                    memory: performance.memory.jsHeapSizeLimit
-                }
-            ],
-            (payload) => {
+            {
+                models,
+                validArea: modelGroup.getValidArea(),
+                angle,
+                offset: offset / 2,
+                padding,
+                memory: performance.memory.jsHeapSizeLimit
+            },
+            payload => {
                 const { status, value } = payload;
                 switch (status) {
                     case 'succeed': {
                         const { parts } = value;
                         let allArranged = true;
 
-                        parts.forEach((part) => {
+                        parts.forEach(part => {
                             const model = modelGroup.getModel(part.modelID);
 
                             const from = cloneDeep(model.transformation);
                             froms[part.modelID] = from;
 
-                            if (
-                                part.angle !== undefined
-                                && part.position !== undefined
-                            ) {
+                            if (part.angle !== undefined && part.position !== undefined) {
                                 model.updateTransformation({
                                     positionX: part.position.x,
                                     positionY: part.position.y
@@ -2789,12 +2678,9 @@ export const actions = {
                             positionY: (validArea.max.y + validArea.min.y) / 2
                         });
 
-                        parts.forEach((part) => {
+                        parts.forEach(part => {
                             const model = modelGroup.getModel(part.modelID);
-                            if (
-                                part.angle === undefined
-                                || part.position === undefined
-                            ) {
+                            if (part.angle === undefined || part.position === undefined) {
                                 allArranged = false;
                                 model.updateTransformation({
                                     positionX: 0,
@@ -2802,29 +2688,21 @@ export const actions = {
                                 });
                             }
                         });
-                        parts.forEach((part) => {
+                        parts.forEach(part => {
                             const model = modelGroup.getModel(part.modelID);
-                            if (
-                                part.angle === undefined
-                                || part.position === undefined
-                            ) {
-                                const position = modelGroup.arrangeOutsidePlate(
-                                    model,
-                                    size
-                                );
+                            if (part.angle === undefined || part.position === undefined) {
+                                const position = modelGroup.arrangeOutsidePlate(model, size);
                                 model.updateTransformation({
                                     positionX: position.x,
                                     positionY: position.y
                                 });
-                                modelGroup.stickToPlateAndCheckOverstepped(
-                                    model
-                                );
+                                modelGroup.stickToPlateAndCheckOverstepped(model);
                             }
                         });
 
                         // record for undo|redo
                         dispatch(actions.onModelAfterTransform());
-                        modelGroup.getModels().forEach((model) => {
+                        modelGroup.getModels().forEach(model => {
                             if (model instanceof PrimeTowerModel) {
                                 return;
                             }
@@ -2838,20 +2716,12 @@ export const actions = {
                         operations.registCallbackAfterAll(() => {
                             dispatch(actions.onModelAfterTransform());
                         });
-                        dispatch(
-                            operationHistoryActions.setOperations(
-                                INITIAL_STATE.name,
-                                operations
-                            )
-                        );
+                        dispatch(operationHistoryActions.setOperations(INITIAL_STATE.name, operations));
 
                         dispatch(
                             actions.updateState({
                                 stage: STEP_STAGE.PRINTING_ARRANGING_MODELS,
-                                progress: progressStatesManager.updateProgress(
-                                    STEP_STAGE.PRINTING_ARRANGING_MODELS,
-                                    1
-                                )
+                                progress: progressStatesManager.updateProgress(STEP_STAGE.PRINTING_ARRANGING_MODELS, 1)
                             })
                         );
                         progressStatesManager.finishProgress(true);
@@ -2862,7 +2732,7 @@ export const actions = {
                                 })
                             );
                         }
-                        res.terminate();
+                        res.then(websocket => websocket.terminate());
                         break;
                     }
                     case 'progress': {
@@ -2904,7 +2774,7 @@ export const actions = {
                                 showArrangeModelsError: true
                             })
                         );
-                        res.terminate();
+                        res.then(websocket => websocket.terminate());
                         break;
                     }
                     default:
@@ -2914,10 +2784,8 @@ export const actions = {
         );
     },
 
-    recordModelBeforeTransform: (modelGroup) => (dispatch) => {
-        dispatch(
-            operationHistoryActions.clearTargetTmpState(INITIAL_STATE.name)
-        );
+    recordModelBeforeTransform: modelGroup => dispatch => {
+        dispatch(operationHistoryActions.clearTargetTmpState(INITIAL_STATE.name));
         const selectedModelArray = modelGroup.selectedModelArray.concat();
         const { recovery } = modelGroup.unselectAllModels();
         for (const model of selectedModelArray) {
@@ -2927,15 +2795,11 @@ export const actions = {
                 dispatch(actions.onModelTransform());
             }
             dispatch(
-                operationHistoryActions.updateTargetTmpState(
-                    INITIAL_STATE.name,
-                    model.modelID,
-                    {
-                        from: {
-                            ...modelGroup.getSelectedModelTransformationForPrinting()
-                        }
+                operationHistoryActions.updateTargetTmpState(INITIAL_STATE.name, model.modelID, {
+                    from: {
+                        ...modelGroup.getSelectedModelTransformationForPrinting()
                     }
-                )
+                })
             );
         }
         recovery();
@@ -2967,33 +2831,20 @@ export const actions = {
             modelGroup.unselectAllModels();
             modelGroup.addModelToSelectedGroup(model);
             dispatch(
-                operationHistoryActions.updateTargetTmpState(
-                    INITIAL_STATE.name,
-                    model.modelID,
-                    {
-                        to: {
-                            ...modelGroup.getSelectedModelTransformationForPrinting()
-                        }
+                operationHistoryActions.updateTargetTmpState(INITIAL_STATE.name, model.modelID, {
+                    to: {
+                        ...modelGroup.getSelectedModelTransformationForPrinting()
                     }
-                )
+                })
             );
-            if (
-                stateEqual(
-                    model,
-                    targetTmpState[model.modelID].from,
-                    targetTmpState[model.modelID].to
-                )
-            ) {
+            if (stateEqual(model, targetTmpState[model.modelID].from, targetTmpState[model.modelID].to)) {
                 continue;
             }
             // model in group translate on Z-axis should clear supports in its group
             if (
                 transformMode === 'translate'
                 && model.isModelInGroup()
-                && Math.abs(
-                    targetTmpState[model.modelID].from.positionZ
-                        - targetTmpState[model.modelID].to.positionZ
-                ) > EPSILON
+                && Math.abs(targetTmpState[model.modelID].from.positionZ - targetTmpState[model.modelID].to.positionZ) > EPSILON
             ) {
                 dispatch(actions.clearSupportInGroup(operations, model));
             }
@@ -3102,7 +2953,7 @@ export const actions = {
         dispatch(actions.displayModel());
     },
 
-    cut: () => (dispatch) => {
+    cut: () => dispatch => {
         dispatch(actions.copy());
         dispatch(actions.removeSelectedModel());
     },
@@ -3172,26 +3023,22 @@ export const actions = {
         dispatch(
             actions.updateState({
                 stage: STEP_STAGE.PRINTING_AUTO_ROTATING_MODELS,
-                progress: progressStatesManager.updateProgress(
-                    STEP_STAGE.PRINTING_AUTO_ROTATING_MODELS,
-                    0.01
-                )
+                progress: progressStatesManager.updateProgress(STEP_STAGE.PRINTING_AUTO_ROTATING_MODELS, 0.01)
             })
         );
         setTimeout(() => {
             if (selected.length === 1) {
                 dispatch(
                     actions.updateState({
-                        progress: progressStatesManager.updateProgress(
-                            STEP_STAGE.PRINTING_AUTO_ROTATING_MODELS,
-                            0.25
-                        )
+                        progress: progressStatesManager.updateProgress(STEP_STAGE.PRINTING_AUTO_ROTATING_MODELS, 0.25)
                     })
                 );
             }
-            const selectedModelInfo = [];
+            const selectedModelInfo = [],
+                positionAttribute = [],
+                normalAttribute = [];
             const revertParentArr = [];
-            selected.forEach((modelItem) => {
+            selected.forEach(modelItem => {
                 let geometry = null;
                 if (modelItem instanceof ThreeGroup) {
                     modelItem.computeConvex();
@@ -3205,35 +3052,27 @@ export const actions = {
                 revertParentArr.push(revertParent);
                 modelItem.meshObject.updateMatrixWorld();
                 geometry.computeBoundingBox();
-                const inverseNormal = modelItem.transformation.scaleX
-                        / Math.abs(modelItem.transformation.scaleX)
-                    < 0;
+                const inverseNormal = modelItem.transformation.scaleX / Math.abs(modelItem.transformation.scaleX) < 0;
                 const modelItemInfo = {
-                    geometryJSON: geometry.toJSON(),
                     matrixWorld: modelItem.meshObject.matrixWorld,
                     convexGeometry: modelItem.convexGeometry,
                     inverseNormal
                 };
                 selectedModelInfo.push(modelItemInfo);
+                positionAttribute.push(geometry.getAttribute('position'));
+                normalAttribute.push(geometry.getAttribute('normal'));
             });
             workerManager.autoRotateModels(
-                [
-                    {
-                        selectedModelInfo
-                    }
-                ],
-                (payload) => {
+                {
+                    selectedModelInfo,
+                    positionAttribute: Transfer(positionAttribute),
+                    normalAttribute: Transfer(normalAttribute)
+                },
+                payload => {
                     const { status, value } = payload;
                     switch (status) {
                         case 'PARTIAL_SUCCESS': {
-                            const {
-                                progress,
-                                targetPlane,
-                                xyPlaneNormal,
-                                index,
-                                isFinish,
-                                isUpdateProgress
-                            } = value;
+                            const { progress, targetPlane, xyPlaneNormal, index, isFinish, isUpdateProgress } = value;
                             if (isUpdateProgress) {
                                 dispatch(
                                     actions.updateState({
@@ -3243,23 +3082,10 @@ export const actions = {
                                 return;
                             }
                             const rotateModel = selected[index];
-                            const _targetPlane = new THREE.Vector3(
-                                targetPlane.x,
-                                targetPlane.y,
-                                targetPlane.z
-                            );
-                            const _xyPlaneNormal = new THREE.Vector3(
-                                xyPlaneNormal.x,
-                                xyPlaneNormal.y,
-                                xyPlaneNormal.z
-                            );
-                            const newQuaternion = new THREE.Quaternion().setFromUnitVectors(
-                                _targetPlane,
-                                _xyPlaneNormal
-                            );
-                            rotateModel.meshObject.applyQuaternion(
-                                newQuaternion
-                            );
+                            const _targetPlane = new THREE.Vector3(targetPlane.x, targetPlane.y, targetPlane.z);
+                            const _xyPlaneNormal = new THREE.Vector3(xyPlaneNormal.x, xyPlaneNormal.y, xyPlaneNormal.z);
+                            const newQuaternion = new THREE.Quaternion().setFromUnitVectors(_targetPlane, _xyPlaneNormal);
+                            rotateModel.meshObject.applyQuaternion(newQuaternion);
                             rotateModel.meshObject.updateMatrix();
                             rotateModel.stickToPlate();
                             rotateModel.onTransform();
@@ -3270,35 +3096,21 @@ export const actions = {
                             // rotateModel.computeBoundingBox();
                             dispatch(
                                 actions.updateState({
-                                    stage:
-                                        STEP_STAGE.PRINTING_AUTO_ROTATING_MODELS,
-                                    progress: progressStatesManager.updateProgress(
-                                        STEP_STAGE.PRINTING_AUTO_ROTATING_MODELS,
-                                        progress
-                                    )
+                                    stage: STEP_STAGE.PRINTING_AUTO_ROTATING_MODELS,
+                                    progress: progressStatesManager.updateProgress(STEP_STAGE.PRINTING_AUTO_ROTATING_MODELS, progress)
                                 })
                             );
                             if (isFinish) {
                                 const modelState = modelGroup.getState();
                                 modelGroup.onModelAfterTransform();
-                                dispatch(
-                                    actions.recordModelAfterTransform(
-                                        'rotate',
-                                        modelGroup,
-                                        operations
-                                    )
-                                );
+                                dispatch(actions.recordModelAfterTransform('rotate', modelGroup, operations));
                                 dispatch(actions.updateState(modelState));
                                 dispatch(actions.destroyGcodeLine());
                                 dispatch(actions.displayModel());
                                 dispatch(
                                     actions.updateState({
-                                        stage:
-                                            STEP_STAGE.PRINTING_AUTO_ROTATING_MODELS,
-                                        progress: progressStatesManager.updateProgress(
-                                            STEP_STAGE.PRINTING_AUTO_ROTATING_MODELS,
-                                            1
-                                        )
+                                        stage: STEP_STAGE.PRINTING_AUTO_ROTATING_MODELS,
+                                        progress: progressStatesManager.updateProgress(STEP_STAGE.PRINTING_AUTO_ROTATING_MODELS, 1)
                                     })
                                 );
                             }
@@ -3308,12 +3120,8 @@ export const actions = {
                             const { progress } = value;
                             dispatch(
                                 actions.updateState({
-                                    stage:
-                                        STEP_STAGE.PRINTING_AUTO_ROTATING_MODELS,
-                                    progress: progressStatesManager.updateProgress(
-                                        STEP_STAGE.PRINTING_AUTO_ROTATING_MODELS,
-                                        progress
-                                    )
+                                    stage: STEP_STAGE.PRINTING_AUTO_ROTATING_MODELS,
+                                    progress: progressStatesManager.updateProgress(STEP_STAGE.PRINTING_AUTO_ROTATING_MODELS, progress)
                                 })
                             );
                             break;
@@ -3321,12 +3129,8 @@ export const actions = {
                         case 'ERROR': {
                             dispatch(
                                 actions.updateState({
-                                    stage:
-                                        STEP_STAGE.PRINTING_AUTO_ROTATE_FAILED,
-                                    progress: progressStatesManager.updateProgress(
-                                        STEP_STAGE.PRINTING_AUTO_ROTATING_MODELS,
-                                        1
-                                    )
+                                    stage: STEP_STAGE.PRINTING_AUTO_ROTATE_FAILED,
+                                    progress: progressStatesManager.updateProgress(STEP_STAGE.PRINTING_AUTO_ROTATING_MODELS, 1)
                                 })
                             );
                             break;
@@ -3339,7 +3143,7 @@ export const actions = {
         }, 200);
     },
 
-    scaleToFitSelectedModel: (models) => (dispatch, getState) => {
+    scaleToFitSelectedModel: models => (dispatch, getState) => {
         const {
             modelGroup,
             stopArea: { left, right, front, back }
@@ -3386,39 +3190,39 @@ export const actions = {
             stopArea: { left, right, front, back }
         } = getState().printing;
         const { size } = getState().machine;
-        progressStatesManager.startProgress(
-            PROCESS_STAGE.PRINTING_SCALE_TO_FIT_WITH_ROTATE
-        );
+        progressStatesManager.startProgress(PROCESS_STAGE.PRINTING_SCALE_TO_FIT_WITH_ROTATE);
         dispatch(
             actions.updateState({
                 stage: STEP_STAGE.PRINTING_SCALE_TO_FIT_WITH_ROTATE,
-                progress: progressStatesManager.updateProgress(
-                    STEP_STAGE.PRINTING_SCALE_TO_FIT_WITH_ROTATE,
-                    0.15
-                )
+                progress: progressStatesManager.updateProgress(STEP_STAGE.PRINTING_SCALE_TO_FIT_WITH_ROTATE, 0.15)
             })
         );
         setTimeout(() => {
-            const meshObjectJSON = [];
-            modelGroup.selectedModelArray.forEach((modelItem) => {
+            const positionAttribute = [];
+            const normalAttribute = [];
+            const matrixWorlds = [];
+            modelGroup.selectedModelArray.forEach(modelItem => {
                 if (modelItem instanceof ThreeGroup) {
-                    modelItem.children.forEach((child) => {
-                        meshObjectJSON.push({
-                            ...child.meshObject.geometry.toJSON(),
-                            modelItemMatrix: child.meshObject.matrixWorld.clone()
-                        });
+                    modelItem.children.forEach(child => {
+                        const childGeometry = child.meshObject.geometry;
+                        positionAttribute.push(childGeometry.getAttribute('position'));
+                        normalAttribute.push(childGeometry.getAttribute('normal'));
+                        matrixWorlds.push(child.meshObject.matrixWorld);
                     });
                 } else {
-                    meshObjectJSON.push({
-                        ...modelItem.meshObject.geometry.toJSON(),
-                        modelItemMatrix: modelItem.meshObject.matrixWorld.clone()
-                    });
+                    const childGeometry = modelItem.meshObject.geometry;
+                    positionAttribute.push(childGeometry.getAttribute('position'));
+                    normalAttribute.push(childGeometry.getAttribute('normal'));
+                    matrixWorlds.push(modelItem.meshObject.matrixWorld);
                 }
             });
             dispatch(actions.recordModelBeforeTransform(modelGroup));
+
             const data = {
                 size,
-                meshObjectJSON,
+                positionAttribute: Transfer(positionAttribute),
+                normalAttribute: Transfer(normalAttribute),
+                matrixWorlds: Transfer(matrixWorlds),
                 left,
                 right,
                 front,
@@ -3426,146 +3230,95 @@ export const actions = {
                 selectedGroupMatrix: modelGroup.selectedGroup.matrix.clone(),
                 selectedCount: modelGroup.selectedModelArray.length
             };
-            workerManager.scaleToFitWithRotate(
-                [
-                    {
-                        data
+            workerManager.scaleToFitWithRotate(data, payload => {
+                const { status, value } = payload;
+                switch (status) {
+                    case 'FINISH': {
+                        const operations = new Operations();
+                        const originQuaternion = modelGroup.selectedGroup.quaternion.clone();
+                        let operation;
+                        const { rotateAngel, maxScale, offsetX } = value;
+                        const { scale: originScale } = modelGroup.selectedGroup;
+                        dispatch(actions.clearAllManualSupport(operations));
+                        const newTransformation = {
+                            scaleX: originScale.x * maxScale,
+                            scaleY: originScale.y * maxScale,
+                            scaleZ: originScale.z * maxScale,
+                            positionX: 0,
+                            positionY: 0
+                        };
+                        // dispatch(actions.recordModelBeforeTransform(modelGroup, operations));
+                        const quaternion = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 0, 1), THREE.Math.degToRad(rotateAngel));
+                        modelGroup.selectedGroup.quaternion
+                            .copy(quaternion)
+                            .multiply(originQuaternion)
+                            .normalize();
+                        modelGroup.updateSelectedGroupTransformation(newTransformation, undefined, true);
+                        const { targetTmpState } = getState().printing;
+                        modelGroup.selectedModelArray.forEach(modelItem => {
+                            operation = new ScaleToFitWithRotateOperation3D({
+                                target: modelItem,
+                                ...targetTmpState[modelItem.modelID],
+                                to: {
+                                    ...modelGroup.getSelectedModelTransformationForPrinting()
+                                }
+                            });
+                            operations.push(operation);
+                        });
+                        const center = new THREE.Vector3();
+                        ThreeUtils.computeBoundingBox(modelGroup.selectedGroup).getCenter(center);
+                        const oldPosition = modelGroup.selectedGroup.position;
+                        modelGroup.updateSelectedGroupTransformation({
+                            positionX: offsetX + (oldPosition.x - center.x),
+                            positionY: oldPosition.y - center.y
+                        });
+                        modelGroup.onModelAfterTransform();
+                        modelGroup.selectedModelArray.forEach(modelItem => {
+                            operation = new ScaleToFitWithRotateOperation3D({
+                                target: modelItem,
+                                ...targetTmpState[modelItem.modelID],
+                                to: {
+                                    ...modelGroup.getSelectedModelTransformationForPrinting()
+                                }
+                            });
+                            operations.push(operation);
+                        });
+                        // dispatch(actions.recordModelAfterTransform('scale', modelGroup, operations));
+                        const modelState = modelGroup.getState();
+                        dispatch(
+                            actions.updateState({
+                                stage: STEP_STAGE.PRINTING_SCALE_TO_FIT_WITH_ROTATE,
+                                progress: progressStatesManager.updateProgress(STEP_STAGE.PRINTING_SCALE_TO_FIT_WITH_ROTATE, 1)
+                            })
+                        );
+                        dispatch(actions.updateState(modelState));
+                        operations.registCallbackAfterAll(() => {
+                            dispatch(actions.updateState(modelGroup.getState()));
+                            dispatch(actions.destroyGcodeLine());
+                            dispatch(actions.displayModel());
+                            dispatch(actions.render());
+                        });
+                        dispatch(operationHistoryActions.setOperations(INITIAL_STATE.name, operations));
+                        break;
                     }
-                ],
-                (payload) => {
-                    const { status, value } = payload;
-                    switch (status) {
-                        case 'FINISH': {
-                            const operations = new Operations();
-                            const originQuaternion = modelGroup.selectedGroup.quaternion.clone();
-                            let operation;
-                            const { rotateAngel, maxScale, offsetX } = value;
-                            const {
-                                scale: originScale
-                            } = modelGroup.selectedGroup;
-                            dispatch(actions.clearAllManualSupport(operations));
-                            const newTransformation = {
-                                scaleX: originScale.x * maxScale,
-                                scaleY: originScale.y * maxScale,
-                                scaleZ: originScale.z * maxScale,
-                                positionX: 0,
-                                positionY: 0
-                            };
-                            // dispatch(actions.recordModelBeforeTransform(modelGroup, operations));
-                            const quaternion = new THREE.Quaternion().setFromAxisAngle(
-                                new THREE.Vector3(0, 0, 1),
-                                THREE.Math.degToRad(rotateAngel)
-                            );
-                            modelGroup.selectedGroup.quaternion
-                                .copy(quaternion)
-                                .multiply(originQuaternion)
-                                .normalize();
-                            modelGroup.updateSelectedGroupTransformation(
-                                newTransformation,
-                                undefined,
-                                true
-                            );
-                            const { targetTmpState } = getState().printing;
-                            modelGroup.selectedModelArray.forEach(
-                                (modelItem) => {
-                                    operation = new ScaleToFitWithRotateOperation3D(
-                                        {
-                                            target: modelItem,
-                                            ...targetTmpState[
-                                                modelItem.modelID
-                                            ],
-                                            to: {
-                                                ...modelGroup.getSelectedModelTransformationForPrinting()
-                                            }
-                                        }
-                                    );
-                                    operations.push(operation);
-                                }
-                            );
-                            const center = new THREE.Vector3();
-                            ThreeUtils.computeBoundingBox(
-                                modelGroup.selectedGroup
-                            ).getCenter(center);
-                            const oldPosition = modelGroup.selectedGroup.position;
-                            modelGroup.updateSelectedGroupTransformation({
-                                positionX: offsetX + (oldPosition.x - center.x),
-                                positionY: oldPosition.y - center.y
-                            });
-                            modelGroup.onModelAfterTransform();
-                            modelGroup.selectedModelArray.forEach(
-                                (modelItem) => {
-                                    operation = new ScaleToFitWithRotateOperation3D(
-                                        {
-                                            target: modelItem,
-                                            ...targetTmpState[
-                                                modelItem.modelID
-                                            ],
-                                            to: {
-                                                ...modelGroup.getSelectedModelTransformationForPrinting()
-                                            }
-                                        }
-                                    );
-                                    operations.push(operation);
-                                }
-                            );
-                            // dispatch(actions.recordModelAfterTransform('scale', modelGroup, operations));
-                            const modelState = modelGroup.getState();
-                            dispatch(
-                                actions.updateState({
-                                    stage:
-                                        STEP_STAGE.PRINTING_SCALE_TO_FIT_WITH_ROTATE,
-                                    progress: progressStatesManager.updateProgress(
-                                        STEP_STAGE.PRINTING_SCALE_TO_FIT_WITH_ROTATE,
-                                        1
-                                    )
-                                })
-                            );
-                            dispatch(actions.updateState(modelState));
-                            operations.registCallbackAfterAll(() => {
-                                dispatch(
-                                    actions.updateState(modelGroup.getState())
-                                );
-                                dispatch(actions.destroyGcodeLine());
-                                dispatch(actions.displayModel());
-                                dispatch(actions.render());
-                            });
-                            dispatch(
-                                operationHistoryActions.setOperations(
-                                    INITIAL_STATE.name,
-                                    operations
-                                )
-                            );
-                            break;
-                        }
-                        case 'UPDATE_PROGRESS': {
-                            const { progress } = value;
-                            dispatch(
-                                actions.updateState({
-                                    stage:
-                                        STEP_STAGE.PRINTING_SCALE_TO_FIT_WITH_ROTATE,
-                                    progress: progressStatesManager.updateProgress(
-                                        STEP_STAGE.PRINTING_SCALE_TO_FIT_WITH_ROTATE,
-                                        progress
-                                    )
-                                })
-                            );
-                            break;
-                        }
-                        case 'ERR': {
-                            dispatch(
-                                actions.updateState({
-                                    stage:
-                                        STEP_STAGE.PRINTING_SCALE_TO_FIT_WITH_ROTATE_FAILED,
-                                    progress: progressStatesManager.updateProgress(
-                                        STEP_STAGE.PRINTING_SCALE_TO_FIT_WITH_ROTATE,
-                                        1
-                                    )
-                                })
-                            );
-                            break;
-                        }
-                        default:
-                            break;
+                    case 'UPDATE_PROGRESS': {
+                        const { progress } = value;
+                        dispatch(
+                            actions.updateState({
+                                stage: STEP_STAGE.PRINTING_SCALE_TO_FIT_WITH_ROTATE,
+                                progress: progressStatesManager.updateProgress(STEP_STAGE.PRINTING_SCALE_TO_FIT_WITH_ROTATE, progress)
+                            })
+                        );
+                        break;
+                    }
+                    case 'ERR': {
+                        dispatch(
+                            actions.updateState({
+                                stage: STEP_STAGE.PRINTING_SCALE_TO_FIT_WITH_ROTATE_FAILED,
+                                progress: progressStatesManager.updateProgress(STEP_STAGE.PRINTING_SCALE_TO_FIT_WITH_ROTATE, 1)
+                            })
+                        );
+                        break;
                     }
                 }
             );
@@ -3625,20 +3378,13 @@ export const actions = {
         dispatch(actions.render());
     },
 
-    loadGcode: (gcodeFilename) => (dispatch, getState) => {
-        const {
-            progressStatesManager,
-            extruderLDefinition,
-            extruderRDefinition
-        } = getState().printing;
+    loadGcode: gcodeFilename => (dispatch, getState) => {
+        const { progressStatesManager, extruderLDefinition, extruderRDefinition } = getState().printing;
         progressStatesManager.startNextStep();
         dispatch(
             actions.updateState({
                 stage: STEP_STAGE.PRINTING_PREVIEWING,
-                progress: progressStatesManager.updateProgress(
-                    STEP_STAGE.PRINTING_SLICING,
-                    0
-                )
+                progress: progressStatesManager.updateProgress(STEP_STAGE.PRINTING_SLICING, 0)
             })
         );
         const extruderColors = {
@@ -3649,15 +3395,11 @@ export const actions = {
                 extruderRDefinition?.settings?.color?.default_value
                 || BLACK_COLOR
         };
-        workerManager.gcodeToBufferGeometry(
-            [{ func: '3DP', gcodeFilename, extruderColors }],
-            (data) => {
-                dispatch(actions.gcodeRenderingCallback(data, extruderColors));
-            }
-        );
+        workerManager.gcodeToBufferGeometry({ func: '3DP', gcodeFilename, extruderColors }, data => {
+            dispatch(actions.gcodeRenderingCallback(data, extruderColors));
+        });
     },
-
-    clearAllManualSupport: (combinedOperations) => (dispatch, getState) => {
+    clearAllManualSupport: combinedOperations => (dispatch, getState) => {
         dispatch(actions.exitPreview());
 
         const { modelGroup } = getState().printing;
@@ -3693,7 +3435,7 @@ export const actions = {
             modelGroup.clearAllSupport(availModels);
         }
     },
-    setDefaultSupportSize: (size) => (dispatch, getState) => {
+    setDefaultSupportSize: size => (dispatch, getState) => {
         const { modelGroup } = getState().printing;
         modelGroup.defaultSupportSize = size;
     },
@@ -3718,7 +3460,7 @@ export const actions = {
             primeTowerTag
         }
     ) => async (dispatch, getState) => {
-        const { progressStatesManager, modelGroup } = getState().printing;
+        const { progressStatesManager, defaultQualityId, qualityDefinitions, modelGroup } = getState().printing;
         const { size } = getState().machine;
         const models = [...modelGroup.models];
         const modelNames = files || [{ originalName, uploadName }];
@@ -3734,10 +3476,7 @@ export const actions = {
                 dispatch(
                     actions.updateState({
                         stage: STEP_STAGE.PRINTING_LOADING_MODEL,
-                        progress: progressStatesManager.updateProgress(
-                            STEP_STAGE.PRINTING_LOADING_MODEL,
-                            _progress
-                        )
+                        progress: progressStatesManager.updateProgress(STEP_STAGE.PRINTING_LOADING_MODEL, _progress)
                     })
                 );
                 const uploadPath = `${DATA_PREFIX}/${model.uploadName}`;
@@ -3777,17 +3516,14 @@ export const actions = {
                     primeTowerModel.updateHeight(initHeight, transformation);
                     resolve();
                 } else {
-                    const onMessage = async (data) => {
+                    const onMessage = async data => {
                         const { type } = data;
                         switch (type) {
                             case 'LOAD_MODEL_POSITIONS': {
                                 const { positions, originalPosition } = data;
 
                                 const bufferGeometry = new THREE.BufferGeometry();
-                                const modelPositionAttribute = new THREE.BufferAttribute(
-                                    positions,
-                                    3
-                                );
+                                const modelPositionAttribute = new THREE.BufferAttribute(positions, 3);
                                 const material = new THREE.MeshPhongMaterial({
                                     color: 0xa0a0a0,
                                     specular: 0xb0b0b0,
@@ -3834,12 +3570,8 @@ export const actions = {
                                     _progress += 1 / modelNames.length;
                                     dispatch(
                                         actions.updateState({
-                                            stage:
-                                                STEP_STAGE.PRINTING_LOADING_MODEL,
-                                            progress: progressStatesManager.updateProgress(
-                                                STEP_STAGE.PRINTING_LOADING_MODEL,
-                                                _progress
-                                            )
+                                            stage: STEP_STAGE.PRINTING_LOADING_MODEL,
+                                            progress: progressStatesManager.updateProgress(STEP_STAGE.PRINTING_LOADING_MODEL, _progress)
                                         })
                                     );
                                 }
@@ -3871,18 +3603,11 @@ export const actions = {
                                 if (modelNames.length === 1) {
                                     const state = getState().printing;
                                     const progress = 0.25 + data.progress * 0.5;
-                                    if (
-                                        progress - state.progress > 0.01
-                                        || progress > 0.75 - EPSILON
-                                    ) {
+                                    if (progress - state.progress > 0.01 || progress > 0.75 - EPSILON) {
                                         dispatch(
                                             actions.updateState({
-                                                stage:
-                                                    STEP_STAGE.PRINTING_LOADING_MODEL,
-                                                progress: progressStatesManager.updateProgress(
-                                                    STEP_STAGE.PRINTING_LOADING_MODEL,
-                                                    progress
-                                                )
+                                                stage: STEP_STAGE.PRINTING_LOADING_MODEL,
+                                                progress: progressStatesManager.updateProgress(STEP_STAGE.PRINTING_LOADING_MODEL, progress)
                                             })
                                         );
                                     }
@@ -3898,12 +3623,8 @@ export const actions = {
                                     _progress += 1 / modelNames.length;
                                     dispatch(
                                         actions.updateState({
-                                            stage:
-                                                STEP_STAGE.PRINTING_LOADING_MODEL,
-                                            progress: progressStatesManager.updateProgress(
-                                                STEP_STAGE.PRINTING_LOADING_MODEL,
-                                                _progress
-                                            )
+                                            stage: STEP_STAGE.PRINTING_LOADING_MODEL,
+                                            progress: progressStatesManager.updateProgress(STEP_STAGE.PRINTING_LOADING_MODEL, _progress)
                                         })
                                     );
                                 }
@@ -3921,15 +3642,13 @@ export const actions = {
 
         await Promise.allSettled(promises);
 
-        const newModels = modelGroup.models.filter((model) => {
+        const newModels = modelGroup.models.filter(model => {
             return !models.includes(model);
         });
         newModels.forEach((model) => {
             const modelSize = new Vector3();
             model.boundingBox.getSize(modelSize);
-            const isLarge = ['x', 'y', 'z'].some(
-                (key) => modelSize[key] >= size[key]
-            );
+            const isLarge = ['x', 'y', 'z'].some(key => modelSize[key] >= size[key]);
 
             if (isLarge) {
                 promptTasks.push({
@@ -3951,16 +3670,13 @@ export const actions = {
             dispatch(
                 actions.updateState({
                     stage: STEP_STAGE.PRINTING_LOAD_MODEL_COMPLETE,
-                    progress: progressStatesManager.updateProgress(
-                        STEP_STAGE.PRINTING_LOADING_MODEL,
-                        1
-                    ),
+                    progress: progressStatesManager.updateProgress(STEP_STAGE.PRINTING_LOADING_MODEL, 1),
                     promptTasks
                 })
             );
         }
     },
-    recordAddOperation: (model) => (dispatch, getState) => {
+    recordAddOperation: model => (dispatch, getState) => {
         const { modelGroup } = getState().printing;
         if (!model.supportTag) {
             // support should be recorded when mouse clicked
@@ -3995,16 +3711,11 @@ export const actions = {
 
     startAnalyzeRotationProgress: () => (dispatch, getState) => {
         const { progressStatesManager } = getState().printing;
-        progressStatesManager.startProgress(
-            PROCESS_STAGE.PRINTING_ROTATE_ANALYZE
-        );
+        progressStatesManager.startProgress(PROCESS_STAGE.PRINTING_ROTATE_ANALYZE);
         dispatch(
             actions.updateState({
                 stage: STEP_STAGE.PRINTING_ROTATE_ANALYZE,
-                progress: progressStatesManager.updateProgress(
-                    STEP_STAGE.PRINTING_ROTATE_ANALYZE,
-                    0.25
-                )
+                progress: progressStatesManager.updateProgress(STEP_STAGE.PRINTING_ROTATE_ANALYZE, 0.25)
             })
         );
     },
@@ -4042,7 +3753,7 @@ export const actions = {
         );
     },
 
-    rotateByPlane: (targetPlane) => (dispatch, getState) => {
+    rotateByPlane: targetPlane => (dispatch, getState) => {
         const { modelGroup } = getState().printing;
         const modelState = modelGroup.rotateByPlane(targetPlane);
         modelGroup.onModelAfterTransform();
@@ -4058,7 +3769,7 @@ export const actions = {
             // calculate model rotation info, convex calculation may take more time, use async way
             modelGroup
                 .analyzeSelectedModelRotationAsync()
-                .then((tableResult) => {
+                .then(tableResult => {
                     if (tableResult) {
                         dispatch(
                             actions.updateState({
@@ -4070,10 +3781,7 @@ export const actions = {
                     dispatch(
                         actions.updateState({
                             stage: STEP_STAGE.PRINTING_ROTATE_ANALYZE,
-                            progress: progressStatesManager.updateProgress(
-                                STEP_STAGE.PRINTING_ROTATE_ANALYZE,
-                                1
-                            )
+                            progress: progressStatesManager.updateProgress(STEP_STAGE.PRINTING_ROTATE_ANALYZE, 1)
                         })
                     );
                     dispatch(actions.destroyGcodeLine());
@@ -4095,7 +3803,7 @@ export const actions = {
         dispatch(actions.displayModel());
     },
 
-    setRotationPlacementFace: (userData) => (dispatch) => {
+    setRotationPlacementFace: userData => dispatch => {
         dispatch(
             actions.updateState({
                 rotationAnalysisSelectedRowId: userData.index
@@ -4275,11 +3983,8 @@ export const actions = {
     setModelsMeshColor: (direction, color) => (dispatch, getState) => {
         const { modelGroup } = getState().printing;
         const models = modelGroup.getModels();
-        modelGroup.traverseModels(models, (model) => {
-            if (
-                model.extruderConfig.shell
-                === (direction === LEFT_EXTRUDER ? '0' : '1')
-            ) {
+        modelGroup.traverseModels(models, model => {
+            if (model.extruderConfig.shell === (direction === LEFT_EXTRUDER ? '0' : '1')) {
                 model.updateMaterialColor(color);
             }
         });
@@ -4287,18 +3992,10 @@ export const actions = {
         dispatch(actions.render());
     },
 
-    getMeshColor: (direction) => (dispatch, getState) => {
-        const {
-            materialDefinitions,
-            defaultMaterialId,
-            defaultMaterialIdRight
-        } = getState().printing;
-        const materialID = direction === LEFT_EXTRUDER
-            ? defaultMaterialId
-            : defaultMaterialIdRight;
-        const index = materialDefinitions.findIndex(
-            (d) => d.definitionId === materialID
-        );
+    getMeshColor: direction => (dispatch, getState) => {
+        const { materialDefinitions, defaultMaterialId, defaultMaterialIdRight } = getState().printing;
+        const materialID = direction === LEFT_EXTRUDER ? defaultMaterialId : defaultMaterialIdRight;
+        const index = materialDefinitions.findIndex(d => d.definitionId === materialID);
         if (index >= 0) {
             return materialDefinitions[index].settings.color.default_value;
         } else {
@@ -4306,16 +4003,16 @@ export const actions = {
         }
     },
 
-    updateAllModelColors: () => (dispatch) => {
+    updateAllModelColors: () => dispatch => {
         const leftColor = dispatch(actions.getMeshColor(LEFT_EXTRUDER));
         dispatch(actions.setModelsMeshColor(LEFT_EXTRUDER, leftColor));
         const rightColor = dispatch(actions.getMeshColor(RIGHT_EXTRUDER));
         dispatch(actions.setModelsMeshColor(RIGHT_EXTRUDER, rightColor));
     },
 
-    checkNewUser: () => (dispatch) => {
+    checkNewUser: () => dispatch => {
         api.checkNewUser()
-            .then((res) => {
+            .then(res => {
                 const isNewUser = res?.body?.isNewUser;
                 dispatch(
                     actions.updateState({
@@ -4323,7 +4020,7 @@ export const actions = {
                     })
                 );
             })
-            .catch((err) => {
+            .catch(err => {
                 console.error({ err });
                 dispatch(
                     actions.updateState({
@@ -4333,7 +4030,7 @@ export const actions = {
             });
     },
 
-    updateSupportOverhangAngle: (angle) => (dispatch) => {
+    updateSupportOverhangAngle: angle => dispatch => {
         dispatch(
             actions.updateState({
                 supportOverhangAngle: angle
@@ -4359,10 +4056,7 @@ export const actions = {
         dispatch(
             actions.updateState({
                 stage: STEP_STAGE.PRINTING_GENERATE_SUPPORT_MODEL,
-                progress: progressStatesManager.updateProgress(
-                    STEP_STAGE.PRINTING_GENERATE_SUPPORT_MODEL,
-                    0
-                )
+                progress: progressStatesManager.updateProgress(STEP_STAGE.PRINTING_GENERATE_SUPPORT_MODEL, 0)
             })
         );
 
@@ -4458,7 +4152,7 @@ export const actions = {
         });
     },
 
-    loadSupports: (supportFilePaths) => (dispatch, getState) => {
+    loadSupports: supportFilePaths => (dispatch, getState) => {
         const { modelGroup, tmpSupportFaceMarks } = getState().printing;
         // use worker to load supports
         const operations = new Operations();
@@ -4507,12 +4201,7 @@ export const actions = {
         });
         Promise.all(promises)
             .then(() => {
-                dispatch(
-                    operationHistoryActions.setOperations(
-                        INITIAL_STATE.name,
-                        operations
-                    )
-                );
+                dispatch(operationHistoryActions.setOperations(INITIAL_STATE.name, operations));
                 dispatch(actions.render());
                 dispatch(
                     actions.updateState({
@@ -4538,17 +4227,11 @@ export const actions = {
         const { modelGroup, progressStatesManager } = getState().printing;
         dispatch(actions.setTransformMode('support'));
         if (shouldApplyChanges) {
-            progressStatesManager.startProgress(
-                PROCESS_STAGE.PRINTING_GENERATE_SUPPORT,
-                [1, 1]
-            );
+            progressStatesManager.startProgress(PROCESS_STAGE.PRINTING_GENERATE_SUPPORT, [1, 1]);
             dispatch(
                 actions.updateState({
                     stage: STEP_STAGE.PRINTING_GENERATE_SUPPORT_AREA,
-                    progress: progressStatesManager.updateProgress(
-                        STEP_STAGE.PRINTING_GENERATE_SUPPORT_AREA,
-                        0.25
-                    )
+                    progress: progressStatesManager.updateProgress(STEP_STAGE.PRINTING_GENERATE_SUPPORT_AREA, 0.25)
                 })
             );
 
@@ -4569,10 +4252,7 @@ export const actions = {
             dispatch(
                 actions.updateState({
                     stage: STEP_STAGE.PRINTING_GENERATE_SUPPORT_AREA,
-                    progress: progressStatesManager.updateProgress(
-                        STEP_STAGE.PRINTING_GENERATE_SUPPORT_AREA,
-                        1
-                    )
+                    progress: progressStatesManager.updateProgress(STEP_STAGE.PRINTING_GENERATE_SUPPORT_AREA, 1)
                 })
             );
 
@@ -4618,7 +4298,7 @@ export const actions = {
         }
     },
 
-    setSupportBrushRadius: (radius) => (dispatch, getState) => {
+    setSupportBrushRadius: radius => (dispatch, getState) => {
         const { modelGroup } = getState().printing;
         modelGroup.setSupportBrushRadius(radius);
         dispatch(actions.render());
@@ -4633,13 +4313,13 @@ export const actions = {
         );
     },
 
-    moveSupportBrush: (raycastResult) => (dispatch, getState) => {
+    moveSupportBrush: raycastResult => (dispatch, getState) => {
         const { modelGroup } = getState().printing;
         modelGroup.moveSupportBrush(raycastResult);
         dispatch(actions.render());
     },
 
-    applySupportBrush: (raycastResult) => (dispatch, getState) => {
+    applySupportBrush: raycastResult => (dispatch, getState) => {
         const { modelGroup, supportBrushStatus } = getState().printing;
         modelGroup.applySupportBrush(raycastResult, supportBrushStatus);
         dispatch(actions.render());
@@ -4651,7 +4331,7 @@ export const actions = {
         dispatch(actions.render());
     },
 
-    computeAutoSupports: (angle) => (dispatch, getState) => {
+    computeAutoSupports: angle => (dispatch, getState) => {
         const { modelGroup, progressStatesManager } = getState().printing;
         // record previous support face marks for undo&redo
         const tmpSupportFaceMarks = {};
@@ -4662,17 +4342,11 @@ export const actions = {
             : modelGroup.getModelsAttachedSupport();
 
         if (availModels.length > 0) {
-            progressStatesManager.startProgress(
-                PROCESS_STAGE.PRINTING_GENERATE_SUPPORT,
-                [1, 1]
-            );
+            progressStatesManager.startProgress(PROCESS_STAGE.PRINTING_GENERATE_SUPPORT, [1, 1]);
             dispatch(
                 actions.updateState({
                     stage: STEP_STAGE.PRINTING_GENERATE_SUPPORT_AREA,
-                    progress: progressStatesManager.updateProgress(
-                        STEP_STAGE.PRINTING_GENERATE_SUPPORT_AREA,
-                        0.25
-                    )
+                    progress: progressStatesManager.updateProgress(STEP_STAGE.PRINTING_GENERATE_SUPPORT_AREA, 0.25)
                 })
             );
 
@@ -4690,10 +4364,7 @@ export const actions = {
             dispatch(
                 actions.updateState({
                     stage: STEP_STAGE.PRINTING_GENERATE_SUPPORT_AREA,
-                    progress: progressStatesManager.updateProgress(
-                        STEP_STAGE.PRINTING_GENERATE_SUPPORT_AREA,
-                        1
-                    )
+                    progress: progressStatesManager.updateProgress(STEP_STAGE.PRINTING_GENERATE_SUPPORT_AREA, 1)
                 })
             );
             if (models.length > 0) {
