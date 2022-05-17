@@ -292,18 +292,18 @@ class SocketTCP extends SocketBASE {
         // this.getLaserMaterialThicknessReq && this.getLaserMaterialThicknessReq.abort();
     };
 
-    public executeGcode = async (options: EventOptions, callback: () => void) => {
-        const { gcode } = options;
-        const gcodeLines = gcode.split('\n');
-        // callback && callback();
-        log.debug(`executeGcode, ${gcodeLines}`);
-        try {
-            callback && callback();
-            this.socket && this.socket.emit('connection:executeGcode', { msg: '', res: null });
-        } catch (e) {
-            log.error(`execute gcode error: ${e}`);
-        }
-    };
+    // public executeGcode = async (options: EventOptions, callback: () => void) => {
+    //     const { gcode } = options;
+    //     const gcodeLines = gcode.split('\n');
+    //     // callback && callback();
+    //     log.debug(`executeGcode, ${gcodeLines}`);
+    //     try {
+    //         callback && callback();
+    //         this.socket && this.socket.emit('connection:executeGcode', { msg: '', res: null });
+    //     } catch (e) {
+    //         log.error(`execute gcode error: ${e}`);
+    //     }
+    // };
 
     public uploadGcodeFile = (gcodeFilePath: string, type: string, callback: (msg: string, data: boolean) => void) => {
         this.sacpClient.uploadFile(gcodeFilePath).then(({ response }) => {

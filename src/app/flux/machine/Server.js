@@ -21,6 +21,7 @@ import {
     CONNECTION_STOP_GCODE,
     CONNECTION_TYPE_SERIAL,
     CONNECTION_TYPE_WIFI,
+    CONNECTION_GO_HOME
 } from '../../constants';
 import { controller } from '../../lib/controller';
 import { actions as workspaceActions } from '../workspace';
@@ -159,6 +160,13 @@ export class Server extends events.EventEmitter {
                 dispatch(baseActions.updateState({
                     workflowStatus: WORKFLOW_STATUS_IDLE
                 }));
+            });
+    }
+
+    goHome(callback) {
+        controller.emitEvent(CONNECTION_GO_HOME)
+            .once(CONNECTION_GO_HOME, (options) => {
+                callback && callback(options);
             });
     }
 

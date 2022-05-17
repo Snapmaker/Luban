@@ -6,7 +6,7 @@ import socketHttp from './socket-http';
 import socketTcp from './sacp/SACP-TCP';
 import socketSerialNew from './sacp/SACP-SERIAL';
 import { HEAD_PRINTING, HEAD_LASER, LEVEL_TWO_POWER_LASER_FOR_SM2, MACHINE_SERIES,
-    CONNECTION_TYPE_WIFI, CONNECTION_TYPE_SERIAL, WORKFLOW_STATE_PAUSED, PORT_SCREEN_HTTP, PORT_SCREEN_SACP } from '../../constants';
+    CONNECTION_TYPE_WIFI, CONNECTION_TYPE_SERIAL, WORKFLOW_STATE_PAUSED, PORT_SCREEN_HTTP, PORT_SCREEN_SACP, SACP_PROTOCOL } from '../../constants';
 import DataStorage from '../../DataStorage';
 import ScheduledTasks from '../../lib/ScheduledTasks';
 
@@ -80,6 +80,7 @@ class ConnectionManager {
                 // this.socket = ;
                 log.debug('serialSacp');
                 this.socket = socketSerialNew;
+                this.protocol = 'SACP';
                 this.socket.connectionOpen(socket, options);
             // } else {
                 // this.socket = socketSerial;
@@ -297,9 +298,9 @@ class ConnectionManager {
     // when using executeGcode, the cmd param is always 'gcode'
     executeGcode = (socket, options, callback) => {
         const { gcode, context, cmd = 'gcode' } = options;
-        if (this.connectionType === CONNECTION_TYPE_WIFI) {
+        if (this.protocol === SACP_PROTOCOL || this.connectionType === CONNECTION_TYPE_WIFI) {
             this.socket.executeGcode(options, callback);
-        } else {
+        }else {
             this.socket.command(this.socket, {
                 cmd: cmd,
                 args: [gcode, context]
@@ -512,7 +513,38 @@ class ConnectionManager {
     // only for Wifi
 
     goHome = () => {
-        this.socket.goHome();
+        if (this.protocol === SACP_PROTOCOL) {
+            this.socket.goHome();
+        } else {
+            console.log('other homing');
+            this.executeGcode(this.socket, {
+                gcode: 'G53'
+            })
+            this.executeGcode(this.socket, {
+                gcode: 'G28'
+            })
+        }
+    }
+
+    coordinateMove = (socket, options) => {
+        const { moveOrders, gcode, context, cmd, jogSpeed } = options;
+        console.log('coordinateMovesss');
+        if (this.protocol === SACP_PROTOCOL) {
+            console.log('coordinateMoveOptions', moveOrders, gcode);
+            this.socket.coordinateMove({ moveOrders, jogSpeed })
+        } else {
+            this.executeGcode(this.socket, { gcode });
+        }
+    }
+
+    setWorkOrigin = (socket, options) => {
+        const { xPosition, yPosition, zPosition, bPosition } = options;
+        console.log('setOrigin', options);
+        if (this.protocol === SACP_PROTOCOL) {
+            this.socket.setWorkOrigin({ xPosition, yPosition, zPosition, bPosition });
+        } else {
+            this.executeGcode(this.socket, { gcode: 'G92 X0 Y0 Z0 B0' });
+        }
     }
 }
 

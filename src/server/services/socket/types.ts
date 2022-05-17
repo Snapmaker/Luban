@@ -17,7 +17,8 @@ export type EventOptions = {
     zOffset?: number,
     headType?: string,
     uploadName?: string,
-    renderGcodeFileName?: string
+    renderGcodeFileName?: string,
+    moveOrders?: object
 };
 
 export type ConnectedData = {

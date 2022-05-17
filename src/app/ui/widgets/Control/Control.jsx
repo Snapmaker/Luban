@@ -183,6 +183,7 @@ function Control({ widgetId, widgetActions: _widgetActions }) {
 
         // actions
         jog: (params = {}) => {
+            const sArr = [];
             const s = map(params, (value, axis) => {
                 const axisMoved = axis.toUpperCase();
                 let signNumber = 1;
@@ -191,11 +192,15 @@ function Control({ widgetId, widgetActions: _widgetActions }) {
                 } else {
                     signNumber = 1;
                 }
+                sArr.push({
+                    axis: axisMoved,
+                    distance: parseFloat(workPosition[axisMoved.toLowerCase()]) + (signNumber * value)
+                });
                 return (`${axisMoved}${signNumber * value}`);
             }).join(' ');
-            if (s) {
+            if (s || !!sArr.length) {
                 const gcode = ['G91', `G0 ${s} F${state.jogSpeed}`, 'G90'];
-                actions.executeGcode(gcode.join('\n'));
+                actions.coordinateMove(gcode.join('\n'), sArr, state.jogSpeed);
             }
         },
         selectAngle: (angle = '') => {
@@ -206,13 +211,32 @@ function Control({ widgetId, widgetActions: _widgetActions }) {
         },
 
         move: (params = {}) => {
-            const s = map(params, (value, axis) => (`${axis.toUpperCase()}${value}`)).join(' ');
+            const sArr = [];
+            const s = map(params, (value, axis) => {
+                sArr.push({
+                    axis: axis.toUpperCase(),
+                    distance: parseFloat(originOffset[axis]) + value
+                });
+                return `${axis.toUpperCase()}${value}`;
+            }).join(' ');
             if (s) {
-                actions.executeGcode(`G0 ${s} F${state.jogSpeed}`);
+                const gcode = `G0 ${s} F${state.jogSpeed}`;
+                // actions.executeGcode(`G0 ${s} F${state.jogSpeed}`);
+                actions.coordinateMove(gcode, sArr, state.jogSpeed);
             }
         },
         executeGcode: (gcode) => {
             dispatch(machineActions.executeGcode(gcode));
+        },
+        coordinateMove: (gcode, moveOrders, jogSpeed) => {
+            dispatch(machineActions.coordinateMove(gcode, moveOrders, jogSpeed));
+        },
+        setWorkOrigin: () => {
+            const xPosition = parseFloat(workPosition.x);
+            const yPosition = parseFloat(workPosition.y);
+            const zPosition = parseFloat(workPosition.z);
+            const bPosition = workPosition.isFourAxis ? parseFloat(workPosition.b) : null;
+            dispatch(machineActions.setWorkOrigin(xPosition, yPosition, zPosition, bPosition));
         },
         toggleKeypadJogging: () => {
             setState(stateBefore => ({
