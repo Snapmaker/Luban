@@ -984,59 +984,21 @@ export const actions = {
         switch (status) {
             case 'succeed': {
                 const { gcodeEntityLayers: bufferGeometry, layerCount, bounds } = value;
-                // const bufferGeometry = new THREE.BufferGeometry();
-                // const positionAttribute = new THREE.Float32BufferAttribute(positions, 3);
-                // const colorAttribute = new THREE.Uint8BufferAttribute(colors, 3);
-                // // this will map the buffer values to 0.0f - +1.0f in the shader
-                // colorAttribute.normalized = true;
-                // const color1Attribute = new THREE.Uint8BufferAttribute(colors1, 3);
-                // color1Attribute.normalized = true;
-                // const layerIndexAttribute = new THREE.Float32BufferAttribute(layerIndices, 1);
-                // const typeCodeAttribute = new THREE.Float32BufferAttribute(typeCodes, 1);
-                // const toolCodeAttribute = new THREE.Float32BufferAttribute(toolCodes, 1);
-
-                // bufferGeometry.setAttribute('position', positionAttribute);
-                // bufferGeometry.setAttribute('a_color', colorAttribute);
-                // bufferGeometry.setAttribute('a_color1', color1Attribute);
-                // bufferGeometry.setAttribute('a_layer_index', layerIndexAttribute);
-                // bufferGeometry.setAttribute('a_type_code', typeCodeAttribute);
-                // bufferGeometry.setAttribute('a_tool_code', toolCodeAttribute);
 
                 dispatch(actions.destroyGcodeLine());
 
-                // gcodeLineObjects.forEach(object => {
-                //     gcodeLineGroup.remove(object);
-                // });
-                // gcodeParser && gcodeParser.dispose();
                 const object3D = gcodeBufferGeometryToObj3d('3DP', bufferGeometry, null, {
                     ...gcodeEntity,
                     extruderColors
                 });
                 gcodeLineGroup.add(object3D);
 
-                // const gcode = value.gcode;
-                // const parser = new GCodeParser(gcode, extruderColors);
-                // parser.travelWidth = 0.1;
-                // parser.radialSegments = 3;
-                // parser.parse();
-                // parser.slice();
-                // const newGcodeLineObjects = [];
-
-                // parser.getGeometries().forEach((geometry) => {
-                //     const newGcodeLineObject = gcodeBufferGeometryToObj3d('3DP', geometry, 'mesh');
-                //     newGcodeLineObjects.push(newGcodeLineObject);
-                // });
-
                 object3D.position.copy(new THREE.Vector3());
-                dispatch(
-                    actions.updateState({
-                        layerCount,
-                        layerRangeDisplayed: [0, layerCount - 1],
-                        gcodeLine: object3D
-                        // gcodeLineObjects: newGcodeLineObjects,
-                        // gcodeParser: parser
-                    })
-                );
+                dispatch(actions.updateState({
+                    layerCount,
+                    layerRangeDisplayed: [0, layerCount - 1],
+                    gcodeLine: object3D
+                }));
 
                 dispatch(actions.updateGcodePreviewMode(gcodePreviewMode));
 
@@ -1055,6 +1017,9 @@ export const actions = {
                 dispatch(actions.displayGcode());
 
                 const { progressStatesManager } = getState().printing;
+                dispatch(actions.updateState({
+                    progress: progressStatesManager.updateProgress(STEP_STAGE.PRINTING_PREVIEWING, 1)
+                }));
                 progressStatesManager.startNextStep();
                 dispatch(
                     actions.updateState({

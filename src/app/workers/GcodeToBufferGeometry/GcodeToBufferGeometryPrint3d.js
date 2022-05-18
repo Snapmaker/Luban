@@ -39,11 +39,11 @@ const TYPE_SETTINGS = {
 };
 
 class GcodeToBufferGeometryPrint3d {
-    gcodeEntityLayers = [];
+    gcodeEntityLayers = {};
 
     // Attention : switch y <====> z
     // vertexBuffer.push(new THREE.Vector3(this.state.x, this.state.z, -this.state.y));
-    parse(gcode, extruderColors = { toolColor0: '#FFFFFF', toolColor1: '#000000' }, onParsed = noop, onProgress = noop, onError = noop) {
+    parse(gcode, extruderColors, onParsed = noop, onProgress = noop, onError = noop) {
         if (isEmpty(gcode)) {
             onError(new Error('gcode is empty'));
             return;
@@ -65,8 +65,8 @@ class GcodeToBufferGeometryPrint3d {
             maxZ: Number.MIN_VALUE
         };
 
-        const { toolColor0, toolColor1 } = extruderColors;
-        console.log(toolColor0, toolColor1);
+        // const { toolColor0, toolColor1 } = extruderColors; // extruderColors = { toolColor0: '#FFFFFF', toolColor1: '#000000' }
+        // console.log(toolColor0, toolColor1);
         // let r0, b0, g0, r1, b1, g1;
         // if (toolColor0.length === 7) {
         //     r0 = parseInt(toolColor0.substring(1, 3), 16);
@@ -210,7 +210,7 @@ class GcodeToBufferGeometryPrint3d {
         });
 
         const layerCount = layerIndex + 1;
-        onProgress(1);
+        onProgress(0.9);
 
         // const bufferGeometry = new THREE.BufferGeometry();
         // const positionAttribute = new THREE.Float32BufferAttribute(positions, 3);
@@ -232,7 +232,7 @@ class GcodeToBufferGeometryPrint3d {
         // bufferGeometry.setAttribute('a_tool_code', toolCodeAttribute);
 
         // onParsed(bufferGeometry, layerCount, bounds);
-        console.log(this.gcodeEntityLayers);
+        // console.log(this.gcodeEntityLayers);
         onParsed(this.gcodeEntityLayers, layerCount, bounds);
     }
 

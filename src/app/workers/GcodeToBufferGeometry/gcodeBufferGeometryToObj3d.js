@@ -94,41 +94,45 @@ function lineToGeometry(originalPositions, breakPositionsIndex, width, height) {
         currentIndex += 8;
     }
 
-    // currentIndex = 4;
-    // for (let i = 1; i < line.length - 1; i++) {
-    //     if (breakPositionsIndex.indexOf(i) > -1 || breakPositionsIndex.indexOf(i - 1) > -1) {
-    //         continue;
-    //     }
-    //     /**
-    //      * calculate the relative position between sc and ec, then decide which side should add faces
-    //      *        center
-    //      *         /\
-    //      *       /   \
-    //      *     /      \
-    //      * start      end
-    //      */
-    //     const pointStart = line[i - 1];
-    //     const pointCenter = line[i];
-    //     const pointEnd = line[i + 1];
+    currentIndex = 4;
+    for (let i = 1; i < line.length - 1; i++) {
+        if (breakPositionsIndex.indexOf(i) > -1) {
+            currentIndex += 8;
+            continue;
+        }
+        if (breakPositionsIndex.indexOf(i - 1) > -1) {
+            continue;
+        }
+        /**
+         * calculate the relative position between sc and ec, then decide which side should add faces
+         *        center
+         *         /\
+         *       /   \
+         *     /      \
+         * start      end
+         */
+        const pointStart = line[i - 1];
+        const pointCenter = line[i];
+        const pointEnd = line[i + 1];
 
-    //     const sc = new THREE.Vector3().subVectors(pointStart, pointCenter);
-    //     const ec = new THREE.Vector3().subVectors(pointEnd, pointCenter);
+        const sc = new THREE.Vector3().subVectors(pointStart, pointCenter);
+        const ec = new THREE.Vector3().subVectors(pointEnd, pointCenter);
 
-    //     const normal = new THREE.Vector3().crossVectors(sc, ec);
-    //     // console.log('angle', normal, sc, ec, normal.angleTo(zUp));
-    //     if (normal.angleTo(zUp) > Math.PI / 2) {
-    //         indices.push(...[
-    //             0, 1, 5, 2, 5, 1
-    //         ].map(index => index + currentIndex));
-    //     } else if (normal.angleTo(zUp) < Math.PI / 2) {
-    //         indices.push(...[
-    //             0, 7, 3, 2, 3, 7
-    //         ].map(index => index + currentIndex));
-    //     } else {
-    //         // console.log('90');
-    //     }
-    //     currentIndex += 8;
-    // }
+        const normal = new THREE.Vector3().crossVectors(sc, ec);
+        // console.log('angle', normal, sc, ec, normal.angleTo(zUp));
+        if (normal.angleTo(zUp) > Math.PI / 2) {
+            indices.push(...[
+                0, 1, 5, 2, 5, 1
+            ].map(index => index + currentIndex));
+        } else if (normal.angleTo(zUp) < Math.PI / 2) {
+            indices.push(...[
+                0, 7, 3, 2, 3, 7
+            ].map(index => index + currentIndex));
+        } else {
+            // console.log('90');
+        }
+        currentIndex += 8;
+    }
     const geometry = new THREE.BufferGeometry();
     geometry.setIndex(indices);
     geometry.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
@@ -139,160 +143,125 @@ function lineToGeometry(originalPositions, breakPositionsIndex, width, height) {
 const gcodeBufferGeometryToObj3d = (func, bufferGeometry, renderMethod, params) => {
     let obj3d = null;
     switch (func) {
-        case '3DP':
-            if (renderMethod === 'mesh') {
-                obj3d = new THREE.Mesh(
-                    bufferGeometry,
-                    new THREE.ShaderMaterial({
-                        uniforms: PRINT3D_UNIFORMS,
-                        vertexShader: PRINT3D_VERT_SHADER,
-                        fragmentShader: PRINT3D_FRAG_SHADER,
-                        side: THREE.DoubleSide,
-                        transparent: true,
-                        linewidth: 10,
-                        wireframeLinewidth: 5
-                        // wireframe: true
-                    })
-                );
-            } else {
-                const gcodeEntityLayers = bufferGeometry;
+        case '3DP': {
+            const gcodeEntityLayers = bufferGeometry;
 
-                const object3D = new THREE.Group();
-                const r0 = parseInt(params.extruderColors.toolColor0.substring(1, 3), 16) / 0xff;
-                const g0 = parseInt(params.extruderColors.toolColor0.substring(3, 5), 16) / 0xff;
-                const b0 = parseInt(params.extruderColors.toolColor0.substring(5), 16) / 0xff;
+            const object3D = new THREE.Group();
+            const r0 = parseInt(params.extruderColors.toolColor0.substring(1, 3), 16) / 0xff;
+            const g0 = parseInt(params.extruderColors.toolColor0.substring(3, 5), 16) / 0xff;
+            const b0 = parseInt(params.extruderColors.toolColor0.substring(5), 16) / 0xff;
 
-                const r1 = parseInt(params.extruderColors.toolColor1.substring(1, 3), 16) / 0xff;
-                const g1 = parseInt(params.extruderColors.toolColor1.substring(3, 5), 16) / 0xff;
-                const b1 = parseInt(params.extruderColors.toolColor1.substring(5), 16) / 0xff;
-                gcodeEntityLayers.forEach((layer, index) => {
-                    layer.forEach(layerType => {
-                        if (layerType.typeCode !== 7) {
-                            let width = 0, height = params.layerHeight;
-                            if (layerType.toolCode === 0) {
-                                width = params.extruderLlineWidth;
-                                if (index === 0) {
-                                    width = params.extruderLlineWidth0;
-                                    height = params.layerHeight0;
-                                }
-                            } else {
-                                width = params.extruderRlineWidth;
-                                if (index === 0) {
-                                    width = params.extruderRlineWidth0;
-                                    height = params.layerHeight0;
-                                }
+            const r1 = parseInt(params.extruderColors.toolColor1.substring(1, 3), 16) / 0xff;
+            const g1 = parseInt(params.extruderColors.toolColor1.substring(3, 5), 16) / 0xff;
+            const b1 = parseInt(params.extruderColors.toolColor1.substring(5), 16) / 0xff;
+            Object.entries(gcodeEntityLayers).forEach(([indexKey, layer]) => {
+                const index = Number(indexKey);
+                layer.forEach(layerType => {
+                    if (layerType.typeCode !== 7) {
+                        let width = 0, height = params.layerHeight;
+                        if (layerType.toolCode === 0) {
+                            width = params.extruderLlineWidth;
+                            if (index === 0) {
+                                width = params.extruderLlineWidth0;
+                                height = params.layerHeight0;
                             }
-                            // console.log('breakPositionsIndex', layerType.breakPositionsIndex);
-                            const geometry = lineToGeometry(layerType.positions, layerType.breakPositionsIndex, width, height);
-                            const mesh = new THREE.Mesh(geometry, new THREE.ShaderMaterial({
-                                vertexShader: PRINT3D_VERT_SHADER,
-                                fragmentShader: PRINT3D_FRAG_SHADER,
-                                side: THREE.FrontSide,
-                                uniforms: {
-                                    ...PRINT3D_UNIFORMS,
-                                    u_color: {
-                                        value: layerType.toolCode === 0 ? [r0, g0, b0] : [r1, g1, b1],
-                                    },
-                                    color: {
-                                        value: layerType.color || 0xffffff,
-                                    },
-                                    type_code: {
-                                        value: layerType.typeCode
-                                    },
-                                    tool_code: {
-                                        value: layerType.toolCode
-                                    },
-                                    layer: {
-                                        value: index
-                                    }
-                                },
-                                depthTest: true,
-                                depthWrite: true,
-                                extensions: {
-                                    derivatives: true,
-                                    fragDepth: true,
-                                    drawBuffers: true
-                                }
-                            }));
-                            object3D.add(mesh);
                         } else {
-                            // travel should render as a line
-                            const geometry = new THREE.BufferGeometry();
-                            const positions = elementToVector3(layerType.positions);
-                            const segmentPositions = [];
-                            for (let i = 0; i < positions.length - 1; i++) {
-                                if (layerType.breakPositionsIndex.indexOf(i) > -1) {
-                                    continue;
-                                }
-                                segmentPositions.push(...positions[i].toArray(), ...positions[i + 1].toArray());
+                            width = params.extruderRlineWidth;
+                            if (index === 0) {
+                                width = params.extruderRlineWidth0;
+                                height = params.layerHeight0;
                             }
-                            geometry.setAttribute('position', new THREE.Float32BufferAttribute(segmentPositions, 3));
-                            const line = new THREE.LineSegments(geometry, new THREE.ShaderMaterial({
-                                vertexShader: PRINT3D_VERT_SHADER,
-                                fragmentShader: PRINT3D_FRAG_SHADER,
-                                side: THREE.FrontSide,
-                                uniforms: {
-                                    ...PRINT3D_UNIFORMS,
-                                    u_color: {
-                                        value: layerType.color || 0xffffff,
-                                    },
-                                    color: {
-                                        value: layerType.color || 0xffffff,
-                                    },
-                                    type_code: {
-                                        value: layerType.typeCode
-                                    },
-                                    tool_code: {
-                                        value: layerType.toolCode
-                                    },
-                                    layer: {
-                                        value: index
-                                    }
-                                },
-                                depthTest: true,
-                                depthWrite: true,
-                                extensions: {
-                                    derivatives: true,
-                                    fragDepth: true,
-                                    drawBuffers: true
-                                },
-                                linewidth: 10,
-                                wireframeLinewidth: 5
-                            }));
-                            object3D.add(line);
                         }
-                    });
+                        // console.log('breakPositionsIndex', layerType.breakPositionsIndex);
+                        const geometry = lineToGeometry(layerType.positions, layerType.breakPositionsIndex, width, height);
+                        const mesh = new THREE.Mesh(geometry, new THREE.ShaderMaterial({
+                            vertexShader: PRINT3D_VERT_SHADER,
+                            fragmentShader: PRINT3D_FRAG_SHADER,
+                            side: THREE.FrontSide,
+                            uniforms: {
+                                ...PRINT3D_UNIFORMS,
+                                u_color_extruder: {
+                                    value: layerType.toolCode === 0 ? [r0, g0, b0] : [r1, g1, b1],
+                                },
+                                u_color_line_type: {
+                                    value: layerType.color || 0xffffff,
+                                },
+                                u_type_code: {
+                                    value: layerType.typeCode
+                                },
+                                u_tool_code: {
+                                    value: layerType.toolCode
+                                },
+                                u_layer_index: {
+                                    value: index
+                                }
+                            },
+                            depthTest: true,
+                            depthWrite: true,
+                            extensions: {
+                                derivatives: true,
+                                fragDepth: true,
+                                drawBuffers: true
+                            }
+                        }));
+                        object3D.add(mesh);
+                    } else {
+                        if (index > 0) {
+                            return;
+                        }
+                        // travel should render as a line
+                        const geometry = new THREE.BufferGeometry();
+                        const positions = elementToVector3(layerType.positions);
+                        console.log(layerType);
+                        const segmentPositions = [], v = [];
+                        for (let i = 0; i < positions.length - 1; i++) {
+                            if (layerType.breakPositionsIndex.indexOf(i) > -1) {
+                                continue;
+                            }
+                            if (i < 10) {
+                                segmentPositions.push(...positions[i].toArray(), ...positions[i + 1].toArray());
+                                v.push(positions[i], positions[i + 1]);
+                            }
+                        }
+                        console.log(v, index);
+                        geometry.setAttribute('position', new THREE.Float32BufferAttribute(segmentPositions, 3));
+                        const line = new THREE.LineSegments(geometry, new THREE.ShaderMaterial({
+                            vertexShader: PRINT3D_VERT_SHADER,
+                            fragmentShader: PRINT3D_FRAG_SHADER,
+                            side: THREE.FrontSide,
+                            uniforms: {
+                                ...PRINT3D_UNIFORMS,
+                                u_color_extruder: {
+                                    value: layerType.color || 0xffffff,
+                                },
+                                u_color_line_type: {
+                                    value: layerType.color || 0xffffff,
+                                },
+                                u_type_code: {
+                                    value: layerType.typeCode
+                                },
+                                u_tool_code: {
+                                    value: layerType.toolCode
+                                },
+                                u_layer_index: {
+                                    value: index
+                                }
+                            },
+                            depthTest: true,
+                            depthWrite: true,
+                            extensions: {
+                                derivatives: true,
+                                fragDepth: true,
+                                drawBuffers: true
+                            }
+                        }));
+                        object3D.add(line);
+                    }
                 });
+            });
 
-                obj3d = object3D;
-
-                // obj3d = new THREE.Mesh(
-                //     geometry,
-                //     // bufferGeometry,
-                //     new THREE.ShaderMaterial({
-                //         uniforms: PRINT3D_UNIFORMS,
-                //         vertexShader: PRINT3D_VERT_SHADER,
-                //         fragmentShader: PRINT3D_FRAG_SHADER,
-                //         side: THREE.DoubleSide,
-                //         // transparent: true,
-                //         // linewidth: 10,
-                //         // wireframeLinewidth: 5
-                //     })
-                // );
-                // console.log(lineToGeometry, bufferGeometry);
-                // obj3d = new THREE.Line(
-                //     bufferGeometry,
-                //     new THREE.ShaderMaterial({
-                //         uniforms: PRINT3D_UNIFORMS,
-                //         vertexShader: PRINT3D_VERT_SHADER,
-                //         fragmentShader: PRINT3D_FRAG_SHADER,
-                //         side: THREE.DoubleSide,
-                //         transparent: true,
-                //         linewidth: 10,
-                //         wireframeLinewidth: 5
-                //     })
-                // );
-            }
+            obj3d = object3D;
+        }
 
             break;
         case 'WORKSPACE':
