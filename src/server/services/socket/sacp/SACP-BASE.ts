@@ -54,7 +54,7 @@ class SocketBASE {
                 ...stateData,
                 status: WORKFLOW_STATUS_MAP[statusKey],
                 headType: HEAD_PRINTING,
-                moduleStatusList
+                moduleStatusList,
             } });
             // clearTimeout(this.heartbeatTimer);
             // this.heartbeatTimer = setTimeout(() => {
@@ -114,7 +114,7 @@ class SocketBASE {
                 pos,
                 originOffset
             };
-            console.log('originOffset', originOffset);
+            // console.log('originOffset', originOffset, pos);
         }).then(res => {
             log.info(`subscribe coordination success: ${res}`);
         });
@@ -126,6 +126,9 @@ class SocketBASE {
         const gcodeLines = gcode.split('\n');
         // callback && callback();
         log.debug(`executeGcode, ${gcodeLines}`);
+        this.sacpClient.executeGcode(gcode).then(res => {
+            log.info(`execute gcode: ${res}`);
+        });
         try {
             callback && callback();
             this.socket && this.socket.emit('connection:executeGcode', { msg: '', res: null });
@@ -134,35 +137,62 @@ class SocketBASE {
         }
     };
 
-    public goHome = () => {
+    public goHome = async () => {
         log.info('onClick gohome');
-        this.sacpClient.requestHome().then(({ response }) => {
+        await this.sacpClient.updateCoordinate(CoordinateType.MACHINE).then(res => {
+            log.info(`Update Coordinate: ${res}`);
+        });
+        await this.sacpClient.requestHome().then(({ response }) => {
             log.info(`Go-Home, ${response}`);
         });
     }
 
-    public coordinateMove = ({ moveOrders, jogSpeed }) => {
-        log.info(`coordinate: ${moveOrders}`);
+    public coordinateMove = async ({ moveOrders, jogSpeed, headType }) => {
+        log.info(`coordinate: ${moveOrders}, ${headType}`);
         const distances = [];
         const directions = [];
         moveOrders.forEach(item => {
             directions.push(COORDINATE_AXIS[item.axis]);
             distances.push(item.distance);
         });
-        this.sacpClient.requestAbsoluteCooridateMove(directions, distances, jogSpeed, CoordinateType.WORKSPACE).then(res => {
+        // await this.sacpClient.updateCoordinate(headType === HEAD_PRINTING ? CoordinateType.MACHINE : CoordinateType.WORKSPACE).then(res => {
+        //     log.info(`Update CoordinateType: ${res}`);
+        // });
+        await this.sacpClient.requestAbsoluteCooridateMove(directions, distances, jogSpeed, CoordinateType.MACHINE).then(res => {
             log.info(`Coordinate Move: ${res}`);
         });
     }
 
-    public setWorkOrigin = ({ xPosition, yPosition, zPosition, bPosition }) => {
+    public setWorkOrigin = async ({ xPosition, yPosition, zPosition, bPosition }) => {
         log.info(`position: ${xPosition}, ${yPosition}, ${zPosition}, ${bPosition}`);
         const coordinateInfos = [new CoordinateInfo(Direction.X1, 0), new CoordinateInfo(Direction.Y1, 0), new CoordinateInfo(Direction.Z1, 0)];
         if (bPosition) {
-            coordinateInfos.push(new CoordinateInfo(Direction.B1, -bPosition));
+            coordinateInfos.push(new CoordinateInfo(Direction.B1, 0));
         }
-        this.sacpClient.setWorkOrigin(coordinateInfos).then(res => {
-            // log.info(`Set Work Origin: ${res.data}`);
-            console.log(res);
+        await this.sacpClient.updateCoordinate(CoordinateType.WORKSPACE).then(res => {
+            log.info(`update CoordinateType, ${res}`);
+        });
+        await this.sacpClient.setWorkOrigin(coordinateInfos).then(res => {
+            log.info(`Set Work Origin: ${res.data}`);
+            // console.log(res);
+        });
+    }
+
+    public stopPrint = () => {
+        this.sacpClient.stopPrint().then(res => {
+            log.info(`Stop Print: ${res}`);
+        });
+    }
+
+    public pauseGcode = () => {
+        this.sacpClient.pausePrint().then(res => {
+            log.info(`Pause Print: ${res}`);
+        });
+    }
+
+    public resumeGcode = () => {
+        this.sacpClient.resumePrint().then(res => {
+            log.info(`Resume Print: ${res}`);
         });
     }
 }

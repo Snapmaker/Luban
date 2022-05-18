@@ -1,12 +1,16 @@
 import SerialPort from 'serialport';
+import fs from 'fs';
+// import path from 'path';
+import crypto from 'crypto';
 import { includes } from 'lodash';
 import logger from '../../../lib/logger';
 import Business from '../../../lib/SACP-SDK/SACP/business/Business';
 import SocketServer from '../../../lib/SocketManager';
 import SocketBASE from './SACP-BASE';
 import { SERIAL_MAP_SACP, PRINTING_MODULE, CNC_MODULE, LASER_MODULE, MODULEID_TOOLHEAD_MAP, ROTARY_MODULES, EMERGENCY_STOP_BUTTON } from '../../../../app/constants';
-import { ConnectedData } from '../types';
+import { ConnectedData, EventOptions } from '../types';
 import { HEAD_CNC, HEAD_LASER, HEAD_PRINTING } from '../../../constants';
+import DataStorage from '../../../DataStorage';
 // import { DUAL_EXTRUDER_TOOLHEAD_FOR_SM2, HEAD_PRINTING } from '../../../constants';
 
 const log = logger('lib:SocketSerial');
@@ -16,17 +20,23 @@ class SocketSerialNew extends SocketBASE {
 
     private availPorts: any;
 
+    public startTime: number;
+
+    // public sent: number;
+
+    // public total: number;
+
     static async getAvailPost() {
         const list = await SerialPort.list();
         log.debug(`static ${list[0]}`);
         return list;
     }
 
-    public connectionOpen = async (socket: SocketServer) => {
+    public connectionOpen = async (socket: SocketServer, options) => {
         this.availPorts = await SerialPort.list();
         this.socket = socket;
         if (this.availPorts.length > 0) {
-            this.serialport = new SerialPort(this.availPorts[0].path, {
+            this.serialport = new SerialPort(options.port ?? this.availPorts[0].path, {
                 autoOpen: false,
                 baudRate: 115200
             });
@@ -36,7 +46,7 @@ class SocketSerialNew extends SocketBASE {
                 this.sacpClient.read(data);
             });
             this.serialport.once('open', () => {
-                log.debug(`${this.availPorts[0].path} opened`);
+                log.debug(`${options.port ?? this.availPorts[0].path} opened`);
                 this.serialport.write('M2000 S5 P1\r\n');
                 setTimeout(async () => {
                     // TO DO: Need to get seriesSize for 'connection:connected' event
@@ -121,12 +131,36 @@ class SocketSerialNew extends SocketBASE {
         this.socket.emit('connection:close');
     }
 
-    // public goHome = () => {
-    //     log.info('onClick gohome');
-    //     this.sacpClient.requestHome().then(({ response }) => {
-    //         log.info(`Go-Home, ${response}`);
-    //     });
-    // }
+    public startGcode = async (options: EventOptions) => {
+        console.log({ options });
+        const gcodeFilePath = `${DataStorage.tmpDir}/${options.uploadName}`;
+        await this.goHome();
+        await this.sacpClient.startPrintSerial(gcodeFilePath, ({ lineNumber, length, elapsedTime: sliceTime }) => {
+            const elapsedTime = new Date().getTime() - this.startTime;
+            const progress = lineNumber / length;
+            const remainingTime = (1 - (progress)) * progress * elapsedTime / progress + (1 - progress) * (1 - progress) * (sliceTime * 1000);
+            console.log('lineNumber', lineNumber, length, elapsedTime, remainingTime);
+            const data = {
+                total: length,
+                sent: lineNumber,
+                progress: lineNumber / length,
+                elapsedTime,
+                remainingTime
+            };
+            this.socket.emit('sender:status', ({ data }));
+        });
+        const md5 = crypto.createHash('md5');
+        const readStream = fs.createReadStream(gcodeFilePath);
+        readStream.on('data', buf => {
+            md5.update(buf);
+        });
+        readStream.once('end', () => {
+            this.sacpClient.startPrint(md5.digest().toString('hex'), options.uploadName, 0).then(({ response }) => {
+                console.log('responsettt', response);
+                this.startTime = new Date().getTime();
+            });
+        });
+    }
 }
 
 export default new SocketSerialNew();
