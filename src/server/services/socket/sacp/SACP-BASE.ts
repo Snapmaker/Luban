@@ -1,5 +1,5 @@
 import { includes, find } from 'lodash';
-import Business, { CoordinateType } from '../../../lib/SACP-SDK/SACP/business/Business';
+import Business, { CoordinateType } from './Business';
 import SocketServer from '../../../lib/SocketManager';
 import logger from '../../../lib/logger';
 import { COORDINATE_AXIS, WORKFLOW_STATUS_MAP, HEAD_PRINTING, EMERGENCY_STOP_BUTTON, ENCLOSURE_MODULES, AIR_PURIFIER_MODULES, ROTARY_MODULES } from '../../../../app/constants';

@@ -4,7 +4,7 @@ import fs from 'fs';
 import crypto from 'crypto';
 import { includes } from 'lodash';
 import logger from '../../../lib/logger';
-import Business from '../../../lib/SACP-SDK/SACP/business/Business';
+import Business from './Business';
 import SocketServer from '../../../lib/SocketManager';
 import SocketBASE from './SACP-BASE';
 import { SERIAL_MAP_SACP, PRINTING_MODULE, CNC_MODULE, LASER_MODULE, MODULEID_TOOLHEAD_MAP, ROTARY_MODULES, EMERGENCY_STOP_BUTTON } from '../../../../app/constants';
@@ -132,14 +132,12 @@ class SocketSerialNew extends SocketBASE {
     }
 
     public startGcode = async (options: EventOptions) => {
-        console.log({ options });
         const gcodeFilePath = `${DataStorage.tmpDir}/${options.uploadName}`;
         await this.goHome();
         await this.sacpClient.startPrintSerial(gcodeFilePath, ({ lineNumber, length, elapsedTime: sliceTime }) => {
             const elapsedTime = new Date().getTime() - this.startTime;
             const progress = lineNumber / length;
             const remainingTime = (1 - (progress)) * progress * elapsedTime / progress + (1 - progress) * (1 - progress) * (sliceTime * 1000);
-            console.log('lineNumber', lineNumber, length, elapsedTime, remainingTime);
             const data = {
                 total: length,
                 sent: lineNumber,
@@ -156,7 +154,6 @@ class SocketSerialNew extends SocketBASE {
         });
         readStream.once('end', () => {
             this.sacpClient.startPrint(md5.digest().toString('hex'), options.uploadName, 0).then(({ response }) => {
-                console.log('responsettt', response);
                 this.startTime = new Date().getTime();
             });
         });
