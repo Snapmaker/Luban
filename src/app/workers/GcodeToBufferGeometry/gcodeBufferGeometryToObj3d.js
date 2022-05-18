@@ -206,24 +206,17 @@ const gcodeBufferGeometryToObj3d = (func, bufferGeometry, renderMethod, params) 
                         }));
                         object3D.add(mesh);
                     } else {
-                        if (index > 0) {
-                            return;
-                        }
                         // travel should render as a line
                         const geometry = new THREE.BufferGeometry();
                         const positions = elementToVector3(layerType.positions);
-                        console.log(layerType);
-                        const segmentPositions = [], v = [];
+                        const segmentPositions = [];
                         for (let i = 0; i < positions.length - 1; i++) {
-                            if (layerType.breakPositionsIndex.indexOf(i) > -1) {
+                            if (i !== 4 && layerType.breakPositionsIndex.indexOf(i) > -1) {
+                                // `i !== 4` ensures Travel type looks normal at the beginning in Raft adhesion
                                 continue;
                             }
-                            if (i < 10) {
-                                segmentPositions.push(...positions[i].toArray(), ...positions[i + 1].toArray());
-                                v.push(positions[i], positions[i + 1]);
-                            }
+                            segmentPositions.push(...positions[i].toArray(), ...positions[i + 1].toArray());
                         }
-                        console.log(v, index);
                         geometry.setAttribute('position', new THREE.Float32BufferAttribute(segmentPositions, 3));
                         const line = new THREE.LineSegments(geometry, new THREE.ShaderMaterial({
                             vertexShader: PRINT3D_VERT_SHADER,
