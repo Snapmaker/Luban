@@ -187,33 +187,37 @@ class ConnectionManager {
                 });
         } else {
             const { workflowState } = options;
-            if (headType === HEAD_LASER && workflowState !== WORKFLOW_STATE_PAUSED) {
-                this.socket.command(socket, {
-                    args: ['G0 X0 Y0 F1000', null]
-                });
-                if (!isRotate) {
-                    if (toolHead === LEVEL_TWO_POWER_LASER_FOR_SM2) {
-                        this.socket.command(socket, {
-                            args: [`G0 Z${(isLaserPrintAutoMode ? 0 : materialThickness)} F1000`, null]
-                        });
-                    } else {
-                        this.socket.command(socket, {
-                            args: [`G0 Z${(isLaserPrintAutoMode ? materialThickness : 0)} F1000`, null]
-                        });
+            if (this.protocol === SACP_PROTOCOL) {
+                this.socket.startGcode(options);
+            } else {
+                if (headType === HEAD_LASER && workflowState !== WORKFLOW_STATE_PAUSED) {
+                    this.socket.command(socket, {
+                        args: ['G0 X0 Y0 F1000', null]
+                    });
+                    if (!isRotate) {
+                        if (toolHead === LEVEL_TWO_POWER_LASER_FOR_SM2) {
+                            this.socket.command(socket, {
+                                args: [`G0 Z${(isLaserPrintAutoMode ? 0 : materialThickness)} F1000`, null]
+                            });
+                        } else {
+                            this.socket.command(socket, {
+                                args: [`G0 Z${(isLaserPrintAutoMode ? materialThickness : 0)} F1000`, null]
+                            });
+                        }
                     }
                 }
+                setTimeout(() => {
+                    this.socket.command(socket, {
+                        cmd: 'gcode:start',
+                    });
+                }, 100);
+                socket && socket.emit(eventName, {});
             }
-            setTimeout(() => {
-                this.socket.command(socket, {
-                    cmd: 'gcode:start',
-                });
-            }, 100);
-            socket && socket.emit(eventName, {});
         }
     }
 
     resumeGcode = (socket, options) => {
-        if (this.connectionType === CONNECTION_TYPE_WIFI) {
+        if (this.protocol === SACP_PROTOCOL || this.connectionType === CONNECTION_TYPE_WIFI) {
             this.socket.resumeGcode(options);
         } else {
             const { headType, pause3dpStatus, pauseStatus } = options;
@@ -269,7 +273,7 @@ class ConnectionManager {
     };
 
     pauseGcode = (socket, options) => {
-        if (this.connectionType === CONNECTION_TYPE_WIFI) {
+        if (this.protocol === SACP_PROTOCOL || this.connectionType === CONNECTION_TYPE_WIFI) {
             this.socket.pauseGcode(options);
         } else {
             const { eventName } = options;
@@ -284,14 +288,18 @@ class ConnectionManager {
         if (this.connectionType === CONNECTION_TYPE_WIFI) {
             this.socket.stopGcode(options);
         } else {
-            this.socket.command(this.socket, {
-                cmd: 'gcode:pause',
-            });
-            this.socket.command(this.socket, {
-                cmd: 'gcode:stop',
-            });
-            const { eventName } = options;
-            socket && socket.emit(eventName, {});
+            if (this.protocol === SACP_PROTOCOL) {
+                this.socket.stopPrint();
+            } else {
+                this.socket.command(this.socket, {
+                    cmd: 'gcode:pause',
+                });
+                this.socket.command(this.socket, {
+                    cmd: 'gcode:stop',
+                });
+                const { eventName } = options;
+                socket && socket.emit(eventName, {});
+            }
         }
     };
 
@@ -564,7 +572,6 @@ class ConnectionManager {
         if (this.protocol === SACP_PROTOCOL) {
             this.socket.goHome();
         } else {
-            console.log('other homing');
             this.executeGcode(this.socket, {
                 gcode: 'G53'
             });
@@ -575,11 +582,9 @@ class ConnectionManager {
     }
 
     coordinateMove = (socket, options) => {
-        const { moveOrders, gcode, context, cmd, jogSpeed } = options;
-        console.log('coordinateMovesss');
+        const { moveOrders, gcode, context, cmd, jogSpeed, headType } = options;
         if (this.protocol === SACP_PROTOCOL) {
-            console.log('coordinateMoveOptions', moveOrders, gcode);
-            this.socket.coordinateMove({ moveOrders, jogSpeed });
+            this.socket.coordinateMove({ moveOrders, jogSpeed, headType });
         } else {
             this.executeGcode(this.socket, { gcode });
         }
@@ -587,7 +592,6 @@ class ConnectionManager {
 
     setWorkOrigin = (socket, options) => {
         const { xPosition, yPosition, zPosition, bPosition } = options;
-        console.log('setOrigin', options);
         if (this.protocol === SACP_PROTOCOL) {
             this.socket.setWorkOrigin({ xPosition, yPosition, zPosition, bPosition });
         } else {

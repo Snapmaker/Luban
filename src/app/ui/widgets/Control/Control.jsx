@@ -187,14 +187,14 @@ function Control({ widgetId, widgetActions: _widgetActions }) {
             const s = map(params, (value, axis) => {
                 const axisMoved = axis.toUpperCase();
                 let signNumber = 1;
-                if (axisMoved === 'Y' && workPosition.isFourAxis) {
+                if (axisMoved === 'Y' && state.workPosition.isFourAxis) {
                     signNumber = -1;
                 } else {
                     signNumber = 1;
                 }
                 sArr.push({
                     axis: axisMoved,
-                    distance: parseFloat(workPosition[axisMoved.toLowerCase()]) + (signNumber * value)
+                    distance: parseFloat(state.workPosition[axisMoved.toLowerCase()]) + (signNumber * value)
                 });
                 return (`${axisMoved}${signNumber * value}`);
             }).join(' ');
@@ -213,9 +213,10 @@ function Control({ widgetId, widgetActions: _widgetActions }) {
         move: (params = {}) => {
             const sArr = [];
             const s = map(params, (value, axis) => {
+                console.log('moveOffset', axis, state.originOffset, state.originOffset[axis.toLowerCase()], state.workPosition[axis.toLowerCase()]);
                 sArr.push({
                     axis: axis.toUpperCase(),
-                    distance: parseFloat(originOffset[axis]) + value
+                    distance: value
                 });
                 return `${axis.toUpperCase()}${value}`;
             }).join(' ');
@@ -232,6 +233,7 @@ function Control({ widgetId, widgetActions: _widgetActions }) {
             dispatch(machineActions.coordinateMove(gcode, moveOrders, jogSpeed));
         },
         setWorkOrigin: () => {
+            console.log(workPosition, state.workPosition);
             const xPosition = parseFloat(workPosition.x);
             const yPosition = parseFloat(workPosition.y);
             const zPosition = parseFloat(workPosition.z);

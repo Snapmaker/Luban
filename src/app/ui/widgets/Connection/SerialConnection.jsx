@@ -15,7 +15,7 @@ import {
     WORKFLOW_STATE_IDLE,
     WORKFLOW_STATE_PAUSED,
     WORKFLOW_STATE_RUNNING, LEVEL_TWO_POWER_LASER_FOR_SM2,
-    HEAD_LASER, HEAD_CNC, HEAD_PRINTING
+    HEAD_LASER, HEAD_CNC, HEAD_PRINTING, DUAL_EXTRUDER_TOOLHEAD_FOR_SM2
 } from '../../../constants';
 import { actions as machineActions } from '../../../flux/machine';
 import styles from './index.styl';
@@ -26,7 +26,7 @@ function SerialConnection() {
         isOpen, enclosureOnline, isConnected, server, servers,
         // connectionTimeout, airPurifier, airPurifierHasPower,
         airPurifier, airPurifierHasPower,
-        heatedBedTemperature, laserCamera, workflowState, emergencyStopOnline
+        heatedBedTemperature, laserCamera, workflowStatus, emergencyStopOnline
     } = useSelector(state => state.machine);
     // console.log({ servers });
     const {
@@ -146,11 +146,19 @@ function SerialConnection() {
                     status: true
                 });
             } else if (headType === HEAD_PRINTING) {
-                newModuleStatusList.push({
-                    key: 'headtype',
-                    moduleName: i18n._('key-Workspace/Connection-3dp'),
-                    status: true
-                });
+                if (toolHead === DUAL_EXTRUDER_TOOLHEAD_FOR_SM2) {
+                    newModuleStatusList.push({
+                        key: 'headtype',
+                        moduleName: i18n._('key-App/Settings/MachineSettings-Dual Extruder Toolhead'),
+                        status: true
+                    });
+                } else {
+                    newModuleStatusList.push({
+                        key: 'headtype',
+                        moduleName: i18n._('key-Workspace/Connection-3dp'),
+                        status: true
+                    });
+                }
             } else if (headType === HEAD_CNC) {
                 newModuleStatusList.push({
                     key: 'headtype',
@@ -238,11 +246,11 @@ function SerialConnection() {
                             {i18n._(MACHINE_SERIES[seriesInfo.toUpperCase()].label)}
                         </span>
                         <span className={styles['connection-state-icon']}>
-                            {workflowState === WORKFLOW_STATE_IDLE
+                            {workflowStatus === WORKFLOW_STATE_IDLE
                             && <i className="sm-icon-14 sm-icon-idle" />}
-                            {workflowState === WORKFLOW_STATE_PAUSED
+                            {workflowStatus === WORKFLOW_STATE_PAUSED
                             && <i className="sm-icon-14 sm-icon-paused" />}
-                            {workflowState === WORKFLOW_STATE_RUNNING
+                            {workflowStatus === WORKFLOW_STATE_RUNNING
                             && <i className="sm-icon-14 sm-icon-running" />}
                         </span>
                     </div>

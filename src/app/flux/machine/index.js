@@ -819,7 +819,8 @@ export const actions = {
 
     coordinateMove: (gcode, moveOrders, jogSpeed, context, cmd) => (dispatch, getState) => {
         const { homingModal } = getState().machine;
-        controller.emitEvent(CONNECTION_COORDINATE_MOVE, { moveOrders, gcode, jogSpeed, context, cmd }, (gcodeArray) => {
+        const { headType } = getState().workspace;
+        controller.emitEvent(CONNECTION_COORDINATE_MOVE, { moveOrders, gcode, jogSpeed, headType, context, cmd }, (gcodeArray) => {
             if (gcodeArray) {
                 if (homingModal && gcode === 'G28') {
                     dispatch(baseActions.updateState({
