@@ -1,5 +1,5 @@
 import { includes, find } from 'lodash';
-import Business, { CoordinateType } from '../../../lib/SACP-SDK/SACP/business/Business';
+import Business, { CoordinateType } from './Business';
 import SocketServer from '../../../lib/SocketManager';
 import logger from '../../../lib/logger';
 import { DUAL_EXTRUDER_TOOLHEAD_FOR_SM2, LEVEL_TWO_POWER_LASER_FOR_SM2,

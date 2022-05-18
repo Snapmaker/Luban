@@ -7,7 +7,7 @@ import type SocketServer from '../../../lib/SocketManager';
 import { EventOptions } from '../types';
 import logger from '../../../lib/logger';
 import { CONNECTION_TYPE_WIFI, DUAL_EXTRUDER_TOOLHEAD_FOR_SM2, HEAD_CNC, HEAD_LASER, HEAD_PRINTING, WORKFLOW_STATE_PAUSED } from '../../../constants';
-import Business, { CoordinateType, RequestPhotoInfo, ToolHeadType } from '../../../lib/SACP-SDK/SACP/business/Business';
+import Business, { CoordinateType, RequestPhotoInfo, ToolHeadType } from './Business';
 import CalibrationInfo from '../../../lib/SACP-SDK/SACP/business/models/CalibrationInfo';
 import DataStorage from '../../../DataStorage';
 // import MovementInstruction, { MoveDirection } from '../../lib/SACP-SDK/SACP/business/models/MovementInstruction';
