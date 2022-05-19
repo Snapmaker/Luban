@@ -184,7 +184,7 @@ const gcodeBufferGeometryToObj3d = (func, bufferGeometry, renderMethod, params) 
                                     value: layerType.toolCode === 0 ? [r0, g0, b0] : [r1, g1, b1],
                                 },
                                 u_color_line_type: {
-                                    value: layerType.color || 0xffffff,
+                                    value: layerType.color,
                                 },
                                 u_type_code: {
                                     value: layerType.typeCode
@@ -211,8 +211,7 @@ const gcodeBufferGeometryToObj3d = (func, bufferGeometry, renderMethod, params) 
                         const positions = elementToVector3(layerType.positions);
                         const segmentPositions = [];
                         for (let i = 0; i < positions.length - 1; i++) {
-                            if (i !== 4 && layerType.breakPositionsIndex.indexOf(i) > -1) {
-                                // `i !== 4` ensures Travel type looks normal at the beginning in Raft adhesion
+                            if (layerType.breakPositionsIndex.indexOf(i) > -1) {
                                 continue;
                             }
                             segmentPositions.push(...positions[i].toArray(), ...positions[i + 1].toArray());
@@ -221,14 +220,13 @@ const gcodeBufferGeometryToObj3d = (func, bufferGeometry, renderMethod, params) 
                         const line = new THREE.LineSegments(geometry, new THREE.ShaderMaterial({
                             vertexShader: PRINT3D_VERT_SHADER,
                             fragmentShader: PRINT3D_FRAG_SHADER,
-                            side: THREE.FrontSide,
                             uniforms: {
                                 ...PRINT3D_UNIFORMS,
                                 u_color_extruder: {
-                                    value: layerType.color || 0xffffff,
+                                    value: layerType.color,
                                 },
                                 u_color_line_type: {
-                                    value: layerType.color || 0xffffff,
+                                    value: layerType.color,
                                 },
                                 u_type_code: {
                                     value: layerType.typeCode
@@ -239,13 +237,6 @@ const gcodeBufferGeometryToObj3d = (func, bufferGeometry, renderMethod, params) 
                                 u_layer_index: {
                                     value: index
                                 }
-                            },
-                            depthTest: true,
-                            depthWrite: true,
-                            extensions: {
-                                derivatives: true,
-                                fragDepth: true,
-                                drawBuffers: true
                             }
                         }));
                         object3D.add(line);

@@ -81,7 +81,7 @@ export const PRINT3D_FRAG_SHADER = [
     '        discard;',
     '    }',
 
-    '    if(u_visible_layer_range_start > u_layer_index){',
+    '    if(u_layer_index < u_visible_layer_range_start){',
     '        discard;',
     '    }',
 
