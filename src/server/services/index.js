@@ -45,6 +45,9 @@ const connectionEventsObject = {
     'connection:goHome': connectionManager.goHome,
     'connection:coordinateMove': connectionManager.coordinateMove,
     'connection:setWorkOrigin': connectionManager.setWorkOrigin,
+    'connection:updateToolHeadSpeed': connectionManager.updateToolHeadSpeed, // CNC, FOR NOW
+    'connection:switchCNC': connectionManager.switchCNC, // CNC, FOR NOW
+    'connection:updateWorkNozzle': connectionManager.switchExtruder,
 };
 
 function startServices(server) {

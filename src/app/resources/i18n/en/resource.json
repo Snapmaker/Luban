@@ -1209,6 +1209,21 @@
     "key-Workspace/Workprogress-Remaining Time": "Remaining Time",
     "key-Workspace/Workprogress-Unknow": "Unknow",
     "key-Workspace/Workprogress-Working": "Job Status",
+
+    "key-Workspace/Marlin-Actual Data Title": "Actual",
+    "key-Workspace/Marlin-Target Data Title": "Target",
+    "key-Workspace/Marlin-Nozzle Temp": "Nozzle Temp",
+    "key-Workspace/Marlin-Left Nozzle Temp": "Left Nozzle Temp",
+    "key-Workspace/Marlin-Right Nozzle Temp": "Right Nozzle Temp",
+    "key-Workspace/Marlin-Heated Bed Temp": "Heated Bed Temp",
+    "key-Workspace/Marlin-Z Offset": "Z Offset",
+    "key-Workspace/Marlin-Laser Power": "Laser Power",
+    "key-Workspace/Marlin-Work Speed": "Work Speed ",
+    "key-Workspace/Marlin-Toolhead Speed": "Toolhead Speed",
+    
+    "key-Workspace/Marlin-Heated": "Heated",
+
+
     "key-app_layout-File Saved": "File Saved",
     "key-app_layout-Open Folder": "Open Folder",
     "key-app_layout-Print Area Exceeded": "Print Area Exceeded",

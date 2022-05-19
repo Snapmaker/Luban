@@ -14,6 +14,7 @@ import {
 function MarlinWidget({ widgetActions }) {
     const { isConnected } = useSelector(state => state.machine);
     const { headType } = useSelector(state => state?.workspace);
+    // const headType = HEAD_LASER;
 
     const actions = {
         setTitle: (_headType) => {
@@ -32,6 +33,7 @@ function MarlinWidget({ widgetActions }) {
     };
 
     useEffect(() => {
+        // widgetActions.setDisplay(true);
         if (isConnected) {
             widgetActions.setDisplay(true);
         } else {

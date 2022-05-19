@@ -311,7 +311,6 @@ export const actions = {
             'Marlin:state': (options) => {
                 // Note: serialPort & Wifi -> for heartBeat
                 const { state } = options;
-                console.log({ state });
                 const { headType, pos, originOffset, headStatus, headPower, temperature, zFocus, isHomed, zAxisModule, laser10WErrorState } = state;
                 const machineState = getState().machine;
                 if ((machineState.isRotate !== pos?.isFourAxis) && (headType === HEAD_LASER || headType === HEAD_CNC)) {
@@ -319,7 +318,7 @@ export const actions = {
                         isRotate: pos.isFourAxis
                     }));
                 }
-                if (pos.isFourAxis) {
+                if (pos && pos.isFourAxis) {
                     if (Number(machineState.workPosition.x) !== Number(pos.x)
                         || Number(machineState.workPosition.y) !== Number(pos.y)
                         || Number(machineState.workPosition.z) !== Number(pos.z)

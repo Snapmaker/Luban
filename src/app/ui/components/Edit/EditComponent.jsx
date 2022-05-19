@@ -34,6 +34,8 @@ const EditComponent = React.memo(({
         <div className="position-re">
             <div className="height-percent-100 sm-flex align-flex-end">
                 <SvgIcon
+                    className="height-24 width-24 border-radius-4 overflow-x-hidden overflow-y-hidden"
+                    hoversize={24}
                     name="Edit"
                     type={['hoverNormal', 'pressNormal']}
                     onClick={() => setShowOverlay(!showOverlay)}
@@ -71,7 +73,7 @@ const EditComponent = React.memo(({
                                 name="CameraCaptureExtract"
                                 hoversize={28}
                                 size={18}
-                                onClick={() => handleSubmit(inputValue)}
+                                onClick={() => { handleSubmit(inputValue); setShowOverlay(false); }}
                             />
                         </div>
                         <div className="width-30 height-30 border-radius-8 border-default-black-5 background-color-white display-inline">
