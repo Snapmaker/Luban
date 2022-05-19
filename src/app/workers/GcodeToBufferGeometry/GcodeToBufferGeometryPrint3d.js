@@ -246,6 +246,9 @@ class GcodeToBufferGeometryPrint3d {
     }
 
     addGcodeLayerInfo(layerIndex, typeCode, toolCode, v2) {
+        if (typeCode === 7 && layerIndex < 0) { // hack for Raft adhesion
+            layerIndex = 0;
+        }
         if (!this.gcodeEntityLayers[layerIndex]) {
             this.gcodeEntityLayers[layerIndex] = [];
         }
@@ -266,6 +269,9 @@ class GcodeToBufferGeometryPrint3d {
     }
 
     setGcodeLayerInfoBreak(layerIndex, typeCode, toolCode) {
+        if (typeCode === 7 && layerIndex < 0) { // hack for Raft adhesion
+            layerIndex = 0;
+        }
         const typeInLayerFound = this.gcodeEntityLayers[layerIndex].find(typeInLayer => {
             return typeInLayer.toolCode === toolCode && typeInLayer.typeCode === typeCode;
         });
