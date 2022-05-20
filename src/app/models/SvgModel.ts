@@ -102,7 +102,6 @@ class SvgModel extends BaseModel {
     public isToolPathSelect: boolean;
     public vertexPoints: TVertexPoint[] = [];
     public geometry: THREE.PlaneGeometry;
-    private scale: number;
 
     public constructor(modelInfo: ModelInfo, modelGroup: ModelGroup) {
         super(modelInfo, modelGroup);

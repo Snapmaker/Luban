@@ -111,11 +111,6 @@ class ThreeModel extends BaseModel {
         this.convexGeometry = null;
         this.modelGroup = modelGroup;
 
-        this.extruderConfig = {
-            ...this.extruderConfig,
-            ...modelInfo.extruderConfig
-        };
-
         if (modelInfo.convexGeometry) {
             this.setConvexGeometry(modelInfo.convexGeometry);
         }

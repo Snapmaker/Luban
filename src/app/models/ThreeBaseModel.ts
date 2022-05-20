@@ -109,10 +109,7 @@ export default class BaseModel {
     public canAttachSupport: boolean = true; // PrimeTowerModel should set false
     public type: string;
 
-    public extruderConfig: ExtruderConfig = {
-        infill: '0',
-        shell: '0'
-    };
+    public extruderConfig: ExtruderConfig;
 
     public mode: string; // TODO
 
@@ -125,10 +122,16 @@ export default class BaseModel {
     public constructor(modelInfo: ModelInfo, modelGroup: ModelGroup) {
         this.modelGroup = modelGroup;
 
-        // eslint-disable-next-line no-return-assign
         Object.keys(modelInfo).forEach((key) => {
             this[key] = modelInfo[key];
         });
+
+        if (!this.extruderConfig) {
+            this.extruderConfig = {
+                infill: '0',
+                shell: '0'
+            };
+        }
 
         this.modelID = this.modelID || `id${uuid()}`;
         this.modelName = this.modelName ?? 'unnamed';

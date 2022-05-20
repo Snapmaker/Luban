@@ -119,7 +119,12 @@ abstract class BaseModel {
     public mode: TMode;
 
     public parent: SVGGElement;
+
+    /**
+     * for cnc model visualizer
+     */
     public image3dObj: Mesh;
+    public scale: number;
 
     public constructor(modelInfo: ModelInfo, modelGroup: ModelGroup) {
         this.modelGroup = modelGroup;
